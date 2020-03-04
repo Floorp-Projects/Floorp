@@ -2286,6 +2286,39 @@ class GeckoEngineSessionTest {
         assertEquals(parsedIssuerName, observedIssuer)
     }
 
+    @Test
+    fun `GIVEN canGoBack true WHEN goBack() is called THEN verify EngineObserver onNavigateBack() is triggered`() {
+        var observedOnNavigateBack = false
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+        engineSession.register(object : EngineSession.Observer {
+            override fun onNavigateBack() {
+                observedOnNavigateBack = true
+            }
+        })
+
+        captureDelegates()
+        navigationDelegate.value.onCanGoBack(mock(), true)
+        engineSession.goBack()
+        assertTrue(observedOnNavigateBack)
+    }
+
+    @Test
+    fun `GIVEN canGoBack false WHEN goBack() is called THEN verify EngineObserver onNavigateBack() is not triggered`() {
+        var observedOnNavigateBack = false
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+        engineSession.register(object : EngineSession.Observer {
+            override fun onNavigateBack() {
+                observedOnNavigateBack = true
+            }
+        })
+
+        captureDelegates()
+        navigationDelegate.value.onCanGoBack(mock(), false)
+        engineSession.goBack()
+        assertFalse(observedOnNavigateBack)
+    }
     private fun mockGeckoSession(): GeckoSession {
         val session = mock<GeckoSession>()
         whenever(session.settings).thenReturn(

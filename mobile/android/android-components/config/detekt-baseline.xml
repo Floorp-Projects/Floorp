@@ -342,6 +342,7 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlocked(tracker: Tracker)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlockingEnabledChange(enabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerLoaded(tracker: Tracker)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigateBack()</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onWebAppManifestLoaded(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy$fun contains(category: TrackingCategory)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy.Companion$fun none()</ID>
