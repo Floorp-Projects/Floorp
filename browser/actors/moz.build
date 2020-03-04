@@ -54,6 +54,7 @@ FINAL_TARGET_FILES.actors += [
     'RFPHelperChild.jsm',
     'RFPHelperParent.jsm',
     'SearchTelemetryChild.jsm',
+    'SearchTelemetryParent.jsm',
     'SwitchDocumentDirectionChild.jsm',
     'URIFixupChild.jsm',
     'WebRTCChild.jsm',
