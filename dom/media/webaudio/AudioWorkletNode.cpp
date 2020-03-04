@@ -52,6 +52,17 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                           NotNull<StructuredCloneHolder*> aSerializedOptions,
                           UniqueMessagePortId& aPortIdentifier);
 
+  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
+    MOZ_ASSERT(mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
+
+    if (aIndex < mParamTimelines.Length()) {
+      mParamTimelines[aIndex].mTimeline.InsertEvent<int64_t>(aEvent);
+    } else {
+      NS_ERROR("Bad WorkletNodeEngine timeline event index");
+    }
+  }
+
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
