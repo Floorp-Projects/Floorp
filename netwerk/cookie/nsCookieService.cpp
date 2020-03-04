@@ -2091,7 +2091,7 @@ already_AddRefed<nsICookieJarSettings> nsCookieService::GetCookieJarSettings(
     nsresult rv =
         loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      cookieJarSettings = CookieJarSettings::CreateBlockingAll();
+      cookieJarSettings = CookieJarSettings::GetBlockingAll();
     }
   } else {
     cookieJarSettings = CookieJarSettings::Create();

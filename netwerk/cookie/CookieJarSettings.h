@@ -112,7 +112,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICOOKIEJARSETTINGS
 
-  static already_AddRefed<nsICookieJarSettings> CreateBlockingAll();
+  static already_AddRefed<nsICookieJarSettings> GetBlockingAll();
 
   static already_AddRefed<nsICookieJarSettings> Create();
 
