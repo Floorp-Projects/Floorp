@@ -11,13 +11,18 @@
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessiblePivot.h"
+#include "nsIStringBundle.h"
+
+#define ROLE_STRINGS_URL "chrome://global/locale/AccessFu.properties"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+static nsIStringBundle* sStringBundle;
+
 void a11y::PlatformInit() {}
 
-void a11y::PlatformShutdown() {}
+void a11y::PlatformShutdown() { NS_IF_RELEASE(sStringBundle); }
 
 void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
   AccessibleWrap* wrapper = nullptr;
@@ -207,4 +212,44 @@ void a11y::ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
       MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
       break;
   }
+}
+
+bool a11y::LocalizeString(const char* aToken, nsAString& aLocalized,
+                          const nsTArray<nsString>& aFormatString) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsresult rv = NS_OK;
+  if (!sStringBundle) {
+    nsCOMPtr<nsIStringBundleService> sbs = services::GetStringBundleService();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get string bundle service");
+      return false;
+    }
+
+    nsCOMPtr<nsIStringBundle> sb;
+    rv = sbs->CreateBundle(ROLE_STRINGS_URL, getter_AddRefs(sb));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get string bundle");
+      return false;
+    }
+
+    sb.forget(&sStringBundle);
+  }
+
+  MOZ_ASSERT(sStringBundle);
+
+  if (aFormatString.Length()) {
+    rv = sStringBundle->FormatStringFromName(aToken, aFormatString, aLocalized);
+    if (NS_SUCCEEDED(rv)) {
+      return true;
+    }
+  } else {
+    rv = sStringBundle->GetStringFromName(aToken, aLocalized);
+    if (NS_SUCCEEDED(rv)) {
+      return true;
+    }
+  }
+
+  NS_WARNING("Failed to localize string");
+  aLocalized.AssignLiteral("");
+  return false;
 }

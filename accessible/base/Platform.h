@@ -131,6 +131,10 @@ class BatchData;
 void ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
                 const nsTArray<ProxyAccessible*>& aAccessibles,
                 const nsTArray<BatchData>& aData);
+
+bool LocalizeString(
+    const char* aToken, nsAString& aLocalized,
+    const nsTArray<nsString>& aFormatString = nsTArray<nsString>());
 #endif
 
 }  // namespace a11y
