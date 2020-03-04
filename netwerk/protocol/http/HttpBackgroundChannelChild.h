@@ -47,10 +47,11 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
                                    const uint32_t& aCount,
                                    const nsCString& aData);
 
-  IPCResult RecvOnStopRequest(const nsresult& aChannelStatus,
-                              const ResourceTimingStructArgs& aTiming,
-                              const TimeStamp& aLastActiveTabOptHit,
-                              const nsHttpHeaderArray& aResponseTrailers);
+  IPCResult RecvOnStopRequest(
+      const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
+      const TimeStamp& aLastActiveTabOptHit,
+      const nsHttpHeaderArray& aResponseTrailers,
+      const nsTArray<ConsoleReportCollected>& aConsoleReports);
 
   IPCResult RecvFlushedForDiversion();
 
