@@ -20,13 +20,11 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIMEMORYREPORTER
 
-  // Blob constructor.
   static already_AddRefed<StreamBlobImpl> Create(
       already_AddRefed<nsIInputStream> aInputStream,
       const nsAString& aContentType, uint64_t aLength,
       const nsAString& aBlobImplType);
 
-  // File constructor.
   static already_AddRefed<StreamBlobImpl> Create(
       already_AddRefed<nsIInputStream> aInputStream, const nsAString& aName,
       const nsAString& aContentType, int64_t aLastModifiedDate,
@@ -66,12 +64,10 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   void GetBlobImplType(nsAString& aBlobImplType) const override;
 
  private:
-  // Blob constructor.
   StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                  const nsAString& aContentType, uint64_t aLength,
                  const nsAString& aBlobImplType);
 
-  // File constructor.
   StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                  const nsAString& aName, const nsAString& aContentType,
                  int64_t aLastModifiedDate, uint64_t aLength,

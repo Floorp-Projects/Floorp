@@ -397,8 +397,8 @@ already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
     return nullptr;
   }
 
-  return File::CreateMemoryFileWithLastModifiedNow(global, data, available,
-                                                   fileName, mType);
+  return File::CreateMemoryFile(global, data, available, fileName, mType,
+                                PR_Now());
 }
 
 void DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
