@@ -927,6 +927,16 @@ already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
     return nullptr;
   }
 
+  if (rv->IsHttp3() && (!gHttpHandler->IsHttp3Enabled() ||
+                   !rv->NPNToken().Equals(gHttpHandler->Http3Version()))) {
+    // If Http3 is disabled or the version not supported anymore, remove the
+    // mapping.
+    mStorage->Remove(
+        key, rv->Private() ? DataStorage_Private : DataStorage_Persistent);
+    return nullptr;
+  }
+
+
   if (rv->TTL() <= 0) {
     LOG(("AltSvcCache::LookupMapping %p expired hit - MISS\n", this));
     mStorage->Remove(
