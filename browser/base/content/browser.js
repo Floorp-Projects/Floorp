@@ -3575,11 +3575,6 @@ function PageProxyClickHandler(aEvent) {
   }
 }
 
-const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
-const SEC_ERROR_UNKNOWN_ISSUER = SEC_ERROR_BASE + 13;
-
-const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
-
 /**
  * Handle command events bubbling up from error page content
  * or from about:newtab or from remote error pages that invoke
