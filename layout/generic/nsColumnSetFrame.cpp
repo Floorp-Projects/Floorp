@@ -1171,13 +1171,17 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       aConfig.mColMaxBSize = aConfig.mKnownFeasibleBSize;
     }
 
-    // If our block-size is unconstrained, make sure that the last column is
+    // This is our last attempt to reflow. If our column container's available
+    // block-size is unconstrained, make sure that the last column is
     // allowed to have arbitrary block-size here, even though we were
     // balancing. Otherwise we'd have to split, and it's not clear what we'd
     // do with that.
+    const bool forceUnboundedLastColumn =
+        aReflowInput.mParentReflowInput->AvailableBSize() ==
+        NS_UNCONSTRAINEDSIZE;
     MarkPrincipalChildrenDirty(this);
     ReflowColumns(aDesiredSize, aReflowInput, aStatus, aConfig,
-                  availableContentBSize == NS_UNCONSTRAINEDSIZE);
+                  forceUnboundedLastColumn);
   }
 }
 
