@@ -58,8 +58,6 @@ class CSSAnimation final : public Animation {
   explicit CSSAnimation(nsIGlobalObject* aGlobal, nsAtom* aAnimationName)
       : dom::Animation(aGlobal),
         mAnimationName(aAnimationName),
-        mIsStylePaused(false),
-        mPauseShouldStick(false),
         mNeedsNewAnimationIndexWhenRun(false),
         mPreviousPhase(ComputedTiming::AnimationPhase::Idle),
         mPreviousIteration(0) {
@@ -85,9 +83,9 @@ class CSSAnimation final : public Animation {
 
   // Animation interface overrides
   void SetEffect(AnimationEffect* aEffect) override;
+  void SetStartTimeAsDouble(const Nullable<double>& aStartTime) override;
   Promise* GetReady(ErrorResult& aRv) override;
-  void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
-  void Pause(ErrorResult& aRv) override;
+  void Reverse(ErrorResult& aRv) override;
 
   // NOTE: tabbrowser.xml currently relies on the fact that reading the
   // currentTime of a CSSAnimation does *not* flush style (whereas reading the
@@ -100,6 +98,7 @@ class CSSAnimation final : public Animation {
   AnimationPlayState PlayStateFromJS() const override;
   bool PendingFromJS() const override;
   void PlayFromJS(ErrorResult& aRv) override;
+  void PauseFromJS(ErrorResult& aRv) override;
 
   void PlayFromStyle();
   void PauseFromStyle();
@@ -128,8 +127,6 @@ class CSSAnimation final : public Animation {
   void Tick() override;
   void QueueEvents(
       const StickyTimeDuration& aActiveTime = StickyTimeDuration());
-
-  bool IsStylePaused() const { return mIsStylePaused; }
 
   bool HasLowerCompositeOrderThan(const CSSAnimation& aOther) const;
 
@@ -207,58 +204,6 @@ class CSSAnimation final : public Animation {
   //
   // For (b) and (c) the owning element will return !IsSet().
   OwningElementRef mOwningElement;
-
-  // When combining animation-play-state with play() / pause() the following
-  // behavior applies:
-  // 1. pause() is sticky and always overrides the underlying
-  //    animation-play-state
-  // 2. If animation-play-state is 'paused', play() will temporarily override
-  //    it until animation-play-state next becomes 'running'.
-  // 3. Calls to play() trigger finishing behavior but setting the
-  //    animation-play-state to 'running' does not.
-  //
-  // This leads to five distinct states:
-  //
-  // A. Running
-  // B. Running and temporarily overriding animation-play-state: paused
-  // C. Paused and sticky overriding animation-play-state: running
-  // D. Paused and sticky overriding animation-play-state: paused
-  // E. Paused by animation-play-state
-  //
-  // C and D may seem redundant but they differ in how to respond to the
-  // sequence: call play(), set animation-play-state: paused.
-  //
-  // C will transition to A then E leaving the animation paused.
-  // D will transition to B then B leaving the animation running.
-  //
-  // A state transition chart is as follows:
-  //
-  //             A | B | C | D | E
-  //   ---------------------------
-  //   play()    A | B | A | B | B
-  //   pause()   C | D | C | D | D
-  //   'running' A | A | C | C | A
-  //   'paused'  E | B | D | D | E
-  //
-  // The base class, Animation already provides a boolean value,
-  // mIsPaused which gives us two states. To this we add a further two booleans
-  // to represent the states as follows.
-  //
-  // A. Running
-  //    (!mIsPaused; !mIsStylePaused; !mPauseShouldStick)
-  // B. Running and temporarily overriding animation-play-state: paused
-  //    (!mIsPaused; mIsStylePaused; !mPauseShouldStick)
-  // C. Paused and sticky overriding animation-play-state: running
-  //    (mIsPaused; !mIsStylePaused; mPauseShouldStick)
-  // D. Paused and sticky overriding animation-play-state: paused
-  //    (mIsPaused; mIsStylePaused; mPauseShouldStick)
-  // E. Paused by animation-play-state
-  //    (mIsPaused; mIsStylePaused; !mPauseShouldStick)
-  //
-  // (That leaves 3 combinations of the boolean values that we never set because
-  // they don't represent valid states.)
-  bool mIsStylePaused;
-  bool mPauseShouldStick;
 
   // When true, indicates that when this animation next leaves the idle state,
   // its animation index should be updated.
