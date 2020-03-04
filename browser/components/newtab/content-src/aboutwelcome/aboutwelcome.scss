@@ -2,26 +2,80 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+@import '../styles/normalize';
+
+$break-point-medium: 610px;
+$break-point-large: 866px;
+$break-point-widest: 1122px;
+
+html {
+  height: 100%;
+}
 
 body {
   // sass-lint:disable no-color-literals
   --grey-subtitle: #4A4A4F;
+  --newtab-background-color: #F9F9FA;
+  --newtab-text-primary-color: #0C0C0D;
+  --newtab-text-conditional-color: #4A4A4F;
+  --newtab-button-primary-color: #0060DF;
+  --newtab-card-background-color: #FFF;
+  --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+  --trailhead-header-text-color: #2B2156;
+  --trailhead-cards-background-color: #EDEDF0;
+  --trailhead-card-button-background-color: rgba(12, 12, 13, 0.1);
+  --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
+  --trailhead-card-button-background-active-color: rgba(12, 12, 13, 0.3);
   --welcome-button-box-shadow-color: rgba(10, 132, 255, 0.3);
   --welcome-button-box-shadow-inset-color: #0A84FF;
   --welcome-button-text-color: #FFF;
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
-}
 
-.welcome-container {
-  background: var(--trailhead-cards-background-color);
+  background-color: var(--trailhead-cards-background-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
+  'Helvetica Neue', sans-serif;
+  font-size: 16px;
+  position: relative;
 }
 
 .trailheadCardGrid {
+  margin: 0;
   margin-top: 32px;
+  display: grid;
+  grid-gap: 32px;
+  opacity: 0;
+  transition: opacity 0.4s;
+  transition-delay: 0.1s;
+  grid-auto-rows: 1fr;
+
+  &.show {
+    opacity: 1;
+  }
+
+  @media (min-width: $break-point-medium) {
+    grid-template-columns: repeat(auto-fit, 224px);
+  }
+
+  @media (min-width: $break-point-widest) {
+    grid-template-columns: repeat(auto-fit, 309px);
+  }
 }
 
 .trailheadCards {
+  text-align: center;
+
+  @media (min-width: $break-point-medium) {
+    max-height: 1000px;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 200;
+    margin: 0 0 40px;
+    color: var(--trailhead-header-text-color);
+  }
+
   .welcome-title {
     margin-bottom: 5px;
     line-height: 52px;
@@ -36,18 +90,125 @@ body {
   }
 }
 
+.trailheadCardsInner {
+  margin: auto;
+  padding: 40px 25px;
+
+  @media (min-width: $break-point-medium) {
+    width: 530px;
+  }
+
+  @media (min-width: $break-point-large) {
+    width: 786px;
+  }
+
+  @media (min-width: $break-point-widest) {
+    width: 1042px;
+  }
+}
+
+.trailheadCard {
+  position: relative;
+  background: var(--newtab-card-background-color);
+  border-radius: 4px;
+  box-shadow: var(--newtab-card-shadow);
+  font-size: 13px;
+  padding: 20px 40px 60px;
+
+  @media (max-width: $break-point-large) {
+    padding: 20px 40px;
+  }
+
+  @media (min-width: $break-point-widest) {
+    font-size: 15px;
+  }
+}
+
+.trailheadCard .onboardingTitle {
+  font-weight: normal;
+  color: var(--newtab-text-primary-color);
+  margin: 10px 0 4px;
+  font-size: 15px;
+
+  @media (min-width: $break-point-widest) {
+    font-size: 18px;
+  }
+}
+
+.trailheadCard .onboardingText {
+  margin: 0 0 60px;
+  color: var(--newtab-text-conditional-color);
+  line-height: 1.5;
+  font-weight: 200;
+}
+
+.trailheadCard .onboardingButton {
+  color: var(--newtab-text-conditional-color);
+  background: var(--trailhead-card-button-background-color);
+  border: 0;
+  border-radius: 4px;
+  margin: 14px;
+  min-width: 70%;
+  padding: 6px 14px;
+  white-space: pre-wrap;
+  cursor: pointer;
+
+  &:focus,
+  &:hover {
+    box-shadow: none;
+    background: var(--trailhead-card-button-background-hover-color);
+  }
+
+  &:focus {
+    outline: dotted 1px;
+  }
+
+  &:active {
+    background: var(--trailhead-card-button-background-active-color);
+  }
+}
+
+.trailheadCard .onboardingButtonContainer {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.onboardingMessageImage {
+  height: 112px;
+  width: 120px;
+  background-size: auto 140px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: inline-block;
+
+  @media (max-width: $break-point-large) {
+    height: 75px;
+    min-width: 80px;
+    background-size: 140px;
+  }
+
+  @media (min-width: $break-point-widest) {
+    width: 230px;
+    background-size: auto 140px;
+  }
+}
+
 .start-button {
   border: 0;
   font-size: 15px;
   font-family: inherit;
+  font-weight: 200;
   margin-inline-start: 12px;
   margin: 30px 0 25px;
-  padding: 7px 12px;
+  padding: 8px 16px;
   white-space: nowrap;
   background-color: var(--newtab-button-primary-color);
   color: var(--welcome-button-text-color);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 2px;
 
   &:focus {
     background: var(--welcome-button-background-hover-color);
@@ -63,4 +224,21 @@ body {
   &:active {
     background: var(--welcome-button-background-active-color);
   }
+}
+
+// Card image assets
+.onboardingMessageImage.devices {
+  background-image: url('../data/content/assets/trailhead/card-illo-devices.svg');
+}
+
+.onboardingMessageImage.ffmonitor {
+  background-image: url('../data/content/assets/trailhead/card-illo-ffmonitor.svg');
+}
+
+.onboardingMessageImage.private {
+  background-image: url('../data/content/assets/trailhead/card-illo-private.svg');
+}
+
+.onboardingMessageImage.mobile {
+  background-image: url('../data/content/assets/trailhead/card-illo-mobile.svg');
 }
