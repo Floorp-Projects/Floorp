@@ -84,9 +84,10 @@ class CSSAnimation final : public Animation {
   nsAtom* AnimationName() const { return mAnimationName; }
 
   // Animation interface overrides
-  virtual Promise* GetReady(ErrorResult& aRv) override;
-  virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
-  virtual void Pause(ErrorResult& aRv) override;
+  void SetEffect(AnimationEffect* aEffect) override;
+  Promise* GetReady(ErrorResult& aRv) override;
+  void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
+  void Pause(ErrorResult& aRv) override;
 
   // NOTE: tabbrowser.xml currently relies on the fact that reading the
   // currentTime of a CSSAnimation does *not* flush style (whereas reading the

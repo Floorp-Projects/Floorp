@@ -90,7 +90,7 @@ class Animation : public DOMEventTargetHelper,
   void SetId(const nsAString& aId);
 
   AnimationEffect* GetEffect() const { return mEffect; }
-  void SetEffect(AnimationEffect* aEffect);
+  virtual void SetEffect(AnimationEffect* aEffect);
   void SetEffectNoUpdate(AnimationEffect* aEffect);
 
   AnimationTimeline* GetTimeline() const { return mTimeline; }
