@@ -25,6 +25,19 @@ mozilla::LazyLogModule gMediaSession("MediaSession");
 namespace mozilla {
 namespace dom {
 
+static bool IsMetadataEmpty(const Maybe<MediaMetadataBase>& aMetadata) {
+  // Media session's metadata is null.
+  if (!aMetadata) {
+    return true;
+  }
+
+  // All attirbutes in metadata are empty.
+  // https://w3c.github.io/mediasession/#empty-metadata
+  const MediaMetadataBase& metadata = *aMetadata;
+  return metadata.mTitle.IsEmpty() && metadata.mArtist.IsEmpty() &&
+         metadata.mAlbum.IsEmpty() && metadata.mArtwork.IsEmpty();
+}
+
 MediaSessionController::MediaSessionController(uint64_t aContextId)
     : mTopLevelBCId(aContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
@@ -51,13 +64,18 @@ void MediaSessionController::NotifySessionDestroyed(
   UpdateActiveMediaSessionContextId();
 }
 
-void MediaSessionController::UpdateMetadata(uint64_t aSessionContextId,
-                                            MediaMetadataBase& aMetadata) {
+void MediaSessionController::UpdateMetadata(
+    uint64_t aSessionContextId, const Maybe<MediaMetadataBase>& aMetadata) {
   if (!mMetadataMap.Contains(aSessionContextId)) {
     return;
   }
-  LOG("Update metadata for session %" PRId64, aSessionContextId);
-  mMetadataMap.GetValue(aSessionContextId)->emplace(aMetadata);
+  if (IsMetadataEmpty(aMetadata)) {
+    LOG("Reset metadata for session %" PRId64, aSessionContextId);
+    mMetadataMap.GetValue(aSessionContextId)->reset();
+  } else {
+    LOG("Update metadata for session %" PRId64, aSessionContextId);
+    mMetadataMap.GetValue(aSessionContextId)->emplace(*aMetadata);
+  }
 }
 
 void MediaSessionController::UpdateActiveMediaSessionContextId() {
