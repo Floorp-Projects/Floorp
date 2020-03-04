@@ -416,6 +416,4 @@ void nsLayoutStatics::Shutdown() {
   css::ImageLoader::Shutdown();
 
   mozilla::net::UrlClassifierFeatureFactory::Shutdown();
-
-  gfxUserFontEntry::Shutdown();
 }
