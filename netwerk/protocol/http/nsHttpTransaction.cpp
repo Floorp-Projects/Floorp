@@ -1739,6 +1739,7 @@ nsresult nsHttpTransaction::HandleContentStart() {
       case 421:
         LOG(("Misdirected Request.\n"));
         gHttpHandler->AltServiceCache()->ClearHostMapping(mConnInfo);
+        mCaps |= NS_HTTP_REFRESH_DNS;
 
         // retry on a new connection - just in case
         if (!mRestartCount) {

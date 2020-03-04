@@ -43,8 +43,7 @@ add_task(async function() {
   info(
     "Check that pseudo-element declarations do not override the host's declarations"
   );
-  const idRule = getRuleViewRuleEditor(view, 4).rule;
-  const idProp = idRule.textProps[0];
+  const idProp = getTextProperty(view, 4, { color: "blue" });
   ok(
     !idProp.overridden,
     "The single declaration of color in ID selector should not be overridden"

@@ -100,11 +100,14 @@ def get_logger():
 
     # bridge for Arsenic
     if sys.version_info.major == 3:
-        from arsenic import connection
-        from structlog import wrap_logger
+        try:
+            from arsenic import connection
+            from structlog import wrap_logger
 
-        connection.log = wrap_logger(new_logger)
-
+            connection.log = wrap_logger(new_logger)
+        except ImportError:
+            # Arsenic is not installed for client-only usage
+            pass
     logger = new_logger
     return logger
 

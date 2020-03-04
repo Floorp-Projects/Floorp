@@ -40,10 +40,11 @@ async function testAddTextInFilter(inspector, view) {
   );
 
   const rule = getRuleViewRuleEditor(view, 1).rule;
+  const prop = getTextProperty(view, 1, { "background-color": "#00F" });
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(
-    rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+    prop.editor.container.classList.contains("ruleview-highlight"),
     "background-color text property is correctly highlighted."
   );
 }

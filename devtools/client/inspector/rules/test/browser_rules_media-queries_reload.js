@@ -44,8 +44,12 @@ add_task(async function() {
   await onResize;
   await testActor.reflow();
   await onRuleViewRefreshed;
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  is(rule.textProps[0].value, "red", "Small viewport media query inspected");
+
+  is(
+    getTextProperty(ruleView, 1, { color: "red" }).value,
+    "red",
+    "Small viewport media query inspected"
+  );
 
   info("Reload the current page");
   await reloadPage(inspector, testActor);
@@ -59,8 +63,12 @@ add_task(async function() {
   await testActor.reflow();
   await onRuleViewRefreshed;
   info("Reselect the rule after page reload.");
-  rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  is(rule.textProps[0].value, "green", "Large viewport media query inspected");
+
+  is(
+    getTextProperty(ruleView, 1, { color: "green" }).value,
+    "green",
+    "Large viewport media query inspected"
+  );
 
   info("Resize window to original dimentions");
   onResize = once(hostWindow, "resize");

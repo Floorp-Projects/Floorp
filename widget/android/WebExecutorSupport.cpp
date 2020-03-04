@@ -24,7 +24,7 @@
 #include "nsIDNSRecord.h"
 
 #include "mozilla/net/DNS.h"  // for NetAddr
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Preferences.h"
 
 #include "nsNetUtil.h"  // for NS_NewURI, NS_NewChannel, NS_NewStreamLoader
@@ -532,11 +532,12 @@ nsresult WebExecutorSupport::CreateStreamLoader(
     channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings = CookieSettings::Create();
-  MOZ_ASSERT(cookieSettings);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      CookieJarSettings::Create();
+  MOZ_ASSERT(cookieJarSettings);
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  loadInfo->SetCookieSettings(cookieSettings);
+  loadInfo->SetCookieJarSettings(cookieJarSettings);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel, &rv));
   NS_ENSURE_SUCCESS(rv, rv);

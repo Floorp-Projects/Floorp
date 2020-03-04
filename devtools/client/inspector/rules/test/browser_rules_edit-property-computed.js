@@ -23,8 +23,7 @@ add_task(async function() {
 });
 
 async function editAndCheck(view) {
-  const idRuleEditor = getRuleViewRuleEditor(view, 1);
-  const prop = idRuleEditor.rule.textProps[0];
+  const prop = getTextProperty(view, 1, { padding: "10px" });
   const propEditor = prop.editor;
   const newPaddingValue = "20px";
 

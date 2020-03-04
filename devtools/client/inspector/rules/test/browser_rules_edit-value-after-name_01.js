@@ -21,9 +21,8 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
 
   await selectNode("#testid", inspector);
-
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const propEditor = ruleEditor.rule.textProps[0].editor;
+  const prop = getTextProperty(view, 1, { color: "red" });
+  const propEditor = prop.editor;
 
   await testColorValueSpanClickWithoutNameChange(propEditor, view);
   await testColorValueSpanClickAfterNameChange(propEditor, view);

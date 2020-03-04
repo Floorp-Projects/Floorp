@@ -301,16 +301,17 @@ body {
   /*
      * The following elements are going to be present in the toolbar:
      *   - The run button
+     *   - The evaluation selector button
      *   - The history nav
      *   - A separator
      *   - The close button
      *
      * +-------------------------------------------+
-     * | ▶︎ Run                          ˄ ˅ 🔍 | ✕ |
+     * | ▶︎ Run  Top↕                    ˄ ˅ 🔍 | ✕ |
      * +-------------------------------------------+
      *
      */
-  grid-template-columns: auto 1fr auto auto auto auto auto;
+  grid-template-columns: auto auto 1fr auto auto auto auto auto;
   height: unset;
 }
 
@@ -322,6 +323,7 @@ body {
   align-items: center;
 }
 
+
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
   content: url("chrome://devtools/skin/images/webconsole/run.svg");
   height: 16px;
@@ -329,6 +331,14 @@ body {
   -moz-context-properties: fill;
   fill: currentColor;
   margin-inline-end: 2px;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-evaluation-selector-button {
+  height: 20px;
+  margin-inline-start: 5px;
+  padding-inline: 8px 16px !important;
+  background-position-x: calc(100% - 5px) !important;
+  background-position-y: calc(50% + 1px) !important;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {

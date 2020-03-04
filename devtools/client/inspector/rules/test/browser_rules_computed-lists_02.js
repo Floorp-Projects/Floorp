@@ -24,8 +24,8 @@ add_task(async function() {
 });
 
 function testComputedList(inspector, view) {
-  const rule = getRuleViewRuleEditor(view, 1).rule;
-  const propEditor = rule.textProps[0].editor;
+  const prop = getTextProperty(view, 1, { margin: "0px 1px 2px 3px" });
+  const propEditor = prop.editor;
   const expander = propEditor.expander;
 
   ok(!expander.hasAttribute("open"), "margin computed list is closed");

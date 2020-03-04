@@ -30,7 +30,7 @@ add_task(async function() {
 
 async function testEditProperty(inspector, ruleView) {
   const idRule = getRuleViewRuleEditor(ruleView, 1).rule;
-  const prop = idRule.textProps[0];
+  const prop = getTextProperty(ruleView, 1, { "background-color": "blue" });
 
   let editor = await focusEditableField(ruleView, prop.editor.nameSpan);
   let input = editor.input;
@@ -111,8 +111,10 @@ async function testEditProperty(inspector, ruleView) {
 }
 
 async function testDisableProperty(inspector, ruleView) {
-  const idRule = getRuleViewRuleEditor(ruleView, 1).rule;
-  const prop = idRule.textProps[0];
+  const prop = getTextProperty(ruleView, 1, {
+    "border-color": "red",
+    color: "red",
+  });
 
   info("Disabling a property");
   await togglePropStatus(ruleView, prop);

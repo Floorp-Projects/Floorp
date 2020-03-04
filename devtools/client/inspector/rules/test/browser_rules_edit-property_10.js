@@ -19,8 +19,8 @@ add_task(async function() {
   const { inspector, view: ruleView } = await openRuleView();
 
   await selectNode("div", inspector);
-  const rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  const prop = rule.textProps[0];
+  const prop = getTextProperty(ruleView, 1, { color: "red" });
+
   let onRuleViewChanged;
 
   info(`Rename the CSS property name to "Color"`);

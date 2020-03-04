@@ -880,7 +880,7 @@ class Encoding final {
  */
 class Decoder final {
  public:
-  ~Decoder() {}
+  ~Decoder() = default;
   static void operator delete(void* aDecoder) {
     decoder_free(reinterpret_cast<Decoder*>(aDecoder));
   }
@@ -1164,7 +1164,7 @@ class Decoder final {
  */
 class Encoder final {
  public:
-  ~Encoder() {}
+  ~Encoder() = default;
 
   static void operator delete(void* aEncoder) {
     encoder_free(reinterpret_cast<Encoder*>(aEncoder));

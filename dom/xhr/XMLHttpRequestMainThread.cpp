@@ -2418,7 +2418,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
     rv = NS_NewChannel(getter_AddRefs(mChannel), mRequestURL, mPrincipal,
                        mClientInfo.ref(), mController, secFlags,
                        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                       mCookieSettings,
+                       mCookieJarSettings,
                        mPerformanceStorage,  // aPerformanceStorage
                        loadGroup,
                        nullptr,  // aCallbacks
@@ -2427,7 +2427,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
     // Otherwise use the principal.
     rv = NS_NewChannel(getter_AddRefs(mChannel), mRequestURL, mPrincipal,
                        secFlags, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                       mCookieSettings,
+                       mCookieJarSettings,
                        mPerformanceStorage,  // aPerformanceStorage
                        loadGroup,
                        nullptr,  // aCallbacks

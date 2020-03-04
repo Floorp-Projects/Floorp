@@ -3563,7 +3563,7 @@ class HTMLEditor final : public TextEditor,
     nsresult OnError(const nsAString& aErrorName);
 
    private:
-    ~BlobReader() {}
+    ~BlobReader() = default;
 
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;

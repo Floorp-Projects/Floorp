@@ -1704,9 +1704,9 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
 NS_IMPL_ISUPPORTS(CSPViolationReportListener, nsIStreamListener,
                   nsIRequestObserver, nsISupports);
 
-CSPViolationReportListener::CSPViolationReportListener() {}
+CSPViolationReportListener::CSPViolationReportListener() = default;
 
-CSPViolationReportListener::~CSPViolationReportListener() {}
+CSPViolationReportListener::~CSPViolationReportListener() = default;
 
 nsresult AppendSegmentToString(nsIInputStream* aInputStream, void* aClosure,
                                const char* aRawSegment, uint32_t aToOffset,
@@ -1743,9 +1743,9 @@ CSPViolationReportListener::OnStartRequest(nsIRequest* aRequest) {
 NS_IMPL_ISUPPORTS(CSPReportRedirectSink, nsIChannelEventSink,
                   nsIInterfaceRequestor);
 
-CSPReportRedirectSink::CSPReportRedirectSink() {}
+CSPReportRedirectSink::CSPReportRedirectSink() = default;
 
-CSPReportRedirectSink::~CSPReportRedirectSink() {}
+CSPReportRedirectSink::~CSPReportRedirectSink() = default;
 
 NS_IMETHODIMP
 CSPReportRedirectSink::AsyncOnChannelRedirect(

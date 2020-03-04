@@ -18,7 +18,7 @@ PerformanceMeasure::PerformanceMeasure(nsISupports* aParent,
       mStartTime(aStartTime),
       mDuration(aEndTime - aStartTime) {}
 
-PerformanceMeasure::~PerformanceMeasure() {}
+PerformanceMeasure::~PerformanceMeasure() = default;
 
 JSObject* PerformanceMeasure::WrapObject(JSContext* aCx,
                                          JS::Handle<JSObject*> aGivenProto) {

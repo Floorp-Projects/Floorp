@@ -25,7 +25,7 @@ class PerformanceStorage {
                         nsITimedChannel* aTimedChannel) = 0;
 
  protected:
-  virtual ~PerformanceStorage() {}
+  virtual ~PerformanceStorage() = default;
 };
 
 }  // namespace dom

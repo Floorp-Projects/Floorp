@@ -232,7 +232,7 @@ nsMixedContentBlocker::nsMixedContentBlocker() {
       &sUpgradeMixedDisplay, "security.mixed_content.upgrade_display_content");
 }
 
-nsMixedContentBlocker::~nsMixedContentBlocker() {}
+nsMixedContentBlocker::~nsMixedContentBlocker() = default;
 
 NS_IMPL_ISUPPORTS(nsMixedContentBlocker, nsIContentPolicy, nsIChannelEventSink)
 

@@ -26,7 +26,7 @@ class nsXMLElement : public mozilla::dom::Element {
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
  protected:
-  virtual ~nsXMLElement() {}
+  virtual ~nsXMLElement() = default;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
