@@ -12,7 +12,6 @@
 
 #include "gc/FreeOp.h"
 #include "jit/JitFrames.h"
-#include "js/StableStringChars.h"
 #include "util/BitArray.h"
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
@@ -25,8 +24,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-
-using JS::AutoStableStringChars;
 
 /* static */
 size_t RareArgumentsData::bytesRequired(size_t numActuals) {
