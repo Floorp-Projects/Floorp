@@ -8,8 +8,8 @@ import select
 import signal
 import sys
 from datetime import datetime, timedelta
-from progressbar import ProgressBar
-from results import NullTestOutput, TestOutput, escape_cmdline
+from .progressbar import ProgressBar
+from .results import NullTestOutput, TestOutput, escape_cmdline
 
 
 class Task(object):
@@ -186,8 +186,8 @@ def reap_zombies(tasks, timeout):
             TestOutput(
                 ended.test,
                 ended.cmd,
-                ''.join(ended.out),
-                ''.join(ended.err),
+                b''.join(ended.out).decode(),
+                b''.join(ended.err).decode(),
                 returncode,
                 (datetime.now() - ended.start).total_seconds(),
                 timed_out(ended, timeout),
