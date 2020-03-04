@@ -1,11 +1,19 @@
 ---
 loader: taskgraph.loader.transform:loader
 transforms:
-    - taskgraph.transforms.index_search:transforms
+    - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
+
+job-defaults:
+    worker-type: always-optimized
+    run:
+        using: index-search
 
 jobs:
     linux64-minidump-stackwalk:
         description: "minidump_stackwalk toolchain"
-        index-search:
-            - gecko.cache.level-3.toolchains.v3.linux64-minidump-stackwalk.latest
+        attributes:
+            toolchain-artifact: public/build/minidump_stackwalk.tar.gz
+        run:
+            index-search:
+                - gecko.cache.level-3.toolchains.v3.linux64-minidump-stackwalk.latest

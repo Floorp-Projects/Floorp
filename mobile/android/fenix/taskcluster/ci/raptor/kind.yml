@@ -79,8 +79,8 @@ job-defaults:
             - '--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity'
             - '--download-symbols=ondemand'
     fetches:
-        linux64-minidump-stackwalk:
-            - artifact: minidump_stackwalk.tar.xz
+        toolchain:
+            - linux64-minidump-stackwalk
 
 jobs:
     tp6m-1-cold:
