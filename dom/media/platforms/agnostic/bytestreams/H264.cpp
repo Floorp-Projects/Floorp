@@ -334,7 +334,7 @@ class SPSNAL {
     }
   }
 
-  SPSNAL() {}
+  SPSNAL() = default;
 
   bool IsValid() const { return mDecodedNAL; }
 

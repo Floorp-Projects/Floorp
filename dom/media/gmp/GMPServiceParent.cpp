@@ -527,7 +527,7 @@ class NotifyObserversTask final : public mozilla::Runnable {
   }
 
  private:
-  ~NotifyObserversTask() {}
+  ~NotifyObserversTask() = default;
   const char* mTopic;
   const nsString mData;
 };

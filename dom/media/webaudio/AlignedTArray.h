@@ -25,7 +25,7 @@ class AlignedAutoTArray : private AutoTArray<E, S + N> {
   typedef typename base_type::size_type size_type;
   typedef typename base_type::index_type index_type;
 
-  AlignedAutoTArray() {}
+  AlignedAutoTArray() = default;
   explicit AlignedAutoTArray(size_type capacity)
       : base_type(capacity + sExtra) {}
   elem_type* Elements() { return getAligned(base_type::Elements()); }
@@ -77,7 +77,7 @@ class AlignedTArray : private nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   typedef typename base_type::size_type size_type;
   typedef typename base_type::index_type index_type;
 
-  AlignedTArray() {}
+  AlignedTArray() = default;
   explicit AlignedTArray(size_type capacity) : base_type(capacity + sExtra) {}
   elem_type* Elements() { return getAligned(base_type::Elements()); }
   const elem_type* Elements() const {

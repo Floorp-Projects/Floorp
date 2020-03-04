@@ -144,7 +144,7 @@ GeckoMediaPluginService::GeckoMediaPluginService()
   }
 }
 
-GeckoMediaPluginService::~GeckoMediaPluginService() {}
+GeckoMediaPluginService::~GeckoMediaPluginService() = default;
 
 NS_IMETHODIMP
 GeckoMediaPluginService::RunPluginCrashCallbacks(

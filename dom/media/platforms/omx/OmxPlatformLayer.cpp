@@ -36,7 +36,7 @@ namespace mozilla {
 template <typename ParamType>
 class OmxConfig {
  public:
-  virtual ~OmxConfig() {}
+  virtual ~OmxConfig() = default;
   // Subclasses should implement this method to configure the codec.
   virtual OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx,
                               const ParamType& aParam) = 0;

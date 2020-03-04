@@ -80,7 +80,7 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
 
  private:
   // Destructor.
-  ~MP3TrackDemuxer() {}
+  ~MP3TrackDemuxer() = default;
 
   // Fast approximate seeking to given time.
   media::TimeUnit FastSeek(const media::TimeUnit& aTime);

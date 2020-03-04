@@ -33,7 +33,7 @@ TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow,
     : DOMEventTargetHelper(aOwnerWindow),
       mTextTrackManager(aTextTrackManager) {}
 
-TextTrackList::~TextTrackList() {}
+TextTrackList::~TextTrackList() = default;
 
 void TextTrackList::GetShowingCues(nsTArray<RefPtr<TextTrackCue>>& aCues) {
   // Only Subtitles and Captions can show on the screen.

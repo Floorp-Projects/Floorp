@@ -58,7 +58,7 @@ class MediaResourceCallback
   virtual void NotifySuspendedStatusChanged(bool aSuspendedByCache) {}
 
  protected:
-  virtual ~MediaResourceCallback() {}
+  virtual ~MediaResourceCallback() = default;
 };
 
 }  // namespace mozilla

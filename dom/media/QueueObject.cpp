@@ -13,7 +13,7 @@ namespace mozilla {
 
 QueueObject::QueueObject(RefPtr<AbstractThread> aThread) : mThread(aThread) {}
 
-QueueObject::~QueueObject() {}
+QueueObject::~QueueObject() = default;
 
 void QueueObject::Dispatch(nsIRunnable* aRunnable) {
   Dispatch(do_AddRef(aRunnable));

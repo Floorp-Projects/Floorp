@@ -63,7 +63,7 @@ static const char* StateTypeToStr(OMX_STATETYPE aType) {
 // A helper class to retrieve AudioData or VideoData.
 class MediaDataHelper {
  protected:
-  virtual ~MediaDataHelper() {}
+  virtual ~MediaDataHelper() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataHelper)

@@ -29,7 +29,7 @@ IIRFilter::IIRFilter(const AudioDoubleArray* feedforwardCoef,
   reset();
 }
 
-IIRFilter::~IIRFilter() {}
+IIRFilter::~IIRFilter() = default;
 
 void IIRFilter::reset() {
   memset(m_xBuffer.Elements(), 0, m_xBuffer.Length() * sizeof(double));

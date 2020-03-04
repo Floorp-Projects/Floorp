@@ -89,7 +89,7 @@ class MediaDataDemuxer : public DecoderDoctorLifeLogger<MediaDataDemuxer> {
   virtual bool ShouldComputeStartTime() const { return true; }
 
  protected:
-  virtual ~MediaDataDemuxer() {}
+  virtual ~MediaDataDemuxer() = default;
 };
 
 class MediaTrackDemuxer : public DecoderDoctorLifeLogger<MediaTrackDemuxer> {
@@ -115,7 +115,7 @@ class MediaTrackDemuxer : public DecoderDoctorLifeLogger<MediaTrackDemuxer> {
     nsTArray<RefPtr<MediaRawData>>& GetMovableSamples() { return mSamples; }
 
    private:
-    ~SamplesHolder() {}
+    ~SamplesHolder() = default;
     nsTArray<RefPtr<MediaRawData>> mSamples;
   };
 
@@ -205,7 +205,7 @@ class MediaTrackDemuxer : public DecoderDoctorLifeLogger<MediaTrackDemuxer> {
   virtual void BreakCycles() {}
 
  protected:
-  virtual ~MediaTrackDemuxer() {}
+  virtual ~MediaTrackDemuxer() = default;
 };
 
 }  // namespace mozilla

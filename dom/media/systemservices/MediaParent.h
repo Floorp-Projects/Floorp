@@ -23,7 +23,7 @@ class NonE10s {
   typedef mozilla::ipc::IProtocol::ActorDestroyReason ActorDestroyReason;
 
  public:
-  virtual ~NonE10s() {}
+  virtual ~NonE10s() = default;
 
  protected:
   virtual mozilla::ipc::IPCResult RecvGetPrincipalKey(
@@ -43,7 +43,7 @@ class RefCountedParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedParent)
 
  protected:
-  virtual ~RefCountedParent() {}
+  virtual ~RefCountedParent() = default;
 };
 
 // Super = PMediaParent or NonE10s

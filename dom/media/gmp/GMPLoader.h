@@ -21,14 +21,14 @@ namespace gmp {
 
 class SandboxStarter {
  public:
-  virtual ~SandboxStarter() {}
+  virtual ~SandboxStarter() = default;
   virtual bool Start(const char* aLibPath) = 0;
 };
 
 // Interface that adapts a plugin to the GMP API.
 class GMPAdapter {
  public:
-  virtual ~GMPAdapter() {}
+  virtual ~GMPAdapter() = default;
   // Sets the adapted to plugin library module.
   // Note: the GMPAdapter is responsible for calling PR_UnloadLibrary on aLib
   // when it's finished with it.

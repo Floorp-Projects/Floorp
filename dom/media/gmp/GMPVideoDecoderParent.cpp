@@ -46,7 +46,7 @@ GMPVideoDecoderParent::GMPVideoDecoderParent(GMPContentParent* aPlugin)
   MOZ_ASSERT(mPlugin);
 }
 
-GMPVideoDecoderParent::~GMPVideoDecoderParent() {}
+GMPVideoDecoderParent::~GMPVideoDecoderParent() = default;
 
 GMPVideoHostImpl& GMPVideoDecoderParent::Host() { return mVideoHost; }
 

@@ -188,7 +188,7 @@ class TimeUnit final {
 
   bool IsValid() const { return mValue.isValid(); }
 
-  constexpr TimeUnit() : mValue(CheckedInt64(0)) {}
+  constexpr TimeUnit() = default;
 
   TimeUnit(const TimeUnit&) = default;
 
@@ -206,7 +206,7 @@ class TimeUnit final {
       : mValue(aMicroseconds) {}
 
   // Our internal representation is in microseconds.
-  CheckedInt64 mValue;
+  CheckedInt64 mValue{0};
 };
 
 typedef Maybe<TimeUnit> NullableTimeUnit;

@@ -60,7 +60,7 @@ class InputObserver : public webrtc::VideoInputFeedBack {
   friend CamerasParent;
 
  private:
-  ~InputObserver() {}
+  ~InputObserver() = default;
 
   RefPtr<CamerasParent> mParent;
 };

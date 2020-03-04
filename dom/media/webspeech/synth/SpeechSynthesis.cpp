@@ -69,7 +69,7 @@ SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
   }
 }
 
-SpeechSynthesis::~SpeechSynthesis() {}
+SpeechSynthesis::~SpeechSynthesis() = default;
 
 JSObject* SpeechSynthesis::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {

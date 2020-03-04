@@ -63,7 +63,7 @@ class RTCCertificate final : public nsISupports, public nsWrapperCache {
       JSStructuredCloneReader* aReader);
 
  private:
-  ~RTCCertificate() {}
+  ~RTCCertificate() = default;
   void operator=(const RTCCertificate&) = delete;
   RTCCertificate(const RTCCertificate&) = delete;
 

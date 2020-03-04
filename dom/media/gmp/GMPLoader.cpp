@@ -152,7 +152,7 @@ class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 namespace {
 class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter {
  private:
-  LinuxSandboxStarter() {}
+  LinuxSandboxStarter() = default;
   friend mozilla::detail::UniqueSelector<LinuxSandboxStarter>::SingleObject
   mozilla::MakeUnique<LinuxSandboxStarter>();
 

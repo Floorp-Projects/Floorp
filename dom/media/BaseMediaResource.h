@@ -122,7 +122,7 @@ class BaseMediaResource : public MediaResource,
         mChannel(aChannel),
         mURI(aURI),
         mLoadInBackground(false) {}
-  virtual ~BaseMediaResource() {}
+  virtual ~BaseMediaResource() = default;
 
   // Set the request's load flags to aFlags.  If the request is part of a
   // load group, the request is removed from the group, the flags are set, and

@@ -42,7 +42,7 @@ class StreamAdaptor {
  public:
   explicit StreamAdaptor(ByteStream* aSource) : mSource(aSource), mOffset(0) {}
 
-  ~StreamAdaptor() {}
+  ~StreamAdaptor() = default;
 
   bool Read(uint8_t* buffer, uintptr_t size, size_t* bytes_read);
 

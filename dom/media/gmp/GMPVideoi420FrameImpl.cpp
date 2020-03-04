@@ -33,7 +33,7 @@ GMPVideoi420FrameImpl::GMPVideoi420FrameImpl(
   MOZ_ASSERT(aHost);
 }
 
-GMPVideoi420FrameImpl::~GMPVideoi420FrameImpl() {}
+GMPVideoi420FrameImpl::~GMPVideoi420FrameImpl() = default;
 
 bool GMPVideoi420FrameImpl::InitFrameData(GMPVideoi420FrameData& aFrameData) {
   mYPlane.InitPlaneData(aFrameData.mYPlane());

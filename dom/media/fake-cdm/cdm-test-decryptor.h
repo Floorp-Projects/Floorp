@@ -99,7 +99,7 @@ class FakeDecryptor : public cdm::ContentDecryptionModule_10 {
   static FakeDecryptor* sInstance;
 
  private:
-  virtual ~FakeDecryptor() {}
+  virtual ~FakeDecryptor() = default;
 
   void TestStorage();
 };

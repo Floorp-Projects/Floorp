@@ -110,7 +110,7 @@ class TextTrackRegion final : public nsISupports, public nsWrapperCache {
   const nsAString& Id() const { return mId; }
 
  private:
-  ~TextTrackRegion() {}
+  ~TextTrackRegion() = default;
 
   nsCOMPtr<nsISupports> mParent;
   nsString mId;

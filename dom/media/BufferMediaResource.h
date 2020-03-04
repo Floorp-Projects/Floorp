@@ -26,7 +26,7 @@ class BufferMediaResource
       : mBuffer(aBuffer), mLength(aLength) {}
 
  protected:
-  virtual ~BufferMediaResource() {}
+  virtual ~BufferMediaResource() = default;
 
  private:
   // These methods are called off the main thread.

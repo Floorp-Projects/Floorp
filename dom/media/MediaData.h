@@ -328,7 +328,7 @@ class MediaData {
  protected:
   explicit MediaData(Type aType) : mType(aType), mOffset(0), mKeyframe(false) {}
 
-  virtual ~MediaData() {}
+  virtual ~MediaData() = default;
 };
 
 // NullData is for decoder generating a sample which doesn't need to be
@@ -396,7 +396,7 @@ class AudioData : public MediaData {
   RefPtr<SharedBuffer> mAudioBuffer;
 
  protected:
-  ~AudioData() {}
+  ~AudioData() = default;
 
  private:
   AudioDataValue* GetAdjustedData() const;
@@ -676,7 +676,7 @@ class MediaByteBuffer : public nsTArray<uint8_t> {
   explicit MediaByteBuffer(size_t aCapacity) : nsTArray<uint8_t>(aCapacity) {}
 
  private:
-  ~MediaByteBuffer() {}
+  ~MediaByteBuffer() = default;
 };
 
 }  // namespace mozilla

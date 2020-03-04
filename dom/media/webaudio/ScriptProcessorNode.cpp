@@ -484,7 +484,7 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
       aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
-ScriptProcessorNode::~ScriptProcessorNode() {}
+ScriptProcessorNode::~ScriptProcessorNode() = default;
 
 size_t ScriptProcessorNode::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {

@@ -64,7 +64,7 @@ class GMPRecord {
   // callbacks.
   virtual GMPErr Close() = 0;
 
-  virtual ~GMPRecord() {}
+  virtual ~GMPRecord() = default;
 };
 
 // Callback object that receives the results of GMPRecord calls. Callbacks
@@ -104,7 +104,7 @@ class GMPRecordClient {
   // call Close() on the GMPRecord to dispose of it.
   virtual void WriteComplete(GMPErr aStatus) = 0;
 
-  virtual ~GMPRecordClient() {}
+  virtual ~GMPRecordClient() = default;
 };
 
 #endif  // GMP_STORAGE_h_

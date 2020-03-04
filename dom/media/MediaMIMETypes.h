@@ -100,7 +100,7 @@ Maybe<MediaMIMEType> MakeMediaMIMEType(const char* aType);
 // A list of case-sensitive codecs attached to a MediaExtendedMIMEType.
 class MediaCodecs {
  public:
-  MediaCodecs() {}
+  MediaCodecs() = default;
   // Construction from a comma-separated list of codecs. Unchecked.
   explicit MediaCodecs(const nsAString& aCodecs) : mCodecs(aCodecs) {}
   // Construction from a literal comma-separated list of codecs. Unchecked.

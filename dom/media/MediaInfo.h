@@ -456,7 +456,7 @@ class TrackInfoSharedPtr {
   }
 
  private:
-  ~TrackInfoSharedPtr() {}
+  ~TrackInfoSharedPtr() = default;
   UniquePtr<TrackInfo> mInfo;
   // A unique ID, guaranteed to change when changing streams.
   uint32_t mStreamSourceID;

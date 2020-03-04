@@ -359,7 +359,7 @@ RefPtr<ShutdownPromise> EMEMediaDataDecoderProxy::Shutdown() {
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM)
     : mProxy(aProxy), mPDM(aPDM) {}
 
-EMEDecoderModule::~EMEDecoderModule() {}
+EMEDecoderModule::~EMEDecoderModule() = default;
 
 static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper(
     CDMProxy* aProxy, const CreateDecoderParams& aParams) {

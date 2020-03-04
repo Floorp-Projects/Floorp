@@ -1416,7 +1416,7 @@ void MediaDecoder::NotifyAudibleStateChanged() {
   GetOwner()->SetAudibleState(mIsAudioDataAudible);
 }
 
-MediaMemoryTracker::MediaMemoryTracker() {}
+MediaMemoryTracker::MediaMemoryTracker() = default;
 
 void MediaMemoryTracker::InitMemoryReporter() {
   RegisterWeakAsyncMemoryReporter(this);

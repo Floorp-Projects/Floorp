@@ -11,9 +11,9 @@
 
 namespace mozilla {
 
-CDMCaps::CDMCaps() {}
+CDMCaps::CDMCaps() = default;
 
-CDMCaps::~CDMCaps() {}
+CDMCaps::~CDMCaps() = default;
 
 // Keys with MediaKeyStatus::Usable, MediaKeyStatus::Output_downscaled,
 // or MediaKeyStatus::Output_restricted status can be used by the CDM

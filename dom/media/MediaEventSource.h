@@ -35,7 +35,7 @@ class RevocableToken {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RevocableToken);
 
  public:
-  RevocableToken() : mRevoked(false) {}
+  RevocableToken() = default;
 
   void Revoke() { mRevoked = true; }
 
@@ -44,10 +44,10 @@ class RevocableToken {
  protected:
   // Virtual destructor is required since we might delete a Listener object
   // through its base type pointer.
-  virtual ~RevocableToken() {}
+  virtual ~RevocableToken() = default;
 
  private:
-  Atomic<bool> mRevoked;
+  Atomic<bool> mRevoked{false};
 };
 
 enum class ListenerPolicy : int8_t {
@@ -264,7 +264,7 @@ class MediaEventListener {
   friend class MediaEventSourceImpl;
 
  public:
-  MediaEventListener() {}
+  MediaEventListener() = default;
 
   MediaEventListener(MediaEventListener&& aOther)
       : mToken(std::move(aOther.mToken)) {}

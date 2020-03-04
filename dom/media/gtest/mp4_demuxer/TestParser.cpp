@@ -62,7 +62,7 @@ class TestStream : public ByteStream,
   size_t mHighestSuccessfulEndOffset;
 
  protected:
-  virtual ~TestStream() {}
+  virtual ~TestStream() = default;
 
   const uint8_t* mBuffer;
   size_t mSize;

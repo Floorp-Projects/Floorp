@@ -41,7 +41,7 @@ class TrackEncoderListener {
   virtual void Error(TrackEncoder* aEncoder) = 0;
 
  protected:
-  virtual ~TrackEncoderListener() {}
+  virtual ~TrackEncoderListener() = default;
 };
 
 /**

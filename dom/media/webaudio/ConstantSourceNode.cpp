@@ -166,7 +166,7 @@ ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
   mTrack->AddMainThreadListener(this);
 }
 
-ConstantSourceNode::~ConstantSourceNode() {}
+ConstantSourceNode::~ConstantSourceNode() = default;
 
 size_t ConstantSourceNode::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {

@@ -63,7 +63,7 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
   void Dealloc(Shmem&& aMem) override { DeallocShmem(aMem); }
 
  private:
-  virtual ~GMPVideoEncoderParent(){};
+  virtual ~GMPVideoEncoderParent() = default;
 
   // PGMPVideoEncoderParent
   void ActorDestroy(ActorDestroyReason aWhy) override;

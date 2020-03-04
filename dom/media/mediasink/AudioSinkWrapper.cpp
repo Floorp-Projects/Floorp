@@ -13,7 +13,7 @@ namespace mozilla {
 
 using media::TimeUnit;
 
-AudioSinkWrapper::~AudioSinkWrapper() {}
+AudioSinkWrapper::~AudioSinkWrapper() = default;
 
 void AudioSinkWrapper::Shutdown() {
   AssertOwnerThread();

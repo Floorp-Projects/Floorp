@@ -52,7 +52,7 @@ VideoFrameContainer::VideoFrameContainer(
   NS_ASSERTION(mImageContainer, "aContainer must not be null");
 }
 
-VideoFrameContainer::~VideoFrameContainer() {}
+VideoFrameContainer::~VideoFrameContainer() = default;
 
 PrincipalHandle VideoFrameContainer::GetLastPrincipalHandle() {
   MutexAutoLock lock(mMutex);

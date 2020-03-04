@@ -11,7 +11,7 @@
 
 namespace mozilla {
 
-DummyDataCreator::~DummyDataCreator() {}
+DummyDataCreator::~DummyDataCreator() = default;
 
 DummyMediaDataDecoder::DummyMediaDataDecoder(
     UniquePtr<DummyDataCreator>&& aCreator, const nsACString& aDescription,

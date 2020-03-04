@@ -541,7 +541,7 @@ class MediaFormatReader::DemuxerProxy {
     UniquePtr<EncryptionInfo> mCrypto;
 
    private:
-    ~Data() {}
+    ~Data() = default;
   };
   RefPtr<Data> mData;
 };

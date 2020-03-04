@@ -166,7 +166,7 @@ class ChannelMediaResource
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink,
                          public nsIThreadRetargetableStreamListener {
-    ~Listener() {}
+    ~Listener() = default;
 
    public:
     Listener(ChannelMediaResource* aResource, int64_t aOffset, uint32_t aLoadID)

@@ -31,7 +31,7 @@ class GMPTimerParent : public PGMPTimerParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  ~GMPTimerParent() {}
+  ~GMPTimerParent() = default;
 
   static void GMPTimerExpired(nsITimer* aTimer, void* aClosure);
 

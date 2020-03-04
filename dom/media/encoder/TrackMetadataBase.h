@@ -30,7 +30,7 @@ class TrackMetadataBase {
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~TrackMetadataBase() {}
+  virtual ~TrackMetadataBase() = default;
 };
 
 // The base class for audio metadata.

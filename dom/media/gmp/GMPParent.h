@@ -27,7 +27,7 @@ namespace gmp {
 
 class GMPCapability {
  public:
-  explicit GMPCapability() {}
+  explicit GMPCapability() = default;
   GMPCapability(GMPCapability&& aOther)
       : mAPIName(std::move(aOther.mAPIName)),
         mAPITags(std::move(aOther.mAPITags)) {}

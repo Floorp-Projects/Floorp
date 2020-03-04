@@ -23,7 +23,8 @@ namespace camera {
 // it was removed (and reimplemented in Talk)
 class VideoEngine {
  private:
-  virtual ~VideoEngine(){};
+  virtual ~VideoEngine() = default;
+
   // Base cache expiration period
   // Note because cameras use HW plug event detection, this
   // only applies to screen based modes.

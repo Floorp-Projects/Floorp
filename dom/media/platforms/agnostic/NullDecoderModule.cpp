@@ -10,7 +10,7 @@ namespace mozilla {
 
 class NullVideoDataCreator : public DummyDataCreator {
  public:
-  NullVideoDataCreator() {}
+  NullVideoDataCreator() = default;
 
   already_AddRefed<MediaData> Create(MediaRawData* aSample) override {
     // Create a dummy VideoData with no image. This gives us something to

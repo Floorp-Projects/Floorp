@@ -66,8 +66,8 @@ class CDM_CLASS_API CdmProxy {
                          uint32_t key_id_size) = 0;
 
  protected:
-  CdmProxy() {}
-  virtual ~CdmProxy() {}
+  CdmProxy() = default;
+  virtual ~CdmProxy() = default;
 };
 
 // Responses to CdmProxy calls. All responses will be called asynchronously.
@@ -108,8 +108,8 @@ class CDM_CLASS_API CdmProxyClient {
   virtual void NotifyHardwareReset() = 0;
 
  protected:
-  CdmProxyClient() {}
-  virtual ~CdmProxyClient() {}
+  CdmProxyClient() = default;
+  virtual ~CdmProxyClient() = default;
 };
 
 }  // namespace cdm

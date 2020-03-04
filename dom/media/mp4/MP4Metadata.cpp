@@ -96,7 +96,7 @@ MP4Metadata::MP4Metadata(ByteStream* aSource)
   MOZ_ASSERT(mParser);
 }
 
-MP4Metadata::~MP4Metadata() {}
+MP4Metadata::~MP4Metadata() = default;
 
 nsresult MP4Metadata::Parse() {
   Mp4parseStatus rv = mp4parse_read(mParser.get());

@@ -27,7 +27,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
   }
 
   explicit FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {}
-  virtual ~FFmpegDecoderModule() {}
+  virtual ~FFmpegDecoderModule() = default;
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override {

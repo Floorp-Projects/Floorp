@@ -23,7 +23,7 @@ SpeechSynthesisVoice::SpeechSynthesisVoice(nsISupports* aParent,
                                            const nsAString& aUri)
     : mParent(aParent), mUri(aUri) {}
 
-SpeechSynthesisVoice::~SpeechSynthesisVoice() {}
+SpeechSynthesisVoice::~SpeechSynthesisVoice() = default;
 
 JSObject* SpeechSynthesisVoice::WrapObject(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {

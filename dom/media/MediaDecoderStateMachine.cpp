@@ -180,7 +180,7 @@ static TimeDuration SuspendBackgroundVideoDelay() {
 
 class MediaDecoderStateMachine::StateObject {
  public:
-  virtual ~StateObject() {}
+  virtual ~StateObject() = default;
   virtual void Exit() {}  // Exit action.
   virtual void Step() {}  // Perform a 'cycle' of this state object.
   virtual State GetState() const = 0;
