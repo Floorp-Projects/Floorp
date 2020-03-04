@@ -118,7 +118,7 @@ CheckX86CPUSupport()
 #include <sys/auxv.h>
 #endif
 extern unsigned long getauxval(unsigned long type) __attribute__((weak));
-#else
+#elif defined(__arm__) || !defined(__OpenBSD__)
 static unsigned long (*getauxval)(unsigned long) = NULL;
 #endif /* defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)*/
 
@@ -431,8 +431,15 @@ ppc_crypto_support()
 
 #if defined(__powerpc__)
 
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
+/* clang-format off */
 #if defined(__linux__) || (defined(__FreeBSD__) && __FreeBSD__ >= 12)
+#if __has_include(<sys/auxv.h>)
 #include <sys/auxv.h>
+#endif
 #elif (defined(__FreeBSD__) && __FreeBSD__ < 12)
 #include <sys/sysctl.h>
 #endif
@@ -449,10 +456,14 @@ CheckPPCSupport()
 
     unsigned long hwcaps = 0;
 #if defined(__linux__)
+#if __has_include(<sys/auxv.h>)
     hwcaps = getauxval(AT_HWCAP2);
+#endif
 #elif defined(__FreeBSD__)
 #if __FreeBSD__ >= 12
+#if __has_include(<sys/auxv.h>)
     elf_aux_info(AT_HWCAP2, &hwcaps, sizeof(hwcaps));
+#endif
 #else
     size_t len = sizeof(hwcaps);
     sysctlbyname("hw.cpu_features2", &hwcaps, &len, NULL, 0);
@@ -461,6 +472,7 @@ CheckPPCSupport()
 
     ppc_crypto_support_ = hwcaps & PPC_FEATURE2_VEC_CRYPTO && disable_hw_crypto == NULL;
 }
+/* clang-format on */
 
 #endif /* __powerpc__ */
 
