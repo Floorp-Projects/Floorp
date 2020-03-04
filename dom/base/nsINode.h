@@ -2004,6 +2004,10 @@ class nsINode : public mozilla::dom::EventTarget {
                    nsTArray<RefPtr<DOMQuad>>& aResult, CallerType aCallerType,
                    ErrorResult& aRv);
 
+  void GetBoxQuadsFromWindowOrigin(const BoxQuadOptions& aOptions,
+                                   nsTArray<RefPtr<DOMQuad>>& aResult,
+                                   ErrorResult& aRv);
+
   already_AddRefed<DOMQuad> ConvertQuadFromNode(
       DOMQuad& aQuad, const TextOrElementOrDocument& aFrom,
       const ConvertCoordinateOptions& aOptions, CallerType aCallerType,
