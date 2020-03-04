@@ -30,8 +30,8 @@ add_task(async function() {
   );
 
   info("Edit the CSS variable");
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const propEditor = ruleEditor.rule.textProps[1].editor;
+  const prop = getTextProperty(view, 1, { "--color": "lime" });
+  const propEditor = prop.editor;
   const editor = await focusEditableField(view, propEditor.valueSpan);
   editor.input.value = "blue";
   const onRuleViewChanged = view.once("ruleview-changed");
