@@ -685,4 +685,17 @@ class DisplayToolbarTest {
 
         assertTrue(wasDismissed)
     }
+
+    @Test
+    fun `set a dismiss lambda on the menu button`() {
+        var wasDismissed = false
+        val (_, displayToolbar) = createDisplayToolbar()
+        displayToolbar.setMenuDismissAction { wasDismissed = true }
+        val menuView = displayToolbar.views.menu
+        menuView.menuBuilder = BrowserMenuBuilder(emptyList())
+        menuView.impl.performClick()
+
+        menuView.dismissMenu()
+        assertTrue(wasDismissed)
+    }
 }

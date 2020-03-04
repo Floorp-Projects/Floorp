@@ -28,6 +28,9 @@ permalink: /changelog/
 
 * **feature-accounts-push**
   * Add known prefix to FxA push scope.
+  
+* **browser-toolbar**
+  * Add the possibility to listen to menu dismissal through `setMenuDismissAction` in `DisplayToolbar`
 
 * **concept-storage**
   * New interface: `LoginsStorage`, describes a logins storage. A slightly cleaned-up version of what was in the `service-sync-logins`.

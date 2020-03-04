@@ -15,11 +15,11 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -55,6 +55,14 @@ class MenuButtonTest {
     }
 
     @Test
+    fun `menu button sets onDismiss action`() {
+        val action = {}
+        menuButton.setMenuDismissAction(action)
+
+        verify(menuButtonInternal).onDismiss = action
+    }
+
+    @Test
     fun `icon displays dot if low highlighted item is present in menu`() {
         verify(menuButtonInternal, never()).invalidateBrowserMenu()
         verify(menuButtonInternal, never()).setHighlight(any())
@@ -69,7 +77,7 @@ class MenuButtonTest {
                 isHighlighted = { isHighlighted }
             )
         )))
-        `when`(highlightMenuBuilder.build(testContext)).thenReturn(menu)
+        whenever(highlightMenuBuilder.build(testContext)).thenReturn(menu)
 
         menuButton.menuBuilder = highlightMenuBuilder
         doReturn(highlightMenuBuilder).`when`(menuButtonInternal).menuBuilder

@@ -41,5 +41,12 @@ internal class MenuButton(
 
     fun dismissMenu() = impl.dismissMenu()
 
+    /**
+     * Sets a lambda to be invoked when the menu is dismissed
+     */
+    fun setMenuDismissAction(onDismiss: () -> Unit) {
+        impl.onDismiss = onDismiss
+    }
+
     fun setColorFilter(@ColorInt color: Int) = impl.setColorFilter(color)
 }
