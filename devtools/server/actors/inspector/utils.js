@@ -546,7 +546,6 @@ async function getBackgroundColor({ rawNode: node, walker }) {
 
 module.exports = {
   allAnonymousContentTreeWalkerFilter,
-  isWhitespaceTextNode,
   findGridParentContainerForNode,
   getBackgroundColor,
   getClosestBackgroundColor,
