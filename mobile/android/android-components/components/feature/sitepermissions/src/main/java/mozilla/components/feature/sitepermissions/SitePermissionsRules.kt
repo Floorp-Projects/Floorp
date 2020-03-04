@@ -98,4 +98,20 @@ data class SitePermissionsRules internal constructor(
             ASK_TO_ALLOW
         }
     }
+
+    /**
+     * Converts a [SitePermissionsRules] object into a [SitePermissions] .
+     */
+    fun toSitePermissions(origin: String, savedAt: Long = System.currentTimeMillis()): SitePermissions {
+        return SitePermissions(
+                origin = origin,
+                location = location.toStatus(),
+                notification = notification.toStatus(),
+                microphone = microphone.toStatus(),
+                camera = camera.toStatus(),
+                autoplayAudible = autoplayAudible.toStatus(),
+                autoplayInaudible = autoplayInaudible.toStatus(),
+                savedAt = savedAt
+        )
+    }
 }

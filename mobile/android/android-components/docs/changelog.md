@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-sitepermissions**
+  *  Fixed [#5616](https://github.com/mozilla-mobile/android-components/issues/5616) issue now when a new exception is added if the [sitePermissionsRules](https://github.com/mozilla-mobile/android-components/blob/52de7118a706a88e88036ead6192e042d4423dc6/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L72) object is present its values are going to be taken into consideration as default values for the new exception.
+
 * **feature-awesomebar**
   *  ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`. Feature and `SuggestionProvider` implementations may require a `BrowserStore` instance instead of a `SessionManager` now.
 
