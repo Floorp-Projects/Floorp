@@ -16,7 +16,7 @@ TextureWrapperImage::TextureWrapperImage(TextureClient* aClient,
       mPictureRect(aPictureRect),
       mTextureClient(aClient) {}
 
-TextureWrapperImage::~TextureWrapperImage() {}
+TextureWrapperImage::~TextureWrapperImage() = default;
 
 gfx::IntSize TextureWrapperImage::GetSize() const {
   return mTextureClient->GetSize();

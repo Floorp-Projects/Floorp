@@ -40,7 +40,7 @@ class SurfacePool {
   virtual void DestroyGLResourcesForContext(gl::GLContext* aGL) = 0;
 
  protected:
-  virtual ~SurfacePool() {}
+  virtual ~SurfacePool() = default;
 };
 
 class SurfacePoolHandleCA;
@@ -63,7 +63,7 @@ class SurfacePoolHandle {
   virtual void OnEndFrame() = 0;
 
  protected:
-  virtual ~SurfacePoolHandle() {}
+  virtual ~SurfacePoolHandle() = default;
 };
 
 }  // namespace layers

@@ -24,7 +24,7 @@ APZCTreeManagerParent::APZCTreeManagerParent(
   MOZ_ASSERT(mUpdater->HasTreeManager(mTreeManager));
 }
 
-APZCTreeManagerParent::~APZCTreeManagerParent() {}
+APZCTreeManagerParent::~APZCTreeManagerParent() = default;
 
 void APZCTreeManagerParent::ChildAdopted(
     RefPtr<APZCTreeManager> aAPZCTreeManager, RefPtr<APZUpdater> aAPZUpdater) {

@@ -545,7 +545,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect, int32_t aStride, float aSigmaX,
   }
 }
 
-AlphaBoxBlur::~AlphaBoxBlur() {}
+AlphaBoxBlur::~AlphaBoxBlur() = default;
 
 IntSize AlphaBoxBlur::GetSize() const {
   IntSize size(mRect.Width(), mRect.Height());

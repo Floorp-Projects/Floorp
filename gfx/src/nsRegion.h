@@ -112,12 +112,8 @@ struct Band {
     mStrips.AppendElement(Strip{aRect.X(), aRect.XMost()});
   }
 
-  Band(const Band& aOther)
-      : top(aOther.top), bottom(aOther.bottom), mStrips(aOther.mStrips) {}
-  Band(const Band&& aOther)
-      : top(aOther.top),
-        bottom(aOther.bottom),
-        mStrips(std::move(aOther.mStrips)) {}
+  Band(const Band& aOther) = default;
+  Band(Band&& aOther) = default;
 
   void InsertStrip(const Strip& aStrip) {
     for (size_t i = 0; i < mStrips.Length(); i++) {
@@ -492,7 +488,7 @@ class nsRegion {
   typedef nsPoint PointType;
   typedef nsMargin MarginType;
 
-  nsRegion() {}
+  nsRegion() = default;
   MOZ_IMPLICIT nsRegion(const nsRect& aRect) {
     mBounds = nsRectAbsolute::FromRect(aRect);
   }
@@ -2217,7 +2213,7 @@ class BaseIntRegion {
   typedef Point PointType;
   typedef Margin MarginType;
 
-  BaseIntRegion() {}
+  BaseIntRegion() = default;
   MOZ_IMPLICIT BaseIntRegion(const Rect& aRect) : mImpl(ToRect(aRect)) {}
   explicit BaseIntRegion(mozilla::gfx::ArrayView<pixman_box32_t> aRects)
       : mImpl(aRects) {}
@@ -2490,7 +2486,7 @@ class IntRegionTyped
   typedef IntMarginTyped<units> MarginType;
 
   // Forward constructors.
-  IntRegionTyped() {}
+  IntRegionTyped() = default;
   MOZ_IMPLICIT IntRegionTyped(const IntRectTyped<units>& aRect)
       : Super(aRect) {}
   IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}

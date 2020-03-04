@@ -14,7 +14,7 @@ class RegionBuilder {
  public:
   typedef typename RegionType::RectType RectType;
 
-  RegionBuilder() {}
+  RegionBuilder() = default;
 
   void OrWith(const RectType& aRect) {
     pixman_box32_t box = {aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost()};

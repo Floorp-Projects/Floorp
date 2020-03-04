@@ -109,7 +109,7 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
 RenderCompositor::RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget)
     : mWidget(aWidget) {}
 
-RenderCompositor::~RenderCompositor() {}
+RenderCompositor::~RenderCompositor() = default;
 
 bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
 

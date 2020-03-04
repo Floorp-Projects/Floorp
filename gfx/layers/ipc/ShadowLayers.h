@@ -470,7 +470,7 @@ class ShadowableLayer {
   virtual CompositableClient* GetCompositableClient() { return nullptr; }
 
  protected:
-  ShadowableLayer() {}
+  ShadowableLayer() = default;
 
  private:
   RefPtr<ShadowLayerForwarder> mForwarder;

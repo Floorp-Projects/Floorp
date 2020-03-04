@@ -71,7 +71,7 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   SetOtherProcessId(aChildProcessId);
 }
 
-ImageBridgeParent::~ImageBridgeParent() {}
+ImageBridgeParent::~ImageBridgeParent() = default;
 
 /* static */
 ImageBridgeParent* ImageBridgeParent::CreateSameProcess() {

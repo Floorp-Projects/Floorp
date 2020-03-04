@@ -783,7 +783,7 @@ DisplayportSetListener::DisplayportSetListener(
       mInputBlockId(aInputBlockId),
       mTargets(aTargets) {}
 
-DisplayportSetListener::~DisplayportSetListener() {}
+DisplayportSetListener::~DisplayportSetListener() = default;
 
 bool DisplayportSetListener::Register() {
   if (mPresShell->AddPostRefreshObserver(this)) {

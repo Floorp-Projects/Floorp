@@ -18,7 +18,7 @@ RecordedTextureData::RecordedTextureData(
   mCanvasChild->EnsureRecorder(aTextureType);
 }
 
-RecordedTextureData::~RecordedTextureData() {}
+RecordedTextureData::~RecordedTextureData() = default;
 
 void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;

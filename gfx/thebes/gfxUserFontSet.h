@@ -327,7 +327,7 @@ class gfxUserFontSet {
     // Memory-reporting support.
     class MemoryReporter final : public nsIMemoryReporter {
      private:
-      ~MemoryReporter() {}
+      ~MemoryReporter() = default;
 
      public:
       NS_DECL_ISUPPORTS
@@ -348,7 +348,7 @@ class gfxUserFontSet {
      public:
       NS_DECL_ISUPPORTS
       NS_DECL_NSIOBSERVER
-      Flusher() {}
+      Flusher() = default;
     };
 
     // Key used to look up entries in the user-font cache.
@@ -391,7 +391,7 @@ class gfxUserFontSet {
             mFontEntry(std::move(aOther.mFontEntry)),
             mPrivate(std::move(aOther.mPrivate)) {}
 
-      ~Entry() {}
+      ~Entry() = default;
 
       bool KeyEquals(const KeyTypePointer aKey) const;
 

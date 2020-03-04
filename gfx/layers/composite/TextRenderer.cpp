@@ -46,7 +46,7 @@ static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
   }
 }
 
-TextRenderer::~TextRenderer() {}
+TextRenderer::~TextRenderer() = default;
 
 TextRenderer::FontCache::~FontCache() { mGlyphBitmaps->Unmap(); }
 

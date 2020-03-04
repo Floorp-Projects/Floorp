@@ -23,7 +23,7 @@ ImageComposite::ImageComposite()
       mDroppedFrames(0),
       mLastChosenImageIndex(0) {}
 
-ImageComposite::~ImageComposite() {}
+ImageComposite::~ImageComposite() = default;
 
 TimeStamp ImageComposite::GetBiasedTime(const TimeStamp& aInput) const {
   switch (mBias) {

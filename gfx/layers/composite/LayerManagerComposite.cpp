@@ -119,7 +119,7 @@ HostLayerManager::HostLayerManager()
       mLastPaintTime(TimeDuration::Forever()),
       mRenderStartTime(TimeStamp::Now()) {}
 
-HostLayerManager::~HostLayerManager() {}
+HostLayerManager::~HostLayerManager() = default;
 
 void HostLayerManager::RecordPaintTimes(const PaintTiming& aTiming) {
   mDiagnostics->RecordPaintTimes(aTiming);
@@ -1638,7 +1638,7 @@ LayerComposite::LayerComposite(LayerManagerComposite* aManager)
       mDestroyed(false),
       mLayerComposited(false) {}
 
-LayerComposite::~LayerComposite() {}
+LayerComposite::~LayerComposite() = default;
 
 void LayerComposite::Destroy() {
   if (!mDestroyed) {

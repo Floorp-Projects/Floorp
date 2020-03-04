@@ -134,7 +134,7 @@ CompositorBridgeParentBase::CompositorBridgeParentBase(
     CompositorManagerParent* aManager)
     : mCanSend(true), mCompositorManager(aManager) {}
 
-CompositorBridgeParentBase::~CompositorBridgeParentBase() {}
+CompositorBridgeParentBase::~CompositorBridgeParentBase() = default;
 
 ProcessId CompositorBridgeParentBase::GetChildProcessId() { return OtherPid(); }
 

@@ -18,7 +18,7 @@ GPUVideoTextureData::GPUVideoTextureData(IGPUVideoSurfaceManager* aManager,
                                          const gfx::IntSize& aSize)
     : mManager(aManager), mSD(aSD), mSize(aSize) {}
 
-GPUVideoTextureData::~GPUVideoTextureData() {}
+GPUVideoTextureData::~GPUVideoTextureData() = default;
 
 bool GPUVideoTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = mSD;

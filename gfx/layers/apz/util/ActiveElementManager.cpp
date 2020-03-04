@@ -23,7 +23,7 @@ namespace layers {
 ActiveElementManager::ActiveElementManager()
     : mCanBePan(false), mCanBePanSet(false), mSetActiveTask(nullptr) {}
 
-ActiveElementManager::~ActiveElementManager() {}
+ActiveElementManager::~ActiveElementManager() = default;
 
 void ActiveElementManager::SetTargetElement(dom::EventTarget* aTarget) {
   if (mTarget) {

@@ -65,7 +65,7 @@ LayerTransactionParent::LayerTransactionParent(
   MOZ_ASSERT(mId.IsValid());
 }
 
-LayerTransactionParent::~LayerTransactionParent() {}
+LayerTransactionParent::~LayerTransactionParent() = default;
 
 void LayerTransactionParent::SetLayerManager(
     HostLayerManager* aLayerManager, CompositorAnimationStorage* aAnimStorage) {

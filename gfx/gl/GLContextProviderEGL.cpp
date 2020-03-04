@@ -238,8 +238,8 @@ class GLContextEGLFactory {
                                             bool aWebRender);
 
  private:
-  GLContextEGLFactory() {}
-  ~GLContextEGLFactory() {}
+  GLContextEGLFactory() = default;
+  ~GLContextEGLFactory() = default;
 };
 
 already_AddRefed<GLContext> GLContextEGLFactory::Create(

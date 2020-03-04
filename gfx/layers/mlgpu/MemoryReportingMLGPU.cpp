@@ -40,7 +40,7 @@ class MemoryReportingMLGPU final : public nsIMemoryReporter {
   }
 
  private:
-  ~MemoryReportingMLGPU() {}
+  ~MemoryReportingMLGPU() = default;
 };
 
 NS_IMPL_ISUPPORTS(MemoryReportingMLGPU, nsIMemoryReporter);

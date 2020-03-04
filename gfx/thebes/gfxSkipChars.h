@@ -150,13 +150,7 @@ class gfxSkipCharsIterator {
                                                                             : 0;
   }
 
-  gfxSkipCharsIterator(const gfxSkipCharsIterator& aIterator)
-      : mSkipChars(aIterator.mSkipChars),
-        mOriginalStringOffset(aIterator.mOriginalStringOffset),
-        mSkippedStringOffset(aIterator.mSkippedStringOffset),
-        mCurrentRangeIndex(aIterator.mCurrentRangeIndex),
-        mOriginalStringToSkipCharsOffset(
-            aIterator.mOriginalStringToSkipCharsOffset) {}
+  gfxSkipCharsIterator(const gfxSkipCharsIterator& aIterator) = default;
 
   /**
    * The empty constructor creates an object that is useless until it is

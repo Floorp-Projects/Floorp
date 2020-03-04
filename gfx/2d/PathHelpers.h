@@ -16,8 +16,8 @@ namespace mozilla {
 namespace gfx {
 
 struct PathOp {
-  PathOp() {}
-  ~PathOp() {}
+  PathOp() = default;
+  ~PathOp() = default;
 
   enum OpType {
     OP_MOVETO = 0,

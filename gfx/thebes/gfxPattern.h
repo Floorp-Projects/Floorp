@@ -63,7 +63,7 @@ class gfxPattern final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~gfxPattern() {}
+  ~gfxPattern() = default;
 
   mozilla::gfx::GeneralPattern mGfxPattern;
   RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;

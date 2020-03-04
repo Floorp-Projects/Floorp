@@ -18,7 +18,7 @@ namespace mozilla::gfx {
 ConvolutionFilter::ConvolutionFilter()
     : mFilter(MakeUnique<SkConvolutionFilter1D>()) {}
 
-ConvolutionFilter::~ConvolutionFilter() {}
+ConvolutionFilter::~ConvolutionFilter() = default;
 
 int32_t ConvolutionFilter::MaxFilter() const { return mFilter->maxFilter(); }
 

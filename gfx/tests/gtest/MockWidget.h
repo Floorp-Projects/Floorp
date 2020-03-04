@@ -80,7 +80,7 @@ class MockWidget : public nsBaseWidget {
   virtual InputContext GetInputContext() override { abort(); }
 
  private:
-  ~MockWidget() {}
+  ~MockWidget() = default;
 
   int mCompWidth;
   int mCompHeight;

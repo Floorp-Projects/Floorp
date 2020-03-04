@@ -42,7 +42,7 @@ StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
 
-PaintThread::PaintThread() {}
+PaintThread::PaintThread() = default;
 
 void PaintThread::Release() {}
 
