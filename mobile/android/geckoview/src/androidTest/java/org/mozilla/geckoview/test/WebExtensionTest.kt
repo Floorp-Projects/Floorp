@@ -1282,4 +1282,54 @@ class WebExtensionTest : BaseSessionTest() {
         // Check that the WebExtension was not applied after being unregistered
         assertBodyBorderEqualTo("")
     }
+
+    @Test
+    fun updatePostpone() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false,
+                "extensions.webextensions.warnings-as-errors" to false
+        ))
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData!!.version, "1.0")
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val update1 = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/update-postpone-1.xpi"))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        assertBodyBorderEqualTo("red")
+
+        sessionRule.waitForResult(controller.update(update1).accept({
+            // We should not be able to update the extension.
+            assertTrue(false)
+        }, { exception ->
+            assertTrue(exception is WebExtension.InstallException)
+            val installException = exception as WebExtension.InstallException
+            assertEquals(installException.code, WebExtension.InstallException.ErrorCodes.ERROR_POSTPONED)
+        }));
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension is still the first extension.
+        assertBodyBorderEqualTo("red")
+
+        sessionRule.waitForResult(controller.uninstall(update1))
+    }
 }
