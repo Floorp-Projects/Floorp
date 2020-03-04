@@ -447,11 +447,12 @@ class WebExtensionTest : BaseSessionTest() {
         val tabsExtension = WebExtension(TABS_CREATE_BACKGROUND, controller)
 
         val tabDelegate = object : WebExtension.TabDelegate {
-            override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
-                assertEquals(uri, "https://www.mozilla.org/en-US/")
+            override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
+                assertEquals(details.url, "https://www.mozilla.org/en-US/")
+                assertEquals(details.active, true)
                 assertEquals(tabsExtension, source)
                 tabsCreateResult.complete(null)
-                return GeckoResult.fromValue(GeckoSession(sessionRule.session.settings))
+                return GeckoResult.fromValue(null)
             }
         }
         tabsExtension.setTabDelegate(tabDelegate)
@@ -480,12 +481,13 @@ class WebExtensionTest : BaseSessionTest() {
                 tabsExtension::setTabDelegate,
                 { tabsExtension.setTabDelegate(null) },
                 object : WebExtension.TabDelegate {
-            override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
+            override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
                 val extensionCreatedSession = GeckoSession(sessionRule.session.settings)
 
                 extensionCreatedSession.webExtensionController.setTabDelegate(tabsExtension, object : WebExtension.SessionTabDelegate {
                     override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
                         assertEquals(tabsExtension, source)
+                        assertEquals(details.active, true)
                         assertNotEquals(null, extensionCreatedSession)
                         assertEquals(extensionCreatedSession, session)
                         onCloseRequestResult.complete(null)
@@ -938,8 +940,15 @@ class WebExtensionTest : BaseSessionTest() {
                 controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
-        mainSession.webExtensionController
-                .setMessageDelegate(extension, messageDelegate, "browser")
+        val sessionController = mainSession.webExtensionController
+        sessionController.setMessageDelegate(extension, messageDelegate, "browser")
+        sessionController.setTabDelegate(extension, object: WebExtension.SessionTabDelegate {
+            override fun onUpdateTab(extension: WebExtension,
+                                     session: GeckoSession,
+                                     details: WebExtension.UpdateTabDetails): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
 
         mainSession.loadUri("http://example.com")
 
