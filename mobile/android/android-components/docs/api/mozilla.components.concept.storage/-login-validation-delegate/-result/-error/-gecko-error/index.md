@@ -2,7 +2,7 @@
 
 # GeckoError
 
-`data class GeckoError : `[`Error`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L82)
+`data class GeckoError : `[`Error`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L214)
 
 Something went wrong in GeckoView. We have no way to handle this type of error. See
 [exception](exception.md) for details.

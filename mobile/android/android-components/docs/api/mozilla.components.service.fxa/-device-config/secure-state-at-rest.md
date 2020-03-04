@@ -2,7 +2,7 @@
 
 # secureStateAtRest
 
-`val secureStateAtRest: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L41)
+`val secureStateAtRest: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L40)
 
 A flag indicating whether or not to use encrypted storage for the persisted account
 state. If set to `true`, [SecureAbove22AccountStorage](#) will be used as a storage layer. As the name suggests,

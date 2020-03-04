@@ -2,7 +2,7 @@
 
 # onLoginSave
 
-`@Synchronized fun onLoginSave(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt#L89)
+`@Synchronized fun onLoginSave(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt#L80)
 
 Overrides [LoginStorageDelegate.onLoginSave](../../mozilla.components.concept.storage/-login-storage-delegate/on-login-save.md)
 

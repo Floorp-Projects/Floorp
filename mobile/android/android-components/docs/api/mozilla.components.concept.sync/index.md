@@ -25,12 +25,10 @@
 | [DevicePushSubscription](-device-push-subscription/index.md) | `data class DevicePushSubscription`<br>Describes an Autopush-compatible push channel subscription. |
 | [DeviceType](-device-type/index.md) | `enum class DeviceType`<br>Describes a type of the physical device in the constellation. |
 | [InFlightMigrationState](-in-flight-migration-state/index.md) | `enum class InFlightMigrationState`<br>Represents a specific type of an "in-flight" migration state that could result from intermittent issues during [OAuthAccount.migrateFromSessionTokenAsync](-o-auth-account/migrate-from-session-token-async.md) or [OAuthAccount.copyFromSessionTokenAsync](-o-auth-account/copy-from-session-token-async.md). |
-| [LockableStore](-lockable-store/index.md) | `interface LockableStore : `[`SyncableStore`](-syncable-store/index.md)<br>An extension of [SyncableStore](-syncable-store/index.md) that can be locked/unlocked using an encryption key. |
 | [OAuthAccount](-o-auth-account/index.md) | `interface OAuthAccount : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>Facilitates testing consumers of FirefoxAccount. |
 | [OAuthScopedKey](-o-auth-scoped-key/index.md) | `data class OAuthScopedKey`<br>Scoped key data. |
 | [Profile](-profile/index.md) | `data class Profile` |
 | [StatePersistenceCallback](-state-persistence-callback/index.md) | `interface StatePersistenceCallback`<br>Describes a delegate object that is used by [OAuthAccount](-o-auth-account/index.md) to persist its internal state as it changes. |
-| [StoreSyncStatus](-store-sync-status/index.md) | `data class StoreSyncStatus` |
 | [SyncAuthInfo](-sync-auth-info/index.md) | `data class SyncAuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](-o-auth-account/index.md). |
 | [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](#). |
 | [SyncableStore](-syncable-store/index.md) | `interface SyncableStore`<br>Describes a "sync" entry point for a storage layer. |
@@ -47,4 +45,3 @@
 | Name | Summary |
 |---|---|
 | [OuterDeviceCommandIncoming](-outer-device-command-incoming.md) | `typealias OuterDeviceCommandIncoming = `[`DeviceCommandIncoming`](-device-command-incoming/index.md) |
-| [SyncResult](-sync-result.md) | `typealias SyncResult = `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`StoreSyncStatus`](-store-sync-status/index.md)`>`<br>A set of results of running a sync operation for multiple instances of [SyncableStore](-syncable-store/index.md). |

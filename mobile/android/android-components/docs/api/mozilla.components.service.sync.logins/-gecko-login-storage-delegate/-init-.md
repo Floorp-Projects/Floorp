@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`GeckoLoginStorageDelegate(loginStorage: `[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`, keyStore: `[`SecureAbove22Preferences`](../../mozilla.components.lib.dataprotect/-secure-above22-preferences/index.md)`, isAutofillEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`
+`GeckoLoginStorageDelegate(loginStorage: `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, isAutofillEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`
 
 [LoginStorageDelegate](../../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation.
 
