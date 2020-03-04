@@ -611,7 +611,7 @@ void AudioNode::SetPassThrough(bool aPassThrough) {
 }
 
 void AudioNode::CreateAudioParam(RefPtr<AudioParam>& aParam, uint32_t aIndex,
-                                 const char* aName, float aDefaultValue,
+                                 const char16_t* aName, float aDefaultValue,
                                  float aMinValue, float aMaxValue) {
   aParam =
       new AudioParam(this, aIndex, aName, aDefaultValue, aMinValue, aMaxValue);
