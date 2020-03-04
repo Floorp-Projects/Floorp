@@ -12,7 +12,11 @@
 namespace mozilla {
 namespace dom {
 
+class FileBlobImpl;
+
 class BaseBlobImpl : public BlobImpl {
+  friend class FileBlobImpl;
+
  public:
   // File constructor.
   BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aName,
@@ -103,10 +107,6 @@ class BaseBlobImpl : public BlobImpl {
   }
 
   virtual int64_t GetFileId() override;
-
-  virtual nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                               nsACString& aContentType,
-                               nsACString& aCharset) override;
 
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,

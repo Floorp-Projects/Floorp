@@ -19,14 +19,12 @@ namespace mozilla {
 namespace dom {
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
-    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), EmptyString(),
-                   EmptyString(),
-                   // We pass 0 as lastModified and length because FileblobImpl
-                   // has a different way to compute those values.
-                   0, 0),
-      mMutex("FileBlobImpl::mMutex"),
+    : mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
+      mSerialNumber(BaseBlobImpl::NextSerialNumber()),
+      mStart(0),
       mFileId(-1),
+      mIsFile(true),
       mWholeFile(true) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -39,14 +37,15 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile)
 FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile)
-    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
-                   // We pass 0 as lastModified and length because FileblobImpl
-                   // has a different way to compute those values.
-                   0, 0),
-      mMutex("FileBlobImpl::mMutex"),
+    : mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
-      mLength(Some(aLength)),
+      mContentType(aContentType),
+      mName(aName),
+      mSerialNumber(BaseBlobImpl::NextSerialNumber()),
+      mStart(0),
       mFileId(-1),
+      mLength(Some(aLength)),
+      mIsFile(true),
       mWholeFile(true) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -56,15 +55,16 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile, int64_t aLastModificationDate)
-    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
-                   // We pass 0 as lastModified and length because FileblobImpl
-                   // has a different way to compute those values.
-                   0, 0),
-      mMutex("FileBlobImpl::mMutex"),
+    : mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
+      mContentType(aContentType),
+      mName(aName),
+      mSerialNumber(BaseBlobImpl::NextSerialNumber()),
+      mStart(0),
+      mFileId(-1),
       mLength(Some(aLength)),
       mLastModified(Some(aLastModificationDate)),
-      mFileId(-1),
+      mIsFile(true),
       mWholeFile(true) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -72,15 +72,15 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 }
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
-                           const nsAString& aContentType,
-                           const nsAString& aBlobImplType)
-    : BaseBlobImpl(aBlobImplType, aName, aContentType,
-                   // We pass 0 as lastModified and length because FileblobImpl
-                   // has a different way to compute those values.
-                   0, 0),
-      mMutex("FileBlobImpl::mMutex"),
+                           const nsAString& aContentType)
+    : mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
+      mContentType(aContentType),
+      mName(aName),
+      mSerialNumber(BaseBlobImpl::NextSerialNumber()),
+      mStart(0),
       mFileId(-1),
+      mIsFile(true),
       mWholeFile(true) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -94,15 +94,14 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
 
 FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
                            uint64_t aLength, const nsAString& aContentType)
-    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aContentType,
-                   aOther->mStart + aStart,
-                   // We pass 0 as length because FileblobImpl has a different
-                   // way to compute the value.
-                   0),
-      mMutex("FileBlobImpl::mMutex"),
+    : mMutex("FileBlobImpl::mMutex"),
       mFile(aOther->mFile),
-      mLength(Some(aLength)),
+      mContentType(aContentType),
+      mSerialNumber(BaseBlobImpl::NextSerialNumber()),
+      mStart(aOther->mStart + aStart),
       mFileId(-1),
+      mLength(Some(aLength)),
+      mIsFile(false),
       mWholeFile(false) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -236,6 +235,10 @@ void FileBlobImpl::GetTypeInternal(nsAString& aType,
   }
 
   aType = mContentType;
+}
+
+void FileBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
+  aBlobImplType = NS_LITERAL_STRING("FileBlobImpl");
 }
 
 int64_t FileBlobImpl::GetLastModified(ErrorResult& aRv) {
