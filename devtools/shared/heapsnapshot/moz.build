@@ -11,8 +11,8 @@ if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
 XPCSHELL_TESTS_MANIFESTS += [ 'tests/xpcshell/xpcshell.ini' ]
-MOCHITEST_MANIFESTS += [ 'tests/mochitest/mochitest.ini' ]
 MOCHITEST_CHROME_MANIFESTS += [ 'tests/chrome/chrome.ini' ]
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 EXPORTS.mozilla.devtools += [
     'AutoMemMap.h',
