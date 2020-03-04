@@ -4941,10 +4941,14 @@ void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
     return;
   }
 
-  wl_region* region =
-      CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
-  wl_surface_set_opaque_region(surface, region);
-  wl_region_destroy(region);
+  if (!aSubtractCorners) {
+    wl_region* region =
+        CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
+    wl_surface_set_opaque_region(surface, region);
+    wl_region_destroy(region);
+  } else {
+    wl_surface_set_opaque_region(surface, nullptr);
+  }
 
   GdkWindow* window = gtk_widget_get_window(mShell);
   if (window) {
