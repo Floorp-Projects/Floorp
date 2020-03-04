@@ -31,6 +31,32 @@ extern mozilla::LazyLogModule gAudioChannelLog;
 namespace mozilla {
 namespace dom {
 
+namespace {
+class OnCompleteTask final : public Runnable {
+ public:
+  OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
+      : Runnable("dom::OfflineDestinationNodeEngine::OnCompleteTask"),
+        mAudioContext(aAudioContext),
+        mRenderedBuffer(aRenderedBuffer) {}
+
+  NS_IMETHOD Run() override {
+    OfflineAudioCompletionEventInit param;
+    param.mRenderedBuffer = mRenderedBuffer;
+
+    RefPtr<OfflineAudioCompletionEvent> event =
+        OfflineAudioCompletionEvent::Constructor(
+            mAudioContext, NS_LITERAL_STRING("complete"), param);
+    mAudioContext->DispatchTrustedEvent(event);
+
+    return NS_OK;
+  }
+
+ private:
+  RefPtr<AudioContext> mAudioContext;
+  RefPtr<AudioBuffer> mRenderedBuffer;
+};
+}  // anonymous namespace
+
 class OfflineDestinationNodeEngine final : public AudioNodeEngine {
  public:
   explicit OfflineDestinationNodeEngine(AudioDestinationNode* aNode)
@@ -114,52 +140,19 @@ class OfflineDestinationNodeEngine final : public AudioNodeEngine {
     return true;
   }
 
-  class OnCompleteTask final : public Runnable {
-   public:
-    OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
-        : Runnable("dom::OfflineDestinationNodeEngine::OnCompleteTask"),
-          mAudioContext(aAudioContext),
-          mRenderedBuffer(aRenderedBuffer) {}
-
-    NS_IMETHOD Run() override {
-      OfflineAudioCompletionEventInit param;
-      param.mRenderedBuffer = mRenderedBuffer;
-
-      RefPtr<OfflineAudioCompletionEvent> event =
-          OfflineAudioCompletionEvent::Constructor(
-              mAudioContext, NS_LITERAL_STRING("complete"), param);
-      mAudioContext->DispatchTrustedEvent(event);
-
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<AudioContext> mAudioContext;
-    RefPtr<AudioBuffer> mRenderedBuffer;
-  };
-
-  void FireOfflineCompletionEvent(AudioDestinationNode* aNode) {
-    AudioContext* context = aNode->Context();
-    context->Shutdown();
-    // Shutdown drops self reference, but the context is still referenced by
-    // aNode, which is strongly referenced by the runnable that called
-    // AudioDestinationNode::FireOfflineCompletionEvent.
-
+  already_AddRefed<AudioBuffer> CreateAudioBuffer(AudioContext* aContext) {
+    MOZ_ASSERT(NS_IsMainThread());
     // Create the input buffer
     ErrorResult rv;
     RefPtr<AudioBuffer> renderedBuffer =
-        AudioBuffer::Create(context->GetOwner(), mNumberOfChannels, mLength,
+        AudioBuffer::Create(aContext->GetOwner(), mNumberOfChannels, mLength,
                             mSampleRate, mBuffer.forget(), rv);
     if (rv.Failed()) {
       rv.SuppressException();
-      return;
+      return nullptr;
     }
 
-    aNode->ResolvePromise(renderedBuffer);
-
-    context->Dispatch(do_AddRef(new OnCompleteTask(context, renderedBuffer)));
-
-    context->OnStateChanged(nullptr, AudioContextState::Closed);
+    return renderedBuffer.forget();
   }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
@@ -434,9 +427,22 @@ void AudioDestinationNode::NotifyMainThreadTrackEnded() {
 }
 
 void AudioDestinationNode::FireOfflineCompletionEvent() {
+  AudioContext* context = Context();
+  context->OfflineClose();
+
   OfflineDestinationNodeEngine* engine =
       static_cast<OfflineDestinationNodeEngine*>(Track()->Engine());
-  engine->FireOfflineCompletionEvent(this);
+  RefPtr<AudioBuffer> renderedBuffer = engine->CreateAudioBuffer(context);
+  if (!renderedBuffer) {
+    return;
+  }
+  ResolvePromise(renderedBuffer);
+
+  context->Dispatch(do_AddRef(new OnCompleteTask(context, renderedBuffer)));
+
+  context->OnStateChanged(nullptr, AudioContextState::Closed);
+
+  mOfflineRenderingRef.Drop(this);
 }
 
 void AudioDestinationNode::ResolvePromise(AudioBuffer* aRenderedBuffer) {

@@ -154,6 +154,10 @@ struct TimingParams {
     mDuration = std::move(aDuration);
     Update();
   }
+  void SetDuration(const Maybe<StickyTimeDuration>& aDuration) {
+    mDuration = aDuration;
+    Update();
+  }
   const Maybe<StickyTimeDuration>& Duration() const { return mDuration; }
 
   void SetDelay(const TimeDuration& aDelay) {

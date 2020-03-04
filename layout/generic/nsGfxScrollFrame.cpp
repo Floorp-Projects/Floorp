@@ -1335,9 +1335,8 @@ nscoord ScrollFrameHelper::GetNondisappearingScrollbarWidth(
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     // We're using overlay scrollbars, so we need to get the width that
     // non-disappearing scrollbars would have.
-    nsITheme* theme = aState->PresContext()->GetTheme();
-    if (theme &&
-        theme->ThemeSupportsWidget(aState->PresContext(),
+    nsITheme* theme = aState->PresContext()->Theme();
+    if (theme->ThemeSupportsWidget(aState->PresContext(),
                                    verticalWM ? mHScrollbarBox : mVScrollbarBox,
                                    StyleAppearance::ScrollbarNonDisappearing)) {
       LayoutDeviceIntSize size;
