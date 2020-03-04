@@ -26,14 +26,10 @@ public class TabSessionManager {
         }
     }
 
-    public void setWebExtensionDelegates(WebExtension extension,
-                                         WebExtension.ActionDelegate actionDelegate,
-                                         WebExtension.SessionTabDelegate tabDelegate) {
+    public void setWebExtensionActionDelegate(WebExtension extension,
+                                              WebExtension.ActionDelegate delegate) {
         for (final TabSession session : mTabSessions) {
-            final WebExtension.SessionController sessionController =
-                    session.getWebExtensionController();
-            sessionController.setActionDelegate(extension, actionDelegate);
-            sessionController.setTabDelegate(extension, tabDelegate);
+            session.setWebExtensionActionDelegate(extension, delegate);
         }
     }
 

@@ -129,30 +129,6 @@ public final class GeckoBundle implements Parcelable {
     }
 
     /**
-     * Returns the value associated with a Boolean mapping, or defaultValue if the mapping
-     * does not exist.
-     *
-     * @param key Key to look for.
-     * @param defaultValue Value to return if mapping does not exist.
-     * @return Boolean value
-     */
-    public Boolean getBooleanObject(final String key, final Boolean defaultValue) {
-        final Object value = mMap.get(key);
-        return value == null ? defaultValue : (Boolean) value;
-    }
-
-    /**
-     * Returns the value associated with a Boolean mapping, or null if the mapping does
-     * not exist.
-     *
-     * @param key Key to look for.
-     * @return Boolean value
-     */
-    public Boolean getBooleanObject(final String key) {
-        return getBooleanObject(key, null);
-    }
-
-    /**
      * Returns the value associated with a boolean array mapping, or null if the mapping
      * does not exist.
      *
@@ -233,30 +209,6 @@ public final class GeckoBundle implements Parcelable {
      */
     public int getInt(final String key) {
         return getInt(key, 0);
-    }
-
-    /**
-     * Returns the value associated with an Integer mapping, or defaultValue if the mapping
-     * does not exist.
-     *
-     * @param key Key to look for.
-     * @param defaultValue Value to return if mapping does not exist.
-     * @return Int value
-     */
-    public Integer getInteger(final String key, final Integer defaultValue) {
-        final Object value = mMap.get(key);
-        return value == null ? defaultValue : ((Integer) value);
-    }
-
-    /**
-     * Returns the value associated with an Integer mapping, or null if the mapping does not
-     * exist.
-     *
-     * @param key Key to look for.
-     * @return Int value
-     */
-    public Integer getInteger(final String key) {
-        return getInteger(key, null);
     }
 
     private static int[] getIntArray(final double[] array) {
