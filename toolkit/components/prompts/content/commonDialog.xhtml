@@ -50,35 +50,38 @@
     </menupopup>
   </popupset>
 
-  <div id="dialogGrid" xmlns="http://www.w3.org/1999/xhtml">
-    <div class="dialogRow">
-      <div id="iconContainer">
-        <xul:image id="infoIcon"/>
-      </div>
-      <div id="infoContainer">
-        <!-- Only shown on OS X, since it has no dialog title -->
-        <xul:description id="infoTitle"
+  <!-- The <box> was added in bug 1606617 to workaround bug 1614447 -->
+  <box>
+    <div id="dialogGrid" xmlns="http://www.w3.org/1999/xhtml">
+      <div class="dialogRow">
+        <div id="iconContainer">
+          <xul:image id="infoIcon"/>
+        </div>
+        <div id="infoContainer">
+          <!-- Only shown on OS X, since it has no dialog title -->
+          <xul:description id="infoTitle"
 #ifndef XP_MACOSX
-          hidden="true"
+            hidden="true"
 #else
-          style="margin-bottom: 1em"
+            style="margin-bottom: 1em"
 #endif
-        />
-        <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true"/>
+          />
+          <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true"/>
+        </div>
+      </div>
+      <div id="loginContainer" class="dialogRow" hidden="hidden">
+        <xul:label id="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
+        <input id="loginTextbox"/>
+      </div>
+      <div id="password1Container" class="dialogRow" hidden="hidden">
+        <xul:label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
+        <input type="password" id="password1Textbox"/>
+      </div>
+      <div id="checkboxContainer" class="dialogRow" hidden="hidden">
+        <div/> <!-- spacer -->
+        <xul:checkbox id="checkbox" oncommand="Dialog.onCheckbox()"/>
       </div>
     </div>
-    <div id="loginContainer" class="dialogRow" hidden="hidden">
-      <xul:label id="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
-      <input id="loginTextbox"/>
-    </div>
-    <div id="password1Container" class="dialogRow" hidden="hidden">
-      <xul:label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
-      <input type="password" id="password1Textbox"/>
-    </div>
-    <div id="checkboxContainer" class="dialogRow" hidden="hidden">
-      <div/> <!-- spacer -->
-      <xul:checkbox id="checkbox" oncommand="Dialog.onCheckbox()"/>
-    </div>
-  </div>
+  </box>
 </dialog>
 </window>
