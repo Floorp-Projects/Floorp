@@ -5,6 +5,9 @@
 "use strict";
 
 module.exports = {
+  appinfo: {
+    OS: "",
+  },
   prefs: {
     getBoolPref: (pref, defaultValue) => {
       // We always use the default value while jest testing.

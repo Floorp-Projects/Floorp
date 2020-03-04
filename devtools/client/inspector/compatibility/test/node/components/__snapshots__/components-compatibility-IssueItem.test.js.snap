@@ -2,91 +2,107 @@
 
 exports[`IssueItem component renders a deprecated issue of CSS property 1`] = `
 <li
-  className="compatibility-issue-item compatibility-issue-item--deprecated"
+  className="compatibility-issue-item"
   key="test-property"
 >
-  <a
-    className="compatibility-issue-item__mdn-link devtools-monospace"
-    href="test-url"
-    onClick={[Function]}
-    title="test-url"
+  <div
+    className="compatibility-issue-item__description compatibility-issue-item__description--deprecated"
   >
-    test-property
-  </a>
-  <span
-    className="compatibility-issue-item__causes"
-  >
-    (deprecated)
-  </span>
+    <a
+      className="compatibility-issue-item__mdn-link devtools-monospace"
+      href="test-url"
+      onClick={[Function]}
+      title="test-url"
+    >
+      test-property
+    </a>
+    <span
+      className="compatibility-issue-item__causes"
+    >
+      (deprecated)
+    </span>
+  </div>
 </li>
 `;
 
 exports[`IssueItem component renders an experimental issue of CSS property 1`] = `
 <li
-  className="compatibility-issue-item compatibility-issue-item--experimental"
+  className="compatibility-issue-item"
   key="test-property"
 >
-  <a
-    className="compatibility-issue-item__mdn-link devtools-monospace"
-    href="test-url"
-    onClick={[Function]}
-    title="test-url"
+  <div
+    className="compatibility-issue-item__description compatibility-issue-item__description--experimental"
   >
-    test-property
-  </a>
-  <span
-    className="compatibility-issue-item__causes"
-  >
-    (experimental)
-  </span>
+    <a
+      className="compatibility-issue-item__mdn-link devtools-monospace"
+      href="test-url"
+      onClick={[Function]}
+      title="test-url"
+    >
+      test-property
+    </a>
+    <span
+      className="compatibility-issue-item__causes"
+    >
+      (experimental)
+    </span>
+  </div>
 </li>
 `;
 
 exports[`IssueItem component renders an issue which has both deprecated and experimental 1`] = `
 <li
-  className="compatibility-issue-item compatibility-issue-item--deprecated compatibility-issue-item--experimental"
+  className="compatibility-issue-item"
   key="test-property"
 >
-  <a
-    className="compatibility-issue-item__mdn-link devtools-monospace"
-    href="test-url"
-    onClick={[Function]}
-    title="test-url"
+  <div
+    className="compatibility-issue-item__description compatibility-issue-item__description--deprecated compatibility-issue-item__description--experimental"
   >
-    test-property
-  </a>
-  <span
-    className="compatibility-issue-item__causes"
-  >
-    (deprecated,experimental)
-  </span>
+    <a
+      className="compatibility-issue-item__mdn-link devtools-monospace"
+      href="test-url"
+      onClick={[Function]}
+      title="test-url"
+    >
+      test-property
+    </a>
+    <span
+      className="compatibility-issue-item__causes"
+    >
+      (deprecated,experimental)
+    </span>
+  </div>
 </li>
 `;
 
 exports[`IssueItem component renders an unsupported issue of CSS property 1`] = `
 <li
-  className="compatibility-issue-item compatibility-issue-item--unsupported"
+  className="compatibility-issue-item"
   key="test-property"
 >
-  <a
-    className="compatibility-issue-item__mdn-link devtools-monospace"
-    href="test-url"
-    onClick={[Function]}
-    title="test-url"
+  <div
+    className="compatibility-issue-item__description compatibility-issue-item__description--unsupported"
   >
-    test-property
-  </a>
-  <UnsupportedBrowserList
-    browsers={
-      Array [
-        Object {
-          "id": "firefox",
-          "name": "Firefox",
-          "status": "nightly",
-          "version": "70",
-        },
-      ]
-    }
-  />
+    <a
+      className="compatibility-issue-item__mdn-link devtools-monospace"
+      href="test-url"
+      onClick={[Function]}
+      title="test-url"
+    >
+      test-property
+    </a>
+    <UnsupportedBrowserList
+      browsers={
+        Array [
+          Object {
+            "id": "firefox",
+            "name": "Firefox",
+            "status": "nightly",
+            "version": "70",
+          },
+        ]
+      }
+    />
+  </div>
 </li>
 `;
