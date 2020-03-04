@@ -247,7 +247,10 @@ Accessible* nsAccUtils::TableFor(Accessible* aRow) {
     Accessible* table = aRow->Parent();
     if (table) {
       roles::Role tableRole = table->Role();
-      if (tableRole == roles::GROUPING) {  // if there's a rowgroup.
+      const nsRoleMapEntry* roleMapEntry = table->ARIARoleMap();
+      if (tableRole == roles::GROUPING ||  // if there's a rowgroup.
+          (table->IsGenericHyperText() &&
+           !roleMapEntry)) {  // or there is a wrapping text container
         table = table->Parent();
         if (table) tableRole = table->Role();
       }
