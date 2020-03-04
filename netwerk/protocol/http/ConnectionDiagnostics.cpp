@@ -161,10 +161,7 @@ void nsHttpConnection::PrintDiagnostics(nsCString& log) {
 void HttpConnectionUDP::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
 
-  log.AppendPrintf("    npncomplete = %d\n", mNPNComplete);
-
-  log.AppendPrintf("    dontReuse = %d isReused = %d\n",
-                   mDontReuse, mIsReused);
+  log.AppendPrintf("    dontReuse = %d isReused = %d\n", mDontReuse, mIsReused);
 
   PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("    time since last read = %ums\n",

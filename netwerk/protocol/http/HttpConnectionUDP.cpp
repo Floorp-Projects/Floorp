@@ -54,9 +54,7 @@ namespace net {
 //-----------------------------------------------------------------------------
 
 HttpConnectionUDP::HttpConnectionUDP()
-    : mSocketInCondition(NS_ERROR_NOT_INITIALIZED),
-      mSocketOutCondition(NS_ERROR_NOT_INITIALIZED),
-      mHttpHandler(gHttpHandler),
+    : mHttpHandler(gHttpHandler),
       mLastReadTime(0),
       mLastWriteTime(0),
       mTotalBytesRead(0),
@@ -65,7 +63,6 @@ HttpConnectionUDP::HttpConnectionUDP()
       mDontReuse(false),
       mIsReused(false),
       mLastTransactionExpectedNoContent(false),
-      mNPNComplete(false),
       mPriority(nsISupportsPriority::PRIORITY_NORMAL),
       mForceSendPending(false),
       mLastRequestBytesSentTime(0) {
@@ -95,7 +92,6 @@ HttpConnectionUDP::~HttpConnectionUDP() {
     mForceSendTimer->Cancel();
     mForceSendTimer = nullptr;
   }
-
 }
 
 nsresult HttpConnectionUDP::Init(
@@ -141,34 +137,6 @@ nsresult HttpConnectionUDP::Init(
   return NS_OK;
 }
 
-bool HttpConnectionUDP::EnsureNPNComplete() {
-  MOZ_ASSERT(mSocketTransport);
-  if (!mSocketTransport) {
-    // this cannot happen
-    mNPNComplete = true;
-    return true;
-  }
-
-  if (mNPNComplete) {
-    return true;
-  }
-
-  LOG(("HttpConnectionUDP::EnsureNPNCompleteHttp3 [this=%p].", this));
-  mHttp3Session->Process();
-  if (mHttp3Session->IsConnected()) {
-    mNPNComplete = true;
-    mIsReused = true;
-  } else if (mHttp3Session->IsClosing()) {
-    LOG(
-        ("HttpConnectionUDP::EnsureNPNCompleteHttp3 "
-         "mHttp3Session failed [this=%p rv=%x]",
-         this, static_cast<uint32_t>(mHttp3Session->GetError())));
-    mNPNComplete = true;
-  }
-
-  return mNPNComplete;
-}
-
 // called on the socket thread
 nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
                                      int32_t pri) {
@@ -180,7 +148,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
     // For QUIC and TFO we have HttpConnecitonUDP before the actual connection
     // has been establish so wait fo TFO and TLS handshake to be finished before
     // we mark the connection 'experienced'.
-    if (mNPNComplete) {
+    if (!mExperienced && mHttp3Session->IsConnected()) {
       mExperienced = true;
     }
     if (mBootstrappedTimingsSet) {
@@ -206,32 +174,23 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // with a write() to get relevant error code.
   if (!mConnectedTransport) {
     uint32_t count;
-    mSocketOutCondition = NS_ERROR_FAILURE;
+    nsresult rv = NS_OK;
     if (mSocketOut) {
-      mSocketOutCondition = mSocketOut->Write("", 0, &count);
+      rv = mSocketOut->Write("", 0, &count);
     }
-    if (NS_FAILED(mSocketOutCondition) &&
-        mSocketOutCondition != NS_BASE_STREAM_WOULD_BLOCK) {
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
       LOG(("HttpConnectionUDP::Activate [this=%p] Bad Socket %" PRIx32 "\n",
-           this, static_cast<uint32_t>(mSocketOutCondition)));
+           this, static_cast<uint32_t>(rv)));
       mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);
-      CloseTransaction(mHttp3Session, mSocketOutCondition);
-      trans->Close(mSocketOutCondition);
-      return mSocketOutCondition;
+      CloseTransaction(mHttp3Session, rv);
+      trans->Close(rv);
+      return rv;
     }
   }
 
-  return AddTransaction(trans, pri);
-}
-
-nsresult HttpConnectionUDP::AddTransaction(nsAHttpTransaction* httpTransaction,
-                                           int32_t priority) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("HttpConnectionUDP::AddTransaction for HTTP3"));
-
-  if (!mHttp3Session->AddStream(httpTransaction, priority, mCallbacks)) {
+  if (!mHttp3Session->AddStream(trans, pri, mCallbacks)) {
     MOZ_ASSERT(false);  // this cannot happen!
-    httpTransaction->Close(NS_ERROR_ABORT);
+    trans->Close(NS_ERROR_ABORT);
     return NS_ERROR_FAILURE;
   }
 
@@ -259,7 +218,6 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
   }
 
   if (NS_FAILED(reason)) {
-
     // The connection and security errors clear out alt-svc mappings
     // in case any previously validated ones are now invalid
     if (((reason == NS_ERROR_NET_RESET) ||
@@ -576,108 +534,35 @@ nsresult HttpConnectionUDP::OnReadSegment(const char* buf, uint32_t count,
   }
 
   nsresult rv = mSocketOut->Write(buf, count, countRead);
-  if (NS_FAILED(rv))
-    mSocketOutCondition = rv;
-  else if (*countRead == 0)
-    mSocketOutCondition = NS_BASE_STREAM_CLOSED;
-  else {
-    mLastWriteTime = PR_IntervalNow();
-    mSocketOutCondition = NS_OK;  // reset condition
-    mTotalBytesWritten += *countRead;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return mSocketOutCondition;
+  if (*countRead == 0) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  mLastWriteTime = PR_IntervalNow();
+  mTotalBytesWritten += *countRead;
+
+  return NS_OK;
 }
 
 nsresult HttpConnectionUDP::OnSocketWritable() {
   LOG(("HttpConnectionUDP::OnSocketWritable [this=%p] host=%s\n", this,
        mConnInfo->Origin()));
 
-  nsresult rv;
-  uint32_t transactionBytes;
+  if (!mHttp3Session) {
+    LOG(("  No session In OnSocketWritable\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t transactionBytes = 0;
   bool again = true;
-
-  // Prevent STS thread from being blocked by single OnOutputStreamReady
-  // callback.
-  const uint32_t maxWriteAttempts = 128;
-  uint32_t writeAttempts = 0;
-
-  do {
-    ++writeAttempts;
-    rv = mSocketOutCondition = NS_OK;
-    transactionBytes = 0;
-
-    // The SSL handshake must be completed before the
-    // transaction->readsegments() processing can proceed because we need to
-    // know how to format the request differently for http/1, http/2, spdy,
-    // etc.. and that is negotiated with NPN/ALPN in the SSL handshake.
-
-    if (!EnsureNPNComplete()) {
-      if (NS_SUCCEEDED(mSocketOutCondition)) {
-        mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
-      }
-    } else if (!mHttp3Session) {
-      rv = NS_ERROR_FAILURE;
-      LOG(("  No Transaction In OnSocketWritable\n"));
-    } else if (NS_SUCCEEDED(rv)) {
-      LOG(("  writing transaction request stream\n"));
-      rv = mHttp3Session->ReadSegmentsAgain(
-          this, nsIOService::gDefaultSegmentSize, &transactionBytes, &again);
-      mContentBytesWritten += transactionBytes;
-    }
-
-    LOG(
-        ("HttpConnectionUDP::OnSocketWritable %p "
-         "ReadSegments returned [rv=%" PRIx32 " read=%u "
-         "sock-cond=%" PRIx32 " again=%d]\n",
-         this, static_cast<uint32_t>(rv), transactionBytes,
-         static_cast<uint32_t>(mSocketOutCondition), again));
-
-    // XXX some streams return NS_BASE_STREAM_CLOSED to indicate EOF.
-    if (rv == NS_BASE_STREAM_CLOSED && !mHttp3Session->IsDone()) {
-      rv = NS_OK;
-      transactionBytes = 0;
-    }
-
-    if (NS_FAILED(rv)) {
-      // if the transaction didn't want to write any more data, then
-      // wait for the transaction to call ResumeSend.
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-        rv = NS_OK;
-      }
-      again = false;
-    } else if (NS_FAILED(mSocketOutCondition)) {
-      if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
-        rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);  // continue writing
-      } else {
-        rv = mSocketOutCondition;
-      }
-      again = false;
-    } else if (!transactionBytes) {
-      rv = NS_OK;
-
-      if (mHttp3Session) {  // in case the ReadSegments stack called
-                            // CloseTransaction()
-        //
-        // at this point we've written out the entire transaction, and now we
-        // must wait for the server's response.  we manufacture a status message
-        // here to reflect the fact that we are waiting.  this message will be
-        // trumped (overwritten) if the server responds quickly.
-        //
-        mHttp3Session->OnTransportStatus(mSocketTransport,
-                                         NS_NET_STATUS_WAITING_FOR, 0);
-
-        rv = ResumeRecv();  // start reading
-      }
-      again = false;
-    } else if (writeAttempts >= maxWriteAttempts) {
-      LOG(("  yield for other transactions\n"));
-      rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);  // continue writing
-      again = false;
-    }
-    // write more to the socket until error or end-of-request...
-  } while (again && gHttpHandler->Active());
-
+  LOG(("  writing transaction request stream\n"));
+  nsresult rv = mHttp3Session->ReadSegmentsAgain(
+      this, nsIOService::gDefaultSegmentSize, &transactionBytes, &again);
+  mContentBytesWritten += transactionBytes;
   return rv;
 }
 
@@ -698,18 +583,45 @@ nsresult HttpConnectionUDP::OnWriteSegment(char* buf, uint32_t count,
   }
 
   nsresult rv = mSocketIn->Read(buf, count, countWritten);
-  if (NS_FAILED(rv))
-    mSocketInCondition = rv;
-  else if (*countWritten == 0)
-    mSocketInCondition = NS_BASE_STREAM_CLOSED;
-  else
-    mSocketInCondition = NS_OK;  // reset condition
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  return mSocketInCondition;
+  if (*countWritten == 0) {
+    return  NS_BASE_STREAM_CLOSED;
+  }
+
+  return NS_OK;
+}
+
+void HttpConnectionUDP::OnQuicTimeout(nsITimer* aTimer, void* aClosure) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  LOG(("HttpConnectionUDP::OnQuicTimeout [this=%p]\n", aClosure));
+
+  HttpConnectionUDP* self = static_cast<HttpConnectionUDP*>(aClosure);
+  self->OnQuicTimeoutExpired();
+}
+
+void HttpConnectionUDP::OnQuicTimeoutExpired() {
+  // if the transaction was dropped...
+  if (!mHttp3Session) {
+    LOG(("  no transaction; ignoring event\n"));
+    return;
+  }
+
+  nsresult rv = mHttp3Session->ProcessOutputAndEvents();
+  if (NS_FAILED(rv)) {
+    CloseTransaction(mHttp3Session, rv);
+  }
 }
 
 nsresult HttpConnectionUDP::OnSocketReadable() {
   LOG(("HttpConnectionUDP::OnSocketReadable [this=%p]\n", this));
+
+  if (!mHttp3Session) {
+    LOG(("  No session In OnSocketReadable\n"));
+    return NS_ERROR_FAILURE;
+  }
 
   PRIntervalTime now = PR_IntervalNow();
 
@@ -717,47 +629,19 @@ nsresult HttpConnectionUDP::OnSocketReadable() {
   // accommodate exhausted sender TCP congestion windows or minor I/O delays.
   mLastReadTime = now;
 
-  nsresult rv;
   uint32_t n;
   bool again = true;
 
-  if (!mNPNComplete) {
-    // We are still doing handshake. TLS/TCP change poll flags therefore they
-    // only trigger OnSocketWritable. Http3/Quic do not do that so imitate
-    // behavior here.
-    return OnSocketWritable();
+  nsresult rv = mHttp3Session->WriteSegmentsAgain(
+      this, nsIOService::gDefaultSegmentSize, &n, &again);
+  LOG(("HttpConnectionUDP::OnSocketReadable %p trans->ws rv=%" PRIx32
+       " n=%d \n",
+       this, static_cast<uint32_t>(rv), n));
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  do {
-
-    mSocketInCondition = NS_OK;
-    rv = mHttp3Session->WriteSegmentsAgain(
-        this, nsIOService::gDefaultSegmentSize, &n, &again);
-    LOG(("HttpConnectionUDP::OnSocketReadable %p trans->ws rv=%" PRIx32
-         " n=%d socketin=%" PRIx32 "\n",
-         this, static_cast<uint32_t>(rv), n,
-         static_cast<uint32_t>(mSocketInCondition)));
-    if (NS_FAILED(rv)) {
-      // if the transaction didn't want to take any more data, then
-      // wait for the transaction to call ResumeRecv.
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-        rv = NS_OK;
-      }
-      again = false;
-    } else {
-      mTotalBytesRead += n;
-      if (NS_FAILED(mSocketInCondition)) {
-        // continue waiting for the socket if necessary...
-        if (mSocketInCondition == NS_BASE_STREAM_WOULD_BLOCK) {
-          rv = ResumeRecv();
-        } else {
-          rv = mSocketInCondition;
-        }
-        again = false;
-      }
-    }
-    // read more from the socket until error...
-  } while (again && gHttpHandler->Active());
+  mTotalBytesRead += n;
 
   return rv;
 }
