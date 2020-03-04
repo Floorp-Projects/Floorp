@@ -1696,6 +1696,7 @@ uptake.remotecontent.result:
         An optional string with the error name attribute in case of failure.
     bug_numbers:
       - 1517469
+      - 1617133
     products:
       - "firefox"
       - "fennec"

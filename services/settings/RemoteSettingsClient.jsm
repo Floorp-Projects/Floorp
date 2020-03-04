@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["RemoteSettingsClient"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -661,9 +658,10 @@ class RemoteSettingsClient extends EventEmitter {
       // In Bug 1617133, we will try to break down specific errors into
       // more precise statuses by reporting the JavaScript error name
       // ("TypeError", etc.) to Telemetry on Nightly.
+      const channel = UptakeTelemetry.Policy.getChannel();
       if (
         thrownError !== null &&
-        AppConstants.NIGHTLY_BUILD &&
+        channel == "nightly" &&
         [
           UptakeTelemetry.STATUS.SYNC_ERROR,
           UptakeTelemetry.STATUS.CUSTOM_1_ERROR, // IndexedDB.
