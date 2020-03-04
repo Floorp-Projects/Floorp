@@ -53,40 +53,6 @@ int64_t BaseBlobImpl::GetLastModified(ErrorResult& aRv) {
 
 int64_t BaseBlobImpl::GetFileId() { return -1; }
 
-nsresult BaseBlobImpl::GetSendInfo(nsIInputStream** aBody,
-                                   uint64_t* aContentLength,
-                                   nsACString& aContentType,
-                                   nsACString& aCharset) {
-  MOZ_ASSERT(aContentLength);
-
-  ErrorResult rv;
-
-  nsCOMPtr<nsIInputStream> stream;
-  CreateInputStream(getter_AddRefs(stream), rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  *aContentLength = GetSize(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  nsAutoString contentType;
-  GetType(contentType);
-
-  if (contentType.IsEmpty()) {
-    aContentType.SetIsVoid(true);
-  } else {
-    CopyUTF16toUTF8(contentType, aContentType);
-  }
-
-  aCharset.Truncate();
-
-  stream.forget(aBody);
-  return NS_OK;
-}
-
 /* static */
 uint64_t BaseBlobImpl::NextSerialNumber() {
   static Atomic<uint64_t> nextSerialNumber;
