@@ -786,7 +786,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.why = reason;
 
       if (this.suspendedFrame) {
-        this.suspendedFrame.waitingOnStep = false;
+        this.suspendedFrame.onStep = undefined;
+        this.suspendedFrame.onPop = undefined;
         this.suspendedFrame = undefined;
       }
 
@@ -840,7 +841,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       frame.onStep = onStep;
       frame.onPop = onPop;
-      frame.waitingOnStep = true;
       return undefined;
     };
   },
@@ -851,7 +851,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // onPop is called when we temporarily leave an async/generator
       if (completion.await || completion.yield) {
         thread.suspendedFrame = this;
-        this.waitingOnStep = true;
         thread.dbg.onEnterFrame = undefined;
         return undefined;
       }
@@ -900,16 +899,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   }) {
     const thread = this;
     return function() {
-      // onStep is called with 'this' set to the current frame.
-      // NOTE: we need to clear the stepping hooks when we are
-      // no longer waiting for an async step to occur.
-      if (this.hasOwnProperty("waitingOnStep") && !this.waitingOnStep) {
-        delete this.waitingOnStep;
-        this.onStep = undefined;
-        this.onPop = undefined;
-        return undefined;
-      }
-
       if (thread._validFrameStepOffset(this, startFrame, this.offset)) {
         return pauseAndRespond(this, packet =>
           thread.createCompletionGrip(packet, completion)
@@ -1048,7 +1037,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         case "break":
         case "next":
           if (stepFrame.script) {
-            stepFrame.waitingOnStep = true;
             if (!this.sources.isFrameBlackBoxed(stepFrame)) {
               stepFrame.onStep = onStep;
             }
