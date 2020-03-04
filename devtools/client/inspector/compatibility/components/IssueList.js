@@ -21,15 +21,30 @@ class IssueList extends PureComponent {
   static get propTypes() {
     return {
       issues: PropTypes.arrayOf(PropTypes.shape(Types.issue)).isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { issues } = this.props;
+    const {
+      issues,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
 
     return dom.ul(
       { className: "compatibility-issue-list" },
-      issues.map(issue => IssueItem({ ...issue }))
+      issues.map(issue =>
+        IssueItem({
+          ...issue,
+          hideBoxModelHighlighter,
+          setSelectedNode,
+          showBoxModelHighlighterForNode,
+        })
+      )
     );
   }
 }
