@@ -233,6 +233,10 @@
       // row child item count provided by parent grid's aria-colcount
       testGroupParentAttrs("table_row", 4, false);
 
+      // Attributes calculated even when row is wrapped in a div.
+      testGroupAttrs("wrapped_row_1", 1, 2);
+      testGroupAttrs("wrapped_row_2", 2, 2);
+
       // ////////////////////////////////////////////////////////////////////////
       // ARIA list constructed by ARIA owns
       testGroupAttrs("t1_li1", 1, 3);
@@ -517,6 +521,19 @@
   <div role="table" aria-colcount="4" aria-rowcount="2" id="table">
     <div role="row" id="table_row" aria-rowindex="2">
       <div role="cell" id="table_cell" aria-colindex="3">cell</div>
+    </div>
+  </div>
+
+  <div role="grid" aria-readonly="true">
+    <div tabindex="-1">
+      <div role="row" id="wrapped_row_1">
+        <div role="gridcell">cell content</div>
+      </div>
+    </div>
+    <div tabindex="-1">
+      <div role="row" id="wrapped_row_2">
+        <div role="gridcell">cell content</div>
+      </div>
     </div>
   </div>
 
