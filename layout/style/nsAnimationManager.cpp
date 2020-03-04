@@ -48,6 +48,12 @@ JSObject* CSSAnimation::WrapObject(JSContext* aCx,
   return dom::CSSAnimation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+void CSSAnimation::SetEffect(AnimationEffect* aEffect) {
+  Animation::SetEffect(aEffect);
+
+  AddOverriddenProperties(CSSAnimationProperties::Effect);
+}
+
 mozilla::dom::Promise* CSSAnimation::GetReady(ErrorResult& aRv) {
   FlushUnanimatedStyle();
   return Animation::GetReady(aRv);
