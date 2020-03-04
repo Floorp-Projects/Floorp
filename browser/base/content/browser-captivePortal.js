@@ -178,6 +178,7 @@ var CaptivePortalWatcher = {
   },
 
   _captivePortalGone() {
+    this._captivePortalTab = null;
     this._cancelDelayedCaptivePortal();
     this._removeNotification();
   },
