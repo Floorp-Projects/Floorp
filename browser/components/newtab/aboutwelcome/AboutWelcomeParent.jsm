@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  AboutWelcomeTelemetry:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -21,6 +23,12 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   );
   return new AboutWelcomeLog("AboutWelcomeParent.jsm");
 });
+
+XPCOMUtils.defineLazyGetter(
+  this,
+  "Telemetry",
+  () => new AboutWelcomeTelemetry()
+);
 
 class AboutWelcomeParent extends JSWindowActorParent {
   /**
@@ -47,6 +55,9 @@ class AboutWelcomeParent extends JSWindowActorParent {
         break;
       case "AWPage:FXA_METRICS_FLOW_URI":
         return FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
+      case "AWPage:TELEMETRY_EVENT":
+        Telemetry.sendTelemetry(data);
+        break;
       default:
         log.debug(`Unexpected event ${type} was not handled.`);
     }

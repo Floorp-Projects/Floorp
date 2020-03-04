@@ -128,12 +128,19 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     });
   }
 
+  handleStartBtnClick() {
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
+  }
+
   componentDidMount() {
     this.fetchFxAFlowUri();
   }
 
-  handleStartBtnClick() {
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
+  componentDidMount() {
+    window.AWSendEventTelemetry({
+      event: "IMPRESSION",
+      message_id: "SIMPLIFIED_ABOUT_WELCOME"
+    });
   }
 
   render() {
