@@ -1809,9 +1809,9 @@ nsITheme* nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
   nsITheme* theme = nullptr;
   const nsStyleDisplay* twistyDisplayData = aTwistyContext->StyleDisplay();
   if (twistyDisplayData->mAppearance != StyleAppearance::None) {
-    theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, nullptr,
-                                            twistyDisplayData->mAppearance))
+    theme = aPresContext->Theme();
+    if (theme->ThemeSupportsWidget(aPresContext, nullptr,
+                                   twistyDisplayData->mAppearance))
       useTheme = true;
   }
 
@@ -2550,7 +2550,7 @@ void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsIFrame* treeFrame = tree ? tree->GetPrimaryFrame() : nullptr;
   nsCOMPtr<nsITreeSelection> selection;
   mView->GetSelection(getter_AddRefs(selection));
-  nsITheme* theme = PresContext()->GetTheme();
+  nsITheme* theme = PresContext()->Theme();
   // On Mac, we support native theming of selected rows. On 10.10 and higher,
   // this means applying vibrancy which require us to register the theme
   // geometrics for the row. In order to make the vibrancy effect to work
@@ -2754,7 +2754,7 @@ ImgDrawResult nsTreeBodyFrame::PaintRow(int32_t aRowIndex,
   nsITheme* theme = nullptr;
   auto appearance = rowContext->StyleDisplay()->mAppearance;
   if (appearance != StyleAppearance::None) {
-    theme = aPresContext->GetTheme();
+    theme = aPresContext->Theme();
   }
 
   if (theme && theme->ThemeSupportsWidget(aPresContext, nullptr, appearance)) {
@@ -2882,9 +2882,9 @@ ImgDrawResult nsTreeBodyFrame::PaintSeparator(int32_t aRowIndex,
   nsITheme* theme = nullptr;
   const nsStyleDisplay* displayData = separatorContext->StyleDisplay();
   if (displayData->HasAppearance()) {
-    theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, nullptr,
-                                            displayData->mAppearance))
+    theme = aPresContext->Theme();
+    if (theme->ThemeSupportsWidget(aPresContext, nullptr,
+                                   displayData->mAppearance))
       useTheme = true;
   }
 

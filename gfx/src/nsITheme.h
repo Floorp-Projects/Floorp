@@ -221,9 +221,9 @@ class nsITheme : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
 
-// Singleton accessor function
+// Singleton accessor functions, these should never return null.
 //
-// Do not use directly, use nsPresContext::GetTheme instead.
+// Do not use directly, use nsPresContext::Theme instead.
 extern already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly();
 extern already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly();
 
