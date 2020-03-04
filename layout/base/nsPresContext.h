@@ -494,6 +494,13 @@ class nsPresContext : public nsISupports,
     UpdateEffectiveTextZoom();
   }
 
+  /**
+   * Notify the pres context that the safe area insets have changed.
+   */
+  void SetSafeAreaInsets(const mozilla::ScreenIntMargin& aInsets);
+
+  mozilla::ScreenIntMargin GetSafeAreaInsets() const { return mSafeAreaInsets; }
+
  protected:
   void UpdateEffectiveTextZoom();
 
@@ -596,7 +603,7 @@ class nsPresContext : public nsISupports,
     return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels));
   }
 
-  float DevPixelsToFloatCSSPixels(int32_t aPixels) {
+  float DevPixelsToFloatCSSPixels(int32_t aPixels) const {
     return AppUnitsToFloatCSSPixels(DevPixelsToAppUnits(aPixels));
   }
 
@@ -1210,6 +1217,8 @@ class nsPresContext : public nsISupports,
   // The maximum height of the dynamic toolbar on mobile.
   mozilla::ScreenIntCoord mDynamicToolbarMaxHeight;
   mozilla::ScreenIntCoord mDynamicToolbarHeight;
+  // Safe area insets support
+  mozilla::ScreenIntMargin mSafeAreaInsets;
   nsSize mPageSize;
   float mPageScale;
   float mPPScale;
