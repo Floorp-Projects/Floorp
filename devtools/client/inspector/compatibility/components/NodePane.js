@@ -32,11 +32,14 @@ class NodePane extends PureComponent {
 
     return nodes.length > 1
       ? dom.details(
-          {},
-          dom.summary({}, `${nodes.length} occurrences`),
+          { className: "compatibility-node-pane" },
+          dom.summary(
+            { className: "compatibility-node-pane__summary" },
+            `${nodes.length} occurrences`
+          ),
           NodeList(this.props)
         )
-      : NodeList(this.props);
+      : dom.div({ className: "compatibility-node-pane" }, NodeList(this.props));
   }
 }
 

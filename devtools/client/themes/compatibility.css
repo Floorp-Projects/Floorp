@@ -115,3 +115,23 @@
   fill: var(--theme-icon-dimmed-color);
   -moz-context-properties: fill;
 }
+
+.compatibility-node-pane {
+  padding-inline-start: calc(var(--compatibility-base-unit) * 4);
+}
+
+.compatibility-node-pane__summary {
+  color: var(--theme-comment);
+  cursor: pointer;
+  padding-block-start: var(--compatibility-base-unit);
+}
+
+.compatibility-node-list {
+  list-style: none;
+  margin: 0;
+  padding-inline-start: calc(var(--compatibility-base-unit) * 2);
+}
+
+.compatibility-node-item {
+  padding-block-start: var(--compatibility-base-unit);
+}
