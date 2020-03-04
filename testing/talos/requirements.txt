@@ -1,6 +1,6 @@
 jsonschema>=2.5.1
-mozlog>=5.0
-mozcrash>=0.15
+mozlog>=6.0
+mozcrash>=2.0
 mozfile>=1.2
 mozinfo>=0.8
 mozprocess>=0.22
