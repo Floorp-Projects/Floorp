@@ -83,7 +83,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   }
 
   if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
-                              nullptr, ArgumentsAreLatin1, err, *args)) {
+                              ArgumentsAreLatin1, err, *args)) {
     return false;
   }
 
@@ -123,7 +123,7 @@ static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
   }
 
   if (!js::ExpandErrorArgumentsVA(cx, js::GetErrorMessage, nullptr, errorNumber,
-                                  nullptr, argumentsType, err, *args)) {
+                                  argumentsType, err, *args)) {
     return;
   }
 

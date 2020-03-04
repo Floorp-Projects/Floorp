@@ -4783,6 +4783,16 @@ JS_PUBLIC_API void JS_ReportErrorNumberUTF8VA(JSContext* cx,
                       ArgumentsAreUTF8, ap);
 }
 
+JS_PUBLIC_API void JS_ReportErrorNumberUTF8Array(JSContext* cx,
+                                                 JSErrorCallback errorCallback,
+                                                 void* userRef,
+                                                 const unsigned errorNumber,
+                                                 const char** args) {
+  AssertHeapIsIdle();
+  ReportErrorNumberUTF8Array(cx, JSREPORT_ERROR, errorCallback, userRef,
+                             errorNumber, args);
+}
+
 JS_PUBLIC_API void JS_ReportErrorNumberUC(JSContext* cx,
                                           JSErrorCallback errorCallback,
                                           void* userRef,
@@ -4881,7 +4891,7 @@ JS_PUBLIC_API bool JS_ExpandErrorArgumentsASCII(JSContext* cx,
 
   AssertHeapIsIdle();
   va_start(ap, reportp);
-  ok = ExpandErrorArgumentsVA(cx, errorCallback, nullptr, errorNumber, nullptr,
+  ok = ExpandErrorArgumentsVA(cx, errorCallback, nullptr, errorNumber,
                               ArgumentsAreASCII, reportp, ap);
   va_end(ap);
   return ok;
