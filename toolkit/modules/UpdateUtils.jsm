@@ -124,8 +124,7 @@ var UpdateUtils = {
             replacement = getSystemCapabilities();
             break;
           case "DISTRIBUTION":
-            replacement =
-              getDistributionPrefValue(PREF_APP_DISTRIBUTION);
+            replacement = getDistributionPrefValue(PREF_APP_DISTRIBUTION);
             break;
           case "DISTRIBUTION_VERSION":
             replacement = getDistributionPrefValue(
