@@ -17,30 +17,12 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
   Ci.nsIX509CertDB
 );
 
-function run_certutil_on_directory(directory, args) {
-  let envSvc = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let greBinDir = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-  envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
-  // TODO(bug 1107794): Android libraries are in /data/local/xpcb, but "GreBinD"
-  // does not return this path on Android, so hard code it here.
-  envSvc.set("LD_LIBRARY_PATH", greBinDir.path + ":/data/local/xpcb");
-  let certutilBin = _getBinaryUtil("certutil");
-  let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-  process.init(certutilBin);
-  args.push("-d");
-  args.push(`sql:${directory}`);
-  process.run(true, args, args.length);
-  Assert.equal(process.exitValue, 0, "certutil should succeed");
-}
-
 registerCleanupFunction(() => {
   let certDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   certDir.append("bad_certs");
   Assert.ok(certDir.exists(), "bad_certs should exist");
   let args = ["-D", "-n", "manually-added-missing-intermediate"];
-  run_certutil_on_directory(certDir.path, args);
+  run_certutil_on_directory(certDir.path, args, false);
 });
 
 function run_test() {
@@ -74,7 +56,11 @@ function run_test() {
   // emitted.
   add_test(() => {
     TestUtils.topicObserved("psm:intermediate-certs-cached").then(
-      run_next_test
+      subjectAndData => {
+        Assert.equal(subjectAndData.length, 2, "expecting [subject, data]");
+        Assert.equal(subjectAndData[1], "1", `expecting "1" cert imported`);
+        run_next_test();
+      }
     );
     run_next_test();
   });
@@ -88,16 +74,18 @@ function run_test() {
   // "psm:intermediate-certs-cached".
   add_test(() => {});
 
-  // Confirm that we cached the intermediate by running a certutil command that
-  // will fail if we didn't.
+  // Delete the intermediate on the server again.
   add_test(() => {
-    // Here we have to use the name that gecko chooses to give it.
-    let args = ["-D", "-n", "Missing Intermediate"];
-    run_certutil_on_directory(do_get_profile().path, args);
+    clearSessionCache();
+    let certDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    certDir.append("bad_certs");
+    Assert.ok(certDir.exists(), "bad_certs should exist");
+    let args = ["-D", "-n", "manually-added-missing-intermediate"];
+    run_certutil_on_directory(certDir.path, args);
     run_next_test();
   });
 
-  // Since we cached the intermediate, this should succeed.
+  // Since we cached the intermediate in gecko, this should succeed.
   add_connection_test(
     "ee-from-missing-intermediate.example.com",
     PRErrorCodeSuccess
