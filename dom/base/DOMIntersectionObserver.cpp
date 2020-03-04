@@ -152,10 +152,17 @@ static LengthPercentage PrefMargin(float aValue, bool aIsPercentage) {
                        : LengthPercentage::FromPixels(aValue);
 }
 
+DOMIntersectionObserver::DOMIntersectionObserver(Document& aDocument,
+                                                 NativeCallback aCallback)
+    : mOwner(aDocument.GetInnerWindow()),
+      mDocument(&aDocument),
+      mCallback(aCallback),
+      mConnected(false) {}
+
 already_AddRefed<DOMIntersectionObserver>
-DOMIntersectionObserver::CreateLazyLoadObserver(nsPIDOMWindowInner* aOwner) {
+DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {
   RefPtr<DOMIntersectionObserver> observer =
-      new DOMIntersectionObserver(aOwner, LazyLoadCallback);
+      new DOMIntersectionObserver(aDocument, LazyLoadCallback);
   observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
 
 #define SET_MARGIN(side_, side_lower_)                                 \
@@ -675,7 +682,7 @@ void DOMIntersectionObserver::Notify() {
         mCallback.as<RefPtr<dom::IntersectionCallback>>());
     callback->Call(this, entries, *this);
   } else {
-    mCallback.as<NativeIntersectionObserverCallback>()(entries);
+    mCallback.as<NativeCallback>()(entries);
   }
 }
 
