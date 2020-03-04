@@ -382,6 +382,7 @@ void AudioNodeEngine::ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
 }
 
 void AudioNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
+                                           GraphTime aFrom,
                                            Span<const AudioBlock> aInput,
                                            Span<AudioBlock> aOutput,
                                            bool* aFinished) {

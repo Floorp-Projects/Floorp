@@ -19,7 +19,7 @@ class ChannelSplitterNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
+  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack, GraphTime aFrom,
                             Span<const AudioBlock> aInput,
                             Span<AudioBlock> aOutput,
                             bool* aFinished) override {

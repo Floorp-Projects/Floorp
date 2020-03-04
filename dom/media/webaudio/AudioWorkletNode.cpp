@@ -41,11 +41,11 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                     bool* aFinished) override {
     MOZ_ASSERT(InputCount() <= 1);
     MOZ_ASSERT(OutputCount() <= 1);
-    ProcessBlocksOnPorts(aTrack, MakeSpan(&aInput, InputCount()),
+    ProcessBlocksOnPorts(aTrack, aFrom, MakeSpan(&aInput, InputCount()),
                          MakeSpan(aOutput, OutputCount()), aFinished);
   }
 
-  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
+  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack, GraphTime aFrom,
                             Span<const AudioBlock> aInput,
                             Span<AudioBlock> aOutput, bool* aFinished) override;
 
@@ -307,6 +307,7 @@ void WorkletNodeEngine::ProduceSilence(AudioNodeTrack* aTrack,
 }
 
 void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
+                                             GraphTime aFrom,
                                              Span<const AudioBlock> aInput,
                                              Span<AudioBlock> aOutput,
                                              bool* aFinished) {
