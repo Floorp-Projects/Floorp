@@ -10,20 +10,25 @@ add_task(async function test_disabled_ss_multi() {
   const TEST_PAGE_URL = "https://example.org/";
 
   // Prepare the test tabs
-  let tab2 = BrowserTestUtils.addTab(gBrowser);
+  let tab2 = BrowserTestUtils.addTab(gBrowser, TEST_PAGE_URL);
   let tabBrowser2 = gBrowser.getBrowserForTab(tab2);
+  let isLoaded = BrowserTestUtils.browserLoaded(
+    tabBrowser2,
+    false,
+    TEST_PAGE_URL
+  );
   await FullZoomHelper.selectTabAndWaitForLocationChange(tab2);
-  await FullZoomHelper.load(tab2, TEST_PAGE_URL);
+  await isLoaded;
 
   let zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser2);
   is(zoomLevel, 1, "tab 2 zoom has been set to 100%");
 
-  let tab1 = BrowserTestUtils.addTab(gBrowser);
+  let tab1 = BrowserTestUtils.addTab(gBrowser, TEST_PAGE_URL);
   let tabBrowser1 = gBrowser.getBrowserForTab(tab1);
+  isLoaded = BrowserTestUtils.browserLoaded(tabBrowser1, false, TEST_PAGE_URL);
   await FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
-  await FullZoomHelper.load(tab1, TEST_PAGE_URL);
+  await isLoaded;
 
-  await FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
   zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser1);
   is(zoomLevel, 1, "tab 1 zoom has been set to 100%");
 
@@ -47,10 +52,11 @@ add_task(async function test_disabled_ss_multi() {
   zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser2);
   is(zoomLevel, 1, "tab 2 zoom remains 100%");
 
-  let tab3 = BrowserTestUtils.addTab(gBrowser);
+  let tab3 = BrowserTestUtils.addTab(gBrowser, TEST_PAGE_URL);
   let tabBrowser3 = gBrowser.getBrowserForTab(tab3);
+  isLoaded = BrowserTestUtils.browserLoaded(tabBrowser3, false, TEST_PAGE_URL);
   await FullZoomHelper.selectTabAndWaitForLocationChange(tab3);
-  await FullZoomHelper.load(tab3, TEST_PAGE_URL);
+  await isLoaded;
 
   zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser3);
   is(zoomLevel, 0.67, "tab 3 zoom has been set to 67%");
