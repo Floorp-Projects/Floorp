@@ -54,7 +54,6 @@ class BaseBlobImpl : public BlobImpl {
         mLength(aLength),
         mLastModificationDate(0),
         mSerialNumber(NextSerialNumber()) {
-    MOZ_ASSERT(aLength != UINT64_MAX, "Must know length when creating slice");
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
   }
@@ -122,8 +121,6 @@ class BaseBlobImpl : public BlobImpl {
   virtual bool IsMemoryFile() const override { return false; }
 
   virtual bool IsFile() const override { return mIsFile; }
-
-  virtual bool IsSizeUnknown() const override { return mLength == UINT64_MAX; }
 
   virtual void GetBlobImplType(nsAString& aBlobImplType) const override {
     aBlobImplType = mBlobImplType;
