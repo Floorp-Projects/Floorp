@@ -62,7 +62,7 @@ class DOMMediaStream : public DOMEventTargetHelper,
 
   class TrackListener {
    public:
-    virtual ~TrackListener() {}
+    virtual ~TrackListener() = default;
 
     /**
      * Called when the DOMMediaStream has a live track added, either by

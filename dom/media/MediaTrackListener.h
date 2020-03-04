@@ -98,7 +98,7 @@ class MediaTrackListener {
   virtual void NotifyRemoved(MediaTrackGraph* aGraph) {}
 
  protected:
-  virtual ~MediaTrackListener() {}
+  virtual ~MediaTrackListener() = default;
 };
 
 /**
@@ -159,7 +159,7 @@ class DirectMediaTrackListener : public MediaTrackListener {
   virtual void NotifyDirectListenerUninstalled() {}
 
  protected:
-  virtual ~DirectMediaTrackListener() {}
+  virtual ~DirectMediaTrackListener() = default;
 
   void MirrorAndDisableSegment(AudioSegment& aFrom, AudioSegment& aTo);
   void MirrorAndDisableSegment(VideoSegment& aFrom, VideoSegment& aTo,

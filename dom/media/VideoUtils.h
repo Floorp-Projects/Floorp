@@ -91,7 +91,7 @@ class ShutdownThreadEvent : public Runnable {
  public:
   explicit ShutdownThreadEvent(nsIThread* aThread)
       : Runnable("ShutdownThreadEvent"), mThread(aThread) {}
-  ~ShutdownThreadEvent() {}
+  ~ShutdownThreadEvent() = default;
   NS_IMETHOD Run() override {
     mThread->Shutdown();
     mThread = nullptr;
@@ -310,7 +310,7 @@ class SimpleTimer : public nsITimerCallback, public nsINamed {
   NS_IMETHOD Notify(nsITimer* timer) override;
 
  private:
-  virtual ~SimpleTimer() {}
+  virtual ~SimpleTimer() = default;
   nsresult Init(nsIRunnable* aTask, uint32_t aTimeoutMs,
                 nsIEventTarget* aTarget);
 

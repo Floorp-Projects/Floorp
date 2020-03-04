@@ -35,7 +35,7 @@ static const int BITRATE_SAMPLERATE_PADDING_PRIVATE = 2;
 static const int CHANNELMODE_MODEEXT_COPY_ORIG_EMPH = 3;
 }  // namespace frame_header
 
-FrameParser::FrameParser() {}
+FrameParser::FrameParser() = default;
 
 void FrameParser::Reset() {
   mID3Parser.Reset();

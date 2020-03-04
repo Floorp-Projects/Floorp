@@ -15,7 +15,7 @@ BufferStream::BufferStream()
 BufferStream::BufferStream(mozilla::MediaByteBuffer* aBuffer)
     : mStartOffset(0), mData(aBuffer) {}
 
-BufferStream::~BufferStream() {}
+BufferStream::~BufferStream() = default;
 
 /*virtual*/
 bool BufferStream::ReadAt(int64_t aOffset, void* aData, size_t aLength,

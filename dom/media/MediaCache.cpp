@@ -93,8 +93,8 @@ class MediaCacheFlusher final : public nsIObserver,
   static void UnregisterMediaCache(MediaCache* aMediaCache);
 
  private:
-  MediaCacheFlusher() {}
-  ~MediaCacheFlusher() {}
+  MediaCacheFlusher() = default;
+  ~MediaCacheFlusher() = default;
 
   // Singleton instance created when a first MediaCache is registered, and
   // released when the last MediaCache is unregistered.
@@ -378,7 +378,7 @@ class MediaCache {
   };
 
   struct BlockOwner {
-    constexpr BlockOwner() {}
+    constexpr BlockOwner() = default;
 
     // The stream that owns this block, or null if the block is free.
     MediaCacheStream* mStream = nullptr;

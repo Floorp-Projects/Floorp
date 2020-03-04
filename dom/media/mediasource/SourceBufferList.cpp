@@ -33,7 +33,7 @@ namespace mozilla {
 
 namespace dom {
 
-SourceBufferList::~SourceBufferList() {}
+SourceBufferList::~SourceBufferList() = default;
 
 SourceBuffer* SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound) {
   MOZ_ASSERT(NS_IsMainThread());

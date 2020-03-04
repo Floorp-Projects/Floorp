@@ -28,7 +28,7 @@ class GMPStorage {
   virtual void Close(const nsCString& aRecordName) = 0;
 
  protected:
-  virtual ~GMPStorage() {}
+  virtual ~GMPStorage() = default;
 };
 
 already_AddRefed<GMPStorage> CreateGMPMemoryStorage();

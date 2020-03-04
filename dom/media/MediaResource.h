@@ -116,7 +116,7 @@ class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
  protected:
-  virtual ~MediaResource(){};
+  virtual ~MediaResource() = default;
 
  private:
   void Destroy();

@@ -721,7 +721,7 @@ void FormatParser::FormatChunk::Update(uint8_t c) {
 
 // DataParser
 
-DataParser::DataParser() {}
+DataParser::DataParser() = default;
 
 void DataParser::Reset() { mChunk.Reset(); }
 

@@ -95,7 +95,7 @@ class GeckoMediaPluginServiceParent final
 
   struct DirectoryFilter {
     virtual bool operator()(nsIFile* aPath) = 0;
-    ~DirectoryFilter() {}
+    ~DirectoryFilter() = default;
   };
   void ClearNodeIdAndPlugin(DirectoryFilter& aFilter);
   void ClearNodeIdAndPlugin(nsIFile* aPluginStorageDir,

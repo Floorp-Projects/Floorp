@@ -89,7 +89,7 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow, double aStartTime,
   }
 }
 
-TextTrackCue::~TextTrackCue() {}
+TextTrackCue::~TextTrackCue() = default;
 
 /** Save a reference to our creating document so we don't have to
  *  keep getting it from our window.

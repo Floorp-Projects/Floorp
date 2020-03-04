@@ -36,7 +36,7 @@ class VideoPlaybackQuality final : public nsWrapperCache {
   uint32_t DroppedVideoFrames() const { return mDroppedFrames; }
 
  private:
-  ~VideoPlaybackQuality() {}
+  ~VideoPlaybackQuality() = default;
 
   RefPtr<HTMLMediaElement> mElement;
   DOMHighResTimeStamp mCreationTime;

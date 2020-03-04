@@ -40,7 +40,7 @@ class GMPRecordImpl : public GMPRecord {
   void WriteComplete(GMPErr aStatus);
 
  private:
-  ~GMPRecordImpl() {}
+  ~GMPRecordImpl() = default;
   const nsCString mName;
   GMPRecordClient* const mClient;
   GMPStorageChild* const mOwner;
@@ -71,7 +71,7 @@ class GMPStorageChild : public PGMPStorageChild {
   already_AddRefed<GMPRecordImpl> GetRecord(const nsCString& aRecordName);
 
  protected:
-  ~GMPStorageChild() {}
+  ~GMPStorageChild() = default;
 
   // PGMPStorageChild
   mozilla::ipc::IPCResult RecvOpenComplete(const nsCString& aRecordName,

@@ -1193,7 +1193,7 @@ OggTrackDemuxer::OggTrackDemuxer(OggDemuxer* aParent,
   MOZ_ASSERT(mInfo);
 }
 
-OggTrackDemuxer::~OggTrackDemuxer() {}
+OggTrackDemuxer::~OggTrackDemuxer() = default;
 
 UniquePtr<TrackInfo> OggTrackDemuxer::GetInfo() const { return mInfo->Clone(); }
 

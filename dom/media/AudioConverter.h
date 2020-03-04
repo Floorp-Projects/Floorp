@@ -48,7 +48,7 @@ template <AudioConfig::SampleFormat Format,
           typename Value = typename AudioDataBufferTypeChooser<Format>::Type>
 class AudioDataBuffer {
  public:
-  AudioDataBuffer() {}
+  AudioDataBuffer() = default;
   AudioDataBuffer(Value* aBuffer, size_t aLength) : mBuffer(aBuffer, aLength) {}
   explicit AudioDataBuffer(const AudioDataBuffer& aOther)
       : mBuffer(aOther.mBuffer) {}

@@ -8,7 +8,7 @@
 
 class GMPCallbackBase {
  public:
-  virtual ~GMPCallbackBase() {}
+  virtual ~GMPCallbackBase() = default;
 
   // The GMP code will call this if the codec crashes or shuts down.  It's
   // expected that the consumer (destination of this callback) will respond

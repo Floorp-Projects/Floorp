@@ -36,7 +36,7 @@ mozilla::Result<mozilla::Ok, nsresult> CryptoFile::DoUpdate(
     if (!reader.ReadArray(psshInfo.data, length)) {
       return mozilla::Err(NS_ERROR_FAILURE);
     }
-    pssh.AppendElement(psshInfo);
+    pssh.AppendElement(std::move(psshInfo));
   }
   return mozilla::Ok();
 }

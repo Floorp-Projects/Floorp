@@ -39,7 +39,7 @@ FlacFrameParser::FlacFrameParser()
       mFullMetadata(false),
       mPacketCount(0) {}
 
-FlacFrameParser::~FlacFrameParser() {}
+FlacFrameParser::~FlacFrameParser() = default;
 
 uint32_t FlacFrameParser::HeaderBlockLength(const uint8_t* aPacket) const {
   uint32_t extra = 4;

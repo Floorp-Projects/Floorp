@@ -111,7 +111,7 @@ TextTrack::TextTrack(nsPIDOMWindowInner* aOwnerWindow,
   SetDefaultSettings();
 }
 
-TextTrack::~TextTrack() {}
+TextTrack::~TextTrack() = default;
 
 void TextTrack::SetDefaultSettings() {
   nsPIDOMWindowInner* ownerWindow = GetOwner();

@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeyStatusMap, mParent)
 MediaKeyStatusMap::MediaKeyStatusMap(nsPIDOMWindowInner* aParent)
     : mParent(aParent) {}
 
-MediaKeyStatusMap::~MediaKeyStatusMap() {}
+MediaKeyStatusMap::~MediaKeyStatusMap() = default;
 
 JSObject* MediaKeyStatusMap::WrapObject(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {

@@ -422,9 +422,9 @@ void GeckoMediaPluginServiceChild::RemoveGMPContentParent(
   }
 }
 
-GMPServiceChild::GMPServiceChild() {}
+GMPServiceChild::GMPServiceChild() = default;
 
-GMPServiceChild::~GMPServiceChild() {}
+GMPServiceChild::~GMPServiceChild() = default;
 
 already_AddRefed<GMPContentParent> GMPServiceChild::GetBridgedGMPContentParent(
     ProcessId aOtherPid, ipc::Endpoint<PGMPContentParent>&& endpoint) {

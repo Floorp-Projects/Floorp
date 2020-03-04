@@ -42,13 +42,13 @@
 class GMPTask {
  public:
   virtual void Destroy() = 0;  // Deletes object.
-  virtual ~GMPTask() {}
+  virtual ~GMPTask() = default;
   virtual void Run() = 0;
 };
 
 class GMPThread {
  public:
-  virtual ~GMPThread() {}
+  virtual ~GMPThread() = default;
   virtual void Post(GMPTask* aTask) = 0;
   virtual void Join() = 0;  // Deletes object after join completes.
 };
@@ -57,7 +57,7 @@ class GMPThread {
 // Must be unlocked the same number of times it's locked.
 class GMPMutex {
  public:
-  virtual ~GMPMutex() {}
+  virtual ~GMPMutex() = default;
   virtual void Acquire() = 0;
   virtual void Release() = 0;
   virtual void Destroy() = 0;  // Deletes object.

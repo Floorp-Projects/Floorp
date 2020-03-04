@@ -128,9 +128,6 @@ XMLHttpRequestStringSnapshot::XMLHttpRequestStringSnapshot()
 
 XMLHttpRequestStringSnapshot::~XMLHttpRequestStringSnapshot() = default;
 
-XMLHttpRequestStringSnapshot& XMLHttpRequestStringSnapshot::operator=(
-    const XMLHttpRequestStringSnapshot& aOther) = default;
-
 void XMLHttpRequestStringSnapshot::ResetInternal(bool aIsVoid) {
   mBuffer = nullptr;
   mLength = 0;
