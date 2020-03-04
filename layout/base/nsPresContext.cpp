@@ -82,6 +82,7 @@
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_zoom.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -330,10 +331,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
 
   tmp->Destroy();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-// whether no native theme service exists;
-// if this gets set to true, we'll stop asking for it.
-static bool sNoTheme = false;
 
 // Set to true when LookAndFeelChanged needs to be called.  This is used
 // because the look and feel is a service, so there's no need to notify it from
@@ -1273,12 +1270,15 @@ void nsPresContext::RecordInteractionTime(InteractionType aType,
   }
 }
 
-nsITheme* nsPresContext::GetTheme() {
-  if (!sNoTheme && !mTheme) {
-    mTheme = do_GetNativeTheme();
-    if (!mTheme) sNoTheme = true;
+nsITheme* nsPresContext::EnsureTheme() {
+  MOZ_ASSERT(!mTheme);
+  if (StaticPrefs::widget_disable_native_theme_for_content() &&
+      (!IsChrome() || XRE_IsContentProcess())) {
+    mTheme = do_GetBasicNativeThemeDoNotUseDirectly();
+  } else {
+    mTheme = do_GetNativeThemeDoNotUseDirectly();
   }
-
+  MOZ_RELEASE_ASSERT(mTheme);
   return mTheme;
 }
 

@@ -14,10 +14,10 @@ exclude: true
 ⚠️  breaking change
 
 ## v75
-- ⚠️ Remove [`GeckoRuntimeSettings.Builder#useContentProcessHint`]. The content
+- ⚠️ Remove `GeckoRuntimeSettings.Builder#useContentProcessHint`. The content
   process is now preloaded by default if
   [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1] is enabled.
-- ⚠️ Move [`GeckoSessionSettings.Builder#useMultiprocess`] to
+- ⚠️ Move `GeckoSessionSettings.Builder#useMultiprocess` to
   [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1]. Multiprocess state is
   no longer determined per session.
 - Added [`DebuggerDelegate#onExtensionListUpdated`][75.2] to notify that a temporary
@@ -29,12 +29,43 @@ exclude: true
   control autoplay.
   ([bug 1614894]({{bugzilla}}1614894))
 - Added [`GeckoSession.reload(int flags)`][75.4] That takes a [load flag][75.5] parameter.
+- ⚠️ Moved [`ActionDelegate`][75.6] and [`MessageDelegate`][75.7] to
+  [`SessionController`][75.8].
+  ([bug 1616625]({{bugzilla}}1616625))
+- Added [`SessionTabDelegate`][75.9] to [`SessionController`][75.8] and
+  [`TabDelegate`][75.10] to [`WebExtension`][69.5] which receive respectively
+  calls for the session and the runtime. `TabDelegate` is also now
+  per-`WebExtension` object instead of being global.  The existing global
+  [`TabDelegate`][75.11] is now deprecated and will be removed in GeckoView 77.
+  ([bug 1616625]({{bugzilla}}1616625))
+- Added [`SessionTabDelegate#onUpdateTab`][75.12] which is called whenever an
+  extension calls `tabs.update` on the corresponding `GeckoSession`.
+  [`TabDelegate#onCreateTab`][75.13] now takes a [`CreateTabDetails`][75.14]
+  object which contains additional information about the newly created tab
+  (including the `url` which used to be passed in directly).
+  ([bug 1616625]({{bugzilla}}1616625))
+- Added [`GeckoRuntimeSettings.setWebManifestEnabled`][75.15],
+  [`GeckoRuntimeSettings.webManifest`][75.16], and
+  [`GeckoRuntimeSettings.getWebManifestEnabled`][75.17]
+  ([bug 1614894]({{bugzilla}}1603673)), to enable or check Web Manifest support.
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
 [75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
 [75.4]: {{javadoc_uri}}/GeckoSession.html#reload-int-
 [75.5]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_NONE
+[75.6]: {{javadoc_uri}}/WebExtension.ActionDelegate.html
+[75.7]: {{javadoc_uri}}/WebExtension.MessageDelegate.html
+[75.8]: {{javadoc_uri}}/WebExtension.SessionController.html
+[75.9]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html
+[75.10]: {{javadoc_uri}}/WebExtension.TabDelegate.html
+[75.11]: {{javadoc_uri}}/WebExtensionRuntime.TabDelegate.html
+[75.12]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html#onUpdateTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.WebExtension.UpdateTabDetails-
+[75.13]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onNewTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.CreateTabDetails-
+[75.14]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
+[75.15]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#setWebManifestEnabled-boolean-
+[75.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#webManifest-boolean-
+[75.17]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled--
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -598,4 +629,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9377e7566adf997b0bb5b50bdc6ded12a0d01ee4
+[api-version]: b293a94c5f74d3f660959dadd2b48732b2b1ecd1

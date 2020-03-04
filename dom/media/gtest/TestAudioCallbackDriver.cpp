@@ -22,7 +22,7 @@ using ::testing::Return;
 using namespace mozilla;
 
 class MockGraphInterface : public GraphInterface {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MockGraphInterface, override);
+  NS_DECL_THREADSAFE_ISUPPORTS
   MOCK_METHOD4(NotifyOutputData,
                void(AudioDataValue*, size_t, TrackRate, uint32_t));
   MOCK_METHOD0(NotifyStarted, void());
@@ -48,6 +48,8 @@ class MockGraphInterface : public GraphInterface {
   Atomic<bool> mKeepProcessing{true};
   virtual ~MockGraphInterface() = default;
 };
+
+NS_IMPL_ISUPPORTS0(MockGraphInterface)
 
 TEST(TestAudioCallbackDriver, StartStop)
 MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {

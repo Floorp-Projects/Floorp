@@ -461,7 +461,11 @@ var FullZoom = {
     // The browser is sometimes half-destroyed because this method is called
     // by content pref service callbacks, which themselves can be called at any
     // time, even after browsers are closed.
-    if (!aBrowser.mInitialized || aBrowser.isSyntheticDocument) {
+    if (
+      !aBrowser.mInitialized ||
+      aBrowser.isSyntheticDocument ||
+      (!this.siteSpecific && aBrowser.tabHasCustomZoom)
+    ) {
       this._executeSoon(aCallback);
       return;
     }
@@ -498,6 +502,10 @@ var FullZoom = {
       gInPrintPreviewMode ||
       browser.isSyntheticDocument
     ) {
+      // If site-specific zoom is disabled, we have called this function
+      // to adjust our tab's zoom level. It is now considered "custom"
+      // and we mark that here.
+      browser.tabHasCustomZoom = !this.siteSpecific;
       return null;
     }
 

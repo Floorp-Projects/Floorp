@@ -4255,16 +4255,11 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
 // Creation Routine
 ///////////////////////////////////////////
 
-already_AddRefed<nsITheme> do_GetNativeTheme() {
+already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
-    if (XRE_IsContentProcess() &&
-        StaticPrefs::widget_disable_native_theme_for_content()) {
-      inst = new nsNativeBasicTheme();
-    } else {
-      inst = new nsNativeThemeWin();
-    }
+    inst = new nsNativeThemeWin();
     ClearOnShutdown(&inst);
   }
 

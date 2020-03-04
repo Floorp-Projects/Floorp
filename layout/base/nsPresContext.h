@@ -752,10 +752,17 @@ class nsPresContext : public nsISupports,
   uint32_t GetBidi() const;
 
   /*
-   * Obtain a native them for rendering our widgets (both form controls and
+   * Obtain a native theme for rendering our widgets (both form controls and
    * html)
+   *
+   * Guaranteed to return non-null.
    */
-  nsITheme* GetTheme();
+  nsITheme* Theme() MOZ_NONNULL_RETURN {
+    if (MOZ_LIKELY(mTheme)) {
+      return mTheme;
+    }
+    return EnsureTheme();
+  }
 
   /*
    * Notify the pres context that the theme has changed.  An internal switch
@@ -1319,6 +1326,8 @@ class nsPresContext : public nsISupports,
   virtual ~nsPresContext();
 
   void LastRelease();
+
+  nsITheme* EnsureTheme();
 
 #ifdef DEBUG
  private:

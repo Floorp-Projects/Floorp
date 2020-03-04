@@ -14,7 +14,9 @@
 
 add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
     manifest: {
+      "applications": { "gecko": { "id": "tabs-create@tests.mozilla.org" } },
       "permissions": ["tabs"],
 
       "background": {"page": "bg/background.html"},
@@ -30,11 +32,9 @@ add_task(async function() {
 
       "bg/background.js": function() {
         let activeTab;
-        let activeWindow;
 
         function runTests() {
           const DEFAULTS = {
-            windowId: activeWindow,
             active: true,
             url: "about:blank",
           };
@@ -74,7 +74,9 @@ add_task(async function() {
 
             let updatedPromise = new Promise(resolve => {
               let onUpdated = (changedTabId, changed) => {
-                if (changed.url) {
+                // Loading an extension page causes two `about:blank` messages
+                // because of the process switch
+                if (changed.url && (expected.url == "about:blank" || changed.url != "about:blank")) {
                   browser.tabs.onUpdated.removeListener(onUpdated);
                   resolve({tabId: changedTabId, url: changed.url});
                 }
@@ -120,7 +122,6 @@ add_task(async function() {
 
         browser.tabs.query({active: true, currentWindow: true}, tabs => {
           activeTab = tabs[0].id;
-          activeWindow = tabs[0].windowId;
 
           runTests();
         });

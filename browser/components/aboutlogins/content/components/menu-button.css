@@ -75,6 +75,10 @@
   background-image: url("chrome://browser/skin/settings.svg");
 }
 
-.menuitem-mobile {
-  background-image: url("chrome://browser/skin/device-phone.svg");
+.menuitem-mobile-ios {
+  background-image: url("chrome://browser/skin/logo-ios.svg");
+}
+
+.menuitem-mobile-android {
+  background-image: url("chrome://browser/skin/logo-android.svg");
 }
