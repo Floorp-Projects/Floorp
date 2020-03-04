@@ -21,7 +21,9 @@ XPCOMUtils.defineLazyServiceGetter(
 function restore_prefs() {
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
   Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
-  Services.prefs.clearUserPref("network.cookieSettings.unblocked_for_testing");
+  Services.prefs.clearUserPref(
+    "network.cookieJarSettings.unblocked_for_testing"
+  );
 }
 
 registerCleanupFunction(restore_prefs);
@@ -52,7 +54,7 @@ async function test_cookie_settings({
   thirdPartyCookiesEnabled,
   cookiesExpireAfterSession,
   rejectTrackers,
-  cookieSettingsLocked,
+  cookieJarSettingsLocked,
 }) {
   let firstPartyURI = NetUtil.newURI("http://example.com/");
   let thirdPartyURI = NetUtil.newURI("http://example.org/");
@@ -111,12 +113,12 @@ async function test_cookie_settings({
 
   is(
     Services.prefs.prefIsLocked("network.cookie.cookieBehavior"),
-    cookieSettingsLocked,
+    cookieJarSettingsLocked,
     "Cookie behavior pref lock status should be what is expected"
   );
   is(
     Services.prefs.prefIsLocked("network.cookie.lifetimePolicy"),
-    cookieSettingsLocked,
+    cookieJarSettingsLocked,
     "Cookie lifetime pref lock status should be what is expected"
   );
 
@@ -127,9 +129,9 @@ async function test_cookie_settings({
   await tab.linkedBrowser.contentWindow.gotoPref("panePrivacy");
   await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [{ cookiesEnabled, cookieSettingsLocked }],
+    [{ cookiesEnabled, cookieJarSettingsLocked }],
     // eslint-disable-next-line no-shadow
-    async function({ cookiesEnabled, cookieSettingsLocked }) {
+    async function({ cookiesEnabled, cookieJarSettingsLocked }) {
       let deleteOnCloseCheckbox = content.document.getElementById(
         "deleteOnClose"
       );
@@ -139,7 +141,7 @@ async function test_cookie_settings({
         "deleteOnCloseCheckbox should not be null."
       );
 
-      let expectControlsDisabled = !cookiesEnabled || cookieSettingsLocked;
+      let expectControlsDisabled = !cookiesEnabled || cookieJarSettingsLocked;
       is(
         deleteOnCloseCheckbox.disabled,
         expectControlsDisabled,
@@ -197,14 +199,14 @@ add_task(async function prepare_tracker_tables() {
 
 add_task(async function test_initial_state() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await test_cookie_settings({
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false,
+    cookieJarSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -213,7 +215,7 @@ add_task(async function test_undefined_unlocked() {
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 3);
   Services.prefs.setIntPref("network.cookie.lifetimePolicy", 2);
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -236,7 +238,7 @@ add_task(async function test_undefined_unlocked() {
 
 add_task(async function test_disabled() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -251,14 +253,14 @@ add_task(async function test_disabled() {
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false,
+    cookieJarSettingsLocked: false,
   });
   restore_prefs();
 });
 
 add_task(async function test_third_party_disabled() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -273,14 +275,14 @@ add_task(async function test_third_party_disabled() {
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false,
+    cookieJarSettingsLocked: false,
   });
   restore_prefs();
 });
 
 add_task(async function test_disabled_and_third_party_disabled() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -296,14 +298,14 @@ add_task(async function test_disabled_and_third_party_disabled() {
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false,
+    cookieJarSettingsLocked: false,
   });
   restore_prefs();
 });
 
 add_task(async function test_disabled_and_third_party_disabled_locked() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -320,14 +322,14 @@ add_task(async function test_disabled_and_third_party_disabled_locked() {
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: true,
+    cookieJarSettingsLocked: true,
   });
   restore_prefs();
 });
 
 add_task(async function test_undefined_locked() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -342,14 +344,14 @@ add_task(async function test_undefined_locked() {
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: true,
+    cookieJarSettingsLocked: true,
   });
   restore_prefs();
 });
 
 add_task(async function test_cookie_expire() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -364,14 +366,14 @@ add_task(async function test_cookie_expire() {
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: true,
-    cookieSettingsLocked: false,
+    cookieJarSettingsLocked: false,
   });
   restore_prefs();
 });
 
 add_task(async function test_cookie_reject_trackers() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -387,14 +389,14 @@ add_task(async function test_cookie_reject_trackers() {
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
     rejectTrackers: true,
-    cookieSettingsLocked: false,
+    cookieJarSettingsLocked: false,
   });
   restore_prefs();
 });
 
 add_task(async function test_cookie_expire_locked() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -410,14 +412,14 @@ add_task(async function test_cookie_expire_locked() {
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: true,
-    cookieSettingsLocked: true,
+    cookieJarSettingsLocked: true,
   });
   restore_prefs();
 });
 
 add_task(async function test_disabled_cookie_expire_locked() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   await setupPolicyEngineWithJson({
@@ -435,7 +437,7 @@ add_task(async function test_disabled_cookie_expire_locked() {
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: true,
-    cookieSettingsLocked: true,
+    cookieJarSettingsLocked: true,
   });
   restore_prefs();
 });

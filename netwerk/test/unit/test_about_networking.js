@@ -85,7 +85,7 @@ add_test(function test_sockets() {
 
 function run_test() {
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
 

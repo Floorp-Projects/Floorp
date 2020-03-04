@@ -10,10 +10,10 @@ with Files('**'):
 # export required interfaces, even if --disable-cookies has been given
 XPIDL_SOURCES += [
     'nsICookie.idl',
+    'nsICookieJarSettings.idl',
     'nsICookieManager.idl',
     'nsICookiePermission.idl',
     'nsICookieService.idl',
-    'nsICookieSettings.idl',
 ]
 
 XPIDL_MODULE = 'necko_cookie'
@@ -24,15 +24,15 @@ if CONFIG['NECKO_COOKIES']:
     ]
 
     EXPORTS.mozilla.net = [
+        'CookieJarSettings.h',
         'CookieServiceChild.h',
         'CookieServiceParent.h',
-        'CookieSettings.h',
         'nsCookieKey.h',
     ]
     UNIFIED_SOURCES += [
+        'CookieJarSettings.cpp',
         'CookieServiceChild.cpp',
         'CookieServiceParent.cpp',
-        'CookieSettings.cpp',
         'nsCookie.cpp',
         'nsCookiePermission.cpp',
     ]

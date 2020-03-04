@@ -472,7 +472,8 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
     }
 
     if (ShouldPartitionStorage(access) &&
-        !StoragePartitioningEnabled(access, mWorkerPrivate->CookieSettings())) {
+        !StoragePartitioningEnabled(access,
+                                    mWorkerPrivate->CookieJarSettings())) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
       aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
       return nullptr;

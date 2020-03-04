@@ -158,9 +158,9 @@ void CreatePermissionKey(const nsCString& aTrackingOrigin,
 
 // This internal method returns ACCESS_DENY if the access is denied,
 // ACCESS_DEFAULT if unknown, some other access code if granted.
-uint32_t CheckCookiePermissionForPrincipal(nsICookieSettings* aCookieSettings,
-                                           nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aCookieSettings);
+uint32_t CheckCookiePermissionForPrincipal(
+    nsICookieJarSettings* aCookieJarSettings, nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aCookieJarSettings);
   MOZ_ASSERT(aPrincipal);
 
   uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
@@ -169,7 +169,7 @@ uint32_t CheckCookiePermissionForPrincipal(nsICookieSettings* aCookieSettings,
   }
 
   nsresult rv =
-      aCookieSettings->CookiePermission(aPrincipal, &cookiePermission);
+      aCookieJarSettings->CookiePermission(aPrincipal, &cookiePermission);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nsICookiePermission::ACCESS_DEFAULT;
   }
@@ -187,7 +187,7 @@ int32_t CookiesBehavior(Document* a3rdPartyDocument) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  return a3rdPartyDocument->CookieSettings()->GetCookieBehavior();
+  return a3rdPartyDocument->CookieJarSettings()->GetCookieBehavior();
 }
 
 int32_t CookiesBehavior(nsILoadInfo* aLoadInfo, nsIURI* a3rdPartyURI) {
@@ -200,19 +200,20 @@ int32_t CookiesBehavior(nsILoadInfo* aLoadInfo, nsIURI* a3rdPartyURI) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nsICookieService::BEHAVIOR_REJECT;
   }
 
-  return cookieSettings->GetCookieBehavior();
+  return cookieJarSettings->GetCookieBehavior();
 }
 
 int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
-                        nsICookieSettings* aCookieSettings) {
+                        nsICookieJarSettings* aCookieJarSettings) {
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aCookieSettings);
+  MOZ_ASSERT(aCookieJarSettings);
 
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 for rationale).
@@ -220,7 +221,7 @@ int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  return aCookieSettings->GetCookieBehavior();
+  return aCookieJarSettings->GetCookieBehavior();
 }
 
 struct ContentBlockingAllowListKey {
@@ -1096,9 +1097,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     LOG(("Parent window has no doc"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
-  int32_t behavior = parentDoc->CookieSettings()->GetCookieBehavior();
+  int32_t behavior = parentDoc->CookieJarSettings()->GetCookieBehavior();
 
-  if (!parentDoc->CookieSettings()->GetRejectThirdPartyTrackers()) {
+  if (!parentDoc->CookieJarSettings()->GetRejectThirdPartyTrackers()) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
@@ -1473,7 +1474,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     // For out-of-process top frames, we need to be able to access three things
     // from the top BrowsingContext in order to be able to port this code to
     // Fission successfully:
-    //   * The CookieSettings of the top BrowsingContext.
+    //   * The CookieJarSettings of the top BrowsingContext.
     //   * The HasStorageAccessGranted() API on BrowsingContext.
     // For now, if we face an out-of-process top frame, instead of failing here,
     // we revert back to looking at the in-process top frame.  This is of course
@@ -1504,7 +1505,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
-      document->CookieSettings(), document->NodePrincipal());
+      document->CookieJarSettings(), document->NodePrincipal());
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
@@ -1728,11 +1729,11 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  rv = loadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  rv = loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(
-        ("Failed to get the cookie settings from the loadinfo, bail out "
+        ("Failed to get the cookie jar settings from the loadinfo, bail out "
          "early"));
     return true;
   }
@@ -1745,7 +1746,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t cookiePermission =
-      CheckCookiePermissionForPrincipal(cookieSettings, channelPrincipal);
+      CheckCookiePermissionForPrincipal(cookieJarSettings, channelPrincipal);
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
@@ -1912,9 +1913,9 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-    nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings) {
+    nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings) {
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aCookieSettings);
+  MOZ_ASSERT(aCookieJarSettings);
 
   uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
   if (aPrincipal->GetIsContentPrincipal()) {
@@ -1929,7 +1930,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return access != nsICookiePermission::ACCESS_DENY;
   }
 
-  int32_t behavior = CookiesBehavior(aPrincipal, aCookieSettings);
+  int32_t behavior = CookiesBehavior(aPrincipal, aCookieJarSettings);
   return behavior != nsICookieService::BEHAVIOR_REJECT;
 }
 
@@ -1951,9 +1952,9 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  if (!parentDocument->CookieSettings()->GetRejectThirdPartyTrackers()) {
+  if (!parentDocument->CookieJarSettings()->GetRejectThirdPartyTrackers()) {
     LOG(("Disabled by the pref (%d), bail out early",
-         parentDocument->CookieSettings()->GetCookieBehavior()));
+         parentDocument->CookieJarSettings()->GetCookieBehavior()));
     return true;
   }
 
@@ -1968,7 +1969,7 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
-      parentDocument->CookieSettings(), parentDocument->NodePrincipal());
+      parentDocument->CookieJarSettings(), parentDocument->NodePrincipal());
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
@@ -2540,16 +2541,16 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
   LOG(("Adding a first-party storage exception for %s...",
        PromiseFlatCString(redirectedOrigin).get()));
 
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  rv = oldLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  rv = oldLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the cookieSettings"));
+    LOG(("Can't get the cookieJarSettings"));
     return;
   }
 
-  int32_t behavior = cookieSettings->GetCookieBehavior();
+  int32_t behavior = cookieJarSettings->GetCookieBehavior();
 
-  if (!cookieSettings->GetRejectThirdPartyTrackers()) {
+  if (!cookieJarSettings->GetRejectThirdPartyTrackers()) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",

@@ -44,7 +44,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/Services.h"
 #include "mozilla/DebugOnly.h"
@@ -1708,11 +1708,11 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   // moment, ServiceWorkers are not exposed in partitioned contexts.
   info.mStoragePrincipal = info.mPrincipal;
 
-  info.mCookieSettings = mozilla::net::CookieSettings::Create();
-  MOZ_ASSERT(info.mCookieSettings);
+  info.mCookieJarSettings = mozilla::net::CookieJarSettings::Create();
+  MOZ_ASSERT(info.mCookieJarSettings);
 
   info.mStorageAccess =
-      StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieSettings);
+      StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieJarSettings);
 
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 

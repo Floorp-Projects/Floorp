@@ -1367,7 +1367,7 @@ function resetPrefs() {
   prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
   prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
   prefs.clearUserPref("network.dns.localDomains");
-  prefs.clearUserPref("network.cookieSettings.unblocked_for_testing");
+  prefs.clearUserPref("network.cookieJarSettings.unblocked_for_testing");
 }
 
 function run_test() {
@@ -1411,7 +1411,7 @@ function run_test() {
     "network.dns.localDomains",
     "foo.example.com, bar.example.com"
   );
-  prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+  prefs.setBoolPref("network.cookieJarSettings.unblocked_for_testing", true);
 
   loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(
     Ci.nsILoadGroup

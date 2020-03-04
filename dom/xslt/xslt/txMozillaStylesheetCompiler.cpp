@@ -561,7 +561,7 @@ nsresult txSyncCompileObserver::loadURI(const nsAString& aUri,
   rv = nsSyncLoadService::LoadDocument(
       uri, nsIContentPolicy::TYPE_XSLT, referrerPrincipal,
       nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS, nullptr,
-      source ? source->OwnerDoc()->CookieSettings() : nullptr, false,
+      source ? source->OwnerDoc()->CookieJarSettings() : nullptr, false,
       aReferrerPolicy, getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
 

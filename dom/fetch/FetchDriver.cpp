@@ -326,14 +326,14 @@ NS_IMPL_ISUPPORTS(FetchDriver, nsIStreamListener, nsIChannelEventSink,
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
                          nsILoadGroup* aLoadGroup,
                          nsIEventTarget* aMainThreadEventTarget,
-                         nsICookieSettings* aCookieSettings,
+                         nsICookieJarSettings* aCookieJarSettings,
                          PerformanceStorage* aPerformanceStorage,
                          bool aIsTrackingFetch)
     : mPrincipal(aPrincipal),
       mLoadGroup(aLoadGroup),
       mRequest(aRequest),
       mMainThreadEventTarget(aMainThreadEventTarget),
-      mCookieSettings(aCookieSettings),
+      mCookieJarSettings(aCookieJarSettings),
       mPerformanceStorage(aPerformanceStorage),
       mNeedToObserveOnDataAvailable(false),
       mIsTrackingFetch(aIsTrackingFetch),
@@ -510,7 +510,7 @@ nsresult FetchDriver::HttpFetch(
   nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND | bypassFlag;
   if (mDocument) {
     MOZ_ASSERT(mDocument->NodePrincipal() == mPrincipal);
-    MOZ_ASSERT(mDocument->CookieSettings() == mCookieSettings);
+    MOZ_ASSERT(mDocument->CookieJarSettings() == mCookieJarSettings);
     rv = NS_NewChannel(getter_AddRefs(chan), uri, mDocument, secFlags,
                        mRequest->ContentPolicyType(),
                        nullptr,             /* aPerformanceStorage */
@@ -519,13 +519,13 @@ nsresult FetchDriver::HttpFetch(
   } else if (mClientInfo.isSome()) {
     rv = NS_NewChannel(getter_AddRefs(chan), uri, mPrincipal, mClientInfo.ref(),
                        mController, secFlags, mRequest->ContentPolicyType(),
-                       mCookieSettings, mPerformanceStorage, mLoadGroup,
+                       mCookieJarSettings, mPerformanceStorage, mLoadGroup,
                        nullptr, /* aCallbacks */
                        loadFlags, ios);
   } else {
     rv =
         NS_NewChannel(getter_AddRefs(chan), uri, mPrincipal, secFlags,
-                      mRequest->ContentPolicyType(), mCookieSettings,
+                      mRequest->ContentPolicyType(), mCookieJarSettings,
                       mPerformanceStorage, mLoadGroup, nullptr, /* aCallbacks */
                       loadFlags, ios);
   }

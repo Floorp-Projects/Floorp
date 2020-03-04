@@ -239,7 +239,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 
   StorageAccess storageAccess;
 
-  nsCOMPtr<nsICookieSettings> cs;
+  nsCOMPtr<nsICookieJarSettings> cjs;
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     if (NS_WARN_IF(!window)) {
@@ -280,7 +280,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 
     Document* doc = window->GetExtantDoc();
     if (doc) {
-      cs = doc->CookieSettings();
+      cjs = doc->CookieJarSettings();
     }
   } else {
     JSContext* cx = aGlobal.Context();
@@ -309,14 +309,14 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     storageAccess = workerPrivate->StorageAccess();
     bc->mWorkerRef = workerRef;
 
-    cs = workerPrivate->CookieSettings();
+    cjs = workerPrivate->CookieJarSettings();
   }
 
   // We want to allow opaque origins.
   if (storagePrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
       (storageAccess == StorageAccess::eDeny ||
        (ShouldPartitionStorage(storageAccess) &&
-        !StoragePartitioningEnabled(storageAccess, cs)))) {
+        !StoragePartitioningEnabled(storageAccess, cjs)))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }

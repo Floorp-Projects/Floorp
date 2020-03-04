@@ -250,7 +250,7 @@ function task(fn) {
   }
 }
 
-// The test will run on a separate window in order to apply the new cookie settings.
+// The test will run on a separate window in order to apply the new cookie jar settings.
 async function runTestInWindow(test) {
   let w = window.open("window_storagePermissions.html");
   await new Promise(resolve => {

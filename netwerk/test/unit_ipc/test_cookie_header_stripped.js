@@ -30,7 +30,7 @@ function run_test() {
     Services.prefs.clearUserPref("network.dns.localDomains");
     Services.prefs.clearUserPref("network.cookie.cookieBehavior");
     Services.prefs.clearUserPref(
-      "network.cookieSettings.unblocked_for_testing"
+      "network.cookieJarSettings.unblocked_for_testing"
     );
 
     httpserv.stop();
@@ -38,7 +38,7 @@ function run_test() {
   });
 
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
   Services.prefs.setCharPref("network.dns.localDomains", TEST_DOMAIN);

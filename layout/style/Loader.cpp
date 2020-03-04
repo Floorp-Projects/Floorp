@@ -1470,7 +1470,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsCOMPtr<nsICookieSettings> cookieSettings;
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   if (mDocument) {
     loadGroup = mDocument->GetDocumentLoadGroup();
     // load for a document with no loadgrup indicates that something is
@@ -1481,7 +1481,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
       return NS_ERROR_UNEXPECTED;
     }
 
-    cookieSettings = mDocument->CookieSettings();
+    cookieJarSettings = mDocument->CookieJarSettings();
   }
 
 #ifdef DEBUG
@@ -1523,7 +1523,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     // triggeringPrincipal should always be the systemPrincipal.
     rv = NS_NewChannel(getter_AddRefs(channel), aLoadData.mURI,
                        nsContentUtils::GetSystemPrincipal(), securityFlags,
-                       contentPolicyType, cookieSettings,
+                       contentPolicyType, cookieJarSettings,
                        /* aPerformanceStorage */ nullptr, loadGroup);
   }
 

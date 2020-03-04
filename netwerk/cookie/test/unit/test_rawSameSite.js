@@ -45,7 +45,7 @@ add_task(async _ => {
   if (!inChildProcess()) {
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
     Services.prefs.setBoolPref(
-      "network.cookieSettings.unblocked_for_testing",
+      "network.cookieJarSettings.unblocked_for_testing",
       true
     );
     Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", true);

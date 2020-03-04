@@ -62,7 +62,7 @@ nsIOfflineCacheUpdate* OfflineCacheUpdateGlue::EnsureUpdate() {
     LOG(("OfflineCacheUpdateGlue [%p] is using update [%p]", this,
          mUpdate.get()));
 
-    mUpdate->SetCookieSettings(mCookieSettings);
+    mUpdate->SetCookieJarSettings(mCookieJarSettings);
   }
 
   return mUpdate;
@@ -124,7 +124,7 @@ OfflineCacheUpdateGlue::Init(nsIURI* aManifestURI, nsIURI* aDocumentURI,
   rv = mUpdate->Init(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr,
                      aCustomProfileDir);
 
-  mUpdate->SetCookieSettings(mCookieSettings);
+  mUpdate->SetCookieJarSettings(mCookieJarSettings);
 
   return rv;
 }
@@ -143,7 +143,7 @@ void OfflineCacheUpdateGlue::SetDocument(Document* aDocument) {
   // implicit (which are the reasons we collect documents here).
   if (!aDocument) return;
 
-  mCookieSettings = aDocument->CookieSettings();
+  mCookieJarSettings = aDocument->CookieJarSettings();
 
   nsIChannel* channel = aDocument->GetChannel();
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =

@@ -28,9 +28,9 @@ function* do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
-  // We don't want to have CookieSettings blocking this test.
+  // We don't want to have CookieJarSettings blocking this test.
   Services.prefs.setBoolPref(
-    "network.cookieSettings.unblocked_for_testing",
+    "network.cookieJarSettings.unblocked_for_testing",
     true
   );
 
