@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +8,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" class="private">
   <head>
     <meta http-equiv="Content-Security-Policy" content="default-src chrome: blob:; object-src 'none'"/>
-    <link rel="icon" type="image/png" href="chrome://browser/skin/privatebrowsing/favicon.svg"/>
-    <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
-    <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" type="text/css" media="all"/>
+    <link rel="icon" href="chrome://browser/skin/privatebrowsing/favicon.svg"/>
+    <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" media="all"/>
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="browser/aboutPrivateBrowsing.ftl"/>
     <script src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
@@ -35,20 +34,20 @@
             data-l10n-args='{"engineName": ""}'></h1>
         <p id="about-private-browsing-search-banner-description"
            data-l10n-id="about-private-browsing-search-banner-description">
-          <a href="" id="open-search-options-link" data-l10n-name="link-options" />
+          <a href="" id="open-search-options-link" data-l10n-name="link-options"></a>
         </p>
       </div>
     </div>
     <div class="showPrivate showSearch container">
       <div class="logo-and-wordmark">
-        <div class="logo" />
-        <div class="wordmark" />
+        <div class="logo"></div>
+        <div class="wordmark"></div>
       </div>
       <div class="search-inner-wrapper">
         <button id="search-handoff-button" class="search-handoff-button" tabindex="-1" data-l10n-id="about-private-browsing">
           <div class="fake-textbox" data-l10n-id="about-private-browsing-search-placeholder"></div>
           <input id="fake-editable" class="fake-editable" tabindex="-1" aria-hidden="true" />
-          <div class="fake-caret" />
+          <div class="fake-caret"></div>
         </button>
       </div>
       <div class="info">
