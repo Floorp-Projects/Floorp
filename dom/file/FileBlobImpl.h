@@ -8,6 +8,7 @@
 #define mozilla_dom_FileBlobImpl_h
 
 #include "mozilla/dom/BaseBlobImpl.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 
 class nsIFile;
@@ -45,9 +46,15 @@ class FileBlobImpl : public BaseBlobImpl {
 
   virtual bool IsDirectory() const override;
 
-  // We always have size and date for this kind of blob.
+  virtual void SetLazyData(const nsAString& aName,
+                           const nsAString& aContentType, uint64_t aLength,
+                           int64_t aLastModifiedDate) override {
+    BaseBlobImpl::SetLazyData(aName, aContentType, aLength, 0);
+    mLastModified.emplace(aLastModifiedDate);
+  }
+
+  // We always have size for this kind of blob.
   virtual bool IsSizeUnknown() const override { return false; }
-  virtual bool IsDateUnknown() const override { return false; }
 
   void SetName(const nsAString& aName) { mName = aName; }
 
@@ -60,6 +67,10 @@ class FileBlobImpl : public BaseBlobImpl {
   void SetEmptySize() { mLength = 0; }
 
   void SetMozFullPath(const nsAString& aPath) { mMozFullPath = aPath; }
+
+  void SetLastModified(int64_t aLastModified) {
+    mLastModified.emplace(aLastModified);
+  }
 
  protected:
   virtual ~FileBlobImpl() = default;
@@ -82,11 +93,12 @@ class FileBlobImpl : public BaseBlobImpl {
   // - GetMozFullPathInternal - mMozFullPath
   // - GetSize - mLength
   // - GetType - mContentType
-  // - GetLastModified - mLastModificationDate
+  // - GetLastModified - mLastModifed
   Mutex mMutex;
 
   nsCOMPtr<nsIFile> mFile;
   nsString mMozFullPath;
+  Maybe<int64_t> mLastModified;
   int64_t mFileId;
   bool mWholeFile;
 };

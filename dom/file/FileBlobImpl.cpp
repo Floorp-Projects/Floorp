@@ -20,7 +20,10 @@ namespace dom {
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), EmptyString(),
-                   EmptyString(), UINT64_MAX, INT64_MAX),
+                   EmptyString(), UINT64_MAX,
+                   // We pass 0 as lastModified because FileblobImpl has a
+                   // different way to compute the value of this attribute
+                   0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
@@ -37,7 +40,10 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
-                   aLength, UINT64_MAX),
+                   aLength,
+                   // We pass 0 as lastModified because FileblobImpl has a
+                   // different way to compute the value of this attribute
+                   0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
@@ -64,7 +70,7 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
                            const nsAString& aContentType,
                            const nsAString& aBlobImplType)
-    : BaseBlobImpl(aBlobImplType, aName, aContentType, UINT64_MAX, INT64_MAX),
+    : BaseBlobImpl(aBlobImplType, aName, aContentType, UINT64_MAX, 0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
@@ -226,17 +232,17 @@ int64_t FileBlobImpl::GetLastModified(ErrorResult& aRv) {
 
   MutexAutoLock lock(mMutex);
 
-  if (BaseBlobImpl::IsDateUnknown()) {
+  if (mLastModified.isNothing()) {
     PRTime msecs;
     aRv = mFile->GetLastModifiedTime(&msecs);
     if (NS_WARN_IF(aRv.Failed())) {
       return 0;
     }
 
-    mLastModificationDate = msecs;
+    mLastModified.emplace(int64_t(msecs));
   }
 
-  return mLastModificationDate;
+  return mLastModified.value();
 }
 
 const uint32_t sFileStreamFlags =
