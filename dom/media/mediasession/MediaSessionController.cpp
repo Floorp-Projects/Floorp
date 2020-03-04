@@ -6,8 +6,9 @@
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-
+#include "mozilla/StaticPrefs_media.h"
 #include "nsIChromeRegistry.h"
+#include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
 
 #ifdef MOZ_PLACES
@@ -80,6 +81,12 @@ void MediaSessionController::UpdateMetadata(
     mMetadataMap.Put(aSessionContextId, aMetadata);
   }
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "media-session-controller-metadata-changed",
+                           nullptr);
+    }
+  }
 }
 
 void MediaSessionController::UpdateActiveMediaSessionContextId() {
