@@ -7,7 +7,7 @@
 # Temporarily disabled. See bug 1256495.
 #test_certificates = (
 #    'ca.pem',
-#    'ee.pem',
+#    'default-ee.pem',
 #    'ee2.pem',
 #    'int.pem',
 #    'int2.pem',
@@ -15,3 +15,10 @@
 #
 #for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)
+#
+#test_keys = (
+#    'default-ee.key',
+#)
+#
+#for test_key in test_keys:
+#    GeneratedTestKey(test_key)
