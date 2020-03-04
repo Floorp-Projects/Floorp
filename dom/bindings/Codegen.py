@@ -7574,8 +7574,10 @@ class CGCallGenerator(CGThing):
                 args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
 
         canOOM = "canOOM" in extendedAttributes
-        if isFallible or canOOM:
+        if isFallible:
             args.append(CGGeneric("rv"))
+        elif canOOM:
+            args.append(CGGeneric("OOMReporter::From(rv)"))
         args.extend(CGGeneric(arg) for arg in argsPost)
 
         call = CGGeneric(nativeMethodName)
@@ -7620,11 +7622,7 @@ class CGCallGenerator(CGThing):
         self.cgRoot.append(call)
 
         if isFallible or canOOM:
-            if isFallible:
-                reporterClass = "FastErrorResult"
-            else:
-                reporterClass = "binding_danger::OOMReporterInstantiator"
-            self.cgRoot.prepend(CGGeneric("%s rv;\n" % reporterClass))
+            self.cgRoot.prepend(CGGeneric("FastErrorResult rv;\n"))
             self.cgRoot.append(CGGeneric(fill(
                 """
                 if (MOZ_UNLIKELY(rv.MaybeSetPendingException(cx, ${context}))) {
