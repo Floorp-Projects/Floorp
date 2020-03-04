@@ -20,22 +20,29 @@
   padding: 0;
 }
 
-/*
- * Layout of the issue item
- *  +------+--------------+-----------------+---------------------------+
- *  | icon | issue factor | (issue causes)? | unsupported browser icons |
- *  +------+--------------+-----------------+---------------------------+
- */
 .compatibility-issue-item {
-  display: grid;
-  grid-template-columns: var(--compatibility-issue-icon-size) max-content 1fr max-content;
-  align-items: center;
   padding-inline-start: calc(var(--compatibility-base-unit) * 2);
   padding-inline-end: calc(var(--compatibility-base-unit) * 4);
   padding-block: calc(var(--compatibility-base-unit) * 2);
 }
 
-.compatibility-issue-item > *:nth-child(-n+2) {
+.compatibility-issue-item:not(:last-child) {
+  border-block-end: 1px solid var(--theme-splitter-color);
+}
+
+/*
+ * Layout of the issue description
+ *  +------+--------------+-----------------+---------------------------+
+ *  | icon | issue factor | (issue causes)? | unsupported browser icons |
+ *  +------+--------------+-----------------+---------------------------+
+ */
+.compatibility-issue-item__description {
+  display: grid;
+  grid-template-columns: var(--compatibility-issue-icon-size) max-content 1fr max-content;
+  align-items: center;
+}
+
+.compatibility-issue-item__description > *:nth-child(-n+2) {
   /*
    * The reason why we don't use `gap` in `.compatibility-issue-item` is
    * because there are cases that the `issue causes` element is null,
@@ -44,11 +51,7 @@
   margin-inline-start: var(--compatibility-base-unit);
 }
 
-.compatibility-issue-item:not(:last-child) {
-  border-block-end: 1px solid var(--theme-splitter-color);
-}
-
-.compatibility-issue-item::before {
+.compatibility-issue-item__description::before {
   content: "";
   width: var(--compatibility-issue-icon-size);
   height: var(--compatibility-issue-icon-size);
@@ -56,12 +59,12 @@
   -moz-context-properties: fill;
 }
 
-.compatibility-issue-item--experimental::before,
-.compatibility-issue-item--unsupported::before {
+.compatibility-issue-item__description--experimental::before,
+.compatibility-issue-item__description--unsupported::before {
   background-image: url(chrome://devtools/skin/images/info.svg);
 }
 
-.compatibility-issue-item--deprecated::before {
+.compatibility-issue-item__description--deprecated::before {
   background-image: url(chrome://devtools/skin/images/alert-small.svg);
   fill: var(--theme-icon-warning-color);
 }
