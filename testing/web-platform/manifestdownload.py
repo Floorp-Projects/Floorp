@@ -5,9 +5,14 @@ import os
 from datetime import datetime, timedelta
 import tarfile
 import requests
+import six
 import vcs
-from cStringIO import StringIO
 import logging
+
+try:
+    from cStringIO import StringIO as BytesIO
+except ImportError:
+    from io import BytesIO
 
 HEADERS = {'User-Agent': "wpt manifest download"}
 
@@ -117,7 +122,7 @@ def taskcluster_url(logger, commits):
 
 
 def download_manifest(logger, test_paths, commits_func, url_func, force=False):
-    manifest_paths = [item["manifest_path"] for item in test_paths.itervalues()]
+    manifest_paths = [item["manifest_path"] for item in six.itervalues(test_paths)]
 
     if not force and not should_download(logger, manifest_paths):
         return True
@@ -141,8 +146,8 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
                         "HTTP status %d" % req.status_code)
         return False
 
-    tar = tarfile.open(mode="r:gz", fileobj=StringIO(req.content))
-    for paths in test_paths.itervalues():
+    tar = tarfile.open(mode="r:gz", fileobj=BytesIO(req.content))
+    for paths in six.itervalues(test_paths):
         try:
             member = tar.getmember(paths["manifest_rel_path"].replace(os.path.sep, "/"))
         except KeyError:
@@ -151,7 +156,7 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
             try:
                 logger.debug("Unpacking %s to %s" % (member.name, paths["manifest_path"]))
                 src = tar.extractfile(member)
-                with open(paths["manifest_path"], "w") as dest:
+                with open(paths["manifest_path"], "wb") as dest:
                     dest.write(src.read())
                 src.close()
             except IOError:
