@@ -2554,12 +2554,6 @@ int32_t nsHttpTransaction::GetProxyConnectResponseCode() {
   return mProxyConnectResponseCode;
 }
 
-void nsHttpTransaction::GetTransactionObserverResult(
-    TransactionObserverResult& aResult) {
-  MutexAutoLock lock(mLock);
-  aResult = mTransactionObserverResult;
-}
-
 void nsHttpTransaction::NotifyTransactionObserver(nsresult reason) {
   MOZ_ASSERT(OnSocketThread());
 
@@ -2592,16 +2586,14 @@ void nsHttpTransaction::NotifyTransactionObserver(nsresult reason) {
     }
   }
 
-  {
-    MutexAutoLock lock(mLock);
-    mTransactionObserverResult.versionOk() = versionOk;
-    mTransactionObserverResult.authOk() = authOk;
-    mTransactionObserverResult.closeReason() = reason;
-  }
+  TransactionObserverResult result;
+  result.versionOk() = versionOk;
+  result.authOk() = authOk;
+  result.closeReason() = reason;
 
   TransactionObserverFunc obs = nullptr;
   std::swap(obs, mTransactionObserver);
-  obs();
+  obs(std::move(result));
 }
 
 }  // namespace net
