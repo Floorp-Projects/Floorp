@@ -567,5 +567,18 @@ nsresult AddClientChannelHelperInParent(
   return NS_OK;
 }
 
+void CreateReservedSourceIfNeeded(nsIChannel* aChannel,
+                                  nsISerialEventTarget* aEventTarget) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  const Maybe<ClientInfo>& reservedClientInfo =
+      loadInfo->GetReservedClientInfo();
+
+  if (reservedClientInfo) {
+    UniquePtr<ClientSource> reservedClient =
+        ClientManager::CreateSourceFromInfo(*reservedClientInfo, aEventTarget);
+    loadInfo->GiveReservedClientSource(std::move(reservedClient));
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla

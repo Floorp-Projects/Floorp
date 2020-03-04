@@ -283,10 +283,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       const ClientInfo& aClientInfo,
       ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
-  void UpdateControlledClient(const ClientInfo& aOldClientInfo,
-                              const ClientInfo& aNewClientInfo,
-                              const ServiceWorkerDescriptor& aServiceWorker);
-
   // Returns the shutdown state ID (may be an invalid ID if an
   // nsIAsyncShutdownBlocker is not used).
   uint32_t MaybeInitServiceWorkerShutdownProgress() const;
