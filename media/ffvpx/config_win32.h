@@ -3,10 +3,10 @@
 #define FFMPEG_CONFIG_H
 #define FFMPEG_CONFIGURATION "--disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vdpau --disable-videotoolbox --enable-decoder=flac --enable-asm --enable-x86asm --disable-cuda --disable-cuvid --enable-decoder=mp3 --toolchain=msvc"
 #define FFMPEG_LICENSE "LGPL version 2.1 or later"
-#define CONFIG_THIS_YEAR 2018
+#define CONFIG_THIS_YEAR 2019
 #define FFMPEG_DATADIR "/usr/local/share/ffmpeg"
 #define AVCONV_DATADIR "/usr/local/share/ffmpeg"
-#define CC_IDENT "Microsoft (R) C/C++ Optimizing Compiler Version 19.15.26726 for x86"
+#define CC_IDENT "Microsoft (R) C/C++ Optimizing Compiler Version 19.24.28315 for x86"
 #define av_restrict __restrict
 #define EXTERN_PREFIX "_"
 #define EXTERN_ASM _
@@ -80,6 +80,7 @@
 #define HAVE_MIPSDSP 0
 #define HAVE_MIPSDSPR2 0
 #define HAVE_MSA 0
+#define HAVE_MSA2 0
 #define HAVE_LOONGSON2 0
 #define HAVE_LOONGSON3 0
 #define HAVE_MMI 0
@@ -102,7 +103,7 @@
 #define HAVE_AMD3DNOWEXT_EXTERNAL 1
 #define HAVE_AVX_EXTERNAL 1
 #define HAVE_AVX2_EXTERNAL 1
-#define HAVE_AVX512_EXTERNAL 0
+#define HAVE_AVX512_EXTERNAL 1
 #define HAVE_FMA3_EXTERNAL 1
 #define HAVE_FMA4_EXTERNAL 1
 #define HAVE_MMX_EXTERNAL 1
@@ -125,6 +126,7 @@
 #define HAVE_MIPSDSP_EXTERNAL 0
 #define HAVE_MIPSDSPR2_EXTERNAL 0
 #define HAVE_MSA_EXTERNAL 0
+#define HAVE_MSA2_EXTERNAL 0
 #define HAVE_LOONGSON2_EXTERNAL 0
 #define HAVE_LOONGSON3_EXTERNAL 0
 #define HAVE_MMI_EXTERNAL 0
@@ -170,6 +172,7 @@
 #define HAVE_MIPSDSP_INLINE 0
 #define HAVE_MIPSDSPR2_INLINE 0
 #define HAVE_MSA_INLINE 0
+#define HAVE_MSA2_INLINE 0
 #define HAVE_LOONGSON2_INLINE 0
 #define HAVE_LOONGSON3_INLINE 0
 #define HAVE_MMI_INLINE 0
@@ -337,13 +340,14 @@
 #define HAVE_INLINE_ASM_LABELS 0
 #define HAVE_INLINE_ASM_NONLOCAL_LABELS 0
 #define HAVE_PRAGMA_DEPRECATED 1
-#define HAVE_RSYNC_CONTIMEOUT 0
+#define HAVE_RSYNC_CONTIMEOUT 1
 #define HAVE_SYMVER_ASM_LABEL 0
 #define HAVE_SYMVER_GNU_ASM 0
 #define HAVE_VFP_ARGS 0
 #define HAVE_XFORM_ASM 0
 #define HAVE_XMM_CLOBBERS 0
 #define HAVE_KCMVIDEOCODECTYPE_HEVC 0
+#define HAVE_KCVPIXELFORMATTYPE_420YPCBCR10BIPLANARVIDEORANGE 0
 #define HAVE_SOCKLEN_T 1
 #define HAVE_STRUCT_ADDRINFO 1
 #define HAVE_STRUCT_GROUP_SOURCE_REQ 1
@@ -406,13 +410,14 @@
 #define CONFIG_LIBX264 0
 #define CONFIG_LIBX265 0
 #define CONFIG_LIBXAVS 0
+#define CONFIG_LIBXAVS2 0
 #define CONFIG_LIBXVID 0
 #define CONFIG_DECKLINK 0
-#define CONFIG_LIBNDI_NEWTEK 0
 #define CONFIG_LIBFDK_AAC 0
 #define CONFIG_OPENSSL 0
 #define CONFIG_LIBTLS 0
 #define CONFIG_GMP 0
+#define CONFIG_LIBARIBB24 0
 #define CONFIG_LIBLENSFUN 0
 #define CONFIG_LIBOPENCORE_AMRNB 0
 #define CONFIG_LIBOPENCORE_AMRWB 0
@@ -433,6 +438,7 @@
 #define CONFIG_LIBCACA 0
 #define CONFIG_LIBCELT 0
 #define CONFIG_LIBCODEC2 0
+#define CONFIG_LIBDAV1D 0
 #define CONFIG_LIBDC1394 0
 #define CONFIG_LIBDRM 0
 #define CONFIG_LIBFLITE 0
@@ -444,6 +450,7 @@
 #define CONFIG_LIBIEC61883 0
 #define CONFIG_LIBILBC 0
 #define CONFIG_LIBJACK 0
+#define CONFIG_LIBKLVANC 0
 #define CONFIG_LIBKVAZAAR 0
 #define CONFIG_LIBMODPLUG 0
 #define CONFIG_LIBMP3LAME 0
@@ -480,6 +487,7 @@
 #define CONFIG_MEDIACODEC 0
 #define CONFIG_OPENAL 0
 #define CONFIG_OPENGL 0
+#define CONFIG_POCKETSPHINX 0
 #define CONFIG_VAPOURSYNTH 0
 #define CONFIG_ALSA 0
 #define CONFIG_APPKIT 0
@@ -498,6 +506,7 @@
 #define CONFIG_SNDIO 0
 #define CONFIG_XLIB 0
 #define CONFIG_ZLIB 0
+#define CONFIG_CUDA_NVCC 0
 #define CONFIG_CUDA_SDK 0
 #define CONFIG_LIBNPP 0
 #define CONFIG_LIBMFX 0
@@ -508,6 +517,7 @@
 #define CONFIG_AUDIOTOOLBOX 0
 #define CONFIG_CRYSTALHD 0
 #define CONFIG_CUDA 0
+#define CONFIG_CUDA_LLVM 0
 #define CONFIG_CUVID 0
 #define CONFIG_D3D11VA 0
 #define CONFIG_DXVA2 0
@@ -549,13 +559,13 @@
 #define CONFIG_ERROR_RESILIENCE 0
 #define CONFIG_FAAN 1
 #define CONFIG_FAST_UNALIGNED 1
-#define CONFIG_FFT 0
+#define CONFIG_FFT 1
 #define CONFIG_LSP 0
 #define CONFIG_LZO 0
 #define CONFIG_MDCT 0
 #define CONFIG_PIXELUTILS 0
 #define CONFIG_NETWORK 0
-#define CONFIG_RDFT 0
+#define CONFIG_RDFT 1
 #define CONFIG_AUTODETECT 0
 #define CONFIG_FONTCONFIG 0
 #define CONFIG_LINUX_PERF 0
@@ -578,8 +588,10 @@
 #define CONFIG_BSWAPDSP 0
 #define CONFIG_CABAC 0
 #define CONFIG_CBS 0
+#define CONFIG_CBS_AV1 0
 #define CONFIG_CBS_H264 0
 #define CONFIG_CBS_H265 0
+#define CONFIG_CBS_JPEG 0
 #define CONFIG_CBS_MPEG2 0
 #define CONFIG_CBS_VP9 0
 #define CONFIG_DIRAC_PARSE 0
@@ -591,6 +603,7 @@
 #define CONFIG_FDCTDSP 1
 #define CONFIG_FLACDSP 1
 #define CONFIG_FMTCONVERT 0
+#define CONFIG_FRAME_THREAD_ENCODER 0
 #define CONFIG_G722DSP 0
 #define CONFIG_GOLOMB 0
 #define CONFIG_GPLV3 0
@@ -639,6 +652,7 @@
 #define CONFIG_RTPDEC 0
 #define CONFIG_RTPENC_CHAIN 0
 #define CONFIG_RV34DSP 0
+#define CONFIG_SCENE_SAD 0
 #define CONFIG_SINEWIN 0
 #define CONFIG_SNAPPY 0
 #define CONFIG_SRTP 0
@@ -660,7 +674,7 @@
 #define CONFIG_VP8_DECODER 1
 #define CONFIG_VP9_DECODER 1
 #define CONFIG_FLAC_DECODER 1
+#define CONFIG_MP3_DECODER 1
 #define CONFIG_VP8_PARSER 1
 #define CONFIG_VP9_PARSER 1
-#define CONFIG_MP3_DECODER 1
 #endif /* FFMPEG_CONFIG_H */

@@ -54,6 +54,7 @@ SOURCES += [
     'null_bsf.c',
     'options.c',
     'parser.c',
+    'parsers.c',
     'pthread.c',
     'pthread_frame.c',
     'pthread_slice.c',
