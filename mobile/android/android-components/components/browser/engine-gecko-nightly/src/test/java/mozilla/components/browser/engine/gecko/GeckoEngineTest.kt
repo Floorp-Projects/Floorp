@@ -631,6 +631,7 @@ class GeckoEngineTest {
     }
 
     @Test
+    @Suppress("Deprecation")
     fun `web extension delegate handles opening a new tab`() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
@@ -667,6 +668,7 @@ class GeckoEngineTest {
     }
 
     @Test
+    @Suppress("Deprecation")
     fun `web extension delegate handles closing tab`() {
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
