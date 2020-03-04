@@ -80,33 +80,22 @@ class HttpConnectionUDP final : public HttpConnectionBase,
 
   bool UsingHttp3() override { return true; }
 
+  static void OnQuicTimeout(nsITimer* aTimer, void* aClosure);
+  void OnQuicTimeoutExpired();
+
  private:
   MOZ_MUST_USE nsresult OnTransactionDone(nsresult reason);
   MOZ_MUST_USE nsresult OnSocketWritable();
   MOZ_MUST_USE nsresult OnSocketReadable();
 
-  // Makes certain the SSL handshake is complete and NPN negotiation
-  // has had a chance to happen
-  MOZ_MUST_USE bool EnsureNPNComplete();
-
-  // Directly Add a transaction to an active connection for SPDY
-  MOZ_MUST_USE nsresult AddTransaction(nsAHttpTransaction*, int32_t);
-
  private:
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
-
-  nsresult mSocketInCondition;
-  nsresult mSocketOutCondition;
-
-  nsCOMPtr<nsIInputStream> mProxyConnectStream;
-  nsCOMPtr<nsIInputStream> mRequestStream;
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
 
   PRIntervalTime mLastReadTime;
   PRIntervalTime mLastWriteTime;
-  int64_t mMaxBytesRead;         // max read in 1 activation
   int64_t mTotalBytesRead;       // total data read
   int64_t mContentBytesWritten;  // does not include CONNECT tunnel or TLS
 
@@ -116,8 +105,6 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   bool mDontReuse;
   bool mIsReused;
   bool mLastTransactionExpectedNoContent;
-
-  bool mNPNComplete;
 
   int32_t mPriority;
 
