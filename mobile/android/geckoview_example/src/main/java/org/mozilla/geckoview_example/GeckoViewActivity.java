@@ -653,7 +653,8 @@ public class GeckoViewActivity
 
         session.setSelectionActionDelegate(new BasicSelectionActionDelegate(this));
         if (sExtensionManager.extension != null) {
-            session.setWebExtensionActionDelegate(sExtensionManager.extension, sExtensionManager);
+            session.getWebExtensionController()
+                    .setActionDelegate(sExtensionManager.extension, sExtensionManager);
         }
 
         updateTrackingProtection(session);
