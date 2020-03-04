@@ -10,7 +10,7 @@ from setuptools import setup
 PACKAGE_NAME = 'mozdevice'
 PACKAGE_VERSION = '3.0.7'
 
-deps = ['mozlog >= 5.0']
+deps = ['mozlog >= 6.0']
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

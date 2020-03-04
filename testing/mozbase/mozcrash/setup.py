@@ -7,11 +7,11 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozcrash'
-PACKAGE_VERSION = '1.2.0'
+PACKAGE_VERSION = '2.0.0'
 
 # dependencies
 deps = ['mozfile >= 1.0',
-        'mozlog >= 5.0']
+        'mozlog >= 6.0']
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
