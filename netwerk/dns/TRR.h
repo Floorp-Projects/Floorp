@@ -165,8 +165,6 @@ class TRR : public Runnable,
 
   bool UseDefaultServer();
 
-  nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
-
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
   TimeStamp mStartTime;

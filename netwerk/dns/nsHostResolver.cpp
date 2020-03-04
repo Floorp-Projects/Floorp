@@ -1272,7 +1272,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
       RefPtr<TRR> trr;
       MutexAutoLock trrlock(addrRec->mTrrLock);
       trr = pushedTRR ? pushedTRR : new TRR(this, rec, rectype);
-      if (pushedTRR || NS_SUCCEEDED(gTRRService->DispatchTRRRequest(trr))) {
+      if (pushedTRR || NS_SUCCEEDED(NS_DispatchToMainThread(trr))) {
         addrRec->mResolving++;
         if (rectype == TRRTYPE_A) {
           MOZ_ASSERT(!addrRec->mTrrA);
@@ -1305,8 +1305,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
     RefPtr<TRR> trr;
     MutexAutoLock trrlock(typeRec->mTrrLock);
     trr = pushedTRR ? pushedTRR : new TRR(this, rec, rectype);
-    RefPtr<TRR> trrRequest = trr;
-    if (pushedTRR || NS_SUCCEEDED(gTRRService->DispatchTRRRequest(trr))) {
+    if (pushedTRR || NS_SUCCEEDED(NS_DispatchToMainThread(trr))) {
       typeRec->mResolving++;
       MOZ_ASSERT(!typeRec->mTrr);
       typeRec->mTrr = trr;
