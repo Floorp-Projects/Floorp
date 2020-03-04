@@ -106,14 +106,19 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
       MakeRefPtr<StyleSheet>(css::SheetParsingMode::eAuthorSheetFeatures,
                              CORSMode::CORS_NONE, dom::SRIMetadata());
 
-  RefPtr<nsIURI> baseURI = nullptr;
+  // baseURL not yet in the spec. Implemented based on the following discussion:
+  // https://github.com/WICG/construct-stylesheets/issues/95#issuecomment-594217180
+  RefPtr<nsIURI> baseURI;
   if (!aOptions.mBaseURL.WasPassed()) {
     baseURI = constructorDocument->GetBaseURI();
-  } else if (NS_FAILED(NS_NewURI(getter_AddRefs(baseURI),
-                                 aOptions.mBaseURL.Value()))) {
-    aRv.ThrowNotAllowedError(
-        "Constructed style sheets must have a valid base url");
-    return nullptr;
+  } else {
+    nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aOptions.mBaseURL.Value(),
+                            nullptr, constructorDocument->GetBaseURI());
+    if (NS_FAILED(rv)) {
+      aRv.ThrowNotAllowedError(
+          "Constructed style sheets must have a valid base URL");
+      return nullptr;
+    }
   }
 
   nsIURI* sheetURI = constructorDocument->GetDocumentURI();
