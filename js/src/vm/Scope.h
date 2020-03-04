@@ -560,6 +560,10 @@ class FunctionScope : public Scope {
                                       bool needsEnvironment, HandleFunction fun,
                                       MutableHandleShape envShape);
 
+  static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
+                                       bool needsEnvironment,
+                                       bool hasParameterExprs);
+
   static FunctionScope* clone(JSContext* cx, Handle<FunctionScope*> scope,
                               HandleFunction fun, HandleScope enclosing);
 
@@ -652,6 +656,9 @@ class VarScope : public Scope {
                                       bool needsEnvironment,
                                       MutableHandleShape envShape);
 
+  static bool updateEnvShapeIfRequired(JSContext* cx,
+                                       MutableHandleShape envShape,
+                                       bool needsEnvironment);
   Data& data() { return *static_cast<Data*>(data_); }
 
   const Data& data() const { return *static_cast<Data*>(data_); }
@@ -823,6 +830,10 @@ class EvalScope : public Scope {
                                       MutableHandle<UniquePtr<Data>> data,
                                       MutableHandleShape envShape);
 
+  static bool updateEnvShapeIfRequired(JSContext* cx,
+                                       MutableHandleShape envShape,
+                                       ScopeKind scopeKind);
+
   Data& data() { return *static_cast<Data*>(data_); }
 
   const Data& data() const { return *static_cast<Data*>(data_); }
@@ -915,6 +926,9 @@ class ModuleScope : public Scope {
                                       MutableHandle<UniquePtr<Data>> data,
                                       HandleModuleObject module,
                                       MutableHandleShape envShape);
+
+  static bool updateEnvShapeIfRequired(JSContext* cx,
+                                       MutableHandleShape envShape);
 
   Data& data() { return *static_cast<Data*>(data_); }
 
