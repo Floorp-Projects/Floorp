@@ -38,37 +38,28 @@ File* File::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
 }
 
 /* static */
-already_AddRefed<File> File::Create(nsIGlobalObject* aGlobal,
-                                    const nsAString& aName,
-                                    const nsAString& aContentType,
-                                    uint64_t aLength,
-                                    int64_t aLastModifiedDate) {
-  MOZ_ASSERT(aGlobal);
-  if (NS_WARN_IF(!aGlobal)) {
-    return nullptr;
-  }
+already_AddRefed<File> File::CreateMemoryFileWithCustomLastModified(
+    nsIGlobalObject* aGlobal, void* aMemoryBuffer, uint64_t aLength,
+    const nsAString& aName, const nsAString& aContentType,
+    int64_t aLastModifiedDate) {
+  RefPtr<MemoryBlobImpl> blobImpl =
+      MemoryBlobImpl::CreateWithCustomLastModified(
+          aMemoryBuffer, aLength, aName, aContentType, aLastModifiedDate);
+  MOZ_ASSERT(blobImpl);
 
-  RefPtr<File> file = new File(
-      aGlobal, new BaseBlobImpl(NS_LITERAL_STRING("BaseBlobImpl"), aName,
-                                aContentType, aLength, aLastModifiedDate));
+  RefPtr<File> file = File::Create(aGlobal, blobImpl);
   return file.forget();
 }
 
 /* static */
-already_AddRefed<File> File::CreateMemoryFile(nsIGlobalObject* aGlobal,
-                                              void* aMemoryBuffer,
-                                              uint64_t aLength,
-                                              const nsAString& aName,
-                                              const nsAString& aContentType,
-                                              int64_t aLastModifiedDate) {
-  MOZ_ASSERT(aGlobal);
-  if (NS_WARN_IF(!aGlobal)) {
-    return nullptr;
-  }
+already_AddRefed<File> File::CreateMemoryFileWithLastModifiedNow(
+    nsIGlobalObject* aGlobal, void* aMemoryBuffer, uint64_t aLength,
+    const nsAString& aName, const nsAString& aContentType) {
+  RefPtr<MemoryBlobImpl> blobImpl = MemoryBlobImpl::CreateWithLastModifiedNow(
+      aMemoryBuffer, aLength, aName, aContentType);
+  MOZ_ASSERT(blobImpl);
 
-  RefPtr<File> file =
-      new File(aGlobal, new MemoryBlobImpl(aMemoryBuffer, aLength, aName,
-                                           aContentType, aLastModifiedDate));
+  RefPtr<File> file = File::Create(aGlobal, blobImpl);
   return file.forget();
 }
 

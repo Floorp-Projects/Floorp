@@ -16,6 +16,10 @@
 namespace mozilla {
 namespace dom {
 
+// This is just a sentinel value to be sure that we don't call
+// SetLengthAndModifiedDate more than once.
+constexpr int64_t MULTIPARTBLOBIMPL_UNKNOWN_LAST_MODIFIED = INT64_MAX;
+
 class MultipartBlobImpl final : public BaseBlobImpl {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MultipartBlobImpl, BaseBlobImpl)
@@ -33,7 +37,8 @@ class MultipartBlobImpl final : public BaseBlobImpl {
   // Create as a file to be later initialized
   explicit MultipartBlobImpl(const nsAString& aName)
       : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), aName,
-                     EmptyString(), UINT64_MAX) {}
+                     EmptyString(), UINT64_MAX,
+                     MULTIPARTBLOBIMPL_UNKNOWN_LAST_MODIFIED) {}
 
   // Create as a blob to be later initialized
   MultipartBlobImpl()
@@ -68,13 +73,18 @@ class MultipartBlobImpl final : public BaseBlobImpl {
 
   void GetBlobImplType(nsAString& aBlobImplType) const override;
 
+  void SetLastModified(int64_t aLastModified);
+
  protected:
+  // File constructor.
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aName, const nsAString& aContentType)
       : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), aName,
-                     aContentType, UINT64_MAX),
+                     aContentType, UINT64_MAX,
+                     MULTIPARTBLOBIMPL_UNKNOWN_LAST_MODIFIED),
         mBlobImpls(std::move(aBlobImpls)) {}
 
+  // Blob constructor.
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aContentType)
       : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), aContentType,

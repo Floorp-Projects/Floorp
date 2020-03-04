@@ -48,18 +48,7 @@ void BaseBlobImpl::GetType(nsAString& aType) { aType = mContentType; }
 
 int64_t BaseBlobImpl::GetLastModified(ErrorResult& aRv) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
-  if (IsDateUnknown()) {
-    mLastModificationDate =
-        nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now(), 0);
-    // mLastModificationDate is an absolute timestamp so we supply a zero
-    // context mix-in
-  }
-
   return mLastModificationDate / PR_USEC_PER_MSEC;
-}
-
-void BaseBlobImpl::SetLastModified(int64_t aLastModified) {
-  mLastModificationDate = aLastModified * PR_USEC_PER_MSEC;
 }
 
 int64_t BaseBlobImpl::GetFileId() { return -1; }
