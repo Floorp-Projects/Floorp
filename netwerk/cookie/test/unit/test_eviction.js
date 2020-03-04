@@ -174,7 +174,7 @@ function setCookie(name, domain, path, maxAge, url) {
   }
   s += " for " + url.spec;
   info(s);
-  cs.setCookieStringFromHttp(url, null, null, value, null, null);
+  cs.setCookieStringFromHttp(url, null, value, null, null);
   return new Promise(function(resolve) {
     // Windows XP has low precision timestamps that cause our cookie eviction
     // algorithm to produce different results from other platforms. We work around

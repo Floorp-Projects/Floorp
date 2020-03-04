@@ -2102,41 +2102,18 @@ already_AddRefed<nsICookieJarSettings> nsCookieService::GetCookieJarSettings(
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieString(nsIURI* aHostURI, nsIPrompt* aPrompt,
+nsCookieService::SetCookieString(nsIURI* aHostURI,
                                  const nsACString& aCookieHeader,
                                  nsIChannel* aChannel) {
-  // The aPrompt argument is deprecated and unused.  Avoid introducing new
-  // code that uses this argument by warning if the value is non-null.
-  MOZ_ASSERT(!aPrompt);
-  if (aPrompt) {
-    nsCOMPtr<nsIConsoleService> aConsoleService =
-        do_GetService("@mozilla.org/consoleservice;1");
-    if (aConsoleService) {
-      aConsoleService->LogStringMessage(
-          u"Non-null prompt ignored by nsCookieService.");
-    }
-  }
   return SetCookieStringCommon(aHostURI, aCookieHeader, VoidCString(), aChannel,
                                false);
 }
 
 NS_IMETHODIMP
 nsCookieService::SetCookieStringFromHttp(nsIURI* aHostURI, nsIURI* aFirstURI,
-                                         nsIPrompt* aPrompt,
                                          const nsACString& aCookieHeader,
                                          const nsACString& aServerTime,
                                          nsIChannel* aChannel) {
-  // The aPrompt argument is deprecated and unused.  Avoid introducing new
-  // code that uses this argument by warning if the value is non-null.
-  MOZ_ASSERT(!aPrompt);
-  if (aPrompt) {
-    nsCOMPtr<nsIConsoleService> aConsoleService =
-        do_GetService("@mozilla.org/consoleservice;1");
-    if (aConsoleService) {
-      aConsoleService->LogStringMessage(
-          u"Non-null prompt ignored by nsCookieService.");
-    }
-  }
   return SetCookieStringCommon(aHostURI, aCookieHeader, aServerTime, aChannel,
                                true);
 }
@@ -2145,8 +2122,7 @@ int64_t nsCookieService::ParseServerTime(const nsACString& aServerTime) {
   // parse server local time. this is not just done here for efficiency
   // reasons - if there's an error parsing it, and we need to default it
   // to the current time, we must do it here since the current time in
-  // SetCookieInternal() will change for each cookie processed (e.g. if the
-  // user is prompted).
+  // SetCookieInternal() will change for each cookie processed.
   PRTime tempServerTime;
   int64_t serverTime;
   PRStatus result =
