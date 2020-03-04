@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1619852
+-->
+<html>
+<head>
+<title>Test for Bug 1619852</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1619852">Bug 1619852</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<div contenteditable>abcd</div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let editor = document.querySelector("div[contenteditable]");
+  // Do nothing, but `HTMLEditor` may use different path to detect unexpected DOM tree or selection change.
+  editor.addEventListener("DOMNodeRemoved", () => {});
+  getSelection().collapse(editor.firstChild, 4);
+  synthesizeKey("KEY_Backspace");
+  is(editor.textContent, "abc", "The last character should've been removed by the Backspace");
+  getSelection().collapse(editor.firstChild, 1);
+  synthesizeKey("KEY_Backspace");
+  is(editor.textContent, "bc", "The first character should've been removed by the Backspace");
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
