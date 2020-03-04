@@ -32,43 +32,6 @@ namespace {
 
 bool sXPCOMShuttingDown = false;
 
-class NotifyChannelActiveRunnable final : public Runnable {
- public:
-  NotifyChannelActiveRunnable(uint64_t aWindowID, bool aActive)
-      : Runnable("NotifyChannelActiveRunnable"),
-        mWindowID(aWindowID),
-        mActive(aActive) {}
-
-  NS_IMETHOD Run() override {
-    nsCOMPtr<nsIObserverService> observerService =
-        services::GetObserverService();
-    if (NS_WARN_IF(!observerService)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsISupportsPRUint64> wrapper =
-        do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
-    if (NS_WARN_IF(!wrapper)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    wrapper->SetData(mWindowID);
-
-    observerService->NotifyObservers(wrapper, "media-playback",
-                                     mActive ? u"active" : u"inactive");
-
-    MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-            ("NotifyChannelActiveRunnable, active = %s\n",
-             mActive ? "true" : "false"));
-
-    return NS_OK;
-  }
-
- private:
-  const uint64_t mWindowID;
-  const bool mActive;
-};
-
 class AudioPlaybackRunnable final : public Runnable {
  public:
   AudioPlaybackRunnable(nsPIDOMWindowOuter* aWindow, bool aActive,
@@ -567,12 +530,6 @@ void AudioChannelService::AudioChannelWindow::AppendAgentAndIncreaseAgentsNum(
   mAgents.AppendElement(aAgent);
 
   ++mConfig.mNumberOfAgents;
-
-  // TODO: Make NotifyChannelActiveRunnable irrelevant to
-  // BrowserElementAudioChannel
-  if (mConfig.mNumberOfAgents == 1) {
-    NotifyChannelActive(aAgent->WindowID(), true);
-  }
 }
 
 void AudioChannelService::AudioChannelWindow::RemoveAgentAndReduceAgentsNum(
@@ -584,10 +541,6 @@ void AudioChannelService::AudioChannelWindow::RemoveAgentAndReduceAgentsNum(
 
   MOZ_ASSERT(mConfig.mNumberOfAgents > 0);
   --mConfig.mNumberOfAgents;
-
-  if (mConfig.mNumberOfAgents == 0) {
-    NotifyChannelActive(aAgent->WindowID(), false);
-  }
 }
 
 void AudioChannelService::AudioChannelWindow::AudioAudibleChanged(
@@ -646,14 +599,6 @@ void AudioChannelService::AudioChannelWindow::NotifyAudioAudibleChanged(
     AudibleChangedReasons aReason) {
   RefPtr<AudioPlaybackRunnable> runnable = new AudioPlaybackRunnable(
       aWindow, aAudible == AudibleState::eAudible, aReason);
-  DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
-}
-
-void AudioChannelService::AudioChannelWindow::NotifyChannelActive(
-    uint64_t aWindowID, bool aActive) {
-  RefPtr<NotifyChannelActiveRunnable> runnable =
-      new NotifyChannelActiveRunnable(aWindowID, aActive);
   DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
 }
