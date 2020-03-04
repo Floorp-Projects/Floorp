@@ -116,7 +116,7 @@ CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(
 CompositorManagerParent::CompositorManagerParent()
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()) {}
 
-CompositorManagerParent::~CompositorManagerParent() {}
+CompositorManagerParent::~CompositorManagerParent() = default;
 
 void CompositorManagerParent::Bind(
     Endpoint<PCompositorManagerParent>&& aEndpoint, bool aIsRoot) {

@@ -50,7 +50,7 @@ class CheckerboardEventStorage {
 
  private:
   /* Stuff for refcounted singleton */
-  CheckerboardEventStorage() {}
+  CheckerboardEventStorage() = default;
   virtual ~CheckerboardEventStorage() = default;
 
   static StaticRefPtr<CheckerboardEventStorage> sInstance;

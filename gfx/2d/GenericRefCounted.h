@@ -25,7 +25,7 @@ namespace mozilla {
  */
 class GenericRefCountedBase {
  protected:
-  virtual ~GenericRefCountedBase(){};
+  virtual ~GenericRefCountedBase() = default;
 
  public:
   // AddRef() and Release() method names are for compatibility with nsRefPtr.

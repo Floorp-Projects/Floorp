@@ -126,13 +126,13 @@ void LayerMLGPU::SetLayerManager(HostLayerManager* aManager) {
 RefLayerMLGPU::RefLayerMLGPU(LayerManagerMLGPU* aManager)
     : RefLayer(aManager, static_cast<HostLayer*>(this)), LayerMLGPU(aManager) {}
 
-RefLayerMLGPU::~RefLayerMLGPU() {}
+RefLayerMLGPU::~RefLayerMLGPU() = default;
 
 ColorLayerMLGPU::ColorLayerMLGPU(LayerManagerMLGPU* aManager)
     : ColorLayer(aManager, static_cast<HostLayer*>(this)),
       LayerMLGPU(aManager) {}
 
-ColorLayerMLGPU::~ColorLayerMLGPU() {}
+ColorLayerMLGPU::~ColorLayerMLGPU() = default;
 
 }  // namespace layers
 }  // namespace mozilla

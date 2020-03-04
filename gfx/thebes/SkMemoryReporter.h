@@ -20,7 +20,7 @@ class SkMemoryReporter final : public nsIMemoryReporter {
                             nsISupports* aData, bool aAnonymize) override;
 
  private:
-  ~SkMemoryReporter() {}
+  ~SkMemoryReporter() = default;
 };
 
 }  // namespace gfx

@@ -12,7 +12,7 @@
 #include "nsISupports.h"         // for NS_DECL_ISUPPORTS
 
 class nsThebesFontEnumerator final : public nsIFontEnumerator {
-  ~nsThebesFontEnumerator() {}
+  ~nsThebesFontEnumerator() = default;
 
  public:
   nsThebesFontEnumerator();

@@ -18,7 +18,7 @@ namespace layers {
 
 AnimationInfo::AnimationInfo() : mCompositorAnimationsId(0), mMutated(false) {}
 
-AnimationInfo::~AnimationInfo() {}
+AnimationInfo::~AnimationInfo() = default;
 
 void AnimationInfo::EnsureAnimationsId() {
   if (!mCompositorAnimationsId) {

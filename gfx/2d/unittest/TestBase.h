@@ -27,7 +27,7 @@
 
 class TestBase {
  public:
-  TestBase() {}
+  TestBase() = default;
 
   typedef void (TestBase::*TestCall)();
 

@@ -20,7 +20,7 @@
 
 NS_IMPL_ISUPPORTS(nsThebesFontEnumerator, nsIFontEnumerator)
 
-nsThebesFontEnumerator::nsThebesFontEnumerator() {}
+nsThebesFontEnumerator::nsThebesFontEnumerator() = default;
 
 NS_IMETHODIMP
 nsThebesFontEnumerator::EnumerateAllFonts(nsTArray<nsString>& aResult) {

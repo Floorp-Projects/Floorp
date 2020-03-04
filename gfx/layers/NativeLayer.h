@@ -59,7 +59,7 @@ class NativeLayerRoot {
   }
 
  protected:
-  virtual ~NativeLayerRoot() {}
+  virtual ~NativeLayerRoot() = default;
 };
 
 // Allows reading back the visual output of a NativeLayerRoot.
@@ -69,7 +69,7 @@ class NativeLayerRoot {
 // same thread.
 class NativeLayerRootSnapshotter {
  public:
-  virtual ~NativeLayerRootSnapshotter() {}
+  virtual ~NativeLayerRootSnapshotter() = default;
 
   // Reads the composited result of the NativeLayer tree into aReadbackBuffer,
   // synchronously. Should only be called right after a call to CommitToScreen()
@@ -185,7 +185,7 @@ class NativeLayer {
   virtual void DiscardBackbuffers() = 0;
 
  protected:
-  virtual ~NativeLayer() {}
+  virtual ~NativeLayer() = default;
 };
 
 }  // namespace layers

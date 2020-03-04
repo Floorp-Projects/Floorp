@@ -35,8 +35,8 @@ namespace layers {
 //    task's duration, and then destroyed on the main thread
 class PaintTask {
  public:
-  PaintTask() {}
-  ~PaintTask() {}
+  PaintTask() = default;
+  ~PaintTask() = default;
 
   void DropTextureClients();
 

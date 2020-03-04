@@ -150,7 +150,7 @@ static_assert(MOZ_ARRAY_LENGTH(gPrefLangNames) == uint32_t(eFontPrefLang_Count),
               "size of pref lang name array doesn't match pref lang enum size");
 
 class gfxFontListPrefObserver final : public nsIObserver {
-  ~gfxFontListPrefObserver() {}
+  ~gfxFontListPrefObserver() = default;
 
  public:
   NS_DECL_ISUPPORTS

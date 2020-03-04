@@ -30,7 +30,7 @@ CompositorSession::CompositorSession(nsBaseWidget* aWidget,
       mCompositorBridgeChild(aChild),
       mRootLayerTreeId(aRootLayerTreeId) {}
 
-CompositorSession::~CompositorSession() {}
+CompositorSession::~CompositorSession() = default;
 
 CompositorBridgeChild* CompositorSession::GetCompositorBridgeChild() {
   return mCompositorBridgeChild;

@@ -26,7 +26,7 @@ namespace layers {
 ContentHostBase::ContentHostBase(const TextureInfo& aTextureInfo)
     : ContentHost(aTextureInfo), mInitialised(false) {}
 
-ContentHostBase::~ContentHostBase() {}
+ContentHostBase::~ContentHostBase() = default;
 
 void ContentHostTexture::Composite(
     Compositor* aCompositor, LayerComposite* aLayer, EffectChain& aEffectChain,

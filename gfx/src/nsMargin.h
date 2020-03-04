@@ -16,8 +16,8 @@ struct nsMargin : public mozilla::gfx::BaseMargin<nscoord, nsMargin> {
   typedef mozilla::gfx::BaseMargin<nscoord, nsMargin> Super;
 
   // Constructors
-  nsMargin() : Super() {}
-  nsMargin(const nsMargin& aMargin) : Super(aMargin) {}
+  nsMargin() = default;
+  nsMargin(const nsMargin& aMargin) = default;
   nsMargin(nscoord aTop, nscoord aRight, nscoord aBottom, nscoord aLeft)
       : Super(aTop, aRight, aBottom, aLeft) {}
 };

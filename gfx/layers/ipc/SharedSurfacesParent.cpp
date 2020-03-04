@@ -21,7 +21,7 @@ using namespace mozilla::gfx;
 StaticMutex SharedSurfacesParent::sMutex;
 StaticAutoPtr<SharedSurfacesParent> SharedSurfacesParent::sInstance;
 
-SharedSurfacesParent::SharedSurfacesParent() {}
+SharedSurfacesParent::SharedSurfacesParent() = default;
 
 SharedSurfacesParent::~SharedSurfacesParent() {
   for (auto i = mSurfaces.Iter(); !i.Done(); i.Next()) {

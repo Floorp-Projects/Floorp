@@ -32,7 +32,7 @@ struct PointD : public BasePoint<double, PointD> {
 };
 
 struct BezierControlPoints {
-  BezierControlPoints() {}
+  BezierControlPoints() = default;
   BezierControlPoints(const PointD& aCP1, const PointD& aCP2,
                       const PointD& aCP3, const PointD& aCP4)
       : mCP1(aCP1), mCP2(aCP2), mCP3(aCP3), mCP4(aCP4) {}
@@ -43,9 +43,9 @@ struct BezierControlPoints {
 void FlattenBezier(const BezierControlPoints& aPoints, PathSink* aSink,
                    double aTolerance);
 
-Path::Path() {}
+Path::Path() = default;
 
-Path::~Path() {}
+Path::~Path() = default;
 
 Float Path::ComputeLength() {
   EnsureFlattenedPath();

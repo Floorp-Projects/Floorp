@@ -78,7 +78,7 @@ class BasicPlanarYCbCrImage : public RecyclingPlanarYCbCrImage {
 
 class BasicImageFactory : public ImageFactory {
  public:
-  BasicImageFactory() {}
+  BasicImageFactory() = default;
 
   virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(
       const gfx::IntSize& aScaleHint, BufferRecycleBin* aRecycleBin) override {

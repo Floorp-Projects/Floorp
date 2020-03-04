@@ -347,7 +347,7 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
 
  protected:
   class MemoryReporter final : public nsIMemoryReporter {
-    ~MemoryReporter() {}
+    ~MemoryReporter() = default;
 
    public:
     NS_DECL_ISUPPORTS
@@ -356,7 +356,7 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
 
   // Observer for notifications that the font cache cares about
   class Observer final : public nsIObserver {
-    ~Observer() {}
+    ~Observer() = default;
 
    public:
     NS_DECL_ISUPPORTS
@@ -399,7 +399,7 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
     // blank. The caller of Put() will fill this in.
     explicit HashEntry(KeyTypePointer aStr) : mFont(nullptr) {}
     HashEntry(const HashEntry& toCopy) : mFont(toCopy.mFont) {}
-    ~HashEntry() {}
+    ~HashEntry() = default;
 
     bool KeyEquals(const KeyTypePointer aKey) const;
     static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
@@ -1071,7 +1071,7 @@ class gfxShapedText {
   // starting at the given index.
   class DetailedGlyphStore {
    public:
-    DetailedGlyphStore() : mLastUsed(0) {}
+    DetailedGlyphStore() = default;
 
     // This is optimized for the most common calling patterns:
     // we rarely need random access to the records, access is most commonly
@@ -1169,7 +1169,7 @@ class gfxShapedText {
     // Records the most recently used index into mOffsetToIndex, so that
     // we can support sequential access more quickly than just doing
     // a binary search each time.
-    nsTArray<DGRec>::index_type mLastUsed;
+    nsTArray<DGRec>::index_type mLastUsed = 0;
   };
 
   mozilla::UniquePtr<DetailedGlyphStore> mDetailedGlyphs;
@@ -2056,7 +2056,7 @@ class gfxFont {
     CacheHashEntry(const CacheHashEntry& toCopy) {
       NS_ERROR("Should not be called");
     }
-    ~CacheHashEntry() {}
+    ~CacheHashEntry() = default;
 
     bool KeyEquals(const KeyTypePointer aKey) const;
 

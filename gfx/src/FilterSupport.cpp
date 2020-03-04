@@ -286,7 +286,7 @@ class FilterCachedColorModels {
   // This array is indexed by ColorModel::ToIndex.
   RefPtr<FilterNode> mFilterForColorModel[4];
 
-  ~FilterCachedColorModels() {}
+  ~FilterCachedColorModels() = default;
 };
 
 FilterCachedColorModels::FilterCachedColorModels(DrawTarget* aDT,
@@ -1923,54 +1923,6 @@ FilterPrimitiveDescription::FilterPrimitiveDescription(
     : mAttributes(std::move(aAttributes)),
       mOutputColorSpace(ColorSpace::SRGB),
       mIsTainted(false) {}
-
-FilterPrimitiveDescription::FilterPrimitiveDescription(
-    const FilterPrimitiveDescription& aOther)
-    : mAttributes(aOther.mAttributes),
-      mInputPrimitives(aOther.mInputPrimitives),
-      mFilterPrimitiveSubregion(aOther.mFilterPrimitiveSubregion),
-      mFilterSpaceBounds(aOther.mFilterSpaceBounds),
-      mInputColorSpaces(aOther.mInputColorSpaces),
-      mOutputColorSpace(aOther.mOutputColorSpace),
-      mIsTainted(aOther.mIsTainted) {}
-
-FilterPrimitiveDescription& FilterPrimitiveDescription::operator=(
-    const FilterPrimitiveDescription& aOther) {
-  if (this != &aOther) {
-    mAttributes = aOther.mAttributes;
-    mInputPrimitives = aOther.mInputPrimitives;
-    mFilterPrimitiveSubregion = aOther.mFilterPrimitiveSubregion;
-    mFilterSpaceBounds = aOther.mFilterSpaceBounds;
-    mInputColorSpaces = aOther.mInputColorSpaces;
-    mOutputColorSpace = aOther.mOutputColorSpace;
-    mIsTainted = aOther.mIsTainted;
-  }
-  return *this;
-}
-
-FilterPrimitiveDescription::FilterPrimitiveDescription(
-    FilterPrimitiveDescription&& aOther)
-    : mAttributes(std::move(aOther.mAttributes)),
-      mInputPrimitives(std::move(aOther.mInputPrimitives)),
-      mFilterPrimitiveSubregion(aOther.mFilterPrimitiveSubregion),
-      mFilterSpaceBounds(aOther.mFilterSpaceBounds),
-      mInputColorSpaces(std::move(aOther.mInputColorSpaces)),
-      mOutputColorSpace(aOther.mOutputColorSpace),
-      mIsTainted(aOther.mIsTainted) {}
-
-FilterPrimitiveDescription& FilterPrimitiveDescription::operator=(
-    FilterPrimitiveDescription&& aOther) {
-  if (this != &aOther) {
-    mAttributes = std::move(aOther.mAttributes);
-    mInputPrimitives = std::move(aOther.mInputPrimitives);
-    mFilterPrimitiveSubregion = aOther.mFilterPrimitiveSubregion;
-    mFilterSpaceBounds = aOther.mFilterSpaceBounds;
-    mInputColorSpaces = std::move(aOther.mInputColorSpaces);
-    mOutputColorSpace = aOther.mOutputColorSpace;
-    mIsTainted = aOther.mIsTainted;
-  }
-  return *this;
-}
 
 bool FilterPrimitiveDescription::operator==(
     const FilterPrimitiveDescription& aOther) const {

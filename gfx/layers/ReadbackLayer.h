@@ -35,7 +35,7 @@ class LayersPacket;
  */
 class ReadbackSink {
  public:
-  ReadbackSink() {}
+  ReadbackSink() = default;
   virtual ~ReadbackSink() = default;
 
   /**

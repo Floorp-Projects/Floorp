@@ -31,7 +31,7 @@ SoftwareDisplay::SoftwareDisplay() : mVsyncEnabled(false) {
                      "GFX: Could not start software vsync thread");
 }
 
-SoftwareDisplay::~SoftwareDisplay() {}
+SoftwareDisplay::~SoftwareDisplay() = default;
 
 void SoftwareDisplay::EnableVsync() {
   MOZ_ASSERT(mVsyncThread->IsRunning());

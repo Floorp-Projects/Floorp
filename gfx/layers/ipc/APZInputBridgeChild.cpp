@@ -16,7 +16,7 @@ APZInputBridgeChild::APZInputBridgeChild() : mDestroyed(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-APZInputBridgeChild::~APZInputBridgeChild() {}
+APZInputBridgeChild::~APZInputBridgeChild() = default;
 
 void APZInputBridgeChild::Destroy() {
   MOZ_ASSERT(XRE_IsParentProcess());

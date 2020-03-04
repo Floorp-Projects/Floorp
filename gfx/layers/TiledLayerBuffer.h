@@ -137,7 +137,7 @@ class TiledLayerBuffer {
         mResolution(1),
         mTileSize(mozilla::gfx::gfxVars::TileSize()) {}
 
-  ~TiledLayerBuffer() {}
+  ~TiledLayerBuffer() = default;
 
   gfx::IntPoint GetTileOffset(TileCoordIntPoint aPosition) const {
     gfx::IntSize scaledTileSize = GetScaledTileSize();

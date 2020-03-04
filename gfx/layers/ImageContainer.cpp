@@ -102,7 +102,7 @@ ImageContainerListener::ImageContainerListener(ImageContainer* aImageContainer)
     : mLock("mozilla.layers.ImageContainerListener.mLock"),
       mImageContainer(aImageContainer) {}
 
-ImageContainerListener::~ImageContainerListener() {}
+ImageContainerListener::~ImageContainerListener() = default;
 
 void ImageContainerListener::NotifyComposite(
     const ImageCompositeNotification& aNotification) {

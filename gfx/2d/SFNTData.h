@@ -76,7 +76,7 @@ class SFNTData final {
                           uint32_t* aIndex, size_t aTruncatedLen = 0);
 
  private:
-  SFNTData() {}
+  SFNTData() = default;
 
   bool AddFont(const uint8_t* aFontData, uint32_t aDataLength,
                uint32_t aOffset);
