@@ -59,6 +59,9 @@ class FFmpegDataDecoder<LIBAV_VER>
   RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;
 
+ protected:
+  static StaticMutex sMonitor;
+
  private:
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
   RefPtr<DecodePromise> ProcessDrain();
@@ -71,7 +74,6 @@ class FFmpegDataDecoder<LIBAV_VER>
   const RefPtr<TaskQueue> mTaskQueue;
   MozPromiseHolder<DecodePromise> mPromise;
   media::TimeUnit mLastInputDts;
-  static StaticMutex sMonitor;
 };
 
 }  // namespace mozilla
