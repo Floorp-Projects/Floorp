@@ -399,7 +399,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
  private:
   RefPtr<ASpdySession> mTunnelProvider;
   TransactionObserverFunc mTransactionObserver;
-  TransactionObserverResult mTransactionObserverResult;
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
   bool mResolvedByTRR;
