@@ -8,14 +8,11 @@
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
-#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
 
 using namespace js;
-
-using JS::AutoStableStringChars;
 
 template <class Base>
 bool SecurityWrapper<Base>::enter(JSContext* cx, HandleObject wrapper,

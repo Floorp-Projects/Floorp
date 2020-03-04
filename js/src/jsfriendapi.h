@@ -21,7 +21,6 @@
 #include "js/Class.h"
 #include "js/ErrorReport.h"
 #include "js/HeapAPI.h"
-#include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 

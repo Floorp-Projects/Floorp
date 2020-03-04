@@ -32,7 +32,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
-#include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 #include "unicode/udata.h"
@@ -64,8 +63,6 @@ using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::FieldType;
 using js::intl::IcuLocale;
-
-using JS::AutoStableStringChars;
 
 const JSClassOps NumberFormatObject::classOps_ = {
     nullptr,                       // addProperty
