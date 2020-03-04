@@ -106,7 +106,16 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
       MakeRefPtr<StyleSheet>(css::SheetParsingMode::eAuthorSheetFeatures,
                              CORSMode::CORS_NONE, dom::SRIMetadata());
 
-  nsIURI* baseURI = constructorDocument->GetBaseURI();
+  RefPtr<nsIURI> baseURI = nullptr;
+  if (!aOptions.mBaseURL.WasPassed()) {
+    baseURI = constructorDocument->GetBaseURI();
+  } else if (NS_FAILED(NS_NewURI(getter_AddRefs(baseURI),
+                                 aOptions.mBaseURL.Value()))) {
+    aRv.ThrowNotAllowedError(
+        "Constructed style sheets must have a valid base url");
+    return nullptr;
+  }
+
   nsIURI* sheetURI = constructorDocument->GetDocumentURI();
   nsIURI* originalURI = nullptr;
   sheet->SetURIs(sheetURI, originalURI, baseURI);
