@@ -320,6 +320,8 @@
     <string name="preferences_usage_data_description">แบ่งปันข้อมูลประสิทธิภาพ, การใช้งาน, ฮาร์ดแวร์ และการปรับแต่งเกี่ยวกับเบราว์เซอร์ของคุณกับ Mozilla เพื่อช่วยเราทำ %1$s ให้ดีขึ้น</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">ข้อมูลการตลาด</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">แบ่งปันข้อมูลเกี่ยวกับคุณลักษณะที่คุณใช้ใน %1$s กับ Leanplum ผู้ให้บริการการตลาดมือถือของเรา</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">การทดลอง</string>
     <!-- Summary for experiments preferences -->
@@ -748,6 +750,8 @@
     <string name="full_screen_notification">เข้าสู่โหมดเต็มหน้าจอ</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">คัดลอก URL แล้ว</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">นี่คือข้อความตัวอย่าง ซึ่งอยู่ที่นี่เพื่อแสดงว่าข้อความจะปรากฏอย่างไรเมื่อคุณเพิ่มหรือลดขนาดด้วยการตั้งค่านี้</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">ทำให้ข้อความบนเว็บไซต์ใหญ่ขึ้นหรือเล็กลง</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -823,6 +827,9 @@
     <string name="onboarding_feature_section_header">ทำความรู้จัก %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">ดูว่ามีอะไรใหม่</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">มีคำถามเกี่ยวกับ %s ที่ออกแบบใหม่หรือไม่? ต้องการรู้ว่ามีอะไรเปลี่ยนไปบ้างหรือไม่?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">พบคำตอบได้ที่นี่</string>
     <!-- text for the firefox account onboarding card header
@@ -857,8 +864,19 @@
     <string name="onboarding_tracking_protection_strict_button">เข้มงวด (แนะนำ)</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">ปิดกันตัวติดตามมากขึ้นเพื่อการปกป้องและประสิทธิภาพที่ดีกว่า แต่ก็อาจทำให้บางไซต์ทำงานไม่สมบูรณ์</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">เลือกตำแหน่ง</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">ลองใช้การเรียกดูด้วยมือเดียวด้วยแถบเครื่องมือด้านล่างหรือย้ายไปด้านบน</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">เรียกดูอย่างเป็นส่วนตัว</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">เปิดแท็บส่วนตัวหนึ่งครั้ง: แตะที่ไอคอน %s</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">เปิดแท็บส่วนตัวทุกครั้ง: อัปเดตการตั้งค่าการเรียกดูแบบส่วนตัวของคุณ</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">เปิดการตั้งค่า</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -876,6 +894,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">เลือกชุดตกแต่งของคุณ</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">ประหยัดแบตเตอรี่และถนอมสายตาของคุณโดยเปิดใช้งานโหมดมืด</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">อัตโนมัติ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1075,6 +1095,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">ลงชื่อเข้าไปยัง Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">การเข้าสู่ระบบที่บันทึกไว้</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">การเข้าสู่ระบบที่คุณบันทึกหรือซิงค์กับ %s จะปรากฏที่นี่</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">เรียนรู้เพิ่มเติมเกี่ยวกับ Sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1217,6 +1239,8 @@
     <string name="confirm_clear_permissions_site">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตทั้งหมดสำหรับไซต์นี้?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตนี้สำหรับไซต์นี้?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">ไม่มีข้อยกเว้นไซต์</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">สุดยอดบทความ</string>
     <!-- Bookmark deletion confirmation -->

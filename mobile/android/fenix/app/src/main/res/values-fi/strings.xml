@@ -1236,6 +1236,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Tervetuloa, käytössäsi on täysin uudistunut %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Täysin uudistettu selain odottaa sinua. Paranneltu suorityskyky ja ominaisuudet auttavat sinua tekemään aiempaa enemmän verkossa.\n\nOdota kunnes %s päivitetään</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Päivitetään %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1249,6 +1251,11 @@
     <string name="phone_feature_blocked_intro">Salliaksesi sen:</string>
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Mene Androidin asetuksiin</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Napauta <b>Käyttöoikeudet</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Aseta <b>%1$s</b> PÄÄLLÄ-asentoon]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Suojattu yhteys</string>
