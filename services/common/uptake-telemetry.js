@@ -150,6 +150,10 @@ class UptakeTelemetry {
     };
   }
 
+  static get Policy() {
+    return Policy;
+  }
+
   /**
    * Reports the uptake status for the specified source.
    *
@@ -175,8 +179,8 @@ class UptakeTelemetry {
       this._eventsEnabled = true;
     }
 
-    const hash = await Policy.getClientIDHash();
-    const channel = Policy.getChannel();
+    const hash = await UptakeTelemetry.Policy.getClientIDHash();
+    const channel = UptakeTelemetry.Policy.getChannel();
     const shouldSendEvent =
       !["release", "esr"].includes(channel) || hash < gSampleRate;
     if (shouldSendEvent) {
