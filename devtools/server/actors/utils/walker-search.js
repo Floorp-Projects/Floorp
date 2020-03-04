@@ -4,6 +4,13 @@
 
 "use strict";
 
+loader.lazyRequireGetter(
+  this,
+  "isWhitespaceTextNode",
+  "devtools/server/actors/inspector/utils",
+  true
+);
+
 /**
  * The walker-search module provides a simple API to index and search strings
  * and elements inside a given document.
@@ -202,13 +209,29 @@ WalkerSearch.prototype = {
     }
   },
 
+  _searchXPath: function(query, options, results) {
+    const isXPath = query && query.startsWith("/");
+    if (!options.types.includes("xpath") || !isXPath) {
+      return;
+    }
+
+    const nodes = this.walker._multiFrameXPath(query);
+    for (const node of nodes) {
+      // Exclude text nodes that only contain whitespace
+      // because they are not displayed in the Inspector.
+      if (!isWhitespaceTextNode(node)) {
+        this._addResult(node, "xpath", results);
+      }
+    }
+  },
+
   /**
    * Search the document
    * @param {String} query What to search for
    * @param {Object} options The following options are accepted:
    * - searchMethod {String} one of WalkerSearch.SEARCH_METHOD_*
    *   defaults to WalkerSearch.SEARCH_METHOD_CONTAINS (does not apply to
-   *   selector search type)
+   *   selector and XPath search types)
    * - types {Array} a list of things to search for (tag, text, attributes, etc)
    *   defaults to WalkerSearch.ALL_RESULTS_TYPES
    * @return {Array} An array is returned with each item being an object like:
@@ -235,6 +258,9 @@ WalkerSearch.prototype = {
 
     // Search with querySelectorAll
     this._searchSelectors(query, options, results);
+
+    // Search with XPath
+    this._searchXPath(query, options, results);
 
     // Concatenate all results into an Array to return
     const resultList = [];
@@ -282,6 +308,7 @@ WalkerSearch.ALL_RESULTS_TYPES = [
   "attributeName",
   "attributeValue",
   "selector",
+  "xpath",
 ];
 
 exports.WalkerSearch = WalkerSearch;
