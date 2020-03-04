@@ -54,8 +54,7 @@ async function testChangeDuplicateDeclarations(ruleView, store, doc) {
   info(
     "Test that changing one of the duplicate declarations won't change the other"
   );
-  const rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  const prop = rule.textProps[0];
+  const prop = getTextProperty(ruleView, 1, { color: "red" });
 
   info("Change the value of the first of the duplicate declarations");
   const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
@@ -75,8 +74,8 @@ async function testChangeDuplicateDeclarations(ruleView, store, doc) {
 async function testRemoveDuplicateDeclarations(ruleView, store, doc) {
   info(`Test that removing the first of the duplicate declarations
         will not remove the second.`);
-  const rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  const prop = rule.textProps[0];
+
+  const prop = getTextProperty(ruleView, 1, { color: "black" });
 
   info("Remove first declaration");
   const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");

@@ -14,8 +14,7 @@ add_task(async function() {
   info("Selecting the test node");
   await selectNode("h1", inspector);
 
-  const rule = getRuleViewRuleEditor(view, 0).rule;
-  const prop = rule.textProps[0];
+  const prop = getTextProperty(view, 0, { color: "lime" });
 
   info("Test with css property value field");
   await testCompletion(view, prop.editor.valueSpan, true);

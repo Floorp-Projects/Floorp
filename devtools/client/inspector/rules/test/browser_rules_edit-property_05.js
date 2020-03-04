@@ -20,8 +20,7 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  const rule = getRuleViewRuleEditor(view, 1).rule;
-  const prop = rule.textProps[0];
+  const prop = getTextProperty(view, 1, { "background-color": "blue" });
 
   info("Disabling background-color property");
   await togglePropStatus(view, prop);
