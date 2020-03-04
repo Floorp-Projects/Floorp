@@ -14,6 +14,35 @@
 using namespace js;
 using namespace js::frontend;
 
+bool frontend::EnvironmentShapeCreationData::createShape(
+    JSContext* cx, MutableHandleShape shape) {
+  struct Matcher {
+    JSContext* cx;
+    MutableHandleShape& shape;
+
+    bool operator()(CreateEnvShapeData& data) {
+      shape.set(CreateEnvironmentShape(cx, data.freshBi, data.cls,
+                                       data.nextEnvironmentSlot,
+                                       data.baseShapeFlags));
+      return shape;
+    }
+
+    bool operator()(EmptyEnvShapeData& data) {
+      shape.set(EmptyEnvironmentShape(cx, data.cls, JSSLOT_FREE(data.cls),
+                                      data.baseShapeFlags));
+      return shape;
+    }
+
+    bool operator()(mozilla::Nothing&) {
+      shape.set(nullptr);
+      return true;
+    }
+  };
+
+  Matcher m{cx, shape};
+  return data_.match(m);
+}
+
 Scope* ScopeCreationData::createScope(JSContext* cx) {
   // If we've already created a scope, best just return it.
   if (scope_) {
@@ -68,9 +97,9 @@ void ScopeCreationData::trace(JSTracer* trc) {
   if (enclosing_) {
     enclosing_.trace(trc);
   }
-  if (environmentShape_) {
-    TraceEdge(trc, &environmentShape_, "ScopeCreationData Environment Shape");
-  }
+
+  environmentShape_.trace(trc);
+
   if (scope_) {
     TraceEdge(trc, &scope_, "ScopeCreationData Scope");
   }
