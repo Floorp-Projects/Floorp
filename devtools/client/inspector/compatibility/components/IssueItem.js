@@ -57,6 +57,9 @@ class IssueItem extends PureComponent {
 
     if (Services.prefs.getBoolPref("devtools.testing", false)) {
       for (const [key, value] of Object.entries(this.props)) {
+        if (key === "nodes") {
+          continue;
+        }
         const datasetKey = `data-qa-${toSnakeCase(key)}`;
         testDataSet[datasetKey] = JSON.stringify(value);
       }
