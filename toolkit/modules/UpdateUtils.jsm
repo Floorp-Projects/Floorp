@@ -94,31 +94,49 @@ var UpdateUtils = {
 
     return url
       .replace(/%(\w+)%/g, (match, name) => {
+        let replacement;
         switch (name) {
           case "PRODUCT":
-            return Services.appinfo.name;
+            replacement = Services.appinfo.name;
+            break;
           case "VERSION":
-            return Services.appinfo.version;
+            replacement = Services.appinfo.version;
+            break;
           case "BUILD_ID":
-            return Services.appinfo.appBuildID;
+            replacement = Services.appinfo.appBuildID;
+            break;
           case "BUILD_TARGET":
-            return Services.appinfo.OS + "_" + this.ABI;
+            replacement = Services.appinfo.OS + "_" + this.ABI;
+            break;
           case "OS_VERSION":
-            return this.OSVersion;
+            replacement = this.OSVersion;
+            break;
           case "LOCALE":
-            return locale;
+            replacement = locale;
+            break;
           case "CHANNEL":
-            return this.UpdateChannel;
+            replacement = this.UpdateChannel;
+            break;
           case "PLATFORM_VERSION":
-            return Services.appinfo.platformVersion;
+            replacement = Services.appinfo.platformVersion;
+            break;
           case "SYSTEM_CAPABILITIES":
-            return getSystemCapabilities();
+            replacement = getSystemCapabilities();
+            break;
           case "DISTRIBUTION":
-            return getDistributionPrefValue(PREF_APP_DISTRIBUTION);
+            replacement =
+              getDistributionPrefValue(PREF_APP_DISTRIBUTION);
+            break;
           case "DISTRIBUTION_VERSION":
-            return getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION);
+            replacement = getDistributionPrefValue(
+              PREF_APP_DISTRIBUTION_VERSION
+            );
+            break;
+          default:
+            return match;
         }
-        return match;
+        replacement = encodeURIComponent(replacement);
+        return replacement;
       })
       .replace(/\+/g, "%2B");
   },
@@ -385,9 +403,13 @@ if (AppConstants.platform != "win") {
 
 /* Get the distribution pref values, from defaults only */
 function getDistributionPrefValue(aPrefName) {
-  return Services.prefs
+  let value = Services.prefs
     .getDefaultBranch(null)
     .getCharPref(aPrefName, "default");
+  if (!value) {
+    value = "default";
+  }
+  return value;
 }
 
 function getSystemCapabilities() {
