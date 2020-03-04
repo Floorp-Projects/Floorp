@@ -1553,7 +1553,9 @@ Inspector.prototype = {
    * Stops listening for reflows.
    */
   untrackReflowsInSelection() {
-    if (!this.reflowFront) {
+    // Check the actorID because the reflowFront is a target scoped actor and
+    // might have been destroyed after switching targets.
+    if (!this.reflowFront || !this.reflowFront.actorID) {
       return;
     }
 
@@ -1653,8 +1655,6 @@ Inspector.prototype = {
     }
 
     this.cancelUpdate();
-
-    this.untrackReflowsInSelection();
 
     this.sidebar.destroy();
 
