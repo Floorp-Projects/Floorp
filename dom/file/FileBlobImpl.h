@@ -49,12 +49,10 @@ class FileBlobImpl : public BaseBlobImpl {
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            int64_t aLastModifiedDate) override {
-    BaseBlobImpl::SetLazyData(aName, aContentType, aLength, 0);
+    BaseBlobImpl::SetLazyData(aName, aContentType, 0, 0);
+    mLength.emplace(aLength);
     mLastModified.emplace(aLastModifiedDate);
   }
-
-  // We always have size for this kind of blob.
-  virtual bool IsSizeUnknown() const override { return false; }
 
   void SetName(const nsAString& aName) { mName = aName; }
 
@@ -64,7 +62,7 @@ class FileBlobImpl : public BaseBlobImpl {
 
   void SetFileId(int64_t aFileId) { mFileId = aFileId; }
 
-  void SetEmptySize() { mLength = 0; }
+  void SetEmptySize() { mLength.emplace(0); }
 
   void SetMozFullPath(const nsAString& aPath) { mMozFullPath = aPath; }
 
@@ -98,6 +96,7 @@ class FileBlobImpl : public BaseBlobImpl {
 
   nsCOMPtr<nsIFile> mFile;
   nsString mMozFullPath;
+  Maybe<uint64_t> mLength;
   Maybe<int64_t> mLastModified;
   int64_t mFileId;
   bool mWholeFile;

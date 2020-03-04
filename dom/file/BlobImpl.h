@@ -93,8 +93,6 @@ class BlobImpl : public nsISupports {
 
   virtual bool IsMemoryFile() const = 0;
 
-  virtual bool IsSizeUnknown() const = 0;
-
   virtual bool IsFile() const = 0;
 
   // Returns true if the BlobImpl is backed by an nsIFile and the underlying
