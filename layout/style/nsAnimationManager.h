@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "AnimationCommon.h"
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/MemoryReporting.h"
@@ -33,6 +34,22 @@ class Promise;
 
 enum class PseudoStyleType : uint8_t;
 struct NonOwningAnimationTarget;
+
+// Properties of CSS Animations that can be overridden by the Web Animations API
+// in a manner that means we should ignore subsequent changes to markup for that
+// property.
+enum class CSSAnimationProperties {
+  None = 0,
+  Keyframes = 1 << 0,
+  Duration = 1 << 1,
+  IterationCount = 1 << 2,
+  Direction = 1 << 3,
+  Delay = 1 << 4,
+  FillMode = 1 << 5,
+  Effect = Keyframes | Duration | IterationCount | Direction | Delay | FillMode,
+  PlayState = 1 << 6,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSAnimationProperties)
 
 namespace dom {
 
@@ -139,6 +156,13 @@ class CSSAnimation final : public Animation {
     QueueEvents(aActiveTime);
   }
 
+  CSSAnimationProperties GetOverriddenProperties() const {
+    return mOverriddenProperties;
+  }
+  void AddOverriddenProperties(CSSAnimationProperties aProperties) {
+    mOverriddenProperties |= aProperties;
+  }
+
  protected:
   virtual ~CSSAnimation() {
     MOZ_ASSERT(!mOwningElement.IsSet(),
@@ -243,9 +267,28 @@ class CSSAnimation final : public Animation {
   // This is used to determine what new events to dispatch.
   ComputedTiming::AnimationPhase mPreviousPhase;
   uint64_t mPreviousIteration;
+
+  // Properties that would normally be defined by the cascade but which have
+  // since been explicitly set via the Web Animations API.
+  CSSAnimationProperties mOverriddenProperties = CSSAnimationProperties::None;
 };
 
 } /* namespace dom */
+
+// A subclass of KeyframeEffect that reports when specific properties have been
+// overridden via the Web Animations API.
+class CSSAnimationKeyframeEffect : public dom::KeyframeEffect {
+ public:
+  CSSAnimationKeyframeEffect(dom::Document* aDocument,
+                             OwningAnimationTarget&& aTarget,
+                             TimingParams&& aTiming,
+                             const KeyframeEffectParams& aOptions)
+      : KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
+                       aOptions) {}
+
+  void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
+                    ErrorResult& aRv) override;
+};
 
 template <>
 struct AnimationTypeTraits<dom::CSSAnimation> {
