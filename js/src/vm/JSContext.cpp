@@ -613,8 +613,15 @@ class MOZ_RAII AutoMessageArgs {
 
   uint16_t count() const { return count_; }
 
-  /* Gather the arguments into an array, and accumulate their sizes. */
-  bool init(JSContext* cx, const char16_t** argsArg, uint16_t countArg,
+  /* Gather the arguments into an array, and accumulate their sizes.
+   *
+   * We could template on the type of argsArg, but we're already trusting people
+   * to do the right thing with varargs, so might as well trust them on this
+   * part too.  Upstream consumers do assert that it's the right thing.  Also,
+   * if argsArg were strongly typed we'd still need casting below for this to
+   * compile, because typeArg is not known at compile-time here.
+   */
+  bool init(JSContext* cx, void* argsArg, uint16_t countArg,
             ErrorArgumentsType typeArg, va_list ap) {
     MOZ_ASSERT(countArg > 0);
 
@@ -624,8 +631,9 @@ class MOZ_RAII AutoMessageArgs {
       switch (typeArg) {
         case ArgumentsAreASCII:
         case ArgumentsAreUTF8: {
-          MOZ_ASSERT(!argsArg);
-          args_[i] = va_arg(ap, char*);
+          const char* c = argsArg ? static_cast<const char**>(argsArg)[i]
+                                  : va_arg(ap, const char*);
+          args_[i] = c;
           MOZ_ASSERT_IF(typeArg == ArgumentsAreASCII,
                         JS::StringIsASCII(args_[i]));
           lengths_[i] = strlen(args_[i]);
@@ -647,7 +655,9 @@ class MOZ_RAII AutoMessageArgs {
           break;
         }
         case ArgumentsAreUnicode: {
-          const char16_t* uc = argsArg ? argsArg[i] : va_arg(ap, char16_t*);
+          const char16_t* uc = argsArg
+                                   ? static_cast<const char16_t**>(argsArg)[i]
+                                   : va_arg(ap, const char16_t*);
           size_t len = js_strlen(uc);
           mozilla::Range<const char16_t> range(uc, len);
           char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
@@ -685,13 +695,18 @@ static void SetExnType(JSErrorNotes::Note* notep, int16_t exnType) {
  * message is placed into reportp->message_.
  *
  * Returns true if the expansion succeeds (can fail if out of memory).
+ *
+ * messageArgs is a `const char**` or a `const char16_t**` but templating on
+ * that is not worth it here because AutoMessageArgs takes a void* anyway, and
+ * using void* here simplifies our callers a bit.
  */
 template <typename T>
-bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
-                                void* userRef, const unsigned errorNumber,
-                                const char16_t** messageArgs,
-                                ErrorArgumentsType argumentsType, T* reportp,
-                                va_list ap) {
+static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
+                                       void* userRef,
+                                       const unsigned errorNumber,
+                                       void* messageArgs,
+                                       ErrorArgumentsType argumentsType,
+                                       T* reportp, va_list ap) {
   const JSErrorFormatString* efs;
 
   if (!callback) {
@@ -796,8 +811,27 @@ bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
+  MOZ_ASSERT(argumentsType == ArgumentsAreUnicode);
   return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
+}
+
+bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
+                                void* userRef, const unsigned errorNumber,
+                                const char** messageArgs,
+                                ErrorArgumentsType argumentsType,
+                                JSErrorReport* reportp, va_list ap) {
+  MOZ_ASSERT(argumentsType != ArgumentsAreUnicode);
+  return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber,
+                                    messageArgs, argumentsType, reportp, ap);
+}
+
+bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
+                                void* userRef, const unsigned errorNumber,
+                                ErrorArgumentsType argumentsType,
+                                JSErrorReport* reportp, va_list ap) {
+  return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber, nullptr,
+                                    argumentsType, reportp, ap);
 }
 
 bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
@@ -825,8 +859,8 @@ bool js::ReportErrorNumberVA(JSContext* cx, unsigned flags,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber, nullptr,
-                              argumentsType, &report, ap)) {
+  if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber, argumentsType,
+                              &report, ap)) {
     return false;
   }
 
@@ -835,9 +869,10 @@ bool js::ReportErrorNumberVA(JSContext* cx, unsigned flags,
   return warning;
 }
 
+template <typename CharT>
 static bool ExpandErrorArguments(JSContext* cx, JSErrorCallback callback,
                                  void* userRef, const unsigned errorNumber,
-                                 const char16_t** messageArgs,
+                                 const CharT** messageArgs,
                                  ErrorArgumentsType argumentsType,
                                  JSErrorReport* reportp, ...) {
   va_list ap;
@@ -849,10 +884,16 @@ static bool ExpandErrorArguments(JSContext* cx, JSErrorCallback callback,
   return expanded;
 }
 
-bool js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
-                                  JSErrorCallback callback, void* userRef,
-                                  const unsigned errorNumber,
-                                  const char16_t** args) {
+template <ErrorArgumentsType argType, typename CharT>
+static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
+                                   JSErrorCallback callback, void* userRef,
+                                   const unsigned errorNumber,
+                                   const CharT** args) {
+  static_assert(
+      (argType == ArgumentsAreUnicode && std::is_same_v<CharT, char16_t>) ||
+          (argType != ArgumentsAreUnicode && std::is_same_v<CharT, char>),
+      "Mismatch between character type and argument type");
+
   if (checkReportFlags(cx, &flags)) {
     return true;
   }
@@ -863,14 +904,30 @@ bool js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  if (!ExpandErrorArguments(cx, callback, userRef, errorNumber, args,
-                            ArgumentsAreUnicode, &report)) {
+  if (!ExpandErrorArguments(cx, callback, userRef, errorNumber, args, argType,
+                            &report)) {
     return false;
   }
 
   ReportError(cx, &report, callback, userRef);
 
   return warning;
+}
+
+bool js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
+                                  JSErrorCallback callback, void* userRef,
+                                  const unsigned errorNumber,
+                                  const char16_t** args) {
+  return ReportErrorNumberArray<ArgumentsAreUnicode>(
+      cx, flags, callback, userRef, errorNumber, args);
+}
+
+bool js::ReportErrorNumberUTF8Array(JSContext* cx, unsigned flags,
+                                    JSErrorCallback callback, void* userRef,
+                                    const unsigned errorNumber,
+                                    const char** args) {
+  return ReportErrorNumberArray<ArgumentsAreUTF8>(cx, flags, callback, userRef,
+                                                  errorNumber, args);
 }
 
 void js::ReportIsNotDefined(JSContext* cx, HandleId id) {
