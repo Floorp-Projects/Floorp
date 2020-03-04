@@ -353,7 +353,7 @@ static av_always_inline int inv_recenter_nonneg(int v, int m)
 // differential forward probability updates
 static int update_prob(VP56RangeCoder *c, int p)
 {
-    static const int inv_map_table[255] = {
+    static const uint8_t inv_map_table[255] = {
           7,  20,  33,  46,  59,  72,  85,  98, 111, 124, 137, 150, 163, 176,
         189, 202, 215, 228, 241, 254,   1,   2,   3,   4,   5,   6,   8,   9,
          10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  21,  22,  23,  24,
@@ -1306,6 +1306,9 @@ static int decode_tiles(AVCodecContext *avctx,
                         decode_sb_mem(td, row, col, lflvl_ptr,
                                       yoff2, uvoff2, BL_64X64);
                     } else {
+                        if (vpX_rac_is_end(td->c)) {
+                            return AVERROR_INVALIDDATA;
+                        }
                         decode_sb(td, row, col, lflvl_ptr,
                                   yoff2, uvoff2, BL_64X64);
                     }
