@@ -54,19 +54,41 @@ void CSSAnimation::SetEffect(AnimationEffect* aEffect) {
   AddOverriddenProperties(CSSAnimationProperties::Effect);
 }
 
+void CSSAnimation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
+  // Note that we always compare with the paused state since for the purposes
+  // of determining if play control is being overridden or not, we want to
+  // treat the finished state as running.
+  bool wasPaused = PlayState() == AnimationPlayState::Paused;
+
+  Animation::SetStartTimeAsDouble(aStartTime);
+
+  bool isPaused = PlayState() == AnimationPlayState::Paused;
+
+  if (wasPaused != isPaused) {
+    AddOverriddenProperties(CSSAnimationProperties::PlayState);
+  }
+}
+
 mozilla::dom::Promise* CSSAnimation::GetReady(ErrorResult& aRv) {
   FlushUnanimatedStyle();
   return Animation::GetReady(aRv);
 }
 
-void CSSAnimation::Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
-  mPauseShouldStick = false;
-  Animation::Play(aRv, aLimitBehavior);
-}
+void CSSAnimation::Reverse(ErrorResult& aRv) {
+  // As with CSSAnimation::SetStartTimeAsDouble, we're really only interested in
+  // the paused state.
+  bool wasPaused = PlayState() == AnimationPlayState::Paused;
 
-void CSSAnimation::Pause(ErrorResult& aRv) {
-  mPauseShouldStick = true;
-  Animation::Pause(aRv);
+  Animation::Reverse(aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  bool isPaused = PlayState() == AnimationPlayState::Paused;
+
+  if (wasPaused != isPaused) {
+    AddOverriddenProperties(CSSAnimationProperties::PlayState);
+  }
 }
 
 AnimationPlayState CSSAnimation::PlayStateFromJS() const {
@@ -88,25 +110,30 @@ void CSSAnimation::PlayFromJS(ErrorResult& aRv) {
   // PlayFromStyle()/PauseFromStyle() on this object.
   FlushUnanimatedStyle();
   Animation::PlayFromJS(aRv);
-}
-
-void CSSAnimation::PlayFromStyle() {
-  mIsStylePaused = false;
-  if (!mPauseShouldStick) {
-    ErrorResult rv;
-    Animation::Play(rv, Animation::LimitBehavior::Continue);
-    // play() should not throw when LimitBehavior is Continue
-    MOZ_ASSERT(!rv.Failed(), "Unexpected exception playing animation");
-  }
-}
-
-void CSSAnimation::PauseFromStyle() {
-  // Check if the pause state is being overridden
-  if (mIsStylePaused) {
+  if (aRv.Failed()) {
     return;
   }
 
-  mIsStylePaused = true;
+  AddOverriddenProperties(CSSAnimationProperties::PlayState);
+}
+
+void CSSAnimation::PauseFromJS(ErrorResult& aRv) {
+  Animation::PauseFromJS(aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  AddOverriddenProperties(CSSAnimationProperties::PlayState);
+}
+
+void CSSAnimation::PlayFromStyle() {
+  ErrorResult rv;
+  Animation::Play(rv, Animation::LimitBehavior::Continue);
+  // play() should not throw when LimitBehavior is Continue
+  MOZ_ASSERT(!rv.Failed(), "Unexpected exception playing animation");
+}
+
+void CSSAnimation::PauseFromStyle() {
   ErrorResult rv;
   Animation::Pause(rv);
   // pause() should only throw when *all* of the following conditions are true:
@@ -470,18 +497,13 @@ static void UpdateOldAnimationPropertiesWithNew(
 
   // Handle changes in play state. If the animation is idle, however,
   // changes to animation-play-state should *not* restart it.
-  if (aOld.PlayState() != AnimationPlayState::Idle) {
-    // CSSAnimation takes care of override behavior so that,
-    // for example, if the author has called pause(), that will
-    // override the animation-play-state.
-    // (We should check aNew->IsStylePaused() but that requires
-    //  downcasting to CSSAnimation and we happen to know that
-    //  aNew will only ever be paused by calling PauseFromStyle
-    //  making IsPausedOrPausing synonymous in this case.)
-    if (!aOld.IsStylePaused() && aNewIsStylePaused) {
+  if (aOld.PlayState() != AnimationPlayState::Idle &&
+      ~aOverriddenProperties & CSSAnimationProperties::PlayState) {
+    bool wasPaused = aOld.PlayState() == AnimationPlayState::Paused;
+    if (!wasPaused && aNewIsStylePaused) {
       aOld.PauseFromStyle();
       animationChanged = true;
-    } else if (aOld.IsStylePaused() && !aNewIsStylePaused) {
+    } else if (wasPaused && !aNewIsStylePaused) {
       aOld.PlayFromStyle();
       animationChanged = true;
     }
