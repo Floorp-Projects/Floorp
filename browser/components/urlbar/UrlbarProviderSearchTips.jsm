@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
@@ -79,6 +80,10 @@ const SUPPORTED_ENGINES = new Map([
 
 // The maximum number of times we'll show a tip across all sessions.
 const MAX_SHOWN_COUNT = 4;
+
+// Amount of time to wait before showing a tip after selecting a tab or
+// navigating to a page where we should show a tip.
+const SHOW_TIP_DELAY_MS = 200;
 
 // We won't show a tip if the browser has been updated in the past
 // LAST_UPDATE_THRESHOLD_MS.
@@ -329,18 +334,12 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    if (this._maybeShowTipForUrlInstance != instance) {
-      return;
-    }
-
     // If we've shown this type of tip the maximum number of times over all
     // sessions, don't show it again.
     let shownCount = UrlbarPrefs.get(`tipShownCount.${tip}`);
     if (shownCount >= MAX_SHOWN_COUNT && !ignoreShowLimits) {
       return;
     }
-
-    this.currentTip = tip;
 
     // At this point, we're showing a tip.
     this.disableTipsForCurrentSession = true;
@@ -349,8 +348,24 @@ class ProviderSearchTips extends UrlbarProvider {
     UrlbarPrefs.set(`tipShownCount.${tip}`, shownCount + 1);
 
     // Start a search.
-    let window = BrowserWindowTracker.getTopWindow();
-    window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
+    setTimeout(() => {
+      if (this._maybeShowTipForUrlInstance != instance) {
+        return;
+      }
+
+      let window = BrowserWindowTracker.getTopWindow();
+      // We don't want to interrupt a user's typed query with a Search Tip.
+      // See bugs 1613662 and 1619547.
+      if (
+        window.gURLBar.getAttribute("pageproxystate") == "invalid" &&
+        window.gURLBar.value != ""
+      ) {
+        return;
+      }
+
+      this.currentTip = tip;
+      window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
+    }, SHOW_TIP_DELAY_MS);
   }
 }
 
