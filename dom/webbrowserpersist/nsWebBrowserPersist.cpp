@@ -52,7 +52,7 @@
 #include "nsIMIMEInfo.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Printf.h"
 #include "ReferrerInfo.h"
 
@@ -1220,16 +1220,16 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     loadFlags |= nsIRequest::LOAD_FROM_CACHE;
   }
 
-  // Create a new cookieSettings for this download in order to send cookies
+  // Create a new cookieJarSettings for this download in order to send cookies
   // based on the current state of the prefs/permissions.
-  nsCOMPtr<nsICookieSettings> cookieSettings =
-      mozilla::net::CookieSettings::Create();
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      mozilla::net::CookieJarSettings::Create();
 
   // Open a channel to the URI
   nsCOMPtr<nsIChannel> inputChannel;
   rv = NS_NewChannel(getter_AddRefs(inputChannel), aURI, aTriggeringPrincipal,
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                     aContentPolicyType, cookieSettings,
+                     aContentPolicyType, cookieJarSettings,
                      nullptr,  // aPerformanceStorage
                      nullptr,  // aLoadGroup
                      static_cast<nsIInterfaceRequestor*>(this), loadFlags);

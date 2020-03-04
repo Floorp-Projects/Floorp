@@ -85,7 +85,7 @@ Performance::Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal)
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-Performance::~Performance() {}
+Performance::~Performance() = default;
 
 DOMHighResTimeStamp Performance::Now() {
   DOMHighResTimeStamp rawTime = NowUnclamped();
@@ -569,7 +569,7 @@ class NotifyObserversTask final : public CancelableRunnable {
   }
 
  private:
-  ~NotifyObserversTask() {}
+  ~NotifyObserversTask() = default;
 
   RefPtr<Performance> mPerformance;
 };

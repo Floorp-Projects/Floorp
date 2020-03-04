@@ -1,5 +1,5 @@
 // BroadcastChannel is not considered part of CookieJar. It's not allowed to
-// communicate with other windows with different cookie settings.
+// communicate with other windows with different cookie jar settings.
 
 CookiePolicyHelper.runTest("BroadcastChannel", {
   cookieJarAccessAllowed: async w => {

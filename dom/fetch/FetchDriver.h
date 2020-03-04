@@ -20,7 +20,7 @@
 #include "mozilla/DebugOnly.h"
 
 class nsIConsoleReportCollector;
-class nsICookieSettings;
+class nsICookieJarSettings;
 class nsICSPEventListener;
 class nsIEventTarget;
 class nsIOutputStream;
@@ -101,7 +101,7 @@ class FetchDriver final : public nsIStreamListener,
 
   FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
               nsILoadGroup* aLoadGroup, nsIEventTarget* aMainThreadEventTarget,
-              nsICookieSettings* aCookieSettings,
+              nsICookieJarSettings* aCookieJarSettings,
               PerformanceStorage* aPerformanceStorage, bool aIsTrackingFetch);
 
   nsresult Fetch(AbortSignalImpl* aSignalImpl, FetchDriverObserver* aObserver);
@@ -141,7 +141,7 @@ class FetchDriver final : public nsIStreamListener,
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
-  nsCOMPtr<nsICookieSettings> mCookieSettings;
+  nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
 
   // This is set only when Fetch is used in workers.
   RefPtr<PerformanceStorage> mPerformanceStorage;

@@ -29,7 +29,7 @@ class PowerManagerService : public nsIPowerManagerService,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPOWERMANAGERSERVICE
 
-  PowerManagerService() {}
+  PowerManagerService() = default;
 
   static already_AddRefed<PowerManagerService> GetInstance();
 

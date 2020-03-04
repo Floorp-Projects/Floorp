@@ -56,7 +56,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD InitLoadInfoNative(nsINode* aLoadingNode,
                                 nsIPrincipal* aLoadingPrincipal,
                                 nsIPrincipal* aTriggeringPrincipal,
-                                nsICookieSettings* aCookieSettings,
+                                nsICookieJarSettings* aCookieJarSettings,
                                 uint32_t aSecurityFlags,
                                 uint32_t aContentPolicyType,
                                 uint32_t aSandboxFlags) override;

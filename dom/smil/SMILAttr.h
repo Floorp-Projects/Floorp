@@ -92,7 +92,7 @@ class SMILAttr {
   /**
    * Virtual destructor, to make sure subclasses can clean themselves up.
    */
-  virtual ~SMILAttr() {}
+  virtual ~SMILAttr() = default;
 };
 
 }  // namespace mozilla

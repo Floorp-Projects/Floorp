@@ -888,7 +888,7 @@ static nsresult NewImageChannel(
     // requestingNode.
     rv = NS_NewChannel(aResult, aURI, nsContentUtils::GetSystemPrincipal(),
                        securityFlags, aPolicyType,
-                       nullptr,  // nsICookieSettings
+                       nullptr,  // nsICookieJarSettings
                        nullptr,  // PerformanceStorage
                        nullptr,  // loadGroup
                        callbacks, aLoadFlags);

@@ -24,7 +24,7 @@ typedef AutoTArray<RefPtr<dom::Element>, 16> ManualNACArray;
  */
 class ManualNACPtr final {
  public:
-  ManualNACPtr() {}
+  ManualNACPtr() = default;
   MOZ_IMPLICIT ManualNACPtr(decltype(nullptr)) {}
   explicit ManualNACPtr(already_AddRefed<dom::Element> aNewNAC)
       : mPtr(aNewNAC) {

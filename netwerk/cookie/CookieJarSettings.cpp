@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowInner.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -13,9 +16,12 @@
 #endif
 #include "nsPermission.h"
 #include "nsPermissionManager.h"
+#include "nsICookieService.h"
 
 namespace mozilla {
 namespace net {
+
+static StaticRefPtr<CookieJarSettings> sBlockinAll;
 
 namespace {
 
@@ -64,39 +70,45 @@ class ReleaseCookiePermissions final : public Runnable {
 }  // namespace
 
 // static
-already_AddRefed<nsICookieSettings> CookieSettings::CreateBlockingAll() {
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::GetBlockingAll() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CookieSettings> cookieSettings =
-      new CookieSettings(nsICookieService::BEHAVIOR_REJECT, eFixed);
-  return cookieSettings.forget();
+  if (sBlockinAll) {
+    return do_AddRef(sBlockinAll);
+  }
+
+  sBlockinAll =
+      new CookieJarSettings(nsICookieService::BEHAVIOR_REJECT, eFixed);
+  ClearOnShutdown(&sBlockinAll);
+
+  return do_AddRef(sBlockinAll);
 }
 
 // static
-already_AddRefed<nsICookieSettings> CookieSettings::Create() {
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CookieSettings> cookieSettings = new CookieSettings(
+  RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
       StaticPrefs::network_cookie_cookieBehavior(), eProgressive);
-  return cookieSettings.forget();
+  return cookieJarSettings.forget();
 }
 
 // static
-already_AddRefed<nsICookieSettings> CookieSettings::Create(
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
     uint32_t aCookieBehavior) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CookieSettings> cookieSettings =
-      new CookieSettings(aCookieBehavior, eProgressive);
-  return cookieSettings.forget();
+  RefPtr<CookieJarSettings> cookieJarSettings =
+      new CookieJarSettings(aCookieBehavior, eProgressive);
+  return cookieJarSettings.forget();
 }
 
-CookieSettings::CookieSettings(uint32_t aCookieBehavior, State aState)
+CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior, State aState)
     : mCookieBehavior(aCookieBehavior), mState(aState), mToBeMerged(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-CookieSettings::~CookieSettings() {
+CookieJarSettings::~CookieJarSettings() {
   if (!NS_IsMainThread() && !mCookiePermissions.IsEmpty()) {
     nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
         mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
@@ -110,13 +122,14 @@ CookieSettings::~CookieSettings() {
 }
 
 NS_IMETHODIMP
-CookieSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
+CookieJarSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
   *aCookieBehavior = mCookieBehavior;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CookieSettings::GetRejectThirdPartyTrackers(bool* aRejectThirdPartyTrackers) {
+CookieJarSettings::GetRejectThirdPartyTrackers(
+    bool* aRejectThirdPartyTrackers) {
   *aRejectThirdPartyTrackers =
       mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
       mCookieBehavior ==
@@ -125,7 +138,7 @@ CookieSettings::GetRejectThirdPartyTrackers(bool* aRejectThirdPartyTrackers) {
 }
 
 NS_IMETHODIMP
-CookieSettings::GetLimitForeignContexts(bool* aLimitForeignContexts) {
+CookieJarSettings::GetLimitForeignContexts(bool* aLimitForeignContexts) {
   *aLimitForeignContexts =
       mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
       (StaticPrefs::privacy_dynamic_firstparty_limitForeign() &&
@@ -135,7 +148,7 @@ CookieSettings::GetLimitForeignContexts(bool* aLimitForeignContexts) {
 }
 
 NS_IMETHODIMP
-CookieSettings::GetPartitionForeign(bool* aPartitionForeign) {
+CookieJarSettings::GetPartitionForeign(bool* aPartitionForeign) {
   *aPartitionForeign =
       mCookieBehavior ==
       nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
@@ -143,7 +156,7 @@ CookieSettings::GetPartitionForeign(bool* aPartitionForeign) {
 }
 
 NS_IMETHODIMP
-CookieSettings::SetPartitionForeign(bool aPartitionForeign) {
+CookieJarSettings::SetPartitionForeign(bool aPartitionForeign) {
   if (aPartitionForeign) {
     mCookieBehavior =
         nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
@@ -152,8 +165,8 @@ CookieSettings::SetPartitionForeign(bool aPartitionForeign) {
 }
 
 NS_IMETHODIMP
-CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
-                                 uint32_t* aCookiePermission) {
+CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
+                                    uint32_t* aCookiePermission) {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aCookiePermission);
@@ -224,7 +237,7 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-void CookieSettings::Serialize(CookieSettingsArgs& aData) {
+void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
   aData.isFixed() = mState == eFixed;
@@ -237,7 +250,7 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
       continue;
     }
 
-    PrincipalInfo principalInfo;
+    ipc::PrincipalInfo principalInfo;
     rv = PrincipalToPrincipalInfo(principal, &principalInfo,
                                   true /* aSkipBaseDomain */);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -257,8 +270,9 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
   mToBeMerged = false;
 }
 
-/* static */ void CookieSettings::Deserialize(
-    const CookieSettingsArgs& aData, nsICookieSettings** aCookieSettings) {
+/* static */ void CookieJarSettings::Deserialize(
+    const CookieJarSettingsArgs& aData,
+    nsICookieJarSettings** aCookieJarSettings) {
   MOZ_ASSERT(NS_IsMainThread());
 
   CookiePermissionList list;
@@ -279,15 +293,15 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
     list.AppendElement(permission);
   }
 
-  RefPtr<CookieSettings> cookieSettings = new CookieSettings(
+  RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
       aData.cookieBehavior(), aData.isFixed() ? eFixed : eProgressive);
 
-  cookieSettings->mCookiePermissions.SwapElements(list);
+  cookieJarSettings->mCookiePermissions.SwapElements(list);
 
-  cookieSettings.forget(aCookieSettings);
+  cookieJarSettings.forget(aCookieJarSettings);
 }
 
-void CookieSettings::Merge(const CookieSettingsArgs& aData) {
+void CookieJarSettings::Merge(const CookieJarSettingsArgs& aData) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(
       mCookieBehavior == aData.cookieBehavior() ||
@@ -341,7 +355,7 @@ void CookieSettings::Merge(const CookieSettingsArgs& aData) {
   }
 }
 
-NS_IMPL_ISUPPORTS(CookieSettings, nsICookieSettings)
+NS_IMPL_ISUPPORTS(CookieJarSettings, nsICookieJarSettings)
 
 }  // namespace net
 }  // namespace mozilla

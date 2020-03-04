@@ -34,7 +34,7 @@
 using mozilla::OriginAttributes;
 
 class nsICookiePermission;
-class nsICookieSettings;
+class nsICookieJarSettings;
 class nsIEffectiveTLDService;
 class nsIIDNService;
 class nsIPrefBranch;
@@ -204,7 +204,7 @@ class nsCookieService final : public nsICookieService,
                            bool aFromHttp, nsIChannel* aChannel,
                            bool& aSetCookie,
                            mozIThirdPartyUtil* aThirdPartyUtil);
-  static CookieStatus CheckPrefs(nsICookieSettings* aCookieSettings,
+  static CookieStatus CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
                                  nsIURI* aHostURI, bool aIsForeign,
                                  bool aIsThirdPartyTrackingResource,
                                  bool aIsThirdPartySocialTrackingResource,
@@ -215,7 +215,7 @@ class nsCookieService final : public nsICookieService,
                                  uint32_t* aRejectedReason);
   static int64_t ParseServerTime(const nsACString& aServerTime);
 
-  static already_AddRefed<nsICookieSettings> GetCookieSettings(
+  static already_AddRefed<nsICookieJarSettings> GetCookieJarSettings(
       nsIChannel* aChannel);
 
   void GetCookiesForURI(nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,

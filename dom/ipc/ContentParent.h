@@ -488,13 +488,13 @@ class ContentParent final
   already_AddRefed<POfflineCacheUpdateParent> AllocPOfflineCacheUpdateParent(
       const URIParams& aManifestURI, const URIParams& aDocumentURI,
       const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument,
-      const CookieSettingsArgs& aCookieSettingsArgs);
+      const CookieJarSettingsArgs& aCookieJarSettingsArgs);
 
   virtual mozilla::ipc::IPCResult RecvPOfflineCacheUpdateConstructor(
       POfflineCacheUpdateParent* aActor, const URIParams& aManifestURI,
       const URIParams& aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
       const bool& stickDocument,
-      const CookieSettingsArgs& aCookieSettingsArgs) override;
+      const CookieJarSettingsArgs& aCookieJarSettingsArgs) override;
 
   mozilla::ipc::IPCResult RecvSetOfflinePermission(
       const IPC::Principal& principal);

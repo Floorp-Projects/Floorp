@@ -775,10 +775,10 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mStorageAccess;
   }
 
-  nsICookieSettings* CookieSettings() const {
+  nsICookieJarSettings* CookieJarSettings() const {
     // Any thread.
-    MOZ_ASSERT(mLoadInfo.mCookieSettings);
-    return mLoadInfo.mCookieSettings;
+    MOZ_ASSERT(mLoadInfo.mCookieJarSettings);
+    return mLoadInfo.mCookieJarSettings;
   }
 
   const OriginAttributes& GetOriginAttributes() const {

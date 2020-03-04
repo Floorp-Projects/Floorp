@@ -184,6 +184,7 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
 
   wl_buffer* mWLBuffer;
   void* mMappedRegion;
+  void* mMappedRegionData;
   uint32_t mMappedRegionStride;
 
   struct gbm_bo* mGbmBufferObject;

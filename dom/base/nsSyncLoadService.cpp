@@ -281,12 +281,12 @@ nsSyncLoader::GetInterface(const nsIID& aIID, void** aResult) {
 nsresult nsSyncLoadService::LoadDocument(
     nsIURI* aURI, nsContentPolicyType aContentPolicyType,
     nsIPrincipal* aLoaderPrincipal, nsSecurityFlags aSecurityFlags,
-    nsILoadGroup* aLoadGroup, nsICookieSettings* aCookieSettings,
+    nsILoadGroup* aLoadGroup, nsICookieJarSettings* aCookieJarSettings,
     bool aForceToXML, ReferrerPolicy aReferrerPolicy, Document** aResult) {
   nsCOMPtr<nsIChannel> channel;
   nsresult rv =
       NS_NewChannel(getter_AddRefs(channel), aURI, aLoaderPrincipal,
-                    aSecurityFlags, aContentPolicyType, aCookieSettings,
+                    aSecurityFlags, aContentPolicyType, aCookieJarSettings,
                     nullptr,  // PerformanceStorage
                     aLoadGroup);
   NS_ENSURE_SUCCESS(rv, rv);

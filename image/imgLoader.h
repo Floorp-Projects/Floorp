@@ -453,7 +453,7 @@ class nsProgressNotificationProxy final : public nsIProgressEventSink,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
  private:
-  ~nsProgressNotificationProxy() {}
+  ~nsProgressNotificationProxy() = default;
 
   nsCOMPtr<nsIInterfaceRequestor> mOriginalCallbacks;
   nsCOMPtr<nsIRequest> mImageRequest;

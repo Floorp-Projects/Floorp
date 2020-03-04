@@ -15,7 +15,7 @@
 #define USER_INTERACTION_PERM NS_LITERAL_CSTRING("storageAccessAPI")
 
 class nsIChannel;
-class nsICookieSettings;
+class nsICookieJarSettings;
 class nsIPermission;
 class nsIPrincipal;
 class nsIURI;
@@ -71,7 +71,7 @@ class AntiTrackingCommon final {
   // This method checks if the principal has the permission to access to the
   // first party storage.
   static bool IsFirstPartyStorageAccessGrantedFor(
-      nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings);
+      nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings);
 
   enum StorageAccessGrantedReason {
     eStorageAccessAPI,

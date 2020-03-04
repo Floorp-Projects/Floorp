@@ -18,7 +18,7 @@
 #include "nsNetCID.h"
 #include "nsIPrefBranch.h"
 #include "mozilla/Unused.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "nsIURI.h"
 
 using mozilla::Unused;
@@ -99,12 +99,13 @@ void SetASameSiteCookie(nsICookieService* aCookieService, const char* aSpec1,
                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
                 nsIContentPolicy::TYPE_OTHER);
 
-  nsCOMPtr<nsICookieSettings> cookieSettings =
-      aAllowed ? CookieSettings::Create() : CookieSettings::CreateBlockingAll();
-  MOZ_ASSERT(cookieSettings);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      aAllowed ? CookieJarSettings::Create()
+               : CookieJarSettings::GetBlockingAll();
+  MOZ_ASSERT(cookieJarSettings);
 
   nsCOMPtr<nsILoadInfo> loadInfo = dummyChannel->LoadInfo();
-  loadInfo->SetCookieSettings(cookieSettings);
+  loadInfo->SetCookieJarSettings(cookieJarSettings);
 
   nsresult rv = aCookieService->SetCookieStringFromHttp(
       uri1, uri2, nullptr, nsDependentCString(aCookieString),
@@ -982,7 +983,7 @@ TEST(TestCookie, TestCookieMain)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
 
   // None of these cookies will be set because using
-  // CookieSettings::CreateBlockingAll().
+  // CookieJarSettings::GetBlockingAll().
   SetASameSiteCookie(cookieService, "http://samesite.test", nullptr,
                      "unset=yes", nullptr, false);
   SetASameSiteCookie(cookieService, "http://samesite.test", nullptr,

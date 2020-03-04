@@ -28,7 +28,7 @@ namespace mozilla {
 namespace net {
 
 //-----------------------------------------------------------------------------
-// CookieSettings IPDL structs
+// CookieJarSettings IPDL structs
 //-----------------------------------------------------------------------------
 
 struct CookiePermissionData
@@ -37,7 +37,7 @@ struct CookiePermissionData
   uint32_t cookiePermission;
 };
 
-struct CookieSettingsArgs
+struct CookieJarSettingsArgs
 {
   // Copy of the cookie behavior and permissions for the top-level document.
   uint32_t cookieBehavior;
@@ -145,7 +145,7 @@ struct LoadInfoArgs
   nsString                    cspNonce;
   bool                        skipContentSniffing;
   bool                        isFromProcessingFrameAttributes;
-  CookieSettingsArgs cookieSettings;
+  CookieJarSettingsArgs       cookieJarSettings;
   uint32_t                    requestBlockingReason;
   CSPInfo?                    cspToInheritInfo;
 };
@@ -191,7 +191,7 @@ struct ParentLoadInfoForwarderArgs
   bool documentHasLoaded;
   bool allowListFutureDocumentsCreatedFromThisRedirectChain;
 
-  CookieSettingsArgs? cookieSettings;
+  CookieJarSettingsArgs? cookieJarSettings;
 
   uint32_t requestBlockingReason;
 

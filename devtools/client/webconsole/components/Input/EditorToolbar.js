@@ -5,9 +5,16 @@
 "use strict";
 
 // React & Redux
-const { Component } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const EvaluationSelector = createFactory(
+  require("devtools/client/webconsole/components/Input/EvaluationSelector")
+);
 
 const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
@@ -28,6 +35,7 @@ class EditorToolbar extends Component {
       reverseSearchInputVisible: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.object.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
+      showEvaluationSelector: PropTypes.bool,
     };
   }
 
@@ -48,6 +56,19 @@ class EditorToolbar extends Component {
         initialValue: serviceContainer.getInputSelection(),
       })
     );
+  }
+
+  renderEvaluationSelector() {
+    if (
+      !this.props.webConsoleUI.wrapper.toolbox ||
+      !this.props.showEvaluationSelector
+    ) {
+      return null;
+    }
+
+    return EvaluationSelector({
+      webConsoleUI: this.props.webConsoleUI,
+    });
   }
 
   render() {
@@ -80,6 +101,7 @@ class EditorToolbar extends Component {
         },
         l10n.getStr("webconsole.editor.toolbar.executeButton.label")
       ),
+      this.renderEvaluationSelector(),
       dom.button({
         className:
           "devtools-button webconsole-editor-toolbar-history-prevExpressionButton",

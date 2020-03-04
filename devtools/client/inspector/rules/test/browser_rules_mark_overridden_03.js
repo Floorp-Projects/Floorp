@@ -23,18 +23,11 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  const idRule = getRuleViewRuleEditor(view, 1).rule;
-  const idProp = idRule.textProps[0];
+  const idProp = getTextProperty(view, 1, { "background-color": "blue" });
   ok(idProp.overridden, "Not-important rule should be overridden.");
 
-  const classRule = getRuleViewRuleEditor(view, 2).rule;
-  const classProp = classRule.textProps[0];
+  const classProp = getTextProperty(view, 2, { "background-color": "green" });
   ok(!classProp.overridden, "Important rule should not be overridden.");
 
   ok(idProp.overridden, "ID property should be overridden.");
-
-  // FIXME: re-enable these 2 assertions when bug 1247737 is fixed.
-  // let elementProp = yield addProperty(view, 0, "background-color", "purple");
-  // ok(!elementProp.overridden, "New important prop should not be overriden.");
-  // ok(classProp.overridden, "Class property should be overridden.");
 });

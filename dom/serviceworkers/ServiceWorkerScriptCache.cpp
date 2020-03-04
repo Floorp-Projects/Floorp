@@ -18,7 +18,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
@@ -660,15 +660,15 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
       mIsMainScript ? nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER
                     : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
 
-  // Create a new cookieSettings.
-  nsCOMPtr<nsICookieSettings> cookieSettings =
-      mozilla::net::CookieSettings::Create();
+  // Create a new cookieJarSettings.
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      mozilla::net::CookieJarSettings::Create();
 
   // Note that because there is no "serviceworker" RequestContext type, we can
   // use the TYPE_INTERNAL_SCRIPT content policy types when loading a service
   // worker.
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, aPrincipal, secFlags,
-                     contentPolicyType, cookieSettings,
+                     contentPolicyType, cookieJarSettings,
                      nullptr /* aPerformanceStorage */, loadGroup,
                      nullptr /* aCallbacks */, mLoadFlags);
   if (NS_WARN_IF(NS_FAILED(rv))) {

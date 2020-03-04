@@ -26,10 +26,9 @@ add_task(async function() {
   const { document: doc, store } = selectChangesView(inspector);
 
   await selectNode("div", inspector);
-  const rule1 = getRuleViewRuleEditor(ruleView, 1).rule;
-  const rule2 = getRuleViewRuleEditor(ruleView, 2).rule;
-  const prop1 = rule1.textProps[0];
-  const prop2 = rule2.textProps[0];
+  const prop1 = getTextProperty(ruleView, 1, { "font-size": "1em" });
+  const prop2 = getTextProperty(ruleView, 2, { color: "red" });
+
   let onTrackChange;
 
   onTrackChange = waitUntilAction(store, "TRACK_CHANGE");

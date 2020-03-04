@@ -22,9 +22,10 @@ add_task(async function() {
   await testClickOnEmptyAreaToCloseEditor(inspector, view);
 });
 
-function synthesizeMouseOnEmptyArea(ruleEditor, view) {
+function synthesizeMouseOnEmptyArea(view) {
   // any text property editor will do
-  const propEditor = ruleEditor.rule.textProps[0].editor;
+  const prop = getTextProperty(view, 1, { "background-color": "blue" });
+  const propEditor = prop.editor;
   const valueContainer = propEditor.valueContainer;
   const valueRect = valueContainer.getBoundingClientRect();
   // click right next to the ";" at the end of valueContainer
@@ -41,7 +42,8 @@ async function testClickOnEmptyAreaToCloseEditor(inspector, view) {
   // Start at the beginning: start to add a rule to the element's style
   // declaration, add some text, then press escape.
   const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const propEditor = ruleEditor.rule.textProps[0].editor;
+  const prop = getTextProperty(view, 1, { "background-color": "blue" });
+  const propEditor = prop.editor;
 
   info("Create a property value editor");
   let editor = await focusEditableField(view, propEditor.valueSpan);
@@ -53,14 +55,14 @@ async function testClickOnEmptyAreaToCloseEditor(inspector, view) {
   );
   const onRuleViewChanged = view.once("ruleview-changed");
   let onBlur = once(editor.input, "blur");
-  synthesizeMouseOnEmptyArea(ruleEditor, view);
+  synthesizeMouseOnEmptyArea(view);
   await onBlur;
   await onRuleViewChanged;
   ok(!view.isEditing, "No inplace editor should be displayed in the ruleview");
 
   info("Create new newProperty editor by clicking again on the empty area");
   const onFocus = once(ruleEditor.element, "focus", true);
-  synthesizeMouseOnEmptyArea(ruleEditor, view);
+  synthesizeMouseOnEmptyArea(view);
   await onFocus;
   editor = inplaceEditor(ruleEditor.element.ownerDocument.activeElement);
   is(
@@ -71,7 +73,7 @@ async function testClickOnEmptyAreaToCloseEditor(inspector, view) {
 
   info("Close the newProperty editor by clicking again on the empty area");
   onBlur = once(editor.input, "blur");
-  synthesizeMouseOnEmptyArea(ruleEditor, view);
+  synthesizeMouseOnEmptyArea(view);
   await onBlur;
 
   ok(!view.isEditing, "No inplace editor should be displayed in the ruleview");

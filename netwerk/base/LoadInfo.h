@@ -20,7 +20,7 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 
-class nsICookieSettings;
+class nsICookieJarSettings;
 class nsINode;
 class nsPIDOMWindowOuter;
 
@@ -132,7 +132,8 @@ class LoadInfo final : public nsILoadInfo {
            nsIPrincipal* aSandboxedLoadingPrincipal,
            nsIPrincipal* aTopLevelPrincipal,
            nsIPrincipal* aTopLevelStorageAreaPrincipal,
-           nsIURI* aResultPrincipalURI, nsICookieSettings* aCookieSettings,
+           nsIURI* aResultPrincipalURI,
+           nsICookieJarSettings* aCookieJarSettings,
            nsIContentSecurityPolicy* aCspToInherit,
            const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
            const Maybe<mozilla::dom::ClientInfo>& aReservedClientInfo,
@@ -204,7 +205,7 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIPrincipal> mTopLevelStorageAreaPrincipal;
   nsCOMPtr<nsIURI> mResultPrincipalURI;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
-  nsCOMPtr<nsICookieSettings> mCookieSettings;
+  nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
   nsCOMPtr<nsIContentSecurityPolicy> mCspToInherit;
 
   Maybe<mozilla::dom::ClientInfo> mClientInfo;

@@ -279,11 +279,11 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   int64_t currentTimeInUsec = PR_Now();
   int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 
-  nsCOMPtr<nsICookieSettings> cookieSettings =
-      nsCookieService::GetCookieSettings(aChannel);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      nsCookieService::GetCookieJarSettings(aChannel);
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
-      cookieSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
+      cookieJarSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
       VoidCString(), CountCookiesFromHashTable(baseDomain, attrs), attrs,
       &aRejectedReason);
@@ -377,13 +377,14 @@ void CookieServiceChild::SetCookieInternal(
     return false;
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
-  uint32_t cookieBehavior = cookieSettings->GetCookieBehavior();
+  uint32_t cookieBehavior = cookieJarSettings->GetCookieBehavior();
   return cookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
          cookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
          cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
@@ -518,11 +519,12 @@ nsresult CookieServiceChild::SetCookieStringInternal(
   nsCookieService::GetBaseDomain(mTLDService, aHostURI, baseDomain,
                                  requireHostMatch);
 
-  nsCOMPtr<nsICookieSettings> cookieSettings =
-      nsCookieService::GetCookieSettings(aChannel);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      nsCookieService::GetCookieJarSettings(aChannel);
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
-      cookieSettings, aHostURI, result.contains(ThirdPartyAnalysis::IsForeign),
+      cookieJarSettings, aHostURI,
+      result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),

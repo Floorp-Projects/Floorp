@@ -18,7 +18,7 @@ NS_IMPL_ISUPPORTS(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
 nsScriptableUnicodeConverter::nsScriptableUnicodeConverter()
     : mIsInternal(false) {}
 
-nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter() {}
+nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter() = default;
 
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,

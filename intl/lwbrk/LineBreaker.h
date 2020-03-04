@@ -51,7 +51,7 @@ class LineBreaker {
                          bool aIsChineseOrJapanese, uint8_t* aBreakBefore);
 
  private:
-  ~LineBreaker() {}
+  ~LineBreaker() = default;
 
   int32_t WordMove(const char16_t* aText, uint32_t aLen, uint32_t aPos,
                    int8_t aDirection);

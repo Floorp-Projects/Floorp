@@ -17,7 +17,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozIThirdPartyUtil.h"
@@ -223,7 +223,7 @@ LoadInfo::LoadInfo(
 
       // Let's inherit the cookie behavior and permission from the parent
       // document.
-      mCookieSettings = aLoadingContext->OwnerDoc()->CookieSettings();
+      mCookieJarSettings = aLoadingContext->OwnerDoc()->CookieJarSettings();
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
@@ -418,7 +418,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   // Let's take the current cookie behavior and current cookie permission
   // for the documents' loadInfo. Note that for any other loadInfos,
   // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
-  mCookieSettings = CookieSettings::Create();
+  mCookieJarSettings = CookieJarSettings::Create();
 }
 
 LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
@@ -496,7 +496,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
   // Let's take the current cookie behavior and current cookie permission
   // for the documents' loadInfo. Note that for any other loadInfos,
   // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
-  mCookieSettings = CookieSettings::Create();
+  mCookieJarSettings = CookieJarSettings::Create();
 }
 
 LoadInfo::LoadInfo(const LoadInfo& rhs)
@@ -507,7 +507,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mTopLevelPrincipal(rhs.mTopLevelPrincipal),
       mTopLevelStorageAreaPrincipal(rhs.mTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(rhs.mResultPrincipalURI),
-      mCookieSettings(rhs.mCookieSettings),
+      mCookieJarSettings(rhs.mCookieJarSettings),
       mCspToInherit(rhs.mCspToInherit),
       mClientInfo(rhs.mClientInfo),
       // mReservedClientSource must be handled specially during redirect
@@ -571,7 +571,8 @@ LoadInfo::LoadInfo(
     nsIPrincipal* aPrincipalToInherit, nsIPrincipal* aSandboxedLoadingPrincipal,
     nsIPrincipal* aTopLevelPrincipal,
     nsIPrincipal* aTopLevelStorageAreaPrincipal, nsIURI* aResultPrincipalURI,
-    nsICookieSettings* aCookieSettings, nsIContentSecurityPolicy* aCspToInherit,
+    nsICookieJarSettings* aCookieJarSettings,
+    nsIContentSecurityPolicy* aCspToInherit,
     const Maybe<ClientInfo>& aClientInfo,
     const Maybe<ClientInfo>& aReservedClientInfo,
     const Maybe<ClientInfo>& aInitialClientInfo,
@@ -607,7 +608,7 @@ LoadInfo::LoadInfo(
       mTopLevelPrincipal(aTopLevelPrincipal),
       mTopLevelStorageAreaPrincipal(aTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(aResultPrincipalURI),
-      mCookieSettings(aCookieSettings),
+      mCookieJarSettings(aCookieJarSettings),
       mCspToInherit(aCspToInherit),
       mClientInfo(aClientInfo),
       mReservedClientInfo(aReservedClientInfo),
@@ -867,41 +868,41 @@ LoadInfo::GetCookiePolicy(uint32_t* aResult) {
 
 namespace {
 
-already_AddRefed<nsICookieSettings> CreateCookieSettings(
+already_AddRefed<nsICookieJarSettings> CreateCookieJarSettings(
     nsContentPolicyType aContentPolicyType) {
-  if (StaticPrefs::network_cookieSettings_unblocked_for_testing()) {
-    return CookieSettings::Create();
+  if (StaticPrefs::network_cookieJarSettings_unblocked_for_testing()) {
+    return CookieJarSettings::Create();
   }
 
-  // These contentPolictTypes require a real CookieSettings because favicon and
-  // save-as requests must send cookies. Anything else should not send/receive
-  // cookies.
+  // These contentPolictTypes require a real CookieJarSettings because favicon
+  // and save-as requests must send cookies. Anything else should not
+  // send/receive cookies.
   if (aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON ||
       aContentPolicyType == nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
-    return CookieSettings::Create();
+    return CookieJarSettings::Create();
   }
 
-  return CookieSettings::CreateBlockingAll();
+  return CookieJarSettings::GetBlockingAll();
 }
 
 }  // namespace
 
 NS_IMETHODIMP
-LoadInfo::GetCookieSettings(nsICookieSettings** aCookieSettings) {
-  if (!mCookieSettings) {
-    mCookieSettings = CreateCookieSettings(mInternalContentPolicyType);
+LoadInfo::GetCookieJarSettings(nsICookieJarSettings** aCookieJarSettings) {
+  if (!mCookieJarSettings) {
+    mCookieJarSettings = CreateCookieJarSettings(mInternalContentPolicyType);
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings = mCookieSettings;
-  cookieSettings.forget(aCookieSettings);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings = mCookieJarSettings;
+  cookieJarSettings.forget(aCookieJarSettings);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-LoadInfo::SetCookieSettings(nsICookieSettings* aCookieSettings) {
-  MOZ_ASSERT(aCookieSettings);
-  // We allow the overwrite of CookieSettings.
-  mCookieSettings = aCookieSettings;
+LoadInfo::SetCookieJarSettings(nsICookieJarSettings* aCookieJarSettings) {
+  MOZ_ASSERT(aCookieJarSettings);
+  // We allow the overwrite of CookieJarSettings.
+  mCookieJarSettings = aCookieJarSettings;
   return NS_OK;
 }
 

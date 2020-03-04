@@ -232,7 +232,7 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
       }
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, just to prevent nbsp proliferation
-      nsresult rv = ReplacePreviousNBSPIfUnncessary(beforeRun, pointToInsert);
+      nsresult rv = ReplacePreviousNBSPIfUnnecessary(beforeRun, pointToInsert);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
@@ -314,7 +314,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      nsresult rv = ReplacePreviousNBSPIfUnncessary(beforeRun, pointToInsert);
+      nsresult rv = ReplacePreviousNBSPIfUnnecessary(beforeRun, pointToInsert);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1901,7 +1901,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
   return NS_OK;
 }
 
-nsresult WSRunObject::ReplacePreviousNBSPIfUnncessary(
+nsresult WSRunObject::ReplacePreviousNBSPIfUnnecessary(
     WSFragment* aRun, const EditorDOMPoint& aPoint) {
   if (NS_WARN_IF(!aRun) || NS_WARN_IF(!aPoint.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -1915,7 +1915,8 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnncessary(
   // inserted object.
   bool canConvert = false;
   EditorDOMPointInText atPreviousChar = GetPreviousCharPoint(aPoint);
-  if (atPreviousChar.IsSet() && atPreviousChar.IsCharNBSP()) {
+  if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
+      atPreviousChar.IsCharNBSP()) {
     EditorDOMPointInText atPreviousCharOfPreviousChar =
         GetPreviousCharPointFromPointInText(atPreviousChar);
     if (atPreviousCharOfPreviousChar.IsSet()) {

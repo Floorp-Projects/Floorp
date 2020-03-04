@@ -12031,7 +12031,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_deffun() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_throwsetconst() {
-  current->peek(-1)->setImplicitlyUsedUnchecked();
   MInstruction* lexicalError =
       MThrowRuntimeLexicalError::New(alloc(), JSMSG_BAD_CONST_ASSIGN);
   current->add(lexicalError);

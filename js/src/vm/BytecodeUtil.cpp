@@ -693,9 +693,6 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
     case JSOp::SetArg:
     case JSOp::SetIntrinsic:
     case JSOp::SetLocal:
-    case JSOp::ThrowSetAliasedConst:
-    case JSOp::ThrowSetCallee:
-    case JSOp::ThrowSetConst:
     case JSOp::InitAliasedLexical:
     case JSOp::IterNext:
       // Keep the top value.
@@ -3041,7 +3038,7 @@ bool js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,
   MOZ_ASSERT(script->containsPC(pc));
 
   JSOp op = (JSOp)*pc;
-  if (FlowsIntoNext(op)) {
+  if (BytecodeFallsThrough(op)) {
     if (!successors.append(GetNextPc(pc))) {
       return false;
     }
