@@ -67,7 +67,6 @@ async function testRemoveTextInFilter(inspector, view) {
   );
 
   let rule = getRuleViewRuleEditor(view, 1).rule;
-
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(
     rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
@@ -75,7 +74,6 @@ async function testRemoveTextInFilter(inspector, view) {
   );
 
   rule = getRuleViewRuleEditor(view, 2).rule;
-
   is(rule.selectorText, ".testclass", "Second rule is .testclass.");
   ok(
     rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),

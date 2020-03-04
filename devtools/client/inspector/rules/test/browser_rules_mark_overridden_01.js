@@ -23,28 +23,14 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  const idRule = getRuleViewRuleEditor(view, 1).rule;
-  const idProp = idRule.textProps[0];
-  is(
-    idProp.name,
-    "background-color",
-    "First ID property should be background-color"
-  );
-  is(idProp.value, "blue", "First ID property value should be blue");
+  const idProp = getTextProperty(view, 1, { "background-color": "blue" });
   ok(!idProp.overridden, "ID prop should not be overridden.");
   ok(
     !idProp.editor.element.classList.contains("ruleview-overridden"),
     "ID property editor should not have ruleview-overridden class"
   );
 
-  const classRule = getRuleViewRuleEditor(view, 2).rule;
-  const classProp = classRule.textProps[0];
-  is(
-    classProp.name,
-    "background-color",
-    "First class prop should be background-color"
-  );
-  is(classProp.value, "green", "First class property value should be green");
+  const classProp = getTextProperty(view, 2, { "background-color": "green" });
   ok(classProp.overridden, "Class property should be overridden.");
   ok(
     classProp.editor.element.classList.contains("ruleview-overridden"),

@@ -20,12 +20,10 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  const rule = getRuleViewRuleEditor(view, 1).rule;
-
   await addProperty(view, 1, "background-color", "red");
 
-  const firstProp = rule.textProps[0];
-  const secondProp = rule.textProps[1];
+  const firstProp = getTextProperty(view, 1, { "background-color": "green" });
+  const secondProp = getTextProperty(view, 1, { "background-color": "red" });
 
   ok(firstProp.overridden, "First property should be overridden.");
   ok(!secondProp.overridden, "Second property should not be overridden.");
