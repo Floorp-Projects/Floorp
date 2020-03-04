@@ -78,6 +78,7 @@ EXPORTS.mozilla += [
     'MotionPathUtils.h',
     'MVMContext.h',
     'OverflowChangedTracker.h',
+    'PositionedEventTargeting.h',
     'PresShell.h',
     'PresShellForwards.h',
     'PresShellInlines.h',
