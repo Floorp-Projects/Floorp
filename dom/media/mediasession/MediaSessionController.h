@@ -55,6 +55,10 @@ class MediaSessionController {
   MediaMetadataBase GetCurrentMediaMetadata() const;
   uint64_t Id() const { return mTopLevelBCId; }
 
+  MediaEventSource<MediaMetadataBase>& MetadataChangedEvent() {
+    return mMetadataChangedEvent;
+  }
+
  protected:
   ~MediaSessionController() = default;
   uint64_t mTopLevelBCId;
@@ -66,6 +70,7 @@ class MediaSessionController {
   void UpdateActiveMediaSessionContextId();
 
   nsDataHashtable<nsUint64HashKey, Maybe<MediaMetadataBase>> mMetadataMap;
+  MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
 };
 
 }  // namespace dom

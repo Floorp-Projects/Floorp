@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -18,9 +19,6 @@ class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
-
-struct MediaImage;
-struct MediaMetadataInit;
 
 class MediaMetadataBase {
  public:

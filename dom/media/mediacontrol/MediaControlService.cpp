@@ -174,7 +174,7 @@ bool MediaControlService::ControllerManager::RemoveController(
 
 void MediaControlService::ControllerManager::Shutdown() {
   mControllers.Clear();
-  mPlayStateChangedListener.DisconnectIfExists();
+  DisconnectMainControllerEvents();
 }
 
 void MediaControlService::ControllerManager::ControllerPlaybackStateChanged(
@@ -183,13 +183,20 @@ void MediaControlService::ControllerManager::ControllerPlaybackStateChanged(
   mSource->SetPlaybackState(aState);
 }
 
+void MediaControlService::ControllerManager::ControllerMetadataChanged(
+    const MediaMetadataBase& aMetadata) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mSource->SetMediaMetadata(aMetadata);
+}
+
 void MediaControlService::ControllerManager::UpdateMainController(
     MediaController* aController) {
   MOZ_ASSERT(NS_IsMainThread());
   mMainController = aController;
+
   // As main controller has been changed, we should disconnect the listener from
   // the previous controller and reconnect it to the new controller.
-  mPlayStateChangedListener.DisconnectIfExists();
+  DisconnectMainControllerEvents();
 
   if (!mMainController) {
     LOG_MAINCONTROLLER("Clear main controller");
@@ -198,17 +205,34 @@ void MediaControlService::ControllerManager::UpdateMainController(
   }
   LOG_MAINCONTROLLER("Set controller %" PRId64 " as main controller",
                      mMainController->Id());
-  // Listen to new main controller in order to get playback state update.
-  mPlayStateChangedListener =
-      mMainController->PlaybackStateChangedEvent().Connect(
-          AbstractThread::MainThread(), this,
-          &ControllerManager::ControllerPlaybackStateChanged);
-  mSource->SetPlaybackState(mMainController->GetState());
+  ConnectToMainControllerEvents();
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
       obs->NotifyObservers(nullptr, "main-media-controller-changed", nullptr);
     }
   }
+}
+
+void MediaControlService::ControllerManager::ConnectToMainControllerEvents() {
+  MOZ_ASSERT(mMainController);
+  // Listen to main controller's event in order to get its playback state and
+  // metadata update.
+  mPlayStateChangedListener =
+      mMainController->PlaybackStateChangedEvent().Connect(
+          AbstractThread::MainThread(), this,
+          &ControllerManager::ControllerPlaybackStateChanged);
+  mMetadataChangedListener = mMainController->MetadataChangedEvent().Connect(
+      AbstractThread::MainThread(), this,
+      &ControllerManager::ControllerMetadataChanged);
+
+  // Update controller's current status to the event source.
+  mSource->SetPlaybackState(mMainController->GetState());
+  mSource->SetMediaMetadata(mMainController->GetCurrentMediaMetadata());
+}
+
+void MediaControlService::ControllerManager::DisconnectMainControllerEvents() {
+  mPlayStateChangedListener.DisconnectIfExists();
+  mMetadataChangedListener.DisconnectIfExists();
 }
 
 MediaController* MediaControlService::ControllerManager::GetMainController()
