@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ActorChild: "resource://gre/modules/ActorChild.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -90,7 +89,7 @@ const searchProviders = new SearchProviders();
  * page are returned to SearchTelemetry. If no ads are found, no notification is
  * given.
  */
-class SearchTelemetryChild extends ActorChild {
+class SearchTelemetryChild extends JSWindowActorChild {
   /**
    * Determines if there is a provider that matches the supplied URL and returns
    * the information associated with that provider.
@@ -110,11 +109,16 @@ class SearchTelemetryChild extends ActorChild {
    * it will notify SearchTelemetry.
    */
   _checkForAdLink() {
-    if (!this.content) {
+    try {
+      if (!this.contentWindow) {
+        return;
+      }
+    } catch (ex) {
+      // unload occurred before the timer expired
       return;
     }
 
-    let doc = this.content.document;
+    let doc = this.document;
     let url = doc.documentURI;
     let providerInfo = this._getProviderInfoForUrl(url);
     if (!providerInfo) {
@@ -152,11 +156,6 @@ class SearchTelemetryChild extends ActorChild {
    * @param {object} event The event details.
    */
   handleEvent(event) {
-    // We are only interested in the top-level frame.
-    if (event.target.ownerGlobal != this.content) {
-      return;
-    }
-
     const cancelCheck = () => {
       if (this._waitForContentTimeout) {
         clearTimeout(this._waitForContentTimeout);
