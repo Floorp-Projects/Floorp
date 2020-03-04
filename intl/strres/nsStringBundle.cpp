@@ -309,7 +309,7 @@ already_AddRefed<T> nsStringBundleBase::Create(Args... args) {
 nsStringBundle::nsStringBundle(const char* aURLSpec)
     : nsStringBundleBase(aURLSpec) {}
 
-nsStringBundle::~nsStringBundle() {}
+nsStringBundle::~nsStringBundle() = default;
 
 NS_IMETHODIMP
 nsStringBundleBase::AsyncPreload() {
