@@ -309,64 +309,58 @@ this.tabs = class extends ExtensionAPI {
           },
         }).api(),
 
-        async create({
-          active,
-          discarded,
-          index,
-          openInReaderMode,
-          pinned,
-          title,
-          url,
-        } = {}) {
-          if (active === null) {
-            active = true;
-          }
+        async create(createProperties) {
+          let principal = context.principal;
+          let window =
+            createProperties.windowId !== null
+              ? windowTracker.getWindow(createProperties.windowId, context)
+              : windowTracker.topWindow;
 
-          tabListener.initTabReady();
+          let { BrowserApp } = window;
+          let url;
 
-          if (url !== null) {
-            url = context.uri.resolve(url);
+          if (createProperties.url !== null) {
+            url = context.uri.resolve(createProperties.url);
 
             if (!context.checkLoadURL(url, { dontReportErrors: true })) {
               return Promise.reject({ message: `Illegal URL: ${url}` });
             }
+          } else {
+            // Falling back to system here as about:newtab requires it, however is safe.
+            principal = Services.scriptSecurityManager.getSystemPrincipal();
           }
 
-          const nativeTab = await GeckoViewTabBridge.createNewTab({
-            extensionId: context.extension.id,
-            createProperties: {
-              active,
-              discarded,
-              index,
-              openInReaderMode,
-              pinned,
-              url,
-            },
-          });
+          let options = {};
 
-          const { browser } = nativeTab;
+          let active = true;
+          if (createProperties.active !== null) {
+            active = createProperties.active;
+          }
+          options.selected = active;
 
-          let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+          if (createProperties.index !== null) {
+            options.tabIndex = createProperties.index;
+          }
 
           // Make sure things like about:blank URIs never inherit,
           // and instead always get a NullPrincipal.
-          if (url !== null) {
-            tabListener.initializingTabs.add(nativeTab);
+          if (url && url.startsWith("about:")) {
+            options.disallowInheritPrincipal = true;
           } else {
-            url = "about:blank";
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+            options.triggeringPrincipal = context.principal;
           }
 
-          browser.loadURI(url, {
-            flags,
-            // GeckoView doesn't support about:newtab so we don't need to worry
-            // about using the system principal here.
-            triggeringPrincipal: context.principal,
-          });
+          options.parentId = BrowserApp.selectedTab.id;
 
-          if (active) {
-            const newWindow = browser.ownerGlobal;
-            mobileWindowTracker.setTabActive(newWindow, true);
+          tabListener.initTabReady();
+          options.triggeringPrincipal = principal;
+
+          options.extensionId = context.extension.id;
+          options.url = url;
+
+          let nativeTab = await GeckoViewTabBridge.createNewTab(options);
+          if (createProperties.url) {
+            tabListener.initializingTabs.add(nativeTab);
           }
 
           return tabManager.convert(nativeTab);
@@ -392,44 +386,28 @@ this.tabs = class extends ExtensionAPI {
           );
         },
 
-        async update(
-          tabId,
-          { active, autoDiscardable, highlighted, muted, pinned, url } = {}
-        ) {
-          const nativeTab = getTabOrActive(tabId);
-          const window = nativeTab.browser.ownerGlobal;
+        async update(tabId, updateProperties) {
+          let nativeTab = getTabOrActive(tabId);
 
-          if (url !== null) {
-            url = context.uri.resolve(url);
+          let { BrowserApp } = nativeTab.browser.ownerGlobal;
+
+          if (updateProperties.url !== null) {
+            let url = context.uri.resolve(updateProperties.url);
 
             if (!context.checkLoadURL(url, { dontReportErrors: true })) {
               return Promise.reject({ message: `Illegal URL: ${url}` });
             }
-          }
 
-          await GeckoViewTabBridge.updateTab({
-            window,
-            extensionId: context.extension.id,
-            updateProperties: {
-              active,
-              autoDiscardable,
-              highlighted,
-              muted,
-              pinned,
-              url,
-            },
-          });
-
-          if (url !== null) {
-            nativeTab.browser.loadURI(url, {
+            let options = {
               triggeringPrincipal: context.principal,
-            });
+            };
+            nativeTab.browser.loadURI(url, options);
           }
 
-          // FIXME: openerTabId, successorTabId
-          if (active) {
-            mobileWindowTracker.setTabActive(window, true);
+          if (updateProperties.active) {
+            BrowserApp.selectTab(nativeTab);
           }
+          // FIXME: highlighted/selected, muted, pinned, openerTabId, successorTabId
 
           return tabManager.convert(nativeTab);
         },

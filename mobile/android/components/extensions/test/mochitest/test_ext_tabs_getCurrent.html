@@ -14,9 +14,7 @@
 
 add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      "applications": { "gecko": { "id": "get-current@tests.mozilla.org" } },
       "permissions": ["tabs"],
     },
 

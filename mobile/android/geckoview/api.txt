@@ -596,6 +596,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
     method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
+    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull WebExtension, @NonNull String);
     method @UiThread @Nullable public GeckoSession.NavigationDelegate getNavigationDelegate();
     method @UiThread @NonNull public OverscrollEdgeEffect getOverscrollEdgeEffect();
     method @UiThread public void getPageToScreenMatrix(@NonNull Matrix);
@@ -610,7 +611,7 @@ package org.mozilla.geckoview {
     method @UiThread public void getSurfaceBounds(@NonNull Rect);
     method @AnyThread @NonNull public SessionTextInput getTextInput();
     method @AnyThread @NonNull public GeckoResult<String> getUserAgent();
-    method @UiThread @NonNull public WebExtension.SessionController getWebExtensionController();
+    method @AnyThread @Nullable public WebExtension.ActionDelegate getWebExtensionActionDelegate(@NonNull WebExtension);
     method @AnyThread public void goBack();
     method @AnyThread public void goForward();
     method @AnyThread public void gotoHistoryIndex(int);
@@ -643,12 +644,14 @@ package org.mozilla.geckoview {
     method @AnyThread public void setFocused(boolean);
     method @AnyThread public void setHistoryDelegate(@Nullable GeckoSession.HistoryDelegate);
     method @AnyThread public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
+    method @AnyThread public void setMessageDelegate(@NonNull WebExtension, @Nullable WebExtension.MessageDelegate, @NonNull String);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
     method @UiThread public void setProgressDelegate(@Nullable GeckoSession.ProgressDelegate);
     method @AnyThread public void setPromptDelegate(@Nullable GeckoSession.PromptDelegate);
     method @UiThread public void setScrollDelegate(@Nullable GeckoSession.ScrollDelegate);
     method @UiThread public void setSelectionActionDelegate(@Nullable GeckoSession.SelectionActionDelegate);
+    method @AnyThread public void setWebExtensionActionDelegate(@NonNull WebExtension, @Nullable WebExtension.ActionDelegate);
     method @AnyThread public void stop();
     method @UiThread protected void setShouldPinOnScreen(boolean);
     field public static final Parcelable.Creator<GeckoSession> CREATOR;
@@ -1452,10 +1455,8 @@ package org.mozilla.geckoview {
   public class WebExtension {
     ctor public WebExtension(@NonNull String, @NonNull String, long, @NonNull WebExtensionController);
     ctor public WebExtension(@NonNull String, @NonNull WebExtensionController);
-    method @UiThread @Nullable public WebExtension.TabDelegate getTabDelegate();
     method @AnyThread public void setActionDelegate(@Nullable WebExtension.ActionDelegate);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
-    method @UiThread public void setTabDelegate(@Nullable WebExtension.TabDelegate);
     field public final long flags;
     field @NonNull public final String id;
     field @NonNull public final String location;
@@ -1489,16 +1490,6 @@ package org.mozilla.geckoview {
     field public static final int SOFTBLOCKED = 1;
     field public static final int VULNERABLE_NO_UPDATE = 5;
     field public static final int VULNERABLE_UPDATE_AVAILABLE = 4;
-  }
-
-  public static class WebExtension.CreateTabDetails {
-    ctor protected CreateTabDetails();
-    field @Nullable public final Boolean active;
-    field @Nullable public final Boolean discarded;
-    field @Nullable public final Integer index;
-    field @Nullable public final Boolean openInReaderMode;
-    field @Nullable public final Boolean pinned;
-    field @Nullable public final String url;
   }
 
   public static class WebExtension.DisabledFlags {
@@ -1586,20 +1577,6 @@ package org.mozilla.geckoview {
     method default public void onPortMessage(@NonNull Object, @NonNull WebExtension.Port);
   }
 
-  public static class WebExtension.SessionController {
-    method @AnyThread @Nullable public WebExtension.ActionDelegate getActionDelegate(@NonNull WebExtension);
-    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull WebExtension, @NonNull String);
-    method @AnyThread @Nullable public WebExtension.SessionTabDelegate getTabDelegate(@NonNull WebExtension);
-    method @AnyThread public void setActionDelegate(@NonNull WebExtension, @Nullable WebExtension.ActionDelegate);
-    method @AnyThread public void setMessageDelegate(@NonNull WebExtension, @Nullable WebExtension.MessageDelegate, @NonNull String);
-    method @AnyThread public void setTabDelegate(@NonNull WebExtension, @Nullable WebExtension.SessionTabDelegate);
-  }
-
-  public static interface WebExtension.SessionTabDelegate {
-    method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension, @NonNull GeckoSession);
-    method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onUpdateTab(@NonNull WebExtension, @NonNull GeckoSession, @NonNull WebExtension.UpdateTabDetails);
-  }
-
   public static class WebExtension.SignedStateFlags {
     ctor public SignedStateFlags();
     field public static final int MISSING = 0;
@@ -1610,31 +1587,17 @@ package org.mozilla.geckoview {
     field public static final int UNKNOWN = -1;
   }
 
-  public static interface WebExtension.TabDelegate {
-    method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@NonNull WebExtension, @NonNull WebExtension.CreateTabDetails);
-  }
-
-  public static class WebExtension.UpdateTabDetails {
-    ctor protected UpdateTabDetails();
-    field @Nullable public final Boolean active;
-    field @Nullable public final Boolean autoDiscardable;
-    field @Nullable public final Boolean highlighted;
-    field @Nullable public final Boolean muted;
-    field @Nullable public final Boolean pinned;
-    field @Nullable public final String url;
-  }
-
   public class WebExtensionController {
     method @AnyThread @NonNull public GeckoResult<WebExtension> disable(@NonNull WebExtension, int);
     method @AnyThread @NonNull public GeckoResult<WebExtension> enable(@NonNull WebExtension, int);
     method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
-    method @UiThread @Nullable @Deprecated public WebExtensionController.TabDelegate getTabDelegate();
+    method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
     method @UiThread public void setDebuggerDelegate(@NonNull WebExtensionController.DebuggerDelegate);
     method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @AnyThread public void setTabActive(@NonNull GeckoSession, boolean);
-    method @Deprecated @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
+    method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
     method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);
     method @AnyThread @NonNull public GeckoResult<WebExtension> update(@NonNull WebExtension);
   }
@@ -1654,7 +1617,7 @@ package org.mozilla.geckoview {
     method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
   }
 
-  @Deprecated public static interface WebExtensionController.TabDelegate {
+  public static interface WebExtensionController.TabDelegate {
     method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension, @NonNull GeckoSession);
     method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension, @Nullable String);
   }

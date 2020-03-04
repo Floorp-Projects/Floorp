@@ -1098,10 +1098,8 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     protected void prepareSession(final GeckoSession session) {
-        session.getWebExtensionController()
-                .setMessageDelegate(RuntimeCreator.sTestSupportExtension,
-                                    mMessageDelegate,
-                          "browser");
+        session.setMessageDelegate(RuntimeCreator.sTestSupportExtension, mMessageDelegate,
+                "browser");
         for (final Class<?> cls : DEFAULT_DELEGATES) {
             try {
                 setDelegate(cls, session, mNullDelegates.contains(cls) ? null : mCallbackProxy);

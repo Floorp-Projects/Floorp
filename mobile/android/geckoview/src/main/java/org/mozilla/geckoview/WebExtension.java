@@ -65,9 +65,7 @@ public class WebExtension {
     /* package */ interface DelegateController {
         void onMessageDelegate(final String nativeApp, final MessageDelegate delegate);
         void onActionDelegate(final ActionDelegate delegate);
-        void onTabDelegate(final TabDelegate delegate);
         ActionDelegate getActionDelegate();
-        TabDelegate getTabDelegate();
     }
 
     private DelegateController mDelegateController = null;
@@ -94,7 +92,7 @@ public class WebExtension {
         /**
          * Set this flag if you want to enable content scripts messaging.
          * To listen to such messages you can use
-         * {@link SessionController#setMessageDelegate}.
+         * {@link GeckoSession#setMessageDelegate}.
          */
         public static final long ALLOW_CONTENT_MESSAGING = 1 << 0;
 
@@ -182,7 +180,7 @@ public class WebExtension {
      * for the native app specified in <code>nativeApp</code>.
      *
      * For messages from content scripts, set a session-specific message
-     * delegate using {@link SessionController#setMessageDelegate}.
+     * delegate using {@link GeckoSession#setMessageDelegate}.
      *
      * See also
      *  <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging">
@@ -221,7 +219,7 @@ public class WebExtension {
      *                  <code>runtime.sendNativeMessage</code> and
      *                  <code>runtime.connectNative</code>.
      *
-     * @see SessionController#setMessageDelegate
+     * @see GeckoSession#setMessageDelegate
      */
     @UiThread
     public void setMessageDelegate(final @Nullable MessageDelegate messageDelegate,
@@ -398,251 +396,6 @@ public class WebExtension {
         }
     }
 
-    /**
-     * This delegate is invoked whenever an extension uses the `tabs` WebExtension API to modify
-     * the state of a tab. See also
-     * <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs">WebExtensions/API/tabs</a>.
-     */
-    public interface SessionTabDelegate {
-        /**
-         * Called when tabs.remove is invoked, this method decides if WebExtension can close the
-         * tab. In case WebExtension can close the tab, it should close passed GeckoSession and
-         * return GeckoResult.ALLOW or GeckoResult.DENY in case tab cannot be closed.
-         *
-         * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove">
-         *     WebExtensions/API/tabs/remove</a>
-         *
-         * @param source An instance of {@link WebExtension} or null if extension was not registered
-         *               with GeckoRuntime.registerWebextension
-         * @param session An instance of {@link GeckoSession} to be closed.
-         * @return GeckoResult.ALLOW if the tab will be closed, GeckoResult.DENY otherwise
-         */
-        @UiThread
-        @NonNull
-        default GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source,
-                                                    @NonNull GeckoSession session)  {
-            return GeckoResult.DENY;
-        }
-
-        /**
-         * Called when tabs.update is invoked. The uri is provided for informational purposes,
-         * there's no need to call <code>loadURI</code> on it. The page will be loaded if
-         * this method returns GeckoResult.ALLOW.
-         *
-         * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/update">
-         *     WebExtensions/API/tabs/update</a>
-         *
-         * @param extension The extension that requested to update the tab.
-         * @param session The {@link GeckoSession} instance that needs to be updated.
-         * @param details {@link UpdateTabDetails} instance that describes what
-         *                needs to be updated for this tab.
-         * @return <code>GeckoResult.ALLOW</code> if the tab will be updated,
-         *         <code>GeckoResult.DENY</code> otherwise.
-         */
-        @UiThread
-        @NonNull
-        default GeckoResult<AllowOrDeny> onUpdateTab(final @NonNull WebExtension extension,
-                                                     final @NonNull GeckoSession session,
-                                                     final @NonNull UpdateTabDetails details) {
-            return GeckoResult.DENY;
-        }
-    }
-
-    /**
-     * Provides details about upating a tab with <code>tabs.update</code>.
-     *
-     * Whenever a field is not passed in by the extension that value will be <code>null</code>.
-     *
-     * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/update">
-     *  WebExtensions/API/tabs/update
-     * </a>.
-     */
-    public static class UpdateTabDetails {
-        /**
-         * Whether the tab should become active. If <code>true</code>,
-         * non-active highlighted tabs should stop being highlighted. If
-         * <code>false</code>, does nothing.
-         */
-        @Nullable
-        public final Boolean active;
-        /**
-         * Whether the tab should be discarded automatically by the app when
-         * resources are low.
-         */
-        @Nullable
-        public final Boolean autoDiscardable;
-        /**
-         * If <code>true</code> and the tab is not highlighted, it should become
-         * active by default.
-         */
-        @Nullable
-        public final Boolean highlighted;
-        /**
-         * Whether the tab should be muted.
-         */
-        @Nullable
-        public final Boolean muted;
-        /**
-         * Whether the tab should be pinned.
-         */
-        @Nullable
-        public final Boolean pinned;
-        /**
-         * The url that the tab will be navigated to. This url is provided just
-         * for informational purposes, there is no need to call
-         * <code>loadUri</code> on it. The corresponding {@link GeckoSession} will be
-         * navigated to the right URL after returning
-         * <code>GeckoResult.ALLOW</code> from {@link SessionTabDelegate#onUpdateTab}
-         */
-        @Nullable
-        public final String url;
-
-        /** For testing. */
-        protected UpdateTabDetails() {
-            active = null;
-            autoDiscardable = null;
-            highlighted = null;
-            muted = null;
-            pinned = null;
-            url = null;
-        }
-
-        /* package */ UpdateTabDetails(final GeckoBundle bundle) {
-            active = bundle.getBooleanObject("active");
-            autoDiscardable = bundle.getBooleanObject("autoDiscardable");
-            highlighted = bundle.getBooleanObject("highlighted");
-            muted = bundle.getBooleanObject("muted");
-            pinned = bundle.getBooleanObject("pinned");
-            url = bundle.getString("url");
-        }
-    }
-
-    /**
-     * Provides details about creating a tab with <code>tabs.create</code>.
-     * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/create">
-     *  WebExtensions/API/tabs/create
-     * </a>.
-     *
-     * Whenever a field is not passed in by the extension that value will be <code>null</code>.
-     */
-    public static class CreateTabDetails {
-        /**
-         * Whether the tab should become active. If <code>true</code>,
-         * non-active highlighted tabs should stop being highlighted. If
-         * <code>false</code>, does nothing.
-         */
-        @Nullable
-        public final Boolean active;
-        /**
-         * Whether the tab is created and made visible in the tab bar
-         * without any content loaded into memory, a state known as
-         * discarded. The tab’s content should be loaded when the tab is
-         * activated.
-         */
-        @Nullable
-        public final Boolean discarded;
-        /**
-         * The position the tab should take in the window.
-         */
-        @Nullable
-        public final Integer index;
-        /**
-         * If true, open this tab in Reader Mode.
-         */
-        @Nullable
-        public final Boolean openInReaderMode;
-        /**
-         * Whether the tab should be pinned.
-         */
-        @Nullable
-        public final Boolean pinned;
-        /**
-         * The url that the tab will be navigated to. This url is provided just
-         * for informational purposes, there is no need to call
-         * <code>loadUri</code> on it. The corresponding {@link GeckoSession} will be
-         * navigated to the right URL after returning
-         * <code>GeckoResult.ALLOW</code> from {@link TabDelegate#onNewTab}
-         */
-        @Nullable
-        public final String url;
-
-        /** For testing. */
-        protected CreateTabDetails() {
-            active = null;
-            discarded = null;
-            index = null;
-            openInReaderMode = null;
-            pinned = null;
-            url = null;
-        }
-
-        /* package */ CreateTabDetails(final GeckoBundle bundle) {
-            active = bundle.getBooleanObject("active");
-            discarded = bundle.getBooleanObject("discarded");
-            index = bundle.getInteger("index");
-            openInReaderMode = bundle.getBooleanObject("openInReaderMode");
-            pinned = bundle.getBooleanObject("pinned");
-            url = bundle.getString("url");
-        }
-    }
-
-    /**
-     * This delegate is invoked whenever an extension uses the `tabs` WebExtension API and
-     * the request is not specific to an existing tab, e.g. when creating a new tab. See also
-     * <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs">WebExtensions/API/tabs</a>.
-     */
-    public interface TabDelegate {
-        /**
-         * Called when tabs.create is invoked, this method returns a *newly-created* session
-         * that GeckoView will use to load the requested page on. If the returned value
-         * is null the page will not be opened.
-         *
-         * @param source An instance of {@link WebExtension}
-         * @param createDetails Information about this tab.
-         * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
-         *        which case the request for a new tab by the extension will fail.
-         *        The implementation of onNewTab is responsible for maintaining a reference
-         *        to the returned object, to prevent it from being garbage collected.
-         */
-        @UiThread
-        @Nullable
-        default GeckoResult<GeckoSession> onNewTab(@NonNull WebExtension source,
-                                                   @NonNull CreateTabDetails createDetails) {
-            return null;
-        }
-    }
-
-    /**
-     * Get the tab delegate for this extension.
-     *
-     * See also
-     * <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs">WebExtensions/API/tabs</a>.
-     *
-     * @return The {@link TabDelegate} instance for this extension.
-     */
-    @UiThread
-    @Nullable
-    public WebExtension.TabDelegate getTabDelegate() {
-        return mDelegateController.getTabDelegate();
-    }
-
-    /**
-     * Set the tab delegate for this extension. This delegate will be invoked whenever
-     * this extension tries to modify the tabs state using the `tabs` WebExtension API.
-     *
-     * See also
-     * <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs">WebExtensions/API/tabs</a>.
-     *
-     * @param delegate the {@link TabDelegate} instance for this extension.
-     */
-    @UiThread
-    public void setTabDelegate(final @Nullable TabDelegate delegate) {
-        if (mDelegateController != null) {
-            mDelegateController.onTabDelegate(delegate);
-        }
-    }
-
-
     private static class Sender {
         public String webExtensionId;
         public String nativeApp;
@@ -672,142 +425,16 @@ public class WebExtension {
         }
     }
 
-    // Public wrapper for Listener
-    public static class SessionController {
-        private final Listener<SessionTabDelegate> mListener;
-
-        /* package */ void setRuntime(final GeckoRuntime runtime) {
-            mListener.runtime = runtime;
-        }
-
-        /* package */ SessionController(final GeckoSession session) {
-            mListener = new Listener<>(session);
-        }
-
-        /**
-         * Defines a message delegate for a Native App.
-         *
-         * If a delegate is already present, this delegate will replace the
-         * existing one.
-         *
-         * This message delegate will be responsible for handling messaging between
-         * a WebExtension content script running on the {@link GeckoSession}.
-         *
-         * Note: To receive messages from content scripts, the WebExtension needs
-         * to explicitely allow it in {@link WebExtension#WebExtension} by setting
-         * {@link Flags#ALLOW_CONTENT_MESSAGING}.
-         *
-         * @param webExtension {@link WebExtension} that this delegate receives
-         *                     messages from.
-         *
-         * @param delegate {@link MessageDelegate} that will receive messages from
-         *                                         this session.
-         * @param nativeApp which native app id this message delegate will handle
-         *                  messaging for.
-         * @see WebExtension#setMessageDelegate
-         */
-        @AnyThread
-        public void setMessageDelegate(final @NonNull WebExtension webExtension,
-                                       final @Nullable WebExtension.MessageDelegate delegate,
-                                       final @NonNull String nativeApp) {
-            mListener.setMessageDelegate(webExtension, delegate, nativeApp);
-        }
-
-        /**
-         * Get the message delegate for <code>nativeApp</code>.
-         *
-         * @param extension {@link WebExtension} that this delegate receives messages from.
-         * @param nativeApp identifier for the native app
-         * @return The {@link MessageDelegate} attached to the
-         *         <code>nativeApp</code>.  <code>null</code> if no delegate is
-         *         present.
-         */
-        @AnyThread
-        public @Nullable WebExtension.MessageDelegate getMessageDelegate(
-                final @NonNull WebExtension extension,
-                final @NonNull String nativeApp) {
-            return mListener.getMessageDelegate(extension, nativeApp);
-        }
-
-        /**
-         * Set the Action delegate for this session.
-         *
-         * This delegate will receive page and browser action overrides specific to
-         * this session.  The default Action will be received by the delegate set
-         * by {@link WebExtension#setActionDelegate}.
-         *
-         * @param extension the {@link WebExtension} object this delegate will
-         *                     receive updates for
-         * @param delegate the {@link ActionDelegate} that will receive updates.
-         * @see WebExtension.Action
-         */
-        @AnyThread
-        public void setActionDelegate(final @NonNull WebExtension extension,
-                                      final @Nullable ActionDelegate delegate) {
-            mListener.setActionDelegate(extension, delegate);
-        }
-
-        /**
-         * Get the Action delegate for this session.
-         *
-         * @param extension {@link WebExtension} that this delegates receive
-         *                     updates for.
-         * @return {@link ActionDelegate} for this
-         *         session
-         */
-        @AnyThread
-        @Nullable
-        public ActionDelegate getActionDelegate(
-                final @NonNull WebExtension extension) {
-            return mListener.getActionDelegate(extension);
-        }
-
-        /**
-         * Set the TabDelegate for this session.
-         *
-         * This delegate will receive messages specific for this session coming from
-         * the WebExtension <code>tabs</code> API.
-         *
-         * @param extension the {@link WebExtension} this delegate will receive updates
-         *                  for
-         * @param delegate the {@link TabDelegate} that will receive updates.
-         * @see WebExtension#setTabDelegate
-         */
-        @AnyThread
-        public void setTabDelegate(final @NonNull WebExtension extension,
-                                   final @Nullable SessionTabDelegate delegate) {
-            mListener.setTabDelegate(extension, delegate);
-        }
-
-        /**
-         * Get the TabDelegate for the given extension.
-         *
-         * @param extension the {@link WebExtension} this delegate refers to.
-         *
-         * @return the current {@link SessionTabDelegate} instance
-         */
-        @AnyThread
-        @Nullable
-        public SessionTabDelegate getTabDelegate(final @NonNull WebExtension extension) {
-            return mListener.getTabDelegate(extension);
-        }
-    }
-
-    /* package */ final static class Listener<TabDelegate> implements BundleEventListener {
+    /* package */ final static class Listener implements BundleEventListener {
         final private HashMap<Sender, WebExtension.MessageDelegate> mMessageDelegates;
         final private HashMap<String, WebExtension.ActionDelegate> mActionDelegates;
-        final private HashMap<String, TabDelegate> mTabDelegates;
+        private WebExtensionController.TabDelegate mTabDelegate = null;
 
         final private GeckoSession mSession;
         final private EventDispatcher mEventDispatcher;
 
         private boolean mActionDelegateRegistered = false;
         private boolean mMessageDelegateRegistered = false;
-        private boolean mTabDelegateRegistered = false;
-
-        // TODO: remove Bug 1618987
-        private WebExtensionController.TabDelegate mLegacyTabDelegate;
-
         public GeckoRuntime runtime;
 
         public Listener(final GeckoRuntime runtime) {
@@ -816,12 +443,16 @@ public class WebExtension {
 
         public Listener(final GeckoSession session) {
             this(session, null);
+
+            // Close tab event is forwarded to the main listener so we need to listen
+            // to it here.
+            mEventDispatcher.registerUiThreadListener(this,
+                    "GeckoView:WebExtension:CloseTab");
         }
 
         private Listener(final GeckoSession session, final GeckoRuntime runtime) {
             mMessageDelegates = new HashMap<>();
             mActionDelegates = new HashMap<>();
-            mTabDelegates = new HashMap<>();
             mEventDispatcher = session != null
                     ? session.getEventDispatcher()
                     : EventDispatcher.getInstance();
@@ -829,51 +460,26 @@ public class WebExtension {
             this.runtime = runtime;
         }
 
-        // TODO: remove Bug 1618987
-        @Deprecated
         public void setTabDelegate(final WebExtensionController.TabDelegate delegate) {
-            if (!mTabDelegateRegistered && delegate != null) {
+            if (delegate != null && mTabDelegate == null) {
                 mEventDispatcher.registerUiThreadListener(
                         this,
                         "GeckoView:WebExtension:NewTab",
-                        "GeckoView:WebExtension:UpdateTab",
                         "GeckoView:WebExtension:CloseTab"
                 );
-                mTabDelegateRegistered = true;
+            } else if (delegate == null && mTabDelegate != null) {
+                mEventDispatcher.unregisterUiThreadListener(
+                        this,
+                        "GeckoView:WebExtension:NewTab",
+                        "GeckoView:WebExtension:CloseTab"
+                );
             }
 
-            mLegacyTabDelegate = delegate;
+            mTabDelegate = delegate;
         }
 
-        // TODO: remove Bug 1618987
-        @Deprecated
         public WebExtensionController.TabDelegate getTabDelegate() {
-            return mLegacyTabDelegate;
-        }
-
-        public void unregisterWebExtension(final WebExtension extension) {
-            mMessageDelegates.remove(extension.id);
-            mActionDelegates.remove(extension.id);
-            mTabDelegates.remove(extension.id);
-        }
-
-        public void setTabDelegate(final WebExtension webExtension,
-                                   final TabDelegate delegate) {
-            if (!mTabDelegateRegistered && delegate != null) {
-                mEventDispatcher.registerUiThreadListener(
-                        this,
-                        "GeckoView:WebExtension:NewTab",
-                        "GeckoView:WebExtension:UpdateTab",
-                        "GeckoView:WebExtension:CloseTab"
-                );
-                mTabDelegateRegistered = true;
-            }
-
-            mTabDelegates.put(webExtension.id, delegate);
-        }
-
-        public TabDelegate getTabDelegate(final WebExtension webExtension) {
-            return mTabDelegates.get(webExtension.id);
+            return mTabDelegate;
         }
 
         public void setActionDelegate(final WebExtension webExtension,
@@ -921,20 +527,42 @@ public class WebExtension {
                 return;
             }
 
-            // TODO: remove Bug 1618987
             final WebExtensionController controller = runtime.getWebExtensionController();
-            WebExtensionController.TabDelegate delegate = controller.getTabDelegate();
-            if (delegate != null) {
-                if ("GeckoView:WebExtension:CloseTab".equals(event)) {
-                    controller.closeTab(message, callback, mSession, delegate);
-                    return;
-                } else if ("GeckoView:WebExtension:NewTab".equals(event)) {
-                    controller.newTab(message, callback, delegate);
-                    return;
-                }
+
+            if ("GeckoView:WebExtension:Message".equals(event)
+                    || "GeckoView:WebExtension:PortMessage".equals(event)
+                    || "GeckoView:WebExtension:Connect".equals(event)
+                    || "GeckoView:WebExtension:Disconnect".equals(event)
+                    || "GeckoView:PageAction:Update".equals(event)
+                    || "GeckoView:PageAction:OpenPopup".equals(event)
+                    || "GeckoView:BrowserAction:Update".equals(event)
+                    || "GeckoView:BrowserAction:OpenPopup".equals(event)) {
+                controller.handleMessage(event, message, callback, mSession);
+                return;
             }
 
-            runtime.getWebExtensionController().handleMessage(event, message, callback, mSession);
+            // If a tab delegate is not defined on the session, try the runtime
+            //
+            // TODO: The tab delegate is special because it's only set on the
+            // controller and not on the session, all other delegates are set
+            // on both, we should unify this and have a tab delegate for each
+            // session too.
+            WebExtensionController.TabDelegate delegate = mTabDelegate;
+            if (delegate == null && mSession != null) {
+                delegate = runtime.getWebExtensionController().getTabDelegate();
+            }
+
+            if (delegate == null) {
+                callback.sendError("No delegate registered.");
+                return;
+            }
+
+            if ("GeckoView:WebExtension:CloseTab".equals(event)) {
+                controller.closeTab(message, callback, delegate, mSession);
+                return;
+            } else if ("GeckoView:WebExtension:NewTab".equals(event)) {
+                controller.newTab(message, callback, delegate);
+            }
         }
     }
 
@@ -1141,7 +769,7 @@ public class WebExtension {
      * {@link Action#withDefault}.
      *
      * Tab specific overrides can be obtained by registering a delegate using
-     * {@link SessionController#setActionDelegate}, while default values
+     * {@link GeckoSession#setWebExtensionActionDelegate}, while default values
      * can be obtained by registering a delegate using
      * {@link #setActionDelegate}.
      *
@@ -1402,7 +1030,7 @@ public class WebExtension {
      * This delegate will receive the default action when registered with
      * {@link WebExtension#setActionDelegate}. To receive
      * {@link GeckoSession}-specific overrides you can use
-     * {@link SessionController#setActionDelegate}.
+     * {@link GeckoSession#setWebExtensionActionDelegate}.
      */
     public interface ActionDelegate {
         /**
@@ -1552,7 +1180,7 @@ public class WebExtension {
      * changes.
      *
      * To listen for {@link GeckoSession}-specific updates, use
-     * {@link SessionController#setActionDelegate}
+     * {@link GeckoSession#setWebExtensionActionDelegate}
      *
      * @param delegate {@link ActionDelegate} that will receive updates.
      */

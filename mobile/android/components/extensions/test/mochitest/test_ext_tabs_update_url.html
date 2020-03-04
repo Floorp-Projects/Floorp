@@ -14,9 +14,7 @@
 
 async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      "applications": { "gecko": { "id": "tabs-update-url@tests.mozilla.org" } },
       "permissions": ["tabs"],
     },
 
@@ -40,7 +38,7 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
         let tabs = await browser.tabs.query({lastFocusedWindow: true});
 
         try {
-          let tab = await browser.tabs.update(tabs[0].id, {url: tabsUpdateURL});
+          let tab = await browser.tabs.update(tabs[1].id, {url: tabsUpdateURL});
 
           browser.test.assertFalse(isErrorExpected, `tabs.update with URL ${tabsUpdateURL} should be rejected`);
           browser.test.assertTrue(tab, "on success the tab should be defined");
