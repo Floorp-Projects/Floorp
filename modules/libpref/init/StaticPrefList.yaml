@@ -7366,25 +7366,25 @@
 
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 1500
   mirror: always
 
 # Single TRR request timeout, in milliseconds for mode 3
 - name: network.trr.request_timeout_mode_trronly_ms
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 30000
   mirror: always
 
 # Whether to send the Accept-Language header for TRR requests
 - name: network.trr.send_accept-language_headers
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
 # Whether to send the User-Agent header for TRR requests
 - name: network.trr.send_user-agent_headers
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -7404,6 +7404,12 @@
 
 # This pref controls if TRR will still be enabled when NRPT rules are detected
 - name: network.trr.enable_when_nrpt_detected
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# This pref controls whether to use SimpleHttpChannel off main thread.
+- name: network.trr.fetch_off_main_thread
   type: RelaxedAtomicBool
   value: false
   mirror: always
