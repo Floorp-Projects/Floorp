@@ -41,6 +41,11 @@ permalink: /changelog/
 * **service-sync-logins**
   * ⚠️ **This is a breaking change**: Refactored `AsyncLoginsStorage`, which is now called `SyncableLoginsStorage`. New class caches the db connection, and removes lock/unlock operations from the public API.
 
+* **feature-tabs**
+  * Fixed close tabs callback incorrectly invoked on start.
+  * ⚠️ **This is a breaking change**: Added `defaultTabsFilter` to `TabsFeature` for initial presenting of tabs.
+    * `TabsFeature.filterTabs` also uses the same filter if no new filter is provided.
+
 # 34.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v33.0.0...v34.0.0)
