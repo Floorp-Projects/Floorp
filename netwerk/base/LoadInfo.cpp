@@ -882,7 +882,7 @@ already_AddRefed<nsICookieJarSettings> CreateCookieJarSettings(
     return CookieJarSettings::Create();
   }
 
-  return CookieJarSettings::CreateBlockingAll();
+  return CookieJarSettings::GetBlockingAll();
 }
 
 }  // namespace

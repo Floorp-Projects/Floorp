@@ -4516,7 +4516,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (mDoc) {
     cookieJarSettings = mDoc->CookieJarSettings();
   } else {
-    cookieJarSettings = net::CookieJarSettings::CreateBlockingAll();
+    cookieJarSettings = net::CookieJarSettings::GetBlockingAll();
   }
 
   bool partitioningEnabled =
