@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-wait"><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1614101</title>
+  <style>
+  @keyframes w {
+    0%, 33% { width:10% }
+    33%, 50% { width:50% }
+    50%, 99% { width:10% }
+    99%, 100% { display:none }
+  }
+
+  .a {
+    column-count: 2;
+    width: 1%;
+    writing-mode: vertical-lr;
+  }
+  </style>
+</head>
+<body>
+
+  <div style="width:10%; border:solid; animation: w .01s infinite">
+    <span>
+      zzzzzzzz
+      <x class="a"><div style="height:30px">A <br> a <br> a <br> a <br> a <br> a <br> B</div></x>
+      <textarea style="width:10px"></textarea>y
+      <canvas>
+    </span>
+  </div>
+  <script>
+  function destroy() {
+    document.body.style.display = 'none';
+    document.documentElement.removeAttribute('class');
+  }
+
+  document.body.getBoundingClientRect();
+  setTimeout(destroy, 500)
+  </script>
+</body>
+</html>
