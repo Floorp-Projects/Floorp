@@ -717,6 +717,9 @@ public class WebExtensionController {
         } else if ("GeckoView:WebExtension:NewTab".equals(event)) {
             newTab(bundle, callback);
             return;
+        } else if ("GeckoView:WebExtension:UpdateTab".equals(event)) {
+            updateTab(bundle, callback, session);
+            return;
         } else if ("GeckoView:WebExtension:CloseTab".equals(event)) {
             closeTab(bundle, callback, session);
             return;
@@ -860,10 +863,12 @@ public class WebExtensionController {
                               final TabDelegate legacyDelegate) {
         extensionFromBundle(message).then(extension -> {
             final WebExtension.TabDelegate delegate = mListener.getTabDelegate(extension);
+            final WebExtension.CreateTabDetails details =
+                    new WebExtension.CreateTabDetails(message.getBundle("createProperties"));
             if (delegate != null) {
-                return delegate.onNewTab(extension, message.getString("uri"));
+                return delegate.onNewTab(extension, details);
             } else if (legacyDelegate != null) {
-                return legacyDelegate.onNewTab(extension, message.getString("uri"));
+                return legacyDelegate.onNewTab(extension, details.url);
             }
             return null;
         }).accept(session -> {
@@ -879,6 +884,26 @@ public class WebExtensionController {
             session.open(mListener.runtime);
 
             callback.sendSuccess(session.getId());
+        });
+    }
+
+    /* package */ void updateTab(final GeckoBundle message,
+                                 final EventCallback callback,
+                                 final GeckoSession session) {
+        extensionFromBundle(message).then(extension -> {
+            final WebExtension.SessionTabDelegate delegate = session.getWebExtensionController()
+                    .getTabDelegate(extension);
+            if (delegate == null) {
+                return GeckoResult.fromValue(AllowOrDeny.DENY);
+            }
+            return delegate.onUpdateTab(extension, session,
+                    new WebExtension.UpdateTabDetails(message.getBundle("updateProperties")));
+        }).accept(value -> {
+            if (value == AllowOrDeny.ALLOW) {
+                callback.sendSuccess(null);
+            } else {
+                callback.sendError(null);
+            }
         });
     }
 
