@@ -1342,6 +1342,12 @@ class EditorBase : public nsIEditor,
   EditorRawDOMPoint GetCompositionEndPoint() const;
 
   /**
+   * IsSelectionRangeContainerNotContent() returns true if one of container
+   * of selection ranges is not a content node, i.e., a Document node.
+   */
+  bool IsSelectionRangeContainerNotContent() const;
+
+  /**
    * InsertTextAsSubAction() inserts aStringToInsert at selection.  This
    * should be used for handling it as an edit sub-action.
    *
