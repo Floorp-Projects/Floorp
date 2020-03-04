@@ -36,7 +36,6 @@
 #include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
-#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #if JS_HAS_INTL_API
 #  include "unicode/uloc.h"
@@ -58,7 +57,6 @@
 
 using namespace js;
 
-using JS::AutoStableStringChars;
 using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::NegativeInfinity;
