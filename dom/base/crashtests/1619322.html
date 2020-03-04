@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+    <iframe></iframe>
+    <script>
+      window.addEventListener('load', () => {
+        let doc = frames[0].document;
+        let count = 0;
+        let id = setInterval(function () {
+          if (!doc.documentElement) {
+            clearInterval(id);
+            document.documentElement.className = "";
+          }
+          doc.documentElement.replaceWith();
+        }, 312)
+        doc.addEventListener('DOMSubtreeModified', (e) => e.originalTarget.writeln(), false)
+      })
+    </script>
+</html>
