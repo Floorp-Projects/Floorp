@@ -44,6 +44,7 @@
 #  include "ScaledFontDWrite.h"
 #  include "NativeFontResourceDWrite.h"
 #  include <d3d10_1.h>
+#  include <stdlib.h>
 #  include "HelpersD2D.h"
 #  include "DXVA2Manager.h"
 #  include "mozilla/layers/TextureD3D11.h"
@@ -920,7 +921,14 @@ RefPtr<IDWriteFontCollection> Factory::GetDWriteSystemFonts(bool aUpdate) {
   HRESULT hr =
       mDWriteFactory->GetSystemFontCollection(getter_AddRefs(systemFonts));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create DWrite system font collection";
+    // only crash some of the time so those experiencing this problem
+    // don't stop using Firefox
+    if ((rand() & 0x3f) == 0) {
+      gfxCriticalError(int(gfx::LogOptions::AssertOnCall))
+          << "Failed to create DWrite system font collection";
+    } else {
+      gfxWarning() << "Failed to create DWrite system font collection";
+    }
     return nullptr;
   }
   mDWriteSystemFonts = systemFonts;
