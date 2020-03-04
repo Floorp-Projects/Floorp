@@ -575,14 +575,18 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnTransportAndData(
 mozilla::ipc::IPCResult HttpChannelChild::RecvOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const TimeStamp& aLastActiveTabOptHit,
-    const nsHttpHeaderArray& aResponseTrailers) {
+    const nsHttpHeaderArray& aResponseTrailers,
+    nsTArray<ConsoleReportCollected>&& aConsoleReports) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStopRequest [this=%p]\n", this));
 
+  nsTArray<ConsoleReportCollected> consoleReports = std::move(aConsoleReports);
+
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
-             aResponseTrailers]() {
-        self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
+             aResponseTrailers, consoleReports]() {
+        self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers,
+                            consoleReports);
       }));
   return IPC_OK();
 }
@@ -973,7 +977,8 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 
 void HttpChannelChild::ProcessOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
-    const nsHttpHeaderArray& aResponseTrailers) {
+    const nsHttpHeaderArray& aResponseTrailers,
+    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
   LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
   MOZ_ASSERT(
@@ -982,14 +987,15 @@ void HttpChannelChild::ProcessOnStopRequest(
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
 
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-                            this,
-                            [self = UnsafePtr<HttpChannelChild>(this),
-                             aChannelStatus, aTiming, aResponseTrailers]() {
-                              self->OnStopRequest(aChannelStatus, aTiming,
-                                                  aResponseTrailers);
-                            }),
-                        mDivertingToParent);
+  mEventQ->RunOrEnqueue(
+      new NeckoTargetChannelFunctionEvent(
+          this,
+          [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
+           aResponseTrailers, aConsoleReports]() {
+            self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers,
+                                aConsoleReports);
+          }),
+      mDivertingToParent);
 }
 
 void HttpChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus) {
@@ -1005,7 +1011,8 @@ void HttpChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus) {
 
 void HttpChannelChild::OnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
-    const nsHttpHeaderArray& aResponseTrailers) {
+    const nsHttpHeaderArray& aResponseTrailers,
+    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aChannelStatus)));
   MOZ_ASSERT(NS_IsMainThread());
@@ -1036,6 +1043,21 @@ void HttpChannelChild::OnStopRequest(
             this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus]() {
               self->MaybeDivertOnStop(aChannelStatus);
             }));
+  }
+
+  if (!aConsoleReports.IsEmpty()) {
+    for (const ConsoleReportCollected& report : aConsoleReports) {
+      if (report.propertiesFile() <
+          nsContentUtils::PropertiesFile::PropertiesFile_COUNT) {
+        AddConsoleReport(
+            report.errorFlags(), report.category(),
+            nsContentUtils::PropertiesFile(report.propertiesFile()),
+            report.sourceFileURI(), report.lineNumber(), report.columnNumber(),
+            report.messageName(), report.stringParams());
+      }
+    }
+
+    MaybeFlushConsoleReports();
   }
 
   nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);

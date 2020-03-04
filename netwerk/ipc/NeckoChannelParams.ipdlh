@@ -343,6 +343,17 @@ struct HttpConnectionInfoCloneArgs
   ProxyInfoCloneArgs[] proxyInfo;
 };
 
+struct ConsoleReportCollected {
+  uint32_t errorFlags;
+  nsCString category;
+  uint32_t propertiesFile;
+  nsCString sourceFileURI;
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+  nsCString messageName;
+  nsString[] stringParams;
+};
+
 //-----------------------------------------------------------------------------
 // FTP IPDL structs
 //-----------------------------------------------------------------------------

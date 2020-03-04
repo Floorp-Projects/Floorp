@@ -370,6 +370,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   void FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
 
+  void StealConsoleReports(
+      nsTArray<net::ConsoleReportCollected>& aReports) override;
+
   void ClearConsoleReports() override;
 
   class nsContentEncodings : public nsStringEnumeratorBase {
@@ -597,6 +600,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult GetResponseEmbedderPolicy(
       nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy);
+
+  void MaybeFlushConsoleReports();
 
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;

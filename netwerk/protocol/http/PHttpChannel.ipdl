@@ -151,7 +151,8 @@ child:
   async OnStopRequest(nsresult channelStatus,
                       ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
-                      nsHttpHeaderArray responseTrailers);
+                      nsHttpHeaderArray responseTrailers,
+                      ConsoleReportCollected[] consoleReport);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.

@@ -44,7 +44,8 @@ child:
   async OnStopRequest(nsresult channelStatus,
                       ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
-                      nsHttpHeaderArray responseTrailers);
+                      nsHttpHeaderArray responseTrailers,
+                      ConsoleReportCollected[] consoleReport);
 
   // Parent has been suspended for diversion; no more events to be enqueued.
   async FlushedForDiversion();

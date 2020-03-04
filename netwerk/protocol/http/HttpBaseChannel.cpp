@@ -2722,6 +2722,10 @@ void HttpBaseChannel::AddConsoleReport(
   mReportCollector->AddConsoleReport(aErrorFlags, aCategory, aPropertiesFile,
                                      aSourceFileURI, aLineNumber, aColumnNumber,
                                      aMessageName, aStringParams);
+
+  // If this channel is already part of a loadGroup, we can flush this console
+  // report immediately.
+  HttpBaseChannel::MaybeFlushConsoleReports();
 }
 
 void HttpBaseChannel::FlushReportsToConsole(uint64_t aInnerWindowID,
@@ -2747,6 +2751,11 @@ void HttpBaseChannel::FlushConsoleReports(nsILoadGroup* aLoadGroup,
 void HttpBaseChannel::FlushConsoleReports(
     nsIConsoleReportCollector* aCollector) {
   mReportCollector->FlushConsoleReports(aCollector);
+}
+
+void HttpBaseChannel::StealConsoleReports(
+    nsTArray<net::ConsoleReportCollected>& aReports) {
+  mReportCollector->StealConsoleReports(aReports);
 }
 
 void HttpBaseChannel::ClearConsoleReports() {
@@ -3523,12 +3532,11 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
 
   // convey the User-Agent header value
   // since we might be setting custom user agent from DevTools.
-  if (httpInternal &&
-      mCorsMode == CORS_MODE_NO_CORS &&
+  if (httpInternal && mCorsMode == CORS_MODE_NO_CORS &&
       redirectType == ReplacementReason::Redirect) {
     nsAutoCString oldUserAgent;
     nsresult hasHeader =
-      mRequestHead.GetHeader(nsHttp::User_Agent, oldUserAgent);
+        mRequestHead.GetHeader(nsHttp::User_Agent, oldUserAgent);
     if (NS_SUCCEEDED(hasHeader)) {
       rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
                                          oldUserAgent, false);
@@ -4524,6 +4532,16 @@ HttpBaseChannel::GetCrossOriginOpenerPolicy(
   }
   *aPolicy = mComputedCrossOriginOpenerPolicy;
   return NS_OK;
+}
+
+void HttpBaseChannel::MaybeFlushConsoleReports() {
+  // If this channel is part of a loadGroup, we can flush the console reports
+  // immediately.
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  nsresult rv = GetLoadGroup(getter_AddRefs(loadGroup));
+  if (NS_SUCCEEDED(rv) && loadGroup) {
+    FlushConsoleReports(loadGroup);
+  }
 }
 
 }  // namespace net

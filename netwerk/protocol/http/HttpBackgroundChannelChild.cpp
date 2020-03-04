@@ -149,7 +149,8 @@ IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
 IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const TimeStamp& aLastActiveTabOptHit,
-    const nsHttpHeaderArray& aResponseTrailers) {
+    const nsHttpHeaderArray& aResponseTrailers,
+    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
   LOG(("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(gSocketTransportService);
   MOZ_ASSERT(gSocketTransportService->IsOnCurrentThreadInfallible());
@@ -168,18 +169,22 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
     LOG(("  > pending until OnStartRequest [status=%" PRIx32 "]\n",
          static_cast<uint32_t>(aChannelStatus)));
 
-    mQueuedRunnables.AppendElement(
-        NewRunnableMethod<const nsresult, const ResourceTimingStructArgs,
-                          const TimeStamp, const nsHttpHeaderArray>(
-            "HttpBackgroundChannelChild::RecvOnStopRequest", this,
-            &HttpBackgroundChannelChild::RecvOnStopRequest, aChannelStatus,
-            aTiming, aLastActiveTabOptHit, aResponseTrailers));
+    RefPtr<HttpBackgroundChannelChild> self = this;
 
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+        "HttpBackgroundChannelChild::RecvOnStopRequest",
+        [self, aChannelStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers,
+         aConsoleReports] {
+          self->RecvOnStopRequest(aChannelStatus, aTiming, aLastActiveTabOptHit,
+                                  aResponseTrailers, aConsoleReports);
+        });
+
+    mQueuedRunnables.AppendElement(task.forget());
     return IPC_OK();
   }
 
   mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming,
-                                      aResponseTrailers);
+                                      aResponseTrailers, aConsoleReports);
 
   return IPC_OK();
 }

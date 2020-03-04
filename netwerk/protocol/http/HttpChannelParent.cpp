@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
@@ -1584,6 +1585,13 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   nsHttpHeaderArray* responseTrailer = mChannel->GetResponseTrailers();
 
+  nsTArray<ConsoleReportCollected> consoleReports;
+
+  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel);
+  if (httpChannel) {
+    httpChannel->StealConsoleReports(consoleReports);
+  }
+
   // Either IPC channel is closed or background channel
   // is ready to send OnStopRequest.
   MOZ_ASSERT(mIPCClosed || mBgParent);
@@ -1595,13 +1603,15 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     TimeStamp lastActTabOpt = nsHttp::GetLastActiveTabLoadOptimizationHit();
     if (!SendOnStopRequest(
             aStatusCode, GetTimingAttributes(mChannel), lastActTabOpt,
-            responseTrailer ? *responseTrailer : nsHttpHeaderArray())) {
+            responseTrailer ? *responseTrailer : nsHttpHeaderArray(),
+            consoleReports)) {
       return NS_ERROR_UNEXPECTED;
     }
   } else if (mIPCClosed || !mBgParent ||
              !mBgParent->OnStopRequest(
                  aStatusCode, GetTimingAttributes(mChannel),
-                 responseTrailer ? *responseTrailer : nsHttpHeaderArray())) {
+                 responseTrailer ? *responseTrailer : nsHttpHeaderArray(),
+                 consoleReports)) {
     return NS_ERROR_UNEXPECTED;
   }
 
