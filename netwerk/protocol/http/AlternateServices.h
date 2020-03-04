@@ -104,6 +104,7 @@ class AltSvcMapping {
                           const OriginAttributes& originAttributes);
 
   bool IsHttp3() { return mIsHttp3; }
+  const nsCString& NPNToken() const { return mNPNToken; }
 
  private:
   virtual ~AltSvcMapping() = default;
