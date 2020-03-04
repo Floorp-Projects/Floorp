@@ -19,8 +19,10 @@ createHTML({
 async function getSineWaveFile(frequency, lengthSeconds) {
   const off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
   const osc = off.createOscillator();
-  const rec = new MediaRecorder(osc, {mimeType: "audio/ogg; codecs=opus"});
+  const rec = new MediaRecorder(off.destination,
+                                {mimeType: "audio/ogg; codecs=opus"});
   osc.frequency.value = frequency;
+  osc.connect(off.destination);
   osc.start();
   rec.start();
   off.startRendering();

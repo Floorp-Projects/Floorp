@@ -3644,15 +3644,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     if (httpChild) {
       rv = httpChild->CrossProcessRedirectFinished(rv);
     }
-    Maybe<LoadInfoArgs> loadInfoArgs;
-    if (newChannel && NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
-      MOZ_ALWAYS_SUCCEEDS(
-          mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-    }
-    aResolve(
-        Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, loadInfoArgs));
+    aResolve(rv);
   });
 
   if (NS_FAILED(rv)) {

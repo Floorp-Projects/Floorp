@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "AnimationCommon.h"
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/MemoryReporting.h"
@@ -34,6 +35,22 @@ class Promise;
 enum class PseudoStyleType : uint8_t;
 struct NonOwningAnimationTarget;
 
+// Properties of CSS Animations that can be overridden by the Web Animations API
+// in a manner that means we should ignore subsequent changes to markup for that
+// property.
+enum class CSSAnimationProperties {
+  None = 0,
+  Keyframes = 1 << 0,
+  Duration = 1 << 1,
+  IterationCount = 1 << 2,
+  Direction = 1 << 3,
+  Delay = 1 << 4,
+  FillMode = 1 << 5,
+  Effect = Keyframes | Duration | IterationCount | Direction | Delay | FillMode,
+  PlayState = 1 << 6,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSAnimationProperties)
+
 namespace dom {
 
 class CSSAnimation final : public Animation {
@@ -41,8 +58,6 @@ class CSSAnimation final : public Animation {
   explicit CSSAnimation(nsIGlobalObject* aGlobal, nsAtom* aAnimationName)
       : dom::Animation(aGlobal),
         mAnimationName(aAnimationName),
-        mIsStylePaused(false),
-        mPauseShouldStick(false),
         mNeedsNewAnimationIndexWhenRun(false),
         mPreviousPhase(ComputedTiming::AnimationPhase::Idle),
         mPreviousIteration(0) {
@@ -67,9 +82,10 @@ class CSSAnimation final : public Animation {
   nsAtom* AnimationName() const { return mAnimationName; }
 
   // Animation interface overrides
-  virtual Promise* GetReady(ErrorResult& aRv) override;
-  virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
-  virtual void Pause(ErrorResult& aRv) override;
+  void SetEffect(AnimationEffect* aEffect) override;
+  void SetStartTimeAsDouble(const Nullable<double>& aStartTime) override;
+  Promise* GetReady(ErrorResult& aRv) override;
+  void Reverse(ErrorResult& aRv) override;
 
   // NOTE: tabbrowser.xml currently relies on the fact that reading the
   // currentTime of a CSSAnimation does *not* flush style (whereas reading the
@@ -82,6 +98,7 @@ class CSSAnimation final : public Animation {
   AnimationPlayState PlayStateFromJS() const override;
   bool PendingFromJS() const override;
   void PlayFromJS(ErrorResult& aRv) override;
+  void PauseFromJS(ErrorResult& aRv) override;
 
   void PlayFromStyle();
   void PauseFromStyle();
@@ -111,8 +128,6 @@ class CSSAnimation final : public Animation {
   void QueueEvents(
       const StickyTimeDuration& aActiveTime = StickyTimeDuration());
 
-  bool IsStylePaused() const { return mIsStylePaused; }
-
   bool HasLowerCompositeOrderThan(const CSSAnimation& aOther) const;
 
   void SetAnimationIndex(uint64_t aIndex) {
@@ -137,6 +152,13 @@ class CSSAnimation final : public Animation {
 
   void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) override {
     QueueEvents(aActiveTime);
+  }
+
+  CSSAnimationProperties GetOverriddenProperties() const {
+    return mOverriddenProperties;
+  }
+  void AddOverriddenProperties(CSSAnimationProperties aProperties) {
+    mOverriddenProperties |= aProperties;
   }
 
  protected:
@@ -183,58 +205,6 @@ class CSSAnimation final : public Animation {
   // For (b) and (c) the owning element will return !IsSet().
   OwningElementRef mOwningElement;
 
-  // When combining animation-play-state with play() / pause() the following
-  // behavior applies:
-  // 1. pause() is sticky and always overrides the underlying
-  //    animation-play-state
-  // 2. If animation-play-state is 'paused', play() will temporarily override
-  //    it until animation-play-state next becomes 'running'.
-  // 3. Calls to play() trigger finishing behavior but setting the
-  //    animation-play-state to 'running' does not.
-  //
-  // This leads to five distinct states:
-  //
-  // A. Running
-  // B. Running and temporarily overriding animation-play-state: paused
-  // C. Paused and sticky overriding animation-play-state: running
-  // D. Paused and sticky overriding animation-play-state: paused
-  // E. Paused by animation-play-state
-  //
-  // C and D may seem redundant but they differ in how to respond to the
-  // sequence: call play(), set animation-play-state: paused.
-  //
-  // C will transition to A then E leaving the animation paused.
-  // D will transition to B then B leaving the animation running.
-  //
-  // A state transition chart is as follows:
-  //
-  //             A | B | C | D | E
-  //   ---------------------------
-  //   play()    A | B | A | B | B
-  //   pause()   C | D | C | D | D
-  //   'running' A | A | C | C | A
-  //   'paused'  E | B | D | D | E
-  //
-  // The base class, Animation already provides a boolean value,
-  // mIsPaused which gives us two states. To this we add a further two booleans
-  // to represent the states as follows.
-  //
-  // A. Running
-  //    (!mIsPaused; !mIsStylePaused; !mPauseShouldStick)
-  // B. Running and temporarily overriding animation-play-state: paused
-  //    (!mIsPaused; mIsStylePaused; !mPauseShouldStick)
-  // C. Paused and sticky overriding animation-play-state: running
-  //    (mIsPaused; !mIsStylePaused; mPauseShouldStick)
-  // D. Paused and sticky overriding animation-play-state: paused
-  //    (mIsPaused; mIsStylePaused; mPauseShouldStick)
-  // E. Paused by animation-play-state
-  //    (mIsPaused; mIsStylePaused; !mPauseShouldStick)
-  //
-  // (That leaves 3 combinations of the boolean values that we never set because
-  // they don't represent valid states.)
-  bool mIsStylePaused;
-  bool mPauseShouldStick;
-
   // When true, indicates that when this animation next leaves the idle state,
   // its animation index should be updated.
   bool mNeedsNewAnimationIndexWhenRun;
@@ -243,9 +213,30 @@ class CSSAnimation final : public Animation {
   // This is used to determine what new events to dispatch.
   ComputedTiming::AnimationPhase mPreviousPhase;
   uint64_t mPreviousIteration;
+
+  // Properties that would normally be defined by the cascade but which have
+  // since been explicitly set via the Web Animations API.
+  CSSAnimationProperties mOverriddenProperties = CSSAnimationProperties::None;
 };
 
 } /* namespace dom */
+
+// A subclass of KeyframeEffect that reports when specific properties have been
+// overridden via the Web Animations API.
+class CSSAnimationKeyframeEffect : public dom::KeyframeEffect {
+ public:
+  CSSAnimationKeyframeEffect(dom::Document* aDocument,
+                             OwningAnimationTarget&& aTarget,
+                             TimingParams&& aTiming,
+                             const KeyframeEffectParams& aOptions)
+      : KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
+                       aOptions) {}
+
+  void UpdateTiming(const dom::OptionalEffectTiming& aTiming,
+                    ErrorResult& aRv) override;
+  void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
+                    ErrorResult& aRv) override;
+};
 
 template <>
 struct AnimationTypeTraits<dom::CSSAnimation> {

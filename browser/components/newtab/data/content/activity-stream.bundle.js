@@ -11619,7 +11619,7 @@ class localized_Localized extends external_React_["Component"] {
     const {
       id,
       attrs,
-      children: elem
+      children: elem = null
     } = this.props; // Validate that the child element isn't an array
 
     if (Array.isArray(elem)) {
@@ -12907,6 +12907,10 @@ const SnippetsTemplates = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+var builtins_namespaceObject = {};
+__webpack_require__.r(builtins_namespaceObject);
+__webpack_require__.d(builtins_namespaceObject, "NUMBER", function() { return NUMBER; });
+__webpack_require__.d(builtins_namespaceObject, "DATETIME", function() { return DATETIME; });
 
 // CONCATENATED MODULE: ./node_modules/fluent/src/types.js
 /* global Intl */
@@ -12958,8 +12962,12 @@ class FluentType {
 
 }
 class FluentNone extends FluentType {
+  valueOf() {
+    return null;
+  }
+
   toString() {
-    return this.value || "???";
+    return `{${this.value || "???"}}`;
   }
 
 }
@@ -13011,10 +13019,6 @@ class FluentDateTime extends FluentType {
  * `FluentType`.  Functions must return `FluentType` objects as well.
  */
 
-/* harmony default export */ var builtins = ({
-  "NUMBER": ([arg], opts) => new FluentNumber(arg.valueOf(), merge(arg.opts, opts)),
-  "DATETIME": ([arg], opts) => new FluentDateTime(arg.valueOf(), merge(arg.opts, opts))
-});
 
 function merge(argopts, opts) {
   return Object.assign({}, argopts, values(opts));
@@ -13028,6 +13032,29 @@ function values(opts) {
   }
 
   return unwrapped;
+}
+
+function NUMBER([arg], opts) {
+  if (arg instanceof FluentNone) {
+    return arg;
+  }
+
+  if (arg instanceof FluentNumber) {
+    return new FluentNumber(arg.valueOf(), merge(arg.opts, opts));
+  }
+
+  return new FluentNone("NUMBER()");
+}
+function DATETIME([arg], opts) {
+  if (arg instanceof FluentNone) {
+    return arg;
+  }
+
+  if (arg instanceof FluentDateTime) {
+    return new FluentDateTime(arg.valueOf(), merge(arg.opts, opts));
+  }
+
+  return new FluentNone("DATETIME()");
 }
 // CONCATENATED MODULE: ./node_modules/fluent/src/resolver.js
 /* global Intl */
@@ -13239,7 +13266,7 @@ function MessageReference(scope, {
     }
 
     scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return Type(scope, message);
+    return new FluentNone(`${name}.${attr}`);
   }
 
   return Type(scope, message);
@@ -13276,7 +13303,7 @@ function TermReference(scope, {
     }
 
     scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return Type(local, term);
+    return new FluentNone(`${id}.${attr}`);
   }
 
   return Type(local, term);
@@ -13289,7 +13316,7 @@ function FunctionReference(scope, {
 }) {
   // Some functions are built-in. Others may be provided by the runtime via
   // the `FluentBundle` constructor.
-  const func = scope.bundle._functions[name] || builtins[name];
+  const func = scope.bundle._functions[name] || builtins_namespaceObject[name];
 
   if (!func) {
     scope.errors.push(new ReferenceError(`Unknown function: ${name}()`));
@@ -13305,7 +13332,7 @@ function FunctionReference(scope, {
     return func(...getArguments(scope, args));
   } catch (e) {
     // XXX Report errors.
-    return new FluentNone();
+    return new FluentNone(`${name}()`);
   }
 } // Resolve a select expression to the member object.
 
@@ -14234,32 +14261,6 @@ class bundle_FluentBundle {
   }
 
 }
-// CONCATENATED MODULE: ./node_modules/fluent/src/util.js
-function nonBlank(line) {
-  return !/^\s*$/.test(line);
-}
-
-function countIndent(line) {
-  const [indent] = line.match(/^\s*/);
-  return indent.length;
-}
-/**
- * Template literal tag for dedenting FTL code.
- *
- * Strip the common indent of non-blank lines. Remove blank lines.
- *
- * @param {Array<string>} strings
- */
-
-
-function ftl(strings) {
-  const [code] = strings;
-  const lines = code.split("\n").filter(nonBlank);
-  const indents = lines.map(countIndent);
-  const common = Math.min(...indents);
-  const indent = new RegExp(`^\\s{${common}}`);
-  return lines.map(line => line.replace(indent, "")).join("\n");
-}
 // CONCATENATED MODULE: ./node_modules/fluent/src/index.js
 /*
  * @module fluent
@@ -14269,7 +14270,6 @@ function ftl(strings) {
  * framework designed to unleash the expressive power of the natural language.
  *
  */
-
 
 
 
@@ -15316,7 +15316,7 @@ var FullPageInterrupt = __webpack_require__(20);
 // EXTERNAL MODULE: ./node_modules/fluent-react/src/index.js + 14 modules
 var src = __webpack_require__(74);
 
-// EXTERNAL MODULE: ./content-src/asrouter/rich-text-strings.js + 8 modules
+// EXTERNAL MODULE: ./content-src/asrouter/rich-text-strings.js + 7 modules
 var rich_text_strings = __webpack_require__(76);
 
 // CONCATENATED MODULE: ./content-src/asrouter/templates/FirstRun/Interrupt.jsx

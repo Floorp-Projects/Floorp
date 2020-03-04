@@ -43,6 +43,11 @@ void GetBoxQuads(nsINode* aNode, const dom::BoxQuadOptions& aOptions,
                  nsTArray<RefPtr<dom::DOMQuad> >& aResult,
                  dom::CallerType aCallerType, ErrorResult& aRv);
 
+void GetBoxQuadsFromWindowOrigin(nsINode* aNode,
+                                 const dom::BoxQuadOptions& aOptions,
+                                 nsTArray<RefPtr<dom::DOMQuad> >& aResult,
+                                 ErrorResult& aRv);
+
 already_AddRefed<dom::DOMQuad> ConvertQuadFromNode(
     nsINode* aTo, dom::DOMQuad& aQuad, const GeometryNode& aFrom,
     const dom::ConvertCoordinateOptions& aOptions, dom::CallerType aCallerType,

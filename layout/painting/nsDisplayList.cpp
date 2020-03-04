@@ -4188,7 +4188,7 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   }
 
   if (isThemed) {
-    nsITheme* theme = presContext->GetTheme();
+    nsITheme* theme = presContext->Theme();
     if (theme->NeedToClearBackgroundBehindWidget(
             aFrame, aFrame->StyleDisplay()->mAppearance) &&
         aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
@@ -4848,7 +4848,7 @@ void nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder) {
   StyleFrame()->IsThemed(disp, &mThemeTransparency);
 
   // Perform necessary RegisterThemeGeometry
-  nsITheme* theme = StyleFrame()->PresContext()->GetTheme();
+  nsITheme* theme = StyleFrame()->PresContext()->Theme();
   nsITheme::ThemeGeometryType type =
       theme->ThemeGeometryTypeForWidget(StyleFrame(), disp->mAppearance);
   if (type != nsITheme::eThemeGeometryTypeUnknown) {
@@ -4913,7 +4913,7 @@ void nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
                                               nsRect* aClipRect) {
   // XXXzw this ignores aClipRect.
   nsPresContext* presContext = StyleFrame()->PresContext();
-  nsITheme* theme = presContext->GetTheme();
+  nsITheme* theme = presContext->Theme();
   nsRect drawing(mBackgroundRect);
   theme->GetWidgetOverflow(presContext->DeviceContext(), StyleFrame(),
                            mAppearance, &drawing);
@@ -4928,7 +4928,7 @@ bool nsDisplayThemedBackground::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  nsITheme* theme = StyleFrame()->PresContext()->GetTheme();
+  nsITheme* theme = StyleFrame()->PresContext()->Theme();
   return theme->CreateWebRenderCommandsForWidget(aBuilder, aResources, aSc,
                                                  aManager, StyleFrame(),
                                                  mAppearance, mBackgroundRect);
@@ -4958,7 +4958,7 @@ void nsDisplayThemedBackground::ComputeInvalidationRegion(
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
   }
-  nsITheme* theme = StyleFrame()->PresContext()->GetTheme();
+  nsITheme* theme = StyleFrame()->PresContext()->Theme();
   if (theme->WidgetAppearanceDependsOnWindowFocus(mAppearance) &&
       IsWindowActive() != geometry->mWindowIsActive) {
     aInvalidRegion->Or(*aInvalidRegion, bounds);
@@ -4975,9 +4975,9 @@ nsRect nsDisplayThemedBackground::GetBoundsInternal() {
   nsPresContext* presContext = mFrame->PresContext();
 
   nsRect r = mBackgroundRect - ToReferenceFrame();
-  presContext->GetTheme()->GetWidgetOverflow(
-      presContext->DeviceContext(), mFrame, mFrame->StyleDisplay()->mAppearance,
-      &r);
+  presContext->Theme()->GetWidgetOverflow(presContext->DeviceContext(), mFrame,
+                                          mFrame->StyleDisplay()->mAppearance,
+                                          &r);
   return r + ToReferenceFrame();
 }
 
@@ -5404,9 +5404,8 @@ bool nsDisplayOutline::IsThemedOutline() const {
   }
 
   nsPresContext* pc = mFrame->PresContext();
-  nsITheme* theme = pc->GetTheme();
-  return theme &&
-         theme->ThemeSupportsWidget(pc, mFrame, StyleAppearance::FocusOutline);
+  nsITheme* theme = pc->Theme();
+  return theme->ThemeSupportsWidget(pc, mFrame, StyleAppearance::FocusOutline);
 }
 
 bool nsDisplayOutline::CreateWebRenderCommands(

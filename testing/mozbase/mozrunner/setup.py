@@ -15,13 +15,13 @@ deps = [
     'mozdevice>=3.0.1',
     'mozfile>=1.2',
     'mozinfo>=0.7,<2',
-    'mozlog>=5.0',
+    'mozlog>=6.0',
     'mozprocess>=0.23,<2',
     'mozprofile~=2.3',
     'six>=1.10.0,<2',
 ]
 
-EXTRAS_REQUIRE = {'crash': ['mozcrash >= 1.0']}
+EXTRAS_REQUIRE = {'crash': ['mozcrash >= 2.0']}
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

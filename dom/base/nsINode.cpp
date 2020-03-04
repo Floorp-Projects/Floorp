@@ -1215,6 +1215,12 @@ void nsINode::GetBoxQuads(const BoxQuadOptions& aOptions,
   mozilla::GetBoxQuads(this, aOptions, aResult, aCallerType, aRv);
 }
 
+void nsINode::GetBoxQuadsFromWindowOrigin(const BoxQuadOptions& aOptions,
+                                          nsTArray<RefPtr<DOMQuad>>& aResult,
+                                          mozilla::ErrorResult& aRv) {
+  mozilla::GetBoxQuadsFromWindowOrigin(this, aOptions, aResult, aRv);
+}
+
 already_AddRefed<DOMQuad> nsINode::ConvertQuadFromNode(
     DOMQuad& aQuad, const GeometryNode& aFrom,
     const ConvertCoordinateOptions& aOptions, CallerType aCallerType,

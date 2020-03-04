@@ -10,7 +10,7 @@ PACKAGE_NAME = "manifestparser"
 PACKAGE_VERSION = '2.0.0'
 
 DEPS = [
-    'mozlog >= 5.0',
+    'mozlog >= 6.0',
     'six >= 1.10.0',
 ]
 setup(name=PACKAGE_NAME,

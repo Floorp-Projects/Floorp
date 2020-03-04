@@ -147,7 +147,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AnimationPlaybackEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AnimationTimeline", insecureContext: true, release: false },
+  { name: "AnimationTimeline", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Attr", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -313,7 +313,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DocumentFragment", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "DocumentTimeline", insecureContext: true, release: false },
+  { name: "DocumentTimeline", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DocumentType", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

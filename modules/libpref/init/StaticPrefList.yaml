@@ -1372,7 +1372,7 @@
 # Is support for timelines from the Web Animations API enabled?
 - name: dom.animations-api.timelines.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 # Is support for AudioWorklet enabled?

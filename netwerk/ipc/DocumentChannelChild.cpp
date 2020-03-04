@@ -226,9 +226,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   auto scopeExit = MakeScopeExit([&]() {
-    Maybe<LoadInfoArgs> dummy;
-    mRedirectResolver(
-        Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, dummy));
+    mRedirectResolver(rv);
     mRedirectResolver = nullptr;
   });
 
@@ -321,9 +319,7 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
   // we're done.
   if (NS_FAILED(mStatus)) {
     redirectChannel->SetNotificationCallbacks(nullptr);
-    Maybe<LoadInfoArgs> dummy;
-    redirectResolver(
-        Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(aStatusCode, dummy));
+    redirectResolver(aStatusCode);
     return NS_OK;
   }
 
@@ -339,9 +335,7 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
     redirectChannel->SetNotificationCallbacks(nullptr);
   }
 
-  Maybe<LoadInfoArgs> dummy;
-  redirectResolver(
-      Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, dummy));
+  redirectResolver(rv);
 
   if (NS_FAILED(rv)) {
     ShutdownListeners(rv);

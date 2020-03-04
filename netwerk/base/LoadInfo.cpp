@@ -378,17 +378,12 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   }
 
   // NB: Ignore the current inner window since we're navigating away from it.
-  mOuterWindowID = aOuterWindow->WindowID();
+  mOuterWindowID = mParentOuterWindowID = mTopOuterWindowID =
+      aOuterWindow->WindowID();
   RefPtr<BrowsingContext> bc = aOuterWindow->GetBrowsingContext();
   mBrowsingContextID = bc ? bc->Id() : 0;
 
-  // TODO We can have a parent without a frame element in some cases dealing
-  // with the hidden window.
-  nsCOMPtr<nsPIDOMWindowOuter> parent =
-      aOuterWindow->GetInProcessScriptableParent();
-  mParentOuterWindowID = parent ? parent->WindowID() : 0;
-  mTopOuterWindowID = FindTopOuterWindowID(aOuterWindow);
-
+  // This should be removed in bug 1618557
   nsGlobalWindowInner* innerWindow =
       nsGlobalWindowInner::Cast(aOuterWindow->GetCurrentInnerWindow());
   if (innerWindow) {
@@ -401,11 +396,17 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   nsCOMPtr<nsIDocShell> docShell = aOuterWindow->GetDocShell();
   MOZ_ASSERT(docShell);
   mOriginAttributes = nsDocShell::Cast(docShell)->GetOriginAttributes();
-  mAncestorPrincipals = nsDocShell::Cast(docShell)->AncestorPrincipals();
-  mAncestorOuterWindowIDs =
-      nsDocShell::Cast(docShell)->AncestorOuterWindowIDs();
-  MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() ==
-                        mAncestorOuterWindowIDs.Length());
+
+  // We sometimes use this constructor for security checks for outer windows
+  // that aren't top level.
+  if (aSecurityFlags != nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK) {
+    MOZ_ASSERT(aOuterWindow->GetInProcessScriptableParent() == aOuterWindow);
+    MOZ_ASSERT(mTopOuterWindowID == FindTopOuterWindowID(aOuterWindow));
+    MOZ_DIAGNOSTIC_ASSERT(
+        nsDocShell::Cast(docShell)->AncestorPrincipals().IsEmpty());
+    MOZ_DIAGNOSTIC_ASSERT(
+        nsDocShell::Cast(docShell)->AncestorOuterWindowIDs().IsEmpty());
+  }
 
 #ifdef DEBUG
   if (docShell->GetBrowsingContext()->IsChrome()) {

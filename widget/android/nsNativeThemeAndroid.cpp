@@ -294,7 +294,7 @@ nsITheme::Transparency nsNativeThemeAndroid::GetWidgetTransparency(
   return eUnknownTransparency;
 }
 
-already_AddRefed<nsITheme> do_GetNativeTheme() {
+already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {

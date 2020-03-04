@@ -370,6 +370,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
     def make_installers(self, locale):
         """wrapper for make installers-(locale)"""
         env = self.query_l10n_env()
+        env['PYTHONIOENCODING'] = 'utf-8'
         self._copy_mozconfig()
         dirs = self.query_abs_dirs()
         cwd = os.path.join(dirs['abs_locales_dir'])

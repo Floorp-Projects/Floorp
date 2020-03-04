@@ -93,7 +93,7 @@ class MediaTrackListener {
 
   /**
    * Notify that this track listener has been removed from the graph, either
-   * after shutdown or RemoveTrackListener.
+   * after shutdown or through MediaTrack::RemoveListener().
    */
   virtual void NotifyRemoved(MediaTrackGraph* aGraph) {}
 

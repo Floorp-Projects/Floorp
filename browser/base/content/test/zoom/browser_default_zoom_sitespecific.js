@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function test_iframe_global_zoom() {
+add_task(async function test_disabled_ss_multi() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.zoom.siteSpecific", false]],
   });
@@ -57,5 +57,46 @@ add_task(async function test_iframe_global_zoom() {
 
   await FullZoomHelper.removeTabAndWaitForLocationChange();
   await FullZoomHelper.removeTabAndWaitForLocationChange();
+  await FullZoomHelper.removeTabAndWaitForLocationChange();
+});
+
+add_task(async function test_disabled_ss_custom() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.zoom.siteSpecific", false]],
+  });
+  const TEST_PAGE_URL = "https://example.org/";
+
+  // 150% global zoom
+  await FullZoomHelper.changeDefaultZoom(150);
+  let defaultZoom = await FullZoomHelper.getGlobalValue();
+  is(defaultZoom, 1.5, "Global zoom is at 150%");
+
+  // Prepare test tab
+  let tab1 = BrowserTestUtils.addTab(gBrowser, TEST_PAGE_URL);
+  let tabBrowser1 = gBrowser.getBrowserForTab(tab1);
+  let isLoaded = BrowserTestUtils.browserLoaded(
+    tabBrowser1,
+    false,
+    TEST_PAGE_URL
+  );
+  await FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
+  await isLoaded;
+
+  await TestUtils.waitForCondition(
+    () => ZoomManager.getZoomForBrowser(tabBrowser1) == 1.5
+  );
+  let zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser1);
+  is(zoomLevel, 1.5, "tab 1 zoom has been set to 150%");
+
+  await FullZoom.enlarge();
+
+  zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser1);
+  is(zoomLevel, 1.7, "tab 1 zoom has been set to 170%");
+
+  await FullZoomHelper.refreshTab(tab1);
+
+  zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser1);
+  is(zoomLevel, 1.7, "tab 1 zoom remains 170%");
+
   await FullZoomHelper.removeTabAndWaitForLocationChange();
 });

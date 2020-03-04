@@ -4370,15 +4370,11 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFram
   }
 }
 
-already_AddRefed<nsITheme> do_GetNativeTheme() {
+already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
-    if (XRE_IsContentProcess() && StaticPrefs::widget_disable_native_theme_for_content()) {
-      inst = new nsNativeBasicTheme();
-    } else {
-      inst = new nsNativeThemeCocoa();
-    }
+    inst = new nsNativeThemeCocoa();
     ClearOnShutdown(&inst);
   }
 

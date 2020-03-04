@@ -11,7 +11,7 @@ PACKAGE_VERSION = '2.4.0'
 
 deps = [
     'mozfile>=1.2',
-    'mozlog>=5.0',
+    'mozlog>=6.0',
     'six>=1.10.0,<2',
 ]
 

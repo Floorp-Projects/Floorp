@@ -10,7 +10,7 @@ PACKAGE_VERSION = '1.0.0'
 
 deps = [
     'mozinfo',
-    'mozlog >= 5.0',
+    'mozlog >= 6.0',
 ]
 
 setup(

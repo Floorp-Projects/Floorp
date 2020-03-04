@@ -10176,7 +10176,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
 nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
                                             nsIURILoader* aURILoader,
                                             uint32_t aOpenFlags) {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   // If anything fails here, make sure to clear our initial ClientSource.
   auto cleanupInitialClient =
@@ -10222,9 +10222,17 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   // create the reserved ClientSource if necessary.
   Maybe<ClientInfo> noReservedClient;
   if (docChannel) {
+    // When using DocumentChannel, all redirect handling is done in the parent,
+    // so we just need the child variant to watch for the internal redirect
+    // to the final channel.
     rv = AddClientChannelHelperInChild(
         aChannel, win->EventTargetFor(TaskCategory::Other));
     docChannel->SetInitialClientInfo(GetInitialClientInfo());
+  } else if (aOpenFlags & nsIURILoader::REDIRECTED_CHANNEL) {
+    // If we did a process switch, then we should have an existing allocated
+    // ClientInfo, so we just need to allocate a corresponding ClientSource.
+    CreateReservedSourceIfNeeded(aChannel,
+                                 win->EventTargetFor(TaskCategory::Other));
   } else {
     rv = AddClientChannelHelper(aChannel, std::move(noReservedClient),
                                 GetInitialClientInfo(),
