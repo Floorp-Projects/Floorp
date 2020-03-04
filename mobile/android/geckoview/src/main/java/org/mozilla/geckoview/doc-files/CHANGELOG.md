@@ -44,10 +44,7 @@ exclude: true
   object which contains additional information about the newly created tab
   (including the `url` which used to be passed in directly).
   ([bug 1616625]({{bugzilla}}1616625))
-- Added [`GeckoRuntimeSettings.setWebManifestEnabled`][75.15],
-  [`GeckoRuntimeSettings.webManifest`][75.16], and
-  [`GeckoRuntimeSettings.getWebManifestEnabled`][75.17]
-  ([bug 1614894]({{bugzilla}}1603673)), to enable or check Web Manifest support.
+
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
@@ -63,9 +60,6 @@ exclude: true
 [75.12]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html#onUpdateTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.WebExtension.UpdateTabDetails-
 [75.13]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onNewTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.CreateTabDetails-
 [75.14]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
-[75.15]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#setWebManifestEnabled-boolean-
-[75.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#webManifest-boolean-
-[75.17]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled--
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -629,4 +623,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: b293a94c5f74d3f660959dadd2b48732b2b1ecd1
+[api-version]: 8b880533b33a0ad178f88ade00aaae5897625ef9
