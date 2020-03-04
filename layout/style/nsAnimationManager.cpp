@@ -323,6 +323,17 @@ void CSSAnimation::UpdateTiming(SeekFlag aSeekFlag,
 
 /////////////////////// CSSAnimationKeyframeEffect ////////////////////////
 
+void CSSAnimationKeyframeEffect::GetTiming(EffectTiming& aRetVal) const {
+  MaybeFlushUnanimatedStyle();
+  KeyframeEffect::GetTiming(aRetVal);
+}
+
+void CSSAnimationKeyframeEffect::GetComputedTimingAsDict(
+    ComputedEffectTiming& aRetVal) const {
+  MaybeFlushUnanimatedStyle();
+  KeyframeEffect::GetComputedTimingAsDict(aRetVal);
+}
+
 void CSSAnimationKeyframeEffect::UpdateTiming(
     const OptionalEffectTiming& aTiming, ErrorResult& aRv) {
   KeyframeEffect::UpdateTiming(aTiming, aRv);
@@ -331,7 +342,7 @@ void CSSAnimationKeyframeEffect::UpdateTiming(
     return;
   }
 
-  if (mAnimation && mAnimation->AsCSSAnimation()) {
+  if (CSSAnimation* cssAnimation = GetOwningCSSAnimation()) {
     CSSAnimationProperties updatedProperties = CSSAnimationProperties::None;
     if (aTiming.mDuration.WasPassed()) {
       updatedProperties |= CSSAnimationProperties::Duration;
@@ -349,7 +360,7 @@ void CSSAnimationKeyframeEffect::UpdateTiming(
       updatedProperties |= CSSAnimationProperties::FillMode;
     }
 
-    mAnimation->AsCSSAnimation()->AddOverriddenProperties(updatedProperties);
+    cssAnimation->AddOverriddenProperties(updatedProperties);
   }
 }
 
@@ -362,9 +373,19 @@ void CSSAnimationKeyframeEffect::SetKeyframes(JSContext* aContext,
     return;
   }
 
-  if (mAnimation && mAnimation->AsCSSAnimation()) {
-    mAnimation->AsCSSAnimation()->AddOverriddenProperties(
-        CSSAnimationProperties::Keyframes);
+  if (CSSAnimation* cssAnimation = GetOwningCSSAnimation()) {
+    cssAnimation->AddOverriddenProperties(CSSAnimationProperties::Keyframes);
+  }
+}
+
+void CSSAnimationKeyframeEffect::MaybeFlushUnanimatedStyle() const {
+  if (!GetOwningCSSAnimation()) {
+    return;
+  }
+
+  if (dom::Document* doc = GetRenderedDocument()) {
+    doc->FlushPendingNotifications(
+        ChangesToFlush(FlushType::Style, false /* flush animations */));
   }
 }
 
