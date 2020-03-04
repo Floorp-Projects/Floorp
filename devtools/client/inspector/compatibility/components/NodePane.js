@@ -21,6 +21,9 @@ class NodePane extends PureComponent {
   static get propTypes() {
     return {
       nodes: PropTypes.arrayOf(Types.node).isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
@@ -31,9 +34,9 @@ class NodePane extends PureComponent {
       ? dom.details(
           {},
           dom.summary({}, `${nodes.length} occurrences`),
-          NodeList({ nodes })
+          NodeList(this.props)
         )
-      : NodeList({ nodes });
+      : NodeList(this.props);
   }
 }
 

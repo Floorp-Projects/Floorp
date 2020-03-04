@@ -19,7 +19,10 @@ exports[`CompatibilityApp component renders zero issues 1`] = `
         Object {
           "component": [Function],
           "componentProps": Object {
+            "hideBoxModelHighlighter": undefined,
             "issues": Array [],
+            "setSelectedNode": undefined,
+            "showBoxModelHighlighterForNode": undefined,
           },
           "header": "All Issues",
           "id": "compatibility-app--all-elements-pane",
