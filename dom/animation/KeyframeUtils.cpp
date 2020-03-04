@@ -373,6 +373,17 @@ static void GetKeyframeListFromKeyframeSequence(
   }
 }
 
+// The class to suppress the exception of parsing easing automatically.
+class MOZ_STACK_CLASS AutoErrorSuppressor final {
+ public:
+  explicit AutoErrorSuppressor(ErrorResult& aErrorResult)
+      : mErrorResult(aErrorResult) {}
+  ~AutoErrorSuppressor() { mErrorResult.SuppressException(); }
+
+ private:
+  ErrorResult& mErrorResult;
+};
+
 /**
  * Converts a JS object wrapped by the given JS::ForIfIterator to an
  * IDL sequence<Keyframe> and stores the resulting Keyframe objects in
@@ -384,6 +395,10 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
                                     nsTArray<Keyframe>& aResult) {
   JS::Rooted<JS::Value> value(aCx);
   ErrorResult parseEasingResult;
+  // Parsing errors should only be reported after we have finished iterating
+  // through all values. If we have any early returns while iterating, we should
+  // suppress parsing errors.
+  AutoErrorSuppressor AutoErrorSuppressor(parseEasingResult);
 
   for (;;) {
     bool done;
@@ -408,6 +423,11 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
     dom::binding_detail::FastBaseKeyframe keyframeDict;
     if (!keyframeDict.Init(aCx, value,
                            "Element of sequence<Keyframe> argument")) {
+      // This may happen if the value type of the member of BaseKeyframe is
+      // invalid. e.g. `offset` only accept a double value, so if we provide a
+      // string, we enter this branch.
+      // Besides, keyframeDict.Init() should throw a Type Error message already,
+      // so we don't have to do it again.
       return false;
     }
 
@@ -415,6 +435,7 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
     if (!keyframe) {
       return false;
     }
+
     if (!keyframeDict.mOffset.IsNull()) {
       keyframe->mOffset.emplace(keyframeDict.mOffset.Value());
     }
