@@ -3,9 +3,6 @@
 
 "use strict";
 
-// Enable web manifest processing.
-Services.prefs.setBoolPref("dom.manifest.enabled", true);
-
 add_task(async function() {
   info("Testing fetching a valid manifest");
   const response = await fetchManifest("application-manifest-basic.html");

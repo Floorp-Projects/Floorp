@@ -44,9 +44,6 @@ async function enableApplicationPanel() {
   // Enable all preferences related to service worker debugging.
   await enableServiceWorkerDebugging();
 
-  // Enable web manifest processing.
-  Services.prefs.setBoolPref("dom.manifest.enabled", true);
-
   // Enable application panel in DevTools.
   await pushPref("devtools.application.enabled", true);
 }

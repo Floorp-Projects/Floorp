@@ -521,7 +521,6 @@ package org.mozilla.geckoview {
     method public boolean getUseMaxScreenDepth();
     method public boolean getUseMultiprocess();
     method public boolean getWebFontsEnabled();
-    method public boolean getWebManifestEnabled();
     method @NonNull public GeckoRuntimeSettings setAboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
@@ -536,7 +535,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setPreferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setWebFontsEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings setWebManifestEnabled(boolean);
     field public static final int COLOR_SCHEME_DARK = 1;
     field public static final int COLOR_SCHEME_LIGHT = 0;
     field public static final int COLOR_SCHEME_SYSTEM = -1;
@@ -572,7 +570,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder useMultiprocess(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings.Builder webManifest(boolean);
     method @NonNull protected GeckoRuntimeSettings newSettings(@Nullable GeckoRuntimeSettings);
   }
 
