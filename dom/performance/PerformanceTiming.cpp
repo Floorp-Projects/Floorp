@@ -228,7 +228,7 @@ void PerformanceTimingData::SetPropertiesFromHttpChannel(
   aChannel->GetNativeServerTiming(mServerTiming);
 }
 
-PerformanceTiming::~PerformanceTiming() {}
+PerformanceTiming::~PerformanceTiming() = default;
 
 DOMHighResTimeStamp PerformanceTimingData::FetchStartHighRes(
     Performance* aPerformance) {

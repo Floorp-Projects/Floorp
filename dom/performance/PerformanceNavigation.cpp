@@ -21,7 +21,7 @@ PerformanceNavigation::PerformanceNavigation(Performance* aPerformance)
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
 }
 
-PerformanceNavigation::~PerformanceNavigation() {}
+PerformanceNavigation::~PerformanceNavigation() = default;
 
 JSObject* PerformanceNavigation::WrapObject(JSContext* cx,
                                             JS::Handle<JSObject*> aGivenProto) {
