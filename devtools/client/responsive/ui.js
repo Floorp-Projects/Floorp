@@ -386,11 +386,11 @@ class ResponsiveUI {
 
       // Restore screen orientation of physical device.
       await this.updateScreenOrientation("landscape-primary", 0);
-    }
 
-    if (this.isBrowserUIEnabled) {
-      await this.responsiveFront.setDocumentInRDMPane(false);
-      await this.responsiveFront.setFloatingScrollbars(false);
+      if (this.isBrowserUIEnabled) {
+        await this.responsiveFront.setDocumentInRDMPane(false);
+        await this.responsiveFront.setFloatingScrollbars(false);
+      }
     }
 
     this.tab.removeEventListener("TabClose", this);
