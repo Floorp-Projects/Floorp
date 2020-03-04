@@ -94,7 +94,7 @@ nsXMLContentSink::nsXMLContentSink()
   PodArrayZero(mText);
 }
 
-nsXMLContentSink::~nsXMLContentSink() {}
+nsXMLContentSink::~nsXMLContentSink() = default;
 
 nsresult nsXMLContentSink::Init(Document* aDoc, nsIURI* aURI,
                                 nsISupports* aContainer, nsIChannel* aChannel) {

@@ -56,8 +56,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   info("Selecting the test node");
   await selectNode("h1", inspector);
 
-  const rule = getRuleViewRuleEditor(view, 0).rule;
-  const prop = rule.textProps[0];
+  const prop = getTextProperty(view, 0, { color: "red" });
 
   info("Focusing the css property editable value");
   let editor = await focusEditableField(view, prop.editor.valueSpan);

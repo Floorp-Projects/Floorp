@@ -44,7 +44,7 @@ class WordBreaker {
   static WordBreakClass GetClass(char16_t aChar);
 
  private:
-  ~WordBreaker() {}
+  ~WordBreaker() = default;
 };
 
 }  // namespace intl

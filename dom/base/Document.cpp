@@ -125,7 +125,7 @@
 #include "mozilla/dom/StyleSheetList.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/UserActivation.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
@@ -3211,8 +3211,19 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   rv = InitFeaturePolicy(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = loadInfo->GetCookieSettings(getter_AddRefs(mCookieSettings));
+  rv = loadInfo->GetCookieJarSettings(getter_AddRefs(mCookieJarSettings));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the cookie jar settings to the window context.
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
+    if (WindowGlobalChild* wgc = inner->GetWindowGlobalChild()) {
+      net::CookieJarSettingsArgs cookieJarSettings;
+      cookieJarSettings.cookieBehavior() =
+          mCookieJarSettings->GetCookieBehavior();
+
+      wgc->WindowContext()->SetCookieJarSettings(Some(cookieJarSettings));
+    }
+  }
 
   return NS_OK;
 }
@@ -5680,7 +5691,7 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
   }
 
   if (ShouldPartitionStorage(storageAccess) &&
-      !StoragePartitioningEnabled(storageAccess, CookieSettings())) {
+      !StoragePartitioningEnabled(storageAccess, CookieJarSettings())) {
     return;
   }
 
@@ -5739,7 +5750,7 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
   }
 
   if (ShouldPartitionStorage(storageAccess) &&
-      !StoragePartitioningEnabled(storageAccess, CookieSettings())) {
+      !StoragePartitioningEnabled(storageAccess, CookieJarSettings())) {
     return;
   }
 
@@ -13369,7 +13380,7 @@ nsTArray<Element*> Document::GetFullscreenStack() const {
 }
 
 // Returns true if aDoc is in the focused tab in the active window.
-static bool IsInActiveTab(Document* aDoc) {
+bool IsInActiveTab(Document* aDoc) {
   nsCOMPtr<nsIDocShell> docshell = aDoc->GetDocShell();
   if (!docshell) {
     return false;
@@ -14999,7 +15010,7 @@ DocumentAutoplayPolicy Document::AutoplayPolicy() const {
 }
 
 void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
-  if (!CookieSettings()->GetRejectThirdPartyTrackers()) {
+  if (!CookieJarSettings()->GetRejectThirdPartyTrackers()) {
     return;
   }
 
@@ -15567,7 +15578,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Only enforce third-party checks when there is a reason to enforce them.
-  if (!CookieSettings()->GetRejectThirdPartyTrackers()) {
+  if (!CookieJarSettings()->GetRejectThirdPartyTrackers()) {
     // Step 3. If the document's frame is the main frame, resolve.
     if (IsTopLevelContentDocument()) {
       promise->MaybeResolveWithUndefined();
@@ -15612,7 +15623,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   //         user settings, anti-clickjacking heuristics, or prompting the
   //         user for explicit permission. Reject if some rule is not fulfilled.
 
-  if (CookieSettings()->GetRejectThirdPartyTrackers()) {
+  if (CookieJarSettings()->GetRejectThirdPartyTrackers()) {
     // Only do something special for third-party tracking content.
     if (StorageDisabledByAntiTracking(this, nullptr)) {
       // Note: If this has returned true, the top-level document is guaranteed
@@ -16006,20 +16017,20 @@ void Document::RecomputeLanguageFromCharset() {
   mLanguageFromCharset = std::move(language);
 }
 
-nsICookieSettings* Document::CookieSettings() {
+nsICookieJarSettings* Document::CookieJarSettings() {
   // If we are here, this is probably a javascript: URL document. In any case,
-  // we must have a nsCookieSettings. Let's create it.
-  if (!mCookieSettings) {
+  // we must have a nsCookieJarSettings. Let's create it.
+  if (!mCookieJarSettings) {
     Document* inProcessParent = GetInProcessParentDocument();
 
-    mCookieSettings =
+    mCookieJarSettings =
         inProcessParent
-            ? net::CookieSettings::Create(
-                  inProcessParent->CookieSettings()->GetCookieBehavior())
-            : net::CookieSettings::Create();
+            ? net::CookieJarSettings::Create(
+                  inProcessParent->CookieJarSettings()->GetCookieBehavior())
+            : net::CookieJarSettings::Create();
   }
 
-  return mCookieSettings;
+  return mCookieJarSettings;
 }
 
 nsIPrincipal* Document::EffectiveStoragePrincipal() const {
@@ -16046,7 +16057,7 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   // normal principal will be used.
   if (ShouldPartitionStorage(rejectedReason) &&
       !StoragePartitioningEnabled(
-          rejectedReason, const_cast<Document*>(this)->CookieSettings())) {
+          rejectedReason, const_cast<Document*>(this)->CookieJarSettings())) {
     return mActiveStoragePrincipal = NodePrincipal();
   }
 

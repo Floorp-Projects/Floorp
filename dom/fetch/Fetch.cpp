@@ -34,7 +34,7 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 
 #include "BodyExtractor.h"
 #include "EmptyBody.h"
@@ -398,7 +398,7 @@ class MainThreadFetchRunnable : public Runnable {
       // so pass false as the last argument to FetchDriver().
       fetch = new FetchDriver(mRequest, principal, loadGroup,
                               workerPrivate->MainThreadEventTarget(),
-                              workerPrivate->CookieSettings(),
+                              workerPrivate->CookieJarSettings(),
                               workerPrivate->GetPerformanceStorage(), false);
       nsAutoCString spec;
       if (proxy->GetWorkerPrivate()->GetBaseURI()) {
@@ -474,7 +474,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     nsCOMPtr<Document> doc;
     nsCOMPtr<nsILoadGroup> loadGroup;
-    nsCOMPtr<nsICookieSettings> cookieSettings;
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
     nsIPrincipal* principal;
     bool isTrackingFetch = false;
     if (window) {
@@ -485,7 +485,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
       }
       principal = doc->NodePrincipal();
       loadGroup = doc->GetDocumentLoadGroup();
-      cookieSettings = doc->CookieSettings();
+      cookieJarSettings = doc->CookieJarSettings();
 
       isTrackingFetch = doc->IsScriptTracking(cx);
     } else {
@@ -495,7 +495,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         return nullptr;
       }
 
-      cookieSettings = mozilla::net::CookieSettings::Create();
+      cookieJarSettings = mozilla::net::CookieJarSettings::Create();
     }
 
     if (!loadGroup) {
@@ -510,7 +510,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         p, observer, signalImpl, request->MozErrors());
     RefPtr<FetchDriver> fetch = new FetchDriver(
         r, principal, loadGroup, aGlobal->EventTargetFor(TaskCategory::Other),
-        cookieSettings, nullptr,  // PerformanceStorage
+        cookieJarSettings, nullptr,  // PerformanceStorage
         isTrackingFetch);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);

@@ -74,7 +74,7 @@ static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
     rv = NS_NewChannel(getter_AddRefs(channel), url,
                        nsContentUtils::GetSystemPrincipal(), secFlags,
                        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                       nullptr,    // aCookieSettings
+                       nullptr,    // aCookieJarSettings
                        nullptr,    // aPerformanceStorage
                        nullptr,    // loadGroup
                        nullptr,    // aCallbacks

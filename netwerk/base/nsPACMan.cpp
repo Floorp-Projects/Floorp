@@ -636,7 +636,7 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
                       nsContentUtils::GetSystemPrincipal(),
                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                       nsIContentPolicy::TYPE_OTHER,
-                      nullptr,  // nsICookieSettings
+                      nullptr,  // nsICookieJarSettings
                       nullptr,  // PerformanceStorage
                       nullptr,  // aLoadGroup
                       nullptr,  // aCallbacks

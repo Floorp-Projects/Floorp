@@ -103,7 +103,7 @@ function receiveProfile(profile, getSymbolTableCallback) {
     throw new Error("No browser window");
   }
   const browser = win.gBrowser;
-  Services.focus.activeWindow = win;
+  win.focus();
 
   // Allow the user to point to something other than profiler.firefox.com.
   const baseUrl = Services.prefs.getStringPref(

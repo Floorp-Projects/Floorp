@@ -50,7 +50,7 @@ class IProgressObserver : public SupportsWeakPtr<IProgressObserver> {
   }
 
  protected:
-  virtual ~IProgressObserver() {}
+  virtual ~IProgressObserver() = default;
 };
 
 }  // namespace image

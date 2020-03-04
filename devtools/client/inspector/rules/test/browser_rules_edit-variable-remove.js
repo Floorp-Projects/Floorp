@@ -30,8 +30,7 @@ add_task(async function() {
   );
 
   info("Remove the --color variable declaration");
-  const { rule } = getRuleViewRuleEditor(view, 1);
-  const prop = rule.textProps[1];
+  const prop = getTextProperty(view, 1, { "--color": "lime" });
   await removeProperty(view, prop);
   checkCSSVariableOutput(
     view,

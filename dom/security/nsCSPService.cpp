@@ -24,9 +24,9 @@ using namespace mozilla;
 
 static LazyLogModule gCspPRLog("CSP");
 
-CSPService::CSPService() {}
+CSPService::CSPService() = default;
 
-CSPService::~CSPService() {}
+CSPService::~CSPService() = default;
 
 NS_IMPL_ISUPPORTS(CSPService, nsIContentPolicy, nsIChannelEventSink)
 

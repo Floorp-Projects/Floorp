@@ -105,7 +105,7 @@ var Harness = {
       Services.prefs.setBoolPref(PREF_INSTALL_REQUIRESECUREORIGIN, false);
       Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
       Services.prefs.setBoolPref(
-        "network.cookieSettings.unblocked_for_testing",
+        "network.cookieJarSettings.unblocked_for_testing",
         true
       );
 
@@ -131,7 +131,7 @@ var Harness = {
         Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
         Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
         Services.prefs.clearUserPref(
-          "network.cookieSettings.unblocked_for_testing"
+          "network.cookieJarSettings.unblocked_for_testing"
         );
 
         Services.obs.removeObserver(self, "addon-install-started");

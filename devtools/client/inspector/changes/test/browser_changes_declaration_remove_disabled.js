@@ -23,14 +23,15 @@ add_task(async function() {
   const { document: doc, store } = selectChangesView(inspector);
 
   await selectNode("div", inspector);
-  const rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  const prop1 = getTextProperty(ruleView, 1, { color: "red" });
+  const prop2 = getTextProperty(ruleView, 1, { background: "black" });
 
   info("Using the second declaration");
-  await testRemoveValue(ruleView, store, doc, rule.textProps[1]);
+  await testRemoveValue(ruleView, store, doc, prop2);
   info("Using the first declaration");
-  await testToggle(ruleView, store, doc, rule.textProps[0]);
+  await testToggle(ruleView, store, doc, prop1);
   info("Using the first declaration");
-  await testRemoveName(ruleView, store, doc, rule.textProps[0]);
+  await testRemoveName(ruleView, store, doc, prop1);
 });
 
 async function testRemoveValue(ruleView, store, doc, prop) {

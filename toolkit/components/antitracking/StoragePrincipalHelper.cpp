@@ -20,8 +20,8 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsCOMPtr<nsICookieSettings> cs;
-  if (NS_FAILED(loadInfo->GetCookieSettings(getter_AddRefs(cs)))) {
+  nsCOMPtr<nsICookieJarSettings> cjs;
+  if (NS_FAILED(loadInfo->GetCookieJarSettings(getter_AddRefs(cjs)))) {
     return false;
   }
 
@@ -41,7 +41,7 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
   // jar.  We use the lower-level AntiTrackingCommon API here to ensure this
   // check doesn't send notifications.
   if (!ShouldPartitionStorage(rejectedReason) ||
-      !StoragePartitioningEnabled(rejectedReason, cs)) {
+      !StoragePartitioningEnabled(rejectedReason, cjs)) {
     return false;
   }
 

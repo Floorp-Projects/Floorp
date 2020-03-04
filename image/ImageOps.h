@@ -36,8 +36,8 @@ class ImageOps {
    protected:
     friend class ImageOps;
 
-    ImageBuffer() {}
-    virtual ~ImageBuffer() {}
+    ImageBuffer() = default;
+    virtual ~ImageBuffer() = default;
 
     virtual already_AddRefed<SourceBuffer> GetSourceBuffer() const = 0;
   };

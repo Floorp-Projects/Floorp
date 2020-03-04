@@ -39,7 +39,7 @@ PerformanceResourceTiming::PerformanceResourceTiming(
   }
 }
 
-PerformanceResourceTiming::~PerformanceResourceTiming() {}
+PerformanceResourceTiming::~PerformanceResourceTiming() = default;
 
 DOMHighResTimeStamp PerformanceResourceTiming::StartTime() const {
   // Force the start time to be the earliest of:

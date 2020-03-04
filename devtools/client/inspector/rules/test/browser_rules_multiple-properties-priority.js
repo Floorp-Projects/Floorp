@@ -38,34 +38,34 @@ add_task(async function() {
   );
 
   is(
-    ruleEditor.rule.textProps[0].name,
+    getTextProperty(view, 0, { color: "red" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[0].value,
+    getTextProperty(view, 0, { color: "red" }).value,
     "red",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[1].name,
+    getTextProperty(view, 0, { width: "100px" }).name,
     "width",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[1].value,
+    getTextProperty(view, 0, { width: "100px" }).value,
     "100px",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[2].name,
+    getTextProperty(view, 0, { height: "100px" }).name,
     "height",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[2].value,
+    getTextProperty(view, 0, { height: "100px" }).value,
     "100px",
     "Should have correct property value"
   );

@@ -23,7 +23,7 @@ class nsIOutputStream;
 
 class nsConverterOutputStream final : public nsIConverterOutputStream {
  public:
-  nsConverterOutputStream() {}
+  nsConverterOutputStream() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUNICHAROUTPUTSTREAM

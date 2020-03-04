@@ -2483,7 +2483,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   mHasStorageAccess = false;
   nsIURI* uri = aDocument->GetDocumentURI();
   if (newInnerWindow &&
-      aDocument->CookieSettings()->GetRejectThirdPartyTrackers() &&
+      aDocument->CookieJarSettings()->GetRejectThirdPartyTrackers() &&
       nsContentUtils::IsThirdPartyWindowOrChannel(newInnerWindow, nullptr,
                                                   uri) &&
       nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow)) {

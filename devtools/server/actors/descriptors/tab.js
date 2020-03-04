@@ -267,18 +267,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     return form;
   },
 
-  form() {
-    return {
-      actor: this.actorID,
-      title: this._getZombieTabTitle(),
-      url: this._getZombieTabUrl(),
-      id:
-        this._browser && this._browser.browsingContext
-          ? this._browser.browsingContext.id
-          : null,
-    };
-  },
-
   destroy() {
     if (this._formUpdateReject) {
       this._formUpdateReject({

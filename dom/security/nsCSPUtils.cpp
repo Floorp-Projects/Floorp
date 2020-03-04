@@ -493,7 +493,7 @@ nsresult CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
 
 nsCSPBaseSrc::nsCSPBaseSrc() : mInvalidated(false) {}
 
-nsCSPBaseSrc::~nsCSPBaseSrc() {}
+nsCSPBaseSrc::~nsCSPBaseSrc() = default;
 
 // ::permits is only called for external load requests, therefore:
 // nsCSPKeywordSrc and nsCSPHashSource fall back to this base class
@@ -526,7 +526,7 @@ nsCSPSchemeSrc::nsCSPSchemeSrc(const nsAString& aScheme) : mScheme(aScheme) {
   ToLowerCase(mScheme);
 }
 
-nsCSPSchemeSrc::~nsCSPSchemeSrc() {}
+nsCSPSchemeSrc::~nsCSPSchemeSrc() = default;
 
 bool nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce,
                              bool aWasRedirected, bool aReportOnly,
@@ -561,7 +561,7 @@ nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost)
   ToLowerCase(mHost);
 }
 
-nsCSPHostSrc::~nsCSPHostSrc() {}
+nsCSPHostSrc::~nsCSPHostSrc() = default;
 
 /*
  * Checks whether the current directive permits a specific port.
@@ -828,7 +828,7 @@ nsCSPKeywordSrc::nsCSPKeywordSrc(enum CSPKeyword aKeyword)
                "'self' should have been replaced in the parser");
 }
 
-nsCSPKeywordSrc::~nsCSPKeywordSrc() {}
+nsCSPKeywordSrc::~nsCSPKeywordSrc() = default;
 
 bool nsCSPKeywordSrc::permits(nsIURI* aUri, const nsAString& aNonce,
                               bool aWasRedirected, bool aReportOnly,
@@ -879,7 +879,7 @@ void nsCSPKeywordSrc::toString(nsAString& outStr) const {
 
 nsCSPNonceSrc::nsCSPNonceSrc(const nsAString& aNonce) : mNonce(aNonce) {}
 
-nsCSPNonceSrc::~nsCSPNonceSrc() {}
+nsCSPNonceSrc::~nsCSPNonceSrc() = default;
 
 bool nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce,
                             bool aWasRedirected, bool aReportOnly,
@@ -946,7 +946,7 @@ nsCSPHashSrc::nsCSPHashSrc(const nsAString& aAlgo, const nsAString& aHash)
   ToLowerCase(mAlgorithm);
 }
 
-nsCSPHashSrc::~nsCSPHashSrc() {}
+nsCSPHashSrc::~nsCSPHashSrc() = default;
 
 bool nsCSPHashSrc::allows(enum CSPKeyword aKeyword,
                           const nsAString& aHashOrNonce,
@@ -998,7 +998,7 @@ void nsCSPHashSrc::toString(nsAString& outStr) const {
 
 nsCSPReportURI::nsCSPReportURI(nsIURI* aURI) : mReportURI(aURI) {}
 
-nsCSPReportURI::~nsCSPReportURI() {}
+nsCSPReportURI::~nsCSPReportURI() = default;
 
 bool nsCSPReportURI::visit(nsCSPSrcVisitor* aVisitor) const { return false; }
 
@@ -1017,7 +1017,7 @@ nsCSPSandboxFlags::nsCSPSandboxFlags(const nsAString& aFlags) : mFlags(aFlags) {
   ToLowerCase(mFlags);
 }
 
-nsCSPSandboxFlags::~nsCSPSandboxFlags() {}
+nsCSPSandboxFlags::~nsCSPSandboxFlags() = default;
 
 bool nsCSPSandboxFlags::visit(nsCSPSrcVisitor* aVisitor) const { return false; }
 
@@ -1251,7 +1251,7 @@ nsCSPChildSrcDirective::nsCSPChildSrcDirective(CSPDirective aDirective)
       mRestrictFrames(false),
       mRestrictWorkers(false) {}
 
-nsCSPChildSrcDirective::~nsCSPChildSrcDirective() {}
+nsCSPChildSrcDirective::~nsCSPChildSrcDirective() = default;
 
 bool nsCSPChildSrcDirective::restrictsContentType(
     nsContentPolicyType aContentType) const {
@@ -1281,7 +1281,7 @@ bool nsCSPChildSrcDirective::equals(CSPDirective aDirective) const {
 nsCSPScriptSrcDirective::nsCSPScriptSrcDirective(CSPDirective aDirective)
     : nsCSPDirective(aDirective), mRestrictWorkers(false) {}
 
-nsCSPScriptSrcDirective::~nsCSPScriptSrcDirective() {}
+nsCSPScriptSrcDirective::~nsCSPScriptSrcDirective() = default;
 
 bool nsCSPScriptSrcDirective::restrictsContentType(
     nsContentPolicyType aContentType) const {
@@ -1306,7 +1306,7 @@ nsBlockAllMixedContentDirective::nsBlockAllMixedContentDirective(
     CSPDirective aDirective)
     : nsCSPDirective(aDirective) {}
 
-nsBlockAllMixedContentDirective::~nsBlockAllMixedContentDirective() {}
+nsBlockAllMixedContentDirective::~nsBlockAllMixedContentDirective() = default;
 
 void nsBlockAllMixedContentDirective::toString(nsAString& outStr) const {
   outStr.AppendASCII(CSP_CSPDirectiveToString(
@@ -1323,7 +1323,7 @@ void nsBlockAllMixedContentDirective::getDirName(nsAString& outStr) const {
 nsUpgradeInsecureDirective::nsUpgradeInsecureDirective(CSPDirective aDirective)
     : nsCSPDirective(aDirective) {}
 
-nsUpgradeInsecureDirective::~nsUpgradeInsecureDirective() {}
+nsUpgradeInsecureDirective::~nsUpgradeInsecureDirective() = default;
 
 void nsUpgradeInsecureDirective::toString(nsAString& outStr) const {
   outStr.AppendASCII(CSP_CSPDirectiveToString(
