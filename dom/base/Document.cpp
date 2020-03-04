@@ -14688,19 +14688,14 @@ void Document::NotifyIntersectionObservers() {
 }
 
 DOMIntersectionObserver* Document::GetLazyLoadImageObserver() {
-  Document* rootDoc = nsContentUtils::GetRootDocument(this);
-  MOZ_ASSERT(rootDoc);
-
-  if (rootDoc->mLazyLoadImageObserver) {
-    return rootDoc->mLazyLoadImageObserver;
+  if (!mLazyLoadImageObserver) {
+    if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
+      mLazyLoadImageObserver =
+          DOMIntersectionObserver::CreateLazyLoadObserver(inner);
+    }
   }
 
-  if (nsPIDOMWindowInner* inner = rootDoc->GetInnerWindow()) {
-    rootDoc->mLazyLoadImageObserver =
-        DOMIntersectionObserver::CreateLazyLoadObserver(inner);
-  }
-
-  return rootDoc->mLazyLoadImageObserver;
+  return mLazyLoadImageObserver;
 }
 
 static CallState NotifyLayerManagerRecreatedCallback(Document& aDocument,
