@@ -25,6 +25,10 @@ class AboutWelcome extends React.PureComponent {
 
   componentDidMount() {
     this.fetchFxAFlowUri();
+    window.AWSendEventTelemetry({
+      event: "IMPRESSION",
+      message_id: "SIMPLIFIED_ABOUT_WELCOME",
+    });
   }
 
   handleStartBtnClick() {
