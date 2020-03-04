@@ -10377,3 +10377,52 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList) {
 
   return false;
 }
+
+/* static */
+ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
+    nsIScreen* aScreen, const ScreenIntMargin& aSafeAreaInsets,
+    const LayoutDeviceIntRect& aWindowRect) {
+  // This calculates safe area insets of window from screen rectangle, window
+  // rectangle and safe area insets of screen.
+  //
+  // +----------------------------------------+ <-- screen
+  // |  +-------------------------------+  <------- window
+  // |  | window's safe area inset top) |     |
+  // +--+-------------------------------+--+  |
+  // |  |                               |  |<------ safe area rectangle of
+  // |  |                               |  |  |     screen
+  // +--+-------------------------------+--+  |
+  // |  |window's safe area inset bottom|     |
+  // |  +-------------------------------+     |
+  // +----------------------------------------+
+  //
+  ScreenIntMargin windowSafeAreaInsets;
+
+  int32_t screenLeft, screenTop, screenWidth, screenHeight;
+  nsresult rv =
+      aScreen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return windowSafeAreaInsets;
+  }
+
+  // Screen's rect of safe area
+  LayoutDeviceIntRect safeAreaRect(
+      screenLeft + aSafeAreaInsets.left, screenTop + aSafeAreaInsets.top,
+      screenWidth - aSafeAreaInsets.right - aSafeAreaInsets.left,
+      screenHeight - aSafeAreaInsets.bottom - aSafeAreaInsets.top);
+  // window's rect of safe area
+  safeAreaRect = safeAreaRect.Intersect(aWindowRect);
+
+  windowSafeAreaInsets.top = std::max(safeAreaRect.y - aWindowRect.y, 0);
+  windowSafeAreaInsets.left = std::max(safeAreaRect.x - aWindowRect.x, 0);
+  windowSafeAreaInsets.right =
+      std::max((aWindowRect.x + aWindowRect.width) -
+                   (safeAreaRect.x + safeAreaRect.width),
+               0);
+  windowSafeAreaInsets.bottom =
+      std::max(aWindowRect.y + aWindowRect.height -
+                   (safeAreaRect.y + safeAreaRect.height),
+               0);
+
+  return windowSafeAreaInsets;
+}
