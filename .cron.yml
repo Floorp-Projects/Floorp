@@ -197,11 +197,11 @@ jobs:
           - {weekday: 'Monday', hour: 10, minute: 0}
           - {weekday: 'Thursday', hour: 10, minute: 0}
 
-    - name: pipfile-update
+    - name: python-dependency-update
       job:
           type: decision-task
           treeherder-symbol: Nfile
-          target-tasks-method: pipfile_update
+          target-tasks-method: python_dependency_update
       run-on-projects:
           - mozilla-central
       when:
