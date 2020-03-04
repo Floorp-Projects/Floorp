@@ -201,20 +201,26 @@ nsresult SimpleHttpChannel::ResolveProxy() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
-
-  nsCOMPtr<nsIProtocolProxyService> pps =
-      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), mURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER);
   if (NS_SUCCEEDED(rv)) {
-    // using the nsIProtocolProxyService2 allows a minor performance
-    // optimization, but if an add-on has only provided the original interface
-    // then it is ok to use that version.
-    nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
-    if (pps2) {
-      rv = pps2->AsyncResolve2(this, mProxyResolveFlags, this, nullptr,
+    nsCOMPtr<nsIProtocolProxyService> pps =
+        do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      // using the nsIProtocolProxyService2 allows a minor performance
+      // optimization, but if an add-on has only provided the original interface
+      // then it is ok to use that version.
+      nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
+      if (pps2) {
+        rv = pps2->AsyncResolve2(channel, mProxyResolveFlags, this, nullptr,
+                                 getter_AddRefs(mProxyRequest));
+      } else {
+        rv = pps->AsyncResolve(channel, mProxyResolveFlags, this, nullptr,
                                getter_AddRefs(mProxyRequest));
-    } else {
-      rv = pps->AsyncResolve(static_cast<nsIChannel*>(this), mProxyResolveFlags,
-                             this, nullptr, getter_AddRefs(mProxyRequest));
+      }
     }
   }
 
@@ -240,13 +246,11 @@ SimpleHttpChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
 
   if (!mCurrentEventTarget->IsOnCurrentThread()) {
     RefPtr<SimpleHttpChannel> self = this;
-    nsCOMPtr<nsICancelable> req = request;
-    nsCOMPtr<nsIChannel> chan = channel;
     nsCOMPtr<nsIProxyInfo> info = pi;
     return mCurrentEventTarget->Dispatch(
         NS_NewRunnableFunction("SimpleHttpChannel::OnProxyAvailable",
-                               [self, req, chan, info, status]() {
-                                 self->OnProxyAvailable(req, chan, info,
+                               [self, info, status]() {
+                                 self->OnProxyAvailable(nullptr, nullptr, info,
                                                         status);
                                }),
         NS_DISPATCH_NORMAL);
@@ -286,19 +290,7 @@ const nsCString& SimpleHttpChannel::GetTopWindowOrigin() {
     return mTopWindowOrigin;
   }
 
-  nsCOMPtr<nsIURI> topWindowURI;
-  nsresult rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-  bool isDocument = false;
-  if (NS_FAILED(rv) && NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
-      isDocument) {
-    // For top-level documents, use the document channel's origin to compute
-    // the unique storage space identifier instead of the top Window URI.
-    rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
-    NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
-  }
-
-  rv = nsContentUtils::GetASCIIOrigin(topWindowURI ? topWindowURI : mURI,
-                                      mTopWindowOrigin);
+  nsresult rv = nsContentUtils::GetASCIIOrigin(mURI, mTopWindowOrigin);
   NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
 
   mTopWindowOriginComputed = true;
@@ -840,13 +832,10 @@ void SimpleHttpChannel::ProcessAltService() {
     proxyInfo = do_QueryInterface(mProxyInfo);
   }
 
-  OriginAttributes originAttributes;
-  NS_GetOriginAttributes(this, originAttributes);
-
   AltSvcMapping::ProcessHeader(
       altSvc, scheme, originHost, originPort, mUsername, GetTopWindowOrigin(),
       mPrivateBrowsing, IsIsolated(), callbacks, proxyInfo,
-      mCaps & NS_HTTP_DISALLOW_SPDY, originAttributes);
+      mCaps & NS_HTTP_DISALLOW_SPDY, OriginAttributes());
 }
 
 NS_IMETHODIMP
