@@ -30,7 +30,7 @@ add_task(async function() {
   const { inspector, panel } = await openCompatibilityView();
 
   info("Update the target browsers for this test");
-  inspector.store.dispatch(updateTargetBrowsers(TARGET_BROWSERS));
+  await inspector.store.dispatch(updateTargetBrowsers(TARGET_BROWSERS));
 
   info("Check the content of the issue item");
   const expectedIssues = [
