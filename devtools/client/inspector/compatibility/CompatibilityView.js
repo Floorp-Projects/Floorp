@@ -52,7 +52,19 @@ class CompatibilityView {
   }
 
   _init() {
-    const compatibilityApp = new CompatibilityApp();
+    const {
+      onShowBoxModelHighlighterForNode: showBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.inspector.getCommonComponentProps();
+    const {
+      onHideBoxModelHighlighter: hideBoxModelHighlighter,
+    } = this.inspector.getPanel("boxmodel").getComponentProps();
+
+    const compatibilityApp = new CompatibilityApp({
+      hideBoxModelHighlighter,
+      showBoxModelHighlighterForNode,
+      setSelectedNode,
+    });
 
     this.provider = createElement(
       Provider,

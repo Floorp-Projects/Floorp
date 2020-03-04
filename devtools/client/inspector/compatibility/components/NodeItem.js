@@ -6,6 +6,7 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const {
   translateNodeFrontToGrip,
@@ -20,11 +21,19 @@ class NodeItem extends PureComponent {
   static get propTypes() {
     return {
       node: Types.node.isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { node } = this.props;
+    const {
+      node,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
 
     return dom.li(
       {},
@@ -32,6 +41,12 @@ class NodeItem extends PureComponent {
         defaultRep: ElementNode,
         mode: MODE.TINY,
         object: translateNodeFrontToGrip(node),
+        onDOMNodeClick: () => {
+          setSelectedNode(node);
+          hideBoxModelHighlighter();
+        },
+        onDOMNodeMouseOut: () => hideBoxModelHighlighter(),
+        onDOMNodeMouseOver: () => showBoxModelHighlighterForNode(node),
       })
     );
   }
