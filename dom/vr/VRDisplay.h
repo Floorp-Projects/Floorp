@@ -54,7 +54,7 @@ class VRFieldOfView final : public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
-  virtual ~VRFieldOfView() {}
+  virtual ~VRFieldOfView() = default;
 
   nsCOMPtr<nsISupports> mParent;
 
@@ -85,7 +85,7 @@ class VRDisplayCapabilities final : public nsWrapperCache {
   uint32_t MaxLayers() const;
 
  protected:
-  ~VRDisplayCapabilities() {}
+  ~VRDisplayCapabilities() = default;
   nsCOMPtr<nsISupports> mParent;
   gfx::VRDisplayCapabilityFlags mFlags;
 };
