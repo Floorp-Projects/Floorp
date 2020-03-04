@@ -52,7 +52,6 @@ NS_INTERFACE_MAP_BEGIN(Http3Session)
   NS_INTERFACE_MAP_ENTRY(nsAHttpConnection)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(Http3Session)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
 NS_INTERFACE_MAP_END
 
 Http3Session::Http3Session()
@@ -193,20 +192,30 @@ nsresult Http3Session::ProcessInput() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mSegmentReaderWriter);
 
-  LOG(("Http3Session::ProcessInput writer=%p [this=%p]",
-       mSegmentReaderWriter.get(), this));
+  LOG(("Http3Session::ProcessInput writer=%p [this=%p state=%d]",
+       mSegmentReaderWriter.get(), this, mState));
 
   uint8_t packet[UDP_MAX_PACKET_SIZE];
   uint32_t read = 0;
-  nsresult rv = mSegmentReaderWriter->OnWriteSegment(
-      (char*)packet, UDP_MAX_PACKET_SIZE, &read);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsresult rv = NS_OK;
+  // Read from socket until NS_BASE_STREAM_WOULD_BLOCK or another error.
+  do {
+    rv = mSegmentReaderWriter->OnWriteSegment((char*)packet,
+                                              UDP_MAX_PACKET_SIZE, &read);
+    if (NS_SUCCEEDED(rv)) {
+      mHttp3Connection->ProcessInput(packet, read);
+    }
+  } while (NS_SUCCEEDED(rv));
+  // Call ProcessHttp3 if there has not been any socket error.
+  // NS_BASE_STREAM_WOULD_BLOCK means that there is no more date to read.
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    mHttp3Connection->ProcessHttp3();
+    return NS_OK;
   }
-  mHttp3Connection->ProcessInput(packet, read);
-  mHttp3Connection->ProcessHttp3();
-  LOG(("Http3Session::Process status: state=%d [this=%p]", mState, this));
-  return NS_OK;
+
+  LOG(("Http3Session::ProcessInput error=%" PRIx32 " [this=%p]",
+       static_cast<uint32_t>(rv), this));
+  return rv;
 }
 
 nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
@@ -243,35 +252,35 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
           continue;
         }
 
-        nsresult rv = stream->WriteSegments(this, count, countWritten);
+        uint32_t countWrittenSingle = 0;
+        nsresult rv = stream->WriteSegments(this, count, &countWrittenSingle);
+        *countWritten += countWrittenSingle;
+
         if (ASpdySession::SoftStreamError(rv)) {
           CloseStream(stream, (rv == NS_BINDING_RETARGETED)
                                   ? NS_BINDING_RETARGETED
                                   : NS_OK);
           *again = false;
-          rv = ResumeRecv();
-          if (NS_FAILED(rv)) {
-            LOG3(("ResumeRecv returned code 0x%" PRIx32 ".",
-                  static_cast<uint32_t>(rv)));
-          }
-          return NS_OK;
+          Unused << ResumeRecv();
+        } else if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+          return rv;
         }
 
         if (stream->RecvdFin() && !stream->Done() && NS_SUCCEEDED(rv)) {
           // In RECEIVED_FIN state we need to give the httpTransaction the info
           // that the transaction is closed.
-          rv = stream->WriteSegments(this, count, countWritten);
+          uint32_t countWrittenSingle = 0;
+          rv = stream->WriteSegments(this, count, &countWrittenSingle);
+          *countWritten += countWrittenSingle;
+
           if (ASpdySession::SoftStreamError(rv)) {
             CloseStream(stream, (rv == NS_BINDING_RETARGETED)
                                     ? NS_BINDING_RETARGETED
                                     : NS_OK);
             *again = false;
-            rv = ResumeRecv();
-            if (NS_FAILED(rv)) {
-              LOG3(("ResumeRecv returned code 0x%" PRIx32 ".",
-                    static_cast<uint32_t>(rv)));
-            }
-            return NS_OK;
+            Unused << ResumeRecv();
+          } else if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+            return rv;
           }
         }
 
@@ -281,16 +290,8 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
                 this, stream.get(), stream->StreamId()));
           CloseStream(stream, NS_OK);
         }
-
-        if (NS_FAILED(rv)) {
-          LOG3(("Http3Session::ProcessEvents failed rv=0x%" PRIx32
-                " [this=%p].",
-                static_cast<uint32_t>(rv), this));
-          // maybe just blocked reading from network
-          if (rv == NS_BASE_STREAM_WOULD_BLOCK) rv = NS_OK;
-        }
-        return rv;
-      } break;
+        break;
+      }
       case Http3Event::Tag::Reset:
         LOG(("Http3Session::ProcessEvents - Reset"));
         ResetRecvd(event.reset.stream_id, event.reset.error);
@@ -316,6 +317,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
         mState = CONNECTED;
         SetSecInfo();
         mSocketControl->HandshakeCompleted();
+        MaybeResumeSend();
         break;
       case Http3Event::Tag::GoawayReceived:
         LOG(("Http3Session::ProcessEvents - GoawayReceived"));
@@ -328,15 +330,17 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
           mError = NS_ERROR_NET_HTTP3_PROTOCOL_ERROR;
           CloseConnectionTelemetry(event.connection_closing.error, true);
         }
-        CloseInternal(false);
+        return mError;
         break;
       case Http3Event::Tag::ConnectionClosed:
         LOG(("Http3Session::ProcessEvents - ConnectionClosed"));
-        if (NS_SUCCEEDED(mError) && !IsClosing()) {
-          mError = NS_ERROR_NET_HTTP3_PROTOCOL_ERROR;
+        if (NS_SUCCEEDED(mError)) {
+          mError = NS_ERROR_NET_TIMEOUT;
           CloseConnectionTelemetry(event.connection_closed.error, false);
         }
         mIsClosedByNeqo = true;
+        LOG(("Http3Session::ProcessEvents - ConnectionClosed error=%" PRIx32,
+             static_cast<uint32_t>(mError)));
         // We need to return here and let HttpConnectionUDP close the session.
         return mError;
         break;
@@ -349,30 +353,6 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
   *again = false;
   Unused << ResumeRecv();
   return NS_OK;
-}
-
-// This function is used to drive quic handshake.
-nsresult Http3Session::Process() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  nsresult rv = ProcessInput();
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-    return rv;
-  }
-
-  bool notUsed;
-  uint32_t n = 0;
-  rv = ProcessEvents(nsIOService::gDefaultSegmentSize, &n, &notUsed);
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-    return rv;
-  }
-
-  rv = ProcessOutput();
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-    return rv;
-  }
-
-  n = 0;
-  return ProcessEvents(nsIOService::gDefaultSegmentSize, &n, &notUsed);
 }
 
 nsresult Http3Session::ProcessOutput() {
@@ -406,8 +386,8 @@ nsresult Http3Session::ProcessOutput() {
   uint64_t timeout = mHttp3Connection->ProcessOutput();
 
   // Maybe get new packets to send.
-  nsresult getDataRv = mHttp3Connection->GetDataToSend(mPacketToSend);
-  while (NS_SUCCEEDED(getDataRv) && mPacketToSend.Length()) {
+  while (NS_SUCCEEDED(mHttp3Connection->GetDataToSend(mPacketToSend))) {
+    MOZ_ASSERT(mPacketToSend.Length());
     LOG(("Http3Session::ProcessOutput sending packet with %u bytes [this=%p].",
          (uint32_t)mPacketToSend.Length(), this));
     uint32_t written = 0;
@@ -421,12 +401,15 @@ nsresult Http3Session::ProcessOutput() {
         if (mConnection) {
           Unused << mConnection->ResumeSend();
         }
+        SetupTimer(timeout);
       }
-      break;
+      // Ok the socket is blocked or there is an error, return from here,
+      // we do not need to set a timer if error is not
+      // NS_BASE_STREAM_WOULD_BLOCK, i.e. we are closing the connection.
+      return rv;
     }
     MOZ_ASSERT(written == mPacketToSend.Length());
     mPacketToSend.TruncateLength(0);
-    getDataRv = mHttp3Connection->GetDataToSend(mPacketToSend);
   }
 
   SetupTimer(timeout);
@@ -434,6 +417,9 @@ nsresult Http3Session::ProcessOutput() {
 }
 
 // This is only called when timer expires.
+// It is called by HttpConnectionUDP::OnQuicTimeout.
+// If tihs function returns an error OnQuicTimeout will handle the error
+// properly and close the connection.
 nsresult Http3Session::ProcessOutputAndEvents() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mHttp3Connection->ProcessTimer();
@@ -444,18 +430,7 @@ nsresult Http3Session::ProcessOutputAndEvents() {
   mHttp3Connection->ProcessHttp3();
   bool notUsed;
   uint32_t n = 0;
-  rv = ProcessEvents(nsIOService::gDefaultSegmentSize, &n, &notUsed);
-  if (NS_FAILED(rv)) {
-    // Now we can remove all references and Http3Session will be destroyed.
-    if (mTimer) {
-      mTimer->Cancel();
-    }
-    mConnection = nullptr;
-    mSocketTransport = nullptr;
-    mSegmentReaderWriter = nullptr;
-    mState = CLOSED;
-  }
-  return NS_OK;
+  return ProcessEvents(nsIOService::gDefaultSegmentSize, &n, &notUsed);
 }
 
 void Http3Session::SetupTimer(uint64_t aTimeout) {
@@ -466,21 +441,14 @@ void Http3Session::SetupTimer(uint64_t aTimeout) {
     mTimer = NS_NewTimer();
   }
 
-  if (!mTimer || NS_FAILED(mTimer->InitWithCallback(this, aTimeout,
-                                                    nsITimer::TYPE_ONE_SHOT))) {
-    NS_DispatchToCurrentThread(
-        NewRunnableMethod("net::Http3Session::ProcessOutputAndEvents", this,
-                          &Http3Session::ProcessOutputAndEvents));
+  if (!mTimer ||
+      NS_FAILED(mTimer->InitWithNamedFuncCallback(
+          &HttpConnectionUDP::OnQuicTimeout, mSegmentReaderWriter, aTimeout,
+          nsITimer::TYPE_ONE_SHOT, "net::HttpConnectionUDP::OnQuicTimeout"))) {
+    NS_DispatchToCurrentThread(NewRunnableMethod(
+        "net::HttpConnectionUDP::OnQuicTimeoutExpired", mSegmentReaderWriter,
+        &HttpConnectionUDP::OnQuicTimeoutExpired));
   }
-}
-
-NS_IMETHODIMP
-Http3Session::Notify(nsITimer* aTimer) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(aTimer == mTimer, "wrong timer");
-  LOG(("Http3Session::Notify [this=%p].", this));
-  Unused << ProcessOutputAndEvents();
-  return NS_OK;
 }
 
 bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
@@ -519,14 +487,6 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   mStreamTransactionHash.Put(aHttpTransaction, RefPtr{stream});
 
   mReadyForWrite.Push(stream);
-
-  if (mState == INITIALIZING) {
-    // Don't call ReadSegments yet, wait untill handshake is done or fails.
-    return true;
-  }
-  // Kick off the SYN transmit without waiting for the poll loop
-  uint32_t countRead;
-  Unused << ReadSegments(nullptr, kDefaultReadAmount, &countRead);
 
   return true;
 }
@@ -721,63 +681,89 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
 
   *countRead = 0;
 
-  Http3Stream* stream = static_cast<Http3Stream*>(mReadyForWrite.PopFront());
-  if (!stream) {
+  //   1) go through all streams/transactions that are ready to write and
+  //      write their data into quic streams (no network write yet).
+  //   2) call ProcessOutput that will loop until all available packets are
+  //      written to a socket or the socket returns an error code.
+  //   3) if we still have streams ready to write call ResumeSend()(we may
+  //      still have such streams because on an stream error we return earlier
+  //      to let the error be handled).
+
+  nsresult rv = NS_OK;
+  Http3Stream* stream = nullptr;
+
+  // Step 1)
+  while (
+      (mState ==
+       CONNECTED) && // Do not send transaction data untill we are connected.
+      (stream = static_cast<Http3Stream*>(mReadyForWrite.PopFront()))) {
+
     LOG(
-        ("Http3Session::ReadSegmentsAgain we do not have a stream ready to "
-         "write."));
-    ProcessOutput();
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
+        ("Http3Session::ReadSegmentsAgain call ReadSegments from stream=%p "
+         "[this=%p]",
+         stream, this));
 
-  LOG(
-      ("Http3Session::ReadSegmentsAgain call ReadSegments from stream=%p "
-       "[this=%p]",
-       stream, this));
-  nsresult rv = stream->ReadSegments(this, count, countRead);
+    uint32_t countReadSingle = 0;
+    do {
+      countReadSingle = 0;
+      rv = stream->ReadSegments(this, count, &countReadSingle);
+      *countRead += countReadSingle;
 
-  if (stream->RequestBlockedOnRead()) {
-    // We are blocked waiting for input - either more http headers or
-    // any request body data. When more data from the request stream
-    // becomes available the httptransaction will call conn->ResumeSend().
+      // Exit when:
+      //   1) RequestBlockedOnRead is true -> We are blocked waiting for input
+      //      - either more http headers or any request body data. When more
+      //      data from the request stream becomes available the
+      //      httptransaction will call conn->ResumeSend().
+      //   2) An error happens -> on an stream error we return earlier to let
+      //      the error be handled.
+      //   3) *countRead == 0 -> httptransaction is done writing data.
+    } while (!stream->RequestBlockedOnRead() && NS_SUCCEEDED(rv) &&
+             (countReadSingle > 0));
 
-    LOG3(("Http3Session::ReadSegments %p dealing with block on read", this));
-
-    // call readsegments again if there are other streams ready
-    // to run in this session
-    if (mReadyForWrite.GetSize() > 0) {
-      rv = NS_OK;
-    } else {
-      rv = NS_BASE_STREAM_WOULD_BLOCK;
-    }
-
-  } else if (NS_FAILED(rv)) {
-    LOG3(("Http3Session::ReadSegmentsAgain %p returns error code 0x%" PRIx32,
-          this, static_cast<uint32_t>(rv)));
-    if (rv != NS_BASE_STREAM_WOULD_BLOCK) {
-      CloseStream(stream, rv);
-      if (ASpdySession::SoftStreamError(rv)) {
-        LOG3(("Http3Session::ReadSegments %p soft error override\n", this));
-        *again = false;
+    // on an stream error we return earlier to let the error be handled.
+    if (NS_FAILED(rv)) {
+      LOG3(("Http3Session::ReadSegmentsAgain %p returns error code 0x%" PRIx32,
+            this, static_cast<uint32_t>(rv)));
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        // TODO handle NS_BASE_STREAM_WOULD_BLOCK, i.e. handle block on
+        // max_stream_data
         rv = NS_OK;
+      } else if (ASpdySession::SoftStreamError(rv)) {
+        CloseStream(stream, rv);
+        LOG3(("Http3Session::ReadSegments %p soft error override\n", this));
+        rv = NS_OK;
+      } else {
+        break;
       }
     }
-  } else if (*countRead > 0) {
-    mReadyForWrite.Push(stream);
   }
 
-  // Call neqo-transaction.
-  ProcessOutput();
-
-  if (mConnection) {
-    Unused << mConnection->ResumeRecv();
+  if (NS_SUCCEEDED(rv)) {
+    // Step 2:
+    // Call actuall network write.
+    rv = ProcessOutput();
   }
-  // TODO block on max_stream_data
 
-  if ((mReadyForWrite.GetSize() > 0) && mConnection) {
+  if (NS_SUCCEEDED(rv)) {
+    if (mConnection) {
+      Unused << mConnection->ResumeRecv();
+    }
+
+    // Step 3:
+    MaybeResumeSend();
+  }
+
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    rv = NS_OK;
+  }
+
+  return rv;
+}
+
+void Http3Session::MaybeResumeSend() {
+  if ((mReadyForWrite.GetSize() > 0) && (mState == CONNECTED) && mConnection) {
     Unused << mConnection->ResumeSend();
   }
-  return rv;
 }
 
 nsresult Http3Session::WriteSegments(nsAHttpSegmentWriter* writer,
@@ -790,37 +776,42 @@ nsresult Http3Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
                                           uint32_t count,
                                           uint32_t* countWritten, bool* again) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (mState == CLOSED) return NS_ERROR_FAILURE;
+  *again = false;
 
   nsresult rv = ProcessInput();
   if (NS_FAILED(rv)) {
     LOG3(("Http3Session %p processInput returns 0x%" PRIx32 "\n", this,
           static_cast<uint32_t>(rv)));
-    // maybe just blocked reading from network
-    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      rv = NS_OK;
-    }
     return rv;
   }
   rv = ProcessEvents(count, countWritten, again);
-  if (NS_SUCCEEDED(rv) && mConnection) {
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (mConnection) {
     Unused << mConnection->ResumeRecv();
   }
 
+  // Update timeout and check for new packets to be written.
+  // We call ResumeSend to trigger writes if needed.
   uint64_t timeout = mHttp3Connection->ProcessOutput();
 
-  // Check if we have datagrams to send. If we have let's poll for writing.
-  if (mConnection && mHttp3Connection->HasDataToSend()) {
+  if (mHttp3Connection->HasDataToSend() && mConnection) {
     Unused << mConnection->ResumeSend();
   }
   SetupTimer(timeout);
-  return rv;
+
+  return NS_OK;
 }
 
 void Http3Session::Close(nsresult aReason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  mError = aReason;
-  CloseInternal(true);
+  if (NS_FAILED(mError)) {
+    CloseInternal(false);
+  } else {
+    mError = aReason;
+    CloseInternal(true);
+  }
 
   // If necko closes connection, this will map to "closing" key and 37 in the
   // graph.
@@ -839,6 +830,9 @@ void Http3Session::Close(nsresult aReason) {
     mSocketTransport = nullptr;
     mSegmentReaderWriter = nullptr;
     mState = CLOSED;
+  }
+  if (mConnection) {
+    Unused << mConnection->ResumeSend();
   }
 }
 
