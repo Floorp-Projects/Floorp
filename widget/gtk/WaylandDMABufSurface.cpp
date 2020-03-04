@@ -245,6 +245,8 @@ bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     mGbmBufferObject =
         nsGbmLib::Create(display->GetGbmDevice(), mWidth, mHeight,
                          mGmbFormat->mFormat, mGbmBufferFlags);
+
+    mBufferModifier = DRM_FORMAT_MOD_INVALID;
   }
 
   if (!mGbmBufferObject) {
@@ -532,10 +534,10 @@ void* WaylandDMABufSurfaceRGBA::MapInternal(uint32_t aX, uint32_t aY,
     NS_WARNING("We should not map dmabuf surfaces with modifiers!");
   }
 
-  void* map_data = nullptr;
   mMappedRegionStride = 0;
-  mMappedRegion = nsGbmLib::Map(mGbmBufferObject, aX, aY, aWidth, aHeight,
-                                aGbmFlags, &mMappedRegionStride, &map_data);
+  mMappedRegion =
+      nsGbmLib::Map(mGbmBufferObject, aX, aY, aWidth, aHeight, aGbmFlags,
+                    &mMappedRegionStride, &mMappedRegionData);
   if (aStride) {
     *aStride = mMappedRegionStride;
   }
@@ -565,8 +567,9 @@ void* WaylandDMABufSurfaceRGBA::Map(uint32_t* aStride) {
 
 void WaylandDMABufSurfaceRGBA::Unmap() {
   if (mMappedRegion) {
-    nsGbmLib::Unmap(mGbmBufferObject, mMappedRegion);
+    nsGbmLib::Unmap(mGbmBufferObject, mMappedRegionData);
     mMappedRegion = nullptr;
+    mMappedRegionData = nullptr;
     mMappedRegionStride = 0;
   }
 }
