@@ -1598,6 +1598,73 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mSizeState = mSizeMode;
 }
 
+static int32_t GdkX11ScreenGetNumberOfDesktops(GdkScreen* screen) {
+  static auto sGdkX11ScreenGetNumberOfDesktops = (int32_t(*)(GdkScreen*))dlsym(
+      RTLD_DEFAULT, "gdk_x11_screen_get_number_of_desktops");
+
+  if (MOZ_UNLIKELY(!sGdkX11ScreenGetNumberOfDesktops)) {
+    LOG(("    gdk_x11_screen_get_number_of_desktops is not available!\n"));
+    return 0;
+  }
+
+  return (*sGdkX11ScreenGetNumberOfDesktops)(screen);
+}
+
+static uint32_t GdkX11WindowGetDesktop(GdkWindow* window) {
+  static auto sGdkX11WindowGetDesktop = (uint32_t(*)(GdkWindow*))dlsym(
+      RTLD_DEFAULT, "gdk_x11_window_get_desktop");
+
+  if (MOZ_UNLIKELY(!sGdkX11WindowGetDesktop)) {
+    LOG(("    gdk_x11_window_get_desktop is not available!\n"));
+    return 1;
+  }
+
+  return (*sGdkX11WindowGetDesktop)(window);
+}
+
+static void GdkX11WindowMoveToDesktop(GdkWindow* window, int32_t desktop) {
+  static auto sGdkX11WindowMoveToDesktop = (void (*)(GdkWindow*, int32_t))dlsym(
+      RTLD_DEFAULT, "gdk_x11_window_move_to_desktop");
+
+  if (MOZ_UNLIKELY(!sGdkX11WindowMoveToDesktop)) {
+    LOG(("    gdk_x11_window_move_to_desktop is not available!\n"));
+    return;
+  }
+
+  (*sGdkX11WindowMoveToDesktop)(window, desktop);
+}
+
+int32_t nsWindow::GetWorkspaceID() {
+  if (!mIsX11Display) {
+    return 0;
+  }
+  // Get the gdk window for this widget.
+  GdkWindow* gdk_window = mGdkWindow;
+  if (!gdk_window) {
+    return 0;
+  }
+
+  return GdkX11WindowGetDesktop(gdk_window);
+}
+
+void nsWindow::MoveToWorkspace(int32_t workspaceID) {
+  if (!workspaceID || !mIsX11Display) {
+    return;
+  }
+
+  // Get the gdk window for this widget.
+  GdkWindow* gdk_window = mGdkWindow;
+  if (!gdk_window) {
+    return;
+  }
+  GdkScreen* screen = gdk_window_get_screen(gdk_window);
+  if (workspaceID > GdkX11ScreenGetNumberOfDesktops(screen)) {
+    return;
+  }
+
+  GdkX11WindowMoveToDesktop(gdk_window, workspaceID);
+}
+
 typedef void (*SetUserTimeFunc)(GdkWindow* aWindow, guint32 aTimestamp);
 
 static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow) {
