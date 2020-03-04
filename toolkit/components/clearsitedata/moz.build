@@ -12,6 +12,11 @@ UNIFIED_SOURCES += [
     'ClearSiteData.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/netwerk/base',
+    '/netwerk/protocol/http',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 with Files('**'):
