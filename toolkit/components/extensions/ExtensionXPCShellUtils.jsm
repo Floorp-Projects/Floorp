@@ -16,9 +16,6 @@ const { ExtensionUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 // Windowless browsers can create documents that rely on XUL Custom Elements:
 ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
@@ -483,16 +480,6 @@ class ExtensionWrapper {
       await this.extension.shutdown();
     }
 
-    if (AppConstants.platform === "android") {
-      // We need a way to notify the embedding layer that an extension has been
-      // uninstalled, so that the java layer can be updated too.
-      Services.obs.notifyObservers(
-        null,
-        "testing-uninstalled-addon",
-        this.addon.id
-      );
-    }
-
     this.state = "unloaded";
   }
 
@@ -672,15 +659,6 @@ class AOMExtensionWrapper extends ExtensionWrapper {
         let [extension] = args;
         if (extension.id === this.id) {
           this.state = "running";
-          if (AppConstants.platform === "android") {
-            // We need a way to notify the embedding layer that a new extension
-            // has been installed, so that the java layer can be updated too.
-            Services.obs.notifyObservers(
-              null,
-              "testing-installed-addon",
-              extension.id
-            );
-          }
           this.resolveStartup(extension);
         }
         break;

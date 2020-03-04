@@ -444,18 +444,18 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     fun testBrowserTabsCreate() {
         val tabsCreateResult = GeckoResult<Void>()
-        val tabsExtension = WebExtension(TABS_CREATE_BACKGROUND, controller)
+        var tabsExtension : WebExtension? = null
 
-        val tabDelegate = object : WebExtension.TabDelegate {
-            override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
-                assertEquals(details.url, "https://www.mozilla.org/en-US/")
-                assertEquals(details.active, true)
+        val tabDelegate = object : WebExtensionController.TabDelegate {
+            override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
+                assertEquals(uri, "https://www.mozilla.org/en-US/")
                 assertEquals(tabsExtension, source)
                 tabsCreateResult.complete(null)
-                return GeckoResult.fromValue(null)
+                return GeckoResult.fromValue(GeckoSession(sessionRule.session.settings))
             }
         }
-        tabsExtension.setTabDelegate(tabDelegate)
+        controller.tabDelegate = tabDelegate
+        tabsExtension = WebExtension(TABS_CREATE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(tabsCreateResult)
@@ -474,31 +474,29 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     fun testBrowserTabsCreateBrowserTabsRemove() {
         val onCloseRequestResult = GeckoResult<Void>()
-        val tabsExtension = WebExtension(TABS_CREATE_REMOVE_BACKGROUND, controller)
+        var tabsExtension : WebExtension? = null
+        var extensionCreatedSession : GeckoSession? = null
 
         sessionRule.addExternalDelegateUntilTestEnd(
-                WebExtension.TabDelegate::class,
-                tabsExtension::setTabDelegate,
-                { tabsExtension.setTabDelegate(null) },
-                object : WebExtension.TabDelegate {
-            override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
-                val extensionCreatedSession = GeckoSession(sessionRule.session.settings)
-
-                extensionCreatedSession.webExtensionController.setTabDelegate(tabsExtension, object : WebExtension.SessionTabDelegate {
-                    override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
-                        assertEquals(tabsExtension, source)
-                        assertEquals(details.active, true)
-                        assertNotEquals(null, extensionCreatedSession)
-                        assertEquals(extensionCreatedSession, session)
-                        onCloseRequestResult.complete(null)
-                        return GeckoResult.ALLOW
-                    }
-                })
-
+                WebExtensionController.TabDelegate::class,
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {
+            override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
+                extensionCreatedSession = GeckoSession(sessionRule.session.settings)
                 return GeckoResult.fromValue(extensionCreatedSession)
+            }
+
+            override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
+                assertEquals(tabsExtension, source)
+                assertNotEquals(null, extensionCreatedSession)
+                assertEquals(extensionCreatedSession, session)
+                onCloseRequestResult.complete(null)
+                return GeckoResult.ALLOW
             }
         })
 
+        tabsExtension = WebExtension(TABS_CREATE_REMOVE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
@@ -521,16 +519,16 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     fun testBrowserTabsActivateBrowserTabsRemove() {
         val onCloseRequestResult = GeckoResult<Void>()
-        val tabsExtension = WebExtension(TABS_ACTIVATE_REMOVE_BACKGROUND, controller)
+        var tabsExtension : WebExtension? = null
         val newTabSession = GeckoSession(sessionRule.session.settings)
 
         newTabSession.open(sessionRule.runtime)
 
         sessionRule.addExternalDelegateUntilTestEnd(
-                WebExtension.SessionTabDelegate::class,
-                { delegate -> newTabSession.webExtensionController.setTabDelegate(tabsExtension, delegate) },
-                { newTabSession.webExtensionController.setTabDelegate(tabsExtension, null) },
-                object : WebExtension.SessionTabDelegate {
+                WebExtensionController.TabDelegate::class,
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {
 
             override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
                 assertEquals(tabsExtension, source)
@@ -539,6 +537,8 @@ class WebExtensionTest : BaseSessionTest() {
                 return GeckoResult.ALLOW
             }
         })
+
+        tabsExtension = WebExtension(TABS_ACTIVATE_REMOVE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
 
@@ -565,19 +565,19 @@ class WebExtensionTest : BaseSessionTest() {
         existingSession.loadTestPath("$HELLO_HTML_PATH?tabToClose")
         existingSession.waitForPageStop()
 
-        val tabsExtension = WebExtension(TABS_REMOVE_BACKGROUND, controller)
-
         sessionRule.addExternalDelegateUntilTestEnd(
-                WebExtension.SessionTabDelegate::class,
-                { delegate -> existingSession.webExtensionController.setTabDelegate(tabsExtension, delegate) },
-                { existingSession.webExtensionController.setTabDelegate(tabsExtension, null) },
-                object : WebExtension.SessionTabDelegate {
+                WebExtensionController.TabDelegate::class,
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {
             override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
                 assertEquals(existingSession, session)
                 onCloseRequestResult.complete(null)
                 return GeckoResult.ALLOW
             }
         })
+
+        val tabsExtension = WebExtension(TABS_REMOVE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
@@ -597,8 +597,7 @@ class WebExtensionTest : BaseSessionTest() {
         } else {
             webExtension = WebExtension(MESSAGING_CONTENT, uuid,
                     WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
-            sessionRule.session.webExtensionController
-                    .setMessageDelegate(webExtension, messageDelegate, "browser")
+            sessionRule.session.setMessageDelegate(webExtension, messageDelegate, "browser")
         }
 
         return webExtension
@@ -901,8 +900,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         messaging = WebExtension("resource://android/assets/web_extensions/messaging-iframe/",
                 "{${UUID.randomUUID()}}", WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
-        sessionRule.session.webExtensionController
-                .setMessageDelegate(messaging, messageDelegate, "browser")
+        sessionRule.session.setMessageDelegate(messaging, messageDelegate, "browser")
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(portTopLevel)
@@ -940,15 +938,7 @@ class WebExtensionTest : BaseSessionTest() {
                 controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
-        val sessionController = mainSession.webExtensionController
-        sessionController.setMessageDelegate(extension, messageDelegate, "browser")
-        sessionController.setTabDelegate(extension, object: WebExtension.SessionTabDelegate {
-            override fun onUpdateTab(extension: WebExtension,
-                                     session: GeckoSession,
-                                     details: WebExtension.UpdateTabDetails): GeckoResult<AllowOrDeny> {
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
-            }
-        })
+        mainSession.setMessageDelegate(extension, messageDelegate, "browser")
 
         mainSession.loadUri("http://example.com")
 
@@ -992,18 +982,18 @@ class WebExtensionTest : BaseSessionTest() {
 
         // Test that after unregistering an extension, all its pages get closed
         sessionRule.addExternalDelegateUntilTestEnd(
-                WebExtension.SessionTabDelegate::class,
-                { delegate -> mainSession.webExtensionController.setTabDelegate(extension, delegate) },
-                { mainSession.webExtensionController.setTabDelegate(extension, null) },
-                object : WebExtension.SessionTabDelegate {})
+                WebExtensionController.TabDelegate::class,
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {})
 
         val unregister = sessionRule.runtime.unregisterWebExtension(extension)
 
-        sessionRule.waitUntilCalled(object : WebExtension.SessionTabDelegate {
+        sessionRule.waitUntilCalled(object : WebExtensionController.TabDelegate {
             @AssertCalled
             override fun onCloseTab(source: WebExtension?,
                                     session: GeckoSession): GeckoResult<AllowOrDeny> {
-                assertEquals(extension, source)
+                assertEquals(null, source)
                 assertEquals(mainSession, session)
                 return GeckoResult.ALLOW
             }

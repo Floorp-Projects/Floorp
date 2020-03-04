@@ -512,12 +512,11 @@ public final class GeckoRuntime implements Parcelable {
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("id", webExtension.id);
 
+        mWebExtensionController.unregisterWebExtension(webExtension);
+
         EventDispatcher.getInstance().dispatch("GeckoView:UnregisterWebExtension", bundle, result);
 
-        return result.then(success -> {
-            mWebExtensionController.unregisterWebExtension(webExtension);
-            return GeckoResult.fromValue(success);
-        });
+        return result;
     }
 
     /**

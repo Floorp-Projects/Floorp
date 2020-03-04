@@ -122,18 +122,29 @@ const GeckoViewTabBridge = {
    * @throws {Error}
    *         Throws an error if the GeckoView app doesn't support tabs.create or fails to handle the request.
    */
-  async createNewTab({ extensionId, createProperties } = {}) {
-    const sessionId = await EventDispatcher.instance.sendRequestForResult({
+  async createNewTab(options = {}) {
+    const url = options.url || "about:blank";
+
+    if (!options.extensionId) {
+      throw new Error("options.extensionId missing");
+    }
+
+    const message = {
       type: "GeckoView:WebExtension:NewTab",
-      extensionId,
-      createProperties,
-    });
+      uri: url,
+      extensionId: options.extensionId,
+    };
+
+    const sessionId = await EventDispatcher.instance.sendRequestForResult(
+      message
+    );
 
     if (!sessionId) {
       throw new Error("Cannot create new tab");
     }
 
-    const window = await new Promise(resolve => {
+    let window;
+    const browser = await new Promise(resolve => {
       const handler = {
         observe(aSubject, aTopic, aData) {
           if (
@@ -141,11 +152,23 @@ const GeckoViewTabBridge = {
             aSubject.name === sessionId
           ) {
             Services.obs.removeObserver(handler, "geckoview-window-created");
-            resolve(aSubject);
+            window = aSubject;
+            resolve(window.browser);
           }
         },
       };
       Services.obs.addObserver(handler, "geckoview-window-created");
+    });
+
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+
+    if (options.disallowInheritPrincipal) {
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+    }
+
+    browser.loadURI(url, {
+      flags,
+      triggeringPrincipal: options.triggeringPrincipal,
     });
 
     return BrowserAppShim.getBrowserApp(window).selectedTab;
@@ -165,17 +188,17 @@ const GeckoViewTabBridge = {
    *         Throws an error if the GeckoView app doesn't allow extension to close tab.
    */
   async closeTab({ window, extensionId } = {}) {
+    if (!extensionId) {
+      throw new Error("extensionId is required");
+    }
+
+    if (!window) {
+      throw new Error("window is required");
+    }
+
     await window.WindowEventDispatcher.sendRequestForResult({
       type: "GeckoView:WebExtension:CloseTab",
       extensionId,
-    });
-  },
-
-  async updateTab({ window, extensionId, updateProperties } = {}) {
-    await window.WindowEventDispatcher.sendRequestForResult({
-      type: "GeckoView:WebExtension:UpdateTab",
-      extensionId,
-      updateProperties,
     });
   },
 };

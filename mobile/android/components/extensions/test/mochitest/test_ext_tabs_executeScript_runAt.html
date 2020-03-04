@@ -107,15 +107,10 @@ add_task(async function testExecuteScript() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      "applications": {
-        "gecko": {
-          "id": "execute-script-run-at@tests.mozilla.org",
-        }
-      },
       "permissions": ["http://mochi.test/", "tabs"],
     },
+
     background: `(${background})(${AppConstants.DEBUG})`,
   });
 

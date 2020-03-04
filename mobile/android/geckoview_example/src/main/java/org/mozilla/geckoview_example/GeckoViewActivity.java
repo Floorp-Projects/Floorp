@@ -79,7 +79,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Locale;
 
-interface WebExtensionDelegate {
+interface BrowserActionDelegate {
     default GeckoSession toggleBrowserActionPopup(boolean force) {
         return null;
     }
@@ -90,14 +90,9 @@ interface WebExtensionDelegate {
     default TabSession getCurrentSession() {
         return null;
     }
-    default void closeTab(TabSession session) {}
-    default void updateTab(TabSession session, WebExtension.UpdateTabDetails details) {}
-    default TabSession openNewTab(WebExtension.CreateTabDetails details) { return null; }
 }
 
 class WebExtensionManager implements WebExtension.ActionDelegate,
-                                     WebExtension.SessionTabDelegate,
-                                     WebExtension.TabDelegate,
                                      WebExtensionController.PromptDelegate,
                                      WebExtensionController.DebuggerDelegate,
                                      TabSessionManager.TabObserver {
@@ -108,7 +103,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     private WebExtension.Action mDefaultAction;
     private TabSessionManager mTabManager;
 
-    private WeakReference<WebExtensionDelegate> mExtensionDelegate;
+    private WeakReference<BrowserActionDelegate> mActionDelegate;
 
     @Nullable
     @Override
@@ -124,7 +119,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     // We only support either one browserAction or one pageAction
     private void onAction(final WebExtension extension, final GeckoSession session,
                           final WebExtension.Action action) {
-        WebExtensionDelegate delegate = mExtensionDelegate.get();
+        BrowserActionDelegate delegate = mActionDelegate.get();
         if (delegate == null) {
             return;
         }
@@ -152,48 +147,6 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     }
 
     @Override
-    public GeckoResult<GeckoSession> onNewTab(WebExtension source,
-                                              WebExtension.CreateTabDetails details) {
-        WebExtensionDelegate delegate = mExtensionDelegate.get();
-        if (delegate == null) {
-            return GeckoResult.fromValue(null);
-        }
-        return GeckoResult.fromValue(delegate.openNewTab(details));
-    }
-
-    @Override
-    public GeckoResult<AllowOrDeny> onCloseTab(WebExtension extension, GeckoSession session) {
-        final WebExtensionDelegate delegate = mExtensionDelegate.get();
-        if (delegate == null) {
-            return GeckoResult.fromValue(AllowOrDeny.DENY);
-        }
-
-        final TabSession tabSession = mTabManager.getSession(session);
-        if (tabSession != null) {
-            delegate.closeTab(tabSession);
-        }
-
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
-    }
-
-    @Override
-    public GeckoResult<AllowOrDeny> onUpdateTab(WebExtension extension,
-                                                GeckoSession session,
-                                                WebExtension.UpdateTabDetails updateDetails) {
-        final WebExtensionDelegate delegate = mExtensionDelegate.get();
-        if (delegate == null) {
-            return GeckoResult.fromValue(AllowOrDeny.DENY);
-        }
-
-        final TabSession tabSession = mTabManager.getSession(session);
-        if (tabSession != null) {
-            delegate.updateTab(tabSession, updateDetails);
-        }
-
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
-    }
-
-    @Override
     public void onPageAction(final WebExtension extension,
                                 final GeckoSession session,
                                 final WebExtension.Action action) {
@@ -208,12 +161,12 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     }
 
     private GeckoResult<GeckoSession> togglePopup(boolean force) {
-        WebExtensionDelegate extensionDelegate = mExtensionDelegate.get();
-        if (extensionDelegate == null) {
+        BrowserActionDelegate actionDelegate = mActionDelegate.get();
+        if (actionDelegate == null) {
             return null;
         }
 
-        GeckoSession session = extensionDelegate.toggleBrowserActionPopup(false);
+        GeckoSession session = actionDelegate.toggleBrowserActionPopup(false);
         if (session == null) {
             return null;
         }
@@ -242,19 +195,19 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     }
 
     private void updateAction(WebExtension.Action resolved) {
-        WebExtensionDelegate extensionDelegate = mExtensionDelegate.get();
-        if (extensionDelegate == null) {
+        BrowserActionDelegate actionDelegate = mActionDelegate.get();
+        if (actionDelegate == null) {
             return;
         }
 
         if (resolved == null || resolved.enabled == null || !resolved.enabled) {
-            extensionDelegate.onActionButton(null);
+            actionDelegate.onActionButton(null);
             return;
         }
 
         if (resolved.icon != null) {
             if (mBitmapCache.get(resolved.icon) != null) {
-                extensionDelegate.onActionButton(new ActionButton(
+                actionDelegate.onActionButton(new ActionButton(
                         mBitmapCache.get(resolved.icon), resolved.badgeText,
                         resolved.badgeTextColor,
                         resolved.badgeBackgroundColor
@@ -262,14 +215,14 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
             } else {
                 resolved.icon.get(100).accept(bitmap -> {
                     mBitmapCache.put(resolved.icon, bitmap);
-                    extensionDelegate.onActionButton(new ActionButton(
+                    actionDelegate.onActionButton(new ActionButton(
                         bitmap, resolved.badgeText,
                         resolved.badgeTextColor,
                         resolved.badgeBackgroundColor));
                 });
             }
         } else {
-            extensionDelegate.onActionButton(null);
+            actionDelegate.onActionButton(null);
         }
     }
 
@@ -280,8 +233,8 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
         }
     }
 
-    public void setExtensionDelegate(WebExtensionDelegate delegate) {
-        mExtensionDelegate = new WeakReference<>(delegate);
+    public void setActionDelegate(BrowserActionDelegate delegate) {
+        mActionDelegate = new WeakReference<>(delegate);
     }
 
     @Override
@@ -314,8 +267,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
 
     public void registerExtension(WebExtension extension) {
         extension.setActionDelegate(this);
-        extension.setTabDelegate(this);
-        mTabManager.setWebExtensionDelegates(extension, this, this);
+        mTabManager.setWebExtensionActionDelegate(extension, this);
         this.extension = extension;
     }
 
@@ -338,7 +290,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
 
 public class GeckoViewActivity
         extends AppCompatActivity
-        implements ToolbarLayout.TabListener, WebExtensionDelegate {
+        implements ToolbarLayout.TabListener, BrowserActionDelegate {
     private static final String LOGTAG = "GeckoViewActivity";
     private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
     private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
@@ -393,16 +345,6 @@ public class GeckoViewActivity
             mGeckoView.requestFocus();
         }
     };
-
-    @Override
-    public TabSession openNewTab(WebExtension.CreateTabDetails details) {
-        final TabSession newSession = createSession();
-        mToolbarView.updateTabCount();
-        if (details.active == Boolean.TRUE) {
-            setGeckoViewSession(newSession, false);
-        }
-        return newSession;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -462,6 +404,24 @@ public class GeckoViewActivity
                     .aboutConfigEnabled(true);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
+
+            sGeckoRuntime.getWebExtensionController().setTabDelegate(new WebExtensionController.TabDelegate() {
+                @Override
+                public GeckoResult<GeckoSession> onNewTab(WebExtension source, String uri) {
+                    final TabSession newSession = createSession();
+                    mToolbarView.updateTabCount();
+                    setGeckoViewSession(newSession);
+                    return GeckoResult.fromValue(newSession);
+                }
+                @Override
+                public GeckoResult<AllowOrDeny> onCloseTab(WebExtension source, GeckoSession session) {
+                    TabSession tabSession = mTabSessionManager.getSession(session);
+                    if (tabSession != null) {
+                        closeTab(tabSession);
+                    }
+                    return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+                }
+            });
 
             sExtensionManager = new WebExtensionManager(sGeckoRuntime, mTabSessionManager);
             mTabSessionManager.setTabObserver(sExtensionManager);
@@ -526,7 +486,7 @@ public class GeckoViewActivity
             });
         }
 
-        sExtensionManager.setExtensionDelegate(this);
+        sExtensionManager.setActionDelegate(this);
 
         if(savedInstanceState == null) {
             TabSession session = getIntent().getParcelableExtra("session");
@@ -606,9 +566,7 @@ public class GeckoViewActivity
         @Override
         public void onCloseRequest(final GeckoSession session) {
           setPopupVisibility(false);
-          if (mPopupSession != null) {
-              mPopupSession.close();
-          }
+          mPopupSession.close();
           mPopupSession = null;
           mPopupView = null;
         }
@@ -695,10 +653,7 @@ public class GeckoViewActivity
 
         session.setSelectionActionDelegate(new BasicSelectionActionDelegate(this));
         if (sExtensionManager.extension != null) {
-            final WebExtension.SessionController sessionController =
-                    session.getWebExtensionController();
-            sessionController.setActionDelegate(sExtensionManager.extension, sExtensionManager);
-            sessionController.setTabDelegate(sExtensionManager.extension, sExtensionManager);
+            session.setWebExtensionActionDelegate(sExtensionManager.extension, sExtensionManager);
         }
 
         updateTrackingProtection(session);
@@ -882,8 +837,7 @@ public class GeckoViewActivity
         mToolbarView.updateTabCount();
     }
 
-    @Override
-    public void closeTab(TabSession session) {
+    private void closeTab(TabSession session) {
         if (mTabSessionManager.sessionCount() > 1) {
             mTabSessionManager.closeSession(session);
             TabSession tabSession = mTabSessionManager.getCurrentSession();
@@ -895,45 +849,28 @@ public class GeckoViewActivity
         }
     }
 
-    @Override
-    public void updateTab(TabSession session, WebExtension.UpdateTabDetails details) {
-        if (details.active == Boolean.TRUE) {
-            switchToSession(session, false);
-        }
-    }
-
     public void onBrowserActionClick() {
         sExtensionManager.onClicked(mTabSessionManager.getCurrentSession());
     }
 
-    public void switchToSession(TabSession session, boolean activateTab) {
+    public void switchToTab(int index) {
+        TabSession nextSession = mTabSessionManager.getSession(index);
         TabSession currentSession = mTabSessionManager.getCurrentSession();
-        if (session != currentSession) {
-            setGeckoViewSession(session, activateTab);
-            mCurrentUri = session.getUri();
+        if(nextSession != currentSession) {
+            setGeckoViewSession(nextSession);
+            mCurrentUri = nextSession.getUri();
             mToolbarView.getLocationView().setText(mCurrentUri);
         }
     }
 
-    public void switchToTab(int index) {
-        TabSession nextSession = mTabSessionManager.getSession(index);
-        switchToSession(nextSession, true);
-    }
-
     private void setGeckoViewSession(TabSession session) {
-        setGeckoViewSession(session, true);
-    }
-
-    private void setGeckoViewSession(TabSession session, boolean activateTab) {
         final WebExtensionController controller = sGeckoRuntime.getWebExtensionController();
         final GeckoSession previousSession = mGeckoView.releaseSession();
         if (previousSession != null) {
             controller.setTabActive(previousSession, false);
         }
         mGeckoView.setSession(session);
-        if (activateTab) {
-            controller.setTabActive(session, true);
-        }
+        controller.setTabActive(session, true);
         mTabSessionManager.setCurrentSession(session);
     }
 

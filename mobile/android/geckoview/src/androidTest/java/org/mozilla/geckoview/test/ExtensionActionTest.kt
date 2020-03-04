@@ -55,7 +55,7 @@ class ExtensionActionTest : BaseSessionTest() {
                 "actions", WebExtension.Flags.ALLOW_CONTENT_MESSAGING,
                 sessionRule.runtime.webExtensionController)
 
-        sessionRule.session.webExtensionController.setMessageDelegate(
+        sessionRule.session.setMessageDelegate(
                 extension!!,
                 object : WebExtension.MessageDelegate {
                     override fun onConnect(port: WebExtension.Port) {
@@ -166,8 +166,8 @@ class ExtensionActionTest : BaseSessionTest() {
         sessionRule.addExternalDelegateDuringNextWait(
                 WebExtension.ActionDelegate::class,
                 { delegate ->
-                    sessionRule.session.webExtensionController.setActionDelegate(extension!!, delegate) },
-                { sessionRule.session.webExtensionController.setActionDelegate(extension!!, null) },
+                    sessionRule.session.setWebExtensionActionDelegate(extension!!, delegate) },
+                { sessionRule.session.setWebExtensionActionDelegate(extension!!, null) },
         object : WebExtension.ActionDelegate {
             override fun onBrowserAction(extension: WebExtension, session: GeckoSession?, action: WebExtension.Action) {
                 assertEquals(id, "#browserAction")
@@ -495,7 +495,7 @@ class ExtensionActionTest : BaseSessionTest() {
         }"""))
 
         val openPopup = GeckoResult<Void>()
-        sessionRule.session.webExtensionController.setActionDelegate(extension!!,
+        sessionRule.session.setWebExtensionActionDelegate(extension!!,
                 object : WebExtension.ActionDelegate {
             override fun onOpenPopup(extension: WebExtension,
                                      popupAction: WebExtension.Action): GeckoResult<GeckoSession>? {
