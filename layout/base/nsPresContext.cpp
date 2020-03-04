@@ -2580,6 +2580,10 @@ DynamicToolbarState nsPresContext::GetDynamicToolbarState() const {
   return DynamicToolbarState::InTransition;
 }
 
+void nsPresContext::SetSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets) {
+  mSafeAreaInsets = aSafeAreaInsets;
+}
+
 #ifdef DEBUG
 
 void nsPresContext::ValidatePresShellAndDocumentReleation() const {

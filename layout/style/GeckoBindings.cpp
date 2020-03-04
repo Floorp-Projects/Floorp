@@ -1744,6 +1744,16 @@ bool Gecko_AssertClassAttrValueIsSane(const nsAttrValue* aValue) {
   return true;
 }
 
+void Gecko_GetSafeAreaInsets(const nsPresContext* aPresContext, float* aTop,
+                             float* aRight, float* aBottom, float* aLeft) {
+  MOZ_ASSERT(aPresContext);
+  ScreenIntMargin safeAreaInsets = aPresContext->GetSafeAreaInsets();
+  *aTop = aPresContext->DevPixelsToFloatCSSPixels(safeAreaInsets.top);
+  *aRight = aPresContext->DevPixelsToFloatCSSPixels(safeAreaInsets.right);
+  *aBottom = aPresContext->DevPixelsToFloatCSSPixels(safeAreaInsets.bottom);
+  *aLeft = aPresContext->DevPixelsToFloatCSSPixels(safeAreaInsets.left);
+}
+
 void Gecko_PrintfStderr(const nsCString* aStr) {
   printf_stderr("%s", aStr->get());
 }
