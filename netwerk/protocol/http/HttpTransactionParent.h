@@ -62,7 +62,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       const bool& aHasStickyConn,
-      const Maybe<TransactionObserverResult>& aTransactionObserverResult);
+      Maybe<TransactionObserverResult>&& aTransactionObserverResult);
   mozilla::ipc::IPCResult RecvOnNetAddrUpdate(const NetAddr& aSelfAddr,
                                               const NetAddr& aPeerAddr,
                                               const bool& aResolvedByTRR);
@@ -99,7 +99,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       const bool& aHasStickyConn,
-      const Maybe<TransactionObserverResult>& aTransactionObserverResult);
+      Maybe<TransactionObserverResult>&& aTransactionObserverResult);
   void DoNotifyListener();
 
   nsCOMPtr<nsITransportEventSink> mEventsink;
@@ -132,7 +132,6 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   TimeStamp mDomainLookupStart;
   TimeStamp mDomainLookupEnd;
   TransactionObserverFunc mTransactionObserver;
-  TransactionObserverResult mTransactionObserverResult;
   OnPushCallback mOnPushCallback;
   nsTArray<uint8_t> mDataForSniffer;
 };

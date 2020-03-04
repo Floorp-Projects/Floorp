@@ -48,7 +48,8 @@ class HttpTransactionShell : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTPTRANSACTIONSHELL_IID)
 
-  using TransactionObserverFunc = std::function<void()>;
+  using TransactionObserverFunc =
+      std::function<void(TransactionObserverResult&&)>;
   using OnPushCallback = std::function<nsresult(
       uint32_t, const nsACString&, const nsACString&, HttpTransactionShell*)>;
 
@@ -146,9 +147,6 @@ class HttpTransactionShell : public nsISupports {
   virtual bool ProxyConnectFailed() = 0;
   virtual int32_t GetProxyConnectResponseCode() = 0;
 
-  virtual void GetTransactionObserverResult(
-      TransactionObserverResult& aResult) = 0;
-
   virtual nsHttpTransaction* AsHttpTransaction() = 0;
   virtual HttpTransactionParent* AsHttpTransactionParent() = 0;
 };
@@ -202,8 +200,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void SetH2WSConnRefTaken() override;                                 \
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
-  virtual void GetTransactionObserverResult(                                   \
-      TransactionObserverResult& aResult) override;                            \
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \
   virtual HttpTransactionParent* AsHttpTransactionParent() override;
 }  // namespace net

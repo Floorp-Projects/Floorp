@@ -82,6 +82,7 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
       uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,
+      bool aHasTransactionObserver,
       const Maybe<H2PushedStreamArg>& aPushedStreamArg);
 
   bool mCanceled;
@@ -92,7 +93,6 @@ class HttpTransactionChild final : public PHttpTransactionChild,
   nsCOMPtr<nsIInputStream> mUploadStream;
   RefPtr<nsHttpTransaction> mTransaction;
   nsCOMPtr<nsIRequest> mTransactionPump;
-  std::function<void()> mTransactionObserver;
   Maybe<TransactionObserverResult> mTransactionObserverResult;
   RefPtr<InputChannelThrottleQueueChild> mThrottleQueue;
 };
