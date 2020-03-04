@@ -83,7 +83,7 @@ class nsCaseInsensitiveStringArrayComparator {
 
 class nsASCIICaseInsensitiveStringComparator : public nsStringComparator {
  public:
-  nsASCIICaseInsensitiveStringComparator() {}
+  nsASCIICaseInsensitiveStringComparator() = default;
   virtual int operator()(const char16_t*, const char16_t*, uint32_t,
                          uint32_t) const override;
 };

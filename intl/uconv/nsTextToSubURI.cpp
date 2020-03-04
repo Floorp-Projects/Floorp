@@ -15,7 +15,7 @@
 
 using namespace mozilla;
 
-nsTextToSubURI::~nsTextToSubURI() {}
+nsTextToSubURI::~nsTextToSubURI() = default;
 
 NS_IMPL_ISUPPORTS(nsTextToSubURI, nsITextToSubURI)
 

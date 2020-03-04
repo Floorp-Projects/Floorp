@@ -14,9 +14,9 @@
 
 using namespace mozilla::intl;
 
-OSPreferences::OSPreferences() {}
+OSPreferences::OSPreferences() = default;
 
-OSPreferences::~OSPreferences() {}
+OSPreferences::~OSPreferences() = default;
 
 bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
