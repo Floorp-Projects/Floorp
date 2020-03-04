@@ -165,7 +165,6 @@ class FuzzyParser(BaseTryParser):
         'artifact',
         'browsertime',
         'chemspill-prio',
-        'ubuntu-bionic',
         'disable-pgo',
         'env',
         'gecko-profile',
