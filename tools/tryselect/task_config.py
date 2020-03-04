@@ -311,22 +311,6 @@ class DisablePgo(TryConfig):
             }
 
 
-class UbuntuBionicTests(TryConfig):
-
-    arguments = [
-        [['--ubuntu-bionic'],
-         {'action': 'store_true',
-          'help': 'Run linux desktop tests on ubuntu1804 image',
-          }],
-    ]
-
-    def try_config(self, ubuntu_bionic, **kwargs):
-        if ubuntu_bionic:
-            return {
-                'ubuntu-bionic': True,
-            }
-
-
 class WorkerOverrides(TryConfig):
 
     arguments = [
@@ -411,6 +395,5 @@ all_task_configs = {
     'path': Path,
     'pernosco': Pernosco,
     'rebuild': Rebuild,
-    'ubuntu-bionic': UbuntuBionicTests,
     'worker-overrides': WorkerOverrides,
 }
