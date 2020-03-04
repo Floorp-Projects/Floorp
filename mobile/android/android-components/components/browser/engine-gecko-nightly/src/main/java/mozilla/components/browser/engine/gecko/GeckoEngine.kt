@@ -256,6 +256,7 @@ class GeckoEngine(
     /**
      * See [Engine.registerWebExtensionDelegate].
      */
+    @Suppress("Deprecation")
     override fun registerWebExtensionDelegate(
         webExtensionDelegate: WebExtensionDelegate
     ) {

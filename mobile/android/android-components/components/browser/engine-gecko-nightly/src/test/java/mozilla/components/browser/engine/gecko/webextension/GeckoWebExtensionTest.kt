@@ -95,6 +95,7 @@ class GeckoWebExtensionTest {
     @Test
     fun `register content message handler`() {
         val webExtensionController: WebExtensionController = mock()
+        val webExtensionSessionController: WebExtension.SessionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
         val session: GeckoEngineSession = mock()
@@ -103,6 +104,7 @@ class GeckoWebExtensionTest {
         val portCaptor = argumentCaptor<Port>()
         val portDelegateCaptor = argumentCaptor<WebExtension.PortDelegate>()
 
+        whenever(geckoSession.webExtensionController).thenReturn(webExtensionSessionController)
         whenever(session.geckoSession).thenReturn(geckoSession)
 
         val extension = GeckoWebExtension(
@@ -115,7 +117,7 @@ class GeckoWebExtensionTest {
         )
         assertFalse(extension.hasContentMessageHandler(session, "mozacTest"))
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
-        verify(geckoSession).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
+        verify(webExtensionSessionController).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
 
         // Verify messages are forwarded to message handler and return value passed on
         val message: Any = mock()
@@ -156,6 +158,7 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `disconnect port from content script`() {
+        val webExtensionSessionController: WebExtension.SessionController = mock()
         val webExtensionController: WebExtensionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
@@ -163,6 +166,7 @@ class GeckoWebExtensionTest {
         val geckoSession: GeckoSession = mock()
         val messageDelegateCaptor = argumentCaptor<WebExtension.MessageDelegate>()
 
+        whenever(geckoSession.webExtensionController).thenReturn(webExtensionSessionController)
         whenever(session.geckoSession).thenReturn(geckoSession)
 
         val extension = GeckoWebExtension(
@@ -174,7 +178,7 @@ class GeckoWebExtensionTest {
             nativeExtension = nativeGeckoWebExt
         )
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
-        verify(geckoSession).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
+        verify(webExtensionSessionController).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
 
         // Connect port
         val port: WebExtension.Port = mock()
@@ -275,8 +279,10 @@ class GeckoWebExtensionTest {
     @Test
     fun `register session-specific action handler`() {
         val webExtensionController: WebExtensionController = mock()
+        val webExtensionSessionController: WebExtension.SessionController = mock()
         val session: GeckoEngineSession = mock()
         val geckoSession: GeckoSession = mock()
+        whenever(geckoSession.webExtensionController).thenReturn(webExtensionSessionController)
         whenever(session.geckoSession).thenReturn(geckoSession)
 
         val nativeGeckoWebExt: WebExtension = mock()
@@ -297,9 +303,9 @@ class GeckoWebExtensionTest {
             nativeExtension = nativeGeckoWebExt
         )
         extension.registerActionHandler(session, actionHandler)
-        verify(geckoSession).setWebExtensionActionDelegate(eq(nativeGeckoWebExt), actionDelegateCaptor.capture())
+        verify(webExtensionSessionController).setActionDelegate(eq(nativeGeckoWebExt), actionDelegateCaptor.capture())
 
-        whenever(geckoSession.getWebExtensionActionDelegate(nativeGeckoWebExt)).thenReturn(actionDelegateCaptor.value)
+        whenever(webExtensionSessionController.getActionDelegate(nativeGeckoWebExt)).thenReturn(actionDelegateCaptor.value)
         assertTrue(extension.hasActionHandler(session))
 
         // Verify that browser actions are forwarded to the handler
