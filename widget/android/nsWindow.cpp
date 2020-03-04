@@ -1270,6 +1270,16 @@ class nsWindow::LayerViewSupport final
       }
     }
   }
+
+  void OnSafeAreaInsetsChanged(int32_t aTop, int32_t aRight, int32_t aBottom,
+                               int32_t aLeft) {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!mWindow) {
+      return;  // Already shut down.
+    }
+    ScreenIntMargin safeAreaInsets(aTop, aRight, aBottom, aLeft);
+    mWindow->UpdateSafeAreaInsets(safeAreaInsets);
+  }
 };
 
 template <>
@@ -2383,6 +2393,20 @@ nsresult nsWindow::SetPrefersReducedMotionOverrideForTest(bool aValue) {
 nsresult nsWindow::ResetPrefersReducedMotionOverrideForTest() {
   LookAndFeel::ResetPrefersReducedMotionOverrideForTest();
   return NS_OK;
+}
+
+ScreenIntMargin nsWindow::GetSafeAreaInsets() const { return mSafeAreaInsets; }
+
+void nsWindow::UpdateSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets) {
+  mSafeAreaInsets = aSafeAreaInsets;
+
+  if (mWidgetListener) {
+    mWidgetListener->SafeAreaInsetsChanged(aSafeAreaInsets);
+  }
+
+  if (mAttachedWidgetListener) {
+    mAttachedWidgetListener->SafeAreaInsetsChanged(aSafeAreaInsets);
+  }
 }
 
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
