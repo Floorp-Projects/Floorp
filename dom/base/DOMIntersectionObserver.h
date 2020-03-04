@@ -83,16 +83,9 @@ class DOMIntersectionObserver final : public nsISupports,
                                       public nsWrapperCache {
   virtual ~DOMIntersectionObserver() { Disconnect(); }
 
-  typedef void (*NativeIntersectionObserverCallback)(
+  typedef void (*NativeCallback)(
       const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries);
-  DOMIntersectionObserver(nsPIDOMWindowInner* aOwner,
-                          NativeIntersectionObserverCallback aCb)
-      : mOwner(aOwner),
-        mDocument(mOwner->GetExtantDoc()),
-        mCallback(aCb),
-        mConnected(false) {
-    MOZ_ASSERT(mOwner);
-  }
+  DOMIntersectionObserver(Document&, NativeCallback);
 
  public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
@@ -136,7 +129,7 @@ class DOMIntersectionObserver final : public nsISupports,
   MOZ_CAN_RUN_SCRIPT void Notify();
 
   static already_AddRefed<DOMIntersectionObserver> CreateLazyLoadObserver(
-      nsPIDOMWindowInner* aOwner);
+      Document&);
 
  protected:
   void Connect();
@@ -149,8 +142,7 @@ class DOMIntersectionObserver final : public nsISupports,
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
   RefPtr<Document> mDocument;
-  Variant<RefPtr<dom::IntersectionCallback>, NativeIntersectionObserverCallback>
-      mCallback;
+  Variant<RefPtr<dom::IntersectionCallback>, NativeCallback> mCallback;
   RefPtr<nsINode> mRoot;
   StyleRect<LengthPercentage> mRootMargin;
   nsTArray<double> mThresholds;
