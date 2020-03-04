@@ -23,6 +23,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MemoryBlobImpl, BaseBlobImpl)
 
+  // File constructor.
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)
       : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aName, aContentType,
@@ -31,6 +32,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
+  // Blob constructor.
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength,
                  const nsAString& aContentType)
       : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aContentType,
