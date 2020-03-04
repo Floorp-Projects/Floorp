@@ -73,4 +73,24 @@ describe("IssueItem component", () => {
     );
     expect(item).toMatchSnapshot();
   });
+
+  it("renders an issue which has nodes that caused this issue", () => {
+    const item = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        unsupportedBrowsers: [],
+        nodes: [
+          {
+            actorID: "test-actor",
+            attributes: [],
+            nodeName: "test-element",
+            nodeType: 1,
+          },
+        ],
+      })
+    );
+    expect(item).toMatchSnapshot();
+  });
 });
