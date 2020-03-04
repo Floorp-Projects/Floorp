@@ -11,6 +11,7 @@ import os
 import posixpath
 import re
 import requests
+import six.moves.urllib_parse as urlparse
 import subprocess
 import threading
 import traceback
@@ -1013,6 +1014,13 @@ class TestInfoReport(TestInfo):
             by_component['annotations']['unique conditions'] = len(conditions)
             by_component['annotations']['conditions'] = conditions
 
+        self.write_report(by_component, output_file)
+
+        end_time = datetime.datetime.now()
+        self.log_verbose("%d seconds total to generate report" %
+                         (end_time - start_time).total_seconds())
+
+    def write_report(self, by_component, output_file):
         json_report = json.dumps(by_component, indent=2, sort_keys=True)
         if output_file:
             output_file = os.path.abspath(output_file)
@@ -1025,6 +1033,72 @@ class TestInfoReport(TestInfo):
         else:
             print(json_report)
 
-        end_time = datetime.datetime.now()
-        self.log_verbose("%d seconds total to generate report" %
-                         (end_time - start_time).total_seconds())
+    def report_diff(self, before, after, output_file):
+        """
+           Support for 'mach test-info report-diff'.
+        """
+
+        def get_file(path_or_url):
+            if urlparse.urlparse(path_or_url).scheme:
+                response = requests.get(path_or_url)
+                response.raise_for_status()
+                return json.loads(response.text)
+            with open(path_or_url) as f:
+                return json.load(f)
+
+        report1 = get_file(before)
+        report2 = get_file(after)
+
+        by_component = {'tests': {}, 'summary': {}}
+        self.diff_summaries(by_component, report1["summary"], report2["summary"])
+        self.diff_all_components(by_component, report1["tests"], report2["tests"])
+        self.write_report(by_component, output_file)
+
+    def diff_summaries(self, by_component, summary1, summary2):
+        """
+           Update by_component with comparison of summaries.
+        """
+        all_keys = set(summary1.keys()) | set(summary2.keys())
+        for key in all_keys:
+            delta = summary2.get(key, 0) - summary1.get(key, 0)
+            by_component['summary']['%s delta' % key] = delta
+
+    def diff_all_components(self, by_component, tests1, tests2):
+        """
+           Update by_component with any added/deleted tests, for all components.
+        """
+        self.added_count = 0
+        self.deleted_count = 0
+        for component in tests1:
+            component1 = tests1[component]
+            component2 = [] if component not in tests2 else tests2[component]
+            self.diff_component(by_component, component, component1, component2)
+        for component in tests2:
+            if component not in tests1:
+                component2 = tests2[component]
+                self.diff_component(by_component, component, [], component2)
+        by_component['summary']['added tests'] = self.added_count
+        by_component['summary']['deleted tests'] = self.deleted_count
+
+    def diff_component(self, by_component, component, component1, component2):
+        """
+           Update by_component[component] with any added/deleted tests for the
+           named component.
+           "added": tests found in component2 but missing from component1.
+           "deleted": tests found in component1 but missing from component2.
+        """
+        tests1 = set([t['test'] for t in component1])
+        tests2 = set([t['test'] for t in component2])
+        deleted = tests1 - tests2
+        added = tests2 - tests1
+        if deleted or added:
+            by_component['tests'][component] = {}
+            if deleted:
+                by_component['tests'][component]['deleted'] = sorted(list(deleted))
+            if added:
+                by_component['tests'][component]['added'] = sorted(list(added))
+        self.added_count += len(added)
+        self.deleted_count += len(deleted)
+        common = len(tests1.intersection(tests2))
+        self.log_verbose("%s: %d deleted, %d added, %d common" % (component, len(deleted),
+                                                                  len(added), common))
