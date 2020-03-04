@@ -43,8 +43,8 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   }
 
   // AnimationEffect interface
-  void GetTiming(EffectTiming& aRetVal) const;
-  void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
+  virtual void GetTiming(EffectTiming& aRetVal) const;
+  virtual void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
   virtual void UpdateTiming(const OptionalEffectTiming& aTiming,
                             ErrorResult& aRv);
 

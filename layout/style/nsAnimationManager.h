@@ -232,10 +232,24 @@ class CSSAnimationKeyframeEffect : public dom::KeyframeEffect {
       : KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
                        aOptions) {}
 
+  void GetTiming(dom::EffectTiming& aRetVal) const override;
+  void GetComputedTimingAsDict(
+      dom::ComputedEffectTiming& aRetVal) const override;
   void UpdateTiming(const dom::OptionalEffectTiming& aTiming,
                     ErrorResult& aRv) override;
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv) override;
+
+ private:
+  dom::CSSAnimation* GetOwningCSSAnimation() {
+    return mAnimation ? mAnimation->AsCSSAnimation() : nullptr;
+  }
+  const dom::CSSAnimation* GetOwningCSSAnimation() const {
+    return mAnimation ? mAnimation->AsCSSAnimation() : nullptr;
+  }
+
+  // Flushes styles if our owning animation is a CSSAnimation
+  void MaybeFlushUnanimatedStyle() const;
 };
 
 template <>
