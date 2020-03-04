@@ -292,95 +292,10 @@ class ClientChannelHelperChild final : public ClientChannelHelper {
                          nsIAsyncVerifyRedirectCallback* aCallback) override {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
-    if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_DOM_BAD_URI)) {
-      return rv;
-    }
-
-    nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
-    nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
-
-    UniquePtr<ClientSource> reservedClient =
-        oldLoadInfo->TakeReservedClientSource();
-
-    // If its a same-origin redirect we just move our reserved client to the
-    // new channel.
-    if (NS_SUCCEEDED(rv)) {
-      // If we're running in the child, but redirects are handled by the parent
-      // then our reserved/initial info should already have been moved to the
-      // new channel via the parent. If they don't match, then we need to create
-      // a new reserved client for the specified info, otherwise we can copy our
-      // reserved client source to the new channel.
-      Maybe<ClientInfo> newClientInfo = newLoadInfo->GetReservedClientInfo();
-      if (newClientInfo) {
-        if (!reservedClient || reservedClient->Info() != *newClientInfo) {
-          // clear `reservedClient` first to ensure the same clientInfo ID has
-          // been removed before adding again.
-          reservedClient.reset(nullptr);
-          reservedClient =
-              ClientManager::CreateSourceFromInfo(*newClientInfo, mEventTarget);
-        }
-        newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
-      }
-    }
-
-    // If it's a cross-origin redirect then we discard the old reserved client
-    // and create a new one.
-    else {
-      // If CheckSameOrigin() worked, then the security manager must exist.
-      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-      MOZ_DIAGNOSTIC_ASSERT(ssm);
-
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = ssm->GetChannelResultPrincipal(aNewChannel,
-                                          getter_AddRefs(principal));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      reservedClient.reset();
-
-      const Maybe<ClientInfo>& reservedClientInfo =
-          newLoadInfo->GetReservedClientInfo();
-      // If we're in the child, but the parent managed redirects for
-      // us then it might have allocated an id for us already. If
-      // so, then just create the ClientSource for that existing
-      // info.
-      if (reservedClientInfo) {
-        reservedClient = ClientManager::CreateSourceFromInfo(
-            *reservedClientInfo, mEventTarget);
-      } else {
-        // Create the new ClientSource.  This should only happen for window
-        // Clients since support cross-origin redirects are blocked by the
-        // same-origin security policy.
-        reservedClient = ClientManager::CreateSource(ClientType::Window,
-                                                     mEventTarget, principal);
-      }
-      MOZ_DIAGNOSTIC_ASSERT(reservedClient);
-
-      newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
-    }
-
-    uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
-    nsCOMPtr<nsIHttpChannelInternal> http = do_QueryInterface(aOldChannel);
-    if (http) {
-      MOZ_ALWAYS_SUCCEEDS(http->GetRedirectMode(&redirectMode));
-    }
-
-    // Normally we keep the controller across channel redirects, but we must
-    // clear it when a document load redirects.  Only do this for real
-    // redirects, however.
-    //
-    // This is effectively described in step 4.2 of:
-    //
-    //  https://fetch.spec.whatwg.org/#http-fetch
-    //
-    // The spec sets the service-workers mode to none when the request is
-    // configured to *not* follow redirects.  This prevents any further
-    // service workers from intercepting.  The first service worker that
-    // had a shot at the FetchEvent remains the controller in this case.
-    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) &&
-        redirectMode != nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW) {
-      newLoadInfo->ClearController();
-    }
+    // All ClientInfo allocation should have been handled in the parent process
+    // by ClientChannelHelperParent, so the only remaining thing to do is to
+    // allocate a ClientSource around the ClientInfo on the channel.
+    CreateReservedSourceIfNeeded(aNewChannel, mEventTarget);
 
     nsCOMPtr<nsIChannelEventSink> outerSink = do_GetInterface(mOuter);
     if (outerSink) {
