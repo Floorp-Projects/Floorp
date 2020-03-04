@@ -893,8 +893,8 @@ nsresult HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
       do_QueryInterface(OwnerDoc()->GetScopeObject());
 
   // The File takes ownership of the buffer
-  RefPtr<File> file = File::CreateMemoryFile(win->AsGlobal(), imgData, imgSize,
-                                             aName, type, PR_Now());
+  RefPtr<File> file = File::CreateMemoryFileWithLastModifiedNow(
+      win->AsGlobal(), imgData, imgSize, aName, type);
   if (NS_WARN_IF(!file)) {
     return NS_ERROR_FAILURE;
   }
