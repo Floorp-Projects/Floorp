@@ -44,6 +44,8 @@ const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
 const DURATION_PREF = "devtools.performance.recording.duration";
 /** @type {PerformancePref["Preset"]} */
 const PRESET_PREF = "devtools.performance.recording.preset";
+/** @type {PerformancePref["PopupFeatureFlag"]} */
+const POPUP_FEATURE_FLAG_PREF = "devtools.performance.popup.feature-flag";
 
 // The following utilities are lazily loaded as they are not needed when controlling the
 // global state of the profiler, and only are used during specific funcationality like
@@ -394,6 +396,7 @@ function revertRecordingPreferences() {
   Services.prefs.clearUserPref(THREADS_PREF);
   Services.prefs.clearUserPref(OBJDIRS_PREF);
   Services.prefs.clearUserPref(DURATION_PREF);
+  Services.prefs.clearUserPref(POPUP_FEATURE_FLAG_PREF);
 }
 
 /**
@@ -499,6 +502,10 @@ function handleWebChannelMessage(channel, id, message, target) {
               "the profiler menu button"
           );
         }
+        // The menu button toggle is only enabled on Nightly by default. Once the profiler
+        // is turned on once, make sure that the menu button is also available.
+        Services.prefs.setBoolPref(POPUP_FEATURE_FLAG_PREF, true);
+
         ProfilerMenuButton.toggle(ownerDocument);
       }
 
