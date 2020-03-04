@@ -324,7 +324,7 @@ class AudioNodeEngine {
    * The numbers of AudioBlocks in aInput and aOutput are always guaranteed to
    * match the numbers of inputs and outputs for the node.
    */
-  virtual void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
+  virtual void ProcessBlocksOnPorts(AudioNodeTrack* aTrack, GraphTime aFrom,
                                     Span<const AudioBlock> aInput,
                                     Span<AudioBlock> aOutput, bool* aFinished);
 
