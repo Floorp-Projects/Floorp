@@ -3214,6 +3214,17 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   rv = loadInfo->GetCookieJarSettings(getter_AddRefs(mCookieJarSettings));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Set the cookie jar settings to the window context.
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
+    if (WindowGlobalChild* wgc = inner->GetWindowGlobalChild()) {
+      net::CookieJarSettingsArgs cookieJarSettings;
+      cookieJarSettings.cookieBehavior() =
+          mCookieJarSettings->GetCookieBehavior();
+
+      wgc->WindowContext()->SetCookieJarSettings(Some(cookieJarSettings));
+    }
+  }
+
   return NS_OK;
 }
 
