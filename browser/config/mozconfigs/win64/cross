@@ -28,8 +28,6 @@ if [ -d "${CLANG_CL_EXE_DIR}" ]; then
     chmod +x "${CLANG_CL_EXE_DIR}/clang-cl.exe"
 fi
 export WINE=${MOZ_FETCHES_DIR}/wine/bin/wine64
-export RC=rc.exe
-export MIDL=midl.exe
 mk_add_options "export PATH=${TOOLTOOL_DIR}/vs2017_15.8.4/VC/bin/Hostx64/x64:${MOZ_FETCHES_DIR}/nsis-3.01:${CLANG_CL_EXE_DIR}:${PATH}"
 
 unset VC_PATH
