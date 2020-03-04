@@ -372,6 +372,12 @@ export interface PerformancePref {
    * time that you open it. After that, it is not displayed by default.
    */
   PopupIntroDisplayed: "devtools.performance.popup.intro-displayed";
+  /**
+   * This preference is used outside of the performance-new type system
+   * (in DevToolsStartup). It toggles the availability of the menu item
+   * "Tools -> Web Developer -> Enable Profiler Toolbar Icon".
+   */
+  PopupFeatureFlag: "devtools.performance.popup.feature-flag";
 }
 
 /**

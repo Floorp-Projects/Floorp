@@ -628,6 +628,11 @@ DevToolsStartup.prototype = {
       AppConstants.NIGHTLY_BUILD
     );
 
+    // Listen for messages from the front-end. This needs to happen even if the
+    // button isn't enabled yet. This will allow the front-end to turn on the
+    // popup for our users, regardless of if the feature is enabled by default.
+    this.initializeProfilerWebChannel();
+
     if (!isPopupFeatureFlagEnabled) {
       // The profiler's popup is experimental. The plan is to eventually turn it on
       // everywhere, but while it's under active development we don't want everyone
@@ -636,10 +641,6 @@ DevToolsStartup.prototype = {
       // go away once it is fully shipped.
       return;
     }
-
-    // Listen for messages from the front-end. This needs to happen even if the
-    // button isn't enabled yet.
-    this.initializeProfilerWebChannel();
 
     if (isProfilerButtonEnabled()) {
       ProfilerMenuButton.initialize();
