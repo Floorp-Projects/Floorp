@@ -403,7 +403,7 @@ this.windows = class extends ExtensionAPI {
             });
           }
           if (updateInfo.focused) {
-            Services.focus.activeWindow = win.window;
+            win.window.focus();
           }
 
           if (updateInfo.state !== null) {
