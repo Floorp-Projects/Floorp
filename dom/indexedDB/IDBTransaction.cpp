@@ -988,7 +988,10 @@ IDBTransaction::Run() {
   // abort/commit.
 
   if (ReadyState::Finished == mReadyState) {
-    MOZ_ASSERT(IsAborted());
+    // There are three cases where mReadyState is set to Finished: In
+    // FileCompleteOrAbortEvents, AbortInternal and in CommitIfNotStarted. We
+    // shouldn't get here after CommitIfNotStarted again.
+    MOZ_ASSERT(mFiredCompleteOrAbort || IsAborted());
     return NS_OK;
   }
 
