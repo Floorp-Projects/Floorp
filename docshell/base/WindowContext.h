@@ -9,11 +9,14 @@
 
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 namespace mozilla {
 namespace dom {
 
-#define MOZ_EACH_WC_FIELD(FIELD) FIELD(OuterWindowId, uint64_t)
+#define MOZ_EACH_WC_FIELD(FIELD) \
+  FIELD(OuterWindowId, uint64_t) \
+  FIELD(CookieJarSettings, Maybe<mozilla::net::CookieJarSettingsArgs>)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -72,6 +75,12 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_OuterWindowId>, const uint64_t& aValue,
               ContentParent* aSource) {
     return GetOuterWindowId() == 0 && aValue != 0;
+  }
+
+  bool CanSet(FieldIndex<IDX_CookieJarSettings>,
+              const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
+              ContentParent* aSource) {
+    return true;
   }
 
   // Overload `DidSet` to get notifications for a particular field being set.
