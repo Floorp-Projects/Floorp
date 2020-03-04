@@ -254,10 +254,16 @@ BrowserToolboxLauncher.prototype = {
       "devtools.browsertoolbox.fission",
       false
     );
+    const isInputContextEnabled = Services.prefs.getBoolPref(
+      "devtools.webconsole.input.context",
+      false
+    );
     const environment = {
       // Will be read by the Browser Toolbox Firefox instance to update the
       // devtools.browsertoolbox.fission pref on the Browser Toolbox profile.
       MOZ_BROWSER_TOOLBOX_FISSION_PREF: isBrowserToolboxFission ? "1" : "0",
+      // Similar, but for the WebConsole input context dropdown.
+      MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT: isInputContextEnabled ? "1" : "0",
       // Disable safe mode for the new process in case this was opened via the
       // keyboard shortcut.
       MOZ_DISABLE_SAFE_MODE_KEY: "1",
