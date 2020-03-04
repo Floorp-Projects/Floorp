@@ -110,22 +110,6 @@ public class GeckoDisplay {
     }
 
     /**
-     * Update the safe area insets of the surface on the screen.
-     *
-     * @param left   left margin of safe area
-     * @param top    top margin of safe area
-     * @param right  right margin of safe area
-     * @param bottom bottom margin of safe area
-     */
-    @UiThread
-    public void safeAreaInsetsChanged(final int top, final int right, final int bottom, final int left) {
-        ThreadUtils.assertOnUiThread();
-
-        if (mSession.getDisplay() == this) {
-            mSession.onSafeAreaInsetsChanged(top, right, bottom, left);
-        }
-    }
-    /**
      * Set the maximum height of the dynamic toolbar(s).
      *
      * If the toolbar is dynamic, this function needs to be called with the maximum

@@ -41,7 +41,6 @@ using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenIntCoord from "Units.h";
-using mozilla::ScreenIntMargin from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";
 using ScreenRect from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
@@ -935,12 +934,6 @@ child:
      * is necessary.
      */
     async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
-
-    /**
-     * Tell the child that the safe area of widget has changed.
-     *
-     */
-    async SafeAreaInsetsChanged(ScreenIntMargin aSafeAreaInsets);
 
     /**
      * Tell the browser that its frame loader has been swapped

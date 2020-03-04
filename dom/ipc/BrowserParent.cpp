@@ -935,15 +935,9 @@ void BrowserParent::InitRendering() {
   Unused << SendInitRendering(textureFactoryIdentifier, layersId,
                               mRemoteLayerTreeOwner.GetCompositorOptions(),
                               mRemoteLayerTreeOwner.IsLayersConnected());
-
-  RefPtr<nsIWidget> widget = GetTopLevelWidget();
-  if (widget) {
-    ScreenIntMargin safeAreaInsets = widget->GetSafeAreaInsets();
-    Unused << SendSafeAreaInsetsChanged(safeAreaInsets);
-  }
-
 #if defined(MOZ_WIDGET_ANDROID)
   if (XRE_IsParentProcess()) {
+    RefPtr<nsIWidget> widget = GetTopLevelWidget();
     MOZ_ASSERT(widget);
 
     Unused << SendDynamicToolbarMaxHeightChanged(

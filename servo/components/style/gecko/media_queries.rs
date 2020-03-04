@@ -310,15 +310,6 @@ impl Device {
 
     /// Returns safe area insets
     pub fn safe_area_insets(&self) -> SideOffsets2D<f32, CSSPixel> {
-        let pc = match self.pres_context() {
-            Some(pc) => pc,
-            None => return SideOffsets2D::zero(),
-        };
-        let mut top = 0.0;
-        let mut right = 0.0;
-        let mut bottom = 0.0;
-        let mut left = 0.0;
-        unsafe { bindings::Gecko_GetSafeAreaInsets(pc, &mut top, &mut right, &mut bottom, &mut left) };
-        SideOffsets2D::new(top, right, bottom, left)
+        SideOffsets2D::zero()
     }
 }

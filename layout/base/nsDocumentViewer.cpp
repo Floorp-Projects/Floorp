@@ -811,19 +811,6 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
     mPresContext->SetOverrideDPPX(mOverrideDPPX);
   }
 
-  if (mWindow && mDocument->IsTopLevelContentDocument()) {
-    // Set initial safe area insets
-    ScreenIntMargin windowSafeAreaInsets;
-    LayoutDeviceIntRect windowRect = mWindow->GetScreenBounds();
-    nsCOMPtr<nsIScreen> screen = mWindow->GetWidgetScreen();
-    if (screen) {
-      windowSafeAreaInsets = nsContentUtils::GetWindowSafeAreaInsets(
-          screen, mWindow->GetSafeAreaInsets(), windowRect);
-    }
-
-    mPresContext->SetSafeAreaInsets(windowSafeAreaInsets);
-  }
-
   if (aDoInitialReflow) {
     RefPtr<PresShell> presShell = mPresShell;
     // Initial reflow
