@@ -248,8 +248,8 @@ class IntervalSet {
   typedef AutoTArray<ElemType, 4> ContainerType;
   typedef typename ContainerType::index_type IndexType;
 
-  IntervalSet() {}
-  virtual ~IntervalSet() {}
+  IntervalSet() = default;
+  virtual ~IntervalSet() = default;
 
   IntervalSet(const SelfType& aOther) : mIntervals(aOther.mIntervals) {}
 

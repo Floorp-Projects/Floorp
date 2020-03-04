@@ -467,8 +467,8 @@ class CDM_CLASS_API Buffer {
   virtual uint32_t Size() const = 0;
 
  protected:
-  Buffer() {}
-  virtual ~Buffer() {}
+  Buffer() = default;
+  virtual ~Buffer() = default;
 
  private:
   Buffer(const Buffer&);
@@ -487,8 +487,8 @@ class CDM_CLASS_API DecryptedBlock {
   virtual int64_t Timestamp() const = 0;
 
  protected:
-  DecryptedBlock() {}
-  virtual ~DecryptedBlock() {}
+  DecryptedBlock() = default;
+  virtual ~DecryptedBlock() = default;
 };
 
 class CDM_CLASS_API VideoFrame {
@@ -519,8 +519,8 @@ class CDM_CLASS_API VideoFrame {
   virtual int64_t Timestamp() const = 0;
 
  protected:
-  VideoFrame() {}
-  virtual ~VideoFrame() {}
+  VideoFrame() = default;
+  virtual ~VideoFrame() = default;
 };
 
 // Represents decrypted and decoded audio frames. AudioFrames can contain
@@ -546,8 +546,8 @@ class CDM_CLASS_API AudioFrames {
   virtual AudioFormat Format() const = 0;
 
  protected:
-  AudioFrames() {}
-  virtual ~AudioFrames() {}
+  AudioFrames() = default;
+  virtual ~AudioFrames() = default;
 };
 
 // FileIO interface provides a way for the CDM to store data in a file in
@@ -592,8 +592,8 @@ class CDM_CLASS_API FileIO {
   virtual void Close() = 0;
 
  protected:
-  FileIO() {}
-  virtual ~FileIO() {}
+  FileIO() = default;
+  virtual ~FileIO() = default;
 };
 
 // Responses to FileIO calls. All responses will be called asynchronously.
@@ -628,8 +628,8 @@ class CDM_CLASS_API FileIOClient {
   virtual void OnWriteComplete(Status status) = 0;
 
  protected:
-  FileIOClient() {}
-  virtual ~FileIOClient() {}
+  FileIOClient() = default;
+  virtual ~FileIOClient() = default;
 };
 
 class CDM_CLASS_API Host_9;
@@ -839,8 +839,8 @@ class CDM_CLASS_API ContentDecryptionModule_9 {
   virtual void Destroy() = 0;
 
  protected:
-  ContentDecryptionModule_9() {}
-  virtual ~ContentDecryptionModule_9() {}
+  ContentDecryptionModule_9() = default;
+  virtual ~ContentDecryptionModule_9() = default;
 };
 
 // ContentDecryptionModule interface that all CDMs need to implement.
@@ -1059,8 +1059,8 @@ class CDM_CLASS_API ContentDecryptionModule_10 {
   virtual void Destroy() = 0;
 
  protected:
-  ContentDecryptionModule_10() {}
-  virtual ~ContentDecryptionModule_10() {}
+  ContentDecryptionModule_10() = default;
+  virtual ~ContentDecryptionModule_10() = default;
 };
 
 // ----- Note: CDM interface(s) below still in development and not stable! -----
@@ -1281,8 +1281,8 @@ class CDM_CLASS_API ContentDecryptionModule_11 {
   virtual void Destroy() = 0;
 
  protected:
-  ContentDecryptionModule_11() {}
-  virtual ~ContentDecryptionModule_11() {}
+  ContentDecryptionModule_11() = default;
+  virtual ~ContentDecryptionModule_11() = default;
 };
 
 class CDM_CLASS_API Host_9 {
@@ -1414,8 +1414,8 @@ class CDM_CLASS_API Host_9 {
   virtual void RequestStorageId(uint32_t version) = 0;
 
  protected:
-  Host_9() {}
-  virtual ~Host_9() {}
+  Host_9() = default;
+  virtual ~Host_9() = default;
 };
 
 class CDM_CLASS_API Host_10 {
@@ -1550,8 +1550,8 @@ class CDM_CLASS_API Host_10 {
   virtual void RequestStorageId(uint32_t version) = 0;
 
  protected:
-  Host_10() {}
-  virtual ~Host_10() {}
+  Host_10() = default;
+  virtual ~Host_10() = default;
 };
 
 class CDM_CLASS_API Host_11 {
@@ -1699,8 +1699,8 @@ class CDM_CLASS_API Host_11 {
   virtual void RequestStorageId(uint32_t version) = 0;
 
  protected:
-  Host_11() {}
-  virtual ~Host_11() {}
+  Host_11() = default;
+  virtual ~Host_11() = default;
 };
 
 }  // namespace cdm

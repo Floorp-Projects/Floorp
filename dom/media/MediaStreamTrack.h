@@ -235,7 +235,7 @@ class MediaStreamTrackSource : public nsISupports {
   }
 
  protected:
-  virtual ~MediaStreamTrackSource() {}
+  virtual ~MediaStreamTrackSource() = default;
 
   bool IsActive() {
     for (const WeakPtr<Sink>& sink : mSinks) {
@@ -339,7 +339,7 @@ class BasicTrackSource : public MediaStreamTrackSource {
   void Enable() override {}
 
  protected:
-  ~BasicTrackSource() {}
+  ~BasicTrackSource() = default;
 
   const MediaSourceEnum mMediaSource;
 };

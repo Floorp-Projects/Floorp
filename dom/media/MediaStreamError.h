@@ -68,7 +68,7 @@ class MediaMgrError final : public nsISupports, public BaseMediaMgrError {
   NS_DECL_THREADSAFE_ISUPPORTS
 
  private:
-  ~MediaMgrError() {}
+  ~MediaMgrError() = default;
 };
 
 namespace dom {
@@ -98,7 +98,7 @@ class MediaStreamError final : public nsISupports,
   void GetConstraint(nsAString& aConstraint) const;
 
  private:
-  virtual ~MediaStreamError() {}
+  virtual ~MediaStreamError() = default;
 
   RefPtr<nsPIDOMWindowInner> mParent;
 };

@@ -45,7 +45,7 @@ struct HostFileData {
   HostFileData(HostFileData&& aOther)
       : mBinary(std::move(aOther.mBinary)), mSig(std::move(aOther.mSig)) {}
 
-  ~HostFileData() {}
+  ~HostFileData() = default;
 
   HostFile mBinary;
   HostFile mSig;

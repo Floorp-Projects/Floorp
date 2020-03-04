@@ -20,7 +20,7 @@ using namespace ipc;
 RDDProcessImpl::RDDProcessImpl(ProcessId aParentPid)
     : ProcessChild(aParentPid) {}
 
-RDDProcessImpl::~RDDProcessImpl() {}
+RDDProcessImpl::~RDDProcessImpl() = default;
 
 bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
 #if defined(MOZ_SANDBOX) && defined(OS_WIN)

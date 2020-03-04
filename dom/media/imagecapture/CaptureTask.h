@@ -63,7 +63,7 @@ class CaptureTask : public DirectMediaTrackListener,
   explicit CaptureTask(dom::ImageCapture* aImageCapture);
 
  protected:
-  virtual ~CaptureTask() {}
+  virtual ~CaptureTask() = default;
 
   // Post a runnable on main thread to end this task and call TaskComplete to
   // post error event to script. It is called off-main-thread.

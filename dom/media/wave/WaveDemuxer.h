@@ -204,7 +204,7 @@ class WAVTrackDemuxer : public MediaTrackDemuxer,
   media::TimeIntervals GetBuffered() override;
 
  private:
-  ~WAVTrackDemuxer() {}
+  ~WAVTrackDemuxer() = default;
 
   media::TimeUnit FastSeek(const media::TimeUnit& aTime);
   media::TimeUnit ScanUntil(const media::TimeUnit& aTime);

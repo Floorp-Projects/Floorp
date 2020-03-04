@@ -18,7 +18,7 @@ namespace gmp {
 GMPProcessChild::GMPProcessChild(ProcessId aParentPid)
     : ProcessChild(aParentPid) {}
 
-GMPProcessChild::~GMPProcessChild() {}
+GMPProcessChild::~GMPProcessChild() = default;
 
 bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
   nsAutoString pluginFilename;

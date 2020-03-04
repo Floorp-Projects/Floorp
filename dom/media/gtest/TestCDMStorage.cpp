@@ -120,7 +120,7 @@ class GMPShutdownObserver : public nsIRunnable, public nsIObserver {
   }
 
  private:
-  virtual ~GMPShutdownObserver() {}
+  virtual ~GMPShutdownObserver() = default;
   nsCOMPtr<nsIRunnable> mShutdownTask;
   nsCOMPtr<nsIRunnable> mContinuation;
   const nsString mNodeId;
@@ -182,7 +182,7 @@ class ClearCDMStorageTask : public nsIRunnable, public nsIObserver {
   }
 
  private:
-  virtual ~ClearCDMStorageTask() {}
+  virtual ~ClearCDMStorageTask() = default;
   nsCOMPtr<nsIRunnable> mContinuation;
   nsCOMPtr<nsIThread> mTarget;
   const PRTime mSince;
@@ -966,7 +966,7 @@ class CDMStorageTest {
   }
 
  private:
-  ~CDMStorageTest() {}
+  ~CDMStorageTest() = default;
 
   struct ExpectedMessage {
     ExpectedMessage(const nsCString& aMessage,

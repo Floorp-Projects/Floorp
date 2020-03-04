@@ -33,7 +33,7 @@ class ByteStream : public DecoderDoctorLifeLogger<ByteStream> {
   }
 
  protected:
-  virtual ~ByteStream() {}
+  virtual ~ByteStream() = default;
 };
 
 }  // namespace mozilla

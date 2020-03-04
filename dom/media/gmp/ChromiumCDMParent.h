@@ -90,7 +90,7 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   void Shutdown();
 
  protected:
-  ~ChromiumCDMParent() {}
+  ~ChromiumCDMParent() = default;
 
   ipc::IPCResult Recv__delete__() override;
   ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(const uint32_t& aPromiseId,

@@ -140,7 +140,7 @@ class SpeechDispatcherVoice {
   nsString mLanguage;
 
  private:
-  ~SpeechDispatcherVoice() {}
+  ~SpeechDispatcherVoice() = default;
 };
 
 class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
@@ -158,7 +158,7 @@ class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
   bool OnSpeechEvent(SPDNotificationType state);
 
  private:
-  ~SpeechDispatcherCallback() {}
+  ~SpeechDispatcherCallback() = default;
 
   // This pointer is used to dispatch events
   nsCOMPtr<nsISpeechTask> mTask;

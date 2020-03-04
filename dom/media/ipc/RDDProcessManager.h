@@ -89,7 +89,7 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
     explicit Observer(RDDProcessManager* aManager);
 
    protected:
-    ~Observer() {}
+    ~Observer() = default;
 
     RDDProcessManager* mManager;
   };

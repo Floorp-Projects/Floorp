@@ -88,7 +88,7 @@ AudioBufferMemoryTracker* AudioBufferMemoryTracker::GetInstance() {
   return sSingleton;
 }
 
-AudioBufferMemoryTracker::AudioBufferMemoryTracker() {}
+AudioBufferMemoryTracker::AudioBufferMemoryTracker() = default;
 
 void AudioBufferMemoryTracker::Init() { RegisterWeakMemoryReporter(this); }
 

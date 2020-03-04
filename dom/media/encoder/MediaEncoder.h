@@ -43,7 +43,7 @@ class MediaEncoderListener {
   virtual void Shutdown() = 0;
 
  protected:
-  virtual ~MediaEncoderListener() {}
+  virtual ~MediaEncoderListener() = default;
 };
 
 /**

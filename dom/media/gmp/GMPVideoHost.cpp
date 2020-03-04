@@ -14,7 +14,7 @@ namespace gmp {
 GMPVideoHostImpl::GMPVideoHostImpl(GMPSharedMemManager* aSharedMemMgr)
     : mSharedMemMgr(aSharedMemMgr) {}
 
-GMPVideoHostImpl::~GMPVideoHostImpl() {}
+GMPVideoHostImpl::~GMPVideoHostImpl() = default;
 
 GMPErr GMPVideoHostImpl::CreateFrame(GMPVideoFrameFormat aFormat,
                                      GMPVideoFrame** aFrame) {

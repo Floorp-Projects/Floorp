@@ -58,7 +58,7 @@ MediaKeySystemAccess::MediaKeySystemAccess(
           mozilla::dom::ToCString(mConfig).get());
 }
 
-MediaKeySystemAccess::~MediaKeySystemAccess() {}
+MediaKeySystemAccess::~MediaKeySystemAccess() = default;
 
 JSObject* MediaKeySystemAccess::WrapObject(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {

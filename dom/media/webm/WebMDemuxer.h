@@ -64,10 +64,7 @@ class MediaRawDataQueue {
     }
   }
 
-  MediaRawDataQueue& operator=(const MediaRawDataQueue& aOther) {
-    mQueue = aOther.mQueue;
-    return *this;
-  }
+  MediaRawDataQueue& operator=(const MediaRawDataQueue& aOther) = delete;
 
   const RefPtr<MediaRawData>& First() const { return mQueue.front(); }
 

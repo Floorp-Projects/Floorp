@@ -1316,7 +1316,7 @@ BasicWaveFormCache::BasicWaveFormCache(uint32_t aSampleRate)
     : mSampleRate(aSampleRate) {
   MOZ_ASSERT(NS_IsMainThread());
 }
-BasicWaveFormCache::~BasicWaveFormCache() {}
+BasicWaveFormCache::~BasicWaveFormCache() = default;
 
 WebCore::PeriodicWave* BasicWaveFormCache::GetBasicWaveForm(
     OscillatorType aType) {

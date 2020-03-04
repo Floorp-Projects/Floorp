@@ -155,7 +155,7 @@ PDMFactory::PDMFactory() {
   CreateNullPDM();
 }
 
-PDMFactory::~PDMFactory() {}
+PDMFactory::~PDMFactory() = default;
 
 /* static */
 void PDMFactory::EnsureInit() {

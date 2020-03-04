@@ -23,7 +23,7 @@ ReaderProxy::ReaderProxy(AbstractThread* aOwnerThread,
              mReader->IsWaitForDataSupported());
 }
 
-ReaderProxy::~ReaderProxy() {}
+ReaderProxy::~ReaderProxy() = default;
 
 media::TimeUnit ReaderProxy::StartTime() const {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());

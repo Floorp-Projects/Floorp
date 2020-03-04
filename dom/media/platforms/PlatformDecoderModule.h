@@ -196,8 +196,8 @@ class PlatformDecoderModule {
   }
 
  protected:
-  PlatformDecoderModule() {}
-  virtual ~PlatformDecoderModule() {}
+  PlatformDecoderModule() = default;
+  virtual ~PlatformDecoderModule() = default;
 
   friend class MediaChangeMonitor;
   friend class PDMFactory;
@@ -260,7 +260,7 @@ DDLoggedTypeDeclName(MediaDataDecoder);
 // for decoding.
 class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
  protected:
-  virtual ~MediaDataDecoder() {}
+  virtual ~MediaDataDecoder() = default;
 
  public:
   typedef TrackInfo::TrackType TrackType;

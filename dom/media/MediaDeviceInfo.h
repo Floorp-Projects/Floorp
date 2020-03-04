@@ -46,7 +46,7 @@ class MediaDeviceInfo final : public nsISupports, public nsWrapperCache {
   nsString mLabel;
   nsString mGroupId;
 
-  virtual ~MediaDeviceInfo() {}
+  virtual ~MediaDeviceInfo() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDeviceInfo,

@@ -44,7 +44,7 @@ class MediaBlockCacheBase {
   static const int32_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
 
  protected:
-  virtual ~MediaBlockCacheBase() {}
+  virtual ~MediaBlockCacheBase() = default;
 
  public:
   // Initialize this cache.

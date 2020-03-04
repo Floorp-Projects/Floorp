@@ -16,7 +16,7 @@ MediaKeyError::MediaKeyError(EventTarget* aOwner, uint32_t aSystemCode)
   InitEvent(NS_LITERAL_STRING("error"), CanBubble::eNo, Cancelable::eNo);
 }
 
-MediaKeyError::~MediaKeyError() {}
+MediaKeyError::~MediaKeyError() = default;
 
 uint32_t MediaKeyError::SystemCode() const { return mSystemCode; }
 

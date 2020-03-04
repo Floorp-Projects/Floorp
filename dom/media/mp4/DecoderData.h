@@ -21,8 +21,10 @@ namespace mozilla {
 class MP4Demuxer;
 
 struct PsshInfo {
-  PsshInfo() {}
-  PsshInfo(const PsshInfo& aOther) : uuid(aOther.uuid), data(aOther.data) {}
+  PsshInfo() = default;
+  PsshInfo(const PsshInfo& aOther) = delete;
+  PsshInfo(PsshInfo&& aOther) = default;
+
   nsTArray<uint8_t> uuid;
   nsTArray<uint8_t> data;
 
@@ -34,9 +36,7 @@ struct PsshInfo {
 class CryptoFile {
  public:
   CryptoFile() : valid(false) {}
-  CryptoFile(const CryptoFile& aCryptoFile) : valid(aCryptoFile.valid) {
-    pssh.AppendElements(aCryptoFile.pssh);
-  }
+  CryptoFile(const CryptoFile& aCryptoFile) = delete;
 
   void Update(const uint8_t* aData, size_t aLength) {
     valid = DoUpdate(aData, aLength).isOk();

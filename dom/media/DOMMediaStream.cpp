@@ -89,7 +89,7 @@ class DOMMediaStream::PlaybackTrackListener : public MediaStreamTrackConsumer {
   }
 
  protected:
-  virtual ~PlaybackTrackListener() {}
+  virtual ~PlaybackTrackListener() = default;
 
   RefPtr<DOMMediaStream> mStream;
 };

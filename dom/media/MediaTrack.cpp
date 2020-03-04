@@ -21,7 +21,7 @@ MediaTrack::MediaTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
       mLabel(aLabel),
       mLanguage(aLanguage) {}
 
-MediaTrack::~MediaTrack() {}
+MediaTrack::~MediaTrack() = default;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(dom::MediaTrack, DOMEventTargetHelper, mList)
 

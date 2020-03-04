@@ -99,7 +99,7 @@ class DDLifetimes {
     explicit DDLogObjectHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
     DDLogObjectHashKey(const DDLogObjectHashKey& aToCopy)
         : mValue(aToCopy.mValue) {}
-    ~DDLogObjectHashKey() {}
+    ~DDLogObjectHashKey() = default;
 
     KeyType GetKey() const { return mValue; }
     bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }

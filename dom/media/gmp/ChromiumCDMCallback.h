@@ -14,7 +14,7 @@
 
 class ChromiumCDMCallback {
  public:
-  virtual ~ChromiumCDMCallback() {}
+  virtual ~ChromiumCDMCallback() = default;
 
   virtual void SetSessionId(uint32_t aPromiseId,
                             const nsCString& aSessionId) = 0;

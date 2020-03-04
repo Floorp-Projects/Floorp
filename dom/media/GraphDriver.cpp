@@ -160,7 +160,7 @@ SystemClockDriver::SystemClockDriver(GraphInterface* aGraphInterface,
       mCurrentTimeStamp(TimeStamp::Now()),
       mLastTimeStamp(TimeStamp::Now()) {}
 
-SystemClockDriver::~SystemClockDriver() {}
+SystemClockDriver::~SystemClockDriver() = default;
 
 void ThreadedDriver::RunThread() {
   mThreadRunning = true;
@@ -267,7 +267,7 @@ OfflineClockDriver::OfflineClockDriver(GraphInterface* aGraphInterface,
                                        uint32_t aSampleRate, GraphTime aSlice)
     : ThreadedDriver(aGraphInterface, nullptr, aSampleRate), mSlice(aSlice) {}
 
-OfflineClockDriver::~OfflineClockDriver() {}
+OfflineClockDriver::~OfflineClockDriver() = default;
 
 void OfflineClockDriver::RunThread() {
   nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(mThread);
@@ -292,7 +292,7 @@ AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver,
       "No audio stream!");
 }
 
-AsyncCubebTask::~AsyncCubebTask() {}
+AsyncCubebTask::~AsyncCubebTask() = default;
 
 NS_IMETHODIMP
 AsyncCubebTask::Run() {

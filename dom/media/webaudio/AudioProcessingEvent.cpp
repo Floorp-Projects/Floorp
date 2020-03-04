@@ -26,7 +26,7 @@ AudioProcessingEvent::AudioProcessingEvent(ScriptProcessorNode* aOwner,
                                            WidgetEvent* aEvent)
     : Event(aOwner, aPresContext, aEvent), mPlaybackTime(0.0), mNode(aOwner) {}
 
-AudioProcessingEvent::~AudioProcessingEvent() {}
+AudioProcessingEvent::~AudioProcessingEvent() = default;
 
 JSObject* AudioProcessingEvent::WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

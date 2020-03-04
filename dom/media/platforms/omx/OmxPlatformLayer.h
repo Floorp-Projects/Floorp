@@ -63,7 +63,7 @@ class OmxPlatformLayer {
 
   virtual nsresult Shutdown() = 0;
 
-  virtual ~OmxPlatformLayer() {}
+  virtual ~OmxPlatformLayer() = default;
 
   // For decoders, input port index is start port number and output port is
   // next. See OpenMAX IL spec v1.1.2 section 8.6.1 & 8.8.1.

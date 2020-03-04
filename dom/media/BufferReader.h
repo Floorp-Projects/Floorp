@@ -47,7 +47,7 @@ class MOZ_RAII BufferReader {
     mLength = mRemaining;
   }
 
-  ~BufferReader() {}
+  ~BufferReader() = default;
 
   size_t Offset() const { return mLength - mRemaining; }
 
