@@ -68,7 +68,7 @@ impl<'a> RawtestHarness<'a> {
 
         match image1.compare(&image2) {
             ReftestImageComparison::Equal => {}
-            ReftestImageComparison::NotEqual { max_difference, count_different } => {
+            ReftestImageComparison::NotEqual { max_difference, count_different, .. } => {
                 let t = "rawtest";
                 println!(
                     "{} | {} | {}: {}, {}: {}",
