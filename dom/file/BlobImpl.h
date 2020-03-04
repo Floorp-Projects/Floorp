@@ -41,6 +41,8 @@ class BlobImpl : public nsISupports {
 
   virtual int64_t GetLastModified(ErrorResult& aRv) = 0;
 
+  virtual void SetLastModified(int64_t aLastModified) = 0;
+
   virtual void GetMozFullPath(nsAString& aName,
                               SystemCallerGuarantee /* unused */,
                               ErrorResult& aRv) = 0;
@@ -83,14 +85,19 @@ class BlobImpl : public nsISupports {
 
   virtual int64_t GetFileId() = 0;
 
-  nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                       nsACString& aContentType, nsACString& aCharset);
+  virtual nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                               nsACString& aContentType,
+                               nsACString& aCharset) = 0;
 
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            int64_t aLastModifiedDate) = 0;
 
   virtual bool IsMemoryFile() const = 0;
+
+  virtual bool IsSizeUnknown() const = 0;
+
+  virtual bool IsDateUnknown() const = 0;
 
   virtual bool IsFile() const = 0;
 

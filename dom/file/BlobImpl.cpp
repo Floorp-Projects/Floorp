@@ -61,38 +61,6 @@ already_AddRefed<BlobImpl> BlobImpl::Slice(const Optional<int64_t>& aStart,
   return CreateSlice((uint64_t)start, (uint64_t)(end - start), type, aRv);
 }
 
-nsresult BlobImpl::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                               nsACString& aContentType, nsACString& aCharset) {
-  MOZ_ASSERT(aContentLength);
-
-  ErrorResult rv;
-
-  nsCOMPtr<nsIInputStream> stream;
-  CreateInputStream(getter_AddRefs(stream), rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  *aContentLength = GetSize(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  nsAutoString contentType;
-  GetType(contentType);
-
-  if (contentType.IsEmpty()) {
-    aContentType.SetIsVoid(true);
-  } else {
-    CopyUTF16toUTF8(contentType, aContentType);
-  }
-
-  aCharset.Truncate();
-
-  stream.forget(aBody);
-  return NS_OK;
-}
-
 NS_IMPL_ISUPPORTS(BlobImpl, BlobImpl)
 
 }  // namespace dom

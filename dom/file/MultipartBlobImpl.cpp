@@ -232,9 +232,8 @@ void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
 }
 
 void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
-  MOZ_ASSERT(mLength == MULTIPARTBLOBIMPL_UNKNOWN_LENGTH);
-  MOZ_ASSERT_IF(mIsFile, mLastModificationDate ==
-                             MULTIPARTBLOBIMPL_UNKNOWN_LAST_MODIFIED);
+  MOZ_ASSERT(mLength == UINT64_MAX);
+  MOZ_ASSERT(mLastModificationDate == INT64_MAX);
 
   uint64_t totalLength = 0;
   int64_t lastModified = 0;
@@ -243,6 +242,11 @@ void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
   for (uint32_t index = 0, count = mBlobImpls.Length(); index < count;
        index++) {
     RefPtr<BlobImpl>& blob = mBlobImpls[index];
+
+#ifdef DEBUG
+    MOZ_ASSERT(!blob->IsSizeUnknown());
+    MOZ_ASSERT(!blob->IsDateUnknown());
+#endif
 
     uint64_t subBlobLength = blob->GetSize(aRv);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -324,8 +328,4 @@ void MultipartBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
   }
 
   aBlobImplType.AppendLiteral("]");
-}
-
-void MultipartBlobImpl::SetLastModified(int64_t aLastModified) {
-  mLastModificationDate = aLastModified * PR_USEC_PER_MSEC;
 }
