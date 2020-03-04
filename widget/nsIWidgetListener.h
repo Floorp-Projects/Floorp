@@ -185,12 +185,6 @@ class nsIWidgetListener {
    */
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                                     bool aUseAttachedEvents);
-
-  /**
-   * Called when safe area insets are changed.
-   */
-  virtual void SafeAreaInsetsChanged(
-      const mozilla::ScreenIntMargin& aSafeAreaInsets);
 };
 
 #endif

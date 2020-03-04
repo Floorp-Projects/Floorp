@@ -372,7 +372,6 @@ class nsIWidget : public nsISupports {
   typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
   typedef mozilla::ScreenIntPoint ScreenIntPoint;
-  typedef mozilla::ScreenIntMargin ScreenIntMargin;
   typedef mozilla::ScreenIntSize ScreenIntSize;
   typedef mozilla::ScreenPoint ScreenPoint;
   typedef mozilla::CSSToScreenScale CSSToScreenScale;
@@ -1742,14 +1741,6 @@ class nsIWidget : public nsISupports {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
-
-  /*
-   * Get safe area insets except to cutout.
-   * See https://drafts.csswg.org/css-env-1/#safe-area-insets.
-   */
-  virtual mozilla::ScreenIntMargin GetSafeAreaInsets() const {
-    return mozilla::ScreenIntMargin();
-  }
 
  private:
   class LongTapInfo {

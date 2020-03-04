@@ -48,13 +48,10 @@ exclude: true
   [`GeckoRuntimeSettings.webManifest`][75.16], and
   [`GeckoRuntimeSettings.getWebManifestEnabled`][75.17]
   ([bug 1614894]({{bugzilla}}1603673)), to enable or check Web Manifest support.
-- Added [`GeckoDisplay.safeAreaInsetsChanged`][75.18] to notify the content of [safe area insets][75.19].
-  ([bug 1503656]({{bugzilla}}1503656))
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
 [75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
-<<<<<<< dest
 [75.4]: {{javadoc_uri}}/GeckoSession.html#reload-int-
 [75.5]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_NONE
 [75.6]: {{javadoc_uri}}/WebExtension.ActionDelegate.html
@@ -69,8 +66,6 @@ exclude: true
 [75.15]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#setWebManifestEnabled-boolean-
 [75.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#webManifest-boolean-
 [75.17]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled--
-[75.18]: {{javadoc_uri}}/GeckoDisplay.html#safeAreaInsetsChanged-int-int-int-int-
-[75.19]: https://developer.mozilla.org/en-US/docs/Web/CSS/env
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -634,4 +629,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 70653951daef244299243f3c154d37e13a4fd140
+[api-version]: b293a94c5f74d3f660959dadd2b48732b2b1ecd1

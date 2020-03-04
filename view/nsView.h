@@ -472,7 +472,6 @@ class nsView final : public nsIWidgetListener {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                                     bool aUseAttachedEvents) override;
-  virtual void SafeAreaInsetsChanged(const mozilla::ScreenIntMargin&) override;
 
   virtual ~nsView();
 

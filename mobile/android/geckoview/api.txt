@@ -393,7 +393,6 @@ package org.mozilla.geckoview {
   public class GeckoDisplay {
     ctor protected GeckoDisplay(GeckoSession);
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
-    method @UiThread public void safeAreaInsetsChanged(int, int, int, int);
     method @UiThread public void screenOriginChanged(int, int);
     method @UiThread @NonNull public GeckoDisplay.ScreenshotBuilder screenshot();
     method @UiThread public void setDynamicToolbarMaxHeight(int);
