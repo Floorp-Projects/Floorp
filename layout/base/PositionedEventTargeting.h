@@ -25,6 +25,16 @@ nsIFrame* FindFrameTargetedByInputEvent(
     WidgetGUIEvent* aEvent, nsIFrame* aRootFrame,
     const nsPoint& aPointRelativeToRootFrame, uint32_t aFlags = 0);
 
+class MOZ_RAII EventRetargetSuppression {
+ public:
+  EventRetargetSuppression();
+  ~EventRetargetSuppression();
+  static bool IsActive();
+
+ private:
+  static uint32_t sSuppressionCount;
+};
+
 }  // namespace mozilla
 
 #endif /* mozilla_PositionedEventTargeting_h */
