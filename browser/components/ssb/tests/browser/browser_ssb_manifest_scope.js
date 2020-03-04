@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Enable web manifest processing.
+Services.prefs.setBoolPref("dom.manifest.enabled", true);
+
 // Check that a site's manifest affects the scope of a ssb.
 
 function build_task(page, linkId, external, preload) {

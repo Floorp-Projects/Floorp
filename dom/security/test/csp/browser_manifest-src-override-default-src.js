@@ -13,6 +13,10 @@ const mixedContentFile = `${path}file_web_manifest_mixed_content.html`;
 const server = `${path}file_testserver.sjs`;
 const defaultURL = new URL(`http://example.org${server}`);
 const mixedURL = new URL(`http://mochi.test:8888${server}`);
+
+// Enable web manifest processing.
+Services.prefs.setBoolPref("dom.manifest.enabled", true);
+
 const tests = [
   // Check interaction with default-src and another origin,
   // CSP allows fetching from example.org, so manifest should load.
