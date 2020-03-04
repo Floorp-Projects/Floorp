@@ -3706,10 +3706,6 @@ function BrowserFullScreen() {
   window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
 }
 
-function getWebNavigation() {
-  return gBrowser.webNavigation;
-}
-
 function BrowserReloadWithFlags(reloadFlags) {
   let unchangedRemoteness = [];
 
@@ -7279,7 +7275,7 @@ function BrowserSetForcedCharacterSet(aCharset) {
     gBrowser.selectedBrowser.characterSet = aCharset;
     // Save the forced character-set
     PlacesUIUtils.setCharsetForPage(
-      getWebNavigation().currentURI,
+      gBrowser.currentURI,
       aCharset,
       window
     ).catch(Cu.reportError);
