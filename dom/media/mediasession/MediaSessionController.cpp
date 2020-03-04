@@ -79,6 +79,7 @@ void MediaSessionController::UpdateMetadata(
         NS_ConvertUTF16toUTF8(aMetadata->mAlbum).get());
     mMetadataMap.Put(aSessionContextId, aMetadata);
   }
+  mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
 }
 
 void MediaSessionController::UpdateActiveMediaSessionContextId() {
