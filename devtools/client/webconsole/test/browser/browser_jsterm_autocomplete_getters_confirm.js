@@ -13,10 +13,13 @@ const TEST_URI = `data:text/html;charset=utf-8,
      * Object prototype properties.
      */
     var obj = props => Object.create(null, Object.getOwnPropertyDescriptors(props));
+    let sideEffect;
     window.foo = obj({
       get bar() {
+        sideEffect = "bar";
         return obj({
           get baz() {
+            sideEffect = "baz";
             return obj({
               hello: 1,
               world: "",
@@ -26,6 +29,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
         })
       },
       get rab() {
+        sideEffect = "rab";
         return "";
       }
     });
@@ -35,6 +39,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 
 add_task(async function() {
   await pushPref("devtools.editor.autoclosebrackets", false);
+
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;

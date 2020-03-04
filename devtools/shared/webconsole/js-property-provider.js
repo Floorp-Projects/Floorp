@@ -6,6 +6,10 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
+const {
+  evalWithDebugger,
+} = require("devtools/server/actors/webconsole/eval-with-debugger");
+
 if (!isWorker) {
   loader.lazyRequireGetter(
     this,
@@ -114,6 +118,34 @@ function JSPropertyProvider({
   } = splitInputAtLastPropertyAccess(inputAnalysis);
   const { lastStatement, isElementAccess } = inputAnalysis;
 
+  // Eagerly evaluate the main expression and return the results properties.
+  // e.g. `obj.func().a` will evaluate `obj.func()` and return properties matching `a`.
+  // NOTE: this is only useful when the input has a property access.
+  if (webconsoleActor && shouldInputBeEagerlyEvaluated(inputAnalysis)) {
+    const eagerResponse = evalWithDebugger(
+      mainExpression,
+      { eager: true, selectedNodeActor },
+      webconsoleActor
+    );
+
+    const ret =
+      eagerResponse && eagerResponse.result && eagerResponse.result.return;
+
+    // Only send matches if eager evaluation returned something meaningful
+    if (ret && ret !== undefined) {
+      const matches =
+        typeof ret != "object"
+          ? getMatchedProps(ret, matchProp)
+          : getMatchedPropsInDbgObject(ret, matchProp);
+
+      return prepareReturnedObject({
+        matches,
+        search: matchProp,
+        isElementAccess,
+      });
+    }
+  }
+
   // AST representation of the expression before the last access char (`.` or `[`).
   let astExpression;
   const startQuoteRegex = /^('|"|`)/;
@@ -174,6 +206,7 @@ function JSPropertyProvider({
         }
 
         let props = getMatchedPropsInDbgObject(matchingObject, search);
+
         if (isElementAccess) {
           props = wrapMatchesInQuotes(props, elementAccessQuote);
         }
@@ -306,36 +339,27 @@ function JSPropertyProvider({
     }
   }
 
-  const prepareReturnedObject = matches => {
-    if (isElementAccess) {
-      // If it's an element access, we need to wrap properties in quotes (either the one
-      // the user already typed, or `"`).
-      matches = wrapMatchesInQuotes(matches, elementAccessQuote);
-    } else if (!isWorker) {
-      // If we're not performing an element access, we need to check that the property
-      // are suited for a dot access. (Reflect.jsm is not available in worker context yet,
-      // see Bug 1507181).
-      for (const match of matches) {
-        try {
-          // In order to know if the property is suited for dot notation, we use Reflect
-          // to parse an expression where we try to access the property with a dot. If it
-          // throws, this means that we need to do an element access instead.
-          Reflect.parse(`({${match}: true})`);
-        } catch (e) {
-          matches.delete(match);
-        }
-      }
-    }
+  const matches =
+    typeof obj != "object"
+      ? getMatchedProps(obj, search)
+      : getMatchedPropsInDbgObject(obj, search);
+  return prepareReturnedObject({
+    matches,
+    search,
+    isElementAccess,
+    elementAccessQuote,
+  });
+}
 
-    return { isElementAccess, matchProp, matches };
-  };
+function shouldInputBeEagerlyEvaluated({ lastStatement }) {
+  const inComputedProperty =
+    lastStatement.lastIndexOf("[") !== -1 &&
+    lastStatement.lastIndexOf("[") > lastStatement.lastIndexOf("]");
 
-  // If the final property is a primitive
-  if (typeof obj != "object") {
-    return prepareReturnedObject(getMatchedProps(obj, search));
-  }
+  const hasPropertyAccess =
+    lastStatement.includes(".") || lastStatement.includes("[");
 
-  return prepareReturnedObject(getMatchedPropsInDbgObject(obj, search));
+  return hasPropertyAccess && !inComputedProperty;
 }
 
 function shouldInputBeAutocompleted(inputAnalysisState) {
@@ -866,6 +890,36 @@ function isObjectUsable(object) {
  */
 function getVariableInEnvironment(environment, name) {
   return getExactMatchImpl(environment, name, DebuggerEnvironmentSupport);
+}
+
+function prepareReturnedObject({
+  matches,
+  search,
+  isElementAccess,
+  elementAccessQuote,
+}) {
+  if (isElementAccess) {
+    // If it's an element access, we need to wrap properties in quotes (either the one
+    // the user already typed, or `"`).
+
+    matches = wrapMatchesInQuotes(matches, elementAccessQuote);
+  } else if (!isWorker) {
+    // If we're not performing an element access, we need to check that the property
+    // are suited for a dot access. (Reflect.jsm is not available in worker context yet,
+    // see Bug 1507181).
+    for (const match of matches) {
+      try {
+        // In order to know if the property is suited for dot notation, we use Reflect
+        // to parse an expression where we try to access the property with a dot. If it
+        // throws, this means that we need to do an element access instead.
+        Reflect.parse(`({${match}: true})`);
+      } catch (e) {
+        matches.delete(match);
+      }
+    }
+  }
+
+  return { isElementAccess, matchProp: search, matches };
 }
 
 /**

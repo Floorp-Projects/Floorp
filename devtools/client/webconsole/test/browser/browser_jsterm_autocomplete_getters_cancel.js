@@ -8,8 +8,10 @@
 const TEST_URI = `data:text/html;charset=utf-8,
 <head>
   <script>
+    let sideEffect;
     window.foo = {
       get rab() {
+        sideEffect = "getRab";
         return "rab";
       }
     };

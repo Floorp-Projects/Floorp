@@ -12,8 +12,10 @@ const TEST_URI = `data:text/html;charset=utf-8,
     /* Create a prototype-less object so popup does not contain native
      * Object prototype properties.
      */
+    let sideEffect;
     window.foo = Object.create(null, Object.getOwnPropertyDescriptors({
       get bar() {
+        sideEffect = "bar";
         return "hello";
       }
     }));
