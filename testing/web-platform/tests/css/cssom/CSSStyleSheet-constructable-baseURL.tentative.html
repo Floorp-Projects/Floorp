@@ -7,10 +7,10 @@
 <script src='/resources/testharnessreport.js'></script>
 <script>
 
-function currentPath() {
-  const pathParts = location.href.split("/")
-  pathParts.pop();
-  return pathParts.join("/");
+function currentLocation() {
+  const sections = location.href.split("/")
+  sections.pop();
+  return sections.join("/");
 }
 
 test(() => {
@@ -24,7 +24,7 @@ test(() => {
   const baseURL = `${location.origin}/custom/path/`;
   const fullURL = `${baseURL}${fileName}`;
 
-  const sheet = new CSSStyleSheet({ baseURL: baseURL });
+  const sheet = new CSSStyleSheet({ baseURL });
   span.shadowRoot.adoptedStyleSheets = [sheet];
 
   sheet.replaceSync(`* { background-image: url("${fileName}"); }`);
@@ -37,7 +37,30 @@ test(() => {
 }, "Constructing sheet with custom base URL ueses that URL for CSS rules");
 
 test(() => {
-  assert_throws_dom("NotAllowedError", () => { new CSSStyleSheet({ baseURL: "::::"}) });
+  const span = document.createElement("span");
+  target.appendChild(span);
+  span.attachShadow({ mode: "open" })
+  const shadowDiv = document.createElement("div");
+  span.shadowRoot.appendChild(shadowDiv);
+
+  const fileName = "example.png"
+  const baseURL = "custom/path/";
+  const fullURL = `${currentLocation()}/${baseURL}${fileName}`;
+
+  const sheet = new CSSStyleSheet({ baseURL });
+  span.shadowRoot.adoptedStyleSheets = [sheet];
+
+  sheet.replaceSync(`* { background-image: url("${fileName}"); }`);
+  const styleFromRelative = getComputedStyle(shadowDiv).backgroundImage;
+
+  sheet.replaceSync(`* { background-image: url("${fullURL}"); }`);
+  const styleFromFull = getComputedStyle(shadowDiv).backgroundImage;
+
+  assert_equals(styleFromRelative, styleFromFull);
+}, "Constructing sheet with relative URL adds to the constructor document's base URL");
+
+test(() => {
+  assert_throws_dom("NotAllowedError", () => { new CSSStyleSheet({ baseURL: "chrome://"}) });
 }, "Constructing sheet with invalid base URL throws a NotAllowedError");
 
 </script>
