@@ -2408,9 +2408,9 @@
      *   Category: Control flow
      *   Type: Exceptions
      *   Operands: uint8_t hops, uint24_t slot
-     *   Stack: v => v
+     *   Stack:
      */ \
-    MACRO(ThrowSetAliasedConst, throw_set_aliased_const, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_DETECTING) \
+    MACRO(ThrowSetAliasedConst, throw_set_aliased_const, NULL, 5, 0, 0, JOF_ENVCOORD|JOF_NAME|JOF_DETECTING) \
     /*
      * Throw a TypeError for invalid assignment to the callee binding in a named
      * lambda, which is always a `const` binding. This is a different bytecode
@@ -2421,9 +2421,9 @@
      *   Category: Control flow
      *   Type: Exceptions
      *   Operands:
-     *   Stack: v => v
+     *   Stack:
      */ \
-    MACRO(ThrowSetCallee, throw_set_callee, NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ThrowSetCallee, throw_set_callee, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Throws a runtime TypeError for invalid assignment to an optimized
      * `const` binding. `localno` is used to get the variable name for the
@@ -2432,9 +2432,9 @@
      *   Category: Control flow
      *   Type: Exceptions
      *   Operands: uint24_t localno
-     *   Stack: v => v
+     *   Stack:
      */ \
-    MACRO(ThrowSetConst, throw_set_const, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
+    MACRO(ThrowSetConst, throw_set_const, NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
