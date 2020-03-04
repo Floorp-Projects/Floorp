@@ -211,13 +211,13 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       AppendHex(pdbAge, breakpadId, WITHOUT_PADDING);
 
       pdbPathStr = pdbName;
-      size_t pos = pdbPathStr.rfind('\\');
+      size_t pos = pdbPathStr.find_last_of("\\/");
       pdbNameStr =
           (pos != std::string::npos) ? pdbPathStr.substr(pos + 1) : pdbPathStr;
     }
 
     std::string modulePathStr(modulePath);
-    size_t pos = modulePathStr.rfind('\\');
+    size_t pos = modulePathStr.find_last_of("\\/");
     std::string moduleNameStr = (pos != std::string::npos)
                                     ? modulePathStr.substr(pos + 1)
                                     : modulePathStr;

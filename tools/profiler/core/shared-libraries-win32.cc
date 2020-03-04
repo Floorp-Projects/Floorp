@@ -144,7 +144,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
     nsAutoString modulePathStr(modulePath);
     nsAutoString moduleNameStr = modulePathStr;
-    int32_t pos = moduleNameStr.RFindChar('\\');
+    int32_t pos = moduleNameStr.RFindCharInSet(u"\\/");
     if (pos != kNotFound) {
       moduleNameStr.Cut(0, pos + 1);
     }
@@ -210,7 +210,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
       pdbPathStr = NS_ConvertUTF8toUTF16(pdbName);
       pdbNameStr = pdbPathStr;
-      int32_t pos = pdbNameStr.RFindChar('\\');
+      int32_t pos = pdbNameStr.RFindCharInSet(u"\\/");
       if (pos != kNotFound) {
         pdbNameStr.Cut(0, pos + 1);
       }
