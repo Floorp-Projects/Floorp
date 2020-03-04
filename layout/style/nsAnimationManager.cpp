@@ -290,6 +290,36 @@ void CSSAnimation::UpdateTiming(SeekFlag aSeekFlag,
 
 /////////////////////// CSSAnimationKeyframeEffect ////////////////////////
 
+void CSSAnimationKeyframeEffect::UpdateTiming(
+    const OptionalEffectTiming& aTiming, ErrorResult& aRv) {
+  KeyframeEffect::UpdateTiming(aTiming, aRv);
+
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (mAnimation && mAnimation->AsCSSAnimation()) {
+    CSSAnimationProperties updatedProperties = CSSAnimationProperties::None;
+    if (aTiming.mDuration.WasPassed()) {
+      updatedProperties |= CSSAnimationProperties::Duration;
+    }
+    if (aTiming.mIterations.WasPassed()) {
+      updatedProperties |= CSSAnimationProperties::IterationCount;
+    }
+    if (aTiming.mDirection.WasPassed()) {
+      updatedProperties |= CSSAnimationProperties::Direction;
+    }
+    if (aTiming.mDelay.WasPassed()) {
+      updatedProperties |= CSSAnimationProperties::Delay;
+    }
+    if (aTiming.mFill.WasPassed()) {
+      updatedProperties |= CSSAnimationProperties::FillMode;
+    }
+
+    mAnimation->AsCSSAnimation()->AddOverriddenProperties(updatedProperties);
+  }
+}
+
 void CSSAnimationKeyframeEffect::SetKeyframes(JSContext* aContext,
                                               JS::Handle<JSObject*> aKeyframes,
                                               ErrorResult& aRv) {
@@ -403,8 +433,27 @@ static void UpdateOldAnimationPropertiesWithNew(
   // identity (and any expando properties attached to it).
   if (aOld.GetEffect()) {
     dom::AnimationEffect* oldEffect = aOld.GetEffect();
-    animationChanged = oldEffect->SpecifiedTiming() != aNewTiming;
-    oldEffect->SetSpecifiedTiming(std::move(aNewTiming));
+
+    // Copy across the changes that are not overridden
+    TimingParams updatedTiming = oldEffect->SpecifiedTiming();
+    if (~aOverriddenProperties & CSSAnimationProperties::Duration) {
+      updatedTiming.SetDuration(aNewTiming.Duration());
+    }
+    if (~aOverriddenProperties & CSSAnimationProperties::IterationCount) {
+      updatedTiming.SetIterations(aNewTiming.Iterations());
+    }
+    if (~aOverriddenProperties & CSSAnimationProperties::Direction) {
+      updatedTiming.SetDirection(aNewTiming.Direction());
+    }
+    if (~aOverriddenProperties & CSSAnimationProperties::Delay) {
+      updatedTiming.SetDelay(aNewTiming.Delay());
+    }
+    if (~aOverriddenProperties & CSSAnimationProperties::FillMode) {
+      updatedTiming.SetFill(aNewTiming.Fill());
+    }
+
+    animationChanged = oldEffect->SpecifiedTiming() != updatedTiming;
+    oldEffect->SetSpecifiedTiming(std::move(updatedTiming));
 
     KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
     if (~aOverriddenProperties & CSSAnimationProperties::Keyframes &&

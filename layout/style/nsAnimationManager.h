@@ -286,6 +286,8 @@ class CSSAnimationKeyframeEffect : public dom::KeyframeEffect {
       : KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
                        aOptions) {}
 
+  void UpdateTiming(const dom::OptionalEffectTiming& aTiming,
+                    ErrorResult& aRv) override;
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv) override;
 };
