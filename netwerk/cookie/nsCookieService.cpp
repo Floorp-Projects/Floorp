@@ -13,7 +13,7 @@
 #include "mozilla/StorageAccess.h"
 #include "mozilla/Unused.h"
 
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -2083,21 +2083,22 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI* aHostURI,
 }
 
 // static
-already_AddRefed<nsICookieSettings> nsCookieService::GetCookieSettings(
+already_AddRefed<nsICookieJarSettings> nsCookieService::GetCookieJarSettings(
     nsIChannel* aChannel) {
-  nsCOMPtr<nsICookieSettings> cookieSettings;
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    nsresult rv = loadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+    nsresult rv =
+        loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      cookieSettings = CookieSettings::CreateBlockingAll();
+      cookieJarSettings = CookieJarSettings::CreateBlockingAll();
     }
   } else {
-    cookieSettings = CookieSettings::Create();
+    cookieJarSettings = CookieJarSettings::Create();
   }
 
-  MOZ_ASSERT(cookieSettings);
-  return cookieSettings.forget();
+  MOZ_ASSERT(cookieJarSettings);
+  return cookieJarSettings.forget();
 }
 
 NS_IMETHODIMP
@@ -2221,7 +2222,8 @@ void nsCookieService::SetCookieStringInternal(
   }
 
   nsCookieKey key(baseDomain, aOriginAttrs);
-  nsCOMPtr<nsICookieSettings> cookieSettings = GetCookieSettings(aChannel);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      GetCookieJarSettings(aChannel);
 
   // check default prefs
   uint32_t priorCookieCount = 0;
@@ -2231,7 +2233,7 @@ void nsCookieService::SetCookieStringInternal(
   CountCookiesFromHostInternal(hostFromURI, aOriginAttrs.mPrivateBrowsingId,
                                &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(
-      cookieSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
+      cookieJarSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
       aCookieHeader, priorCookieCount, aOriginAttrs, &rejectedReason);
 
@@ -3021,7 +3023,8 @@ void nsCookieService::GetCookiesForURI(
     return;
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings = GetCookieSettings(aChannel);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      GetCookieJarSettings(aChannel);
 
   // check default prefs
   uint32_t rejectedReason = aRejectedReason;
@@ -3029,7 +3032,7 @@ void nsCookieService::GetCookiesForURI(
   CountCookiesFromHostInternal(hostFromURI, aOriginAttrs.mPrivateBrowsingId,
                                &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(
-      cookieSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
+      cookieJarSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
       VoidCString(), priorCookieCount, aOriginAttrs, &rejectedReason);
 
@@ -3987,7 +3990,7 @@ static inline bool IsSubdomainOf(const nsCString& a, const nsCString& b) {
 }
 
 CookieStatus nsCookieService::CheckPrefs(
-    nsICookieSettings* aCookieSettings, nsIURI* aHostURI, bool aIsForeign,
+    nsICookieJarSettings* aCookieJarSettings, nsIURI* aHostURI, bool aIsForeign,
     bool aIsThirdPartyTrackingResource,
     bool aIsThirdPartySocialTrackingResource,
     bool aFirstPartyStorageAccessGranted, const nsACString& aCookieHeader,
@@ -4019,7 +4022,7 @@ CookieStatus nsCookieService::CheckPrefs(
   // check the permission list first; if we find an entry, it overrides
   // default prefs. see bug 184059.
   uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
-  rv = aCookieSettings->CookiePermission(principal, &cookiePermission);
+  rv = aCookieJarSettings->CookiePermission(principal, &cookiePermission);
   if (NS_SUCCEEDED(rv)) {
     switch (cookiePermission) {
       case nsICookiePermission::ACCESS_DENY:
@@ -4040,7 +4043,7 @@ CookieStatus nsCookieService::CheckPrefs(
   // access to the first-party cookie jar.
   if (aIsForeign && aIsThirdPartyTrackingResource &&
       !aFirstPartyStorageAccessGranted &&
-      aCookieSettings->GetRejectThirdPartyTrackers()) {
+      aCookieJarSettings->GetRejectThirdPartyTrackers()) {
     // Explicitly pass nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
     // here to ensure that we are testing the partitioning configuration only
     // for the nsICookieService::BEHAVIOR_REJECT_TRACKER configuration.
@@ -4048,7 +4051,7 @@ CookieStatus nsCookieService::CheckPrefs(
     // don't want to give a free pass to tracker cookies here!
     if (StoragePartitioningEnabled(
             nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-            aCookieSettings)) {
+            aCookieJarSettings)) {
       MOZ_ASSERT(!aOriginAttrs.mFirstPartyDomain.IsEmpty(),
                  "We must have a StoragePrincipal here!");
       return STATUS_ACCEPTED;
@@ -4070,7 +4073,7 @@ CookieStatus nsCookieService::CheckPrefs(
   // Check aFirstPartyStorageAccessGranted when checking aCookieBehavior
   // so that we take things such as the content blocking allow list into
   // account.
-  if (aCookieSettings->GetCookieBehavior() ==
+  if (aCookieJarSettings->GetCookieBehavior() ==
           nsICookieService::BEHAVIOR_REJECT &&
       !aFirstPartyStorageAccessGranted) {
     COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
@@ -4081,7 +4084,7 @@ CookieStatus nsCookieService::CheckPrefs(
 
   // check if cookie is foreign
   if (aIsForeign) {
-    if (aCookieSettings->GetCookieBehavior() ==
+    if (aCookieJarSettings->GetCookieBehavior() ==
             nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
         !aFirstPartyStorageAccessGranted) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
@@ -4090,7 +4093,7 @@ CookieStatus nsCookieService::CheckPrefs(
       return STATUS_REJECTED;
     }
 
-    if (aCookieSettings->GetLimitForeignContexts() &&
+    if (aCookieJarSettings->GetLimitForeignContexts() &&
         !aFirstPartyStorageAccessGranted && aNumOfCookies == 0) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                         aHostURI, aCookieHeader, "context is third party");

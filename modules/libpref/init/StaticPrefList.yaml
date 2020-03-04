@@ -7197,9 +7197,9 @@
   value: true
   mirror: always
 
-# Allow CookieSettings to be unblocked for channels without a document.
+# Allow CookieJarSettings to be unblocked for channels without a document.
 # This is for testing only.
-- name: network.cookieSettings.unblocked_for_testing
+- name: network.cookieJarSettings.unblocked_for_testing
   type: bool
   value: false
   mirror: always

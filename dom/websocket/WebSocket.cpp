@@ -34,7 +34,7 @@
 #include "nsXPCOM.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
-#include "nsICookieSettings.h"
+#include "nsICookieJarSettings.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURL.h"
 #include "nsThreadUtils.h"
@@ -130,7 +130,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
 
   nsresult ParseURL(const nsAString& aURL);
   nsresult InitializeConnection(nsIPrincipal* aPrincipal,
-                                nsICookieSettings* aCookieSettings);
+                                nsICookieJarSettings* aCookieJarSettings);
 
   // These methods when called can release the WebSocket object
   void FailConnection(uint16_t reasonCode,
@@ -1093,7 +1093,7 @@ class ConnectRunnable final : public WebSocketMainThreadRunnable {
     }
 
     mConnectionFailed = NS_FAILED(mImpl->InitializeConnection(
-        doc->NodePrincipal(), mWorkerPrivate->CookieSettings()));
+        doc->NodePrincipal(), mWorkerPrivate->CookieJarSettings()));
     return true;
   }
 
@@ -1103,7 +1103,7 @@ class ConnectRunnable final : public WebSocketMainThreadRunnable {
 
     mConnectionFailed = NS_FAILED(
         mImpl->InitializeConnection(aTopLevelWorkerPrivate->GetPrincipal(),
-                                    mWorkerPrivate->CookieSettings()));
+                                    mWorkerPrivate->CookieJarSettings()));
     return true;
   }
 
@@ -1270,7 +1270,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     // url parameter, so don't throw if InitializeConnection fails, and call
     // onerror/onclose asynchronously
     connectionFailed = NS_FAILED(webSocketImpl->InitializeConnection(
-        principal, doc ? doc->CookieSettings() : nullptr));
+        principal, doc ? doc->CookieJarSettings() : nullptr));
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1696,7 +1696,7 @@ class nsAutoCloseWS final {
 };
 
 nsresult WebSocketImpl::InitializeConnection(
-    nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings) {
+    nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings) {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mChannel, "mChannel should be null");
 
@@ -1740,8 +1740,8 @@ nsresult WebSocketImpl::InitializeConnection(
   MOZ_ASSERT(!doc || doc->NodePrincipal()->Equals(aPrincipal));
 
   rv = wsChannel->InitLoadInfoNative(
-      doc, doc ? doc->NodePrincipal() : aPrincipal, aPrincipal, aCookieSettings,
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      doc, doc ? doc->NodePrincipal() : aPrincipal, aPrincipal,
+      aCookieJarSettings, nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
       nsIContentPolicy::TYPE_WEBSOCKET, 0);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 

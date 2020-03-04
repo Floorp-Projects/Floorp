@@ -138,12 +138,12 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings =
-      mozilla::net::CookieSettings::Create();
-  MOZ_ASSERT(cookieSettings);
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      mozilla::net::CookieJarSettings::Create();
+  MOZ_ASSERT(cookieJarSettings);
 
   StorageAccess storageAccess =
-      StorageAllowedForServiceWorker(principal, cookieSettings);
+      StorageAllowedForServiceWorker(principal, cookieJarSettings);
 
   ServiceWorkerData serviceWorkerData;
   serviceWorkerData.cacheName() = mOuter->mInfo->CacheName();

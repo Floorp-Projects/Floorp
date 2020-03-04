@@ -134,7 +134,7 @@ nsresult ChannelFromScriptURL(
     const Maybe<ServiceWorkerDescriptor>& aController, bool aIsMainScript,
     WorkerScriptType aWorkerScriptType,
     nsContentPolicyType aMainScriptContentPolicyType, nsLoadFlags aLoadFlags,
-    nsICookieSettings* aCookieSettings, nsIReferrerInfo* aReferrerInfo,
+    nsICookieJarSettings* aCookieJarSettings, nsIReferrerInfo* aReferrerInfo,
     nsIChannel** aChannel) {
   AssertIsOnMainThread();
 
@@ -226,13 +226,13 @@ nsresult ChannelFromScriptURL(
     if (aClientInfo.isSome()) {
       rv = NS_NewChannel(getter_AddRefs(channel), uri, principal,
                          aClientInfo.ref(), aController, secFlags,
-                         contentPolicyType, aCookieSettings, performanceStorage,
-                         loadGroup, nullptr,  // aCallbacks
+                         contentPolicyType, aCookieJarSettings,
+                         performanceStorage, loadGroup, nullptr,  // aCallbacks
                          aLoadFlags, ios);
     } else {
       rv = NS_NewChannel(getter_AddRefs(channel), uri, principal, secFlags,
-                         contentPolicyType, aCookieSettings, performanceStorage,
-                         loadGroup, nullptr,  // aCallbacks
+                         contentPolicyType, aCookieJarSettings,
+                         performanceStorage, loadGroup, nullptr,  // aCallbacks
                          aLoadFlags, ios);
     }
 
@@ -998,8 +998,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
                                 ios, secMan, url, mClientInfo, mController,
                                 IsMainWorkerScript(), mWorkerScriptType,
                                 mWorkerPrivate->ContentPolicyType(), loadFlags,
-                                mWorkerPrivate->CookieSettings(), referrerInfo,
-                                getter_AddRefs(channel));
+                                mWorkerPrivate->CookieJarSettings(),
+                                referrerInfo, getter_AddRefs(channel));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1868,7 +1868,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
     nsCOMPtr<Document> parentDoc = mWorkerPrivate->GetDocument();
 
     mLoadInfo.mLoadGroup = mWorkerPrivate->GetLoadGroup();
-    mLoadInfo.mCookieSettings = mWorkerPrivate->CookieSettings();
+    mLoadInfo.mCookieJarSettings = mWorkerPrivate->CookieJarSettings();
 
     // Nested workers use default uri encoding.
     nsCOMPtr<nsIURI> url;
@@ -1890,7 +1890,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
         mLoadInfo.mLoadingPrincipal, parentDoc, mLoadInfo.mLoadGroup, url,
         clientInfo,
         // Nested workers are always dedicated.
-        nsIContentPolicy::TYPE_INTERNAL_WORKER, mLoadInfo.mCookieSettings,
+        nsIContentPolicy::TYPE_INTERNAL_WORKER, mLoadInfo.mCookieJarSettings,
         mLoadInfo.mReferrerInfo, getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(mResult, true);
 
@@ -2249,7 +2249,7 @@ nsresult ChannelFromScriptURLMainThread(
     nsIPrincipal* aPrincipal, Document* aParentDoc, nsILoadGroup* aLoadGroup,
     nsIURI* aScriptURL, const Maybe<ClientInfo>& aClientInfo,
     nsContentPolicyType aMainScriptContentPolicyType,
-    nsICookieSettings* aCookieSettings, nsIReferrerInfo* aReferrerInfo,
+    nsICookieJarSettings* aCookieJarSettings, nsIReferrerInfo* aReferrerInfo,
     nsIChannel** aChannel) {
   AssertIsOnMainThread();
 
@@ -2261,7 +2261,7 @@ nsresult ChannelFromScriptURLMainThread(
   return ChannelFromScriptURL(
       aPrincipal, aParentDoc, nullptr, aLoadGroup, ios, secMan, aScriptURL,
       aClientInfo, Maybe<ServiceWorkerDescriptor>(), true, WorkerScript,
-      aMainScriptContentPolicyType, nsIRequest::LOAD_NORMAL, aCookieSettings,
+      aMainScriptContentPolicyType, nsIRequest::LOAD_NORMAL, aCookieJarSettings,
       aReferrerInfo, aChannel);
 }
 

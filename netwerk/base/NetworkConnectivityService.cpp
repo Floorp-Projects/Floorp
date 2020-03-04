@@ -196,7 +196,7 @@ static inline already_AddRefed<nsIChannel> SetupIPCheckChannel(bool ipv4) {
       getter_AddRefs(channel), uri, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
       nsIContentPolicy::TYPE_OTHER,
-      nullptr,  // nsICookieSettings
+      nullptr,  // nsICookieJarSettings
       nullptr,  // aPerformanceStorage
       nullptr,  // aLoadGroup
       nullptr,
