@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">ગોપનીયતા સેટિંગ્સ વાંચો અને તેમાં ફેરફાર કરો</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">તમામ વેબસાઇટ્સ માટે તમારા ડેટાને ઍક્સેસ કરો</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">બ્રાઉઝર ટૅબ્સને ઍક્સેસ કરો</string>
+    </resources>

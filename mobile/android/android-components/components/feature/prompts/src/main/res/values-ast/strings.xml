@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Nun guardar</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Guardar</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">Anovar</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">El campu Contraseña nun ha tar baleru</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->

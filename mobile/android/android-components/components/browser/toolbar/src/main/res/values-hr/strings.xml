@@ -6,7 +6,7 @@
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Zaštita od praćenja je uključena</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Zaštita od praćenja je blokirala pratitelje</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Zaštita od praćenja je blokirala programe za praćenje</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Zaštita od praćenja je isključena za ovu stranicu</string>
     <!-- Content description: For the site security information icon (the site security icon).-->

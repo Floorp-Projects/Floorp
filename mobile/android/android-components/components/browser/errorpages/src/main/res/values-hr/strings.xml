@@ -28,8 +28,8 @@
     <string name="mozac_browser_errorpages_security_bad_cert_title">Sigurna veza nije uspjela</string>
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
-        <li>Ovo može biti uzrokovano postavkama na poslužitelju ili je moguće da netko pokušava oponašati ovaj poslužitelj.</li>
-        <li>Ako ste se na ovaj poslužitelj u prošlosti bez problema spajali, moguće je da je greška privremena, stoga možete pokušati ponovno kasnije.</li>
+        <li>Možda se radi o problemu s postavkama na poslužitelju ili možda netko pokušava oponašati ovaj poslužitelj.</li>
+        <li>Ako si se na ovaj poslužitelj u prošlosti bez problema spajao/la, moguće je da se radi o privremenoj grešci, stoga pokušaj ponovo kasnije.</li>
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
@@ -57,12 +57,12 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Vezi je isteklo vrijeme</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Zatražena stranica nije odgovorila na zahtjev te je preglednik prestao čekati na odgovor.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Zatražena stranica nije odgovorila na zahtjev i preglednik je prestao čekati na odgovor.</p>
       <ul>
         <li>Možda je poslužitelj opterećen velikom količinom zahtjeva ili je privremeno ostao bez napajanja? Pokušaj ponovo kasnije.</li>
         <li>Možeš li pregledavati ostale stranice? Provjeri mrežnu vezu svog računala.</li>
-        <li>Jesu li tvoje računalo ili mreža zaštićeni vatrozidom ili proxyem? Neispravne postavke mogu prouzročiti probleme prilikom pregledavanja weba.</li>
-        <li>Ukoliko još uvijek imaš probleme, za pomoć se obrati administratoru mreže ili pružatelju internet usluge.</li>
+        <li>Jesu li tvoje računalo ili mreža zaštićeni vatrozidom ili proxyjem? Neispravne postavke mogu prouzročiti probleme prilikom pregledavanja weba.</li>
+        <li>Ukoliko još uvijek imaš probleme, za pomoć se obrati administratoru mreže ili pružatelju internetske usluge.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
@@ -71,7 +71,7 @@
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
         <li>Stranica je možda privremeno nedostupna ili preopterećena. Pokušaj ponovno malo kasnije.</li>
-        <li>Ukoliko ne možeš učitati niti jednu stranicu, provjeri podatke tvog uređaja ili Wi-Fi vezu.</li>
+        <li>Ako ne možeš učitati niti jednu stranicu, provjeri podatke svog uređaja ili Wi-Fi vezu.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
@@ -84,27 +84,27 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Stranica ne preusmjerava ispravno</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Preglednik je odustao od dohvaćanja zatražene stranice. Stranica preusmjerava zahtjev na takav način da on nikada ne može biti ispunjen.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Preglednik je prestao dohvaćati zatražene stranice. Stranica preusmjerava zahtjev na takav način, da se on nikada ne može ispuniti.</p>
       <ul>
-        <li>Jesi li onemogućio/la ili blokirao/la kolačiće za ovu stranicu?</li>
+        <li>Jesu li kolačići za ovu stranicu deaktivirani ili blokirani?</li>
         <li>Ako prihvaćanje kolačića stranice ne riješi problem, vrlo vjerojatno se radi o problemu s konfiguracijom poslužitelja, a ne tvog računala.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_title">Izvanmreženi način rada</string>
+    <string name="mozac_browser_errorpages_offline_title">Izvanmrežni način rada</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Preglednik je u izvanmrežnom načinu rada i ne može se spojiti na traženu stavku.</p>
       <ul>
         <li>Je li uređaj spojen na aktivnu mrežu?</li>
-        <li>Klikni na &quot;Pokušaj ponovo&quot; za prebacivanje na mrežni način rada i ponovo učitaj stranicu.</li>
+        <li>Klikni na „Pokušaj ponovo” za prebacivanje na mrežni način rada i ponovo učitaj stranicu.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_title">Ulaz je ograničen iz sigurnosnih razloga</string>
+    <string name="mozac_browser_errorpages_port_blocked_title">Priključak je iz sigurnosnih razloga ograničen</string>
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Zatražena adresa ima definiran ulaz (npr. <q>mozilla.org:80</q> za ulaz 80 na mozilla.org) koji se inače koristi za <em>druge</em> radnje, a ne za pregledavanje weba. Preglednik je prekinuo zahtjev za radi tvoje zaštite i sigurnosti.</p>]]></string>
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Zatražena adresa ima definiran priključak (npr. <q>mozilla.org:80</q> za priključak 80 na mozilla.org) koji se inače koristi za <em>druge</em> radnje, a ne za pregledavanje weba. Preglednik je prekinuo zahtjev radi tvoje zaštite i sigurnosti.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Veza je prekinuta</string>
@@ -156,7 +156,7 @@
         <li>Pazi da nemaš greške u tipkanju, kao što su
           <strong>ww</strong>.primjer.hr umjesto
           <strong>www</strong>.primjer.hr.</li>
-        <li>Ako ne možeš učitati nijednu stranicu, provjeri podatke tvog uređaja ili Wi-Fi vezu.</li>
+        <li>Ako ne možeš učitati nijednu stranicu, provjeri podatke svog uređaja ili Wi-Fi vezu.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
@@ -211,7 +211,7 @@
       <ul>
         <li>Jesu li proxy postavke ispravne? Provjeri postavke i pokušaj ponovo.</li>
         <li>Dozvoljava li proxy usluga povezivanje iz ove mreže?</li>
-        <li>Ukoliko još uvijek imaš probleme, za pomoć se obrati administratoru mreže ili pružatelju internet usluge.</li>
+        <li>Ukoliko još uvijek imaš probleme, za pomoć se obrati administratoru mreže ili pružatelju internetske usluge.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->

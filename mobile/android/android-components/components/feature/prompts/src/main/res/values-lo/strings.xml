@@ -22,6 +22,12 @@
     <string name="mozac_feature_prompt_save_confirmation">ບັນທຶກ</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">ອັບເດດ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">ປ່ອງປ້ອນລະຫັດຜ່ານຈະຕ້ອງບໍ່ຫວ່າງເປົ່າ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">ບໍ່ສາມາດບັກທຶກການເຂົ້າສູ່ລະບົບໄດ້</string>
+    <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="mozac_feature_prompt_logins_save_message">ທ່ານຕ້ອງການໃຫ້ %s ບັນທຶກການເຂົ້າສູ່ລະບົບນີ້ບໍ?</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">ເລືອກສີ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->

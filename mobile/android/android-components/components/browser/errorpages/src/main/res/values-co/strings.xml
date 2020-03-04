@@ -67,11 +67,10 @@
       <p>U navigatore hà troppu aspettatu durante a cunnessione à u situ è hà fermatu d’aspettà una risposta.</p>¶
       <ul>¶
         <li>Forse u servitore tratta dumande numerose o hè timpurariamente in panna ? Pruvate torna da quì à pocu.</li>¶
-        <li>Ùn pudete micca navigà nant’à d’altri siti ? Verificate a cunnessione à a reta di u vostru urdinatore./li>¶
-        <li>U vostru urdinatore o a vostra reta hè pruttetu da un parafocu o un proxy ? Gattivi parametri ponu interferisce cù a navigazione nant’à u web.</li>¶
+        <li>Ùn pudete micca navigà nant’à d’altri siti ? Verificate a cunnessione à a reta di u vostru apparechju./li>¶
+        <li>U vostru apparechju o a vostra reta hè pruttetu da un parafocu o un proxy ? Gattivi parametri ponu interferisce cù a navigazione nant’à u web.</li>¶
         <li>Avete sempre penseri ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>¶
-      </ul>¶
-    ]]></string>
+      </ul>¶]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Impussibule di cunnettassi</string>
@@ -98,9 +97,8 @@
       <p>U navigatore hà piantatu d’aspettà una risposta da u situ. U situ hà creatu una ridirezzione d’una manera ch’ella ùn puderà mai riesce.</p>¶
       <ul>¶
         <li>Avete disattivatu o bluccatu i canistrelli richiesti da stu situ ?</li>¶
-        <li>S’è u penseru ùn hè currettu cù l’accunsentu di i canistrelli, forse ci serà una cunfigurazione gattiva di u servitore è micca di u vostru urdinatore.</li>¶
-      </ul>¶
-    ]]></string>
+        <li>S’è u penseru ùn hè currettu cù l’accunsentu di i canistrelli, forse ci serà una cunfigurazione gattiva di u servitore è micca di u vostru apparechju.</li>¶
+      </ul>¶]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Modu fora di cunnessione</string>
@@ -109,10 +107,9 @@
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[¶
       <p>U navigatore funziuneghja in u modu fora di cunnessione è ùn si pò cunnettà à l’indirizzu indicatu.</p>¶
       <ul>¶
-        <li>L’urdinatore hè cunnettu à a reta ?</li>¶
+        <li>L’apparechju hè cunnettu à a reta ?</li>¶
         <li>Sceglite « Pruvà torna » per cambià ver di u modu in linea è ricaricà a pagina.</li>¶
-      </ul>¶
-    ]]></string>
+      </ul>¶]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Portu ristrintu per raghjone di sicurità</string>
@@ -253,10 +250,9 @@
       <p>U navigatore hè cunfiguratu per impiegà un servitore proxy, ma quessu ùn si trova micca.</p>¶
       <ul>¶
         <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate e preferenze è pruvate torna.</li>¶
-        <li>L’urdinatore hè cunnettu à una reta attiva ?</li>¶
+        <li>L’apparechju hè cunnettu à una reta attiva ?</li>¶
         <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>¶
-      </ul>¶
-    ]]></string>
+      </ul>¶]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Prublema di prugramma animosu</string>

@@ -16,7 +16,17 @@
     <string name="mozac_feature_contextmenu_save_image">نقش محفوظ کریں</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">نیا ٹیب کھلا</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">نیا نجی ٹیب کھل گیا</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">لنک کاپی کلپ بورڈ میں کیا گیا</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">سوئچ</string>
     <string name="mozac_feature_contextmenu_open_link_in_external_app">لنک کو باهری ایپ میں کھولیں</string>
-    </resources>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
+    <string name="mozac_selection_context_menu_search">%s تلاش کریں</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
+    <string name="mozac_selection_context_menu_search_privately">%s نجی تلاش</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">شیئر</string>
+</resources>

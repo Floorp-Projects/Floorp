@@ -1,17 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">ອ່ານ ແລະ ແກ້ໄຂການຕັ້ງຄ່າຄວາມເປັນສາວນຕົວ</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານສຳລັບເວັບໄຊທທັງຫມົດ</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">ເຂົ້າເຖິງແທັບຂອງບຣາວເຊີ</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">ເກັບຂໍ້ມູນຂອງເບື້ອງລູກຄ່າຍໄວ້ໂດຍບໍ່ຈຳກັດຈຳນວນ</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">ເຂົ້າເຖິງກິດຈະກຳຂອງບຣາວເຊີໃນລະຫວ່າງການນຳທາງ</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">ອ່ານ ແລະ ແກ້ໄຂບຸກມາກ</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">ອ່ານ ແລະ ແກ້ໄຂການຕັ້ງຄ່າໃນບຣາວເຊີ</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">ລົບລ້າງປະຫວັດການທ່ອງເວັບ, ຄຸກກີ້ ແລະ ຂໍ້ມູນອື່ນໆທີ່ກ່ຽວຂອ້ງ</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">ຮັບເອົາຂໍ້ມູນຈາກຄຣິບບອດ</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">ປ້ອນຂໍ້ມູນເຂົ້າໄປໃນຄຣິບບອດ</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">ດາວໂຫລດໄຟລ ແລະ ອ່ານ ແລະ ແກ້ໄຂປະຫວັດການດາວໂຫລດຂອງບຣາວເຊີ</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">ເປີດໄຟລທີ່ດາວໂຫລດມາໃນອຸປະກອນຂອງທ່ານ</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">ອ່ານຂໍ້ຄວາມຂອງແທັບທີ່ເປີດທັງໝົດ</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">ເຂົ້າເຖິງສະຖານທີ່ຂອງທ່ານ</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">ຕິດຕາມການນຳໃຊ້ເອັກສເທັນຊັນ ແລະ ຈັດການເທມ</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">ສະແດງການແຈ້ງເຕືອນໃຫ້ທ່ານ</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">ຄວບຄຸມການຕັ້ງຄ່າພັອກຊີຂອງບຣາວເຊີ</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">ເຂົ້າໄປຫາແທັບທີ່ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ເຊື່ອງ ແລະ ສະແດງແທັບຂອງບຣາວເຊີ</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">ຂະຫຍາຍເຄື່ອງມືຂອງນັກພັດທະນາເພື່ອເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນແທັບທີ່ເປີດຢູ່</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ເວີຊັນ</string>
     <!-- The authors of an add-on. -->
@@ -30,12 +62,18 @@
     <string name="mozac_feature_addons_settings_on">ເປີດ</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">ປິດ</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">ເປີດໃຊ້ງານແລ້ວ</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">ປິດໃຊ້ງານແລ້ວ</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">ຕິດ​ຕັ້ງ​ແລ້ວ</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">ແນະນຳ</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">ຍັງບໍ່ໄດ້ຮັບການສະໜັບສະໜູນເທື່ອ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">ປິດໃຊ້ງານແລ້ວ</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">ລາຍລະອຽດ</string>
     <!-- Displays a page with all the permissions of an add-on. -->
@@ -64,7 +102,36 @@
     <string name="mozac_feature_addons_updater_notification_deny_button">ປະຕິເສດ</string>
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">%1$s ມີຕົວອັບເດດໃຫມ່</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">ອັບເດດ Add-on</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">ກຳລັງດາວໂຫລດ ແລະ ກວດສອບ add-on…</string>
-
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">ບໍ່ສາມາດສອບຖາມ Add-ons ໄດ້!</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">ສຳເລັດການຕິດຕັ້ງ %1$s</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">ການຕິດຕັ້ງ %1$s ລົ້ມເຫລວ</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">ສຳເລັດການເປີດໃຊ້ງານ %1$s</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">ເປີດໃຊ້ງານ %1$s ລົ້ມເຫລວ</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">ສຳເລັດການປິດໃຊ້ງານ %1$s</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">ປິດໃຊ້ງານ %1$s ລົ້ມເຫລວ</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">ສຳເລັດຖອນການຕິດຕັ້ງ %1$s</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">ຖອນການຕິດຕັ້ງ %1$s ລົ້ມເຫລວ</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">ສຳເລັດການລຶບ %1$s</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">ລຶບ %1$s ລົ້ມເຫລວ</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 add-on</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s add-ons</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 </resources>

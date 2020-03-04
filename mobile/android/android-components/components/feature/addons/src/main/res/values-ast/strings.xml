@@ -30,10 +30,14 @@
     <string name="mozac_feature_addons_permissions_history_description">Acceder al historial de restolar</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Supervisar l\'usu d\'estensiones y xestionar estilos</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Intercambiar mensaxes con otres aplicaciones aparte d\'esta</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Amosate avisos</string>
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">Fornir servicios d\'autenticación criptográfica</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Controlar los axustes del proxy del restolador</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">Acceder a les llingüetes zarraes apocayá</string>
     <!-- Description for tab_hide permission. -->
@@ -46,6 +50,8 @@
     <string name="mozac_feature_addons_version">Versión</string>
     <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">Autores</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">L\'últimu anovamientu</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Páxina d\'aniciu</string>
     <!-- A link where users can find more information about add-ons permissions. -->
@@ -54,6 +60,10 @@
     <string name="mozac_feature_addons_rating">Valoración</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Axustes</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">Activóse</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">Desactivóse</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Activóse</string>
     <!-- Indicates the add-on is disabled. -->

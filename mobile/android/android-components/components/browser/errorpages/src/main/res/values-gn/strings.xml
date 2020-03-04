@@ -20,11 +20,27 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Jeikekatu ojavy</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Ko kuatiarogue ehechasevahína ndaikatúi ojekuaa ndojehechajeykuaái rupi mba’ekuaarã moneĩmby og̃uahẽramóva.</li>
+        <li>Eñe’ẽ umi ñanduti renda jára ndive emombe’u hag̃ua ko apañuãi.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Jeikekatu ojavy</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Kóva ikatu oiko apañuãi mohendahavusu ñemboheko rupive, térã oĩ omohendagueséva ko mohendahavusúpe.</li>
+        <li>Eike memeramovoi ko mohendahavusúpe antes a este servidor, ko jejavy ikatu sapy’aguávante, ha eha’ãkuaajey uperire.</li>
+      </ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Jehopyre…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Oĩvaicha omyendagueséva tendápe ha anive emba’apo.</label>
+        <br><br>
+        <label>Umi ñanduti renda oha’ã heraite mboajepyre rupive. %1$s ndojeroviái <b>%2$s</b> rehe pe mboajepyre me’ẽha mavave ndoikuaái, pe mboajepyre heraguapy ijehegui térã pe mohendahavusu ndoguerahaukái umi mboajepyre mbytegua iporãva.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Guevi (jeroviaháva)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -39,8 +55,17 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Ndaikatúi eike</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Tenda ikatu ndoikói sapy’ami térã ojepurueterei. Eha’ãjey ag̃ave.</li>
+        <li>Ndaikatúiramo emyanyhẽ mavave kuatiarogue, ehechajey oĩpa wifi térã mba’ekuaarã ne mba’e’oka oku’éva rehegua.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Mbohovái eha’arõ’ỹva mohendahavusúgui</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Pe tenda ombohovái ñanduti mba’ejerure oñeha’ãrõ’ỹre ha pe kundahára ndaikatuvéima oku’ejey.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Ko kuatiarogue ndoguerahajeýi hekoitépe</string>
@@ -56,6 +81,11 @@
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Marandurenda hekorosã’ỹva</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Eñe’ẽ ñanduti renda jára ndive ha emomarandu chupekuéra ko apañuãi.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Tetepy imarãpyréva jejavy</string>
@@ -83,6 +113,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Pe kundaharape ndoikói</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Ñanduti kundaharape ojehai jepi kóicha: <strong>http://www.example.com/</strong></li>
+        <li>Ema’ẽjey eipuru porãpa barra ojero’áva tenonde gotyo (i.e. <strong>/</strong>).</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Taperekoite ojekuaa’ỹva</string>
 
@@ -91,6 +127,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Marandurendápe jeike noñemoneĩri</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>        <li>Ikatúmakuri oñemboguete térã oñemongu’e, térã marandurenda ñemoneĩ omboyke pe jeike.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Mohendahavusu proxy ombotove jeike</string>
@@ -104,8 +143,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Apañuãi tenda eipota’ỹvape</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Pe tenda %1$s pegua oje’e hese ha’eha software ivaíva ha upévare ojejokóma, ohapypuehóvo eguerohoryvéva tekorosarã.</p>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Apañuãi tenda imarãvape</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Tenda %1$s ojehechakuaa ha’eha peteĩ tenda ivaikuaáva ha upévare ojejoko, emongu’évo erohoryvéva rekorosãrã.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Apañuãi tenda ijapúvape</string>

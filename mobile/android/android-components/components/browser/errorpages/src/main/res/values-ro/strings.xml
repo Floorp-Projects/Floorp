@@ -142,33 +142,86 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Eroare de codificare a conținutului</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Pagina pe care încerci să o vezi nu poate fi afișată pentru că folosește o formă de compresie nevalidă sau nesuportată.</p>
+      <ul>
+        <li>Te rugăm să contactezi proprietarii site-ului web pentru a-i informa despre această problemă.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Nu s-a găsit adresa</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Browserul nu a găsit serverul-gazdă pentru adresa furnizată.</p>
+      <ul>
+        <li>Verifică adresa pentru erori de tastare precum
+          <strong>ww</strong>.exemplu.com în loc de
+          <strong>www</strong>.exemplu.com.</li>
+        <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Lipsă conexiune la internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verifică-ți conexiunea la rețea sau încearcă să reîncarci pagina în câteva momente.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Reîncarcă</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Adresă nevalidă</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Adresa furnizată nu este într-un format recunoscut. Verifică să nu fie greșeli în bara de adrese și încearcă din nou</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adresa nu este validă</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Adresele web sunt scrise în mod normal așa: <strong>http://www.example.com/</strong></li>
+        <li>Asigură-te că folosești bare înclinate la dreapta (adică <strong>/</strong>).</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocol necunoscut</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Adresa specifică un protocol (de ex. <q>wxyz://</q>) pe care browserul nu îl recunoaște și, prin urmare, browserul nu se poate conecta corect la site.</p>
+      <ul>
+        <li>Încerci să accesezi conținut multimedia sau alte servicii non-text? Verifică site-ul pentru cerințe suplimentare.</li>
+        <li>Este posibil ca unele protocoale să necesite softuri de la terți sau pluginuri înainte ca browserul să le poată recunoaște.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Fișierul nu a fost găsit</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Se poate ca articolul să fi fost redenumit, șters sau mutat?</li>
+        <li>Este vreo eroare de ortografie, majuscule/minuscule sau altă eroare tipografică în adresă?</li>
+        <li>Ai suficiente drepturi de acces la articolul solicitat?</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Accesul la fișier a fost refuzat</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Este posibil să fi fost șters, mutat sau poate că permisiunile fișierului împiedică accesul.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Serverul proxy a refuzat conexiunea</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Browserul este configurat să folosească un server proxy, însă proxy-ul a refuzat o conexiune.</p>
+      <ul>
+        <li>Este configurația proxy corectă în browser? Verifică setările și încearcă din nou.</li>
+        <li>Serviciul proxy permite conexiuni din această rețea?</li>
+        <li>Problemele persistă? Contactează administratorul de rețea sau furnizorul de servicii de Internet pentru asistență.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Serverul proxy nu a fost găsit</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Browserul este configurat să folosească un server proxy, însă proxy-ul nu a putut fi găsit.</p>
+      <ul>
+        <li>Este configurația proxy corectă în browser? Verifică setările și încearcă din nou.</li>
+        <li>Dispozitivul este conectat la o rețea activă?</li>
+        <li>Problemele persistă? Contactează administratorul de rețea sau furnizorul de servicii de Internet pentru asistență.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problemă de soft rău intenționat pe acest site</string>

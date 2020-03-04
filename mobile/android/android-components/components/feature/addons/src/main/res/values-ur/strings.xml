@@ -6,14 +6,42 @@
     <string name="mozac_feature_addons_permissions_all_urls_description">تمام ویب سائٹس کے لئے اپنے کوائف تک رسائی</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">براؤزر ٹیبز تک رسائی حاصل کریں</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">صارف کی طرف سے لامحدود کوائف محفوظ کریں</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">گشت کاری کے دوران برائزر کی سرگرمی کی رسائی</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">نشانیاں پڑھیں اور ترمیم کریں</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">رازداری سیٹکگیں پڑھیں اور ترمیم کریں</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">حالیہ برائوزنگ سابقات، کوکیز اور اس متعلقہ کوائف صاف کریں</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">کلپ بورڈ سے کوائف حاصل کریں</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">کلپ بورڈ میں کوائف ڈالیں</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">مسل کو ڈاؤن لوڈ کریں اور پڑھیں اور براؤزرکے سابقات میں ترمیم کریں‪</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">تمام کھلے ٹیبس کا متن پڑھیں</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">اپنے محل وقوع تک رسائی کریں</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">برائوزنگ سابقات تک رسائی  حاصل کریں</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">توسیع کے استعمال کی نگرانی اور موضوعات کا انتظام کریں</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">اطلاعات کی آپ کو نمائش کریں</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">برائوزر کی پراکسی ترتیبات کو کنٹرول کریں</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">حالیہ بند کی گئی ٹیبیں تک رسائی</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">براؤزر ٹیبز کو چھپائیں اور دکھائیں</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ کی تاریخ تک رسائی</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ کی سابقات تک رسائی</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">کھلے ٹیب میں اپنے ڈیٹا تک رسائی کیلئے ڈویلپر کے اوزار کو بڑھانے</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورژن</string>
     <!-- The authors of an add-on. -->
@@ -40,6 +68,8 @@
     <string name="mozac_feature_addons_installed_section">تنصیب شدہ</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">تجویز کردہ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">ابھی تک تعاون یافتہ نہیں ہے</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">غیر فعال شدہ</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -60,10 +90,18 @@
     <string name="mozac_feature_addons_install_addon_content_description">ایڈ اون انسٹاال کریں</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">صارفین: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ایڈ اون</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">اجازت دیں</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">انکار کریں</string>
-    </resources>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 ایڈ اون</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s ایڈ اون</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">مزید سیکھیں</string>
+</resources>
