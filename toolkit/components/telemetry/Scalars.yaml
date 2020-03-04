@@ -3779,8 +3779,9 @@ browser.search:
   data_transferred:
     bug_numbers:
       - 1614777
+      - 1619954
     description: >
-      Records KBs has been transferred for search requests, including
+      Records bytes that have been transferred for search requests, including
       top-level documents, sub-resources, iframes and search suggestions.
       The key format could be one of:
         <search-provider-name>
