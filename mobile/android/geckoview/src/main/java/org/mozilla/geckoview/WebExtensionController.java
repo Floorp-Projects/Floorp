@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POSTPONED;
 import static org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED;
 
 public class WebExtensionController {
@@ -400,6 +401,7 @@ public class WebExtensionController {
             implements EventCallback {
         /** These states should match gecko's AddonManager.STATE_* constants. */
         private static class StateCodes {
+            public static final int STATE_POSTPONED = 7;
             public static final int STATE_CANCELED = 12;
         }
 
@@ -428,6 +430,8 @@ public class WebExtensionController {
                 final int installState = bundle.getInt("state");
                 if (errorCode == 0 && installState == StateCodes.STATE_CANCELED) {
                     errorCode = ERROR_USER_CANCELED;
+                } else if (errorCode == 0 && installState == StateCodes.STATE_POSTPONED) {
+                    errorCode = ERROR_POSTPONED;
                 }
                 completeExceptionally(new WebExtension.InstallException(errorCode));
             } else {

@@ -12,6 +12,18 @@
         }
       ]
     },
+    "update-postpone@example.com": {
+      "updates": [
+        {
+          "version": "1.0",
+          "update_link": "https://example.org/tests/junit/update-postpone-1.xpi"
+        },
+        {
+          "version": "2.0",
+          "update_link": "https://example.org/tests/junit/update-postpone-2.xpi"
+        }
+      ]
+    },
     "update-with-perms@example.com": {
       "updates": [
         {
