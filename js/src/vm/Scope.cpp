@@ -175,6 +175,15 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
   return UniquePtr<typename ConcreteScope::Data>(dataCopy);
 }
 
+static bool SetEnvironmentShape(JSContext* cx, BindingIter& freshBi,
+                                BindingIter& bi, const JSClass* cls,
+                                uint32_t baseShapeFlags,
+                                MutableHandleShape envShape) {
+  envShape.set(CreateEnvironmentShape(
+      cx, freshBi, cls, bi.nextEnvironmentSlot(), baseShapeFlags));
+  return envShape;
+}
+
 template <typename ConcreteScope>
 static bool PrepareScopeData(
     JSContext* cx, BindingIter& bi,
@@ -192,12 +201,8 @@ static bool PrepareScopeData(
       bi.canHaveFrameSlots() ? bi.nextFrameSlot() : LOCALNO_LIMIT;
 
   // Make a new environment shape if any environment slots were used.
-  if (bi.nextEnvironmentSlot() == JSSLOT_FREE(cls)) {
-    envShape.set(nullptr);
-  } else {
-    envShape.set(CreateEnvironmentShape(
-        cx, freshBi, cls, bi.nextEnvironmentSlot(), baseShapeFlags));
-    if (!envShape) {
+  if (bi.nextEnvironmentSlot() != JSSLOT_FREE(cls)) {
+    if (!SetEnvironmentShape(cx, freshBi, bi, cls, baseShapeFlags, envShape)) {
       return false;
     }
   }
