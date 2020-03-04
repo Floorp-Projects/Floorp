@@ -332,9 +332,6 @@ class nsWindow final : public nsBaseWidget {
 
   void UpdateDynamicToolbarOffset(mozilla::ScreenIntCoord aOffset);
 
-  virtual mozilla::ScreenIntMargin GetSafeAreaInsets() const override;
-  void UpdateSafeAreaInsets(const mozilla::ScreenIntMargin& aSafeAreaInsets);
-
  protected:
   void BringToFront();
   nsWindow* FindTopLevel();
@@ -352,7 +349,6 @@ class nsWindow final : public nsBaseWidget {
 
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
   mozilla::ScreenIntCoord mDynamicToolbarMaxHeight;
-  mozilla::ScreenIntMargin mSafeAreaInsets;
 
   bool mIsFullScreen;
   bool mIsDisablingWebRender;

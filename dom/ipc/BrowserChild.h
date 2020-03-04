@@ -406,9 +406,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvSwappedWithOtherRemoteLoader(
       const IPCTabContext& aContext);
 
-  mozilla::ipc::IPCResult RecvSafeAreaInsetsChanged(
-      const mozilla::ScreenIntMargin& aSafeAreaInsets);
-
 #ifdef ACCESSIBILITY
   PDocAccessibleChild* AllocPDocAccessibleChild(PDocAccessibleChild*,
                                                 const uint64_t&,

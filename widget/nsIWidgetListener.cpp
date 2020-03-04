@@ -33,9 +33,6 @@ bool nsIWidgetListener::WindowResized(nsIWidget* aWidget, int32_t aWidth,
 
 void nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode) {}
 
-void nsIWidgetListener::SafeAreaInsetsChanged(const mozilla::ScreenIntMargin&) {
-}
-
 void nsIWidgetListener::UIResolutionChanged() {}
 
 #if defined(MOZ_WIDGET_ANDROID)

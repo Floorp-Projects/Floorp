@@ -633,9 +633,6 @@ bool Gecko_MediaFeatures_IsResourceDocument(const mozilla::dom::Document*);
 nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
     const mozilla::dom::Document*);
 
-void Gecko_GetSafeAreaInsets(const nsPresContext*, float*, float*, float*,
-                             float*);
-
 void Gecko_PrintfStderr(const nsCString*);
 
 }  // extern "C"

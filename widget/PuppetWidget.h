@@ -232,10 +232,6 @@ class PuppetWidget : public nsBaseWidget,
 
   nsIntSize GetScreenDimensions();
 
-  // safe area insets support
-  virtual ScreenIntMargin GetSafeAreaInsets() const override;
-  void UpdateSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets);
-
   // Get the offset to the chrome of the window that this tab belongs to.
   //
   // NOTE: In OOP iframes this value is zero. You should use
@@ -402,8 +398,6 @@ class PuppetWidget : public nsBaseWidget,
 
   nsCOMPtr<imgIContainer> mCustomCursor;
   uint32_t mCursorHotspotX, mCursorHotspotY;
-
-  ScreenIntMargin mSafeAreaInsets;
 
   nsCOMArray<nsIKeyEventInPluginCallback> mKeyEventInPluginCallbacks;
 
