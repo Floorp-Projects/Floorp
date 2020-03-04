@@ -98,6 +98,17 @@
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">ເນື້ອຫາຂັດຂ້ອງ</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>ບໍ່ສາມາດສະແດງຫນ້າເວັບທີ່ທ່ານກຳລັງພະຍາຍາມເຂົ້າໄປເບິງໄດ້ເນື່ອງຈາກກວດພົບຂໍ້ຜິດພາດໃນການສົ່ງຂໍ້ມູນ.</p>
+      <ul>
+        <li>ກະລຸນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງບັນຫານີ້.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">ຂໍ້ຜິດພາດການເຂົ້າລະຫັດເນື້ອຫາ</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">ບໍ່ພົບທີ່ຢູ່</string>
 
     <!-- The document title and heading of an error page. -->
@@ -125,4 +136,6 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ປັນຫາເວັບໄຊທ Malware</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">ບັນຫາເວັບໄຊທປອມແປງ</string>
     </resources>

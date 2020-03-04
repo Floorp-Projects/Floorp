@@ -16,8 +16,16 @@
     <string name="mozac_feature_prompt_save_confirmation">Enregistrar</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Metre a jorn</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">Lo camp senhal pòt pas èsser void</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Causir una color</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">Autorizar</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">Refusar</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Causir un mes</string>
     <!-- January (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_jan">Gen</string>
     <!-- February month of the year (short description), used on the month chooser dialog. -->

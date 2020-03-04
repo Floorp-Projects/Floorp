@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Legi kaj modifi privatecajn agordojn</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Aliri viajn datumojn por ĉiuj retejoj</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Aliri retumilajn langetojn</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Senlime konservi datumojn en la kliento</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Aliri la agojn de la retumilo dum retumo</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Legi kaj modifi legosignojn</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Legi kaj modifi retumilajn agordojn</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Viŝi ĵusan retuman historion, kuketojn kaj rilatatajn datumojn</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Ricevi datumojn el la tondujo</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Meti datumojn en la tondujon</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Elŝuti dosierojn, legi kaj modifi la elŝutan historion de la retumilo</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Malfermi dosierojn elŝutitaj al via aparato</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Legi la tekston de ĉiuj malfermitaj langetoj</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Aliri vian pozicion</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Aliri la retuman historion</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Kontroli uzon de etendaĵojn kaj administri etosojn</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Interŝanĝi mesaĝojn kun alia programoj</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Montri sciigojn al vi</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Provizi ĉifritajn aŭtentikigajn servojn</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Regi retperantajn agordoj por retumilo</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Aliri ĵuse fermitajn langetojn</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Kaŝi kaj montri langetojn de retumilo</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Aliri la retuman historion</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Etendi la ilojn por programistoj por povi aliri viajn datumojn en malfermitaj langetoj</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">Versio</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">Aŭtoroj</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">Laste ĝisdatigita</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">Eka paĝo</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Pli da informo pri permesoj</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">Taksado</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">Agordoj</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">Ŝaltita</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">Malŝaltita</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Aktiva</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Malaktiva</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Instalita</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Rekomenditaj</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Ankoraŭ ne subtenata</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Malaktiva</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">Detaloj</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">Permesoj</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">Forigi</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">Ĉu aldoni %1$s?</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Ĝi postulas vian permeson por:</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Aldoni</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Nuligi</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">Instali aldonaĵon</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Uzantoj: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Aldonaĵoj</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">Permesi</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">Rifuzi</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s havas novan ĝisdatigon</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d postulas novajn permesojn</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">Ĝisdatigoj de aldonaĵoj</string>
+    </resources>

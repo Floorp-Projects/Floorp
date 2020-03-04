@@ -11,8 +11,6 @@
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">अनुरोध पूरा नहीं किया जा सका</string>
-    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>इस समस्या या त्रुटी के बारे में अतिरिक्त जानकारी फिलहाल उपलब्ध नहीं है।</p>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">सुरक्षित संपर्क विफ़ल</string>
@@ -111,5 +109,16 @@
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">सुरक्षा कारणों से पोर्ट प्रतिबंधित है</string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">कनेक्शन रिसेट किया गया था</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">पता नहीं पाया गया</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">इंटरनेट कनेक्शन नही</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">फिर से लोड करें</string>
 
     </resources>

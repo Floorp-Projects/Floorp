@@ -174,7 +174,7 @@
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">네트워크 연결을 확인하시거나 잠시 후 페이지를 다시 로드하세요.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
-    <string name="mozac_browser_errorpages_no_internet_refresh_button">새로고침</string>
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">새로 고침</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">유효하지 않은 주소</string>

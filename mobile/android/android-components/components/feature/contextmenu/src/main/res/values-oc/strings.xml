@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Dobrir dins un onglet novèl</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Dobrir en navigacion privada</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Dobrir l’imatge dins un onglet novèl</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Partejar lo ligam</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
@@ -14,4 +20,6 @@
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Onglet novèl privat dobèrt</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">Recercar amb %s</string>
-    </resources>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">Partejar</string>
+</resources>

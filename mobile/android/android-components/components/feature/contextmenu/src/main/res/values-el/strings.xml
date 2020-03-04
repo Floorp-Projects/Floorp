@@ -18,6 +18,9 @@
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Άνοιξε νέα καρτέλα</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Άνοιξε νέα ιδιωτική καρτέλα</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">Εναλλαγή</string>
+    <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Άνοιγμα συνδέσμου σε εξωτερική εφαρμογή</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">Αναζήτηση %s</string>

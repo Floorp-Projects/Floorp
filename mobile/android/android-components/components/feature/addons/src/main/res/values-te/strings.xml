@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">అమరికలు</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">వివరాలు</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">అనుమతులు</string>
+    </resources>

@@ -11,6 +11,14 @@
 
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">گہرا</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">گہرے رنگ کی اسکیم</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">سیپیا</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">سیپیا رنگ سکیم</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">ہلکا</string>
-    </resources>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ہلکے رنگ کی اسکیم</string>
+</resources>

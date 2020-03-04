@@ -110,6 +110,8 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Najowäx %1$d k\'ak\'a\' ya\'oj q\'ij</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Kik\'exoj tz\'aqat</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Nib\'an k\'ak\'a\' chi re ri runa\'ob\'al rutz\'aqat Firefox. Re taq tz\'aqat re\' yekokisaj taq ruchi\' ri man kik\'amon ta ki\' rik\'in ri Firefox 75 &amp; ch\'aqa\' chik e nima\'q.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Niqasäx chuqa\' ninik\'öx tz\'aqat…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

@@ -93,13 +93,11 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Циклическое перенаправление на странице</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Браузер прекратил попытки загрузки страницы, так как сайт перенаправляет запрос таким образом, что он никогда не завершится.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Браузер прекратил попытки загрузки страницы, так как сайт перенаправляет запрос таким образом, что он никогда не завершится.</p>
       <ul>
         <li>Возможно, вы отключили или заблокировали куки, требуемые этим сайтом.</li>
-        <li>Если разрешение принятия кук сайта не решает проблему, то, по всей вероятности, это проблема на сервере, а не на вашем компьютере.</li>
-      </ul>
-    ]]></string>
+        <li>Если разрешение принятия кук сайта не решает проблему, то, по всей вероятности, это проблема на сервере, а не на вашем устройстве.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Автономный режим</string>

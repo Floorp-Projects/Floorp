@@ -12,6 +12,10 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">درخواست مکمل نہیں کی جا سکتی</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[¶
+      <p>اس مسئلے کے متعلق اضافی معلومات فی الحال دستیاب نہیں ہے۔</p>¶]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">قابل بھروسا کنکشن ناکام ہو گیا ہے</string>
 
@@ -101,6 +105,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">پراکسی سرور نہیں ملا</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">میلویئر سائٹ مسئلہ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ناپسندیدہ سائٹ مسئلہ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">نقصان دہ سائٹ کا مسئلہ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">فریب دہ سائٹ کا مسئلہ</string>

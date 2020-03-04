@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Проблем при зареждане на страница</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Повторен опит</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Връщане назад</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Заявката не може да бъде завършена</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Допълнителна информация за този проблем или грешка в момента не е налична.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Неуспешно установяване на шифрована връзка</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul> <li>Страницата не може да бъде показана, защото достоверността на получените данни не може да бъде проверена.</li> <li>Моля, свържете се със собствениците на сайта, за да ги информирате за проблема.</li> </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Неуспешно установяване на шифрована връзка</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul> <li>Това е или проблем с настройките на сървъра, или някой се опитва се представи за него.</li> <li>Ако и преди сте се свързвали успешно с него, има вероятност грешката да е временна и може да опитате по-късно.</li> </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Разширени…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Връщане назад (препоръчително)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Продължаване въпреки риска</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Връзката е прекъсната</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Времето за изчакване на връзка изтече</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Страницата не отговаря на заявките за свързване и четецът спря да чака отговор.</p><ul><li>Дали сървърът не е претоварен или изключен? Опитайте отново по-късно.</li><li>Можете ли да разглеждате други страници? Проверете връзката си с интернет</li><li>Устройството намира ли се зад защитна стена или мрежов посредник? Неправилните настройки могат да попречат на разглеждането.</li><li>Ако все още има проблем, обърнете се за помощ към мрежовия администратор или доставчика си на интернет.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Не е установена връзка</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+  <li>Сайтът може да е временно недостъпен или натоварен. Опитайте отново след малко.</li>
+  <li>Ако не може да отворите друга страница, проверете връзката за данни или Wi-Fi.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Неочакван отговор от сървъра</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Страницата отговори на мрежово запитване по неочакван начин и четецът не може да продължи.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Страницата не пренасочва правилно</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Четецът спря опитите за зареждане. Страницата препраща заявката по начин, който никога не завършва.</p><ul><li>Да не би да сте изключили или спрели бисквитките на страницата?</li><li>Ако разрешаването на бисквитките не разреши проблема, вероятно става въпрос за грешка в настройките на сървъра, а не във вашето устройство.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Работа извън мрежата</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Четецът е настроен да работи в този режим и затова не може да се свърже.</p><ul><li>Работи ли мрежата към която е свързано устройството?</li><li>Изберете „Повторен опит“ за свързване към мрежата и презареждане на страницата.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Достъп до порта ограничен от съображения за сигурност</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Адресът не е намерен</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Няма връзка с интернет</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Презареждане</string>
+
+    </resources>

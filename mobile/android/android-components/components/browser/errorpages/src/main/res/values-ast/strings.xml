@@ -28,6 +28,12 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Falló la conexón segura</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Esto podría ser un problema cola configuración del sirvidor o que daquién tea tentando de suplantate nel sirvidor.</li>
+        <li>Si nel pasáu te coneutesti con ésitu al sirvidor, el fallu quiciabes seya temporal polo que refresca la páxina dempués.</li>
+      </ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avanzao…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
@@ -46,7 +52,7 @@
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>El restolador coneutóse con ésitu porque la conexón interrumpióse mentanto se tresfería información. Volvi tentalo, por favor.</p>
       <ul>
         <li>Seique\'l sitiu ta temporalmente non disponible o perocupáu. Volvi tentalo nun momentu.</li>
-        <li>SI nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
+        <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
@@ -88,14 +94,24 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Mou desconeutáu</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>El restolador ta operando nel mou desconeutáu y nun pue coneutar al elementu solicitáu.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>El restolador ta operando nel mou desconeutáu y nun pue coneutase col elementu solicitáu.</p>
       <ul>
         <li>¿El preséu ta coneutáu a una rede activa?</li>
         <li>Primi «Retentar» pa cambiar al mou coneutáu y recargar la páxina.</li>
       </ul>]]></string>
 
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Torgóse un puertu por seguranza</string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Reanicióse la conexón</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Interrumpióse l\'enllaz a la rede mentanto se negociaba una conexón. Volvi tentalo, por favor.</p>
+      <ul>
+        <li>Seique\'l sitiu tea temporalmente non disponible o perocupáu. Volvi tentalo nun momentu.</li>
+        <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">La triba del ficheru ye insegura</string>
@@ -176,10 +192,47 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Ñegóse l\'accesu al ficheru</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Seique se desaniciare, moviere o los permisos del ficheru eviten l\'accesu a elli.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">El sirvidor del proxy refugó la conexón</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>El restolador ta configuráu pa qu\'use un sirvidor proxy pero refugó la conexón.</p>
+      <ul>
+        <li>¿La configuración del proxy del restolador ye correuta? Comprueba los axustes y volvi tentalo.</li>
+        <li>¿El serviciu del proxy permite les conexones dende esta rede?</li>
+        <li>¿Entá tienes problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nun s\'alcontró\'l sirvidor del proxy</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>El restolador ta configuráu pa qu\'use un sirvidor proxy pero nun pudo alcontrase.</p>
+      <ul>
+        <li>¿La configuración del proxy del restolador ye correuta? Comprueba los axustes y volvi tentalo.</li>
+        <li>¿El preséu ta coneutáu a una rede activa?</li>
+        <li>¿Entá tienes problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema de sitiu con malware</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Informóse de que %1$s ye un sitiu atacante y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema de sitiu indeseable</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Informóse de que\'l sitiu en %1$s ta sirviendo software indeseable y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema de sitiu dañible</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Informóse de que\'l sitiu en %1$s ye potencialmente dañible y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sitiu engañosu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Informóse de que la páxina web de %1$s ye engañosa y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+</resources>

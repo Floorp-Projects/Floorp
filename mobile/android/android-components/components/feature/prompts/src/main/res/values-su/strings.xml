@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">HEUG</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">Bolay</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
     <string name="mozac_feature_prompts_clear">Beresihan</string>
     </resources>

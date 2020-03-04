@@ -14,6 +14,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Afrita staðsetningu myndar</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Vista mynd</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">Vista skjal í tæki</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Nýr flipi opnaður</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
@@ -22,9 +24,12 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Afritað tengil á klemmuspjald</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Skipta</string>
+    <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Opna tengil með ytra smáforriti</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">%s leit</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
     <string name="mozac_selection_context_menu_search_privately">%s einkaleit</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">Deila</string>
 </resources>

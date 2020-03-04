@@ -7,7 +7,7 @@
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Abrir la imaxe nuna llingüeta nueva</string>
     <!-- Text for context menu item to share the link with an other app. -->
-    <string name="mozac_feature_contextmenu_share_link">Compartir l\'enllaz</string>
+    <string name="mozac_feature_contextmenu_share_link">Compartición del enllaz</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Copiar l\'enllaz</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
@@ -22,4 +22,8 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">L\'enllaz copióse al cartafueyu</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Cambiar</string>
-    </resources>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Abrir l\'enllaz nun aplicación esterna</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">Compartir</string>
+</resources>

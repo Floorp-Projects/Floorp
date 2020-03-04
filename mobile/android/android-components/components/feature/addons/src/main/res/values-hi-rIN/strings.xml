@@ -34,6 +34,8 @@
     <string name="mozac_feature_addons_version">संस्करण</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">मुख्य पृष्ठ</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">अनुमतियों के बारे में और अधिक जानें</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">रेटिंग</string>
     <!-- The settings of the add-on. -->
@@ -48,6 +50,8 @@
     <string name="mozac_feature_addons_disabled">निष्क्रिय किया गया</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">विवरण</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">अनुमति‌</string>
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">हटाएं</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->

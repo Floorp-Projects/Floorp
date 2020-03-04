@@ -4,6 +4,10 @@
     <string name="mozac_feature_addons_permissions_privacy_description">Legir e modificar los paramètres de vida privada</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">Accedir a vòstras donadas per totes los sites web</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Accedir als onglets del navegador</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Accedir a l’activitat del navegador pendent la navegacion</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Legir e modificar los marcapaginas</string>
     <!-- Description for browser_setting permission. -->
@@ -24,6 +28,16 @@
     <string name="mozac_feature_addons_permissions_geolocation_description">Accedir a vòstra localizacion</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Accedir a l’istoric de navigacion</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Susvelhar l’utilizacion de las extensions e administrar los tèmas</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Escambiar de messatges amb d’autres programas</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Vos mostrar de notificacions</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Provesir de servicis d’autentificacion chifrats</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Contrarotlar los paramètres proxy del navegador</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">Accedir als onglets recentament tancats del navegador</string>
     <!-- Description for tab_hide permission. -->
@@ -38,8 +52,32 @@
     <string name="mozac_feature_addons_last_updated">Darrièra mesa a jorn</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Pagina d’acuèlh</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Per ne saber mai sus las permissions</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">Apreciacion</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Paramètres</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">Activat</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">Desactivat</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Activat</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Desactivat</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Installats</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Recomandats</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Pas encara compatible</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Desactivadas</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">Detalhs</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">Permissions</string>
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">Levar</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
@@ -48,6 +86,8 @@
     <string name="mozac_feature_addons_permissions_dialog_add">Apondre</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Anullar</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">Installar lo modul</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">Utilizaire : %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
@@ -58,6 +98,12 @@
     <string name="mozac_feature_addons_updater_notification_allow_button">Autorizar</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">Refusar</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">Mesas a jorn des moduls</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 modul complementari</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s moduls complementaris</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Ne saber mai</string>
 </resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_media_notification_channel">Aŭdvidaĵo</string>
+
+    <!-- Neutral title of the media notification for when a website that is open in private mode. -->
+    <string name="mozac_feature_media_notification_private_mode">Aŭdvidaĵo ludata de retejo</string>
+</resources>

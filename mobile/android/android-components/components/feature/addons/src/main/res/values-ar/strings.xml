@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">قراءة إعدادات الخصوصية وتعديلها</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">الوصول إلى بياناتك في المواقع كافة</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">الوصول إلى ألسنة المتصفح</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">الوصول إلى نشاط المتصفح أثناء التنقل</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">قراءة العلامات وتعديلها</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">قراءة إعدادات المتصفح وتعديلها</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">جلب البيانات من الحافظة</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">إدخال البيانات في الحافظة</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">فتح الملفات المنزّلة على الجهاز</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">قراءة نصوص الألسنة المفتوحة</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">معرفة مكانك</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">الوصول إلى تأريخ التصفح</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">إدارة استخدام الامتدادات وإدارة السمات</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">عرض التنبيهات</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">توفير خدمات استيثاق معمّاة</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">التحكم بإعدادات الوسيط للمتصفح</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">الوصول إلى الألسنة المغلقة حديثًا</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">الوصول إلى تأريخ التصفح</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">توسيع أدوات المطورين للوصول إلى بياناتك في الألسنة المفتوحة</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">النسخة</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">المؤلّفون</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">آخر تحديث</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">الصفحة الرئيسية</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">اطّلع على المزيد عن التصاريح</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">التقييم</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">الإعدادات</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">التفاصيل</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">التصاريح</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">أزِل</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">أتريد إضافة %1$s؟</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">يحتاج الصلاحيات التالية:</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">أضِف</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">ألغِ</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">تثبيت الإضافة</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">المستخدمون: %1$s</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">الإضافات</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">اسمح</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">ارفض</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">تحديثات الإضافات</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">يُنزّل الإضافة ويتثبّت منها…</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">نجح تثبيت %1$s</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">فشل تثبيت %1$s</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">نجح تفعيل %1$s</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">فشل تفعيل %1$s</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">نجح تعطيل %1$s</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">فشل تعطيل %1$s</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">إضافة واحدة</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s من الإضافات</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">اطّلع على المزيد</string>
+</resources>
