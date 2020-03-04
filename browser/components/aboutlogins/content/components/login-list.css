@@ -14,16 +14,20 @@
 .meta {
   display: flex;
   align-items: center;
-  padding: 5px 16px;
+  padding: 9px 16px;
   border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
   color: var(--in-content-deemphasized-text);
   font-size: 0.8em;
 }
 
+.meta > label > span {
+  margin-inline-end: 2px;
+}
+
 #login-sort {
   background-color: transparent;
-  margin-inline-start: 0;
+  margin: 0;
   padding-inline: 0 16px;
   min-height: initial;
   font: inherit;
