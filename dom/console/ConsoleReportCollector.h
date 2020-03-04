@@ -13,6 +13,10 @@
 
 namespace mozilla {
 
+namespace net {
+class ConsoleReportCollected;
+}
+
 class ConsoleReportCollector final : public nsIConsoleReportCollector {
  public:
   ConsoleReportCollector();
@@ -40,6 +44,9 @@ class ConsoleReportCollector final : public nsIConsoleReportCollector {
       ReportAction aAction = ReportAction::Forget) override;
 
   void FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
+
+  void StealConsoleReports(
+      nsTArray<net::ConsoleReportCollected>& aReports) override;
 
   void ClearConsoleReports() override;
 

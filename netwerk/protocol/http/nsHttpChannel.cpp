@@ -8397,6 +8397,8 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   // Register entry to the PerformanceStorage resource timing
   MaybeReportTimingData();
 
+  MaybeFlushConsoleReports();
+
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers() && !mRedirectURI) {
     // Don't include this if we already redirected

@@ -20,6 +20,12 @@
     }                                                \
   }
 
+namespace mozilla {
+namespace net {
+class ConsoleReportCollected;
+}
+}  // namespace mozilla
+
 // An interface for saving reports until we can flush them to the correct
 // window at a later time.
 class NS_NO_VTABLE nsIConsoleReportCollector : public nsISupports {
@@ -113,6 +119,10 @@ class NS_NO_VTABLE nsIConsoleReportCollector : public nsISupports {
   // aCollector     A required collector object that will effectively take
   //                ownership of our currently console reports.
   virtual void FlushConsoleReports(nsIConsoleReportCollector* aCollector) = 0;
+
+  // Steal all pending reports to IPC structs. May be called from any thread.
+  virtual void StealConsoleReports(
+      nsTArray<mozilla::net::ConsoleReportCollected>& aReports) = 0;
 
   // Clear all pending reports.
   virtual void ClearConsoleReports() = 0;

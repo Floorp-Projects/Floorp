@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 #include "ConsoleUtils.h"
 #include "nsIScriptError.h"
@@ -160,6 +161,25 @@ void ConsoleReportCollector::FlushConsoleReports(
                                  report.mPropertiesFile, report.mSourceFileURI,
                                  report.mLineNumber, report.mColumnNumber,
                                  report.mMessageName, report.mStringParams);
+  }
+}
+
+void ConsoleReportCollector::StealConsoleReports(
+    nsTArray<net::ConsoleReportCollected>& aReports) {
+  aReports.Clear();
+
+  nsTArray<PendingReport> reports;
+
+  {
+    MutexAutoLock lock(mMutex);
+    mPendingReports.SwapElements(reports);
+  }
+
+  for (const PendingReport& report : reports) {
+    aReports.AppendElement(net::ConsoleReportCollected(
+        report.mErrorFlags, report.mCategory, report.mPropertiesFile,
+        report.mSourceFileURI, report.mLineNumber, report.mColumnNumber,
+        report.mMessageName, report.mStringParams));
   }
 }
 
