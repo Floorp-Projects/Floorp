@@ -17,7 +17,7 @@ class NewTabShortcutIntentProcessor : IntentProcessor {
     /**
      * Returns true if this intent processor will handle the intent.
      */
-    override fun matches(intent: Intent): Boolean {
+    private fun matches(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         return safeIntent.action == ACTION_OPEN_TAB || safeIntent.action == ACTION_OPEN_PRIVATE_TAB
     }

@@ -38,23 +38,12 @@ class FennecBookmarkShortcutsIntentProcessorTest {
     private val loadUrlUseCase = mockk<SessionUseCases.DefaultLoadUrlUseCase>(relaxed = true)
 
     @Test
-    fun `only match Fennec pinned shortcut Intents`() {
-        val processor = FennecBookmarkShortcutsIntentProcessor(sessionManager, loadUrlUseCase)
-
-        assertAll {
-            assertThat(processor.matches(Intent(ACTION_FENNEC_HOMESCREEN_SHORTCUT))).isTrue()
-            assertThat(processor.matches(Intent("ShouldNotMatch"))).isFalse()
-            assertThat(processor.matches(Intent())).isFalse()
-        }
-    }
-
-    @Test
     fun `do not process blank Intents`() = runBlocking {
         val processor = FennecBookmarkShortcutsIntentProcessor(sessionManager, loadUrlUseCase)
         val fennecShortcutsIntent = Intent(ACTION_FENNEC_HOMESCREEN_SHORTCUT)
         fennecShortcutsIntent.data = Uri.parse("http://mozilla.org")
 
-        val wasEmptyIntentProcessed = processor.matches(Intent())
+        val wasEmptyIntentProcessed = processor.process(Intent())
 
         assertThat(wasEmptyIntentProcessed).isFalse()
         verify {

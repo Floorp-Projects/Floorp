@@ -43,7 +43,7 @@ class FennecWebAppIntentProcessor(
     /**
      * Returns true if this intent should launch a progressive web app created in Fennec.
      */
-    override fun matches(intent: Intent) =
+    private fun matches(intent: Intent) =
         intent.toSafeIntent().action == ACTION_FENNEC_WEBAPP
 
     /**

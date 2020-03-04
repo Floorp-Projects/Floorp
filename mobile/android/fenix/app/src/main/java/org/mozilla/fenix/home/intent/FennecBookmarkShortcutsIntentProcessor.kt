@@ -27,7 +27,7 @@ class FennecBookmarkShortcutsIntentProcessor(
     /**
      * Returns true if this Intent is of a Fennec pinned shortcut.
      */
-    override fun matches(intent: Intent): Boolean {
+    private fun matches(intent: Intent): Boolean {
         return intent.toSafeIntent().action == ACTION_FENNEC_HOMESCREEN_SHORTCUT
     }
 

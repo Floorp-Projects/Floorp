@@ -40,9 +40,7 @@ class IntentReceiverActivityTest {
         intent.flags = FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
 
         `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)
-        `when`(testContext.components.intentProcessors.intentProcessor.matches(intent)).thenReturn(true)
         `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(false)
-        `when`(testContext.components.intentProcessors.customTabIntentProcessor.matches(intent)).thenReturn(false)
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
 
@@ -155,7 +153,6 @@ class IntentReceiverActivityTest {
 
         val intent = Intent()
         `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(true)
-        `when`(testContext.components.intentProcessors.customTabIntentProcessor.matches(intent)).thenReturn(true)
 
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
@@ -176,7 +173,6 @@ class IntentReceiverActivityTest {
 
         val intent = Intent()
         `when`(testContext.components.intentProcessors.privateCustomTabIntentProcessor.process(intent)).thenReturn(true)
-        `when`(testContext.components.intentProcessors.privateCustomTabIntentProcessor.matches(intent)).thenReturn(true)
 
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
