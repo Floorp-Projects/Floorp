@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const Types = require("devtools/client/inspector/compatibility/types");
+
+const NodeList = createFactory(
+  require("devtools/client/inspector/compatibility/components/NodeList")
+);
+
+class NodePane extends PureComponent {
+  static get propTypes() {
+    return {
+      nodes: PropTypes.arrayOf(Types.node).isRequired,
+    };
+  }
+
+  render() {
+    const { nodes } = this.props;
+
+    return nodes.length > 1
+      ? dom.details(
+          {},
+          dom.summary({}, `${nodes.length} occurrences`),
+          NodeList({ nodes })
+        )
+      : NodeList({ nodes });
+  }
+}
+
+module.exports = NodePane;

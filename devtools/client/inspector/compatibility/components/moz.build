@@ -9,6 +9,9 @@ DevToolsModules(
     "IssueItem.js",
     "IssueList.js",
     "IssuePane.js",
+    "NodeItem.js",
+    "NodeList.js",
+    "NodePane.js",
     "UnsupportedBrowserItem.js",
     "UnsupportedBrowserList.js",
 )
