@@ -43,6 +43,12 @@ nsresult AddClientChannelHelperInChild(nsIChannel* aChannel,
 nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
                                         Maybe<ClientInfo>&& aInitialClientInfo);
 
+// If the channel's LoadInfo has a reserved ClientInfo, but no reserved
+// ClientSource, then allocates a ClientSource using that existing
+// ClientInfo.
+void CreateReservedSourceIfNeeded(nsIChannel* aChannel,
+                                  nsISerialEventTarget* aEventTarget);
+
 }  // namespace dom
 }  // namespace mozilla
 

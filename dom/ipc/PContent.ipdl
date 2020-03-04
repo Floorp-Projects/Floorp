@@ -839,7 +839,7 @@ child:
     // moved to a new process it now has different properties.
 
     async CrossProcessRedirect(RedirectToRealChannelArgs args)
-        returns (nsresult rv, LoadInfoArgs? arg);
+        returns (nsresult rv);
 
     /**
     * This method is used to notifty content process to start delayed autoplay
