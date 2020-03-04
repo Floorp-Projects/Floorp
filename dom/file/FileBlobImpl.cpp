@@ -20,10 +20,10 @@ namespace dom {
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), EmptyString(),
-                   EmptyString(), UINT64_MAX,
-                   // We pass 0 as lastModified because FileblobImpl has a
-                   // different way to compute the value of this attribute
-                   0),
+                   EmptyString(),
+                   // We pass 0 as lastModified and length because FileblobImpl
+                   // has a different way to compute those values.
+                   0, 0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
@@ -40,12 +40,12 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
-                   aLength,
-                   // We pass 0 as lastModified because FileblobImpl has a
-                   // different way to compute the value of this attribute
-                   0),
+                   // We pass 0 as lastModified and length because FileblobImpl
+                   // has a different way to compute those values.
+                   0, 0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
+      mLength(Some(aLength)),
       mFileId(-1),
       mWholeFile(true) {
   MOZ_ASSERT(mFile, "must have file");
@@ -57,9 +57,13 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile, int64_t aLastModificationDate)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
-                   aLength, aLastModificationDate),
+                   // We pass 0 as lastModified and length because FileblobImpl
+                   // has a different way to compute those values.
+                   0, 0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
+      mLength(Some(aLength)),
+      mLastModified(Some(aLastModificationDate)),
       mFileId(-1),
       mWholeFile(true) {
   MOZ_ASSERT(mFile, "must have file");
@@ -70,7 +74,10 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
                            const nsAString& aContentType,
                            const nsAString& aBlobImplType)
-    : BaseBlobImpl(aBlobImplType, aName, aContentType, UINT64_MAX, 0),
+    : BaseBlobImpl(aBlobImplType, aName, aContentType,
+                   // We pass 0 as lastModified and length because FileblobImpl
+                   // has a different way to compute those values.
+                   0, 0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
@@ -88,9 +95,13 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
 FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
                            uint64_t aLength, const nsAString& aContentType)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aContentType,
-                   aOther->mStart + aStart, aLength),
+                   aOther->mStart + aStart,
+                   // We pass 0 as length because FileblobImpl has a different
+                   // way to compute the value.
+                   0),
       mMutex("FileBlobImpl::mMutex"),
       mFile(aOther->mFile),
+      mLength(Some(aLength)),
       mFileId(-1),
       mWholeFile(false) {
   MOZ_ASSERT(mFile, "must have file");
@@ -128,7 +139,7 @@ void FileBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
 uint64_t FileBlobImpl::GetSize(ErrorResult& aRv) {
   MutexAutoLock lock(mMutex);
 
-  if (BaseBlobImpl::IsSizeUnknown()) {
+  if (mLength.isNothing()) {
     MOZ_ASSERT(mWholeFile,
                "Should only use lazy size when using the whole file");
     int64_t fileSize;
@@ -142,10 +153,10 @@ uint64_t FileBlobImpl::GetSize(ErrorResult& aRv) {
       return 0;
     }
 
-    mLength = fileSize;
+    mLength.emplace(fileSize);
   }
 
-  return mLength;
+  return mLength.value();
 }
 
 class FileBlobImpl::GetTypeRunnable final : public WorkerMainThreadRunnable {
@@ -263,8 +274,10 @@ void FileBlobImpl::CreateInputStream(nsIInputStream** aStream,
     return;
   }
 
+  MOZ_ASSERT(mLength.isSome());
+
   RefPtr<SlicedInputStream> slicedInputStream =
-      new SlicedInputStream(stream.forget(), mStart, mLength);
+      new SlicedInputStream(stream.forget(), mStart, mLength.value());
   slicedInputStream.forget(aStream);
 }
 
