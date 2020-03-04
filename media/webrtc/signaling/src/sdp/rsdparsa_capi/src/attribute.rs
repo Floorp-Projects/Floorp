@@ -1179,10 +1179,15 @@ pub struct RustSdpAttributeExtmap {
 
 impl<'a> From<&'a SdpAttributeExtmap> for RustSdpAttributeExtmap {
     fn from(other: &SdpAttributeExtmap) -> Self {
+        let dir = if other.direction.is_some() {
+            RustDirection::from(&other.direction)
+        } else {
+            RustDirection::from(&Some(SdpAttributeDirection::Sendrecv))
+        };
         RustSdpAttributeExtmap {
             id : other.id as u16,
             direction_specified: other.direction.is_some(),
-            direction: RustDirection::from(&other.direction),
+            direction: dir,
             url: StringView::from(other.url.as_str()),
             extension_attributes: StringView::from(&other.extension_attributes)
         }
