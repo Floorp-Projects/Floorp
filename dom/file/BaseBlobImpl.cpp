@@ -48,10 +48,55 @@ void BaseBlobImpl::GetType(nsAString& aType) { aType = mContentType; }
 
 int64_t BaseBlobImpl::GetLastModified(ErrorResult& aRv) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
+  if (IsDateUnknown()) {
+    mLastModificationDate =
+        nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now(), 0);
+    // mLastModificationDate is an absolute timestamp so we supply a zero
+    // context mix-in
+  }
+
   return mLastModificationDate / PR_USEC_PER_MSEC;
 }
 
+void BaseBlobImpl::SetLastModified(int64_t aLastModified) {
+  mLastModificationDate = aLastModified * PR_USEC_PER_MSEC;
+}
+
 int64_t BaseBlobImpl::GetFileId() { return -1; }
+
+nsresult BaseBlobImpl::GetSendInfo(nsIInputStream** aBody,
+                                   uint64_t* aContentLength,
+                                   nsACString& aContentType,
+                                   nsACString& aCharset) {
+  MOZ_ASSERT(aContentLength);
+
+  ErrorResult rv;
+
+  nsCOMPtr<nsIInputStream> stream;
+  CreateInputStream(getter_AddRefs(stream), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  *aContentLength = GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  nsAutoString contentType;
+  GetType(contentType);
+
+  if (contentType.IsEmpty()) {
+    aContentType.SetIsVoid(true);
+  } else {
+    CopyUTF16toUTF8(contentType, aContentType);
+  }
+
+  aCharset.Truncate();
+
+  stream.forget(aBody);
+  return NS_OK;
+}
 
 /* static */
 uint64_t BaseBlobImpl::NextSerialNumber() {
