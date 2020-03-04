@@ -8,7 +8,6 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsHostResolver.h"
-#include "nsHttpHandler.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
@@ -29,7 +28,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tokenizer.h"
@@ -158,12 +156,7 @@ nsresult TRR::DohEncode(nsCString& aBody, bool aDisableECS) {
 
 NS_IMETHODIMP
 TRR::Run() {
-  MOZ_ASSERT_IF(gTRRService && StaticPrefs::network_trr_fetch_off_main_thread(),
-                gTRRService->IsOnTRRThread());
-  MOZ_ASSERT_IF(
-      gTRRService && !StaticPrefs::network_trr_fetch_off_main_thread(),
-      NS_IsMainThread());
-
+  MOZ_ASSERT(NS_IsMainThread());
   if ((gTRRService == nullptr) || NS_FAILED(SendHTTPRequest())) {
     FailData(NS_ERROR_FAILURE);
     // The dtor will now be run
@@ -171,63 +164,9 @@ TRR::Run() {
   return NS_OK;
 }
 
-static void InitHttpHandler() {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIProtocolHandler> handler;
-  rv = ios->GetProtocolHandler("http", getter_AddRefs(handler));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-}
-
-nsresult TRR::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
-  *aResult = nullptr;
-
-  if (NS_IsMainThread()) {
-    nsresult rv;
-    nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_NewChannel(aResult, aUri, nsContentUtils::GetSystemPrincipal(),
-                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                         nsIContentPolicy::TYPE_OTHER,
-                         nullptr,  // nsICookieSettings
-                         nullptr,  // PerformanceStorage
-                         nullptr,  // aLoadGroup
-                         nullptr,  // aCallbacks
-                         nsIRequest::LOAD_NORMAL, ios);
-  }
-
-  // Unfortunately, we can only initialize gHttpHandler on main thread.
-  if (!gHttpHandler) {
-    nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
-    if (main) {
-      // Forward to the main thread synchronously.
-      SyncRunnable::DispatchToThread(
-          main, new SyncRunnable(NS_NewRunnableFunction(
-                    "InitHttpHandler", []() { InitHttpHandler(); })));
-    }
-  }
-
-  if (!gHttpHandler) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return gHttpHandler->CreateSimpleHttpChannel(aUri,
-                                               nullptr,  // givenProxyInfo
-                                               0,        // proxyResolveFlags
-                                               nullptr,  // proxyURI
-                                               nullptr,  // aLoadInfo
-                                               aResult);
-}
-
 nsresult TRR::SendHTTPRequest() {
   // This is essentially the "run" method - created from nsHostResolver
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
   if ((mType != TRRTYPE_A) && (mType != TRRTYPE_AAAA) &&
       (mType != TRRTYPE_NS) && (mType != TRRTYPE_TXT)) {
@@ -257,11 +196,14 @@ nsresult TRR::SendHTTPRequest() {
     }
   }
 
+  nsresult rv;
+  nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   bool useGet = gTRRService->UseGET();
   nsAutoCString body;
   nsCOMPtr<nsIURI> dnsURI;
   bool disableECS = gTRRService->DisableECS();
-  nsresult rv;
 
   LOG(("TRR::SendHTTPRequest resolve %s type %u\n", mHost.get(), mType));
 
@@ -304,19 +246,22 @@ nsresult TRR::SendHTTPRequest() {
     return rv;
   }
 
-  rv = CreateChannelHelper(dnsURI, getter_AddRefs(mChannel));
+  rv = NS_NewChannel(getter_AddRefs(mChannel), dnsURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // nsICookieSettings
+                     nullptr,  // PerformanceStorage
+                     nullptr,  // aLoadGroup
+                     this,
+                     nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
+                         nsIRequest::LOAD_BYPASS_CACHE |
+                         nsIChannel::LOAD_BYPASS_URL_CLASSIFIER,
+                     ios);
   if (NS_FAILED(rv)) {
     LOG(("TRR:SendHTTPRequest: NewChannel failed!\n"));
     return rv;
   }
-
-  mChannel->SetLoadFlags(
-      nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
-      nsIRequest::LOAD_BYPASS_CACHE | nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mChannel->SetNotificationCallbacks(this);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (!httpChannel) {
@@ -1074,10 +1019,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
              mCname.get(), mCnameLoop));
         RefPtr<TRR> trr =
             new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
-        if (!gTRRService) {
-          return NS_ERROR_FAILURE;
-        }
-        rv = gTRRService->DispatchTRRRequest(trr);
+        rv = NS_DispatchToMainThread(trr);
         if (NS_SUCCEEDED(rv)) {
           return rv;
         }
@@ -1246,22 +1188,10 @@ class ProxyCancel : public Runnable {
 };
 
 void TRR::Cancel() {
-  if (StaticPrefs::network_trr_fetch_off_main_thread()) {
-    if (gTRRService) {
-      nsCOMPtr<nsIThread> thread = gTRRService->TRRThread();
-      if (thread && !thread->IsOnCurrentThread()) {
-        nsCOMPtr<nsIRunnable> r = new ProxyCancel(this);
-        thread->Dispatch(r.forget());
-        return;
-      }
-    }
-  } else {
-    if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(new ProxyCancel(this));
-      return;
-    }
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(new ProxyCancel(this));
+    return;
   }
-
   if (mChannel) {
     LOG(("TRR: %p canceling Channel %p %s %d\n", this, mChannel.get(),
          mHost.get(), mType));
