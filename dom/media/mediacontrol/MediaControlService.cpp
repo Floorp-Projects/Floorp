@@ -201,11 +201,11 @@ void MediaControlService::ControllerManager::UpdateMainController(
   if (!mMainController) {
     LOG_MAINCONTROLLER("Clear main controller");
     mSource->SetPlaybackState(PlaybackState::eStopped);
-    return;
+  } else {
+    LOG_MAINCONTROLLER("Set controller %" PRId64 " as main controller",
+                       mMainController->Id());
+    ConnectToMainControllerEvents();
   }
-  LOG_MAINCONTROLLER("Set controller %" PRId64 " as main controller",
-                     mMainController->Id());
-  ConnectToMainControllerEvents();
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
       obs->NotifyObservers(nullptr, "main-media-controller-changed", nullptr);
