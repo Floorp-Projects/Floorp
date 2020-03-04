@@ -41,8 +41,6 @@ class BlobImpl : public nsISupports {
 
   virtual int64_t GetLastModified(ErrorResult& aRv) = 0;
 
-  virtual void SetLastModified(int64_t aLastModified) = 0;
-
   virtual void GetMozFullPath(nsAString& aName,
                               SystemCallerGuarantee /* unused */,
                               ErrorResult& aRv) = 0;
@@ -96,8 +94,6 @@ class BlobImpl : public nsISupports {
   virtual bool IsMemoryFile() const = 0;
 
   virtual bool IsSizeUnknown() const = 0;
-
-  virtual bool IsDateUnknown() const = 0;
 
   virtual bool IsFile() const = 0;
 
