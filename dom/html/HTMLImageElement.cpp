@@ -1262,12 +1262,9 @@ void HTMLImageElement::SetLazyLoading() {
   // There (maybe) is a race condition that we have no LazyLoadImageObserver
   // when the root document has been removed from the docshell.
   // In the case we don't need to worry about lazy-loading.
-  if (DOMIntersectionObserver* lazyLoadObserver =
-          OwnerDoc()->GetLazyLoadImageObserver()) {
-    lazyLoadObserver->Observe(*this);
-    mLazyLoading = true;
-    UpdateImageState(true);
-  }
+  OwnerDoc()->EnsureLazyLoadImageObserver().Observe(*this);
+  mLazyLoading = true;
+  UpdateImageState(true);
 }
 
 void HTMLImageElement::StartLoadingIfNeeded() {
@@ -1290,13 +1287,7 @@ void HTMLImageElement::StopLazyLoadingAndStartLoadIfNeeded() {
     return;
   }
   mLazyLoading = false;
-
-  DOMIntersectionObserver* lazyLoadObserver =
-      OwnerDoc()->GetLazyLoadImageObserver();
-  MOZ_ASSERT(lazyLoadObserver);
-
-  lazyLoadObserver->Unobserve(*this);
-
+  OwnerDoc()->GetLazyLoadImageObserver()->Unobserve(*this);
   StartLoadingIfNeeded();
 }
 

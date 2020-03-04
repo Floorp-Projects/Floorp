@@ -14687,15 +14687,12 @@ void Document::NotifyIntersectionObservers() {
   }
 }
 
-DOMIntersectionObserver* Document::GetLazyLoadImageObserver() {
+DOMIntersectionObserver& Document::EnsureLazyLoadImageObserver() {
   if (!mLazyLoadImageObserver) {
-    if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
-      mLazyLoadImageObserver =
-          DOMIntersectionObserver::CreateLazyLoadObserver(inner);
-    }
+    mLazyLoadImageObserver =
+        DOMIntersectionObserver::CreateLazyLoadObserver(*this);
   }
-
-  return mLazyLoadImageObserver;
+  return *mLazyLoadImageObserver;
 }
 
 static CallState NotifyLayerManagerRecreatedCallback(Document& aDocument,
