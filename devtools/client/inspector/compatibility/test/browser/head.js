@@ -35,14 +35,18 @@ async function openCompatibilityView() {
   const panel = inspector.panelDoc.querySelector(
     "#compatibilityview-panel .inspector-tabpanel"
   );
-  return { inspector, panel };
+
+  const selectedElementPane = panel.querySelector(
+    "#compatibility-app--selected-element-pane"
+  );
+
+  return { inspector, panel, selectedElementPane };
 }
 
 /**
  * Check whether the content of issue item element is matched with the expected values.
  *
  * @param {Element} panel
- *        The Compatibility panel container element
  * @param {Array} expectedIssues
  *        Array of the issue expected.
  *        For the structure of issue items, see types.js.

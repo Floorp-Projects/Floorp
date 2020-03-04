@@ -47,11 +47,11 @@ const TEST_DATA = [
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const { inspector, panel } = await openCompatibilityView();
+  const { inspector, selectedElementPane } = await openCompatibilityView();
 
   for (const { selector, expectedIssues } of TEST_DATA) {
     info(`Check the issue list for ${selector} node`);
     await selectNode(selector, inspector);
-    await assertIssueList(panel, expectedIssues);
+    await assertIssueList(selectedElementPane, expectedIssues);
   }
 });
