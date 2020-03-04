@@ -236,7 +236,7 @@ jobs:
         definition: partner-repack
     periodic-updates:
         symbol: I(file)
-    pipfile-updates:
+    python-dependency-updates:
         symbol: I(pip)
     firefox-snap:
         symbol: I(snap)
