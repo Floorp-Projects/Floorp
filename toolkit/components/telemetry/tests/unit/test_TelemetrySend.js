@@ -968,7 +968,7 @@ add_task(async function testCookies() {
   PingServer.clearRequests();
 
   let uri = Services.io.newURI("http://localhost:" + PingServer.port);
-  Services.cookies.setCookieString(uri, null, "cookie-time=yes", null);
+  Services.cookies.setCookieString(uri, "cookie-time=yes", null);
 
   const id = await TelemetryController.submitExternalPing(TEST_TYPE, {});
   let foundit = false;

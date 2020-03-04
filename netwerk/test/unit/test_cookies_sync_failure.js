@@ -165,7 +165,7 @@ function* run_test_1(generator) {
 
   // Load the profile and populate it.
   let uri = NetUtil.newURI("http://foo.com/");
-  Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
+  Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
 
   // Fake a profile change.
   do_close_profile(sub_generator);
@@ -191,7 +191,7 @@ function* run_test_2(generator) {
   // Load the profile and populate it.
   do_load_profile();
   let uri = NetUtil.newURI("http://foo.com/");
-  Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
+  Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
 
   // Fake a profile change.
   do_close_profile(sub_generator);

@@ -11,7 +11,6 @@ function run_test() {
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
-    null,
     "BadCookie1=\x01",
     null,
     null
@@ -19,7 +18,6 @@ function run_test() {
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
-    null,
     "BadCookie2=\v",
     null,
     null
@@ -27,7 +25,6 @@ function run_test() {
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
-    null,
     "Bad\x07Name=illegal",
     null,
     null
@@ -35,7 +32,6 @@ function run_test() {
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
-    null,
     GOOD_COOKIE,
     null,
     null
@@ -43,7 +39,6 @@ function run_test() {
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
-    null,
     SPACEY_COOKIE,
     null,
     null

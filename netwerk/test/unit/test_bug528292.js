@@ -79,7 +79,7 @@ function run_test() {
   var postRedirectURI = ioService.newURI(postRedirectURL);
   Cc["@mozilla.org/cookieService;1"]
     .getService(Ci.nsICookieService)
-    .setCookieString(postRedirectURI, null, sentCookieVal, chan);
+    .setCookieString(postRedirectURI, sentCookieVal, chan);
 
   // Load the pre-redirect URI.
   chan.asyncOpen(new ChannelListener(finish_test, null));

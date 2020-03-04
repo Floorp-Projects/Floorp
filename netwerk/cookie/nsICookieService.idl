@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIPrompt;
 interface nsIChannel;
 
 /**
@@ -143,10 +142,6 @@ interface nsICookieService : nsISupports
    *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
    *        is acceptable, and will be stripped. This argument must not be null.
-   * @param aPrompt
-   *        the prompt to use for all user-level cookie notifications. This is
-   *        presently ignored and can be null. (Prompt information is determined
-   *        from the channel if necessary.)
    * @param aCookie
    *        the cookie string to set.
    * @param aChannel
@@ -156,8 +151,8 @@ interface nsICookieService : nsISupports
    *        to determine the originating URI of the document; if it is not
    *        provided, the cookies will be assumed third-party.)
    */
-  void setCookieString(in nsIURI aURI, in nsIPrompt aPrompt,
-                       in ACString aCookie, in nsIChannel aChannel);
+  void setCookieString(in nsIURI aURI, in ACString aCookie,
+                       in nsIChannel aChannel);
 
   /*
    * Set the cookie string and expires associated with the URI.
@@ -173,10 +168,6 @@ interface nsICookieService : nsISupports
    * @param aFirstURI
    *        the URI that the user originally typed in or clicked on to initiate
    *        the load of the document referenced by aURI.
-   * @param aPrompt
-   *        the prompt to use for all user-level cookie notifications. This is
-   *        presently ignored and can be null. (Prompt information is determined
-   *        from the channel if necessary.)
    * @param aCookie
    *        the cookie string to set.
    * @param aServerTime
@@ -193,8 +184,8 @@ interface nsICookieService : nsISupports
    *        provided, the cookies will be assumed third-party.)
    */
   void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI,
-                               in nsIPrompt aPrompt, in ACString aCookie,
-                               in ACString aServerTime, in nsIChannel aChannel);
+                               in ACString aCookie, in ACString aServerTime,
+                               in nsIChannel aChannel);
 
 
   /*

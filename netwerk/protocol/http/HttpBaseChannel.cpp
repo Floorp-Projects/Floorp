@@ -2151,8 +2151,8 @@ HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   nsAutoCString date;
   // empty date is not an error
   Unused << mResponseHead->GetHeader(nsHttp::Date, date);
-  nsresult rv = cs->SetCookieStringFromHttp(mURI, nullptr, nullptr,
-                                            aCookieHeader, date, this);
+  nsresult rv =
+      cs->SetCookieStringFromHttp(mURI, nullptr, aCookieHeader, date, this);
   if (NS_SUCCEEDED(rv)) {
     NotifySetCookie(aCookieHeader);
   }

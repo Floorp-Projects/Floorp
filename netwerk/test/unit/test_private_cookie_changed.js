@@ -34,9 +34,9 @@ function run_test() {
   let uri = NetUtil.newURI("http://foo.com/");
   let publicChan = makeChan(uri, false);
   let svc = Services.cookies.QueryInterface(Ci.nsICookieService);
-  svc.setCookieString(uri, null, "oh=hai", publicChan);
+  svc.setCookieString(uri, "oh=hai", publicChan);
   let privateChan = makeChan(uri, true);
-  svc.setCookieString(uri, null, "oh=hai", privateChan);
+  svc.setCookieString(uri, "oh=hai", privateChan);
   Assert.equal(publicNotifications, 1);
   Assert.equal(privateNotifications, 1);
 }

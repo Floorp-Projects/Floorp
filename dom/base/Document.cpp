@@ -5784,7 +5784,7 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     }
 
     NS_ConvertUTF16toUTF8 cookie(aCookie);
-    service->SetCookieString(principalURI, nullptr, cookie, channel);
+    service->SetCookieString(principalURI, cookie, channel);
   }
 }
 
