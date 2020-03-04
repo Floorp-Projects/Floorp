@@ -264,18 +264,11 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     # this list will get cleaned up / reduced / removed in bug 1354088
     if is_macosx:
         env.update({
-            'IDLEIZER_DISABLE_SHUTDOWN': 'true',
-            'LANG': 'en_US.UTF-8',
             'LC_ALL': 'en_US.UTF-8',
-            'MOZ_HIDE_RESULTS_TABLE': '1',
+            'LANG': 'en_US.UTF-8',
             'MOZ_NODE_PATH': '/usr/local/bin/node',
-            'MOZ_NO_REMOTE': '1',
-            'NO_FAIL_ON_TEST_ERRORS': '1',
             'PATH': '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
             'SHELL': '/bin/bash',
-            'XPCOM_DEBUG_BREAK': 'warn',
-            'XPC_FLAGS': '0x0',
-            'XPC_SERVICE_NAME': '0',
         })
     elif is_bitbar:
         env.update({
