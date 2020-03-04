@@ -45,13 +45,9 @@ interface nsIFocusManager : nsISupports
 {
   /**
    * The most active (frontmost) window, or null if no window that is part of
-   * the application is active. Setting the activeWindow raises it, and
-   * focuses the current child window's current element, if any. Setting this
-   * to null or to a non-top-level window throws an NS_ERROR_INVALID_ARG
-   * exception.
-   * The setter for this attribute defaults to CallerType::System.
+   * the application is active.
    */
-  attribute mozIDOMWindowProxy activeWindow;
+  readonly attribute mozIDOMWindowProxy activeWindow;
 
   /**
    * The child window within the activeWindow that is focused. This will

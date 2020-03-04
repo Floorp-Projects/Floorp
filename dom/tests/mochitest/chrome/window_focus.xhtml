@@ -1286,21 +1286,6 @@ function switchWindowTest(otherWindow, framesetWindow)
   expectFocusShift(() => otherWindow.focus(),
                    gNewExpectedWindow, getById("other"), true, "switch to another window");
 
-  var exh = false;
-  try {
-    fm.activeWindow = framesetWindow.frames[0];
-  }
-  catch (ex) { exh = true; }
-  is(exh, true, "activeWindow set to non top-level window");
-
-  exh = false;
-  try {
-    fm.activeWindow = null;
-  }
-  catch (ex) { exh = true; }
-  is(exh, true, "activeWindow set to null");
-  is(fm.activeWindow, otherWindow, "window not changed when activeWindow set to null");
-
   var topWindow = getTopWindow(framesetWindow);
 
   ok(topWindow.document.commandDispatcher.getControllerForCommand("cmd_copy"),
@@ -1316,7 +1301,7 @@ function switchWindowTest(otherWindow, framesetWindow)
 
   gOldExpectedWindow = otherWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(() => fm.activeWindow = topWindow,
+  expectFocusShift(() => topWindow.focus(),
                    gNewExpectedWindow, getById("f4"), true, "switch to frame activeWindow");
 
   fm.clearFocus(otherWindow);
@@ -1331,8 +1316,8 @@ function switchWindowTest(otherWindow, framesetWindow)
   fm.moveFocus(otherWindow, null, fm.MOVEFOCUS_FORWARD, 0);
   var otherInput = otherWindow.document.getElementById("other-input");
   otherInput.setSelectionRange(2, 3);
-  fm.activeWindow = topWindow;
-  fm.activeWindow = otherWindow;
+  topWindow.focus();
+  otherWindow.focus();
   is(otherInput.selectionStart, 2, "selectionStart after input focus and window raise");
   is(otherInput.selectionEnd, 3, "selectionEnd after input focus and window raise");
   is(fm.getLastFocusMethod(null), fm.FLAG_BYMOVEFOCUS, "last focus method after input focus and window raise");
