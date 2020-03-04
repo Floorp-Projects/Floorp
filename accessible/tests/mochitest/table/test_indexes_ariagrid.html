@@ -42,6 +42,14 @@
       ];
       testTableIndexes("grid2", idxes);
 
+      // an ARIA grid with div wrapping cell and div wrapping row
+      idxes = [
+        [0, 1],
+        [2, 3],
+        [4, 5],
+      ];
+      testTableIndexes("grid3", idxes);
+
       SimpleTest.finish();
     }
 
@@ -133,5 +141,19 @@
     </div>
   </div>
 
+  <div role="grid" id="grid3">
+    <div role="row">
+      <div role="gridcell">Normal cell</div>
+      <div role="gridcell">1</div>
+    </div>
+    <div role="row">
+      <div role="gridcell">Div</div>
+      <div><div role="gridcell">2</div></div>
+    </div>
+    <div tabindex="-1"><div role="row">
+      <div role="gridcell">Cell in row in div</div>
+      <div role="gridcell">3</div>
+    </div></div>
+  </div>
 </body>
 </html>

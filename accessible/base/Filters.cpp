@@ -28,9 +28,13 @@ uint32_t filters::GetSelectable(Accessible* aAccessible) {
 uint32_t filters::GetRow(Accessible* aAccessible) {
   if (aAccessible->IsTableRow()) return eMatch | eSkipSubtree;
 
-  // Look for rows inside rowgroup.
+  // Look for rows inside rowgroup or wrapping text containers.
   a11y::role role = aAccessible->Role();
-  if (role == roles::GROUPING) return eSkip;
+  const nsRoleMapEntry* roleMapEntry = aAccessible->ARIARoleMap();
+  if (role == roles::GROUPING ||
+      (aAccessible->IsGenericHyperText() && !roleMapEntry)) {
+    return eSkip;
+  }
 
   return eSkipSubtree;
 }
