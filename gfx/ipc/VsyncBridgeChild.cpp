@@ -14,7 +14,7 @@ VsyncBridgeChild::VsyncBridgeChild(RefPtr<VsyncIOThreadHolder> aThread,
                                    const uint64_t& aProcessToken)
     : mThread(aThread), mProcessToken(aProcessToken) {}
 
-VsyncBridgeChild::~VsyncBridgeChild() {}
+VsyncBridgeChild::~VsyncBridgeChild() = default;
 
 /* static */
 RefPtr<VsyncBridgeChild> VsyncBridgeChild::Create(

@@ -19,7 +19,7 @@ ImageLayer::ImageLayer(LayerManager* aManager, void* aImplData)
       mSamplingFilter(gfx::SamplingFilter::GOOD),
       mScaleMode(ScaleMode::SCALE_NONE) {}
 
-ImageLayer::~ImageLayer() {}
+ImageLayer::~ImageLayer() = default;
 
 void ImageLayer::SetContainer(ImageContainer* aContainer) {
   mContainer = aContainer;

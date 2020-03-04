@@ -281,7 +281,7 @@ UiCompositorControllerChild::UiCompositorControllerChild(
     const uint64_t& aProcessToken)
     : mIsOpen(false), mProcessToken(aProcessToken), mWidget(nullptr) {}
 
-UiCompositorControllerChild::~UiCompositorControllerChild() {}
+UiCompositorControllerChild::~UiCompositorControllerChild() = default;
 
 void UiCompositorControllerChild::OpenForSameProcess() {
   MOZ_ASSERT(IsOnUiThread());

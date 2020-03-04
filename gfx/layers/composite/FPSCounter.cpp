@@ -32,7 +32,7 @@ FPSCounter::FPSCounter(const char* aName)
   Init();
 }
 
-FPSCounter::~FPSCounter() {}
+FPSCounter::~FPSCounter() = default;
 
 void FPSCounter::Init() {
   for (int i = 0; i < kMaxFrames; i++) {

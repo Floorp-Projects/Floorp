@@ -17,7 +17,7 @@ NativeFontResourceFreeType::NativeFontResourceFreeType(
       mDataLength(aDataLength),
       mFTLibrary(aFTLibrary) {}
 
-NativeFontResourceFreeType::~NativeFontResourceFreeType() {}
+NativeFontResourceFreeType::~NativeFontResourceFreeType() = default;
 
 template <class T>
 already_AddRefed<T> NativeFontResourceFreeType::CreateInternal(

@@ -203,7 +203,7 @@ class GradientStops : public external::AtomicRefCounted<GradientStops> {
   virtual bool IsValid() const { return true; }
 
  protected:
-  GradientStops() {}
+  GradientStops() = default;
 };
 
 /**
@@ -929,7 +929,7 @@ class UnscaledFont : public SupportsThreadSafeWeakPtr<UnscaledFont> {
   }
 
  protected:
-  UnscaledFont() {}
+  UnscaledFont() = default;
 
  private:
   static Atomic<uint32_t> sDeletionCounter;

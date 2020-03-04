@@ -24,7 +24,7 @@ namespace layers {
 // through this interface.
 class CompositableParentManager : public HostIPCAllocator {
  public:
-  CompositableParentManager() {}
+  CompositableParentManager() = default;
 
   void DestroyActor(const OpDestroy& aOp);
 

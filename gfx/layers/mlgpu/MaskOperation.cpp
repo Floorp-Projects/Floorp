@@ -21,7 +21,7 @@ MaskOperation::MaskOperation(FrameBuilder* aBuilder) {}
 MaskOperation::MaskOperation(FrameBuilder* aBuilder, MLGTexture* aSource)
     : mTexture(aSource) {}
 
-MaskOperation::~MaskOperation() {}
+MaskOperation::~MaskOperation() = default;
 
 static gfx::Rect ComputeQuadForMaskLayer(Layer* aLayer, const IntSize& aSize) {
   const Matrix4x4& transform = aLayer->GetEffectiveTransform();
@@ -77,7 +77,7 @@ RefPtr<TextureSource> GetMaskLayerTexture(Layer* aLayer) {
 MaskCombineOperation::MaskCombineOperation(FrameBuilder* aBuilder)
     : MaskOperation(aBuilder), mBuilder(aBuilder) {}
 
-MaskCombineOperation::~MaskCombineOperation() {}
+MaskCombineOperation::~MaskCombineOperation() = default;
 
 void MaskCombineOperation::Init(const MaskTextureList& aTextures) {
   // All masks for a single layer exist in the same coordinate space. Find the

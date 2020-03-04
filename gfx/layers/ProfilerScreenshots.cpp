@@ -23,7 +23,7 @@ using namespace mozilla::layers;
 ProfilerScreenshots::ProfilerScreenshots()
     : mMutex("ProfilerScreenshots::mMutex"), mLiveSurfaceCount(0) {}
 
-ProfilerScreenshots::~ProfilerScreenshots() {}
+ProfilerScreenshots::~ProfilerScreenshots() = default;
 
 /* static */
 bool ProfilerScreenshots::IsEnabled() {

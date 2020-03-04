@@ -27,7 +27,7 @@ namespace mozilla {
 namespace layers {
 
 struct SurfaceDescriptorX11 {
-  SurfaceDescriptorX11() {}
+  SurfaceDescriptorX11() = default;
 
   explicit SurfaceDescriptorX11(gfxXlibSurface* aSurf,
                                 bool aForwardGLX = false);

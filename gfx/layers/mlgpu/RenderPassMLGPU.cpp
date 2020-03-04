@@ -147,7 +147,7 @@ RenderPassMLGPU::RenderPassMLGPU(FrameBuilder* aBuilder, const ItemInfo& aItem)
       mMaskRectBufferIndex(kInvalidResourceIndex),
       mPrepared(false) {}
 
-RenderPassMLGPU::~RenderPassMLGPU() {}
+RenderPassMLGPU::~RenderPassMLGPU() = default;
 
 bool RenderPassMLGPU::IsCompatible(const ItemInfo& aItem) {
   if (GetType() != aItem.type) {

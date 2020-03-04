@@ -517,7 +517,7 @@ static bool HasSyntheticBoldOrColor(gfxFont* aFont) {
 struct MOZ_STACK_CLASS BufferAlphaColor {
   explicit BufferAlphaColor(gfxContext* aContext) : mContext(aContext) {}
 
-  ~BufferAlphaColor() {}
+  ~BufferAlphaColor() = default;
 
   void PushSolidColor(const gfxRect& aBounds, const Color& aAlphaColor,
                       uint32_t appsPerDevUnit) {

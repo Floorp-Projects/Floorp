@@ -67,7 +67,7 @@ class VRProcessManager final : public VRProcessParent::Listener {
     explicit Observer(VRProcessManager* aManager);
 
    protected:
-    ~Observer() {}
+    ~Observer() = default;
 
     VRProcessManager* mManager;
   };

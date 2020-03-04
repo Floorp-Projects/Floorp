@@ -44,7 +44,7 @@ class OOPCanvasRenderer final {
   CanvasClient* mCanvasClient = nullptr;
 
  private:
-  ~OOPCanvasRenderer() {}
+  ~OOPCanvasRenderer() = default;
 };
 
 }  // namespace layers

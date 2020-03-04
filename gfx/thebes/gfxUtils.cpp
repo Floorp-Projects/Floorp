@@ -1383,7 +1383,7 @@ class GetFeatureStatusWorkerRunnable final
   nsresult GetNSResult() const { return mNSResult; }
 
  protected:
-  ~GetFeatureStatusWorkerRunnable() {}
+  ~GetFeatureStatusWorkerRunnable() = default;
 
  private:
   nsCOMPtr<nsIGfxInfo> mGfxInfo;

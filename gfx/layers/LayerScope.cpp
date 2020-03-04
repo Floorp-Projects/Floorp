@@ -133,7 +133,7 @@ class LayerScopeWebSocketManager {
    public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    SocketListener() {}
+    SocketListener() = default;
 
     /* nsIServerSocketListener */
     NS_IMETHOD OnSocketAccepted(nsIServerSocket* aServ,

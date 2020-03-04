@@ -59,9 +59,9 @@ class CompositorScreenshotGrabberImpl final {
   const IntSize mBufferSize;
 };
 
-CompositorScreenshotGrabber::CompositorScreenshotGrabber() {}
+CompositorScreenshotGrabber::CompositorScreenshotGrabber() = default;
 
-CompositorScreenshotGrabber::~CompositorScreenshotGrabber() {}
+CompositorScreenshotGrabber::~CompositorScreenshotGrabber() = default;
 
 void CompositorScreenshotGrabber::MaybeGrabScreenshot(Compositor* aCompositor) {
   if (ProfilerScreenshots::IsEnabled()) {

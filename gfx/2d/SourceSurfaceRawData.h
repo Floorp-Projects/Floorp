@@ -22,7 +22,7 @@ class SourceSurfaceMappedData final : public DataSourceSurface {
                           SurfaceFormat aFormat)
       : mMap(std::move(aMap)), mSize(aSize), mFormat(aFormat) {}
 
-  ~SourceSurfaceMappedData() final {}
+  ~SourceSurfaceMappedData() final = default;
 
   uint8_t* GetData() final { return mMap.GetData(); }
   int32_t Stride() final { return mMap.GetStride(); }
@@ -104,7 +104,7 @@ class SourceSurfaceAlignedRawData : public DataSourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceAlignedRawData,
                                           override)
   SourceSurfaceAlignedRawData() : mStride(0), mFormat(SurfaceFormat::UNKNOWN) {}
-  ~SourceSurfaceAlignedRawData() override {}
+  ~SourceSurfaceAlignedRawData() override = default;
 
   bool Init(const IntSize& aSize, SurfaceFormat aFormat, bool aClearMem,
             uint8_t aClearValue, int32_t aStride = 0);

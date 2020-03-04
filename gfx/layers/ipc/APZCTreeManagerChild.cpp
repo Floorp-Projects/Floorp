@@ -18,7 +18,7 @@ namespace layers {
 APZCTreeManagerChild::APZCTreeManagerChild()
     : mCompositorSession(nullptr), mIPCOpen(false) {}
 
-APZCTreeManagerChild::~APZCTreeManagerChild() {}
+APZCTreeManagerChild::~APZCTreeManagerChild() = default;
 
 void APZCTreeManagerChild::SetCompositorSession(
     RemoteCompositorSession* aSession) {

@@ -157,7 +157,7 @@ struct ImageBackendData {
   virtual ~ImageBackendData() = default;
 
  protected:
-  ImageBackendData() {}
+  ImageBackendData() = default;
 };
 
 /* Forward declarations for Image derivatives. */
@@ -280,7 +280,7 @@ class BufferRecycleBin final {
   typedef mozilla::Mutex Mutex;
 
   // Private destructor, to discourage deletion outside of Release():
-  ~BufferRecycleBin() {}
+  ~BufferRecycleBin() = default;
 
   // This protects mRecycledBuffers, mRecycledBufferSize, mRecycledTextures
   // and mRecycledTextureSizes
@@ -314,7 +314,7 @@ class ImageFactory {
  protected:
   friend class ImageContainer;
 
-  ImageFactory() {}
+  ImageFactory() = default;
   virtual ~ImageFactory() = default;
 
   virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(

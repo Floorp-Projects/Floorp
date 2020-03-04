@@ -111,7 +111,7 @@ CanvasChild::CanvasChild(Endpoint<PCanvasChild>&& aEndpoint) {
   aEndpoint.Bind(this);
 }
 
-CanvasChild::~CanvasChild() {}
+CanvasChild::~CanvasChild() = default;
 
 ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

@@ -51,11 +51,10 @@ class BufferCache final {
   // while drawing, it shouldn't be a big deal.
   struct CacheEntry {
     CacheEntry() : mLastUsedFrame(0) {}
-    CacheEntry(const CacheEntry& aEntry)
-        : mLastUsedFrame(aEntry.mLastUsedFrame), mBuffer(aEntry.mBuffer) {}
-    CacheEntry(CacheEntry&& aEntry)
-        : mLastUsedFrame(aEntry.mLastUsedFrame),
-          mBuffer(std::move(aEntry.mBuffer)) {}
+    // XXX The copy constructor can be deleted once RefPtr's move constructor is
+    // declared noexcept, see Bug 1612680.
+    CacheEntry(const CacheEntry& aEntry) = default;
+    CacheEntry(CacheEntry&& aEntry) = default;
     CacheEntry(size_t aLastUsedFrame, MLGBuffer* aBuffer)
         : mLastUsedFrame(aLastUsedFrame), mBuffer(aBuffer) {}
 

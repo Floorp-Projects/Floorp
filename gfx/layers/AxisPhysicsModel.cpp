@@ -38,7 +38,7 @@ AxisPhysicsModel::AxisPhysicsModel(double aInitialPosition,
       mPrevState(aInitialPosition, aInitialVelocity),
       mNextState(aInitialPosition, aInitialVelocity) {}
 
-AxisPhysicsModel::~AxisPhysicsModel() {}
+AxisPhysicsModel::~AxisPhysicsModel() = default;
 
 double AxisPhysicsModel::GetVelocity() const {
   return LinearInterpolate(mPrevState.v, mNextState.v, mProgress);

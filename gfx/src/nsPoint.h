@@ -23,8 +23,8 @@ typedef mozilla::gfx::IntPoint nsIntPoint;
 struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
   typedef mozilla::gfx::BasePoint<nscoord, nsPoint> Super;
 
-  nsPoint() : Super() {}
-  nsPoint(const nsPoint& aPoint) : Super(aPoint) {}
+  nsPoint() = default;
+  nsPoint(const nsPoint& aPoint) = default;
   nsPoint(nscoord aX, nscoord aY) : Super(aX, aY) {}
 
   inline nsIntPoint ScaleToNearestPixels(float aXScale, float aYScale,

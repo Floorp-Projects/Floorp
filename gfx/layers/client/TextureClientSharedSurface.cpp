@@ -23,7 +23,7 @@ SharedSurfaceTextureData::SharedSurfaceTextureData(
     UniquePtr<gl::SharedSurface> surf)
     : mSurf(std::move(surf)) {}
 
-SharedSurfaceTextureData::~SharedSurfaceTextureData() {}
+SharedSurfaceTextureData::~SharedSurfaceTextureData() = default;
 
 void SharedSurfaceTextureData::Deallocate(LayersIPCChannel*) {}
 

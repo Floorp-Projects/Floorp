@@ -33,7 +33,7 @@ FrameBuilder::FrameBuilder(LayerManagerMLGPU* aManager,
   mRoot = mManager->GetRoot()->AsHostLayer()->AsLayerMLGPU();
 }
 
-FrameBuilder::~FrameBuilder() {}
+FrameBuilder::~FrameBuilder() = default;
 
 bool FrameBuilder::Build() {
   AUTO_PROFILER_LABEL("FrameBuilder::Build", GRAPHICS);

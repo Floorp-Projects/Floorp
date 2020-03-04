@@ -22,7 +22,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-gfxAlphaBoxBlur::~gfxAlphaBoxBlur() {}
+gfxAlphaBoxBlur::~gfxAlphaBoxBlur() = default;
 
 already_AddRefed<gfxContext> gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
                                                    const gfxRect& aRect,

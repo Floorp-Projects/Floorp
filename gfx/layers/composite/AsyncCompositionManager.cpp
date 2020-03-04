@@ -74,7 +74,7 @@ AsyncCompositionManager::AsyncCompositionManager(
   MOZ_ASSERT(mCompositorBridge);
 }
 
-AsyncCompositionManager::~AsyncCompositionManager() {}
+AsyncCompositionManager::~AsyncCompositionManager() = default;
 
 void AsyncCompositionManager::ResolveRefLayers(
     CompositorBridgeParent* aCompositor, bool* aHasRemoteContent,

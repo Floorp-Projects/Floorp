@@ -45,12 +45,9 @@ struct ScrollableLayerGuid {
         mPresShellId(aPresShellId),
         mScrollId(aScrollId) {}
 
-  ScrollableLayerGuid(const ScrollableLayerGuid& other)
-      : mLayersId(other.mLayersId),
-        mPresShellId(other.mPresShellId),
-        mScrollId(other.mScrollId) {}
+  ScrollableLayerGuid(const ScrollableLayerGuid& other) = default;
 
-  ~ScrollableLayerGuid() {}
+  ~ScrollableLayerGuid() = default;
 
   bool operator==(const ScrollableLayerGuid& other) const {
     return mLayersId == other.mLayersId && mPresShellId == other.mPresShellId &&

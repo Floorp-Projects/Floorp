@@ -21,7 +21,7 @@ namespace layers {
 
 class IGPUVideoSurfaceManager {
  protected:
-  virtual ~IGPUVideoSurfaceManager(){};
+  virtual ~IGPUVideoSurfaceManager() = default;
 
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING

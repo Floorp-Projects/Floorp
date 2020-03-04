@@ -39,7 +39,7 @@ class SyncObjectHost : public RefCounted<SyncObjectHost> {
   virtual bool Synchronize(bool aFallible = false) = 0;
 
  protected:
-  SyncObjectHost() {}
+  SyncObjectHost() = default;
 };
 
 class SyncObjectClient : public external::AtomicRefCounted<SyncObjectClient> {
@@ -67,7 +67,7 @@ class SyncObjectClient : public external::AtomicRefCounted<SyncObjectClient> {
   virtual bool IsSyncObjectValid() = 0;
 
  protected:
-  SyncObjectClient() {}
+  SyncObjectClient() = default;
 };
 
 }  // namespace layers

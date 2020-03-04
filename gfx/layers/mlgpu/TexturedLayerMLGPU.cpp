@@ -163,7 +163,7 @@ TempImageLayerMLGPU::TempImageLayerMLGPU(LayerManagerMLGPU* aManager)
       mFilter(gfx::SamplingFilter::GOOD),
       mIsOpaque(false) {}
 
-TempImageLayerMLGPU::~TempImageLayerMLGPU() {}
+TempImageLayerMLGPU::~TempImageLayerMLGPU() = default;
 
 void TempImageLayerMLGPU::Init(TexturedLayerMLGPU* aSource,
                                const RefPtr<TextureSource>& aTexture,

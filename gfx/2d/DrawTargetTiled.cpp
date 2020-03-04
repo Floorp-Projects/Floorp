@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace gfx {
 
-DrawTargetTiled::DrawTargetTiled() {}
+DrawTargetTiled::DrawTargetTiled() = default;
 
 bool DrawTargetTiled::Init(const TileSet& aTiles) {
   if (!aTiles.mTileCount) {

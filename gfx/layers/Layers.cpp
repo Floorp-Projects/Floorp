@@ -185,7 +185,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData)
 {
 }
 
-Layer::~Layer() {}
+Layer::~Layer() = default;
 
 void Layer::SetCompositorAnimations(
     const CompositorAnimations& aCompositorAnimations) {
@@ -770,7 +770,7 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
       mMayHaveReadbackChild(false),
       mChildrenChanged(false) {}
 
-ContainerLayer::~ContainerLayer() {}
+ContainerLayer::~ContainerLayer() = default;
 
 bool ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter) {
   if (aChild->Manager() != Manager()) {

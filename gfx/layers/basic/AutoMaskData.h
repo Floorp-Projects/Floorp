@@ -19,8 +19,8 @@ namespace layers {
  */
 class MOZ_STACK_CLASS AutoMoz2DMaskData {
  public:
-  AutoMoz2DMaskData() {}
-  ~AutoMoz2DMaskData() {}
+  AutoMoz2DMaskData() = default;
+  ~AutoMoz2DMaskData() = default;
 
   void Construct(const gfx::Matrix& aTransform, gfx::SourceSurface* aSurface) {
     MOZ_ASSERT(!IsConstructed());

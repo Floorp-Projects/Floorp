@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace gfx {
 
-DrawTargetOffset::DrawTargetOffset() {}
+DrawTargetOffset::DrawTargetOffset() = default;
 
 bool DrawTargetOffset::Init(DrawTarget* aDrawTarget, IntPoint aOrigin) {
   mDrawTarget = aDrawTarget;

@@ -26,7 +26,7 @@ nsFont::nsFont(StyleGenericFontFamily aGenericType, nscoord aSize)
 
 nsFont::nsFont(const nsFont& aOther) = default;
 
-nsFont::~nsFont() {}
+nsFont::~nsFont() = default;
 
 bool nsFont::Equals(const nsFont& aOther) const {
   return CalcDifference(aOther) == MaxDifference::eNone;

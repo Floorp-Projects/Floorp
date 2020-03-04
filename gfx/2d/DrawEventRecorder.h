@@ -227,7 +227,7 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
   MemStream mIndex;
 
  protected:
-  virtual ~DrawEventRecorderMemory(){};
+  virtual ~DrawEventRecorderMemory() = default;
 
  private:
   SerializeResourcesFn mSerializeCallback;

@@ -31,7 +31,7 @@ class nsTransform2D {
     m00 = m11 = 1.0f;
   }
 
-  ~nsTransform2D(void) {}
+  ~nsTransform2D(void) = default;
 
   /**
    * set this transform to a translation

@@ -22,7 +22,7 @@ using namespace ipc;
 GPUProcessImpl::GPUProcessImpl(ProcessId aParentPid)
     : ProcessChild(aParentPid) {}
 
-GPUProcessImpl::~GPUProcessImpl() {}
+GPUProcessImpl::~GPUProcessImpl() = default;
 
 bool GPUProcessImpl::Init(int aArgc, char* aArgv[]) {
 #if defined(MOZ_SANDBOX) && defined(OS_WIN)

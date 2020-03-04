@@ -484,7 +484,7 @@ void TextureHost::Updated(const nsIntRegion* aRegion) {
 
 TextureSource::TextureSource() : mCompositableCount(0) {}
 
-TextureSource::~TextureSource() {}
+TextureSource::~TextureSource() = default;
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
     : TextureHost(aFlags),
@@ -520,7 +520,7 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
   }
 }
 
-BufferTextureHost::~BufferTextureHost() {}
+BufferTextureHost::~BufferTextureHost() = default;
 
 void BufferTextureHost::UpdatedInternal(const nsIntRegion* aRegion) {
   ++mUpdateSerial;

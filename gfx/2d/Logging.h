@@ -216,11 +216,11 @@ class LogForwarder {
 
 class NoLog {
  public:
-  NoLog() {}
-  ~NoLog() {}
+  NoLog() = default;
+  ~NoLog() = default;
 
   // No-op
-  MOZ_IMPLICIT NoLog(const NoLog&) {}
+  MOZ_IMPLICIT NoLog(const NoLog&) = default;
 
   template <typename T>
   NoLog& operator<<(const T& aLogText) {

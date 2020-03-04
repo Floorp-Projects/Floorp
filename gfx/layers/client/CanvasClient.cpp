@@ -528,7 +528,7 @@ CanvasClientOOP::CanvasClientOOP(CompositableForwarder* aLayerForwarder,
                                  TextureFlags aFlags)
     : CanvasClient(aLayerForwarder, aFlags) {}
 
-CanvasClientOOP::~CanvasClientOOP() {}
+CanvasClientOOP::~CanvasClientOOP() = default;
 
 void CanvasClientOOP::SetLayer(ShadowableLayer* aLayer,
                                OOPCanvasRenderer* aRenderer) {

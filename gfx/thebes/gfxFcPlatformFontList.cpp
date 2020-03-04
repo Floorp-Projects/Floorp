@@ -1239,7 +1239,7 @@ gfxFontconfigFont::gfxFontconfigFont(
   InitMetrics();
 }
 
-gfxFontconfigFont::~gfxFontconfigFont() {}
+gfxFontconfigFont::~gfxFontconfigFont() = default;
 
 already_AddRefed<ScaledFont> gfxFontconfigFont::GetScaledFont(
     mozilla::gfx::DrawTarget* aTarget) {

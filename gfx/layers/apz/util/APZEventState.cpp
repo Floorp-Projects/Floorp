@@ -110,7 +110,7 @@ APZEventState::APZEventState(nsIWidget* aWidget,
              " does not support weak references. APZ will NOT work!");
 }
 
-APZEventState::~APZEventState() {}
+APZEventState::~APZEventState() = default;
 
 class DelayedFireSingleTapEvent final : public nsITimerCallback,
                                         public nsINamed {
@@ -148,7 +148,7 @@ class DelayedFireSingleTapEvent final : public nsITimerCallback,
   void ClearTimer() { mTimer = nullptr; }
 
  private:
-  ~DelayedFireSingleTapEvent() {}
+  ~DelayedFireSingleTapEvent() = default;
 
   nsWeakPtr mWidget;
   LayoutDevicePoint mPoint;

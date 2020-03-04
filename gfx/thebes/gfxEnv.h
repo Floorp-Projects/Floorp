@@ -124,8 +124,9 @@ class gfxEnv final {
     return (val != 0 && *val != '\0');
   }
 
-  gfxEnv(){};
-  ~gfxEnv(){};
+  gfxEnv() = default;
+  ~gfxEnv() = default;
+
   gfxEnv(const gfxEnv&) = delete;
   gfxEnv& operator=(const gfxEnv&) = delete;
 };

@@ -229,25 +229,18 @@ struct ToAlphaAttributes {
 
 class ImplicitlyCopyableFloatArray : public nsTArray<float> {
  public:
-  ImplicitlyCopyableFloatArray() : nsTArray<float>() {}
+  ImplicitlyCopyableFloatArray() = default;
 
-  ImplicitlyCopyableFloatArray(ImplicitlyCopyableFloatArray&& aOther)
-      : nsTArray<float>(std::move(aOther)) {}
+  ImplicitlyCopyableFloatArray(ImplicitlyCopyableFloatArray&& aOther) = default;
 
   ImplicitlyCopyableFloatArray& operator=(
-      ImplicitlyCopyableFloatArray&& aOther) {
-    nsTArray<float>::operator=(std::move(aOther));
-    return *this;
-  }
+      ImplicitlyCopyableFloatArray&& aOther) = default;
 
   ImplicitlyCopyableFloatArray(const ImplicitlyCopyableFloatArray& aOther) =
       default;
 
   ImplicitlyCopyableFloatArray& operator=(
-      const ImplicitlyCopyableFloatArray& aOther) {
-    nsTArray<float>::operator=(aOther);
-    return *this;
-  }
+      const ImplicitlyCopyableFloatArray& aOther) = default;
 };
 
 struct ColorMatrixAttributes {
@@ -418,11 +411,13 @@ class FilterPrimitiveDescription final {
 
   FilterPrimitiveDescription();
   explicit FilterPrimitiveDescription(PrimitiveAttributes&& aAttributes);
-  FilterPrimitiveDescription(FilterPrimitiveDescription&& aOther);
-  FilterPrimitiveDescription& operator=(FilterPrimitiveDescription&& aOther);
-  FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther);
+  FilterPrimitiveDescription(FilterPrimitiveDescription&& aOther) = default;
+  FilterPrimitiveDescription& operator=(FilterPrimitiveDescription&& aOther) =
+      default;
+  FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther) =
+      default;
   FilterPrimitiveDescription& operator=(
-      const FilterPrimitiveDescription& aOther);
+      const FilterPrimitiveDescription& aOther) = default;
 
   const PrimitiveAttributes& Attributes() const { return mAttributes; }
   PrimitiveAttributes& Attributes() { return mAttributes; }
@@ -491,7 +486,7 @@ class FilterPrimitiveDescription final {
  * functionality.
  */
 struct FilterDescription final {
-  FilterDescription() {}
+  FilterDescription() = default;
   explicit FilterDescription(
       nsTArray<FilterPrimitiveDescription>&& aPrimitives) {
     mPrimitives.SwapElements(aPrimitives);

@@ -53,7 +53,6 @@ void ScrollVelocityQueue::TrimQueue() {
 
   TimeStamp currentRefreshTime =
       mPresContext->RefreshDriver()->MostRecentRefresh();
-  nsPoint velocity;
   uint32_t timeDelta = (currentRefreshTime - mSampleTime).ToMilliseconds();
   for (int i = mQueue.Length() - 1; i >= 0; i--) {
     timeDelta += mQueue[i].first;

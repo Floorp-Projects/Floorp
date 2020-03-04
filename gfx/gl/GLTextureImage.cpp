@@ -220,7 +220,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL, gfx::IntSize aSize,
   }
 }
 
-TiledTextureImage::~TiledTextureImage() {}
+TiledTextureImage::~TiledTextureImage() = default;
 
 bool TiledTextureImage::DirectUpdate(
     gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion,

@@ -783,7 +783,7 @@ EGLImageTextureHost::EGLImageTextureHost(TextureFlags aFlags, EGLImage aImage,
       mSize(aSize),
       mHasAlpha(hasAlpha) {}
 
-EGLImageTextureHost::~EGLImageTextureHost() {}
+EGLImageTextureHost::~EGLImageTextureHost() = default;
 
 gl::GLContext* EGLImageTextureHost::gl() const {
   return mProvider ? mProvider->GetGLContext() : nullptr;
@@ -899,7 +899,7 @@ GLTextureHost::GLTextureHost(TextureFlags aFlags, GLuint aTextureHandle,
       mSize(aSize),
       mHasAlpha(aHasAlpha) {}
 
-GLTextureHost::~GLTextureHost() {}
+GLTextureHost::~GLTextureHost() = default;
 
 gl::GLContext* GLTextureHost::gl() const {
   return mProvider ? mProvider->GetGLContext() : nullptr;

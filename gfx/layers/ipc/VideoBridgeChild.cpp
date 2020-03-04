@@ -50,7 +50,7 @@ VideoBridgeChild::VideoBridgeChild()
       mMessageLoop(MessageLoop::current()),
       mCanSend(true) {}
 
-VideoBridgeChild::~VideoBridgeChild() {}
+VideoBridgeChild::~VideoBridgeChild() = default;
 
 VideoBridgeChild* VideoBridgeChild::GetSingleton() { return sVideoBridge; }
 

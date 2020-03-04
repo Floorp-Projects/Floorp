@@ -42,7 +42,7 @@ SharedSurfacesChild::ImageKeyData& SharedSurfacesChild::ImageKeyData::operator=(
   return *this;
 }
 
-SharedSurfacesChild::ImageKeyData::~ImageKeyData() {}
+SharedSurfacesChild::ImageKeyData::~ImageKeyData() = default;
 
 void SharedSurfacesChild::ImageKeyData::MergeDirtyRect(
     const Maybe<IntRect>& aDirtyRect) {

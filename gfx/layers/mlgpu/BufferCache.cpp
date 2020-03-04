@@ -30,7 +30,7 @@ BufferCache::BufferCache(MLGDevice* aDevice)
   mCaches.resize(lastSizeClass - mFirstSizeClass + 1);
 }
 
-BufferCache::~BufferCache() {}
+BufferCache::~BufferCache() = default;
 
 RefPtr<MLGBuffer> BufferCache::GetOrCreateBuffer(size_t aBytes) {
   size_t sizeClass = CeilingLog2(aBytes);

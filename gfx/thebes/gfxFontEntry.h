@@ -1001,8 +1001,7 @@ struct FontFamily {
 struct FamilyAndGeneric final {
   FamilyAndGeneric()
       : mFamily(), mGeneric(mozilla::StyleGenericFontFamily(0)) {}
-  FamilyAndGeneric(const FamilyAndGeneric& aOther)
-      : mFamily(aOther.mFamily), mGeneric(aOther.mGeneric) {}
+  FamilyAndGeneric(const FamilyAndGeneric& aOther) = default;
   explicit FamilyAndGeneric(gfxFontFamily* aFamily,
                             mozilla::StyleGenericFontFamily aGeneric =
                                 mozilla::StyleGenericFontFamily(0))

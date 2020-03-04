@@ -62,7 +62,7 @@ SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
   mRefDT = mOwner->mRefDT;
 }
 
-SourceSurfaceCapture::~SourceSurfaceCapture() {}
+SourceSurfaceCapture::~SourceSurfaceCapture() = default;
 
 void SourceSurfaceCapture::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                SizeOfInfo& aInfo) const {
