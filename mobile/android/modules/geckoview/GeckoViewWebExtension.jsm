@@ -321,6 +321,11 @@ class ExtensionInstallListener {
     this.resolve({ installError, state });
   }
 
+  onInstallPostponed(aInstall) {
+    const { error: installError, state } = aInstall;
+    this.resolve({ installError, state });
+  }
+
   onInstallEnded(aInstall, aAddon) {
     const addonId = aAddon.id;
     const { sourceURI } = aInstall;

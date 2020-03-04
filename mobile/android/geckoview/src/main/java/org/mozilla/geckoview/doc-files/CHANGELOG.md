@@ -70,6 +70,7 @@ exclude: true
 [75.17]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled--
 [75.18]: {{javadoc_uri}}/GeckoDisplay.html#safeAreaInsetsChanged-int-int-int-int-
 [75.19]: https://developer.mozilla.org/en-US/docs/Web/CSS/env
+[75.20]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_POSTPONED-
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -633,4 +634,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 70653951daef244299243f3c154d37e13a4fd140
+[api-version]: 2d95173aa2669bb1ed0acff26af3978047ec274c
