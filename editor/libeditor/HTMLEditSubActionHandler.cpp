@@ -2551,7 +2551,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtTextNode(
        NS_WARN_IF(!endToDelete.IsInTextNode()) ||
        NS_WARN_IF(startToDelete.ContainerAsText() != visibleTextNode) ||
        NS_WARN_IF(endToDelete.ContainerAsText() != visibleTextNode) ||
-       NS_WARN_IF(startToDelete.Offset() <= endToDelete.Offset()))) {
+       NS_WARN_IF(startToDelete.Offset() >= endToDelete.Offset()))) {
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
   rv = DeleteTextWithTransaction(visibleTextNode, startToDelete.Offset(),
