@@ -816,14 +816,14 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MOZ_CAN_RUN_SCRIPT nsresult CheckTrailingNBSPOfRun(WSFragment* aRun);
 
   /**
-   * ReplacePreviousNBSPIfUnncessary() replaces previous character of aPoint
+   * ReplacePreviousNBSPIfUnnecessary() replaces previous character of aPoint
    * if it's a NBSP and it's unnecessary.
    *
    * @param aRun        Current text run.  aPoint must be in this run.
    * @param aPoint      Current insertion point.  Its previous character is
    *                    unnecessary NBSP will be checked.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult ReplacePreviousNBSPIfUnncessary(
+  MOZ_CAN_RUN_SCRIPT nsresult ReplacePreviousNBSPIfUnnecessary(
       WSFragment* aRun, const EditorDOMPoint& aPoint);
 
   MOZ_CAN_RUN_SCRIPT
