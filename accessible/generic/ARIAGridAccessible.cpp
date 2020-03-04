@@ -461,11 +461,31 @@ role ARIARowAccessible::NativeRole() const {
 GroupPos ARIARowAccessible::GroupPosition() {
   int32_t count = 0, index = 0;
   Accessible* table = nsAccUtils::TableFor(this);
-  if (table &&
-      nsCoreUtils::GetUIntAttr(table->GetContent(), nsGkAtoms::aria_rowcount,
-                               &count) &&
-      nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_rowindex, &index)) {
-    return GroupPos(0, index, count);
+  if (table) {
+    if (nsCoreUtils::GetUIntAttr(table->GetContent(), nsGkAtoms::aria_rowcount,
+                                 &count) &&
+        nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_rowindex, &index)) {
+      return GroupPos(0, index, count);
+    }
+
+    // Deal with the special case here that tables and grids can have rows
+    // which are wrapped in generic text container elements. Exclude tree grids
+    // because these are dealt with elsewhere.
+    if (table->Role() == roles::TABLE) {
+      Accessible* row = nullptr;
+      AccIterator rowIter(table, filters::GetRow);
+      while ((row = rowIter.Next())) {
+        index++;
+        if (row == this) {
+          break;
+        }
+      }
+
+      if (row) {
+        count = table->AsTable()->RowCount();
+        return GroupPos(0, index, count);
+      }
+    }
   }
 
   return AccessibleWrap::GroupPosition();
