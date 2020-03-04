@@ -38,7 +38,7 @@ function* do_run_test() {
 
   for (let i = 0; i < CMAX; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
+    Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
   }
 
   Assert.equal(do_count_cookies(), CMAX);

@@ -843,7 +843,7 @@ add_task(async function test_not_sending_cookie() {
     Ci.nsICookieService
   );
   let uri = CommonUtils.makeURI(server.baseURI);
-  cookieSer.setCookieString(uri, null, "test=test; path=/;", null);
+  cookieSer.setCookieString(uri, "test=test; path=/;", null);
 
   let res = new RESTRequest(server.baseURI + "/test");
   let response = await res.get();
