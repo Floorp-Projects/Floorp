@@ -97,13 +97,17 @@ impl ExtraCheck {
     }
 }
 
+pub struct RefTestFuzzy {
+    max_difference: usize,
+    num_differences: usize,
+}
+
 pub struct Reftest {
     op: ReftestOp,
     test: Vec<PathBuf>,
     reference: PathBuf,
     font_render_mode: Option<FontRenderMode>,
-    max_difference: usize,
-    num_differences: usize,
+    fuzziness: Vec<RefTestFuzzy>,
     extra_checks: Vec<ExtraCheck>,
     disable_dual_source_blending: bool,
     allow_mipmaps: bool,
@@ -123,16 +127,100 @@ impl Reftest {
             ReftestImageComparison::Equal => {
                 true
             }
-            ReftestImageComparison::NotEqual { max_difference, count_different } => {
-                if max_difference > self.max_difference || count_different > self.num_differences {
+            ReftestImageComparison::NotEqual { difference_histogram, max_difference, count_different } => {
+                // Each entry in the sorted self.fuzziness list represents a bucket which
+                // allows at most num_differences pixels with a difference of at most
+                // max_difference -- but with the caveat that a difference which is small
+                // enough to be less than a max_difference of an earlier bucket, must be
+                // counted against that bucket.
+                //
+                // Thus the test will fail if the number of pixels with a difference
+                // > fuzzy[j-1].max_difference and <= fuzzy[j].max_difference
+                // exceeds fuzzy[j].num_differences.
+                //
+                // (For the first entry, consider fuzzy[j-1] to allow zero pixels of zero
+                // difference).
+                //
+                // For example, say we have this histogram of differences:
+                //
+                //       | [0] [1] [2] [3] [4] [5] [6] ... [255]
+                // ------+------------------------------------------
+                // Hist. |  0   3   2   1   6   2   0  ...   0
+                //
+                // Ie. image comparison found 3 pixels that differ by 1, 2 that differ by 2, etc.
+                // (Note that entry 0 is always zero, we don't count matching pixels.)
+                //
+                // First we calculate an inclusive prefix sum:
+                //
+                //       | [0] [1] [2] [3] [4] [5] [6] ... [255]
+                // ------+------------------------------------------
+                // Hist. |  0   3   2   1   6   2   0  ...   0
+                // Sum   |  0   3   5   6  12  14  14  ...  14
+                //
+                // Let's say the fuzzy statements are:
+                // Fuzzy( 2, 6 )    -- allow up to 6 pixels that differ by 2 or less
+                // Fuzzy( 4, 8 )    -- allow up to 8 pixels that differ by 4 or less _but_
+                //                     also by more than 2 (= by 3 or 4).
+                //
+                // The first  check is Sum[2] <= max 6  which passes: 5 <= 6.
+                // The second check is Sum[4] - Sum[2] <= max 8  which passes: 12-5 <= 8.
+                // Finally we check if there are any pixels that exceed the max difference (4)
+                // by checking Sum[255] - Sum[4] which shows there are 14-12 == 2 so we fail.
+
+                let prefix_sum = difference_histogram.iter()
+                                                     .scan(0, |sum, i| { *sum += i; Some(*sum) })
+                                                     .collect::<Vec<_>>();
+
+                // check each fuzzy statement for violations.
+                assert_eq!(0, difference_histogram[0]);
+                assert_eq!(0, prefix_sum[0]);
+
+                // loop invariant: this is the max_difference of the previous iteration's 'fuzzy'
+                let mut previous_max_diff = 0;
+
+                // loop invariant: this is the number of pixels to ignore as they have been counted
+                // against previous iterations' fuzzy statements.
+                let mut previous_sum_fail = 0;  // ==  prefix_sum[previous_max_diff]
+
+                let mut is_failing = false;
+                let mut fail_text = String::new();
+
+                for fuzzy in &self.fuzziness {
+                    let fuzzy_max_difference = cmp::min(255, fuzzy.max_difference);
+                    let num_differences = prefix_sum[fuzzy_max_difference] - previous_sum_fail;
+                    if num_differences > fuzzy.num_differences {
+                        fail_text.push_str(
+                            &format!("{} differences > {} and <= {} (allowed {}); ",
+                                     num_differences,
+                                     previous_max_diff, fuzzy_max_difference,
+                                     fuzzy.num_differences));
+                        is_failing = true;
+                    }
+                    previous_max_diff = fuzzy_max_difference;
+                    previous_sum_fail = prefix_sum[previous_max_diff];
+                }
+                // do we have any pixels with a difference above the highest allowed
+                // max difference? if so, we fail the test:
+                let num_differences = prefix_sum[255] - previous_sum_fail;
+                if num_differences > 0 {
+                    fail_text.push_str(
+                        &format!("{} num_differences > {} and <= {} (allowed {}); ",
+                                num_differences,
+                                previous_max_diff, 255,
+                                0));
+                    is_failing = true;
+                }
+
+                if is_failing {
                     println!(
-                        "{} | {} | {}: {}, {}: {}",
+                        "{} | {} | {}: {}, {}: {} | {}",
                         "REFTEST TEST-UNEXPECTED-FAIL",
                         self,
                         "image comparison, max difference",
                         max_difference,
                         "number of differing pixels",
-                        count_different
+                        count_different,
+                        fail_text,
                     );
                     println!("REFTEST   IMAGE 1 (TEST): {}", test.clone().create_data_uri());
                     println!(
@@ -175,10 +263,12 @@ pub struct ReftestImage {
     pub size: DeviceIntSize,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum ReftestImageComparison {
     Equal,
     NotEqual {
+        /// entry[j] = number of pixels with a difference of exactly j
+        difference_histogram: Vec<usize>,
         max_difference: usize,
         count_different: usize,
     },
@@ -190,6 +280,7 @@ impl ReftestImage {
         assert_eq!(self.data.len(), other.data.len());
         assert_eq!(self.data.len() % 4, 0);
 
+        let mut histogram = [0usize; 256];
         let mut count = 0;
         let mut max = 0;
 
@@ -202,12 +293,19 @@ impl ReftestImage {
                     .unwrap();
 
                 count += 1;
+                assert!(pixel_max < 256, "pixel values are not 8 bit, update the histogram binning code");
+                // deliberately avoid counting pixels that match --
+                // histogram[0] stays at zero.
+                // this helps our prefix sum later during analysis to
+                // only count actual differences.
+                histogram[pixel_max as usize] += 1;
                 max = cmp::max(max, pixel_max);
             }
         }
 
         if count != 0 {
             ReftestImageComparison::NotEqual {
+                difference_histogram: histogram.to_vec(),
                 max_difference: max,
                 count_different: count,
             }
@@ -267,8 +365,7 @@ impl ReftestManifest {
 
             let tokens: Vec<&str> = s.split_whitespace().collect();
 
-            let mut max_difference = 0;
-            let mut max_count = 0;
+            let mut fuzziness = Vec::new();
             let mut op = None;
             let mut font_render_mode = None;
             let mut extra_checks = vec![];
@@ -314,10 +411,29 @@ impl ReftestManifest {
                         let (_, args, _) = parse_function(function);
                         allow_sacrificing_subpixel_aa = Some(args[0].parse().unwrap());
                     }
+                    function if function.starts_with("fuzzy-range") => {  // make sure this comes before 'fuzzy'
+                        let (_, args, _) = parse_function(function);
+                        let num_range = args.len() / 2;
+                        for range in 0..num_range {
+                            let mut max = args[range * 2 + 0];
+                            let mut num = args[range * 2 + 1];
+                            if max.starts_with("<=") { // trim_start_matches would allow <=<=123
+                                max = &max[2..];
+                            }
+                            if num.starts_with("*") {
+                                num = &num[1..];
+                            }
+                            let max_difference  = max.parse().unwrap();
+                            let num_differences = num.parse().unwrap();
+                            fuzziness.push(RefTestFuzzy { max_difference, num_differences });
+                        }
+                    }
                     function if function.starts_with("fuzzy") => {
                         let (_, args, _) = parse_function(function);
-                        max_difference = args[0].parse().unwrap();
-                        max_count = args[1].parse().unwrap();
+                        let max_difference = args[0].parse().unwrap();
+                        let num_differences = args[1].parse().unwrap();
+                        assert!(fuzziness.is_empty()); // if this fires, consider fuzzy-range instead
+                        fuzziness.push(RefTestFuzzy { max_difference, num_differences });
                     }
                     function if function.starts_with("draw_calls") => {
                         let (_, args, _) = parse_function(function);
@@ -389,13 +505,38 @@ impl ReftestManifest {
             let reference = paths.pop().unwrap();
             let test = paths;
 
+            // to avoid changing the meaning of existing tests, the case of
+            // only a single (or no) 'fuzzy' keyword means we use the max
+            // of that fuzzy and options.allow_.. (we don't want that to
+            // turn into a test that allows fuzzy.allow_ *plus* options.allow_):
+            match fuzziness.len() {
+                0 => fuzziness.push(RefTestFuzzy {
+                        max_difference: options.allow_max_difference,
+                        num_differences: options.allow_num_differences }),
+                1 => {
+                    let mut fuzzy = &mut fuzziness[0];
+                    fuzzy.max_difference = cmp::max(fuzzy.max_difference, options.allow_max_difference);
+                    fuzzy.num_differences = cmp::max(fuzzy.num_differences, options.allow_num_differences);
+                },
+                _ => {
+                    // ignore options, use multiple fuzzy keywords instead. make sure
+                    // the list is sorted to speed up counting violations.
+                    fuzziness.sort_by(|a, b| a.max_difference.cmp(&b.max_difference));
+                    for pair in fuzziness.windows(2) {
+                        if pair[0].max_difference == pair[1].max_difference {
+                            println!("Warning: repeated fuzzy of max_difference {} ignored.",
+                                     pair[1].max_difference);
+                        }
+                    }
+                }
+            }
+
             reftests.push(Reftest {
                 op,
                 test,
                 reference,
                 font_render_mode,
-                max_difference: cmp::max(max_difference, options.allow_max_difference),
-                num_differences: cmp::max(max_count, options.allow_num_differences),
+                fuzziness,
                 extra_checks,
                 disable_dual_source_blending,
                 allow_mipmaps,

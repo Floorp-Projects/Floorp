@@ -4,12 +4,12 @@
 
 use std::str::CharIndices;
 
-// support arguments like '4', 'ab', '4.0', '>=10.14'
+// support arguments like '4', 'ab', '4.0', '>=10.14', '*123'
 fn acceptable_arg_character(c: char) -> bool {
-    c.is_alphanumeric() || c == '.' || c == '-' || c == '<' || c == '>' || c == '='
+    c.is_alphanumeric() || c == '.' || c == '-' || c == '<' || c == '>' || c == '=' || c == '*'
 }
 
-// A crapy parser for parsing strings like "translate(1, 3) blahblah"
+// A crappy parser for parsing strings like "translate(1, 3) blahblah"
 // Returns a tuple with three components:
 // - First component is the function name (e.g. "translate")
 // - Second component is the list of arguments (e.g. vec!["1", "3"])
