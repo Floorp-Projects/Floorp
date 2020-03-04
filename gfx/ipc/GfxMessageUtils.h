@@ -609,6 +609,26 @@ struct ParamTraits<mozilla::gfx::MarginTyped<T>> {
   }
 };
 
+template <class T>
+struct ParamTraits<mozilla::gfx::IntMarginTyped<T>> {
+  typedef mozilla::gfx::IntMarginTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param) {
+    WriteParam(msg, param.top);
+    WriteParam(msg, param.right);
+    WriteParam(msg, param.bottom);
+    WriteParam(msg, param.left);
+  }
+
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
+    return (ReadParam(msg, iter, &result->top) &&
+            ReadParam(msg, iter, &result->right) &&
+            ReadParam(msg, iter, &result->bottom) &&
+            ReadParam(msg, iter, &result->left));
+  }
+};
+
 template <>
 struct ParamTraits<nsRect> {
   typedef nsRect paramType;
