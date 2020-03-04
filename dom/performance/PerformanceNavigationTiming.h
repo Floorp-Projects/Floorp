@@ -60,7 +60,7 @@ class PerformanceNavigationTiming final : public PerformanceResourceTiming {
                                        nsITimedChannel* aChannel);
 
  private:
-  ~PerformanceNavigationTiming() {}
+  ~PerformanceNavigationTiming() = default;
 };
 
 }  // namespace dom

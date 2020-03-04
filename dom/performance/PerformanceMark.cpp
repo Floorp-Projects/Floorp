@@ -15,7 +15,7 @@ PerformanceMark::PerformanceMark(nsISupports* aParent, const nsAString& aName,
     : PerformanceEntry(aParent, aName, NS_LITERAL_STRING("mark")),
       mStartTime(aStartTime) {}
 
-PerformanceMark::~PerformanceMark() {}
+PerformanceMark::~PerformanceMark() = default;
 
 JSObject* PerformanceMark::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
