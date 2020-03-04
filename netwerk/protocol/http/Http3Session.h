@@ -143,6 +143,7 @@ class Http3Session final : public nsAHttpTransaction,
       mStreamTransactionHash;
 
   nsDeque mReadyForWrite;
+  nsTArray<uint64_t> mReadyForWriteButBlocked;
   nsDeque mQueuedStreams;
 
   enum State { INITIALIZING, CONNECTED, CLOSING, CLOSED } mState;
