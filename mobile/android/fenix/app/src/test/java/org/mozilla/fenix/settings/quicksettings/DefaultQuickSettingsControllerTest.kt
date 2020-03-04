@@ -220,6 +220,7 @@ class DefaultQuickSettingsControllerTest {
 
     @Test
     @ExperimentalCoroutinesApi
+    @Ignore("Intermittently failing; https://github.com/mozilla-mobile/fenix/issues/8621")
     fun `handlePermissionsChange should store the updated permission and reload webpage`() =
         runBlocking {
             val testPermissions = mockk<SitePermissions>()
