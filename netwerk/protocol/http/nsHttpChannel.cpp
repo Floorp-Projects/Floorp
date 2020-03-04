@@ -120,7 +120,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "HttpTrafficAnalyzer.h"
@@ -10489,14 +10489,14 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
 }
 
 void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
-  nsCOMPtr<nsICookieSettings> cs;
+  nsCOMPtr<nsICookieJarSettings> cjs;
   if (mLoadInfo) {
-    Unused << mLoadInfo->GetCookieSettings(getter_AddRefs(cs));
+    Unused << mLoadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
   }
-  if (!cs) {
-    cs = net::CookieSettings::Create();
+  if (!cjs) {
+    cjs = net::CookieJarSettings::Create();
   }
-  if (cs->GetRejectThirdPartyTrackers()) {
+  if (cjs->GetRejectThirdPartyTrackers()) {
     bool isPrivate =
         mLoadInfo && mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
     // If our referrer has been set before, and our referrer policy is unset

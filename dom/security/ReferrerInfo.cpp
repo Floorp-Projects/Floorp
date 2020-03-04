@@ -20,7 +20,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/net/CookieSettings.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -195,14 +195,14 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
   if (aChannel) {
     loadInfo = aChannel->LoadInfo();
   }
-  nsCOMPtr<nsICookieSettings> cs;
+  nsCOMPtr<nsICookieJarSettings> cjs;
   if (loadInfo) {
-    Unused << loadInfo->GetCookieSettings(getter_AddRefs(cs));
+    Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
   }
-  if (!cs) {
-    cs = net::CookieSettings::Create();
+  if (!cjs) {
+    cjs = net::CookieJarSettings::Create();
   }
-  if (aChannel && aURI && cs->GetRejectThirdPartyTrackers()) {
+  if (aChannel && aURI && cjs->GetRejectThirdPartyTrackers()) {
     uint32_t rejectedReason = 0;
     thirdPartyTrackerIsolated =
         !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(

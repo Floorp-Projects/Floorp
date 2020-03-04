@@ -9,10 +9,11 @@
 interface nsIPrincipal;
 
 /**
- * Cookie settings for top-level documents.
+ * Cookie jar settings for top-level documents. Please see CookieJarSettings.h
+ * for more details.
  */
 [builtinclass, uuid(3ec40331-7cf0-4b71-ba2a-2265aab8f6bc)]
-interface nsICookieSettings : nsISupports
+interface nsICookieJarSettings : nsISupports
 {
   /**
    * CookieBehavior at the loading of the document. Any other loadInfo

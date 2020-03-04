@@ -10,7 +10,7 @@
 
 interface nsIChannel;
 interface nsIContentSecurityPolicy;
-interface nsICookieSettings;
+interface nsICookieJarSettings;
 interface nsICSPEventListener;
 interface nsINode;
 interface nsIPrincipal;
@@ -433,10 +433,10 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute unsigned long cookiePolicy;
 
   /**
-   * The cookie settings inherited from the top-level document's loadInfo.
+   * The cookie jar settings inherited from the top-level document's loadInfo.
    * It cannot be null.
    */
-  attribute nsICookieSettings cookieSettings;
+  attribute nsICookieJarSettings cookieJarSettings;
 
   /**
    * If forceInheritPrincipal is true, the data coming from the channel should
