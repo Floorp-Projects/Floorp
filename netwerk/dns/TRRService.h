@@ -67,10 +67,6 @@ class TRRService : public nsIObserver,
   void TRRIsOkay(enum TrrOkay aReason);
   bool ParentalControlEnabled() const { return mParentalControlEnabled; }
 
-  nsresult DispatchTRRRequest(TRR* aTrrRequest);
-  already_AddRefed<nsIThread> TRRThread();
-  bool IsOnTRRThread();
-
  private:
   virtual ~TRRService();
   nsresult ReadPrefs(const char* name);
@@ -87,9 +83,6 @@ class TRRService : public nsIObserver,
 
   void RebuildSuffixList(nsINetworkLinkService* aLinkService);
   void CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService);
-
-  nsresult DispatchTRRRequestInternal(TRR* aTrrRequest, bool aWithLock);
-  already_AddRefed<nsIThread> TRRThread_locked();
 
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
