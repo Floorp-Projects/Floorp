@@ -262,7 +262,7 @@ void nsRangeFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   if (IsThemed(disp) &&
-      PresContext()->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+      PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
     return;  // the native theme displays its own visual indication of focus
   }
 
@@ -514,9 +514,9 @@ Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
     nsPresContext* presContext = PresContext();
     bool notUsedCanOverride;
     LayoutDeviceIntSize size;
-    presContext->GetTheme()->GetMinimumWidgetSize(presContext, this,
-                                                  StyleAppearance::RangeThumb,
-                                                  &size, &notUsedCanOverride);
+    presContext->Theme()->GetMinimumWidgetSize(presContext, this,
+                                               StyleAppearance::RangeThumb,
+                                               &size, &notUsedCanOverride);
     thumbSize.width = presContext->DevPixelsToAppUnits(size.width);
     thumbSize.height = presContext->DevPixelsToAppUnits(size.height);
     // For GTK, GetMinimumWidgetSize returns zero for the thumb dimension
@@ -723,8 +723,8 @@ nscoord nsRangeFrame::AutoCrossSize(nscoord aEm) {
     bool unused;
     LayoutDeviceIntSize size;
     nsPresContext* pc = PresContext();
-    pc->GetTheme()->GetMinimumWidgetSize(pc, this, StyleAppearance::RangeThumb,
-                                         &size, &unused);
+    pc->Theme()->GetMinimumWidgetSize(pc, this, StyleAppearance::RangeThumb,
+                                      &size, &unused);
     minCrossSize =
         pc->DevPixelsToAppUnits(IsHorizontal() ? size.height : size.width);
   }

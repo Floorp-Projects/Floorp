@@ -5333,8 +5333,8 @@ static nscoord AddIntrinsicSizeOffset(
     LayoutDeviceIntSize devSize;
     bool canOverride = true;
     nsPresContext* pc = aFrame->PresContext();
-    pc->GetTheme()->GetMinimumWidgetSize(pc, aFrame, disp->mAppearance,
-                                         &devSize, &canOverride);
+    pc->Theme()->GetMinimumWidgetSize(pc, aFrame, disp->mAppearance, &devSize,
+                                      &canOverride);
     nscoord themeSize = pc->DevPixelsToAppUnits(
         aAxis == eAxisVertical ? devSize.height : devSize.width);
     // GetMinimumWidgetSize() returns a border-box width.
@@ -8435,9 +8435,9 @@ nsRect nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
     // border-box path with border-radius disabled.
     if (transparency != nsITheme::eOpaque) {
       nsPresContext* presContext = aFrame->PresContext();
-      presContext->GetTheme()->GetWidgetOverflow(
-          presContext->DeviceContext(), aFrame, styleDisplay->mAppearance,
-          &inputRect);
+      presContext->Theme()->GetWidgetOverflow(presContext->DeviceContext(),
+                                              aFrame, styleDisplay->mAppearance,
+                                              &inputRect);
     }
   }
 

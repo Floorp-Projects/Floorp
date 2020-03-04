@@ -1596,7 +1596,7 @@ nsMargin nsIFrame::GetUsedBorder() const {
   const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
     nsPresContext* pc = PresContext();
-    LayoutDeviceIntMargin widgetBorder = pc->GetTheme()->GetWidgetBorder(
+    LayoutDeviceIntMargin widgetBorder = pc->Theme()->GetWidgetBorder(
         pc->DeviceContext(), mutable_this, disp->mAppearance);
     border =
         LayoutDevicePixel::ToAppUnits(widgetBorder, pc->AppUnitsPerDevPixel());
@@ -1626,8 +1626,8 @@ nsMargin nsIFrame::GetUsedPadding() const {
   if (mutable_this->IsThemed(disp)) {
     nsPresContext* pc = PresContext();
     LayoutDeviceIntMargin widgetPadding;
-    if (pc->GetTheme()->GetWidgetPadding(pc->DeviceContext(), mutable_this,
-                                         disp->mAppearance, &widgetPadding)) {
+    if (pc->Theme()->GetWidgetPadding(pc->DeviceContext(), mutable_this,
+                                      disp->mAppearance, &widgetPadding)) {
       return LayoutDevicePixel::ToAppUnits(widgetPadding,
                                            pc->AppUnitsPerDevPixel());
     }
@@ -4121,7 +4121,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // REVIEW: Taken from nsBoxFrame::Paint
   // Don't paint our children if the theme object is a leaf.
   if (IsThemed(ourDisp) &&
-      !PresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
+      !PresContext()->Theme()->WidgetIsContainer(ourDisp->mAppearance))
     return;
 
   // Since we're now sure that we're adding this frame to the display list
@@ -5905,15 +5905,15 @@ static nsIFrame::IntrinsicSizeOffsetData IntrinsicSizeOffsets(
   if (aFrame->IsThemed(disp)) {
     nsPresContext* presContext = aFrame->PresContext();
 
-    LayoutDeviceIntMargin border = presContext->GetTheme()->GetWidgetBorder(
+    LayoutDeviceIntMargin border = presContext->Theme()->GetWidgetBorder(
         presContext->DeviceContext(), aFrame, disp->mAppearance);
     result.border = presContext->DevPixelsToAppUnits(
         verticalAxis ? border.TopBottom() : border.LeftRight());
 
     LayoutDeviceIntMargin padding;
-    if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
-                                                  aFrame, disp->mAppearance,
-                                                  &padding)) {
+    if (presContext->Theme()->GetWidgetPadding(presContext->DeviceContext(),
+                                               aFrame, disp->mAppearance,
+                                               &padding)) {
       result.padding = presContext->DevPixelsToAppUnits(
           verticalAxis ? padding.TopBottom() : padding.LeftRight());
     }
@@ -6170,7 +6170,7 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
     LayoutDeviceIntSize widget;
     bool canOverride = true;
     nsPresContext* presContext = PresContext();
-    presContext->GetTheme()->GetMinimumWidgetSize(
+    presContext->Theme()->GetMinimumWidgetSize(
         presContext, this, disp->mAppearance, &widget, &canOverride);
 
     // Convert themed widget's physical dimensions to logical coords
@@ -9553,9 +9553,9 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
     useOutlineAuto = outline->mOutlineStyle.IsAuto();
     if (MOZ_UNLIKELY(useOutlineAuto)) {
       nsPresContext* presContext = aFrame->PresContext();
-      nsITheme* theme = presContext->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(presContext, aFrame,
-                                              StyleAppearance::FocusOutline)) {
+      nsITheme* theme = presContext->Theme();
+      if (theme->ThemeSupportsWidget(presContext, aFrame,
+                                     StyleAppearance::FocusOutline)) {
         outerRect.Inflate(offset);
         theme->GetWidgetOverflow(presContext->DeviceContext(), aFrame,
                                  StyleAppearance::FocusOutline, &outerRect);
@@ -9694,8 +9694,8 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   if (!::IsXULBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
     nsPresContext* presContext = PresContext();
-    if (presContext->GetTheme()->GetWidgetOverflow(
-            presContext->DeviceContext(), this, disp->mAppearance, &r)) {
+    if (presContext->Theme()->GetWidgetOverflow(presContext->DeviceContext(),
+                                                this, disp->mAppearance, &r)) {
       nsRect& vo = aOverflowAreas.VisualOverflow();
       vo.UnionRectEdges(vo, r);
     }
