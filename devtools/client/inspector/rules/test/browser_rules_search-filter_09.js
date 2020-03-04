@@ -29,19 +29,20 @@ add_task(async function() {
   info("Start entering a new property in the rule");
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const rule = ruleEditor.rule;
+  const prop = getTextProperty(view, 1, { width: "100%" });
   let editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(
-    rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+    prop.editor.container.classList.contains("ruleview-highlight"),
     "width text property is correctly highlighted."
   );
   ok(
-    !rule.textProps[1].editor.container.classList.contains(
-      "ruleview-highlight"
-    ),
+    !getTextProperty(view, 1, {
+      height: "50%",
+    }).editor.container.classList.contains("ruleview-highlight"),
     "height text property is not highlighted."
   );
 

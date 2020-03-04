@@ -39,78 +39,78 @@ add_task(async function() {
   );
 
   is(
-    ruleEditor.rule.textProps[0].name,
+    getTextProperty(view, 0, { color: "red" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[0].value,
+    getTextProperty(view, 0, { color: "red" }).value,
     "red",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[1].name,
+    getTextProperty(view, 0, { color: "orange" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[1].value,
+    getTextProperty(view, 0, { color: "orange" }).value,
     "orange",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[2].name,
+    getTextProperty(view, 0, { color: "yellow" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[2].value,
+    getTextProperty(view, 0, { color: "yellow" }).value,
     "yellow",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[3].name,
+    getTextProperty(view, 0, { color: "green" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[3].value,
+    getTextProperty(view, 0, { color: "green" }).value,
     "green",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[4].name,
+    getTextProperty(view, 0, { color: "blue" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[4].value,
+    getTextProperty(view, 0, { color: "blue" }).value,
     "blue",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[5].name,
+    getTextProperty(view, 0, { color: "indigo" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[5].value,
+    getTextProperty(view, 0, { color: "indigo" }).value,
     "indigo",
     "Should have correct property value"
   );
 
   is(
-    ruleEditor.rule.textProps[6].name,
+    getTextProperty(view, 0, { color: "violet" }).name,
     "color",
     "Should have correct property name"
   );
   is(
-    ruleEditor.rule.textProps[6].value,
+    getTextProperty(view, 0, { color: "violet" }).value,
     "violet",
     "Should have correct property value"
   );

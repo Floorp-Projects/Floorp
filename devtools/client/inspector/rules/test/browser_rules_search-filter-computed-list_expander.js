@@ -30,7 +30,7 @@ add_task(async function() {
 
 async function testOpenExpanderAndAddTextInFilter(inspector, view) {
   const rule = getRuleViewRuleEditor(view, 1).rule;
-  const ruleEditor = rule.textProps[0].editor;
+  const ruleEditor = getTextProperty(view, 1, { margin: "4px 0px" }).editor;
   const computed = ruleEditor.computed;
 
   info("Opening the computed list of margin property");
