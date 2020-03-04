@@ -69,7 +69,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
     val
       ? val.split(",").map(t => t.trim())
       : [
-          "https://doh.opendns.com/dns-query",
           "https://mozilla.cloudflare-dns.com/dns-query",
           "https://trr.dns.nextdns.io/",
           "https://doh.xfinity.com/dns-query",
