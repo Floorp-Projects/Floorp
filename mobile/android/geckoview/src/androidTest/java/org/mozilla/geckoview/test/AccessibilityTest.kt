@@ -251,7 +251,7 @@ class AccessibilityTest : BaseSessionTest() {
         loadTestPage("test-text-entry-node")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("document.querySelector('input').focus()")
+        mainSession.evaluateJS("document.querySelector('input[aria-label=Name]').focus()")
 
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -264,6 +264,23 @@ class AccessibilityTest : BaseSessionTest() {
                     assertThat("Hint has field name",
                             node.extras.getString("AccessibilityNodeInfo.hint"),
                             equalTo("Name description"))
+                }
+            }
+        })
+
+        mainSession.evaluateJS("document.querySelector('input[aria-label=Last]').focus()")
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onFocused(event: AccessibilityEvent) {
+                val nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Focused EditBox", node.className.toString(),
+                        equalTo("android.widget.EditText"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Hint has field name",
+                            node.extras.getString("AccessibilityNodeInfo.hint"),
+                            equalTo("Last, required"))
                 }
             }
         })
