@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceObserverEntryList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-PerformanceObserverEntryList::~PerformanceObserverEntryList() {}
+PerformanceObserverEntryList::~PerformanceObserverEntryList() = default;
 
 JSObject* PerformanceObserverEntryList::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
