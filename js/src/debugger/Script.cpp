@@ -1102,7 +1102,7 @@ class FlowGraphSummary {
       size_t column = prevColumn;
       JSOp op = r.frontOpcode();
 
-      if (FlowsIntoNext(prevOp)) {
+      if (BytecodeFallsThrough(prevOp)) {
         addEdge(prevLineno, prevColumn, r.frontOffset());
       }
 

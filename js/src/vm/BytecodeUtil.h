@@ -374,19 +374,20 @@ static inline uint32_t JOF_OPTYPE(JSOp op) {
 static inline bool IsJumpOpcode(JSOp op) { return JOF_OPTYPE(op) == JOF_JUMP; }
 
 static inline bool BytecodeFallsThrough(JSOp op) {
+  // Note:
+  // * JSOp::Yield/JSOp::Await is considered to fall through, like JSOp::Call.
+  // * JSOp::Gosub falls through indirectly, after executing a 'finally'.
   switch (op) {
     case JSOp::Goto:
     case JSOp::Default:
     case JSOp::Return:
     case JSOp::RetRval:
+    case JSOp::Retsub:
     case JSOp::FinalYieldRval:
     case JSOp::Throw:
     case JSOp::ThrowMsg:
     case JSOp::TableSwitch:
       return false;
-    case JSOp::Gosub:
-      /* These fall through indirectly, after executing a 'finally'. */
-      return true;
     default:
       return true;
   }
@@ -529,22 +530,6 @@ static inline bool BytecodeFlowsToBitop(jsbytecode* pc) {
 
 extern bool IsValidBytecodeOffset(JSContext* cx, JSScript* script,
                                   size_t offset);
-
-inline bool FlowsIntoNext(JSOp op) {
-  // JSOp::Yield/JSOp::Await is considered to flow into the next instruction,
-  // like JSOp::Call.
-  switch (op) {
-    case JSOp::RetRval:
-    case JSOp::Return:
-    case JSOp::Throw:
-    case JSOp::Goto:
-    case JSOp::Retsub:
-    case JSOp::FinalYieldRval:
-      return false;
-    default:
-      return true;
-  }
-}
 
 inline bool IsArgOp(JSOp op) { return JOF_OPTYPE(op) == JOF_QARG; }
 

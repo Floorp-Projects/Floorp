@@ -3038,7 +3038,7 @@ bool js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,
   MOZ_ASSERT(script->containsPC(pc));
 
   JSOp op = (JSOp)*pc;
-  if (FlowsIntoNext(op)) {
+  if (BytecodeFallsThrough(op)) {
     if (!successors.append(GetNextPc(pc))) {
       return false;
     }
