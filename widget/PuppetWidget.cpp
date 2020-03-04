@@ -1259,6 +1259,15 @@ PuppetScreenManager::ScreenForRect(int32_t inLeft, int32_t inTop,
   return GetPrimaryScreen(outScreen);
 }
 
+ScreenIntMargin PuppetWidget::GetSafeAreaInsets() const {
+  return mSafeAreaInsets;
+}
+
+void PuppetWidget::UpdateSafeAreaInsets(
+    const ScreenIntMargin& aSafeAreaInsets) {
+  mSafeAreaInsets = aSafeAreaInsets;
+}
+
 nsIWidgetListener* PuppetWidget::GetCurrentWidgetListener() {
   if (!mPreviouslyAttachedWidgetListener || !mAttachedWidgetListener) {
     return mAttachedWidgetListener;
