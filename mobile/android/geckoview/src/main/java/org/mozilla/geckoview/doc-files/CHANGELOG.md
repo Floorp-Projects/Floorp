@@ -14,10 +14,10 @@ exclude: true
 ⚠️  breaking change
 
 ## v75
-- ⚠️ Remove [`GeckoRuntimeSettings.Builder#useContentProcessHint`]. The content
+- ⚠️ Remove `GeckoRuntimeSettings.Builder#useContentProcessHint`. The content
   process is now preloaded by default if
   [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1] is enabled.
-- ⚠️ Move [`GeckoSessionSettings.Builder#useMultiprocess`] to
+- ⚠️ Move `GeckoSessionSettings.Builder#useMultiprocess` to
   [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1]. Multiprocess state is
   no longer determined per session.
 - Added [`DebuggerDelegate#onExtensionListUpdated`][75.2] to notify that a temporary
@@ -29,12 +29,18 @@ exclude: true
   control autoplay.
   ([bug 1614894]({{bugzilla}}1614894))
 - Added [`GeckoSession.reload(int flags)`][75.4] That takes a [load flag][75.5] parameter.
+- ⚠️ Moved [`ActionDelegate`][75.6] and [`MessageDelegate`][75.7] to
+  [`SessionController`][75.8].
+  ([bug 1616625]({{bugzilla}}1616625))
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
 [75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
 [75.4]: {{javadoc_uri}}/GeckoSession.html#reload-int-
 [75.5]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_NONE
+[75.6]: {{javadoc_uri}}/WebExtension.ActionDelegate.html
+[75.7]: {{javadoc_uri}}/WebExtension.MessageDelegate.html
+[75.8]: {{javadoc_uri}}/WebExtension.SessionController.html
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -598,4 +604,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9377e7566adf997b0bb5b50bdc6ded12a0d01ee4
+[api-version]: e5d6af21f89f4159bc89d9c308f2d97be6424b1f
