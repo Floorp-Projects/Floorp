@@ -248,6 +248,7 @@ load xhr_html_nullresponse.html
 load xhr-with-pagehide-1.html
 pref(layout.css.resizeobserver.enabled,true) load 1555786.html
 load 1577191.html
+load eventSource_invalid_scheme_worker_shutdown.html
 load 1291535.html
 skip-if(!isDebugBuild||xulRuntime.OS!="Linux") load 1611853.html
 load 1619322.html
