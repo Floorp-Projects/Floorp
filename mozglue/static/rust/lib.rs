@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use arrayvec::{Array, ArrayString};
+use std::cmp;
+use std::ops::Deref;
 use std::os::raw::c_char;
 use std::os::raw::c_int;
-use std::cmp;
 use std::panic;
-use std::ops::Deref;
-use arrayvec::{Array, ArrayString};
 
-#[link(name="wrappers")]
+#[link(name = "wrappers")]
 extern "C" {
     // We can't use MOZ_Crash directly because it may be weakly linked
     // and rust can't handle that.
@@ -86,8 +86,11 @@ fn panic_hook(info: &panic::PanicInfo) {
     let message = ArrayCString::<[_; 512]>::from(message);
     let filename = ArrayCString::<[_; 512]>::from(filename);
     unsafe {
-        RustMozCrash(filename.as_ptr() as *const c_char, line as c_int,
-                 message.as_ptr() as *const c_char);
+        RustMozCrash(
+            filename.as_ptr() as *const c_char,
+            line as c_int,
+            message.as_ptr() as *const c_char,
+        );
     }
 }
 

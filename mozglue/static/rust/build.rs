@@ -9,14 +9,20 @@ fn main() {
     let dist_path = {
         let path = PathBuf::from(env::var_os("MOZ_DIST").unwrap());
         if !path.is_absolute() || !path.is_dir() {
-            panic!("MOZ_DIST must be an absolute directory, was: {}", path.display());
+            panic!(
+                "MOZ_DIST must be an absolute directory, was: {}",
+                path.display()
+            );
         }
         path
     };
     let topobjdir = {
         let path = PathBuf::from(env::var_os("MOZ_TOPOBJDIR").unwrap());
         if !path.is_absolute() || !path.is_dir() {
-            panic!("MOZ_TOPOBJDIR must be an absolute directory, was: {}", path.display());
+            panic!(
+                "MOZ_TOPOBJDIR must be an absolute directory, was: {}",
+                path.display()
+            );
         }
         path
     };
