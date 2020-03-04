@@ -648,5 +648,53 @@ test(t => {
 }, 'KeyframeEffect.getKeyframes() returns expected values for ' +
    'animations with only custom property in a keyframe');
 
+test(t => {
+  const div = addDiv(t);
+
+  // Add custom @keyframes rule
+  const stylesheet = document.styleSheets[0];
+  const keyframes = '@keyframes anim-custom { to { left: 100px } }';
+  const ruleIndex = stylesheet.insertRule(keyframes, 0);
+  const keyframesRule = stylesheet.cssRules[ruleIndex];
+
+  t.add_cleanup(function() {
+    stylesheet.deleteRule(ruleIndex);
+  });
+
+  div.style.animation = 'anim-custom 100s';
+
+  // Sanity check the initial result
+  let frames = getKeyframes(div);
+  assert_frames_equal(
+    frames[frames.length - 1],
+    {
+      offset: 1,
+      computedOffset: 1,
+      easing: 'ease',
+      composite: 'auto',
+      left: '100px',
+    },
+    'Keyframes reflect the initial @keyframes rule'
+  );
+
+  // Update the @keyframes rule
+  keyframesRule.deleteRule(0);
+  keyframesRule.appendRule('to { left: 200px }');
+
+  // Check the result from getKeyframes() is updated
+  frames = getKeyframes(div);
+  assert_frames_equal(
+    frames[frames.length - 1],
+    {
+      offset: 1,
+      computedOffset: 1,
+      easing: 'ease',
+      composite: 'auto',
+      left: '200px',
+    },
+    'Keyframes reflects the updated @keyframes rule'
+  );
+}, 'KeyframeEffect.getKeyframes() reflects changes to @keyframes rules');
+
 </script>
 </body>
