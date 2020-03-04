@@ -101,7 +101,7 @@ void SetASameSiteCookie(nsICookieService* aCookieService, const char* aSpec1,
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       aAllowed ? CookieJarSettings::Create()
-               : CookieJarSettings::CreateBlockingAll();
+               : CookieJarSettings::GetBlockingAll();
   MOZ_ASSERT(cookieJarSettings);
 
   nsCOMPtr<nsILoadInfo> loadInfo = dummyChannel->LoadInfo();
@@ -983,7 +983,7 @@ TEST(TestCookie, TestCookieMain)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
 
   // None of these cookies will be set because using
-  // CookieJarSettings::CreateBlockingAll().
+  // CookieJarSettings::GetBlockingAll().
   SetASameSiteCookie(cookieService, "http://samesite.test", nullptr,
                      "unset=yes", nullptr, false);
   SetASameSiteCookie(cookieService, "http://samesite.test", nullptr,
