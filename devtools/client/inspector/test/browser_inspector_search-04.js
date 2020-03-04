@@ -63,6 +63,7 @@ var TEST_DATA = [
       { label: "#p1" },
       { label: "#p2" },
       { label: "#p3" },
+      { label: "#root" },
       { label: "#s1" },
       { label: "#s2" },
     ],
