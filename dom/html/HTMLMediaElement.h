@@ -703,7 +703,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // These are used for testing only
   float ComputedVolume() const;
   bool ComputedMuted() const;
-  nsSuspendedTypes ComputedSuspended() const;
 
   void SetMediaInfo(const MediaInfo& aInfo);
 
