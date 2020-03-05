@@ -12,17 +12,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef MOZ_LOGGING
-#  include "mozilla/Logging.h"
-#  include "nsTArray.h"
-#  include "Units.h"
-extern mozilla::LazyLogModule gWaylandDmabufLog;
-#  define LOGDMABUF(args) \
-    MOZ_LOG(gWaylandDmabufLog, mozilla::LogLevel::Debug, args)
-#else
-#  define LOGDMABUF(args)
-#endif /* MOZ_LOGGING */
-
 namespace mozilla {
 namespace widget {
 
@@ -263,7 +252,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
   } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
     auto dmabuf = static_cast<zwp_linux_dmabuf_v1*>(
         wl_registry_bind(registry, id, &zwp_linux_dmabuf_v1_interface, 3));
-    LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
     display->SetDmabuf(dmabuf);
     zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
   }
@@ -341,7 +329,6 @@ bool nsWaylandDisplay::Matches(wl_display* aDisplay) {
 
 bool nsWaylandDisplay::ConfigureGbm() {
   if (!nsGbmLib::IsAvailable()) {
-    LOGDMABUF(("nsGbmLib is not available!"));
     return false;
   }
 
@@ -353,23 +340,22 @@ bool nsWaylandDisplay::ConfigureGbm() {
 
   mGbmFd = open(drm_render_node, O_RDWR);
   if (mGbmFd < 0) {
-    LOGDMABUF(
-        (nsPrintfCString("Failed to open drm render node %s\n", drm_render_node)
-             .get()));
+    NS_WARNING(
+        nsPrintfCString("Failed to open drm render node %s\n", drm_render_node)
+            .get());
     return false;
   }
 
   mGbmDevice = nsGbmLib::CreateDevice(mGbmFd);
   if (mGbmDevice == nullptr) {
-    LOGDMABUF((nsPrintfCString("Failed to create drm render device %s\n",
+    NS_WARNING(nsPrintfCString("Failed to create drm render device %s\n",
                                drm_render_node)
-                   .get()));
+                   .get());
     close(mGbmFd);
     mGbmFd = -1;
     return false;
   }
 
-  LOGDMABUF(("GBM device initialized"));
   return true;
 }
 
@@ -469,7 +455,6 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
   // WaylandDisplayGet() loads dmabuf config prefs
   nsWaylandDisplay* display = WaylandDisplayGet();
   if (!display) {
-    LOGDMABUF(("IsDMABufEnabled(): Failed to get Wayland display!"));
     return false;
   }
 
@@ -479,20 +464,18 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
       !StaticPrefs::widget_wayland_dmabuf_webgl_enabled() &&
       !StaticPrefs::widget_wayland_dmabuf_vaapi_enabled()) {
     // Disabled by user, just quit.
-    LOGDMABUF(("IsDMABufEnabled(): Disabled by preferences."));
     return false;
   }
 
   if (!display->ConfigureGbm()) {
-    LOGDMABUF(("Failed to create GbmDevice, DMABUF/DRM won't be available!"));
+    NS_WARNING("Failed to create GbmDevice, DMABUF/DRM won't be available!");
     return false;
   }
 
   if (!display->GetGbmFormat(/* aHasAlpha */ false) ||
       !display->GetGbmFormat(/* aHasAlpha */ true)) {
-    LOGDMABUF(
-        ("Failed to create obtain pixel format, DMABUF/DRM won't be "
-         "available!"));
+    NS_WARNING(
+        "Failed to create obtain pixel format, DMABUF/DRM won't be available!");
     return false;
   }
 
@@ -540,28 +523,25 @@ GetOffsetFunc nsGbmLib::sGetOffset;
 DeviceIsFormatSupportedFunc nsGbmLib::sDeviceIsFormatSupported;
 DrmPrimeHandleToFDFunc nsGbmLib::sDrmPrimeHandleToFD;
 
-bool nsGbmLib::IsLoaded() {
+bool nsGbmLib::IsAvailable() {
+  if (!Load()) {
+    return false;
+  }
   return sCreateDevice != nullptr && sCreate != nullptr &&
          sCreateWithModifiers != nullptr && sImport != nullptr &&
          sGetModifier != nullptr && sGetStride != nullptr &&
          sGetFd != nullptr && sDestroy != nullptr && sMap != nullptr &&
          sUnmap != nullptr && sGetPlaneCount != nullptr &&
          sGetHandleForPlane != nullptr && sGetStrideForPlane != nullptr &&
-         sGetOffset != nullptr && sDeviceIsFormatSupported != nullptr;
-}
-
-bool nsGbmLib::IsAvailable() {
-  if (!Load()) {
-    return false;
-  }
-  return IsLoaded();
+         sGetOffset != nullptr && sDeviceIsFormatSupported != nullptr &&
+         sDrmPrimeHandleToFD != nullptr;
 }
 
 bool nsGbmLib::IsModifierAvailable() {
   if (!Load()) {
     return false;
   }
-  return IsLoaded() && sDrmPrimeHandleToFD != nullptr;
+  return sDrmPrimeHandleToFD != nullptr;
 }
 
 bool nsGbmLib::Load() {
@@ -570,9 +550,9 @@ bool nsGbmLib::Load() {
 
     sGbmLibHandle = dlopen(GBMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
     if (!sGbmLibHandle) {
-      LOGDMABUF((nsPrintfCString("Failed to load %s, dmabuf isn't available.\n",
+      NS_WARNING(nsPrintfCString("Failed to load %s, dmabuf isn't available.\n",
                                  GBMLIB_NAME)
-                     .get()));
+                     .get());
       return false;
     }
 
@@ -597,21 +577,15 @@ bool nsGbmLib::Load() {
     sDeviceIsFormatSupported = (DeviceIsFormatSupportedFunc)dlsym(
         sGbmLibHandle, "gbm_device_is_format_supported");
 
-    if (!IsLoaded()) {
-      LOGDMABUF(
-          (nsPrintfCString("Failed to load all symbols from %s\n", GBMLIB_NAME)
-               .get()));
-    }
-
     sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
     if (sXf86DrmLibHandle) {
       sDrmPrimeHandleToFD = (DrmPrimeHandleToFDFunc)dlsym(sXf86DrmLibHandle,
                                                           "drmPrimeHandleToFD");
       if (!sDrmPrimeHandleToFD) {
-        LOGDMABUF((nsPrintfCString(
+        NS_WARNING(nsPrintfCString(
                        "Failed to load %s, gbm modifiers are not available.\n",
                        DRMLIB_NAME)
-                       .get()));
+                       .get());
       }
     }
   }
