@@ -5419,23 +5419,17 @@ void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
   masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
 }
 
-void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
-                                      Register extraStackSpace) {
+void CodeGenerator::emitPushElementsAsArguments(Register tmpArgc,
+                                                Register elementsAndArgc,
+                                                Register extraStackSpace) {
+  // Pushes |tmpArgc| number of elements stored in |elementsAndArgc| onto the
+  // stack. |extraStackSpace| is used as a temp register within this function,
+  // but must be restored before returning.
+  // On exit, |tmpArgc| is written to |elementsAndArgc|, so we can keep using
+  // |tmpArgc| as a scratch register. And |elementsAndArgc| is from now on the
+  // register holding the arguments count.
+
   Label noCopy, epilogue;
-  Register tmpArgc = ToRegister(apply->getTempObject());
-  Register elementsAndArgc = ToRegister(apply->getElements());
-
-  // Invariants guarded in the caller:
-  //  - the array is not too long
-  //  - the array length equals its initialized length
-
-  // The array length is our argc for the purposes of allocating space.
-  Address length(ToRegister(apply->getElements()),
-                 ObjectElements::offsetOfLength());
-  masm.load32(length, tmpArgc);
-
-  // Allocate space for the values.
-  emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
 
   // Skip the copy of arguments if there are none.
   masm.branchTestPtr(Assembler::Zero, tmpArgc, tmpArgc, &noCopy);
@@ -5469,6 +5463,27 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
   // Join with all arguments copied and the extra stack usage computed.
   // Note, "elements" has become "argc".
   masm.bind(&epilogue);
+}
+
+void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
+                                      Register extraStackSpace) {
+  Register tmpArgc = ToRegister(apply->getTempObject());
+  Register elementsAndArgc = ToRegister(apply->getElements());
+
+  // Invariants guarded in the caller:
+  //  - the array is not too long
+  //  - the array length equals its initialized length
+
+  // The array length is our argc for the purposes of allocating space.
+  Address length(ToRegister(apply->getElements()),
+                 ObjectElements::offsetOfLength());
+  masm.load32(length, tmpArgc);
+
+  // Allocate space for the values.
+  emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
+
+  // After this call "elements" has become "argc".
+  emitPushElementsAsArguments(tmpArgc, elementsAndArgc, extraStackSpace);
 
   // Push |this|.
   masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
