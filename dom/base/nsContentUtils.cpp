@@ -34,7 +34,6 @@
 #include "ImageOps.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AntiTrackingCommon.h"
-#include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
@@ -8190,29 +8189,6 @@ bool nsContentUtils::IsThirdPartyTrackingResourceWindow(
   }
 
   return classifiedChannel->IsThirdPartyTrackingResource();
-}
-
-// static public
-bool nsContentUtils::IsFirstPartyTrackingResourceWindow(
-    nsPIDOMWindowInner* aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  Document* document = aWindow->GetExtantDoc();
-  if (!document) {
-    return false;
-  }
-
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(document->GetChannel());
-  if (!classifiedChannel) {
-    return false;
-  }
-
-  uint32_t classificationFlags =
-      classifiedChannel->GetFirstPartyClassificationFlags();
-
-  return mozilla::net::UrlClassifierCommon::IsTrackingClassificationFlag(
-      classificationFlags);
 }
 
 namespace {

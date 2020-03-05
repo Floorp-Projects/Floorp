@@ -15042,8 +15042,8 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
     return;
   }
 
-  // We care about first-party tracking resources only.
-  if (!nsContentUtils::IsFirstPartyTrackingResourceWindow(inner)) {
+  // No tracking resource.
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(inner)) {
     return;
   }
 
