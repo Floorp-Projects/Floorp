@@ -128,19 +128,16 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     });
   }
 
-  handleStartBtnClick() {
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
-  }
-
   componentDidMount() {
     this.fetchFxAFlowUri();
-  }
-
-  componentDidMount() {
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
       message_id: "SIMPLIFIED_ABOUT_WELCOME"
     });
+  }
+
+  handleStartBtnClick() {
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
   }
 
   render() {
@@ -298,7 +295,7 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
       let url = new URL(action.data.args);
       Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__["addUtmParams"])(url, UTMTerm);
 
-      if (action.addFlowParams) {
+      if (action.addFlowParams && this.state.flowParams) {
         url.searchParams.append("device_id", this.state.flowParams.deviceId);
         url.searchParams.append("flow_id", this.state.flowParams.flowId);
         url.searchParams.append("flow_begin_time", this.state.flowParams.flowBeginTime);
