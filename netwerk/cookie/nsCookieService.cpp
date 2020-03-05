@@ -1113,8 +1113,8 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         NS_NAMED_LITERAL_CSTRING(convertToOriginAttrsName,
                                  "CONVERT_TO_ORIGIN_ATTRIBUTES");
 
-        rv = mDefaultDBState->syncConn->RegisterFunction(
-            convertToOriginAttrsName, 2, convertToOriginAttrs);
+        rv = mDefaultDBState->syncConn->CreateFunction(convertToOriginAttrsName,
+                                                       2, convertToOriginAttrs);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1128,8 +1128,8 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
             "FROM moz_cookies_old"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        rv = mDefaultDBState->syncConn->UnregisterFunction(
-            convertToOriginAttrsName);
+        rv =
+            mDefaultDBState->syncConn->RemoveFunction(convertToOriginAttrsName);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         // Drop old table
@@ -1161,18 +1161,24 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
 
         // Compute and populate the values of appId and inBrwoserElement from
         // originAttributes.
+        nsCOMPtr<mozIStorageFunction> setAppId(
+            new SetAppIdFromOriginAttributesSQLFunction());
+        NS_ENSURE_TRUE(setAppId, RESULT_RETRY);
+
         NS_NAMED_LITERAL_CSTRING(setAppIdName, "SET_APP_ID");
 
-        rv = mDefaultDBState->syncConn->RegisterFunction(
-            setAppIdName, 1,
-            MakeAndAddRef<SetAppIdFromOriginAttributesSQLFunction>());
+        rv = mDefaultDBState->syncConn->CreateFunction(setAppIdName, 1,
+                                                       setAppId);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        nsCOMPtr<mozIStorageFunction> setInBrowser(
+            new SetInBrowserFromOriginAttributesSQLFunction());
+        NS_ENSURE_TRUE(setInBrowser, RESULT_RETRY);
 
         NS_NAMED_LITERAL_CSTRING(setInBrowserName, "SET_IN_BROWSER");
 
-        rv = mDefaultDBState->syncConn->RegisterFunction(
-            setInBrowserName, 1,
-            MakeAndAddRef<SetInBrowserFromOriginAttributesSQLFunction>());
+        rv = mDefaultDBState->syncConn->CreateFunction(setInBrowserName, 1,
+                                                       setInBrowser);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1180,10 +1186,10 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
             "inBrowserElement = SET_IN_BROWSER(originAttributes);"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        rv = mDefaultDBState->syncConn->UnregisterFunction(setAppIdName);
+        rv = mDefaultDBState->syncConn->RemoveFunction(setAppIdName);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        rv = mDefaultDBState->syncConn->UnregisterFunction(setInBrowserName);
+        rv = mDefaultDBState->syncConn->RemoveFunction(setInBrowserName);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         COOKIE_LOGSTRING(LogLevel::Debug,

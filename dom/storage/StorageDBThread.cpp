@@ -1133,7 +1133,7 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       nsCOMPtr<mozIStorageFunction> patternMatchFunction(
           new OriginAttrsPatternMatchSQLFunction(mOriginPattern));
 
-      rv = aThread->mWorkerConnection->RegisterFunction(
+      rv = aThread->mWorkerConnection->CreateFunction(
           NS_LITERAL_CSTRING("ORIGIN_ATTRS_PATTERN_MATCH"), 1,
           patternMatchFunction);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1151,7 +1151,7 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       }
 
       // Always remove the function
-      aThread->mWorkerConnection->UnregisterFunction(
+      aThread->mWorkerConnection->RemoveFunction(
           NS_LITERAL_CSTRING("ORIGIN_ATTRS_PATTERN_MATCH"));
 
       NS_ENSURE_SUCCESS(rv, rv);
