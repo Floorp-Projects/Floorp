@@ -239,3 +239,17 @@ linux64-liblowercase:
     fetches:
         toolchain:
             - linux64-rust-1.41
+
+linux64-wine:
+    description: "Wine build for Windows Cross Compile"
+    treeherder:
+        symbol: TL(wine)
+        tier: 1
+    worker:
+        max-run-time: 10800
+    run:
+        script: build-wine.sh
+        toolchain-artifact: public/build/wine.tar.xz
+    fetches:
+        fetch:
+            - wine-3.0.3
