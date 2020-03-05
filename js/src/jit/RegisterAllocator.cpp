@@ -312,9 +312,6 @@ void AllocationIntegrityState::checkSafepointAllocation(LInstruction* ins,
     case LDefinition::OBJECT:
       MOZ_ASSERT(safepoint->hasGcPointer(alloc));
       break;
-    case LDefinition::STACKRESULTS:
-      MOZ_ASSERT(safepoint->hasAllGcPointersFromStackArea(alloc));
-      break;
     case LDefinition::SLOTS:
       MOZ_ASSERT(safepoint->hasSlotsOrElementsPointer(alloc));
       break;

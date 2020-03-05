@@ -1011,11 +1011,7 @@ MoveOperand CodeGeneratorARM64::toMoveOperand(const LAllocation a) const {
   if (a.isFloatReg()) {
     return MoveOperand(ToFloatRegister(a));
   }
-  MoveOperand::Kind kind =
-      a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
-
-  return MoveOperand(AsRegister(masm.getStackPointer()), ToStackOffset(a),
-                     kind);
+  return MoveOperand(AsRegister(masm.getStackPointer()), ToStackOffset(a));
 }
 
 class js::jit::OutOfLineTableSwitch

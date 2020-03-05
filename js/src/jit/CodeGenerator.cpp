@@ -3904,7 +3904,6 @@ void CodeGenerator::visitMoveGroup(LMoveGroup* group) {
       case LDefinition::BOX:
 #endif
       case LDefinition::GENERAL:
-      case LDefinition::STACKRESULTS:
         moveType = MoveOp::GENERAL;
         break;
       case LDefinition::INT32:
@@ -7421,25 +7420,6 @@ void CodeGenerator::visitGetNextEntryForIterator(
 // don't generate code.
 void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
 void CodeGenerator::visitWasmRegisterPairResult(LWasmRegisterPairResult* lir) {}
-void CodeGenerator::visitWasmStackResult(LWasmStackResult* lir) {}
-void CodeGenerator::visitWasmStackResult64(LWasmStackResult64* lir) {}
-
-void CodeGenerator::visitWasmStackResultArea(LWasmStackResultArea* lir) {
-  LAllocation* output = lir->getDef(0)->output();
-  MOZ_ASSERT(output->isStackArea());
-  bool tempInit = false;
-  for (auto iter = output->toStackArea()->results(); iter; iter.next()) {
-    // Zero out ref stack results.
-    if (iter.isGcPointer()) {
-      Register temp = ToRegister(lir->temp());
-      if (!tempInit) {
-        masm.xorPtr(temp, temp);
-        tempInit = true;
-      }
-      masm.storePtr(temp, ToAddress(iter.alloc()));
-    }
-  }
-}
 
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   MWasmCall* mir = lir->mir();
