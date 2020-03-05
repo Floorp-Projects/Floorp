@@ -222,18 +222,13 @@ def fixStackTraces(inputFilename, isZipped, opener):
         def fix(line):
             return fixModule.fixSymbols(line, bpsyms, jsonEscape=True)
 
-    elif sysname == 'Linux':
-        import fix_linux_stack as fixModule
+    elif sysname in ('Linux', 'Darwin', 'Windows'):
+        import fix_stacks as fixModule
 
-        def fix(line): return fixModule.fixSymbols(line, jsonEscape=True)
-
-    elif sysname == 'Darwin':
-        import fix_macosx_stack as fixModule
-
-        def fix(line): return fixModule.fixSymbols(line, jsonEscape=True)
+        def fix(line): return fixModule.fixSymbols(line, jsonMode=True)
 
     else:
-        fix = None  # there is no fix script for Windows
+        fix = None
 
     if fix:
         # Fix stacks, writing output to a temporary file, and then

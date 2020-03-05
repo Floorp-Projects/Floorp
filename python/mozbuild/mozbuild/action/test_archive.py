@@ -295,6 +295,7 @@ ARCHIVE_FILES = {
             'base': 'dist/bin',
             'patterns': [
                 'dmd.py',
+                'fix_stacks.py',
                 'fix_linux_stack.py',
                 'fix_macosx_stack.py',
                 'fix_stack_using_bpsyms.py',
