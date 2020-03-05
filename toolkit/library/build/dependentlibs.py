@@ -20,7 +20,8 @@ from mozpack.executables import (
 from buildconfig import substs
 
 def dependentlibs_win32_objdump(lib):
-    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE)
+    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE,
+                            universal_newlines=True)
     deps = []
     for line in proc.stdout:
         match = re.match('\s+DLL Name: (\S+)', line)
@@ -31,7 +32,8 @@ def dependentlibs_win32_objdump(lib):
 
 def dependentlibs_readelf(lib):
     '''Returns the list of dependencies declared in the given ELF .so'''
-    proc = subprocess.Popen([substs.get('TOOLCHAIN_PREFIX', '') + 'readelf', '-d', lib], stdout = subprocess.PIPE)
+    proc = subprocess.Popen([substs.get('TOOLCHAIN_PREFIX', '') + 'readelf', '-d', lib], stdout = subprocess.PIPE,
+                            universal_newlines=True)
     deps = []
     for line in proc.stdout:
         # Each line has the following format:
@@ -53,7 +55,8 @@ def dependentlibs_readelf(lib):
 
 def dependentlibs_mac_objdump(lib):
     '''Returns the list of dependencies declared in the given MACH-O dylib'''
-    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE)
+    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE,
+                            universal_newlines=True)
     deps = []
     cmd = None
     for line in proc.stdout:
@@ -113,7 +116,7 @@ def gen_list(output, lib):
     output.write('\n'.join(deps.keys()) + '\n')
 
     with open(output.name + ".gtest", 'w') as gtest_out:
-        libs = deps.keys()
+        libs = list(deps.keys())
         libs[-1] = 'gtest/' + libs[-1]
         gtest_out.write('\n'.join(libs) + '\n')
 
