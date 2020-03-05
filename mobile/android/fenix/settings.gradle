@@ -68,7 +68,7 @@ if (localProperties != null) {
             log("android-components are up-to-date, skipping publication.")
         } else {
             log("android-components changed, publishing locally...")
-            def publishAcCmd = ["${androidComponentsLocalPath}/{gradlew}", "publishToMavenLocal", "-Plocal=true"]
+            def publishAcCmd = ["${androidComponentsLocalPath}/${gradlew}", "publishToMavenLocal", "-Plocal=true"]
             runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components.")
         }
     } else {
