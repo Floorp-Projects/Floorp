@@ -141,6 +141,11 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
 
         self.install_toolchain_artifact(state_dir, checkout_root, dump_syms.WIN64_DUMP_SYMS)
 
+    def ensure_fix_stacks_packages(self, state_dir, checkout_root):
+        from mozboot import fix_stacks
+
+        self.install_toolchain_artifact(state_dir, checkout_root, fix_stacks.WINDOWS_FIX_STACKS)
+
     def _update_package_manager(self):
         pass
 
