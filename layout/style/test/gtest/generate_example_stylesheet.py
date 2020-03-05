@@ -1,5 +1,5 @@
 def main(output, stylesheet):
-    css = open(stylesheet, 'rb').read()
+    css = open(stylesheet, 'r').read()
     css = css.replace('\\', '\\\\').replace('\r', '\\r').replace('\n', '\\n').replace('"', '\\"')
 
     # Work around "error C2026: string too big"
