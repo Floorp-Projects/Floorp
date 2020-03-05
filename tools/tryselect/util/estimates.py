@@ -5,109 +5,12 @@
 from __future__ import absolute_import, print_function
 
 import os
-import requests
 import json
 from datetime import datetime, timedelta
 
-
-TASK_DURATION_URL = 'https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json'
-GRAPH_QUANTILES_URL = 'https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv'
 TASK_DURATION_CACHE = 'task_duration_history.json'
 GRAPH_QUANTILE_CACHE = 'graph_quantile_cache.csv'
 TASK_DURATION_TAG_FILE = 'task_duration_tag.json'
-
-
-def check_downloaded_history(tag_file, duration_cache, quantile_cache):
-    if not os.path.isfile(tag_file):
-        return False
-
-    try:
-        with open(tag_file) as f:
-            duration_tags = json.load(f)
-        download_date = datetime.strptime(duration_tags.get('download_date'), '%Y-%M-%d')
-        if download_date < datetime.now() - timedelta(days=30):
-            return False
-    except (IOError, ValueError):
-        return False
-
-    if not os.path.isfile(duration_cache):
-        return False
-    if not os.path.isfile(quantile_cache):
-        return False
-
-    return True
-
-
-def download_task_history_data(cache_dir):
-    """Fetch task duration data exported from BigQuery."""
-    task_duration_cache = os.path.join(cache_dir, TASK_DURATION_CACHE)
-    task_duration_tag_file = os.path.join(cache_dir, TASK_DURATION_TAG_FILE)
-    graph_quantile_cache = os.path.join(cache_dir, GRAPH_QUANTILE_CACHE)
-
-    if check_downloaded_history(task_duration_tag_file, task_duration_cache, graph_quantile_cache):
-        return
-
-    try:
-        os.unlink(task_duration_tag_file)
-        os.unlink(task_duration_cache)
-        os.unlink(graph_quantile_cache)
-    except OSError:
-        print("No existing task history to clean up.")
-
-    try:
-        r = requests.get(TASK_DURATION_URL, stream=True)
-    except requests.exceptions.RequestException as exc:
-        # This is fine, the durations just won't be in the preview window.
-        print("Error fetching task duration cache from {}: {}".format(TASK_DURATION_URL, exc))
-        return
-
-    # The data retrieved from google storage is a newline-separated
-    # list of json entries, which Python's json module can't parse.
-    duration_data = list()
-    for line in r.content.splitlines():
-        duration_data.append(json.loads(line))
-
-    with open(task_duration_cache, 'w') as f:
-        json.dump(duration_data, f, indent=4)
-
-    try:
-        r = requests.get(GRAPH_QUANTILES_URL, stream=True)
-    except requests.exceptions.RequestException as exc:
-        # This is fine, the percentile just won't be in the preview window.
-        print("Error fetching task group percentiles from {}: {}".format(GRAPH_QUANTILES_URL, exc))
-        return
-
-    with open(graph_quantile_cache, 'w') as f:
-        f.write(r.content)
-
-    with open(task_duration_tag_file, 'w') as f:
-        json.dump({
-            'download_date': datetime.now().strftime('%Y-%m-%d')
-            }, f, indent=4)
-
-
-def make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=None):
-    """Trim the taskgraph cache used for dependencies.
-
-    Speeds up the fzf preview window to less human-perceptible
-    ranges."""
-    if not os.path.isfile(graph_cache):
-        return
-
-    target_task_set = set()
-    if target_file:
-        with open(target_file) as f:
-            target_task_set = set(json.load(f).keys())
-
-    with open(graph_cache) as f:
-        graph = json.load(f)
-    graph = {
-        name: list(defn['dependencies'].values())
-        for name, defn in graph.items()
-        if name in target_task_set
-    }
-    with open(dep_cache, 'w') as f:
-        json.dump(graph, f, indent=4)
 
 
 def find_all_dependencies(graph, tasklist):
@@ -176,8 +79,7 @@ def determine_quantile(quantiles_file, duration):
 
 def task_duration_data(cache_dir):
     with open(os.path.join(cache_dir, TASK_DURATION_CACHE)) as f:
-        durations = json.load(f)
-    return {d['name']: d['mean_duration_seconds'] for d in durations}
+        return json.load(f)
 
 
 def duration_summary(graph_cache_file, tasklist, cache_dir):
@@ -217,6 +119,7 @@ def duration_summary(graph_cache_file, tasklist, cache_dir):
 
     output["wall_duration_seconds"] = timedelta(seconds=int(longest_path))
     output["eta_datetime"] = datetime.now()+timedelta(seconds=longest_path)
-    # (datetime.now()+timedelta(seconds=longest_path)).strftime("%H:%M")
+
+    output["task_durations"] = {task: int(durations.get(task, 0.0)) for task in tasklist}
 
     return output

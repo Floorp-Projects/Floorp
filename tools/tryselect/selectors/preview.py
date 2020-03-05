@@ -12,16 +12,20 @@ import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(here), 'util'))
-from estimates import duration_summary, task_duration_data
+from estimates import duration_summary
 
 
 def process_args():
     """Process preview arguments."""
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('-s', '--show-estimates', action="store_true")
-    argparser.add_argument('-g', '--graph-cache', type=str, default=None)
-    argparser.add_argument('-c', '--cache_dir', type=str, default=None)
-    argparser.add_argument('tasklist', type=str)
+    argparser.add_argument('-s', '--show-estimates', action="store_true",
+                           help="Show task duration estimates (default: False)")
+    argparser.add_argument('-g', '--graph-cache', type=str, default=None,
+                           help="Filename of task graph dependencies")
+    argparser.add_argument('-c', '--cache_dir', type=str, default=None,
+                           help="Path to cache directory containing task durations")
+    argparser.add_argument('-t', '--tasklist', type=str, default=None,
+                           help="Path to temporary file containing the selected tasks")
     return argparser.parse_args()
 
 
@@ -30,9 +34,10 @@ def plain_display(tasklist):
     print("\n".join(sorted(s.strip("'") for s in tasklist.split())))
 
 
-def duration_display(graph_cache_file, tasklist, cache_dir):
+def duration_display(graph_cache_file, taskfile, cache_dir):
     """Preview window display with task durations + metadata."""
-    tasklist = [t.strip("'") for t in tasklist.split()]
+    with open(taskfile, "r") as f:
+        tasklist = [line.strip() for line in f]
 
     durations = duration_summary(graph_cache_file, tasklist, cache_dir)
     output = ""
@@ -51,10 +56,9 @@ def duration_display(graph_cache_file, tasklist, cache_dir):
         durations["eta_datetime"].strftime("%H:%M"))
 
     duration_width = 5  # show five numbers at most.
-    task_durations = task_duration_data(cache_dir)
     output += "{:>{width}}\n".format("Duration", width=max_columns)
     for task in tasklist:
-        duration = int(task_durations.get(task, 0.0))
+        duration = durations["task_durations"].get(task, 0.0)
         output += "{:{align}{width}} {:{nalign}{nwidth}}s\n".format(
             task,
             duration,
