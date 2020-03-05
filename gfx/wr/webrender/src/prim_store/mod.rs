@@ -3440,14 +3440,14 @@ impl PrimitiveStore {
                             request.push([
                                 prim_data.center.x,
                                 prim_data.center.y,
-                                prim_data.angle.angle,
-                                0.0,
+                                prim_data.params.start_offset,
+                                prim_data.params.end_offset,
                             ]);
                             request.push([
+                                prim_data.params.angle,
                                 pack_as_float(prim_data.extend_mode as u32),
                                 prim_data.stretch_size.width,
                                 prim_data.stretch_size.height,
-                                0.0,
                             ]);
                         },
                     );
