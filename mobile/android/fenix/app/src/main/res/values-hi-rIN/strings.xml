@@ -84,11 +84,171 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">अधिक जानें</string>
 
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">डेस्कटॉप बुकमार्क</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">बुकमार्क मेन्यू</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">अन्य बुकमार्क</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">इतिहास</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">खोजें</string>
     <!-- Library Page Title -->
     <string name="library_title">लाइब्रे‌री</string>
     <!-- Settings Page Title -->
     <string name="settings_title">सेटिंग</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">बंद करें</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">खुले टैब</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">निजी सत्र</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">निजी टैब</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">टैब जोड़ें</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">टैब बंद करें</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">टैब बंद करें %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">टैब मेन्यू खोलें</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">सभी टैब बंद करें</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">टैब साझा करें</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">टैब साझा करें</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">मिटाएं</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">सहेजें‌</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">साझा करें</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">खुले टैब</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">हटाएं</string>
+
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">साफ करें</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">मिटाएं</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">पिछले 24 घंटे</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">पिछले 7 दिन</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">पिछले 30 दिन</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">यहां कोई इतिहास नहीं</string>
+
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">टैब बंद करें</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">टैब पुनर्स्थापित करें</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">बुकमार्क मेन्यू</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">बुकमार्क संपादित करें</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">फ़ोल्डर चुनें</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">फ़ोल्डर जोड़ें</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">बुकमार्क बनाया गया।</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">बुकमार्क सहेजा गया!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">संपादित</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">संपादन</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">चुनें</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">कॉपी करें</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">साझा करें</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">नए टैब में खोलें</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">निजी टैब में खोलें</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">मिटाएं</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">सहेजें</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">बुकमार्क संपादित करें</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">फ़ोल्डर सम्पादित करें</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">फ़ोल्डर</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">नाम</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">फ़ोल्डर जोड़ें</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">फ़ोल्डर चुनें</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">अवैध URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">यहां कोई बुकमार्क नहीं है</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">सेटिंग्स पर जायें</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">कैमरा</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">माइक्रोफोन</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">स्थान</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">अधिसूचना</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">अपवाद</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">टैब सहेजे गए!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">टैब सहेजे गए!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">बंद करें</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">सहेजें</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">भेजें और साझा करें</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">साझा करें</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">साझा करें</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">लिंक साझा करें</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">उपकरण को भेजें</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">हाल ही में उपयोग किया गया</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">सिंक करने के लिए साइन इन करें</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">सभी उपकरणों को भेजें</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">उपकरण को भेजें</string>
+
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">खोलें</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">हटाएं और खोलें</string>
 
     </resources>

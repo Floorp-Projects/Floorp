@@ -45,7 +45,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Otvori kartice</string>
+    <string name="browser_tabs_button">Otvorene kartice</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Natrag</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -165,7 +165,7 @@
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomoć</string>
     <!-- Preference link to rating Fenix on the Play Store -->
-    <string name="preferences_rate">Ocijeni na Google Play-u</string>
+    <string name="preferences_rate">Ocijeni na Google Playu</string>
     <!-- Preference for giving feedback about Fenix -->
     <string name="preferences_feedback">Pošalji povratnu informaciju</string>
     <!-- Preference linking to about page for Fenix
@@ -405,7 +405,7 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">Otvori kartice</string>
+    <string name="tab_header_label">Otvorene kartice</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Privatna sesija</string>
     <!-- Title for the list of tabs in the current private session -->
@@ -1207,7 +1207,7 @@
     <string name="search_add_custom_engine_form_description">Detalji prilagođene tražilice</string>
 
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Poveznica na stranicu s podrobnim informacijama</string>
+    <string name="search_add_custom_engine_learn_more_description">Poveznica na stranicu s daljnjim informacijama</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Upiši ime tražilice</string>
