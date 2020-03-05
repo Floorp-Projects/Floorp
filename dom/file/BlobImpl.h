@@ -83,9 +83,8 @@ class BlobImpl : public nsISupports {
 
   virtual int64_t GetFileId() = 0;
 
-  virtual nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                               nsACString& aContentType,
-                               nsACString& aCharset) = 0;
+  nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                       nsACString& aContentType, nsACString& aCharset);
 
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,

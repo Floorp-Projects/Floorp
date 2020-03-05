@@ -62,8 +62,8 @@ add_task(async _ => {
     xhr.onloadend = __ => {
       is(
         xhr.response.blobImplType,
-        "StreamBlobImpl[TemporaryBlobImpl]",
-        "We want a StreamBlobImpl holding a TemporaryBlobImpl on the parent side"
+        "StreamBlobImpl[TemporaryFileBlobImpl]",
+        "We want a StreamBlobImpl holding a TemporaryFileBlobImpl on the parent side"
       );
       resolve();
     };

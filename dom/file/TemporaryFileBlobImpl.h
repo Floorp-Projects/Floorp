@@ -30,6 +30,10 @@ class TemporaryFileBlobImpl final : public FileBlobImpl {
   virtual void CreateInputStream(nsIInputStream** aInputStream,
                                  ErrorResult& aRv) override;
 
+  void GetBlobImplType(nsAString& aBlobImplType) const override {
+    aBlobImplType = NS_LITERAL_STRING("TemporaryFileBlobImpl");
+  }
+
  protected:
   virtual ~TemporaryFileBlobImpl();
 
