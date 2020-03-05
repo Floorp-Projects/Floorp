@@ -978,4 +978,18 @@ bool SiteIdentifier::Equals(const SiteIdentifier& aOther) const {
   return mPrincipal->FastEquals(aOther.mPrincipal);
 }
 
+NS_IMETHODIMP
+BasePrincipal::CreateReferrerInfo(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                                  nsIReferrerInfo** _retval) {
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<dom::ReferrerInfo> info =
+      new dom::ReferrerInfo(prinURI, aReferrerPolicy);
+  info.forget(_retval);
+  return NS_OK;
+}
+
 }  // namespace mozilla
