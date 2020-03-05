@@ -3,3 +3,34 @@
 ac_add_options --target=aarch64-windows-mingw32
 
 . $topsrcdir/build/win64-aarch64/mozconfig.vs-latest
+
+if test `uname -s` = Linux; then
+
+# Configure expects executables for check_prog, so set the relevant files
+# as executable on the first evaluation of the mozconfig where they exist.
+if [ -d "${VSPATH}" -a ! -x "${VSPATH}/VC/bin/Hostx64/arm64/cl.exe" ]; then
+    find "${VSPATH}" -type f -name \*.exe -exec chmod +x {} \;
+fi
+export MAKENSISU="${MOZ_FETCHES_DIR}/nsis-3.01/makensis.exe"
+if [ -d "${MAKENSISU%/*}" -a ! -x "${MAKENSISU}" ]; then
+    chmod +x "${MAKENSISU}"
+fi
+export MAKECAB="${TOOLTOOL_DIR}/makecab.exe"
+if [ -f "${MAKECAB}" ]; then
+    chmod +x "${MAKECAB}"
+fi
+export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
+if [ -f "${UPX}" ]; then
+    chmod +x "${UPX}"
+fi
+CLANG_CL_EXE_DIR="${MOZ_FETCHES_DIR}/clang-cl/clang/bin"
+if [ -d "${CLANG_CL_EXE_DIR}" ]; then
+    chmod +x "${CLANG_CL_EXE_DIR}/clang-cl.exe"
+fi
+export WINE=${MOZ_FETCHES_DIR}/wine/bin/wine64
+mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/arm64:${MOZ_FETCHES_DIR}/nsis-3.01:${CLANG_CL_EXE_DIR}:${PATH}"
+mk_add_options "export WINEPATH=${VSPATH}/VC/bin/Hostx64/x64"
+
+unset VC_PATH
+
+fi
