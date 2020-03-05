@@ -88,15 +88,15 @@ class GeckoLoginStorageDelegate(
                 Operation.CREATE -> {
                     // If an existing Login was autofilled, we want to clear its guid to
                     // avoid updating its record
-                    loginStorage.add(login.copy(guid = ""))
+                    loginStorage.add(login.copy(guid = null))
                 }
             }
         }
     }
 
     /**
-     * Returns whether an existing login record should be [UPDATE]d or a new one [CREATE]d, based
-     * on the saved [ServerPassword] and new [Login].
+     * Returns whether an existing login record should be UPDATED or a new one [CREATE]d, based
+     * on the saved [Login] and new [Login].
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun getPersistenceOperation(newLogin: Login, savedLogin: Login?): Operation = when {
@@ -146,8 +146,8 @@ fun Login.mergeWithLogin(login: Login): Login {
  * Converts an Android Components [Login] to an Application Services [ServerPassword]
  */
 fun Login.toServerPassword() = ServerPassword(
-    // Underlying Rust code will generate a new GUID
-    id = "",
+    // Underlying Rust code will generate a new GUID if `guid` is missing.
+    id = guid ?: "",
     username = username,
     password = password,
     hostname = origin,
