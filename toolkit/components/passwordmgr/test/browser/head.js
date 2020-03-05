@@ -405,19 +405,6 @@ async function cleanupPasswordNotifications(
   }
 }
 
-async function clearMessageCache(browser) {
-  await SpecialPowers.spawn(browser, [], async () => {
-    const { LoginManagerChild } = ChromeUtils.import(
-      "resource://gre/modules/LoginManagerChild.jsm",
-      this
-    );
-    let docState = LoginManagerChild.forWindow(content).stateForDocument(
-      content.document
-    );
-    docState.lastSubmittedValuesByRootElement = new content.WeakMap();
-  });
-}
-
 /**
  * Checks the doorhanger's username and password.
  *
@@ -695,7 +682,6 @@ function listenForTestNotification(expectedMessage, count = 1) {
     LoginManagerParent.setListenerForTests((msg, data) => {
       if (msg == expectedMessage && --count == 0) {
         LoginManagerParent.setListenerForTests(null);
-        info("listenForTestNotification, resolving for message: " + msg);
         resolve(data);
       }
     });
