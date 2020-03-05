@@ -60,29 +60,41 @@ def install_reqs():
 
         return False
     except Exception:
-        if not os.path.exists(os.path.join(TOPDIR, "mozfile")):
-            req_file = PY3 and "local-requirements.txt" or "local-py2-requirements.txt"
+        # we're detecting here that this is running in Taskcluster
+        # by checking for the presence of the mozfile directory
+        # that was decompressed from target.condprof.tests.tar.gz
+        run_in_ci = os.path.exists(os.path.join(TOPDIR, "mozfile"))
+
+        # On Python 2 we only install what's required for condprof.client
+        # On Python 3 it's the full thing
+        if not run_in_ci:
+            req_files = PY3 and ["base.txt", "local.txt"] or ["local-client.txt"]
         else:
-            req_file = PY3 and "requirements.txt" or "py2-requirements.txt"
+            req_files = PY3 and ["base.txt", "ci.txt"] or ["ci-client.txt"]
 
-        req_file = os.path.join(TOPDIR, req_file)
+        for req_file in req_files:
+            req_file = os.path.join(TOPDIR, "requirements", req_file)
 
-        with open(req_file) as f:
-            reqs = [req for req in f.read().split("\n") if req.strip() != ""]
-            for req in reqs:
-                subprocess.check_call(
-                    [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "install",
-                        "--no-cache-dir",
-                        "--isolated",
-                        "--find-links",
-                        "https://pypi.pub.build.mozilla.org/pub",
-                        req,
-                    ]
-                )
+            with open(req_file) as f:
+                reqs = [
+                    req
+                    for req in f.read().split("\n")
+                    if req.strip() != "" and not req.startswith("#")
+                ]
+                for req in reqs:
+                    subprocess.check_call(
+                        [
+                            sys.executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            "--no-cache-dir",
+                            "--isolated",
+                            "--find-links",
+                            "https://pypi.pub.build.mozilla.org/pub",
+                            req,
+                        ]
+                    )
 
         return True
 

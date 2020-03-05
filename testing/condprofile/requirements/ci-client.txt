@@ -1,0 +1,10 @@
+# pulled when running in TaskCluster for python 2 only
+# we just pull dependencies required by condprof.client
+requests==2.22.0
+pyyaml==5.1.2
+
+# the target.condprof.tests.tar.gz archive pulls those dependencies
+# directly into the condprof project root
+./mozfile
+./mozprofile
+./mozlog

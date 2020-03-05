@@ -4,155 +4,145 @@
 """ Script that launches profiles creation.
 """
 import os
-import argparse
-import asyncio
-import sys
 import shutil
+import asyncio
 
-# easier than setting PYTHONPATH in various platforms
-if __name__ == "__main__":
-    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from condprof.check_install import check  # NOQA
-
-check()  # NOQA
-
-from condprof.creator import ProfileCreator  # NOQA
-from condprof.desktop import DesktopEnv  # NOQA
-from condprof.android import AndroidEnv  # NOQA
-from condprof.changelog import Changelog  # NOQA
-from condprof.scenarii import scenarii  # NOQA
+from condprof.creator import ProfileCreator
+from condprof.desktop import DesktopEnv
+from condprof.android import AndroidEnv
+from condprof.changelog import Changelog
+from condprof.scenarii import scenarii
 from condprof.util import (
     logger,
     get_version,
     get_current_platform,
     extract_from_dmg,
-)  # NOQA
-from condprof.customization import get_customizations, find_customization  # NOQA
-from condprof.client import read_changelog, ProfileNotFoundError  # NOQA
+)
+from condprof.customization import get_customizations, find_customization
+from condprof.client import read_changelog, ProfileNotFoundError
 
 
-def main(args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(description="Profile Creator")
-    parser.add_argument("archive", help="Archives Dir", type=str, default=None)
-    parser.add_argument("--firefox", help="Firefox Binary", type=str, default=None)
-    parser.add_argument("--scenario", help="Scenario to use", type=str, default="all")
-    parser.add_argument(
-        "--profile", help="Existing profile Dir", type=str, default=None
-    )
-    parser.add_argument(
-        "--customization", help="Profile customization to use", type=str, default="all"
-    )
-    parser.add_argument(
-        "--visible", help="Don't use headless mode", action="store_true", default=False
-    )
-    parser.add_argument(
-        "--archives-dir", help="Archives local dir", type=str, default="/tmp/archives"
-    )
-    parser.add_argument(
-        "--force-new", help="Create from scratch", action="store_true", default=False
-    )
-    parser.add_argument(
-        "--strict",
-        help="Errors out immediatly on a scenario failure",
-        action="store_true",
-        default=True,
-    )
-    parser.add_argument(
-        "--geckodriver",
-        help="Path to the geckodriver binary",
-        type=str,
-        default=sys.platform.startswith("win") and "geckodriver.exe" or "geckodriver",
-    )
+class Runner:
+    def __init__(
+        self,
+        profile,
+        firefox,
+        geckodriver,
+        archive,
+        device_name,
+        strict,
+        force_new,
+        visible,
+    ):
+        self.force_new = force_new
+        self.profile = profile
+        self.geckodriver = geckodriver
+        self.archive = archive
+        self.device_name = device_name
+        self.strict = strict
+        self.visible = visible
+        # unpacking a dmg
+        # XXX do something similar if we get an apk (but later)
+        # XXX we want to do
+        #   adb install -r target.apk
+        #   and get the installed app name
+        if firefox is not None and firefox.endswith("dmg"):
+            target = os.path.join(os.path.dirname(firefox), "firefox.app")
+            extract_from_dmg(firefox, target)
+            firefox = os.path.join(target, "Contents", "MacOS", "firefox")
+        self.firefox = firefox
+        self.android = self.firefox is not None and self.firefox.startswith(
+            "org.mozilla"
+        )
 
-    parser.add_argument(
-        "--device-name", help="Name of the device", type=str, default=None
-    )
+    def prepare(self, scenario, customization):
+        self.scenario = scenario
+        self.customization = customization
 
-    args = parser.parse_args(args=args)
+        # early checks to avoid extra work
+        if self.customization != "all":
+            if find_customization(self.customization) is None:
+                raise IOError("Cannot find customization %r" % self.customization)
 
-    # unpacking a dmg
-    # XXX do something similar if we get an apk (but later)
-    # XXX we want to do
-    #   adb install -r target.apk
-    #   and get the installed app name
-    if args.firefox is not None and args.firefox.endswith("dmg"):
-        target = os.path.join(os.path.dirname(args.firefox), "firefox.app")
-        extract_from_dmg(args.firefox, target)
-        args.firefox = os.path.join(target, "Contents", "MacOS", "firefox")
+        if self.scenario != "all" and self.scenario not in scenarii:
+            raise IOError("Cannot find scenario %r" % self.scenario)
 
-    args.android = args.firefox is not None and args.firefox.startswith("org.mozilla")
+        if not self.android and self.firefox is not None:
+            logger.info("Verifying Desktop Firefox binary")
+            # we want to verify we do have a firefox binary
+            # XXX so lame
+            if not os.path.exists(self.firefox):
+                if "MOZ_FETCHES_DIR" in os.environ:
+                    target = os.path.join(os.environ["MOZ_FETCHES_DIR"], self.firefox)
+                    if os.path.exists(target):
+                        self.firefox = target
 
-    # early checks to avoid extra work
-    if args.customization != "all":
-        if find_customization(args.customization) is None:
-            raise IOError("Cannot find customization %r" % args.customization)
+            if not os.path.exists(self.firefox):
+                raise IOError("Cannot find %s" % self.firefox)
 
-    if args.scenario != "all" and args.scenario not in scenarii:
-        raise IOError("Cannot find scenario %r" % args.scenario)
+            version = get_version(self.firefox)
+            logger.info("Working with Firefox %s" % version)
 
-    if not args.android and args.firefox is not None:
-        logger.info("Verifying Desktop Firefox binary")
-        # we want to verify we do have a firefox binary
-        # XXX so lame
-        if not os.path.exists(args.firefox):
-            if "MOZ_FETCHES_DIR" in os.environ:
-                target = os.path.join(os.environ["MOZ_FETCHES_DIR"], args.firefox)
-                if os.path.exists(target):
-                    args.firefox = target
+        logger.info(os.environ)
+        self.archive = os.path.abspath(self.archive)
+        logger.info("Archives directory is %s" % self.archive)
+        if not os.path.exists(self.archive):
+            os.makedirs(self.archive, exist_ok=True)
 
-        if not os.path.exists(args.firefox):
-            raise IOError("Cannot find %s" % args.firefox)
+        logger.info("Verifying Geckodriver binary presence")
+        if shutil.which(self.geckodriver) is None and not os.path.exists(
+            self.geckodriver
+        ):
+            raise IOError("Cannot find %s" % self.geckodriver)
 
-        version = get_version(args.firefox)
-        logger.info("Working with Firefox %s" % version)
+        try:
+            if self.android:
+                plat = "%s-%s" % (
+                    self.device_name,
+                    self.firefox.split("org.mozilla.")[-1],
+                )
+            else:
+                plat = get_current_platform()
+            self.changelog = read_changelog(plat)
+            logger.info("Got the changelog from TaskCluster")
+        except ProfileNotFoundError:
+            logger.info("changelog not found on TaskCluster, creating a local one.")
+            self.changelog = Changelog(self.archive)
 
-    logger.info(os.environ)
-    args.archive = os.path.abspath(args.archive)
-    logger.info("Archives directory is %s" % args.archive)
-    if not os.path.exists(args.archive):
-        os.makedirs(args.archive, exist_ok=True)
-
-    logger.info("Verifying Geckodriver binary presence")
-    if shutil.which(args.geckodriver) is None and not os.path.exists(args.geckodriver):
-        raise IOError("Cannot find %s" % args.geckodriver)
-
-    try:
-        if args.android:
-            plat = "%s-%s" % (args.device_name, args.firefox.split("org.mozilla.")[-1])
+    def _create_env(self):
+        if self.android:
+            klass = AndroidEnv
         else:
-            plat = get_current_platform()
-        changelog = read_changelog(plat)
-        logger.info("Got the changelog from TaskCluster")
-    except ProfileNotFoundError:
-        logger.info("changelog not found on TaskCluster, creating a local one.")
-        changelog = Changelog(args.archive)
-    loop = asyncio.get_event_loop()
+            klass = DesktopEnv
 
-    async def one_run(scenario, customization):
-        if args.android:
-            env = AndroidEnv(
-                args.profile,
-                args.firefox,
-                args.geckodriver,
-                args.archive,
-                args.device_name,
-            )
-        else:
-            env = DesktopEnv(
-                args.profile,
-                args.firefox,
-                args.geckodriver,
-                args.archive,
-                args.device_name,
-            )
+        return klass(
+            self.profile,
+            self.firefox,
+            self.geckodriver,
+            self.archive,
+            self.device_name,
+        )
+
+    def display_error(self, scenario, customization):
+        logger.error("%s x %s failed." % (scenario, customization), exc_info=True)
+        if self.strict:
+            raise
+
+    async def one_run(self, scenario, customization):
+        """Runs one single conditioned profile.
+
+        Create an instance of the environment and run the ProfileCreator.
+        """
+        env = self._create_env()
         return await ProfileCreator(
-            scenario, customization, args.archive, changelog, args.force_new, env
-        ).run(not args.visible)
+            scenario, customization, self.archive, self.changelog, self.force_new, env
+        ).run(not self.visible)
 
-    async def run_all(args):
-        if args.scenario != "all":
-            selected_scenario = [args.scenario]
+    async def run_all(self):
+        """Runs the conditioned profile builders
+        """
+        if self.scenario != "all":
+            selected_scenario = [self.scenario]
         else:
             selected_scenario = scenarii.keys()
 
@@ -160,40 +150,53 @@ def main(args=sys.argv[1:]):
         # for the current platform when "all" is selected
         res = []
         failures = 0
-
-        def display_error(scenario, customization):
-            logger.error("%s x %s failed." % (scenario, customization), exc_info=True)
-
         for scenario in selected_scenario:
-            if args.customization != "all":
+            if self.customization != "all":
                 try:
-                    res.append(await one_run(scenario, args.customization))
+                    res.append(await self.one_run(scenario, self.customization))
                 except Exception:
                     failures += 1
-                    display_error(scenario, args.customization)
-                    if args.strict:
-                        raise
+                    self.display_error(scenario, self.customization)
             else:
                 for customization in get_customizations():
                     logger.info("Customization %s" % customization)
                     try:
-                        res.append(await one_run(scenario, customization))
+                        res.append(await self.one_run(scenario, customization))
                     except Exception:
                         failures += 1
-                        display_error(scenario, customization)
-                        if args.strict:
-                            raise
+                        self.display_error(scenario, customization)
+
         return failures, [one_res for one_res in res if one_res]
 
+    def save(self):
+        self.changelog.save(self.archive)
+
+
+def run(
+    archive,
+    firefox=None,
+    scenario="all",
+    profile=None,
+    customization="all",
+    visible=False,
+    archives_dir="/tmp/archives",
+    force_new=False,
+    strict=True,
+    geckodriver="geckodriver",
+    device_name=None,
+):
+    runner = Runner(
+        profile, firefox, geckodriver, archive, device_name, strict, force_new, visible
+    )
+
+    runner.prepare(scenario, customization)
+    loop = asyncio.get_event_loop()
+
     try:
-        failures, results = loop.run_until_complete(run_all(args))
-        logger.info("Saving changelog in %s" % args.archive)
-        changelog.save(args.archive)
+        failures, results = loop.run_until_complete(runner.run_all())
+        logger.info("Saving changelog in %s" % archive)
+        runner.save()
         if failures > 0:
             raise Exception("At least one scenario failed")
     finally:
         loop.close()
-
-
-if __name__ == "__main__":
-    main()

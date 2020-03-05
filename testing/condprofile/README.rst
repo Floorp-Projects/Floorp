@@ -29,17 +29,52 @@ For each combination of scenario, customization and platform:
 
 It's based on the Arsenic webdriver client https://github.com/HDE/arsenic
 
-A client that wants to use a profile can download it from the indexed artifacts
-by using a simple HTTP client or the provided client in **condprof.client**.
+The project provides two **Mach** commands to interact with the conditioned
+profile:
 
+- **fetch-condprofile**: downloads a conditioned profile and deecompress it
+- **run-condprofile**: runs on or all conditioned profiles scenarii locally
 
-Scenario
-========
+How to download a conditioned profile
+=====================================
 
-Scenarii are coroutines registered under a unique name in condprof/scenarii.
+From your mozilla-central root, run:
+
+::
+
+    $ ./mach fetch-condprofile
+
+This will grab the latest conditioned profile for your platform. But
+you can also grab a specific profile built from any scenario or platform.
+
+You can look at all the options with --help
+
+How to run a conditioned profile
+================================
+
+If you want to play a scenario locally to modify it, run for example:
+
+::
+
+    $ ./mach run-condprofile --scenario settled --visible /path/to/generated/profile
+
+The project will run a webdriver session against Firefox and generate the profile.
+You can look at all the options with --help
+
+Architecture
+============
+
+The conditioned profile project is organized into webdriver **scenarii** and
+**customization** files.
+
+Scenarii
+--------
+
+Scenarii are coroutines registered under a unique name in condprof/scenarii/__init__.py.
+
 They get a **session** object and some **options**.
 
-The scenario can do whatever it wants with the browser, through the session
+The scenario can do whatever it wants with the browser, through the webdriver session
 instance.
 
 See Arsenic's `API documentation <https://arsenic.readthedocs.io/en/latest/reference/session.html>`_ for the session class.
@@ -49,7 +84,7 @@ and register it in condprof/scenarii/__init__.py
 
 
 Customization
-=============
+-------------
 
 A customization is a configuration file that can be used to set some
 prefs in the browser and install some webextensions.
@@ -78,34 +113,3 @@ In the example below, we install uBlock, set a pref, and pass the
       }
    }
 
-
-Getting conditioned profiles
-============================
-
-Unlike the profile creator, the client is Python 2 and 3 compatible.
-
-You can grab a conditioned profile using the client API::
-
-   >>> from condprof.client import get_profile
-   >>> get_profile(".", "win64", "settled", "default")
-
-or the **cp-client** script that gets install when you run the
-conditioned profile installer.
-
-Running locally
-===============
-
-Unfortunately, we can't hook the conditioned profile builder into mach
-at this point. We need to wait for everything in the tree to be fully
-Python 3 compatible.
-
-Until then, if you want to build profiles locally, to try out one
-of your scenario for instance, you can install a local Python 3
-virtual env and use the script from there.
-
-Get a mozilla-central source clone and do the following::
-
-   $ cd testing/condprofile
-   $ virtualenv .
-
-From there you can trigger profiles creation using **bin/cp-creator**.

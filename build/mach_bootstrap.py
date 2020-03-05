@@ -58,6 +58,7 @@ MACH_MODULES = [
     'remote/mach_commands.py',
     'taskcluster/mach_commands.py',
     'testing/awsy/mach_commands.py',
+    'testing/condprofile/mach_commands.py',
     'testing/firefox-ui/mach_commands.py',
     'testing/geckodriver/mach_commands.py',
     'testing/mach_commands.py',
