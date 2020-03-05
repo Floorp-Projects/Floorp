@@ -612,9 +612,6 @@ android-x86_64-tests:
 android-x86_64-qr-tests:
     - crashtest
     - reftest
-    - mochitest-plain
-    - mochitest-gpu
-    - mochitest-media
 
 android-hw-aarch64-opt-unittests:
     - mochitest-media
