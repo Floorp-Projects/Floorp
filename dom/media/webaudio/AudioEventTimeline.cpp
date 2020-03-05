@@ -101,6 +101,13 @@ AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs) {
 }
 
 AudioTimelineEvent::~AudioTimelineEvent() {
+  // AudioTimelineEvent can be destroyed on the render thread. If an event
+  // contains an AudioNodeTrack, it means that this AudioNodeTrack can be
+  // destroyed on the render thread. This in turns can provoke a GC, since it
+  // can be the last reference to GC-able objects. We want to avoid causing GC
+  // on the render thread, so mTrack never points to a valid AudioNodeTrack on
+  // destruction, on the render thread.
+  MOZ_ASSERT(NS_IsMainThread() || !mTrack, "Track reference on the render thread should have been dropped when inserting the event in the timeline.");
   if (mType == AudioTimelineEvent::SetValueCurve) {
     delete[] mCurve;
   }
