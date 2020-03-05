@@ -51,6 +51,7 @@ EXPORTS.mozilla = [
     'HashFunctions.h',
     'HashTable.h',
     'HelperMacros.h',
+    'InitializedOnce.h',
     'IntegerPrintfMacros.h',
     'IntegerRange.h',
     'IntegerTypeTraits.h',
