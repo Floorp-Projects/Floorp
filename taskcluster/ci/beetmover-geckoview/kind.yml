@@ -40,13 +40,13 @@ not-for-build-platforms:
 job-template:
     attributes:
         artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
-    run-on-projects: ['mozilla-central', 'mozilla-release']
+    run-on-projects: ['mozilla-release']
     run-on-hg-branches:
         by-project:
             mozilla-release:
                 - '^GECKOVIEW_\d+_RELBRANCH$'
             default:
-                - '.*'
+                - 'all'
     shipping-phase:
         by-project:
             # Beetmoving geckoview makes it available to the official maven repo.
@@ -55,10 +55,14 @@ job-template:
             # `push` phase of the release graphs.
             # So we want beetmover to act only when the release is greenlit. That
             # is to say:
-            # - (to be changed soon to be as part of the nightly graph) right after nightly builds on mozilla-central
-            # - as part of Firefox betas push graphs on mozilla-beta
-            # - at every patch uplifted on the GECKOVIEW_XX_RELBRANC on mozilla-release
+            # 1. (to be changed soon to be as part of the nightly graph) right after nightly builds on mozilla-central
+            # 2. as part of Firefox push graphs on both mozilla-beta and mozilla-release
+            # 3. as part of ship-rc graphs on Firefox RC
+            # 4. at every patch uplifted on the GECKOVIEW_XX_RELBRANCH on mozilla-release
             # Reminder: There is no Android/geckoview build on ESR.
+            #
+            # The logic of point 2 and 3 is handled in target_tasks directly because it's mixing and
+            # matching 2 different shipping-products
             mozilla-release: build
             default: push
     bucket-scope:
