@@ -87,22 +87,13 @@ namespace dom {
 
 const char* SuspendTypeToStr(const nsSuspendedTypes& aSuspend) {
   MOZ_ASSERT(aSuspend == nsISuspendedTypes::NONE_SUSPENDED ||
-             aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE ||
-             aSuspend == nsISuspendedTypes::SUSPENDED_BLOCK ||
-             aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE ||
-             aSuspend == nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE);
+             aSuspend == nsISuspendedTypes::SUSPENDED_BLOCK);
 
   switch (aSuspend) {
     case nsISuspendedTypes::NONE_SUSPENDED:
       return "none";
-    case nsISuspendedTypes::SUSPENDED_PAUSE:
-      return "pause";
     case nsISuspendedTypes::SUSPENDED_BLOCK:
       return "block";
-    case nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE:
-      return "disposable-pause";
-    case nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE:
-      return "disposable-stop";
     default:
       return "unknown";
   }
