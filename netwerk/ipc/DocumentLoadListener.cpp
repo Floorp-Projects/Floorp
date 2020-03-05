@@ -389,29 +389,34 @@ bool DocumentLoadListener::Open(
   RefPtr<HttpBaseChannel> httpBaseChannel = do_QueryObject(mChannel, aRv);
   if (httpBaseChannel) {
     nsCOMPtr<nsIURI> topWindowURI;
-    if (topWindow) {
-      nsCOMPtr<nsIPrincipal> topWindowPrincipal =
-          topWindow->DocumentPrincipal();
-      if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
-        topWindowPrincipal->GetURI(getter_AddRefs(topWindowURI));
-      }
-    }
-    httpBaseChannel->SetTopWindowURI(topWindowURI);
-
     nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
-    if (topWindow) {
-      contentBlockingAllowListPrincipal =
-          topWindow->GetContentBlockingAllowListPrincipal();
-    }
+    if (bc->IsTop()) {
+      // If this is for the top level loading, the top window URI should be the
+      // URI which we are loading.
+      topWindowURI = uriBeingLoaded;
 
-    if (bc->IsTop() && contentBlockingAllowListPrincipal &&
-        contentBlockingAllowListPrincipal->GetIsNullPrincipal()) {
+      // We need to recompute the ContentBlockingAllowListPrincipal here for the
+      // top level channel because we might navigate from the the initial
+      // about:blank page or the existing page which may have a different origin
+      // than the URI we are going to load here. Thus, we need to recompute the
+      // prinicpal in order to get the correct
+      // ContentBlockingAllowListPrincipal.
       OriginAttributes attrs;
       aLoadInfo->GetOriginAttributes(&attrs);
       AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
           uriBeingLoaded, attrs,
           getter_AddRefs(contentBlockingAllowListPrincipal));
+    } else if (topWindow) {
+      nsCOMPtr<nsIPrincipal> topWindowPrincipal =
+          topWindow->DocumentPrincipal();
+      if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
+        topWindowPrincipal->GetURI(getter_AddRefs(topWindowURI));
+      }
+
+      contentBlockingAllowListPrincipal =
+          topWindow->GetContentBlockingAllowListPrincipal();
     }
+    httpBaseChannel->SetTopWindowURI(topWindowURI);
 
     if (contentBlockingAllowListPrincipal &&
         contentBlockingAllowListPrincipal->GetIsContentPrincipal()) {
