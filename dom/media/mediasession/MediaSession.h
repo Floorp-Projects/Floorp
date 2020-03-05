@@ -59,6 +59,8 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   };
   void NotifyMediaSessionStatus(SessionStatus aState);
 
+  void NotifyMetadataUpdated();
+
   void DispatchNotifyHandler(const MediaSessionActionDetails& aDetails);
 
   MediaSessionActionHandler* GetActionHandler(MediaSessionAction aAction) const;
