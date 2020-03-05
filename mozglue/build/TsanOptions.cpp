@@ -212,10 +212,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1603504
          "race:HttpChannelParent::OnDataAvailable\n"
 
-         // Bug 1606635
-         "race:DatabaseWork\n"
-         "race:OpenDirectory\n"
-
          // Bug 1606647
          "race:nsSocketTransport::OnSocketReady\n"
 
