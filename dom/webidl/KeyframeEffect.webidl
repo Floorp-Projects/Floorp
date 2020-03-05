@@ -16,7 +16,9 @@ enum IterationCompositeOperation {
 };
 
 dictionary KeyframeEffectOptions : EffectTiming {
+  [Pref="dom.animations-api.compositing.enabled"]
   IterationCompositeOperation iterationComposite = "replace";
+  [Pref="dom.animations-api.compositing.enabled"]
   CompositeOperation          composite = "replace";
   DOMString?                  pseudoElement = null;
 };
