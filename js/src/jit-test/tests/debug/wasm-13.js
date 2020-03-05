@@ -78,18 +78,29 @@ monitorGlobalValues(
     }]
 );
 monitorGlobalValues(
-    '(module\
+    `(module\
      (global i32 (i32.const 1))(global i64 (i64.const 2))(global f32 (f32.const 3.5))(global f64 (f64.const 42.25))\
-     (func (export "test") (nop)))',
+     ${wasmReftypesEnabled() ? '(global anyref (ref.null))' : ''}\
+     (func (export "test") (nop)))`,
     undefined,
-    [{global0: [1], global1: [2], global2: [3.5], global3: [42.25]}]
+    [(function () {
+        let x = {global0: [1], global1: [2], global2: [3.5], global3: [42.25]};
+        if (wasmReftypesEnabled()) x.global4 = [ function (x) { assertEq(x.optimizedOut, true); } ];
+        return x;
+    })()]
 );
 monitorGlobalValues(
-    '(module (global (mut i32) (i32.const 1))(global (mut i64) (i64.const 2))\
+    `(module (global (mut i32) (i32.const 1))(global (mut i64) (i64.const 2))\
              (global (mut f32) (f32.const 3.5))(global (mut f64) (f64.const 42.25))\
+             ${wasmReftypesEnabled() ? '(global (mut anyref) (ref.null))' : ''}\
      (func (export "test")\
-       (i32.const 2)(set_global 0)(i64.const 1)(set_global 1)\
-       (f32.const 42.25)(set_global 2)(f64.const 3.5)(set_global 3)))',
+       (i32.const 2)(global.set 0)(i64.const 1)(global.set 1)\
+       (f32.const 42.25)(global.set 2)(f64.const 3.5)(global.set 3)\
+       ${wasmReftypesEnabled() ? '(ref.null)(global.set 4)' : ''}))`,
     undefined,
-    [{global0: [1, 2], global1: [2, 1], global2: [3.5, 42.25], global3: [42.25, 3.5]}]
+    [(function () {
+        let x = {global0: [1, 2], global1: [2, 1], global2: [3.5, 42.25], global3: [42.25, 3.5]};
+        if (wasmReftypesEnabled()) x.global4 = [ function (x) { assertEq(x.optimizedOut, true); } ];
+        return x;
+    })()]
 )
