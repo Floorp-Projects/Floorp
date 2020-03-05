@@ -36,7 +36,7 @@ MediaMetadata* MediaSession::GetMetadata() const { return mMediaMetadata; }
 
 void MediaSession::SetMetadata(MediaMetadata* aMetadata) {
   mMediaMetadata = aMetadata;
-  // TODO: Perform update-metadata algorithm.
+  NotifyMetadataUpdated();
 }
 
 void MediaSession::SetActionHandler(MediaSessionAction aAction,
@@ -104,6 +104,26 @@ void MediaSession::NotifyMediaSessionStatus(SessionStatus aState) {
   MOZ_ASSERT(currentBC, "Update session status after context destroyed!");
   NotfiyMediaSessionCreationOrDeconstruction(currentBC,
                                              aState == SessionStatus::eCreated);
+}
+
+void MediaSession::NotifyMetadataUpdated() {
+  RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
+  MOZ_ASSERT(currentBC, "Update session metadata after context destroyed!");
+  Maybe<MediaMetadataBase> metadata;
+  if (GetMetadata()) {
+    metadata.emplace(*(GetMetadata()->AsMetadataBase()));
+  }
+
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyUpdateMediaMetadata(currentBC, metadata);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<MediaController> controller =
+          currentBC->Canonical()->GetMediaController()) {
+    controller->UpdateMetadata(currentBC->Id(), metadata);
+  }
 }
 
 }  // namespace dom

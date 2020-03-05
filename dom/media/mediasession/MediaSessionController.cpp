@@ -73,7 +73,10 @@ void MediaSessionController::UpdateMetadata(
     LOG("Reset metadata for session %" PRId64, aSessionContextId);
     mMetadataMap.GetValue(aSessionContextId)->reset();
   } else {
-    LOG("Update metadata for session %" PRId64, aSessionContextId);
+    LOG("Update metadata for session %" PRId64 " title=%s artist=%s album=%s",
+        aSessionContextId, NS_ConvertUTF16toUTF8((*aMetadata).mTitle).get(),
+        NS_ConvertUTF16toUTF8(aMetadata->mArtist).get(),
+        NS_ConvertUTF16toUTF8(aMetadata->mAlbum).get());
     mMetadataMap.Put(aSessionContextId, aMetadata);
   }
 }

@@ -71,6 +71,11 @@ class MediaMetadata final : public nsISupports,
   void SetArtwork(JSContext* aCx, const Sequence<JSObject*>& aArtwork,
                   ErrorResult& aRv);
 
+  // This would expose MediaMetadataBase's members as public, so use this method
+  // carefully. Now we only use this when we want to update the metadata to the
+  // media session controller in the chrome process.
+  MediaMetadataBase* AsMetadataBase() { return this; }
+
  private:
   MediaMetadata(nsIGlobalObject* aParent, const nsString& aTitle,
                 const nsString& aArtist, const nsString& aAlbum);
