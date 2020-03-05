@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_SimpleHttpChannel_h
-#define mozilla_net_SimpleHttpChannel_h
+#ifndef mozilla_net_TRRServiceChannel_h
+#define mozilla_net_TRRServiceChannel_h
 
 #include "HttpBaseChannel.h"
 #include "nsIDNSListener.h"
@@ -22,16 +22,18 @@ namespace net {
 class HttpTransactionShell;
 class nsHttpHandler;
 
-// Use to support QI nsIChannel to SimpleHttpChannel
-#define NS_SIMPLEHTTPCHANNEL_IID                     \
+// Use to support QI nsIChannel to TRRServiceChannel
+#define NS_TRRSERVICECHANNEL_IID                     \
   {                                                  \
     0x361c4bb1, 0xd6b2, 0x493b, {                    \
       0x86, 0xbc, 0x88, 0xd3, 0x5d, 0x16, 0x38, 0xfa \
     }                                                \
   }
 
-class SimpleHttpChannel : public HttpBaseChannel,
-                          public HttpAsyncAborter<SimpleHttpChannel>,
+// TRRServiceChannel is designed to fetch DNS data from DoH server. This channel
+// MUST only be used by TRR.
+class TRRServiceChannel : public HttpBaseChannel,
+                          public HttpAsyncAborter<TRRServiceChannel>,
                           public nsIDNSListener,
                           public nsIStreamListener,
                           public nsITransportEventSink,
@@ -46,7 +48,7 @@ class SimpleHttpChannel : public HttpBaseChannel,
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIPROXIEDCHANNEL
   NS_DECL_NSIPROTOCOLPROXYCALLBACK
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SIMPLEHTTPCHANNEL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TRRSERVICECHANNEL_IID)
 
   // nsIRequest
   NS_IMETHOD Cancel(nsresult status) override;
@@ -101,8 +103,8 @@ class SimpleHttpChannel : public HttpBaseChannel,
   NS_IMETHOD GetResponseEnd(mozilla::TimeStamp* aResponseEnd) override;
 
  protected:
-  SimpleHttpChannel();
-  virtual ~SimpleHttpChannel();
+  TRRServiceChannel();
+  virtual ~TRRServiceChannel();
 
   void CancelNetworkRequest(nsresult aStatus);
   const nsCString& GetTopWindowOrigin();
@@ -140,13 +142,13 @@ class SimpleHttpChannel : public HttpBaseChannel,
   nsCOMPtr<nsICancelable> mProxyRequest;
   nsCOMPtr<nsIEventTarget> mCurrentEventTarget;
 
-  friend class HttpAsyncAborter<SimpleHttpChannel>;
+  friend class HttpAsyncAborter<TRRServiceChannel>;
   friend class nsHttpHandler;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(SimpleHttpChannel, NS_SIMPLEHTTPCHANNEL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(TRRServiceChannel, NS_TRRSERVICECHANNEL_IID)
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_SimpleHttpChannel_h
+#endif  // mozilla_net_TRRServiceChannel_h
