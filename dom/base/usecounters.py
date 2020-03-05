@@ -5,7 +5,7 @@
 import buildconfig
 import collections
 import re
-import StringIO
+from six import StringIO
 import sys
 
 def read_conf(conf_filename):
