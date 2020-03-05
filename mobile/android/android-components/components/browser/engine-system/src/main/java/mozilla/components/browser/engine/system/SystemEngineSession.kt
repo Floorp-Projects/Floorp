@@ -101,6 +101,9 @@ class SystemEngineSession(
      */
     override fun goBack() {
         webView.goBack()
+        if (webView.canGoBack()) {
+            notifyObservers { onNavigateBack() }
+        }
     }
 
     /**

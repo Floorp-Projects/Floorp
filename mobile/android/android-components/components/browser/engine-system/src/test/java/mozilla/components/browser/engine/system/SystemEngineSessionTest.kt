@@ -40,6 +40,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.never
@@ -959,5 +960,23 @@ class SystemEngineSessionTest {
         assertFalse(engineSession.recoverFromCrash())
 
         verify(webView, never()).restoreState(any())
+    }
+
+    @Test
+    fun `GIVEN webView_canGoBack() true WHEN goBack() is called THEN verify EngineObserver onNavigateBack() is triggered`() {
+        var observedOnNavigateBack = false
+
+        val engineSession = SystemEngineSession(testContext)
+        val webView = mock<WebView>()
+        engineSession.webView = webView
+        Mockito.`when`(webView.canGoBack()).thenReturn(true)
+        engineSession.register(object : EngineSession.Observer {
+            override fun onNavigateBack() {
+                observedOnNavigateBack = true
+            }
+        })
+
+        engineSession.goBack()
+        assertTrue(observedOnNavigateBack)
     }
 }
