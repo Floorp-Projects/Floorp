@@ -328,7 +328,7 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
       nsCOMPtr<mozIStorageFunction> function1(new nsReverseStringSQLFunction());
       NS_ENSURE_TRUE(function1, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = aWorkerConnection->RegisterFunction(
+      rv = aWorkerConnection->CreateFunction(
           NS_LITERAL_CSTRING("REVERSESTRING"), 1, function1);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -365,8 +365,7 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      aWorkerConnection->UnregisterFunction(
-          NS_LITERAL_CSTRING("REVERSESTRING"));
+      aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("REVERSESTRING"));
 
       // Update the scoping to match the new implememntation: split to oa suffix
       // and origin key First rename the old table, we want to remove some
@@ -387,13 +386,13 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
 
       nsCOMPtr<mozIStorageFunction> oaSuffixFunc(new GetOriginParticular(
           GetOriginParticular::ORIGIN_ATTRIBUTES_SUFFIX));
-      rv = aWorkerConnection->RegisterFunction(
+      rv = aWorkerConnection->CreateFunction(
           NS_LITERAL_CSTRING("GET_ORIGIN_SUFFIX"), 1, oaSuffixFunc);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<mozIStorageFunction> originKeyFunc(
           new GetOriginParticular(GetOriginParticular::ORIGIN_KEY));
-      rv = aWorkerConnection->RegisterFunction(
+      rv = aWorkerConnection->CreateFunction(
           NS_LITERAL_CSTRING("GET_ORIGIN_KEY"), 1, originKeyFunc);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -413,10 +412,9 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
           NS_LITERAL_CSTRING("DROP TABLE webappsstore2_old"));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      aWorkerConnection->UnregisterFunction(
+      aWorkerConnection->RemoveFunction(
           NS_LITERAL_CSTRING("GET_ORIGIN_SUFFIX"));
-      aWorkerConnection->UnregisterFunction(
-          NS_LITERAL_CSTRING("GET_ORIGIN_KEY"));
+      aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("GET_ORIGIN_KEY"));
 
       rv = aWorkerConnection->SetSchemaVersion(1);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -425,7 +423,7 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
     }
     case 1: {
       nsCOMPtr<mozIStorageFunction> oaStripAddonId(new StripOriginAddonId());
-      rv = aWorkerConnection->RegisterFunction(
+      rv = aWorkerConnection->CreateFunction(
           NS_LITERAL_CSTRING("STRIP_ADDON_ID"), 1, oaStripAddonId);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -435,8 +433,7 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
           "WHERE originAttributes LIKE '^%'"));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      aWorkerConnection->UnregisterFunction(
-          NS_LITERAL_CSTRING("STRIP_ADDON_ID"));
+      aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("STRIP_ADDON_ID"));
 
       rv = aWorkerConnection->SetSchemaVersion(2);
       NS_ENSURE_SUCCESS(rv, rv);

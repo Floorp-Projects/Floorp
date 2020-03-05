@@ -1587,7 +1587,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
     if (data.type == Connection::FunctionInfo::SIMPLE) {
       mozIStorageFunction* function =
           static_cast<mozIStorageFunction*>(data.function.get());
-      rv = aClone->RegisterFunction(key, data.numArgs, function);
+      rv = aClone->CreateFunction(key, data.numArgs, function);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to copy function to cloned connection");
       }
@@ -2055,9 +2055,9 @@ Connection::CreateTable(const char* aTableName, const char* aTableSchema) {
 }
 
 NS_IMETHODIMP
-Connection::RegisterFunction(const nsACString& aFunctionName,
-                             int32_t aNumArguments,
-                             nsCOMPtr<mozIStorageFunction> aFunction) {
+Connection::CreateFunction(const nsACString& aFunctionName,
+                           int32_t aNumArguments,
+                           mozIStorageFunction* aFunction) {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2076,12 +2076,8 @@ Connection::RegisterFunction(const nsACString& aFunctionName,
       SQLITE_ANY, aFunction, basicFunctionHelper, nullptr, nullptr);
   if (srv != SQLITE_OK) return convertResultCode(srv);
 
-  // TODO (Bug 1620198): we can't use std::move(aFunction) here because
-  // FunctionInfo::function is a nsCOMPtr<nsISupports> to allow for either
-  // mozIStorageFunction or mozIStorageAggregateFunction. When
-  // mozIStorageAggregateFunction is removed, this can be changed.
-  FunctionInfo info = {aFunction.forget().take(),
-                       Connection::FunctionInfo::SIMPLE, aNumArguments};
+  FunctionInfo info = {aFunction, Connection::FunctionInfo::SIMPLE,
+                       aNumArguments};
   mFunctions.Put(aFunctionName, info);
 
   return NS_OK;
@@ -2122,7 +2118,7 @@ Connection::CreateAggregateFunction(const nsACString& aFunctionName,
 }
 
 NS_IMETHODIMP
-Connection::UnregisterFunction(const nsACString& aFunctionName) {
+Connection::RemoveFunction(const nsACString& aFunctionName) {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
