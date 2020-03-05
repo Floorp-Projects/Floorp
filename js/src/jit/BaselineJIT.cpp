@@ -979,7 +979,7 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
       if (base->isLazyScript()) {
         continue;
       }
-      JSScript* script = static_cast<JSScript*>(base.get());
+      JSScript* script = base->asJSScript();
       if (enable) {
         if (JitScript* jitScript = script->maybeJitScript()) {
           jitScript->ensureProfileString(cx, script);
@@ -1001,7 +1001,7 @@ void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
       if (base->isLazyScript()) {
         continue;
       }
-      JSScript* script = static_cast<JSScript*>(base.get());
+      JSScript* script = base->asJSScript();
       if (!script->hasBaselineScript()) {
         continue;
       }
@@ -1016,7 +1016,7 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
       if (base->isLazyScript()) {
         continue;
       }
-      JSScript* script = static_cast<JSScript*>(base.get());
+      JSScript* script = base->asJSScript();
       if (!script->hasBaselineScript()) {
         continue;
       }

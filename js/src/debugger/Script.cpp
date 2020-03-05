@@ -123,7 +123,7 @@ DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
 
 static JSScript* DelazifyScript(JSContext* cx, Handle<BaseScript*> script) {
   if (script->hasBytecode()) {
-    return static_cast<JSScript*>(script.get());
+    return script->asJSScript();
   }
   MOZ_ASSERT(script->isFunction());
 

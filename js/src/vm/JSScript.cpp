@@ -683,7 +683,7 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
   // per-zone maps. Note that a failed compilation must not have entries since
   // the script itself will not be marked as having bytecode.
   if (hasBytecode()) {
-    JSScript* script = static_cast<JSScript*>(this);
+    JSScript* script = this->asJSScript();
 
     if (coverage::IsLCovEnabled()) {
       coverage::CollectScriptCoverage(script, true);
@@ -704,7 +704,7 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
   }
 
   if (warmUpData_.isJitScript()) {
-    JSScript* script = static_cast<JSScript*>(this);
+    JSScript* script = this->asJSScript();
     script->releaseJitScriptOnFinalize(fop);
   }
 
@@ -5672,7 +5672,7 @@ JS::ubi::Base::Size JS::ubi::Concrete<BaseScript>::size(
 
   // Include any JIT data if it exists.
   if (base->hasJitScript()) {
-    JSScript* script = static_cast<JSScript*>(base);
+    JSScript* script = base->asJSScript();
 
     size_t jitScriptSize = 0;
     size_t fallbackStubSize = 0;

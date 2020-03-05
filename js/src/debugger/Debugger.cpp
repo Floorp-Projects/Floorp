@@ -3113,7 +3113,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
         if (base->isLazyScript()) {
           continue;
         }
-        JSScript* script = static_cast<JSScript*>(base.get());
+        JSScript* script = base->asJSScript();
         if (obs.shouldRecompileOrInvalidate(script)) {
           if (!AppendAndInvalidateScript(cx, zone, script, scripts)) {
             return false;
@@ -6088,7 +6088,7 @@ DebuggerScript* Debugger::wrapVariantReferent(
   if (referent.is<BaseScript*>()) {
     Rooted<BaseScript*> base(cx, referent.as<BaseScript*>());
     if (!base->isLazyScript()) {
-      RootedScript untaggedReferent(cx, static_cast<JSScript*>(base.get()));
+      RootedScript untaggedReferent(cx, base->asJSScript());
       if (untaggedReferent->maybeLazyScript()) {
         // This JSScript has a LazyScript, so the LazyScript is canonical.
         Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());

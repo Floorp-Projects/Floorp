@@ -2129,7 +2129,7 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
     if (base->isLazyScript()) {
       continue;
     }
-    JSScript* script = static_cast<JSScript*>(base.get());
+    JSScript* script = base->asJSScript();
 
     AutoSweepJitScript sweep(script);
   }

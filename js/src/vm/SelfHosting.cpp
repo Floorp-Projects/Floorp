@@ -2667,7 +2667,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
     if (base->isLazyScript()) {
       continue;
     }
-    JSScript* script = static_cast<JSScript*>(base.get());
+    JSScript* script = base->asJSScript();
 
     for (BytecodeLocation loc : AllBytecodesIterable(script)) {
       JSOp op = loc.getOp();

@@ -84,6 +84,11 @@ inline JSPrincipals* BaseScript::principals() const {
   return realm()->principals();
 }
 
+inline JSScript* BaseScript::asJSScript() {
+  MOZ_ASSERT(!isLazyScript());
+  return static_cast<JSScript*>(this);
+}
+
 }  // namespace js
 
 inline JSFunction* JSScript::getFunction(size_t index) {
