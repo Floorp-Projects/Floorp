@@ -278,7 +278,6 @@ add_task(async function test_set_login_empty() {
   ok(originInput.matches(":invalid"), "origin value is required");
   is(originInput.value, "", "origin input should be blank at start");
 
-  originInput.focus();
   for (let originTuple of [
     ["ftp://ftp.example.com/", "ftp://ftp.example.com/"],
     ["https://example.com/", "https://example.com/"],
