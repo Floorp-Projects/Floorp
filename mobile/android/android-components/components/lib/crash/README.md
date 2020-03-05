@@ -99,6 +99,7 @@ CrashReporter(
 ).install(applicationContext)
 ```
 
+`MozillaSocorroService` will report version information such as App version, Android Component version, Glean version, Application Services version, GeckoView version and Build ID
 ⚠️ Note: Currently only native code crashes get uploaded to Socorro. Socorro has limited support for "uncaught exception" crashes too, but it is recommended to use a more elaborate solution like Sentry for that.
 
 ### Sending crash reports to Glean
