@@ -1887,7 +1887,7 @@ class gfxFont {
   // directly to the destination (found from the buffer's parameters).
   template <FontComplexityT FC>
   void DrawOneGlyph(uint32_t aGlyphID, const mozilla::gfx::Point& aPt,
-                    GlyphBufferAzure& aBuffer, bool* aEmittedGlyphs) const;
+                    GlyphBufferAzure& aBuffer, bool* aEmittedGlyphs);
 
   // Helper for DrawOneGlyph to handle missing glyphs, rendering either
   // nothing (for default-ignorables) or a missing-glyph hexbox.
