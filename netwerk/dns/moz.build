@@ -76,7 +76,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 GeneratedFile('etld_data.inc', script='prepare_tlds.py',
-              py2=True,
               inputs=['effective_tld_names.dat'])
 
 # need to include etld_data.inc
