@@ -74,7 +74,7 @@ void MediaSessionController::UpdateMetadata(
     mMetadataMap.GetValue(aSessionContextId)->reset();
   } else {
     LOG("Update metadata for session %" PRId64, aSessionContextId);
-    mMetadataMap.GetValue(aSessionContextId)->emplace(*aMetadata);
+    mMetadataMap.Put(aSessionContextId, aMetadata);
   }
 }
 
