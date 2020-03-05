@@ -535,8 +535,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 
   Rect devPxRect = NSRectToSnappedRect(aRect, twipsPerPixel, *dt);
 
-  if (aAppearance == StyleAppearance::MenulistButton ||
-      aAppearance == StyleAppearance::MozMenulistButton) {
+  if (aAppearance == StyleAppearance::MozMenulistButton) {
     bool isHTML = IsHTMLContent(aFrame);
     nsIFrame* parentFrame = aFrame->GetParent();
     bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
@@ -577,10 +576,10 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       break;
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
       PaintMenulist(dt, devPxRect, eventState, dpi);
       break;
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
       PaintMenulistButton(aFrame, dt, devPxRect, eventState, dpi);
       break;
@@ -662,13 +661,13 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     // author-specified padding.
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
     case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
       aResult->SizeTo(7 * dpi, 8 * dpi, 7 * dpi, 8 * dpi);
