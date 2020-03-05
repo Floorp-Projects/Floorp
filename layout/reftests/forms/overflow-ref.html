@@ -1,0 +1,19 @@
+<!doctype html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1615026
+-->
+<title>Form controls don't paint outside of their layout bounds</title>
+<style>
+  span {
+    float: left;
+    margin: 10px;
+  }
+</style>
+<span><input type="text"></span>
+<span><input type="file"></span>
+<span><input type="number"></span>
+<span><input type="search"></span>
+<span><input type="checkbox"></span>
+<span><input type="radio"></span>
+<span><button></button></span>
+<span><select></select></span>

@@ -148,22 +148,38 @@ static Rect FixAspectRatio(const Rect& aRect) {
   return rect;
 }
 
+static void PaintRoundedRectWithBorder(DrawTarget* aDrawTarget,
+                                       const Rect& aRect,
+                                       const Color& aBackgroundColor,
+                                       const Color& aBorderColor,
+                                       CSSCoord aBorderWidth, CSSCoord aRadius,
+                                       uint32_t aDpi) {
+  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpi);
+  const LayoutDeviceCoord radius(aRadius * aDpi);
+
+  Rect rect(aRect);
+  // Deflate the rect by half the border width, so that the middle of the stroke
+  // fills exactly the area we want to fill and not more.
+  rect.Deflate(borderWidth * 0.5f);
+
+  RectCornerRadii radii(radius, radius, radius, radius);
+  RefPtr<Path> roundedRect = MakePathForRoundedRect(*aDrawTarget, rect, radii);
+
+  aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(aBackgroundColor)));
+  aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(aBorderColor)),
+                      StrokeOptions(borderWidth));
+}
+
 static void PaintCheckboxControl(DrawTarget* aDrawTarget, const Rect& aRect,
                                  const EventStates& aState, uint32_t aDpi) {
-  uint32_t radius = 3 * aDpi;
-  RectCornerRadii innerRadii(radius, radius, radius, radius);
-  Rect rect(aRect);
-  rect.Round();
-  RefPtr<Path> roundedRect =
-      MakePathForRoundedRect(*aDrawTarget, rect, innerRadii);
+  const CSSCoord kBorderWidth = 2.0f;
+  const CSSCoord kRadius = 4.0f;
 
   Color backgroundColor;
   Color borderColor;
   ComputeCheckColors(aState, backgroundColor, borderColor);
-
-  aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(backgroundColor)));
-  aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(borderColor)),
-                      StrokeOptions(2.0f * aDpi));
+  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kBorderWidth, kRadius, aDpi);
 }
 
 static void PaintCheckMark(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -239,18 +255,14 @@ static void PaintTextField(DrawTarget* aDrawTarget, const Rect& aRect,
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
 
-  uint32_t radius = 4 * aDpi;
-  RectCornerRadii innerRadii(radius, radius, radius, radius);
-  RefPtr<Path> roundedRect =
-      MakePathForRoundedRect(*aDrawTarget, aRect, innerRadii);
+  const Color& backgroundColor = isDisabled ? sDisabledColor : sBackgroundColor;
+  const Color& borderColor = isHovered ? sBorderHoverColor : sBorderColor;
 
-  aDrawTarget->Fill(roundedRect,
-                    ColorPattern(ToDeviceColor(isDisabled ? sDisabledColor
-                                                          : sBackgroundColor)));
-  aDrawTarget->Stroke(
-      roundedRect,
-      ColorPattern(ToDeviceColor(isHovered ? sBorderHoverColor : sBorderColor)),
-      StrokeOptions(1.0f * aDpi));
+  const CSSCoord kBorderWidth = 1.0f;
+  const CSSCoord kRadius = 4.0f;
+
+  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kBorderWidth, kRadius, aDpi);
 }
 
 static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -260,25 +272,25 @@ static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
 
-  uint32_t radius = 4 * aDpi;
-  RectCornerRadii innerRadii(radius, radius, radius, radius);
-  RefPtr<Path> roundedRect =
-      MakePathForRoundedRect(*aDrawTarget, aRect, innerRadii);
+  const Color& backgroundColor = [&] {
+    if (isDisabled) {
+      return sDisabledColor;
+    }
+    if (isActive) {
+      return sButtonActiveColor;
+    }
+    if (isHovered) {
+      return sButtonHoverColor;
+    }
+    return sButtonColor;
+  }();
 
-  if (isDisabled) {
-    aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(sDisabledColor)));
-  } else {
-    aDrawTarget->Fill(
-        roundedRect,
-        ColorPattern(ToDeviceColor(isActive ? sButtonActiveColor
-                                            : isHovered ? sButtonHoverColor
-                                                        : sButtonColor)));
-  }
+  const Color& borderColor = isHovered ? sBorderHoverColor : sBorderColor;
+  const CSSCoord kBorderWidth = 1.0f;
+  const CSSCoord kRadius = 4.0f;
 
-  aDrawTarget->Stroke(
-      roundedRect,
-      ColorPattern(ToDeviceColor(isHovered ? sBorderHoverColor : sBorderColor)),
-      StrokeOptions(1.0f * aDpi));
+  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kBorderWidth, kRadius, aDpi);
 }
 
 static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -487,40 +499,43 @@ static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
 
-  uint32_t radius = 4 * aDpi;
-  RectCornerRadii innerRadii(radius, radius, radius, radius);
-  Rect rect(aRect);
-  rect.Round();
-  RefPtr<Path> roundedRect =
-      MakePathForRoundedRect(*aDrawTarget, rect, innerRadii);
+  const Color& backgroundColor = [&] {
+    if (isDisabled) {
+      return sDisabledColor;
+    }
+    if (IsDateTimeResetButton(aFrame)) {
+      return sWhiteColor;
+    }
+    if (isActive) {
+      return sButtonActiveColor;
+    }
+    if (isHovered) {
+      return sButtonHoverColor;
+    }
+    return sButtonColor;
+  }();
 
-  if (isDisabled) {
-    aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(sDisabledColor)));
-  } else if (IsDateTimeResetButton(aFrame)) {
-    aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(sWhiteColor)));
-  } else {
-    aDrawTarget->Fill(
-        roundedRect,
-        ColorPattern(ToDeviceColor(isActive ? sButtonActiveColor
-                                            : isHovered ? sButtonHoverColor
-                                                        : sButtonColor)));
-  }
+  const Color& borderColor = isHovered ? sBorderHoverColor : sBorderColor;
 
-  aDrawTarget->Stroke(
-      roundedRect,
-      ColorPattern(ToDeviceColor(isHovered ? sBorderHoverColor : sBorderColor)),
-      StrokeOptions(1.0f * aDpi));
+  const CSSCoord kBorderWidth = 1.0f;
+  const CSSCoord kRadius = 4.0f;
+
+  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kBorderWidth, kRadius, aDpi);
 }
 
 NS_IMETHODIMP
 nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
                                          const nsRect& aRect,
-                                         const nsRect& aDirtyRect) {
+                                         const nsRect& /* aDirtyRect */) {
   DrawTarget* dt = aContext->GetDrawTarget();
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  Rect devPxRect = NSRectToRect(aRect, twipsPerPixel);
   EventStates eventState = GetContentState(aFrame, aAppearance);
+
+  Rect devPxRect = NSRectToRect(aRect, twipsPerPixel);
+  bool snapped = UserToDevicePixelSnapped(devPxRect, *dt);
+  Unused << snapped;
 
   if (aAppearance == StyleAppearance::MenulistButton ||
       aAppearance == StyleAppearance::MozMenulistButton) {
