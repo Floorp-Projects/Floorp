@@ -798,7 +798,6 @@
         "resources": [
             "2o7.net",
             "adobe.com",
-            "adobedtm.com",
             "auditude.com",
             "demdex.com",
             "demdex.net",
@@ -1561,6 +1560,7 @@
             "abebooks.it",
             "acx.com",
             "alexa.com",
+            "amazon.ae",
             "amazon.ca",
             "amazon.cn",
             "amazon.co.jp",
@@ -1577,6 +1577,7 @@
             "amazon.in",
             "amazon.it",
             "amazon.nl",
+            "amazon.sa",
             "amazonaws.com",
             "amazoninspire.com",
             "assoc-amazon.com",
@@ -1605,6 +1606,8 @@
             "pillpack.com",
             "shopbop.com",
             "souq.com",
+            "twitch.com",
+            "twitch.tv",
             "wholefoodsmarket.com",
             "withoutabox.com",
             "woot.com",
@@ -1626,7 +1629,8 @@
             "amazon.it",
             "amazonaws.com",
             "assoc-amazon.com",
-            "cloudfront.net"
+            "cloudfront.net",
+            "ssl-images-amazon.com"
         ]
     },
     "Ambient Digital": {
@@ -1843,10 +1847,10 @@
     "AT Internet": {
         "properties": [
             "atinternet.com",
-            "hit-parade.com",
             "xiti.com"
         ],
         "resources": [
+            "at-o.net",
             "atinternet.com",
             "hit-parade.com",
             "xiti.com"
@@ -3579,7 +3583,8 @@
             "criteo.com",
             "criteo.net",
             "hlserve.com",
-            "hooklogic.com"
+            "hooklogic.com",
+            "storetail.io"
         ]
     },
     "Cross Pixel": {
@@ -4105,12 +4110,10 @@
             "ebay.in",
             "ebay.it",
             "ebay.nl",
-            "ebay.pl",
-            "gopjn.com"
+            "ebay.pl"
         ],
         "resources": [
-            "ebay.com",
-            "gopjn.com"
+            "ebay.com"
         ]
     },
     "Echo": {
@@ -4551,9 +4554,13 @@
             "fbcdn.net",
             "friendfeed.com",
             "instagram.com",
-            "messenger.com"
+            "internalfb.com",
+            "messenger.com",
+            "oculus.com",
+            "workplace.com"
         ],
         "resources": [
+            "apps.fbsbx.com",
             "atdmt.com",
             "atlassolutions.com",
             "facebook.com",
@@ -5062,6 +5069,7 @@
             "gleam.io"
         ],
         "resources": [
+            "fraudjs.io",
             "gleam.io"
         ]
     },
@@ -5135,6 +5143,7 @@
             "abc.xyz",
             "admeld.com",
             "blogger.com",
+            "crashlytics.com",
             "google-melange.com",
             "google.ad",
             "google.ae",
@@ -5339,6 +5348,7 @@
             "apture.com",
             "blogger.com",
             "cc-dt.com",
+            "crashlytics.com",
             "destinationurl.com",
             "doubleclick.net",
             "ggpht.com",
@@ -5439,21 +5449,6 @@
         "resources": [
             "guj.de",
             "ligatus.com"
-        ]
-    },
-    "GSI Commerce": {
-        "properties": [
-            "pepperjam.com"
-        ],
-        "resources": [
-            "gsicommerce.com",
-            "gsimedia.net",
-            "pepperjam.com",
-            "pjatr.com",
-            "pjtra.com",
-            "pntra.com",
-            "pntrac.com",
-            "pntrs.com"
         ]
     },
     "GTop": {
@@ -5587,14 +5582,10 @@
     },
     "Horyzon Media": {
         "properties": [
-            "horyzon-media.com",
-            "meetic-partners.com",
-            "smartadserver.com"
+            "horyzon-media.com"
         ],
         "resources": [
-            "horyzon-media.com",
-            "meetic-partners.com",
-            "smartadserver.com"
+            "horyzon-media.com"
         ]
     },
     "HotelChamp": {
@@ -5675,6 +5666,15 @@
             "hurra.com"
         ]
     },
+    "IAB": {
+        "properties": [
+            "digitru.st",
+            "iabtechlab.com"
+        ],
+        "resources": [
+            "digitru.st"
+        ]
+    },
     "IAC": {
         "properties": [
             "iac.com",
@@ -5697,7 +5697,8 @@
     },
     "IBM": {
         "properties": [
-            "ibm.com"
+            "ibm.com",
+            "multicloud-ibm.com"
         ],
         "resources": [
             "cmcore.com",
@@ -5705,6 +5706,14 @@
             "ibm.com",
             "unica.com",
             "xtify.com"
+        ]
+    },
+    "ID5": {
+        "properties": [
+            "id5.io"
+        ],
+        "resources": [
+            "id5-sync.com"
         ]
     },
     "IDG": {
@@ -6248,6 +6257,14 @@
         ],
         "resources": [
             "keymetric.net"
+        ]
+    },
+    "Keywee": {
+        "properties": [
+            "keywee.co"
+        ],
+        "resources": [
+            "keywee.co"
         ]
     },
     "kikin": {
@@ -6926,7 +6943,8 @@
         ],
         "resources": [
             "chemistry.com",
-            "match.com"
+            "match.com",
+            "meetic-partners.com"
         ]
     },
     "Matomy": {
@@ -7109,6 +7127,25 @@
     },
     "Mercadopago": {
         "properties": [
+            "mercadolibre.cl",
+            "mercadolibre.co.cr",
+            "mercadolibre.com",
+            "mercadolibre.com.ar",
+            "mercadolibre.com.bo",
+            "mercadolibre.com.co",
+            "mercadolibre.com.do",
+            "mercadolibre.com.ec",
+            "mercadolibre.com.gt",
+            "mercadolibre.com.hn",
+            "mercadolibre.com.mx",
+            "mercadolibre.com.ni",
+            "mercadolibre.com.pa",
+            "mercadolibre.com.pe",
+            "mercadolibre.com.py",
+            "mercadolibre.com.sv",
+            "mercadolibre.com.uy",
+            "mercadolibre.com.ve",
+            "mercadolivre.com.br",
             "mercadopago.com"
         ],
         "resources": [
@@ -7923,14 +7960,6 @@
             "adohana.com",
             "ohana-media.com",
             "ohanaqb.com"
-        ]
-    },
-    "Olark": {
-        "properties": [
-            "olark.com"
-        ],
-        "resources": [
-            "olark.com"
         ]
     },
     "Omnicom Group": {
@@ -8841,6 +8870,15 @@
             "radarurl.com"
         ]
     },
+    "Radial": {
+        "properties": [
+            "radial.com"
+        ],
+        "resources": [
+            "gsicommerce.com",
+            "gsimedia.net"
+        ]
+    },
     "Radiate Media": {
         "properties": [
             "gtnetwork.com.au",
@@ -9266,11 +9304,22 @@
     },
     "Salesforce.com": {
         "properties": [
-            "salesforce.com"
+            "force.com",
+            "salesforce.com",
+            "trailblazer.me"
         ],
         "resources": [
+            "documentforce.com",
+            "force.com",
+            "forcesslreports.com",
+            "forceusercontent.com",
+            "lightning.com",
+            "salesforce-communities.com",
+            "salesforce-hub.com",
             "salesforce.com",
-            "salesforceliveagent.com"
+            "salesforceliveagent.com",
+            "trailblazer.me",
+            "visualforce.com"
         ]
     },
     "Salesintelligence": {
@@ -9617,6 +9666,14 @@
             "smaato.com"
         ]
     },
+    "SmartAdServer": {
+        "properties": [
+            "smartadserver.com"
+        ],
+        "resources": [
+            "smartadserver.com"
+        ]
+    },
     "Smartlook": {
         "properties": [
             "smartlook.com"
@@ -9772,6 +9829,14 @@
         ],
         "resources": [
             "deployads.com"
+        ]
+    },
+    "Sourcepoint": {
+        "properties": [
+            "sourcepoint.com"
+        ],
+        "resources": [
+            "summerhamster.com"
         ]
     },
     "Sovrn": {
@@ -10252,6 +10317,14 @@
             "teads.tv"
         ]
     },
+    "Tealium": {
+        "properties": [
+            "tealium.com"
+        ],
+        "resources": [
+            "tealiumiq.com"
+        ]
+    },
     "Technorati": {
         "properties": [
             "technorati.com"
@@ -10695,7 +10768,6 @@
     },
     "Twitter": {
         "properties": [
-            "crashlytics.com",
             "digits.com",
             "fabric.io",
             "tweetdeck.com",
@@ -10704,7 +10776,6 @@
         ],
         "resources": [
             "ads-twitter.com",
-            "crashlytics.com",
             "fabric.io",
             "tweetdeck.com",
             "twimg.com",
@@ -10900,16 +10971,6 @@
         ],
         "resources": [
             "uservoice.com"
-        ]
-    },
-    "USI Technologies": {
-        "properties": [
-            "upsellit.com",
-            "usitechnologies.com"
-        ],
-        "resources": [
-            "upsellit.com",
-            "usitechnologies.com"
         ]
     },
     "USocial": {
@@ -11145,14 +11206,6 @@
         "resources": [
             "vindicogroup.com",
             "vindicosuite.com"
-        ]
-    },
-    "ViralLoops": {
-        "properties": [
-            "viral-loops.com"
-        ],
-        "resources": [
-            "viral-loops.com"
         ]
     },
     "VisibleBrands": {
@@ -11492,16 +11545,6 @@
         "resources": [
             "wiredminds.com",
             "wiredminds.de"
-        ]
-    },
-    "Wirtualna Polska": {
-        "properties": [
-            "adtotal.pl",
-            "wp.pl"
-        ],
-        "resources": [
-            "adtotal.pl",
-            "wp.pl"
         ]
     },
     "Wishabi": {
