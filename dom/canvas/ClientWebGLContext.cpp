@@ -3980,6 +3980,8 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(
     CallerType aCallerType, ErrorResult& out_error) const {
+  if (IsContextLost()) return false;
+
   if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
       aCallerType != CallerType::System) {
     JsWarning("readPixels: Not allowed");
