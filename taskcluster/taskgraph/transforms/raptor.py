@@ -42,7 +42,8 @@ raptor_description_schema = Schema({
         text_type
     ),
     Optional('pageload'): optionally_keyed_by(
-        'test-platform', 'app',
+        'test-platform',
+        'app',
         Any('cold', 'warm', 'both'),
     ),
     # Configs defined in the 'test_description_schema'.
