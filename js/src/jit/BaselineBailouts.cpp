@@ -2000,7 +2000,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     // Normal bailouts.
     case Bailout_Inevitable:
     case Bailout_DuringVMCall:
-    case Bailout_NonJSFunctionCallee:
+    case Bailout_TooManyArguments:
     case Bailout_DynamicNameNotFound:
     case Bailout_StringArgumentsEval:
     case Bailout_Overflow:

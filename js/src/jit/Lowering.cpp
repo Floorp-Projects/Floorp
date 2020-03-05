@@ -472,10 +472,8 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
       tempFixed(CallTempReg1),   // object register
       tempFixed(CallTempReg2));  // stack counter register
 
-  // Bailout is needed in the case of possible non-JSFunction callee or too
-  // many values in the arguments array.  I'm going to use NonJSFunctionCallee
-  // for the code even if that is not an adequate description.
-  assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+  // Bailout is needed in the case of too many values in the arguments array.
+  assignSnapshot(lir, Bailout_TooManyArguments);
 
   defineReturn(lir, apply);
   assignSafepoint(lir, apply);
@@ -495,11 +493,9 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
       tempFixed(CallTempReg1),   // object register
       tempFixed(CallTempReg2));  // stack counter register
 
-  // Bailout is needed in the case of possible non-JSFunction callee,
-  // too many values in the array, or empty space at the end of the
-  // array.  I'm going to use NonJSFunctionCallee for the code even
-  // if that is not an adequate description.
-  assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+  // Bailout is needed in the case of too many values in the array, or empty
+  // space at the end of the array.
+  assignSnapshot(lir, Bailout_TooManyArguments);
 
   defineReturn(lir, apply);
   assignSafepoint(lir, apply);
@@ -522,11 +518,9 @@ void LIRGenerator::visitConstructArray(MConstructArray* mir) {
       useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5),
       tempFixed(CallTempReg2));
 
-  // Bailout is needed in the case of possible non-JSFunction callee,
-  // too many values in the array, or empty space at the end of the
-  // array.  I'm going to use NonJSFunctionCallee for the code even
-  // if that is not an adequate description.
-  assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+  // Bailout is needed in the case of too many values in the array, or empty
+  // space at the end of the array.
+  assignSnapshot(lir, Bailout_TooManyArguments);
 
   defineReturn(lir, mir);
   assignSafepoint(lir, mir);
