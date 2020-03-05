@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TRRServiceChannel.h"
+#include "mozilla/net/SimpleHttpChannel.h"
 
 #include "HttpLog.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -24,10 +24,10 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ADDREF(TRRServiceChannel)
-NS_IMPL_RELEASE(TRRServiceChannel)
+NS_IMPL_ADDREF(SimpleHttpChannel)
+NS_IMPL_RELEASE(SimpleHttpChannel)
 
-NS_INTERFACE_MAP_BEGIN(TRRServiceChannel)
+NS_INTERFACE_MAP_BEGIN(SimpleHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
@@ -41,24 +41,24 @@ NS_INTERFACE_MAP_BEGIN(TRRServiceChannel)
   NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(TRRServiceChannel)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(SimpleHttpChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
-TRRServiceChannel::TRRServiceChannel()
-    : HttpAsyncAborter<TRRServiceChannel>(this),
+SimpleHttpChannel::SimpleHttpChannel()
+    : HttpAsyncAborter<SimpleHttpChannel>(this),
       mTopWindowOriginComputed(false),
       mPushedStreamId(0),
       mCurrentEventTarget(GetCurrentThreadEventTarget()) {
-  LOG(("TRRServiceChannel ctor [this=%p]\n", this));
+  LOG(("SimpleHttpChannel ctor [this=%p]\n", this));
 }
 
-TRRServiceChannel::~TRRServiceChannel() {
-  LOG(("TRRServiceChannel dtor [this=%p]\n", this));
+SimpleHttpChannel::~SimpleHttpChannel() {
+  LOG(("SimpleHttpChannel dtor [this=%p]\n", this));
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::Cancel(nsresult status) {
-  LOG(("TRRServiceChannel::Cancel [this=%p status=%" PRIx32 "]\n", this,
+SimpleHttpChannel::Cancel(nsresult status) {
+  LOG(("SimpleHttpChannel::Cancel [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(status)));
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
@@ -80,7 +80,7 @@ TRRServiceChannel::Cancel(nsresult status) {
   return NS_OK;
 }
 
-void TRRServiceChannel::CancelNetworkRequest(nsresult aStatus) {
+void SimpleHttpChannel::CancelNetworkRequest(nsresult aStatus) {
   if (mTransaction) {
     nsresult rv = gHttpHandler->CancelTransaction(mTransaction, aStatus);
     if (NS_FAILED(rv)) {
@@ -91,8 +91,8 @@ void TRRServiceChannel::CancelNetworkRequest(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::Suspend() {
-  LOG(("TRRServiceChannel::SuspendInternal [this=%p]\n", this));
+SimpleHttpChannel::Suspend() {
+  LOG(("SimpleHttpChannel::SuspendInternal [this=%p]\n", this));
 
   if (mTransactionPump) {
     return mTransactionPump->Suspend();
@@ -102,8 +102,8 @@ TRRServiceChannel::Suspend() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::Resume() {
-  LOG(("TRRServiceChannel::Resume [this=%p]\n", this));
+SimpleHttpChannel::Resume() {
+  LOG(("SimpleHttpChannel::Resume [this=%p]\n", this));
 
   if (mTransactionPump) {
     return mTransactionPump->Resume();
@@ -113,7 +113,7 @@ TRRServiceChannel::Resume() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetSecurityInfo(nsISupports** securityInfo) {
+SimpleHttpChannel::GetSecurityInfo(nsISupports** securityInfo) {
   NS_ENSURE_ARG_POINTER(securityInfo);
   *securityInfo = mSecurityInfo;
   NS_IF_ADDREF(*securityInfo);
@@ -121,7 +121,7 @@ TRRServiceChannel::GetSecurityInfo(nsISupports** securityInfo) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::AsyncOpen(nsIStreamListener* aListener) {
+SimpleHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   NS_ENSURE_ARG_POINTER(aListener);
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
@@ -167,7 +167,7 @@ TRRServiceChannel::AsyncOpen(nsIStreamListener* aListener) {
   return NS_OK;
 }
 
-nsresult TRRServiceChannel::MaybeResolveProxyAndBeginConnect() {
+nsresult SimpleHttpChannel::MaybeResolveProxyAndBeginConnect() {
   nsresult rv;
 
   // The common case for HTTP channels is to begin proxy resolution and return
@@ -189,12 +189,12 @@ nsresult TRRServiceChannel::MaybeResolveProxyAndBeginConnect() {
   return NS_OK;
 }
 
-nsresult TRRServiceChannel::ResolveProxy() {
-  LOG(("TRRServiceChannel::ResolveProxy [this=%p]\n", this));
+nsresult SimpleHttpChannel::ResolveProxy() {
+  LOG(("SimpleHttpChannel::ResolveProxy [this=%p]\n", this));
   if (!NS_IsMainThread()) {
     return NS_DispatchToMainThread(
-        NewRunnableMethod("TRRServiceChannel::ResolveProxy", this,
-                          &TRRServiceChannel::ResolveProxy),
+        NewRunnableMethod("SimpleHttpChannel::ResolveProxy", this,
+                          &SimpleHttpChannel::ResolveProxy),
         NS_DISPATCH_NORMAL);
   }
 
@@ -227,8 +227,8 @@ nsresult TRRServiceChannel::ResolveProxy() {
   if (NS_FAILED(rv)) {
     if (!mCurrentEventTarget->IsOnCurrentThread()) {
       mCurrentEventTarget->Dispatch(
-          NewRunnableMethod<nsresult>("TRRServiceChannel::AsyncAbort", this,
-                                      &TRRServiceChannel::AsyncAbort, rv),
+          NewRunnableMethod<nsresult>("SimpleHttpChannel::AsyncAbort", this,
+                                      &SimpleHttpChannel::AsyncAbort, rv),
           NS_DISPATCH_NORMAL);
     }
   }
@@ -237,18 +237,18 @@ nsresult TRRServiceChannel::ResolveProxy() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
+SimpleHttpChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
                                     nsIProxyInfo* pi, nsresult status) {
-  LOG(("TRRServiceChannel::OnProxyAvailable [this=%p pi=%p status=%" PRIx32
+  LOG(("SimpleHttpChannel::OnProxyAvailable [this=%p pi=%p status=%" PRIx32
        " mStatus=%" PRIx32 "]\n",
        this, pi, static_cast<uint32_t>(status),
        static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
 
   if (!mCurrentEventTarget->IsOnCurrentThread()) {
-    RefPtr<TRRServiceChannel> self = this;
+    RefPtr<SimpleHttpChannel> self = this;
     nsCOMPtr<nsIProxyInfo> info = pi;
     return mCurrentEventTarget->Dispatch(
-        NS_NewRunnableFunction("TRRServiceChannel::OnProxyAvailable",
+        NS_NewRunnableFunction("SimpleHttpChannel::OnProxyAvailable",
                                [self, info, status]() {
                                  self->OnProxyAvailable(nullptr, nullptr, info,
                                                         status);
@@ -285,7 +285,7 @@ TRRServiceChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
   return rv;
 }
 
-const nsCString& TRRServiceChannel::GetTopWindowOrigin() {
+const nsCString& SimpleHttpChannel::GetTopWindowOrigin() {
   if (mTopWindowOriginComputed) {
     return mTopWindowOrigin;
   }
@@ -297,8 +297,8 @@ const nsCString& TRRServiceChannel::GetTopWindowOrigin() {
   return mTopWindowOrigin;
 }
 
-nsresult TRRServiceChannel::BeginConnect() {
-  LOG(("TRRServiceChannel::BeginConnect [this=%p]\n", this));
+nsresult SimpleHttpChannel::BeginConnect() {
+  LOG(("SimpleHttpChannel::BeginConnect [this=%p]\n", this));
   nsresult rv;
 
   // Construct connection info object
@@ -343,7 +343,7 @@ nsresult TRRServiceChannel::BeginConnect() {
       (mapping = gHttpHandler->GetAltServiceMapping(
            scheme, host, port, mPrivateBrowsing, IsIsolated(),
            GetTopWindowOrigin(), OriginAttributes()))) {
-    LOG(("TRRServiceChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n",
+    LOG(("SimpleHttpChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n",
          this, scheme.get(), mapping->AlternateHost().get(),
          mapping->AlternatePort(), mapping->HashKey().get()));
 
@@ -360,17 +360,17 @@ nsresult TRRServiceChannel::BeginConnect() {
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    LOG(("TRRServiceChannel %p Using connection info from altsvc mapping",
+    LOG(("SimpleHttpChannel %p Using connection info from altsvc mapping",
          this));
     mapping->GetConnectionInfo(getter_AddRefs(mConnectionInfo), proxyInfo,
                                OriginAttributes());
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, true);
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC_OE, !isHttps);
   } else if (mConnectionInfo) {
-    LOG(("TRRServiceChannel %p Using channel supplied connection info", this));
+    LOG(("SimpleHttpChannel %p Using channel supplied connection info", this));
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
   } else {
-    LOG(("TRRServiceChannel %p Using default connection info", this));
+    LOG(("SimpleHttpChannel %p Using default connection info", this));
 
     mConnectionInfo = connInfo;
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
@@ -420,7 +420,7 @@ nsresult TRRServiceChannel::BeginConnect() {
           mConnectionInfo);
       if (NS_FAILED(rv)) {
         LOG(
-            ("TRRServiceChannel::BeginConnect "
+            ("SimpleHttpChannel::BeginConnect "
              "DoShiftReloadConnectionCleanup failed: %08x [this=%p]",
              static_cast<uint32_t>(rv), this));
       }
@@ -441,8 +441,8 @@ nsresult TRRServiceChannel::BeginConnect() {
   return NS_OK;
 }
 
-nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
-  LOG(("TRRServiceChannel::ContinueOnBeforeConnect [this=%p]\n", this));
+nsresult SimpleHttpChannel::ContinueOnBeforeConnect() {
+  LOG(("SimpleHttpChannel::ContinueOnBeforeConnect [this=%p]\n", this));
 
   // ensure that we are using a valid hostname
   if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Origin())))
@@ -470,8 +470,8 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
   return Connect();
 }
 
-nsresult TRRServiceChannel::Connect() {
-  LOG(("TRRServiceChannel::Connect [this=%p]\n", this));
+nsresult SimpleHttpChannel::Connect() {
+  LOG(("SimpleHttpChannel::Connect [this=%p]\n", this));
 
   nsresult rv = SetupTransaction();
   if (NS_FAILED(rv)) {
@@ -486,8 +486,8 @@ nsresult TRRServiceChannel::Connect() {
   return mTransaction->AsyncRead(this, getter_AddRefs(mTransactionPump));
 }
 
-nsresult TRRServiceChannel::SetupTransaction() {
-  LOG(("TRRServiceChannel::SetupTransaction [this=%p, cos=%u, prio=%d]\n", this,
+nsresult SimpleHttpChannel::SetupTransaction() {
+  LOG(("SimpleHttpChannel::SetupTransaction [this=%p, cos=%u, prio=%d]\n", this,
        mClassOfService, mPriority));
 
   NS_ENSURE_TRUE(!mTransaction, NS_ERROR_ALREADY_INITIALIZED);
@@ -567,7 +567,7 @@ nsresult TRRServiceChannel::SetupTransaction() {
 
   mRequestHead.SetRequestURI(*requestURI);
 
-  // Force setting no-cache header for TRRServiceChannel.
+  // Force setting no-cache header for SimpleHttpChannel.
   // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
   // no proxy is configured since we might be talking with a transparent
   // proxy, i.e. one that operates at the network level.  See bug #14772.
@@ -587,7 +587,7 @@ nsresult TRRServiceChannel::SetupTransaction() {
 
   // create the transaction object
   mTransaction = new nsHttpTransaction();
-  LOG1(("TRRServiceChannel %p created nsHttpTransaction %p\n", this,
+  LOG1(("SimpleHttpChannel %p created nsHttpTransaction %p\n", this,
         mTransaction.get()));
 
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
@@ -613,7 +613,7 @@ nsresult TRRServiceChannel::SetupTransaction() {
                                  const nsACString& aRequestString,
                                  HttpTransactionShell* aTransaction) {
       if (nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtrThis)) {
-        return static_cast<TRRServiceChannel*>(channel.get())
+        return static_cast<SimpleHttpChannel*>(channel.get())
             ->OnPush(aPushedStreamId, aUrl, aRequestString, aTransaction);
       }
       return NS_ERROR_NOT_AVAILABLE;
@@ -640,22 +640,22 @@ nsresult TRRServiceChannel::SetupTransaction() {
   return rv;
 }
 
-void TRRServiceChannel::SetPushedStreamTransactionAndId(
+void SimpleHttpChannel::SetPushedStreamTransactionAndId(
     HttpTransactionShell* aTransWithPushedStream, uint32_t aPushedStreamId) {
   MOZ_ASSERT(!mTransWithPushedStream);
-  LOG(("TRRServiceChannel::SetPushedStreamTransaction [this=%p] trans=%p", this,
+  LOG(("SimpleHttpChannel::SetPushedStreamTransaction [this=%p] trans=%p", this,
        aTransWithPushedStream));
 
   mTransWithPushedStream = aTransWithPushedStream;
   mPushedStreamId = aPushedStreamId;
 }
 
-nsresult TRRServiceChannel::OnPush(uint32_t aPushedStreamId,
+nsresult SimpleHttpChannel::OnPush(uint32_t aPushedStreamId,
                                    const nsACString& aUrl,
                                    const nsACString& aRequestString,
                                    HttpTransactionShell* aTransaction) {
   MOZ_ASSERT(aTransaction);
-  LOG(("TRRServiceChannel::OnPush [this=%p, trans=%p]\n", this, aTransaction));
+  LOG(("SimpleHttpChannel::OnPush [this=%p, trans=%p]\n", this, aTransaction));
 
   MOZ_ASSERT(mCaps & NS_HTTP_ONPUSH_LISTENER);
   nsCOMPtr<nsIHttpPushListener> pushListener;
@@ -665,7 +665,7 @@ nsresult TRRServiceChannel::OnPush(uint32_t aPushedStreamId,
 
   if (!pushListener) {
     LOG(
-        ("TRRServiceChannel::OnPush [this=%p] notification callbacks do not "
+        ("SimpleHttpChannel::OnPush [this=%p] notification callbacks do not "
          "implement nsIHttpPushListener\n",
          this));
     return NS_ERROR_NOT_AVAILABLE;
@@ -681,7 +681,7 @@ nsresult TRRServiceChannel::OnPush(uint32_t aPushedStreamId,
   }
 
   nsCOMPtr<nsIChannel> pushHttpChannel;
-  rv = gHttpHandler->CreateTRRServiceChannel(pushResource, nullptr, 0, nullptr,
+  rv = gHttpHandler->CreateSimpleHttpChannel(pushResource, nullptr, 0, nullptr,
                                              nullptr,
                                              getter_AddRefs(pushHttpChannel));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -689,7 +689,7 @@ nsresult TRRServiceChannel::OnPush(uint32_t aPushedStreamId,
   rv = pushHttpChannel->SetLoadFlags(mLoadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<TRRServiceChannel> channel;
+  RefPtr<SimpleHttpChannel> channel;
   CallQueryInterface(pushHttpChannel, channel.StartAssignment());
   MOZ_ASSERT(channel);
   if (!channel) {
@@ -707,7 +707,7 @@ nsresult TRRServiceChannel::OnPush(uint32_t aPushedStreamId,
   return rv;
 }
 
-void TRRServiceChannel::MaybeStartDNSPrefetch() {
+void SimpleHttpChannel::MaybeStartDNSPrefetch() {
   if (mConnectionInfo->UsingHttpProxy() ||
       (mLoadFlags & (nsICachingChannel::LOAD_NO_NETWORK_IO |
                      nsICachingChannel::LOAD_ONLY_FROM_CACHE))) {
@@ -715,7 +715,7 @@ void TRRServiceChannel::MaybeStartDNSPrefetch() {
   }
 
   LOG(
-      ("TRRServiceChannel::MaybeStartDNSPrefetch [this=%p] "
+      ("SimpleHttpChannel::MaybeStartDNSPrefetch [this=%p] "
        "prefetching%s\n",
        this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
 
@@ -726,13 +726,13 @@ void TRRServiceChannel::MaybeStartDNSPrefetch() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnTransportStatus(nsITransport* trans, nsresult status,
+SimpleHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
                                      int64_t progress, int64_t progressMax) {
   return NS_OK;
 }
 
-nsresult TRRServiceChannel::CallOnStartRequest() {
-  LOG(("TRRServiceChannel::CallOnStartRequest [this=%p]", this));
+nsresult SimpleHttpChannel::CallOnStartRequest() {
+  LOG(("SimpleHttpChannel::CallOnStartRequest [this=%p]", this));
 
   if (mOnStartRequestCalled) {
     LOG(("CallOnStartRequest already invoked before"));
@@ -783,7 +783,7 @@ nsresult TRRServiceChannel::CallOnStartRequest() {
   return NS_OK;
 }
 
-void TRRServiceChannel::ProcessAltService() {
+void SimpleHttpChannel::ProcessAltService() {
   // e.g. Alt-Svc: h2=":443"; ma=60
   // e.g. Alt-Svc: h2="otherhost:443"
   // Alt-Svc       = 1#( alternative *( OWS ";" OWS parameter ) )
@@ -839,8 +839,8 @@ void TRRServiceChannel::ProcessAltService() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnStartRequest(nsIRequest* request) {
-  LOG(("TRRServiceChannel::OnStartRequest [this=%p request=%p status=%" PRIx32
+SimpleHttpChannel::OnStartRequest(nsIRequest* request) {
+  LOG(("SimpleHttpChannel::OnStartRequest [this=%p request=%p status=%" PRIx32
        "]\n",
        this, request, static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
 
@@ -888,9 +888,9 @@ TRRServiceChannel::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
+SimpleHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
                                    uint64_t offset, uint32_t count) {
-  LOG(("TRRServiceChannel::OnDataAvailable [this=%p request=%p offset=%" PRIu64
+  LOG(("SimpleHttpChannel::OnDataAvailable [this=%p request=%p offset=%" PRIu64
        " count=%" PRIu32 "]\n",
        this, request, offset, count));
 
@@ -907,8 +907,8 @@ TRRServiceChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnStopRequest(nsIRequest* request, nsresult status) {
-  LOG(("TRRServiceChannel::OnStopRequest [this=%p request=%p status=%" PRIx32
+SimpleHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
+  LOG(("SimpleHttpChannel::OnStopRequest [this=%p request=%p status=%" PRIx32
        "]\n",
        this, request, static_cast<uint32_t>(status)));
 
@@ -919,7 +919,7 @@ TRRServiceChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   mTransactionPump = nullptr;
 
   if (mListener) {
-    LOG(("TRRServiceChannel %p calling OnStopRequest\n", this));
+    LOG(("SimpleHttpChannel %p calling OnStopRequest\n", this));
     MOZ_ASSERT(mOnStartRequestCalled,
                "OnStartRequest should be called before OnStopRequest");
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
@@ -939,10 +939,10 @@ TRRServiceChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
+SimpleHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                     nsresult status) {
   LOG(
-      ("TRRServiceChannel::OnLookupComplete [this=%p] prefetch complete%s: "
+      ("SimpleHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
        "%s status[0x%" PRIx32 "]\n",
        this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : "",
        NS_SUCCEEDED(status) ? "success" : "failure",
@@ -975,43 +975,43 @@ TRRServiceChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnLookupByTypeComplete(nsICancelable* aRequest,
+SimpleHttpChannel::OnLookupByTypeComplete(nsICancelable* aRequest,
                                           nsIDNSByTypeRecord* aRes,
                                           nsresult aStatus) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
+SimpleHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
                                          const nsACString& aCategory) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
+SimpleHttpChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
                                        bool aWarning, const nsAString& aURL,
                                        const nsAString& aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::SetupFallbackChannel(const char* aFallbackKey) {
+SimpleHttpChannel::SetupFallbackChannel(const char* aFallbackKey) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
+SimpleHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
   mCallbacks = aCallbacks;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::SetPriority(int32_t value) {
+SimpleHttpChannel::SetPriority(int32_t value) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void TRRServiceChannel::OnClassOfServiceUpdated() {
-  LOG(("TRRServiceChannel::OnClassOfServiceUpdated this=%p, cos=%u", this,
+void SimpleHttpChannel::OnClassOfServiceUpdated() {
+  LOG(("SimpleHttpChannel::OnClassOfServiceUpdated this=%p, cos=%u", this,
        mClassOfService));
 
   if (mTransaction) {
@@ -1021,7 +1021,7 @@ void TRRServiceChannel::OnClassOfServiceUpdated() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::SetClassFlags(uint32_t inFlags) {
+SimpleHttpChannel::SetClassFlags(uint32_t inFlags) {
   uint32_t previous = mClassOfService;
   mClassOfService = inFlags;
   if (previous != mClassOfService) {
@@ -1031,7 +1031,7 @@ TRRServiceChannel::SetClassFlags(uint32_t inFlags) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::AddClassFlags(uint32_t inFlags) {
+SimpleHttpChannel::AddClassFlags(uint32_t inFlags) {
   uint32_t previous = mClassOfService;
   mClassOfService |= inFlags;
   if (previous != mClassOfService) {
@@ -1041,7 +1041,7 @@ TRRServiceChannel::AddClassFlags(uint32_t inFlags) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::ClearClassFlags(uint32_t inFlags) {
+SimpleHttpChannel::ClearClassFlags(uint32_t inFlags) {
   uint32_t previous = mClassOfService;
   mClassOfService &= ~inFlags;
   if (previous != mClassOfService) {
@@ -1051,16 +1051,16 @@ TRRServiceChannel::ClearClassFlags(uint32_t inFlags) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::ResumeAt(uint64_t aStartPos, const nsACString& aEntityID) {
+SimpleHttpChannel::ResumeAt(uint64_t aStartPos, const nsACString& aEntityID) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void TRRServiceChannel::DoAsyncAbort(nsresult aStatus) {
+void SimpleHttpChannel::DoAsyncAbort(nsresult aStatus) {
   Unused << AsyncAbort(aStatus);
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetProxyInfo(nsIProxyInfo** result) {
+SimpleHttpChannel::GetProxyInfo(nsIProxyInfo** result) {
   if (!mConnectionInfo)
     *result = mProxyInfo;
   else
@@ -1069,7 +1069,7 @@ TRRServiceChannel::GetProxyInfo(nsIProxyInfo** result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP TRRServiceChannel::GetHttpProxyConnectResponseCode(
+NS_IMETHODIMP SimpleHttpChannel::GetHttpProxyConnectResponseCode(
     int32_t* aResponseCode) {
   NS_ENSURE_ARG_POINTER(aResponseCode);
 
@@ -1078,12 +1078,12 @@ NS_IMETHODIMP TRRServiceChannel::GetHttpProxyConnectResponseCode(
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
+SimpleHttpChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   return HttpBaseChannel::GetLoadFlags(aLoadFlags);
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
+SimpleHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
   if (aLoadFlags & (nsICachingChannel::LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE |
                     nsICachingChannel::LOAD_NO_NETWORK_IO |
                     nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE)) {
@@ -1095,28 +1095,28 @@ TRRServiceChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetURI(nsIURI** aURI) {
+SimpleHttpChannel::GetURI(nsIURI** aURI) {
   return HttpBaseChannel::GetURI(aURI);
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetNotificationCallbacks(
+SimpleHttpChannel::GetNotificationCallbacks(
     nsIInterfaceRequestor** aCallbacks) {
   return HttpBaseChannel::GetNotificationCallbacks(aCallbacks);
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
+SimpleHttpChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   return HttpBaseChannel::GetLoadGroup(aLoadGroup);
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetRequestMethod(nsACString& aMethod) {
+SimpleHttpChannel::GetRequestMethod(nsACString& aMethod) {
   return HttpBaseChannel::GetRequestMethod(aMethod);
 }
 
-void TRRServiceChannel::DoNotifyListener() {
-  LOG(("TRRServiceChannel::DoNotifyListener this=%p", this));
+void SimpleHttpChannel::DoNotifyListener() {
+  LOG(("SimpleHttpChannel::DoNotifyListener this=%p", this));
 
   // In case nsHttpChannel::OnStartRequest wasn't called (e.g. due to flag
   // LOAD_ONLY_IF_MODIFIED) we want to set mAfterOnStartRequestBegun to true
@@ -1151,10 +1151,10 @@ void TRRServiceChannel::DoNotifyListener() {
   DoNotifyListenerCleanup();
 }
 
-void TRRServiceChannel::DoNotifyListenerCleanup() {}
+void SimpleHttpChannel::DoNotifyListenerCleanup() {}
 
 NS_IMETHODIMP
-TRRServiceChannel::GetDomainLookupStart(TimeStamp* _retval) {
+SimpleHttpChannel::GetDomainLookupStart(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetDomainLookupStart();
   else
@@ -1163,7 +1163,7 @@ TRRServiceChannel::GetDomainLookupStart(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetDomainLookupEnd(TimeStamp* _retval) {
+SimpleHttpChannel::GetDomainLookupEnd(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetDomainLookupEnd();
   else
@@ -1172,7 +1172,7 @@ TRRServiceChannel::GetDomainLookupEnd(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetConnectStart(TimeStamp* _retval) {
+SimpleHttpChannel::GetConnectStart(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetConnectStart();
   else
@@ -1181,7 +1181,7 @@ TRRServiceChannel::GetConnectStart(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetTcpConnectEnd(TimeStamp* _retval) {
+SimpleHttpChannel::GetTcpConnectEnd(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetTcpConnectEnd();
   else
@@ -1190,7 +1190,7 @@ TRRServiceChannel::GetTcpConnectEnd(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetSecureConnectionStart(TimeStamp* _retval) {
+SimpleHttpChannel::GetSecureConnectionStart(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetSecureConnectionStart();
   else
@@ -1199,7 +1199,7 @@ TRRServiceChannel::GetSecureConnectionStart(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetConnectEnd(TimeStamp* _retval) {
+SimpleHttpChannel::GetConnectEnd(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetConnectEnd();
   else
@@ -1208,7 +1208,7 @@ TRRServiceChannel::GetConnectEnd(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetRequestStart(TimeStamp* _retval) {
+SimpleHttpChannel::GetRequestStart(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetRequestStart();
   else
@@ -1217,7 +1217,7 @@ TRRServiceChannel::GetRequestStart(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetResponseStart(TimeStamp* _retval) {
+SimpleHttpChannel::GetResponseStart(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetResponseStart();
   else
@@ -1226,7 +1226,7 @@ TRRServiceChannel::GetResponseStart(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetResponseEnd(TimeStamp* _retval) {
+SimpleHttpChannel::GetResponseEnd(TimeStamp* _retval) {
   if (mTransaction)
     *_retval = mTransaction->GetResponseEnd();
   else
