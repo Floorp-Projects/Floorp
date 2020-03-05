@@ -61,6 +61,10 @@ class MediaControlService final : public nsIObserver {
   // This is used for testing only, to generate fake media control keys events.
   void GenerateMediaControlKeysTestEvent(MediaControlKeysEvent aEvent);
 
+  // Return the media metadata from the main controller, and it's used for test
+  // only.
+  MediaMetadataBase GetMainControllerMediaMetadata() const;
+
  private:
   MediaControlService();
   ~MediaControlService();
