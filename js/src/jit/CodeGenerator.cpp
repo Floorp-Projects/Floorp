@@ -5326,6 +5326,54 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
 #endif
 }
 
+// Do not bailout after the execution of this function since the stack no longer
+// correspond to what is expected by the snapshots.
+void CodeGenerator::emitAllocateSpaceForConstructAndPushNewTarget(
+    Register argcreg, Register newTargetAndExtraStackSpace) {
+  // Align the JitFrameLayout on the JitStackAlignment. Contrary to
+  // |emitAllocateSpaceForApply()|, we're always pushing a magic value, because
+  // we can't write to |newTargetAndExtraStackSpace| before |new.target| has
+  // been pushed onto the stack.
+  if (JitStackValueAlignment > 1) {
+    MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
+               "Stack padding assumes that the frameSize is correct");
+    MOZ_ASSERT(JitStackValueAlignment == 2);
+
+    Label noPaddingNeeded;
+    // If the number of arguments is even, then we do not need any padding.
+    masm.branchTestPtr(Assembler::Zero, argcreg, Imm32(1), &noPaddingNeeded);
+    masm.pushValue(MagicValue(JS_ARG_POISON));
+    masm.bind(&noPaddingNeeded);
+  }
+
+  // Push |new.target| after the padding value, but before any arguments.
+  masm.pushValue(JSVAL_TYPE_OBJECT, newTargetAndExtraStackSpace);
+
+  // Initialize the loop counter AND compute the stack usage.
+  masm.movePtr(argcreg, newTargetAndExtraStackSpace);
+
+  // Reserve space for copying the arguments.
+  NativeObject::elementsSizeMustNotOverflow();
+  masm.lshiftPtr(Imm32(ValueShift), newTargetAndExtraStackSpace);
+  masm.subFromStackPtr(newTargetAndExtraStackSpace);
+
+  // Account for |new.target| which has already been pushed onto the stack.
+  masm.addPtr(Imm32(sizeof(Value)), newTargetAndExtraStackSpace);
+
+  // And account for the padding.
+  if (JitStackValueAlignment > 1) {
+    MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
+               "Stack padding assumes that the frameSize is correct");
+    MOZ_ASSERT(JitStackValueAlignment == 2);
+
+    Label noPaddingNeeded;
+    // If the number of arguments is even, then we do not need any padding.
+    masm.branchTestPtr(Assembler::Zero, argcreg, Imm32(1), &noPaddingNeeded);
+    masm.addPtr(Imm32(sizeof(Value)), newTargetAndExtraStackSpace);
+    masm.bind(&noPaddingNeeded);
+  }
+}
+
 // Destroys argvIndex and copyreg.
 void CodeGenerator::emitCopyValuesForApply(Register argvSrcBase,
                                            Register argvIndex, Register copyreg,
@@ -5490,6 +5538,34 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
   masm.pushValue(ToValue(apply, LApplyArrayGeneric::ThisIndex));
 }
 
+void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct,
+                                      Register extraStackSpace) {
+  MOZ_ASSERT(extraStackSpace == ToRegister(construct->getNewTarget()));
+
+  Register tmpArgc = ToRegister(construct->getTempObject());
+  Register elementsAndArgc = ToRegister(construct->getElements());
+
+  // Invariants guarded in the caller:
+  //  - the array is not too long
+  //  - the array length equals its initialized length
+
+  // The array length is our argc for the purposes of allocating space.
+  Address length(ToRegister(construct->getElements()),
+                 ObjectElements::offsetOfLength());
+  masm.load32(length, tmpArgc);
+
+  // Allocate space for the values.
+  emitAllocateSpaceForConstructAndPushNewTarget(tmpArgc, extraStackSpace);
+
+  // After this call "elements" has become "argc" and "newTarget" has become
+  // "extraStackSpace".
+  emitPushElementsAsArguments(tmpArgc, elementsAndArgc, extraStackSpace);
+
+  // Push |this|.
+  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
+  masm.pushValue(ToValue(construct, LConstructArrayGeneric::ThisIndex));
+}
+
 template <typename T>
 void CodeGenerator::emitApplyGeneric(T* apply) {
   // Holds the function object.
@@ -5499,8 +5575,8 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   Register objreg = ToRegister(apply->getTempObject());
   Register extraStackSpace = ToRegister(apply->getTempStackCounter());
 
-  // Holds the function nargs, computed in the invoker or (for
-  // ApplyArray) in the argument pusher.
+  // Holds the function nargs, computed in the invoker or (for ApplyArray and
+  // ConstructArray) in the argument pusher.
   Register argcreg = ToRegister(apply->getArgc());
 
   // Unless already known, guard that calleereg is actually a function object.
@@ -5513,14 +5589,18 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   // Copy the arguments of the current function.
   //
-  // In the case of ApplyArray, also compute argc: the argc register
-  // and the elements register are the same; argc must not be
-  // referenced before the call to emitPushArguments() and elements
-  // must not be referenced after it returns.
+  // In the case of ApplyArray and ConstructArray, also compute argc: the argc
+  // register and the elements register are the same; argc must not be
+  // referenced before the call to emitPushArguments() and elements must not be
+  // referenced after it returns.
+  //
+  // In the case of ConstructArray, also overwrite newTarget with
+  // extraStackSpace; newTarget must not be referenced after this point.
   //
   // objreg is dead across this call.
   //
-  // extraStackSpace is garbage on entry and defined on exit.
+  // extraStackSpace is garbage on entry (for ApplyArray and ApplyArgs) and
+  // defined on exit.
   emitPushArguments(apply, extraStackSpace);
 
   masm.checkStackAlignment();
@@ -5700,6 +5780,29 @@ void CodeGenerator::visitApplyArrayGeneric(LApplyArrayGeneric* apply) {
   bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
 
   emitApplyGeneric(apply);
+}
+
+void CodeGenerator::visitConstructArrayGeneric(LConstructArrayGeneric* lir) {
+  LSnapshot* snapshot = lir->snapshot();
+  Register tmp = ToRegister(lir->getTempObject());
+
+  Address length(ToRegister(lir->getElements()),
+                 ObjectElements::offsetOfLength());
+  masm.load32(length, tmp);
+
+  // See comment in visitApplyArgsGeneric, above.
+
+  uint32_t limit = 3000 / sizeof(Value);
+  bailoutCmp32(Assembler::Above, tmp, Imm32(limit), snapshot);
+
+  // Ensure that the array does not contain an uninitialized tail.
+
+  Address initializedLength(ToRegister(lir->getElements()),
+                            ObjectElements::offsetOfInitializedLength());
+  masm.sub32(initializedLength, tmp);
+  bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
+
+  emitApplyGeneric(lir);
 }
 
 void CodeGenerator::visitBail(LBail* lir) { bailout(lir->snapshot()); }

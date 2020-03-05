@@ -2866,6 +2866,48 @@ class MApplyArray
   }
 };
 
+// |new F(...args)| and |super(...args)|.
+class MConstructArray : public MQuaternaryInstruction,
+                        public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
+                                         BoxPolicy<2>, ObjectPolicy<3>>::Data {
+  // Monomorphic cache of single target from TI, or nullptr.
+  WrappedFunction* target_;
+  bool maybeCrossRealm_ = true;
+
+  MConstructArray(WrappedFunction* target, MDefinition* fun,
+                  MDefinition* elements, MDefinition* thisValue,
+                  MDefinition* newTarget)
+      : MQuaternaryInstruction(classOpcode, fun, elements, thisValue,
+                               newTarget),
+        target_(target) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ConstructArray)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, getFunction), (1, getElements), (2, getThis),
+                 (3, getNewTarget))
+
+  // For TI-informed monomorphic callsites.
+  WrappedFunction* getSingleTarget() const { return target_; }
+
+  bool maybeCrossRealm() const { return maybeCrossRealm_; }
+  void setNotCrossRealm() { maybeCrossRealm_ = false; }
+
+  bool ignoresReturnValue() const { return false; }
+  bool isConstructing() const { return true; }
+
+  bool possiblyCalls() const override { return true; }
+
+  bool appendRoots(MRootList& roots) const override {
+    if (target_) {
+      return target_->appendRoots(roots);
+    }
+    return true;
+  }
+};
+
 class MBail : public MNullaryInstruction {
  protected:
   explicit MBail(BailoutKind kind) : MNullaryInstruction(classOpcode) {

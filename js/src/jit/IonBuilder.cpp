@@ -2106,6 +2106,10 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::SpreadCall:
       return jsop_spreadcall();
 
+    case JSOp::SpreadNew:
+    case JSOp::SpreadSuperCall:
+      return jsop_spreadnew();
+
     case JSOp::Call:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
@@ -2465,8 +2469,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::LeaveWith:
 
     // Spread
-    case JSOp::SpreadNew:
-    case JSOp::SpreadSuperCall:
     case JSOp::SpreadEval:
     case JSOp::StrictSpreadEval:
 
@@ -5717,25 +5719,28 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapply(uint32_t argc) {
   return jsop_funapplyarguments(argc);
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
-  // The arguments array is constructed by a JSOp::NewArray and not
-  // leaked to user. The complications of spread call iterator behaviour are
-  // handled when the user objects are expanded and copied into this hidden
-  // array.
-
+static void AssertSpreadArgIsArray(MDefinition* argument,
+                                   CompilerConstraintList* constraints) {
 #ifdef DEBUG
   // If we know class, ensure it is what we expected
-  MDefinition* argument = current->peek(-1);
   if (TemporaryTypeSet* objTypes = argument->resultTypeSet()) {
-    if (const JSClass* clasp = objTypes->getKnownClass(constraints())) {
+    if (const JSClass* clasp = objTypes->getKnownClass(constraints)) {
       MOZ_ASSERT(clasp == &ArrayObject::class_);
     }
   }
 #endif
+}
 
+AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
   MDefinition* argArr = current->pop();
   MDefinition* argThis = current->pop();
   MDefinition* argFunc = current->pop();
+
+  // The arguments array is constructed by a JSOp::NewArray and not
+  // leaked to user. The complications of spread call iterator behaviour are
+  // handled when the user objects are expanded and copied into this hidden
+  // array.
+  AssertSpreadArgIsArray(argArr, constraints());
 
   // Extract call target.
   TemporaryTypeSet* funTypes = argFunc->resultTypeSet();
@@ -5761,6 +5766,50 @@ AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
   }
 
   // TypeBarrier the call result
+  TemporaryTypeSet* types = bytecodeTypes(pc);
+  return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_spreadnew() {
+  MDefinition* newTarget = current->pop();
+  MDefinition* argArr = current->pop();
+  MDefinition* thisValue = current->pop();
+  MDefinition* callee = current->pop();
+
+  // The arguments array is constructed by JSOp::NewArray and not leaked to the
+  // user. The complications of spread call iterator behaviour are handled when
+  // the user objects are expanded and copied into this hidden array.
+  AssertSpreadArgIsArray(argArr, constraints());
+
+  // Extract call target.
+  TemporaryTypeSet* funTypes = callee->resultTypeSet();
+  JSFunction* target = getSingleCallTarget(funTypes);
+  if (target && !target->isConstructor()) {
+    // Don't optimize when the target doesn't support construct calls.
+    target = nullptr;
+  }
+  WrappedFunction* wrappedTarget =
+      target ? new (alloc()) WrappedFunction(target) : nullptr;
+
+  // Inline the constructor on the caller-side.
+  MDefinition* create = createThis(target, callee, newTarget, false);
+  thisValue->setImplicitlyUsedUnchecked();
+
+  // Dense elements of the argument array.
+  MElements* elements = MElements::New(alloc(), argArr);
+  current->add(elements);
+
+  auto* apply = MConstructArray::New(alloc(), wrappedTarget, callee, elements,
+                                     create, newTarget);
+  current->add(apply);
+  current->push(apply);
+  MOZ_TRY(resumeAfter(apply));
+
+  if (target && target->realm() == script()->realm()) {
+    apply->setNotCrossRealm();
+  }
+
+  // TypeBarrier the call result.
   TemporaryTypeSet* types = bytecodeTypes(pc);
   return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
 }

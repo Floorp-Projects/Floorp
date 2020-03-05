@@ -505,6 +505,33 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   assignSafepoint(lir, apply);
 }
 
+void LIRGenerator::visitConstructArray(MConstructArray* mir) {
+  MOZ_ASSERT(mir->getFunction()->type() == MIRType::Object);
+  MOZ_ASSERT(mir->getElements()->type() == MIRType::Elements);
+  MOZ_ASSERT(mir->getNewTarget()->type() == MIRType::Object);
+  MOZ_ASSERT(mir->getThis()->type() == MIRType::Value);
+
+  // Assert if the return value is already erased.
+  static_assert(CallTempReg2 != JSReturnReg_Type);
+  static_assert(CallTempReg2 != JSReturnReg_Data);
+
+  auto* lir = new (alloc()) LConstructArrayGeneric(
+      useFixedAtStart(mir->getFunction(), CallTempReg3),
+      useFixedAtStart(mir->getElements(), CallTempReg0),
+      useFixedAtStart(mir->getNewTarget(), CallTempReg1),
+      useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5),
+      tempFixed(CallTempReg2));
+
+  // Bailout is needed in the case of possible non-JSFunction callee,
+  // too many values in the array, or empty space at the end of the
+  // array.  I'm going to use NonJSFunctionCallee for the code even
+  // if that is not an adequate description.
+  assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+
+  defineReturn(lir, mir);
+  assignSafepoint(lir, mir);
+}
+
 void LIRGenerator::visitBail(MBail* bail) {
   LBail* lir = new (alloc()) LBail();
   assignSnapshot(lir, bail->bailoutKind());
