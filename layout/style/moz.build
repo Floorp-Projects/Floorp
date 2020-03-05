@@ -290,12 +290,10 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         ])
     GeneratedFile('nsComputedDOMStyleGenerated.inc',
                   script='GenerateComputedDOMStyleGenerated.py',
-                  py2=True,
                   entry_point='generate',
                   inputs=['!ServoCSSPropList.py'])
     GeneratedFile('nsCSSPropsGenerated.inc',
                   script='GenerateCSSPropsGenerated.py',
-                  py2=True,
                   entry_point='generate',
                   inputs=['!ServoCSSPropList.py'])
     GeneratedFile('ServoStyleConsts.h', script='/build/RunCbindgen.py',

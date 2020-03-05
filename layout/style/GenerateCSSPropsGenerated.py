@@ -49,7 +49,7 @@ def generate(output, dataFile):
     output.write("};\n\n")
 
     # Generate kIDLNameSortPositionTable
-    ps = sorted(properties, key=lambda p: p.idlname)
+    ps = sorted(properties, key=lambda p: p.idlname if p.idlname else '')
     ps = [(p, position) for position, p in enumerate(ps)]
     ps.sort(key=lambda item: item[0].index)
     output.write("const int32_t nsCSSProps::"
