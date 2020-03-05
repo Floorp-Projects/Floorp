@@ -59,12 +59,12 @@ extern JSScript* CompileEvalScript(CompilationInfo& compilationInfo,
                                    JS::SourceText<char16_t>& srcBuf);
 
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
-                                             JS::Handle<LazyScript*> lazy,
+                                             JS::Handle<BaseScript*> lazy,
                                              const char16_t* units,
                                              size_t length);
 
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
-                                             JS::Handle<LazyScript*> lazy,
+                                             JS::Handle<BaseScript*> lazy,
                                              const mozilla::Utf8Unit* units,
                                              size_t length);
 

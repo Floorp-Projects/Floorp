@@ -99,7 +99,6 @@ class JSLinearString;
 
 namespace js {
 
-class LazyScript;
 class ModuleObject;
 class ScriptSourceObject;
 
@@ -117,7 +116,7 @@ JSScript* CompileGlobalBinASTScript(
     ScriptSourceObject** sourceObjectOut = nullptr);
 
 MOZ_MUST_USE bool CompileLazyBinASTFunction(JSContext* cx,
-                                            Handle<LazyScript*> lazy,
+                                            Handle<BaseScript*> lazy,
                                             const uint8_t* buf, size_t length);
 
 #endif  // JS_BUILD_BINAST

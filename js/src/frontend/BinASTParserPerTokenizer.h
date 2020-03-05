@@ -68,7 +68,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   BinASTParserPerTokenizer(JSContext* cx, CompilationInfo& compilationInfo,
                            const JS::ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
-                           Handle<LazyScript*> lazyScript = nullptr);
+                           Handle<BaseScript*> lazyScript = nullptr);
   ~BinASTParserPerTokenizer() {}
 
   /**
@@ -295,7 +295,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   }
 
  protected:
-  Rooted<LazyScript*> lazyScript_;
+  Rooted<BaseScript*> lazyScript_;
   FullParseHandler handler_;
 
   mozilla::Maybe<Tokenizer> tokenizer_;

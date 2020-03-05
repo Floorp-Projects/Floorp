@@ -178,7 +178,7 @@ class SyntaxParseHandler {
 
  public:
   SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
-                     LazyScript* lazyOuterFunction)
+                     BaseScript* lazyOuterFunction)
       : lastAtom(nullptr) {}
 
   static NullNode null() { return NodeFailure; }

@@ -926,7 +926,7 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
 }
 
 template <typename Unit>
-static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
+static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
                                     const Unit* units, size_t length) {
   MOZ_ASSERT(cx->compartment() == lazy->compartment());
 
@@ -1016,12 +1016,12 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   return true;
 }
 
-bool frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy,
+bool frontend::CompileLazyFunction(JSContext* cx, Handle<BaseScript*> lazy,
                                    const char16_t* units, size_t length) {
   return CompileLazyFunctionImpl(cx, lazy, units, length);
 }
 
-bool frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy,
+bool frontend::CompileLazyFunction(JSContext* cx, Handle<BaseScript*> lazy,
                                    const Utf8Unit* units, size_t length) {
   return CompileLazyFunctionImpl(cx, lazy, units, length);
 }
@@ -1030,7 +1030,7 @@ bool frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy,
 
 template <class ParserT>
 static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
-                                          Handle<LazyScript*> lazy,
+                                          Handle<BaseScript*> lazy,
                                           const uint8_t* buf, size_t length) {
   MOZ_ASSERT(cx->compartment() == lazy->compartment());
 
@@ -1089,7 +1089,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
 }
 
 bool frontend::CompileLazyBinASTFunction(JSContext* cx,
-                                         Handle<LazyScript*> lazy,
+                                         Handle<BaseScript*> lazy,
                                          const uint8_t* buf, size_t length) {
   if (lazy->scriptSource()->binASTSourceMetadata()->isMultipart()) {
     return CompileLazyBinASTFunctionImpl<BinASTTokenReaderMultipart>(

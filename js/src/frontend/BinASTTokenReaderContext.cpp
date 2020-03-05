@@ -1463,7 +1463,7 @@ BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
   return SkippableSubTree(0, 0);
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::registerLazyScript(LazyScript* lazy) {
+JS::Result<Ok> BinASTTokenReaderContext::registerLazyScript(BaseScript* lazy) {
   BINJS_TRY(lazyScripts_.append(lazy));
   return Ok();
 }
