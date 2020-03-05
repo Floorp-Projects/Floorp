@@ -231,32 +231,10 @@ function getUptakeTelemetrySnapshot(key) {
 }
 
 function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
-  const STATUSES = [
-    "up_to_date",
-    "success",
-    "backoff",
-    "pref_disabled",
-    "parse_error",
-    "content_error",
-    "sign_error",
-    "sign_retry_error",
-    "conflict_error",
-    "sync_error",
-    "apply_error",
-    "server_error",
-    "certificate_error",
-    "download_error",
-    "timeout_error",
-    "network_error",
-    "offline_error",
-    "cleanup_error",
-    "unknown_error",
-    "custom_1_error",
-    "custom_2_error",
-    "custom_3_error",
-    "custom_4_error",
-    "custom_5_error",
-  ];
+  const { UptakeTelemetry } = ChromeUtils.import(
+    "resource://services-common/uptake-telemetry.js"
+  );
+  const STATUSES = Object.values(UptakeTelemetry.HISTOGRAM_LABELS);
 
   for (const status of STATUSES) {
     const key = STATUSES.indexOf(status);
