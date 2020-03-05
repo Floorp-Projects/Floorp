@@ -7282,11 +7282,6 @@ bool HTMLMediaElement::ComputedMuted() const {
   return (mMuted & MUTED_BY_AUDIO_CHANNEL);
 }
 
-nsSuspendedTypes HTMLMediaElement::ComputedSuspended() const {
-  return mAudioChannelWrapper ? mAudioChannelWrapper->GetSuspendType()
-                              : nsISuspendedTypes::NONE_SUSPENDED;
-}
-
 bool HTMLMediaElement::IsCurrentlyPlaying() const {
   // We have playable data, but we still need to check whether data is "real"
   // current data.
