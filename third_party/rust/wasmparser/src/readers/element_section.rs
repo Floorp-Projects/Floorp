@@ -93,21 +93,11 @@ impl<'a> ElementItemsReader<'a> {
             let ret = match self.reader.read_operator()? {
                 Operator::RefNull => ElementItem::Null,
                 Operator::RefFunc { function_index } => ElementItem::Func(function_index),
-                _ => {
-                    return Err(BinaryReaderError {
-                        message: "invalid passive segment",
-                        offset,
-                    })
-                }
+                _ => return Err(BinaryReaderError::new("invalid passive segment", offset)),
             };
             match self.reader.read_operator()? {
                 Operator::End => {}
-                _ => {
-                    return Err(BinaryReaderError {
-                        message: "invalid passive segment",
-                        offset,
-                    })
-                }
+                _ => return Err(BinaryReaderError::new("invalid passive segment", offset)),
             }
             Ok(ret)
         } else {
@@ -205,10 +195,10 @@ impl<'a> ElementSectionReader<'a> {
     {
         let flags = self.reader.read_var_u32()?;
         if (flags & !0b111) != 0 {
-            return Err(BinaryReaderError {
-                message: "invalid flags byte in element segment",
-                offset: self.reader.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "invalid flags byte in element segment",
+                self.reader.original_position() - 1,
+            ));
         }
         let kind = if flags & 0b001 != 0 {
             if flags & 0b010 != 0 {
@@ -241,10 +231,10 @@ impl<'a> ElementSectionReader<'a> {
                 match self.reader.read_external_kind()? {
                     ExternalKind::Function => Type::AnyFunc,
                     _ => {
-                        return Err(BinaryReaderError {
-                            message: "only the function external type is supported in elem segment",
-                            offset: self.reader.original_position() - 1,
-                        });
+                        return Err(BinaryReaderError::new(
+                            "only the function external type is supported in elem segment",
+                            self.reader.original_position() - 1,
+                        ));
                     }
                 }
             }

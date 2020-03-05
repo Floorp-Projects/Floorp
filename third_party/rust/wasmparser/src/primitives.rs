@@ -17,10 +17,18 @@ use std::error::Error;
 use std::fmt;
 use std::result;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct BinaryReaderError {
-    pub message: &'static str,
-    pub offset: usize,
+    // Wrap the actual error data in a `Box` so that the error is just one
+    // word. This means that we can continue returning small `Result`s in
+    // registers.
+    pub(crate) inner: Box<BinaryReaderErrorInner>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BinaryReaderErrorInner {
+    pub(crate) message: String,
+    pub(crate) offset: usize,
 }
 
 pub type Result<T> = result::Result<T, BinaryReaderError>;
@@ -29,7 +37,30 @@ impl Error for BinaryReaderError {}
 
 impl fmt::Display for BinaryReaderError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} (at offset {})", self.message, self.offset)
+        write!(
+            f,
+            "{} (at offset {})",
+            self.inner.message, self.inner.offset
+        )
+    }
+}
+
+impl BinaryReaderError {
+    pub(crate) fn new(message: impl Into<String>, offset: usize) -> Self {
+        let message = message.into();
+        BinaryReaderError {
+            inner: Box::new(BinaryReaderErrorInner { message, offset }),
+        }
+    }
+
+    /// Get this error's message.
+    pub fn message(&self) -> &str {
+        &self.inner.message
+    }
+
+    /// Get the offset within the Wasm binary where the error occured.
+    pub fn offset(&self) -> usize {
+        self.inner.offset
     }
 }
 
@@ -603,6 +634,10 @@ pub enum Operator<'a> {
     I8x16Sub,
     I8x16SubSaturateS,
     I8x16SubSaturateU,
+    I8x16MinS,
+    I8x16MinU,
+    I8x16MaxS,
+    I8x16MaxU,
     I8x16Mul,
     I16x8Neg,
     I16x8AnyTrue,
@@ -617,6 +652,10 @@ pub enum Operator<'a> {
     I16x8SubSaturateS,
     I16x8SubSaturateU,
     I16x8Mul,
+    I16x8MinS,
+    I16x8MinU,
+    I16x8MaxS,
+    I16x8MaxU,
     I32x4Neg,
     I32x4AnyTrue,
     I32x4AllTrue,
@@ -626,6 +665,10 @@ pub enum Operator<'a> {
     I32x4Add,
     I32x4Sub,
     I32x4Mul,
+    I32x4MinS,
+    I32x4MinU,
+    I32x4MaxS,
+    I32x4MaxU,
     I64x2Neg,
     I64x2AnyTrue,
     I64x2AllTrue,

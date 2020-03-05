@@ -35,7 +35,7 @@ where
 {
     loop {
         match *d.read() {
-            ParserState::Error(e) => panic!("unexpected error {:?}", e),
+            ParserState::Error(ref e) => panic!("unexpected error {}", e),
             ParserState::EndWasm => return,
             _ => (),
         }

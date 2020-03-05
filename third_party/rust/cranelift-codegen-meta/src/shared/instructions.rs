@@ -481,6 +481,101 @@ fn define_control_flow(
     );
 }
 
+#[inline(never)]
+fn define_simd_arithmetic(
+    ig: &mut InstructionGroupBuilder,
+    formats: &Formats,
+    _: &Immediates,
+    _: &EntityRefs,
+) {
+    let Int = &TypeVar::new(
+        "Int",
+        "A scalar or vector integer type",
+        TypeSetBuilder::new()
+            .ints(Interval::All)
+            .simd_lanes(Interval::All)
+            .build(),
+    );
+
+    let a = &Operand::new("a", Int);
+    let x = &Operand::new("x", Int);
+    let y = &Operand::new("y", Int);
+
+    ig.push(
+        Inst::new(
+            "imin",
+            r#"
+        Signed integer minimum.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "umin",
+            r#"
+        Unsigned integer minimum.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "imax",
+            r#"
+        Signed integer maximum.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "umax",
+            r#"
+        Unsigned integer maximum.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    let IxN = &TypeVar::new(
+        "IxN",
+        "A SIMD vector type containing integers",
+        TypeSetBuilder::new()
+            .ints(Interval::All)
+            .simd_lanes(Interval::All)
+            .includes_scalars(false)
+            .build(),
+    );
+
+    let a = &Operand::new("a", IxN);
+    let x = &Operand::new("x", IxN);
+    let y = &Operand::new("y", IxN);
+
+    ig.push(
+        Inst::new(
+            "avg_round",
+            r#"
+        Unsigned average with rounding: `a := (x + y + 1) // 2`
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+}
+
 #[allow(clippy::many_single_char_names)]
 pub(crate) fn define(
     all_instructions: &mut AllInstructions,
@@ -491,6 +586,7 @@ pub(crate) fn define(
     let mut ig = InstructionGroupBuilder::new(all_instructions);
 
     define_control_flow(&mut ig, formats, imm, entities);
+    define_simd_arithmetic(&mut ig, formats, imm, entities);
 
     // Operand kind shorthands.
     let iflags: &TypeVar = &ValueType::Special(types::Flag::IFlags.into()).into();
@@ -557,7 +653,6 @@ pub(crate) fn define(
             .includes_scalars(false)
             .build(),
     );
-
     let Any = &TypeVar::new(
         "Any",
         "Any integer, float, boolean, or reference scalar or vector type",
@@ -1025,6 +1120,18 @@ pub(crate) fn define(
             "symbol_value",
             r#"
         Compute the value of global GV, which is a symbolic value.
+        "#,
+            &formats.unary_global_value,
+        )
+        .operands_in(vec![GV])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "tls_value",
+            r#"
+        Compute the value of global GV, which is a TLS (thread local storage) value.
         "#,
             &formats.unary_global_value,
         )
