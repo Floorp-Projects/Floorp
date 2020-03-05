@@ -22,17 +22,21 @@ async function f() {
   };
 
   var value = 42;
+  Promise.resolve().then(resolveTop);
   await promises.top;
   {
     let block = "block";
+    Promise.resolve().then(resolveBlock);
     await promises.block;
   }
   for (let loop of ["loop"]) {
+    Promise.resolve().then(resolveLoop);
     await promises.loop;
   }
   try {
     throw "err";
   } catch (err) {
+    Promise.resolve().then(resolveCatch);
     await promises.catch;
   }
   return value;
@@ -67,7 +71,6 @@ dbg.onEnterFrame = f => {
 
   assertEq(frame.environment.getVariable("value"), 43);
 
-  g.resolveTop();
   await waitForOnPop(frame);
 
   assertEq(
@@ -76,7 +79,6 @@ dbg.onEnterFrame = f => {
   );
   assertEq(frame.environment.getVariable("block"), "block");
 
-  g.resolveBlock();
   await waitForOnPop(frame);
 
   assertEq(
@@ -85,7 +87,6 @@ dbg.onEnterFrame = f => {
   );
   assertEq(frame.environment.getVariable("loop"), "loop");
 
-  g.resolveLoop();
   await waitForOnPop(frame);
 
   assertEq(
@@ -94,7 +95,6 @@ dbg.onEnterFrame = f => {
   );
   assertEq(frame.environment.getVariable("err"), "err");
 
-  g.resolveCatch();
   const result = await promise;
 
   assertEq(result, 43);

@@ -1,4 +1,3 @@
-// |jit-test| --enable-experimental-await-fix
 // async functions fire onEnterFrame each time they resume, like generators
 
 let g = newGlobal({newCompartment: true});

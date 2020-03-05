@@ -1,5 +1,3 @@
-// |jit-test| --enable-experimental-await-fix
-
 // Resolve async function promise when initially awaiting.
 
 let g = newGlobal({newCompartment: true});

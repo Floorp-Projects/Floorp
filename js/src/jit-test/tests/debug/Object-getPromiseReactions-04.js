@@ -1,4 +1,3 @@
-// |jit-test| --enable-experimental-await-fix
 // Debugger.Object.prototype.getPromiseReactions reports reaction records
 // created by `await` expressions in async functions.
 
