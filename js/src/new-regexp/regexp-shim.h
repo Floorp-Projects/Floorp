@@ -883,15 +883,20 @@ class StackLimitCheck {
   JSContext* cx_;
 };
 
-class Code {
+class Code : public HeapObject {
  public:
-  bool operator!=(Code& other) const;
+  uint8_t* raw_instruction_start() { return inner()->raw(); }
 
-  Address raw_instruction_start();
-  Address raw_instruction_end();
-  Address address();
-
-  static Code cast(Object object);
+  static Code cast(Object object) {
+    Code c;
+    MOZ_ASSERT(JS::Value(object).toGCThing()->is<js::jit::JitCode>());
+    c.value_ = JS::PrivateGCThingValue(JS::Value(object).toGCThing());
+    return c;
+  }
+private:
+  js::jit::JitCode* inner() {
+    return value_.toGCThing()->as<js::jit::JitCode>();
+  }
 };
 
 enum class MessageTemplate { kStackOverflow };
