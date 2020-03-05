@@ -4310,7 +4310,7 @@ JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
 }
 
 /* static */ JSScript* JSScript::CreateFromLazy(JSContext* cx,
-                                                Handle<LazyScript*> lazy) {
+                                                Handle<BaseScript*> lazy) {
   RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
   RootedObject fun(cx, lazy->function());
   RootedScript script(cx, JSScript::New(cx, fun, sourceObject, lazy->extent()));

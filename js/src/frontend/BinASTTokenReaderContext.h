@@ -1633,7 +1633,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   /**
    * Register LazyScript for later modification.
    */
-  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(LazyScript* lazy);
+  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(BaseScript* lazy);
 
   // --- Composite values.
   //
@@ -1772,7 +1772,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
   // LazyScript created while reading the tree.
   // After reading tree, the start/end offset are set to correct value.
-  Rooted<GCVector<LazyScript*>> lazyScripts_;
+  Rooted<GCVector<BaseScript*>> lazyScripts_;
 
  public:
   BinASTTokenReaderContext(const BinASTTokenReaderContext&) = delete;

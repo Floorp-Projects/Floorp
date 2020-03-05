@@ -2495,7 +2495,7 @@ class JSScript : public js::BaseScript {
                           bool hideScriptFromDebugger, js::SourceExtent extent);
 
   static JSScript* CreateFromLazy(JSContext* cx,
-                                  js::Handle<js::LazyScript*> lazy);
+                                  js::Handle<js::BaseScript*> lazy);
 
   // NOTE: If you use createPrivateScriptData directly instead of via
   // fullyInitFromStencil, you are responsible for notifying the debugger

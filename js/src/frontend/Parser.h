@@ -514,7 +514,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   //       are less likely to select this overload.
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationInfo& compilationInfo,
-                   LazyScript* lazyOuterFunction,
+                   BaseScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject,
                    void* internalSyntaxParser);
 
@@ -523,7 +523,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationInfo& compilationInfo,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
-                   LazyScript* lazyOuterFunction,
+                   BaseScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject)
       : PerHandlerParser(
             cx, options, foldConstants, compilationInfo, lazyOuterFunction,
@@ -987,7 +987,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
                 CompilationInfo& compilationInfo, SyntaxParser* syntaxParser,
-                LazyScript* lazyOuterFunction,
+                BaseScript* lazyOuterFunction,
                 ScriptSourceObject* sourceObject);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
