@@ -5289,8 +5289,7 @@ void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
 // Do not bailout after the execution of this function since the stack no longer
 // correspond to what is expected by the snapshots.
 void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
-                                              Register extraStackSpace,
-                                              Label* end) {
+                                              Register extraStackSpace) {
   // Initialize the loop counter AND Compute the stack usage (if == 0)
   masm.movePtr(argcreg, extraStackSpace);
 
@@ -5325,9 +5324,6 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
     masm.bind(&noPaddingNeeded);
   }
 #endif
-
-  // Skip the copy of arguments if there are none.
-  masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, end);
 }
 
 // Destroys argvIndex and copyreg.
@@ -5372,13 +5368,19 @@ void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
   Register copyreg = ToRegister(apply->getTempObject());
 
   Label end;
-  emitAllocateSpaceForApply(argcreg, extraStackSpace, &end);
+  emitAllocateSpaceForApply(argcreg, extraStackSpace);
 
+  // Skip the copy of arguments if there are none.
+  masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, &end);
+
+  // clang-format off
+  //
   // We are making a copy of the arguments which are above the JitFrameLayout
   // of the current Ion frame.
   //
-  // [arg1] [arg0] <- src [this] [JitFrameLayout] [.. frameSize ..] [pad] [arg1]
-  // [arg0] <- dst
+  // [arg1] [arg0] <- src [this] [JitFrameLayout] [.. frameSize ..] [pad] [arg1] [arg0] <- dst
+  //
+  // clang-format on
 
   // Compute the source and destination offsets into the stack.
   size_t argvSrcOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
@@ -5433,7 +5435,10 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
   masm.load32(length, tmpArgc);
 
   // Allocate space for the values.
-  emitAllocateSpaceForApply(tmpArgc, extraStackSpace, &noCopy);
+  emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
+
+  // Skip the copy of arguments if there are none.
+  masm.branchTestPtr(Assembler::Zero, tmpArgc, tmpArgc, &noCopy);
 
   // Copy the values.  This code is skipped entirely if there are
   // no values.
@@ -5467,7 +5472,7 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
 
   // Push |this|.
   masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
-  masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
+  masm.pushValue(ToValue(apply, LApplyArrayGeneric::ThisIndex));
 }
 
 template <typename T>
