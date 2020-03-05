@@ -379,6 +379,7 @@ MSG_DEF(JSMSG_BAD_CODE_UNITS,          1, JSEXN_NOTE, "the code units comprising
 
 // SmooshMonkey
 MSG_DEF(JSMSG_SMOOSH_COMPILE_ERROR,    1, JSEXN_SYNTAXERR, "{0}")
+MSG_DEF(JSMSG_SMOOSH_UNIMPLEMENTED,    1, JSEXN_INTERNALERR, "{0}")
 
 // asm.js
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,       1, JSEXN_TYPEERR, "asm.js type error: {0}")
