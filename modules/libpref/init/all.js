@@ -3924,7 +3924,7 @@ pref("signon.autologin.proxy",              false);
 pref("signon.formlessCapture.enabled",      true);
 pref("signon.generation.available",               true);
 pref("signon.generation.enabled",                 true);
-pref("signon.passwordEditCapture.enabled",        false);
+pref("signon.passwordEditCapture.enabled",        true);
 pref("signon.privateBrowsingCapture.enabled",     true);
 pref("signon.storeWhenAutocompleteOff",     true);
 pref("signon.userInputRequiredToCapture.enabled", true);
