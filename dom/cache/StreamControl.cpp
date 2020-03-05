@@ -57,6 +57,11 @@ void StreamControl::CloseReadStreams(const nsID& aId) {
 void StreamControl::CloseAllReadStreams() {
   AssertOwningThread();
 
+  // A copy of mReadStreamList is necessary here for two reasons:
+  // 1. mReadStreamList is modified in StreamControl::ForgetReadStream (called
+  //    transitively)
+  // 2. the this pointer is deleted by CacheStreamControlParent::Shutdown
+  //    (called transitively)
   auto readStreamList = mReadStreamList;
   ReadStreamList::ForwardIterator iter(readStreamList);
   while (iter.HasMore()) {
