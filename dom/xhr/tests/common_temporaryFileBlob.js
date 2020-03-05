@@ -25,7 +25,7 @@ function test_simple() {
     if ("SpecialPowers" in self) {
       is(
         SpecialPowers.wrap(xhr.response).blobImplType,
-        "StreamBlobImpl[TemporaryBlobImpl]",
+        "StreamBlobImpl[TemporaryFileBlobImpl]",
         "We have a blob stored into a stream file"
       );
     }
@@ -67,7 +67,7 @@ function test_reuse() {
     if ("SpecialPowers" in self) {
       is(
         SpecialPowers.wrap(xhr.response).blobImplType,
-        "StreamBlobImpl[TemporaryBlobImpl]",
+        "StreamBlobImpl[TemporaryFileBlobImpl]",
         "We have a blob stored into a stream file"
       );
     }
