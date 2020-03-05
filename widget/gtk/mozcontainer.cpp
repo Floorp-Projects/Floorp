@@ -164,15 +164,13 @@ void moz_container_move(MozContainer* container, int dx, int dy) {
 
   // wl_subsurface_set_position is actually property of parent surface
   // which is effective when parent surface is commited.
-  wl_subsurface_set_position(container->subsurface, container->subsurface_dx,
-                             container->subsurface_dy);
-  container->surface_position_needs_update = false;
-
-  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-  if (window) {
-    GdkRectangle rect = (GdkRectangle){.width = gdk_window_get_width(window),
-                                       .height = gdk_window_get_height(window)};
-    gdk_window_invalidate_rect(window, &rect, false);
+  wl_surface* parent_surface =
+      moz_gtk_widget_get_wl_surface(GTK_WIDGET(container));
+  if (parent_surface) {
+    wl_subsurface_set_position(container->subsurface, container->subsurface_dx,
+                               container->subsurface_dy);
+    wl_surface_commit(parent_surface);
+    container->surface_position_needs_update = false;
   }
 }
 
@@ -582,16 +580,11 @@ static void moz_container_set_opaque_region(MozContainer* container) {
   gtk_widget_get_allocation(GTK_WIDGET(container), &allocation);
 
   // Set region to mozcontainer which does not have any offset
-  if (container->opaque_region_subtract_corners) {
-    wl_region* region =
-        CreateOpaqueRegionWayland(0, 0, allocation.width, allocation.height,
-                                  container->opaque_region_subtract_corners);
-    wl_surface_set_opaque_region(container->surface, region);
-    wl_region_destroy(region);
-  } else {
-    wl_surface_set_opaque_region(container->surface, nullptr);
-  }
-
+  wl_region* region =
+      CreateOpaqueRegionWayland(0, 0, allocation.width, allocation.height,
+                                container->opaque_region_subtract_corners);
+  wl_surface_set_opaque_region(container->surface, region);
+  wl_region_destroy(region);
   container->opaque_region_needs_update = false;
 }
 
