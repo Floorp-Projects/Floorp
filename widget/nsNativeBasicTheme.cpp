@@ -315,9 +315,9 @@ static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
                       StrokeOptions(2.0f * aDpi));
 }
 
-static void PaintMenulistButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                                const Rect& aRect, const EventStates& aState,
-                                uint32_t aDpi) {
+static void PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                                     const Rect& aRect,
+                                     const EventStates& aState, uint32_t aDpi) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
                                                       NS_EVENT_STATE_ACTIVE);
@@ -535,7 +535,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 
   Rect devPxRect = NSRectToSnappedRect(aRect, twipsPerPixel, *dt);
 
-  if (aAppearance == StyleAppearance::MozMenulistButton) {
+  if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     bool isHTML = IsHTMLContent(aFrame);
     nsIFrame* parentFrame = aFrame->GetParent();
     bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
@@ -580,8 +580,8 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::MenulistTextfield:
       PaintMenulist(dt, devPxRect, eventState, dpi);
       break;
-    case StyleAppearance::MozMenulistButton:
-      PaintMenulistButton(aFrame, dt, devPxRect, eventState, dpi);
+    case StyleAppearance::MozMenulistArrowButton:
+      PaintMenulistArrowButton(aFrame, dt, devPxRect, eventState, dpi);
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
@@ -661,7 +661,7 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     // author-specified padding.
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
     case StyleAppearance::Textarea:
@@ -789,7 +789,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
@@ -800,7 +800,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
 
 bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
   switch (aAppearance) {
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
       return false;

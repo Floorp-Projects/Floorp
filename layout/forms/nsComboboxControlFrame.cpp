@@ -698,6 +698,8 @@ static void printSize(char* aDesc, nscoord aSize) {
 
 bool nsComboboxControlFrame::HasDropDownButton() const {
   const nsStyleDisplay* disp = StyleDisplay();
+  // FIXME(emilio): Blink also shows this for menulist-button and such... Seems
+  // more similar to our mac / linux implementation.
   return disp->mAppearance == StyleAppearance::Menulist &&
          (!IsThemed(disp) ||
           PresContext()->Theme()->ThemeNeedsComboboxDropmarker());
