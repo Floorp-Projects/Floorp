@@ -4,6 +4,7 @@
 ---
 job-defaults:
     description: "fix-stacks toolchain build"
+    worker-type: b-linux
     worker:
         max-run-time: 1800
     run:
@@ -18,7 +19,6 @@ job-defaults:
 linux64-fix-stacks:
     treeherder:
         symbol: TL(fix-stacks)
-    worker-type: b-linux
     run:
         arguments: ['x86_64-unknown-linux-gnu']
         toolchain-artifact: public/build/fix-stacks.tar.xz
@@ -31,7 +31,6 @@ linux64-fix-stacks:
 macosx64-fix-stacks:
     treeherder:
         symbol: TM(fix-stacks)
-    worker-type: b-linux
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
@@ -43,24 +42,24 @@ macosx64-fix-stacks:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-cctools-port
             - linux64-clang-9
             - linux64-rust-macos
 
-win64-fix-stacks:
+win32-fix-stacks:
     treeherder:
-        symbol: TW64(fix-stacks)
-    worker-type: b-win2012
+        symbol: TW32(fix-stacks)
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
-        arguments: ['x86_64-pc-windows-msvc']
+        arguments: ['i686-pc-windows-msvc']
         toolchain-artifact: public/build/fix-stacks.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust
+            - linux64-clang-9
+            - linux64-liblowercase
+            - linux64-rust-windows
