@@ -64,25 +64,6 @@ class StackSlotAllocator {
  public:
   StackSlotAllocator() : height_(0) {}
 
-  void allocateStackArea(LStackArea* alloc) {
-    uint32_t size = alloc->size();
-
-    switch (alloc->alignment()) {
-      case 8:
-        if (height_ % 8 != 0) {
-          addAvailableSlot(height_ += 4);
-        }
-        break;
-      default:
-        MOZ_CRASH("unexpected stack results area alignment");
-    }
-    MOZ_ASSERT(height_ % alloc->alignment() == 0);
-    MOZ_ASSERT(size % 4 == 0);
-
-    height_ += size;
-    alloc->setBase(height_);
-  }
-
   static uint32_t width(LDefinition::Type type) {
     switch (type) {
 #if JS_BITS_PER_WORD == 32

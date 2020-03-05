@@ -226,8 +226,7 @@ int32_t CodeGeneratorShared::ToStackOffset(LAllocation a) const {
   if (a.isArgument()) {
     return ArgToStackOffset(a.toArgument()->index());
   }
-  return SlotToStackOffset(a.isStackSlot() ? a.toStackSlot()->slot()
-                                           : a.toStackArea()->base());
+  return SlotToStackOffset(a.toStackSlot()->slot());
 }
 
 int32_t CodeGeneratorShared::ToStackOffset(const LAllocation* a) const {

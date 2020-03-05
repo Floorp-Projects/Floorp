@@ -11883,10 +11883,8 @@ class MWasmStackResultArea : public MNullaryInstruction {
 
  private:
   FixedList<StackResult> results_;
-  uint32_t base_;
 
-  explicit MWasmStackResultArea()
-      : MNullaryInstruction(classOpcode), base_(UINT32_MAX) {
+  explicit MWasmStackResultArea() : MNullaryInstruction(classOpcode) {
     setResultType(MIRType::StackResults);
   }
 
@@ -11899,8 +11897,6 @@ class MWasmStackResultArea : public MNullaryInstruction {
 #endif
   }
 
-  bool baseInitialized() const { return base_ != UINT32_MAX; }
-
  public:
   INSTRUCTION_HEADER(WasmStackResultArea)
   TRIVIAL_NEW_WRAPPERS
@@ -11908,13 +11904,7 @@ class MWasmStackResultArea : public MNullaryInstruction {
   MOZ_MUST_USE bool init(TempAllocator& alloc, size_t stackResultCount) {
     MOZ_ASSERT(results_.length() == 0);
     MOZ_ASSERT(stackResultCount > 0);
-    if (!results_.init(alloc, stackResultCount)) {
-      return false;
-    }
-    for (size_t n = 0; n < stackResultCount; n++) {
-      results_[n] = StackResult();
-    }
-    return true;
+    return results_.init(alloc, stackResultCount);
   }
 
   size_t resultCount() const { return results_.length(); }
@@ -11933,21 +11923,14 @@ class MWasmStackResultArea : public MNullaryInstruction {
     assertInitialized();
     return result(resultCount() - 1).endOffset();
   }
-
-  // Stack index indicating base of stack area.
-  uint32_t base() const {
-    MOZ_ASSERT(baseInitialized());
-    return base_;
-  }
-  void setBase(uint32_t base) {
-    MOZ_ASSERT(!baseInitialized());
-    base_ = base;
-    MOZ_ASSERT(baseInitialized());
-  }
 };
 
 class MWasmStackResult : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t resultIdx_;
+
+  const MWasmStackResultArea::StackResult& result() const {
+    return resultArea()->toWasmStackResultArea()->result(resultIdx_);
+  }
 
   MWasmStackResult(MWasmStackResultArea* resultArea, size_t idx)
       : MUnaryInstruction(classOpcode, resultArea), resultIdx_(idx) {
@@ -11958,10 +11941,6 @@ class MWasmStackResult : public MUnaryInstruction, public NoTypePolicy::Data {
   INSTRUCTION_HEADER(WasmStackResult)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, resultArea))
-
-  const MWasmStackResultArea::StackResult& result() const {
-    return resultArea()->toWasmStackResultArea()->result(resultIdx_);
-  }
 };
 
 class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
