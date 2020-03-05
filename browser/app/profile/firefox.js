@@ -508,7 +508,9 @@ pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
 pref("security.allow_eval_with_system_principal", false);
 pref("security.allow_eval_in_parent_process", false);
 
-pref("security.allow_parent_unrestricted_js_loads", false);
+#if defined(NIGHTLY_BUILD)
+  pref("security.allow_parent_unrestricted_js_loads", false);
+#endif
 
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", false);
