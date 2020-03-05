@@ -27,7 +27,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import kotlin.reflect.KProperty
 
-internal val additionalHeaders = mapOf(
+internal val xRequestHeader = mapOf(
     // For every request WebView sends a "X-requested-with" header with the package name of the
     // application. We can't really prevent that but we can at least send an empty value.
     // Unfortunately the additional headers will not be propagated to subsequent requests
@@ -68,10 +68,22 @@ class SystemEngineSession(
      * See [EngineSession.loadUrl]. Note that [LoadUrlFlags] are ignored in this engine
      * implementation.
      */
-    override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {
+    override fun loadUrl(
+        url: String,
+        parent: EngineSession?,
+        flags: LoadUrlFlags,
+        additionalHeaders: Map<String, String>?
+    ) {
+        val headers =
+            if (additionalHeaders == null) {
+                xRequestHeader
+            } else {
+                xRequestHeader + additionalHeaders
+            }
+
         if (!url.isEmpty()) {
             currentUrl = url
-            webView.loadUrl(url, additionalHeaders)
+            webView.loadUrl(url, headers)
         }
     }
 

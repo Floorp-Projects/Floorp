@@ -101,8 +101,13 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.loadUrl]
      */
-    override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {
-        geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value)
+    override fun loadUrl(
+        url: String,
+        parent: EngineSession?,
+        flags: LoadUrlFlags,
+        additionalHeaders: Map<String, String>?
+    ) {
+        geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value, additionalHeaders)
     }
 
     /**
