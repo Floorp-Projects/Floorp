@@ -220,8 +220,10 @@ open class FenixApplication : LocaleAwareApplication() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
+
         runOnlyInMainProcess {
-            components.core.sessionManager.onLowMemory()
+            components.core.icons.onTrimMemory(level)
+            components.core.sessionManager.onTrimMemory(level)
         }
     }
 
