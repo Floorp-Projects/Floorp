@@ -277,14 +277,11 @@ void AudioSession::StopInternal() {
     mAudioSessionControl->UnregisterAudioSessionNotification(this);
   }
 
-  // Win7 is the only Windows version supported before Win8.
-  if (mAudioSessionControl && !IsWin8OrLater()) {
-    // bug 1419488: Avoid hanging due to Win7 race condition when destroying
-    // AudioSessionControl.  We do that by Moving the AudioSessionControl
-    // to a worker thread (that we never 'join') for destruction.
+  if (mAudioSessionControl) {
+    // Avoid hanging when destroying AudioSessionControl.  We do that by
+    // moving the AudioSessionControl to a worker thread (that we never
+    // 'join') for destruction.
     SpawnASCReleaseThread(std::move(mAudioSessionControl));
-  } else {
-    mAudioSessionControl = nullptr;
   }
 }
 
