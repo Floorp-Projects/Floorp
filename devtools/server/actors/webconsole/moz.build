@@ -11,7 +11,6 @@ DIRS += [
 DevToolsModules(
     'commands.js',
     'content-process-forward.js',
-    'eager-ecma-whitelist.js',
     'eager-function-whitelist.js',
     'eval-with-debugger.js',
     'message-manager-mock.js',
