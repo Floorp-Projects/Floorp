@@ -136,10 +136,13 @@ class AntiTrackingCommon final {
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
-  // Check whether a top window principal is on the content blocking allow list.
-  static nsresult IsOnContentBlockingAllowList(nsIPrincipal* aTopWinPrincipal,
-                                               bool aIsPrivateBrowsing,
-                                               bool& aIsAllowListed);
+  // Check whether a principal is on the content blocking allow list.
+  // aPrincipal should be a "content blocking allow list principal".
+  // This principal can be obtained from the load info object for top-level
+  // windows.
+  static nsresult IsOnContentBlockingAllowList(
+      nsIPrincipal* aContentBlockingAllowListPrincipal, bool aIsPrivateBrowsing,
+      bool& aIsAllowListed);
 
   // Computes the principal used to check the content blocking allow list for a
   // top-level document based on the document principal.  This function is used
