@@ -430,6 +430,14 @@ def verify_index(config, index):
     # case, they take precedence over a Docker volume. But a volume still
     # needs to be declared for the path.
     Optional('volumes'): [text_type],
+    Optional(
+        "required-volumes",
+        description=(
+            "Paths that are required to be volumes for performance reasons. "
+            "For in-tree images, these paths will be checked to verify that they "
+            "are defined as volumes."
+        ),
+    ): [text_type],
 
     # caches to set up for the task
     Optional('caches'): [{
@@ -690,6 +698,7 @@ def build_docker_worker_payload(config, task, task_def):
         payload['supersederUrl'] = superseder_url(config, task)
 
     check_caches_are_volumes(task)
+    check_required_volumes(task)
 
 
 @payload_builder('generic-worker', schema={
@@ -2085,6 +2094,28 @@ def check_caches_are_volumes(task):
 
     raise Exception('task %s (image %s) has caches that are not declared as '
                     'Docker volumes: %s '
+                    '(have you added them as VOLUMEs in the Dockerfile?)'
+                    % (task['label'], task['worker']['docker-image'],
+                       ', '.join(sorted(missing))))
+
+
+def check_required_volumes(task):
+    """
+    Ensures that all paths that are required to be volumes are defined as volumes.
+
+    Performance of writing to files in poor in directories not marked as
+    volumes, in docker. Ensure that paths that are often written to are marked
+    as volumes.
+    """
+    volumes = set(task['worker']['volumes'])
+    paths = set(task['worker'].get('required-volumes', []))
+    missing = paths - volumes
+
+    if not missing:
+        return
+
+    raise Exception('task %s (image %s) has paths that should be volumes for peformance '
+                    'that are not declared as Docker volumes: %s '
                     '(have you added them as VOLUMEs in the Dockerfile?)'
                     % (task['label'], task['worker']['docker-image'],
                        ', '.join(sorted(missing))))

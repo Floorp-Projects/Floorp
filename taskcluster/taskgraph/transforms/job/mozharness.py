@@ -174,6 +174,8 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         'PYTHONUNBUFFERED': '1',
     })
 
+    worker.setdefault('required-volumes', []).append(env['WORKSPACE'])
+
     if 'actions' in run:
         env['MOZHARNESS_ACTIONS'] = ' '.join(run.pop('actions'))
 
