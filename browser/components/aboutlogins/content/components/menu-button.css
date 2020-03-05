@@ -68,7 +68,7 @@
 }
 
 .menuitem-import {
-  background-image: url("chrome://browser/skin/save.svg");
+  background-image: url("chrome://browser/skin/import.svg");
 }
 
 .menuitem-preferences {
