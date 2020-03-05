@@ -286,8 +286,8 @@ BEGIN_TEST(test_ubiCoarseType) {
   JSScript* script = nullptr;
   CHECK(JS::ubi::Node(script).coarseType() == JS::ubi::CoarseType::Script);
 
-  js::LazyScript* lazyScript = nullptr;
-  CHECK(JS::ubi::Node(lazyScript).coarseType() == JS::ubi::CoarseType::Script);
+  js::BaseScript* baseScript = nullptr;
+  CHECK(JS::ubi::Node(baseScript).coarseType() == JS::ubi::CoarseType::Script);
 
   js::jit::JitCode* jitCode = nullptr;
   CHECK(JS::ubi::Node(jitCode).coarseType() == JS::ubi::CoarseType::Script);
