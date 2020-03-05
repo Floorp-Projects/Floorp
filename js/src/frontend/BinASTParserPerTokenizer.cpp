@@ -85,7 +85,7 @@ BinASTParserPerTokenizer<Tok>::BinASTParserPerTokenizer(
     JSContext* cx, CompilationInfo& compilationInfo,
     const JS::ReadOnlyCompileOptions& options,
     HandleScriptSourceObject sourceObject,
-    Handle<LazyScript*> lazyScript /* = nullptr */)
+    Handle<BaseScript*> lazyScript /* = nullptr */)
     : BinASTParserBase(cx, compilationInfo, sourceObject),
       options_(options),
       lazyScript_(cx, lazyScript),

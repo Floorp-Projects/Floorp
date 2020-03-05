@@ -66,7 +66,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   BinASTParser(JSContext* cx, CompilationInfo& compilationInfo,
                const JS::ReadOnlyCompileOptions& options,
                HandleScriptSourceObject sourceObject,
-               Handle<LazyScript*> lazyScript = nullptr)
+               Handle<BaseScript*> lazyScript = nullptr)
       : BinASTParserPerTokenizer<Tok>(cx, compilationInfo, options,
                                       sourceObject, lazyScript) {}
   ~BinASTParser() {}

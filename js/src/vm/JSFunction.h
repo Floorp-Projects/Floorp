@@ -815,7 +815,7 @@ class JSFunction : public js::NativeObject {
 
   // Release the lazyScript() pointer while triggering barriers.
   void clearLazyScript() {
-    js::LazyScript::writeBarrierPre(lazyScript());
+    js::BaseScript::writeBarrierPre(lazyScript());
     u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
   }

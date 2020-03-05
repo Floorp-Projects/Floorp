@@ -149,7 +149,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    * Register LazyScript for later modification.
    * Not used in multipart format.
    */
-  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(LazyScript* lazy) {
+  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(BaseScript* lazy) {
     return Ok();
   }
 

@@ -596,7 +596,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     flags_.setFlags(FunctionFlags::BASESCRIPT, interpreted);
   }
 
-  void initLazyScript(LazyScript* script) {
+  void initLazyScript(BaseScript* script) {
     function()->initLazyScript(script);
   }
 

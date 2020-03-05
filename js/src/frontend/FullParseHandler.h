@@ -51,7 +51,7 @@ class FullParseHandler {
    * - lazyInnerFunctionIndex is used as we skip over inner functions
    *   (see skipLazyInnerFunction),
    */
-  const Rooted<LazyScript*> lazyOuterFunction_;
+  const Rooted<BaseScript*> lazyOuterFunction_;
   size_t lazyInnerFunctionIndex;
 
   size_t lazyClosedOverBindingIndex;
@@ -102,7 +102,7 @@ class FullParseHandler {
   }
 
   FullParseHandler(JSContext* cx, LifoAlloc& alloc,
-                   LazyScript* lazyOuterFunction,
+                   BaseScript* lazyOuterFunction,
                    SourceKind kind = SourceKind::Text)
       : allocator(cx, alloc),
         lazyOuterFunction_(cx, lazyOuterFunction),
