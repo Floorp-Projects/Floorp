@@ -139,7 +139,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         try:
             self.tooltool_fetch(
                 manifest=manifest,
-                output_dir=os.path.join(dirs['abs_src_dir']),
+                output_dir=os.path.join(dirs['abs_work_dir']),
                 cache=c.get('tooltool_cache')
             )
         except KeyError:
@@ -372,7 +372,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         if self.config.get('partial_env'):
             env = self.query_env(self.config['partial_env'])
         kwargs = dict(cwd=repo_dir, env=env)
-        dump_syms = os.path.join(dirs['abs_src_dir'], c['dump_syms_binary'])
+        dump_syms = os.path.join(dirs['abs_work_dir'], c['dump_syms_binary'])
         self.chmod(dump_syms, 0o755)
         python = self.query_exe('python2.7')
         cmd = [python, os.path.join(external_tools_path, 'packagesymbols.py'),
