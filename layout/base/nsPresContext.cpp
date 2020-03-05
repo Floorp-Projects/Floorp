@@ -793,7 +793,7 @@ void nsPresContext::UpdateCharSet(NotNull<const Encoding*> aCharSet) {
   }
 }
 
-nsPresContext* nsPresContext::GetParentPresContext() {
+nsPresContext* nsPresContext::GetParentPresContext() const {
   mozilla::PresShell* presShell = GetPresShell();
   if (presShell) {
     nsViewManager* viewManager = presShell->GetViewManager();
@@ -848,8 +848,8 @@ nsIWidget* nsPresContext::GetRootWidget() const {
 
 // We may want to replace this with something faster, maybe caching the root
 // prescontext
-nsRootPresContext* nsPresContext::GetRootPresContext() {
-  nsPresContext* pc = this;
+nsRootPresContext* nsPresContext::GetRootPresContext() const {
+  nsPresContext* pc = const_cast<nsPresContext*>(this);
   for (;;) {
     nsPresContext* parent = pc->GetParentPresContext();
     if (!parent) break;

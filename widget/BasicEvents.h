@@ -176,6 +176,8 @@ struct BaseEventFlags {
   // remote process (but it's not handled yet if it's not a duplicated event
   // instance).
   bool mPostedToRemoteProcess : 1;
+  // If mCameFromAnotherProcess is true, the event came from another process.
+  bool mCameFromAnotherProcess : 1;
 
   // At lease one of the event in the event path had non privileged click
   // listener.
@@ -336,6 +338,16 @@ struct BaseEventFlags {
    */
   inline bool HasBeenPostedToRemoteProcess() const {
     return mPostedToRemoteProcess;
+  }
+  /**
+   * Return true if the event came from another process.
+   */
+  inline bool CameFromAnotherProcess() const { return mCameFromAnotherProcess; }
+  /**
+   * Mark the event as coming from another process.
+   */
+  inline void MarkAsComingFromAnotherProcess() {
+    mCameFromAnotherProcess = true;
   }
   /**
    * Mark the event is reserved by chrome.  I.e., shouldn't be dispatched to
@@ -699,6 +711,18 @@ class WidgetEvent : public WidgetEventTime {
    */
   inline bool HasBeenPostedToRemoteProcess() const {
     return mFlags.HasBeenPostedToRemoteProcess();
+  }
+  /**
+   * Return true if the event came from another process.
+   */
+  inline bool CameFromAnotherProcess() const {
+    return mFlags.CameFromAnotherProcess();
+  }
+  /**
+   * Mark the event as coming from another process.
+   */
+  inline void MarkAsComingFromAnotherProcess() {
+    mFlags.MarkAsComingFromAnotherProcess();
   }
   /**
    * Mark the event is reserved by chrome.  I.e., shouldn't be dispatched to

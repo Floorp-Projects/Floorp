@@ -1939,6 +1939,7 @@ class PresShell final : public nsStubDocumentObserver,
   // Check if aEvent is a mouse event and record the mouse location for later
   // synth mouse moves.
   void RecordMouseLocation(WidgetGUIEvent* aEvent);
+  inline bool MouseLocationWasSetBySynthesizedMouseEventForTests() const;
   class nsSynthMouseMoveEvent final : public nsARefreshObserver {
    public:
     nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
@@ -2758,7 +2759,7 @@ class PresShell final : public nsStubDocumentObserver,
     static StaticRefPtr<dom::Element> sLastKeyDownEventTargetElement;
   };
 
-  PresShell* GetRootPresShell();
+  PresShell* GetRootPresShell() const;
 
   nscolor GetDefaultBackgroundColorToDraw();
 
@@ -3159,6 +3160,10 @@ class PresShell final : public nsStubDocumentObserver,
   bool mForceUseLegacyNonPrimaryDispatch : 1;
   // Whether mForceUseLegacyNonPrimaryDispatch is initialised.
   bool mInitializedWithClickEventDispatchingBlacklist : 1;
+
+  // Set to true if mMouseLocation is set by a mouse event which is synthesized
+  // for tests.
+  bool mMouseLocationWasSetBySynthesizedMouseEventForTests : 1;
 
   struct CapturingContentInfo final {
     CapturingContentInfo()
