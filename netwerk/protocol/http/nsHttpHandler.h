@@ -53,8 +53,8 @@ class nsHttpConnection;
 class nsHttpConnectionInfo;
 class HttpTransactionShell;
 class AltSvcMapping;
-class SimpleHttpChannel;
 class TRR;
+class TRRServiceChannel;
 
 /*
  * FRAMECHECK_LAX - no check
@@ -503,10 +503,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // thread. Updates mSpeculativeConnectEnabled when done.
   void MaybeEnableSpeculativeConnect();
 
-  // We only allow TRR and SimpleHttpChannel itself to create SimpleHttpChannel.
-  friend class SimpleHttpChannel;
+  // We only allow TRR and TRRServiceChannel itself to create TRRServiceChannel.
+  friend class TRRServiceChannel;
   friend class TRR;
-  nsresult CreateSimpleHttpChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
+  nsresult CreateTRRServiceChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
                                    uint32_t proxyResolveFlags, nsIURI* proxyURI,
                                    nsILoadInfo* aLoadInfo, nsIChannel** result);
   nsresult SetupChannelInternal(HttpBaseChannel* aChannel, nsIURI* uri,
