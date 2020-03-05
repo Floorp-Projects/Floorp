@@ -96,8 +96,7 @@ class TemporaryFileInputStream final : public nsFileInputStream {
 
 TemporaryFileBlobImpl::TemporaryFileBlobImpl(nsIFile* aFile,
                                              const nsAString& aContentType)
-    : FileBlobImpl(aFile, EmptyString(), aContentType,
-                   NS_LITERAL_STRING("TemporaryBlobImpl"))
+    : FileBlobImpl(aFile, EmptyString(), aContentType)
 #ifdef DEBUG
       ,
       mInputStreamCreated(false)

@@ -16,7 +16,7 @@ function test_fetch_basic() {
       if ("SpecialPowers" in self) {
         is(
           SpecialPowers.wrap(blob).blobImplType,
-          "StreamBlobImpl[TemporaryBlobImpl]",
+          "StreamBlobImpl[TemporaryFileBlobImpl]",
           "We have a blob stored into a stream file"
         );
       }
@@ -51,7 +51,7 @@ function test_xhr_basic() {
       if ("SpecialPowers" in self) {
         is(
           SpecialPowers.wrap(blob).blobImplType,
-          "StreamBlobImpl[TemporaryBlobImpl]",
+          "StreamBlobImpl[TemporaryFileBlobImpl]",
           "We have a blob stored into a stream file"
         );
       }
@@ -80,7 +80,7 @@ function test_response_basic() {
     if ("SpecialPowers" in self) {
       is(
         SpecialPowers.wrap(blob).blobImplType,
-        "StreamBlobImpl[TemporaryBlobImpl]",
+        "StreamBlobImpl[TemporaryFileBlobImpl]",
         "We have a blob stored into a stream file"
       );
     }
@@ -108,7 +108,7 @@ function test_request_basic() {
     if ("SpecialPowers" in self) {
       is(
         SpecialPowers.wrap(blob).blobImplType,
-        "StreamBlobImpl[TemporaryBlobImpl]",
+        "StreamBlobImpl[TemporaryFileBlobImpl]",
         "We have a blob stored into a stream file"
       );
     }

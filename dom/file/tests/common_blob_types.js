@@ -63,7 +63,7 @@ let blobTypes = [
         };
       });
     },
-    blobImplType: "StreamBlobImpl[TemporaryBlobImpl]",
+    blobImplType: "StreamBlobImpl[TemporaryFileBlobImpl]",
   },
 ];
 
