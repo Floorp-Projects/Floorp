@@ -239,11 +239,6 @@ const observer = {
 
       // Used to watch for changes to fields filled with generated passwords.
       case "change": {
-        let formLikeRoot = FormLikeFactory.findRootForField(aEvent.target);
-        if (!docState.fieldModificationsByRootElement.get(formLikeRoot)) {
-          log("Ignoring change event on form that hasn't been user-modified");
-          break;
-        }
         if (aEvent.target.hasBeenTypePassword) {
           let triggeredByFillingGenerated = docState.generatedPasswordFields.has(
             aEvent.target
@@ -285,7 +280,6 @@ const observer = {
 
       case "input": {
         let field = aEvent.target;
-        let isPasswordInput = field.hasBeenTypePassword;
         // React to input into fields filled with generated passwords.
         if (docState.generatedPasswordFields.has(field)) {
           LoginManagerChild.forWindow(
@@ -293,40 +287,15 @@ const observer = {
           )._maybeStopTreatingAsGeneratedPasswordField(aEvent);
         }
         // React to input into potential username or password fields
-        if (isPasswordInput || LoginHelper.isUsernameFieldType(field)) {
-          let formLikeRoot = FormLikeFactory.findRootForField(field);
-
-          if (formLikeRoot !== aEvent.currentTarget) {
-            break;
-          }
+        if (
+          field.hasBeenTypePassword ||
+          LoginHelper.isUsernameFieldType(field)
+        ) {
           // flag this form as user-modified for the closest form/root ancestor
-          let alreadyModified = docState.fieldModificationsByRootElement.get(
-            formLikeRoot
-          );
-          let { login: filledLogin, userTriggered: fillWasUserTriggered } =
-            docState.fillsByRootElement.get(formLikeRoot) || {};
-
-          // don't flag as user-modified if the form was autofilled and doesn't appear to have changed
-          let isAutofillInput = filledLogin && !fillWasUserTriggered;
-          if (!alreadyModified && isAutofillInput) {
-            if (isPasswordInput && filledLogin.password == field.value) {
-              log(
-                "Ignoring password input event that doesn't change autofilled values"
-              );
-              break;
-            }
-            if (
-              !isPasswordInput &&
-              filledLogin.usernameField &&
-              filledLogin.username == field.value
-            ) {
-              log(
-                "Ignoring username input event that doesn't change autofilled values"
-              );
-              break;
-            }
+          let formLikeRoot = FormLikeFactory.findRootForField(field);
+          if (formLikeRoot == aEvent.currentTarget) {
+            docState.fieldModificationsByRootElement.set(formLikeRoot, true);
           }
-          docState.fieldModificationsByRootElement.set(formLikeRoot, true);
         }
         break;
       }
@@ -1707,8 +1676,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    let { login: autoFilledLogin } =
-      docState.fillsByRootElement.get(form.rootElement) || {};
+    let autoFilledLogin = docState.fillsByRootElement.get(form.rootElement);
     let browsingContextId = win.windowGlobalChild.browsingContext.id;
 
     let detail = {
@@ -2186,31 +2154,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
       // Fill the form
 
-      let doc = form.ownerDocument;
-      let willAutofill =
-        usernameField || passwordField.value != selectedLogin.password;
-      if (willAutofill) {
-        let autoFilledLogin = {
-          guid: selectedLogin.QueryInterface(Ci.nsILoginMetaInfo).guid,
-          username: selectedLogin.username,
-          usernameField: usernameField
-            ? Cu.getWeakReference(usernameField)
-            : null,
-          password: selectedLogin.password,
-          passwordField: Cu.getWeakReference(passwordField),
-        };
-        // Ensure the state is updated before setUserInput is called.
-        log(
-          "Saving autoFilledLogin",
-          autoFilledLogin.guid,
-          "for",
-          form.rootElement
-        );
-        this.stateForDocument(doc).fillsByRootElement.set(form.rootElement, {
-          login: autoFilledLogin,
-          userTriggered,
-        });
-      }
       if (usernameField) {
         // Don't modify the username field if it's disabled or readOnly so we preserve its case.
         let disabledOrReadOnly =
@@ -2230,16 +2173,36 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           if (!userEnteredDifferentCase && userNameDiffers) {
             usernameField.setUserInput(selectedLogin.username);
           }
+
           this._highlightFilledField(usernameField);
         }
       }
 
+      let doc = form.ownerDocument;
       if (passwordField.value != selectedLogin.password) {
         // Ensure the field gets re-masked in case a generated password was
         // filled into it previously.
         this._stopTreatingAsGeneratedPasswordField(passwordField);
-
         passwordField.setUserInput(selectedLogin.password);
+        let autoFilledLogin = {
+          guid: selectedLogin.QueryInterface(Ci.nsILoginMetaInfo).guid,
+          username: selectedLogin.username,
+          usernameField: usernameField
+            ? Cu.getWeakReference(usernameField)
+            : null,
+          password: selectedLogin.password,
+          passwordField: Cu.getWeakReference(passwordField),
+        };
+        log(
+          "Saving autoFilledLogin",
+          autoFilledLogin.guid,
+          "for",
+          form.rootElement
+        );
+        this.stateForDocument(doc).fillsByRootElement.set(
+          form.rootElement,
+          autoFilledLogin
+        );
       }
 
       this._highlightFilledField(passwordField);
@@ -2330,10 +2293,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     log("_isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
-    let { login: filledLogin } =
-      this.stateForDocument(
-        aUsernameField.ownerDocument
-      ).fillsByRootElement.get(formLikeRoot) || {};
+    let filledLogin = this.stateForDocument(
+      aUsernameField.ownerDocument
+    ).fillsByRootElement.get(formLikeRoot);
     if (!filledLogin) {
       return false;
     }
