@@ -335,7 +335,8 @@ void GfxInfo::GetData() {
 
   mAdapterDescription.Assign(glRenderer);
 #ifdef MOZ_WAYLAND
-  mIsWayland = !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  mIsWayland = gdk_display_get_default() &&
+               !GDK_IS_X11_DISPLAY(gdk_display_get_default());
   if (mIsWayland) {
     mIsWaylandDRM = nsWaylandDisplay::IsDMABufEnabled();
   }
