@@ -8,7 +8,7 @@ external_tools_path = os.path.join(
     'external_tools',
 )
 
-VSPATH = '%(abs_src_dir)s\\vs2017_15.8.4'
+VSPATH = '%(abs_work_dir)s\\vs2017_15.8.4'
 config = {
     'tooltool_manifest_file': 'win.manifest',
     'exes': {
