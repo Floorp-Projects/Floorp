@@ -101,8 +101,8 @@ static void TraverseInnerLazyScriptsForLazyScript(
     }
 
     LazyScript* lazyScript = fun->lazyScript();
-    MOZ_ASSERT_IF(lazyScript->hasEnclosingLazyScript(),
-                  lazyScript->enclosingLazyScript() == enclosingLazyScript);
+    MOZ_ASSERT_IF(lazyScript->hasEnclosingScript(),
+                  lazyScript->enclosingScript() == enclosingLazyScript);
 
     lazyScriptCallback(cx->runtime(), data, lazyScript, nogc);
 

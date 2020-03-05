@@ -664,9 +664,9 @@ js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
       .source();
 }
 
-void js::BaseScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript) {
-  MOZ_ASSERT(enclosingLazyScript);
-  warmUpData_.initEnclosingScript(enclosingLazyScript);
+void js::BaseScript::setEnclosingScript(BaseScript* enclosingScript) {
+  MOZ_ASSERT(enclosingScript);
+  warmUpData_.initEnclosingScript(enclosingScript);
 }
 
 void js::BaseScript::setEnclosingScope(Scope* enclosingScope) {
@@ -5195,7 +5195,7 @@ void ScriptWarmUpData::trace(JSTracer* trc) {
   uintptr_t tag = data_ & TagMask;
   switch (tag) {
     case EnclosingScriptTag: {
-      LazyScript* enclosingScript = toEnclosingScript();
+      BaseScript* enclosingScript = toEnclosingScript();
       TraceManuallyBarrieredEdge(trc, &enclosingScript, "enclosingScript");
       setTaggedPtr<EnclosingScriptTag>(enclosingScript);
       break;
