@@ -127,6 +127,12 @@ using byte = uint8_t;
 using Address = uintptr_t;
 static const Address kNullAddress = 0;
 
+// Latin1/UTF-16 constants
+// Code-point values in Unicode 4.0 are 21 bits wide.
+// Code units in UTF-16 are 16 bits wide.
+using uc16 = char16_t;
+using uc32 = int32_t;
+
 namespace base {
 
 // Origin:
@@ -178,10 +184,10 @@ using uchar = unsigned int;
 // https://github.com/v8/v8/blob/1f1e4cdb04c75eab77adbecd5f5514ddc3eb56cf/src/strings/unicode.h#L133-L150
 class Latin1 {
  public:
-  static const uint16_t kMaxChar = 0xff;
+  static const uc16 kMaxChar = 0xff;
 
   // Convert the character to Latin-1 case equivalent if possible.
-  static inline uint16_t TryConvertToLatin1(uint16_t c) {
+  static inline uc16 TryConvertToLatin1(uc16 c) {
     // "GREEK CAPITAL LETTER MU" case maps to "MICRO SIGN".
     // "GREEK SMALL LETTER MU" case maps to "MICRO SIGN".
     if (c == 0x039C || c == 0x03BC) {
@@ -206,10 +212,10 @@ class Utf16 {
   static inline bool IsTrailSurrogate(int code) {
     return js::unicode::IsTrailSurrogate(code);
   }
-  static inline uint16_t LeadSurrogate(uint32_t char_code) {
+  static inline uc16 LeadSurrogate(uint32_t char_code) {
     return js::unicode::LeadSurrogate(char_code);
   }
-  static inline uint16_t TrailSurrogate(uint32_t char_code) {
+  static inline uc16 TrailSurrogate(uint32_t char_code) {
     return js::unicode::TrailSurrogate(char_code);
   }
   static inline uint32_t CombineSurrogatePair(char16_t lead, char16_t trail) {
@@ -306,12 +312,6 @@ constexpr int kSystemPointerSize = sizeof(void*);
 // representable as a Number value.  ES6 section 20.1.2.6
 constexpr double kMaxSafeInteger = 9007199254740991.0;  // 2^53-1
 
-// Latin1/UTF-16 constants
-// Code-point values in Unicode 4.0 are 21 bits wide.
-// Code units in UTF-16 are 16 bits wide.
-using uc16 = uint16_t;
-using uc32 = int32_t;
-
 constexpr int kBitsPerByte = 8;
 constexpr int kBitsPerByteLog2 = 3;
 constexpr int kUInt32Size = sizeof(uint32_t);
@@ -328,10 +328,10 @@ inline bool IsIdentifierPart(uc32 c) {
   return js::unicode::IsIdentifierPart(uint32_t(c));
 }
 
-// Wrappers to disambiguate uint16_t and uc16.
+// Wrappers to disambiguate char16_t and uc16.
 struct AsUC16 {
-  explicit AsUC16(uint16_t v) : value(v) {}
-  uint16_t value;
+  explicit AsUC16(char16_t v) : value(v) {}
+  char16_t value;
 };
 
 struct AsUC32 {
@@ -388,16 +388,16 @@ inline int CompareChars(const lchar* lhs, const rchar* rhs, size_t chars) {
                                   reinterpret_cast<const uint8_t*>(rhs), chars);
     } else {
       return CompareCharsUnsigned(reinterpret_cast<const uint8_t*>(lhs),
-                                  reinterpret_cast<const uint16_t*>(rhs),
+                                  reinterpret_cast<const char16_t*>(rhs),
                                   chars);
     }
   } else {
     if (sizeof(rchar) == 1) {
-      return CompareCharsUnsigned(reinterpret_cast<const uint16_t*>(lhs),
+      return CompareCharsUnsigned(reinterpret_cast<const char16_t*>(lhs),
                                   reinterpret_cast<const uint8_t*>(rhs), chars);
     } else {
-      return CompareCharsUnsigned(reinterpret_cast<const uint16_t*>(lhs),
-                                  reinterpret_cast<const uint16_t*>(rhs),
+      return CompareCharsUnsigned(reinterpret_cast<const char16_t*>(lhs),
+                                  reinterpret_cast<const char16_t*>(rhs),
                                   chars);
     }
   }
@@ -628,8 +628,6 @@ class String : public HeapObject {
                                    string_->length());
     }
     Vector<const uc16> ToUC16Vector() const;
-    // TODO: twoByteChars returns char16_t*, but uc16 is uint16_t, which is
-    // not compatible :( :( :(
     // {
     //   MOZ_ASSERT(IsTwoByte());
     //   return Vector<const uc16>(string_->twoByteChars(no_gc_),
