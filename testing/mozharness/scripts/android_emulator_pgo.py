@@ -98,8 +98,9 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         abs_dirs = super(AndroidProfileRun, self).query_abs_dirs()
         dirs = {}
 
+        dirs['abs_src_dir'] = os.environ['GECKO_PATH']
         dirs['abs_test_install_dir'] = os.path.join(
-            os.environ['GECKO_PATH'], 'testing')
+            dirs['abs_src_dir'], 'testing')
         dirs['abs_xre_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'hostutils')
         dirs['abs_blob_upload_dir'] = '/builds/worker/artifacts/blobber_upload_dir'
@@ -124,7 +125,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         dirs = self.query_abs_dirs()
         self.register_virtualenv_module(
             'marionette',
-            os.path.join(dirs['abs_work_dir'], 'src', 'testing', 'marionette', 'client')
+            os.path.join(dirs['abs_test_install_dir'], 'marionette', 'client')
         )
 
     def download(self):
@@ -163,7 +164,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         }
 
         dirs = self.query_abs_dirs()
-        topsrcdir = os.path.join(dirs['abs_work_dir'], 'src')
+        topsrcdir = dirs['abs_src_dir']
         adb = self.query_exe('adb')
 
         path_mappings = {
