@@ -174,10 +174,10 @@ impl<'a> NameSectionReader<'a> {
 
     fn verify_section_end(&self, end: usize) -> Result<()> {
         if self.reader.buffer.len() < end {
-            return Err(BinaryReaderError {
-                message: "Name entry extends past end of the code section",
-                offset: self.reader.original_offset + self.reader.buffer.len(),
-            });
+            return Err(BinaryReaderError::new(
+                "Name entry extends past end of the code section",
+                self.reader.original_offset + self.reader.buffer.len(),
+            ));
         }
         Ok(())
     }

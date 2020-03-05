@@ -42,10 +42,10 @@ impl<'a> OperatorsReader<'a> {
         if self.eof() {
             return Ok(());
         }
-        Err(BinaryReaderError {
-            message: "Unexpected data at the end of operators",
-            offset: self.reader.original_position(),
-        })
+        Err(BinaryReaderError::new(
+            "Unexpected data at the end of operators",
+            self.reader.original_position(),
+        ))
     }
 
     pub fn read<'b>(&mut self) -> Result<Operator<'b>>

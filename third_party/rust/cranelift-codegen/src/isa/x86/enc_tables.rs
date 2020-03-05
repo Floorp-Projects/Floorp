@@ -123,6 +123,39 @@ fn size_plus_maybe_sib_or_offset_for_inreg_1(
     sizing.base_size + if needs_sib_or_offset { 1 } else { 0 }
 }
 
+/// Calculates the size while inferring if the first and second input registers (inreg0, inreg1)
+/// require a dynamic REX prefix and if the second input register (inreg1) requires a SIB or offset.
+fn size_plus_maybe_sib_or_offset_inreg1_plus_rex_prefix_for_inreg0_inreg1(
+    sizing: &RecipeSizing,
+    enc: Encoding,
+    inst: Inst,
+    divert: &RegDiversions,
+    func: &Function,
+) -> u8 {
+    let needs_rex = (EncodingBits::from(enc.bits()).rex_w() != 0)
+        || test_input(0, inst, divert, func, is_extended_reg)
+        || test_input(1, inst, divert, func, is_extended_reg);
+    size_plus_maybe_sib_or_offset_for_inreg_1(sizing, enc, inst, divert, func)
+        + if needs_rex { 1 } else { 0 }
+}
+
+/// Calculates the size while inferring if the first input register (inreg0) and first output
+/// register (outreg0) require a dynamic REX and if the first input register (inreg0) requires a
+/// SIB or offset.
+fn size_plus_maybe_sib_or_offset_for_inreg_0_plus_rex_prefix_for_inreg0_outreg0(
+    sizing: &RecipeSizing,
+    enc: Encoding,
+    inst: Inst,
+    divert: &RegDiversions,
+    func: &Function,
+) -> u8 {
+    let needs_rex = (EncodingBits::from(enc.bits()).rex_w() != 0)
+        || test_input(0, inst, divert, func, is_extended_reg)
+        || test_result(0, inst, divert, func, is_extended_reg);
+    size_plus_maybe_sib_or_offset_for_inreg_0(sizing, enc, inst, divert, func)
+        + if needs_rex { 1 } else { 0 }
+}
+
 /// Infers whether a dynamic REX prefix will be emitted, for use with one input reg.
 ///
 /// A REX prefix is known to be emitted if either:
@@ -195,6 +228,19 @@ fn size_with_inferred_rex_for_inreg0_outreg0(
 ) -> u8 {
     let needs_rex = (EncodingBits::from(enc.bits()).rex_w() != 0)
         || test_input(0, inst, divert, func, is_extended_reg)
+        || test_result(0, inst, divert, func, is_extended_reg);
+    sizing.base_size + if needs_rex { 1 } else { 0 }
+}
+
+/// Infers whether a dynamic REX prefix will be emitted, based on a single output register.
+fn size_with_inferred_rex_for_outreg0(
+    sizing: &RecipeSizing,
+    enc: Encoding,
+    inst: Inst,
+    divert: &RegDiversions,
+    func: &Function,
+) -> u8 {
+    let needs_rex = (EncodingBits::from(enc.bits()).rex_w() != 0)
         || test_result(0, inst, divert, func, is_extended_reg);
     sizing.base_size + if needs_rex { 1 } else { 0 }
 }
@@ -1213,7 +1259,7 @@ fn convert_insertlane(
     }
 }
 
-/// For SIMD negation, convert an `ineg` to a `vconst + isub`.
+/// For SIMD or scalar integer negation, convert `ineg` to `vconst + isub` or `iconst + isub`.
 fn convert_ineg(
     inst: ir::Inst,
     func: &mut ir::Function,
@@ -1229,10 +1275,53 @@ fn convert_ineg(
     } = pos.func.dfg[inst]
     {
         let value_type = pos.func.dfg.value_type(arg);
-        if value_type.is_vector() && value_type.lane_type().is_int() {
+        let zero_value = if value_type.is_vector() && value_type.lane_type().is_int() {
             let zero_immediate = pos.func.dfg.constants.insert(vec![0; 16].into());
-            let zero_value = pos.ins().vconst(value_type, zero_immediate); // this should be legalized to a PXOR
-            pos.func.dfg.replace(inst).isub(zero_value, arg);
+            pos.ins().vconst(value_type, zero_immediate) // this should be legalized to a PXOR
+        } else if value_type.is_int() {
+            pos.ins().iconst(value_type, 0)
+        } else {
+            panic!("Can't convert ineg of type {}", value_type)
+        };
+        pos.func.dfg.replace(inst).isub(zero_value, arg);
+    } else {
+        unreachable!()
+    }
+}
+
+fn expand_tls_value(
+    inst: ir::Inst,
+    func: &mut ir::Function,
+    _cfg: &mut ControlFlowGraph,
+    isa: &dyn TargetIsa,
+) {
+    use crate::settings::TlsModel;
+
+    assert!(
+        isa.triple().architecture == target_lexicon::Architecture::X86_64,
+        "Not yet implemented for {:?}",
+        isa.triple(),
+    );
+
+    if let ir::InstructionData::UnaryGlobalValue {
+        opcode: ir::Opcode::TlsValue,
+        global_value,
+    } = func.dfg[inst]
+    {
+        let ctrl_typevar = func.dfg.ctrl_typevar(inst);
+        assert_eq!(ctrl_typevar, ir::types::I64);
+
+        match isa.flags().tls_model() {
+            TlsModel::None => panic!("tls_model flag is not set."),
+            TlsModel::ElfGd => {
+                func.dfg.replace(inst).x86_elf_tls_get_addr(global_value);
+            }
+            TlsModel::Macho => {
+                func.dfg.replace(inst).x86_macho_tls_get_addr(global_value);
+            }
+            model => unimplemented!("tls_value for tls model {:?}", model),
         }
+    } else {
+        unreachable!();
     }
 }

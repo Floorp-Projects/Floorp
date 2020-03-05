@@ -22,10 +22,10 @@ pub(crate) fn read_sourcemappingurl_section_content<'a>(
     let mut reader = BinaryReader::new_with_offset(data, offset);
     let url = reader.read_string()?;
     if !reader.eof() {
-        return Err(BinaryReaderError {
-            message: "Unexpected content in the sourceMappingURL section",
-            offset: offset + reader.position,
-        });
+        return Err(BinaryReaderError::new(
+            "Unexpected content in the sourceMappingURL section",
+            offset + reader.position,
+        ));
     }
     Ok(url)
 }

@@ -19,10 +19,10 @@ pub(crate) fn read_start_section_content(data: &[u8], offset: usize) -> Result<u
     let mut reader = BinaryReader::new_with_offset(data, offset);
     let start_index = reader.read_var_u32()?;
     if !reader.eof() {
-        return Err(BinaryReaderError {
-            message: "Unexpected content in the start section",
-            offset: offset + reader.position,
-        });
+        return Err(BinaryReaderError::new(
+            "Unexpected content in the start section",
+            offset + reader.position,
+        ));
     }
     Ok(start_index)
 }

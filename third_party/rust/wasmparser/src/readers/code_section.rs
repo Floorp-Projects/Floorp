@@ -151,10 +151,10 @@ impl<'a> CodeSectionReader<'a> {
 
     fn verify_body_end(&self, end: usize) -> Result<()> {
         if self.reader.buffer.len() < end {
-            return Err(BinaryReaderError {
-                message: "Function body extends past end of the code section",
-                offset: self.reader.original_offset + self.reader.buffer.len(),
-            });
+            return Err(BinaryReaderError::new(
+                "Function body extends past end of the code section",
+                self.reader.original_offset + self.reader.buffer.len(),
+            ));
         }
         Ok(())
     }
