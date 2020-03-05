@@ -571,7 +571,7 @@ jobject AndroidBridge::GetGlobalContextRef() {
 NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidEventDispatcher, nsIAndroidBridge,
                   nsIObserver)
 
-nsAndroidBridge::nsAndroidBridge() : mAudibleWindowsNum(0) {
+nsAndroidBridge::nsAndroidBridge() {
   if (jni::IsAvailable()) {
     RefPtr<widget::EventDispatcher> dispatcher = new widget::EventDispatcher();
     dispatcher->Attach(java::EventDispatcher::GetInstance(),
