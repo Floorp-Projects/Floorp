@@ -11,7 +11,7 @@ the state of the session manager changes.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TabsTrayPresenter(tabsTray: `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, closeTabsTray: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, tabsFilter: (`[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)`) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true })`<br>Presenter implementation for a tabs tray implementation in order to update the tabs tray whenever the state of the session manager changes. |
+| [&lt;init&gt;](-init-.md) | `TabsTrayPresenter(tabsTray: `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, tabsFilter: (`[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)`) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, closeTabsTray: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Presenter implementation for a tabs tray implementation in order to update the tabs tray whenever the state of the session manager changes. |
 
 ### Functions
 

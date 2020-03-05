@@ -30,6 +30,12 @@ Indicate how site permissions must behave by permission category.
 | [microphone](microphone.md) | `val microphone: `[`Action`](-action/index.md) |
 | [notification](notification.md) | `val notification: `[`Action`](-action/index.md) |
 
+### Functions
+
+| Name | Summary |
+|---|---|
+| [toSitePermissions](to-site-permissions.md) | `fun toSitePermissions(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, savedAt: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = System.currentTimeMillis()): `[`SitePermissions`](../-site-permissions/index.md)<br>Converts a [SitePermissionsRules](./index.md) object into a [SitePermissions](../-site-permissions/index.md) . |
+
 ### Extension Functions
 
 | Name | Summary |
