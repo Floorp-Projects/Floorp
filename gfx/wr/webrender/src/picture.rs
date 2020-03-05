@@ -273,6 +273,8 @@ pub struct PictureCacheState {
     allocations: PictureCacheRecycledAllocations,
     /// Currently allocated native compositor surface for this picture cache.
     pub native_surface: Option<NativeSurface>,
+    /// A cache of compositor surfaces that are retained between display lists
+    pub external_native_surface_cache: FastHashMap<ExternalNativeSurfaceKey, ExternalNativeSurface>,
 }
 
 pub struct PictureCacheRecycledAllocations {
@@ -2128,6 +2130,28 @@ pub struct NativeSurface {
     pub alpha: NativeSurfaceId,
 }
 
+/// Hash key for an external native compositor surface
+#[derive(PartialEq, Eq, Hash)]
+pub struct ExternalNativeSurfaceKey {
+    /// The YUV image keys that are used to draw this surface.
+    pub image_keys: [ImageKey; 3],
+    /// The current device size of the surface.
+    pub size: DeviceIntSize,
+}
+
+/// Information about a native compositor surface cached between frames.
+pub struct ExternalNativeSurface {
+    /// If true, the surface was used this frame. Used for a simple form
+    /// of GC to remove old surfaces.
+    pub used_this_frame: bool,
+    /// The native compositor surface handle
+    pub native_surface_id: NativeSurfaceId,
+    /// List of image keys, and current image generations, that are drawn in this surface.
+    /// The image generations are used to check if the compositor surface is dirty and
+    /// needs to be updated.
+    pub image_dependencies: [ImageDependency; 3],
+}
+
 /// Represents a cache of tiles that make up a picture primitives.
 pub struct TileCacheInstance {
     /// Index of the tile cache / slice for this frame builder. It's determined
@@ -2228,6 +2252,8 @@ pub struct TileCacheInstance {
     pub external_surfaces: Vec<ExternalSurfaceDescriptor>,
     /// z-buffer ID assigned to opaque tiles in this slice
     pub z_id_opaque: ZBufferId,
+    /// A cache of compositor surfaces that are retained between frames
+    pub external_native_surface_cache: FastHashMap<ExternalNativeSurfaceKey, ExternalNativeSurface>,
 }
 
 impl TileCacheInstance {
@@ -2282,6 +2308,7 @@ impl TileCacheInstance {
             tile_size_override: None,
             external_surfaces: Vec::new(),
             z_id_opaque: ZBufferId::invalid(),
+            external_native_surface_cache: FastHashMap::default(),
         }
     }
 
@@ -2410,6 +2437,7 @@ impl TileCacheInstance {
             self.color_bindings = prev_state.color_bindings;
             self.current_tile_size = prev_state.current_tile_size;
             self.native_surface = prev_state.native_surface;
+            self.external_native_surface_cache = prev_state.external_native_surface_cache;
 
             fn recycle_map<K: std::cmp::Eq + std::hash::Hash, V>(
                 ideal_len: usize,
@@ -2440,6 +2468,15 @@ impl TileCacheInstance {
                 &mut self.compare_cache,
                 prev_state.allocations.compare_cache,
             );
+        }
+
+        // At the start of the frame, step through each current compositor surface
+        // and mark it as unused. Later, this is used to free old compositor surfaces.
+        // TODO(gw): In future, we might make this more sophisticated - for example,
+        //           retaining them for >1 frame if unused, or retaining them in some
+        //           kind of pool to reduce future allocations.
+        for external_native_surface in self.external_native_surface_cache.values_mut() {
+            external_native_surface.used_this_frame = false;
         }
 
         // Only evaluate what tile size to use fairly infrequently, so that we don't end
@@ -2684,6 +2721,10 @@ impl TileCacheInstance {
                     frame_state.resource_cache.destroy_compositor_surface(native_surface.opaque);
                     frame_state.resource_cache.destroy_compositor_surface(native_surface.alpha);
                 }
+
+                for (_, external_surface) in self.external_native_surface_cache.drain() {
+                    frame_state.resource_cache.destroy_compositor_surface(external_surface.native_surface_id)
+                }
             }
             CompositorKind::Native { .. } => {
                 // This could hit even when compositor mode is not changed,
@@ -2712,7 +2753,7 @@ impl TileCacheInstance {
         data_stores: &DataStores,
         clip_store: &ClipStore,
         pictures: &[PicturePrimitive],
-        resource_cache: &ResourceCache,
+        resource_cache: &mut ResourceCache,
         opacity_binding_store: &OpacityBindingStorage,
         color_bindings: &ColorBindingStorage,
         image_instances: &ImageInstanceStorage,
@@ -2909,10 +2950,9 @@ impl TileCacheInstance {
                 //           extract the logic below and support RGBA compositor surfaces too.
                 let mut promote_to_surface = false;
 
-                // For initial implementation, only the simple (draw) compositor mode
-                // supports primitives as compositor surfaces. We can remove this restriction
-                // as a follow up, when we support this for native compositor modes.
-                if let CompositorKind::Draw { .. } = composite_state.compositor_kind {
+
+                // If picture caching is disabled, we can't support any compositor surfaces.
+                if composite_state.picture_caching_is_enabled {
                     // Check if this primitive _wants_ to be promoted to a compositor surface.
                     if prim_data.common.flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
                         promote_to_surface = true;
@@ -3001,6 +3041,64 @@ impl TileCacheInstance {
                             }
                         }
 
+                        // When using native compositing, we need to find an existing native surface
+                        // handle to use, or allocate a new one. For existing native surfaces, we can
+                        // also determine whether this needs to be updated, depending on whether the
+                        // image generation(s) of the YUV planes have changed since last composite.
+                        let (native_surface_id, update_params) = match composite_state.compositor_kind {
+                            CompositorKind::Draw { .. } => {
+                                (None, None)
+                            }
+                            CompositorKind::Native { .. } => {
+                                let native_surface_size = device_rect.size.round().to_i32();
+
+                                let key = ExternalNativeSurfaceKey {
+                                    image_keys: prim_data.kind.yuv_key,
+                                    size: native_surface_size,
+                                };
+
+                                let native_surface = self.external_native_surface_cache
+                                    .entry(key)
+                                    .or_insert_with(|| {
+                                        // No existing surface, so allocate a new compositor surface and
+                                        // a single compositor tile that covers the entire compositor surface.
+
+                                        let native_surface_id = resource_cache.create_compositor_surface(
+                                            native_surface_size,
+                                            true,
+                                        );
+
+                                        let tile_id = NativeTileId {
+                                            surface_id: native_surface_id,
+                                            x: 0,
+                                            y: 0,
+                                        };
+
+                                        resource_cache.create_compositor_tile(tile_id);
+
+                                        ExternalNativeSurface {
+                                            used_this_frame: true,
+                                            native_surface_id,
+                                            image_dependencies: [ImageDependency::INVALID; 3],
+                                        }
+                                    });
+
+                                // Mark that the surface is referenced this frame so that the
+                                // backing native surface handle isn't freed.
+                                native_surface.used_this_frame = true;
+
+                                // If the image dependencies match, there is no need to update
+                                // the backing native surface.
+                                let update_params = if image_dependencies == native_surface.image_dependencies {
+                                    None
+                                } else {
+                                    Some(native_surface_size)
+                                };
+
+                                (Some(native_surface.native_surface_id), update_params)
+                            }
+                        };
+
                         // Each compositor surface allocates a unique z-id
                         self.external_surfaces.push(ExternalSurfaceDescriptor {
                             local_rect: prim_info.prim_clip_rect,
@@ -3013,6 +3111,8 @@ impl TileCacheInstance {
                             yuv_format: prim_data.kind.format,
                             yuv_rescale: prim_data.kind.color_depth.rescaling_factor(),
                             z_id: composite_state.z_generator.next(),
+                            native_surface_id,
+                            update_params,
                         });
                     }
                 } else {
@@ -3238,6 +3338,16 @@ impl TileCacheInstance {
                 external_surface.world_rect,
             );
         }
+
+        // A simple GC of the native external surface cache, to remove and free any
+        // surfaces that were not referenced during the update_prim_dependencies pass.
+        self.external_native_surface_cache.retain(|_, surface| {
+            if !surface.used_this_frame {
+                frame_state.resource_cache.destroy_compositor_surface(surface.native_surface_id);
+            }
+
+            surface.used_this_frame
+        });
 
         // Detect if the picture cache was scrolled or scaled. In this case,
         // the device space dirty rects aren't applicable (until we properly
@@ -4174,6 +4284,7 @@ impl PicturePrimitive {
                         root_transform: tile_cache.root_transform,
                         current_tile_size: tile_cache.current_tile_size,
                         native_surface: tile_cache.native_surface,
+                        external_native_surface_cache: tile_cache.external_native_surface_cache,
                         allocations: PictureCacheRecycledAllocations {
                             old_opacity_bindings: tile_cache.old_opacity_bindings,
                             old_color_bindings: tile_cache.old_color_bindings,
