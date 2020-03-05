@@ -812,7 +812,11 @@ pref("toolkit.telemetry.unified", true);
 #else
   // ASan and TSan builds can be considerably slower. Extend the grace period
   // of both asyncshutdown and the terminator.
-  pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
+  #if defined(MOZ_TSAN)
+    pref("toolkit.asyncshutdown.crash_timeout", 360000); // 6 minutes
+  #else
+    pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
+  #endif
 #endif // !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
