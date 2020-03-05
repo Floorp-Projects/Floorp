@@ -101,19 +101,6 @@ class GeckoEngineViewTest {
         verify(mockGeckoView, times(2)).capturePixels()
         geckoResult.complete(mock())
         assertNull(thumbnail)
-
-        // Verify that with `firstContentfulPaint` set to false, capturePixels returns a null bitmap
-        geckoResult = GeckoResult()
-
-        thumbnail = mock()
-        whenever(geckoSession.firstContentfulPaint).thenReturn(false)
-        engineView.captureThumbnail {
-            thumbnail = it
-        }
-        // capturePixels should not have been called again because `firstContentfulPaint` is false
-        verify(mockGeckoView, times(2)).capturePixels()
-        geckoResult.complete(mock())
-        assertNull(thumbnail)
     }
 
     @Test

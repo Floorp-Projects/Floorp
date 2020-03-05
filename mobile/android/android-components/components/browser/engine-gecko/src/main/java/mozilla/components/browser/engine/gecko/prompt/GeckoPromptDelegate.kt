@@ -10,6 +10,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.concept.storage.Login
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
@@ -28,6 +29,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MON
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
+import org.mozilla.geckoview.LoginStorage
 import java.io.FileOutputStream
 import java.io.IOException
 import java.security.InvalidParameterException
@@ -53,6 +55,49 @@ typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
 @Suppress("TooManyFunctions")
 internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSession) :
     PromptDelegate {
+
+    override fun onLoginStoragePrompt(
+        session: GeckoSession,
+        prompt: PromptDelegate.LoginStoragePrompt
+    ): GeckoResult<PromptResponse>? {
+        fun LoginStorage.LoginEntry.toLogin() = Login(
+            guid = guid,
+            origin = origin,
+            formActionOrigin = formActionOrigin,
+            httpRealm = httpRealm,
+            username = username,
+            password = password
+        )
+
+        fun Login.toLoginEntry() = LoginStorage.LoginEntry.Builder()
+            .guid(guid)
+            .origin(origin)
+            .formActionOrigin(formActionOrigin)
+            .httpRealm(httpRealm)
+            .username(username)
+            .password(password)
+            .build()
+
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onConfirmSave: (Login) -> Unit = { login ->
+            geckoResult.complete(prompt.confirm(login.toLoginEntry()))
+        }
+        val onDismiss: () -> Unit = {
+            geckoResult.complete(prompt.dismiss())
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.LoginPrompt(
+                    hint = prompt.hint,
+                    logins = prompt.logins.map { it.toLogin() },
+                    onConfirm = onConfirmSave,
+                    onDismiss = onDismiss
+                )
+            )
+        }
+        return geckoResult
+    }
 
     override fun onChoicePrompt(
         session: GeckoSession,

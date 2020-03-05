@@ -8,8 +8,8 @@ import android.graphics.Bitmap
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
@@ -188,7 +188,12 @@ class GeckoWebExtension(
                 session: GeckoSession?,
                 action: GeckoNativeWebExtensionAction
             ) {
-                actionHandler.onPageAction(this@GeckoWebExtension, null, action.convert())
+                // Page action API doesn't support enable/disable so we enable by default.
+                actionHandler.onPageAction(
+                    this@GeckoWebExtension,
+                    null,
+                    action.convert().copy(enabled = true)
+                )
             }
 
             override fun onTogglePopup(
@@ -228,7 +233,12 @@ class GeckoWebExtension(
                 geckoSession: GeckoSession?,
                 action: GeckoNativeWebExtensionAction
             ) {
-                actionHandler.onPageAction(this@GeckoWebExtension, session, action.convert())
+                // Page action API doesn't support enable/disable so we enable by default.
+                actionHandler.onPageAction(
+                    this@GeckoWebExtension,
+                    session,
+                    action.convert().copy(enabled = true)
+                )
             }
         }
 
@@ -258,16 +268,15 @@ class GeckoWebExtension(
                 version = it.version,
                 permissions = it.permissions.toList(),
                 hostPermissions = it.origins.toList(),
-                disabledFlags = DisabledFlags.select(0),
-                optionsPageUrl = null, // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
-                openOptionsPageInTab = false // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
+                disabledFlags = DisabledFlags.select(it.disabledFlags),
+                optionsPageUrl = it.optionsPageUrl,
+                openOptionsPageInTab = it.openOptionsPageInTab
             )
         }
     }
 
     override fun isEnabled(): Boolean {
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
-        return true
+        return nativeExtension.metaData?.enabled == true
     }
 }
 
