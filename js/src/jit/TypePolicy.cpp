@@ -1236,6 +1236,8 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(MixPolicy<StringPolicy<0>, UnboxedInt32Policy<1>>)                        \
   _(MixPolicy<StringPolicy<0>, StringPolicy<1>>)                              \
   _(MixPolicy<BoxPolicy<0>, BoxPolicy<1>>)                                    \
+  _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2>,                 \
+              ObjectPolicy<3>>)                                               \
   _(NoFloatPolicy<0>)                                                         \
   _(NoFloatPolicyAfter<0>)                                                    \
   _(NoFloatPolicyAfter<1>)                                                    \

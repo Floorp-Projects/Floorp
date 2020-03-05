@@ -561,6 +561,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_funapplyarguments(uint32_t argc);
   AbortReasonOr<Ok> jsop_funapplyarray(uint32_t argc);
   AbortReasonOr<Ok> jsop_spreadcall();
+  AbortReasonOr<Ok> jsop_spreadnew();
   AbortReasonOr<Ok> jsop_optimize_spreadcall();
   AbortReasonOr<Ok> jsop_call(uint32_t argc, bool constructing,
                               bool ignoresReturnValue);
