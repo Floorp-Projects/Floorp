@@ -16177,16 +16177,5 @@ bool Document::HasRecentlyStartedForegroundLoads() {
   return false;
 }
 
-already_AddRefed<nsIPrincipal>
-Document::RecomputeContentBlockingAllowListPrincipal(
-    nsIURI* aURIBeingLoaded, const OriginAttributes& aAttrs) {
-  AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
-      aURIBeingLoaded, aAttrs,
-      getter_AddRefs(mContentBlockingAllowListPrincipal));
-
-  nsCOMPtr<nsIPrincipal> copy = mContentBlockingAllowListPrincipal;
-  return copy.forget();
-}
-
 }  // namespace dom
 }  // namespace mozilla
