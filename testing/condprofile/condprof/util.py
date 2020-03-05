@@ -168,17 +168,21 @@ def check_exists(archive, server=None):
     if server is not None:
         archive = server + "/" + archive
     try:
-        resp = requests.head(archive)
+        logger.info("Getting headers at %s" % archive)
+        resp = requests.head(archive, timeout=DOWNLOAD_TIMEOUT)
     except ConnectionError:
         return False, {}
 
     if resp.status_code in (302, 303):
+        logger.info("Redirected")
         return check_exists(resp.headers["Location"])
 
     # see Bug 1574854
     if resp.status_code == 200 and "text/html" in resp.headers["Content-Type"]:
+        logger.info("Got an html page back")
         exists = False
     else:
+        logger.info("Response code is %d" % resp.status_code)
         exists = resp.status_code
 
     return exists, resp.headers
