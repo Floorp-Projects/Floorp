@@ -223,8 +223,14 @@ static void PaintIndeterminateMark(DrawTarget* aDrawTarget, const Rect& aRect,
 
 static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
                               const EventStates& aState, uint32_t aDpi) {
+  const float kBorderWidth = 2.0f * aDpi;
+
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  AppendEllipseToPath(builder, aRect.Center(), aRect.Size());
+
+  // Deflate for the same reason as PaintRoundedRectWithBorder. Note that the
+  // size is the diameter, so we just shrink by the border width once.
+  Size size(aRect.Size() - Size(kBorderWidth, kBorderWidth));
+  AppendEllipseToPath(builder, aRect.Center(), size);
   RefPtr<Path> ellipse = builder->Finish();
 
   Color backgroundColor;
@@ -233,7 +239,7 @@ static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
 
   aDrawTarget->Fill(ellipse, ColorPattern(ToDeviceColor(backgroundColor)));
   aDrawTarget->Stroke(ellipse, ColorPattern(ToDeviceColor(borderColor)),
-                      StrokeOptions(2.0f * aDpi));
+                      StrokeOptions(kBorderWidth));
 }
 
 static void PaintCheckedRadioButton(DrawTarget* aDrawTarget, const Rect& aRect,
