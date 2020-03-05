@@ -38,7 +38,7 @@ use api::{ApiMsg, BlobImageHandler, ColorF, ColorU, MixBlendMode};
 use api::{DocumentId, Epoch, ExternalImageHandler, ExternalImageId};
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, FrameMsg, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest, OutputImageHandler};
-use api::{DebugCommand, MemoryReport, VoidPtrToSizeFn};
+use api::{DebugCommand, MemoryReport, VoidPtrToSizeFn, PremultipliedColorF};
 use api::{RenderApiSender, RenderNotifier, TextureTarget};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
@@ -49,7 +49,7 @@ use api::channel::MsgSender;
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
-use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile};
+use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, ResolvedExternalSurface};
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeSurfaceFormat};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::debug_colors;
@@ -4255,6 +4255,7 @@ impl Renderer {
     fn draw_tile_list<'a, I: Iterator<Item = &'a CompositeTile>>(
         &mut self,
         tiles_iter: I,
+        external_surfaces: &[ResolvedExternalSurface],
         projection: &default::Transform3D<f32>,
         partial_present_mode: Option<PartialPresentMode>,
         stats: &mut RendererStats,
@@ -4270,27 +4271,11 @@ impl Renderer {
                 &mut self.renderer_errors
             );
 
+        let mut current_shader_params = (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray);
         let mut current_textures = BatchTextures::no_texture();
         let mut instances = Vec::new();
 
         for tile in tiles_iter {
-            // Work out the draw params based on the tile surface
-            let (texture, layer, color) = match tile.surface {
-                CompositeTileSurface::Color { color } => {
-                    (TextureSource::Dummy, 0.0, color)
-                }
-                CompositeTileSurface::Clear => {
-                    (TextureSource::Dummy, 0.0, ColorF::BLACK)
-                }
-                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture, layer } } => {
-                    (texture, layer as f32, ColorF::WHITE)
-                }
-                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { .. } } => {
-                    unreachable!("bug: found native surface in simple composite path");
-                }
-            };
-            let textures = BatchTextures::color(texture);
-
             // Determine a clip rect to apply to this tile, depending on what
             // the partial present mode is.
             let partial_clip_rect = match partial_present_mode {
@@ -4314,113 +4299,125 @@ impl Renderer {
                 None => continue,
             };
 
-            // Flush this batch if the textures aren't compatible
-            if !current_textures.is_compatible_with(&textures) {
-                self.draw_instanced_batch(
-                    &instances,
-                    VertexArrayKind::Composite,
-                    &current_textures,
-                    stats,
-                );
-                instances.clear();
-            }
-            current_textures = textures;
+            // Work out the draw params based on the tile surface
+            let (instance, textures, shader_params) = match tile.surface {
+                CompositeTileSurface::Color { color } => {
+                    (
+                        CompositeInstance::new(
+                            tile.rect,
+                            clip_rect,
+                            color.premultiplied(),
+                            0.0,
+                            tile.z_id,
+                        ),
+                        BatchTextures::color(TextureSource::Dummy),
+                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
+                    )
+                }
+                CompositeTileSurface::Clear => {
+                    (
+                        CompositeInstance::new(
+                            tile.rect,
+                            clip_rect,
+                            PremultipliedColorF::BLACK,
+                            0.0,
+                            tile.z_id,
+                        ),
+                        BatchTextures::color(TextureSource::Dummy),
+                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
+                    )
+                }
+                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture, layer } } => {
+                    (
+                        CompositeInstance::new(
+                            tile.rect,
+                            clip_rect,
+                            PremultipliedColorF::WHITE,
+                            layer as f32,
+                            tile.z_id,
+                        ),
+                        BatchTextures::color(texture),
+                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
+                    )
+                }
+                CompositeTileSurface::ExternalSurface { external_surface_index } => {
+                    let surface = &external_surfaces[external_surface_index.0];
 
-            // Create the instance and add to current batch
-            let instance = CompositeInstance::new(
-                tile.rect,
-                clip_rect,
-                color.premultiplied(),
-                layer,
-                tile.z_id,
-            );
-            instances.push(instance);
-        }
+                    let textures = BatchTextures {
+                        colors: [
+                            surface.yuv_planes[0].texture,
+                            surface.yuv_planes[1].texture,
+                            surface.yuv_planes[2].texture,
+                        ],
+                    };
 
-        // Flush the last batch
-        if !instances.is_empty() {
-            self.draw_instanced_batch(
-                &instances,
-                VertexArrayKind::Composite,
-                &current_textures,
-                stats,
-            );
-        }
-    }
+                    // When the texture is an external texture, the UV rect is not known when
+                    // the external surface descriptor is created, because external textures
+                    // are not resolved until the lock() callback is invoked at the start of
+                    // the frame render. To handle this, query the texture resolver for the
+                    // UV rect if it's an external texture, otherwise use the default UV rect.
+                    let uv_rects = [
+                        self.texture_resolver.get_uv_rect(&textures.colors[0], surface.yuv_planes[0].uv_rect),
+                        self.texture_resolver.get_uv_rect(&textures.colors[1], surface.yuv_planes[1].uv_rect),
+                        self.texture_resolver.get_uv_rect(&textures.colors[2], surface.yuv_planes[2].uv_rect),
+                    ];
 
-    /// Draw a list of external compositor surfaces
-    fn draw_external_surface_list(
-        &mut self,
-        composite_state: &CompositeState,
-        projection: &default::Transform3D<f32>,
-        stats: &mut RendererStats,
-    ) {
-        // Only opaque compositor surfaces are supported
-        let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
-        self.set_blend(false, FramebufferKind::Main);
-
-        let mut current_textures = BatchTextures::no_texture();
-        let mut instances = Vec::new();
-
-        for surface in &composite_state.external_surfaces {
-            // Bind an appropriate YUV shader for the texture format kind
-            self.shaders
-                .borrow_mut()
-                .get_composite_shader(
-                    CompositeSurfaceFormat::Yuv,
-                    surface.image_buffer_kind,
-                ).bind(
-                    &mut self.device,
-                    projection,
-                    &mut self.renderer_errors
-                );
-
-            let textures = BatchTextures {
-                colors: [
-                    surface.yuv_planes[0].texture,
-                    surface.yuv_planes[1].texture,
-                    surface.yuv_planes[2].texture,
-                ],
+                    (
+                        CompositeInstance::new_yuv(
+                            tile.rect,
+                            clip_rect,
+                            tile.z_id,
+                            surface.yuv_color_space,
+                            surface.yuv_format,
+                            surface.yuv_rescale,
+                            [
+                                surface.yuv_planes[0].texture_layer as f32,
+                                surface.yuv_planes[1].texture_layer as f32,
+                                surface.yuv_planes[2].texture_layer as f32,
+                            ],
+                            uv_rects,
+                        ),
+                        textures,
+                        (CompositeSurfaceFormat::Yuv, surface.image_buffer_kind),
+                    )
+                }
+                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { .. } } => {
+                    unreachable!("bug: found native surface in simple composite path");
+                }
             };
 
-            // Flush this batch if the textures aren't compatible
-            if !current_textures.is_compatible_with(&textures) {
-                self.draw_instanced_batch(
-                    &instances,
-                    VertexArrayKind::Composite,
-                    &current_textures,
-                    stats,
-                );
-                instances.clear();
+            // Flush batch if shader params or textures changed
+            let flush_batch = !current_textures.is_compatible_with(&textures) ||
+                shader_params != current_shader_params;
+
+            if flush_batch {
+                if !instances.is_empty() {
+                    self.draw_instanced_batch(
+                        &instances,
+                        VertexArrayKind::Composite,
+                        &current_textures,
+                        stats,
+                    );
+                    instances.clear();
+                }
             }
+
+            if shader_params != current_shader_params {
+                self.shaders
+                    .borrow_mut()
+                    .get_composite_shader(shader_params.0, shader_params.1)
+                    .bind(
+                        &mut self.device,
+                        projection,
+                        &mut self.renderer_errors
+                    );
+
+                current_shader_params = shader_params;
+            }
+
             current_textures = textures;
 
-            // When the texture is an external texture, the UV rect is not known when
-            // the external surface descriptor is created, because external textures
-            // are not resolved until the lock() callback is invoked at the start of
-            // the frame render. To handle this, query the texture resolver for the
-            // UV rect if it's an external texture, otherwise use the default UV rect.
-            let uv_rects = [
-                self.texture_resolver.get_uv_rect(&textures.colors[0], surface.yuv_planes[0].uv_rect),
-                self.texture_resolver.get_uv_rect(&textures.colors[1], surface.yuv_planes[1].uv_rect),
-                self.texture_resolver.get_uv_rect(&textures.colors[2], surface.yuv_planes[2].uv_rect),
-            ];
-
-            // Create the instance and add to current batch
-            let instance = CompositeInstance::new_yuv(
-                surface.device_rect,
-                surface.clip_rect,
-                surface.z_id,
-                surface.yuv_color_space,
-                surface.yuv_format,
-                surface.yuv_rescale,
-                [
-                    surface.yuv_planes[0].texture_layer as f32,
-                    surface.yuv_planes[1].texture_layer as f32,
-                    surface.yuv_planes[2].texture_layer as f32,
-                ],
-                uv_rects,
-            );
+            // Add instance to current batch
             instances.push(instance);
         }
 
@@ -4433,8 +4430,6 @@ impl Renderer {
                 stats,
             );
         }
-
-        self.gpu_profile.finish_sampler(opaque_sampler);
     }
 
     /// Composite picture cache tiles into the framebuffer. This is currently
@@ -4471,19 +4466,6 @@ impl Renderer {
                 // what the device supports.
                 for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
                     let dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
-                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
-                }
-
-                // Include any external surfaces in the partial present dirty rect. For now,
-                // we assume that the external surfaces are always dirty / updating and always
-                // need to be presented.
-                // TODO(gw): We could check if the epoch of the external image has changed, and
-                //           skip including the external surface in the partial present dirty
-                //           rect if it hasn't changed.
-                for surface in &composite_state.external_surfaces {
-                    let dirty_rect = surface.device_rect
-                        .intersection(&surface.clip_rect)
-                        .unwrap_or_else(DeviceRect::zero);
                     combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
                 }
 
@@ -4537,15 +4519,6 @@ impl Renderer {
             + composite_state.alpha_tiles.len();
         self.profile_counters.total_picture_cache_tiles.set(num_tiles);
 
-        // Draw external compositor surfaces
-        if !composite_state.external_surfaces.is_empty() {
-            self.draw_external_surface_list(
-                composite_state,
-                projection,
-                &mut results.stats,
-            );
-        }
-
         // Draw opaque tiles first, front-to-back to get maxmum
         // z-reject efficiency.
         if !composite_state.opaque_tiles.is_empty() {
@@ -4554,6 +4527,7 @@ impl Renderer {
             self.set_blend(false, FramebufferKind::Main);
             self.draw_tile_list(
                 composite_state.opaque_tiles.iter().rev(),
+                &composite_state.external_surfaces,
                 projection,
                 partial_present_mode,
                 &mut results.stats,
@@ -4568,6 +4542,7 @@ impl Renderer {
             self.device.set_blend_mode_premultiplied_dest_out();
             self.draw_tile_list(
                 composite_state.clear_tiles.iter(),
+                &composite_state.external_surfaces,
                 projection,
                 partial_present_mode,
                 &mut results.stats,
@@ -4583,6 +4558,7 @@ impl Renderer {
             self.set_blend_mode_premultiplied_alpha(FramebufferKind::Main);
             self.draw_tile_list(
                 composite_state.alpha_tiles.iter(),
+                &composite_state.external_surfaces,
                 projection,
                 partial_present_mode,
                 &mut results.stats,
