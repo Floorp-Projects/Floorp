@@ -236,13 +236,12 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
 NS_INTERFACE_MAP_END
 
 DocumentLoadListener::DocumentLoadListener(
-    CanonicalBrowsingContext* aProcessTopBrowsingContext,
-    nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus,
-    ADocumentChannelBridge* aBridge)
+    CanonicalBrowsingContext* aBrowsingContext, nsILoadContext* aLoadContext,
+    PBOverrideStatus aOverrideStatus, ADocumentChannelBridge* aBridge)
     : mLoadContext(aLoadContext), mPBOverride(aOverrideStatus) {
   LOG(("DocumentLoadListener ctor [this=%p]", this));
   mParentChannelListener = new ParentChannelListener(
-      this, aProcessTopBrowsingContext, aLoadContext->UsePrivateBrowsing());
+      this, aBrowsingContext, aLoadContext->UsePrivateBrowsing());
   mDocumentChannelBridge = aBridge;
 }
 
@@ -343,8 +342,6 @@ CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
 }
 
 bool DocumentLoadListener::Open(
-    CanonicalBrowsingContext* aBrowsingContext,
-    CanonicalBrowsingContext* aProcessTopBrowsingContext,
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
     bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
@@ -354,6 +351,8 @@ bool DocumentLoadListener::Open(
     uint64_t aOuterWindowId, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      mParentChannelListener->GetBrowsingContext();
 
   OriginAttributes attrs;
   mLoadContext->GetOriginAttributes(attrs);
@@ -364,12 +363,12 @@ bool DocumentLoadListener::Open(
   // TODO: Handle TYPE_SUBDOCUMENT LoadInfo construction, and stop passing
   // aLoadInfo across IPC.
   RefPtr<LoadInfo> loadInfo = aLoadInfo;
-  if (!aBrowsingContext->GetParent()) {
+  if (!browsingContext->GetParent()) {
     // If we're a top level load, then we should have not got an existing
     // LoadInfo, or if we did, it should be TYPE_DOCUMENT.
     MOZ_ASSERT(!aLoadInfo || aLoadInfo->InternalContentPolicyType() ==
                                  nsIContentPolicy::TYPE_DOCUMENT);
-    loadInfo = CreateLoadInfo(aBrowsingContext, aLoadState, aOuterWindowId);
+    loadInfo = CreateLoadInfo(browsingContext, aLoadState, aOuterWindowId);
   }
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
@@ -463,7 +462,7 @@ bool DocumentLoadListener::Open(
     RefPtr<ParentProcessDocumentOpenInfo> openInfo =
         new ParentProcessDocumentOpenInfo(mParentChannelListener,
                                           aPluginsAllowed, *aDocumentOpenFlags,
-                                          aProcessTopBrowsingContext);
+                                          browsingContext);
     openInfo->Prepare();
 
     *aRv = mChannel->AsyncOpen(openInfo);
