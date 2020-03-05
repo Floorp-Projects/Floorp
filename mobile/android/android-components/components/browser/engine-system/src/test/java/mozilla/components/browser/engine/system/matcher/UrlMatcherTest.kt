@@ -116,22 +116,6 @@ class UrlMatcherTest {
     val BLOCK_LIST = """{
       "license": "test-license",
       "categories": {
-        "Disconnect": [
-          {
-            "Facebook": {
-              "http://www.facebook.com/": [
-                "facebook.com"
-              ]
-            }
-          },
-          {
-            "Disconnect1": {
-              "http://www.disconnect1.com/": [
-                "disconnect1.com"
-              ]
-            }
-          }
-        ],
         "Advertising": [
           {
             "AdTest1": {
@@ -200,22 +184,6 @@ class UrlMatcherTest {
     }
     """
 
-    val OVERRIDES = """{
-      "categories": {
-        "Advertising": [
-          {
-            "AdTest2": {
-              "http://www.adtest2.com/": [
-                "adtest2.de",
-                "adtest2.at"
-              ]
-            }
-          }
-        ]
-      }
-    }
-    """
-
     val WHITE_LIST = """{
       "SocialTest1": {
         "properties": [
@@ -230,7 +198,6 @@ class UrlMatcherTest {
     fun createMatcher() {
         val matcher = UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
-                listOf(StringReader(OVERRIDES)),
                 StringReader(WHITE_LIST))
 
         // Check returns correct category
@@ -268,11 +235,6 @@ class UrlMatcherTest {
         assertTrue(matchesAnalytics)
         assertEquals(categoryAnalytics, ANALYTICS)
 
-        // Check that override worked
-        assertTrue(matcher.matches("http://adtest2.com", "http://www.adtest2.com").first)
-        assertTrue(matcher.matches("http://adtest2.at", "http://www.adtest2.com").first)
-        assertTrue(matcher.matches("http://adtest2.de", "http://www.adtest2.com").first)
-
         // Check that white list worked
         assertTrue(matcher.matches("http://socialtest1.com", "http://www.socialtest1.com").first)
         assertFalse(matcher.matches("http://socialtest1.de", "http://www.socialtest1.com").first)
@@ -280,10 +242,6 @@ class UrlMatcherTest {
         // Check ignored categories
         assertFalse(matcher.matches("http://ignored1.de", "http://www.ignored1.com").first)
         assertFalse(matcher.matches("http://ignored2.de", "http://www.ignored2.com").first)
-
-        // Check that we find the social URIs we moved from Disconnect
-        assertTrue(matcher.matches("http://facebook.com", "http://www.facebook.com").first)
-        assertFalse(matcher.matches("http://disconnect1.com", "http://www.disconnect1.com").first)
     }
 
     @Test
@@ -301,7 +259,6 @@ class UrlMatcherTest {
     fun setCategoriesEnabled() {
         val matcher = spy(UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
-                listOf(StringReader(OVERRIDES)),
                 StringReader(WHITE_LIST),
                 setOf("Advertising", "Analytics"))
         )
@@ -319,7 +276,6 @@ class UrlMatcherTest {
     fun webFontsNotBlockedByDefault() {
         val matcher = UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
-                listOf(StringReader(OVERRIDES)),
                 StringReader(WHITE_LIST),
                 setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT))
 
