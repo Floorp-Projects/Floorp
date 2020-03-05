@@ -1163,8 +1163,8 @@ nsresult nsOfflineCacheDevice::InitWithSqlite(mozIStorageService* ss) {
   mEvictionFunction = new nsOfflineCacheEvictionFunction(this);
   if (!mEvictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3,
-                           do_AddRef(mEvictionFunction));
+  rv = mDB->RegisterFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3,
+                             do_AddRef(mEvictionFunction));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -2337,8 +2337,8 @@ nsresult nsOfflineCacheDevice::Evict(
 
   nsresult rv;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"), 1,
-                           MakeAndAddRef<OriginMatch>(aPattern));
+  rv = mDB->RegisterFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"), 1,
+                             MakeAndAddRef<OriginMatch>(aPattern));
   NS_ENSURE_SUCCESS(rv, rv);
 
   class AutoRemoveFunc {
@@ -2346,7 +2346,7 @@ nsresult nsOfflineCacheDevice::Evict(
     mozIStorageConnection* mDB;
     explicit AutoRemoveFunc(mozIStorageConnection* aDB) : mDB(aDB) {}
     ~AutoRemoveFunc() {
-      mDB->RemoveFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"));
+      mDB->UnregisterFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"));
     }
   };
   AutoRemoveFunc autoRemove(mDB);

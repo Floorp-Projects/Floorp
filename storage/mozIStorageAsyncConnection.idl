@@ -260,7 +260,7 @@ interface mozIStorageAsyncConnection : nsISupports {
   //// Functions
 
   /**
-   * Create a new SQL function.  If you use your connection on multiple threads,
+   * Register a new SQL function.  If you use your connection on multiple threads,
    * your function needs to be threadsafe, or it should only be called on one
    * thread.
    *
@@ -274,7 +274,7 @@ interface mozIStorageAsyncConnection : nsISupports {
    *        in question. Takes ownership of the passed function pointer, and
    *        discards it in case of an error.
    */
-  void createFunction(in AUTF8String aFunctionName,
+  void registerFunction(in AUTF8String aFunctionName,
                       in long aNumArguments,
                       in nsCOMPtr_mozIStorageFunction aFunction);
 
@@ -296,12 +296,12 @@ interface mozIStorageAsyncConnection : nsISupports {
                                in long aNumArguments,
                                in mozIStorageAggregateFunction aFunction);
   /**
-   * Delete custom SQL function (simple or aggregate one).
+   * Unregisters a custom SQL function (simple or aggregate one).
    *
    * @param aFunctionName
    *        The name of function to remove.
    */
-  void removeFunction(in AUTF8String aFunctionName);
+  void unregisterFunction(in AUTF8String aFunctionName);
 
   /**
    * Sets a progress handler. Only one handler can be registered at a time.

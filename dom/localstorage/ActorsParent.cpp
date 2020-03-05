@@ -7443,16 +7443,16 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     nsCOMPtr<mozIStorageFunction> function = new CompressFunction();
 
-    rv =
-        connection->CreateFunction(NS_LITERAL_CSTRING("compress"), 1, function);
+    rv = connection->RegisterFunction(NS_LITERAL_CSTRING("compress"), 1,
+                                      function);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     function = new CompressibleFunction();
 
-    rv = connection->CreateFunction(NS_LITERAL_CSTRING("compressible"), 1,
-                                    function);
+    rv = connection->RegisterFunction(NS_LITERAL_CSTRING("compressible"), 1,
+                                      function);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7483,12 +7483,12 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
       return rv;
     }
 
-    rv = connection->RemoveFunction(NS_LITERAL_CSTRING("compress"));
+    rv = connection->UnregisterFunction(NS_LITERAL_CSTRING("compress"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = connection->RemoveFunction(NS_LITERAL_CSTRING("compressible"));
+    rv = connection->UnregisterFunction(NS_LITERAL_CSTRING("compressible"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9053,7 +9053,8 @@ nsresult QuotaClient::AboutToClearOrigins(
       nsCOMPtr<mozIStorageFunction> function(
           new MatchFunction(archivedOriginScope->GetPattern()));
 
-      rv = connection->CreateFunction(NS_LITERAL_CSTRING("match"), 2, function);
+      rv = connection->RegisterFunction(NS_LITERAL_CSTRING("match"), 2,
+                                        function);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9101,7 +9102,7 @@ nsresult QuotaClient::AboutToClearOrigins(
     stmt = nullptr;
 
     if (archivedOriginScope->IsPattern()) {
-      rv = connection->RemoveFunction(NS_LITERAL_CSTRING("match"));
+      rv = connection->UnregisterFunction(NS_LITERAL_CSTRING("match"));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
