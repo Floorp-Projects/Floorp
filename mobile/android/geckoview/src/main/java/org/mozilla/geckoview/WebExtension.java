@@ -816,11 +816,6 @@ public class WebExtension {
 
         public Listener(final GeckoSession session) {
             this(session, null);
-            // TODO: remove Bug 1618987
-            // Close tab event is forwarded to the main listener so we need to listen
-            // to it here.
-            mEventDispatcher.registerUiThreadListener(this,
-                    "GeckoView:WebExtension:CloseTab");
         }
 
         private Listener(final GeckoSession session, final GeckoRuntime runtime) {
