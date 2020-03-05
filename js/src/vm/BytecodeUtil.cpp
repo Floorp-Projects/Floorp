@@ -190,7 +190,7 @@ bool js::DumpRealmPCCounts(JSContext* cx) {
     if (base->isLazyScript()) {
       continue;
     }
-    JSScript* script = static_cast<JSScript*>(base.get());
+    JSScript* script = base->asJSScript();
     if (script->realm() != cx->realm()) {
       continue;
     }
@@ -2598,7 +2598,7 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
       if (base->isLazyScript()) {
         continue;
       }
-      JSScript* script = static_cast<JSScript*>(base.get());
+      JSScript* script = base->asJSScript();
       if (script->hasScriptCounts() && script->hasJitScript()) {
         if (!vec->append(script)) {
           return;

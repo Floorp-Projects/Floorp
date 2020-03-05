@@ -939,7 +939,7 @@ JSScript* ModuleObject::maybeScript() const {
   BaseScript* script = value.toGCThing()->as<BaseScript>();
   MOZ_ASSERT(script->hasBytecode(),
              "Module scripts should always have bytecode");
-  return static_cast<JSScript*>(script);
+  return script->asJSScript();
 }
 
 JSScript* ModuleObject::script() const {

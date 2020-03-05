@@ -164,7 +164,7 @@ void DebugScript::clearBreakpointsIn(JSFreeOp* fop, Realm* realm, Debugger* dbg,
     if (base->isLazyScript()) {
       continue;
     }
-    JSScript* script = static_cast<JSScript*>(base.get());
+    JSScript* script = base->asJSScript();
     if (script->realm() == realm && script->hasDebugScript()) {
       clearBreakpointsIn(fop, script, dbg, handler);
     }

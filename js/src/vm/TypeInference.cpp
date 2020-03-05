@@ -2696,7 +2696,7 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
     if (base->isLazyScript()) {
       continue;
     }
-    script = static_cast<JSScript*>(base.get());
+    script = base->asJSScript();
     if (JitScript* jitScript = script->maybeJitScript()) {
       jitScript->printTypes(cx, script);
     }

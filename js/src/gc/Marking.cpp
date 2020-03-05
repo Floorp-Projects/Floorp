@@ -1112,7 +1112,7 @@ void BaseScript::traceChildren(JSTracer* trc) {
   // per-zone maps. Note that a failed compilation must not have entries since
   // the script itself will not be marked as having bytecode.
   if (hasBytecode()) {
-    JSScript* script = static_cast<JSScript*>(this);
+    JSScript* script = this->asJSScript();
 
     if (hasDebugScript()) {
       DebugAPI::traceDebugScript(trc, script);
