@@ -441,7 +441,7 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument) {
   MOZ_ASSERT(rootDoc && !rootDoc->IsTopLevelContentDocument());
 
   PresShell* rootPresShell = rootDoc->GetPresShell();
-  if (!rootPresShell) {
+  if (!rootPresShell || rootPresShell->IsDestroying()) {
     return Nothing();
   }
 
@@ -450,15 +450,17 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument) {
     return Nothing();
   }
 
+  BrowserChild* browserChild = BrowserChild::GetFrom(rootDoc->GetDocShell());
+  if (!browserChild) {
+    return Nothing();
+  }
+  MOZ_DIAGNOSTIC_ASSERT(!browserChild->IsTopLevel());
+
   nsRect inProcessRootRect;
   if (nsIScrollableFrame* scrollFrame =
           rootPresShell->GetRootScrollFrameAsScrollable()) {
     inProcessRootRect = scrollFrame->GetScrollPortRect();
   }
-
-  nsIDocShell* docShell = rootDoc->GetDocShell();
-  BrowserChild* browserChild = BrowserChild::GetFrom(docShell);
-  MOZ_ASSERT(browserChild && !browserChild->IsTopLevel());
 
   Maybe<LayoutDeviceRect> remoteDocumentVisibleRect =
       browserChild->GetTopLevelViewportVisibleRectInSelfCoords();
