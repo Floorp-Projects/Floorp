@@ -68,7 +68,7 @@ use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData};
-use crate::gpu_types::{CompositeInstance, ResolveInstanceData};
+use crate::gpu_types::{CompositeInstance, ResolveInstanceData, ZBufferId};
 use crate::internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
@@ -4251,6 +4251,127 @@ impl Renderer {
         }
     }
 
+    /// Rasterize any external compositor surfaces that require updating
+    fn update_external_native_surfaces(
+        &mut self,
+        external_surfaces: &[ResolvedExternalSurface],
+        results: &mut RenderResults,
+    ) {
+        if external_surfaces.is_empty() {
+            return;
+        }
+
+        let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
+
+        self.device.disable_depth();
+        self.set_blend(false, FramebufferKind::Main);
+
+        for surface in external_surfaces {
+            // See if this surface needs to be updated
+            let (native_surface_id, surface_size) = match surface.update_params {
+                Some(params) => params,
+                None => continue,
+            };
+
+            // When updating an external surface, the entire surface rect is used
+            // for all of the draw, dirty, valid and clip rect parameters.
+            let surface_rect = surface_size.into();
+
+            // Bind the native compositor surface to update
+            let surface_info = self.compositor_config
+                .compositor()
+                .unwrap()
+                .bind(
+                    NativeTileId {
+                        surface_id: native_surface_id,
+                        x: 0,
+                        y: 0,
+                    },
+                    surface_rect,
+                    surface_rect,
+                );
+
+            // Bind the native surface to current FBO target
+            let draw_target = DrawTarget::NativeSurface {
+                offset: surface_info.origin,
+                external_fbo_id: surface_info.fbo_id,
+                dimensions: surface_size,
+            };
+            self.device.bind_draw_target(draw_target);
+
+            let projection = Transform3D::ortho(
+                0.0,
+                surface_size.width as f32,
+                0.0,
+                surface_size.height as f32,
+                ORTHO_NEAR_PLANE,
+                ORTHO_FAR_PLANE,
+            );
+
+            // Bind an appropriate YUV shader for the texture format kind
+            self.shaders
+                .borrow_mut()
+                .get_composite_shader(
+                    CompositeSurfaceFormat::Yuv,
+                    surface.image_buffer_kind,
+                ).bind(
+                    &mut self.device,
+                    &projection,
+                    &mut self.renderer_errors
+                );
+
+            let textures = BatchTextures {
+                colors: [
+                    surface.yuv_planes[0].texture,
+                    surface.yuv_planes[1].texture,
+                    surface.yuv_planes[2].texture,
+                ],
+            };
+
+            // When the texture is an external texture, the UV rect is not known when
+            // the external surface descriptor is created, because external textures
+            // are not resolved until the lock() callback is invoked at the start of
+            // the frame render. To handle this, query the texture resolver for the
+            // UV rect if it's an external texture, otherwise use the default UV rect.
+            let uv_rects = [
+                self.texture_resolver.get_uv_rect(&textures.colors[0], surface.yuv_planes[0].uv_rect),
+                self.texture_resolver.get_uv_rect(&textures.colors[1], surface.yuv_planes[1].uv_rect),
+                self.texture_resolver.get_uv_rect(&textures.colors[2], surface.yuv_planes[2].uv_rect),
+            ];
+
+            let instance = CompositeInstance::new_yuv(
+                surface_rect.to_f32(),
+                surface_rect.to_f32(),
+                // z-id is not relevant when updating a native compositor surface.
+                // TODO(gw): Support compositor surfaces without z-buffer, for memory / perf win here.
+                ZBufferId(0),
+                surface.yuv_color_space,
+                surface.yuv_format,
+                surface.yuv_rescale,
+                [
+                    surface.yuv_planes[0].texture_layer as f32,
+                    surface.yuv_planes[1].texture_layer as f32,
+                    surface.yuv_planes[2].texture_layer as f32,
+                ],
+                uv_rects,
+            );
+
+            self.draw_instanced_batch(
+                &[instance],
+                VertexArrayKind::Composite,
+                &textures,
+                &mut results.stats,
+            );
+
+            self.compositor_config
+                .compositor()
+                .unwrap()
+                .unbind();
+        }
+
+        self.gpu_profile.finish_sampler(opaque_sampler);
+    }
+
     /// Draw a list of tiles to the framebuffer
     fn draw_tile_list<'a, I: Iterator<Item = &'a CompositeTile>>(
         &mut self,
@@ -5448,6 +5569,10 @@ impl Renderer {
                             // to specify how to composite each of the picture cache surfaces.
                             match self.current_compositor_kind {
                                 CompositorKind::Native { .. } => {
+                                    self.update_external_native_surfaces(
+                                        &frame.composite_state.external_surfaces,
+                                        results,
+                                    );
                                     let compositor = self.compositor_config.compositor().unwrap();
                                     frame.composite_state.composite_native(&mut **compositor);
                                 }
