@@ -397,7 +397,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
       if (base->isLazyScript()) {
         continue;
       }
-      JSScript* script = static_cast<JSScript*>(base);
+      JSScript* script = base->asJSScript();
       if (jit::JitScript* jitScript = script->maybeJitScript()) {
         MOZ_ASSERT(!jitScript->active());
       }
@@ -415,7 +415,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
     if (base->isLazyScript()) {
       continue;
     }
-    JSScript* script = static_cast<JSScript*>(base.get());
+    JSScript* script = base->asJSScript();
     jit::JitScript* jitScript = script->maybeJitScript();
     if (!jitScript) {
       continue;

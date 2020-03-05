@@ -2372,6 +2372,8 @@ setterLevel:                                                                  \
     return mallocSizeOf(data_);
   }
 
+  inline JSScript* asJSScript();
+
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
