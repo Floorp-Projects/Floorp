@@ -8,6 +8,7 @@
 #include "nsIContentSecurityPolicy.idl"
 #include "nsISerializable.idl"
 #include "nsIAboutModule.idl"
+#include "nsIReferrerInfo.idl"
 
 %{C++
 struct JSPrincipals;
@@ -45,6 +46,7 @@ interface nsIURI;
 [ptr] native JSPrincipals(JSPrincipals);
 [ref] native PrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
 [ref] native const_OriginAttributes(const mozilla::OriginAttributes);
+native ReferrerPolicy(mozilla::dom::ReferrerPolicy);
 
 [scriptable, builtinclass, uuid(f75f502d-79fd-48be-a079-e5a7b8f80c8b)]
 interface nsIPrincipal : nsISerializable
@@ -322,6 +324,12 @@ interface nsIPrincipal : nsISerializable
      * associated AboutModule, in case there is one.
      */
     uint32_t getAboutModuleFlags();
+
+    /**
+     * Creates and Returns a new ReferrerInfo with the 
+     * Principals URI
+     */
+    nsIReferrerInfo createReferrerInfo(in ReferrerPolicy aReferrerPolicy);
 
     /**
      * The base part of |origin| without the concatenation with |originSuffix|.
