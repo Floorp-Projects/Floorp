@@ -3465,13 +3465,12 @@ void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
     return;
   }
 
-  // In derived class constructors (including nested arrows/eval)
-  // GetAliasedVar can return the magic TDZ value.
+  // Ops like GetAliasedVar can return the magic TDZ value.
   MOZ_ASSERT(rval.whyMagic() == JS_UNINITIALIZED_LEXICAL);
-  MOZ_ASSERT(script->function() || script->isForEval());
   MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOp::CheckThis ||
              JSOp(*GetNextPc(pc)) == JSOp::CheckThisReinit ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckReturn);
+             JSOp(*GetNextPc(pc)) == JSOp::CheckReturn ||
+             JSOp(*GetNextPc(pc)) == JSOp::CheckLexical);
 
   MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
 }

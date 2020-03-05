@@ -695,6 +695,7 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
     case JSOp::SetLocal:
     case JSOp::InitAliasedLexical:
     case JSOp::IterNext:
+    case JSOp::CheckLexical:
       // Keep the top value.
       MOZ_ASSERT(nuses == 1);
       MOZ_ASSERT(ndefs == 1);

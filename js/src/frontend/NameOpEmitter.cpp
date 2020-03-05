@@ -66,26 +66,28 @@ bool NameOpEmitter::emitGet() {
       }
       break;
     case NameLocation::Kind::FrameSlot:
-      if (loc_.isLexical()) {
-        if (!bce_->emitTDZCheckIfNeeded(name_, loc_)) {
-          return false;
-        }
-      }
       if (!bce_->emitLocalOp(JSOp::GetLocal, loc_.frameSlot())) {
         //          [stack] VAL
         return false;
       }
-      break;
-    case NameLocation::Kind::EnvironmentCoordinate:
       if (loc_.isLexical()) {
-        if (!bce_->emitTDZCheckIfNeeded(name_, loc_)) {
+        if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::Yes)) {
+          //        [stack] VAL
           return false;
         }
       }
+      break;
+    case NameLocation::Kind::EnvironmentCoordinate:
       if (!bce_->emitEnvCoordOp(JSOp::GetAliasedVar,
                                 loc_.environmentCoordinate())) {
         //          [stack] VAL
         return false;
+      }
+      if (loc_.isLexical()) {
+        if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::Yes)) {
+          //        [stack] VAL
+          return false;
+        }
       }
       break;
     case NameLocation::Kind::DynamicAnnexBVar:
@@ -274,8 +276,7 @@ bool NameOpEmitter::emitAssignment() {
           if (loc_.isConst()) {
             op = JSOp::ThrowSetConst;
           }
-
-          if (!bce_->emitTDZCheckIfNeeded(name_, loc_)) {
+          if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
             return false;
           }
         }
@@ -300,8 +301,7 @@ bool NameOpEmitter::emitAssignment() {
           if (loc_.isConst()) {
             op = JSOp::ThrowSetAliasedConst;
           }
-
-          if (!bce_->emitTDZCheckIfNeeded(name_, loc_)) {
+          if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
             return false;
           }
         }

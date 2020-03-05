@@ -1737,7 +1737,8 @@ bool BytecodeEmitter::emitGetName(NameNode* name) {
 }
 
 bool BytecodeEmitter::emitTDZCheckIfNeeded(HandleAtom name,
-                                           const NameLocation& loc) {
+                                           const NameLocation& loc,
+                                           ValueIsOnStack isOnStack) {
   // Dynamic accesses have TDZ checks built into their VM code and should
   // never emit explicit TDZ checks.
   MOZ_ASSERT(loc.hasKnownSlot());
@@ -1754,13 +1755,25 @@ bool BytecodeEmitter::emitTDZCheckIfNeeded(HandleAtom name,
     return true;
   }
 
-  if (loc.kind() == NameLocation::Kind::FrameSlot) {
-    if (!emitLocalOp(JSOp::CheckLexical, loc.frameSlot())) {
-      return false;
+  // If the value is not on the stack, we have to load it first.
+  if (isOnStack == ValueIsOnStack::No) {
+    if (loc.kind() == NameLocation::Kind::FrameSlot) {
+      if (!emitLocalOp(JSOp::GetLocal, loc.frameSlot())) {
+        return false;
+      }
+    } else {
+      if (!emitEnvCoordOp(JSOp::GetAliasedVar, loc.environmentCoordinate())) {
+        return false;
+      }
     }
-  } else {
-    if (!emitEnvCoordOp(JSOp::CheckAliasedLexical,
-                        loc.environmentCoordinate())) {
+  }
+
+  if (!emitAtomOp(JSOp::CheckLexical, name)) {
+    return false;
+  }
+
+  if (isOnStack == ValueIsOnStack::No) {
+    if (!emit1(JSOp::Pop)) {
       return false;
     }
   }
