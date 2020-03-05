@@ -836,6 +836,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     private fun fullScreenChanged(inFullScreen: Boolean) {
         if (inFullScreen) {
+            // Close find in page bar if opened
+            findInPageIntegration.onBackPressed()
             FenixSnackbar.make(
                     view = view!!,
                     duration = Snackbar.LENGTH_SHORT,
