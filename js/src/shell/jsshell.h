@@ -122,7 +122,6 @@ extern bool enableBYOBStreamReaders;
 extern bool enableWritableStreams;
 extern bool enableReadableStreamPipeTo;
 extern bool enableFields;
-extern bool enableAwaitFix;
 extern bool enableWeakRefs;
 extern bool enableToSource;
 extern bool enablePropertyErrorMessageFix;
