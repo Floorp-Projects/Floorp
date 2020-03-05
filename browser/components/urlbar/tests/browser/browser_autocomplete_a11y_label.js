@@ -50,15 +50,12 @@ async function initAccessibilityService() {
 }
 
 add_task(async function switchToTab() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:about"
-  );
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     waitForFocus: SimpleTest.waitForFocus,
-    value: "% about",
+    value: "% robots",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
@@ -70,7 +67,7 @@ add_task(async function switchToTab() {
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
   is(
     await getResultText(element),
-    "about : about— Switch to Tab",
+    "about: robots— Switch to Tab",
     "Result a11y label should be: <title>— Switch to Tab"
   );
 

@@ -601,6 +601,7 @@ class UrlbarQueryContext {
       ["providers", v => Array.isArray(v) && v.length],
       ["sources", v => Array.isArray(v) && v.length],
       ["engineName", v => typeof v == "string" && !!v.length],
+      ["currentPage", v => typeof v == "string" && !!v.length],
     ]) {
       if (options[prop]) {
         if (!checkFn(options[prop])) {

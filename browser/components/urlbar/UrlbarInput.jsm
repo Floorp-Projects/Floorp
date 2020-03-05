@@ -858,6 +858,7 @@ class UrlbarInput {
         userContextId: this.window.gBrowser.selectedBrowser.getAttribute(
           "usercontextid"
         ),
+        currentPage: this.window.gBrowser.currentURI.spec,
       })
     );
   }
