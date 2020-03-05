@@ -100,7 +100,7 @@ Connection::ExecuteSimpleSQLAsync(const nsACString&,
 NS_IMETHODIMP
 Connection::CreateFunction(const nsACString& aFunctionName,
                            int32_t aNumArguments,
-                           mozIStorageFunction* aFunction) {
+                           nsCOMPtr<mozIStorageFunction> aFunction) {
   // async methods are not supported
   return NS_ERROR_NOT_IMPLEMENTED;
 }

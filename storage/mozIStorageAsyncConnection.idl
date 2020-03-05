@@ -5,6 +5,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsCOMPtr.h"
+%}
+
+native nsCOMPtr_mozIStorageFunction(nsCOMPtr<mozIStorageFunction>);
+
 interface mozIStorageAggregateFunction;
 interface mozIStorageCompletionCallback;
 interface mozIStorageFunction;
@@ -265,11 +271,12 @@ interface mozIStorageAsyncConnection : nsISupports {
    *        variable-argument functions.
    * @param aFunction
    *        The instance of mozIStorageFunction, which implements the function
-   *        in question.
+   *        in question. Takes ownership of the passed function pointer, and
+   *        discards it in case of an error.
    */
   void createFunction(in AUTF8String aFunctionName,
                       in long aNumArguments,
-                      in mozIStorageFunction aFunction);
+                      in nsCOMPtr_mozIStorageFunction aFunction);
 
   /**
    * Create a new SQL aggregate function.  If you use your connection on

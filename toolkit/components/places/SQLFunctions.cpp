@@ -370,10 +370,9 @@ namespace places {
 
 /* static */
 nsresult MatchAutoCompleteFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<MatchAutoCompleteFunction> function = new MatchAutoCompleteFunction();
-
   nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("autocomplete_match"), kArgIndexLength, function);
+      NS_LITERAL_CSTRING("autocomplete_match"), kArgIndexLength,
+      MakeAndAddRef<MatchAutoCompleteFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -549,10 +548,9 @@ MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult CalculateFrecencyFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<CalculateFrecencyFunction> function = new CalculateFrecencyFunction();
-
-  nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("calculate_frecency"), -1, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("calculate_frecency"), -1,
+                              MakeAndAddRef<CalculateFrecencyFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -760,9 +758,8 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult GenerateGUIDFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
-  nsresult rv =
-      aDBConn->CreateFunction(NS_LITERAL_CSTRING("generate_guid"), 0, function);
+  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("generate_guid"), 0,
+                                        MakeAndAddRef<GenerateGUIDFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -786,9 +783,8 @@ GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult IsValidGUIDFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<IsValidGUIDFunction> function = new IsValidGUIDFunction();
   return aDBConn->CreateFunction(NS_LITERAL_CSTRING("is_valid_guid"), 1,
-                                 function);
+                                 MakeAndAddRef<IsValidGUIDFunction>());
 }
 
 NS_IMPL_ISUPPORTS(IsValidGUIDFunction, mozIStorageFunction)
@@ -813,9 +809,9 @@ IsValidGUIDFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult GetUnreversedHostFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<GetUnreversedHostFunction> function = new GetUnreversedHostFunction();
-  nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("get_unreversed_host"), 1, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_unreversed_host"), 1,
+                              MakeAndAddRef<GetUnreversedHostFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -851,9 +847,8 @@ GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult FixupURLFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<FixupURLFunction> function = new FixupURLFunction();
-  nsresult rv =
-      aDBConn->CreateFunction(NS_LITERAL_CSTRING("fixup_url"), 1, function);
+  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("fixup_url"), 1,
+                                        MakeAndAddRef<FixupURLFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -894,10 +889,9 @@ FixupURLFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult FrecencyNotificationFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<FrecencyNotificationFunction> function =
-      new FrecencyNotificationFunction();
-  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("notify_frecency"),
-                                        5, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("notify_frecency"), 5,
+                              MakeAndAddRef<FrecencyNotificationFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -943,10 +937,9 @@ FrecencyNotificationFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 
 /* static */
 nsresult StoreLastInsertedIdFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<StoreLastInsertedIdFunction> function =
-      new StoreLastInsertedIdFunction();
-  nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("store_last_inserted_id"), 2, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("store_last_inserted_id"), 2,
+                              MakeAndAddRef<StoreLastInsertedIdFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -993,9 +986,8 @@ StoreLastInsertedIdFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 
 /* static */
 nsresult GetQueryParamFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<GetQueryParamFunction> function = new GetQueryParamFunction();
   return aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_query_param"), 2,
-                                 function);
+                                 MakeAndAddRef<GetQueryParamFunction>());
 }
 
 NS_IMPL_ISUPPORTS(GetQueryParamFunction, mozIStorageFunction)
@@ -1024,8 +1016,8 @@ GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult HashFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<HashFunction> function = new HashFunction();
-  return aDBConn->CreateFunction(NS_LITERAL_CSTRING("hash"), -1, function);
+  return aDBConn->CreateFunction(NS_LITERAL_CSTRING("hash"), -1,
+                                 MakeAndAddRef<HashFunction>());
 }
 
 NS_IMPL_ISUPPORTS(HashFunction, mozIStorageFunction)
@@ -1064,9 +1056,8 @@ HashFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
 /* static */
 nsresult GetPrefixFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<GetPrefixFunction> function = new GetPrefixFunction();
-  nsresult rv =
-      aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_prefix"), 1, function);
+  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_prefix"), 1,
+                                        MakeAndAddRef<GetPrefixFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1097,9 +1088,9 @@ GetPrefixFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 
 /* static */
 nsresult GetHostAndPortFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<GetHostAndPortFunction> function = new GetHostAndPortFunction();
-  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_host_and_port"),
-                                        1, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_host_and_port"), 1,
+                              MakeAndAddRef<GetHostAndPortFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1134,10 +1125,9 @@ GetHostAndPortFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 /* static */
 nsresult StripPrefixAndUserinfoFunction::create(
     mozIStorageConnection* aDBConn) {
-  RefPtr<StripPrefixAndUserinfoFunction> function =
-      new StripPrefixAndUserinfoFunction();
   nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("strip_prefix_and_userinfo"), 1, function);
+      NS_LITERAL_CSTRING("strip_prefix_and_userinfo"), 1,
+      MakeAndAddRef<StripPrefixAndUserinfoFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1170,10 +1160,9 @@ StripPrefixAndUserinfoFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 
 /* static */
 nsresult IsFrecencyDecayingFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<IsFrecencyDecayingFunction> function =
-      new IsFrecencyDecayingFunction();
-  nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("is_frecency_decaying"), 0, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("is_frecency_decaying"), 0,
+                              MakeAndAddRef<IsFrecencyDecayingFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1206,9 +1195,8 @@ IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 
 /* static */
 nsresult SqrtFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<SqrtFunction> function = new SqrtFunction();
-  nsresult rv =
-      aDBConn->CreateFunction(NS_LITERAL_CSTRING("sqrt"), 1, function);
+  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("sqrt"), 1,
+                                        MakeAndAddRef<SqrtFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -1240,9 +1228,9 @@ SqrtFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
 
 /* static */
 nsresult NoteSyncChangeFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<NoteSyncChangeFunction> function = new NoteSyncChangeFunction();
-  nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("note_sync_change"),
-                                        0, function);
+  nsresult rv =
+      aDBConn->CreateFunction(NS_LITERAL_CSTRING("note_sync_change"), 0,
+                              MakeAndAddRef<NoteSyncChangeFunction>());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
