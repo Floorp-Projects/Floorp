@@ -10,19 +10,6 @@ job-defaults:
         docker-image: {in-tree: mingw32-build}
         max-run-time: 3600
 
-linux64-wine:
-    description: "Wine build for MinGW32 Cross Compile"
-    treeherder:
-        symbol: TMW(wine)
-    worker:
-        max-run-time: 10800
-    run:
-        script: build-wine.sh
-        toolchain-artifact: public/build/wine.tar.xz
-    fetches:
-        fetch:
-            - wine-3.0.3
-
 linux64-mingw32-gcc:
     description: "GCC toolchain build for MinGW32 Cross Compile"
     treeherder:
