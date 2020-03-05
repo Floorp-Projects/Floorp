@@ -339,6 +339,10 @@ class AudioEventTimeline {
             mEvents[1].Time<TimeType>(), &mEvents[0], nullptr);
       }
 
+      MOZ_ASSERT(!mEvents[0].mTrack,
+                 "AudioParam tracks should never be destroyed on the real-time "
+                 "thread.");
+      JS::AutoSuppressGCAnalysis suppress;
       mEvents.RemoveElementAt(0);
     }
   }
