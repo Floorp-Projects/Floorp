@@ -1756,7 +1756,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
              "default class constructors are built-in, but have their "
              "self-hosted flag cleared");
 
-  LazyScript* lazy = script->maybeLazyScript();
+  BaseScript* lazy = script->maybeLazyScript();
   if (lazy) {
     u.scripted.s.script_ = lazy;
     MOZ_ASSERT(hasBaseScript());
@@ -2278,7 +2278,7 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
     clone->initEnvironment(enclosingEnv);
   } else if (fun->hasBaseScript()) {
     MOZ_ASSERT(fun->compartment() == clone->compartment());
-    LazyScript* lazy = fun->lazyScript();
+    BaseScript* lazy = fun->baseScript();
     clone->initLazyScript(lazy);
     clone->initEnvironment(enclosingEnv);
   } else {

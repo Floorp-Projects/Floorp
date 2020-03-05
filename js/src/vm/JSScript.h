@@ -3083,11 +3083,6 @@ class JSScript : public js::BaseScript {
   };
 };
 
-/* If this fails, add/remove padding within JSScript. */
-static_assert(
-    sizeof(JSScript) % js::gc::CellAlignBytes == 0,
-    "Size of JSScript must be an integral multiple of js::gc::CellAlignBytes");
-
 namespace js {
 
 // Information about a script which may be (or has been) lazily compiled to
@@ -3230,11 +3225,6 @@ class LazyScript : public BaseScript {
   bool hasScript() const { return bool(u.script_); }
 };
 
-/* If this fails, add/remove padding within LazyScript. */
-static_assert(sizeof(LazyScript) % js::gc::CellAlignBytes == 0,
-              "Size of LazyScript must be an integral multiple of "
-              "js::gc::CellAlignBytes");
-
 struct ScriptAndCounts {
   /* This structure is stored and marked from the JSRuntime. */
   JSScript* script;
@@ -3317,8 +3307,6 @@ namespace ubi {
 
 template <>
 class Concrete<JSScript> : public Concrete<js::BaseScript> {};
-template <>
-class Concrete<js::LazyScript> : public Concrete<js::BaseScript> {};
 
 }  // namespace ubi
 }  // namespace JS
