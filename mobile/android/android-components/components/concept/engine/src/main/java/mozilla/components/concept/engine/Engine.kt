@@ -78,12 +78,15 @@ interface Engine : WebExtensionRuntime {
     fun createView(context: Context, attrs: AttributeSet? = null): EngineView
 
     /**
-     * Creates a new engine session.
+     * Creates a new engine session. If [speculativeCreateSession] is supported this
+     * method returns the prepared [EngineSession] if it is still applicable i.e.
+     * the parameter(s) ([private]) are equal.
      *
      * @param private whether or not this session should use private mode.
      *
      * @return the newly created [EngineSession].
      */
+    @MainThread
     fun createSession(private: Boolean = false): EngineSession
 
     /**
@@ -109,6 +112,18 @@ interface Engine : WebExtensionRuntime {
      * Not all [Engine] implementations may actually implement this.
      */
     fun speculativeConnect(url: String)
+
+    /**
+     * Informs the engine that an [EngineSession] is likely to be requested soon
+     * via [createSession]. This is useful in case creating an engine session is
+     * costly and an application wants to decide when the session should be created
+     * without having to manage the session itself i.e. when it may or may not
+     * need it.
+     *
+     * @param private whether or not the session should use private mode.
+     */
+    @MainThread
+    fun speculativeCreateSession(private: Boolean = false) = Unit
 
     /**
      * Registers a [WebNotificationDelegate] to be notified of engine events
