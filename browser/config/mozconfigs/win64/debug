@@ -15,6 +15,4 @@ export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --with-branding=browser/branding/nightly
 
-. $topsrcdir/build/win64/mozconfig.vs-latest
-
 . "$topsrcdir/build/mozconfig.common.override"
