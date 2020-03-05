@@ -194,32 +194,73 @@ pub unsafe extern "C" fn run_smoosh(
     }
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn test_parse_script(text: *const u8, text_len: usize) -> bool {
-    let text = match str::from_utf8(slice::from_raw_parts(text, text_len)) {
-        Ok(text) => text,
-        Err(_) => return false, // .expect("Invalid UTF8")
-    };
-    let allocator = bumpalo::Bump::new();
-    let parse_options = ParseOptions::new();
-    match parse_script(&allocator, text, &parse_options) {
-        Ok(_) => true,
-        Err(_) => false,
+#[repr(C)]
+pub struct SmooshParseResult {
+    unimplemented: bool,
+    error: CVec<u8>,
+}
+
+fn convert_parse_result<'alloc, T>(r: jsparagus::parser::Result<'alloc, T>) -> SmooshParseResult {
+    match r {
+        Ok(_) => SmooshParseResult {
+            unimplemented: false,
+            error: CVec::empty(),
+        },
+        Err(err) => match err {
+            ParseError::NotImplemented(_) => {
+                let message = err.message();
+                SmooshParseResult {
+                    unimplemented: true,
+                    error: CVec::from(format!("{}\0", message).into_bytes()),
+                }
+            }
+            _ => {
+                let message = err.message();
+                SmooshParseResult {
+                    unimplemented: false,
+                    error: CVec::from(format!("{}\0", message).into_bytes()),
+                }
+            }
+        },
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn test_parse_module(text: *const u8, text_len: usize) -> bool {
+pub unsafe extern "C" fn test_parse_script(text: *const u8, text_len: usize) -> SmooshParseResult {
     let text = match str::from_utf8(slice::from_raw_parts(text, text_len)) {
         Ok(text) => text,
-        Err(_) => return false, // .expect("Invalid UTF8")
+        Err(_) => {
+            return SmooshParseResult {
+                unimplemented: false,
+                error: CVec::from("Invalid UTF-8\0".to_string().into_bytes()),
+            };
+        }
     };
     let allocator = bumpalo::Bump::new();
     let parse_options = ParseOptions::new();
-    match parse_module(&allocator, text, &parse_options) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    convert_parse_result(parse_script(&allocator, text, &parse_options))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn test_parse_module(text: *const u8, text_len: usize) -> SmooshParseResult {
+    let text = match str::from_utf8(slice::from_raw_parts(text, text_len)) {
+        Ok(text) => text,
+        Err(_) => {
+            return SmooshParseResult {
+                unimplemented: false,
+                error: CVec::from("Invalid UTF-8\0".to_string().into_bytes()),
+            };
+        }
+    };
+    let allocator = bumpalo::Bump::new();
+    let parse_options = ParseOptions::new();
+    convert_parse_result(parse_module(&allocator, text, &parse_options))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn free_smoosh_parse_result(result: SmooshParseResult) {
+    let _ = result.error.into();
+    //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
 }
 
 #[no_mangle]
