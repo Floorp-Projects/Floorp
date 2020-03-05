@@ -15,7 +15,6 @@
     android:background="@drawable/toolbar_background_top"
     android:clickable="true"
     android:focusable="true"
-    android:transitionName="toolbar_wrapper_transition"
     android:focusableInTouchMode="true"
     app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
     app:browserToolbarClearColor="?primaryText"

@@ -33,7 +33,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -544,11 +543,7 @@ class HomeFragment : Fragment() {
             sessionId = null
         )
 
-        val extras = FragmentNavigator.Extras.Builder()
-                .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
-                .build()
-
-        nav(R.id.homeFragment, directions, extras)
+        nav(R.id.homeFragment, directions)
     }
 
     private fun openSettingsScreen() {

@@ -21,7 +21,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
@@ -57,17 +56,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     private lateinit var searchStore: SearchFragmentStore
     private lateinit var searchInteractor: SearchInteractor
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        postponeEnterTransition()
-
-        sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-                .setDuration(SHARED_TRANSITION_MS)
-
-        requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -86,6 +74,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         )
 
         val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+
+        requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
 
         val showSearchSuggestions =
             if (isPrivate) {

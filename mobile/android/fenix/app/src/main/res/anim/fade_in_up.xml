@@ -6,9 +6,9 @@
     <alpha
         android:interpolator="@android:interpolator/decelerate_quad"
         android:fromAlpha="0" android:toAlpha="1"
-        android:duration="125" />
+        android:duration="150" />
     <translate
         android:interpolator="@android:interpolator/decelerate_quad"
         android:fromYDelta="7%" android:toYDelta="0%"
-        android:duration="125"/>
+        android:duration="150"/>
 </set>

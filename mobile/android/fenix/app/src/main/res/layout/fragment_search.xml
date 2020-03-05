@@ -38,7 +38,6 @@
         android:layout_height="@dimen/browser_toolbar_height"
         android:layout_margin="0dp"
         android:outlineProvider="paddedBounds"
-        android:transitionName="toolbar_wrapper_transition"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">

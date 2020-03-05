@@ -120,7 +120,6 @@
             android:clickable="true"
             android:contentDescription="@string/search_hint"
             android:focusable="true"
-            android:transitionName="toolbar_wrapper_transition"
             app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
             app:layout_constraintEnd_toStartOf="@+id/add_tab_button"
             app:layout_constraintStart_toStartOf="parent"
