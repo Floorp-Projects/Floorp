@@ -698,7 +698,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   ~nsPIDOMWindowOuter();
 
   void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
-  bool IsDisposableSuspend(SuspendTypes aSuspend) const;
   void MaybeNotifyMediaResumedFromBlock(SuspendTypes aSuspend);
 
  public:

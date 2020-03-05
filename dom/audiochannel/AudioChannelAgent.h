@@ -54,7 +54,6 @@ class AudioChannelAgent : public nsIAudioChannelAgent {
   nsPIDOMWindowOuter* Window() const { return mWindow; }
   uint64_t InnerWindowID() const;
   AudioPlaybackConfig GetMediaConfig() const;
-  bool IsDisposableSuspend(nsSuspendedTypes aSuspend) const;
 
   // Returns mCallback if that's non-null, or otherwise tries to get an
   // nsIAudioChannelAgentCallback out of mWeakCallback.
