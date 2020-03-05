@@ -1908,7 +1908,7 @@ nsresult UpgradeSchemaFrom8To9_0(mozIStorageConnection* aConnection) {
 
   NS_NAMED_LITERAL_CSTRING(compressorName, "compress");
 
-  rv = aConnection->RegisterFunction(compressorName, 1, compressor);
+  rv = aConnection->CreateFunction(compressorName, 1, compressor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1926,7 +1926,7 @@ nsresult UpgradeSchemaFrom8To9_0(mozIStorageConnection* aConnection) {
     return rv;
   }
 
-  rv = aConnection->UnregisterFunction(compressorName);
+  rv = aConnection->RemoveFunction(compressorName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2198,7 +2198,7 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection) {
 
   nsCOMPtr<mozIStorageFunction> encoder = new EncodeKeysFunction();
 
-  nsresult rv = aConnection->RegisterFunction(encoderName, 1, encoder);
+  nsresult rv = aConnection->CreateFunction(encoderName, 1, encoder);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2418,7 +2418,7 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection) {
     return rv;
   }
 
-  rv = aConnection->UnregisterFunction(encoderName);
+  rv = aConnection->RemoveFunction(encoderName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2847,29 +2847,32 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
   // Register the |upgrade_key| function.
+  RefPtr<UpgradeKeyFunction> updateFunction = new UpgradeKeyFunction();
+
   NS_NAMED_LITERAL_CSTRING(upgradeKeyFunctionName, "upgrade_key");
 
-  nsresult rv = aConnection->RegisterFunction(
-      upgradeKeyFunctionName, 1, MakeAndAddRef<UpgradeKeyFunction>());
+  nsresult rv =
+      aConnection->CreateFunction(upgradeKeyFunctionName, 1, updateFunction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Register the |insert_idv| function.
+  RefPtr<InsertIndexDataValuesFunction> insertIDVFunction =
+      new InsertIndexDataValuesFunction();
+
   NS_NAMED_LITERAL_CSTRING(insertIDVFunctionName, "insert_idv");
 
-  rv = aConnection->RegisterFunction(
-      insertIDVFunctionName, 4, MakeAndAddRef<InsertIndexDataValuesFunction>());
+  rv = aConnection->CreateFunction(insertIDVFunctionName, 4, insertIDVFunction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ALWAYS_SUCCEEDS(
-        aConnection->UnregisterFunction(upgradeKeyFunctionName));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(upgradeKeyFunctionName));
     return rv;
   }
 
   rv = DoUpgradeInternal(aConnection, aOrigin);
 
-  MOZ_ALWAYS_SUCCEEDS(aConnection->UnregisterFunction(upgradeKeyFunctionName));
-  MOZ_ALWAYS_SUCCEEDS(aConnection->UnregisterFunction(insertIDVFunctionName));
+  MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(upgradeKeyFunctionName));
+  MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(insertIDVFunctionName));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3491,7 +3494,7 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
 
   NS_NAMED_LITERAL_CSTRING(functionName, "upgrade");
 
-  rv = aConnection->RegisterFunction(functionName, 2, std::move(function));
+  rv = aConnection->CreateFunction(functionName, 2, function);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3524,7 +3527,7 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
     return rv;
   }
 
-  rv = aConnection->UnregisterFunction(functionName);
+  rv = aConnection->RemoveFunction(functionName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3698,10 +3701,12 @@ nsresult UpgradeSchemaFrom20_0To21_0(mozIStorageConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom20_0To21_0", DOM);
 
+  RefPtr<UpgradeIndexDataValuesFunction> function =
+      new UpgradeIndexDataValuesFunction();
+
   NS_NAMED_LITERAL_CSTRING(functionName, "upgrade_idv");
 
-  nsresult rv = aConnection->RegisterFunction(
-      functionName, 1, MakeAndAddRef<UpgradeIndexDataValuesFunction>());
+  nsresult rv = aConnection->CreateFunction(functionName, 1, function);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3714,7 +3719,7 @@ nsresult UpgradeSchemaFrom20_0To21_0(mozIStorageConnection* aConnection) {
     return rv;
   }
 
-  rv = aConnection->UnregisterFunction(functionName);
+  rv = aConnection->RemoveFunction(functionName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3864,9 +3869,9 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection* aConnection) {
   nsCOMPtr<mozIStorageFunction> stripObsoleteAttributes =
       new StripObsoleteOriginAttributesFunction();
 
-  nsresult rv = aConnection->RegisterFunction(functionName,
-                                              /* aNumArguments */ 1,
-                                              stripObsoleteAttributes);
+  nsresult rv = aConnection->CreateFunction(functionName,
+                                            /* aNumArguments */ 1,
+                                            stripObsoleteAttributes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3879,7 +3884,7 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection* aConnection) {
     return rv;
   }
 
-  rv = aConnection->UnregisterFunction(functionName);
+  rv = aConnection->RemoveFunction(functionName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10451,8 +10456,8 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
         new UpdateRefcountFunction(this, mFileManager->get());
 
     rv = (*mStorageConnection)
-             ->RegisterFunction(NS_LITERAL_CSTRING("update_refcount"),
-                                /* aNumArguments */ 2, do_AddRef(function));
+             ->CreateFunction(NS_LITERAL_CSTRING("update_refcount"),
+                              /* aNumArguments */ 2, function);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -10913,7 +10918,7 @@ void DatabaseConnection::Close() {
   if (mUpdateRefcountFunction) {
     MOZ_ALWAYS_SUCCEEDS(
         (*mStorageConnection)
-            ->UnregisterFunction(NS_LITERAL_CSTRING("update_refcount")));
+            ->RemoveFunction(NS_LITERAL_CSTRING("update_refcount")));
     mUpdateRefcountFunction = nullptr;
   }
 
@@ -23865,19 +23870,20 @@ nsresult CreateIndexOp::InsertDataFromObjectStore(
       aConnection->GetStorageConnection();
   MOZ_ASSERT(storageConnection);
 
+  RefPtr<UpdateIndexDataValuesFunction> updateFunction =
+      new UpdateIndexDataValuesFunction(this, aConnection);
+
   NS_NAMED_LITERAL_CSTRING(updateFunctionName, "update_index_data_values");
 
-  nsresult rv = storageConnection->RegisterFunction(
-      updateFunctionName, 4,
-      MakeAndAddRef<UpdateIndexDataValuesFunction>(this, aConnection));
+  nsresult rv =
+      storageConnection->CreateFunction(updateFunctionName, 4, updateFunction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = InsertDataFromObjectStoreInternal(aConnection);
 
-  MOZ_ALWAYS_SUCCEEDS(
-      storageConnection->UnregisterFunction(updateFunctionName));
+  MOZ_ALWAYS_SUCCEEDS(storageConnection->RemoveFunction(updateFunctionName));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
