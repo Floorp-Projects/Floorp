@@ -116,7 +116,7 @@ class RaptorGatherer(FrameworkGatherer):
         '''
         test_manifest = TestManifest([manifest_path], strict=False)
         test_list = test_manifest.active_tests(exists=False, disabled=False)
-        subtest_list = [subtest["name"] for subtest in test_list]
+        subtest_list = {subtest["name"]: subtest["manifest"] for subtest in test_list}
 
         return subtest_list
 
@@ -140,11 +140,9 @@ class RaptorGatherer(FrameworkGatherer):
         # and place the subtests into self._test_list under the same key
         for suite_name, manifest_paths in suite_list.items():
             if not self._test_list.get(suite_name):
-                self._test_list[suite_name] = []
+                self._test_list[suite_name] = {}
             for i, manifest_path in enumerate(manifest_paths, 1):
                 subtest_list = self._get_subtests_from_ini(manifest_path)
-                self._test_list[suite_name].extend(subtest_list)
-                if i == len(manifest_paths):
-                    self._test_list[suite_name] = sorted(self._test_list[suite_name])
+                self._test_list[suite_name].update(subtest_list)
 
         return self._test_list

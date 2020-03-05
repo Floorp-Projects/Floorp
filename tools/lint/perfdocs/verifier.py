@@ -117,25 +117,25 @@ class Verifier(object):
                 # Suite found - now check if any tests in YAML
                 # definitions doesn't exist
                 ytests = ytests['tests']
-                for suite_name in ytests:
+                for test_name in ytests:
                     foundtest = False
                     for t in framework_info["test_list"][suite]:
                         tb = os.path.basename(t)
                         tb = re.sub("\..*", "", tb)
-                        if suite_name == tb:
-                            # Found an exact match for the suite_name
+                        if test_name == tb:
+                            # Found an exact match for the test_name
                             foundtest = True
                             break
-                        if suite_name in tb:
-                            # Found a 'fuzzy' match for the suite_name
+                        if test_name in tb:
+                            # Found a 'fuzzy' match for the test_name
                             # i.e. 'wasm' could exist for all raptor wasm tests
-                            global_descriptions[suite].append(suite_name)
+                            global_descriptions[suite].append(test_name)
                             foundtest = True
                             break
                     if not foundtest:
                         logger.warning(
                             "Could not find an existing test for {} - bad test name?".format(
-                                suite_name
+                                test_name
                             ),
                             framework_info["yml_path"]
                         )
@@ -165,15 +165,15 @@ class Verifier(object):
             tests_found = 0
             missing_tests = []
             test_to_manifest = {}
-            for test_name in test_list:
-                tb = os.path.basename(test_name)
+            for test_name, manifest_path in test_list.items():
+                tb = os.path.basename(manifest_path)
                 tb = re.sub("\..*", "", tb)
                 if stests.get(tb) or stests.get(test_name):
                     # Test description exists, continue with the next test
                     tests_found += 1
                     continue
-                test_to_manifest[tb] = test_name
-                missing_tests.append(tb)
+                test_to_manifest[test_name] = manifest_path
+                missing_tests.append(test_name)
 
             # Check if global test descriptions exist (i.e.
             # ones that cover all of tp6) for the missing tests
@@ -181,8 +181,11 @@ class Verifier(object):
             for mt in missing_tests:
                 found = False
                 for test_name in global_descriptions[suite]:
+                    # Global test exists for this missing test
+                    if mt.startswith(test_name):
+                        found = True
+                        break
                     if test_name in mt:
-                        # Global test exists for this missing test
                         found = True
                         break
                 if not found:
@@ -196,7 +199,6 @@ class Verifier(object):
                         "Could not find a test description for {}".format(test_name),
                         test_to_manifest[test_name]
                     )
-                continue
 
     def validate_yaml(self, yaml_path):
         '''
