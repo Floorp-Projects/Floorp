@@ -182,6 +182,20 @@ static LazyLogModule gCookieLog("cookie");
   MOZ_LOG(gCookieLog, lvl, ("\n")); \
   PR_END_MACRO
 
+static const char* SameSiteToString(uint32_t aSameSite) {
+  switch (aSameSite) {
+    case nsICookie::SAMESITE_NONE:
+      return "none";
+    case nsICookie::SAMESITE_LAX:
+      return "lax";
+    case nsICookie::SAMESITE_STRICT:
+      return "strict";
+    default:
+      MOZ_CRASH("Invalid nsICookie sameSite value");
+      return "";
+  }
+}
+
 static void LogFailure(bool aSetCookie, nsIURI* aHostURI,
                        const nsACString& aCookieString, const char* aReason) {
   // if logging isn't enabled, return now to save cycles
@@ -241,6 +255,10 @@ static void LogCookie(nsCookie* aCookie) {
             ("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
     MOZ_LOG(gCookieLog, LogLevel::Debug,
             ("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
+    MOZ_LOG(gCookieLog, LogLevel::Debug,
+            ("sameSite: %s - rawSameSite: %s\n",
+             SameSiteToString(aCookie->SameSite()),
+             SameSiteToString(aCookie->RawSameSite())));
 
     nsAutoCString suffix;
     aCookie->OriginAttributesRef().CreateSuffix(suffix);
