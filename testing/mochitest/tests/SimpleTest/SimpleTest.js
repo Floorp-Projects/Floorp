@@ -708,6 +708,10 @@ SimpleTest.waitForExplicitFinish = function() {
 SimpleTest.requestLongerTimeout = function(factor) {
   if (parentRunner) {
     parentRunner.requestLongerTimeout(factor);
+  } else {
+    dump(
+      "[SimpleTest.requestLongerTimeout()] ignoring request, maybe you meant to call the global `requestLongerTimeout` instead?\n"
+    );
   }
 };
 
