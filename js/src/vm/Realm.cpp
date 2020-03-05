@@ -588,7 +588,7 @@ static bool AddLazyFunctionsForRealm(JSContext* cx,
       continue;
     }
 
-    LazyScript* lazy = fun->lazyScript();
+    BaseScript* lazy = fun->baseScript();
     if (lazy->enclosingScriptHasEverBeenCompiled()) {
       if (!lazyFunctions.append(fun)) {
         return false;

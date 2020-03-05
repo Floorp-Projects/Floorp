@@ -2890,13 +2890,13 @@ struct CollectedScripts {
   explicit CollectedScripts(MutableHandle<ScriptVector> scripts)
       : scripts(scripts) {}
 
-  static void consider(JSRuntime* rt, void* data, JSScript* script,
+  static void consider(JSRuntime* rt, void* data, BaseScript* script,
                        const JS::AutoRequireNoGC& nogc) {
     auto self = static_cast<CollectedScripts*>(data);
     if (!script->filename()) {
       return;
     }
-    if (!self->scripts.append(script)) {
+    if (!self->scripts.append(script->asJSScript())) {
       self->ok = false;
     }
   }
