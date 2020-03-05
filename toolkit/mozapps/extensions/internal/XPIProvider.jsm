@@ -1128,7 +1128,7 @@ class SystemAddonDefaults extends DirectoryLocation {
     let manifest = XPIProvider.builtInAddons;
 
     if (!("system" in manifest)) {
-      logger.warn("No list of valid system add-ons found.");
+      logger.debug("No list of valid system add-ons found.");
       return addons;
     }
 
@@ -2372,7 +2372,7 @@ var XPIProvider = {
         let data = Cu.readUTF8URI(url);
         this.builtInAddons = JSON.parse(data);
       } catch (e) {
-        logger.warn("List of valid built-in add-ons could not be parsed.", e);
+        logger.debug("List of valid built-in add-ons could not be parsed.", e);
       }
 
       this.registerBuiltinDictionaries();
