@@ -6737,6 +6737,79 @@ class LWasmRegisterPairResult : public LInstructionHelper<2, 0, 0> {
   MDefinition* mir() const { return mirRaw(); }
 };
 
+class LWasmStackResultArea : public LInstructionHelper<1, 0, 1> {
+ public:
+  LIR_HEADER(WasmStackResultArea);
+
+  explicit LWasmStackResultArea(const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setTemp(0, temp);
+  }
+
+  MWasmStackResultArea* mir() const { return mir_->toWasmStackResultArea(); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
+inline uint32_t LStackArea::base() const {
+  return ins()->toWasmStackResultArea()->mir()->base();
+}
+inline void LStackArea::setBase(uint32_t base) {
+  ins()->toWasmStackResultArea()->mir()->setBase(base);
+}
+inline uint32_t LStackArea::size() const {
+  return ins()->toWasmStackResultArea()->mir()->byteSize();
+}
+
+inline bool LStackArea::ResultIterator::done() const {
+  return idx_ == alloc_.ins()->toWasmStackResultArea()->mir()->resultCount();
+}
+inline void LStackArea::ResultIterator::next() {
+  MOZ_ASSERT(!done());
+  idx_++;
+}
+inline LAllocation LStackArea::ResultIterator::alloc() const {
+  MOZ_ASSERT(!done());
+  MWasmStackResultArea* area = alloc_.ins()->toWasmStackResultArea()->mir();
+  return LStackSlot(area->base() - area->result(idx_).offset());
+}
+inline bool LStackArea::ResultIterator::isGcPointer() const {
+  MOZ_ASSERT(!done());
+  MWasmStackResultArea* area = alloc_.ins()->toWasmStackResultArea()->mir();
+  MIRType type = area->result(idx_).type();
+  return LDefinition::TypeFrom(type) == LDefinition::OBJECT;
+}
+
+class LWasmStackResult : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmStackResult);
+
+  LWasmStackResult() : LInstructionHelper(classOpcode) {}
+
+  MWasmStackResult* mir() const { return mir_->toWasmStackResult(); }
+  LStackSlot result(uint32_t base) const {
+    return LStackSlot(base - mir()->result().offset());
+  }
+};
+
+class LWasmStackResult64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(WasmStackResult64);
+
+  LWasmStackResult64() : LInstructionHelper(classOpcode) {}
+
+  MWasmStackResult* mir() const { return mir_->toWasmStackResult(); }
+  LStackSlot result(uint32_t base) const {
+    return LStackSlot(base - mir()->result().offset());
+  }
+};
+
+inline LStackSlot LStackArea::resultAlloc(LNode* lir) const {
+  if (lir->isWasmStackResult64()) {
+    return lir->toWasmStackResult64()->result(base());
+  }
+  return lir->toWasmStackResult()->result(base());
+}
+
 inline bool LNode::isCallPreserved(AnyRegister reg) const {
   return isWasmCall() && LWasmCall::isCallPreserved(reg);
 }
