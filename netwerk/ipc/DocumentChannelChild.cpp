@@ -114,11 +114,14 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // TODO: What happens if the caller has called other methods on the
-  // nsIChannel after the ctor, but before this?
+  if (!GetDocShell() || !GetDocShell()->GetBrowsingContext() ||
+      GetDocShell()->GetBrowsingContext()->IsDiscarded()) {
+    return NS_ERROR_FAILURE;
+  }
 
   gNeckoChild->SendPDocumentChannelConstructor(
-      this, browserChild, IPC::SerializedLoadContext(this), args);
+      this, browserChild, GetDocShell()->GetBrowsingContext(),
+      IPC::SerializedLoadContext(this), args);
 
   mIsPending = true;
   mWasOpened = true;

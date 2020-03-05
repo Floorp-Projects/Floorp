@@ -63,22 +63,13 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIProcessSwitchRequestor,
                              public nsIMultiPartChannelListener {
  public:
-  // aProcessTopBrowsingContext should be the top BrowsingContext in the same
-  // process as the load, which would be the owner of the BrowserParent (if
-  // has been created).
-  // This is weird legacy behaviour, that will be cleaned up with bug 1618057.
-  explicit DocumentLoadListener(
-      dom::CanonicalBrowsingContext* aProcessTopBrowsingContext,
-      nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus,
-      ADocumentChannelBridge* aBridge);
+  explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
+                                nsILoadContext* aLoadContext,
+                                PBOverrideStatus aOverrideStatus,
+                                ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
-  // Must be the same BrowsingContext as was passed to the constructor, we
-  // expect Necko to pass it again so that we don't need a member var for
-  // it.
-  bool Open(dom::CanonicalBrowsingContext* aBrowsingContext,
-            dom::CanonicalBrowsingContext* aProcessTopBrowsingContext,
-            nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+  bool Open(nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
             nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
             bool aIsActive, bool aIsTopLevelDoc,
             bool aHasNonEmptySandboxingFlags, const uint64_t& aChannelId,

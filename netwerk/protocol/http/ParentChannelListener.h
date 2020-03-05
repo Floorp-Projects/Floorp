@@ -65,6 +65,10 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // Called to set a new listener which replaces the old one after a redirect.
   void SetListenerAfterRedirect(nsIStreamListener* aListener);
 
+  dom::CanonicalBrowsingContext* GetBrowsingContext() {
+    return mBrowsingContext;
+  }
+
  private:
   virtual ~ParentChannelListener();
 
@@ -98,7 +102,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // interception is enabled.
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 
-  RefPtr<mozilla::dom::CanonicalBrowsingContext> mBrowsingContext;
+  RefPtr<dom::CanonicalBrowsingContext> mBrowsingContext;
 
   // True if we received OnStartRequest for a nsIMultiPartChannel, and are
   // expected AllPartsStopped to be called when complete.

@@ -409,8 +409,17 @@ mozilla::ipc::IPCResult NeckoParent::RecvPFTPChannelConstructor(
 
 already_AddRefed<PDocumentChannelParent>
 NeckoParent::AllocPDocumentChannelParent(
-    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
+    PBrowserParent* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext,
+    const SerializedLoadContext& aSerialized,
     const DocumentChannelCreationArgs& args) {
+  // We still create the actor even if the BrowsingContext isn't available,
+  // so that we can send the reject message using it from
+  // RecvPDocumentChannelConstructor
+  CanonicalBrowsingContext* context = nullptr;
+  if (!aContext.IsNullOrDiscarded()) {
+    context = aContext.get_canonical();
+  }
+
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       GetRequestingPrincipal(Some(args.loadInfo()));
 
@@ -422,21 +431,24 @@ NeckoParent::AllocPDocumentChannelParent(
   }
   PBOverrideStatus overrideStatus =
       PBOverrideStatusFromLoadContext(aSerialized);
-  RefPtr<dom::BrowserParent> browser =
-      static_cast<dom::BrowserParent*>(aBrowser);
   RefPtr<DocumentChannelParent> p =
-      new DocumentChannelParent(browser, loadContext, overrideStatus);
+      new DocumentChannelParent(context, loadContext, overrideStatus);
   return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDocumentChannelConstructor(
     PDocumentChannelParent* aActor, PBrowserParent* aBrowser,
+    const MaybeDiscarded<BrowsingContext>& aContext,
     const SerializedLoadContext& aSerialized,
     const DocumentChannelCreationArgs& aArgs) {
   DocumentChannelParent* p = static_cast<DocumentChannelParent*>(aActor);
-  RefPtr<dom::BrowserParent> browser =
-      static_cast<dom::BrowserParent*>(aBrowser);
-  if (!p->Init(browser, aArgs)) {
+
+  if (aContext.IsNullOrDiscarded()) {
+    Unused << p->SendFailedAsyncOpen(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+
+  if (!p->Init(aArgs)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
