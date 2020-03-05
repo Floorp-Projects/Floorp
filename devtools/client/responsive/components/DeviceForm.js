@@ -62,7 +62,9 @@ class DeviceForm extends PureComponent {
     });
   }
 
-  onDeviceFormSave() {
+  onDeviceFormSave(e) {
+    e.preventDefault();
+
     if (!this.pixelRatioInputRef.current.checkValidity()) {
       return;
     }
