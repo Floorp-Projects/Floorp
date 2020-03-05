@@ -1,0 +1,7 @@
+# pulled when running in TaskCluster
+# the target.condprof.tests.tar.gz archive pulls those dependencies
+# directly into the condprof project root.
+./mozfile
+./mozprofile
+./mozdevice
+./mozlog

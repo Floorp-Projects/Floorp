@@ -1,0 +1,8 @@
+# pulled when running tox locally
+-r requirements/local.txt
+
+pytest
+pytest-cov
+pytest-random-order
+coveralls
+responses

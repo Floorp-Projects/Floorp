@@ -1,6 +1,5 @@
+# pulled when running locally
 ../mozbase/mozfile
 ../mozbase/mozprofile
+../mozbase/mozdevice
 ../mozbase/mozlog
-
-requests==2.22.0
-pyyaml==5.1.2

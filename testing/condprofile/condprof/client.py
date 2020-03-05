@@ -138,17 +138,3 @@ def read_changelog(platform, repo="mozilla-central"):
         shutil.rmtree(download_dir)
         raise ProfileNotFoundError(changelog_url)
     return Changelog(download_dir)
-
-
-def main():
-    # XXX demo. download an older version of a profile, given a task id
-    # plat = get_current_platform()
-    older_change = read_changelog("win64").history()[0]
-    task_id = older_change["TASK_ID"]
-    target_dir = tempfile.mkdtemp()
-    filename = get_profile(target_dir, "win64", "settled", "default", task_id)
-    print("Profile downloaded and extracted at %s" % filename)
-
-
-if __name__ == "__main__":
-    main()
