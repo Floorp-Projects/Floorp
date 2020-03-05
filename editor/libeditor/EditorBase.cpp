@@ -5455,21 +5455,6 @@ NS_IMETHODIMP EditorBase::SetNewlineHandling(int32_t aNewlineHandling) {
   }
 }
 
-bool EditorBase::IsSelectionRangeContainerNotContent() const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
-    nsRange* range = SelectionRefPtr()->GetRangeAt(i);
-    MOZ_ASSERT(range);
-    if (!range || !range->GetStartContainer() ||
-        !range->GetStartContainer()->IsContent() || !range->GetEndContainer() ||
-        !range->GetEndContainer()->IsContent()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 NS_IMETHODIMP EditorBase::InsertText(const nsAString& aStringToInsert) {
   nsresult rv = InsertTextAsAction(aStringToInsert);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert text");

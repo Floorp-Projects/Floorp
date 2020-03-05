@@ -1748,10 +1748,6 @@ HTMLEditor::SelectTable() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-    return NS_OK;  // Don't fail if we didn't find a table.
-  }
-
   RefPtr<Element> table =
       GetElementOrParentByTagNameAtSelection(*nsGkAtoms::table);
   if (NS_WARN_IF(!table)) {
@@ -1776,14 +1772,8 @@ HTMLEditor::SelectTableCell() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
-
   RefPtr<Element> cell = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
   if (NS_WARN_IF(!cell)) {
-    // Don't fail if we didn't find a cell.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
@@ -1803,11 +1793,6 @@ HTMLEditor::SelectAllTableCells() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   RefPtr<Element> cell = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
@@ -1885,11 +1870,6 @@ HTMLEditor::SelectTableRow() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   RefPtr<Element> cell = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
@@ -1971,11 +1951,6 @@ HTMLEditor::SelectTableColumn() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   RefPtr<Element> cell = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
@@ -2985,10 +2960,6 @@ HTMLEditor::NormalizeTable(Element* aTableOrElementInTable) {
   }
 
   if (!aTableOrElementInTable) {
-    if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-      return NS_OK;  // Don't throw error even if the element is not in <table>.
-    }
-
     aTableOrElementInTable =
         GetElementOrParentByTagNameAtSelection(*nsGkAtoms::table);
     if (!aTableOrElementInTable) {
@@ -3139,11 +3110,6 @@ void HTMLEditor::CellIndexes::Update(HTMLEditor& aHTMLEditor,
                                      Selection& aSelection, ErrorResult& aRv) {
   MOZ_ASSERT(!aRv.Failed());
 
-  if (NS_WARN_IF(aHTMLEditor.IsSelectionRangeContainerNotContent())) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   // Guarantee the life time of the cell element since Init() will access
   // layout methods.
   RefPtr<Element> cellElement =
@@ -3233,9 +3199,6 @@ HTMLEditor::GetTableSize(Element* aTableOrElementInTable, int32_t* aRowCount,
 
   Element* tableOrElementInTable = aTableOrElementInTable;
   if (!tableOrElementInTable) {
-    if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-      return NS_ERROR_FAILURE;
-    }
     tableOrElementInTable =
         GetElementOrParentByTagNameAtSelection(*nsGkAtoms::table);
     if (NS_WARN_IF(!tableOrElementInTable)) {
@@ -3312,9 +3275,6 @@ HTMLEditor::GetCellDataAt(Element* aTableElement, int32_t aRowIndex,
   // them.
   RefPtr<Element> table = aTableElement;
   if (!table) {
-    if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-      return NS_ERROR_FAILURE;
-    }
     // Get the selected table or the table enclosing the selection anchor.
     table = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::table);
     if (NS_WARN_IF(!table)) {
@@ -3398,9 +3358,6 @@ HTMLEditor::GetCellAt(Element* aTableElement, int32_t aRowIndex,
 
   Element* tableElement = aTableElement;
   if (!tableElement) {
-    if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-      return NS_ERROR_FAILURE;
-    }
     // Get the selected table or the table enclosing the selection anchor.
     tableElement = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::table);
     if (NS_WARN_IF(!tableElement)) {
@@ -4021,9 +3978,6 @@ HTMLEditor::GetSelectedCellsType(Element* aElement, uint32_t* aSelectionType) {
       return NS_ERROR_FAILURE;
     }
   } else {
-    if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-      return NS_ERROR_FAILURE;
-    }
     table = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::table);
     if (NS_WARN_IF(!table)) {
       return NS_ERROR_FAILURE;
