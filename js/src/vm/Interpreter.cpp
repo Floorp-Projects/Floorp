@@ -3383,14 +3383,15 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(SetAliasedVar)
 
     CASE(ThrowSetConst) {
-      ReportRuntimeConstAssignment(cx, script, REGS.pc);
+      ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, script, REGS.pc);
       goto error;
     }
     END_CASE(ThrowSetConst)
 
     CASE(CheckLexical) {
       if (REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
-        ReportUninitializedLexical(cx, script, REGS.pc);
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, script,
+                                  REGS.pc);
         goto error;
       }
     }
