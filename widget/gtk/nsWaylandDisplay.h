@@ -152,6 +152,7 @@ typedef int (*DrmPrimeHandleToFDFunc)(int, uint32_t, uint32_t, int*);
 class nsGbmLib {
  public:
   static bool Load();
+  static bool IsLoaded();
   static bool IsAvailable();
   static bool IsModifierAvailable();
 
