@@ -694,53 +694,8 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
                                            nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
                                            nsRect* aOverflowRect) {
-  nsIntMargin overflow;
-  switch (aAppearance) {
-    case StyleAppearance::Button:
-    case StyleAppearance::MozMacDisclosureButtonOpen:
-    case StyleAppearance::MozMacDisclosureButtonClosed:
-    case StyleAppearance::MozMacHelpButton:
-    case StyleAppearance::Toolbarbutton:
-    case StyleAppearance::NumberInput:
-    case StyleAppearance::Textfield:
-    case StyleAppearance::Textarea:
-    case StyleAppearance::Searchfield:
-    case StyleAppearance::Listbox:
-    case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
-    case StyleAppearance::MenulistTextfield:
-    case StyleAppearance::Checkbox:
-    case StyleAppearance::Radio:
-    case StyleAppearance::Tab:
-    case StyleAppearance::FocusOutline: {
-      overflow.SizeTo(2, 2, 2, 2);
-      break;
-    }
-    case StyleAppearance::ProgressBar: {
-      // Progress bars draw a 2 pixel white shadow under their progress
-      // indicators.
-      overflow.bottom = 2;
-      break;
-    }
-    case StyleAppearance::Meter: {
-      // Meter bars overflow their boxes by about 2 pixels.
-      overflow.SizeTo(2, 2, 2, 2);
-      break;
-    }
-    default:
-      break;
-  }
-
-  if (overflow != nsIntMargin()) {
-    int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
-    aOverflowRect->Inflate(nsMargin(NSIntPixelsToAppUnits(overflow.top, p2a),
-                                    NSIntPixelsToAppUnits(overflow.right, p2a),
-                                    NSIntPixelsToAppUnits(overflow.bottom, p2a),
-                                    NSIntPixelsToAppUnits(overflow.left, p2a)));
-    return true;
-  }
-
+  // TODO(bug 1620360): This should return non-zero for
+  // StyleAppearance::FocusOutline, if we implement outline-style: auto.
   return false;
 }
 
@@ -765,35 +720,6 @@ nsNativeBasicTheme::WidgetStateChanged(nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        nsAtom* aAttribute, bool* aShouldRepaint,
                                        const nsAttrValue* aOldValue) {
-  // Some widget types just never change state.
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::Toolbox:
-    case StyleAppearance::Toolbar:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Tooltip:
-    case StyleAppearance::Tabpanels:
-    case StyleAppearance::Tabpanel:
-    case StyleAppearance::Dialog:
-    case StyleAppearance::Menupopup:
-    case StyleAppearance::Groupbox:
-    case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgressBar:
-    case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::Meter:
-    case StyleAppearance::Meterchunk:
-    case StyleAppearance::MozMacVibrancyLight:
-    case StyleAppearance::MozMacVibrancyDark:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark:
-      *aShouldRepaint = false;
-      return NS_OK;
-    default:
-      break;
-  }
-
   if (!aAttribute) {
     // Hover/focus/active changed.  Always repaint.
     *aShouldRepaint = true;
@@ -820,22 +746,8 @@ nsNativeBasicTheme::WidgetStateChanged(nsIFrame* aFrame,
 NS_IMETHODIMP
 nsNativeBasicTheme::ThemeChanged() { return NS_OK; }
 
-bool nsNativeBasicTheme::WidgetAppearanceDependsOnWindowFocus(
-    StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-    case StyleAppearance::MozWindowFrameBottom:
-    case StyleAppearance::MozWindowButtonClose:
-    case StyleAppearance::MozWindowButtonMinimize:
-    case StyleAppearance::MozWindowButtonMaximize:
-    case StyleAppearance::MozWindowButtonRestore:
-      return true;
-    default:
-      return false;
-  }
+bool nsNativeBasicTheme::WidgetAppearanceDependsOnWindowFocus(StyleAppearance) {
+  return false;
 }
 
 nsITheme::ThemeGeometryType nsNativeBasicTheme::ThemeGeometryTypeForWidget(
