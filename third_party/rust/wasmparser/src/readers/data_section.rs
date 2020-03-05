@@ -55,10 +55,10 @@ impl<'a> DataSectionReader<'a> {
 
     fn verify_data_end(&self, end: usize) -> Result<()> {
         if self.reader.buffer.len() < end {
-            return Err(BinaryReaderError {
-                message: "Data segment extends past end of the data section",
-                offset: self.reader.original_offset + self.reader.buffer.len(),
-            });
+            return Err(BinaryReaderError::new(
+                "Data segment extends past end of the data section",
+                self.reader.original_offset + self.reader.buffer.len(),
+            ));
         }
         Ok(())
     }
@@ -102,10 +102,10 @@ impl<'a> DataSectionReader<'a> {
                 0 => 0,
                 2 => self.reader.read_var_u32()?,
                 _ => {
-                    return Err(BinaryReaderError {
-                        message: "invalid flags byte in data segment",
-                        offset: self.reader.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "invalid flags byte in data segment",
+                        self.reader.original_position() - 1,
+                    ));
                 }
             };
             let init_expr = {

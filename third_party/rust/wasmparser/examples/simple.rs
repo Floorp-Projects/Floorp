@@ -33,7 +33,7 @@ fn main() {
                 println!("  Import {}::{}", module, field)
             }
             ParserState::EndWasm => break,
-            ParserState::Error(err) => panic!("Error: {:?}", err),
+            ParserState::Error(ref err) => panic!("Error: {:?}", err),
             _ => ( /* println!(" Other {:?}", state); */ ),
         }
     }
