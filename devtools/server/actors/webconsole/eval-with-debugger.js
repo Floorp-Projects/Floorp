@@ -276,17 +276,22 @@ function preventSideEffects(dbg) {
     throw new Error("Debugger has hook installed");
   }
 
+  // We ensure that the metadata for native functions is loaded before we
+  // initialize sideeffect-prevention because the data is lazy-loaded, and this
+  // logic can run inside of debuggee compartments because the
+  // "addAllGlobalsAsDebuggees" considers the vast majority of realms
+  // valid debuggees. Without this, eager-eval runs the risk of failing
+  // because building the list of valid native functions is itself a
+  // side-effectful operation because it needs to populate a
+  // module cache, among any number of other things.
+  ensureSideEffectFreeNatives();
+
   // Note: It is critical for debuggee performance that we implement all of
   // this debuggee tracking logic with a separate Debugger instance.
   // Bug 1617666 arises otherwise if we set an onEnterFrame hook on the
   // existing debugger object and then later clear it.
   const newDbg = new Debugger();
-  for (const debuggee of dbg.getDebuggees()) {
-    newDbg.addDebuggee(debuggee.unsafeDereference());
-  }
-
-  // TODO: re-enable addAllGlobalsAsDebuggees(bug #1610532)
-  // newDbg.addAllGlobalsAsDebuggees();
+  newDbg.addAllGlobalsAsDebuggees();
 
   const timeoutDuration = 100;
   const endTime = Date.now() + timeoutDuration;
@@ -403,8 +408,6 @@ function nativeHasNoSideEffects(fn) {
     case "valueOf":
       return true;
   }
-
-  ensureSideEffectFreeNatives();
 
   const natives = gSideEffectFreeNatives.get(fn.name);
   return natives && natives.some(n => fn.isSameNative(n));
