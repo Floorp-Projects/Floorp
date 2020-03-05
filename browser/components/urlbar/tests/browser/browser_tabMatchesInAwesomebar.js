@@ -41,6 +41,7 @@ add_task(async function step_2() {
   gBrowser.removeCurrentTab();
   gBrowser.selectTabAtIndex(1);
   gBrowser.removeCurrentTab();
+  gBrowser.selectTabAtIndex(0);
 
   let promises = [];
   for (let i = 1; i < gBrowser.tabs.length; i++) {
