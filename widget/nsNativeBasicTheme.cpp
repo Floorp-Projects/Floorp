@@ -533,9 +533,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   EventStates eventState = GetContentState(aFrame, aAppearance);
 
-  Rect devPxRect = NSRectToRect(aRect, twipsPerPixel);
-  bool snapped = UserToDevicePixelSnapped(devPxRect, *dt);
-  Unused << snapped;
+  Rect devPxRect = NSRectToSnappedRect(aRect, twipsPerPixel, *dt);
 
   if (aAppearance == StyleAppearance::MenulistButton ||
       aAppearance == StyleAppearance::MozMenulistButton) {
