@@ -385,9 +385,13 @@ if (AppConstants.platform != "win") {
 
 /* Get the distribution pref values, from defaults only */
 function getDistributionPrefValue(aPrefName) {
-  return Services.prefs
+  let value = Services.prefs
     .getDefaultBranch(null)
     .getCharPref(aPrefName, "default");
+  if (!value) {
+    value = "default";
+  }
+  return value;
 }
 
 function getSystemCapabilities() {
