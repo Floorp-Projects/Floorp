@@ -100,6 +100,12 @@ pub struct ExternalSurfaceDescriptor {
     pub yuv_format: YuvFormat,
     pub yuv_rescale: f32,
     pub z_id: ZBufferId,
+    /// If native compositing is enabled, the native compositor surface handle.
+    /// Otherwise, this will be None
+    pub native_surface_id: Option<NativeSurfaceId>,
+    /// If the native surface needs to be updated, this will contain the size
+    /// of the native surface as Some(size). If not dirty, this is None.
+    pub update_params: Option<DeviceIntSize>,
 }
 
 /// Information about a plane in a YUV surface.
@@ -140,6 +146,9 @@ pub struct ResolvedExternalSurface {
     pub yuv_format: YuvFormat,
     pub yuv_rescale: f32,
     pub image_buffer_kind: ImageBufferKind,
+
+    // Update information for a native surface if it's dirty
+    pub update_params: Option<(NativeSurfaceId, DeviceIntSize)>,
 }
 
 /// Public interface specified in `RendererOptions` that configures
@@ -501,6 +510,16 @@ impl CompositeState {
                 external_surface_index: ResolvedExternalSurfaceIndex(self.external_surfaces.len()),
             };
 
+            // If the external surface descriptor reports that the native surface
+            // needs to be updated, create an update params tuple for the renderer
+            // to use.
+            let update_params = external_surface.update_params.map(|surface_size| {
+                (
+                    external_surface.native_surface_id.expect("bug: no native surface!"),
+                    surface_size
+                )
+            });
+
             self.external_surfaces.push(ResolvedExternalSurface {
                 yuv_color_space: external_surface.yuv_color_space,
                 yuv_format: external_surface.yuv_format,
@@ -508,6 +527,7 @@ impl CompositeState {
                 image_buffer_kind: get_buffer_kind(yuv_planes[0].texture),
                 image_dependencies: external_surface.image_dependencies,
                 yuv_planes,
+                update_params,
             });
 
             let tile = CompositeTile {
@@ -524,10 +544,7 @@ impl CompositeState {
             // a dependency on the compositor surface external image keys / generations.
             self.descriptor.surfaces.push(
                 CompositeSurfaceDescriptor {
-                    // TODO(gw): When we add native compositor surfaces, this be
-                    //           need to be set, as that's how native compositor
-                    //           surfaces are added to the visual tree.
-                    surface_id: None,
+                    surface_id: external_surface.native_surface_id,
                     offset: tile.rect.origin,
                     clip_rect: tile.clip_rect,
                     image_dependencies: external_surface.image_dependencies,
