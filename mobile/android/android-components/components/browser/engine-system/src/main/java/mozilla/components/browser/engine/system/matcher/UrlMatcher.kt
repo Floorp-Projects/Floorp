@@ -171,48 +171,41 @@ class UrlMatcher {
          *
          * @deprecated Pass resources directly
          * @param blackListFile resource ID to a JSON file containing the black list
-         * @param overrides array of resource ID to JSON files containing black list overrides
          * @param whiteListFile resource ID to a JSON file containing the white list
          */
         fun createMatcher(
             context: Context,
             @RawRes blackListFile: Int,
-            overrides: IntArray?,
             @RawRes whiteListFile: Int,
             enabledCategories: Set<String> = supportedCategories
         ): UrlMatcher =
-            createMatcher(context.resources, blackListFile, overrides, whiteListFile, enabledCategories)
+            createMatcher(context.resources, blackListFile, whiteListFile, enabledCategories)
 
         /**
          * Creates a new matcher instance for the provided URL lists.
          *
          * @param blackListFile resource ID to a JSON file containing the black list
-         * @param overrides array of resource ID to JSON files containing black list overrides
          * @param whiteListFile resource ID to a JSON file containing the white list
          */
         fun createMatcher(
             resources: Resources,
             @RawRes blackListFile: Int,
-            overrides: IntArray?,
             @RawRes whiteListFile: Int,
             enabledCategories: Set<String> = supportedCategories
         ): UrlMatcher {
             val blackListReader = InputStreamReader(resources.openRawResource(blackListFile), UTF_8)
             val whiteListReader = InputStreamReader(resources.openRawResource(whiteListFile), UTF_8)
-            val overrideReaders = overrides?.map { InputStreamReader(resources.openRawResource(it), UTF_8) }
-            return createMatcher(blackListReader, overrideReaders, whiteListReader, enabledCategories)
+            return createMatcher(blackListReader, whiteListReader, enabledCategories)
         }
 
         /**
          * Creates a new matcher instance for the provided URL lists.
          *
          * @param black reader containing the black list
-         * @param overrides array of resource ID to JSON files containing black list overrides
          * @param white resource ID to a JSON file containing the white list
          */
         fun createMatcher(
             black: Reader,
-            overrides: List<Reader>?,
             white: Reader,
             enabledCategories: Set<String> = supportedCategories
         ): UrlMatcher {
@@ -220,12 +213,6 @@ class UrlMatcher {
 
             JsonReader(black).use {
                 jsonReader -> loadCategories(jsonReader, categoryMap)
-            }
-
-            overrides?.forEach {
-                JsonReader(it).use {
-                    jsonReader -> loadCategories(jsonReader, categoryMap, true)
-                }
             }
 
             var whiteList: WhiteList? = null

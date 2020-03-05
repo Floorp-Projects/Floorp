@@ -68,8 +68,6 @@ import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import java.util.Calendar
-import java.util.Date
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.content.blocking.Tracker
 import java.io.StringReader
@@ -563,7 +561,6 @@ class SystemEngineViewTest {
     """
         SystemEngineView.URL_MATCHER = UrlMatcher.createMatcher(
             StringReader(BLOCK_LIST),
-            null,
             StringReader("{}")
         )
 
@@ -1545,12 +1542,5 @@ class SystemEngineViewTest {
         val authRequest = request as PromptRequest.Authentication
         assertEquals(authRequest.userName, userName)
         assertEquals(authRequest.password, password)
-    }
-
-    private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {
-        val calendar = Calendar.getInstance()
-        calendar.time = this
-        calendar.add(timeUnit, amountOfTime)
-        return calendar.time
     }
 }

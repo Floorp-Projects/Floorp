@@ -50,6 +50,9 @@ permalink: /changelog/
   * SessionManager will now close internal `EngineSession` instances on memory pressure when `onTrimMemory()` gets called
   * `SessionManager.onLowMemory()` is now deprecated and `SessionManager.onTrimMemory(level)` should be used instead.
 
+* **browser-engine-system**
+  * Updated tracking protection lists for more details see [#6163](https://github.com/mozilla-mobile/android-components/issues/6163).
+
 # 34.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v33.0.0...v34.0.0)

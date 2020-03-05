@@ -806,7 +806,6 @@ class SystemEngineView @JvmOverloads constructor(
                 URL_MATCHER = UrlMatcher.createMatcher(
                         resources,
                         R.raw.domain_blacklist,
-                        intArrayOf(R.raw.domain_overrides),
                         R.raw.domain_whitelist,
                         categories)
                 }
