@@ -333,14 +333,21 @@ function preventSideEffects(dbg) {
   // explicitly calling eval, so we need to add this hook on "dbg" even though
   // the rest of our hooks work via "newDbg".
   dbg.onNativeCall = (callee, reason) => {
-    // Getters are never considered effectful, and setters are always effectful.
-    // Natives called normally are handled with a whitelist.
-    if (
-      reason == "get" ||
-      (reason == "call" && nativeHasNoSideEffects(callee))
-    ) {
-      // Returning undefined causes execution to continue normally.
-      return undefined;
+    try {
+      // Getters are never considered effectful, and setters are always effectful.
+      // Natives called normally are handled with a whitelist.
+      if (
+        reason == "get" ||
+        (reason == "call" && nativeHasNoSideEffects(callee))
+      ) {
+        // Returning undefined causes execution to continue normally.
+        return undefined;
+      }
+    } catch (err) {
+      DevToolsUtils.reportException(
+        "evalWithDebugger onNativeCall",
+        new Error("Unable to validate native function against whitelist")
+      );
     }
     // Returning null terminates the current evaluation.
     return null;
