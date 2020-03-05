@@ -1057,8 +1057,7 @@ BaseLocalIter::BaseLocalIter(const ValTypeVector& locals,
       args_(args),
       argsIter_(args_),
       index_(0),
-      localSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0),
-      reservedSize_(localSize_),
+      nextFrameSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0),
       frameOffset_(INT32_MAX),
       stackResultPointerOffset_(INT32_MAX),
       mirType_(MIRType::Undefined),
@@ -1069,11 +1068,14 @@ BaseLocalIter::BaseLocalIter(const ValTypeVector& locals,
 
 int32_t BaseLocalIter::pushLocal(size_t nbytes) {
   MOZ_ASSERT(nbytes % 4 == 0 && nbytes <= 16);
-  localSize_ = AlignBytes(localSize_, nbytes) + nbytes;
-  return localSize_;  // Locals grow down so capture base address.
+  nextFrameSize_ = AlignBytes(frameSize_, nbytes) + nbytes;
+  return nextFrameSize_;  // Locals grow down so capture base address.
 }
 
 void BaseLocalIter::settle() {
+  MOZ_ASSERT(!done_);
+  frameSize_ = nextFrameSize_;
+
   if (!argsIter_.done()) {
     mirType_ = argsIter_.mirType();
     MIRType concreteType = mirType_;
@@ -1104,6 +1106,7 @@ void BaseLocalIter::settle() {
       // Advance past the synthetic stack result pointer argument and fall
       // through to the next case.
       argsIter_++;
+      frameSize_ = nextFrameSize_;
       MOZ_ASSERT(argsIter_.done());
     } else {
       return;
@@ -1634,23 +1637,21 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 
     DebugOnly<uint32_t> index = 0;
     BaseLocalIter i(locals, args, debugEnabled);
-    varLow_ = i.reservedSize();
-    for (; !i.done() && i.index() < args.length(); i++) {
+    for (; !i.done() && i.index() < args.lengthWithoutStackResults(); i++) {
       MOZ_ASSERT(i.isArg());
       MOZ_ASSERT(i.index() == index);
       localInfo->infallibleEmplaceBack(i.mirType(), i.frameOffset());
-      varLow_ = i.currentLocalSize();
       index++;
     }
 
-    varHigh_ = varLow_;
+    varLow_ = i.frameSize();
     for (; !i.done(); i++) {
       MOZ_ASSERT(!i.isArg());
       MOZ_ASSERT(i.index() == index);
       localInfo->infallibleEmplaceBack(i.mirType(), i.frameOffset());
-      varHigh_ = i.currentLocalSize();
       index++;
     }
+    varHigh_ = i.frameSize();
 
     setLocalSize(AlignBytes(varHigh_, WasmStackAlignment));
 
@@ -1738,7 +1739,9 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     MOZ_ASSERT(results.height() <= masm.framePushed());
     uint32_t offsetFromSP = masm.framePushed() - results.height();
     masm.movePtr(AsRegister(sp_), dest);
-    masm.addPtr(Imm32(offsetFromSP), dest);
+    if (offsetFromSP) {
+      masm.addPtr(Imm32(offsetFromSP), dest);
+    }
   }
 
  private:
@@ -1951,6 +1954,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
   void popStackResultsToMemory(Register dest, uint32_t bytes, Register temp) {
     MOZ_ASSERT(bytes <= currentStackHeight());
     MOZ_ASSERT(bytes % sizeof(uint32_t) == 0);
+    uint32_t bytesToPop = bytes;
     uint32_t srcOffset = stackOffset(currentStackHeight());
     uint32_t destOffset = 0;
     while (bytes >= sizeof(intptr_t)) {
@@ -1965,7 +1969,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
       masm.load32(Address(sp_, srcOffset), temp);
       masm.store32(temp, Address(dest, destOffset));
     }
-    popBytes(bytes);
+    popBytes(bytesToPop);
   }
 
   void storeImmediateToStack(int32_t imm, uint32_t destHeight, Register temp) {
