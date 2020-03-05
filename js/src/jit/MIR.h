@@ -2812,6 +2812,8 @@ class MApplyArgs : public MTernaryInstruction,
   bool ignoresReturnValue() const { return ignoresReturnValue_; }
   void setIgnoresReturnValue() { ignoresReturnValue_ = true; }
 
+  bool isConstructing() const { return false; }
+
   bool possiblyCalls() const override { return true; }
 
   bool appendRoots(MRootList& roots) const override {
@@ -2851,6 +2853,8 @@ class MApplyArray
 
   bool ignoresReturnValue() const { return ignoresReturnValue_; }
   void setIgnoresReturnValue() { ignoresReturnValue_ = true; }
+
+  bool isConstructing() const { return false; }
 
   bool possiblyCalls() const override { return true; }
 

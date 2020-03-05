@@ -5275,10 +5275,10 @@ void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
   pushArg(objreg);                                     // argv.
   pushArg(ToRegister(apply->getArgc()));               // argc.
   pushArg(Imm32(apply->mir()->ignoresReturnValue()));  // ignoresReturnValue.
-  pushArg(Imm32(false));                               // isConstrucing.
+  pushArg(Imm32(apply->mir()->isConstructing()));      // isConstructing.
   pushArg(ToRegister(apply->getFunction()));           // JSFunction*.
 
-  // This specialization og callVM restore the extraStackSize after the call.
+  // This specialization of callVM restores the extraStackSize after the call.
   using Fn = bool (*)(JSContext*, HandleObject, bool, bool, uint32_t, Value*,
                       MutableHandleValue);
   callVM<Fn, jit::InvokeFunction>(apply, &extraStackSize);
@@ -5525,10 +5525,26 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   masm.checkStackAlignment();
 
+  bool constructing = apply->mir()->isConstructing();
+
   // If the function is native, only emit the call to InvokeFunction.
   if (apply->hasSingleTarget() &&
       apply->getSingleTarget()->isNativeWithCppEntry()) {
     emitCallInvokeFunction(apply, extraStackSpace);
+
+#ifdef DEBUG
+    // Native constructors are guaranteed to return an Object value, so we never
+    // have to replace a primitive result with the previously allocated Object
+    // from CreateThis.
+    if (constructing) {
+      Label notPrimitive;
+      masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                               &notPrimitive);
+      masm.assumeUnreachable("native constructors don't return primitives");
+      masm.bind(&notPrimitive);
+    }
+#endif
+
     emitPopArguments(extraStackSpace);
     return;
   }
@@ -5536,12 +5552,22 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   Label end, invoke;
 
   // Guard that calleereg is an interpreted function with a JSScript.
-  masm.branchIfFunctionHasNoJitEntry(calleereg, /* constructing */ false,
-                                     &invoke);
+  masm.branchIfFunctionHasNoJitEntry(calleereg, constructing, &invoke);
 
-  // Guard that calleereg is not a class constrcuctor
-  masm.branchFunctionKind(Assembler::Equal, FunctionFlags::ClassConstructor,
-                          calleereg, objreg, &invoke);
+  // Guard that callee allows the [[Call]] or [[Construct]] operation required.
+  if (constructing) {
+    masm.branchTestFunctionFlags(calleereg, FunctionFlags::CONSTRUCTOR,
+                                 Assembler::Zero, &invoke);
+  } else {
+    masm.branchFunctionKind(Assembler::Equal, FunctionFlags::ClassConstructor,
+                            calleereg, objreg, &invoke);
+  }
+
+  // Use the slow path if CreateThis was unable to create the |this| object.
+  if (constructing) {
+    Address thisAddr(masm.getStackPointer(), 0);
+    masm.branchTestNull(Assembler::Equal, thisAddr, &invoke);
+  }
 
   // Call with an Ion frame or a rectifier frame.
   {
@@ -5560,7 +5586,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
                              JitFrameLayout::Size());
 
     masm.Push(argcreg);
-    masm.Push(calleereg);
+    masm.PushCalleeToken(calleereg, constructing);
     masm.Push(stackSpace);  // descriptor
 
     Label underflow, rejoin;
@@ -5621,8 +5647,19 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     emitCallInvokeFunction(apply, extraStackSpace);
   }
 
-  // Pop arguments and continue.
   masm.bind(&end);
+
+  // If the return value of the constructing function is Primitive,
+  // replace the return value with the Object from CreateThis.
+  if (constructing) {
+    Label notPrimitive;
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.loadValue(Address(masm.getStackPointer(), 0), JSReturnOperand);
+    masm.bind(&notPrimitive);
+  }
+
+  // Pop arguments and continue.
   emitPopArguments(extraStackSpace);
 }
 
