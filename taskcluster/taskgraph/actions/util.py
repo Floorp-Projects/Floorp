@@ -248,6 +248,8 @@ def add_args_to_command(cmd_parts, extra_args=[]):
           cmd_parts: the raw command as seen by taskcluster
           extra_args: array of args we want to add
     """
+    # Prevent modification of the caller's copy of cmd_parts
+    cmd_parts = copy.deepcopy(cmd_parts)
     cmd_type = 'default'
     if len(cmd_parts) == 1 and isinstance(cmd_parts[0], dict):
         # windows has single cmd part as dict: 'task-reference', with long string
@@ -261,8 +263,16 @@ def add_args_to_command(cmd_parts, extra_args=[]):
         # osx has an single value array with an array inside
         cmd_parts = cmd_parts[0]
         cmd_type = 'subarray'
+    elif len(cmd_parts) == 2 and isinstance(cmd_parts[1], list):
+        # osx has an double value array with an array inside each element.
+        # The first element is a pre-requisite command while the second
+        # is the actual test command.
+        cmd_type = 'subarray2'
 
-    cmd_parts.extend(extra_args)
+    if cmd_type == 'subarray2':
+        cmd_parts[1].extend(extra_args)
+    else:
+        cmd_parts.extend(extra_args)
 
     if cmd_type == 'dict':
         cmd_parts = [{'task-reference': ' '.join(cmd_parts)}]

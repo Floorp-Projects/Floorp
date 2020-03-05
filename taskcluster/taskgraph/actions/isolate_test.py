@@ -119,6 +119,9 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
     """
     logger.info("Isolate task:\n{}".format(json.dumps(task_definition, indent=2)))
 
+    # Operate on a copy of the original task_definition
+    task_definition = copy.deepcopy(task_definition)
+
     task_name = task_definition['metadata']['name']
     repeatable_task = False
     if ('crashtest' in task_name or 'mochitest' in task_name or
@@ -151,14 +154,20 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
         task_definition['payload']['maxRunTime'] = 3600 * 3
 
     for failure_group in failures:
+        if len(failures[failure_group]) == 0:
+            continue
         if failure_group == 'dirs':
             failure_group_suffix = '-id'
             # execute 5 total loops
             repeat_args = ['--repeat=4'] if repeatable_task else []
-        else:
+        elif failure_group == 'tests':
             failure_group_suffix = '-it'
             # execute 20 total loops
             repeat_args = ['--repeat=19'] if repeatable_task else []
+        else:
+            logger.error("create_isolate_failure_tasks: Unknown failure_group {}".format(
+                failure_group))
+            continue
 
         if repeat_args:
             task_definition['payload']['command'] = add_args_to_command(command,
