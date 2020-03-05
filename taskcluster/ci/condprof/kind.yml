@@ -52,7 +52,7 @@ jobs:
             using: run-task
             command: >-
                 cd %CONDPROF_ROOT% &&
-                python3.exe condprof/runner.py --geckodriver z:/%USERNAME%/fetches/bin/geckodriver.exe --firefox firefox/firefox.exe z:/%USERNAME%/archive
+                python3.exe condprof/main.py --geckodriver z:/%USERNAME%/fetches/bin/geckodriver.exe --firefox firefox/firefox.exe z:/%USERNAME%/archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -80,7 +80,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3.7 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3.7 condprof/runner.py --firefox $MOZ_FETCHES_DIR/firefox/firefox-bin $CONDPROF_ARCHIVES
+                bin/python3.7 condprof/main.py --firefox $MOZ_FETCHES_DIR/firefox/firefox-bin $CONDPROF_ARCHIVES
         worker:
             docker-image: {in-tree: condprof}
             artifacts:
@@ -109,7 +109,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
                 cd $CONDPROF_ROOT &&
-                bin/python3 condprof/runner.py --firefox $MOZ_FETCHES_DIR/target.dmg ../../archive
+                bin/python3 condprof/main.py --firefox $MOZ_FETCHES_DIR/target.dmg ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -141,7 +141,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name g5 --firefox org.mozilla.geckoview_example ../../archive
+                bin/python3 condprof/main.py --device-name g5 --firefox org.mozilla.geckoview_example ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -171,7 +171,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name g5 --firefox org.mozilla.fenix.performancetest ../../archive
+                bin/python3 condprof/main.py --device-name g5 --firefox org.mozilla.fenix.performancetest ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -201,7 +201,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.fenix.performancetest ../../archive
+                bin/python3 condprof/main.py --device-name p2_aarch64 --firefox org.mozilla.fenix.performancetest ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -233,7 +233,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.geckoview_example ../../archive
+                bin/python3 condprof/main.py --device-name p2_aarch64 --firefox org.mozilla.geckoview_example ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -263,7 +263,7 @@ jobs:
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.fennec_aurora ../../archive
+                bin/python3 condprof/main.py --device-name p2_aarch64 --firefox org.mozilla.fennec_aurora ../../archive
         worker:
             artifacts:
                 - name: public/condprof

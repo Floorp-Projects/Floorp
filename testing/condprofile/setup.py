@@ -7,7 +7,7 @@ PY3 = sys.version_info.major == 3
 if PY3:
     entry_points = """
       [console_scripts]
-      cp-creator = condprof.runner:main
+      cp-creator = condprof.main:main
       cp-client = condprof.client:main
       """
 else:
