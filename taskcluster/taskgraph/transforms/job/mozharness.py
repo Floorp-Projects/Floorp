@@ -69,10 +69,6 @@ mozharness_run_schema = Schema({
     # Extra configuration options to pass to mozharness.
     Optional('extra-config'): dict,
 
-    # Extra metadata to use toward the workspace caching.
-    # Only supported on docker-worker
-    Optional('extra-workspace-cache-key'): text_type,
-
     # If not false, tooltool downloads will be enabled via relengAPIProxy
     # for either just public files, or all files.  Not supported on Windows
     Required('tooltool-downloads'): Any(
@@ -227,7 +223,6 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     )
     run.pop('secrets')
     run.pop('requires-signed-builds')
-    run.pop('extra-workspace-cache-key', None)
 
     configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
@@ -321,7 +316,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     run.pop('secrets')
     run.pop('requires-signed-builds')
     run.pop('job-script', None)
-    run.pop('extra-workspace-cache-key', None)
     configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
     # TODO We should run the mozharness script with `mach python` so these
