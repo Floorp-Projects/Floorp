@@ -59,6 +59,7 @@ EXPORTS.mozilla.net += [
     'ParentChannelListener.h',
     'PHttpChannelParams.h',
     'PSpdyPush.h',
+    'SimpleHttpChannel.h',
     'TimingStruct.h',
 ]
 
@@ -122,7 +123,7 @@ UNIFIED_SOURCES += [
     'NullHttpTransaction.cpp',
     'ParentChannelListener.cpp',
     'QuicSocketControl.cpp',
-    'TRRServiceChannel.cpp',
+    'SimpleHttpChannel.cpp',
     'TunnelUtils.cpp',
 ]
 
