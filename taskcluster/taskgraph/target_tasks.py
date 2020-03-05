@@ -651,13 +651,13 @@ def target_tasks_chromium_update(full_task_graph, parameters, graph_config):
             'fetch-mac-chromium']
 
 
-@_target_task('python_dependency_update')
-def target_tasks_python_update(full_task_graph, parameters, graph_config):
+@_target_task('pipfile_update')
+def target_tasks_pipfile_update(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform nightly in-tree pipfile updates
     """
     def filter(task):
         # For now any task in the repo-update kind is ok
-        return task.kind in ['python-dependency-update']
+        return task.kind in ['pipfile-update']
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 

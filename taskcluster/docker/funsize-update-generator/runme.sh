@@ -10,7 +10,7 @@ ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
 
 # duplicate the functionality of taskcluster-lib-urls, but in bash..
-queue_base="${TASKCLUSTER_ROOT_URL%/}/api/queue/v1"
+queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 
 curl --location --retry 10 --retry-delay 10 -o /home/worker/task.json "$queue_base/task/$TASK_ID"
 
@@ -51,7 +51,7 @@ fi
 
 # EXTRA_PARAMS is optional
 # shellcheck disable=SC2086
-python3.8 /home/worker/bin/funsize.py \
+pipenv run /home/worker/bin/funsize.py \
     --artifacts-dir "$ARTIFACTS_DIR" \
     --task-definition /home/worker/task.json \
     --sha1-signing-cert "/home/worker/keys/${SHA1_SIGNING_CERT}.pubkey" \

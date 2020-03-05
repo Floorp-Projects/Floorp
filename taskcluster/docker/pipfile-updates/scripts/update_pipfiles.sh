@@ -7,7 +7,7 @@ function usage {
 
 Usage: $(basename "$0") -h # Displays this usage/help text
 Usage: $(basename "$0") -x # lists exit codes
-Usage: $(basename "$0") -b branch -r REQUIREMENTS_FILE [-2] [-3]
+Usage: $(basename "$0") -b branch -p pipfile_directory [-2] [-3]
 
 EOF
 }
@@ -18,7 +18,8 @@ COMMIT_AUTHOR='ffxbld <ffxbld@mozilla.com>'
 REPODIR=''
 HGHOST="hg.mozilla.org"
 BASEDIR="${HOME}"
-REQUIREMENTS_FILE=""
+PIPFILE_DIRECTORY=""
+DIFF_ARTIFACT="${ARTIFACTS_DIR}/Pipfile.lock.diff"
 
 HG="$(command -v hg)"
 
@@ -52,7 +53,7 @@ function push_repo {
   # Clean up older review requests
   # Turn  Needs Review D624: No bug, Automated HSTS ...
   # into D624
-  for diff in $($ARC list | grep "Needs Review" | grep "${REQUIREMENTS_FILE} pip-update" | awk 'match($0, /D[0-9]+[^: ]/) { print substr($0, RSTART, RLENGTH)  }')
+  for diff in $($ARC list | grep "Needs Review" | grep "${PIPFILE_DIRECTORY} pipfile-update" | awk 'match($0, /D[0-9]+[^: ]/) { print substr($0, RSTART, RLENGTH)  }')
   do
     echo "Removing old request $diff"
     # There is no 'arc abandon', see bug 1452082
@@ -62,9 +63,9 @@ function push_repo {
   $ARC diff --verbatim --reviewers "${REVIEWERS}"
 }
 
-function update_requirements {
+function update_pipfile {
   pushd "${REPODIR}/${1}"
-  pip-compile --generate-hashes "${2}"
+  pipenv update
   popd
 }
 
@@ -78,7 +79,7 @@ while [ $# -gt 0 ]; do
     -r) REPODIR="$2"; shift ;;
     -2) PIP="pip" ;;
     -3) PIP="pip3" ;;
-    -f) REQUIREMENTS_FILE="$2"; shift ;;
+    -p) PIPFILE_DIRECTORY="$2"; shift ;;
     -*) usage
       exit 11 ;;
     *)  break ;; # terminate while loop
@@ -101,7 +102,7 @@ if [ "${BRANCH}" == "" ]; then
 fi
 
 if [ "${REPODIR}" == "" ]; then
-  REPODIR="${BASEDIR}/$(basename "${BRANCH}")"
+  REPODIR="$(basename "${BRANCH}")"
 fi
 
 if [ "${BRANCH}" == "mozilla-central" ]; then
@@ -114,18 +115,13 @@ fi
 
 clone_repo
 
-${PIP} install pip-tools
+${PIP} install pipenv
 
-requirements_basefile="$(basename "${REQUIREMENTS_FILE}")"
-requirements_dir="$(dirname "${REQUIREMENTS_FILE}")"
-update_requirements "${requirements_dir}" "${requirements_basefile}"
-requirements_newfile="${requirements_basefile%%.in}.txt"
-DIFF_ARTIFACT="${ARTIFACTS_DIR}/${requirements_newfile}.diff"
+update_pipfile "${PIPFILE_DIRECTORY}"
+echo "INFO: diffing old/new Pipfile.lock into ${DIFF_ARTIFACT}"
+${HG} -R "${REPODIR}" diff "${BASEDIR}/${BRANCH}/${PIPFILE_DIRECTORY}/Pipfile.lock" | tee "${DIFF_ARTIFACT}"
 
-echo "INFO: diffing old/new ${requirements_newfile} into ${DIFF_ARTIFACT}"
-${HG} -R "${REPODIR}" diff "${BASEDIR}/${BRANCH}/${requirements_dir}/${requirements_newfile}" | tee "${DIFF_ARTIFACT}"
-
-COMMIT_MESSAGE="No Bug, ${requirements_dir}/${requirements_newfile} pip-update."
+COMMIT_MESSAGE="No Bug, ${PIPFILE_DIRECTORY} pipfile-update."
 
 if ${HG} -R "${REPODIR}" commit -u "${COMMIT_AUTHOR}" -m "${COMMIT_MESSAGE}"
 then

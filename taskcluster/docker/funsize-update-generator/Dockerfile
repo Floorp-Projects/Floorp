@@ -7,22 +7,12 @@ ENV DEBIAN_FRONTEND noninteractive
 # to make sure that files are removed within a single docker layer
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
-    bzip2 \
-    ca-certificates \
-    curl \
-    gcc \
-    jq \
-    libdpkg-perl \
-    libgetopt-simple-perl \
-    liblzma-dev \
-    locales \
-    python3.8 \
-    libpython3.8-dev \
-    python3-dev \
-    xz-utils \
-    && apt-get clean
+    python3.8 libpython3.8-dev python3-setuptools python3-cryptography libgetopt-simple-perl \
+    bzip2 python3-requests python3-sh curl \
+    python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl locales && \
+    apt-get clean
 RUN useradd -d /home/worker -s /bin/bash -m worker
-COPY requirements.txt /
+COPY Pipfile Pipfile.lock /
 
 RUN locale-gen en_CA.UTF-8
 ENV LANG en_CA.UTF-8
@@ -33,8 +23,7 @@ ENV LC_ALL en_CA.UTF-8
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically. Install it like this saves us almost 200M.
 RUN bash -c "curl -L https://bootstrap.pypa.io/get-pip.py | python3.8"
-
-RUN ["pip", "install", "-r", "/requirements.txt"]
+RUN ["pip", "install", "pipenv"]
 
 # scripts
 RUN mkdir /home/worker/bin
@@ -50,6 +39,7 @@ ENV           SHELL         /bin/bash
 ENV           USER          worker
 ENV           LOGNAME       worker
 
-USER worker
+# This is done after setting environment variables to make sure the virtualenv is created in the right place.
+RUN pipenv install
 
 CMD ["/runme.sh"]
