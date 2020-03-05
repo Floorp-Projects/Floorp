@@ -181,7 +181,7 @@ class nsPresContext : public nsISupports,
    * Returns the parent prescontext for this one. Returns null if this is a
    * root.
    */
-  nsPresContext* GetParentPresContext();
+  nsPresContext* GetParentPresContext() const;
 
   /**
    * Returns the prescontext of the toplevel content document that contains
@@ -218,7 +218,7 @@ class nsPresContext : public nsISupports,
    * hierarchy that contains this presentation context, or nullptr if it can't
    * be found (e.g. it's detached).
    */
-  nsRootPresContext* GetRootPresContext();
+  nsRootPresContext* GetRootPresContext() const;
 
   virtual bool IsRoot() { return false; }
 
