@@ -5,12 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+import buildconfig
 
 
 def main(output, data_file, data_symbol):
+    if buildconfig.substs.get('WINE'):
+        drive = 'z:'
+    else:
+        drive = ''
     output.write('''    AREA |.rdata|,ALIGN=4,DATA,READONLY
     EXPORT |{data_symbol}|[DATA]
 |{data_symbol}|
-    INCBIN {data_file}
+    INCBIN {drive}{data_file}
     END
-'''.format(data_file=data_file, data_symbol=data_symbol))
+'''.format(data_file=data_file, data_symbol=data_symbol, drive=drive))
