@@ -63,8 +63,7 @@ add_task(async function test_each_status_can_be_caught_in_snapshot() {
   const startHistogram = getUptakeTelemetrySnapshot(source);
 
   const expectedIncrements = {};
-  for (const label of Object.keys(UptakeTelemetry.STATUS)) {
-    const status = UptakeTelemetry.STATUS[label];
+  for (const status of Object.values(UptakeTelemetry.HISTOGRAM_LABELS)) {
     await UptakeTelemetry.report(COMPONENT, status, { source });
     expectedIncrements[status] = 1;
   }

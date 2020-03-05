@@ -60,6 +60,9 @@ Usage
   - ``UptakeTelemetry.STATUS.CUSTOM_4_ERROR``: Error #4 specific to this update source.
   - ``UptakeTelemetry.STATUS.CUSTOM_5_ERROR``: Error #5 specific to this update source.
 
+  Events Telemetry only:
+
+  - ``UptakeTelemetry.STATUS.SHUTDOWN_ERROR``: Error occurring during shutdown.
 
 Example:
 

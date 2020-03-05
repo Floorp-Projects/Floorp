@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["RemoteSettingsClient"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironmentBase:
@@ -632,9 +633,14 @@ class RemoteSettingsClient extends EventEmitter {
       }
     } catch (e) {
       thrownError = e;
+      // If browser is shutting down, then we can report a specific status.
+      // (eg. IndexedDB will abort transactions)
+      if (Services.startup.shuttingDown) {
+        reportStatus = UptakeTelemetry.STATUS.SHUTDOWN_ERROR;
+      }
       // If no Telemetry status was determined yet (ie. outside sync step),
       // then introspect error, default status at this step is UNKNOWN.
-      if (reportStatus == null) {
+      else if (reportStatus == null) {
         reportStatus = this._telemetryFromError(e, {
           default: UptakeTelemetry.STATUS.UNKNOWN_ERROR,
         });
@@ -666,6 +672,7 @@ class RemoteSettingsClient extends EventEmitter {
           UptakeTelemetry.STATUS.SYNC_ERROR,
           UptakeTelemetry.STATUS.CUSTOM_1_ERROR, // IndexedDB.
           UptakeTelemetry.STATUS.UNKNOWN_ERROR,
+          UptakeTelemetry.STATUS.SHUTDOWN_ERROR,
         ].includes(reportStatus)
       ) {
         // List of possible error names for IndexedDB:
