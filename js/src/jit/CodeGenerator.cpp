@@ -5579,14 +5579,6 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   // ConstructArray) in the argument pusher.
   Register argcreg = ToRegister(apply->getArgc());
 
-  // Unless already known, guard that calleereg is actually a function object.
-  if (!apply->hasSingleTarget()) {
-    Label bail;
-    masm.branchTestObjClass(Assembler::NotEqual, calleereg, &JSFunction::class_,
-                            objreg, calleereg, &bail);
-    bailoutFrom(&bail, apply->snapshot());
-  }
-
   // Copy the arguments of the current function.
   //
   // In the case of ApplyArray and ConstructArray, also compute argc: the argc
@@ -5630,6 +5622,12 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   }
 
   Label end, invoke;
+
+  // Unless already known, guard that calleereg is actually a function object.
+  if (!apply->hasSingleTarget()) {
+    masm.branchTestObjClass(Assembler::NotEqual, calleereg, &JSFunction::class_,
+                            objreg, calleereg, &invoke);
+  }
 
   // Guard that calleereg is an interpreted function with a JSScript.
   masm.branchIfFunctionHasNoJitEntry(calleereg, constructing, &invoke);
