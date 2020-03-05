@@ -98,9 +98,9 @@ Connection::ExecuteSimpleSQLAsync(const nsACString&,
 }
 
 NS_IMETHODIMP
-Connection::CreateFunction(const nsACString& aFunctionName,
-                           int32_t aNumArguments,
-                           nsCOMPtr<mozIStorageFunction> aFunction) {
+Connection::RegisterFunction(const nsACString& aFunctionName,
+                             int32_t aNumArguments,
+                             nsCOMPtr<mozIStorageFunction> aFunction) {
   // async methods are not supported
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -114,8 +114,8 @@ Connection::CreateAggregateFunction(const nsACString& aFunctionName,
 }
 
 NS_IMETHODIMP
-Connection::RemoveFunction(const nsACString& aFunctionName) {
-  return mBase->RemoveFunction(aFunctionName);
+Connection::UnregisterFunction(const nsACString& aFunctionName) {
+  return mBase->UnregisterFunction(aFunctionName);
 }
 
 NS_IMETHODIMP

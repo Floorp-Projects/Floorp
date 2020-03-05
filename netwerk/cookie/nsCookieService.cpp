@@ -1113,8 +1113,8 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         NS_NAMED_LITERAL_CSTRING(convertToOriginAttrsName,
                                  "CONVERT_TO_ORIGIN_ATTRIBUTES");
 
-        rv = mDefaultDBState->syncConn->CreateFunction(convertToOriginAttrsName,
-                                                       2, convertToOriginAttrs);
+        rv = mDefaultDBState->syncConn->RegisterFunction(
+            convertToOriginAttrsName, 2, convertToOriginAttrs);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1128,8 +1128,8 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
             "FROM moz_cookies_old"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        rv =
-            mDefaultDBState->syncConn->RemoveFunction(convertToOriginAttrsName);
+        rv = mDefaultDBState->syncConn->UnregisterFunction(
+            convertToOriginAttrsName);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         // Drop old table
@@ -1163,14 +1163,14 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         // originAttributes.
         NS_NAMED_LITERAL_CSTRING(setAppIdName, "SET_APP_ID");
 
-        rv = mDefaultDBState->syncConn->CreateFunction(
+        rv = mDefaultDBState->syncConn->RegisterFunction(
             setAppIdName, 1,
             MakeAndAddRef<SetAppIdFromOriginAttributesSQLFunction>());
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         NS_NAMED_LITERAL_CSTRING(setInBrowserName, "SET_IN_BROWSER");
 
-        rv = mDefaultDBState->syncConn->CreateFunction(
+        rv = mDefaultDBState->syncConn->RegisterFunction(
             setInBrowserName, 1,
             MakeAndAddRef<SetInBrowserFromOriginAttributesSQLFunction>());
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
@@ -1180,10 +1180,10 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
             "inBrowserElement = SET_IN_BROWSER(originAttributes);"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        rv = mDefaultDBState->syncConn->RemoveFunction(setAppIdName);
+        rv = mDefaultDBState->syncConn->UnregisterFunction(setAppIdName);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        rv = mDefaultDBState->syncConn->RemoveFunction(setInBrowserName);
+        rv = mDefaultDBState->syncConn->UnregisterFunction(setInBrowserName);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         COOKIE_LOGSTRING(LogLevel::Debug,

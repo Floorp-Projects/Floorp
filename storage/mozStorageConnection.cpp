@@ -1587,7 +1587,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
     if (data.type == Connection::FunctionInfo::SIMPLE) {
       mozIStorageFunction* function =
           static_cast<mozIStorageFunction*>(data.function.get());
-      rv = aClone->CreateFunction(key, data.numArgs, function);
+      rv = aClone->RegisterFunction(key, data.numArgs, function);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to copy function to cloned connection");
       }
@@ -2055,9 +2055,9 @@ Connection::CreateTable(const char* aTableName, const char* aTableSchema) {
 }
 
 NS_IMETHODIMP
-Connection::CreateFunction(const nsACString& aFunctionName,
-                           int32_t aNumArguments,
-                           nsCOMPtr<mozIStorageFunction> aFunction) {
+Connection::RegisterFunction(const nsACString& aFunctionName,
+                             int32_t aNumArguments,
+                             nsCOMPtr<mozIStorageFunction> aFunction) {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2122,7 +2122,7 @@ Connection::CreateAggregateFunction(const nsACString& aFunctionName,
 }
 
 NS_IMETHODIMP
-Connection::RemoveFunction(const nsACString& aFunctionName) {
+Connection::UnregisterFunction(const nsACString& aFunctionName) {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
