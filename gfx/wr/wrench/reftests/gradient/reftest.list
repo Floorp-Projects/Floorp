@@ -42,9 +42,8 @@ platform(linux,mac) fuzzy(1,80000) == radial-ellipse.yaml radial-ellipse-ref.png
 
 == norm-conic-1.yaml norm-conic-1-ref.yaml
 == norm-conic-2.yaml norm-conic-2-ref.yaml
-# Bug 1616255 - These should pass
-# == norm-conic-3.yaml norm-conic-3-ref.yaml
-# == norm-conic-4.yaml norm-conic-4-ref.yaml
+== norm-conic-3.yaml norm-conic-3-ref.yaml
+== norm-conic-4.yaml norm-conic-4-ref.yaml
 == norm-conic-degenerate.yaml norm-conic-degenerate-ref.yaml
 
 # fuzzy because of differences from normalization
@@ -53,9 +52,8 @@ fuzzy(255,1200) == repeat-linear.yaml repeat-linear-ref.yaml
 fuzzy(255,1200) == repeat-linear-reverse.yaml repeat-linear-ref.yaml
 fuzzy(255,2664) == repeat-radial.yaml repeat-radial-ref.yaml
 fuzzy(255,2664) == repeat-radial-negative.yaml repeat-radial-ref.yaml
-# Bug 1616255 - These should pass
-# == repeat-conic.yaml repeat-conic-ref.yaml
-# == repeat-conic-negative.yaml repeat-conic-ref.yaml
+fuzzy(255,1652) == repeat-conic.yaml repeat-conic-ref.yaml
+fuzzy(255,1652) == repeat-conic-negative.yaml repeat-conic-ref.yaml
 
 # fuzzy because of thin spaced out column of pixels that are 1 off
 fuzzy(1,83164) == tiling-linear-1.yaml tiling-linear-1-ref.yaml

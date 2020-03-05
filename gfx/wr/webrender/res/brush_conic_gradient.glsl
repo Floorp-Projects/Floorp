@@ -13,7 +13,9 @@
 #define V_GRADIENT_ADDRESS  flat_varying_highp_int_address_0
 
 #define V_CENTER            flat_varying_vec4_0.xy
-#define V_ANGLE             flat_varying_vec4_0.z
+#define V_START_OFFSET      flat_varying_vec4_0.z
+#define V_END_OFFSET        flat_varying_vec4_0.w
+#define V_ANGLE             flat_varying_vec4_1.w
 
 // Size of the gradient pattern's rectangle, used to compute horizontal and vertical
 // repetitions. Not to be confused with another kind of repetition of the pattern
@@ -29,12 +31,13 @@
 #define V_TILE_REPEAT       flat_varying_vec4_2.xy
 #endif
 
-#define PI                  3.1415926538
+#define PI                  3.141592653589793
 
 #ifdef WR_VERTEX_SHADER
 
 struct ConicGradient {
     vec2 center_point;
+    vec2 start_end_offset;
     float angle;
     int extend_mode;
     vec2 stretch_size;
@@ -44,9 +47,10 @@ ConicGradient fetch_gradient(int address) {
     vec4 data[2] = fetch_from_gpu_cache_2(address);
     return ConicGradient(
         data[0].xy,
-        float(data[0].z),
-        int(data[1].x),
-        data[1].yz
+        data[0].zw,
+        float(data[1].x),
+        int(data[1].y),
+        data[1].zw
     );
 }
 
@@ -74,6 +78,8 @@ void conic_gradient_brush_vs(
 
     V_CENTER = gradient.center_point;
     V_ANGLE = gradient.angle;
+    V_START_OFFSET = gradient.start_end_offset.x;
+    V_END_OFFSET = gradient.start_end_offset.y;
 
     vec2 tile_repeat = local_rect.size / gradient.stretch_size;
     V_REPEATED_SIZE = gradient.stretch_size;
@@ -115,7 +121,8 @@ Fragment conic_gradient_brush_fs() {
 
     vec2 current_dir = pos - V_CENTER;
     float current_angle = atan(current_dir.y, current_dir.x) + (PI / 2.0 - V_ANGLE);
-    float offset = mod(current_angle / (2.0 * PI), 1.0);
+    float offset = mod(current_angle / (2.0 * PI), 1.0) - V_START_OFFSET;
+    offset = offset / (V_END_OFFSET - V_START_OFFSET);
 
     vec4 color = sample_gradient(V_GRADIENT_ADDRESS,
                                  offset,
