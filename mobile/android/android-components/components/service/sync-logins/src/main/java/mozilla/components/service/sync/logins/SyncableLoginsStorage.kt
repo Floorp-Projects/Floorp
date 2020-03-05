@@ -183,6 +183,7 @@ class SyncableLoginsStorage(
      */
     @Throws(IdCollisionException::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun add(login: Login): String = withContext(coroutineContext) {
+        check(login.guid == null) { "'guid' for a new login must be `null`" }
         conn.getStorage().add(login.toServerPassword())
     }
 
