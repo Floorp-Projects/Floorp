@@ -282,6 +282,14 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
+def is_geckoview(task, parameters):
+    return (
+        task.attributes.get('shipping_product') == 'fennec' and
+        task.kind in ('beetmover-geckoview', 'upload-symbols') and
+        parameters['release_product'] == 'firefox'
+    )
+
+
 @_target_task('push_desktop')
 def target_tasks_push_desktop(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to push a build of desktop to cdns.
@@ -296,14 +304,13 @@ def target_tasks_push_desktop(full_task_graph, parameters, graph_config):
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
-        if task.attributes.get('shipping_product') == parameters['release_product'] and \
-                task.attributes.get('shipping_phase') == 'push':
-            return True
         # XXX: Bug 1612540 - include beetmover jobs for publishing geckoview, along
         # with the regular Firefox (not Devedition!) releases so that they are at sync
-        if (task.attributes.get('shipping_product') == 'fennec' and
-            task.kind in ('beetmover-geckoview', 'upload-symbols') and
-                parameters['release_product'] == 'firefox'):
+        if is_geckoview(task, parameters):
+            return True
+
+        if task.attributes.get('shipping_product') == parameters['release_product'] and \
+                task.attributes.get('shipping_phase') == 'push':
             return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
@@ -332,6 +339,11 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
+
+        # XXX: Bug 1619603 - geckoview also ships alongside Firefox RC
+        if is_geckoview(task, parameters) and is_rc:
+            return True
+
         if task.attributes.get('shipping_product') != parameters['release_product'] or \
                 task.attributes.get('shipping_phase') != 'ship':
             return False
