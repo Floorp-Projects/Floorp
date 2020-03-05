@@ -74,7 +74,7 @@
 #include "mozilla/dom/network/Connection.h"
 
 #include "nsNSSComponent.h"
-#include "SimpleHttpChannel.h"
+#include "TRRServiceChannel.h"
 
 #if defined(XP_UNIX)
 #  include <sys/utsname.h>
@@ -2125,7 +2125,7 @@ nsresult nsHttpHandler::SetupChannelInternal(
                          channelId, contentPolicyType);
   if (NS_FAILED(rv)) return rv;
 
-  // SimpleHttpChannel doesn't need loadInfo.
+  // TRRServiceChannel doesn't need loadInfo.
   if (aLoadInfo) {
     // set the loadInfo on the new channel
     rv = httpChannel->SetLoadInfo(aLoadInfo);
@@ -2158,12 +2158,12 @@ nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
                               proxyResolveFlags, proxyURI, aLoadInfo, result);
 }
 
-nsresult nsHttpHandler::CreateSimpleHttpChannel(
+nsresult nsHttpHandler::CreateTRRServiceChannel(
     nsIURI* uri, nsIProxyInfo* givenProxyInfo, uint32_t proxyResolveFlags,
     nsIURI* proxyURI, nsILoadInfo* aLoadInfo, nsIChannel** result) {
-  HttpBaseChannel* httpChannel = new SimpleHttpChannel();
+  HttpBaseChannel* httpChannel = new TRRServiceChannel();
 
-  LOG(("nsHttpHandler::CreateSimpleHttpChannel [proxyInfo=%p]\n",
+  LOG(("nsHttpHandler::CreateTRRServiceChannel [proxyInfo=%p]\n",
        givenProxyInfo));
 
   return SetupChannelInternal(httpChannel, uri, givenProxyInfo,

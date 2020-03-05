@@ -218,7 +218,7 @@ nsresult TRR::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return gHttpHandler->CreateSimpleHttpChannel(aUri,
+  return gHttpHandler->CreateTRRServiceChannel(aUri,
                                                nullptr,  // givenProxyInfo
                                                0,        // proxyResolveFlags
                                                nullptr,  // proxyURI
