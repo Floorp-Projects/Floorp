@@ -4,11 +4,10 @@ set -x -e -v
 # This script is for building fix-stacks.
 PROJECT=fix-stacks
 
-# Needed by osx-cross-linker; unset when building for non-osx.
 export TARGET="$1"
 
-case "$(uname -s)" in
-Linux)
+case "$TARGET" in
+x86_64-unknown-linux-gnu)
     EXE=
     COMPRESS_EXT=xz
     # {CC,CXX} and TARGET_{CC,CXX} must be set because a build.rs file builds
@@ -16,22 +15,36 @@ Linux)
     export CC=$MOZ_FETCHES_DIR/clang/bin/clang
     export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++
     export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
-    if [ "$TARGET" == "x86_64-apple-darwin" ] ; then
-        # Cross-compiling for Mac on Linux.
-        export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
-        export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-        export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
-        export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
-    else
-        export RUSTFLAGS="-C linker=$CXX"
-    fi
+    export RUSTFLAGS="-C linker=$CXX"
     ;;
-MINGW*)
-    UPLOAD_DIR=$PWD/public/build
+x86_64-apple-darwin)
+    # Cross-compiling for Mac on Linux.
+    EXE=
+    COMPRESS_EXT=xz
+    # {CC,CXX} and TARGET_{CC,CXX} must be set because a build.rs file builds
+    # some C and C++ code.
+    export CC=$MOZ_FETCHES_DIR/clang/bin/clang
+    export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++
+    export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+    export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
+    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
+    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
+    ;;
+i686-pc-windows-msvc)
+    # Cross-compiling for Windows on Linux.
     EXE=.exe
     COMPRESS_EXT=bz2
-
-    . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
+    # Some magic that papers over differences in case-sensitivity/insensitivity on Linux
+    # and Windows file systems.
+    export LD_PRELOAD="/builds/worker/fetches/liblowercase/liblowercase.so"
+    export LOWERCASE_DIRS="/builds/worker/fetches/vs2017_15.8.4"
+    # {CC,CXX} and TARGET_{CC,CXX} must be set because a build.rs file builds
+    # some C and C++ code.
+    export CC=$MOZ_FETCHES_DIR/clang/bin/clang-cl
+    export CXX=$MOZ_FETCHES_DIR/clang/bin/clang-cl
+    export TARGET_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-lib
+    . $GECKO_PATH/taskcluster/scripts/misc/vs-setup32.sh
+    export CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
     ;;
 esac
 
