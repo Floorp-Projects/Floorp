@@ -50,6 +50,8 @@ It is augmented as it progresses through the system, with various information:
                 // property can be used to pick a specific search engine, by
                 // setting it to the name under which the engine is registered
                 // with the search service.
+    currentPage: // {string} url of the page that was loaded when the search
+                 // began.
 
     // Properties added by the Model.
     results; // {array} list of UrlbarResult objects.

@@ -686,6 +686,7 @@ function Search(
     this._prohibitAutoFill = !queryContext.allowAutofill;
     this._maxResults = queryContext.maxResults;
     this._userContextId = queryContext.userContextId;
+    this._currentPage = queryContext.currentPage;
   } else {
     let params = new Set(searchParam.split(" "));
     this._enableActions = params.has("enable-actions");
@@ -2491,6 +2492,10 @@ Search.prototype = {
       openPageCount > 0 &&
       this.hasBehavior("openpage")
     ) {
+      if (this._currentPage == match.value) {
+        // Don't suggest switching to the current tab.
+        return;
+      }
       // Actions are enabled and the page is open.  Add a switch-to-tab result.
       match.value = makeActionUrl("switchtab", { url: match.value });
       match.style = "action switchtab";
