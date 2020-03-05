@@ -56,7 +56,7 @@ export class FxCards extends React.PureComponent {
       let url = new URL(action.data.args);
       addUtmParams(url, UTMTerm);
 
-      if (action.addFlowParams) {
+      if (action.addFlowParams && this.state.flowParams) {
         url.searchParams.append("device_id", this.state.flowParams.deviceId);
         url.searchParams.append("flow_id", this.state.flowParams.flowId);
         url.searchParams.append(
