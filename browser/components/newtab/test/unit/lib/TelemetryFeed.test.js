@@ -876,6 +876,7 @@ describe("TelemetryFeed", () => {
       assert.equal(pingType, "onboarding");
       assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
       assert.propertyVal(ping, "message_id", "onboarding_message_01");
+      assert.propertyVal(ping, "browser_session_id", "fake_session_id");
     });
     it("should include page to event_context if there is a session", async () => {
       const data = {
@@ -1091,6 +1092,7 @@ describe("TelemetryFeed", () => {
       const expectedPayload = {
         client_id: FAKE_TELEMETRY_ID,
         event: "CLICK",
+        browser_session_id: "fake_session_id",
       };
       assert.calledWith(instance.sendStructuredIngestionEvent, expectedPayload);
     });
@@ -1108,6 +1110,7 @@ describe("TelemetryFeed", () => {
       const expectedPayload = {
         client_id: FAKE_TELEMETRY_ID,
         event: "CLICK",
+        browser_session_id: "fake_session_id",
         value: JSON.stringify({ foo: "bar" }),
       };
       assert.calledWith(instance.sendStructuredIngestionEvent, expectedPayload);

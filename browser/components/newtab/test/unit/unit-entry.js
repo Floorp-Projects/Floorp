@@ -400,6 +400,14 @@ const TEST_GLOBAL = {
       return false;
     },
   },
+  TelemetrySession: {
+    getMetadata(reason) {
+      return {
+        reason,
+        sessionId: "fake_session_id",
+      };
+    },
+  },
 };
 overrider.set(TEST_GLOBAL);
 

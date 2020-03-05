@@ -72,6 +72,7 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -120,6 +121,12 @@ const ONBOARDING_ALLOWED_PAGE_VALUES = [
   "about:home",
   "about:newtab",
 ];
+
+XPCOMUtils.defineLazyGetter(
+  this,
+  "browserSessionId",
+  () => TelemetrySession.getMetadata("").sessionId
+);
 
 this.TelemetryFeed = class TelemetryFeed {
   constructor(options) {
@@ -665,6 +672,7 @@ this.TelemetryFeed = class TelemetryFeed {
    */
   async applyOnboardingPolicy(ping, session) {
     ping.client_id = await this.telemetryClientId;
+    ping.browser_session_id = browserSessionId;
     // Attach page info to `event_context` if there is a session associated with this ping
     if (ping.action === "onboarding_user_event" && session && session.page) {
       let event_context;
@@ -710,6 +718,7 @@ this.TelemetryFeed = class TelemetryFeed {
   async sendEventPing(ping) {
     delete ping.action;
     ping.client_id = await this.telemetryClientId;
+    ping.browser_session_id = browserSessionId;
     if (ping.value && typeof ping.value === "object") {
       ping.value = JSON.stringify(ping.value);
     }
