@@ -17,7 +17,8 @@
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
-#include "builtin/streams/ReadableStream.h"  // js::ForAuthorCodeBool, js::ReadableStream
+#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
+#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamBYOBReader, js::ForAuthorCodeBool
 
 using JS::Handle;
 
