@@ -1,0 +1,17 @@
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        const range = new Range()
+        const fragment = range.cloneContents()
+        range.selectNodeContents(document)
+        document.designMode = 'on'
+        document.replaceChild(fragment, document.documentElement)
+        const selection = window.getSelection()
+        selection.addRange(range)
+        document.execCommand('indent', false, null)
+      })
+    </script>
+</head>
+</html>
+<!-- COMMENT -->
