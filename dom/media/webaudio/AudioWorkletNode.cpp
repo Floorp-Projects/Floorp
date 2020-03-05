@@ -9,6 +9,9 @@
 #include "AudioParamMap.h"
 #include "js/Array.h"  // JS::{Get,Set}ArrayLength, JS::NewArrayLength
 #include "mozilla/dom/AudioWorkletNodeBinding.h"
+#include "mozilla/dom/AudioParamMapBinding.h"
+#include "AudioParam.h"
+#include "AudioDestinationNode.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
 #include "PlayingRefChangeHandler.h"
@@ -18,13 +21,26 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioWorkletNode, AudioNode, mPort)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioWorkletNode, AudioNode, mPort,
+                                   mParameters)
+
+struct NamedAudioParamTimeline {
+  explicit NamedAudioParamTimeline(const AudioParamDescriptor& aParamDescriptor)
+      : mName(aParamDescriptor.mName),
+        mTimeline(aParamDescriptor.mDefaultValue) {}
+  const nsString mName;
+  AudioParamTimeline mTimeline;
+};
 
 class WorkletNodeEngine final : public AudioNodeEngine {
  public:
   WorkletNodeEngine(AudioWorkletNode* aNode,
+                    AudioDestinationNode* aDestinationNode,
+                    nsTArray<NamedAudioParamTimeline>&& aParamTimelines,
                     const Optional<Sequence<uint32_t>>& aOutputChannelCount)
-      : AudioNodeEngine(aNode) {
+      : AudioNodeEngine(aNode),
+        mDestination(aDestinationNode->Track()),
+        mParamTimelines(aParamTimelines) {
     if (aOutputChannelCount.WasPassed()) {
       mOutputChannelCount = aOutputChannelCount.Value();
     }
@@ -87,7 +103,9 @@ class WorkletNodeEngine final : public AudioNodeEngine {
     mProcessor.reset();
   }
 
+  RefPtr<AudioNodeTrack> mDestination;
   nsTArray<uint32_t> mOutputChannelCount;
+  nsTArray<NamedAudioParamTimeline> mParamTimelines;
   // The AudioWorkletGlobalScope-associated objects referenced from
   // WorkletNodeEngine are typically kept alive as long as the
   // AudioWorkletNode in the main-thread global.  The objects must be released
@@ -419,6 +437,58 @@ AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
       mInputCount(aOptions.mNumberOfInputs),
       mOutputCount(aOptions.mNumberOfOutputs) {}
 
+void AudioWorkletNode::InitializeParameters(
+    nsTArray<NamedAudioParamTimeline>* aParamTimelines, ErrorResult& aRv) {
+  MOZ_ASSERT(!mParameters, "Only initialize the `parameters` attribute once.");
+  MOZ_ASSERT(aParamTimelines);
+
+  AudioContext* context = Context();
+  const AudioParamDescriptorMap* parameterDescriptors =
+      context->GetParamMapForWorkletName(mNodeName);
+  MOZ_ASSERT(parameterDescriptors);
+  nsPIDOMWindowInner* window = context->GetParentObject();
+  MOZ_ASSERT(window);
+
+  mParameters = new AudioParamMap(window);
+  size_t audioParamIndex = 0;
+  aParamTimelines->SetCapacity(parameterDescriptors->Length());
+
+  for (size_t i = 0; i < parameterDescriptors->Length(); i++) {
+    auto& paramEntry = (*parameterDescriptors)[i];
+    RefPtr<AudioParam> param = nullptr;
+    // There are no ways to remove elements from ParamMapForWorkletName, so the
+    // string contained in it and used here have a lifetime that is strictly
+    // longer than the lifetime of the AudioParam constructed below.
+    // Additionally, AudioParam keep a reference to their AudioNode.
+    CreateAudioParam(param, audioParamIndex++, paramEntry.mName.get(),
+                     paramEntry.mDefaultValue, paramEntry.mMinValue,
+                     paramEntry.mMaxValue);
+    AudioParamMap_Binding::MaplikeHelpers::Set(mParameters, paramEntry.mName,
+                                               *param, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+    aParamTimelines->AppendElement(paramEntry);
+  }
+}
+
+void AudioWorkletNode::SendParameterData(
+    const Optional<Record<nsString, double>>& aParameterData) {
+  MOZ_ASSERT(mTrack, "This method only works if the track has been created.");
+  nsAutoString name;
+  if (aParameterData.WasPassed()) {
+    const auto& paramData = aParameterData.Value();
+    for (const auto& paramDataEntry : paramData.Entries()) {
+      for (auto& audioParam : mParams) {
+        audioParam->GetName(name);
+        if (paramDataEntry.mKey.Equals(name)) {
+          audioParam->SetValue(paramDataEntry.mValue);
+        }
+      }
+    }
+  }
+}
+
 /* static */
 already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aAudioContext,
@@ -550,11 +620,24 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
    */
   audioWorkletNode->mPort = messageChannel->Port1();
 
-  auto engine =
-      new WorkletNodeEngine(audioWorkletNode, aOptions.mOutputChannelCount);
+  /**
+   * 11. Let parameterDescriptors be the result of retrieval of nodeName from
+   * node name to parameter descriptor map.
+   */
+  nsTArray<NamedAudioParamTimeline> paramTimelines;
+  audioWorkletNode->InitializeParameters(&paramTimelines, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  auto engine = new WorkletNodeEngine(
+      audioWorkletNode, aAudioContext.Destination(), std::move(paramTimelines),
+      aOptions.mOutputChannelCount);
   audioWorkletNode->mTrack = AudioNodeTrack::Create(
       &aAudioContext, engine, AudioNodeTrack::NO_TRACK_FLAGS,
       aAudioContext.Graph());
+
+  audioWorkletNode->SendParameterData(aOptions.mParameterData);
 
   /**
    * 12. Queue a control message to invoke the constructor of the
@@ -587,8 +670,7 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
 }
 
 AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  return mParameters.get();
 }
 
 JSObject* AudioWorkletNode::WrapObject(JSContext* aCx,

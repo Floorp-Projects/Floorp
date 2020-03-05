@@ -15,6 +15,7 @@ namespace dom {
 class AudioParamMap;
 struct AudioWorkletNodeOptions;
 class MessagePort;
+struct NamedAudioParamTimeline;
 
 class AudioWorkletNode : public AudioNode {
  public:
@@ -47,9 +48,14 @@ class AudioWorkletNode : public AudioNode {
   AudioWorkletNode(AudioContext* aAudioContext, const nsAString& aName,
                    const AudioWorkletNodeOptions& aOptions);
   ~AudioWorkletNode() = default;
+  void InitializeParameters(nsTArray<NamedAudioParamTimeline>* aParamTimelines,
+                            ErrorResult& aRv);
+  void SendParameterData(
+      const Optional<Record<nsString, double>>& aParameterData);
 
   nsString mNodeName;
   RefPtr<MessagePort> mPort;
+  RefPtr<AudioParamMap> mParameters;
   uint16_t mInputCount;
   uint16_t mOutputCount;
 };
