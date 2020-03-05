@@ -86,7 +86,7 @@ LayoutDeviceIntMargin HeadlessThemeGTK::GetWidgetBorder(
       result.bottom = 6;
       result.left = 7;
       break;
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       result.top = 1;
       result.right = 1;
       result.bottom = 1;
@@ -126,7 +126,7 @@ bool HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::ButtonArrowPrevious:
     case StyleAppearance::TabScrollArrowBack:
     case StyleAppearance::TabScrollArrowForward:
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::RangeThumb:
     case StyleAppearance::ButtonFocus:
       aResult->top = 0;
@@ -264,7 +264,7 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->width = 44;
       aResult->height = 27;
       break;
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       aResult->width = 29;
       aResult->height = 28;
       *aIsOverridable = false;
@@ -392,7 +392,7 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Menuarrow:
     case StyleAppearance::MozGtkInfoBar:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       return (!aFrame ||
               IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
              !IsWidgetStyled(aPresContext, aFrame, aAppearance);
@@ -404,7 +404,7 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 
 NS_IMETHODIMP_(bool)
 HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
-  if (aAppearance == StyleAppearance::MozMenulistButton ||
+  if (aAppearance == StyleAppearance::MozMenulistArrowButton ||
       aAppearance == StyleAppearance::Radio ||
       aAppearance == StyleAppearance::RangeThumb ||
       aAppearance == StyleAppearance::Checkbox ||
