@@ -56,7 +56,6 @@ class PerformancePanel {
    */
   async _doOpen() {
     this.panelWin.gToolbox = this.toolbox;
-    this.panelWin.gTarget = this.target;
 
     const [perfFront, preferenceFront] = await Promise.all([
       this.target.client.mainRoot.getFront("perf"),
