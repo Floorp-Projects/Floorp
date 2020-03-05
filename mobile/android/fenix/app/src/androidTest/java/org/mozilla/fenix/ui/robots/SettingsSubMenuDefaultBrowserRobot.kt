@@ -7,18 +7,15 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
@@ -35,7 +32,6 @@ class SettingsSubMenuDefaultBrowserRobot {
         const val DEFAULT_APPS_SETTINGS_ACTION = "android.settings.MANAGE_DEFAULT_APPS_SETTINGS"
     }
 
-    fun verifyOpenLinksInPrivateTab() = assertOpenLinksInPrivateTab()
     fun verifyDefaultBrowserIsDisabled() = assertDefaultBrowserIsDisabled()
     fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
     fun verifyAndroidDefaultAppsMenuAppears() = assertAndroidDefaultAppsMenuAppears()
@@ -45,7 +41,7 @@ class SettingsSubMenuDefaultBrowserRobot {
 
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
-            goBackButton().perform(ViewActions.click())
+            goBackButton().perform(click())
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -70,11 +66,6 @@ fun toggleDefaultBrowserSwitch() {
 
 private fun assertAndroidDefaultAppsMenuAppears() {
     intended(hasAction(DEFAULT_APPS_SETTINGS_ACTION))
-}
-
-private fun assertOpenLinksInPrivateTab() {
-    onView(withText("Open links in private tab"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun goBackButton() =

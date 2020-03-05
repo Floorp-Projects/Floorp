@@ -73,6 +73,10 @@ class BookmarksRobot {
     }
 
     fun clickAddFolderButton() {
+        mDevice.waitNotNull(
+            Until.findObject(By.res("org.mozilla.fenix.debug:id/add_bookmark_folder")),
+            TestAssetHelper.waitingTime
+        )
         addFolderButton().click()
     }
 

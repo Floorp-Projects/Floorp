@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.helpers
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.preference.PreferenceManager
@@ -12,6 +14,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
@@ -48,6 +51,14 @@ object TestHelper {
         editor.apply()
     }
 
+    fun restartApp(activity: HomeActivityTestRule) {
+        with(activity) {
+            finishActivity()
+            mDevice.waitForIdle()
+            launchActivity(null)
+        }
+    }
+
     fun getPermissionAllowID(): String {
         return when
             (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
@@ -61,5 +72,21 @@ object TestHelper {
             Until.findObjects(By.res(resourceName)),
             TestAssetHelper.waitingTime
         )
+    }
+
+    fun openAppFromExternalLink(url: String) {
+        val context = InstrumentationRegistry.getInstrumentation().getTargetContext()
+        val intent = Intent().apply {
+            action = Intent.ACTION_VIEW
+            data = Uri.parse(url)
+            `package` = "org.mozilla.fenix.debug"
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            context.startActivity(intent)
+        } catch (ex: ActivityNotFoundException) {
+            intent.setPackage(null)
+            context.startActivity(intent)
+        }
     }
 }

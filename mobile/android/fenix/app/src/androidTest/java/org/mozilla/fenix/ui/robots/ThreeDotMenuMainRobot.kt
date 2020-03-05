@@ -233,6 +233,14 @@ class ThreeDotMenuMainRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun openAddToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
+            mDevice.waitNotNull(Until.findObject(By.text("Add to Home screen")), waitingTime)
+            addToHomeScreenButton().click()
+
+            AddToHomeScreenRobot().interact()
+            return AddToHomeScreenRobot.Transition()
+        }
     }
 }
 
@@ -335,6 +343,8 @@ private fun whatsNewButton() = onView(
 
 private fun assertWhatsNewButton() = whatsNewButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun addToHomeScreenButton() = onView(withText("Add to Home screen"))
 
 private fun readerViewToggle() = onView(allOf(withText(R.string.browser_menu_read)))
 private fun assertReaderViewToggle(visible: Boolean) = readerViewToggle()
