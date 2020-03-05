@@ -41,7 +41,6 @@ class AudioChannelAgent : public nsIAudioChannelAgent {
 
   bool IsWindowAudioCapturingEnabled() const;
   bool IsPlayingStarted() const;
-  bool ShouldBlockMedia() const;
 
  private:
   virtual ~AudioChannelAgent();
