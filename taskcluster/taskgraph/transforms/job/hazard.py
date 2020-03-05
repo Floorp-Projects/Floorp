@@ -16,7 +16,6 @@ from taskgraph.transforms.job import (
     configure_taskdesc_for_run,
 )
 from taskgraph.transforms.job.common import (
-    docker_worker_add_workspace_cache,
     setup_secrets,
     docker_worker_add_artifacts,
     add_tooltool,
@@ -51,7 +50,7 @@ def docker_worker_hazard(config, job, taskdesc):
     worker['artifacts'] = []
 
     docker_worker_add_artifacts(config, job, taskdesc)
-    docker_worker_add_workspace_cache(config, job, taskdesc)
+    worker.setdefault('required-volumes', []).append('{workdir}/workspace'.format(**run))
     add_tooltool(config, job, taskdesc)
     setup_secrets(config, job, taskdesc)
 
