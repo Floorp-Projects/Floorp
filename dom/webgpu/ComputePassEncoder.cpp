@@ -38,6 +38,7 @@ void ComputePassEncoder::SetBindGroup(
     uint32_t aSlot, const BindGroup& aBindGroup,
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
   if (mValid) {
+    mUsedBindGroups.push_back(&aBindGroup);
     ffi::wgpu_compute_pass_set_bind_group(&mRaw, aSlot, aBindGroup.mId,
                                           aDynamicOffsets.Elements(),
                                           aDynamicOffsets.Length());
@@ -46,6 +47,7 @@ void ComputePassEncoder::SetBindGroup(
 
 void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
   if (mValid) {
+    mUsedPipelines.push_back(&aPipeline);
     ffi::wgpu_compute_pass_set_pipeline(&mRaw, aPipeline.mId);
   }
 }
