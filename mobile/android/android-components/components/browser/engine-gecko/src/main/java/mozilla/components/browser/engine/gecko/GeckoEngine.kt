@@ -239,9 +239,20 @@ class GeckoEngine(
         onSuccess: (WebExtension?) -> Unit,
         onError: (String, Throwable) -> Unit
     ) {
-        // GeckoView support for updating extensions hasn't been implemented yet
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599581
-        onSuccess(null)
+        runtime.webExtensionController.update((extension as GeckoWebExtension).nativeExtension).then({ geckoExtension ->
+            val updatedExtension = if (geckoExtension != null) {
+                GeckoWebExtension(geckoExtension, runtime.webExtensionController).also {
+                    it.registerActionHandler(webExtensionActionHandler)
+                }
+            } else {
+                null
+            }
+            onSuccess(updatedExtension)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(extension.id, throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**
@@ -303,9 +314,24 @@ class GeckoEngine(
                     GeckoResult.DENY
                 }
             }
-            // TODO implement onUpdatePrompt:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599581
-            // https://github.com/mozilla-mobile/android-components/issues/5143
+
+            override fun onUpdatePrompt(
+                current: org.mozilla.geckoview.WebExtension,
+                updated: org.mozilla.geckoview.WebExtension,
+                newPermissions: Array<out String>,
+                newOrigins: Array<out String>
+            ): GeckoResult<AllowOrDeny>? {
+                // NB: We don't have a user flow for handling updated origins so we ignore them for now.
+                val result = GeckoResult<AllowOrDeny>()
+                webExtensionDelegate.onUpdatePermissionRequest(
+                    GeckoWebExtension(current, runtime.webExtensionController),
+                    GeckoWebExtension(updated, runtime.webExtensionController),
+                    newPermissions.toList()
+                ) {
+                    allow -> if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
+                }
+                return result
+            }
         }
 
         runtime.webExtensionController.promptDelegate = promptDelegate
@@ -339,9 +365,15 @@ class GeckoEngine(
         onSuccess: (WebExtension) -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
-        webExtensionDelegate?.onEnabled(extension)
-        onSuccess(extension)
+        runtime.webExtensionController.enable((extension as GeckoWebExtension).nativeExtension, source.id).then({
+            val enabledExtension = GeckoWebExtension(it!!, runtime.webExtensionController)
+            webExtensionDelegate?.onEnabled(enabledExtension)
+            onSuccess(enabledExtension)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**
@@ -353,9 +385,15 @@ class GeckoEngine(
         onSuccess: (WebExtension) -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
-        webExtensionDelegate?.onDisabled(extension)
-        onSuccess(extension)
+        runtime.webExtensionController.disable((extension as GeckoWebExtension).nativeExtension, source.id).then({
+            val disabledExtension = GeckoWebExtension(it!!, runtime.webExtensionController)
+            webExtensionDelegate?.onDisabled(disabledExtension)
+            onSuccess(disabledExtension)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**
