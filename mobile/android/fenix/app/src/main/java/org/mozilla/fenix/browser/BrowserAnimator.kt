@@ -41,7 +41,7 @@ class BrowserAnimator(
     private val unwrappedSwipeRefresh: View?
         get() = swipeRefresh.get()
 
-    private val browserInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
+    private val browserZoomInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
         addUpdateListener {
             unwrappedSwipeRefresh?.scaleX = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
             unwrappedSwipeRefresh?.scaleY = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
@@ -58,9 +58,24 @@ class BrowserAnimator(
         duration = ANIMATION_DURATION
     }
 
+    private val browserFadeInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
+        addUpdateListener {
+            unwrappedSwipeRefresh?.alpha = it.animatedFraction
+        }
+
+        doOnEnd {
+            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
+            unwrappedSwipeRefresh?.background = null
+            arguments.putBoolean(SHOULD_ANIMATE_FLAG, false)
+        }
+
+        interpolator = DecelerateInterpolator()
+        duration = ANIMATION_DURATION
+    }
+
     /**
-     * Triggers the *in* browser animation to run if necessary (based on the SHOULD_ANIMATE_FLAG). Also
-     * removes the flag from the bundle so it is not played on future entries into the fragment.
+     * Triggers the *zoom in* browser animation to run if necessary (based on the SHOULD_ANIMATE_FLAG).
+     * Also removes the flag from the bundle so it is not played on future entries into the fragment.
      */
     fun beginAnimateInIfNecessary() {
         val shouldAnimate = arguments.getBoolean(SHOULD_ANIMATE_FLAG, false)
@@ -68,7 +83,7 @@ class BrowserAnimator(
             viewLifeCycleScope?.launch(Dispatchers.Main) {
                 delay(ANIMATION_DELAY)
                 captureEngineViewAndDrawStatically {
-                    browserInValueAnimator.start()
+                    browserZoomInValueAnimator.start()
                 }
             }
         } else {
@@ -79,13 +94,25 @@ class BrowserAnimator(
     }
 
     /**
-     * Triggers the *out* browser animation to run.
+     * Triggers the *zoom out* browser animation to run.
      */
     fun beginAnimateOut() {
         viewLifeCycleScope?.launch(Dispatchers.Main) {
             captureEngineViewAndDrawStatically {
                 unwrappedEngineView?.asView()?.visibility = View.GONE
-                browserInValueAnimator.reverse()
+                browserZoomInValueAnimator.reverse()
+            }
+        }
+    }
+
+    /**
+     * Triggers the *fade out* browser animation to run.
+     */
+    fun beginFadeOut() {
+        viewLifeCycleScope?.launch(Dispatchers.Main) {
+            captureEngineViewAndDrawStatically {
+                unwrappedEngineView?.asView()?.visibility = View.GONE
+                browserFadeInValueAnimator.reverse()
             }
         }
     }

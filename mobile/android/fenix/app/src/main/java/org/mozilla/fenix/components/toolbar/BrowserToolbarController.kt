@@ -51,8 +51,6 @@ interface BrowserToolbarController {
     fun handleTabCounterClick()
 }
 
-typealias onComplete = () -> Unit
-
 @Suppress("LargeClass")
 class DefaultBrowserToolbarController(
     private val store: BrowserFragmentStore,

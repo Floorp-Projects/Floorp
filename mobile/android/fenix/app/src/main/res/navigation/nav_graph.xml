@@ -177,12 +177,15 @@
     <fragment
         android:id="@+id/browserFragment"
         android:name="org.mozilla.fenix.browser.BrowserFragment"
+        app:exitAnim="@anim/fade_out"
         tools:layout="@layout/fragment_browser">
         <action
             android:id="@+id/action_browserFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
+            app:enterAnim="@anim/fade_in_up"
+            app:popExitAnim="@anim/fade_out_down"
             app:destination="@id/searchFragment" />
         <argument
             android:name="activeSessionId"
