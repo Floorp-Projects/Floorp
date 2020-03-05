@@ -1,10 +1,4 @@
-APIKEYDIR=/builds
-
-. "$topsrcdir/build/mozconfig.win-common"
-. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
-. "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
-
-ac_add_options --with-branding=browser/branding/nightly
+if test `uname -s` = Linux; then
 
 # Configure expects executables for check_prog, so set the relevant files
 # as executable on the first evaluation of the mozconfig where they exist.
@@ -32,4 +26,4 @@ mk_add_options "export PATH=${TOOLTOOL_DIR}/vs2017_15.8.4/VC/bin/Hostx64/x64:${M
 
 unset VC_PATH
 
-. "$topsrcdir/build/mozconfig.common.override"
+fi

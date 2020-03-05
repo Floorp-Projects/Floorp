@@ -302,7 +302,6 @@ win64-cross/opt:
         extra-config:
             disable_package_metrics: true
             mozconfig_platform: win64
-            mozconfig_variant: cross
             env:
                 # Setting LD_PRELOAD at the worker level would set it during
                 # fetch-content, which can fail randomly when a tar/unzip subprocess
@@ -310,7 +309,6 @@ win64-cross/opt:
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/workspace/build/src/vs2017_15.8.4/"
-        mozconfig-variant: cross
     run-on-projects: ['trunk', 'try']
     dependencies:
         win64-clang-cl: toolchain-win64-clang-cl
