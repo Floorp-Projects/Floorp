@@ -137,7 +137,8 @@ add_task(async function test_dedupe_subdomain() {
     let LMC = this.content.windowGlobalChild.getActor("LoginManager");
     let doc = this.content.document;
     let form = doc.getElementById("form-basic");
-    return LMC.stateForDocument(doc).fillsByRootElement.get(form).guid;
+    let { login: filledLogin } = LMC.stateForDocument(doc).fillsByRootElement.get(form);
+    return filledLogin && filledLogin.guid;
   });
   is(filledGUID, loginToFillGUID, "Check the correct login was filled");
 });
