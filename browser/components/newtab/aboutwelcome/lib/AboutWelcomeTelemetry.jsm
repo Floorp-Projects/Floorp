@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PingCentre: "resource:///modules/PingCentre.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
@@ -24,6 +25,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyGetter(this, "telemetryClientId", () =>
   ClientID.getClientID()
+);
+XPCOMUtils.defineLazyGetter(
+  this,
+  "browserSessionId",
+  () => TelemetrySession.getMetadata("").sessionId
 );
 // This is for PingCentre client to capture "activity-stream" experiment strings.
 // Although we could change it to anything else, such as "messaging-system", that would
@@ -71,6 +77,7 @@ class AboutWelcomeTelemetry {
       addon_version: Services.appinfo.appBuildID,
       locale: Services.locale.appLocaleAsBCP47,
       client_id: await telemetryClientId,
+      browser_session_id: browserSessionId,
     };
 
     return ping;
