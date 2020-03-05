@@ -50,9 +50,6 @@ std::ostream& operator<<(std::ostream& os, const AsUC32& c) {
   return os << buf;
 }
 
-DisallowJavascriptExecution::DisallowJavascriptExecution(Isolate* isolate)
-    : nojs_(isolate->cx()) {}
-
 // TODO: Map flags to jitoptions
 bool FLAG_correctness_fuzzer_suppressions = false;
 bool FLAG_enable_regexp_unaligned_accesses = false;

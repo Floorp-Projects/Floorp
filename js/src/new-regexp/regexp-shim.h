@@ -434,14 +434,6 @@ class Object {
   // idiom: return false iff we are throwing an exception.
   inline bool IsException(Isolate*) const { return !value_.toBoolean(); }
 
-  // SpiderMonkey tries to avoid leaking the internal representation of its
-  // objects. V8 is not so strict. These functions are used when calling /
-  // being called by native code: objects are converted to Addresses for the
-  // call, then cast back to objects on the other side.
-  // We might be able to upstream a patch that eliminates the need for these.
-  Object(Address bits);
-  Address ptr() const;
-
  protected:
   JS::Value value_;
 };
@@ -588,14 +580,6 @@ class AllowHeapAllocation {
  public:
   // Empty constructor to avoid unused_variable warnings
   AllowHeapAllocation() {}
-};
-
-class DisallowJavascriptExecution {
- public:
-  DisallowJavascriptExecution(Isolate* isolate);
-
- private:
-  js::AutoAssertNoContentJS nojs_;
 };
 
 // Origin:
@@ -856,9 +840,6 @@ class Isolate {
 
   Handle<ByteArray> NewByteArray(
       int length, AllocationType allocation = AllocationType::kYoung);
-  MOZ_MUST_USE MaybeHandle<String> NewStringFromOneByte(
-      const Vector<const uint8_t>& str,
-      AllocationType allocation = AllocationType::kYoung);
 
   // Allocates a fixed array initialized with undefined values.
   Handle<FixedArray> NewFixedArray(
@@ -911,38 +892,6 @@ class Code {
   Address address();
 
   static Code cast(Object object);
-};
-
-// GeneratedCode provides an interface for calling into jit code.
-// It will probably require additional work to hook this up to the
-// arm simulator.
-// Origin:
-// https://github.com/v8/v8/blob/abfbe7687edb5b2dffe0b33b24e0a41bb86a8214/src/execution/simulator.h#L96-L164
-template <typename Return, typename... Args>
-class GeneratedCode {
- public:
-  using Signature = Return(Args...);
-
-  static GeneratedCode FromCode(Code code);  // TODO: implement
-  Return Call(Args... args) { return fn_ptr_(args...); }
-
- private:
-  friend class GeneratedCode<Return(Args...)>;
-  Isolate* isolate_;
-  Signature* fn_ptr_;
-  GeneratedCode(Isolate* isolate, Signature* fn_ptr)
-      : isolate_(isolate), fn_ptr_(fn_ptr) {}
-};
-
-// Allow to use {GeneratedCode<ret(arg1, arg2)>} instead of
-// {GeneratedCode<ret, arg1, arg2>}.
-template <typename Return, typename... Args>
-class GeneratedCode<Return(Args...)> : public GeneratedCode<Return, Args...> {
- public:
-  // Automatically convert from {GeneratedCode<ret, arg1, arg2>} to
-  // {GeneratedCode<ret(arg1, arg2)>}.
-  GeneratedCode(GeneratedCode<Return, Args...> other)
-      : GeneratedCode<Return, Args...>(other.isolate_, other.fn_ptr_) {}
 };
 
 enum class MessageTemplate { kStackOverflow };
