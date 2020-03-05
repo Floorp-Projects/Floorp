@@ -731,7 +731,10 @@ class LoginManagerParent extends JSWindowActorParent {
 
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
-        log("...passwords differ, prompting to change.");
+        log(
+          "...passwords differ, prompting to change. dismissed?",
+          dismissedPrompt
+        );
         prompter.promptToChangePassword(
           promptBrowser,
           existingLogin,
