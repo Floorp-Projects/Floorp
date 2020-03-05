@@ -64,8 +64,7 @@ class UrlbarInput {
       this.window.MozXULElement.parseXULToFragment(`
         <vbox class="urlbarView"
               role="group"
-              tooltip="aHTMLTooltip"
-              context="">
+              tooltip="aHTMLTooltip">
           <html:div class="urlbarView-body-outer">
             <html:div class="urlbarView-body-inner">
               <html:div id="urlbar-results"
