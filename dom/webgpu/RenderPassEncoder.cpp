@@ -117,7 +117,15 @@ ffi::WGPURawPass BeginRenderPass(RawId aEncoderId,
 
 RenderPassEncoder::RenderPassEncoder(CommandEncoder* const aParent,
                                      const dom::GPURenderPassDescriptor& aDesc)
-    : ChildOf(aParent), mRaw(BeginRenderPass(aParent->mId, aDesc)) {}
+    : ChildOf(aParent), mRaw(BeginRenderPass(aParent->mId, aDesc)) {
+  for (const auto& at : aDesc.mColorAttachments) {
+    mUsedTextureViews.push_back(at.mAttachment);
+  }
+  if (aDesc.mDepthStencilAttachment.WasPassed()) {
+    mUsedTextureViews.push_back(
+        aDesc.mDepthStencilAttachment.Value().mAttachment);
+  }
+}
 
 RenderPassEncoder::~RenderPassEncoder() {
   if (mValid) {
@@ -130,6 +138,7 @@ void RenderPassEncoder::SetBindGroup(
     uint32_t aSlot, const BindGroup& aBindGroup,
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
   if (mValid) {
+    mUsedBindGroups.push_back(&aBindGroup);
     ffi::wgpu_render_pass_set_bind_group(&mRaw, aSlot, aBindGroup.mId,
                                          aDynamicOffsets.Elements(),
                                          aDynamicOffsets.Length());
@@ -138,6 +147,7 @@ void RenderPassEncoder::SetBindGroup(
 
 void RenderPassEncoder::SetPipeline(const RenderPipeline& aPipeline) {
   if (mValid) {
+    mUsedPipelines.push_back(&aPipeline);
     ffi::wgpu_render_pass_set_pipeline(&mRaw, aPipeline.mId);
   }
 }
@@ -145,6 +155,7 @@ void RenderPassEncoder::SetPipeline(const RenderPipeline& aPipeline) {
 void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
                                        uint64_t aOffset) {
   if (mValid) {
+    mUsedBuffers.push_back(&aBuffer);
     ffi::wgpu_render_pass_set_index_buffer(&mRaw, aBuffer.mId, aOffset);
   }
 }
@@ -152,6 +163,7 @@ void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
 void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
                                         uint64_t aOffset) {
   if (mValid) {
+    mUsedBuffers.push_back(&aBuffer);
     // TODO: change the Rust API to use a single vertex buffer?
     ffi::wgpu_render_pass_set_vertex_buffers(&mRaw, aSlot, &aBuffer.mId,
                                              &aOffset, 1);
