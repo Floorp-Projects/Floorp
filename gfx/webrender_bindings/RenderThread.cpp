@@ -993,7 +993,8 @@ static already_AddRefed<gl::GLContext> CreateGLContext() {
 #if defined(MOZ_WIDGET_ANDROID)
   return CreateGLContextEGL();
 #elif defined(MOZ_WAYLAND)
-  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (gdk_display_get_default() &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return CreateGLContextEGL();
   }
 #endif

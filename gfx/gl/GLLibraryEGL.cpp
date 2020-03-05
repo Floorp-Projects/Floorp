@@ -810,7 +810,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
 #ifdef MOZ_WAYLAND
     // Some drivers doesn't support EGL_DEFAULT_DISPLAY
     GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
+    if (gdkDisplay && !GDK_IS_X11_DISPLAY(gdkDisplay)) {
       nativeDisplay = WaylandDisplayGetWLDisplay(gdkDisplay);
       if (!nativeDisplay) {
         NS_WARNING("Failed to get wl_display.");

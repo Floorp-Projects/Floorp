@@ -32,7 +32,8 @@ namespace mozilla::wr {
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     RefPtr<widget::CompositorWidget> aWidget) {
 #ifdef MOZ_WAYLAND
-  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (!gdk_display_get_default() ||
+      GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return nullptr;
   }
 #endif
