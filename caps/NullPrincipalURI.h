@@ -45,6 +45,7 @@ class NullPrincipalURI final : public nsIURI, public nsISizeOf {
 
  private:
   NullPrincipalURI(const NullPrincipalURI& aOther);
+  void operator=(const NullPrincipalURI& aOther) = delete;
 
   ~NullPrincipalURI() {}
 
