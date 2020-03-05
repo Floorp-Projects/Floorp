@@ -43,8 +43,8 @@ class BaseLocalIter {
   const ArgTypeVector& args_;
   jit::ABIArgIter<ArgTypeVector> argsIter_;
   size_t index_;
-  int32_t localSize_;
-  int32_t reservedSize_;
+  int32_t frameSize_;
+  int32_t nextFrameSize_;
   int32_t frameOffset_;
   int32_t stackResultPointerOffset_;
   jit::MIRType mirType_;
@@ -72,8 +72,10 @@ class BaseLocalIter {
     MOZ_ASSERT(!done_);
     return index_;
   }
-  int32_t currentLocalSize() const { return localSize_; }
-  int32_t reservedSize() const { return reservedSize_; }
+  // The size in bytes taken up by the previous `index_` locals, also including
+  // fixed allocations like the DebugFrame and "hidden" locals like a spilled
+  // stack results pointer.
+  int32_t frameSize() const { return frameSize_; }
 
   int32_t stackResultPointerOffset() const {
     MOZ_ASSERT(args_.hasSyntheticStackResultPointerArg());
