@@ -1998,18 +1998,18 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
 }
 
 nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
-    nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing,
+    nsIPrincipal* aContentBlockingAllowListPrincipal, bool aIsPrivateBrowsing,
     bool& aIsAllowListed) {
   aIsAllowListed = false;
 
-  if (!aTopWinPrincipal) {
+  if (!aContentBlockingAllowListPrincipal) {
     // Nothing to do!
     return NS_OK;
   }
 
   LOG_PRIN(("Deciding whether the user has overridden content blocking for %s",
             _spec),
-           aTopWinPrincipal);
+           aContentBlockingAllowListPrincipal);
 
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
@@ -2027,7 +2027,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
 
     uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
     nsresult rv = permManager->TestPermissionFromPrincipal(
-        aTopWinPrincipal, types[i].first(), &permissions);
+        aContentBlockingAllowListPrincipal, types[i].first(), &permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (permissions == nsIPermissionManager::ALLOW_ACTION) {
