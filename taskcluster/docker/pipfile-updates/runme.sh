@@ -4,12 +4,12 @@ set -xe
 
 # Things to be set by task definition.
 # -b branch
-# -f requirements_file
+# -p pipfile_directory
 # -3 use python3
 
 
 test "${BRANCH}"
-test "${REQUIREMENTS_FILE}"
+test "${PIPFILE_DIRECTORY}"
 
 PIP_ARG="-2"
 if [ -n "${PYTHON3}" ]; then
@@ -58,4 +58,4 @@ fi
 export HGPLAIN=1
 
 # shellcheck disable=SC2086
-/home/worker/scripts/update_pipfiles.sh -b "${BRANCH}" -f "${REQUIREMENTS_FILE}" ${PIP_ARG}
+/home/worker/scripts/update_pipfiles.sh -b "${BRANCH}" -p "${PIPFILE_DIRECTORY}" ${PIP_ARG}
