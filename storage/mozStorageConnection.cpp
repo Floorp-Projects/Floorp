@@ -2057,7 +2057,7 @@ Connection::CreateTable(const char* aTableName, const char* aTableSchema) {
 NS_IMETHODIMP
 Connection::CreateFunction(const nsACString& aFunctionName,
                            int32_t aNumArguments,
-                           mozIStorageFunction* aFunction) {
+                           nsCOMPtr<mozIStorageFunction> aFunction) {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2076,8 +2076,12 @@ Connection::CreateFunction(const nsACString& aFunctionName,
       SQLITE_ANY, aFunction, basicFunctionHelper, nullptr, nullptr);
   if (srv != SQLITE_OK) return convertResultCode(srv);
 
-  FunctionInfo info = {aFunction, Connection::FunctionInfo::SIMPLE,
-                       aNumArguments};
+  // TODO (Bug 1620198): we can't use std::move(aFunction) here because
+  // FunctionInfo::function is a nsCOMPtr<nsISupports> to allow for either
+  // mozIStorageFunction or mozIStorageAggregateFunction. When
+  // mozIStorageAggregateFunction is removed, this can be changed.
+  FunctionInfo info = {aFunction.forget().take(),
+                       Connection::FunctionInfo::SIMPLE, aNumArguments};
   mFunctions.Put(aFunctionName, info);
 
   return NS_OK;
