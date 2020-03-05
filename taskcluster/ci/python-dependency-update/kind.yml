@@ -5,13 +5,13 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - taskgraph.transforms.pipfile_update:transforms
+    - taskgraph.transforms.python_update:transforms
     - taskgraph.transforms.task:transforms
 
 
 job-defaults:
-    name: pipfile_update
-    description: Update Pipfile.lock
+    name: python_dependency_update
+    description: Update requirements.txt
     run-on-projects: []
     treeherder:
         kind: build
@@ -21,14 +21,14 @@ job-defaults:
     worker:
         implementation: docker-worker
         os: linux
-        docker-image: {in-tree: pipfile-updates}
+        docker-image: {in-tree: python-dependency-update}
         taskcluster-proxy: true
         max-run-time: 2400
         command:
             - /runme.sh
         artifacts:
-            - name: 'public/build/Pipfile.lock.diff'
-              path: '/home/worker/artifacts/Pipfile.lock.diff'
+            - name: 'public/build/requirements.txt.diff'
+              path: '/home/worker/artifacts/requirements.txt.diff'
               type: file
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token
@@ -37,9 +37,9 @@ job-defaults:
 jobs:
     funsize-update-generator:
         treeherder:
-            symbol: pipfu(fug)
+            symbol: pydep(fug)
         worker:
             env:
-                PIPFILE_DIRECTORY: "taskcluster/docker/funsize-update-generator"
+                REQUIREMENTS_FILE: "taskcluster/docker/funsize-update-generator/requirements.in"
                 PYTHON3: "1"
                 REVIEWERS: "sfraser, bhearsum"

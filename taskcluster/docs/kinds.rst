@@ -570,10 +570,10 @@ repo-update
 Repo-Update tasks are tasks that perform some action on the project repo itself,
 in order to update its state in some way.
 
-pipfile-update
---------------
-Pipfile-update tasks generate update Pipfile.lock for in-tree Pipfiles, and attach
-patches with the updates to Phabricator.
+python-dependency-update
+------------------------
+Python-dependency-update runs `pip-compile --generate-hashes` against the specified `requirements.in` and
+submits patches to Phabricator.
 
 partials
 --------
