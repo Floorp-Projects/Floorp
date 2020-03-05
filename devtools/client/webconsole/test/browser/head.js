@@ -775,18 +775,8 @@ async function openDebugger(options = {}) {
   toolbox = await gDevTools.showToolbox(target, "jsdebugger");
   const panel = toolbox.getCurrentPanel();
 
-  // Do not clear VariableView lazily so it doesn't disturb test ending.
-  if (panel._view) {
-    panel._view.Variables.lazyEmpty = false;
-  }
+  await toolbox.threadFront.getSources();
 
-  // Old debugger
-  if (panel.panelWin && panel.panelWin.DebuggerController) {
-    await panel.panelWin.DebuggerController.waitForSourcesLoaded();
-  } else {
-    // New debugger
-    await toolbox.threadFront.getSources();
-  }
   return { target, toolbox, panel };
 }
 
