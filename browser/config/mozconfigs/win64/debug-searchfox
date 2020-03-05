@@ -16,7 +16,5 @@ export RUSTFLAGS="-Zsave-analysis"
 ac_add_options --enable-clang-plugin
 ac_add_options --enable-mozsearch-plugin
 
-. $topsrcdir/build/win64/mozconfig.vs-latest
-
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.clang-cl"
