@@ -4941,17 +4941,24 @@ void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
     return;
   }
 
-  wl_region* region =
-      CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
-  wl_surface_set_opaque_region(surface, region);
-  wl_region_destroy(region);
+  // Set opaque region to toplevel window only in fullscreen mode.
+  bool fullScreen = mSizeState != nsSizeMode_Normal && !mIsTiled;
+  if (fullScreen) {
+    wl_region* region =
+        CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
+    wl_surface_set_opaque_region(surface, region);
+    wl_region_destroy(region);
+  } else {
+    wl_surface_set_opaque_region(surface, nullptr);
+  }
 
+  // TODO -> create a function for it
   GdkWindow* window = gtk_widget_get_window(mShell);
   if (window) {
     gdk_window_invalidate_rect(window, &rect, false);
   }
 
-  moz_container_update_opaque_region(mContainer, aSubtractCorners);
+  moz_container_update_opaque_region(mContainer, aSubtractCorners, fullScreen);
 }
 #endif
 
