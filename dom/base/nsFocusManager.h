@@ -758,6 +758,10 @@ class nsFocusManager final : public nsIFocusManager,
   // Not supposed to be used in a meaningful way in the chrome process.
   RefPtr<mozilla::dom::BrowsingContext> mActiveBrowsingContextInContent;
 
+  // Whether or not mActiveBrowsingContextInContent was set from another process
+  // or from this process.
+  bool mActiveBrowsingContextInContentSetFromOtherProcess;
+
   // This is the chrome process notion of content's
   // mActiveBrowsingContextInContent. Avoiding field reuse for different
   // semantics in different process types to make it easier to catch bugs.
