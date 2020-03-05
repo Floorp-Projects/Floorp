@@ -47,7 +47,7 @@ class UrlMatcher {
 
         for ((key) in categoryMap) {
             if (!supportedCategories.contains(key)) {
-                throw IllegalArgumentException("categoryMap contains undeclared category")
+                throw IllegalArgumentException("$key categoryMap contains undeclared category")
             }
         }
 
@@ -150,14 +150,12 @@ class UrlMatcher {
         const val ADVERTISING = "Advertising"
         const val ANALYTICS = "Analytics"
         const val CONTENT = "Content"
-        const val DISCONNECT = "Disconnect"
         const val SOCIAL = "Social"
         const val DEFAULT = "default"
         const val CRYPTOMINING = "Cryptomining"
         const val FINGERPRINTING = "Fingerprinting"
 
         private val ignoredCategories = setOf("Legacy Disconnect", "Legacy Content")
-        private val disconnectMoved = setOf("Facebook", "Twitter")
         private val webfontExtensions = arrayOf(".woff2", ".woff", ".eot", ".ttf", ".otf")
         private val supportedCategories = setOf(
                 ADVERTISING,
@@ -275,11 +273,6 @@ class UrlMatcher {
                 val categoryName = reader.nextName()
                 when {
                     ignoredCategories.contains(categoryName) -> reader.skipValue()
-                    categoryName == DISCONNECT -> {
-                        extractCategory(reader) { url, owner ->
-                            if (disconnectMoved.contains(owner)) socialOverrides.add(url)
-                        }
-                    }
                     else -> {
                         val categoryTrie: Trie?
                         if (!override) {

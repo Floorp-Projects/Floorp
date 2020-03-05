@@ -116,22 +116,6 @@ class UrlMatcherTest {
     val BLOCK_LIST = """{
       "license": "test-license",
       "categories": {
-        "Disconnect": [
-          {
-            "Facebook": {
-              "http://www.facebook.com/": [
-                "facebook.com"
-              ]
-            }
-          },
-          {
-            "Disconnect1": {
-              "http://www.disconnect1.com/": [
-                "disconnect1.com"
-              ]
-            }
-          }
-        ],
         "Advertising": [
           {
             "AdTest1": {
@@ -280,10 +264,6 @@ class UrlMatcherTest {
         // Check ignored categories
         assertFalse(matcher.matches("http://ignored1.de", "http://www.ignored1.com").first)
         assertFalse(matcher.matches("http://ignored2.de", "http://www.ignored2.com").first)
-
-        // Check that we find the social URIs we moved from Disconnect
-        assertTrue(matcher.matches("http://facebook.com", "http://www.facebook.com").first)
-        assertFalse(matcher.matches("http://disconnect1.com", "http://www.disconnect1.com").first)
     }
 
     @Test
