@@ -5139,17 +5139,17 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     return true;
   }
 
-  static void considerScript(JSRuntime* rt, void* data, JSScript* script,
+  static void considerScript(JSRuntime* rt, void* data, BaseScript* script,
                              const JS::AutoRequireNoGC& nogc) {
     ScriptQuery* self = static_cast<ScriptQuery*>(data);
-    self->consider(script, nogc);
+    self->consider(script->asJSScript(), nogc);
   }
 
-  static void considerLazyScript(JSRuntime* rt, void* data,
-                                 LazyScript* lazyScript,
+  static void considerLazyScript(JSRuntime* rt, void* data, BaseScript* script,
                                  const JS::AutoRequireNoGC& nogc) {
     ScriptQuery* self = static_cast<ScriptQuery*>(data);
-    self->consider(lazyScript, nogc);
+    LazyScript* lazy = static_cast<LazyScript*>(script);
+    self->consider(lazy, nogc);
   }
 
   bool needsDelazifyBeforeQuery() const {
@@ -5404,17 +5404,17 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase {
  private:
   Rooted<SourceSet> sources;
 
-  static void considerScript(JSRuntime* rt, void* data, JSScript* script,
+  static void considerScript(JSRuntime* rt, void* data, BaseScript* script,
                              const JS::AutoRequireNoGC& nogc) {
     SourceQuery* self = static_cast<SourceQuery*>(data);
-    self->consider(script, nogc);
+    self->consider(script->asJSScript(), nogc);
   }
 
-  static void considerLazyScript(JSRuntime* rt, void* data,
-                                 LazyScript* lazyScript,
+  static void considerLazyScript(JSRuntime* rt, void* data, BaseScript* script,
                                  const JS::AutoRequireNoGC& nogc) {
     SourceQuery* self = static_cast<SourceQuery*>(data);
-    self->consider(lazyScript, nogc);
+    LazyScript* lazy = static_cast<LazyScript*>(script);
+    self->consider(lazy, nogc);
   }
 
   void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {

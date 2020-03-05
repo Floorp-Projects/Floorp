@@ -23,11 +23,9 @@ class JSTracer;
 
 namespace js {
 
-class LazyScript;
 class AccessorShape;
 class FatInlineAtom;
 class NormalAtom;
-class LazyScript;
 
 class Nursery;
 
@@ -107,10 +105,8 @@ extern void IterateHeapUnbarrieredForZone(
 extern void IterateChunks(JSContext* cx, void* data,
                           IterateChunkCallback chunkCallback);
 
-using IterateScriptCallback = void (*)(JSRuntime*, void*, JSScript*,
+using IterateScriptCallback = void (*)(JSRuntime*, void*, BaseScript*,
                                        const JS::AutoRequireNoGC&);
-using IterateLazyScriptCallback = void (*)(JSRuntime*, void*, LazyScript*,
-                                           const JS::AutoRequireNoGC&);
 
 /*
  * Invoke scriptCallback on every in-use script for the given realm or for all
@@ -119,7 +115,7 @@ using IterateLazyScriptCallback = void (*)(JSRuntime*, void*, LazyScript*,
 extern void IterateScripts(JSContext* cx, JS::Realm* realm, void* data,
                            IterateScriptCallback scriptCallback);
 extern void IterateLazyScripts(JSContext* cx, JS::Realm* realm, void* data,
-                               IterateLazyScriptCallback lazyScriptCallback);
+                               IterateScriptCallback lazyScriptCallback);
 
 JS::Realm* NewRealm(JSContext* cx, JSPrincipals* principals,
                     const JS::RealmOptions& options);

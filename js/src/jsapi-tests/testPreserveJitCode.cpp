@@ -14,10 +14,10 @@
 
 using namespace JS;
 
-static void ScriptCallback(JSRuntime* rt, void* data, JSScript* script,
+static void ScriptCallback(JSRuntime* rt, void* data, js::BaseScript* script,
                            const JS::AutoRequireNoGC& nogc) {
   unsigned& count = *static_cast<unsigned*>(data);
-  if (script->hasIonScript()) {
+  if (script->asJSScript()->hasIonScript()) {
     ++count;
   }
 }
