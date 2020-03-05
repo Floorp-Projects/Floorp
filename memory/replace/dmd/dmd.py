@@ -329,20 +329,37 @@ def getDigestFromFile(args, inputFile):
         fmt = '    #{:02d}{:}'
 
         if args.filter_stacks_for_testing:
-            # When running SmokeDMD.cpp, every stack trace should contain at
-            # least one frame that contains 'DMD.cpp', from either |DMD.cpp| or
-            # |SmokeDMD.cpp|. (Or 'dmd.cpp' on Windows.) On builds without
-            # debuginfo we expect just |SmokeDMD|. If we see such a
-            # frame, we replace the entire stack trace with a single,
-            # predictable frame. There is too much variation in the stack
-            # traces across different machines and platforms to do more precise
-            # matching, but this level of matching will result in failure if
-            # stack fixing fails completely.
+            # This option is used by `test_dmd.js`, which runs the code in
+            # `SmokeDMD.cpp`. When running that test, there is too much
+            # variation in the stack traces across different machines and
+            # platforms to do exact output matching. However, every stack trace
+            # should have at least three frames that contain `DMD` (in one of
+            # `DMD.cpp`, `SmokeDMD.cpp`, `SmokeDMD`, or `SmokeDMD.exe`). Some
+            # example frames from automation (where `..` indicates excised path
+            # segments):
+            #
+            # Linux debug, with stack fixing using breakpad syms:
+            # `#01: replace_realloc(void*, unsigned long) [../dmd/DMD.cpp:1110]`
+            #
+            # Linux opt, with native stack fixing:
+            # `#02: TestFull(char const*, int, char const*, int) (../dmd/test/SmokeDMD.cpp:165)`
+            #
+            # Mac opt, with native stack fixing:
+            # `#03: RunTests() (../build/tests/bin/SmokeDMD +0x21f9)`
+            #
+            # Windows opt, with native stack fixing failing due to a missing PDB:
+            # `#04: ??? (..\\build\\tests\\bin\\SmokeDMD.exe +0x1c58)`
+            #
+            # If we see three such frames, we replace the entire stack trace
+            # with a single, predictable frame. This imprecise matching will at
+            # least detect if stack fixing fails completely.
+            dmd_frame_matches = 0
             for frameKey in frameKeys:
                 frameDesc = frameTable[frameKey]
-                expected = ('DMD.cpp', 'dmd.cpp', 'SmokeDMD')
-                if any(ex in frameDesc for ex in expected):
-                    return [fmt.format(1, ': ... DMD.cpp ...')]
+                if 'DMD' in frameDesc:
+                    dmd_frame_matches += 1
+                    if dmd_frame_matches >= 3:
+                        return [fmt.format(1, ': ... DMD.cpp ...')]
 
         # The frame number is always '#00' (see DMD.h for why), so we have to
         # replace that with the correct frame number.
