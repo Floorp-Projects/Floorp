@@ -3861,6 +3861,10 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
         aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
         aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
         sameSiteSet = true;
+      } else {
+        LogMessageToConsole(aChannel, aHostURI,
+                            NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
+                            aCookieData.name());
       }
     }
   }
