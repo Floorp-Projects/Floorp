@@ -142,6 +142,15 @@ void MediaControlService::GenerateMediaControlKeysTestEvent(
   mMediaKeysHandler->OnKeyPressed(aEvent);
 }
 
+MediaMetadataBase MediaControlService::GetMainControllerMediaMetadata() const {
+  MediaMetadataBase metadata;
+  if (!StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    return metadata;
+  }
+  return GetMainController() ? GetMainController()->GetCurrentMediaMetadata()
+                             : metadata;
+}
+
 // Following functions belong to ControllerManager
 MediaControlService::ControllerManager::ControllerManager(
     MediaControlService* aService)
