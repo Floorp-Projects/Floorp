@@ -568,15 +568,19 @@ impl IsVisible for RadialGradient {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, MallocSizeOf, PartialEq)]
-pub struct ConicGradientAngle {
+pub struct ConicGradientParams {
     pub angle: f32, // in radians
+    pub start_offset: f32,
+    pub end_offset: f32,
 }
 
-impl Eq for ConicGradientAngle {}
+impl Eq for ConicGradientParams {}
 
-impl hash::Hash for ConicGradientAngle {
+impl hash::Hash for ConicGradientParams {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.angle.to_bits().hash(state);
+        self.start_offset.to_bits().hash(state);
+        self.end_offset.to_bits().hash(state);
     }
 }
 
@@ -588,7 +592,7 @@ pub struct ConicGradientKey {
     pub common: PrimKeyCommonData,
     pub extend_mode: ExtendMode,
     pub center: PointKey,
-    pub angle: ConicGradientAngle,
+    pub params: ConicGradientParams,
     pub stretch_size: SizeKey,
     pub stops: Vec<GradientStopKey>,
     pub tile_spacing: SizeKey,
@@ -608,7 +612,7 @@ impl ConicGradientKey {
             },
             extend_mode: conic_grad.extend_mode,
             center: conic_grad.center,
-            angle: conic_grad.angle,
+            params: conic_grad.params,
             stretch_size: conic_grad.stretch_size,
             stops: conic_grad.stops,
             tile_spacing: conic_grad.tile_spacing,
@@ -626,7 +630,7 @@ pub struct ConicGradientTemplate {
     pub common: PrimTemplateCommonData,
     pub extend_mode: ExtendMode,
     pub center: LayoutPoint,
-    pub angle: ConicGradientAngle,
+    pub params: ConicGradientParams,
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub brush_segments: Vec<BrushSegment>,
@@ -667,7 +671,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
             common,
             center: item.center.into(),
             extend_mode: item.extend_mode,
-            angle: item.angle,
+            params: item.params,
             stretch_size: item.stretch_size.into(),
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
@@ -692,14 +696,14 @@ impl ConicGradientTemplate {
             request.push([
                 self.center.x,
                 self.center.y,
-                self.angle.angle,
-                0.0,
+                self.params.start_offset,
+                self.params.end_offset,
             ]);
             request.push([
+                self.params.angle,
                 pack_as_float(self.extend_mode as u32),
                 self.stretch_size.width,
                 self.stretch_size.height,
-                0.0,
             ]);
 
             // write_segment_gpu_blocks
@@ -732,7 +736,7 @@ pub type ConicGradientDataHandle = InternHandle<ConicGradient>;
 pub struct ConicGradient {
     pub extend_mode: ExtendMode,
     pub center: PointKey,
-    pub angle: ConicGradientAngle,
+    pub params: ConicGradientParams,
     pub stretch_size: SizeKey,
     pub stops: Vec<GradientStopKey>,
     pub tile_spacing: SizeKey,
@@ -1000,7 +1004,7 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<RadialGradientTemplate>(), 120, "RadialGradientTemplate size changed");
     assert_eq!(mem::size_of::<RadialGradientKey>(), 88, "RadialGradientKey size changed");
 
-    assert_eq!(mem::size_of::<ConicGradient>(), 64, "ConicGradient size changed");
-    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 112, "ConicGradientTemplate size changed");
-    assert_eq!(mem::size_of::<ConicGradientKey>(), 80, "ConicGradientKey size changed");
+    assert_eq!(mem::size_of::<ConicGradient>(), 72, "ConicGradient size changed");
+    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 120, "ConicGradientTemplate size changed");
+    assert_eq!(mem::size_of::<ConicGradientKey>(), 88, "ConicGradientKey size changed");
 }
