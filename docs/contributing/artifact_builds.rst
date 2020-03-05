@@ -1,41 +1,21 @@
-.. note::
-
-   | This page covers the steps needed to build a bleeding-edge,
-     development version of **Firefox for Desktop** or **Firefox for
-     Android** using pre-built binary artifacts.  Welcome, we're
-     delighted to see you! :)
-   | If you're having trouble following this documentation or hit a
-     roadblock you can't get around, please contact Nick Alexander at
-     nalexander@mozilla.com directly so we can solve the problem for you
-     and every new contributor after you.
-
-For additional information, see the general Firefox `build
-documentation </en-US/docs/Mozilla/Developer_guide/Build_Instructions>`__.
-
-.. _Artifact_builds:
-
 Artifact builds
----------------
+===============
 
 Firefox for Desktop and Android supports a **fast build mode** called
-*artifact mode*.  The resulting builds are called *artifact builds*. 
-(Some mobile team managers call it *manager mode* since it's
-particularly helpful if you only write code infrequently.)  *Artifact
-mode* downloads pre-built C++ components rather than building them
+*artifact mode*. The resulting builds are called *artifact builds*.
+Artifact mode downloads pre-built C++ components rather than building them
 locally, trading bandwidth for time.
 
 Artifact builds will be useful to many developers who are not working
 with compiled code (see "Restrictions" below). Artifacts are typically
-fetched from `fx-team <https://hg.mozilla.org/integration/fx-team/>`__,
-`mozilla-inbound <https://hg.mozilla.org/integration/mozilla-inbound/>`__,
-or `mozilla-central <https://hg.mozilla.org/mozilla-central/>`__.
+fetched from `mozilla-central <https://hg.mozilla.org/mozilla-central/>`__.
 
 To automatically download and use pre-built binary artifacts, add the
 following lines into your
-`mozconfig </en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options#Using_a_.mozconfig_Configuration_File>`__
+`mozconfig <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options#Using_a_.mozconfig_Configuration_File>`__
 file:
 
-::
+.. code-block:: shell
 
    # Automatically download and use compiled C++ components:
    ac_add_options --enable-artifact-builds
@@ -48,7 +28,7 @@ binary artifact (currently supported for Linux, OSX and Windows
 artifacts), add ``ac_add_options --enable-debug`` to your mozconfig file
 (with artifact builds option already enabled):
 
-::
+.. code-block:: shell
 
    # Enable debug versions of the pre-built binary artifacts:
    ac_add_options --enable-debug
@@ -59,9 +39,6 @@ artifacts), add ``ac_add_options --enable-debug`` to your mozconfig file
    # Write build artifacts to:
    mk_add_options MOZ_OBJDIR=./objdir-frontend-debug-artifact
 
- 
-
-.. _Prerequisites:
 
 Prerequisites
 -------------
@@ -74,31 +51,29 @@ git-cinnabar. Further information about using git-cinnabar to interact
 with Mozilla repositories can be found on `the project
 wiki <https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development>`__.
 
-.. _Building:
-
 Building
 --------
 
 If you've added ``--enable-artifact-builds`` to your ``mozconfig``, each
 time you run ``mach build`` and ``mach build path/to/subdirectory`` the
 build system will determine what the best pre-built binary artifacts
-available are, download them, and put them in place for you.  The
+available are, download them, and put them in place for you. The
 computations are cached, so the additional calculations should be very
 fast after the up-to-date artifacts are downloaded -- just a second or
-two on modern hardware.  Most Desktop developers should find that
+two on modern hardware. Most Desktop developers should find that
 
-::
+.. code-block:: shell
 
    ./mach build
    ./mach run
 
-just works. 
+just works.
 
 To only rebuild local changes (to avoid re-checking for pushes and/or
 unzipping the downloaded cached artifacts after local commits), you can
 use:
 
-::
+.. code-block:: shell
 
    ./mach build faster
 
@@ -107,7 +82,7 @@ asset) files.
 
 Most Firefox for Android developers should find that
 
-::
+.. code-block:: shell
 
    ./mach build
    ./mach package
@@ -115,10 +90,8 @@ Most Firefox for Android developers should find that
 
 just works.
 
-.. _Pulling_artifacts_from_a_try_build:
-
 Pulling artifacts from a try build
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 To only accept artifacts from a specific revision (such as a try build),
 set ``MOZ_ARTIFACT_REVISION`` in your environment to the value of the
@@ -127,24 +100,20 @@ override the default behavior of finding a recent candidate build with
 the required artifacts, and will cause builds to fail if the specified
 revision does not contain the required artifacts.
 
-.. _Restrictions:
-
 Restrictions
 ------------
 
-Oh, so many.  Artifact builds are rather delicate: any mismatch between
+Oh, so many. Artifact builds are rather delicate: any mismatch between
 your local source directory and the downloaded binary artifacts can
 result in difficult to diagnose incompatibilities, including unexplained
 crashes and catastrophic XPCOM initialization and registration
-failures.  These are rare, but do happen.
-
-.. _Things_that_are_supported:
+failures. These are rare, but do happen.
 
 Things that are supported
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 -  Modifying JavaScript, (X)HTML, and CSS resources; and string
-   properties and DTD files.
+   properties and DTD and FTL files.
 -  Modifying Android Java code, resources, and strings.
 -  Running mochitests and xpcshell tests.
 -  Modifying ``Scalars.yaml`` to add Scalar Telemetry (since {{
@@ -155,45 +124,37 @@ Things that are supported
 Essentially everything updated by ``mach build faster`` should work with
 artifact builds.
 
-.. _Things_that_are_not_supported:
-
 Things that are not supported
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 -  Products other than Firefox for Desktop and Firefox for Android are
    not supported and are unlikely to ever be supported.
--  You cannot modify C, C++, or Rust source code anywhere in the tree. 
+-  You cannot modify C, C++, or Rust source code anywhere in the tree.
    If it’s compiled to machine code, it can't be changed.
 -  You cannot modify ``histograms.json`` to add Telemetry histogram
-   definitions.  (But see {{ Bug("1206117") }}.).
+   definitions.(But see `Bug 1206117 <https://bugzilla.mozilla.org/show_bug.cgi?id=1206117>`__).
 -  Modifying build system configuration and definitions does not work in
    all situations.
 
-.. _Things_that_are_not_yet_supported:
-
 Things that are not **yet** supported
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 -  Tests other than mochitests, xpcshell, and Marionette-based tests.
    There aren’t inherent barriers here, but these are not known to work.
--  Modifying WebIDL definitions, even ones implemented in JavaScript. 
-   We don’t really know if there are barriers to making this work, and
-   would appreciate somebody trying it and documenting the results.
-
-.. _Troubleshooting:
+-  Modifying WebIDL definitions, even ones implemented in JavaScript.
 
 Troubleshooting
 ---------------
 
 There are two parts to artifact mode:
-the ``--disable-compile-environment`` option, and the ``mach artifact``
-command that implements the downloading and caching.  Start by running
+the ``--disable-compile-environment`` option, and the ``mach artifact``
+command that implements the downloading and caching. Start by running
 
-::
+.. code-block:: shell
 
    ./mach artifact install --verbose
 
-to see what the build system is trying to do.  There is some support for
+to see what the build system is trying to do. There is some support for
 querying and printing the cache; run ``mach artifact`` to see
 information about those commands.
 
@@ -202,8 +163,7 @@ Downloaded artifacts are stored in
 ``~/.mozbuild/package-frontend``.
 
 Discussion is best started on the `dev-builds mailing
-list <https://lists.mozilla.org/listinfo/dev-builds>`__.  Questions are
-best raised in #build on `IRC <https://wiki.mozilla.org/IRC>`__.  Please
-file bugs in *Firefox Build System :: General*, blocking {{
-Bug("901840") }}.
+list <https://lists.mozilla.org/listinfo/dev-builds>`__. Questions are
+best raised in `#build <https://chat.mozilla.org/#/room/#build:mozilla.org>`__ on `Matrix <https://chat.mozilla.org/>`__. Please
+file bugs in *Firefox Build System :: General*, blocking  `Bug 901840 <https://bugzilla.mozilla.org/show_bug.cgi?id=901840>`__
 
