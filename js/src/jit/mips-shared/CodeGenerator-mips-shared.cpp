@@ -1093,10 +1093,8 @@ MoveOperand CodeGeneratorMIPSShared::toMoveOperand(LAllocation a) const {
   }
   int32_t offset = ToStackOffset(a);
   MOZ_ASSERT((offset & 3) == 0);
-  MoveOperand::Kind kind =
-      a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
 
-  return MoveOperand(StackPointer, offset, kind);
+  return MoveOperand(StackPointer, offset);
 }
 
 void CodeGenerator::visitMathD(LMathD* math) {
