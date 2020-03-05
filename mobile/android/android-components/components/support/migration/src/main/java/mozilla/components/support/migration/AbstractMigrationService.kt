@@ -124,7 +124,7 @@ abstract class AbstractMigrationService : Service() {
                 .setContentTitle(getString(titleRes))
                 .setContentText(getString(contentRes))
                 .setContentIntent(PendingIntent.getActivity(this, 0,
-                        Intent(this, migrationDecisionActivity), 0))
+                        Intent(this, migrationDecisionActivity).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
