@@ -1161,24 +1161,18 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
 
         // Compute and populate the values of appId and inBrwoserElement from
         // originAttributes.
-        nsCOMPtr<mozIStorageFunction> setAppId(
-            new SetAppIdFromOriginAttributesSQLFunction());
-        NS_ENSURE_TRUE(setAppId, RESULT_RETRY);
-
         NS_NAMED_LITERAL_CSTRING(setAppIdName, "SET_APP_ID");
 
-        rv = mDefaultDBState->syncConn->CreateFunction(setAppIdName, 1,
-                                                       setAppId);
+        rv = mDefaultDBState->syncConn->CreateFunction(
+            setAppIdName, 1,
+            MakeAndAddRef<SetAppIdFromOriginAttributesSQLFunction>());
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-
-        nsCOMPtr<mozIStorageFunction> setInBrowser(
-            new SetInBrowserFromOriginAttributesSQLFunction());
-        NS_ENSURE_TRUE(setInBrowser, RESULT_RETRY);
 
         NS_NAMED_LITERAL_CSTRING(setInBrowserName, "SET_IN_BROWSER");
 
-        rv = mDefaultDBState->syncConn->CreateFunction(setInBrowserName, 1,
-                                                       setInBrowser);
+        rv = mDefaultDBState->syncConn->CreateFunction(
+            setInBrowserName, 1,
+            MakeAndAddRef<SetInBrowserFromOriginAttributesSQLFunction>());
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(

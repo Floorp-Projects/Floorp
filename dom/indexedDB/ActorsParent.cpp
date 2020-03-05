@@ -2847,23 +2847,19 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
   // Register the |upgrade_key| function.
-  RefPtr<UpgradeKeyFunction> updateFunction = new UpgradeKeyFunction();
-
   NS_NAMED_LITERAL_CSTRING(upgradeKeyFunctionName, "upgrade_key");
 
-  nsresult rv =
-      aConnection->CreateFunction(upgradeKeyFunctionName, 1, updateFunction);
+  nsresult rv = aConnection->CreateFunction(
+      upgradeKeyFunctionName, 1, MakeAndAddRef<UpgradeKeyFunction>());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Register the |insert_idv| function.
-  RefPtr<InsertIndexDataValuesFunction> insertIDVFunction =
-      new InsertIndexDataValuesFunction();
-
   NS_NAMED_LITERAL_CSTRING(insertIDVFunctionName, "insert_idv");
 
-  rv = aConnection->CreateFunction(insertIDVFunctionName, 4, insertIDVFunction);
+  rv = aConnection->CreateFunction(
+      insertIDVFunctionName, 4, MakeAndAddRef<InsertIndexDataValuesFunction>());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(upgradeKeyFunctionName));
     return rv;
@@ -3494,7 +3490,7 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
 
   NS_NAMED_LITERAL_CSTRING(functionName, "upgrade");
 
-  rv = aConnection->CreateFunction(functionName, 2, function);
+  rv = aConnection->CreateFunction(functionName, 2, std::move(function));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3701,12 +3697,10 @@ nsresult UpgradeSchemaFrom20_0To21_0(mozIStorageConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom20_0To21_0", DOM);
 
-  RefPtr<UpgradeIndexDataValuesFunction> function =
-      new UpgradeIndexDataValuesFunction();
-
   NS_NAMED_LITERAL_CSTRING(functionName, "upgrade_idv");
 
-  nsresult rv = aConnection->CreateFunction(functionName, 1, function);
+  nsresult rv = aConnection->CreateFunction(
+      functionName, 1, MakeAndAddRef<UpgradeIndexDataValuesFunction>());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10457,7 +10451,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
 
     rv = (*mStorageConnection)
              ->CreateFunction(NS_LITERAL_CSTRING("update_refcount"),
-                              /* aNumArguments */ 2, function);
+                              /* aNumArguments */ 2, do_AddRef(function));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -23870,13 +23864,11 @@ nsresult CreateIndexOp::InsertDataFromObjectStore(
       aConnection->GetStorageConnection();
   MOZ_ASSERT(storageConnection);
 
-  RefPtr<UpdateIndexDataValuesFunction> updateFunction =
-      new UpdateIndexDataValuesFunction(this, aConnection);
-
   NS_NAMED_LITERAL_CSTRING(updateFunctionName, "update_index_data_values");
 
-  nsresult rv =
-      storageConnection->CreateFunction(updateFunctionName, 4, updateFunction);
+  nsresult rv = storageConnection->CreateFunction(
+      updateFunctionName, 4,
+      MakeAndAddRef<UpdateIndexDataValuesFunction>(this, aConnection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
