@@ -144,4 +144,13 @@ inline bool JSObject::is<js::ReadableStreamReader>() const {
   return is<js::ReadableStreamDefaultReader>();
 }
 
+namespace js {
+
+extern MOZ_MUST_USE JSObject* CreateReadableStreamBYOBReader(
+    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
+    ForAuthorCodeBool forAuthorCode = ForAuthorCodeBool::No,
+    JS::Handle<JSObject*> proto = nullptr);
+
+}  // namespace js
+
 #endif  // builtin_streams_ReadableStreamReader_h
