@@ -1366,7 +1366,7 @@ enum class FunctionAsyncKind : bool { SyncFunction, AsyncFunction };
 // ScriptWarmUpData represents a pointer-sized field in BaseScript that stores
 // one of the following using low-bit tags:
 //
-// * The enclosing LazyScript. This is only used while this script is lazy and
+// * The enclosing BaseScript. This is only used while this script is lazy and
 //   its containing script is also lazy. This outer script must be compiled
 //   before the current script can in order to correctly build the scope chain.
 //
@@ -1436,10 +1436,10 @@ class ScriptWarmUpData {
   // NOTE: To change type safely, 'clear' the old tagged value and then 'init'
   //       the new one. This will notify the GC appropriately.
 
-  LazyScript* toEnclosingScript() const {
-    return getTaggedPtr<LazyScript*, EnclosingScriptTag>();
+  BaseScript* toEnclosingScript() const {
+    return getTaggedPtr<BaseScript*, EnclosingScriptTag>();
   }
-  inline void initEnclosingScript(LazyScript* enclosingScript);
+  inline void initEnclosingScript(BaseScript* enclosingScript);
   inline void clearEnclosingScript();
 
   Scope* toEnclosingScope() const {
@@ -2294,16 +2294,14 @@ setterLevel:                                                                  \
 
   void setArgumentsHasVarBinding();
 
-  bool hasEnclosingLazyScript() const {
-    return warmUpData_.isEnclosingScript();
-  }
-  LazyScript* enclosingLazyScript() const {
+  bool hasEnclosingScript() const { return warmUpData_.isEnclosingScript(); }
+  BaseScript* enclosingScript() const {
     return warmUpData_.toEnclosingScript();
   }
-  void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
+  void setEnclosingScript(BaseScript* enclosingScript);
 
   // Returns true if the enclosing script has ever been compiled. Once the
-  // enclosing script is compiled, the scope chain is created. This LazyScript
+  // enclosing script is compiled, the scope chain is created. This BaseScript
   // is delazify-able as long as it has the enclosing scope, even if the
   // enclosing JSScript is GCed.
   bool enclosingScriptHasEverBeenCompiled() const {

@@ -129,9 +129,9 @@ static JSScript* DelazifyScript(JSContext* cx, Handle<BaseScript*> script) {
 
   // JSFunction::getOrCreateScript requires an enclosing scope. This requires
   // the enclosing script to be non-lazy.
-  if (script->hasEnclosingLazyScript()) {
-    Rooted<LazyScript*> enclosingLazyScript(cx, script->enclosingLazyScript());
-    if (!DelazifyScript(cx, enclosingLazyScript)) {
+  if (script->hasEnclosingScript()) {
+    Rooted<BaseScript*> enclosingScript(cx, script->enclosingScript());
+    if (!DelazifyScript(cx, enclosingScript)) {
       return nullptr;
     }
 

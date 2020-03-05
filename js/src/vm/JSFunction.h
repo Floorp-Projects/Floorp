@@ -776,8 +776,8 @@ class JSFunction : public js::NativeObject {
     baseScript()->setEnclosingScope(enclosingScope);
   }
 
-  void setEnclosingLazyScript(js::LazyScript* enclosingScript) {
-    baseScript()->setEnclosingLazyScript(enclosingScript);
+  void setEnclosingLazyScript(js::BaseScript* enclosingScript) {
+    baseScript()->setEnclosingScript(enclosingScript);
   }
 
   js::GeneratorKind generatorKind() const {
@@ -808,7 +808,7 @@ class JSFunction : public js::NativeObject {
     u.scripted.s.script_ = script;
   }
 
-  void initLazyScript(js::LazyScript* lazy) {
+  void initLazyScript(js::BaseScript* lazy) {
     MOZ_ASSERT(isInterpreted());
     u.scripted.s.script_ = lazy;
   }
