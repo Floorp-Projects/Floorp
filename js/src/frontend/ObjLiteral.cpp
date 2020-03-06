@@ -53,10 +53,7 @@ static JSObject* InterpretObjLiteralObj(
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
 
   // Compute property values and build the key/value-pair list.
-  while (true) {
-    if (!reader.readInsn(&insn)) {
-      break;
-    }
+  while (reader.readInsn(&insn)) {
     MOZ_ASSERT(insn.isValid());
 
     jsid propId;
@@ -95,10 +92,7 @@ static JSObject* InterpretObjLiteralArray(
 
   Rooted<ValueVector> elements(cx, ValueVector(cx));
 
-  while (true) {
-    if (!reader.readInsn(&insn)) {
-      break;
-    }
+  while (reader.readInsn(&insn)) {
     MOZ_ASSERT(insn.isValid());
 
     JS::Value propVal = InterpretObjLiteralValue(atoms, insn);
