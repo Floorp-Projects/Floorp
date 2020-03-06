@@ -1251,7 +1251,7 @@ linux64-ccov/opt:
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip
-              path: /builds/worker/workspace/build/src/obj-firefox/code-coverage-grcov.zip
+              path: /builds/worker/workspace/obj-build/code-coverage-grcov.zip
               type: file
         max-run-time: 7200
         env:

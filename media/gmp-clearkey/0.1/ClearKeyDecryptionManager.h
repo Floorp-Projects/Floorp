@@ -30,7 +30,7 @@ class ClearKeyDecryptor;
 
 class CryptoMetaData {
  public:
-  CryptoMetaData() {}
+  CryptoMetaData() = default;
 
   explicit CryptoMetaData(const cdm::InputBuffer_2* aInputBuffer) {
     Init(aInputBuffer);

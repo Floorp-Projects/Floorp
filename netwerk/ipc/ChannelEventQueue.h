@@ -173,7 +173,7 @@ class ChannelEventQueue final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~ChannelEventQueue() {}
+  ~ChannelEventQueue() = default;
 
   void SuspendInternal();
   void ResumeInternal();

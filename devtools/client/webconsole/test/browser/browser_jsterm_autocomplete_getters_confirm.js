@@ -14,7 +14,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
      */
     var obj = props => Object.create(null, Object.getOwnPropertyDescriptors(props));
     let sideEffect;
-    window.foo = obj({
+    var foo = obj({
       get bar() {
         sideEffect = "bar";
         return obj({
@@ -49,12 +49,12 @@ add_task(async function() {
   let tooltip = await setInputValueForGetterConfirmDialog(
     toolbox,
     hud,
-    "window.foo.bar."
+    "foo.bar."
   );
   let labelEl = tooltip.querySelector(".confirm-label");
   is(
     labelEl.textContent,
-    "Invoke getter window.foo.bar to retrieve the property list?",
+    "Invoke getter foo.bar to retrieve the property list?",
     "Dialog has expected text content"
   );
 
@@ -69,13 +69,13 @@ add_task(async function() {
     hasExactPopupLabels(autocompletePopup, ["baz", "bloop"]),
     "popup has expected items"
   );
-  checkInputValueAndCursorPosition(hud, "window.foo.bar.|");
+  checkInputValueAndCursorPosition(hud, "foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   let onPopUpClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpClose;
-  checkInputValueAndCursorPosition(hud, "window.foo.bar.baz|");
+  checkInputValueAndCursorPosition(hud, "foo.bar.baz|");
 
   info(
     "Check that the invoke tooltip is displayed when performing an element access"
@@ -87,7 +87,7 @@ add_task(async function() {
   labelEl = tooltip.querySelector(".confirm-label");
   is(
     labelEl.textContent,
-    "Invoke getter window.foo.bar.baz to retrieve the property list?",
+    "Invoke getter foo.bar.baz to retrieve the property list?",
     "Dialog has expected text content"
   );
 
@@ -102,13 +102,13 @@ add_task(async function() {
     hasExactPopupLabels(autocompletePopup, [`"hello"`, `"world"`]),
     "popup has expected items"
   );
-  checkInputValueAndCursorPosition(hud, "window.foo.bar.baz[|");
+  checkInputValueAndCursorPosition(hud, "foo.bar.baz[|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   onPopUpClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpClose;
-  checkInputValueAndCursorPosition(hud, `window.foo.bar.baz["hello"]|`);
+  checkInputValueAndCursorPosition(hud, `foo.bar.baz["hello"]|`);
 
   info("Check that autocompletion work on a getter result");
   onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -120,15 +120,11 @@ add_task(async function() {
     "popup has expected items"
   );
 
-  tooltip = await setInputValueForGetterConfirmDialog(
-    toolbox,
-    hud,
-    "window.foo.rab."
-  );
+  tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "foo.rab.");
   labelEl = tooltip.querySelector(".confirm-label");
   is(
     labelEl.textContent,
-    "Invoke getter window.foo.rab to retrieve the property list?",
+    "Invoke getter foo.rab to retrieve the property list?",
     "Dialog has expected text content"
   );
 
@@ -146,6 +142,9 @@ add_task(async function() {
     hasPopupLabel(autocompletePopup, "startsWith"),
     "popup has expected items"
   );
-  checkInputValueAndCursorPosition(hud, "window.foo.rab.|");
+  checkInputValueAndCursorPosition(hud, "foo.rab.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
+
+  info("Close autocomplete popup");
+  await closeAutocompletePopup(hud);
 });

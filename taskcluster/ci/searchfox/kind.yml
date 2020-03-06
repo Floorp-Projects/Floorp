@@ -115,7 +115,6 @@ jobs:
         run:
             using: mozharness
             actions: [build]
-            use-caches: false
             options: [append-env-variables-from-configs]
             script: mozharness/scripts/fx_desktop_build.py
             config:
@@ -147,7 +146,7 @@ jobs:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
                 MOZSEARCH_PLATFORM: "android-armv7"
-                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+                GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
         run:
             using: mozharness

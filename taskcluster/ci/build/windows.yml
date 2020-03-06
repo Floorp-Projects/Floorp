@@ -5,7 +5,6 @@
 job-defaults:
     run:
         using: mozharness
-        use-caches: false
         tooltool-downloads: internal
     fetches:
         toolchain:
@@ -311,7 +310,7 @@ win64-cross/opt:
                 # of fetch-content starts while the library is being extracted by
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/workspace/build/src/vs2017_15.8.4/"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['trunk', 'try']
     dependencies:
         win64-clang-cl: toolchain-win64-clang-cl
@@ -737,7 +736,7 @@ win64-ccov/opt:
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip
-              path: build\src\obj-firefox\code-coverage-grcov.zip
+              path: workspace\obj-build\code-coverage-grcov.zip
               type: file
         max-run-time: 7200
         env:

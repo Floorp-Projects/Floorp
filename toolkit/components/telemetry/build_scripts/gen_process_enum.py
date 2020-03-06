@@ -40,7 +40,7 @@ def write_processes_enum(processes, output):
     processes = collections.OrderedDict(processes)
 
     p("enum class ProcessID : uint32_t {")
-    for i, (name, _) in enumerate(processes.iteritems()):
+    for i, (name, _) in enumerate(sorted(processes.items())):
         p("  %s = %d," % (to_enum_label(name), i))
     p("  Count = %d" % len(processes))
     p("};")

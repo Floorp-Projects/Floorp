@@ -3054,7 +3054,7 @@ nsresult Selection::NotifySelectionListeners() {
   // We've notified all selection listeners even when some of them are removed
   // (and may be destroyed) during notifying one of them.  Therefore, we should
   // copy all listeners to the local variable first.
-  AutoTArray<nsCOMPtr<nsISelectionListener>, 5> selectionListeners(
+  const AutoTArray<nsCOMPtr<nsISelectionListener>, 5> selectionListeners(
       mSelectionListeners);
 
   int16_t reason = frameSelection->PopChangeReasons();
@@ -3074,7 +3074,12 @@ nsresult Selection::NotifySelectionListeners() {
     dispatcher->OnSelectionChange(doc, this, reason);
   }
   for (auto& listener : selectionListeners) {
-    listener->NotifySelectionChanged(doc, this, reason);
+    // MOZ_KnownLive because 'selectionListeners' is guaranteed to
+    // keep it alive.
+    //
+    // This can go away once
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+    MOZ_KnownLive(listener)->NotifySelectionChanged(doc, this, reason);
   }
   return NS_OK;
 }

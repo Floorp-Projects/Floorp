@@ -43,4 +43,7 @@ add_task(async function() {
     hasPopupLabel(autocompletePopup, "getNamedItem"),
     "autocomplete popup has expected items"
   );
+
+  info("Close autocomplete popup");
+  await closeAutocompletePopup(hud);
 });

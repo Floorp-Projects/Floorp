@@ -48,9 +48,8 @@ add_task(async function() {
   EventUtils.sendString(".");
   await onAutocompleteUpdated;
 
-  is(
-    popup.items.map(i => i.label).join("-"),
-    ["y".repeat(10), "z".repeat(20)].join("-"),
+  ok(
+    hasExactPopupLabels(popup, ["y".repeat(10), "z".repeat(20)]),
     "popup has expected items"
   );
   const newPopupWidth = popup._tooltip.container.clientWidth;
@@ -75,13 +74,16 @@ add_task(async function() {
     originalWidth,
     "popup is back to its original width"
   );
+
+  info("Close autocomplete popup");
+  await closeAutocompletePopup(hud);
 });
 
 function getLongestLabelWidth(jsterm) {
   return (
     jsterm._inputCharWidth *
-    jsterm.autocompletePopup.items
-      .map(item => item.label)
-      .sort((a, b) => a < b)[0].length
+    getAutocompletePopupLabels(jsterm.autocompletePopup).sort(
+      (a, b) => a < b
+    )[0].length
   );
 }

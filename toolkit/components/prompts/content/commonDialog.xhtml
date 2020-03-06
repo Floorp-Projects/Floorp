@@ -50,9 +50,9 @@
     </menupopup>
   </popupset>
 
-  <!-- The <box> was added in bug 1606617 to workaround bug 1614447 -->
-  <box>
-    <div id="dialogGrid" xmlns="http://www.w3.org/1999/xhtml">
+  <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    <div id="dialogGrid">
       <div class="dialogRow">
         <div id="iconContainer">
           <xul:image id="infoIcon"/>
@@ -82,6 +82,6 @@
         <xul:checkbox id="checkbox" oncommand="Dialog.onCheckbox()"/>
       </div>
     </div>
-  </box>
+  </div>
 </dialog>
 </window>

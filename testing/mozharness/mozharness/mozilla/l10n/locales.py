@@ -137,7 +137,7 @@ class LocalesMixin(object):
             c['locales_dir'],
         )
 
-        dirs['abs_obj_dir'] = os.path.join(dirs['abs_src_dir'],
+        dirs['abs_obj_dir'] = os.path.join(dirs['abs_work_dir'],
                                            c['objdir'])
         dirs['abs_locales_dir'] = os.path.join(dirs['abs_obj_dir'],
                                                c['locales_dir'])

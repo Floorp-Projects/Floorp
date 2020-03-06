@@ -44,7 +44,7 @@ class NonSeekableStream final : public nsIInputStream {
   }
 
  private:
-  ~NonSeekableStream() {}
+  ~NonSeekableStream() = default;
 };
 
 NS_IMPL_ISUPPORTS(NonSeekableStream, nsIInputStream)

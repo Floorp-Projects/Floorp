@@ -1954,7 +1954,13 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     if (!mResizeEventFlushObservers.RemoveElement(presShell)) {
       continue;
     }
-    presShell->FireResizeEvent();
+    // MOZ_KnownLive because 'observers' is guaranteed to
+    // keep it alive.
+    //
+    // Fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 on its own
+    // won't help here, because 'observers' is non-const and we have the
+    // Reversed() going on too...
+    MOZ_KnownLive(presShell)->FireResizeEvent();
   }
   DispatchVisualViewportResizeEvents();
 

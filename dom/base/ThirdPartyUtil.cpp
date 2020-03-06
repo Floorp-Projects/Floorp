@@ -19,6 +19,7 @@
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
@@ -162,8 +163,8 @@ ThirdPartyUtil::GetContentBlockingAllowListPrincipalFromWindow(
     OriginAttributes attrs =
         docShell ? nsDocShell::Cast(docShell)->GetOriginAttributes()
                  : OriginAttributes();
-    AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
-        aURIBeingLoaded, attrs, getter_AddRefs(principal));
+    ContentBlockingAllowList::RecomputePrincipal(aURIBeingLoaded, attrs,
+                                                 getter_AddRefs(principal));
   }
 
   if (!principal || !principal->GetIsContentPrincipal()) {

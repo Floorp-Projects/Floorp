@@ -317,6 +317,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     if (front) {
       if (!form.actor.includes("tabDescriptor")) {
         // Backwards compatibility for servers FF74 and older.
+        front.form(form);
         return front;
       }
 

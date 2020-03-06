@@ -760,7 +760,7 @@ NrIceStats NrIceCtx::Destroy() {
   return stats;
 }
 
-NrIceCtx::~NrIceCtx() {}
+NrIceCtx::~NrIceCtx() = default;
 
 void NrIceCtx::destroy_peer_ctx() { nr_ice_peer_ctx_destroy(&peer_); }
 

@@ -1,6 +1,5 @@
 {
     "log_name": "multilocale",
-    "objdir": "obj-firefox",
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US", "multi"],
     "vcs_share_base": "/builds/hg-shared",

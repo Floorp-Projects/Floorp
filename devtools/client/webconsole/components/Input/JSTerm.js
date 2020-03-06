@@ -116,6 +116,7 @@ class JSTerm extends Component {
       showEditorOnboarding: PropTypes.bool,
       autocomplete: PropTypes.bool,
       showEvaluationSelector: PropTypes.bool,
+      autocompletePopupPosition: PropTypes.string,
     };
   }
 
@@ -173,8 +174,9 @@ class JSTerm extends Component {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
       listId: "webConsole_autocompletePopupListBox",
-      position: "bottom",
+      position: this.props.autocompletePopupPosition,
       autoSelect: true,
+      useXulWrapper: true,
     };
 
     const doc = this.webConsoleUI.document;
@@ -563,6 +565,14 @@ class JSTerm extends Component {
         this.setEditorWidth(null);
       }
     }
+
+    if (
+      nextProps.autocompletePopupPosition !==
+        this.props.autocompletePopupPosition &&
+      this.autocompletePopup
+    ) {
+      this.autocompletePopup.position = nextProps.autocompletePopupPosition;
+    }
   }
 
   /**
@@ -934,7 +944,7 @@ class JSTerm extends Component {
    *        }
    * @fires autocomplete-updated
    */
-  updateAutocompletionPopup(data) {
+  async updateAutocompletionPopup(data) {
     if (!this.editor) {
       return;
     }
@@ -942,7 +952,6 @@ class JSTerm extends Component {
     const { matches, matchProp, isElementAccess } = data;
     if (!matches.length) {
       this.clearCompletion();
-      this.emit("autocomplete-updated");
       return;
     }
 
@@ -1003,7 +1012,7 @@ class JSTerm extends Component {
       const xOffset = -1 * matchProp.length * this._inputCharWidth;
       const yOffset = 5;
       const popupAlignElement = this.props.serviceContainer.getJsTermTooltipAnchor();
-      popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
+      await popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
         preventSelectCallback: true,
       });
     } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
@@ -1056,6 +1065,7 @@ class JSTerm extends Component {
   /**
    * Clear the current completion information, cancel any pending autocompletion update
    * and close the autocomplete popup, if needed.
+   * @fires autocomplete-updated
    */
   clearCompletion() {
     this.autocompleteUpdate.cancel();
@@ -1063,17 +1073,17 @@ class JSTerm extends Component {
     this.terminalInputChanged(this._getValue());
 
     this.setAutoCompletionText("");
+    let onPopupClosed = Promise.resolve();
     if (this.autocompletePopup) {
       this.autocompletePopup.clearItems();
 
       if (this.autocompletePopup.isOpen) {
-        this.autocompletePopup.once("popup-closed", () => {
-          this.focus();
-        });
+        onPopupClosed = this.autocompletePopup.once("popup-closed");
         this.autocompletePopup.hidePopup();
+        onPopupClosed.then(() => this.focus());
       }
-      this.emit("autocomplete-updated");
     }
+    onPopupClosed.then(() => this.emit("autocomplete-updated"));
   }
 
   /**
@@ -1387,6 +1397,7 @@ function mapStateToProps(state) {
     autocompleteData: getAutocompleteState(state),
     showEditorOnboarding: state.ui.showEditorOnboarding,
     showEvaluationSelector: state.ui.showEvaluationSelector,
+    autocompletePopupPosition: state.prefs.eagerEvaluation ? "top" : "bottom",
   };
 }
 

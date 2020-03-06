@@ -60,7 +60,7 @@ bool nsPluginsDir::IsPluginFile(nsIFile* file) {
 
 nsPluginFile::nsPluginFile(nsIFile* file) : mPlugin(file) {}
 
-nsPluginFile::~nsPluginFile() {}
+nsPluginFile::~nsPluginFile() = default;
 
 nsresult nsPluginFile::LoadPlugin(PRLibrary** outLibrary) {
   PRLibSpec libSpec;

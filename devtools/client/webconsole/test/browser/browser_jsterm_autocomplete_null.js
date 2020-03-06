@@ -20,12 +20,11 @@ add_task(async function() {
   await onMessagesCleared;
 
   info(`Create a null variable`);
-  execute(hud, "globalThis.nullVar = null;");
+  // Using the console front directly as we don't want to impact the UI state.
+  await hud.evaluateJSAsync(`globalThis.nullVar = null;`);
 
   info(`Check completion suggestions for "null"`);
-  const onPopUpOpen = popup.once("popup-opened");
-  EventUtils.sendString("null", hud.iframeWindow);
-  await onPopUpOpen;
+  await setInputValueForAutocompletion(hud, "null");
   ok(popup.isOpen, "popup is open");
   const expectedPopupItems = ["null", "nullVar"];
   ok(
@@ -50,6 +49,7 @@ add_task(async function() {
   EventUtils.sendString("Var.", hud.iframeWindow);
   await onAutocompleteUpdated;
   is(popup.itemCount, 0, "popup has no items");
+  is(popup.isOpen, false, "popup is closed");
 
   info(`Check that no error was logged`);
   await waitFor(() => findMessage(hud, "", ".message.error")).then(
@@ -65,5 +65,5 @@ add_task(async function() {
   );
 
   info(`Cleanup`);
-  execute(hud, "delete globalThis.nullVar;");
+  await hud.evaluateJSAsync(`delete globalThis.nullVar;`);
 });

@@ -148,6 +148,11 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString searchForm;
 
   /**
+   * The identifier to use for this engine when submitting to telemetry.
+   */
+  readonly attribute AString telemetryId;
+
+  /**
    * An optional unique identifier for this search engine within the context of
    * the distribution, as provided by the distributing entity.
    */

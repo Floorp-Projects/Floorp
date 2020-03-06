@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
-    name='retrigger-mochitest',
-    title='Retrigger Mochitest/Reftest with Debugging',
+    name='retrigger-custom',
+    title='Retrigger task with custom parameters',
     symbol='rt',
     generic=True,
-    description="Retriggers the specified mochitest/reftest job with additional options",
+    description="Retriggers the specified task with custom environment and parameters",
     context=[{'test-type': 'mochitest'},
              {'test-type': 'reftest'}],
     order=10,
@@ -81,7 +81,7 @@ logger = logging.getLogger(__name__)
         'required': ['path']
     }
 )
-def mochitest_retrigger_action(parameters, graph_config, input, task_group_id, task_id):
+def custom_retrigger_action(parameters, graph_config, input, task_group_id, task_id):
     task = taskcluster.get_task_definition(task_id)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)
