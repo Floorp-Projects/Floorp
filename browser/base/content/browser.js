@@ -3342,67 +3342,6 @@ function BrowserPageInfo(
   );
 }
 
-/**
- * Sets the URI to display in the location bar.
- *
- * @param aURI [optional]
- *        nsIURI to set. If this is unspecified, the current URI will be used.
- * @param updatePopupNotifications [optional]
- *        Passed though to SetPageProxyState, indicates whether the
- *        PopupNotifications need updated.
- */
-function URLBarSetURI(aURI, updatePopupNotifications) {
-  var value = gBrowser.userTypedValue;
-  var valid = false;
-
-  // Explicitly check for nulled out value. We don't want to reset the URL
-  // bar if the user has deleted the URL and we'd just put the same URL
-  // back. See bug 304198.
-  if (value === null) {
-    let uri = aURI || gBrowser.currentURI;
-    // Strip off usernames and passwords for the location bar
-    try {
-      uri = Services.uriFixup.createExposableURI(uri);
-    } catch (e) {}
-
-    // Replace initial page URIs with an empty string
-    // only if there's no opener (bug 370555).
-    if (
-      isInitialPage(uri) &&
-      checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)
-    ) {
-      value = "";
-    } else {
-      // We should deal with losslessDecodeURI throwing for exotic URIs
-      try {
-        value = gURLBar._losslessDecodeURI(uri);
-      } catch (ex) {
-        value = "about:blank";
-      }
-    }
-
-    valid = !isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
-  } else if (
-    isInitialPage(value) &&
-    checkEmptyPageOrigin(gBrowser.selectedBrowser)
-  ) {
-    value = "";
-    valid = true;
-  }
-
-  let isDifferentValidValue = valid && value != gURLBar.value;
-  gURLBar.value = value;
-  gURLBar.valueIsTyped = !valid;
-  gURLBar.removeAttribute("usertyping");
-  if (isDifferentValidValue) {
-    // The selection is enforced only for new values, to avoid overriding the
-    // cursor position when the user switches windows while typing.
-    gURLBar.selectionStart = gURLBar.selectionEnd = 0;
-  }
-
-  SetPageProxyState(valid ? "valid" : "invalid", updatePopupNotifications);
-}
-
 function UpdateUrlbarSearchSplitterState() {
   var splitter = document.getElementById("urlbar-search-splitter");
   var urlbar = document.getElementById("urlbar-container");
@@ -5386,7 +5325,7 @@ var XULBrowserWindow = {
       // via simulated locationchange events such as switching between tabs, however
       // if this is a document navigation then PopupNotifications will be updated
       // via TabsProgressListener.onLocationChange and we do not want it called twice
-      URLBarSetURI(aLocationURI, aIsSimulated);
+      gURLBar.setURI(aLocationURI, aIsSimulated);
 
       BookmarkingUI.onLocationChange();
 

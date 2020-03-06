@@ -5961,8 +5961,8 @@
             this.mBrowser.userTypedValue = null;
 
             let isNavigating = this.mBrowser.isNavigating;
-            if (this.mTab.selected && gURLBar && !isNavigating) {
-              URLBarSetURI();
+            if (this.mTab.selected && !isNavigating) {
+              gURLBar.setURI();
             }
           } else if (isSuccessful) {
             this.mBrowser.urlbarChangeTracker.finishedLoad();
