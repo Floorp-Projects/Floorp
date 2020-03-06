@@ -46,16 +46,6 @@ impl<'builder> RecipeGroup<'builder> {
         self.templates.push(template.clone());
         template
     }
-    fn add_template_inferred(
-        &mut self,
-        recipe: EncodingRecipeBuilder,
-        infer_function: &'static str,
-    ) -> Rc<Template<'builder>> {
-        let template =
-            Rc::new(Template::new(recipe, self.regs).inferred_rex_compute_size(infer_function));
-        self.templates.push(template.clone());
-        template
-    }
     fn add_template(&mut self, template: Template<'builder>) -> Rc<Template<'builder>> {
         let template = Rc::new(template);
         self.templates.push(template.clone());
@@ -1491,7 +1481,7 @@ pub(crate) fn define<'shared>(
         );
 
         // XX /r register-indirect store of FPR with no offset.
-        recipes.add_template_inferred(
+        recipes.add_template_recipe(
             EncodingRecipeBuilder::new("fst", &formats.store, 1)
                 .operands_in(vec![fpr, gpr])
                 .inst_predicate(has_no_offset)
@@ -1514,7 +1504,6 @@ pub(crate) fn define<'shared>(
                         }
                     "#,
                 ),
-            "size_plus_maybe_sib_or_offset_inreg1_plus_rex_prefix_for_inreg0_inreg1",
         );
 
         let has_small_offset =
@@ -2002,7 +1991,7 @@ pub(crate) fn define<'shared>(
         );
 
         // XX /r float load with no offset.
-        recipes.add_template_inferred(
+        recipes.add_template_recipe(
             EncodingRecipeBuilder::new("fld", &formats.load, 1)
                 .operands_in(vec![gpr])
                 .operands_out(vec![fpr])
@@ -2026,7 +2015,6 @@ pub(crate) fn define<'shared>(
                         }
                     "#,
                 ),
-            "size_plus_maybe_sib_or_offset_for_inreg_0_plus_rex_prefix_for_inreg0_outreg0",
         );
 
         let has_small_offset =
@@ -2527,7 +2515,7 @@ pub(crate) fn define<'shared>(
             ),
     );
 
-    recipes.add_template_inferred(
+    recipes.add_template_recipe(
         EncodingRecipeBuilder::new("vconst", &formats.unary_const, 5)
             .operands_out(vec![fpr])
             .clobbers_flags(false)
@@ -2538,10 +2526,9 @@ pub(crate) fn define<'shared>(
                     const_disp4(constant_handle, func, sink);
                 "#,
             ),
-        "size_with_inferred_rex_for_outreg0",
     );
 
-    recipes.add_template_inferred(
+    recipes.add_template_recipe(
         EncodingRecipeBuilder::new("vconst_optimized", &formats.unary_const, 1)
             .operands_out(vec![fpr])
             .clobbers_flags(false)
@@ -2551,7 +2538,6 @@ pub(crate) fn define<'shared>(
                     modrm_rr(out_reg0, out_reg0, sink);
                 "#,
             ),
-        "size_with_inferred_rex_for_outreg0",
     );
 
     recipes.add_template_recipe(
@@ -3259,72 +3245,9 @@ pub(crate) fn define<'shared>(
     recipes.add_recipe(
         EncodingRecipeBuilder::new("safepoint", &formats.multiary, 0).emit(
             r#"
-                sink.add_stackmap(args, func, isa);
-            "#,
+            sink.add_stackmap(args, func, isa);
+        "#,
         ),
-    );
-
-    // Both `elf_tls_get_addr` and `macho_tls_get_addr` require all caller-saved registers to be spilled.
-    // This is currently special cased in `regalloc/spilling.rs` in the `visit_inst` function.
-
-    recipes.add_recipe(
-        EncodingRecipeBuilder::new("elf_tls_get_addr", &formats.unary_global_value, 16)
-            // FIXME Correct encoding for non rax registers
-            .operands_out(vec![reg_rax])
-            .emit(
-                r#"
-                    // output %rax
-                    // clobbers %rdi
-
-                    // Those data16 prefixes are necessary to pad to 16 bytes.
-
-                    // data16 lea gv@tlsgd(%rip),%rdi
-                    sink.put1(0x66); // data16
-                    sink.put1(0b01001000); // rex.w
-                    const LEA: u8 = 0x8d;
-                    sink.put1(LEA); // lea
-                    modrm_riprel(0b111/*out_reg0*/, sink); // 0x3d
-                    sink.reloc_external(Reloc::ElfX86_64TlsGd,
-                                        &func.global_values[global_value].symbol_name(),
-                                        -4);
-                    sink.put4(0);
-
-                    // data16 data16 callq __tls_get_addr-4
-                    sink.put1(0x66); // data16
-                    sink.put1(0x66); // data16
-                    sink.put1(0b01001000); // rex.w
-                    sink.put1(0xe8); // call
-                    sink.reloc_external(Reloc::X86CallPLTRel4,
-                                        &ExternalName::LibCall(LibCall::ElfTlsGetAddr),
-                                        -4);
-                    sink.put4(0);
-                "#,
-            ),
-    );
-
-    recipes.add_recipe(
-        EncodingRecipeBuilder::new("macho_tls_get_addr", &formats.unary_global_value, 9)
-            // FIXME Correct encoding for non rax registers
-            .operands_out(vec![reg_rax])
-            .emit(
-                r#"
-                    // output %rax
-                    // clobbers %rdi
-
-                    // movq gv@tlv(%rip), %rdi
-                    sink.put1(0x48); // rex
-                    sink.put1(0x8b); // mov
-                    modrm_riprel(0b111/*out_reg0*/, sink); // 0x3d
-                    sink.reloc_external(Reloc::MachOX86_64Tlv,
-                                        &func.global_values[global_value].symbol_name(),
-                                        -4);
-                    sink.put4(0);
-
-                    // callq *(%rdi)
-                    sink.put1(0xff);
-                    sink.put1(0x17);
-                "#,
-            ),
     );
 
     recipes
