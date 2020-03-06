@@ -6888,6 +6888,13 @@
   value: 60000
   mirror: always
 
+# We would only use media control to control media which duration is longer
+# than this value.
+- name: media.mediacontrol.eligible.media.duration.s
+  type: AtomicFloat
+  value: 3.0f
+  mirror: always
+
 - name: media.webrtc.platformencoder
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
