@@ -26,6 +26,10 @@ class Picker {
     return this._panel._toolbox;
   }
 
+  get accessibilityProxy() {
+    return this._panel.accessibilityProxy;
+  }
+
   get pickerButton() {
     return this.toolbox.pickerButton;
   }
@@ -71,8 +75,8 @@ class Picker {
   updateButton() {
     this.pickerButton.description = this.getStr("accessibility.pick");
     this.pickerButton.className = "accessibility";
-    this.pickerButton.disabled = !this._panel.front.enabled;
-    if (!this._panel.front.enabled && this.isPicking) {
+    this.pickerButton.disabled = !this.accessibilityProxy.enabled;
+    if (!this.accessibilityProxy.enabled && this.isPicking) {
       this.cancel();
     }
   }
@@ -138,7 +142,7 @@ class Picker {
     this.isPicking = false;
     this.pickerButton.isChecked = false;
 
-    await this._panel.cancelPick(
+    await this.accessibilityProxy.cancelPick(
       this.onPickerAccessibleHovered,
       this.onPickerAccessiblePicked,
       this.onPickerAccessiblePreviewed,
@@ -166,7 +170,7 @@ class Picker {
     this.isPicking = true;
     this.pickerButton.isChecked = true;
 
-    await this._panel.pick(
+    await this.accessibilityProxy.pick(
       doFocus,
       this.onPickerAccessibleHovered,
       this.onPickerAccessiblePicked,
