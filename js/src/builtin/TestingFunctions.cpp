@@ -85,9 +85,7 @@
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
 #include "wasm/WasmBaselineCompile.h"
-#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmInstance.h"
-#include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -722,25 +720,25 @@ static bool WasmIsSupported(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmIsSupportedByHardware(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::HasPlatformSupport(cx));
+  args.rval().setBoolean(wasm::HasCompilerSupport(cx));
   return true;
 }
 
 static bool WasmDebuggingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::HasSupport(cx) && wasm::BaselineAvailable(cx));
+  args.rval().setBoolean(wasm::HasSupport(cx) && cx->options().wasmBaseline());
   return true;
 }
 
 static bool WasmStreamingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::StreamingCompilationAvailable(cx));
+  args.rval().setBoolean(wasm::HasStreamingSupport(cx));
   return true;
 }
 
 static bool WasmCachingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::CodeCachingAvailable(cx));
+  args.rval().setBoolean(wasm::HasCachingSupport(cx));
   return true;
 }
 
@@ -754,9 +752,26 @@ static bool WasmHugeMemoryIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmUsesCranelift(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_WASM_CRANELIFT
+  bool usesCranelift = cx->options().wasmCranelift();
+#else
+  bool usesCranelift = false;
+#endif
+  args.rval().setBoolean(usesCranelift);
+  return true;
+}
+
 static bool WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::ThreadsAvailable(cx));
+  bool isSupported = wasm::HasSupport(cx);
+#ifdef ENABLE_WASM_CRANELIFT
+  if (cx->options().wasmCranelift()) {
+    isSupported = false;
+  }
+#endif
+  args.rval().setBoolean(isSupported);
   return true;
 }
 
@@ -774,71 +789,47 @@ static bool WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmReftypesEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::ReftypesAvailable(cx));
+  args.rval().setBoolean(wasm::HasReftypesSupport(cx));
   return true;
 }
 
 static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::GcTypesAvailable(cx));
+  args.rval().setBoolean(wasm::HasGcSupport(cx));
   return true;
 }
 
 static bool WasmMultiValueEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::MultiValuesAvailable(cx));
+  args.rval().setBoolean(wasm::HasMultiValueSupport(cx));
   return true;
 }
 
 static bool WasmBigIntEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::I64BigIntConversionAvailable(cx));
+  args.rval().setBoolean(wasm::HasI64BigIntSupport(cx));
   return true;
 }
 
-static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmDebugSupport(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  char buf[256];
-  *buf = 0;
-  if (wasm::HasSupport(cx)) {
-    if (wasm::BaselinePlatformSupport()) {
-      strcat(buf, "baseline");
-    }
-    if (wasm::IonPlatformSupport()) {
-      if (*buf) {
-        strcat(buf, ",");
-      }
-      strcat(buf, "ion");
-    }
-    if (wasm::CraneliftPlatformSupport()) {
-      if (*buf) {
-        strcat(buf, ",");
-      }
-      strcat(buf, "cranelift");
-    }
-  }
-
-  JSString* result = JS_NewStringCopyZ(cx, buf);
-  if (!result) {
-    return false;
-  }
-
-  args.rval().setString(result);
+  args.rval().setBoolean(cx->options().wasmBaseline() &&
+                         wasm::BaselineCanCompile());
   return true;
 }
 
 static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // This triplet of predicates will select zero or one baseline compiler and
-  // zero or one optimizing compiler.
-  bool baseline = wasm::BaselineAvailable(cx);
-  bool ion = wasm::IonAvailable(cx);
-  bool cranelift = wasm::CraneliftAvailable(cx);
+  bool baseline = cx->options().wasmBaseline();
+  bool ion = cx->options().wasmIon();
+#ifdef ENABLE_WASM_CRANELIFT
+  bool cranelift = cx->options().wasmCranelift();
+#else
+  bool cranelift = false;
+#endif
 
-  MOZ_ASSERT(!(ion && cranelift));
-
+  // We default to ion if nothing is enabled, as does the Wasm compiler.
   JSString* result;
   if (!wasm::HasSupport(cx)) {
     result = JS_NewStringCopyZ(cx, "none");
@@ -6638,6 +6629,12 @@ gc::ZealModeHelpText),
 "  Returns a boolean indicating whether WebAssembly supports using a large"
 "  virtual memory reservation in order to elide bounds checks on this platform."),
 
+    JS_FN_HELP("wasmUsesCranelift", WasmUsesCranelift, 0, 0,
+"wasmUsesCranelift()",
+"  Returns a boolean indicating whether Cranelift is currently enabled for backend\n"
+"  compilation. This doesn't necessarily mean a module will be compiled with \n"
+"  Cranelift (e.g. when baseline is also enabled)."),
+
     JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
 "wasmThreadsSupported()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
@@ -6648,19 +6645,10 @@ gc::ZealModeHelpText),
 "  Returns a boolean indicating whether the WebAssembly bulk memory proposal is\n"
 "  supported on the current device."),
 
-    JS_FN_HELP("wasmCompilersPresent", WasmCompilersPresent, 0, 0,
-"wasmCompilersPresent()",
-"  Returns a string indicating the present wasm compilers: a comma-separated list\n"
-"  of 'baseline', 'ion', and 'cranelift'.  A compiler is present in the executable\n"
-"  if it is compiled in and can generate code for the current architecture."),
-
     JS_FN_HELP("wasmCompileMode", WasmCompileMode, 0, 0,
 "wasmCompileMode()",
-"  Returns a string indicating the available wasm compilers: 'baseline', 'ion',\n"
-"  'cranelift', 'baseline+ion', 'baseline+cranelift', or 'none'.  A compiler is\n"
-"  available if it is present in the executable and not disabled by switches\n"
-"  or runtime conditions.  At most one baseline and one optimizing compiler can\n"
-"  be available."),
+"  Returns a string indicating the available compile policy: 'baseline', 'ion',\n"
+"  'baseline-or-ion', or 'disabled' (if wasm is not available at all)."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",
@@ -6704,6 +6692,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmBigIntEnabled", WasmBigIntEnabled, 1, 0,
 "wasmBigIntEnabled()",
 "  Returns a boolean indicating whether the WebAssembly I64 to BigInt proposal is enabled."),
+
+    JS_FN_HELP("wasmDebugSupport", WasmDebugSupport, 1, 0,
+"wasmDebugSupport()",
+"  Returns a boolean indicating whether the WebAssembly compilers support debugging."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",

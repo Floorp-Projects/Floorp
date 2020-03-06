@@ -64,74 +64,7 @@ using mozilla::RangedPtr;
 
 extern mozilla::Atomic<bool> fuzzingSafe;
 
-static inline bool WasmMultiValueFlag(JSContext* cx) {
-#ifdef ENABLE_WASM_MULTI_VALUE
-  return true;
-#else
-  return false;
-#endif
-}
-
-// Compiler availability predicates.  These must be kept in sync with the
-// feature predicates in the next section below.
-//
-// These can't call the feature predicates since the feature predicates call
-// back to these predicates.  So there will be a small amount of duplicated
-// logic here, but as compilers reach feature parity that duplication will go
-// away.
-//
-// There's a static precedence order between the optimizing compilers.  This
-// order currently ranks Cranelift over Ion on all platforms because Cranelift
-// is disabled by default on all platforms: anyone who has enabled Cranelift
-// will wish to use it instead of Ion.
-//
-// The precedence order is implemented by guards in IonAvailable() and
-// CraneliftAvailable().  We expect that it will become more complex as the
-// default settings change.  But it should remain static.
-
-bool wasm::BaselineAvailable(JSContext* cx) {
-  // Baseline supports every feature supported by any compiler.
-  return cx->options().wasmBaseline() && BaselinePlatformSupport();
-}
-
-bool wasm::IonAvailable(JSContext* cx) {
-  if (!cx->options().wasmIon() || !IonPlatformSupport()) {
-    return false;
-  }
-
-  // Ion has no debugging support, no gc support.
-  bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
-  bool gc = cx->options().wasmGc();
-  bool cranelift = CraneliftAvailable(cx);
-  return !debug && !gc && !cranelift;
-}
-
-bool wasm::CraneliftAvailable(JSContext* cx) {
-  if (!cx->options().wasmCranelift() || !CraneliftPlatformSupport()) {
-    return false;
-  }
-
-  // Cranelift has no debugging support, no gc support, no multi-value support,
-  // no threads.
-  bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
-  bool gc = cx->options().wasmGc();
-  bool multiValue = WasmMultiValueFlag(cx);
-  bool threads =
-      cx->realm() &&
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  return !debug && !gc && !multiValue && !threads;
-}
-
-// Feature predicates.  These must be kept in sync with the predicates in the
-// section above.
-//
-// The meaning of these predicates is tricky: A predicate is true for a feature
-// if the feature is enabled and/or compiled-in *and* we have *at least one*
-// compiler that can support the feature.  Subsequent compiler selection must
-// ensure that only compilers that actually support the feature are used.
-
-bool wasm::ReftypesAvailable(JSContext* cx) {
-  // All compilers support reference types.
+bool wasm::HasReftypesSupport(JSContext* cx) {
 #ifdef ENABLE_WASM_REFTYPES
   return true;
 #else
@@ -139,18 +72,38 @@ bool wasm::ReftypesAvailable(JSContext* cx) {
 #endif
 }
 
-bool wasm::GcTypesAvailable(JSContext* cx) {
-  // Cranelift and Ion do not support GC.
-  return cx->options().wasmGc() && BaselineAvailable(cx);
+bool wasm::HasGcSupport(JSContext* cx) {
+#ifdef ENABLE_WASM_CRANELIFT
+  if (cx->options().wasmCranelift()) {
+    return false;
+  }
+#endif
+#ifdef ENABLE_WASM_GC
+  return cx->options().wasmGc() && cx->options().wasmBaseline();
+#else
+  return false;
+#endif
 }
 
-bool wasm::MultiValuesAvailable(JSContext* cx) {
-  // Cranelift does not support multi-value.
-  return WasmMultiValueFlag(cx) && (BaselineAvailable(cx) || IonAvailable(cx));
+bool wasm::HasMultiValueSupport(JSContext* cx) {
+#ifdef ENABLE_WASM_CRANELIFT
+  if (cx->options().wasmCranelift()) {
+    return false;
+  }
+#endif
+#ifdef ENABLE_WASM_MULTI_VALUE
+  return true;
+#else
+  return false;
+#endif
 }
 
-bool wasm::I64BigIntConversionAvailable(JSContext* cx) {
-  // All compilers support int64<->bigint conversion.
+bool wasm::HasI64BigIntSupport(JSContext* cx) {
+#ifdef ENABLE_WASM_CRANELIFT
+  if (cx->options().wasmCranelift()) {
+    return false;
+  }
+#endif
 #ifdef ENABLE_WASM_BIGINT
   return cx->options().isWasmBigIntEnabled();
 #else
@@ -158,14 +111,7 @@ bool wasm::I64BigIntConversionAvailable(JSContext* cx) {
 #endif
 }
 
-bool wasm::ThreadsAvailable(JSContext* cx) {
-  // Cranelift does not support atomics.
-  return cx->realm() &&
-         cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled() &&
-         (BaselineAvailable(cx) || IonAvailable(cx));
-}
-
-bool wasm::HasPlatformSupport(JSContext* cx) {
+bool wasm::HasCompilerSupport(JSContext* cx) {
 #if !MOZ_LITTLE_ENDIAN() || defined(JS_CODEGEN_NONE)
   return false;
 #endif
@@ -197,10 +143,22 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
   }
 #endif
 
-  // Test only whether the compilers are supported on the hardware, not whether
-  // they are enabled.
-  return BaselinePlatformSupport() || IonPlatformSupport() ||
-         CraneliftPlatformSupport();
+  return BaselineCanCompile() || IonCanCompile() || CraneliftCanCompile();
+}
+
+bool wasm::HasOptimizedCompilerTier(JSContext* cx) {
+  return (cx->options().wasmIon() && IonCanCompile())
+#ifdef ENABLE_WASM_CRANELIFT
+         || (cx->options().wasmCranelift() && CraneliftCanCompile())
+#endif
+      ;
+}
+
+// Return whether wasm compilation is allowed by prefs.  This check
+// only makes sense if HasCompilerSupport() is true.
+static bool HasAvailableCompilerTier(JSContext* cx) {
+  return (cx->options().wasmBaseline() && BaselineCanCompile()) ||
+         HasOptimizedCompilerTier(cx);
 }
 
 bool wasm::HasSupport(JSContext* cx) {
@@ -212,11 +170,10 @@ bool wasm::HasSupport(JSContext* cx) {
                   cx->realm()->principals() &&
                   cx->realm()->principals()->isSystemOrAddonPrincipal();
   }
-  return prefEnabled && HasPlatformSupport(cx) &&
-         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
+  return prefEnabled && HasCompilerSupport(cx) && HasAvailableCompilerTier(cx);
 }
 
-bool wasm::StreamingCompilationAvailable(JSContext* cx) {
+bool wasm::HasStreamingSupport(JSContext* cx) {
   // This should match EnsureStreamSupport().
   return HasSupport(cx) &&
          cx->runtime()->offThreadPromiseState.ref().initialized() &&
@@ -224,12 +181,8 @@ bool wasm::StreamingCompilationAvailable(JSContext* cx) {
          cx->runtime()->reportStreamErrorCallback;
 }
 
-bool wasm::CodeCachingAvailable(JSContext* cx) {
-  // At the moment, we require Ion support for code caching.  The main reason
-  // for this is that wasm::CompileAndSerialize() does not have access to
-  // information about which optimizing compiler it should use.  See comments in
-  // CompileAndSerialize(), below.
-  return StreamingCompilationAvailable(cx) && IonAvailable(cx);
+bool wasm::HasCachingSupport(JSContext* cx) {
+  return HasStreamingSupport(cx) && HasOptimizedCompilerTier(cx);
 }
 
 bool wasm::CheckRefType(JSContext* cx, RefType::Kind targetTypeKind,
@@ -289,7 +242,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
     }
     case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
-      if (I64BigIntConversionAvailable(cx)) {
+      if (HasI64BigIntSupport(cx)) {
         BigInt* bigint = ToBigInt(cx, v);
         if (!bigint) {
           return false;
@@ -336,7 +289,7 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
       return true;
     case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
-      if (I64BigIntConversionAvailable(cx)) {
+      if (HasI64BigIntSupport(cx)) {
         BigInt* bi = BigInt::createFromInt64(cx, val.i64());
         if (!bi) {
           return false;
@@ -489,7 +442,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           obj->val(&val);
         } else {
           if (IsNumberType(global.type())) {
-            if (I64BigIntConversionAvailable(cx)) {
+            if (HasI64BigIntSupport(cx)) {
               if (global.type() == ValType::I64 && v.isNumber()) {
                 return ThrowBadImportType(cx, import.field.get(), "BigInt");
               }
@@ -638,15 +591,10 @@ bool wasm::CompileAndSerialize(const ShareableBytes& bytecode,
     return false;
   }
 
-  // The caller has ensured CodeCachingAvailable(). Moreover, we want to ensure
+  // The caller has ensured HasCachingSupport(). Moreover, we want to ensure
   // we go straight to tier-2 so that we synchronously call
   // JS::OptimizedEncodingListener::storeOptimizedEncoding().
   compileArgs->baselineEnabled = false;
-
-  // We always pick Ion here, and we depend on CodeCachingAvailable() having
-  // determined that Ion is available, see comments at CodeCachingAvailable().
-  // To do better, we need to pass information about which compiler that should
-  // be used into CompileAndSerialize().
   compileArgs->ionEnabled = true;
 
   // The caller must ensure that huge memory support is configured the same in
@@ -2329,7 +2277,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef ENABLE_WASM_REFTYPES
   } else if (StringEqualsLiteral(elementLinearStr, "anyref") ||
              StringEqualsLiteral(elementLinearStr, "nullref")) {
-    if (!ReftypesAvailable(cx)) {
+    if (!HasReftypesSupport(cx)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_ELEMENT);
       return false;
@@ -2787,18 +2735,18 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   } else if (StringEqualsLiteral(typeLinearStr, "f64")) {
     globalType = ValType::F64;
 #ifdef ENABLE_WASM_BIGINT
-  } else if (I64BigIntConversionAvailable(cx) &&
+  } else if (HasI64BigIntSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "i64")) {
     globalType = ValType::I64;
 #endif
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (ReftypesAvailable(cx) &&
+  } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "funcref")) {
     globalType = RefType::func();
-  } else if (ReftypesAvailable(cx) &&
+  } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "anyref")) {
     globalType = RefType::any();
-  } else if (ReftypesAvailable(cx) &&
+  } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "nullref")) {
     globalType = RefType::null();
 #endif
@@ -2874,7 +2822,7 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
       return true;
     case ValType::I64:
 #ifdef ENABLE_WASM_BIGINT
-      if (I64BigIntConversionAvailable(cx)) {
+      if (HasI64BigIntSupport(cx)) {
         return args.thisv().toObject().as<WasmGlobalObject>().value(
             cx, args.rval());
       }
@@ -2918,7 +2866,7 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (global->type() == ValType::I64 && !I64BigIntConversionAvailable(cx)) {
+  if (global->type() == ValType::I64 && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
     return false;
@@ -2942,7 +2890,7 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
       break;
     case ValType::I64:
 #ifdef ENABLE_WASM_BIGINT
-      MOZ_ASSERT(I64BigIntConversionAvailable(cx),
+      MOZ_ASSERT(HasI64BigIntSupport(cx),
                  "expected BigInt support for setting I64 global");
       cell->i64 = val.get().i64();
 #endif
@@ -3420,7 +3368,7 @@ static bool WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool EnsureStreamSupport(JSContext* cx) {
-  // This should match wasm::StreamingCompilationAvailable().
+  // This should match wasm::HasStreamingSupport().
 
   if (!EnsurePromiseSupport(cx)) {
     return false;

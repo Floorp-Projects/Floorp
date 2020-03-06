@@ -35,63 +35,48 @@ class SharedArrayRawBuffer;
 
 namespace wasm {
 
-// Return whether WebAssembly can in principle be compiled on this platform (ie
-// combination of hardware and OS), assuming at least one of the compilers that
-// supports the platform is not disabled by other settings.
-//
-// This predicate must be checked and must be true to call any of the top-level
-// wasm eval/compile methods.
+// Return whether WebAssembly can be compiled on this platform.
+// This must be checked and must be true to call any of the top-level wasm
+// eval/compile methods.
 
-bool HasPlatformSupport(JSContext* cx);
+bool HasCompilerSupport(JSContext* cx);
+
+// Return whether WebAssembly has support for an optimized compiler backend.
+
+bool HasOptimizedCompilerTier(JSContext* cx);
 
 // Return whether WebAssembly is supported on this platform. This determines
 // whether the WebAssembly object is exposed to JS and takes into account
-// configuration options that disable various modes.  It also checks that at
-// least one compiler is (currently) available.
+// configuration options that disable various modes.
 
 bool HasSupport(JSContext* cx);
 
-// Predicates for compiler availability.
-//
-// These three predicates together select zero or one baseline compiler and zero
-// or one optimizing compiler, based on: what's compiled into the executable,
-// what's supported on the current platform, what's selected by options, and the
-// current run-time environment.  As it is possible for the computed values to
-// change (when a value changes in about:config or the debugger pane is shown or
-// hidden), it is inadvisable to cache these values in such a way that they
-// could become invalid.  Generally it is cheap always to recompute them.
+// Return whether WebAssembly streaming/caching is supported on this platform.
+// This takes into account prefs and necessary embedding callbacks.
 
-bool BaselineAvailable(JSContext* cx);
-bool IonAvailable(JSContext* cx);
-bool CraneliftAvailable(JSContext* cx);
+bool HasStreamingSupport(JSContext* cx);
 
-// Predicates for feature availability.
-//
-// The following predicates check whether particular wasm features are enabled,
-// and for each, whether at least one compiler is (currently) available that
-// supports the feature.
+bool HasCachingSupport(JSContext* cx);
 
-// Streaming compilation.
-bool StreamingCompilationAvailable(JSContext* cx);
+// Returns true if WebAssembly as configured by compile-time flags and run-time
+// options can support reference types and stack walking.
 
-// Caching of optimized code.  Implies both streaming compilation and an
-// optimizing compiler tier.
-bool CodeCachingAvailable(JSContext* cx);
+bool HasReftypesSupport(JSContext* cx);
 
-// General reference types (anyref, funcref, nullref) and operations on them.
-bool ReftypesAvailable(JSContext* cx);
+// Returns true if WebAssembly as configured by compile-time flags and run-time
+// options can support (ref T) types and structure types, etc (evolving).
 
-// Experimental (ref T) types and structure types.
-bool GcTypesAvailable(JSContext* cx);
+bool HasGcSupport(JSContext* cx);
 
-// Multi-value block and function returns.
-bool MultiValuesAvailable(JSContext* cx);
+// Returns true if WebAssembly as configured by compile-time flags and run-time
+// options can support multi-value block and function returns (evolving).
 
-// I64<->BigInt interconversion at the wasm/JS boundary.
-bool I64BigIntConversionAvailable(JSContext* cx);
+bool HasMultiValueSupport(JSContext* cx);
 
-// Shared memory and atomics.
-bool ThreadsAvailable(JSContext* cx);
+// Returns true if WebAssembly as configured by compile-time flags and run-time
+// options can support I64 to BigInt conversion.
+
+bool HasI64BigIntSupport(JSContext* cx);
 
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
