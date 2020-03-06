@@ -58,7 +58,7 @@ class SplitNodeTransaction final : public EditTransactionBase {
   nsIContent* GetNewNode();
 
  protected:
-  virtual ~SplitNodeTransaction();
+  virtual ~SplitNodeTransaction() = default;
 
   RefPtr<EditorBase> mEditorBase;
 

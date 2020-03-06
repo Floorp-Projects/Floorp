@@ -51,8 +51,6 @@ InsertNodeTransaction::InsertNodeTransaction(
   Unused << mPointToInsert.GetChild();
 }
 
-InsertNodeTransaction::~InsertNodeTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTransactionBase,
                                    mEditorBase, mContentToInsert,
                                    mPointToInsert)
