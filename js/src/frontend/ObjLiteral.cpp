@@ -68,7 +68,7 @@ static JSObject* InterpretObjLiteralObj(
       propVal = InterpretObjLiteralValue(atoms, insn);
     }
 
-    if (!properties.append(IdValuePair(propId, propVal))) {
+    if (!properties.emplaceBack(propId, propVal)) {
       return nullptr;
     }
   }
