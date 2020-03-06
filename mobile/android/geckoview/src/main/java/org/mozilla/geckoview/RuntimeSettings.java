@@ -90,6 +90,9 @@ public abstract class RuntimeSettings implements Parcelable {
         }
 
         public void commit(final T newValue) {
+            if (newValue.equals(mValue)) {
+                return;
+            }
             set(newValue);
             commit();
         }
