@@ -193,6 +193,11 @@ add_task(async function test_keyboard_navigation() {
   ok(ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[1].classList.contains("keyboard-selected"), `second item should be marked as keyboard-selected (DOWN)`);
   selectedGuid = ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[1].dataset.guid;
 
+  synthesizeKey("VK_DOWN", { repeat: 5 });
+  ok(ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[6].classList.contains("keyboard-selected"), `sixth item should be marked as keyboard-selected after 5 DOWN repeats`);
+  synthesizeKey("VK_UP", { repeat: 5 });
+  ok(ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[1].classList.contains("keyboard-selected"), `second item should be marked as keyboard-selected again after 5 UP repeats`);
+
   loginSelectedEvent = null;
   gLoginList.addEventListener("AboutLoginsLoginSelected", event => loginSelectedEvent = event, {once: true});
   sendKey("RETURN");
