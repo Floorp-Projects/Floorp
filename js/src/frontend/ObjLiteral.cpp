@@ -91,23 +91,8 @@ static JSObject* InterpretObjLiteralObj(
         singleton ? SingletonObject : TenuredObject);
   }
 
-  gc::AllocKind allocKind = gc::GetGCObjectKind(properties.length());
-  RootedPlainObject result(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
-  if (!result) {
-    return nullptr;
-  }
-
-  Rooted<JS::PropertyKey> propKey(cx);
-  for (const auto& kvPair : properties) {
-    propKey.set(kvPair.id);
-    propVal.set(kvPair.value);
-    if (!NativeDefineDataProperty(cx, result, propKey, propVal,
-                                  JSPROP_ENUMERATE)) {
-      return nullptr;
-    }
-  }
-  return result;
+  return NewPlainObjectWithProperties(cx, properties.begin(),
+                                      properties.length(), TenuredObject);
 }
 
 static JSObject* InterpretObjLiteralArray(
