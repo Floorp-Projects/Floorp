@@ -13,9 +13,9 @@
 function configureTest() {
 
   var expected_errors = [
-    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor is not a constructor.",
+    "TypeError: AudioWorkletGlobalScope.registerProcessor: Argument 2 is not a constructor.",
     "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: Argument 1 should not be an empty string.",
-    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor is not an object.",
+    "TypeError: AudioWorkletGlobalScope.registerProcessor: Argument 2 is not an object.",
     "TypeError: AudioWorkletGlobalScope.registerProcessor: .constructor.parameterDescriptors of argument 2 is neither an array nor undefined.",
     "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: Argument 1 is invalid: a class with the same name is already registered.",
     "TypeError: Missing required 'name' member of AudioParamDescriptor.",
