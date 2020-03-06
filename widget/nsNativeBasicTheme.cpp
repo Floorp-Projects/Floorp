@@ -241,25 +241,35 @@ static void PaintIndeterminateMark(DrawTarget* aDrawTarget, const Rect& aRect,
                 ToDeviceColor(isDisabled ? sDisabledColor : sBackgroundColor)));
 }
 
-static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
-                              const EventStates& aState, uint32_t aDpi) {
-  const float kBorderWidth = 2.0f * aDpi;
-
+static void PaintStrokedEllipse(DrawTarget* aDrawTarget, const Rect& aRect,
+                                const Color& aBackgroundColor,
+                                const Color& aBorderColor,
+                                const CSSCoord aBorderWidth,
+                                uint32_t aDpi) {
+  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpi);
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
   // Deflate for the same reason as PaintRoundedRectWithBorder. Note that the
   // size is the diameter, so we just shrink by the border width once.
-  Size size(aRect.Size() - Size(kBorderWidth, kBorderWidth));
+  Size size(aRect.Size() - Size(borderWidth, borderWidth));
   AppendEllipseToPath(builder, aRect.Center(), size);
   RefPtr<Path> ellipse = builder->Finish();
+
+  aDrawTarget->Fill(ellipse, ColorPattern(ToDeviceColor(aBackgroundColor)));
+  aDrawTarget->Stroke(ellipse, ColorPattern(ToDeviceColor(aBorderColor)),
+                      StrokeOptions(borderWidth));
+}
+
+static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
+                              const EventStates& aState, uint32_t aDpi) {
+  const CSSCoord kBorderWidth = 2.0f;
 
   Color backgroundColor;
   Color borderColor;
   ComputeCheckColors(aState, backgroundColor, borderColor);
 
-  aDrawTarget->Fill(ellipse, ColorPattern(ToDeviceColor(backgroundColor)));
-  aDrawTarget->Stroke(ellipse, ColorPattern(ToDeviceColor(borderColor)),
-                      StrokeOptions(kBorderWidth));
+  PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
+                      kBorderWidth, aDpi);
 }
 
 static void PaintCheckedRadioButton(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -291,8 +301,9 @@ static void PaintTextField(DrawTarget* aDrawTarget, const Rect& aRect,
                              kBorderWidth, kRadius, aDpi);
 }
 
-static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
-                          const EventStates& aState, uint32_t aDpi) {
+std::pair<Color, Color> ComputeButtonColors(
+    const EventStates& aState,
+    bool aIsDatetimeResetButton = false) {
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
@@ -301,6 +312,9 @@ static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
   const Color& backgroundColor = [&] {
     if (isDisabled) {
       return sDisabledColor;
+    }
+    if (aIsDatetimeResetButton) {
+      return sWhiteColor;
     }
     if (isActive) {
       return sButtonActiveColor;
@@ -312,8 +326,17 @@ static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
   }();
 
   const Color& borderColor = isHovered ? sBorderHoverColor : sBorderColor;
+
+  return std::make_pair(backgroundColor, borderColor);
+}
+
+static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
+                          const EventStates& aState, uint32_t aDpi) {
   const CSSCoord kBorderWidth = 1.0f;
   const CSSCoord kRadius = 4.0f;
+
+  Color backgroundColor, borderColor;
+  std::tie(backgroundColor, borderColor) = ComputeButtonColors(aState);
 
   PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
                              kBorderWidth, kRadius, aDpi);
@@ -528,34 +551,29 @@ static void PaintScrollbarbutton(DrawTarget* aDrawTarget,
 static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                         const Rect& aRect, const EventStates& aState,
                         uint32_t aDpi) {
-  bool isActive =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
-
-  const Color& backgroundColor = [&] {
-    if (isDisabled) {
-      return sDisabledColor;
-    }
-    if (IsDateTimeResetButton(aFrame)) {
-      return sWhiteColor;
-    }
-    if (isActive) {
-      return sButtonActiveColor;
-    }
-    if (isHovered) {
-      return sButtonHoverColor;
-    }
-    return sButtonColor;
-  }();
-
-  const Color& borderColor = isHovered ? sBorderHoverColor : sBorderColor;
-
   const CSSCoord kBorderWidth = 1.0f;
   const CSSCoord kRadius = 4.0f;
 
+  // FIXME: The DateTimeResetButton bit feels like a bit of a hack.
+  Color backgroundColor, borderColor;
+  std::tie(backgroundColor, borderColor) =
+      ComputeButtonColors(aState, IsDateTimeResetButton(aFrame));
+
   PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
                              kBorderWidth, kRadius, aDpi);
+}
+
+static void PaintRangeThumb(DrawTarget* aDrawTarget,
+                            const Rect& aRect,
+                            const EventStates& aState,
+                            uint32_t aDpi) {
+  const CSSCoord kBorderWidth = 2.0f;
+
+  Color backgroundColor, borderColor;
+  std::tie(backgroundColor, borderColor) = ComputeButtonColors(aState);
+
+  PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
+                      kBorderWidth, aDpi);
 }
 
 NS_IMETHODIMP
@@ -626,7 +644,10 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintRangeInputBackground(dt, devPxRect, eventState, dpi, IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
-      // TODO: Paint Range Thumb
+      // TODO(emilio): Do we want to enforce it being a circle using
+      // FixAspectRatio here? For now let authors tweak, it's a custom pseudo so
+      // it doesn't probably have much compat impact if at all.
+      PaintRangeThumb(dt, devPxRect, eventState, dpi);
       break;
     case StyleAppearance::ScrollbarthumbHorizontal:
       PaintScrollbarthumbHorizontal(dt, devPxRect, eventState);
@@ -809,7 +830,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::Range:
-    /*case StyleAppearance::RangeThumb:*/
+    case StyleAppearance::RangeThumb:
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
