@@ -23,7 +23,7 @@ bool CallbackInterface::GetCallableProperty(
     JS::RootedString propId(cx, JSID_TO_STRING(aPropId));
     JS::UniqueChars propName = JS_EncodeStringToUTF8(cx, propId);
     nsPrintfCString description("Property '%s'", propName.get());
-    ThrowErrorMessage<MSG_NOT_CALLABLE>(cx, description.get());
+    cx.ThrowErrorMessage<MSG_NOT_CALLABLE>(description.get());
     return false;
   }
 
