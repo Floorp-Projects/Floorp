@@ -159,11 +159,26 @@
   assertEq(a, "ok");
 }
 
+// In binding destructuring contexts with object rest pattern.
+{
+  let {0n: a, ...b} = ["ok", "test"];
+  assertEq(a, "ok");
+  assertEqArray(Object.getOwnPropertyNames(b), ["1"]);
+}
+
 // In assignment destructuring contexts.
 {
   let a;
   ({0n: a} = ["ok"]);
   assertEq(a, "ok");
+}
+
+// In assignment destructuring contexts with object rest pattern.
+{
+  let a, b;
+  ({0n: a, ...b} = ["ok", "test"]);
+  assertEq(a, "ok");
+  assertEqArray(Object.getOwnPropertyNames(b), ["1"]);
 }
 
 // BigInt literals as inferred names.
