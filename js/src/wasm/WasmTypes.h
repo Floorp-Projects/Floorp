@@ -1086,6 +1086,16 @@ class FuncType {
     }
     return false;
   }
+  // Entry from JS to wasm is currently unimplemented for functions that return
+  // multiple values.
+  bool temporarilyUnsupportedResultCountForEntry() const {
+    return results().length() > 1;
+  }
+  // Calls out from wasm to JS that return multiple values is currently
+  // unsupported.
+  bool temporarilyUnsupportedResultCountForExit() const {
+    return results().length() > 1;
+  }
   // For JS->wasm jit entries, AnyRef parameters and returns are allowed,
   // as are all reference types apart from TypeIndex.
   bool temporarilyUnsupportedReftypeForEntry() const {
