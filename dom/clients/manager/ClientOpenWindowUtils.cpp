@@ -205,7 +205,7 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
     JS::Rooted<JSObject*> sandbox(cx);
     rv = xpc->CreateSandbox(cx, principal, sandbox.address());
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError(u"Unable to open window");
+      aRv.ThrowTypeError("Unable to open window");
       return;
     }
 
@@ -215,19 +215,19 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
     nsCOMPtr<nsIWindowWatcher> wwatch =
         do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError(u"Unable to open window");
+      aRv.ThrowTypeError("Unable to open window");
       return;
     }
     nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
     if (NS_WARN_IF(!pwwatch)) {
-      aRv.ThrowTypeError(u"Unable to open window");
+      aRv.ThrowTypeError("Unable to open window");
       return;
     }
 
     nsCString spec;
     rv = uri->GetSpec(spec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError(u"Unable to open window");
+      aRv.ThrowTypeError("Unable to open window");
       return;
     }
 
@@ -242,7 +242,7 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
         /* aForceNoReferrer = */ false,
         /* aLoadInfp = */ nullptr, aBC);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError(u"Unable to open window");
+      aRv.ThrowTypeError("Unable to open window");
       return;
     }
 
@@ -257,14 +257,14 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
     // It is possible to be running without a browser window on Mac OS, so
     // we need to open a new chrome window.
     // TODO(catalinb): open new chrome window. Bug 1218080
-    aRv.ThrowTypeError(u"Unable to open window");
+    aRv.ThrowTypeError("Unable to open window");
     return;
   }
 
   nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(browserWindow);
   if (NS_WARN_IF(!chromeWin)) {
     // XXXbz Can this actually happen?  Seems unlikely.
-    aRv.ThrowTypeError(u"Unable to open window");
+    aRv.ThrowTypeError("Unable to open window");
     return;
   }
 
@@ -272,14 +272,14 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
   chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
 
   if (NS_WARN_IF(!bwin)) {
-    aRv.ThrowTypeError(u"Unable to open window");
+    aRv.ThrowTypeError("Unable to open window");
     return;
   }
 
   rv = bwin->OpenURI(uri, nullptr, nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
                      nsIBrowserDOMWindow::OPEN_NEW, principal, csp, aBC);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError(u"Unable to open window");
+    aRv.ThrowTypeError("Unable to open window");
     return;
   }
 }

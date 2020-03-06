@@ -110,7 +110,7 @@ struct TimingParams {
 
   static void ValidateIterations(double aIterations, ErrorResult& aRv) {
     if (IsNaN(aIterations)) {
-      aRv.ThrowTypeError(u"Iterations must not be NaN");
+      aRv.ThrowTypeError("Iterations must not be NaN");
       return;
     }
 

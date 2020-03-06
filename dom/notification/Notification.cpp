@@ -768,8 +768,8 @@ already_AddRefed<Notification> Notification::Constructor(
   UNWRAP_OBJECT(ServiceWorkerGlobalScope, aGlobal.Get(), scope);
   if (scope) {
     aRv.ThrowTypeError(
-        u"Notification constructor cannot be used in ServiceWorkerGlobalScope. "
-        u"Use registration.showNotification() instead.");
+        "Notification constructor cannot be used in ServiceWorkerGlobalScope. "
+        "Use registration.showNotification() instead.");
     return nullptr;
   }
 

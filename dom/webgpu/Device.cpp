@@ -75,7 +75,7 @@ void Device::CreateBufferMapped(JSContext* aCx,
                                 ErrorResult& aRv) {
   const auto checked = CheckedInt<size_t>(aDesc.mSize);
   if (!checked.isValid()) {
-    aRv.ThrowRangeError(u"Mapped size is too large");
+    aRv.ThrowRangeError("Mapped size is too large");
     return;
   }
   const auto& size = checked.value();

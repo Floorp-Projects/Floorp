@@ -45,7 +45,7 @@ bool IsValidPutRequestURL(const nsAString& aUrl, ErrorResult& aRv) {
   }
 
   if (!validScheme) {
-    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>(u"Request", aUrl);
+    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Request", aUrl);
     return false;
   }
 

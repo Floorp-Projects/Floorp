@@ -91,7 +91,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    throw a TypeError and abort these steps.
    */
   if (!JS::IsConstructor(constructorUnwrapped)) {
-    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(u"Argument 2");
+    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>("Argument 2");
     return;
   }
 
@@ -112,7 +112,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    TypeError and abort all these steps.
    */
   if (!prototype.isObject()) {
-    aRv.ThrowTypeError<MSG_NOT_OBJECT>(u"processorCtor.prototype");
+    aRv.ThrowTypeError<MSG_NOT_OBJECT>("processorCtor.prototype");
     return;
   }
   /**
@@ -144,7 +144,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
 
   if (!descriptors.isUndefined() && !isArray) {
     aRv.ThrowTypeError<MSG_NOT_ARRAY_NOR_UNDEFINED>(
-        u".constructor.parameterDescriptors of argument 2");
+        ".constructor.parameterDescriptors of argument 2");
     return;
   }
 

@@ -74,7 +74,7 @@ already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
   }
   const auto checked = CheckedInt<size_t>(mSize);
   if (!checked.isValid()) {
-    aRv.ThrowRangeError(u"Mapped size is too large");
+    aRv.ThrowRangeError("Mapped size is too large");
     return nullptr;
   }
 

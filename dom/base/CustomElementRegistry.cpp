@@ -728,7 +728,7 @@ void CustomElementRegistry::Define(
    *    these steps.
    */
   if (!JS::IsConstructor(constructorUnwrapped)) {
-    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(u"Argument 2");
+    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>("Argument 2");
     return;
   }
 
@@ -867,7 +867,7 @@ void CustomElementRegistry::Define(
      * 14.2. If Type(prototype) is not Object, then throw a TypeError exception.
      */
     if (!prototype.isObject()) {
-      aRv.ThrowTypeError<MSG_NOT_OBJECT>(u"constructor.prototype");
+      aRv.ThrowTypeError<MSG_NOT_OBJECT>("constructor.prototype");
       return;
     }
 
@@ -1117,7 +1117,7 @@ static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
   // always forms the return value from a JSObject.
   if (NS_FAILED(UNWRAP_OBJECT(Element, &constructResult, element)) ||
       element != aElement) {
-    aRv.ThrowTypeError(u"Custom element constructor returned a wrong element");
+    aRv.ThrowTypeError("Custom element constructor returned a wrong element");
     return;
   }
 }

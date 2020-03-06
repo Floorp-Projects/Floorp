@@ -3885,8 +3885,8 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // Step 10.
     if (element == ALREADY_CONSTRUCTED_MARKER) {
       rv.ThrowTypeError(
-          u"Cannot instantiate a custom element inside its own constructor "
-          u"during upgrades");
+          "Cannot instantiate a custom element inside its own constructor "
+          "during upgrades");
       return false;
     }
 

@@ -377,7 +377,7 @@ bool InternalHeaders::IsInvalidValue(const nsACString& aValue,
 
 bool InternalHeaders::IsImmutable(ErrorResult& aRv) const {
   if (mGuard == HeadersGuardEnum::Immutable) {
-    aRv.ThrowTypeError(u"Headers are immutable and cannot be modified.");
+    aRv.ThrowTypeError("Headers are immutable and cannot be modified.");
     return true;
   }
   return false;
@@ -419,8 +419,8 @@ void InternalHeaders::Fill(const Sequence<Sequence<nsCString>>& aInit,
     const Sequence<nsCString>& tuple = aInit[i];
     if (tuple.Length() != 2) {
       aRv.ThrowTypeError(
-          u"Headers require name/value tuples when being initialized by a "
-          u"sequence.");
+          "Headers require name/value tuples when being initialized by a "
+          "sequence.");
       return;
     }
     Append(tuple[0], tuple[1], aRv);

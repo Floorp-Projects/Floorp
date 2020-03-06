@@ -209,7 +209,7 @@ void ReadStream::Inner::Serialize(
 
   if (mState != Open) {
     aRv.ThrowTypeError(
-        u"Response body is a cache file stream that has already been closed.");
+        "Response body is a cache file stream that has already been closed.");
     return;
   }
 
