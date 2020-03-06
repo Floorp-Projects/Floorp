@@ -1,6 +1,5 @@
 config = {
     'default_actions': ['package-source'],
-    'objdir': 'obj-firefox',
     'stage_platform': 'source',  # Not used, but required by the script
     'env': {
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',

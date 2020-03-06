@@ -2,7 +2,6 @@ config = {
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
 
-    "objdir": "obj-firefox",
     "repack_env": {
         "MOZ_OBJDIR": "%(abs_obj_dir)s",
     },

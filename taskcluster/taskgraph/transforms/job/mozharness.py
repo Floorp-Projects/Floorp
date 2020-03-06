@@ -26,7 +26,6 @@ from taskgraph.transforms.job import (
     run_job_using,
 )
 from taskgraph.transforms.job.common import (
-    docker_worker_add_workspace_cache,
     setup_secrets,
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,
@@ -164,13 +163,10 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     })
     worker['taskcluster-proxy'] = run.pop('taskcluster-proxy', None)
     docker_worker_add_artifacts(config, job, taskdesc)
-    docker_worker_add_workspace_cache(config, job, taskdesc,
-                                      extra=run.pop('extra-workspace-cache-key', None))
 
     env = worker.setdefault('env', {})
     env.update({
         'WORKSPACE': '{workdir}/workspace'.format(**run),
-        'GECKO_PATH': '{workdir}/workspace/build/src'.format(**run),
         'MOZHARNESS_CONFIG': ' '.join(run.pop('config')),
         'MOZHARNESS_SCRIPT': run.pop('script'),
         'MH_BRANCH': config.params['project'],
@@ -194,9 +190,10 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     if 'custom-build-variant-cfg' in run:
         env['MH_CUSTOM_BUILD_VARIANT_CFG'] = run.pop('custom-build-variant-cfg')
 
-    if 'extra-config' in run:
-        env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
-            json.dumps(run.pop('extra-config')))
+    extra_config = run.pop('extra-config', {})
+    extra_config['objdir'] = 'obj-build'
+    env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
+        json.dumps(extra_config))
 
     if 'job-script' in run:
         env['JOB_SCRIPT'] = run['job-script']
@@ -230,6 +227,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     )
     run.pop('secrets')
     run.pop('requires-signed-builds')
+    run.pop('extra-workspace-cache-key', None)
 
     configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
@@ -279,9 +277,10 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     if run.pop('use-simple-package'):
         env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
 
-    if 'extra-config' in run:
-        env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
-            json.dumps(run.pop('extra-config')))
+    extra_config = run.pop('extra-config', {})
+    extra_config['objdir'] = 'obj-build'
+    env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
+        json.dumps(extra_config))
 
     # The windows generic worker uses batch files to pass environment variables
     # to commands.  Setting a variable to empty in a batch file unsets, so if
@@ -307,7 +306,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--config ' + cfg)
     if run.pop('use-magic-mh-args'):
         mh_command.append('--branch ' + config.params['project'])
-    mh_command.append(r'--work-dir %cd:Z:=z:%\build')
+    mh_command.append(r'--work-dir %cd:Z:=z:%\workspace')
     for action in run.pop('actions', []):
         mh_command.append('--' + action)
 

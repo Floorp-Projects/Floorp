@@ -33,7 +33,6 @@ fail() {
 }
 
 export MOZ_CRASHREPORTER_NO_REPORT=1
-export MOZ_OBJDIR=obj-firefox
 export TINDERBOX_OUTPUT=1
 
 # use "simple" package names so that they can be hard-coded in the task's
@@ -99,4 +98,4 @@ $GECKO_PATH/mach python $GECKO_PATH/testing/${MOZHARNESS_SCRIPT} \
   $actions \
   $options \
   --log-level=debug \
-  --work-dir=$WORKSPACE/build \
+  --work-dir=$WORKSPACE \

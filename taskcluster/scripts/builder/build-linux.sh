@@ -37,7 +37,6 @@ fail() {
 }
 
 export MOZ_CRASHREPORTER_NO_REPORT=1
-export MOZ_OBJDIR=obj-firefox
 export TINDERBOX_OUTPUT=1
 
 # use "simple" package names so that they can be hard-coded in the task's
@@ -45,7 +44,7 @@ export TINDERBOX_OUTPUT=1
 export MOZ_SIMPLE_PACKAGE_NAME=target
 
 # Ensure that in tree libraries can be found
-export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/lib64
+export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/obj-build:$WORKSPACE/src/gcc/lib64
 
 # test required parameters are supplied
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
@@ -120,6 +119,6 @@ $GECKO_PATH/mach python $GECKO_PATH/testing/${MOZHARNESS_SCRIPT} \
   $actions \
   $options \
   --log-level=debug \
-  --work-dir=$WORKSPACE/build \
+  --work-dir=$WORKSPACE \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}
