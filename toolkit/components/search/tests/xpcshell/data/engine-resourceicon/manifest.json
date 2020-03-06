@@ -11,16 +11,11 @@
   "icons": {
     "16": "favicon.png"
   },
+  "default_locale": "en",
   "chrome_settings_overrides": {
     "search_provider": {
-      "name": "engine-resourceicon",
-      "search_url": "https://www.google.com/search",
-      "params": [
-        {
-          "name": "q",
-          "value": "{searchTerms}"
-        }
-      ]
+      "name": "__MSG_extensionName__",
+      "search_url": "__MSG_searchUrl__"
     }
   }
 }
