@@ -20,12 +20,14 @@ const {
 } = require("devtools/shared/constants");
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    a11yWalker,
+    parentAccessibility,
+  } = await initAccessibilityFrontsForUrl(
     `${MAIN_DOMAIN}doc_accessibility_text_label_audit_frame.html`
   );
-
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  await accessibility.enable();
 
   const tests = [
     ["Frame with no name", "#frame-1", { score: FAIL, issue: FRAME_NO_NAME }],
@@ -44,8 +46,7 @@ add_task(async function() {
     );
   }
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

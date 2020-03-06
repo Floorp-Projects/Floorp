@@ -12,12 +12,14 @@ const {
 } = require("devtools/server/actors/highlighters/utils/accessibility");
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    parentAccessibility,
+    a11yWalker,
+  } = await initAccessibilityFrontsForUrl(
     MAIN_DOMAIN + "doc_accessibility_infobar.html"
   );
-
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  await accessibility.enable();
 
   info("Button front checks");
   await checkNameAndRole(walker, "#button", a11yWalker, "Accessible Button");
@@ -30,8 +32,7 @@ add_task(async function() {
     "Lorem ipsum dolor sit ame" + "\u2026" + "e et dolore magna aliqua."
   );
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

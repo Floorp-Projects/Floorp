@@ -7,14 +7,17 @@
 // Checks for the AccessibleActor events
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    a11yWalker,
+    parentAccessibility,
+  } = await initAccessibilityFrontsForUrl(
     MAIN_DOMAIN + "doc_accessibility.html"
   );
   const modifiers =
     Services.appinfo.OS === "Darwin" ? "\u2303\u2325" : "Alt+Shift+";
 
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  await accessibility.enable();
   const rootNode = await walker.getRootNode();
   const a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
   const buttonNode = await walker.querySelector(walker.rootNode, "#button");
@@ -194,8 +197,7 @@ add_task(async function() {
       )
   );
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });
