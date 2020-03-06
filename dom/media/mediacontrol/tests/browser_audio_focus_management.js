@@ -6,6 +6,8 @@ const PAGE_AUDIBLE =
 const PAGE_INAUDIBLE =
   "https://example.com/browser/dom/media/mediacontrol/tests/file_muted_autoplay.html";
 
+const testVideoId = "autoplay";
+
 /**
  * These tests are used to ensure that the audio focus management works correctly
  * amongs different tabs no matter the pref is on or off. If the pref is on,
@@ -20,14 +22,14 @@ add_task(async function testDisableAudioFocusManagement() {
 
   info(`open audible autoplay media in tab1`);
   const tab1 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(`open same page on another tab, which shouldn't cause audio competing`);
   const tab2 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab2);
+  await checkOrWaitUntilMediaStartedPlaying(tab2, testVideoId);
 
   info(`media in tab1 should be playing still`);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(`remove tabs`);
   await clearTabsAndResetPref([tab1, tab2]);
@@ -38,14 +40,14 @@ add_task(async function testEnableAudioFocusManagement() {
 
   info(`open audible autoplay media in tab1`);
   const tab1 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(`open same page on another tab, which should cause audio competing`);
   const tab2 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab2);
+  await checkOrWaitUntilMediaStartedPlaying(tab2, testVideoId);
 
   info(`media in tab1 should be stopped`);
-  await checkOrWaitUntilMediaStoppedPlaying(tab1);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1, testVideoId);
 
   info(`remove tabs`);
   await clearTabsAndResetPref([tab1, tab2]);
@@ -56,26 +58,26 @@ add_task(async function testCheckAudioCompetingMultipleTimes() {
 
   info(`open audible autoplay media in tab1`);
   const tab1 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(`open same page on another tab, which should cause audio competing`);
   const tab2 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab2);
+  await checkOrWaitUntilMediaStartedPlaying(tab2, testVideoId);
 
   info(`media in tab1 should be stopped`);
-  await checkOrWaitUntilMediaStoppedPlaying(tab1);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1, testVideoId);
 
   info(`play media in tab1 again`);
   await playMedia(tab1);
 
   info(`media in tab2 should be stopped`);
-  await checkOrWaitUntilMediaStoppedPlaying(tab2);
+  await checkOrWaitUntilMediaStoppedPlaying(tab2, testVideoId);
 
   info(`play media in tab2 again`);
   await playMedia(tab2);
 
   info(`media in tab1 should be stopped`);
-  await checkOrWaitUntilMediaStoppedPlaying(tab1);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1, testVideoId);
 
   info(`remove tabs`);
   await clearTabsAndResetPref([tab1, tab2]);
@@ -86,28 +88,28 @@ add_task(async function testMutedMediaWontInvolveAudioCompeting() {
 
   info(`open audible autoplay media in tab1`);
   const tab1 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(
     `open inaudible media page on another tab, which shouldn't cause audio competing`
   );
   const tab2 = await createTabAndLoad(PAGE_INAUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab2);
+  await checkOrWaitUntilMediaStartedPlaying(tab2, testVideoId);
 
   info(`media in tab1 should be playing still`);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(
     `open audible media page on the third tab, which should cause audio competing`
   );
   const tab3 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab3);
+  await checkOrWaitUntilMediaStartedPlaying(tab3, testVideoId);
 
   info(`media in tab1 should be stopped`);
-  await checkOrWaitUntilMediaStoppedPlaying(tab1);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1, testVideoId);
 
   info(`media in tab2 should not be affected because it's inaudible.`);
-  await checkOrWaitUntilMediaStartedPlaying(tab2);
+  await checkOrWaitUntilMediaStartedPlaying(tab2, testVideoId);
 
   info(`remove tabs`);
   await clearTabsAndResetPref([tab1, tab2, tab3]);
@@ -118,21 +120,21 @@ add_task(async function testStopMultipleTabsWhenSwitchingPrefDynamically() {
 
   info(`open audible autoplay media in tab1`);
   const tab1 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab1);
+  await checkOrWaitUntilMediaStartedPlaying(tab1, testVideoId);
 
   info(`open same page on another tab, which shouldn't cause audio competing`);
   const tab2 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab2);
+  await checkOrWaitUntilMediaStartedPlaying(tab2, testVideoId);
 
   await switchAudioFocusManagerment(true);
 
   info(`open same page on the third tab, which should cause audio competing`);
   const tab3 = await createTabAndLoad(PAGE_AUDIBLE);
-  await checkOrWaitUntilMediaStartedPlaying(tab3);
+  await checkOrWaitUntilMediaStartedPlaying(tab3, testVideoId);
 
   info(`media in tab1 and tab2 should be stopped`);
-  await checkOrWaitUntilMediaStoppedPlaying(tab1);
-  await checkOrWaitUntilMediaStoppedPlaying(tab2);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1, testVideoId);
+  await checkOrWaitUntilMediaStoppedPlaying(tab2, testVideoId);
 
   info(`remove tabs`);
   await clearTabsAndResetPref([tab1, tab2, tab3]);
