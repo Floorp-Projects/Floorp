@@ -9,6 +9,11 @@ const {
 } = require("devtools/shared/constants");
 const { FILTERS } = require("devtools/client/accessibility/constants");
 
+const PARENT_ACCESSIBILITY_EVENTS = [
+  "can-be-disabled-change",
+  "can-be-enabled-change",
+];
+
 /**
  * Component responsible for tracking all Accessibility fronts in parent and
  * content processes.
@@ -100,12 +105,34 @@ class AccessibilityProxy {
     this.accessibleWalkerFront.off("picker-accessible-canceled", onCanceled);
   }
 
-  disableAccessibility() {
-    return this.accessibilityFront.disable();
+  async disableAccessibility() {
+    // Accessibility service is shut down using the parent accessibility front.
+    // That, in turn, shuts down accessibility service in all content processes.
+    // We need to wait until that happens to be sure platform  accessibility is
+    // fully disabled.
+    // TODO: Remove this after Firefox 75 and use parentAccessibilityFront.
+    if (this.parentAccessibilityFront) {
+      const disabled = this.accessibilityFront.once("shutdown");
+      await this.parentAccessibilityFront.disable();
+      await disabled;
+    } else {
+      await this.accessibilityFront.disable();
+    }
   }
 
-  enableAccessibility() {
-    return this.accessibilityFront.enable();
+  async enableAccessibility() {
+    // Accessibility service is initialized using the parent accessibility
+    // front. That, in turn, initializes accessibility service in all content
+    // processes. We need to wait until that happens to be sure platform
+    // accessibility is fully enabled.
+    // TODO: Remove this after Firefox 75 and use parentAccessibilityFront.
+    if (this.parentAccessibilityFront) {
+      const enabled = this.accessibilityFront.once("init");
+      await this.parentAccessibilityFront.enable();
+      await enabled;
+    } else {
+      await this.accessibilityFront.enable();
+    }
   }
 
   /**
@@ -133,7 +160,9 @@ class AccessibilityProxy {
   }
 
   async resetAccessiblity() {
-    const { enabled, canBeDisabled, canBeEnabled } = this.accessibilityFront;
+    const { enabled } = this.accessibilityFront;
+    const { canBeEnabled, canBeDisabled } =
+      this.parentAccessibilityFront || this.accessibilityFront;
     return { enabled, canBeDisabled, canBeEnabled };
   }
 
@@ -152,8 +181,14 @@ class AccessibilityProxy {
   startListeningForLifecycleEvents(eventMap) {
     for (let [type, listeners] of Object.entries(eventMap)) {
       listeners = Array.isArray(listeners) ? listeners : [listeners];
+      const accessibilityFront =
+        // TODO: Remove parentAccessibilityFront check after Firefox 75.
+        this.parentAccessibilityFront &&
+        PARENT_ACCESSIBILITY_EVENTS.includes(type)
+          ? this.parentAccessibilityFront
+          : this.accessibilityFront;
       for (const listener of listeners) {
-        this.accessibilityFront.on(type, listener);
+        accessibilityFront.on(type, listener);
       }
     }
   }
@@ -161,9 +196,30 @@ class AccessibilityProxy {
   stopListeningForLifecycleEvents(eventMap) {
     for (let [type, listeners] of Object.entries(eventMap)) {
       listeners = Array.isArray(listeners) ? listeners : [listeners];
+      // TODO: Remove parentAccessibilityFront check after Firefox 75.
+      const accessibilityFront =
+        this.parentAccessibilityFront &&
+        PARENT_ACCESSIBILITY_EVENTS.includes(type)
+          ? this.parentAccessibilityFront
+          : this.accessibilityFront;
       for (const listener of listeners) {
-        this.accessibilityFront.off(type, listener);
+        accessibilityFront.off(type, listener);
       }
+    }
+  }
+
+  async ensureReady() {
+    const { mainRoot } = this.target.client;
+    if (await mainRoot.hasActor("parentAccessibility")) {
+      this.parentAccessibilityFront = await mainRoot.getFront(
+        "parentaccessibility"
+      );
+    }
+
+    this.accessibleWalkerFront = this.accessibilityFront.accessibleWalkerFront;
+    this.simulatorFront = this.accessibilityFront.simulatorFront;
+    if (this.simulatorFront) {
+      this.simulate = types => this.simulatorFront.simulate({ types });
     }
   }
 
@@ -173,12 +229,6 @@ class AccessibilityProxy {
       // Finalize accessibility front initialization. See accessibility front
       // bootstrap method description.
       await this.accessibilityFront.bootstrap();
-      this.accessibleWalkerFront = this.accessibilityFront.accessibleWalkerFront;
-      this.simulatorFront = this.accessibilityFront.simulatorFront;
-      if (this.simulatorFront) {
-        this.simulate = types => this.simulatorFront.simulate({ types });
-      }
-
       this.supports = {};
       // To add a check for backward compatibility add something similar to the
       // example below:
@@ -196,6 +246,7 @@ class AccessibilityProxy {
 
   destroy() {
     this.accessibilityFront = null;
+    this.parentAccessibilityFront = null;
     this.accessibleWalkerFront = null;
     this.simulatorFront = null;
     this.simulate = null;

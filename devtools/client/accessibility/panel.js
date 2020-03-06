@@ -90,6 +90,7 @@ AccessibilityPanel.prototype = {
     this.shouldRefresh = true;
 
     await this.startup.initAccessibility();
+    await this.accessibilityProxy.ensureReady();
     this.picker = new Picker(this);
     this.fluentBundles = await this.createFluentBundles();
 

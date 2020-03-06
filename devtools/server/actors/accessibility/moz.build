@@ -7,10 +7,10 @@ DIRS += [
 ]
 
 DevToolsModules(
-  'accessibility-parent.js',
   'accessibility.js',
   'accessible.js',
   'constants.js',
+  'parent-accessibility.js',
   'simulator.js',
   'walker.js',
   'worker.js',
