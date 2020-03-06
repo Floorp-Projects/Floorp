@@ -1158,7 +1158,7 @@ nsresult nsXPCComponents_Constructor::CallOrConstruct(
   XPCWrappedNativeScope* scope = ObjectScope(obj);
   nsCOMPtr<nsIXPCComponents> comp;
 
-  if (!xpc || !scope || !(comp = do_QueryInterface(scope->GetComponents()))) {
+  if (!xpc || !scope || !(comp = scope->GetComponents())) {
     return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
   }
 
@@ -2553,31 +2553,21 @@ nsXPCComponents_Utils::GetComponentLoadStack(const nsACString& aLocation,
 /***************************************************************************/
 /***************************************************************************/
 
-nsXPCComponentsBase::nsXPCComponentsBase(XPCWrappedNativeScope* aScope)
+nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
     : mScope(aScope) {
   MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
-nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
-    : nsXPCComponentsBase(aScope) {}
-
-nsXPCComponentsBase::~nsXPCComponentsBase() {}
-
 nsXPCComponents::~nsXPCComponents() {}
 
-void nsXPCComponentsBase::ClearMembers() {
+void nsXPCComponents::ClearMembers() {
   mInterfaces = nullptr;
   mResults = nullptr;
-}
-
-void nsXPCComponents::ClearMembers() {
   mClasses = nullptr;
   mID = nullptr;
   mException = nullptr;
   mConstructor = nullptr;
   mUtils = nullptr;
-
-  nsXPCComponentsBase::ClearMembers();
 }
 
 /*******************************************/
@@ -2590,9 +2580,9 @@ void nsXPCComponents::ClearMembers() {
     return NS_OK;                                                \
   }
 
-XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, Interfaces)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Interfaces)
 XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Classes)
-XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, Results)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Results)
 XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, ID)
 XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Exception)
 XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Constructor)
@@ -2602,7 +2592,7 @@ XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Utils)
 /*******************************************/
 
 NS_IMETHODIMP
-nsXPCComponentsBase::IsSuccessCode(nsresult result, bool* out) {
+nsXPCComponents::IsSuccessCode(nsresult result, bool* out) {
   *out = NS_SUCCEEDED(result);
   return NS_OK;
 }
@@ -2667,13 +2657,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) ComponentsSH::Release(void) {
 
 NS_IMPL_QUERY_INTERFACE(ComponentsSH, nsIXPCScriptable)
 
-#define NSXPCCOMPONENTSBASE_CID                      \
-  {                                                  \
-    0xc62998e5, 0x95f1, 0x4058, {                    \
-      0xa5, 0x09, 0xec, 0x21, 0x66, 0x18, 0x92, 0xb9 \
-    }                                                \
-  }
-
 #define NSXPCCOMPONENTS_CID                          \
   {                                                  \
     0x3649f405, 0xf0ec, 0x4c28, {                    \
@@ -2681,20 +2664,8 @@ NS_IMPL_QUERY_INTERFACE(ComponentsSH, nsIXPCScriptable)
     }                                                \
   }
 
-NS_IMPL_CLASSINFO(nsXPCComponentsBase, &ComponentsSH::Get, 0,
-                  NSXPCCOMPONENTSBASE_CID)
-NS_IMPL_ISUPPORTS_CI(nsXPCComponentsBase, nsIXPCComponentsBase)
-
 NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, 0, NSXPCCOMPONENTS_CID)
-// Below is more or less what NS_IMPL_ISUPPORTS_CI_INHERITED1 would look like
-// if it existed.
-NS_IMPL_ADDREF_INHERITED(nsXPCComponents, nsXPCComponentsBase)
-NS_IMPL_RELEASE_INHERITED(nsXPCComponents, nsXPCComponentsBase)
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
-  NS_IMPL_QUERY_CLASSINFO(nsXPCComponents)
-NS_INTERFACE_MAP_END_INHERITING(nsXPCComponentsBase)
-NS_IMPL_CI_INTERFACE_GETTER(nsXPCComponents, nsIXPCComponents)
+NS_IMPL_ISUPPORTS_CI(nsXPCComponents, nsIXPCComponents)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us
 #define XPC_MAP_CLASSNAME ComponentsSH
@@ -2705,7 +2676,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsXPCComponents, nsIXPCComponents)
 NS_IMETHODIMP
 ComponentsSH::PreCreate(nsISupports* nativeObj, JSContext* cx,
                         JSObject* globalObj, JSObject** parentObj) {
-  nsXPCComponentsBase* self = static_cast<nsXPCComponentsBase*>(nativeObj);
+  nsXPCComponents* self = static_cast<nsXPCComponents*>(nativeObj);
   // this should never happen
   if (!self->GetScope()) {
     NS_WARNING(
