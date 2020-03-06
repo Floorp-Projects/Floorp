@@ -3295,6 +3295,7 @@ void HTMLMediaElement::SetVolumeInternal() {
 
   NotifyAudioPlaybackChanged(
       AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+  StartListeningMediaControlEventIfNeeded();
 }
 
 void HTMLMediaElement::SetMuted(bool aMuted) {
@@ -6390,12 +6391,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
     if (mMediaControlEventListener) {
       MOZ_ASSERT(!mMediaControlEventListener->IsStarted(),
                  "We didn't stop listening event when we were in bfcache?");
-      mMediaControlEventListener->Start();
-      // As resuming media from bfcache won't change `mPaused`, so we have to
-      // update the playback state manually,
-      if (!mPaused) {
-        mMediaControlEventListener->NotifyMediaStartedPlaying();
-      }
+      StartListeningMediaControlEventIfNeeded();
     }
   }
 }
@@ -7147,6 +7143,7 @@ void HTMLMediaElement::SetAudibleState(bool aAudible) {
     mIsAudioTrackAudible = aAudible;
     NotifyAudioPlaybackChanged(
         AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+    StartListeningMediaControlEventIfNeeded();
   }
 }
 
@@ -7235,6 +7232,7 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
+  StartListeningMediaControlEventIfNeeded();
 }
 
 void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
@@ -7669,12 +7667,37 @@ void HTMLMediaElement::NotifyMediaControlPlaybackStateChanged() {
 }
 
 void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
+  if (mPaused) {
+    MEDIACONTROL_LOG("Not listening because media is paused");
+    return;
+  }
+
+  // This includes cases such like `video is muted`, `video has zero volume`,
+  // `video's audio track is still inaudible` and `tab is muted by audio channel
+  // (tab sound indicator)`, all these cases would make media inaudible.
+  // `ComputedVolume()` would return the final volume applied the affection made
+  // by audio channel, which is used to detect if the tab is muted by audio
+  // channel.
+  if (!IsAudible() || ComputedVolume() == 0.0f) {
+    MEDIACONTROL_LOG("Not listening because media is inaudible");
+    return;
+  }
+
   if (!mMediaControlEventListener) {
     mMediaControlEventListener = new MediaControlEventListener(this);
   }
-  if (!mMediaControlEventListener->IsStarted()) {
-    mMediaControlEventListener->Start();
+
+  if (mMediaControlEventListener->IsStarted()) {
+    return;
   }
+
+  mMediaControlEventListener->Start();
+
+  // If `mPaused` was being changed at the time the listener didn't start, then
+  // this method won't be called. Eg. if the media becomes audible after it has
+  // been playing for a while. Therefore, we have to manually update playback
+  // state after starting listener.
+  NotifyMediaControlPlaybackStateChanged();
 }
 
 void HTMLMediaElement::StopListeningMediaControlEventIfNeeded() {
