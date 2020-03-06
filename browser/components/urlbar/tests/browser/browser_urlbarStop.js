@@ -58,7 +58,7 @@ async function typeAndSubmitAndStop(url) {
     gBrowser.selectedBrowser
   );
 
-  // When the load is stopped, tabbrowser calls URLBarSetURI and then calls
+  // When the load is stopped, tabbrowser calls gURLBar.setURI and then calls
   // onStateChange on its progress listeners.  So to properly wait until the
   // urlbar value has been updated, add our own progress listener here.
   let progressPromise = new Promise(resolve => {

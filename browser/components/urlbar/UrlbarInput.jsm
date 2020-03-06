@@ -253,6 +253,73 @@ class UrlbarInput {
   }
 
   /**
+   * Sets the URI to display in the location bar.
+   *
+   * @param {nsIURI} [uri]
+   *        If this is unspecified, the current URI will be used.
+   * @param {boolean} [updatePopupNotifications]
+   *        Passed though to SetPageProxyState.
+   */
+  setURI(uri, updatePopupNotifications) {
+    let value = this.window.gBrowser.userTypedValue;
+    let valid = false;
+
+    // Explicitly check for nulled out value. We don't want to reset the URL
+    // bar if the user has deleted the URL and we'd just put the same URL
+    // back. See bug 304198.
+    if (value === null) {
+      uri = uri || this.window.gBrowser.currentURI;
+      // Strip off usernames and passwords for the location bar
+      try {
+        uri = Services.uriFixup.createExposableURI(uri);
+      } catch (e) {}
+
+      // Replace initial page URIs with an empty string
+      // only if there's no opener (bug 370555).
+      if (
+        this.window.isInitialPage(uri) &&
+        this.window.checkEmptyPageOrigin(
+          this.window.gBrowser.selectedBrowser,
+          uri
+        )
+      ) {
+        value = "";
+      } else {
+        // We should deal with losslessDecodeURI throwing for exotic URIs
+        try {
+          value = losslessDecodeURI(uri);
+        } catch (ex) {
+          value = "about:blank";
+        }
+      }
+
+      valid =
+        !this.window.isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
+    } else if (
+      this.window.isInitialPage(value) &&
+      this.window.checkEmptyPageOrigin(this.window.gBrowser.selectedBrowser)
+    ) {
+      value = "";
+      valid = true;
+    }
+
+    let isDifferentValidValue = valid && value != this.value;
+    this.value = value;
+    this.valueIsTyped = !valid;
+    this.removeAttribute("usertyping");
+    if (isDifferentValidValue) {
+      // The selection is enforced only for new values, to avoid overriding the
+      // cursor position when the user switches windows while typing.
+      this.selectionStart = this.selectionEnd = 0;
+    }
+
+    this.window.SetPageProxyState(
+      valid ? "valid" : "invalid",
+      updatePopupNotifications
+    );
+  }
+
+  /**
    * Converts an internal URI (e.g. a URI with a username or password) into one
    * which we can expose to the user.
    *
@@ -431,7 +498,7 @@ class UrlbarInput {
 
   handleRevert() {
     this.window.gBrowser.userTypedValue = null;
-    this.window.URLBarSetURI(null, true);
+    this.setURI(null, true);
     if (this.value && this.focused) {
       this.select();
     }
@@ -1143,19 +1210,6 @@ class UrlbarInput {
     } catch (ex) {}
 
     return "";
-  }
-
-  /**
-   * Exposes losslessDecodeURI so URLBarSetURI can call it; to be removed in
-   * bug 1610475.
-   *
-   * @param {nsIURI} aURI
-   *   The URI to decode
-   * @returns {string}
-   *   The decoded URI
-   */
-  _losslessDecodeURI(aURI) {
-    return losslessDecodeURI(aURI);
   }
 
   /**
@@ -2177,9 +2231,9 @@ class UrlbarInput {
       // For safety reasons, in the drop case we don't want to immediately show
       // the the dropped value, instead we want to keep showing the current page
       // url until an onLocationChange happens.
-      // See the handling in URLBarSetURI for further details.
+      // See the handling in `setURI` for further details.
       this.window.gBrowser.userTypedValue = null;
-      this.window.URLBarSetURI(null, true);
+      this.setURI(null, true);
     }
   }
 

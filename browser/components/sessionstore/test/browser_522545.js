@@ -426,13 +426,13 @@ function test() {
     if (tests.length) {
       waitForBrowserState(state, function() {
         gBrowser.selectedBrowser.userTypedValue = null;
-        URLBarSetURI();
+        gURLBar.setURI();
         tests.shift()();
       });
     } else {
       waitForBrowserState(originalState, function() {
         gBrowser.selectedBrowser.userTypedValue = null;
-        URLBarSetURI();
+        gURLBar.setURI();
         finish();
       });
     }

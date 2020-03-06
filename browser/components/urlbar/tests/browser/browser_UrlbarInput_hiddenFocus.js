@@ -6,7 +6,7 @@ add_task(async function() {
 
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
-    URLBarSetURI();
+    gURLBar.setURI();
   });
 
   gURLBar.blur();
