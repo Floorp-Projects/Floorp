@@ -937,6 +937,10 @@ static bool IsThisSlotDefinition(LDefinition* def) {
              THIS_FRAME_ARGSLOT + sizeof(Value);
 }
 
+static bool HasStackPolicy(LDefinition* def) {
+  return def->policy() == LDefinition::STACK;
+}
+
 bool BacktrackingAllocator::tryMergeBundles(LiveBundle* bundle0,
                                             LiveBundle* bundle1) {
   // See if bundle0 and bundle1 can be merged together.
@@ -972,6 +976,17 @@ bool BacktrackingAllocator::tryMergeBundles(LiveBundle* bundle0,
         return true;
       }
     }
+  }
+
+  // When we make a call to a WebAssembly function that returns multiple
+  // results, some of those results can go on the stack.  The callee is passed a
+  // pointer to this stack area, which is represented as having policy
+  // LDefinition::STACK (with type LDefinition::STACKRESULTS).  Individual
+  // results alias parts of the stack area with a value-appropriate type, but
+  // policy LDefinition::STACK.  This aliasing between allocations makes it
+  // unsound to merge anything with a LDefinition::STACK policy.
+  if (HasStackPolicy(reg0.def()) || HasStackPolicy(reg1.def())) {
+    return true;
   }
 
   // Limit the number of times we compare ranges if there are many ranges in
@@ -1159,6 +1174,22 @@ bool BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def,
   return tryMergeBundles(def.firstBundle(), input.firstBundle());
 }
 
+void BacktrackingAllocator::allocateStackDefinition(VirtualRegister& reg) {
+  LInstruction* ins = reg.ins()->toInstruction();
+  if (reg.def()->type() == LDefinition::STACKRESULTS) {
+    LStackArea alloc(ins->toInstruction());
+    stackSlotAllocator.allocateStackArea(&alloc);
+    reg.def()->setOutput(alloc);
+  } else {
+    // Because the definitions are visited in order, the area has been allocated
+    // before we reach this result, so we know the operand is an LStackArea.
+    const LUse* use = ins->getOperand(0)->toUse();
+    VirtualRegister& area = vregs[use->virtualRegister()];
+    const LStackArea* areaAlloc = area.def()->output()->toStackArea();
+    reg.def()->setOutput(areaAlloc->resultAlloc(ins));
+  }
+}
+
 bool BacktrackingAllocator::mergeAndQueueRegisters() {
   MOZ_ASSERT(!vregs[0u].hasRanges());
 
@@ -1245,6 +1276,12 @@ bool BacktrackingAllocator::mergeAndQueueRegisters() {
   // Add all bundles to the allocation queue, and create spill sets for them.
   for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
     VirtualRegister& reg = vregs[i];
+
+    // Eagerly allocate stack result areas and their component stack results.
+    if (reg.def() && reg.def()->policy() == LDefinition::STACK) {
+      allocateStackDefinition(reg);
+    }
+
     for (LiveRange::RegisterLinkIterator iter = reg.rangesBegin(); iter;
          iter++) {
       LiveRange* range = LiveRange::get(*iter);
@@ -1456,8 +1493,10 @@ bool BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
     if (range->hasDefinition()) {
       // Deal with any definition constraints/hints.
       LDefinition::Policy policy = reg.def()->policy();
-      if (policy == LDefinition::FIXED) {
-        // Fixed policies get a FIXED requirement.
+      if (policy == LDefinition::FIXED || policy == LDefinition::STACK) {
+        // Fixed and stack policies get a FIXED requirement.  (In the stack
+        // case, the allocation should have been performed already by
+        // mergeAndQueueRegisters.)
         JitSpew(JitSpew_RegAlloc, "  Requirement %s, fixed by definition",
                 reg.def()->output()->toString().get());
         if (!requirement->merge(Requirement(*reg.def()->output()))) {
@@ -1499,6 +1538,14 @@ bool BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
           return false;
         }
       }
+
+      // The only case of STACK use policies is individual stack results using
+      // their containing stack result area, which is given a fixed allocation
+      // above.
+      MOZ_ASSERT_IF(policy == LUse::STACK,
+                    requirement->kind() == Requirement::FIXED);
+      MOZ_ASSERT_IF(policy == LUse::STACK,
+                    requirement->allocation().isStackArea());
     }
   }
 
@@ -2305,6 +2352,15 @@ static inline bool IsTraceable(VirtualRegister& reg) {
     return true;
   }
 #endif
+  if (reg.type() == LDefinition::STACKRESULTS) {
+    MOZ_ASSERT(reg.def());
+    const LStackArea* alloc = reg.def()->output()->toStackArea();
+    for (auto iter = alloc->results(); iter; iter.next()) {
+      if (iter.isGcPointer()) {
+        return true;
+      }
+    }
+  }
   return false;
 }
 
@@ -2384,6 +2440,17 @@ bool BacktrackingAllocator::populateSafepoints() {
               return false;
             }
             break;
+          case LDefinition::STACKRESULTS: {
+            MOZ_ASSERT(a.isStackArea());
+            for (auto iter = a.toStackArea()->results(); iter; iter.next()) {
+              if (iter.isGcPointer()) {
+                if (!safepoint->addGcPointer(iter.alloc())) {
+                  return false;
+                }
+              }
+            }
+            break;
+          }
 #ifdef JS_NUNBOX32
           case LDefinition::TYPE:
             if (!safepoint->addNunboxType(i, a)) {

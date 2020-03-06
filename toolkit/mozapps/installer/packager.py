@@ -35,81 +35,6 @@ import os
 import six
 from six import StringIO
 import subprocess
-import mozinfo
-
-# List of libraries to shlibsign.
-SIGN_LIBS = [
-    'softokn3',
-    'nssdbm3',
-    'freebl3',
-    'freeblpriv3',
-    'freebl_32fpu_3',
-    'freebl_32int_3',
-    'freebl_32int64_3',
-    'freebl_64fpu_3',
-    'freebl_64int_3',
-]
-
-
-class ToolLauncher(object):
-    '''
-    Helper to execute tools like xpcshell with the appropriate environment.
-        launcher = ToolLauncher()
-        launcher.tooldir = '/path/to/tools'
-        launcher.launch(['xpcshell', '-e', 'foo.js'])
-    '''
-    def __init__(self):
-        self.tooldir = None
-
-    def launch(self, cmd, extra_linker_path=None, extra_env={}):
-        '''
-        Launch the given command, passed as a list. The first item in the
-        command list is the program name, without a path and without a suffix.
-        These are determined from the tooldir member and the BIN_SUFFIX value.
-        An extra_linker_path may be passed to give an additional directory
-        to add to the search paths for the dynamic linker.
-        An extra_env dict may be passed to give additional environment
-        variables to export when running the command.
-        '''
-        assert self.tooldir
-        cmd[0] = os.path.join(self.tooldir, 'bin',
-                              cmd[0] + buildconfig.substs['BIN_SUFFIX'])
-        if not extra_linker_path:
-            extra_linker_path = os.path.join(self.tooldir, 'bin')
-        env = dict(os.environ)
-        for p in ['LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
-            if p in env:
-                env[p] = extra_linker_path + ':' + env[p]
-            else:
-                env[p] = extra_linker_path
-        for e in extra_env:
-            env[e] = extra_env[e]
-
-        print('Executing %s' % ' '.join(cmd), file=errors.out)
-        errors.out.flush()
-        return subprocess.call(cmd, env=env)
-
-    def can_launch(self):
-        return self.tooldir is not None
-
-launcher = ToolLauncher()
-
-
-class LibSignFile(File):
-    '''
-    File class for shlibsign signatures.
-    '''
-    def copy(self, dest, skip_if_older=True):
-        assert isinstance(dest, six.string_types)
-        # os.path.getmtime returns a result in seconds with precision up to the
-        # microsecond. But microsecond is too precise because shutil.copystat
-        # only copies milliseconds, and seconds is not enough precision.
-        if os.path.exists(dest) and skip_if_older and \
-                int(os.path.getmtime(self.path) * 1000) <= \
-                int(os.path.getmtime(dest) * 1000):
-            return False
-        if launcher.launch(['shlibsign', '-v', '-o', dest, '-i', self.path]):
-            errors.fatal('Error while signing %s' % self.path)
 
 
 class RemovedFiles(GeneratedFile):
@@ -250,9 +175,6 @@ def main():
     while respath.startswith('/'):
         respath = respath[1:]
 
-    if not buildconfig.substs['CROSS_COMPILE']:
-        launcher.tooldir = mozpath.join(buildconfig.topobjdir, 'dist')
-
     with errors.accumulate():
         finder_args = dict(
             minify=args.minify,
@@ -285,18 +207,6 @@ def main():
             removals = RemovedFiles(copier)
             preprocess(removals_in, removals, defines)
             copier.add(mozpath.join(respath, 'removed-files'), removals)
-
-    # shlibsign libraries
-    if launcher.can_launch():
-        if not mozinfo.isMac and buildconfig.substs.get('COMPILE_ENVIRONMENT'):
-            for lib in SIGN_LIBS:
-                libbase = mozpath.join(respath, '%s%s') \
-                    % (buildconfig.substs['DLL_PREFIX'], lib)
-                libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
-                if copier.contains(libname):
-                    copier.add(libbase + '.chk',
-                               LibSignFile(os.path.join(args.destination,
-                                                        libname)))
 
     # If a pdb file is present and we were instructed to copy it, include it.
     # Run on all OSes to capture MinGW builds

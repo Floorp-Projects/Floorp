@@ -299,11 +299,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             this.notifyParentOfViewportFit();
           }
         }
-        if (content && aMsg.data.suspendMedia) {
-          content.windowUtils.mediaSuspend = aMsg.data.active
-            ? Ci.nsISuspendedTypes.NONE_SUSPENDED
-            : Ci.nsISuspendedTypes.SUSPENDED_PAUSE;
-        }
         break;
 
       case "GeckoView:UpdateInitData":

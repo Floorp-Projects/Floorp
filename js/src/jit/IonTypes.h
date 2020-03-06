@@ -71,8 +71,8 @@ enum BailoutKind {
   // We just lump them together.
   Bailout_DuringVMCall,
 
-  // Call to a non-JSFunction (problem for |apply|)
-  Bailout_NonJSFunctionCallee,
+  // Too many arguments for apply calls.
+  Bailout_TooManyArguments,
 
   // Dynamic scope chain lookup produced |undefined|
   Bailout_DynamicNameNotFound,
@@ -182,8 +182,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_Inevitable";
     case Bailout_DuringVMCall:
       return "Bailout_DuringVMCall";
-    case Bailout_NonJSFunctionCallee:
-      return "Bailout_NonJSFunctionCallee";
+    case Bailout_TooManyArguments:
+      return "Bailout_TooManyArguments";
     case Bailout_DynamicNameNotFound:
       return "Bailout_DynamicNameNotFound";
     case Bailout_StringArgumentsEval:

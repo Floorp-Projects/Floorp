@@ -66,6 +66,7 @@ fuzzy(1,113) platform(linux) == raster-space.yaml raster-space.png
 skip_on(android) skip_on(mac,>=10.14) != allow-subpixel.yaml allow-subpixel-ref.yaml  # Android: we don't enable sub-px aa on this platform.
 skip_on(android,device) == bg-color.yaml bg-color-ref.yaml  # Fails on Pixel2
 != large-glyphs.yaml blank.yaml
+!= large-line-decoration.yaml blank.yaml
 skip_on(android,device) == snap-text-offset.yaml snap-text-offset-ref.yaml
 fuzzy(5,4435) == shadow-border.yaml shadow-solid-ref.yaml
 fuzzy(5,4435) == shadow-image.yaml shadow-solid-ref.yaml
@@ -80,4 +81,4 @@ platform(linux) allow_sacrificing_subpixel_aa(true) == text-fixed-slice.yaml tex
 # most pixels are off by a small amount, but a few pixels on the edge vary by a lot, pushing up the fuzzy max-diff;
 # the main goal of the test is that everything is in the same place, at the same scale, clipped the same way,
 # despite 4x on-the-fly scale change.
-skip_on(android) fuzzy-range(<=3,*20568,<=20,*2525,<=115,*543) == raster_root_C_8192.yaml raster_root_C_ref.yaml
+skip_on(android) fuzzy-range(<=3,*20569,<=20,*2525,<=115,*543) == raster_root_C_8192.yaml raster_root_C_ref.yaml

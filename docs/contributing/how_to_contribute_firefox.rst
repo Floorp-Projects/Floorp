@@ -1,7 +1,6 @@
 How to contribute to Firefox
 ============================
 
-This guide covers the basics of working on Firefox code. You'll learn how to set up your dev environment, build Firefox locally, and submit changes. The simplest commands are listed, with more detailed documentation linked from each section.
 
 The whole process is a bit long, and it will take time to get things right.
 If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
@@ -37,7 +36,7 @@ Firefox provides a mechanism to install all dependencies; in the source tree:
      $ ./mach bootstrap
 
 The default options are recommended.
-If you're not planning to write C++ or Rust code, select "`Artifact Mode <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds>`__" 
+If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Artifact builds>`
 and follow the instructions at the end of the bootstrap for creating a mozconfig file.
 
 `More

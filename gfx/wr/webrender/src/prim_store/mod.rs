@@ -34,7 +34,7 @@ use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle, ConicGradientDataHandle};
 use crate::prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
-use crate::prim_store::line_dec::LineDecorationDataHandle;
+use crate::prim_store::line_dec::{LineDecorationDataHandle,MAX_LINE_DECORATION_RESOLUTION};
 use crate::prim_store::picture::PictureDataHandle;
 use crate::prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 #[cfg(debug_assertions)]
@@ -2920,7 +2920,14 @@ impl PrimitiveStore {
                     // TODO(gw): Do we ever need / want to support scales for text decorations
                     //           based on the current transform?
                     let scale_factor = Scale::new(1.0) * device_pixel_scale;
-                    let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
+                    let mut task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
+                    if task_size.width > MAX_LINE_DECORATION_RESOLUTION as i32 ||
+                       task_size.height > MAX_LINE_DECORATION_RESOLUTION as i32 {
+                         let max_extent = cmp::max(task_size.width, task_size.height);
+                         let task_scale_factor = Scale::new(MAX_LINE_DECORATION_RESOLUTION as f32 / max_extent as f32);
+                         task_size = (LayoutSize::from_au(cache_key.size) * scale_factor * task_scale_factor)
+                                        .ceil().to_i32();
+                    }
 
                     // Request a pre-rendered image task.
                     // TODO(gw): This match is a bit untidy, but it should disappear completely

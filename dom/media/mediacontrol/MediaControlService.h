@@ -61,6 +61,10 @@ class MediaControlService final : public nsIObserver {
   // This is used for testing only, to generate fake media control keys events.
   void GenerateMediaControlKeysTestEvent(MediaControlKeysEvent aEvent);
 
+  // Return the media metadata from the main controller, and it's used for test
+  // only.
+  MediaMetadataBase GetMainControllerMediaMetadata() const;
+
  private:
   MediaControlService();
   ~MediaControlService();
@@ -95,11 +99,14 @@ class MediaControlService final : public nsIObserver {
     MediaController* GetControllerById(uint64_t aId) const;
     uint64_t GetControllersNum() const;
 
-    // Callback function for monitoring controller play state changes.
+    // Callback functions for monitoring main controller's status change.
     void ControllerPlaybackStateChanged(PlaybackState aState);
+    void ControllerMetadataChanged(const MediaMetadataBase& aMetadata);
 
    private:
     void UpdateMainController(MediaController* aController);
+    void ConnectToMainControllerEvents();
+    void DisconnectMainControllerEvents();
 
     nsTArray<RefPtr<MediaController>> mControllers;
     RefPtr<MediaController> mMainController;
@@ -108,6 +115,7 @@ class MediaControlService final : public nsIObserver {
     // update the playback state to the event source.
     RefPtr<MediaControlKeysEventSource> mSource;
     MediaEventListener mPlayStateChangedListener;
+    MediaEventListener mMetadataChangedListener;
   };
 
   void Init();

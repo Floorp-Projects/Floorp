@@ -14,6 +14,7 @@
 #include "SSLServerCertVerification.h"
 #include "nsNSSIOLayer.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/Unused.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
@@ -95,6 +96,7 @@ void IPCServerCertVerificationResult::Dispatch(
           }),
       NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(nrv));
+  Unused << nrv;
 }
 
 }  // anonymous namespace

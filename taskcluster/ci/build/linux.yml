@@ -121,6 +121,9 @@ linux64-fuzzing/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        fuzzing-builds:
+            - linux
 
 linux64/debug:
     description: "Linux64 Debug"
@@ -810,6 +813,9 @@ linux64-tsan-fuzzing/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        fuzzing-builds:
+            - linux
 
 linux64-asan-fuzzing/opt:
     description: "Linux64 Fuzzing Opt ASAN"
@@ -849,6 +855,9 @@ linux64-asan-fuzzing/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        fuzzing-builds:
+            - linux
 
 linux64-asan-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt ASAN w/ Coverage"
@@ -930,6 +939,9 @@ linux64-fuzzing-ccov/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        fuzzing-builds:
+            - linux
 
 linux64-asan-reporter-nightly/opt:
     description: "Linux64 Opt ASAN Reporter Nightly"

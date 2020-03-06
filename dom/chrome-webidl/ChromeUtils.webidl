@@ -445,6 +445,11 @@ partial namespace ChromeUtils {
   // This is used to generate fake media control keys event in testing.
   [ChromeOnly]
   void generateMediaControlKeysTestEvent(MediaControlKeysTestEvent aEvent);
+
+  // This is used to get the media metadata from the current main controller in
+  // testing.
+  [ChromeOnly]
+  MediaMetadataInit getCurrentActiveMediaMetadata();
 };
 
 /*

@@ -16,12 +16,11 @@ def main(header, propFile):
           mappings[parts[0].strip()] = parts[1].strip()
  
   keys = mappings.keys()
-  keys.sort()
 
   header.write("// This is a generated file. Please do not edit.\n")
   header.write("// Please edit the corresponding .properties file instead.\n")
 
   entries = ['{ "%s", %s }'
-             % (key, mappings[key].replace('-', '_').upper() + '_ENCODING') for key in keys]
+             % (key, mappings[key].replace('-', '_').upper() + '_ENCODING') for key in sorted(keys)]
   header.write(',\n'.join(entries) + '\n')
 
