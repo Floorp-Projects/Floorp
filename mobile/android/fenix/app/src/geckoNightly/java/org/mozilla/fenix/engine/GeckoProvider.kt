@@ -56,9 +56,10 @@ object GeckoProvider {
         }
 
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
+        // As a quick fix for #8967 we are conflating "should autofill" with "should save logins"
         val loginStorageDelegate = GeckoLoginStorageDelegate(
             storage,
-            { context.settings().shouldAutofillLogins && context.settings().shouldPromptToSaveLogins }
+            { context.settings().shouldPromptToSaveLogins }
         )
         geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)
 

@@ -9,6 +9,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.RadioButtonPreference
@@ -39,6 +40,8 @@ class SaveLoginSettingFragment : PreferenceFragmentCompat() {
                         )
                     )
                 }
+                // We want to reload the current session here so we can try to fill the current page
+                context?.components?.useCases?.sessionUseCases?.reload?.invoke()
                 return super.onPreferenceChange(preference, newValue)
             }
         }
@@ -57,6 +60,8 @@ class SaveLoginSettingFragment : PreferenceFragmentCompat() {
                         )
                     )
                 }
+                // We want to reload the current session here so we don't save any currently inserted login
+                context?.components?.useCases?.sessionUseCases?.reload?.invoke()
                 return super.onPreferenceChange(preference, newValue)
             }
         }
