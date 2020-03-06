@@ -603,6 +603,11 @@ static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxMemoryInitialPages = 16384;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
 
+// FIXME: Temporary limit to function result counts.  Replace with MaxResults:
+// bug 1585909.
+
+static const unsigned MaxFuncResults = 1;
+
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.
 
