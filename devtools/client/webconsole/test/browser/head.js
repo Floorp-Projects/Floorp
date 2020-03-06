@@ -620,11 +620,17 @@ async function setInputValueForAutocompletion(
 ) {
   const { jsterm } = hud;
 
+  const initialPromises = [];
+  if (jsterm.autocompletePopup.isOpen) {
+    initialPromises.push(jsterm.autocompletePopup.once("popup-closed"));
+  }
   setInputValue(hud, "");
+  await Promise.all(initialPromises);
+
   jsterm.focus();
 
   const updated = jsterm.once("autocomplete-updated");
-  EventUtils.sendString(value);
+  EventUtils.sendString(value, hud.iframeWindow);
   await updated;
 
   if (caretPosition < 0) {
@@ -725,6 +731,19 @@ function checkInputValueAndCursorPosition(
 function getInputCompletionValue(hud) {
   const { jsterm } = hud;
   return jsterm.editor.getAutoCompletionText();
+}
+
+function closeAutocompletePopup(hud) {
+  const { jsterm } = hud;
+
+  if (!jsterm.autocompletePopup.isOpen) {
+    return Promise.resolve();
+  }
+
+  const onPopupClosed = jsterm.autocompletePopup.once("popup-closed");
+  const onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.synthesizeKey("KEY_Escape");
+  return Promise.all([onPopupClosed, onAutocompleteUpdated]);
 }
 
 /**

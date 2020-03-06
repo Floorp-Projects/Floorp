@@ -10,22 +10,21 @@ const TEST_URI =
   "data:text/html;charset=utf8,<p>test JSTerm Helpers autocomplete";
 
 add_task(async function() {
+  await pushPref("devtools.editor.autoclosebrackets", false);
   const hud = await openNewTabAndConsole(TEST_URI);
   await testInspectAutoCompletion(hud, "i", true);
   await testInspectAutoCompletion(hud, "window.", false);
   await testInspectAutoCompletion(hud, "dump(i", true);
   await testInspectAutoCompletion(hud, "window.dump(i", true);
+
+  info("Close autocomplete popup");
+  await closeAutocompletePopup(hud);
 });
 
 async function testInspectAutoCompletion(hud, inputValue, expectInspect) {
-  setInputValue(hud, "");
-  const { jsterm } = hud;
-  jsterm.focus();
-  const updated = jsterm.once("autocomplete-updated");
-  EventUtils.sendString(inputValue);
-  await updated;
+  await setInputValueForAutocompletion(hud, inputValue);
   is(
-    getAutocompletePopupLabels(jsterm.autocompletePopup).includes("inspect"),
+    hasPopupLabel(hud.jsterm.autocompletePopup, "inspect"),
     expectInspect,
     `autocomplete results${
       expectInspect ? "" : " does not"

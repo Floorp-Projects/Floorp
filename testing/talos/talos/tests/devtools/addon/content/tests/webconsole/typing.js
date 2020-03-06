@@ -42,11 +42,11 @@ module.exports = async function() {
 
   // Simulate typing in the input.
   for (const char of Array.from(input)) {
-    const onPopupOpened = jsterm.autocompletePopup.once("popup-opened");
+    const onAutocompleteUpdated = jsterm.once("autocomplete-updated");
     jsterm.insertStringAtCursor(char);
     // We need to trigger autocompletion update to show the popup.
     jsterm.props.autocompleteUpdate();
-    await onPopupOpened;
+    await onAutocompleteUpdated;
   }
 
   test.done();

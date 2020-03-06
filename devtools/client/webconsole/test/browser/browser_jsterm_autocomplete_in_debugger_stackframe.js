@@ -56,6 +56,7 @@ add_task(async function() {
     hasPopupLabel(popup, "prop21"),
     `"foo1Obj.prop2." gave the expected suggestions`
   );
+  await closeAutocompletePopup(hud);
 
   info("Opening Debugger");
   await openDebugger();
