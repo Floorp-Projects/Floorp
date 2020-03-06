@@ -219,6 +219,12 @@ TEST(Moz2D, SwizzleRow)
       15,  14,  13, 255, 18, 17, 16,  255, 21, 20, 19, 255, 24, 23, 22, 255,
       27,  26,  25, 255, 30, 29, 28,  255, 33, 32, 31, 255, 36, 35, 34, 255,
   };
+  const uint8_t check_unpack_xrgb[16 * 4] = {
+      255, 0,  254, 253, 255, 255, 0,  0,  255, 0,  0,  0,  255, 3,  2,  1,
+      255, 9,  0,   127, 255, 4,   5,  6,  255, 9,  8,  7,  255, 10, 11, 12,
+      255, 13, 14,  15,  255, 16,  17, 18, 255, 19, 20, 21, 255, 22, 23, 24,
+      255, 25, 26,  27,  255, 28,  29, 30, 255, 31, 32, 33, 255, 34, 35, 36,
+  };
 
   SwizzleRowFn func =
       SwizzleRow(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8);
@@ -246,4 +252,13 @@ TEST(Moz2D, SwizzleRow)
   memcpy(out_unpack, in_rgb, sizeof(in_rgb));
   func(out_unpack, out_unpack, 16);
   EXPECT_TRUE(ArrayEqual(out_unpack, check_unpack_rgbx));
+
+  func = SwizzleRow(SurfaceFormat::R8G8B8, SurfaceFormat::X8R8G8B8);
+  func(in_rgb, out_unpack, 16);
+  EXPECT_TRUE(ArrayEqual(out_unpack, check_unpack_xrgb));
+
+  memset(out_unpack, 0xE5, sizeof(out_unpack));
+  memcpy(out_unpack, in_rgb, sizeof(in_rgb));
+  func(out_unpack, out_unpack, 16);
+  EXPECT_TRUE(ArrayEqual(out_unpack, check_unpack_xrgb));
 }

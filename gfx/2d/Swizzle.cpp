@@ -892,7 +892,11 @@ void UnpackRowRGB24(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
     uint8_t r = src[aSwapRB ? 2 : 0];
     uint8_t g = src[1];
     uint8_t b = src[aSwapRB ? 0 : 2];
+#if MOZ_LITTLE_ENDIAN()
     *--dst = 0xFF000000 | (b << 16) | (g << 8) | r;
+#else
+    *--dst = 0x000000FF | (b << 8) | (g << 16) | (r << 24);
+#endif
     src -= 3;
   }
 }
@@ -905,6 +909,28 @@ template void UnpackRowRGB24<true>(const uint8_t*, uint8_t*, int32_t);
   FORMAT_CASE_ROW(                       \
       SurfaceFormat::R8G8B8, aDstFormat, \
       UnpackRowRGB24<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
+
+static void UnpackRowRGB24_To_ARGB(const uint8_t* aSrc, uint8_t* aDst,
+                                   int32_t aLength) {
+  // Because we are expanding, we can only process the data back to front in
+  // case we are performing this in place.
+  const uint8_t* src = aSrc + 3 * (aLength - 1);
+  uint32_t* dst = reinterpret_cast<uint32_t*>(aDst + 4 * aLength);
+  while (src >= aSrc) {
+    uint8_t r = src[0];
+    uint8_t g = src[1];
+    uint8_t b = src[2];
+#if MOZ_LITTLE_ENDIAN()
+    *--dst = 0x000000FF | (r << 8) | (g << 16) | (b << 24);
+#else
+    *--dst = 0xFF000000 | (r << 24) | (g << 16) | b;
+#endif
+    src -= 3;
+  }
+}
+
+#define UNPACK_ROW_RGB_TO_ARGB(aDstFormat) \
+  FORMAT_CASE_ROW(SurfaceFormat::R8G8B8, aDstFormat, UnpackRowRGB24_To_ARGB)
 
 bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
                  SurfaceFormat aSrcFormat, uint8_t* aDst, int32_t aDstStride,
@@ -1071,16 +1097,36 @@ SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat) {
     SWIZZLE_ROW_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
     SWIZZLE_ROW_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
     SWIZZLE_ROW_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_ROW_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::A8R8G8B8)
+    SWIZZLE_ROW_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::X8R8G8B8)
+
+    SWIZZLE_ROW_FALLBACK(SurfaceFormat::A8R8G8B8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_ROW_FALLBACK(SurfaceFormat::X8R8G8B8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_ROW_FALLBACK(SurfaceFormat::A8R8G8B8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_ROW_FALLBACK(SurfaceFormat::X8R8G8B8, SurfaceFormat::R8G8B8A8)
 
     SWIZZLE_ROW_OPAQUE(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
     SWIZZLE_ROW_OPAQUE(SurfaceFormat::B8G8R8X8, SurfaceFormat::B8G8R8A8)
     SWIZZLE_ROW_OPAQUE(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
     SWIZZLE_ROW_OPAQUE(SurfaceFormat::R8G8B8X8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_ROW_OPAQUE(SurfaceFormat::A8R8G8B8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_ROW_OPAQUE(SurfaceFormat::X8R8G8B8, SurfaceFormat::A8R8G8B8)
+
+    SWIZZLE_ROW_SWAP(SurfaceFormat::B8G8R8A8, SurfaceFormat::A8R8G8B8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::B8G8R8A8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::B8G8R8X8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::B8G8R8X8, SurfaceFormat::A8R8G8B8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::A8R8G8B8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::A8R8G8B8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::X8R8G8B8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_ROW_SWAP(SurfaceFormat::X8R8G8B8, SurfaceFormat::B8G8R8A8)
 
     UNPACK_ROW_RGB(SurfaceFormat::R8G8B8X8)
     UNPACK_ROW_RGB(SurfaceFormat::R8G8B8A8)
     UNPACK_ROW_RGB(SurfaceFormat::B8G8R8X8)
     UNPACK_ROW_RGB(SurfaceFormat::B8G8R8A8)
+    UNPACK_ROW_RGB_TO_ARGB(SurfaceFormat::A8R8G8B8)
+    UNPACK_ROW_RGB_TO_ARGB(SurfaceFormat::X8R8G8B8)
 
     default:
       break;
