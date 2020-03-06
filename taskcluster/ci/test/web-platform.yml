@@ -56,7 +56,6 @@ web-platform-tests:
             macosx.*/debug: 20
             windows.*/debug: 18
             windows10-64-ccov/opt: 18
-            windows10-aarch64/opt: 16
             default: 12
     max-run-time:
         by-test-platform:
@@ -66,13 +65,11 @@ web-platform-tests:
     e10s: true
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
             linux1804-32-shippable/opt: ['try', 'release']  # skip integration, Bug 1599197
             .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
-            windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
     mozharness:
@@ -100,14 +97,10 @@ web-platform-tests-reftests:
             android.*: 6
             default: 4
     e10s: true
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
-            default: built-projects
+    run-on-projects: built-projects
     tier:
         by-test-platform:
             linux1804-64-asan/opt: 2
-            windows10-aarch64.*: 2
             default: default
     mozharness:
         extra-options:
@@ -128,7 +121,6 @@ web-platform-tests-wdspec:
             - --test-type=wdspec
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
             .*-qr/.*: ['release', 'try']
             default: built-projects
     tier:
@@ -169,13 +161,11 @@ web-platform-tests-crashtests:
             - --test-type=crashtest
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
             .*-qr/.*: ['release', 'try']
             default: built-projects
     tier:
         by-test-platform:
             linux1804-64-asan/opt: 2
-            windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
 

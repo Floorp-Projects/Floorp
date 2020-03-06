@@ -84,13 +84,9 @@ jsreftest:
             macosx.*64-ccov/.*: 7200
             linux.*64-ccov/.*: 7200
             default: 3600
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try']
             android-hw-.*-api-16/debug: ['try', 'mozilla-central']
             default: built-projects
 

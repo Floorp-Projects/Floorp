@@ -22,10 +22,7 @@ job-defaults:
                     - awsy/macosx_config.py
                 default:
                     - awsy/linux_config.py
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     fission-tier:
         by-test-platform:
             linux1804-64(?!-shippable).*: 3
@@ -34,7 +31,6 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
-            windows10-aarch64/opt: ['try']
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     fission-run-on-projects:
         by-test-platform:
@@ -55,7 +51,6 @@ awsy-tp6:
         by-test-platform:
             .*-ccov/.*: []  # don't run on coverage
             .*-devedition/.*: []  # don't run on devedition
-            windows10-aarch64/opt: ['try']
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
