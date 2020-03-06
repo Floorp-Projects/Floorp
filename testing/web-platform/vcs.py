@@ -22,6 +22,8 @@ class Mercurial(object):
                                         stderr=devnull)
         except subprocess.CalledProcessError:
             return False
+        except OSError:
+            return False
         # TODO: Test on windows
         return True
 
@@ -46,6 +48,8 @@ class Git(object):
                 subprocess.check_call(["git", "rev-parse", "--show-cdup"], cwd=repo_root,
                                         stdout=devnull, stderr=devnull)
         except subprocess.CalledProcessError:
+            return False
+        except OSError:
             return False
         # TODO: Test on windows
         return True
