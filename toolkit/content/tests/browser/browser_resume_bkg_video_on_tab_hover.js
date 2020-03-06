@@ -32,7 +32,8 @@ async function check_video_decoding_state(args) {
   });
 }
 
-function check_should_send_unselected_tab_hover_msg(browser) {
+async function check_should_send_unselected_tab_hover_msg(browser) {
+  info("did not update the value now, wait until it changes.");
   if (browser.shouldHandleUnselectedTabHover) {
     ok(
       true,
@@ -40,44 +41,18 @@ function check_should_send_unselected_tab_hover_msg(browser) {
     );
     return true;
   }
-
-  info("did not update the value now, wait until it changes.");
-  return new Promise(resolve => {
-    browser.messageManager.addMessageListener(
-      "UnselectedTabHoverMsg:Enabled",
-      function() {
-        ok(
-          true,
-          "Should send unselected tab hover msg, someone is listening for it."
-        );
-        resolve();
-      }
-    );
-  });
+  return BrowserTestUtils.waitForCondition(
+    () => browser.shouldHandleUnselectedTabHover,
+    "Should send unselected tab hover msg, someone is listening for it."
+  );
 }
 
-function check_should_not_send_unselected_tab_hover_msg(browser) {
-  if (!browser.shouldHandleUnselectedTabHover) {
-    ok(
-      true,
-      "Should not send unselected tab hover msg, no one is listening for it."
-    );
-    return true;
-  }
-
+async function check_should_not_send_unselected_tab_hover_msg(browser) {
   info("did not update the value now, wait until it changes.");
-  return new Promise(resolve => {
-    browser.messageManager.addMessageListener(
-      "UnselectedTabHoverMsg:Disabled",
-      function() {
-        ok(
-          true,
-          "Should not send unselected tab hover msg, no one is listening for it."
-        );
-        resolve();
-      }
-    );
-  });
+  return BrowserTestUtils.waitForCondition(
+    () => !browser.shouldHandleUnselectedTabHover,
+    "Should not send unselected tab hover msg, no one is listening for it."
+  );
 }
 
 function get_video_decoding_suspend_promise(browser, reload) {

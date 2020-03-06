@@ -369,6 +369,21 @@ let ACTORS = {
     allFrames: true,
   },
 
+  UnselectedTabHover: {
+    parent: {
+      moduleURI: "resource://gre/actors/UnselectedTabHoverParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/UnselectedTabHoverChild.jsm",
+      events: {
+        "UnselectedTabHover:Enable": {},
+        "UnselectedTabHover:Disable": {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   WebNavigation: {
     child: {
       moduleURI: "resource://gre/actors/WebNavigationChild.jsm",
@@ -526,17 +541,6 @@ let LEGACY_ACTORS = {
         "Printing:Preview:ParseDocument",
         "Printing:Print",
       ],
-    },
-  },
-
-  UnselectedTabHover: {
-    child: {
-      module: "resource://gre/actors/UnselectedTabHoverChild.jsm",
-      events: {
-        "UnselectedTabHover:Enable": {},
-        "UnselectedTabHover:Disable": {},
-      },
-      messages: ["Browser:UnselectedTabHover"],
     },
   },
 };
