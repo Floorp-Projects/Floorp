@@ -24,6 +24,8 @@ class WindowGlobalActor : public nsISupports {
   static WindowGlobalInit AboutBlankInitializer(
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal);
 
+  virtual bool IsInProcess() = 0;
+
  protected:
   virtual ~WindowGlobalActor() = default;
 

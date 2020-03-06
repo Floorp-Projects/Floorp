@@ -30,6 +30,7 @@ enum class JSWindowActorMessageKind {
   EndGuard_,
 };
 
+class WindowGlobalActor;
 class JSWindowActorMessageMeta;
 class QueryPromiseHandler;
 
@@ -59,6 +60,7 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
                          ipc::StructuredCloneData&& aStack);
 
   virtual nsIGlobalObject* GetParentObject() const = 0;
+  virtual WindowGlobalActor* GetManager() const = 0;
 
   void RejectPendingQueries();
 
