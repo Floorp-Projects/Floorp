@@ -1706,7 +1706,7 @@ class PluginOfflineObserver final : public nsIObserver {
   explicit PluginOfflineObserver(PluginModuleChromeParent* pmp) : mPmp(pmp) {}
 
  private:
-  ~PluginOfflineObserver() {}
+  ~PluginOfflineObserver() = default;
   PluginModuleChromeParent* mPmp;
 };
 
