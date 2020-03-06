@@ -154,7 +154,6 @@ GeneratedFile('TelemetryHistogramEnums.h',
               inputs=histogram_files)
 GeneratedFile('TelemetryHistogramNameMap.h',
               script='build_scripts/gen_histogram_phf.py',
-              py2=True,
               inputs=histogram_files)
 
 # Generate scalar files.
