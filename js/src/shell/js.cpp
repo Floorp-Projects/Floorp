@@ -5546,6 +5546,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (found) {
       JS_ReportErrorASCII(cx, "'rustFrontend' option is renamed to 'smoosh'");
+      return false;
     }
 
     RootedValue optionSmoosh(cx);

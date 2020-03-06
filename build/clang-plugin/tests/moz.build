@@ -60,6 +60,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'TestLoadLibraryUsage.cpp',
     ]
 
+include('../external/tests/sources.mozbuild')
+
 DisableStlWrapping()
 NoVisibilityFlags()
 

@@ -406,6 +406,10 @@ impl FrameBuilder {
                     visibility_state.resource_cache.destroy_compositor_surface(native_surface.opaque);
                     visibility_state.resource_cache.destroy_compositor_surface(native_surface.alpha);
                 }
+
+                for (_, external_surface) in cache_state.external_native_surface_cache.drain() {
+                    visibility_state.resource_cache.destroy_compositor_surface(external_surface.native_surface_id)
+                }
             }
         }
 

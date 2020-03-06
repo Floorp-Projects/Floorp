@@ -162,8 +162,8 @@ ThirdPartyUtil::GetContentBlockingAllowListPrincipalFromWindow(
     OriginAttributes attrs =
         docShell ? nsDocShell::Cast(docShell)->GetOriginAttributes()
                  : OriginAttributes();
-    principal =
-        doc->RecomputeContentBlockingAllowListPrincipal(aURIBeingLoaded, attrs);
+    AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
+        aURIBeingLoaded, attrs, getter_AddRefs(principal));
   }
 
   if (!principal || !principal->GetIsContentPrincipal()) {

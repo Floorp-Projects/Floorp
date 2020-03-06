@@ -57,7 +57,7 @@ let whitelist = [
     platforms: ["linux"],
     isFromDevTools: false,
   },
-  // The '-moz-menulist-button' value is only supported in chrome and UA sheets
+  // The '-moz-menulist-arrow-button' value is only supported in chrome and UA sheets
   // but forms.css is loaded as a document sheet by this test.
   // Maybe bug 1261237 will fix this?
   {

@@ -27,11 +27,5 @@ EXTRA_JS_MODULES.presentation += [
     'StateMachineHelper.jsm',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_JS_MODULES += [
-        # For android presentation device
-        'AndroidCastDeviceProvider.jsm',
-    ]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'

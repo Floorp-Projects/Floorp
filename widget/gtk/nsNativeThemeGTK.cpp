@@ -295,7 +295,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
                aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
                aAppearance == StyleAppearance::Menulist ||
                aAppearance == StyleAppearance::MenulistButton ||
-               aAppearance == StyleAppearance::MozMenulistButton) {
+               aAppearance == StyleAppearance::MozMenulistArrowButton) {
       aState->active &= aState->inHover;
     } else if (aAppearance == StyleAppearance::Treetwisty ||
                aAppearance == StyleAppearance::Treetwistyopen) {
@@ -415,7 +415,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
           aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
           aAppearance == StyleAppearance::Menulist ||
           aAppearance == StyleAppearance::MenulistButton ||
-          aAppearance == StyleAppearance::MozMenulistButton) {
+          aAppearance == StyleAppearance::MozMenulistArrowButton) {
         bool menuOpen = IsOpenButton(aFrame);
         aState->depressed = IsCheckedButton(aFrame) || menuOpen;
         // we must not highlight buttons with open drop down menus on hover.
@@ -425,7 +425,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       // When the input field of the drop down button has focus, some themes
       // should draw focus for the drop down button as well.
       if ((aAppearance == StyleAppearance::MenulistButton ||
-           aAppearance == StyleAppearance::MozMenulistButton) &&
+           aAppearance == StyleAppearance::MozMenulistArrowButton) &&
           aWidgetFlags) {
         *aWidgetFlags = CheckBooleanAttr(aFrame, nsGkAtoms::parentfocused);
       }
@@ -633,7 +633,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::MenulistTextfield:
       aGtkWidgetType = MOZ_GTK_DROPDOWN_ENTRY;
       break;
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
       break;
     case StyleAppearance::ToolbarbuttonDropdown:
@@ -1390,7 +1390,7 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Dualbutton:
     case StyleAppearance::TabScrollArrowBack:
     case StyleAppearance::TabScrollArrowForward:
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::ToolbarbuttonDropdown:
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown:
@@ -1563,7 +1563,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       moz_gtk_get_tab_scroll_arrow_size(&aResult->width, &aResult->height);
       *aIsOverridable = false;
     } break;
-    case StyleAppearance::MozMenulistButton: {
+    case StyleAppearance::MozMenulistArrowButton: {
       moz_gtk_get_combo_box_entry_button_size(&aResult->width,
                                               &aResult->height);
       *aIsOverridable = false;
@@ -1914,7 +1914,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
       return gtk_check_version(3, 10, 0) == nullptr &&
              !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
         return false;
       }
@@ -1936,7 +1936,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
   // XXXdwh At some point flesh all of this out.
-  if (aAppearance == StyleAppearance::MozMenulistButton ||
+  if (aAppearance == StyleAppearance::MozMenulistArrowButton ||
       aAppearance == StyleAppearance::Radio ||
       aAppearance == StyleAppearance::RangeThumb ||
       aAppearance == StyleAppearance::Checkbox ||

@@ -6,8 +6,9 @@
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-
+#include "mozilla/StaticPrefs_media.h"
 #include "nsIChromeRegistry.h"
+#include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
 
 #ifdef MOZ_PLACES
@@ -24,6 +25,19 @@ mozilla::LazyLogModule gMediaSession("MediaSession");
 
 namespace mozilla {
 namespace dom {
+
+static bool IsMetadataEmpty(const Maybe<MediaMetadataBase>& aMetadata) {
+  // Media session's metadata is null.
+  if (!aMetadata) {
+    return true;
+  }
+
+  // All attirbutes in metadata are empty.
+  // https://w3c.github.io/mediasession/#empty-metadata
+  const MediaMetadataBase& metadata = *aMetadata;
+  return metadata.mTitle.IsEmpty() && metadata.mArtist.IsEmpty() &&
+         metadata.mAlbum.IsEmpty() && metadata.mArtwork.IsEmpty();
+}
 
 MediaSessionController::MediaSessionController(uint64_t aContextId)
     : mTopLevelBCId(aContextId) {
@@ -51,13 +65,28 @@ void MediaSessionController::NotifySessionDestroyed(
   UpdateActiveMediaSessionContextId();
 }
 
-void MediaSessionController::UpdateMetadata(uint64_t aSessionContextId,
-                                            MediaMetadataBase& aMetadata) {
+void MediaSessionController::UpdateMetadata(
+    uint64_t aSessionContextId, const Maybe<MediaMetadataBase>& aMetadata) {
   if (!mMetadataMap.Contains(aSessionContextId)) {
     return;
   }
-  LOG("Update metadata for session %" PRId64, aSessionContextId);
-  mMetadataMap.GetValue(aSessionContextId)->emplace(aMetadata);
+  if (IsMetadataEmpty(aMetadata)) {
+    LOG("Reset metadata for session %" PRId64, aSessionContextId);
+    mMetadataMap.GetValue(aSessionContextId)->reset();
+  } else {
+    LOG("Update metadata for session %" PRId64 " title=%s artist=%s album=%s",
+        aSessionContextId, NS_ConvertUTF16toUTF8((*aMetadata).mTitle).get(),
+        NS_ConvertUTF16toUTF8(aMetadata->mArtist).get(),
+        NS_ConvertUTF16toUTF8(aMetadata->mAlbum).get());
+    mMetadataMap.Put(aSessionContextId, aMetadata);
+  }
+  mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "media-session-controller-metadata-changed",
+                           nullptr);
+    }
+  }
 }
 
 void MediaSessionController::UpdateActiveMediaSessionContextId() {

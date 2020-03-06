@@ -144,13 +144,18 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
 
   // Hide urlbar zoom button if zoom is at the default zoom level,
   // if we're viewing an about:blank page with an empty/null
-  // principal, or if the customizable control is in the toolbar
+  // principal, if the PDF viewer is currently open,
+  // or if the customizable control is in the toolbar.
 
   urlbarZoomButton.hidden =
     defaultZoom == zoomFactor ||
     (aBrowser.currentURI.spec == "about:blank" &&
       (!aBrowser.contentPrincipal ||
         aBrowser.contentPrincipal.isNullPrincipal)) ||
+    (aBrowser.contentPrincipal &&
+      aBrowser.contentPrincipal.URI &&
+      aBrowser.contentPrincipal.URI.spec ==
+        "resource://pdf.js/web/viewer.html") ||
     (customizableZoomControls &&
       customizableZoomControls.getAttribute("cui-areatype") == "toolbar");
 

@@ -310,6 +310,7 @@ import_sibling_modules()
 register_strategy('test', args=('skip-unless-schedules', 'seta'))(Either)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
+register_strategy('fuzzing-builds', args=('skip-unless-schedules', 'seta'))(Either)
 
 
 # Experimental strategies that run in 'shadow-scheduler' tasks.

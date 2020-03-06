@@ -170,8 +170,6 @@
       "removeProgressListener",
       "audioPlaybackStarted",
       "audioPlaybackStopped",
-      "pauseMedia",
-      "stopMedia",
       "resumeMedia",
       "mute",
       "unmute",

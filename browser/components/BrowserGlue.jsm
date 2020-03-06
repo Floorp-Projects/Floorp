@@ -390,16 +390,6 @@ let LEGACY_ACTORS = {
     },
   },
 
-  OfflineApps: {
-    child: {
-      module: "resource:///actors/OfflineAppsChild.jsm",
-      events: {
-        MozApplicationManifest: {},
-      },
-      messages: ["OfflineApps:StartFetching"],
-    },
-  },
-
   URIFixup: {
     child: {
       module: "resource:///actors/URIFixupChild.jsm",

@@ -132,6 +132,9 @@ macosx64-asan-fuzzing/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        fuzzing-builds:
+            - macosx
 
 macosx64-fuzzing/debug:
     description: "MacOS X x64 Cross-compile Fuzzing Debug"
@@ -176,6 +179,9 @@ macosx64-fuzzing/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        fuzzing-builds:
+            - macosx
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition x64 (shippable)"

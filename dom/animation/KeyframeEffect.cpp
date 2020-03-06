@@ -724,15 +724,16 @@ template <class OptionsType>
 static KeyframeEffectParams KeyframeEffectParamsFromUnion(
     const OptionsType& aOptions, CallerType aCallerType, ErrorResult& aRv) {
   KeyframeEffectParams result;
-  if (aOptions.IsUnrestrictedDouble() ||
-      // Ignore iterationComposite and composite if the corresponding pref is
-      // not set. The default value 'Replace' will be used instead.
-      !StaticPrefs::dom_animations_api_compositing_enabled()) {
+  if (aOptions.IsUnrestrictedDouble()) {
     return result;
   }
 
   const KeyframeEffectOptions& options =
       KeyframeEffectOptionsFromUnion(aOptions);
+
+  // If dom.animations-api.compositing.enabled is turned off,
+  // iterationComposite and composite are the default value 'replace' in the
+  // dictionary.
   result.mIterationComposite = options.mIterationComposite;
   result.mComposite = options.mComposite;
 

@@ -1825,7 +1825,9 @@ MoveOperand CodeGeneratorX86Shared::toMoveOperand(LAllocation a) const {
   if (a.isFloatReg()) {
     return MoveOperand(ToFloatRegister(a));
   }
-  return MoveOperand(StackPointer, ToStackOffset(a));
+  MoveOperand::Kind kind =
+      a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
+  return MoveOperand(StackPointer, ToStackOffset(a), kind);
 }
 
 class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared> {

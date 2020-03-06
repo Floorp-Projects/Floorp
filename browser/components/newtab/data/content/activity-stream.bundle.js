@@ -6314,20 +6314,15 @@ class CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
 
   onDismissClick() {
     const {
-      data,
-      items
+      data
     } = this.props;
 
     if (this.props.dispatch && data && data.spocs && data.spocs.length) {
       const pos = 0;
-      const source = this.props.type.toUpperCase(); // Grab the displayed items in the array to dismiss.
-      // This fires a ping for all items displayed, even if below the fold.
-      // It does not fire it for items not displayed, but those items would
-      // still be filtered out because of matching flight_ids.
-      // This is otherwise just for telemetry puproses, to report which items were displayed,
-      // but not nessisarily visible, at the time of dismiss.
+      const source = this.props.type.toUpperCase(); // Grab the available items in the array to dismiss.
+      // This fires a ping for all items available, even if below the fold.
 
-      const spocsData = data.spocs.slice(0, items).map(item => ({
+      const spocsData = data.spocs.map(item => ({
         url: item.url,
         guid: item.id,
         shim: item.shim
@@ -10404,11 +10399,25 @@ const selectLayoutRender = ({
   };
 
   const handleComponent = component => {
+    if (component.spocs && component.spocs.positions && component.spocs.positions.length) {
+      const placement = component.placement || {};
+      const placementName = placement.name || "spocs";
+      const spocsData = spocs.data[placementName];
+
+      if (spocs.loaded && spocsData && spocsData.items && spocsData.items.length) {
+        return { ...component,
+          data: {
+            spocs: spocsData.items.filter(spoc => spoc && !spocs.blocked.includes(spoc.url)).map((spoc, index) => ({ ...spoc,
+              pos: index
+            }))
+          }
+        };
+      }
+    }
+
     return { ...component,
       data: {
-        spocs: handleSpocs([], component).map((spoc, index) => ({ ...spoc,
-          pos: index
-        }))
+        spocs: []
       }
     };
   };
