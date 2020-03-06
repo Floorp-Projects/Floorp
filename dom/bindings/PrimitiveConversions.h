@@ -209,7 +209,7 @@ inline bool PrimitiveConversionTraits_EnforceRange(JSContext* cx,
       rounded > PrimitiveConversionTraits_Limits<T>::max()) {
     // XXXbz a better context (first arg after cx) would sure be nice.
     return ThrowErrorMessage<MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
-        cx, "", TypeName<T>::value());
+        cx, nullptr, TypeName<T>::value());
   }
 
   *retval = static_cast<T>(rounded);
