@@ -226,7 +226,8 @@ struct TErrorResult<CleanupPolicy>::Message {
   }
   ~Message() { MOZ_COUNT_DTOR(TErrorResult::Message); }
 
-  nsTArray<nsString> mArgs;
+  // UTF-8 strings (probably ASCII in most cases) in mArgs.
+  nsTArray<nsCString> mArgs;
   dom::ErrNum mErrorNumber;
 
   bool HasCorrectNumberOfArguments() {
@@ -239,7 +240,7 @@ struct TErrorResult<CleanupPolicy>::Message {
 };
 
 template <typename CleanupPolicy>
-nsTArray<nsString>& TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(
+nsTArray<nsCString>& TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(
     const dom::ErrNum errorNumber, nsresult errorType) {
   AssertInOwningThread();
   mResult = errorType;
@@ -301,15 +302,15 @@ void TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(
     }
   }
   const uint32_t argCount = message->mArgs.Length();
-  const char16_t* args[JS::MaxNumErrorArguments + 1];
+  const char* args[JS::MaxNumErrorArguments + 1];
   for (uint32_t i = 0; i < argCount; ++i) {
     args[i] = message->mArgs.ElementAt(i).get();
   }
   args[argCount] = nullptr;
 
-  JS_ReportErrorNumberUCArray(aCx, dom::GetErrorMessage, nullptr,
-                              static_cast<unsigned>(message->mErrorNumber),
-                              argCount > 0 ? args : nullptr);
+  JS_ReportErrorNumberUTF8Array(aCx, dom::GetErrorMessage, nullptr,
+                                static_cast<unsigned>(message->mErrorNumber),
+                                argCount > 0 ? args : nullptr);
 
   ClearMessage();
   mResult = NS_OK;
