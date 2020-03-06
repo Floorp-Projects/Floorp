@@ -804,15 +804,12 @@
     /*
      * Create and push a new object with no properties.
      *
-     * (This opcode has 4 unused bytes so it can be easily turned into
-     * `JSOp::NewObject` during bytecode generation.)
-     *
      *   Category: Objects
      *   Type: Creating objects
-     *   Operands: uint32_t _unused
+     *   Operands:
      *   Stack: => obj
      */ \
-    MACRO(NewInit, new_init, NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
+    MACRO(NewInit, new_init, NULL, 1, 0, 1, JOF_UINT32|JOF_IC) \
     /*
      * Create and push a new object of a predetermined shape.
      *
