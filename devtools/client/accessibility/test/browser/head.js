@@ -163,7 +163,7 @@ async function disableAccessibilityInspector(env) {
   const { doc, win, panel } = env;
   // Disable accessibility service through the panel and wait for the shutdown
   // event.
-  const shutdown = panel.front.once("shutdown");
+  const shutdown = panel.accessibilityProxy.accessibilityFront.once("shutdown");
   const disableButton = await BrowserTestUtils.waitForCondition(
     () => doc.getElementById("accessibility-disable-button"),
     "Wait for the disable button."
@@ -664,7 +664,12 @@ async function toggleSimulationOption(doc, optionIndex) {
 }
 
 async function findAccessibleFor(
-  { toolbox: { target }, panel: { walker: accessibleWalkerFront } },
+  {
+    toolbox: { target },
+    panel: {
+      accessibilityProxy: { accessibleWalkerFront },
+    },
+  },
   selector
 ) {
   const domWalker = (await target.getFront("inspector")).walker;
