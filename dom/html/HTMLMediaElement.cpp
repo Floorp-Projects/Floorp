@@ -394,21 +394,23 @@ class HTMLMediaElement::MediaControlEventListener final
     MOZ_ASSERT(aElement);
   }
 
-  void Start() {
+  // Return false if the listener can't be started. Otherwise, return true.
+  bool Start() {
     MOZ_ASSERT(NS_IsMainThread());
     if (IsStarted()) {
       // We have already been started, do not notify start twice.
-      return;
+      return true;
     }
 
     // Fail to init media agent, we are not able to notify the media controller
     // any update and also are not able to receive media control key events.
     if (!InitMediaAgent()) {
       MEDIACONTROL_LOG("Fail to init content media agent!");
-      return;
+      return false;
     }
 
     NotifyMediaStateChanged(ControlledMediaState::eStarted);
+    return true;
   }
 
   void Stop() {
@@ -444,10 +446,13 @@ class HTMLMediaElement::MediaControlEventListener final
 
   void UpdateMediaAudibleState(bool aIsOwnerAudible) {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(IsStarted());
     if (mIsOwnerAudible == aIsOwnerAudible) {
       return;
     }
     mIsOwnerAudible = aIsOwnerAudible;
+    MEDIACONTROL_LOG("Media becomes %s",
+                     mIsOwnerAudible ? "audible" : "inaudible");
     // If media hasn't started playing, it doesn't make sense to update media
     // audible state. Therefore, in that case we would noitfy the audible state
     // when media starts playing.
@@ -7215,7 +7220,7 @@ void HTMLMediaElement::NotifyAudioPlaybackChanged(
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
-  if (mMediaControlEventListener) {
+  if (mMediaControlEventListener && mMediaControlEventListener->IsStarted()) {
     mMediaControlEventListener->UpdateMediaAudibleState(IsAudible());
   }
   // only request wake lock for audible media.
@@ -7687,17 +7692,21 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
     mMediaControlEventListener = new MediaControlEventListener(this);
   }
 
-  if (mMediaControlEventListener->IsStarted()) {
+  if (mMediaControlEventListener->IsStarted() ||
+      !mMediaControlEventListener->Start()) {
     return;
   }
-
-  mMediaControlEventListener->Start();
 
   // If `mPaused` was being changed at the time the listener didn't start, then
   // this method won't be called. Eg. if the media becomes audible after it has
   // been playing for a while. Therefore, we have to manually update playback
   // state after starting listener.
   NotifyMediaControlPlaybackStateChanged();
+
+  // `UpdateMediaAudibleState()` could only be used after we start the listener,
+  // but the audible state update could happen before that. Therefore, we have
+  // to manually update media's audible state as well.
+  mMediaControlEventListener->UpdateMediaAudibleState(IsAudible());
 }
 
 void HTMLMediaElement::StopListeningMediaControlEventIfNeeded() {
