@@ -148,6 +148,24 @@ static Rect FixAspectRatio(const Rect& aRect) {
   return rect;
 }
 
+// This pushes and pops a clip rect to the draw target.
+//
+// This is done to reduce fuzz in places where we may have antialiasing, because
+// skia is not clip-invariant: given different clips, it does not guarantee the
+// same result, even if the painted content doesn't intersect the clips.
+//
+// This is a bit sad, overall, but...
+struct MOZ_RAII AutoClipRect {
+  AutoClipRect(DrawTarget& aDt, const Rect& aRect) : mDt(aDt) {
+    mDt.PushClipRect(aRect);
+  }
+
+  ~AutoClipRect() { mDt.PopClip(); }
+
+ private:
+  DrawTarget& mDt;
+};
+
 static void PaintRoundedRectWithBorder(DrawTarget* aDrawTarget,
                                        const Rect& aRect,
                                        const Color& aBackgroundColor,
@@ -540,6 +558,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   EventStates eventState = GetContentState(aFrame, aAppearance);
 
   Rect devPxRect = NSRectToSnappedRect(aRect, twipsPerPixel, *dt);
+  AutoClipRect clip(*dt, devPxRect);
 
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     bool isHTML = IsHTMLContent(aFrame);
