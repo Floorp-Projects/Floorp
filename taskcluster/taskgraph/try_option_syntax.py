@@ -9,7 +9,6 @@ import copy
 import logging
 import re
 import shlex
-import six
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -296,7 +295,7 @@ class TryOptionSyntax(object):
 
     def generate_test_tiers(self, full_task_graph):
         retval = defaultdict(set)
-        for t in six.itervalues(full_task_graph.tasks):
+        for t in full_task_graph.tasks.itervalues():
             if t.attributes.get('kind') == 'test':
                 try:
                     tier = t.task['extra']['treeherder']['tier']
@@ -321,11 +320,11 @@ class TryOptionSyntax(object):
         if build_types_arg is None:
             build_types_arg = []
 
-        build_types = (_f for _f in (BUILD_TYPE_ALIASES.get(build_type) for
-                       build_type in build_types_arg) if _f)
+        build_types = filter(None, [BUILD_TYPE_ALIASES.get(build_type) for
+                             build_type in build_types_arg])
 
         all_types = set(t.attributes['build_type']
-                        for t in six.itervalues(full_task_graph.tasks)
+                        for t in full_task_graph.tasks.itervalues()
                         if 'build_type' in t.attributes)
         bad_types = set(build_types) - all_types
         if bad_types:
@@ -350,10 +349,10 @@ class TryOptionSyntax(object):
                             (build, ', '.join(RIDEALONG_BUILDS[build])))
 
         test_platforms = set(t.attributes['test_platform']
-                             for t in six.itervalues(full_task_graph.tasks)
+                             for t in full_task_graph.tasks.itervalues()
                              if 'test_platform' in t.attributes)
         build_platforms = set(t.attributes['build_platform']
-                              for t in six.itervalues(full_task_graph.tasks)
+                              for t in full_task_graph.tasks.itervalues()
                               if 'build_platform' in t.attributes)
         all_platforms = test_platforms | build_platforms
         bad_platforms = set(results) - all_platforms
@@ -379,7 +378,7 @@ class TryOptionSyntax(object):
             return []
 
         all_platforms = set(t.attributes['test_platform'].split('/')[0]
-                            for t in six.itervalues(full_task_graph.tasks)
+                            for t in full_task_graph.tasks.itervalues()
                             if 'test_platform' in t.attributes)
 
         tests = self.parse_test_opts(test_arg, all_platforms)
@@ -388,7 +387,7 @@ class TryOptionSyntax(object):
             return []
 
         all_tests = set(t.attributes[attr_name]
-                        for t in six.itervalues(full_task_graph.tasks)
+                        for t in full_task_graph.tasks.itervalues()
                         if attr_name in t.attributes)
 
         # Special case where tests is 'all' and must be expanded
@@ -545,7 +544,7 @@ class TryOptionSyntax(object):
 
     def find_all_attribute_suffixes(self, graph, prefix):
         rv = set()
-        for t in six.itervalues(graph.tasks):
+        for t in graph.tasks.itervalues():
             for a in t.attributes:
                 if a.startswith(prefix):
                     rv.add(a[len(prefix):])
