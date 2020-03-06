@@ -6879,6 +6879,15 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# If media is being paused after a certain period, then we would think that
+# media doesn't need to be controlled anymore. Therefore, that media would stop
+# listening to the media control key events. The value of this pref is how long
+# media would stop listening to the event after it's paused.
+- name: media.mediacontrol.stopcontrol.timer.ms
+  type: RelaxedAtomicUint32
+  value: 60000
+  mirror: always
+
 - name: media.webrtc.platformencoder
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
