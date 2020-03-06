@@ -215,7 +215,6 @@ GeneratedFile('TelemetryProcessEnums.h',
 
 GeneratedFile('TelemetryProcessData.h',
               script='build_scripts/gen_process_data.py',
-              py2=True,
               inputs=processes_files)
 
 # Ensure that the GeckoView metrics file parses correctly prior to it
