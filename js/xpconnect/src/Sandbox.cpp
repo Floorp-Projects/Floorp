@@ -31,6 +31,7 @@
 #include "xpc_make_class.h"
 #include "XPCWrapper.h"
 #include "Crypto.h"
+#include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
@@ -305,8 +306,9 @@ static bool SandboxFetch(JSContext* cx, JS::HandleObject scope,
     return false;
   }
   RootedDictionary<dom::RequestInit> options(cx);
+  BindingCallContext callCx(cx, "fetch");
   if (!options.Init(cx, args.hasDefined(1) ? args[1] : JS::NullHandleValue,
-                    "Argument 2 of fetch", false)) {
+                    "Argument 2", false)) {
     return false;
   }
   nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(scope);
