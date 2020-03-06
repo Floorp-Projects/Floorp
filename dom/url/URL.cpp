@@ -50,10 +50,17 @@ already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
                                        const nsAString& aURL,
                                        const nsAString& aBase,
                                        ErrorResult& aRv) {
+  // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+  nsAutoCString base;
+  if (!AppendUTF16toUTF8(aBase, base, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIURI> baseUri;
-  nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase);
+  nsresult rv = NS_NewURI(getter_AddRefs(baseUri), base);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aBase);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(base);
     return nullptr;
   }
 
@@ -64,12 +71,19 @@ already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
 already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
                                        const nsAString& aURL, nsIURI* aBase,
                                        ErrorResult& aRv) {
+  // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+  nsAutoCString urlStr;
+  if (!AppendUTF16toUTF8(aURL, urlStr, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, aBase);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), urlStr, nullptr, aBase);
   if (NS_FAILED(rv)) {
     // No need to warn in this case. It's common to use the URL constructor
     // to determine if a URL is valid and an exception will be propagated.
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aURL);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(urlStr);
     return nullptr;
   }
 
@@ -156,10 +170,17 @@ void URL::URLSearchParamsUpdated(URLSearchParams* aSearchParams) {
 void URL::GetHref(nsAString& aHref) const { URL_GETTER(aHref, GetSpec); }
 
 void URL::SetHref(const nsAString& aHref, ErrorResult& aRv) {
+  // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+  nsAutoCString href;
+  if (!AppendUTF16toUTF8(aHref, href, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), href);
   if (NS_FAILED(rv)) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aHref);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(href);
     return;
   }
 

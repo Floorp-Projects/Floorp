@@ -108,11 +108,11 @@ void PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
   while (start != end) {
     // the first char must be in the range %x61-7A
     if ((*start < 'a' || *start > 'z')) {
-      nsAutoString error;
+      nsAutoCString error;
       error.AssignLiteral("'");
-      error.Append(aIdentifier);
+      error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
       error.AppendLiteral("' is not valid. The character '");
-      error.Append(*start);
+      error.Append(NS_ConvertUTF16toUTF8(start, 1));
       error.AppendLiteral(
           "' at the beginning or after the '-' must be in the range [a-z].");
       aRv.ThrowRangeError(error);
@@ -127,11 +127,11 @@ void PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
     }
     // if the char is not in the range %x61-7A + DIGITs, it must be '-'
     if (start != end && *start != '-') {
-      nsAutoString error;
+      nsAutoCString error;
       error.AssignLiteral("'");
-      error.Append(aIdentifier);
+      error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
       error.AppendLiteral("' is not valid. The character '");
-      error.Append(*start);
+      error.Append(NS_ConvertUTF16toUTF8(start, 1));
       error.AppendLiteral("' must be in the range [a-zA-z0-9-].");
       aRv.ThrowRangeError(error);
       return;
@@ -140,11 +140,11 @@ void PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
       ++start;
       // the last char can not be '-'
       if (start == end) {
-        nsAutoString error;
+        nsAutoCString error;
         error.AssignLiteral("'");
-        error.Append(aIdentifier);
+        error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
         error.AppendLiteral("' is not valid. The last character '");
-        error.Append(*start);
+        error.Append(NS_ConvertUTF16toUTF8(start, 1));
         error.AppendLiteral("' must be in the range [a-z0-9].");
         aRv.ThrowRangeError(error);
         return;
@@ -177,9 +177,9 @@ void PaymentRequest::IsValidPaymentMethodIdentifier(
       urlParser->ParseURL(url.get(), url.Length(), &schemePos, &schemeLen,
                           &authorityPos, &authorityLen, nullptr, nullptr);
   if (NS_FAILED(rv)) {
-    nsAutoString error;
+    nsAutoCString error;
     error.AppendLiteral("Error parsing payment method identifier '");
-    error.Append(aIdentifier);
+    error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
     error.AppendLiteral("'as a URL.");
     aRv.ThrowRangeError(error);
     return;
@@ -191,17 +191,17 @@ void PaymentRequest::IsValidPaymentMethodIdentifier(
     return;
   }
   if (!Substring(aIdentifier, schemePos, schemeLen).EqualsASCII("https")) {
-    nsAutoString error;
+    nsAutoCString error;
     error.AssignLiteral("'");
-    error.Append(aIdentifier);
+    error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
     error.AppendLiteral("' is not valid. The scheme must be 'https'.");
     aRv.ThrowRangeError(error);
     return;
   }
   if (Substring(aIdentifier, authorityPos, authorityLen).IsEmpty()) {
-    nsAutoString error;
+    nsAutoCString error;
     error.AssignLiteral("'");
-    error.Append(aIdentifier);
+    error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
     error.AppendLiteral("' is not valid. hostname can not be empty.");
     aRv.ThrowRangeError(error);
     return;
@@ -251,9 +251,9 @@ void PaymentRequest::IsValidPaymentMethodIdentifier(
     // not exist.
     if ((usernameLen <= 0) && (passwordLen <= 0)) {
       if (authority.Length() - atPos - 1 == 0) {
-        nsAutoString error;
+        nsAutoCString error;
         error.AssignLiteral("'");
-        error.Append(aIdentifier);
+        error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
         error.AppendLiteral("' is not valid. hostname can not be empty.");
         aRv.ThrowRangeError(error);
         return;
@@ -267,9 +267,9 @@ void PaymentRequest::IsValidPaymentMethodIdentifier(
       if (NS_FAILED(rv)) {
         // ParseServerInfo returns NS_ERROR_MALFORMED_URI in all fail cases, we
         // probably need a followup bug to figure out the fail reason.
-        nsAutoString error;
+        nsAutoCString error;
         error.AssignLiteral("Error extracting hostname from '");
-        error.Append(NS_ConvertUTF8toUTF16(serverInfo));
+        error.Append(serverInfo);
         error.AppendLiteral("'.");
         aRv.ThrowRangeError(error);
         return;
@@ -278,9 +278,9 @@ void PaymentRequest::IsValidPaymentMethodIdentifier(
   }
   // PMI is valid when usernameLen/passwordLen equals to -1 or 0.
   if (usernameLen > 0 || passwordLen > 0) {
-    nsAutoString error;
+    nsAutoCString error;
     error.AssignLiteral("'");
-    error.Append(aIdentifier);
+    error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
     error.AssignLiteral("' is not valid. Username and password must be empty.");
     aRv.ThrowRangeError(error);
     return;
@@ -288,9 +288,9 @@ void PaymentRequest::IsValidPaymentMethodIdentifier(
 
   // PMI is valid when hostnameLen is larger than 0
   if (hostnameLen <= 0) {
-    nsAutoString error;
+    nsAutoCString error;
     error.AssignLiteral("'");
-    error.Append(aIdentifier);
+    error.Append(NS_ConvertUTF16toUTF8(aIdentifier));
     error.AppendLiteral("' is not valid. hostname can not be empty.");
     aRv.ThrowRangeError(error);
     return;
@@ -321,7 +321,7 @@ void PaymentRequest::IsValidMethodData(
       nsAutoString error;
       if (!service->IsValidBasicCardRequest(aCx, methodData.mData.Value(),
                                             error)) {
-        aRv.ThrowTypeError(error);
+        aRv.ThrowTypeError(NS_ConvertUTF16toUTF8(error));
         return;
       }
     }
@@ -353,11 +353,11 @@ void PaymentRequest::IsValidNumber(const nsAString& aItem,
   }
 
   if (NS_FAILED(error)) {
-    nsAutoString errorMsg;
+    nsAutoCString errorMsg;
     errorMsg.AssignLiteral("The amount.value of \"");
-    errorMsg.Append(aItem);
+    errorMsg.Append(NS_ConvertUTF16toUTF8(aItem));
     errorMsg.AppendLiteral("\"(");
-    errorMsg.Append(aStr);
+    errorMsg.Append(NS_ConvertUTF16toUTF8(aStr));
     errorMsg.AppendLiteral(") must be a valid decimal monetary value.");
     aRv.ThrowTypeError(errorMsg);
     return;
@@ -381,11 +381,11 @@ void PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
   }
 
   if (NS_FAILED(error)) {
-    nsAutoString errorMsg;
+    nsAutoCString errorMsg;
     errorMsg.AssignLiteral("The amount.value of \"");
-    errorMsg.Append(aItem);
+    errorMsg.Append(NS_ConvertUTF16toUTF8(aItem));
     errorMsg.AppendLiteral("\"(");
-    errorMsg.Append(aStr);
+    errorMsg.Append(NS_ConvertUTF16toUTF8(aStr));
     errorMsg.AppendLiteral(
         ") must be a valid and non-negative decimal monetary value.");
     aRv.ThrowTypeError(errorMsg);
@@ -405,11 +405,11 @@ void PaymentRequest::IsValidCurrency(const nsAString& aItem,
    * "Z" (U+0041 to U+005A) or the range "a" to "z" (U+0061 to U+007A)
    */
   if (aCurrency.Length() != 3) {
-    nsAutoString error;
+    nsAutoCString error;
     error.AssignLiteral("The length amount.currency of \"");
-    error.Append(aItem);
+    error.Append(NS_ConvertUTF16toUTF8(aItem));
     error.AppendLiteral("\"(");
-    error.Append(aCurrency);
+    error.Append(NS_ConvertUTF16toUTF8(aCurrency));
     error.AppendLiteral(") must be 3.");
     aRv.ThrowRangeError(error);
     return;
@@ -421,11 +421,11 @@ void PaymentRequest::IsValidCurrency(const nsAString& aItem,
         (aCurrency.CharAt(idx) >= 'a' && aCurrency.CharAt(idx) <= 'z')) {
       continue;
     }
-    nsAutoString error;
+    nsAutoCString error;
     error.AssignLiteral("The character amount.currency of \"");
-    error.Append(aItem);
+    error.Append(NS_ConvertUTF16toUTF8(aItem));
     error.AppendLiteral("\"(");
-    error.Append(aCurrency);
+    error.Append(NS_ConvertUTF16toUTF8(aCurrency));
     error.AppendLiteral(
         ") must be in the range 'A' to 'Z'(U+0041 to U+005A) or 'a' to "
         "'z'(U+0061 to U+007A).");
@@ -515,9 +515,9 @@ void PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
         return;
       }
       if (seenIDs.Contains(shippingOption.mId)) {
-        nsAutoString error;
+        nsAutoCString error;
         error.AssignLiteral("Duplicate shippingOption id '");
-        error.Append(shippingOption.mId);
+        error.Append(NS_ConvertUTF16toUTF8(shippingOption.mId));
         error.AppendLiteral("'");
         aRv.ThrowTypeError(error);
         return;

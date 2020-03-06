@@ -144,20 +144,6 @@ struct CStringArrayAppender {
                        "required by the ErrNum.");
   }
 
-  // Allow passing nsAString instances for our args.
-  template <typename... Ts>
-  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
-                     const nsAString& aFirst, Ts&&... aOtherArgs) {
-    if (aCount == 0) {
-      MOZ_ASSERT(false,
-                 "There should not be more string arguments provided than are "
-                 "required by the ErrNum.");
-      return;
-    }
-    aArgs.AppendElement(NS_ConvertUTF16toUTF8(aFirst));
-    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
-  }
-
   // Allow passing nsACString instances for our args.
   template <typename... Ts>
   static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
@@ -356,11 +342,6 @@ class TErrorResult {
   // To be used when throwing a TypeError with a completely custom
   // message string that's only used in one spot.
   inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowTypeError(const nsAString& aMessage) {
-    this->template ThrowTypeError<dom::MSG_ONE_OFF_TYPEERR>(aMessage);
-  }
-
-  inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
   ThrowTypeError(const nsACString& aMessage) {
     this->template ThrowTypeError<dom::MSG_ONE_OFF_TYPEERR>(aMessage);
   }
@@ -384,11 +365,6 @@ class TErrorResult {
 
   // To be used when throwing a RangeError with a completely custom
   // message string that's only used in one spot.
-  inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowRangeError(const nsAString& aMessage) {
-    this->template ThrowRangeError<dom::MSG_ONE_OFF_RANGEERR>(aMessage);
-  }
-
   inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
   ThrowRangeError(const nsACString& aMessage) {
     this->template ThrowRangeError<dom::MSG_ONE_OFF_RANGEERR>(aMessage);

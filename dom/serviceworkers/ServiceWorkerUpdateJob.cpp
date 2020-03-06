@@ -231,8 +231,7 @@ void ServiceWorkerUpdateJob::AsyncExecute() {
 
   if (!registration) {
     ErrorResult rv;
-    rv.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(
-        NS_ConvertUTF8toUTF16(mScope), "uninstalled");
+    rv.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(mScope, "uninstalled");
     FailUpdateJob(rv);
     return;
   }
@@ -247,8 +246,7 @@ void ServiceWorkerUpdateJob::AsyncExecute() {
   //   2. Invoke Finish Job with job and abort these steps."
   if (newest && !newest->ScriptSpec().Equals(mScriptSpec)) {
     ErrorResult rv;
-    rv.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(
-        NS_ConvertUTF8toUTF16(mScope), "changed");
+    rv.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(mScope, "changed");
     FailUpdateJob(rv);
     return;
   }
@@ -455,10 +453,8 @@ void ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(
 
   if (NS_WARN_IF(!aScriptEvaluationResult)) {
     ErrorResult error;
-
-    NS_ConvertUTF8toUTF16 scriptSpec(mScriptSpec);
-    NS_ConvertUTF8toUTF16 scope(mRegistration->Scope());
-    error.ThrowTypeError<MSG_SW_SCRIPT_THREW>(scriptSpec, scope);
+    error.ThrowTypeError<MSG_SW_SCRIPT_THREW>(mScriptSpec,
+                                              mRegistration->Scope());
     FailUpdateJob(error);
     return;
   }

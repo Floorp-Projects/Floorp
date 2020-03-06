@@ -49,7 +49,7 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
-    aRv.ThrowTypeError<MSG_URL_NOT_LOADABLE>(NS_ConvertUTF8toUTF16(spec));
+    aRv.ThrowTypeError<MSG_URL_NOT_LOADABLE>(spec);
     return nullptr;
   }
 

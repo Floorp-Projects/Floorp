@@ -59,7 +59,7 @@ void CheckForSlashEscapedCharsInPath(nsIURI* aURI, const char* aURLDescription,
   ToLowerCase(path);
   if (path.Find("%2f") != kNotFound || path.Find("%5c") != kNotFound) {
     nsPrintfCString err("%s contains %%2f or %%5c", aURLDescription);
-    aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+    aRv.ThrowTypeError(err);
   }
 }
 

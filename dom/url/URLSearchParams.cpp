@@ -344,7 +344,7 @@ already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
       if (item.Length() != 2) {
         nsPrintfCString err("Expected 2 items in pair but got %zu",
                             item.Length());
-        aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+        aRv.ThrowTypeError(err);
         return nullptr;
       }
       sp->Append(item[0], item[1]);

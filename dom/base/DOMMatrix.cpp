@@ -60,8 +60,7 @@ static bool ValidateAndFixupMatrix2DInit(DOMMatrix2DInit& aMatrixInit,
     }                                                     \
   }
 #define ValidateAndSet(field, alias, fieldName, aliasName, defaultValue) \
-  ValidateAliases((field), (alias), NS_LITERAL_STRING(fieldName),        \
-                  NS_LITERAL_STRING(aliasName));                         \
+  ValidateAliases((field), (alias), fieldName, aliasName);               \
   SetFromAliasOrDefault((field), (alias), (defaultValue));
 
   ValidateAndSet(aMatrixInit.mM11, aMatrixInit.mA, "m11", "a", 1);
@@ -81,17 +80,16 @@ static bool ValidateAndFixupMatrix2DInit(DOMMatrix2DInit& aMatrixInit,
 // https://drafts.fxtf.org/geometry/#matrix-validate-and-fixup
 static bool ValidateAndFixupMatrixInit(DOMMatrixInit& aMatrixInit,
                                        ErrorResult& aRv) {
-#define Check3DField(field, fieldName, defaultValue)  \
-  if ((field) != (defaultValue)) {                    \
-    if (!aMatrixInit.mIs2D.WasPassed()) {             \
-      aMatrixInit.mIs2D.Construct(false);             \
-      return true;                                    \
-    }                                                 \
-    if (aMatrixInit.mIs2D.Value()) {                  \
-      aRv.ThrowTypeError<MSG_MATRIX_INIT_EXCEEDS_2D>( \
-          NS_LITERAL_STRING(fieldName));              \
-      return false;                                   \
-    }                                                 \
+#define Check3DField(field, fieldName, defaultValue)             \
+  if ((field) != (defaultValue)) {                               \
+    if (!aMatrixInit.mIs2D.WasPassed()) {                        \
+      aMatrixInit.mIs2D.Construct(false);                        \
+      return true;                                               \
+    }                                                            \
+    if (aMatrixInit.mIs2D.Value()) {                             \
+      aRv.ThrowTypeError<MSG_MATRIX_INIT_EXCEEDS_2D>(fieldName); \
+      return false;                                              \
+    }                                                            \
   }
 
   if (!ValidateAndFixupMatrix2DInit(aMatrixInit, aRv)) {
@@ -726,7 +724,7 @@ static void SetDataInMatrix(DOMMatrixReadOnly* aMatrix, const T* aData,
     aMatrix->SetE(aData[4]);
     aMatrix->SetF(aData[5]);
   } else {
-    nsAutoString lengthStr;
+    nsAutoCString lengthStr;
     lengthStr.AppendInt(aLength);
     aRv.ThrowTypeError<MSG_MATRIX_INIT_LENGTH_WRONG>(lengthStr);
   }
