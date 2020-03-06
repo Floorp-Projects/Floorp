@@ -46,6 +46,21 @@
 // Utility functions
 // ============================================================================
 
+
+static void
+convert_kvm_err(const char *syscall, char *errbuf) {
+    char fullmsg[8192];
+
+    sprintf(fullmsg, "(originated from %s: %s)", syscall, errbuf);
+    if (strstr(errbuf, "Permission denied") != NULL)
+        AccessDenied(fullmsg);
+    else if (strstr(errbuf, "Operation not permitted") != NULL)
+        AccessDenied(fullmsg);
+    else
+        PyErr_Format(PyExc_RuntimeError, fullmsg);
+}
+
+
 int
 psutil_kinfo_proc(pid_t pid, struct kinfo_proc *proc) {
     // Fills a kinfo_proc struct based on process pid.
@@ -67,7 +82,7 @@ psutil_kinfo_proc(pid_t pid, struct kinfo_proc *proc) {
     }
     // sysctl stores 0 in the size if we can't find the process information.
     if (size == 0) {
-        NoSuchProcess("");
+        NoSuchProcess("sysctl (size = 0)");
         return -1;
     }
     return 0;
@@ -75,7 +90,7 @@ psutil_kinfo_proc(pid_t pid, struct kinfo_proc *proc) {
 
 
 struct kinfo_file *
-kinfo_getfile(long pid, int* cnt) {
+kinfo_getfile(pid_t pid, int* cnt) {
     // Mimic's FreeBSD kinfo_file call, taking a pid and a ptr to an
     // int as arg and returns an array with cnt struct kinfo_file.
     int mib[6];
@@ -84,7 +99,7 @@ kinfo_getfile(long pid, int* cnt) {
     mib[0] = CTL_KERN;
     mib[1] = KERN_FILE;
     mib[2] = KERN_FILE_BYPID;
-    mib[3] = (int) pid;
+    mib[3] = pid;
     mib[4] = sizeof(struct kinfo_file);
     mib[5] = 0;
 
@@ -133,16 +148,16 @@ psutil_get_proc_list(struct kinfo_proc **procList, size_t *procCount) {
     assert(procCount != NULL);
 
     kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
-
-    if (kd == NULL) {
-        return errno;
+    if (! kd) {
+        convert_kvm_err("kvm_openfiles", errbuf);
+        return 1;
     }
 
     result = kvm_getprocs(kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &cnt);
     if (result == NULL) {
+        PyErr_Format(PyExc_RuntimeError, "kvm_getprocs syscall failed");
         kvm_close(kd);
-        err(1, NULL);
-        return errno;
+        return 1;
     }
 
     *procCount = (size_t)cnt;
@@ -150,9 +165,9 @@ psutil_get_proc_list(struct kinfo_proc **procList, size_t *procCount) {
     size_t mlen = cnt * sizeof(struct kinfo_proc);
 
     if ((*procList = malloc(mlen)) == NULL) {
+        PyErr_NoMemory();
         kvm_close(kd);
-        err(1, NULL);
-        return errno;
+        return 1;
     }
 
     memcpy(*procList, result, mlen);
@@ -163,8 +178,8 @@ psutil_get_proc_list(struct kinfo_proc **procList, size_t *procCount) {
 }
 
 
-char **
-_psutil_get_argv(long pid) {
+static char **
+_psutil_get_argv(pid_t pid) {
     static char **argv;
     int argv_mib[] = {CTL_KERN, KERN_PROC_ARGS, pid, KERN_PROC_ARGV};
     size_t argv_size = 128;
@@ -189,7 +204,7 @@ _psutil_get_argv(long pid) {
 
 // returns the command line as a python list object
 PyObject *
-psutil_get_cmdline(long pid) {
+psutil_get_cmdline(pid_t pid) {
     static char **argv;
     char **p;
     PyObject *py_arg = NULL;
@@ -226,7 +241,7 @@ psutil_proc_threads(PyObject *self, PyObject *args) {
     // https://github.com/janmojzis/pstree/blob/master/proc_kvm.c
     // Note: this requires root access, else it will fail trying
     // to access /dev/kmem.
-    long pid;
+    pid_t pid;
     kvm_t *kd = NULL;
     int nentries, i;
     char errbuf[4096];
@@ -236,15 +251,12 @@ psutil_proc_threads(PyObject *self, PyObject *args) {
 
     if (py_retlist == NULL)
         return NULL;
-    if (! PyArg_ParseTuple(args, "l", &pid))
+    if (! PyArg_ParseTuple(args, _Py_PARSE_PID, &pid))
         goto error;
 
     kd = kvm_openfiles(0, 0, 0, O_RDONLY, errbuf);
     if (! kd) {
-        if (strstr(errbuf, "Permission denied") != NULL)
-            AccessDenied("");
-        else
-            PyErr_Format(PyExc_RuntimeError, "kvm_openfiles() syscall failed");
+        convert_kvm_err("kvm_openfiles()", errbuf);
         goto error;
     }
 
@@ -253,7 +265,7 @@ psutil_proc_threads(PyObject *self, PyObject *args) {
         sizeof(*kp), &nentries);
     if (! kp) {
         if (strstr(errbuf, "Permission denied") != NULL)
-            AccessDenied("");
+            AccessDenied("kvm_getprocs");
         else
             PyErr_Format(PyExc_RuntimeError, "kvm_getprocs() syscall failed");
         goto error;
@@ -264,7 +276,7 @@ psutil_proc_threads(PyObject *self, PyObject *args) {
             continue;
         if (kp[i].p_pid == pid) {
             py_tuple = Py_BuildValue(
-                "Idd",
+                _Py_PARSE_PID "dd",
                 kp[i].p_tid,
                 PSUTIL_KPT2DOUBLE(kp[i].p_uutime),
                 PSUTIL_KPT2DOUBLE(kp[i].p_ustime));
@@ -390,25 +402,23 @@ error:
 
 PyObject *
 psutil_proc_num_fds(PyObject *self, PyObject *args) {
-    long pid;
+    pid_t pid;
     int cnt;
 
     struct kinfo_file *freep;
     struct kinfo_proc kipp;
 
-    if (! PyArg_ParseTuple(args, "l", &pid))
+    if (! PyArg_ParseTuple(args, _Py_PARSE_PID, &pid))
         return NULL;
+
     if (psutil_kinfo_proc(pid, &kipp) == -1)
         return NULL;
 
-    errno = 0;
     freep = kinfo_getfile(pid, &cnt);
-    if (freep == NULL) {
-        psutil_raise_for_pid(pid, "kinfo_getfile()");
+    if (freep == NULL)
         return NULL;
-    }
-    free(freep);
 
+    free(freep);
     return Py_BuildValue("i", cnt);
 }
 
@@ -418,12 +428,12 @@ psutil_proc_cwd(PyObject *self, PyObject *args) {
     // Reference:
     // https://github.com/openbsd/src/blob/
     //     588f7f8c69786211f2d16865c552afb91b1c7cba/bin/ps/print.c#L191
-    long pid;
+    pid_t pid;
     struct kinfo_proc kp;
     char path[MAXPATHLEN];
     size_t pathlen = sizeof path;
 
-    if (! PyArg_ParseTuple(args, "l", &pid))
+    if (! PyArg_ParseTuple(args, _Py_PARSE_PID, &pid))
         return NULL;
     if (psutil_kinfo_proc(pid, &kp) == -1)
         return NULL;
@@ -482,7 +492,7 @@ psutil_inet6_addrstr(struct in6_addr *p)
  */
 PyObject *
 psutil_proc_connections(PyObject *self, PyObject *args) {
-    long pid;
+    pid_t pid;
     int i;
     int cnt;
     struct kinfo_file *freep = NULL;
@@ -499,17 +509,16 @@ psutil_proc_connections(PyObject *self, PyObject *args) {
 
     if (py_retlist == NULL)
         return NULL;
-    if (! PyArg_ParseTuple(args, "lOO", &pid, &py_af_filter, &py_type_filter))
+    if (! PyArg_ParseTuple(args, _Py_PARSE_PID "OO", &pid, &py_af_filter,
+                           &py_type_filter))
         goto error;
     if (!PySequence_Check(py_af_filter) || !PySequence_Check(py_type_filter)) {
         PyErr_SetString(PyExc_TypeError, "arg 2 or 3 is not a sequence");
         goto error;
     }
 
-    errno = 0;
     freep = kinfo_getfile(pid, &cnt);
     if (freep == NULL) {
-        psutil_raise_for_pid(pid, "kinfo_getfile()");
         goto error;
     }
 

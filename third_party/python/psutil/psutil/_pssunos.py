@@ -17,14 +17,21 @@ from . import _common
 from . import _psposix
 from . import _psutil_posix as cext_posix
 from . import _psutil_sunos as cext
+from ._common import AccessDenied
 from ._common import AF_INET6
+from ._common import debug
 from ._common import get_procfs_path
 from ._common import isfile_strict
 from ._common import memoize_when_activated
+from ._common import NoSuchProcess
 from ._common import sockfam_to_enum
 from ._common import socktype_to_enum
 from ._common import usage_percent
+from ._common import ZombieProcess
 from ._compat import b
+from ._compat import FileNotFoundError
+from ._compat import PermissionError
+from ._compat import ProcessLookupError
 from ._compat import PY3
 
 
@@ -83,13 +90,6 @@ proc_info_map = dict(
     euid=9,
     gid=10,
     egid=11)
-
-# These objects get set on "import psutil" from the __init__.py
-# file, see: https://github.com/giampaolo/psutil/issues/1402
-NoSuchProcess = None
-ZombieProcess = None
-AccessDenied = None
-TimeoutExpired = None
 
 
 # =====================================================================
@@ -226,7 +226,12 @@ def disk_partitions(all=False):
             # Differently from, say, Linux, we don't have a list of
             # common fs types so the best we can do, AFAIK, is to
             # filter by filesystem having a total size > 0.
-            if not disk_usage(mountpoint).total:
+            try:
+                if not disk_usage(mountpoint).total:
+                    continue
+            except OSError as err:
+                # https://github.com/giampaolo/psutil/issues/1674
+                debug("skipping %r: %r" % (mountpoint, err))
                 continue
         ntuple = _common.sdiskpart(device, mountpoint, fstype, opts)
         retlist.append(ntuple)
@@ -262,6 +267,7 @@ def net_connections(kind, _pid=-1):
             continue
         if type_ not in types:
             continue
+        # TODO: refactor and use _common.conn_to_ntuple.
         if fam in (AF_INET, AF_INET6):
             if laddr:
                 laddr = _common.addr(*laddr)
@@ -341,22 +347,22 @@ def wrap_exceptions(fun):
     def wrapper(self, *args, **kwargs):
         try:
             return fun(self, *args, **kwargs)
-        except EnvironmentError as err:
+        except (FileNotFoundError, ProcessLookupError):
+            # ENOENT (no such file or directory) gets raised on open().
+            # ESRCH (no such process) can get raised on read() if
+            # process is gone in meantime.
+            if not pid_exists(self.pid):
+                raise NoSuchProcess(self.pid, self._name)
+            else:
+                raise ZombieProcess(self.pid, self._name, self._ppid)
+        except PermissionError:
+            raise AccessDenied(self.pid, self._name)
+        except OSError:
             if self.pid == 0:
                 if 0 in pids():
                     raise AccessDenied(self.pid, self._name)
                 else:
                     raise
-            # ENOENT (no such file or directory) gets raised on open().
-            # ESRCH (no such process) can get raised on read() if
-            # process is gone in meantime.
-            if err.errno in (errno.ENOENT, errno.ESRCH):
-                if not pid_exists(self.pid):
-                    raise NoSuchProcess(self.pid, self._name)
-                else:
-                    raise ZombieProcess(self.pid, self._name, self._ppid)
-            if err.errno in (errno.EPERM, errno.EACCES):
-                raise AccessDenied(self.pid, self._name)
             raise
     return wrapper
 
@@ -396,6 +402,9 @@ class Process(object):
     @wrap_exceptions
     @memoize_when_activated
     def _proc_basic_info(self):
+        if self.pid == 0 and not \
+                os.path.exists('%s/%s/psinfo' % (self._procfs_path, self.pid)):
+            raise AccessDenied(self.pid)
         ret = cext.proc_basic_info(self.pid, self._procfs_path)
         assert len(ret) == len(proc_info_map)
         return ret
@@ -514,11 +523,9 @@ class Process(object):
                 try:
                     return os.readlink(
                         '%s/%d/path/%d' % (procfs_path, self.pid, x))
-                except OSError as err:
-                    if err.errno == errno.ENOENT:
-                        hit_enoent = True
-                        continue
-                    raise
+                except FileNotFoundError:
+                    hit_enoent = True
+                    continue
         if hit_enoent:
             self._assert_alive()
 
@@ -531,11 +538,9 @@ class Process(object):
         procfs_path = self._procfs_path
         try:
             return os.readlink("%s/%s/path/cwd" % (procfs_path, self.pid))
-        except OSError as err:
-            if err.errno == errno.ENOENT:
-                os.stat("%s/%s" % (procfs_path, self.pid))  # raise NSP or AD
-                return None
-            raise
+        except FileNotFoundError:
+            os.stat("%s/%s" % (procfs_path, self.pid))  # raise NSP or AD
+            return None
 
     @wrap_exceptions
     def memory_info(self):
@@ -596,12 +601,9 @@ class Process(object):
             if os.path.islink(path):
                 try:
                     file = os.readlink(path)
-                except OSError as err:
-                    # ENOENT == file which is gone in the meantime
-                    if err.errno == errno.ENOENT:
-                        hit_enoent = True
-                        continue
-                    raise
+                except FileNotFoundError:
+                    hit_enoent = True
+                    continue
                 else:
                     if isfile_strict(file):
                         retlist.append(_common.popenfile(file, int(fd)))

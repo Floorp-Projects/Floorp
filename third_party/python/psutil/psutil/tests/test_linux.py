@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -10,6 +10,7 @@ from __future__ import division
 import collections
 import contextlib
 import errno
+import glob
 import io
 import os
 import re
@@ -24,6 +25,7 @@ import warnings
 import psutil
 from psutil import LINUX
 from psutil._compat import basestring
+from psutil._compat import FileNotFoundError
 from psutil._compat import PY3
 from psutil._compat import u
 from psutil.tests import call_until
@@ -54,7 +56,7 @@ SIOCGIFCONF = 0x8912
 SIOCGIFHWADDR = 0x8927
 if LINUX:
     SECTOR_SIZE = 512
-
+EMPTY_TEMPERATURES = not glob.glob('/sys/class/hwmon/hwmon*')
 
 # =====================================================================
 # --- utils
@@ -311,9 +313,10 @@ class TestSystemVirtualMemory(unittest.TestCase):
                 self.assertEqual(ret.available, 0)
                 self.assertEqual(ret.slab, 0)
 
+    @retry_on_failure()
     def test_avail_old_percent(self):
         # Make sure that our calculation of avail mem for old kernels
-        # is off by max 10%.
+        # is off by max 15%.
         from psutil._pslinux import calculate_avail_vmem
         from psutil._pslinux import open_binary
 
@@ -327,7 +330,7 @@ class TestSystemVirtualMemory(unittest.TestCase):
         if b'MemAvailable:' in mems:
             b = mems[b'MemAvailable:']
             diff_percent = abs(a - b) / a * 100
-            self.assertLess(diff_percent, 10)
+            self.assertLess(diff_percent, 15)
 
     def test_avail_old_comes_from_kernel(self):
         # Make sure "MemAvailable:" coluimn is used instead of relying
@@ -704,15 +707,12 @@ class TestSystemCPUFrequency(unittest.TestCase):
             if path.startswith("/sys/devices/system/cpu/cpufreq/policy"):
                 return False
             else:
-                flags.append(None)
                 return orig_exists(path)
 
-        flags = []
         orig_exists = os.path.exists
         with mock.patch("os.path.exists", side_effect=path_exists_mock,
                         create=True):
             assert psutil.cpu_freq()
-            self.assertEqual(len(flags), psutil.cpu_count(logical=True))
 
     @unittest.skipIf(not HAS_CPU_FREQ, "not supported")
     def test_emulate_use_cpuinfo(self):
@@ -842,25 +842,6 @@ class TestSystemCPUFrequency(unittest.TestCase):
                                 return_value=1):
                     freq = psutil.cpu_freq()
                     self.assertEqual(freq.current, 200)
-
-        # Also test that NotImplementedError is raised in case no
-        # current freq file is present.
-
-        def open_mock(name, *args, **kwargs):
-            if name.endswith('/scaling_cur_freq'):
-                raise IOError(errno.ENOENT, "")
-            elif name.endswith('/cpuinfo_cur_freq'):
-                raise IOError(errno.ENOENT, "")
-            elif name == '/proc/cpuinfo':
-                raise IOError(errno.ENOENT, "")
-            else:
-                return orig_open(name, *args, **kwargs)
-
-        orig_open = open
-        patch_point = 'builtins.open' if PY3 else '__builtin__.open'
-        with mock.patch(patch_point, side_effect=open_mock):
-            with mock.patch('os.path.exists', return_value=True):
-                self.assertRaises(NotImplementedError, psutil.cpu_freq)
 
 
 @unittest.skipIf(not LINUX, "LINUX only")
@@ -1080,10 +1061,9 @@ class TestSystemDiskPartitions(unittest.TestCase):
         try:
             with mock.patch('os.path.realpath',
                             return_value='/non/existent') as m:
-                with self.assertRaises(OSError) as cm:
+                with self.assertRaises(FileNotFoundError):
                     psutil.disk_partitions()
                 assert m.called
-                self.assertEqual(cm.exception.errno, errno.ENOENT)
         finally:
             psutil.PROCFS_PATH = "/proc"
 
@@ -1568,24 +1548,6 @@ class TestSensorsBattery(unittest.TestCase):
 @unittest.skipIf(not LINUX, "LINUX only")
 class TestSensorsTemperatures(unittest.TestCase):
 
-    @unittest.skipIf(TRAVIS, "unreliable on TRAVIS")
-    def test_emulate_eio_error(self):
-        def open_mock(name, *args, **kwargs):
-            if name.endswith("_input"):
-                raise OSError(errno.EIO, "")
-            elif name.endswith("temp"):
-                raise OSError(errno.EIO, "")
-            else:
-                return orig_open(name, *args, **kwargs)
-
-        orig_open = open
-        patch_point = 'builtins.open' if PY3 else '__builtin__.open'
-        with mock.patch(patch_point, side_effect=open_mock) as m:
-            with warnings.catch_warnings(record=True) as ws:
-                self.assertEqual(psutil.sensors_temperatures(), {})
-                assert m.called
-                self.assertIn("ignoring", str(ws[0].message))
-
     def test_emulate_class_hwmon(self):
         def open_mock(name, *args, **kwargs):
             if name.endswith('/name'):
@@ -1636,6 +1598,7 @@ class TestSensorsTemperatures(unittest.TestCase):
             elif path == '/sys/class/thermal/thermal_zone0/trip_point*':
                 return ['/sys/class/thermal/thermal_zone1/trip_point_0_type',
                         '/sys/class/thermal/thermal_zone1/trip_point_0_temp']
+            return []
 
         orig_open = open
         patch_point = 'builtins.open' if PY3 else '__builtin__.open'
@@ -1857,6 +1820,16 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(p.cmdline(), ['foo', 'bar', ''])
             assert m.called
 
+    def test_cmdline_mixed_separators(self):
+        # https://github.com/giampaolo/psutil/issues/
+        #    1179#issuecomment-552984549
+        p = psutil.Process()
+        fake_file = io.StringIO(u('foo\x20bar\x00'))
+        with mock.patch('psutil._common.open',
+                        return_value=fake_file, create=True) as m:
+            self.assertEqual(p.cmdline(), ['foo', 'bar'])
+            assert m.called
+
     def test_readlink_path_deleted_mocked(self):
         with mock.patch('psutil._pslinux.os.readlink',
                         return_value='/home/foo (deleted)'):
@@ -1920,9 +1893,8 @@ class TestProcess(unittest.TestCase):
                 '/proc/%s/smaps' % os.getpid(),
                 IOError(errno.ENOENT, "")) as m:
             p = psutil.Process()
-            with self.assertRaises(IOError) as err:
+            with self.assertRaises(FileNotFoundError):
                 p.memory_maps()
-            self.assertEqual(err.exception.errno, errno.ENOENT)
             assert m.called
 
     @unittest.skipIf(not HAS_RLIMIT, "not supported")
@@ -1994,6 +1966,9 @@ class TestProcess(unittest.TestCase):
             "0",      # cnswap
             "0",      # exit_signal
             "6",      # processor
+            "0",      # rt priority
+            "0",      # policy
+            "7",      # delayacct_blkio_ticks
         ]
         content = " ".join(args).encode()
         with mock_open_content('/proc/%s/stat' % os.getpid(), content):
@@ -2008,6 +1983,7 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(cpu.system, 3 / CLOCK_TICKS)
             self.assertEqual(cpu.children_user, 4 / CLOCK_TICKS)
             self.assertEqual(cpu.children_system, 5 / CLOCK_TICKS)
+            self.assertEqual(cpu.iowait, 7 / CLOCK_TICKS)
             self.assertEqual(p.cpu_num(), 6)
 
     def test_status_file_parsing(self):

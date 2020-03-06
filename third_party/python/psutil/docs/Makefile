@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-PYTHON        = python
+PYTHON        = python3
 SPHINXOPTS    =
 SPHINXBUILD   = $(PYTHON) -m sphinx
 PAPER         =
@@ -14,6 +14,9 @@ PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+
+DEPS = sphinx
+
 
 .PHONY: help
 help:
@@ -224,3 +227,7 @@ dummy:
 	$(SPHINXBUILD) -b dummy $(ALLSPHINXOPTS) $(BUILDDIR)/dummy
 	@echo
 	@echo "Build finished. Dummy builder generates no files."
+
+.PHONY: setup-dev-env
+setup-dev-env:  ## Install GIT hooks, pip, test deps (also upgrades them).
+	$(PYTHON) -m pip install --user --upgrade --trusted-host files.pythonhosted.org $(DEPS)

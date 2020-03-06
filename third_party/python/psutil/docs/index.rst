@@ -13,7 +13,7 @@ Quick links
 - `Blog <http://grodola.blogspot.com/search/label/psutil>`__
 - `Forum <http://groups.google.com/group/psutil/topics>`__
 - `Download <https://pypi.org/project/psutil/#files>`__
-- `Development guide <https://github.com/giampaolo/psutil/blob/master/DEVGUIDE.rst>`_
+- `Development guide <https://github.com/giampaolo/psutil/blob/master/docs/DEVGUIDE.rst>`_
 - `What's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst>`__
 
 About
@@ -42,20 +42,44 @@ Supported Python versions are **2.6**, **2.7** and **3.4+**.
 
 The psutil documentation you're reading is distributed as a single HTML page.
 
+
+Professional support
+--------------------
+
+.. image:: https://nedbatchelder.com/pix/Tidelift_Logos_RGB_Tidelift_Shorthand_On-White_small.png
+    :width: 80px
+    :align: left
+
+Professional support for psutil is available as part of the `Tidelift Subscription`_.
+Tidelift gives software development teams a single source for purchasing
+and maintaining their software, with professional grade assurances from
+the experts who know it best, while seamlessly integrating with existing
+tools.
+By subscribing you will help me (`Giampaolo Rodola`_) support psutil
+future development. Alternatively consider making a small `donation`_.
+To report a security vulnerability, please use the `Tidelift security
+contact`_.  Tidelift will coordinate the fix and disclosure.
+
 Install
 -------
 
-The easiest way to install psutil is via ``pip``::
+Linux Ubuntu / Debian::
 
-    pip install psutil
+  sudo apt-get install gcc python3-dev
+  sudo pip3 install psutil
 
-On UNIX this requires a C compiler (e.g. gcc) installed. On Windows pip will
-automatically retrieve a pre-compiled wheel version from
-`PyPI repository <https://pypi.org/project/psutil>`__.
-Alternatively, see more detailed
+Linux Redhat::
+
+  sudo yum install gcc python3-devel
+  sudo pip3 install psutil
+
+Windows::
+
+  pip3 install psutil
+
+For other platforms see more detailed
 `install <https://github.com/giampaolo/psutil/blob/master/INSTALL.rst>`_
 instructions.
-
 
 System related functions
 ========================
@@ -78,7 +102,8 @@ CPU
 
   - **nice** *(UNIX)*: time spent by niced (prioritized) processes executing in
     user mode; on Linux this also includes **guest_nice** time
-  - **iowait** *(Linux)*: time spent waiting for I/O to complete
+  - **iowait** *(Linux)*: time spent waiting for I/O to complete. This is *not*
+    accounted in **idle** time counter.
   - **irq** *(Linux, BSD)*: time spent for servicing hardware interrupts
   - **softirq** *(Linux)*: time spent for servicing software interrupts
   - **steal** *(Linux 2.6.11+)*: time spent by other operating systems running
@@ -161,8 +186,10 @@ CPU
 
   Return the number of logical CPUs in the system (same as `os.cpu_count`_
   in Python 3.4) or ``None`` if undetermined.
-  If *logical* is ``False`` return the number of physical cores only (hyper
-  thread CPUs are excluded) or ``None`` if undetermined.
+  *logical* cores means the number of physical cores multiplied by the number
+  of threads that can run on each core (this is known as Hyper Threading).
+  If *logical* is ``False`` return the number of physical cores only (Hyper
+  Thread CPUs are excluded) or ``None`` if undetermined.
   On OpenBSD and NetBSD ``psutil.cpu_count(logical=False)`` always return
   ``None``.
   Example on a system having 2 physical hyper-thread CPU cores:
@@ -241,19 +268,27 @@ CPU
 .. function:: getloadavg()
 
     Return the average system load over the last 1, 5 and 15 minutes as a tuple.
-    The load represents how many processes are waiting to be run by the
-    operating system.
-    On UNIX systems this relies on `os.getloadavg`_. On Windows this is
-    emulated by using a Windows API that spawns a thread which updates the
-    average every 5 seconds, mimicking the UNIX behavior. Thus, the first time
-    this is called and for the next 5 seconds it will return a meaningless
-    ``(0.0, 0.0, 0.0)`` tuple. Example:
+    The load represents the processes which are in a runnable state, either
+    using the CPU or waiting to use the CPU (e.g. waiting for disk I/O).
+    On UNIX systems this relies on `os.getloadavg`_. On Windows this is emulated
+    by using a Windows API that spawns a thread which keeps running in
+    background and updates the load average every 5 seconds, mimicking the UNIX
+    behavior. Thus, the first time this is called and for the next 5 seconds
+    it will return a meaningless ``(0.0, 0.0, 0.0)`` tuple.
+    The numbers returned only make sense if related to the number of CPU cores
+    installed on the system. So, for instance, `3.14` on a system with 10 CPU
+    cores means that the system load was 31.4% percent over the last N minutes.
 
     .. code-block:: python
 
        >>> import psutil
        >>> psutil.getloadavg()
        (3.14, 3.89, 4.67)
+       >>> psutil.cpu_count()
+       10
+       >>> # percentage representation
+       >>> [x / psutil.cpu_count() * 100 for x in psutil.getloadavg()]
+       [31.4, 38.9, 46.7]
 
     Availability: Unix, Windows
 
@@ -267,7 +302,7 @@ Memory
   Return statistics about system memory usage as a named tuple including the
   following fields, expressed in bytes. Main metrics:
 
-  - **total**: total physical memory.
+  - **total**: total physical memory (exclusive swap).
   - **available**: the memory that can be given instantly to processes without
     the system going into swap.
     This is calculated by summing different memory values depending on the
@@ -353,7 +388,7 @@ Disks
   mount point and filesystem type, similarly to "df" command on UNIX. If *all*
   parameter is ``False`` it tries to distinguish and return physical devices
   only (e.g. hard disks, cd-rom drives, USB keys) and ignore all others
-  (e.g. memory partitions such as /dev/shm).
+  (e.g. pseudo, memory, duplicate, inaccessible filesystems).
   Note that this may not be fully reliable on all systems (e.g. on BSD this
   parameter is ignored).
   Named tuple's **fstype** field is a string which varies depending on the
@@ -513,7 +548,8 @@ Network
     to obtain a usable socket object.
     On Windows and SunOS this is always set to ``-1``.
   - **family**: the address family, either `AF_INET`_, `AF_INET6`_ or `AF_UNIX`_.
-  - **type**: the address type, either `SOCK_STREAM`_ or `SOCK_DGRAM`_.
+  - **type**: the address type, either `SOCK_STREAM`_, `SOCK_DGRAM`_ or
+    `SOCK_SEQPACKET`_.
   - **laddr**: the local address as a ``(ip, port)`` named tuple or a ``path``
     in case of AF_UNIX sockets. For UNIX sockets see notes below.
   - **raddr**: the remote address as a ``(ip, port)`` named tuple or an
@@ -825,38 +861,24 @@ Functions
 
   Return an iterator yielding a :class:`Process` class instance for all running
   processes on the local machine.
-  Every instance is only created once and then cached into an internal table
-  which is updated every time an element is yielded.
-  Cached :class:`Process` instances are checked for identity so that you're
-  safe in case a PID has been reused by another process, in which case the
-  cached instance is updated.
-  This is preferred over :func:`psutil.pids()` for iterating over processes.
-  Sorting order in which processes are returned is based on their PID.
+  This should be preferred over :func:`psutil.pids()` to iterate over processes
+  as it's safe from race condition.
+
+  Every :class:`Process` instance is only created once, and then cached for the
+  next time :func:`psutil.process_iter()` is called (if PID is still alive).
+  Also it makes sure process PIDs are not reused.
+
   *attrs* and *ad_value* have the same meaning as in :meth:`Process.as_dict()`.
-  If *attrs* is specified :meth:`Process.as_dict()` is called internally and
-  the resulting dict is stored as a ``info`` attribute which is attached to the
-  returned :class:`Process`  instances.
+  If *attrs* is specified :meth:`Process.as_dict()` result will be stored as a
+  ``info`` attribute attached to the returned :class:`Process` instances.
   If *attrs* is an empty list it will retrieve all process info (slow).
-  Example usage::
+
+  Sorting order in which processes are returned is based on their PID.
+
+  Example::
 
     >>> import psutil
-    >>> for proc in psutil.process_iter():
-    ...     try:
-    ...         pinfo = proc.as_dict(attrs=['pid', 'name', 'username'])
-    ...     except psutil.NoSuchProcess:
-    ...         pass
-    ...     else:
-    ...         print(pinfo)
-    ...
-    {'name': 'systemd', 'pid': 1, 'username': 'root'}
-    {'name': 'kthreadd', 'pid': 2, 'username': 'root'}
-    {'name': 'ksoftirqd/0', 'pid': 3, 'username': 'root'}
-    ...
-
-  More compact version using *attrs* parameter::
-
-    >>> import psutil
-    >>> for proc in psutil.process_iter(attrs=['pid', 'name', 'username']):
+    >>> for proc in psutil.process_iter(['pid', 'name', 'username']):
     ...     print(proc.info)
     ...
     {'name': 'systemd', 'pid': 1, 'username': 'root'}
@@ -864,26 +886,15 @@ Functions
     {'name': 'ksoftirqd/0', 'pid': 3, 'username': 'root'}
     ...
 
-  Example of a dict comprehensions to create a ``{pid: info, ...}`` data
-  structure::
+  A dict comprehensions to create a ``{pid: info, ...}`` data structure::
 
     >>> import psutil
-    >>> procs = {p.pid: p.info for p in psutil.process_iter(attrs=['name', 'username'])}
+    >>> procs = {p.pid: p.info for p in psutil.process_iter(['name', 'username'])}
     >>> procs
     {1: {'name': 'systemd', 'username': 'root'},
      2: {'name': 'kthreadd', 'username': 'root'},
      3: {'name': 'ksoftirqd/0', 'username': 'root'},
      ...}
-
-  Example showing how to filter processes by name::
-
-    >>> import psutil
-    >>> [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
-    [{'name': 'python3', 'pid': 21947},
-     {'name': 'python', 'pid': 23835}]
-
-  See also `process filtering <#filtering-and-sorting-processes>`__ section for
-  more examples.
 
   .. versionchanged::
     5.3.0 added "attrs" and "ad_value" parameters.
@@ -898,11 +909,11 @@ Functions
   Convenience function which waits for a list of :class:`Process` instances to
   terminate. Return a ``(gone, alive)`` tuple indicating which processes are
   gone and which ones are still alive. The *gone* ones will have a new
-  *returncode* attribute indicating process exit status (will be ``None`` for
-  processes which are not our children).
+  *returncode* attribute indicating process exit status as returned by
+  :meth:`Process.wait`.
   ``callback`` is a function which gets called when one of the processes being
   waited on is terminated and a :class:`Process` instance is passed as callback
-  argument).
+  argument (the instance will also have a *returncode* attribute set).
   This function will return as soon as all processes terminate or when
   *timeout* (seconds) occurs.
   Differently from :meth:`Process.wait` it will not raise
@@ -1069,9 +1080,9 @@ Process class
     +------------------------------+-------------------------------+------------------------------+------------------------------+--------------------------+--------------------------+
     | :meth:`gids`                 |                               | :meth:`name`                 | :meth:`num_ctx_switches`     | :meth:`terminal`         | :meth:`terminal`         |
     +------------------------------+-------------------------------+------------------------------+------------------------------+--------------------------+--------------------------+
-    | :meth:`num_ctx_switches`     |                               | :meth:`ppid`                 | :meth:`ppid`                 |                          |                          |
+    | :meth:`num_ctx_switches`     | :meth:`exe`                   | :meth:`ppid`                 | :meth:`ppid`                 |                          |                          |
     +------------------------------+-------------------------------+------------------------------+------------------------------+--------------------------+--------------------------+
-    | :meth:`num_threads`          |                               | :meth:`status`               | :meth:`status`               | :meth:`gids`             | :meth:`gids`             |
+    | :meth:`num_threads`          | :meth:`name`                  | :meth:`status`               | :meth:`status`               | :meth:`gids`             | :meth:`gids`             |
     +------------------------------+-------------------------------+------------------------------+------------------------------+--------------------------+--------------------------+
     | :meth:`uids`                 |                               | :meth:`terminal`             | :meth:`terminal`             | :meth:`uids`             | :meth:`uids`             |
     +------------------------------+-------------------------------+------------------------------+------------------------------+--------------------------+--------------------------+
@@ -1205,6 +1216,8 @@ Process class
 
     The process current working directory as an absolute path.
 
+    .. versionchanged:: 5.6.4 added support for NetBSD
+
   .. method:: username()
 
     The name of the user that owns the process. On UNIX this is calculated by
@@ -1287,13 +1300,15 @@ Process class
     Here's an example on how to set the highest I/O priority depending on what
     platform you're on::
 
-      import psutil
-      p = psutil.Process()
-      if psutil.LINUX
-          p.ionice(psutil.IOPRIO_CLASS_RT, value=7)
-      else:  # Windows
-          p.ionice(psutil.IOPRIO_HIGH)
-      p.ionice()  # get
+      >>> import psutil
+      >>> p = psutil.Process()
+      >>> if psutil.LINUX:
+      ...     p.ionice(psutil.IOPRIO_CLASS_RT, value=7)
+      ... else:
+      ...     p.ionice(psutil.IOPRIO_HIGH)
+      ...
+      >>> p.ionice()  # get
+      pionice(ioclass=<IOPriority.IOPRIO_CLASS_RT: 1>, value=7)
 
     Availability: Linux, Windows Vista+
 
@@ -1401,15 +1416,32 @@ Process class
 
   .. method:: cpu_times()
 
-    Return a `(user, system, children_user, children_system)` named tuple
-    representing the accumulated process time, in seconds (see
-    `explanation <http://stackoverflow.com/questions/556405/>`__).
-    On Windows and macOS only *user* and *system* are filled, the others are
-    set to ``0``.
+    Return a named tuple representing the accumulated process times, in seconds
+    (see `explanation <http://stackoverflow.com/questions/556405/>`__).
     This is similar to `os.times`_ but can be used for any process PID.
+
+    - **user**: time spent in user mode.
+    - **system**: time spent in kernel mode.
+    - **children_user**: user time of all child processes (always ``0`` on
+      Windows and macOS).
+    - **system_user**: user time of all child processes (always ``0`` on
+      Windows and macOS).
+    - **iowait**: (Linux) time spent waiting for blocking I/O to complete.
+      This value is excluded from `user` and `system` times count (because the
+      CPU is not doing any work).
+
+    >>> import psutil
+    >>> p = psutil.Process()
+    >>> p.cpu_times()
+    pcputimes(user=0.03, system=0.67, children_user=0.0, children_system=0.0, iowait=0.08)
+    >>> sum(p.cpu_times()[:2])  # cumulative, excluding children and iowait
+    0.70
 
     .. versionchanged::
       4.1.0 return two extra fields: *children_user* and *children_system*.
+
+    .. versionchanged::
+      5.6.4 added *iowait* on Linux.
 
   .. method:: cpu_percent(interval=None)
 
@@ -1752,13 +1784,12 @@ Process class
       on Windows this method is not reliable due to some limitations of the
       underlying Windows API which may hang when retrieving certain file
       handles.
-      In order to work around that psutil spawns a thread for each handle and
-      kills it if it's not responding after 100ms.
+      In order to work around that psutil spawns a thread to determine the file
+      handle name and kills it if it's not responding after 100ms.
       That implies that this method on Windows is not guaranteed to enumerate
       all regular file handles (see
       `issue 597 <https://github.com/giampaolo/psutil/pull/597>`_).
-      Also, it will only list files living in the C:\\ drive (see
-      `issue 1020 <https://github.com/giampaolo/psutil/pull/1020>`_).
+      Tools like ProcessHacker has the same limitation.
 
     .. warning::
       on BSD this method can return files with a null path ("") due to a
@@ -1782,7 +1813,8 @@ Process class
       always set to ``-1``.
     - **family**: the address family, either `AF_INET`_, `AF_INET6`_ or
       `AF_UNIX`_.
-    - **type**: the address type, either `SOCK_STREAM`_ or `SOCK_DGRAM`_.
+    - **type**: the address type, either `SOCK_STREAM`_, `SOCK_DGRAM`_ or
+      `SOCK_SEQPACKET`_.  .
     - **laddr**: the local address as a ``(ip, port)`` named tuple or a ``path``
       in case of AF_UNIX sockets. For UNIX sockets see notes below.
     - **raddr**: the remote address as a ``(ip, port)`` named tuple or an
@@ -2189,7 +2221,7 @@ Process priority constants
 .. data:: IOPRIO_NORMAL
 .. data:: IOPRIO_HIGH
 
-  A set of integers representing the I/O priority of a process on Linux.
+  A set of integers representing the I/O priority of a process on Windows.
   They can be used in conjunction with :meth:`psutil.Process.ionice()` to get
   or set process I/O priority.
 
@@ -2291,46 +2323,6 @@ Hardware constants
       >>> if psutil.version_info >= (4, 5):
       ...    pass
 
-----
-
-Unicode
-=======
-
-Starting from version 5.3.0 psutil adds unicode support, see `issue #1040`_.
-The notes below apply to *any* API returning a string such as
-:meth:`Process.exe` or :meth:`Process.cwd`, including non-filesystem related
-methods such as :meth:`Process.username` or :meth:`WindowsService.description`:
-
-* all strings are encoded by using the OS filesystem encoding
-  (``sys.getfilesystemencoding()``) which varies depending on the platform
-  (e.g. "UTF-8" on macOS, "mbcs" on Win)
-* no API call is supposed to crash with ``UnicodeDecodeError``
-* instead, in case of badly encoded data returned by the OS, the following error handlers are used to replace the corrupted characters in the string:
-    * Python 3: ``sys.getfilesystemencodeerrors()`` (PY 3.6+) or
-      ``"surrogatescape"`` on POSIX and ``"replace"`` on Windows
-    * Python 2: ``"replace"``
-* on Python 2 all APIs return bytes (``str`` type), never ``unicode``
-* on Python 2, you can go back to ``unicode`` by doing:
-
-.. code-block:: python
-
-    >>> unicode(p.exe(), sys.getdefaultencoding(), errors="replace")
-
-Example which filters processes with a funky name working with both Python 2
-and 3::
-
-    # -*- coding: utf-8 -*-
-    import psutil, sys
-
-    PY3 = sys.version_info[0] == 2
-    LOOKFOR = u"ƒőő"
-    for proc in psutil.process_iter(attrs=['name']):
-        name = proc.info['name']
-        if not PY3:
-            name = unicode(name, sys.getdefaultencoding(), errors="replace")
-        if LOOKFOR == name:
-             print("process %s found" % p)
-
 Recipes
 =======
 
@@ -2346,7 +2338,7 @@ Check string against :meth:`Process.name()`:
   def find_procs_by_name(name):
       "Return a list of processes matching 'name'."
       ls = []
-      for p in psutil.process_iter(attrs=['name']):
+      for p in psutil.process_iter(['name']):
           if p.info['name'] == name:
               ls.append(p)
       return ls
@@ -2362,7 +2354,7 @@ A bit more advanced, check string against :meth:`Process.name()`,
   def find_procs_by_name(name):
       "Return a list of processes matching 'name'."
       ls = []
-      for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
+      for p in psutil.process_iter(["name", "exe", "cmdline"]):
           if name == p.info['name'] or \
                   p.info['exe'] and os.path.basename(p.info['exe']) == name or \
                   p.info['cmdline'] and p.info['cmdline'][0] == name:
@@ -2396,83 +2388,34 @@ Kill process tree
                                       callback=on_terminate)
       return (gone, alive)
 
-Terminate my children
----------------------
-
-This may be useful in unit tests whenever sub-processes are started.
-This will help ensure that no extra children (zombies) stick around to hog
-resources.
-
-::
-
-  import psutil
-
-  def reap_children(timeout=3):
-      "Tries hard to terminate and ultimately kill all the children of this process."
-      def on_terminate(proc):
-          print("process {} terminated with exit code {}".format(proc, proc.returncode))
-
-      procs = psutil.Process().children()
-      # send SIGTERM
-      for p in procs:
-          try:
-              p.terminate()
-          except psutil.NoSuchProcess:
-              pass
-      gone, alive = psutil.wait_procs(procs, timeout=timeout, callback=on_terminate)
-      if alive:
-          # send SIGKILL
-          for p in alive:
-              print("process {} survived SIGTERM; trying SIGKILL" % p)
-              try:
-                  p.kill()
-              except psutil.NoSuchProcess:
-                  pass
-          gone, alive = psutil.wait_procs(alive, timeout=timeout, callback=on_terminate)
-          if alive:
-              # give up
-              for p in alive:
-                  print("process {} survived SIGKILL; giving up" % p)
-
 Filtering and sorting processes
 -------------------------------
 
-This is a collection of one-liners showing how to use :func:`process_iter()` in
-order to filter for processes and sort them.
-
-Setup::
+A collection of code samples showing how to use :func:`process_iter()` to filter processes and sort them. Setup::
 
   >>> import psutil
   >>> from pprint import pprint as pp
 
-Processes having "python" in their name::
-
-  >>> pp([p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']])
-  [{'name': 'python3', 'pid': 21947},
-   {'name': 'python', 'pid': 23835}]
-
 Processes owned by user::
 
   >>> import getpass
-  >>> pp([(p.pid, p.info['name']) for p in psutil.process_iter(attrs=['name', 'username']) if p.info['username'] == getpass.getuser()])
+  >>> pp([(p.pid, p.info['name']) for p in psutil.process_iter(['name', 'username']) if p.info['username'] == getpass.getuser()])
   (16832, 'bash'),
   (19772, 'ssh'),
   (20492, 'python')]
 
 Processes actively running::
 
-  >>> pp([(p.pid, p.info) for p in psutil.process_iter(attrs=['name', 'status']) if p.info['status'] == psutil.STATUS_RUNNING])
+  >>> pp([(p.pid, p.info) for p in psutil.process_iter(['name', 'status']) if p.info['status'] == psutil.STATUS_RUNNING])
   [(1150, {'name': 'Xorg', 'status': 'running'}),
    (1776, {'name': 'unity-panel-service', 'status': 'running'}),
    (20492, {'name': 'python', 'status': 'running'})]
 
 Processes using log files::
 
-  >>> import os
-  >>> import psutil
-  >>> for p in psutil.process_iter(attrs=['name', 'open_files']):
+  >>> for p in psutil.process_iter(['name', 'open_files']):
   ...      for file in p.info['open_files'] or []:
-  ...          if os.path.splitext(file.path)[1] == '.log':
+  ...          if file.path.endswith('.log'):
   ...               print("%-5s %-10s %s" % (p.pid, p.info['name'][:10], file.path))
   ...
   1510  upstart    /home/giampaolo/.cache/upstart/unity-settings-daemon.log
@@ -2481,38 +2424,17 @@ Processes using log files::
 
 Processes consuming more than 500M of memory::
 
-  >>> pp([(p.pid, p.info['name'], p.info['memory_info'].rss) for p in psutil.process_iter(attrs=['name', 'memory_info']) if p.info['memory_info'].rss > 500 * 1024 * 1024])
+  >>> pp([(p.pid, p.info['name'], p.info['memory_info'].rss) for p in psutil.process_iter(['name', 'memory_info']) if p.info['memory_info'].rss > 500 * 1024 * 1024])
   [(2650, 'chrome', 532324352),
    (3038, 'chrome', 1120088064),
    (21915, 'sublime_text', 615407616)]
 
-Top 3 most memory consuming processes::
-
-  >>> pp([(p.pid, p.info) for p in sorted(psutil.process_iter(attrs=['name', 'memory_percent']), key=lambda p: p.info['memory_percent'])][-3:])
-  [(21915, {'memory_percent': 3.6815453247662737, 'name': 'sublime_text'}),
-   (3038, {'memory_percent': 6.732935429979187, 'name': 'chrome'}),
-   (3249, {'memory_percent': 8.994554843376399, 'name': 'chrome'})]
-
 Top 3 processes which consumed the most CPU time::
 
-  >>> pp([(p.pid, p.info['name'], sum(p.info['cpu_times'])) for p in sorted(psutil.process_iter(attrs=['name', 'cpu_times']), key=lambda p: sum(p.info['cpu_times'][:2]))][-3:])
+  >>> pp([(p.pid, p.info['name'], sum(p.info['cpu_times'])) for p in sorted(psutil.process_iter(['name', 'cpu_times']), key=lambda p: sum(p.info['cpu_times'][:2]))][-3:])
   [(2721, 'chrome', 10219.73),
    (1150, 'Xorg', 11116.989999999998),
    (2650, 'chrome', 18451.97)]
-
-Top 3 processes which caused the most I/O::
-
-  >>> pp([(p.pid, p.info['name']) for p in sorted(psutil.process_iter(attrs=['name', 'io_counters']), key=lambda p: p.info['io_counters'] and p.info['io_counters'][:2])][-3:])
-  [(21915, 'sublime_text'),
-   (1871, 'pulseaudio'),
-   (1510, 'upstart')]
-
-Top 3 processes opening more file descriptors::
-
-   >>> pp([(p.pid, p.info) for p in sorted(psutil.process_iter(attrs=['name', 'num_fds']), key=lambda p: p.info['num_fds'])][-3:])
-  [(21915, {'name': 'sublime_text', 'num_fds': 105}),
-   (2721, {'name': 'chrome', 'num_fds': 185}),
-   (2650, {'name': 'chrome', 'num_fds': 354})]
 
 Bytes conversion
 ----------------
@@ -2546,28 +2468,6 @@ Bytes conversion
   100399730688
   93.5G
 
-Supported platforms
-===================
-
-These are the platforms I develop and test on:
-
-* Linux Ubuntu 16.04
-* MacOS 10.11 El Captain
-* Windows 10
-* Solaris 10
-* FreeBSD 11
-* OpenBSD 6.4
-* NetBSD 8.0
-* AIX 6.1 TL8 (maintainer `Arnon Yaari <https://github.com/wiggin15>`__)
-
-Earlier versions are supposed to work but are not tested.
-For Linux, Windows and MacOS we have continuos integration. Other platforms
-are tested manually from time to time.
-Oldest supported Windows version is Windows XP, which can be compiled from
-sources. Latest wheel supporting Windows XP is
-`psutil 2.1.3 <https://pypi.org/project/psutil/2.1.3/#files>`__.
-Supported Python versions are 3.4+, 2.7 and 2.6.
-
 FAQs
 ====
 
@@ -2576,7 +2476,7 @@ FAQs
   especially on macOS (see `issue #883`_) and Windows.
   Unfortunately there's not much you can do about this except running the
   Python process with higher privileges.
-  On Unix you may run the the Python process as root or use the SUID bit
+  On Unix you may run the Python process as root or use the SUID bit
   (this is the trick used by tools such as ``ps`` and ``netstat``).
   On Windows you may run the Python process as NT AUTHORITY\\SYSTEM or install
   the Python script as a Windows service (this is the trick used by tools
@@ -2585,25 +2485,58 @@ FAQs
 Running tests
 =============
 
-There are two ways of running tests. If psutil is already installed use::
+::
 
-    $ python -m psutil.tests
-
-You can use this method as a quick way to make sure psutil fully works on your
-platform. If you have a copy of the source code you can also use::
-
-    $ make test
+    $ python3 -m psutil.tests
 
 Development guide
 =================
 
-If you plan on hacking on psutil (e.g. want to add a new feature or fix a bug)
+If you want to hacking on psutil (e.g. want to add a new feature or fix a bug)
 take a look at the `development guide`_.
+
+Platforms support history
+=========================
+
+* psutil 5.7.0 (2020-02): drop Windows XP & Server 2003 support
+* psutil 5.7.0 (2020-02): **PyPy** on Windows
+* psutil 5.4.0 (2017-11): **AIX**
+* psutil 3.4.1 (2016-01): **NetBSD**
+* psutil 3.3.0 (2015-11): **OpenBSD**
+* psutil 1.0.0 (2013-07): **Solaris**
+* psutil 0.1.1 (2009-03): **FreeBSD**
+* psutil 0.1.0 (2009-01): **Linux, Windows, macOS**
+
+Supported Python versions are 2.6, 2.7, 3.4+ and PyPy3.
 
 Timeline
 ========
 
-- 2019-0426:
+- 2020-02-18:
+  `5.7.0 <https://pypi.org/project/psutil/5.7.0/#files>`__ -
+  `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#570>`__ -
+  `diff <https://github.com/giampaolo/psutil/compare/release-5.6.7...release-5.7.0#files_bucket>`__
+- 2019-11-26:
+  `5.6.7 <https://pypi.org/project/psutil/5.6.7/#files>`__ -
+  `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#567>`__ -
+  `diff <https://github.com/giampaolo/psutil/compare/release-5.6.6...release-5.6.7#files_bucket>`__
+- 2019-11-25:
+  `5.6.6 <https://pypi.org/project/psutil/5.6.6/#files>`__ -
+  `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#566>`__ -
+  `diff <https://github.com/giampaolo/psutil/compare/release-5.6.5...release-5.6.6#files_bucket>`__
+- 2019-11-06:
+  `5.6.5 <https://pypi.org/project/psutil/5.6.5/#files>`__ -
+  `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#565>`__ -
+  `diff <https://github.com/giampaolo/psutil/compare/release-5.6.4...release-5.6.5#files_bucket>`__
+- 2019-11-04:
+  `5.6.4 <https://pypi.org/project/psutil/5.6.4/#files>`__ -
+  `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#564>`__ -
+  `diff <https://github.com/giampaolo/psutil/compare/release-5.6.3...release-5.6.4#files_bucket>`__
+- 2019-06-11:
+  `5.6.3 <https://pypi.org/project/psutil/5.6.3/#files>`__ -
+  `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#563>`__ -
+  `diff <https://github.com/giampaolo/psutil/compare/release-5.6.2...release-5.6.3#files_bucket>`__
+- 2019-04-26:
   `5.6.2 <https://pypi.org/project/psutil/5.6.2/#files>`__ -
   `what's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst#562>`__ -
   `diff <https://github.com/giampaolo/psutil/compare/release-5.6.1...release-5.6.2#files_bucket>`__
@@ -2902,13 +2835,15 @@ Timeline
 .. _`BPO-6973`: https://bugs.python.org/issue6973
 .. _`CPU affinity`: https://www.linuxjournal.com/article/6799?page=0,0
 .. _`cpu_distribution.py`: https://github.com/giampaolo/psutil/blob/master/scripts/cpu_distribution.py
-.. _`development guide`: https://github.com/giampaolo/psutil/blob/master/DEVGUIDE.rst
+.. _`development guide`: https://github.com/giampaolo/psutil/blob/master/docs/DEVGUIDE.rst
 .. _`disk_usage.py`: https://github.com/giampaolo/psutil/blob/master/scripts/disk_usage.py
+.. _`donation`: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=A9ZS7PKKRM3S8
 .. _`enums`: https://docs.python.org/3/library/enum.html#module-enum
 .. _`fans.py`: https://github.com/giampaolo/psutil/blob/master/scripts/fans.py
 .. _`GetDriveType`: https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getdrivetypea
 .. _`getfsstat`: http://www.manpagez.com/man/2/getfsstat/
 .. _`GetPriorityClass`: https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getpriorityclass
+.. _`Giampaolo Rodola`: http://grodola.blogspot.com/p/about.html
 .. _`hash`: https://docs.python.org/3/library/functions.html#hash
 .. _`ifconfig.py`: https://github.com/giampaolo/psutil/blob/master/scripts/ifconfig.py
 .. _`ioprio_get`: https://linux.die.net/man/2/ioprio_get
@@ -2919,7 +2854,7 @@ Timeline
 .. _`issue #883`: https://github.com/giampaolo/psutil/issues/883
 .. _`man prlimit`: https://linux.die.net/man/2/prlimit
 .. _`meminfo.py`: https://github.com/giampaolo/psutil/blob/master/scripts/meminfo.py
-.. _`netstat.py`: https://github.com/giampaolo/psutil/blob/master/scripts/netstat.py.
+.. _`netstat.py`: https://github.com/giampaolo/psutil/blob/master/scripts/netstat.py
 .. _`nettop.py`: https://github.com/giampaolo/psutil/blob/master/scripts/nettop.py
 .. _`open`: https://docs.python.org/3/library/functions.html#open
 .. _`os.cpu_count`: https://docs.python.org/3/library/os.html#os.cpu_count
@@ -2944,8 +2879,11 @@ Timeline
 .. _`shutil.disk_usage`: https://docs.python.org/3/library/shutil.html#shutil.disk_usage.
 .. _`signal module`: https://docs.python.org//library/signal.html
 .. _`SOCK_DGRAM`: https://docs.python.org/3/library/socket.html#socket.SOCK_DGRAM
+.. _`SOCK_SEQPACKET`: https://docs.python.org/3/library/socket.html#socket.SOCK_SEQPACKET
 .. _`SOCK_STREAM`: https://docs.python.org/3/library/socket.html#socket.SOCK_STREAM
 .. _`socket.fromfd`: https://docs.python.org/3/library/socket.html#socket.fromfd
 .. _`subprocess.Popen`: https://docs.python.org/3/library/subprocess.html#subprocess.Popen
 .. _`temperatures.py`: https://github.com/giampaolo/psutil/blob/master/scripts/temperatures.py
 .. _`TerminateProcess`: https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-terminateprocess
+.. _Tidelift security contact: https://tidelift.com/security
+.. _Tidelift Subscription: https://tidelift.com/subscription/pkg/pypi-psutil?utm_source=pypi-psutil&utm_medium=referral&utm_campaign=readme

@@ -57,7 +57,7 @@ N: Arnon Yaari (wiggin15)
 W: https://github.com/wiggin15
 D: AIX implementation, expert on multiple fronts
 I: 517, 607, 610, 1131, 1123, 1130, 1154, 1164, 1174, 1177, 1210, 1214, 1408,
-   1329, 1276, 1494.
+   1329, 1276, 1494, 1528.
 
 N: Alex Manuskin
 W: https://github.com/amanusk
@@ -621,4 +621,46 @@ I: 1491
 N: Kamil Rytarowski
 W: https://github.com/krytarowski
 C: Poland
-I: 1526
+I: 1526, 1530
+
+N: Athos Ribeiro
+W: https://github.com/athos-ribeiro
+I: 1585
+
+N: Erwan Le Pape
+W: https://github.com/erwan-le-pape
+I: 1570
+
+N: Étienne Servais
+W: https://github.com/vser1
+I: 1607, 1637
+
+N: Bernát Gábor
+W: https://github.com/gaborbernat
+I: 1565
+
+N: Nathan Houghton
+W: https://github.com/n1000
+I: 1619
+
+N: Riccardo Schirone
+W: https://github.com/ret2libc
+C: Milano, Italy
+I: 1616
+
+N: Po-Chuan Hsieh
+W: https://github.com/sunpoet
+C: Taiwan
+I: 1646
+
+N: Javad Karabi
+W: https://github.com/karabijavad
+I: 1648
+
+N: Mike Hommey
+W: https://github.com/glandium
+I: 1665
+
+N: Anselm Kruis
+W: https://github.com/akruis
+I: 1695

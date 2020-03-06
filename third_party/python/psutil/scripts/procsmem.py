@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -64,7 +64,7 @@ def main():
         with p.oneshot():
             try:
                 mem = p.memory_full_info()
-                info = p.as_dict(attrs=["cmdline", "username"])
+                info = p.as_dict(["cmdline", "username"])
             except psutil.AccessDenied:
                 ad_pids.append(p.pid)
             except psutil.NoSuchProcess:

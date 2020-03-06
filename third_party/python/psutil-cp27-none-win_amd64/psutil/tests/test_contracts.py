@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -14,35 +14,32 @@ import os
 import stat
 import time
 import traceback
-import warnings
-from contextlib import closing
 
 from psutil import AIX
 from psutil import BSD
 from psutil import FREEBSD
 from psutil import LINUX
+from psutil import MACOS
 from psutil import NETBSD
 from psutil import OPENBSD
 from psutil import OSX
 from psutil import POSIX
 from psutil import SUNOS
 from psutil import WINDOWS
-from psutil._compat import callable
 from psutil._compat import long
-from psutil.tests import bind_unix_socket
-from psutil.tests import check_connection_ntuple
+from psutil.tests import create_sockets
+from psutil.tests import enum
 from psutil.tests import get_kernel_version
-from psutil.tests import HAS_CONNECTIONS_UNIX
+from psutil.tests import HAS_CPU_FREQ
+from psutil.tests import HAS_NET_IO_COUNTERS
 from psutil.tests import HAS_RLIMIT
 from psutil.tests import HAS_SENSORS_FANS
 from psutil.tests import HAS_SENSORS_TEMPERATURES
 from psutil.tests import is_namedtuple
-from psutil.tests import run_test_module_by_name
 from psutil.tests import safe_rmpath
-from psutil.tests import skip_on_access_denied
+from psutil.tests import SKIP_SYSCONS
 from psutil.tests import TESTFN
 from psutil.tests import unittest
-from psutil.tests import unix_socket_path
 from psutil.tests import VALID_PROC_STATUSES
 from psutil.tests import warn
 import psutil
@@ -52,19 +49,10 @@ import psutil
 # --- APIs availability
 # ===================================================================
 
+# Make sure code reflects what doc promises in terms of APIs
+# availability.
 
-class TestAvailability(unittest.TestCase):
-    """Make sure code reflects what doc promises in terms of APIs
-    availability.
-    """
-
-    def test_cpu_affinity(self):
-        hasit = LINUX or WINDOWS or FREEBSD
-        self.assertEqual(hasattr(psutil.Process, "cpu_affinity"), hasit)
-
-    def test_win_service(self):
-        self.assertEqual(hasattr(psutil, "win_service_iter"), WINDOWS)
-        self.assertEqual(hasattr(psutil, "win_service_get"), WINDOWS)
+class TestAvailConstantsAPIs(unittest.TestCase):
 
     def test_PROCFS_PATH(self):
         self.assertEqual(hasattr(psutil, "PROCFS_PATH"),
@@ -79,12 +67,19 @@ class TestAvailability(unittest.TestCase):
         ae(hasattr(psutil, "NORMAL_PRIORITY_CLASS"), WINDOWS)
         ae(hasattr(psutil, "REALTIME_PRIORITY_CLASS"), WINDOWS)
 
-    def test_linux_ioprio(self):
+    def test_linux_ioprio_linux(self):
         ae = self.assertEqual
         ae(hasattr(psutil, "IOPRIO_CLASS_NONE"), LINUX)
         ae(hasattr(psutil, "IOPRIO_CLASS_RT"), LINUX)
         ae(hasattr(psutil, "IOPRIO_CLASS_BE"), LINUX)
         ae(hasattr(psutil, "IOPRIO_CLASS_IDLE"), LINUX)
+
+    def test_linux_ioprio_windows(self):
+        ae = self.assertEqual
+        ae(hasattr(psutil, "IOPRIO_HIGH"), WINDOWS)
+        ae(hasattr(psutil, "IOPRIO_NORMAL"), WINDOWS)
+        ae(hasattr(psutil, "IOPRIO_LOW"), WINDOWS)
+        ae(hasattr(psutil, "IOPRIO_VERYLOW"), WINDOWS)
 
     def test_linux_rlimit(self):
         ae = self.assertEqual
@@ -110,78 +105,77 @@ class TestAvailability(unittest.TestCase):
         ae(hasattr(psutil, "RLIMIT_RTTIME"), hasit)
         ae(hasattr(psutil, "RLIMIT_SIGPENDING"), hasit)
 
+
+class TestAvailSystemAPIs(unittest.TestCase):
+
+    def test_win_service_iter(self):
+        self.assertEqual(hasattr(psutil, "win_service_iter"), WINDOWS)
+
+    def test_win_service_get(self):
+        self.assertEqual(hasattr(psutil, "win_service_get"), WINDOWS)
+
     def test_cpu_freq(self):
         linux = (LINUX and
                  (os.path.exists("/sys/devices/system/cpu/cpufreq") or
                   os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq")))
-        self.assertEqual(hasattr(psutil, "cpu_freq"), linux or OSX or WINDOWS)
+        self.assertEqual(hasattr(psutil, "cpu_freq"),
+                         linux or MACOS or WINDOWS or FREEBSD)
 
     def test_sensors_temperatures(self):
-        self.assertEqual(hasattr(psutil, "sensors_temperatures"), LINUX)
+        self.assertEqual(
+            hasattr(psutil, "sensors_temperatures"), LINUX or FREEBSD)
 
     def test_sensors_fans(self):
         self.assertEqual(hasattr(psutil, "sensors_fans"), LINUX)
 
     def test_battery(self):
         self.assertEqual(hasattr(psutil, "sensors_battery"),
-                         LINUX or WINDOWS or FREEBSD or OSX)
+                         LINUX or WINDOWS or FREEBSD or MACOS)
 
-    def test_proc_environ(self):
+
+class TestAvailProcessAPIs(unittest.TestCase):
+
+    def test_environ(self):
         self.assertEqual(hasattr(psutil.Process, "environ"),
-                         LINUX or OSX or WINDOWS)
+                         LINUX or MACOS or WINDOWS or AIX or SUNOS)
 
-    def test_proc_uids(self):
+    def test_uids(self):
         self.assertEqual(hasattr(psutil.Process, "uids"), POSIX)
 
-    def test_proc_gids(self):
+    def test_gids(self):
         self.assertEqual(hasattr(psutil.Process, "uids"), POSIX)
 
-    def test_proc_terminal(self):
+    def test_terminal(self):
         self.assertEqual(hasattr(psutil.Process, "terminal"), POSIX)
 
-    def test_proc_ionice(self):
+    def test_ionice(self):
         self.assertEqual(hasattr(psutil.Process, "ionice"), LINUX or WINDOWS)
 
-    def test_proc_rlimit(self):
+    def test_rlimit(self):
         self.assertEqual(hasattr(psutil.Process, "rlimit"), LINUX)
 
-    def test_proc_io_counters(self):
+    def test_io_counters(self):
         hasit = hasattr(psutil.Process, "io_counters")
-        self.assertEqual(hasit, False if OSX or SUNOS else True)
+        self.assertEqual(hasit, False if MACOS or SUNOS else True)
 
-    def test_proc_num_fds(self):
+    def test_num_fds(self):
         self.assertEqual(hasattr(psutil.Process, "num_fds"), POSIX)
 
-    def test_proc_num_handles(self):
+    def test_num_handles(self):
         self.assertEqual(hasattr(psutil.Process, "num_handles"), WINDOWS)
 
-    def test_proc_cpu_affinity(self):
+    def test_cpu_affinity(self):
         self.assertEqual(hasattr(psutil.Process, "cpu_affinity"),
                          LINUX or WINDOWS or FREEBSD)
 
-    def test_proc_cpu_num(self):
+    def test_cpu_num(self):
         self.assertEqual(hasattr(psutil.Process, "cpu_num"),
                          LINUX or FREEBSD or SUNOS)
 
-    def test_proc_memory_maps(self):
+    def test_memory_maps(self):
         hasit = hasattr(psutil.Process, "memory_maps")
-        self.assertEqual(hasit, False if OPENBSD or NETBSD or AIX else True)
-
-
-# ===================================================================
-# --- Test deprecations
-# ===================================================================
-
-
-class TestDeprecations(unittest.TestCase):
-
-    def test_memory_info_ex(self):
-        with warnings.catch_warnings(record=True) as ws:
-            psutil.Process().memory_info_ex()
-        w = ws[0]
-        self.assertIsInstance(w.category(), FutureWarning)
-        self.assertIn("memory_info_ex() is deprecated", str(w.message))
-        self.assertIn("use memory_info() instead", str(w.message))
+        self.assertEqual(
+            hasit, False if OPENBSD or NETBSD or AIX or MACOS else True)
 
 
 # ===================================================================
@@ -189,7 +183,7 @@ class TestDeprecations(unittest.TestCase):
 # ===================================================================
 
 
-class TestSystem(unittest.TestCase):
+class TestSystemAPITypes(unittest.TestCase):
     """Check the return types of system related APIs.
     Mainly we want to test we never return unicode on Python 2, see:
     https://github.com/giampaolo/psutil/issues/1039
@@ -202,18 +196,40 @@ class TestSystem(unittest.TestCase):
     def tearDown(self):
         safe_rmpath(TESTFN)
 
-    def test_cpu_times(self):
-        # Duplicate of test_system.py. Keep it anyway.
-        ret = psutil.cpu_times()
-        assert is_namedtuple(ret)
-        for n in ret:
-            self.assertIsInstance(n, float)
-            self.assertGreaterEqual(n, 0)
+    def assert_ntuple_of_nums(self, nt, type_=float, gezero=True):
+        assert is_namedtuple(nt)
+        for n in nt:
+            self.assertIsInstance(n, type_)
+            if gezero:
+                self.assertGreaterEqual(n, 0)
 
-    def test_io_counters(self):
+    def test_cpu_times(self):
+        self.assert_ntuple_of_nums(psutil.cpu_times())
+        for nt in psutil.cpu_times(percpu=True):
+            self.assert_ntuple_of_nums(nt)
+
+    def test_cpu_percent(self):
+        self.assertIsInstance(psutil.cpu_percent(interval=None), float)
+        self.assertIsInstance(psutil.cpu_percent(interval=0.00001), float)
+
+    def test_cpu_times_percent(self):
+        self.assert_ntuple_of_nums(psutil.cpu_times_percent(interval=None))
+        self.assert_ntuple_of_nums(psutil.cpu_times_percent(interval=0.0001))
+
+    def test_cpu_count(self):
+        self.assertIsInstance(psutil.cpu_count(), int)
+
+    @unittest.skipIf(not HAS_CPU_FREQ, "not supported")
+    def test_cpu_freq(self):
+        if psutil.cpu_freq() is None:
+            raise self.skipTest("cpu_freq() returns None")
+        self.assert_ntuple_of_nums(psutil.cpu_freq(), type_=(float, int, long))
+
+    def test_disk_io_counters(self):
         # Duplicate of test_system.py. Keep it anyway.
-        for k in psutil.disk_io_counters(perdisk=True):
+        for k, v in psutil.disk_io_counters(perdisk=True).items():
             self.assertIsInstance(k, str)
+            self.assert_ntuple_of_nums(v, type_=(int, long))
 
     def test_disk_partitions(self):
         # Duplicate of test_system.py. Keep it anyway.
@@ -223,31 +239,40 @@ class TestSystem(unittest.TestCase):
             self.assertIsInstance(disk.fstype, str)
             self.assertIsInstance(disk.opts, str)
 
-    @unittest.skipIf(not POSIX, 'POSIX only')
-    @unittest.skipIf(not HAS_CONNECTIONS_UNIX, "can't list UNIX sockets")
-    @skip_on_access_denied(only_if=OSX)
+    @unittest.skipIf(SKIP_SYSCONS, "requires root")
     def test_net_connections(self):
-        with unix_socket_path() as name:
-            with closing(bind_unix_socket(name)):
-                cons = psutil.net_connections(kind='unix')
-                assert cons
-                for conn in cons:
-                    self.assertIsInstance(conn.laddr, str)
+        with create_sockets():
+            ret = psutil.net_connections('all')
+            self.assertEqual(len(ret), len(set(ret)))
+            for conn in ret:
+                assert is_namedtuple(conn)
 
     def test_net_if_addrs(self):
         # Duplicate of test_system.py. Keep it anyway.
         for ifname, addrs in psutil.net_if_addrs().items():
             self.assertIsInstance(ifname, str)
             for addr in addrs:
+                if enum is not None:
+                    assert isinstance(addr.family, enum.IntEnum), addr
+                else:
+                    assert isinstance(addr.family, int), addr
                 self.assertIsInstance(addr.address, str)
                 self.assertIsInstance(addr.netmask, (str, type(None)))
                 self.assertIsInstance(addr.broadcast, (str, type(None)))
 
     def test_net_if_stats(self):
         # Duplicate of test_system.py. Keep it anyway.
-        for ifname, _ in psutil.net_if_stats().items():
+        for ifname, info in psutil.net_if_stats().items():
             self.assertIsInstance(ifname, str)
+            self.assertIsInstance(info.isup, bool)
+            if enum is not None:
+                self.assertIsInstance(info.duplex, enum.IntEnum)
+            else:
+                self.assertIsInstance(info.duplex, int)
+            self.assertIsInstance(info.speed, int)
+            self.assertIsInstance(info.mtu, int)
 
+    @unittest.skipIf(not HAS_NET_IO_COUNTERS, 'not supported')
     def test_net_io_counters(self):
         # Duplicate of test_system.py. Keep it anyway.
         for ifname, _ in psutil.net_io_counters(pernic=True).items():
@@ -260,6 +285,7 @@ class TestSystem(unittest.TestCase):
             self.assertIsInstance(name, str)
             for unit in units:
                 self.assertIsInstance(unit.label, str)
+                self.assertIsInstance(unit.current, (float, int, type(None)))
 
     @unittest.skipIf(not HAS_SENSORS_TEMPERATURES, "not supported")
     def test_sensors_temperatures(self):
@@ -268,6 +294,13 @@ class TestSystem(unittest.TestCase):
             self.assertIsInstance(name, str)
             for unit in units:
                 self.assertIsInstance(unit.label, str)
+                self.assertIsInstance(unit.current, (float, int, type(None)))
+                self.assertIsInstance(unit.high, (float, int, type(None)))
+                self.assertIsInstance(unit.critical, (float, int, type(None)))
+
+    def test_boot_time(self):
+        # Duplicate of test_system.py. Keep it anyway.
+        self.assertIsInstance(psutil.boot_time(), float)
 
     def test_users(self):
         # Duplicate of test_system.py. Keep it anyway.
@@ -288,21 +321,11 @@ class TestFetchAllProcesses(unittest.TestCase):
     some sanity checks against Process API's returned values.
     """
 
-    def setUp(self):
-        if POSIX:
-            import pwd
-            import grp
-            users = pwd.getpwall()
-            groups = grp.getgrall()
-            self.all_uids = set([x.pw_uid for x in users])
-            self.all_usernames = set([x.pw_name for x in users])
-            self.all_gids = set([x.gr_gid for x in groups])
-
-    def test_fetch_all(self):
-        valid_procs = 0
+    def get_attr_names(self):
         excluded_names = set([
             'send_signal', 'suspend', 'resume', 'terminate', 'kill', 'wait',
-            'as_dict', 'parent', 'children', 'memory_info_ex', 'oneshot',
+            'as_dict', 'parent', 'parents', 'children', 'memory_info_ex',
+            'oneshot',
         ])
         if LINUX and not HAS_RLIMIT:
             excluded_names.add('rlimit')
@@ -313,55 +336,66 @@ class TestFetchAllProcesses(unittest.TestCase):
             if name in excluded_names:
                 continue
             attrs.append(name)
+        return attrs
 
-        default = object()
-        failures = []
+    def iter_procs(self):
+        attrs = self.get_attr_names()
         for p in psutil.process_iter():
             with p.oneshot():
                 for name in attrs:
-                    ret = default
-                    try:
-                        args = ()
-                        kwargs = {}
-                        attr = getattr(p, name, None)
-                        if attr is not None and callable(attr):
-                            if name == 'rlimit':
-                                args = (psutil.RLIMIT_NOFILE,)
-                            elif name == 'memory_maps':
-                                kwargs = {'grouped': False}
-                            ret = attr(*args, **kwargs)
-                        else:
-                            ret = attr
-                        valid_procs += 1
-                    except NotImplementedError:
-                        msg = "%r was skipped because not implemented" % (
-                            self.__class__.__name__ + '.test_' + name)
-                        warn(msg)
-                    except (psutil.NoSuchProcess, psutil.AccessDenied) as err:
-                        self.assertEqual(err.pid, p.pid)
-                        if err.name:
-                            # make sure exception's name attr is set
-                            # with the actual process name
-                            self.assertEqual(err.name, p.name())
-                        assert str(err)
-                        assert err.msg
-                    except Exception as err:
-                        s = '\n' + '=' * 70 + '\n'
-                        s += "FAIL: test_%s (proc=%s" % (name, p)
-                        if ret != default:
-                            s += ", ret=%s)" % repr(ret)
-                        s += ')\n'
-                        s += '-' * 70
-                        s += "\n%s" % traceback.format_exc()
-                        s = "\n".join((" " * 4) + i for i in s.splitlines())
-                        s += '\n'
-                        failures.append(s)
-                        break
-                    else:
-                        if ret not in (0, 0.0, [], None, '', {}):
-                            assert ret, ret
-                        meth = getattr(self, name)
-                        meth(ret, p)
+                    yield (p, name)
+
+    def call_meth(self, p, name):
+        args = ()
+        kwargs = {}
+        attr = getattr(p, name, None)
+        if attr is not None and callable(attr):
+            if name == 'rlimit':
+                args = (psutil.RLIMIT_NOFILE,)
+            elif name == 'memory_maps':
+                kwargs = {'grouped': False}
+            return attr(*args, **kwargs)
+        else:
+            return attr
+
+    def test_fetch_all(self):
+        valid_procs = 0
+        default = object()
+        failures = []
+        for p, name in self.iter_procs():
+            ret = default
+            try:
+                ret = self.call_meth(p, name)
+            except NotImplementedError:
+                msg = "%r was skipped because not implemented" % (
+                    self.__class__.__name__ + '.test_' + name)
+                warn(msg)
+            except (psutil.NoSuchProcess, psutil.AccessDenied) as err:
+                self.assertEqual(err.pid, p.pid)
+                if err.name:
+                    # make sure exception's name attr is set
+                    # with the actual process name
+                    self.assertEqual(err.name, p.name())
+                assert str(err)
+                assert err.msg
+            except Exception:
+                s = '\n' + '=' * 70 + '\n'
+                s += "FAIL: test_%s (proc=%s" % (name, p)
+                if ret != default:
+                    s += ", ret=%s)" % repr(ret)
+                s += ')\n'
+                s += '-' * 70
+                s += "\n%s" % traceback.format_exc()
+                s = "\n".join((" " * 4) + i for i in s.splitlines())
+                s += '\n'
+                failures.append(s)
+                break
+            else:
+                valid_procs += 1
+                if ret not in (0, 0.0, [], None, '', {}):
+                    assert ret, ret
+                meth = getattr(self, name)
+                meth(ret, p)
 
         if failures:
             self.fail(''.join(failures))
@@ -380,13 +414,15 @@ class TestFetchAllProcesses(unittest.TestCase):
         if not ret:
             self.assertEqual(ret, '')
         else:
+            if WINDOWS and not ret.endswith('.exe'):
+                return  # May be "Registry", "MemCompression", ...
             assert os.path.isabs(ret), ret
             # Note: os.stat() may return False even if the file is there
             # hence we skip the test, see:
             # http://stackoverflow.com/questions/3112546/os-path-exists-lies
             if POSIX and os.path.isfile(ret):
                 if hasattr(os, 'access') and hasattr(os, "X_OK"):
-                    # XXX may fail on OSX
+                    # XXX may fail on MACOS
                     assert os.access(ret, os.X_OK)
 
     def pid(self, ret, proc):
@@ -424,7 +460,6 @@ class TestFetchAllProcesses(unittest.TestCase):
         for uid in ret:
             self.assertIsInstance(uid, int)
             self.assertGreaterEqual(uid, 0)
-            self.assertIn(uid, self.all_uids)
 
     def gids(self, ret, proc):
         assert is_namedtuple(ret)
@@ -432,15 +467,12 @@ class TestFetchAllProcesses(unittest.TestCase):
         # gid == 30 (nodoby); not sure why.
         for gid in ret:
             self.assertIsInstance(gid, int)
-            if not OSX and not NETBSD:
+            if not MACOS and not NETBSD:
                 self.assertGreaterEqual(gid, 0)
-                self.assertIn(gid, self.all_gids)
 
     def username(self, ret, proc):
         self.assertIsInstance(ret, str)
         assert ret
-        if POSIX:
-            self.assertIn(ret, self.all_usernames)
 
     def status(self, ret, proc):
         self.assertIsInstance(ret, str)
@@ -456,16 +488,20 @@ class TestFetchAllProcesses(unittest.TestCase):
                 self.assertGreaterEqual(field, 0)
 
     def ionice(self, ret, proc):
-        if POSIX:
-            assert is_namedtuple(ret)
-            for field in ret:
-                self.assertIsInstance(field, int)
         if LINUX:
+            self.assertIsInstance(ret.ioclass, int)
+            self.assertIsInstance(ret.value, int)
             self.assertGreaterEqual(ret.ioclass, 0)
             self.assertGreaterEqual(ret.value, 0)
-        else:
+        else:  # Windows, Cygwin
+            choices = [
+                psutil.IOPRIO_VERYLOW,
+                psutil.IOPRIO_LOW,
+                psutil.IOPRIO_NORMAL,
+                psutil.IOPRIO_HIGH]
+            self.assertIsInstance(ret, int)
             self.assertGreaterEqual(ret, 0)
-            self.assertIn(ret, (0, 1, 2))
+            self.assertIn(ret, choices)
 
     def num_threads(self, ret, proc):
         self.assertIsInstance(ret, int)
@@ -506,13 +542,7 @@ class TestFetchAllProcesses(unittest.TestCase):
         for value in ret:
             self.assertIsInstance(value, (int, long))
             self.assertGreaterEqual(value, 0)
-        if POSIX and not AIX and ret.vms != 0:
-            # VMS is always supposed to be the highest
-            for name in ret._fields:
-                if name != 'vms':
-                    value = getattr(ret, name)
-                    self.assertGreater(ret.vms, value, msg=ret)
-        elif WINDOWS:
+        if WINDOWS:
             self.assertGreaterEqual(ret.peak_wset, ret.wset)
             self.assertGreaterEqual(ret.peak_paged_pool, ret.paged_pool)
             self.assertGreaterEqual(ret.peak_nonpaged_pool, ret.nonpaged_pool)
@@ -525,6 +555,10 @@ class TestFetchAllProcesses(unittest.TestCase):
             value = getattr(ret, name)
             self.assertIsInstance(value, (int, long))
             self.assertGreaterEqual(value, 0, msg=(name, value))
+            if LINUX or OSX and name in ('vms', 'data'):
+                # On Linux there are processes (e.g. 'goa-daemon') whose
+                # VMS is incredibly high for some reason.
+                continue
             self.assertLessEqual(value, total, msg=(name, value, total))
 
         if LINUX:
@@ -555,9 +589,10 @@ class TestFetchAllProcesses(unittest.TestCase):
         self.assertGreaterEqual(ret, 0)
 
     def connections(self, ret, proc):
-        self.assertEqual(len(ret), len(set(ret)))
-        for conn in ret:
-            check_connection_ntuple(conn)
+        with create_sockets():
+            self.assertEqual(len(ret), len(set(ret)))
+            for conn in ret:
+                assert is_namedtuple(conn)
 
     def cwd(self, ret, proc):
         if ret:     # 'ret' can be None or empty
@@ -609,8 +644,11 @@ class TestFetchAllProcesses(unittest.TestCase):
                         # commented as on Linux we might get
                         # '/foo/bar (deleted)'
                         # assert os.path.exists(nt.path), nt.path
-                elif fname in ('addr', 'perms'):
-                    assert value
+                elif fname == 'addr':
+                    assert value, repr(value)
+                elif fname == 'perms':
+                    if not WINDOWS:
+                        assert value, repr(value)
                 else:
                     self.assertIsInstance(value, (int, long))
                     self.assertGreaterEqual(value, 0)
@@ -648,4 +686,5 @@ class TestFetchAllProcesses(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    run_test_module_by_name(__file__)
+    from psutil.tests.runner import run
+    run(__file__)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009 Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -19,14 +19,15 @@ import errno
 import os
 import requests
 import shutil
+import sys
 
 from psutil import __version__ as PSUTIL_VERSION
 from psutil._common import bytes2human
-from scriptutils import printerr, exit
+from psutil._common import print_color
 
 
 BASE_URL = 'https://ci.appveyor.com/api'
-PY_VERSIONS = ['2.7', '3.5', '3.6', '3.7']
+PY_VERSIONS = ['2.7', '3.5', '3.6', '3.7', '3.8']
 TIMEOUT = 30
 COLORS = True
 
@@ -81,7 +82,8 @@ def get_file_urls(options):
                 file_url = job_url + '/' + item['fileName']
                 urls.append(file_url)
         if not urls:
-            exit("no artifacts found")
+            print_color("no artifacts found", 'ret')
+            sys.exit(1)
         else:
             for url in sorted(urls, key=lambda x: os.path.basename(x)):
                 yield url
@@ -111,7 +113,7 @@ def run(options):
             try:
                 local_fname = fut.result()
             except Exception:
-                printerr("error while downloading %s" % (url))
+                print_color("error while downloading %s" % (url), 'red')
                 raise
             else:
                 completed += 1

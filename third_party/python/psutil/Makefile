@@ -3,7 +3,7 @@
 # You can set the variables below from the command line.
 
 PYTHON = python3
-TSCRIPT = psutil/tests/__main__.py
+TSCRIPT = psutil/tests/runner.py
 ARGS =
 # List of nice-to-have dev libs.
 DEPS = \
@@ -11,20 +11,22 @@ DEPS = \
 	check-manifest \
 	coverage \
 	flake8 \
+	pyperf \
+	requests \
+	setuptools \
+	twine \
+	virtualenv \
+	wheel
+PY2_DEPS = \
 	futures \
 	ipaddress \
 	mock==1.0.1 \
-	perf \
-	requests \
-	setuptools \
-	sphinx \
-	twine \
-	unittest2 \
-	virtualenv \
-	wheel
-
+	unittest2
+DEPS += `$(PYTHON) -c \
+	"import sys; print('$(PY2_DEPS)' if sys.version_info[0] == 2 else '')"`
 # In not in a virtualenv, add --user options for install commands.
-INSTALL_OPTS = `$(PYTHON) -c "import sys; print('' if hasattr(sys, 'real_prefix') else '--user')"`
+INSTALL_OPTS = `$(PYTHON) -c \
+	"import sys; print('' if hasattr(sys, 'real_prefix') else '--user')"`
 TEST_PREFIX = PYTHONWARNINGS=all PSUTIL_TESTING=1 PSUTIL_DEBUG=1
 
 all: test
@@ -54,8 +56,7 @@ clean:  ## Remove all build files.
 		build/ \
 		dist/ \
 		docs/_build/ \
-		htmlcov/ \
-		tmp/
+		htmlcov/
 
 _:
 
@@ -67,13 +68,11 @@ build: _  ## Compile without installing.
 	@# "import psutil" when using the interactive interpreter from within
 	@# this directory.
 	PYTHONWARNINGS=all $(PYTHON) setup.py build_ext -i
-	rm -rf tmp
 	$(PYTHON) -c "import psutil"  # make sure it actually worked
 
 install:  ## Install this package as current user in "edit" mode.
 	${MAKE} build
 	PYTHONWARNINGS=all $(PYTHON) setup.py develop $(INSTALL_OPTS)
-	rm -rf tmp
 
 uninstall:  ## Uninstall this package via pip.
 	cd ..; $(PYTHON) -m pip uninstall -y -v psutil || true
@@ -101,8 +100,8 @@ install-pip:  ## Install pip (no-op if already installed).
 setup-dev-env:  ## Install GIT hooks, pip, test deps (also upgrades them).
 	${MAKE} install-git-hooks
 	${MAKE} install-pip
-	$(PYTHON) -m pip install $(INSTALL_OPTS) --upgrade pip
-	$(PYTHON) -m pip install $(INSTALL_OPTS) --upgrade $(DEPS)
+	$(PYTHON) -m pip install $(INSTALL_OPTS) --upgrade --trusted-host files.pythonhosted.org pip
+	$(PYTHON) -m pip install $(INSTALL_OPTS) --upgrade --trusted-host files.pythonhosted.org $(DEPS)
 
 # ===================================================================
 # Tests
@@ -154,7 +153,7 @@ test-by-name:  ## e.g. make test-by-name ARGS=psutil.tests.test_system.TestSyste
 
 test-failed:  ## Re-run tests which failed on last run
 	${MAKE} install
-	$(TEST_PREFIX) $(PYTHON) -c "import psutil.tests.runner as r; r.run(last_failed=True)"
+	$(TEST_PREFIX) $(PYTHON) $(TSCRIPT) --last-failed
 
 test-coverage:  ## Run test coverage.
 	${MAKE} install
@@ -170,8 +169,18 @@ test-coverage:  ## Run test coverage.
 # Linters
 # ===================================================================
 
-flake8:  ## flake8 linter.
-	@git ls-files | grep \\.py$ | xargs $(PYTHON) -m flake8
+lint-py:  ## Run Python (flake8) linter.
+	@git ls-files '*.py' | xargs $(PYTHON) -m flake8
+
+lint-c:  ## Run  C linter.
+	@git ls-files '*.c' '*.h' | xargs $(PYTHON) scripts/internal/clinter.py
+
+lint:  ## Run Python (flake8) and C linters.
+	${MAKE} lint-py
+	${MAKE} lint-c
+
+fix-lint:  ## Attempt to automatically fix some Python lint issues.
+	@git ls-files | grep \\.py$ | xargs $(PYTHON) -m flake8 --exit-zero | $(PYTHON) scripts/internal/fix_flake8.py
 
 # ===================================================================
 # GIT
@@ -197,7 +206,7 @@ wheel:  ## Generate wheel.
 	$(PYTHON) setup.py bdist_wheel
 
 win-download-wheels:  ## Download wheels hosted on appveyor.
-	$(TEST_PREFIX) $(PYTHON) scripts/internal/download_exes.py --user giampaolo --project psutil
+	$(TEST_PREFIX) $(PYTHON) scripts/internal/win_download_wheels.py --user giampaolo --project psutil
 
 upload-src:  ## Upload source tarball on https://pypi.org/project/psutil/
 	${MAKE} sdist
@@ -254,10 +263,12 @@ print-timeline:  ## Print releases' timeline.
 	@$(PYTHON) scripts/internal/print_timeline.py
 
 print-access-denied: ## Print AD exceptions
-	@$(PYTHON) scripts/internal/print_access_denied.py
+	${MAKE} install
+	@$(TEST_PREFIX) $(PYTHON) scripts/internal/print_access_denied.py
 
 print-api-speed:  ## Benchmark all API calls
-	@$(PYTHON) scripts/internal/print_api_speed.py $(ARGS)
+	${MAKE} install
+	@$(TEST_PREFIX) $(PYTHON) scripts/internal/print_api_speed.py $(ARGS)
 
 # ===================================================================
 # Misc

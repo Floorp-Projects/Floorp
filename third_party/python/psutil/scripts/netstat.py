@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -41,7 +41,7 @@ def main():
         "Proto", "Local address", "Remote address", "Status", "PID",
         "Program name"))
     proc_names = {}
-    for p in psutil.process_iter(attrs=['pid', 'name']):
+    for p in psutil.process_iter(['pid', 'name']):
         proc_names[p.info['pid']] = p.info['name']
     for c in psutil.net_connections(kind='inet'):
         laddr = "%s:%s" % (c.laddr)
