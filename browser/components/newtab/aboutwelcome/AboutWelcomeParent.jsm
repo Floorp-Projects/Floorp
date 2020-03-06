@@ -5,6 +5,7 @@
 "use strict";
 
 const EXPORTED_SYMBOLS = ["AboutWelcomeParent"];
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -30,6 +31,8 @@ XPCOMUtils.defineLazyGetter(
   () => new AboutWelcomeTelemetry()
 );
 
+const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
+
 class AboutWelcomeParent extends JSWindowActorParent {
   /**
    * Handle messages from AboutWelcomeChild.jsm
@@ -42,6 +45,13 @@ class AboutWelcomeParent extends JSWindowActorParent {
   onContentMessage(type, data, browser, window) {
     log.debug(`Received content event: ${type}`);
     switch (type) {
+      case "AWPage:SET_WELCOME_MESSAGE_SEEN":
+        try {
+          Services.prefs.setBoolPref(DID_SEE_ABOUT_WELCOME_PREF, true);
+        } catch (e) {
+          log.debug(`Fails to set ${DID_SEE_ABOUT_WELCOME_PREF}.`);
+        }
+        break;
       case "AWPage:OPEN_AWESOME_BAR":
         window.gURLBar.search("");
         break;
