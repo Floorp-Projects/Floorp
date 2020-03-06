@@ -57,12 +57,14 @@ async function checkAudit(a11yWalker, node, expected, options) {
 }
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    a11yWalker,
+    parentAccessibility,
+  } = await initAccessibilityFrontsForUrl(
     MAIN_DOMAIN + "doc_accessibility_infobar.html"
   );
-
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  await accessibility.enable();
 
   const headerNode = await walker.querySelector(walker.rootNode, "#h1");
   await checkAudit(
@@ -112,8 +114,7 @@ add_task(async function() {
     { types: [] }
   );
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

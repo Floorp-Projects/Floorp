@@ -68,8 +68,9 @@ async function testSimulate(simulator, matrix, type = null) {
 }
 
 add_task(async function() {
-  const { target, accessibility } = await initAccessibilityFrontForUrl(
-    MAIN_DOMAIN + "doc_accessibility.html"
+  const { target, accessibility } = await initAccessibilityFrontsForUrl(
+    MAIN_DOMAIN + "doc_accessibility.html",
+    { enableByDefault: false }
   );
 
   const simulator = accessibility.simulatorFront;

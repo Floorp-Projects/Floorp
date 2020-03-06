@@ -7,14 +7,16 @@
 // Checks for the AccessibleWalkerActor
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    a11yWalker,
+    parentAccessibility,
+  } = await initAccessibilityFrontsForUrl(
     MAIN_DOMAIN + "doc_accessibility.html"
   );
 
-  const a11yWalker = accessibility.accessibleWalkerFront;
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
-
-  await accessibility.enable();
   const rootNode = await walker.getRootNode();
   const a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
   ok(a11yDoc, "The AccessibleFront for root doc is created");
@@ -164,8 +166,7 @@ add_task(async function() {
   await reloaded;
   await documentReady;
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });
