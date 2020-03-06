@@ -31,6 +31,7 @@ export const DEFAULT_WELCOME_CONTENT = {
   },
   startButton: {
     string_id: "onboarding-start-browsing-button-label",
+    message_id: "START_BROWSING_BUTTON",
     action: {
       type: "OPEN_AWESOME_BAR",
     },
