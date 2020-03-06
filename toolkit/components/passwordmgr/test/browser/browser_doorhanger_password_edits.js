@@ -64,6 +64,10 @@ add_task(async function test_edit_password() {
 
   for (let testCase of testCases) {
     info("Test case: " + JSON.stringify(testCase));
+    // Clean state before the test case is executed.
+    await LoginTestUtils.clearData();
+    await cleanupDoorhanger();
+    await cleanupPasswordNotifications();
 
     // Create the pre-existing logins when needed.
     if (testCase.usernameInPageExists) {
@@ -88,6 +92,8 @@ add_task(async function test_edit_password() {
       );
     }
 
+    let formFilledPromise = listenForTestNotification("FormProcessed");
+
     await BrowserTestUtils.withNewTab(
       {
         gBrowser,
@@ -96,25 +102,35 @@ add_task(async function test_edit_password() {
           "passwordmgr/test/browser/form_basic.html",
       },
       async function(browser) {
+        await formFilledPromise;
+
+        // Set the form to a known state so we can expect a single PasswordEditedOrGenerated message
+        await initForm(browser, {
+          "#form-basic-username": testCase.usernameInPage,
+          "#form-basic-password": "",
+        });
+
+        info("Editing the form");
+        await changeContentFormValues(browser, {
+          "#form-basic-password": testCase.passwordInPage,
+        });
+
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
+        info("Submitting the form");
+        let formSubmittedPromise = listenForTestNotification("FormSubmit");
         let promiseShown = BrowserTestUtils.waitForEvent(
           PopupNotifications.panel,
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        let formSubmittedPromise = listenForTestNotification("FormSubmit");
-        await changeContentFormValues(browser, {
-          "#form-basic-username": testCase.usernameInPage,
-          "#form-basic-password": testCase.passwordInPage,
-        });
-        await TestUtils.waitForTick();
-        await SpecialPowers.spawn(browser, [], async function() {
+        await SpecialPowers.spawn(browser, [], function() {
           content.document.getElementById("form-basic").submit();
         });
         await formSubmittedPromise;
 
         let notif = await waitForDoorhanger(browser, "any");
+        ok(!notif.dismissed, "Doorhanger is not dismissed");
         await promiseShown;
 
         // Modify the username & password in the dialog if requested.
@@ -146,8 +162,9 @@ add_task(async function test_edit_password() {
           "popuphidden"
         );
         clickDoorhangerButton(notif, CHANGE_BUTTON);
-        let [result] = await promiseLogin;
         await promiseHidden;
+        info("Waiting for storage changed");
+        let [result] = await promiseLogin;
 
         // Check that the values in the database match the expected values.
         let login = expectModifyLogin
@@ -174,12 +191,17 @@ add_task(async function test_edit_password() {
           expectedLogin.timeCreated = meta.timePasswordChanged;
         }
         verifyLogins([expectedLogin]);
-
-        await cleanupDoorhanger();
       }
     );
-
-    // Clean up the database before the next test case is executed.
-    Services.logins.removeAllLogins();
   }
 });
+
+async function initForm(browser, formDefaults = {}) {
+  await ContentTask.spawn(browser, formDefaults, async function(
+    selectorValues
+  ) {
+    for (let [sel, value] of Object.entries(selectorValues)) {
+      content.document.querySelector(sel).value = value;
+    }
+  });
+}
