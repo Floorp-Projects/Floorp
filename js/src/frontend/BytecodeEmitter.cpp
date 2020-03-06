@@ -9097,7 +9097,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     ObjLiteralFlags flags;
     if (isSingletonContext) {
       // Use `ObjectGroup::newPlainObject` rather than
-      // `NewBuiltinClassInstance<PlainObject>`.
+      // `NewPlainObjectWithProperties`.
       flags += ObjLiteralFlag::SpecificGroup;
       if (!isInner) {
         flags += ObjLiteralFlag::Singleton;
