@@ -21,7 +21,7 @@ void TextDecoder::Init(const nsAString& aLabel,
   // (https://encoding.spec.whatwg.org/#dom-textdecoder).
   const Encoding* encoding = Encoding::ForLabelNoReplacement(aLabel);
   if (!encoding) {
-    nsAutoString label(aLabel);
+    NS_ConvertUTF16toUTF8 label(aLabel);
     label.Trim(" \t\n\f\r");
     aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(label);
     return;

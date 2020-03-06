@@ -360,7 +360,7 @@ void SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
     return;
   }
   nsPrintfCString err("Invalid base value %u for marker orient", aValue);
-  aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+  aRv.ThrowTypeError(err);
 }
 
 void SVGAnimatedOrient::SetAnimValue(float aValue, uint8_t aUnit,

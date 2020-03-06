@@ -125,8 +125,7 @@ void TypeUtils::ToCacheRequest(
   }
   if (!schemeValid) {
     if (aSchemeAction == TypeErrorOnInvalidScheme) {
-      NS_ConvertUTF8toUTF16 urlUTF16(url);
-      aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Request", urlUTF16);
+      aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Request", url);
       return;
     }
   }

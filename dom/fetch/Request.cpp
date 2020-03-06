@@ -84,11 +84,18 @@ already_AddRefed<nsIURI> ParseURLFromDocument(Document* aDocument,
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+  nsAutoCString input;
+  if (!AppendUTF16toUTF8(aInput, input, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIURI> resolvedURI;
-  aRv = NS_NewURI(getter_AddRefs(resolvedURI), aInput, nullptr,
-                  aDocument->GetBaseURI());
-  if (NS_WARN_IF(aRv.Failed())) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
+  nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI), input, nullptr,
+                          aDocument->GetBaseURI());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.ThrowTypeError<MSG_INVALID_URL>(input);
   }
   return resolvedURI.forget();
 }
@@ -104,7 +111,7 @@ void GetRequestURLFromDocument(Document* aDocument, const nsAString& aInput,
   nsAutoCString credentials;
   Unused << resolvedURI->GetUserPass(credentials);
   if (!credentials.IsEmpty()) {
-    aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
+    aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(NS_ConvertUTF16toUTF8(aInput));
     return;
   }
 
@@ -129,10 +136,17 @@ void GetRequestURLFromDocument(Document* aDocument, const nsAString& aInput,
 already_AddRefed<nsIURI> ParseURLFromChrome(const nsAString& aInput,
                                             ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
+  // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+  nsAutoCString input;
+  if (!AppendUTF16toUTF8(aInput, input, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIURI> uri;
-  aRv = NS_NewURI(getter_AddRefs(uri), aInput);
-  if (aRv.Failed()) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), input);
+  if (NS_FAILED(rv)) {
+    aRv.ThrowTypeError<MSG_INVALID_URL>(input);
   }
   return uri.forget();
 }
@@ -147,7 +161,7 @@ void GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   nsAutoCString credentials;
   Unused << uri->GetUserPass(credentials);
   if (!credentials.IsEmpty()) {
-    aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
+    aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(NS_ConvertUTF16toUTF8(aInput));
     return;
   }
 
@@ -180,7 +194,7 @@ already_AddRefed<URL> ParseURLFromWorker(const GlobalObject& aGlobal,
   RefPtr<URL> url =
       URL::Constructor(aGlobal.GetAsSupports(), aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(NS_ConvertUTF16toUTF8(aInput));
   }
   return url.forget();
 }
@@ -198,7 +212,7 @@ void GetRequestURLFromWorker(const GlobalObject& aGlobal,
   url->GetPassword(password);
 
   if (!username.IsEmpty() || !password.IsEmpty()) {
-    aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
+    aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(NS_ConvertUTF16toUTF8(aInput));
     return;
   }
 
@@ -352,7 +366,8 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
           uri = ParseURLFromChrome(referrer, aRv);
         }
         if (NS_WARN_IF(aRv.Failed())) {
-          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(
+              NS_ConvertUTF16toUTF8(referrer));
           return nullptr;
         }
         nsAutoCString spec;
@@ -372,7 +387,8 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
       } else {
         RefPtr<URL> url = ParseURLFromWorker(aGlobal, referrer, aRv);
         if (NS_WARN_IF(aRv.Failed())) {
-          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(
+              NS_ConvertUTF16toUTF8(referrer));
           return nullptr;
         }
         url->GetHref(referrerURL);
@@ -449,8 +465,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
   if (cache != RequestCache::EndGuard_) {
     if (cache == RequestCache::Only_if_cached &&
         request->Mode() != RequestMode::Same_origin) {
-      NS_ConvertASCIItoUTF16 modeString(
-          RequestModeValues::GetString(request->Mode()));
+      nsCString modeString(RequestModeValues::GetString(request->Mode()));
       aRv.ThrowTypeError<MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN>(modeString);
       return nullptr;
     }
@@ -479,8 +494,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     nsAutoCString outMethod;
     nsresult rv = FetchUtil::GetValidRequestMethod(method, outMethod);
     if (NS_FAILED(rv)) {
-      NS_ConvertUTF8toUTF16 label(method);
-      aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(label);
+      aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(method);
       return nullptr;
     }
 
@@ -512,8 +526,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     if (!request->HasSimpleMethod()) {
       nsAutoCString method;
       request->GetMethod(method);
-      NS_ConvertUTF8toUTF16 label(method);
-      aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(label);
+      aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(method);
       return nullptr;
     }
 

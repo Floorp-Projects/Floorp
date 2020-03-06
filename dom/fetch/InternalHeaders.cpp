@@ -356,8 +356,7 @@ bool InternalHeaders::IsRevalidationHeader(const nsCString& aName) {
 // static
 bool InternalHeaders::IsInvalidName(const nsACString& aName, ErrorResult& aRv) {
   if (!NS_IsValidHTTPToken(aName)) {
-    NS_ConvertUTF8toUTF16 label(aName);
-    aRv.ThrowTypeError<MSG_INVALID_HEADER_NAME>(label);
+    aRv.ThrowTypeError<MSG_INVALID_HEADER_NAME>(aName);
     return true;
   }
 
@@ -368,8 +367,7 @@ bool InternalHeaders::IsInvalidName(const nsACString& aName, ErrorResult& aRv) {
 bool InternalHeaders::IsInvalidValue(const nsACString& aValue,
                                      ErrorResult& aRv) {
   if (!NS_IsReasonableHTTPHeaderValue(aValue)) {
-    NS_ConvertUTF8toUTF16 label(aValue);
-    aRv.ThrowTypeError<MSG_INVALID_HEADER_VALUE>(label);
+    aRv.ThrowTypeError<MSG_INVALID_HEADER_VALUE>(aValue);
     return true;
   }
   return false;

@@ -2147,7 +2147,7 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
 
     if (NS_WARN_IF(NS_FAILED(loadChecker->Result()))) {
       if (loadChecker->Result() == NS_ERROR_NOT_AVAILABLE) {
-        aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(aScope);
+        aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(NS_ConvertUTF16toUTF8(aScope));
       } else {
         aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       }

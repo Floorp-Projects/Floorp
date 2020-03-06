@@ -91,11 +91,11 @@ struct TimingParams {
         result.emplace(StickyTimeDuration::FromMilliseconds(durationInMs));
       } else {
         nsPrintfCString err("Duration (%g) must be nonnegative", durationInMs);
-        aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+        aRv.ThrowTypeError(err);
       }
     } else if (!aDuration.GetAsString().EqualsLiteral("auto")) {
       aRv.ThrowTypeError<dom::MSG_INVALID_DURATION_ERROR>(
-          aDuration.GetAsString());
+          NS_ConvertUTF16toUTF8(aDuration.GetAsString()));
     }
     return result;
   }
@@ -104,7 +104,7 @@ struct TimingParams {
     if (aIterationStart < 0) {
       nsPrintfCString err("Iteration start (%g) must not be negative",
                           aIterationStart);
-      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+      aRv.ThrowTypeError(err);
     }
   }
 
@@ -116,7 +116,7 @@ struct TimingParams {
 
     if (aIterations < 0) {
       nsPrintfCString err("Iterations (%g) must not be negative", aIterations);
-      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+      aRv.ThrowTypeError(err);
     }
   }
 
