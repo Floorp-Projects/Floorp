@@ -192,7 +192,6 @@ GeneratedFile('TelemetryEventData.h', script='build_scripts/gen_event_data.py',
               inputs=event_files)
 
 GeneratedFile('TelemetryEventEnums.h', script='build_scripts/gen_event_enum.py',
-              py2=True,
               inputs=event_files)
 
 # Generate the JSON event definitions. They will only be

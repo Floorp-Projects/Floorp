@@ -56,7 +56,7 @@ def main(output, *filenames):
     print(banner, file=output)
     print(file_header, file=output)
 
-    for category, indexed in grouped.iteritems():
+    for category, indexed in sorted(grouped.items()):
         category_cpp = indexed[0][1].category_cpp
 
         print("  // category: %s" % category, file=output)
