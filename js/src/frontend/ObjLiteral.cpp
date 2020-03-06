@@ -18,30 +18,23 @@
 
 namespace js {
 
-static void InterpretObjLiteralValue(ObjLiteralAtomVector& atoms,
-                                     const ObjLiteralInsn& insn,
-                                     MutableHandleValue propVal) {
+static JS::Value InterpretObjLiteralValue(ObjLiteralAtomVector& atoms,
+                                          const ObjLiteralInsn& insn) {
   switch (insn.getOp()) {
     case ObjLiteralOpcode::ConstValue:
-      propVal.set(insn.getConstValue());
-      break;
+      return insn.getConstValue();
     case ObjLiteralOpcode::ConstAtom: {
       uint32_t index = insn.getAtomIndex();
-      propVal.setString(atoms[index]);
-      break;
+      return StringValue(atoms[index]);
     }
     case ObjLiteralOpcode::Null:
-      propVal.setNull();
-      break;
+      return NullValue();
     case ObjLiteralOpcode::Undefined:
-      propVal.setUndefined();
-      break;
+      return UndefinedValue();
     case ObjLiteralOpcode::True:
-      propVal.setBoolean(true);
-      break;
+      return BooleanValue(true);
     case ObjLiteralOpcode::False:
-      propVal.setBoolean(false);
-      break;
+      return BooleanValue(false);
     default:
       MOZ_CRASH("Unexpected object-literal instruction opcode");
   }
@@ -57,8 +50,6 @@ static JSObject* InterpretObjLiteralObj(
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
 
-  jsid propId;
-  Rooted<Value> propVal(cx);
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
 
   // Compute property values and build the key/value-pair list.
@@ -68,16 +59,16 @@ static JSObject* InterpretObjLiteralObj(
     }
     MOZ_ASSERT(insn.isValid());
 
+    jsid propId;
     if (insn.getKey().isArrayIndex()) {
       propId = INT_TO_JSID(insn.getKey().getArrayIndex());
     } else {
       propId = AtomToId(atoms[insn.getKey().getAtomIndex()]);
     }
 
-    if (noValues) {
-      propVal.setUndefined();
-    } else {
-      InterpretObjLiteralValue(atoms, insn, &propVal);
+    JS::Value propVal;
+    if (!noValues) {
+      propVal = InterpretObjLiteralValue(atoms, insn);
     }
 
     if (!properties.append(IdValuePair(propId, propVal))) {
@@ -103,7 +94,6 @@ static JSObject* InterpretObjLiteralArray(
   ObjLiteralInsn insn;
 
   Rooted<ValueVector> elements(cx, ValueVector(cx));
-  Rooted<Value> propVal(cx);
 
   while (true) {
     if (!reader.readInsn(&insn)) {
@@ -111,8 +101,7 @@ static JSObject* InterpretObjLiteralArray(
     }
     MOZ_ASSERT(insn.isValid());
 
-    propVal.setUndefined();
-    InterpretObjLiteralValue(atoms, insn, &propVal);
+    JS::Value propVal = InterpretObjLiteralValue(atoms, insn);
     if (!elements.append(propVal)) {
       return nullptr;
     }
