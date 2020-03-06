@@ -7699,6 +7699,16 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
     return;
   }
 
+  // In order to filter out notification-ish sound, we use this pref to set the
+  // eligible media duration to prevent showing media control for those short
+  // sound.
+  if (Duration() <
+      StaticPrefs::media_mediacontrol_eligible_media_duration_s()) {
+    MEDIACONTROL_LOG("Not listening because media's duration %f is too short.",
+                     Duration());
+    return;
+  }
+
   // As we would like to start listening to media control event again so we
   // should clear the timer, which is used to stop listening to the event.
   ClearStopMediaControlTimerIfNeeded();
