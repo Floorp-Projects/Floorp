@@ -47,11 +47,8 @@ MSG_DEF(MSG_OVERLOAD_RESOLUTION_FAILED, 3, true, JSEXN_TYPEERR, "{0}Argument {1}
 MSG_DEF(MSG_ENCODING_NOT_SUPPORTED, 2, true, JSEXN_RANGEERR, "{0}The given encoding '{1}' is not supported.")
 MSG_DEF(MSG_DOM_DECODING_FAILED, 1, true, JSEXN_TYPEERR, "{0}Decoding failed.")
 MSG_DEF(MSG_NOT_FINITE, 2, true, JSEXN_TYPEERR, "{0}{1} is not a finite floating-point value.")
-// It would be nice to give MSG_INVALID_BYTESTRING a context, but it's not used
-// with ErrorResult.  https://bugzilla.mozilla.org/show_bug.cgi?id=1613755
-// tracks threading the context through to the uses.
-MSG_DEF(MSG_INVALID_BYTESTRING, 2, false, JSEXN_TYPEERR, "Cannot convert string to ByteString because the character"
-        " at index {0} has value {1} which is greater than 255.")
+MSG_DEF(MSG_INVALID_BYTESTRING, 4, true, JSEXN_TYPEERR, "{0}Cannot convert {1} to ByteString because the character"
+        " at index {2} has value {3} which is greater than 255.")
 MSG_DEF(MSG_INVALID_URL, 2, true, JSEXN_TYPEERR, "{0}{1} is not a valid URL.")
 MSG_DEF(MSG_URL_HAS_CREDENTIALS, 2, true, JSEXN_TYPEERR, "{0}{1} is an url with embedded credentials.")
 MSG_DEF(MSG_INVALID_HEADER_NAME, 2, true, JSEXN_TYPEERR, "{0}{1} is an invalid header name.")

@@ -2624,8 +2624,9 @@ bool NormalizeUSVString(binding_detail::FakeString<char16_t>& aString) {
   return true;
 }
 
-bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
-                                bool nullable, nsACString& result) {
+bool ConvertJSValueToByteString(BindingCallContext& cx, JS::Handle<JS::Value> v,
+                                bool nullable, const char* sourceDescription,
+                                nsACString& result) {
   JS::Rooted<JSString*> s(cx);
   if (v.isString()) {
     s = v.toString();
@@ -2682,7 +2683,8 @@ bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       char badCharArray[6];
       static_assert(sizeof(char16_t) <= 2, "badCharArray too small");
       SprintfLiteral(badCharArray, "%d", badChar);
-      ThrowErrorMessage<MSG_INVALID_BYTESTRING>(cx, index, badCharArray);
+      cx.ThrowErrorMessage<MSG_INVALID_BYTESTRING>(sourceDescription, index,
+                                                   badCharArray);
       return false;
     }
   } else {
