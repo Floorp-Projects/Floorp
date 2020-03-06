@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "base/macros.h"
+#include "base/version.h"
 
 #include "mozilla/Assertions.h"
 
@@ -29,8 +30,8 @@ class FileVersionInfoWin {
   static std::unique_ptr<FileVersionInfoWin> CreateFileVersionInfoWin(
       const base::FilePath& file_path);
 
-  // Get the fixed file info if it exists. Otherwise NULL
-  const VS_FIXEDFILEINFO* fixed_file_info() const { return fixed_file_info_; }
+  // Get file version number in dotted version format.
+  base::Version GetFileVersion() const;
 
  private:
   // |data| is a VS_VERSION_INFO resource. |language| and |code_page| are
@@ -44,8 +45,8 @@ class FileVersionInfoWin {
   const WORD language_;
   const WORD code_page_;
 
-  // This is a pointer into |data_| if it exists. Otherwise nullptr.
-  const VS_FIXEDFILEINFO* const fixed_file_info_;
+  // This is a reference for a portion of |data_|.
+  const VS_FIXEDFILEINFO& fixed_file_info_;
 
   DISALLOW_COPY_AND_ASSIGN(FileVersionInfoWin);
 };
