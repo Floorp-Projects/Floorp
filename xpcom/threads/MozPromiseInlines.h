@@ -29,7 +29,7 @@ MozPromise<ResolveValueT, RejectValueT, IsExclusive>::FromDomPromise(
         ResolveValueT value;
         bool ok = dom::ValueToPrimitive<ResolveValueT,
                                         dom::ConversionBehavior::eDefault>(
-            aCx, aValue, &value);
+            aCx, aValue, "Resolution value", &value);
         if (!ok) {
           p->Reject(NS_ERROR_FAILURE, __func__);
           return;
