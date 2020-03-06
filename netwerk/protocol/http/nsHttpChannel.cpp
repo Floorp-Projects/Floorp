@@ -575,9 +575,7 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   // header for *all* navigational requests instead of all requests as
   // defined in the spec, see:
   // https://www.w3.org/TR/upgrade-insecure-requests/#preference
-  nsContentPolicyType type = mLoadInfo
-                                 ? mLoadInfo->GetExternalContentPolicyType()
-                                 : nsIContentPolicy::TYPE_OTHER;
+  nsContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
 
   if (type == nsIContentPolicy::TYPE_DOCUMENT ||
       type == nsIContentPolicy::TYPE_SUBDOCUMENT) {
@@ -587,7 +585,7 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   }
 
   nsCOMPtr<nsIPrincipal> resultPrincipal;
-  if (!mURI->SchemeIs("https") && mLoadInfo) {
+  if (!mURI->SchemeIs("https")) {
     nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
         this, getter_AddRefs(resultPrincipal));
   }
@@ -1055,7 +1053,7 @@ nsresult nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv) {
     LOG(("ContinueHandleAsyncRedirect got failure result [rv=%" PRIx32 "]\n",
          static_cast<uint32_t>(rv)));
 
-    bool redirectsEnabled = !mLoadInfo || !mLoadInfo->GetDontFollowRedirects();
+    bool redirectsEnabled = !mLoadInfo->GetDontFollowRedirects();
 
     if (redirectsEnabled) {
       // TODO: stop failing original channel if redirect vetoed?
@@ -1814,8 +1812,8 @@ void nsHttpChannel::SetCachedContentType() {
           NS_ConvertUTF8toUTF16(contentTypeStr))) {
     contentType = nsICacheEntry::CONTENT_TYPE_JAVASCRIPT;
   } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("text/css")) ||
-             (mLoadInfo && mLoadInfo->GetExternalContentPolicyType() ==
-                               nsIContentPolicy::TYPE_STYLESHEET)) {
+             (mLoadInfo->GetExternalContentPolicyType() ==
+              nsIContentPolicy::TYPE_STYLESHEET)) {
     contentType = nsICacheEntry::CONTENT_TYPE_STYLESHEET;
   } else if (StringBeginsWith(contentTypeStr,
                               NS_LITERAL_CSTRING("application/wasm"))) {
@@ -2661,7 +2659,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
 }
 
 void nsHttpChannel::AssertNotDocumentChannel() {
-  if (!mLoadInfo || !IsDocument()) {
+  if (!IsDocument()) {
     return;
   }
 
@@ -5967,7 +5965,7 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
 
   // If we were told to not follow redirects automatically, then again
   // carry on as though this were a normal response.
-  if (mLoadInfo && mLoadInfo->GetDontFollowRedirects()) {
+  if (mLoadInfo->GetDontFollowRedirects()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -6460,7 +6458,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return rv;
   }
   MOZ_ASSERT(
-      !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
+      mLoadInfo->GetSecurityMode() == 0 ||
           mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
@@ -8303,7 +8301,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     upgradeKey = NS_LITERAL_CSTRING("disabledNoReason");
     // Checks "security.mixed_content.upgrade_display_content" is true
     if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
-      if (mLoadInfo && mLoadInfo->GetBrowserUpgradeInsecureRequests()) {
+      if (mLoadInfo->GetBrowserUpgradeInsecureRequests()) {
         // HTTP content the browser has upgraded to HTTPS
         upgradeKey = NS_LITERAL_CSTRING("enabledUpgrade");
       } else {
@@ -8314,7 +8312,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     // shift http to https disposition enums
     chanDisposition =
         static_cast<ChannelDisposition>(chanDisposition + kHttpsCanceled);
-  } else if (mLoadInfo && mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
+  } else if (mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
     // HTTP content the browser would upgrade to HTTPS if upgrading was
     // enabled
     upgradeKey = NS_LITERAL_CSTRING("disabledUpgrade");
@@ -10496,8 +10494,7 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
     cjs = net::CookieJarSettings::Create();
   }
   if (cjs->GetRejectThirdPartyTrackers()) {
-    bool isPrivate =
-        mLoadInfo && mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
     // If our referrer has been set before, and our referrer policy is unset
     // (default policy) if we thought the channel wasn't a third-party
     // tracking channel, we may need to set our referrer with referrer policy
