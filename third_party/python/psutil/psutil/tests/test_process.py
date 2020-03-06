@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -37,6 +37,7 @@ from psutil._compat import long
 from psutil._compat import PY3
 from psutil.tests import APPVEYOR
 from psutil.tests import call_until
+from psutil.tests import CIRRUS
 from psutil.tests import copyload_shared_lib
 from psutil.tests import create_exe
 from psutil.tests import create_proc_children_pair
@@ -251,6 +252,8 @@ class TestProcess(unittest.TestCase):
         assert (times.user > 0.0) or (times.system > 0.0), times
         assert (times.children_user >= 0.0), times
         assert (times.children_system >= 0.0), times
+        if LINUX:
+            assert times.iowait >= 0.0, times
         # make sure returned values can be pretty printed with strftime
         for name in times._fields:
             time.strftime("%H:%M:%S", time.localtime(getattr(times, name)))
@@ -295,7 +298,7 @@ class TestProcess(unittest.TestCase):
         time.strftime("%Y %m %d %H:%M:%S", time.localtime(p.create_time()))
 
     @unittest.skipIf(not POSIX, 'POSIX only')
-    @unittest.skipIf(TRAVIS, 'not reliable on TRAVIS')
+    @unittest.skipIf(TRAVIS or CIRRUS, 'not reliable on TRAVIS/CIRRUS')
     def test_terminal(self):
         terminal = psutil.Process().terminal()
         if sys.stdin.isatty() or sys.stdout.isatty():
@@ -308,7 +311,6 @@ class TestProcess(unittest.TestCase):
     @skip_on_not_implemented(only_if=LINUX)
     def test_io_counters(self):
         p = psutil.Process()
-
         # test reads
         io1 = p.io_counters()
         with open(PYTHON_EXE, 'rb') as f:
@@ -724,6 +726,7 @@ class TestProcess(unittest.TestCase):
             else:
                 raise
 
+    @unittest.skipIf(PYPY, "broken on PYPY")
     def test_long_cmdline(self):
         create_exe(TESTFN)
         self.addCleanup(safe_rmpath, TESTFN)
@@ -738,6 +741,7 @@ class TestProcess(unittest.TestCase):
         pyexe = os.path.basename(os.path.realpath(sys.executable)).lower()
         assert pyexe.startswith(name), (pyexe, name)
 
+    @unittest.skipIf(PYPY, "unreliable on PYPY")
     def test_long_name(self):
         long_name = TESTFN + ("0123456789" * 2)
         create_exe(long_name)
@@ -749,6 +753,7 @@ class TestProcess(unittest.TestCase):
     # XXX
     @unittest.skipIf(SUNOS, "broken on SUNOS")
     @unittest.skipIf(AIX, "broken on AIX")
+    @unittest.skipIf(PYPY, "broken on PYPY")
     def test_prog_w_funky_name(self):
         # Test that name(), exe() and cmdline() correctly handle programs
         # with funky chars such as spaces and ")", see:
@@ -937,6 +942,8 @@ class TestProcess(unittest.TestCase):
         self.addCleanup(p.cpu_affinity, initial)
 
         # All possible CPU set combinations.
+        if len(initial) > 12:
+            initial = initial[:12]  # ...otherwise it will take forever
         combos = []
         for l in range(0, len(initial) + 1):
             for subset in itertools.combinations(initial, l):
@@ -961,13 +968,12 @@ class TestProcess(unittest.TestCase):
             f.flush()
             # give the kernel some time to see the new file
             files = call_until(p.open_files, "len(ret) != %i" % len(files))
-            for file in files:
-                if file.path == TESTFN:
-                    if LINUX:
+            filenames = [os.path.normcase(x.path) for x in files]
+            self.assertIn(os.path.normcase(TESTFN), filenames)
+            if LINUX:
+                for file in files:
+                    if file.path == TESTFN:
                         self.assertEqual(file.position, 1024)
-                    break
-            else:
-                self.fail("no file found; files=%s" % repr(files))
         for file in files:
             assert os.path.isfile(file.path), file
 
@@ -977,12 +983,12 @@ class TestProcess(unittest.TestCase):
         p = psutil.Process(sproc.pid)
 
         for x in range(100):
-            filenames = [x.path for x in p.open_files()]
+            filenames = [os.path.normcase(x.path) for x in p.open_files()]
             if TESTFN in filenames:
                 break
             time.sleep(.01)
         else:
-            self.assertIn(TESTFN, filenames)
+            self.assertIn(os.path.normcase(TESTFN), filenames)
         for file in filenames:
             assert os.path.isfile(file), file
 
@@ -992,14 +998,16 @@ class TestProcess(unittest.TestCase):
     @unittest.skipIf(APPVEYOR, "unreliable on APPVEYOR")
     def test_open_files_2(self):
         # test fd and path fields
+        normcase = os.path.normcase
         with open(TESTFN, 'w') as fileobj:
             p = psutil.Process()
             for file in p.open_files():
-                if file.path == fileobj.name or file.fd == fileobj.fileno():
+                if normcase(file.path) == normcase(fileobj.name) or \
+                        file.fd == fileobj.fileno():
                     break
             else:
                 self.fail("no file found; files=%s" % repr(p.open_files()))
-            self.assertEqual(file.path, fileobj.name)
+            self.assertEqual(normcase(file.path), normcase(fileobj.name))
             if WINDOWS:
                 self.assertEqual(file.fd, -1)
             else:
@@ -1078,16 +1086,13 @@ class TestProcess(unittest.TestCase):
                         side_effect=psutil.NoSuchProcess(0, 'foo')):
             self.assertIsNone(p.parent())
 
+    @retry_on_failure()
     def test_parents(self):
         assert psutil.Process().parents()
         p1, p2 = create_proc_children_pair()
         self.assertEqual(p1.parents()[0], psutil.Process())
         self.assertEqual(p2.parents()[0], p1)
         self.assertEqual(p2.parents()[1], psutil.Process())
-        if POSIX:
-            lowest_pid = psutil.pids()[0]
-            self.assertEqual(p1.parents()[-1].pid, lowest_pid)
-            self.assertEqual(p2.parents()[-1].pid, lowest_pid)
 
     def test_children(self):
         reap_children(recursive=True)
@@ -1322,6 +1327,16 @@ class TestProcess(unittest.TestCase):
             except NotImplementedError:
                 pass
             else:
+                # NtQuerySystemInformation succeeds if process is gone.
+                if WINDOWS and name in ('exe', 'name'):
+                    normcase = os.path.normcase
+                    if name == 'exe':
+                        self.assertEqual(normcase(ret), normcase(PYTHON_EXE))
+                    else:
+                        self.assertEqual(
+                            normcase(ret),
+                            normcase(os.path.basename(PYTHON_EXE)))
+                    continue
                 self.fail(
                     "NoSuchProcess exception not raised for %r, retval=%s" % (
                         name, ret))

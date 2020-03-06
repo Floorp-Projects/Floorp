@@ -20,15 +20,15 @@ rem      set PYTHON=C:\Python34\python.exe & set TSCRIPT=foo.py & make.bat test
 rem ==========================================================================
 
 if "%PYTHON%" == "" (
-    if exist "C:\Python37\python.exe" (
-        set PYTHON=C:\Python37\python.exe
+    if exist "C:\Python38-64\python.exe" (
+        set PYTHON=C:\Python38-64\python.exe
     ) else (
         set PYTHON=C:\Python27\python.exe
     )
 )
 
 if "%TSCRIPT%" == "" (
-    set TSCRIPT=psutil\tests\__main__.py
+    set TSCRIPT=psutil\tests\runner.py
 )
 
 rem Needed to locate the .pypirc file and upload exes on PyPI.

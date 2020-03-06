@@ -10,8 +10,6 @@
 #include <windows.h>
 #include <pdh.h>
 
-#include "../../_psutil_common.h"
-
 
 // We use an exponentially weighted moving average, just like Unix systems do
 // https://en.wikipedia.org/wiki/Load_(computing)#Unix-style_load_calculation
@@ -22,8 +20,8 @@
 // This formula comes from linux's include/linux/sched/loadavg.h
 // https://github.com/torvalds/linux/blob/345671ea0f9258f410eb057b9ced9cefbbe5dc78/include/linux/sched/loadavg.h#L20-L23
 #define LOADAVG_FACTOR_1F  0.9200444146293232478931553241
-#define LOADAVG_FACTOR_5F  0.6592406302004437462547604110
-#define LOADAVG_FACTOR_15F 0.2865047968601901003248854266
+#define LOADAVG_FACTOR_5F  0.9834714538216174894737477501
+#define LOADAVG_FACTOR_15F 0.9944598480048967508795473394
 // The time interval in seconds between taking load counts, same as Linux
 #define SAMPLING_INTERVAL 5
 
@@ -98,13 +96,13 @@ psutil_init_loadavg_counter(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 
 error:
-    PyErr_SetExcFromWindowsErr(PyExc_OSError, 0);
+    PyErr_SetFromWindowsErr(0);
     return NULL;
 }
 
 
 /*
- * Gets the emulated 1 minute, 5 minute and 15 minute load averages 
+ * Gets the emulated 1 minute, 5 minute and 15 minute load averages
  * (processor queue length) for the system.
  * `init_loadavg_counter` must be called before this function to engage the
  * mechanism that records load values.

@@ -15,7 +15,7 @@
  * - psutil.Process.io_counters read count is always 0
  * - psutil.Process.io_counters may not be available on older AIX versions
  * - psutil.Process.threads may not be available on older AIX versions
- # - psutil.net_io_counters may not be available on older AIX versions
+ * - psutil.net_io_counters may not be available on older AIX versions
  * - reading basic process info may fail or return incorrect values when
  *   process is starting (see IBM APAR IV58499 - fixed in newer AIX versions)
  * - sockets and pipes may not be counted in num_fds (fixed in newer AIX
@@ -29,7 +29,6 @@
  */
 
 #include <Python.h>
-
 #include <sys/limits.h>
 #include <sys/proc.h>
 #include <sys/procfs.h>
@@ -51,11 +50,11 @@
 #include <libperfstat.h>
 #include <unistd.h>
 
+#include "_psutil_common.h"
+#include "_psutil_posix.h"
 #include "arch/aix/ifaddrs.h"
 #include "arch/aix/net_connections.h"
 #include "arch/aix/common.h"
-#include "_psutil_common.h"
-#include "_psutil_posix.h"
 
 
 #define TV2DOUBLE(t)   (((t).tv_nsec * 0.000000001) + (t).tv_sec)
@@ -180,7 +179,7 @@ psutil_proc_args(PyObject *self, PyObject *args) {
     }
 
     procbuf.pi_pid = pid;
-    ret = getargs(&procbuf, sizeof(struct procinfo), argbuf, ARG_MAX);
+    ret = getargs(&procbuf, sizeof(procbuf), argbuf, ARG_MAX);
     if (ret == -1) {
         PyErr_SetFromErrno(PyExc_OSError);
         goto error;
@@ -241,7 +240,7 @@ psutil_proc_environ(PyObject *self, PyObject *args) {
     }
 
     procbuf.pi_pid = pid;
-    ret = getevars(&procbuf, sizeof(struct procinfo), envbuf, ARG_MAX);
+    ret = getevars(&procbuf, sizeof(procbuf), envbuf, ARG_MAX);
     if (ret == -1) {
         PyErr_SetFromErrno(PyExc_OSError);
         goto error;
@@ -265,8 +264,8 @@ psutil_proc_environ(PyObject *self, PyObject *args) {
                 goto error;
             if (PyDict_SetItem(py_retdict, py_key, py_val))
                 goto error;
-            Py_DECREF(py_key);
-            Py_DECREF(py_val);
+            Py_CLEAR(py_key);
+            Py_CLEAR(py_val);
         }
         curvar = strchr(curvar, '\0') + 1;
     }
@@ -462,7 +461,7 @@ psutil_proc_num_ctx_switches(PyObject *self, PyObject *args) {
 
     /* finished iteration without finding requested pid */
     free(processes);
-    return NoSuchProcess("");
+    return NoSuchProcess("psutil_read_process_table (no PID found)");
 }
 
 
@@ -510,10 +509,10 @@ psutil_users(PyObject *self, PyObject *args) {
             goto error;
         if (PyList_Append(py_retlist, py_tuple))
             goto error;
-        Py_DECREF(py_username);
-        Py_DECREF(py_tty);
-        Py_DECREF(py_hostname);
-        Py_DECREF(py_tuple);
+        Py_CLEAR(py_username);
+        Py_CLEAR(py_tty);
+        Py_CLEAR(py_hostname);
+        Py_CLEAR(py_tuple);
     }
     endutxent();
 
@@ -570,9 +569,9 @@ psutil_disk_partitions(PyObject *self, PyObject *args) {
             goto error;
         if (PyList_Append(py_retlist, py_tuple))
             goto error;
-        Py_DECREF(py_dev);
-        Py_DECREF(py_mountp);
-        Py_DECREF(py_tuple);
+        Py_CLEAR(py_dev);
+        Py_CLEAR(py_mountp);
+        Py_CLEAR(py_tuple);
         mt = getmntent(file);
     }
     endmntent(file);

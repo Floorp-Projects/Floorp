@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009 Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -30,7 +30,7 @@ def get_tag_date(tag):
 
 def main():
     releases = []
-    out = sh("git tags")
+    out = sh("git tag")
     for line in out.split('\n'):
         tag = line.split(' ')[0]
         ver = tag.replace('release-', '')
