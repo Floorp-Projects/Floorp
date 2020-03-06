@@ -22,8 +22,14 @@ namespace dom {
 namespace indexedDB {
 
 inline StructuredCloneFile::StructuredCloneFile(FileType aType,
-                                                RefPtr<Blob> aBlob)
+                                                RefPtr<dom::Blob> aBlob)
     : mBlob{std::move(aBlob)}, mType{aType} {
+  MOZ_COUNT_CTOR(StructuredCloneFile);
+}
+
+inline StructuredCloneFile::StructuredCloneFile(
+    FileType aType, RefPtr<indexedDB::FileInfo> aFileInfo)
+    : mFileInfo{std::move(aFileInfo)}, mType{aType} {
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
@@ -33,8 +39,27 @@ inline StructuredCloneFile::StructuredCloneFile(
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+inline StructuredCloneFile::StructuredCloneFile(StructuredCloneFile&& aOther)
+    : mBlob{std::move(aOther.mBlob)},
+      mMutableFile{std::move(aOther.mMutableFile)},
+      mFileInfo{std::move(aOther.mFileInfo)},
+      mType{aOther.mType} {
+  MOZ_COUNT_CTOR(StructuredCloneFile);
+}
+#endif
+
 inline StructuredCloneFile::~StructuredCloneFile() {
   MOZ_COUNT_DTOR(StructuredCloneFile);
+}
+
+inline RefPtr<indexedDB::FileInfo> StructuredCloneFile::FileInfoPtr() const {
+  return mFileInfo;
+}
+
+inline RefPtr<dom::Blob> StructuredCloneFile::BlobPtr() const {
+  MOZ_ASSERT(HasBlob());
+  return mBlob;
 }
 
 inline bool StructuredCloneFile::operator==(
