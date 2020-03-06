@@ -9203,31 +9203,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
   return true;
 }
 
-bool BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj,
-                                                  BytecodeOffset offset) {
-  ObjectBox* objbox = parser->newObjectBox(obj);
-  if (!objbox) {
-    return false;
-  }
-
-  static_assert(
-      JSOpLength_NewInit == JSOpLength_NewObject,
-      "newinit and newobject must have equal length to edit in-place");
-
-  uint32_t index;
-  if (!perScriptData().gcThingList().append(objbox, &index)) {
-    return false;
-  }
-
-  jsbytecode* code = bytecodeSection().code(offset);
-
-  MOZ_ASSERT(JSOp(code[0]) == JSOp::NewInit);
-  code[0] = jsbytecode(JSOp::NewObject);
-  SET_UINT32(code, index);
-
-  return true;
-}
-
 bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
   bool isSingleton = checkSingletonContext();
   if (!array->hasNonConstInitializer() && array->head()) {

@@ -492,9 +492,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_NEVER_INLINE MOZ_MUST_USE bool emitObject(ListNode* objNode,
                                                 bool isInner = false);
 
-  MOZ_MUST_USE bool replaceNewInitWithNewObject(JSObject* obj,
-                                                BytecodeOffset offset);
-
   MOZ_MUST_USE bool emitHoistedFunctionsInList(ListNode* stmtList);
 
   // Can we use the object-literal writer either in singleton-object mode (with
