@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebugSupport()
+// |jit-test| skip-if: !wasmDebuggingIsSupported()
 // Tests that JS can be evaluated on wasm module scripts frames.
 
 load(libdir + "wasm.js");

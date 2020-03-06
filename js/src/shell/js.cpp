@@ -4684,6 +4684,10 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
   // Throw if trying to disable all the Wasm compilers.  The logic here is that
   // if we're trying to disable a compiler that is currently enabled and that is
   // the last compiler enabled then we must throw.
+  //
+  // Note that this check does not prevent an error from being thrown later.
+  // Actual compiler availability is dynamic and depends on other conditions,
+  // such as other options set and whether a debugger is present.
   if ((opt == JSJITCOMPILER_WASM_JIT_BASELINE ||
        opt == JSJITCOMPILER_WASM_JIT_ION ||
        opt == JSJITCOMPILER_WASM_JIT_CRANELIFT) &&
@@ -6319,7 +6323,7 @@ static bool CompileAndSerializeInSeparateProcess(JSContext* cx,
 }
 
 static bool WasmCompileAndSerialize(JSContext* cx) {
-  MOZ_ASSERT(wasm::HasCachingSupport(cx));
+  MOZ_ASSERT(wasm::CodeCachingAvailable(cx));
 
 #ifdef XP_WIN
   // See CompileAndSerializeInSeparateProcess for why we've had to smuggle
@@ -6369,7 +6373,7 @@ static bool WasmCompileAndSerialize(JSContext* cx) {
 
 static bool WasmCompileInSeparateProcess(JSContext* cx, unsigned argc,
                                          Value* vp) {
-  if (!wasm::HasCachingSupport(cx)) {
+  if (!wasm::CodeCachingAvailable(cx)) {
     JS_ReportErrorASCII(cx, "WebAssembly caching not supported");
     return false;
   }
