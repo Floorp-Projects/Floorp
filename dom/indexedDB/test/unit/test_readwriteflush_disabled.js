@@ -62,8 +62,8 @@ function* testSteps() {
   ok(exception instanceof Error, "exception is an Error object");
   is(
     exception.message,
-    "IDBDatabase.transaction: 'readwriteflush' (value of argument 2) is not " +
-      "a valid value for enumeration IDBTransactionMode.",
+    "Argument 2 of IDBDatabase.transaction 'readwriteflush' is not a valid " +
+      "value for enumeration IDBTransactionMode.",
     "exception has the correct message"
   );
 

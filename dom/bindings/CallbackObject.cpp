@@ -311,10 +311,6 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   // And now we're ready to go.
   mCx = cx;
-
-  // We don't really have a good error message prefix to use for the
-  // BindingCallContext.
-  mCallContext.emplace(cx, nullptr);
 }
 
 bool CallbackObject::CallSetup::ShouldRethrowException(

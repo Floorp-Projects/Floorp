@@ -440,7 +440,7 @@ static void CheckCharsInCharRange(const CharT* chars, size_t len) {
 
 template <typename T>
 bool ConvertToPrimitive(JSContext* cx, HandleValue v, T* retval) {
-  return ValueToPrimitive<T, eDefault>(cx, v, "Value", retval);
+  return ValueToPrimitive<T, eDefault>(cx, v, retval);
 }
 
 // static

@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 bool CallbackInterface::GetCallableProperty(
-    BindingCallContext& cx, JS::Handle<jsid> aPropId,
+    JSContext* cx, JS::Handle<jsid> aPropId,
     JS::MutableHandle<JS::Value> aCallable) {
   if (!JS_GetPropertyById(cx, CallbackKnownNotGray(), aPropId, aCallable)) {
     return false;
@@ -23,7 +23,7 @@ bool CallbackInterface::GetCallableProperty(
     JS::RootedString propId(cx, JSID_TO_STRING(aPropId));
     JS::UniqueChars propName = JS_EncodeStringToUTF8(cx, propId);
     nsPrintfCString description("Property '%s'", propName.get());
-    cx.ThrowErrorMessage<MSG_NOT_CALLABLE>(description.get());
+    ThrowErrorMessage<MSG_NOT_CALLABLE>(cx, description.get());
     return false;
   }
 
