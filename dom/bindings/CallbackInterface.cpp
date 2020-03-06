@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 bool CallbackInterface::GetCallableProperty(
-    JSContext* cx, JS::Handle<jsid> aPropId,
+    BindingCallContext& cx, JS::Handle<jsid> aPropId,
     JS::MutableHandle<JS::Value> aCallable) {
   if (!JS_GetPropertyById(cx, CallbackKnownNotGray(), aPropId, aCallable)) {
     return false;
