@@ -391,6 +391,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ટૅબ મેનૂ</string>
 
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">ટૅબ્સ શેર કરો</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">કાઢી નાખો</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">સાચવો</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">વહેંચો</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">વર્તમાન સત્રની છબી</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">સંગ્રહમાં સાચવો</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">સંગ્રહ કાઢી નાખો</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">સંગ્રહનું નામ બદલો</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">ટૅબ્સ ખોલો</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ઇતિહાસ કાઢી નાખો</string>
@@ -510,5 +529,78 @@
     <string name="quick_settings_sheet">ઝડપી સેટિંગ્સ શીટ</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">ભલામણ કરેલ</string>
+
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">પરવાનગીઓ સાફ કરો</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">પરવાનગીઓ સાફ કરો</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">કેમેરા</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">માઇક્રોફોન</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">સ્થાન</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">સૂચના</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">અવરોધિત</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Android દ્વારા અવરોધિત</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">અપવાદો</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">ચાલુ કરો</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">બંધ કરો</string>
+
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">સંગ્રહો</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">કોઈ સંગ્રહ નથી</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">ટેબ્સ પસંદ કરો</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">સંગ્રહ પસંદ કરો</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">બધું પસંદ કરો</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">સાચવવા માટે ટેબ્સ પસંદ કરો</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d ટેબ્સ પસંદ કર્યા</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d ટેબ્સ પસંદ કરેલ</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">ટેબ્સ સાચવ્યા!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">ટેબ સાચવી!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">બંધ કરો</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">સાચવો</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">મોકલો અને શેર કરો</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">વહેંચો</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">વહેંચો</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">લિંક વહેંચો</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">ઉપકરણ પર મોકલો</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">સમન્વયન કરવા માટે સાઇન ઇન કરો</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">બધા ઉપકરણો પર મોકલો</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">સમન્વયન કરવા માટે ફરીથી કનેક્ટ કરો</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">ઑફલાઇન</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">બીજા ઉપકરણ સાથે જોડાણ કરો</string>
 
     </resources>

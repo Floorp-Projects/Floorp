@@ -509,6 +509,9 @@
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">Lagre</string>
 
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d valde</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Rediger bokmerke</string>
     <!-- Bookmark folder editing screen title -->
@@ -544,6 +547,10 @@
     <string name="permissions_header">Løyve</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Gå til Innstillingar</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Oversikt over hurtig-innstillingr</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Tilrådd</string>
     <!-- button that allows editing site permissions settings -->
@@ -701,6 +708,8 @@
     <string name="snackbar_tab_closed">Fane attlaten</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Faner attlatne</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Lagt til i føretrekte netttadar!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privat fane attlaten</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -735,6 +744,9 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Skriftstorleik</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Automatisk skriftstorleik</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Slett nettlesardata</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -755,6 +767,8 @@
     <string name="preferences_delete_browsing_data_cookies">Infokapslar</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Du blir logga ut frå dei fleste nettstadar</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Hurtiglagra (cached) bilde og filer</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Frigjer lagringsplass</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -838,6 +852,9 @@
     <string name="onboarding_toolbar_position_header">Vel side</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Surf privat</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Opne ei privat fane ein gong: Trykk på %s-ikonet.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Opne innstillingar</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -887,6 +904,10 @@
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Innstillingar for vern</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Utvida sporingsvern</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Bruk nettet utan å bli overvaka</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Les meir</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -910,6 +931,10 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Berre i private faner</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Berre i tilpassa faner</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptominarar</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
     <string name="enhanced_tracking_protection_blocked">Blokkert</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Tillatne</string>
@@ -992,6 +1017,8 @@
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Les meir om Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Unntak</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Søk innloggingar</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Alfabetisk</string>
     <!-- Option to sort logins list by most recently used -->
@@ -1006,6 +1033,8 @@
     <string name="preferences_passwords_saved_logins_enter_pin">Skriv inn PIN-kode på nytt</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Les meir</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Vil du at %s skal lagre denne innlogginga?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Lagre</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1027,6 +1056,8 @@
     <string name="saved_login_reveal_password">Vis passord</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Gøym passord</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Lås opp for å sjå dei lagra innloggingane dine</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Seinare</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
