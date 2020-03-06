@@ -35,6 +35,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
     SOURCES += [
+        'chromium-shim/base/file_version_info_win.cpp',
         'chromium-shim/base/files/file_path.cpp',
         'chromium-shim/base/logging.cpp',
         'chromium-shim/sandbox/win/permissionsService.cpp',
