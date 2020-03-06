@@ -658,8 +658,7 @@ bool CustomElementRegistry::JSObjectToAtomArray(
 
   if (!iterable.isUndefined()) {
     if (!iterable.isObject()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
-          NS_LITERAL_STRING("CustomElementRegistry.define: ") + aName);
+      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(aName);
       return false;
     }
 
@@ -670,8 +669,7 @@ bool CustomElementRegistry::JSObjectToAtomArray(
     }
 
     if (!iter.valueIsIterable()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
-          NS_LITERAL_STRING("CustomElementRegistry.define: ") + aName);
+      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(aName);
       return false;
     }
 
@@ -730,8 +728,7 @@ void CustomElementRegistry::Define(
    *    these steps.
    */
   if (!JS::IsConstructor(constructorUnwrapped)) {
-    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(
-        u"Argument 2 of CustomElementRegistry.define");
+    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(u"Argument 2");
     return;
   }
 
@@ -870,8 +867,7 @@ void CustomElementRegistry::Define(
      * 14.2. If Type(prototype) is not Object, then throw a TypeError exception.
      */
     if (!prototype.isObject()) {
-      aRv.ThrowTypeError<MSG_NOT_OBJECT>(
-          u"CustomElementRegistry.define: constructor.prototype");
+      aRv.ThrowTypeError<MSG_NOT_OBJECT>(u"constructor.prototype");
       return;
     }
 
