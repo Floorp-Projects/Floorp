@@ -481,14 +481,15 @@ ResultCode InterceptionManager::PatchClientFunctions(
   thunk.reset(new ServiceResolverThunk(child_->Process(), relaxed_));
 #else
   base::win::OSInfo* os_info = base::win::OSInfo::GetInstance();
+  base::win::Version real_os_version = os_info->Kernel32Version();
   if (os_info->wow64_status() == base::win::OSInfo::WOW64_ENABLED) {
-    if (os_info->version() >= base::win::VERSION_WIN10)
+    if (real_os_version >= base::win::VERSION_WIN10)
       thunk.reset(new Wow64W10ResolverThunk(child_->Process(), relaxed_));
-    else if (os_info->version() >= base::win::VERSION_WIN8)
+    else if (real_os_version >= base::win::VERSION_WIN8)
       thunk.reset(new Wow64W8ResolverThunk(child_->Process(), relaxed_));
     else
       thunk.reset(new Wow64ResolverThunk(child_->Process(), relaxed_));
-  } else if (os_info->version() >= base::win::VERSION_WIN8) {
+  } else if (real_os_version >= base::win::VERSION_WIN8) {
     thunk.reset(new Win8ResolverThunk(child_->Process(), relaxed_));
   } else {
     thunk.reset(new ServiceResolverThunk(child_->Process(), relaxed_));
