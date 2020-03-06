@@ -262,19 +262,14 @@ class AutoPushFeature(
     internal fun verifyActiveSubscriptions() {
         DeliveryManager.with(connection) {
             coroutineScope.launchAndTry {
-                val notifyObservers = verifyConnection()
+                val subscriptionChanges = verifyConnection()
 
-                if (notifyObservers) {
+                if (subscriptionChanges.isNotEmpty()) {
                     logger.info("Subscriptions have changed; notifying observers..")
 
-                    // TODO update this when an a-s change lands to give us the scope of subs that changed.
-                    //  See: https://github.com/mozilla/application-services/issues/2049
-                    // subscriptionChangedList.forEach { pushScope ->
-                    //     notifyObservers { onSubscriptionChanged(pushScope) }
-                    // }
-
-                    // We only notify the fake_scope because we're aware of it and it helps with verifying tests.
-                    notifyObservers { onSubscriptionChanged("fake_scope") }
+                    subscriptionChanges.forEach { sub ->
+                        notifyObservers { onSubscriptionChanged(sub.scope) }
+                    }
                 }
             }
         }
@@ -420,6 +415,14 @@ data class AutoPushSubscription(
     val publicKey: String,
     val authKey: String,
     val appServerKey: String?
+)
+
+/**
+ * The subscription from AutoPush that has changed on the remote push servers.
+ */
+data class AutoPushSubscriptionChanged(
+    val scope: PushScope,
+    val channelId: String
 )
 
 /**

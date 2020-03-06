@@ -10,6 +10,7 @@ import mozilla.appservices.push.BridgeType
 import mozilla.appservices.push.PushAPI
 import mozilla.appservices.push.PushError
 import mozilla.appservices.push.PushManager
+import mozilla.appservices.push.PushSubscriptionChanged as SubscriptionChanged
 import mozilla.appservices.push.SubscriptionResponse
 import java.io.Closeable
 import java.util.Locale
@@ -59,9 +60,9 @@ interface PushConnection : Closeable {
      * Implementation notes: This API will change to return the specific subscriptions that have been updated.
      * See: https://github.com/mozilla/application-services/issues/2049
      *
-     * @return true if a push subscription was updated and a subscriber should be notified of the change.
+     * @return the list of push subscriptions that were updated for subscribers that should be notified about.
      */
-    suspend fun verifyConnection(): Boolean
+    suspend fun verifyConnection(): List<AutoPushSubscriptionChanged>
 
     /**
      * Decrypts a received message.
@@ -173,7 +174,7 @@ internal class RustPushConnection(
         } catch (e: PushError) {
             // Once we get GeneralError, let's catch that instead:
             // https://github.com/mozilla/application-services/issues/2541
-            val fakeChannelId = UUID.nameUUIDFromBytes("fake".toByteArray()).toString().replace("-", "")
+            val fakeChannelId = "fake".toChannelId()
             // It's possible that we have a race (on a first run) between 'subscribing' and setting a token.
             // 'update' expects that we've called 'subscribe' (which would obtain a 'uaid' from an autopush
             // server), which we need to have in order to call 'update' on the library.
@@ -187,11 +188,11 @@ internal class RustPushConnection(
     }
 
     @GuardedBy("this")
-    override suspend fun verifyConnection(): Boolean = synchronized(this) {
+    override suspend fun verifyConnection(): List<AutoPushSubscriptionChanged> = synchronized(this) {
         val pushApi = api
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
 
-        return pushApi.verifyConnection()
+        return pushApi.verifyConnection().map { it.toPushSubscriptionChanged() }
     }
 
     @GuardedBy("this")
@@ -268,3 +269,11 @@ internal fun SubscriptionResponse.toPushSubscription(
         appServerKey = appServerKey
     )
 }
+
+/**
+ * A helper to convert the internal data class.
+ */
+internal fun SubscriptionChanged.toPushSubscriptionChanged() = AutoPushSubscriptionChanged(
+    scope = scope,
+    channelId = channelID
+)

@@ -6,6 +6,7 @@ package mozilla.components.feature.push
 
 import mozilla.appservices.push.BridgeType
 import mozilla.appservices.push.KeyInfo
+import mozilla.appservices.push.PushSubscriptionChanged as SubscriptionChanged
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
@@ -47,5 +48,16 @@ class ConnectionKtTest {
     fun `Protocol to string`() {
         assertEquals("http", Protocol.HTTP.asString())
         assertEquals("https", Protocol.HTTPS.asString())
+    }
+
+    @Test
+    fun `transform response to PushSubscriptionChanged`() {
+        val response = SubscriptionChanged(
+            "992a0f0542383f1ea5ef51b7cf4ae6c4",
+            "scope"
+        )
+        val sub = response.toPushSubscriptionChanged()
+        assertEquals(response.channelID, sub.channelId)
+        assertEquals(response.scope, sub.scope)
     }
 }
