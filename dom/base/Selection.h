@@ -307,8 +307,7 @@ class Selection final : public nsSupportsWeakReference,
   /**
    * Callers need to keep `aRange` alive.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void RemoveRangeAndUnselectFramesAndNotifyListeners(
+  MOZ_CAN_RUN_SCRIPT void RemoveRangeAndUnselectFramesAndNotifyListeners(
       nsRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void RemoveAllRanges(mozilla::ErrorResult& aRv);

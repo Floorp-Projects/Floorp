@@ -11,10 +11,11 @@ import re
 import runpy
 import sys
 import atexit
-import shared_telemetry_utils as utils
+import six
+from . import shared_telemetry_utils as utils
 
 from ctypes import c_int
-from shared_telemetry_utils import ParserError
+from .shared_telemetry_utils import ParserError
 from collections import OrderedDict
 atexit.register(ParserError.exit_func)
 
@@ -114,7 +115,7 @@ def load_allowlist():
         with open(allowlist_path, 'r') as f:
             try:
                 allowlists = json.load(f)
-                for name, allowlist in allowlists.iteritems():
+                for name, allowlist in allowlists.items():
                     allowlists[name] = set(allowlist)
             except ValueError:
                 ParserError('Error parsing allowlist: %s' % allowlist_path).handle_now()
@@ -373,7 +374,7 @@ the histogram."""
             return
 
         invalid = filter(lambda l: len(l) > MAX_LABEL_LENGTH, labels)
-        if len(invalid) > 0:
+        if len(list(invalid)) > 0:
             ParserError('Label values for "%s" exceed length limit of %d: %s' %
                         (name, MAX_LABEL_LENGTH, ', '.join(invalid))).handle_later()
 
@@ -384,7 +385,7 @@ the histogram."""
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the label values to a strict pattern.
         invalid = filter(lambda l: not re.match(CPP_IDENTIFIER_PATTERN, l, re.IGNORECASE), labels)
-        if len(invalid) > 0:
+        if len(list(invalid)) > 0:
             ParserError('Label values for %s are not matching pattern "%s": %s' %
                         (name, CPP_IDENTIFIER_PATTERN, ', '.join(invalid))).handle_later()
 
@@ -484,7 +485,7 @@ the histogram."""
             raise ValueError('Label count for %s exceeds limit of %d' % (name, MAX_KEY_COUNT))
 
         invalid = filter(lambda k: len(k) > MAX_KEY_LENGTH, keys)
-        if len(invalid) > 0:
+        if len(list(invalid)) > 0:
             raise ValueError('"keys" values for %s are exceeding length "%d": %s' %
                              (name, MAX_KEY_LENGTH, ', '.join(invalid)))
 
@@ -539,22 +540,22 @@ the histogram."""
             "low": int,
             "high": int,
             "keyed": bool,
-            "expires_in_version": basestring,
-            "kind": basestring,
-            "description": basestring,
-            "releaseChannelCollection": basestring,
+            "expires_in_version": six.string_types,
+            "kind": six.string_types,
+            "description": six.string_types,
+            "releaseChannelCollection": six.string_types,
         }
 
         # For list fields we check the items types.
         type_checked_list_fields = {
             "bug_numbers": int,
-            "alert_emails": basestring,
-            "labels": basestring,
-            "record_in_processes": basestring,
-            "keys": basestring,
-            "products": basestring,
-            "operating_systems": basestring,
-            "record_into_store": basestring,
+            "alert_emails": six.string_types,
+            "labels": six.string_types,
+            "record_in_processes": six.string_types,
+            "keys": six.string_types,
+            "products": six.string_types,
+            "operating_systems": six.string_types,
+            "record_into_store": six.string_types,
         }
 
         # For the server-side, where _strict_type_checks==False, we want to
@@ -582,11 +583,11 @@ the histogram."""
                 definition["keyed"] = True
 
         def nice_type_name(t):
-            if t is basestring:
+            if t is str:
                 return "string"
             return t.__name__
 
-        for key, key_type in type_checked_fields.iteritems():
+        for key, key_type in type_checked_fields.items():
             if key not in definition:
                 continue
             if not isinstance(definition[key], key_type):
@@ -598,7 +599,7 @@ the histogram."""
             ParserError('Value for high in histogram "{0}" should be lower or equal to INT_MAX.'
                         .format(nice_type_name(c_int))).handle_later()
 
-        for key, key_type in type_checked_list_fields.iteritems():
+        for key, key_type in type_checked_list_fields.items():
             if key not in definition:
                 continue
             if not all(isinstance(x, key_type) for x in definition[key]):
@@ -608,7 +609,7 @@ the histogram."""
     def check_keys(self, name, definition, allowed_keys):
         if not self._strict_type_checks:
             return
-        for key in definition.iterkeys():
+        for key in iter(definition.keys()):
             if key not in allowed_keys:
                 ParserError('Key "%s" is not allowed for histogram "%s".' %
                             (key, name)).handle_later()
@@ -865,13 +866,13 @@ the histograms defined in filenames.
         if not isinstance(histograms, OrderedDict):
             ParserError("Histogram parser did not provide an OrderedDict.").handle_now()
 
-        for (name, definition) in histograms.iteritems():
+        for (name, definition) in histograms.items():
             if name in all_histograms:
                 ParserError('Duplicate histogram name "%s".' % name).handle_later()
             all_histograms[name] = definition
 
     def check_continuity(iterable, filter_function, name):
-        indices = filter(filter_function, enumerate(iterable.iterkeys()))
+        indices = list(filter(filter_function, enumerate(iter(iterable.keys()))))
         if indices:
             lower_bound = indices[0][0]
             upper_bound = indices[-1][0]
@@ -894,12 +895,12 @@ the histograms defined in filenames.
     # Check that histograms that were removed from Histograms.json etc.
     # are also removed from the allowlists.
     if allowlists is not None:
-        all_allowlist_entries = itertools.chain.from_iterable(allowlists.itervalues())
+        all_allowlist_entries = itertools.chain.from_iterable(iter(allowlists.values()))
         orphaned = set(all_allowlist_entries) - set(all_histograms.keys())
         if len(orphaned) > 0:
             msg = 'The following entries are orphaned and should be removed from ' \
                   'histogram-allowlists.json:\n%s'
             ParserError(msg % (', '.join(sorted(orphaned)))).handle_later()
 
-    for (name, definition) in all_histograms.iteritems():
+    for (name, definition) in all_histograms.items():
         yield Histogram(name, definition, strict_type_checks=strict_type_checks)

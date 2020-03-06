@@ -19,6 +19,7 @@ import mozlog
 import moznetwork
 from mozdevice import ADBDevice, ADBError, ADBTimeoutError
 from mozprofile import Profile, DEFAULT_PORTS
+from mozprofile.cli import parse_preferences
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
 
@@ -119,6 +120,8 @@ class JUnitTestRunner(MochitestDesktop):
 
         # Set preferences
         self.merge_base_profiles(self.options, 'geckoview-junit')
+        prefs = parse_preferences(self.options.extra_prefs)
+        self.profile.set_preferences(prefs)
 
         if self.fillCertificateDB(self.options):
             self.log.error("Certificate integration failed")
@@ -434,6 +437,12 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           dest="run_until_failure",
                           default=False,
                           help="Run tests repeatedly but stop the first time a test fails.")
+        self.add_argument("--setpref",
+                          action="append",
+                          dest="extra_prefs",
+                          default=[],
+                          metavar="PREF=VALUE",
+                          help="Defines an extra user preference.")
         # Additional options for server.
         self.add_argument("--certificate-path",
                           action="store",

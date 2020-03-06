@@ -145,18 +145,6 @@ function getPinnedTabsCount() {
   return pinnedTabs;
 }
 
-function getSearchEngineId(engine) {
-  if (engine) {
-    if (engine.identifier) {
-      return engine.identifier;
-    }
-    if (engine.name) {
-      return "other-" + engine.name;
-    }
-  }
-  return "other";
-}
-
 function shouldRecordSearchCount(tabbrowser) {
   return (
     !PrivateBrowsingUtils.isWindowPrivate(tabbrowser.ownerGlobal) ||
@@ -444,7 +432,7 @@ let BrowserUsageTelemetry = {
       return;
     }
 
-    const countIdPrefix = getSearchEngineId(engine) + ".";
+    const countIdPrefix = `${engine.telemetryId}.`;
     const countIdSource = countIdPrefix + source;
     let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
 
@@ -489,7 +477,7 @@ let BrowserUsageTelemetry = {
       1
     );
     Services.telemetry.recordEvent("navigation", "search", source, action, {
-      engine: getSearchEngineId(engine),
+      engine: engine.telemetryId,
     });
   },
 

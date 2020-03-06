@@ -838,6 +838,7 @@ items from that key's value."
 
         dirs = self.query_abs_dirs()
         base_work_dir = dirs['base_work_dir']
+        work_dir = dirs['abs_work_dir']
         objdir = dirs['abs_obj_dir']
         branch = self.branch
 
@@ -851,11 +852,12 @@ items from that key's value."
             dirs['abs_src_dir'],
             'testing/mozharness/scripts/multil10n.py',
         )
-        base_work_dir = os.path.join(base_work_dir, 'workspace')
 
         cmd = [
             sys.executable,
             multil10n_path,
+            '--work-dir',
+            work_dir,
             '--config-file',
             'multi_locale/android-mozharness-build.json',
             '--pull-locale-source',

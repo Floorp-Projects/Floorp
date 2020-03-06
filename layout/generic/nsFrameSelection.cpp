@@ -2413,7 +2413,7 @@ nsresult nsFrameSelection::TableSelection::SelectBlockOfCells(
   nsresult result = NS_OK;
 
   // If new end cell is in a different table, do nothing
-  nsIContent* table = IsInSameTable(aStartCell, aEndCell);
+  const RefPtr<nsIContent> table = IsInSameTable(aStartCell, aEndCell);
   if (!table) {
     return NS_OK;
   }

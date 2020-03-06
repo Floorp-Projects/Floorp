@@ -15288,29 +15288,27 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
 
   if (NS_SUCCEEDED(aResult)) {
     // Remove all deleted objectStores and indexes, then mark immutable.
-    for (auto objectStoreIter = info->mMetadata->mObjectStores.Iter();
-         !objectStoreIter.Done(); objectStoreIter.Next()) {
+    info->mMetadata->mObjectStores.RemoveIf([](const auto& objectStoreIter) {
       MOZ_ASSERT(objectStoreIter.Key());
-      RefPtr<FullObjectStoreMetadata>& metadata = objectStoreIter.Data();
+      const RefPtr<FullObjectStoreMetadata>& metadata = objectStoreIter.Data();
       MOZ_ASSERT(metadata);
 
       if (metadata->mDeleted) {
-        objectStoreIter.Remove();
-        continue;
+        return true;
       }
 
-      for (auto indexIter = metadata->mIndexes.Iter(); !indexIter.Done();
-           indexIter.Next()) {
+      metadata->mIndexes.RemoveIf([](const auto& indexIter) -> bool {
         MOZ_ASSERT(indexIter.Key());
-        RefPtr<FullIndexMetadata>& index = indexIter.Data();
+        const RefPtr<FullIndexMetadata>& index = indexIter.Data();
         MOZ_ASSERT(index);
 
-        if (index->mDeleted) {
-          indexIter.Remove();
-        }
-      }
+        return index->mDeleted;
+      });
       metadata->mIndexes.MarkImmutable();
-    }
+
+      return false;
+    });
+
     info->mMetadata->mObjectStores.MarkImmutable();
   } else {
     // Replace metadata pointers for all live databases.
@@ -16335,14 +16333,12 @@ nsresult FileManager::Invalidate() {
 
   mInvalidated.Flip();
 
-  for (auto iter = mFileInfos.Iter(); !iter.Done(); iter.Next()) {
+  mFileInfos.RemoveIf([](const auto& iter) {
     FileInfo* info = iter.Data();
     MOZ_ASSERT(info);
 
-    if (!info->LockedClearDBRefs()) {
-      iter.Remove();
-    }
-  }
+    return !info->LockedClearDBRefs();
+  });
 
   return NS_OK;
 }

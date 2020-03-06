@@ -23,19 +23,21 @@ class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   static already_AddRefed<StringBlobImpl> Create(const nsACString& aData,
                                                  const nsAString& aContentType);
 
-  virtual void CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
-  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
-                                                 uint64_t aLength,
-                                                 const nsAString& aContentType,
-                                                 ErrorResult& aRv) override;
+  already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
+                                         const nsAString& aContentType,
+                                         ErrorResult& aRv) override;
 
   size_t GetAllocationSize() const override { return mData.Length(); }
 
   size_t GetAllocationSize(
       FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override {
     return GetAllocationSize();
+  }
+
+  void GetBlobImplType(nsAString& aBlobImplType) const override {
+    aBlobImplType = NS_LITERAL_STRING("StringBlobImpl");
   }
 
  private:

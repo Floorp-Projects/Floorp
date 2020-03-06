@@ -323,6 +323,8 @@ class nsFrameSelection final {
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult RemoveCellsFromSelection(nsIContent* aTable, int32_t aStartRowIndex,
                                     int32_t aStartColumnIndex,
                                     int32_t aEndRowIndex,
@@ -337,6 +339,8 @@ class nsFrameSelection final {
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult RestrictCellsToSelection(nsIContent* aTable, int32_t aStartRowIndex,
                                     int32_t aStartColumnIndex,
                                     int32_t aEndRowIndex,
@@ -820,24 +824,27 @@ class nsFrameSelection final {
     // (according to GetFirstCellNodeInRange).
     nsRange* GetNextCellRange(const mozilla::dom::Selection& aNormalSelection);
 
+    // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     nsresult HandleSelection(nsINode* aParentContent, int32_t aContentOffset,
                              mozilla::TableSelectionMode aTarget,
                              mozilla::WidgetMouseEvent* aMouseEvent,
                              bool aDragState,
                              mozilla::dom::Selection& aNormalSelection);
 
+    // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     nsresult SelectBlockOfCells(nsIContent* aStartCell, nsIContent* aEndCell,
                                 mozilla::dom::Selection& aNormalSelection);
 
     nsresult SelectRowOrColumn(nsIContent* aCellContent,
                                mozilla::dom::Selection& aNormalSelection);
 
-    // TODO: mark as `MOZ_CAN_RUN_SCRIPT`.
-    nsresult UnselectCells(nsIContent* aTable, int32_t aStartRowIndex,
-                           int32_t aStartColumnIndex, int32_t aEndRowIndex,
-                           int32_t aEndColumnIndex,
-                           bool aRemoveOutsideOfCellRange,
-                           mozilla::dom::Selection& aNormalSelection);
+    MOZ_CAN_RUN_SCRIPT nsresult
+    UnselectCells(nsIContent* aTable, int32_t aStartRowIndex,
+                  int32_t aStartColumnIndex, int32_t aEndRowIndex,
+                  int32_t aEndColumnIndex, bool aRemoveOutsideOfCellRange,
+                  mozilla::dom::Selection& aNormalSelection);
 
     nsCOMPtr<nsINode> mCellParent;  // used to snap to table selection
     nsCOMPtr<nsIContent> mStartSelectedCell;

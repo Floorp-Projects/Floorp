@@ -56,8 +56,6 @@ CreateElementTransaction::CreateElementTransaction(
       mTag(&aTag),
       mPointToInsert(aPointToInsert) {}
 
-CreateElementTransaction::~CreateElementTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction,
                                    EditTransactionBase, mEditorBase,
                                    mPointToInsert, mNewNode)

@@ -192,27 +192,6 @@ task_description_schema = Schema({
         text_type
     ),
 
-    # Coalescing provides the facility for tasks to be superseded by the same
-    # task in a subsequent commit, if the current task backlog reaches an
-    # explicit threshold. Both age and size thresholds need to be met in order
-    # for coalescing to be triggered.
-    Optional('coalesce'): {
-        # A unique identifier per job (typically a hash of the job label) in
-        # order to partition tasks into appropriate sets for coalescing. This
-        # is combined with the project in order to generate a unique coalescing
-        # key for the coalescing service.
-        'job-identifier': text_type,
-
-        # The minimum amount of time in seconds between two pending tasks with
-        # the same coalescing key, before the coalescing service will return
-        # tasks.
-        'age': int,
-
-        # The minimum number of backlogged tasks with the same coalescing key,
-        # before the coalescing service will return tasks.
-        'size': int,
-    },
-
     # The `always-target` attribute will cause the task to be included in the
     # target_task_graph regardless of filtering. Tasks included in this manner
     # will be candidates for optimization even when `optimize_target_tasks` is
@@ -321,10 +300,6 @@ def get_branch_repo(config):
     )]
 
 
-COALESCE_KEY = '{project}.{job-identifier}'
-SUPERSEDER_URL = 'https://coalesce.mozilla-releng.net/v1/list/{age}/{size}/{key}'
-
-
 @memoize
 def get_default_priority(graph_config, project):
     return evaluate_keyed_by(
@@ -362,24 +337,6 @@ def index_builder(name):
         index_builders[name] = func
         return func
     return wrap
-
-
-def coalesce_key(config, task):
-    return COALESCE_KEY.format(**{
-               'project': config.params['project'],
-               'job-identifier': task['coalesce']['job-identifier'],
-           })
-
-
-def superseder_url(config, task):
-    key = coalesce_key(config, task)
-    age = task['coalesce']['age']
-    size = task['coalesce']['size']
-    return SUPERSEDER_URL.format(
-        age=age,
-        size=size,
-        key=key
-    )
 
 
 UNSUPPORTED_INDEX_PRODUCT_ERROR = """\
@@ -430,6 +387,14 @@ def verify_index(config, index):
     # case, they take precedence over a Docker volume. But a volume still
     # needs to be declared for the path.
     Optional('volumes'): [text_type],
+    Optional(
+        "required-volumes",
+        description=(
+            "Paths that are required to be volumes for performance reasons. "
+            "For in-tree images, these paths will be checked to verify that they "
+            "are defined as volumes."
+        ),
+    ): [text_type],
 
     # caches to set up for the task
     Optional('caches'): [{
@@ -685,11 +650,8 @@ def build_docker_worker_payload(config, task, task_def):
     if capabilities:
         payload['capabilities'] = capabilities
 
-    # coalesce / superseding
-    if 'coalesce' in task:
-        payload['supersederUrl'] = superseder_url(config, task)
-
     check_caches_are_volumes(task)
+    check_required_volumes(task)
 
 
 @payload_builder('generic-worker', schema={
@@ -885,10 +847,6 @@ def build_generic_worker_payload(config, task, task_def):
 
     if features:
         task_def['payload']['features'] = features
-
-    # coalesce / superseding
-    if 'coalesce' in task:
-        task_def['payload']['supersederUrl'] = superseder_url(config, task)
 
 
 @payload_builder('scriptworker-signing', schema={
@@ -1923,10 +1881,6 @@ def build_task(config, tasks):
         if 'deadline-after' not in task:
             task['deadline-after'] = '1 day'
 
-        if 'coalesce' in task:
-            key = coalesce_key(config, task)
-            routes.append('coalesce.v1.' + key)
-
         if 'priority' not in task:
             task['priority'] = get_default_priority(config.graph_config, config.params['project'])
 
@@ -2085,6 +2039,28 @@ def check_caches_are_volumes(task):
 
     raise Exception('task %s (image %s) has caches that are not declared as '
                     'Docker volumes: %s '
+                    '(have you added them as VOLUMEs in the Dockerfile?)'
+                    % (task['label'], task['worker']['docker-image'],
+                       ', '.join(sorted(missing))))
+
+
+def check_required_volumes(task):
+    """
+    Ensures that all paths that are required to be volumes are defined as volumes.
+
+    Performance of writing to files in poor in directories not marked as
+    volumes, in docker. Ensure that paths that are often written to are marked
+    as volumes.
+    """
+    volumes = set(task['worker']['volumes'])
+    paths = set(task['worker'].get('required-volumes', []))
+    missing = paths - volumes
+
+    if not missing:
+        return
+
+    raise Exception('task %s (image %s) has paths that should be volumes for peformance '
+                    'that are not declared as Docker volumes: %s '
                     '(have you added them as VOLUMEs in the Dockerfile?)'
                     % (task['label'], task['worker']['docker-image'],
                        ', '.join(sorted(missing))))

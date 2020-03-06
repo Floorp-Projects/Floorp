@@ -26,7 +26,7 @@ class PluginProcessChild : public mozilla::ipc::ProcessChild {
   explicit PluginProcessChild(ProcessId aParentPid)
       : ProcessChild(aParentPid), mPlugin(true) {}
 
-  virtual ~PluginProcessChild() {}
+  virtual ~PluginProcessChild() = default;
 
   virtual bool Init(int aArgc, char* aArgv[]) override;
   virtual void CleanUp() override;

@@ -34,7 +34,6 @@ typedef void (*nsProcessValueFunc)(const nsAString* aInputString,
 class CSSEditUtils final {
  public:
   explicit CSSEditUtils(HTMLEditor* aEditor);
-  ~CSSEditUtils();
 
   enum nsCSSEditableProperty {
     eCSSEditableProperty_NONE = 0,

@@ -99,7 +99,7 @@ class NrSocketBase {
     memset(cb_args_, 0, sizeof(cb_args_));
     memset(&my_addr_, 0, sizeof(my_addr_));
   }
-  virtual ~NrSocketBase() {}
+  virtual ~NrSocketBase() = default;
 
   // Factory method; will create either an NrSocket, NrUdpSocketIpc, or
   // NrTcpSocketIpc as appropriate.
@@ -204,7 +204,7 @@ struct nr_udp_message {
   UniquePtr<MediaPacket> data;
 
  private:
-  ~nr_udp_message() {}
+  ~nr_udp_message() = default;
   DISALLOW_COPY_ASSIGN(nr_udp_message);
 };
 
@@ -226,7 +226,7 @@ class NrSocketIpc : public NrSocketBase {
   // For TCP PNecko, this is MainThread (and TCPSocket requires MainThread
   // currently)
   const nsCOMPtr<nsIEventTarget> io_thread_;
-  virtual ~NrSocketIpc(){};
+  virtual ~NrSocketIpc() = default;
 
  private:
   DISALLOW_COPY_ASSIGN(NrSocketIpc);

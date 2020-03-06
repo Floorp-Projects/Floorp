@@ -15,6 +15,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditorCommands.h"
@@ -3732,7 +3733,7 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
   mIntrinsicStoragePrincipal = aNewStoragePrincipal;
 
-  AntiTrackingCommon::ComputeContentBlockingAllowListPrincipal(
+  ContentBlockingAllowList::ComputePrincipal(
       aNewPrincipal, getter_AddRefs(mContentBlockingAllowListPrincipal));
 
 #ifdef DEBUG
@@ -14682,7 +14683,14 @@ void Document::NotifyIntersectionObservers() {
   }
   for (const auto& observer : observers) {
     if (observer) {
-      observer->Notify();
+      // MOZ_KnownLive because 'observers' is guaranteed to
+      // keep it alive.
+      //
+      // Even with https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 fixed
+      // this might need to stay, because 'observers' is not const, so it's not
+      // obvious how to prove via static analysis that it won't change and
+      // release us.
+      MOZ_KnownLive(observer)->Notify();
     }
   }
 }
@@ -15622,11 +15630,10 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       // Note: If this has returned true, the top-level document is guaranteed
       // to not be on the Content Blocking allow list.
       DebugOnly<bool> isOnAllowList = false;
-      MOZ_ASSERT_IF(
-          NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-              parent->GetContentBlockingAllowListPrincipal(), false,
-              isOnAllowList)),
-          !isOnAllowList);
+      MOZ_ASSERT_IF(NS_SUCCEEDED(ContentBlockingAllowList::Check(
+                        parent->GetContentBlockingAllowListPrincipal(), false,
+                        isOnAllowList)),
+                    !isOnAllowList);
 
       RefPtr<Document> self(this);
 

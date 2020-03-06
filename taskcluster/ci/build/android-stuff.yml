@@ -23,12 +23,12 @@ android-geckoview-docs/opt:
     worker:
         docker-image: {in-tree: android-build}
         env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+            GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-geckoview-docs
             GECKOVIEW_DOCS_UPLOAD_SECRET: "project/releng/gecko/build/level-{level}/geckoview-docs-upload"
         artifacts:
             - name: public/android/geckoview-docs/geckoview-javadoc.jar
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/libs/geckoview-javadoc.jar
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/libs/geckoview-javadoc.jar
               type: file
         max-run-time: 7200
     run:

@@ -36,7 +36,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -60,7 +60,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -84,7 +84,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -107,13 +107,14 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: build/openh264/artifacts
+                  path: workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win32.py
+            tooltool-downloads: internal
         fetches:
             toolchain:
                 - win64-clang-cl
@@ -128,13 +129,14 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: build/openh264/artifacts
+                  path: workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win64.py
+            tooltool-downloads: internal
         fetches:
             toolchain:
                 - win64-clang-cl
@@ -149,129 +151,14 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: build/openh264/artifacts
+                  path: workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win64-aarch64.py
+            tooltool-downloads: internal
         fetches:
             toolchain:
                 - win64-clang-cl
-    android-api-16/opt:
-        attributes:
-            build_platform: android-arm
-            build_type: opt
-        treeherder:
-            platform: android-api-16/opt
-        worker-type: b-linux
-        worker:
-            max-run-time: 1800
-            artifacts:
-                - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
-                  type: directory
-        # This rev includes Android Makefile fixes from after
-        # the 1.8.1 release
-        repo: https://github.com/dminor/openh264.git
-        revision: 42954cf0fe8a2bdc97fdc180462a3eaefceb035f
-        run:
-            using: mozharness
-            script: mozharness/scripts/openh264_build.py
-            config:
-                - openh264/android-arm.py
-            tooltool-downloads: internal
-        fetches:
-            toolchain:
-                - android-ndk-linux
-                - android-sdk-linux
-                - linux64-clang
-                - linux64-nasm
-    android-aarch64/opt:
-        attributes:
-            build_platform: android-aarch64
-            build_type: opt
-        treeherder:
-            platform: android-5-0-aarch64/opt
-        worker-type: b-linux
-        worker:
-            max-run-time: 1800
-            artifacts:
-                - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
-                  type: directory
-        # This rev includes Android Makefile fixes from after
-        # the 1.8.1 release
-        repo: https://github.com/dminor/openh264.git
-        revision: 42954cf0fe8a2bdc97fdc180462a3eaefceb035f
-        run:
-            using: mozharness
-            script: mozharness/scripts/openh264_build.py
-            config:
-                - openh264/android-aarch64.py
-            tooltool-downloads: internal
-        fetches:
-            toolchain:
-                - android-ndk-linux
-                - android-sdk-linux
-                - linux64-clang
-                - linux64-nasm
-    android-x86/opt:
-        attributes:
-            build_platform: android-x86
-            build_type: opt
-        treeherder:
-            platform: android-4-2-x86/opt
-        worker-type: b-linux
-        worker:
-            max-run-time: 1800
-            artifacts:
-                - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
-                  type: directory
-        # This rev includes Android Makefile fixes from after
-        # the 1.8.1 release
-        repo: https://github.com/dminor/openh264.git
-        revision: 42954cf0fe8a2bdc97fdc180462a3eaefceb035f
-        run:
-            using: mozharness
-            script: mozharness/scripts/openh264_build.py
-            config:
-                - openh264/android-x86.py
-            tooltool-downloads: internal
-        fetches:
-            toolchain:
-                - android-ndk-linux
-                - android-sdk-linux
-                - linux64-clang
-                - linux64-nasm
-    android-x86_64/opt:
-        attributes:
-            build_platform: android-x86_64
-            build_type: opt
-        treeherder:
-            platform: android-5-0-x86_64/opt
-        worker-type: b-linux
-        worker:
-            max-run-time: 1800
-            artifacts:
-                - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
-                  type: directory
-        # This rev includes Android Makefile fixes from after
-        # the 1.8.1 release
-        repo: https://github.com/dminor/openh264.git
-        revision: 42954cf0fe8a2bdc97fdc180462a3eaefceb035f
-        run:
-            using: mozharness
-            script: mozharness/scripts/openh264_build.py
-            config:
-                - openh264/android-x86_64.py
-            tooltool-downloads: internal
-        fetches:
-            toolchain:
-                - android-ndk-linux
-                - android-sdk-linux
-                - linux64-clang
-                - linux64-nasm

@@ -28,7 +28,7 @@ class ContentProcess : public mozilla::ipc::ProcessChild {
  public:
   explicit ContentProcess(ProcessId aParentPid) : ProcessChild(aParentPid) {}
 
-  ~ContentProcess() {}
+  ~ContentProcess() = default;
 
   virtual bool Init(int aArgc, char* aArgv[]) override;
   virtual void CleanUp() override;

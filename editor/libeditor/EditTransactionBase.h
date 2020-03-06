@@ -26,7 +26,7 @@ class EditTransactionBase : public nsITransaction {
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
  protected:
-  virtual ~EditTransactionBase();
+  virtual ~EditTransactionBase() = default;
 };
 
 }  // namespace mozilla

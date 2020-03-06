@@ -956,7 +956,7 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
       mLightingColor(StyleColor::White()),
       mStopOpacity(1.0f),
       mFloodOpacity(1.0f),
-      mVectorEffect(NS_STYLE_VECTOR_EFFECT_NONE),
+      mVectorEffect(StyleVectorEffect::None),
       mMaskType(StyleMaskType::Luminance) {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
 }

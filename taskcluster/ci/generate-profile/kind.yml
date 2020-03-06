@@ -96,9 +96,8 @@ jobs:
             max-run-time: 5400
             docker-image: {in-tree: ubuntu1804-test}
             env:
-                WORKSPACE: "/builds/worker/workspace"
                 WORKING_DIR: "/builds/worker"
-                MOZHARNESS_PATH: "/builds/worker/workspace/build/src/testing/mozharness"
+                MOZHARNESS_PATH: "/builds/worker/checkouts/gecko/testing/mozharness"
             artifacts:
                 - type: directory
                   name: public/build

@@ -41,8 +41,6 @@ ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
       mRemoveAttribute(!aValue),
       mAttributeWasSet(false) {}
 
-ChangeAttributeTransaction::~ChangeAttributeTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTransaction,
                                    EditTransactionBase, mElement)
 

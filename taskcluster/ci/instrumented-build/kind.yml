@@ -135,17 +135,17 @@ jobs:
         worker:
             docker-image: {in-tree: android-build}
             env:
-                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+                GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
             artifacts:
                 - name: public/build
                   path: /builds/worker/artifacts/
                   type: directory
                 - name: public/build/geckoview-androidTest.apk
-                  path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
                   type: file
                 - name: public/build/geckoview_example.apk
-                  path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
                   type: file
         run:
             config:
@@ -177,7 +177,6 @@ jobs:
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
-            use-caches: false
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
             config:
@@ -210,7 +209,6 @@ jobs:
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
         run:
-            use-caches: false
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
             config:

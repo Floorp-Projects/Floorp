@@ -341,8 +341,10 @@ class HyperTextAccessible : public AccessibleWrap {
    * Changes the start and end offset of the specified selection.
    * @return true if succeeded
    */
-  bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
-                            int32_t aEndOffset);
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool SetSelectionBoundsAt(int32_t aSelectionNum,
+                                                        int32_t aStartOffset,
+                                                        int32_t aEndOffset);
 
   /**
    * Adds a selection bounded by the specified offsets.
@@ -354,7 +356,8 @@ class HyperTextAccessible : public AccessibleWrap {
    * Removes the specified selection.
    * @return true if succeeded
    */
-  bool RemoveFromSelection(int32_t aSelectionNum);
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool RemoveFromSelection(int32_t aSelectionNum);
 
   /**
    * Scroll the given text range into view.
@@ -508,7 +511,9 @@ class HyperTextAccessible : public AccessibleWrap {
   void GetSelectionDOMRanges(SelectionType aSelectionType,
                              nsTArray<nsRange*>* aRanges);
 
-  nsresult SetSelectionRange(int32_t aStartPos, int32_t aEndPos);
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult SetSelectionRange(int32_t aStartPos,
+                                                         int32_t aEndPos);
 
   /**
    * Convert the given DOM point to a DOM point in non-generated contents.

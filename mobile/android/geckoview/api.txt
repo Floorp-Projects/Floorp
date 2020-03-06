@@ -422,6 +422,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>, @Nullable GeckoResult.Consumer<Throwable>);
     method @NonNull public static <V> GeckoResult<List<V>> allOf(@NonNull GeckoResult<V>);
     method @NonNull public static <V> GeckoResult<List<V>> allOf(@Nullable List<GeckoResult<V>>);
+    method @NonNull public synchronized GeckoResult<Boolean> cancel();
     method public synchronized void complete(@Nullable T);
     method public synchronized void completeExceptionally(@NonNull Throwable);
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);
@@ -430,11 +431,16 @@ package org.mozilla.geckoview {
     method @Nullable public Looper getLooper();
     method @Nullable public synchronized T poll();
     method @Nullable public synchronized T poll(long);
+    method public void setCancellationDelegate(@Nullable GeckoResult.CancellationDelegate);
     method @NonNull public <U> GeckoResult<U> then(@NonNull GeckoResult.OnValueListener<T,U>);
     method @NonNull public <U> GeckoResult<U> then(@Nullable GeckoResult.OnValueListener<T,U>, @Nullable GeckoResult.OnExceptionListener<U>);
     method @NonNull public GeckoResult<T> withHandler(@Nullable Handler);
     field public static final GeckoResult<AllowOrDeny> ALLOW;
     field public static final GeckoResult<AllowOrDeny> DENY;
+  }
+
+  @AnyThread public static interface GeckoResult.CancellationDelegate {
+    method @NonNull default public GeckoResult<Boolean> cancel();
   }
 
   public static interface GeckoResult.Consumer<T> {
