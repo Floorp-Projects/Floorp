@@ -480,9 +480,8 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
     // Pretend that this mode doesn't exist. We don't have a way to annotate
     // certain enum values as depending on preferences so we just duplicate the
     // normal exception generation here.
-    aRv.ThrowTypeError<MSG_INVALID_ENUM_VALUE>(
-        u"Argument 2 of IDBDatabase.transaction", u"readwriteflush",
-        u"IDBTransactionMode");
+    aRv.ThrowTypeError<MSG_INVALID_ENUM_VALUE>(u"argument 2", u"readwriteflush",
+                                               u"IDBTransactionMode");
     return nullptr;
   }
 
