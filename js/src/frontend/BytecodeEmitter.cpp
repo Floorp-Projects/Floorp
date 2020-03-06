@@ -8541,8 +8541,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  PropListType type,
                                                  ObjLiteralFlags flags) {
-  int32_t stackDepth = bytecodeSection().stackDepth();
-
   ObjLiteralCreationData data(cx);
   data.writer().beginObject(flags);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
@@ -8594,18 +8592,15 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   JSOp op = singleton
                 ? JSOp::Object
                 : isInnerSingleton ? JSOp::NewObjectWithGroup : JSOp::NewObject;
-  bool success = emitIndexOp(op, gcThingIndex);
-  if (!success) {
+  if (!emitIndexOp(op, gcThingIndex)) {
+    //              [stack] OBJ
     return false;
   }
 
-  bytecodeSection().setStackDepth(stackDepth + 1);
   return true;
 }
 
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
-  int32_t stackDepth = bytecodeSection().stackDepth();
-
   ObjLiteralCreationData data(cx);
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   if (isCow) {
@@ -8628,10 +8623,10 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
 
   JSOp op = isCow ? JSOp::NewArrayCopyOnWrite : JSOp::Object;
   if (!emitIndexOp(op, gcThingIndex)) {
+    //              [stack] OBJ
     return false;
   }
 
-  bytecodeSection().setStackDepth(stackDepth + 1);
   return true;
 }
 
