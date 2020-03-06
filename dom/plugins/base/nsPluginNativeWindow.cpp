@@ -44,7 +44,7 @@ nsPluginNativeWindowImpl::nsPluginNativeWindowImpl() : nsPluginNativeWindow() {
 #endif
 }
 
-nsPluginNativeWindowImpl::~nsPluginNativeWindowImpl() {}
+nsPluginNativeWindowImpl::~nsPluginNativeWindowImpl() = default;
 
 nsresult PLUG_NewPluginNativeWindow(
     nsPluginNativeWindow** aPluginNativeWindow) {

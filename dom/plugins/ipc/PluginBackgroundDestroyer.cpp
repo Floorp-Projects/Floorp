@@ -15,7 +15,7 @@ PluginBackgroundDestroyerParent::PluginBackgroundDestroyerParent(
     gfxASurface* aDyingBackground)
     : mDyingBackground(aDyingBackground) {}
 
-PluginBackgroundDestroyerParent::~PluginBackgroundDestroyerParent() {}
+PluginBackgroundDestroyerParent::~PluginBackgroundDestroyerParent() = default;
 
 void PluginBackgroundDestroyerParent::ActorDestroy(ActorDestroyReason why) {
   switch (why) {

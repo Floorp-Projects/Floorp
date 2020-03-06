@@ -156,7 +156,7 @@ static nsresult IsEnabledStateLockedForPlugin(nsIInternalPluginTag* aTag,
 
 uint32_t nsIInternalPluginTag::sNextId;
 
-nsIInternalPluginTag::nsIInternalPluginTag() {}
+nsIInternalPluginTag::nsIInternalPluginTag() = default;
 
 nsIInternalPluginTag::nsIInternalPluginTag(const char* aName,
                                            const char* aDescription,
@@ -180,7 +180,7 @@ nsIInternalPluginTag::nsIInternalPluginTag(
       mMimeDescriptions(aMimeDescriptions),
       mExtensions(aExtensions) {}
 
-nsIInternalPluginTag::~nsIInternalPluginTag() {}
+nsIInternalPluginTag::~nsIInternalPluginTag() = default;
 
 bool nsIInternalPluginTag::HasExtension(const nsACString& aExtension,
                                         nsACString& aMatchingType) const {
@@ -714,7 +714,7 @@ nsFakePluginTag::nsFakePluginTag(uint32_t aId,
       mSandboxScript(aSandboxScript),
       mState(nsPluginTag::ePluginState_Enabled) {}
 
-nsFakePluginTag::~nsFakePluginTag() {}
+nsFakePluginTag::~nsFakePluginTag() = default;
 
 NS_IMPL_ADDREF(nsFakePluginTag)
 NS_IMPL_RELEASE(nsFakePluginTag)
