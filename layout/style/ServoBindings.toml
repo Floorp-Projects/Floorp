@@ -161,6 +161,7 @@ rusty-enums = [
     "mozilla::StyleMaskMode",
     "mozilla::StyleScrollBehavior",
     "mozilla::StyleColorInterpolation",
+    "mozilla::StyleVectorEffect",
 ]
 whitelist-vars = [
     "NS_AUTHOR_SPECIFIED_.*",
