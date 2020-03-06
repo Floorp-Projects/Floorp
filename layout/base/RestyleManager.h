@@ -358,7 +358,6 @@ class RestyleManager {
   void NextRestyleIsForCSSRuleChanges() { mRestyleForCSSRuleChanges = true; }
 
   void RebuildAllStyleData(nsChangeHint aExtraHint, RestyleHint);
-  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint, RestyleHint);
 
   void ProcessPendingRestyles();
   void ProcessAllPendingAttributeAndStateInvalidations();

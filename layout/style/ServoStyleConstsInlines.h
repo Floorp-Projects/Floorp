@@ -907,16 +907,22 @@ inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(
 using RestyleHint = StyleRestyleHint;
 
 inline RestyleHint RestyleHint::RestyleSubtree() {
-  return RestyleHint::RESTYLE_SELF | RestyleHint::RESTYLE_DESCENDANTS;
+  return RESTYLE_SELF | RESTYLE_DESCENDANTS;
 }
 
 inline RestyleHint RestyleHint::RecascadeSubtree() {
-  return RestyleHint::RECASCADE_SELF | RestyleHint::RECASCADE_DESCENDANTS;
+  return RECASCADE_SELF | RECASCADE_DESCENDANTS;
 }
 
 inline RestyleHint RestyleHint::ForAnimations() {
-  return RestyleHint::RESTYLE_CSS_TRANSITIONS |
-         RestyleHint::RESTYLE_CSS_ANIMATIONS | RestyleHint::RESTYLE_SMIL;
+  return RESTYLE_CSS_TRANSITIONS | RESTYLE_CSS_ANIMATIONS | RESTYLE_SMIL;
+}
+
+inline bool RestyleHint::DefinitelyRecascadesAllSubtree() const {
+  if (!(*this & (RECASCADE_DESCENDANTS | RESTYLE_DESCENDANTS))) {
+    return false;
+  }
+  return bool(*this & (RESTYLE_SELF | RECASCADE_SELF));
 }
 
 template <>
