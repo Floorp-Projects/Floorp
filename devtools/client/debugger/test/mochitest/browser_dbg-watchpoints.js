@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+async function getScopeValue(dbg, index) {
+  return (await waitForElement(dbg, "scopeValue", index)).innerText;
+}
+
 // - Tests adding a watchpoint
 // - Tests removing a watchpoint
 // - Tests adding a watchpoint, resuming to after the youngest frame has popped,
@@ -30,6 +34,7 @@ add_task(async function() {
   await waitForPaused(dbg);
   await waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
   assertPausedAtSourceAndLine(dbg, sourceId, 17);
+  is(await getScopeValue(dbg, 5), "3");
 
   info("Resume and wait to pause at the access to b in the first `obj.b;`");
   resume(dbg);
@@ -62,7 +67,7 @@ add_task(async function() {
   getWatchpointItem2.click();
   pressKey(dbg, "Escape");
   await addedWatchpoint2;
-  
+
   info("Resume and wait to pause at the access to b in getB");
   resume(dbg);
   await waitForPaused(dbg);
@@ -81,7 +86,7 @@ add_task(async function() {
   el2.scrollIntoView();
      clickElementWithSelector(dbg, ".remove-get-watchpoint");
   await removedWatchpoint2;
-   
+
   info("Add back the get watchpoint on b");
   const addedWatchpoint3 = waitForDispatch(dbg, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 5);

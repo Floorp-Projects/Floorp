@@ -780,9 +780,7 @@ const proto = {
       retval.value = this.hooks.createValueGrip(desc.value);
     } else if (this.thread.getWatchpoint(obj, name.toString())) {
       const watchpoint = this.thread.getWatchpoint(obj, name.toString());
-      retval.value = this.hooks.createValueGrip(
-        this.obj.makeDebuggeeValue(watchpoint.desc.value)
-      );
+      retval.value = this.hooks.createValueGrip(watchpoint.desc.value);
       retval.watchpoint = watchpoint.watchpointType;
     } else {
       if ("get" in desc) {
