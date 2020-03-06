@@ -643,8 +643,9 @@ class ContentHandler {
     let getTopURL = channel => {
       // top-level document
       if (
+        channel.loadInfo &&
         channel.loadInfo.externalContentPolicyType ==
-        Ci.nsIContentPolicy.TYPE_DOCUMENT
+          Ci.nsIContentPolicy.TYPE_DOCUMENT
       ) {
         return channel.finalURL;
       }
@@ -665,6 +666,7 @@ class ContentHandler {
 
       // top-level resource
       if (
+        channel.loadInfo &&
         channel.loadInfo.loadingPrincipal &&
         channel.loadInfo.loadingPrincipal.URI
       ) {
