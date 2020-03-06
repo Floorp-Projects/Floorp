@@ -11,11 +11,10 @@ const TEST_URI = `data:text/html;charset=utf-8,
     /* Create a prototype-less object so popup does not contain native
      * Object prototype properties.
      */
-    window.foo = Object.create(null);
-    Object.assign(window.foo, {
+    var foo = Object.create(null, Object.getOwnPropertyDescriptors({
       item0: "value0",
       item1: "value1",
-    });
+    }));
   </script>
 </head>
 <body>bug 585991 - autocomplete popup ctrl+space usage test</body>`;
@@ -26,13 +25,8 @@ add_task(async function() {
 
   const { autocompletePopup: popup } = hud.jsterm;
 
-  let onPopUpOpen = popup.once("popup-opened");
-
-  info("wait for completion: window.foo.");
-  setInputValue(hud, "window.foo");
-  EventUtils.sendString(".");
-
-  await onPopUpOpen;
+  info("wait for completion: foo.");
+  await setInputValueForAutocompletion(hud, "foo.");
 
   const { itemCount } = popup;
   ok(popup.isOpen, "popup is open");
@@ -44,16 +38,21 @@ add_task(async function() {
   is(popup.itemCount, itemCount, "The popup wasn't modified on Ctrl+Space");
 
   info("press Escape to close the popup");
-  const onPopupClose = popup.once("popup-closed");
+  let onPopupClose = popup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Escape");
   await onPopupClose;
   ok(!popup.isOpen, "popup is not open after VK_ESCAPE");
 
   info("Check that Ctrl+Space opens the popup when it was closed");
-  onPopUpOpen = popup.once("popup-opened");
+  const onAutocompleteUpdated = hud.jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey(" ", { ctrlKey: true });
-  await onPopUpOpen;
+  await onAutocompleteUpdated;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");
   is(popup.itemCount, itemCount, "popup has the expected items");
+
+  info("Close the popup again");
+  onPopupClose = popup.once("popup-closed");
+  EventUtils.synthesizeKey("KEY_Escape");
+  await onPopupClose;
 });
