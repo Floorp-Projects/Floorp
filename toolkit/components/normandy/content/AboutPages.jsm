@@ -15,8 +15,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "BranchedAddonStudyAction",
-  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
+  "AddonStudyAction",
+  "resource://normandy/actions/AddonStudyAction.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -159,7 +159,7 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      */
     async removeAddonStudy(recipeId, reason) {
       try {
-        const action = new BranchedAddonStudyAction();
+        const action = new AddonStudyAction();
         await action.unenroll(recipeId, reason);
       } catch (err) {
         // If the exception was that the study was already removed, that's ok.
