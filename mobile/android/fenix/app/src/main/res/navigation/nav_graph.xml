@@ -63,6 +63,10 @@
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
         tools:layout="@layout/fragment_home">
+        <argument
+            android:name="shouldScrollToSelectedTab"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_homeFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment" />
@@ -181,8 +185,9 @@
         app:exitAnim="@anim/fade_out"
         tools:layout="@layout/fragment_browser">
         <action
-            android:id="@+id/action_browserFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            android:id="@+id/action_browserFragment_to_homeFragment_popUp"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/homeFragment" />
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
             app:enterAnim="@anim/fade_in_up"
