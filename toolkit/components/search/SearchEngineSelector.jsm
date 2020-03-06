@@ -45,6 +45,25 @@ function sectionExcludes(config, key, value) {
   return hasAppKey(config, key) && !config.application[key].includes(value);
 }
 
+function sectionIncludes(config, key, value) {
+  return hasAppKey(config, key) && config.application[key].includes(value);
+}
+
+function isDistroExcluded(config, key, distroID) {
+  // Should be excluded when:
+  // - There's a distroID and that is not in the non-empty distroID list.
+  // - There's no distroID and the distroID list is not empty.
+  const appKey = hasAppKey(config, key);
+  if (!appKey) {
+    return false;
+  }
+  const distroList = config.application[key];
+  if (distroID) {
+    return distroList.length && !distroList.includes(distroID);
+  }
+  return !!distroList.length;
+}
+
 function belowMinVersion(config, version) {
   return (
     hasAppKey(config, "minVersion") &&
@@ -85,17 +104,18 @@ class SearchEngineSelector {
    * @param {string} locale - Users locale.
    * @param {string} region - Users region.
    * @param {string} channel - The update channel the application is running on.
+   * @param {string} distroID - The distribution ID of the application.
    * @returns {object}
    *   An object with "engines" field, a sorted list of engines and
    *   optionally "privateDefault" which is an object containing the engine
    *   details for the engine which should be the default in Private Browsing mode.
    */
-  fetchEngineConfiguration(locale, region, channel) {
+  fetchEngineConfiguration(locale, region, channel, distroID) {
     let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let name = getAppInfo("name");
     let version = getAppInfo("version");
     log(
-      `fetchEngineConfiguration ${region}:${locale}:${channel}:${cohort}:${name}:${version}`
+      `fetchEngineConfiguration ${region}:${locale}:${channel}:${distroID}:${cohort}:${name}:${version}`
     );
     let engines = [];
     const lcLocale = locale.toLowerCase();
@@ -109,6 +129,9 @@ class SearchEngineSelector {
         if (
           sectionExcludes(section, "channel", channel) ||
           sectionExcludes(section, "name", name) ||
+          (distroID &&
+            sectionIncludes(section, "excludedDistributions", distroID)) ||
+          isDistroExcluded(section, "distributions", distroID) ||
           belowMinVersion(section, version) ||
           aboveMaxVersion(section, version)
         ) {
