@@ -15,7 +15,7 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "mozSearch",
-      "search_url": "https://example.com:443/browser/browser/components/search/test/browser/",
+      "search_url": "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs",
       "params": [
         {
           "name": "test",
@@ -37,7 +37,8 @@
           "purpose": "keyword",
           "value": "keywordsearch"
         }
-      ]
+      ],
+      "search_url_post_params": "foo=bar"
     }
   }
 }

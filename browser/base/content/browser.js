@@ -4499,7 +4499,9 @@ const BrowserSearch = {
         : "tab",
       usePrivate,
       "contextmenu",
-      triggeringPrincipal,
+      Services.scriptSecurityManager.createNullPrincipal(
+        triggeringPrincipal.originAttributes
+      ),
       csp
     );
     if (engine) {
