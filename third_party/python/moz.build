@@ -33,7 +33,7 @@ with Files('futures/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('jsmin/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 with Files('lldbutils/**'):
     BUG_COMPONENT = ('Core', 'General')
