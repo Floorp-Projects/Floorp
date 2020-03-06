@@ -310,7 +310,7 @@ win64-cross/opt:
                 # of fetch-content starts while the library is being extracted by
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/workspace/build/src/vs2017_15.8.4/"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['trunk', 'try']
     dependencies:
         win64-clang-cl: toolchain-win64-clang-cl
