@@ -315,12 +315,7 @@ bool PropertyEmitter::emitInit(JSOp op, JS::Handle<JSAtom*> key) {
 
   //                [stack] CTOR? OBJ CTOR? VAL
 
-  uint32_t index;
-  if (!bce_->makeAtomIndex(key, &index)) {
-    return false;
-  }
-
-  if (!bce_->emitAtomOp(op, index)) {
+  if (!bce_->emitAtomOp(op, key)) {
     //              [stack] CTOR? OBJ CTOR?
     return false;
   }

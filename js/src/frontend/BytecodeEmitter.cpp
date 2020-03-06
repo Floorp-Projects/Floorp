@@ -1700,22 +1700,13 @@ bool BytecodeEmitter::emitPrepareIteratorResult() {
 }
 
 bool BytecodeEmitter::emitFinishIteratorResult(bool done) {
-  uint32_t value_id;
-  if (!makeAtomIndex(cx->names().value, &value_id)) {
-    return false;
-  }
-  uint32_t done_id;
-  if (!makeAtomIndex(cx->names().done, &done_id)) {
-    return false;
-  }
-
-  if (!emitAtomOp(JSOp::InitProp, value_id)) {
+  if (!emitAtomOp(JSOp::InitProp, cx->names().value)) {
     return false;
   }
   if (!emit1(done ? JSOp::True : JSOp::False)) {
     return false;
   }
-  if (!emitAtomOp(JSOp::InitProp, done_id)) {
+  if (!emitAtomOp(JSOp::InitProp, cx->names().done)) {
     return false;
   }
   return true;
@@ -3895,12 +3886,7 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
         return false;
       }
     } else {
-      uint32_t index;
-      if (!makeAtomIndex(pnatom, &index)) {
-        return false;
-      }
-
-      if (!emitAtomOp(JSOp::InitProp, index)) {
+      if (!emitAtomOp(JSOp::InitProp, pnatom)) {
         return false;
       }
     }
@@ -9923,12 +9909,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
     return false;
   }
 
-  uint32_t index;
-  if (!makeAtomIndex(atom, &index)) {
-    return false;
-  }
-
-  if (!emitAtomOp(JSOp::String, index)) {
+  if (!emitAtomOp(JSOp::String, atom)) {
     return false;
   }
   //            [stack] CALLBACK UNDEFINED KIND
