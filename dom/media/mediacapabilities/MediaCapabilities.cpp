@@ -172,7 +172,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     // parameters.
     if (videoTracks.Length() != 1) {
       promise->MaybeRejectWithTypeError<MSG_NO_CODECS_PARAMETER>(
-          NS_ConvertUTF8toUTF16(videoContainer->OriginalString()));
+          videoContainer->OriginalString());
       return promise.forget();
     }
     MOZ_DIAGNOSTIC_ASSERT(videoTracks.ElementAt(0),
@@ -188,7 +188,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     // parameters.
     if (audioTracks.Length() != 1) {
       promise->MaybeRejectWithTypeError<MSG_NO_CODECS_PARAMETER>(
-          NS_ConvertUTF8toUTF16(audioContainer->OriginalString()));
+          audioContainer->OriginalString());
       return promise.forget();
     }
     MOZ_DIAGNOSTIC_ASSERT(audioTracks.ElementAt(0),

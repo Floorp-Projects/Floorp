@@ -3089,7 +3089,7 @@ void DataChannel::SendErrnoToErrorResult(int error, size_t aMessageSize,
     case EMSGSIZE: {
       nsPrintfCString err("Message size (%zu) exceeds maxMessageSize",
                           aMessageSize);
-      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+      aRv.ThrowTypeError(err);
       break;
     }
     default:

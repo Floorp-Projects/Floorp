@@ -264,7 +264,7 @@ void ChromiumCDMParent::GetStatusForPolicy(uint32_t aPromiseId,
     // TypeError for invalid args, as usual.
     NS_NAMED_LITERAL_CSTRING(
         err, "getStatusForPolicy failed due to bad hdcp version argument");
-    rv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+    rv.ThrowTypeError(err);
     RejectPromise(aPromiseId, std::move(rv), err);
     return;
   }
@@ -497,7 +497,7 @@ static ErrorResult ToErrorResult(uint32_t aException,
       rv.ThrowInvalidStateError(aErrorMessage);
       break;
     case cdm::Exception::kExceptionTypeError:
-      rv.ThrowTypeError(NS_ConvertUTF8toUTF16(aErrorMessage));
+      rv.ThrowTypeError(aErrorMessage);
       break;
     case cdm::Exception::kExceptionQuotaExceededError:
       rv.ThrowQuotaExceededError(aErrorMessage);

@@ -244,11 +244,18 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
     return nullptr;
   }
 
-  nsresult rv;
+  // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+  nsAutoCString scriptURL;
+  if (!AppendUTF16toUTF8(aScriptURL, scriptURL, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIURI> scriptURI;
-  rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, baseURI);
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(scriptURI), scriptURL, nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aScriptURL);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(scriptURL);
     return nullptr;
   }
 
@@ -258,13 +265,12 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
 
   // Step 4. If none passed, parse against script's URL
   if (!aOptions.mScope.WasPassed()) {
-    NS_NAMED_LITERAL_STRING(defaultScope, "./");
+    NS_NAMED_LITERAL_CSTRING(defaultScope, "./");
     rv = NS_NewURI(getter_AddRefs(scopeURI), defaultScope, nullptr, scriptURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString spec;
       scriptURI->GetSpec(spec);
-      NS_ConvertUTF8toUTF16 wSpec(spec);
-      aRv.ThrowTypeError<MSG_INVALID_SCOPE>(defaultScope, wSpec);
+      aRv.ThrowTypeError<MSG_INVALID_SCOPE>(defaultScope, spec);
       return nullptr;
     }
   } else {
@@ -275,8 +281,8 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
       nsIURI* uri = baseURI ? baseURI : scriptURI;
       nsAutoCString spec;
       uri->GetSpec(spec);
-      NS_ConvertUTF8toUTF16 wSpec(spec);
-      aRv.ThrowTypeError<MSG_INVALID_SCOPE>(aOptions.mScope.Value(), wSpec);
+      aRv.ThrowTypeError<MSG_INVALID_SCOPE>(
+          NS_ConvertUTF16toUTF8(aOptions.mScope.Value()), spec);
       return nullptr;
     }
   }

@@ -745,7 +745,8 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
   RefPtr<nsAtom> pseudoAtom =
       nsCSSPseudoElements::GetPseudoAtom(options.mPseudoElement);
   if (!pseudoAtom) {
-    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(options.mPseudoElement);
+    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(
+        NS_ConvertUTF16toUTF8(options.mPseudoElement));
     return result;
   }
 
@@ -753,7 +754,8 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
       pseudoAtom, CSSEnabledState::ForAllContent);
 
   if (!IsSupportedPseudoForWebAnimation(result.mPseudoType)) {
-    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(options.mPseudoElement);
+    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(
+        NS_ConvertUTF16toUTF8(options.mPseudoElement));
   }
 
   return result;
@@ -1062,14 +1064,16 @@ void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
   RefPtr<nsAtom> pseudoAtom =
       nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
   if (!pseudoAtom) {
-    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(aPseudoElement);
+    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(
+        NS_ConvertUTF16toUTF8(aPseudoElement));
     return;
   }
 
   pseudoType = nsCSSPseudoElements::GetPseudoType(
       pseudoAtom, CSSEnabledState::ForAllContent);
   if (!IsSupportedPseudoForWebAnimation(pseudoType)) {
-    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(aPseudoElement);
+    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(
+        NS_ConvertUTF16toUTF8(aPseudoElement));
     return;
   }
 

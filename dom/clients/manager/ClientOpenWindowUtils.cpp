@@ -170,14 +170,14 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
   nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aArgs.baseURL());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     nsPrintfCString err("Invalid base URL \"%s\"", aArgs.baseURL().get());
-    aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+    aRv.ThrowTypeError(err);
     return;
   }
 
   rv = NS_NewURI(getter_AddRefs(uri), aArgs.url(), nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     nsPrintfCString err("Invalid URL \"%s\"", aArgs.url().get());
-    aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+    aRv.ThrowTypeError(err);
     return;
   }
 
