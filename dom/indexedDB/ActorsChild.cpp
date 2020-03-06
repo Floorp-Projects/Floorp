@@ -2942,8 +2942,8 @@ mozilla::ipc::IPCResult BackgroundRequestChild::RecvPreprocess(
 nsresult BackgroundRequestChild::PreprocessHelper::Init(
     const StructuredCloneFile& aFile) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aFile.HasBlob());
-  MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eStructuredClone);
+  MOZ_ASSERT(aFile.mBlob);
+  MOZ_ASSERT(aFile.mType == StructuredCloneFile::eStructuredClone);
   MOZ_ASSERT(mState == State::Initial);
 
   // The stream transport service is used for asynchronous processing. It has a
@@ -2962,8 +2962,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::Init(
   ErrorResult errorResult;
 
   nsCOMPtr<nsIInputStream> stream;
-  // XXX After Bug 1620560, MutableBlob is not needed here anymore.
-  aFile.MutableBlob().CreateInputStream(getter_AddRefs(stream), errorResult);
+  aFile.mBlob->CreateInputStream(getter_AddRefs(stream), errorResult);
   if (NS_WARN_IF(errorResult.Failed())) {
     return errorResult.StealNSResult();
   }

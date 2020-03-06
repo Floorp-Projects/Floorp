@@ -115,7 +115,7 @@ void IDBMutableFile::AbortFileHandles() {
   class MOZ_STACK_CLASS Helper final {
    public:
     static void AbortFileHandles(
-        const nsTHashtable<nsPtrHashKey<IDBFileHandle>>& aTable) {
+        nsTHashtable<nsPtrHashKey<IDBFileHandle>>& aTable) {
       if (!aTable.Count()) {
         return;
       }
@@ -123,8 +123,8 @@ void IDBMutableFile::AbortFileHandles() {
       nsTArray<RefPtr<IDBFileHandle>> fileHandlesToAbort;
       fileHandlesToAbort.SetCapacity(aTable.Count());
 
-      for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
-        IDBFileHandle* const fileHandle = iter.Get()->GetKey();
+      for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
+        IDBFileHandle* fileHandle = iter.Get()->GetKey();
         MOZ_ASSERT(fileHandle);
 
         fileHandle->AssertIsOnOwningThread();
@@ -139,7 +139,7 @@ void IDBMutableFile::AbortFileHandles() {
         return;
       }
 
-      for (const auto& fileHandle : fileHandlesToAbort) {
+      for (RefPtr<IDBFileHandle>& fileHandle : fileHandlesToAbort) {
         MOZ_ASSERT(fileHandle);
 
         fileHandle->Abort();

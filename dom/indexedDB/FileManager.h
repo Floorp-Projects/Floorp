@@ -8,7 +8,6 @@
 #define mozilla_dom_indexeddb_filemanager_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -27,6 +26,8 @@ class FileInfo;
 
 // Implemented in ActorsParent.cpp.
 class FileManager final {
+  friend class FileInfo;
+
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   const PersistenceType mPersistenceType;
@@ -91,8 +92,6 @@ class FileManager final {
   MOZ_MUST_USE RefPtr<FileInfo> GetFileInfo(int64_t aId) const;
 
   MOZ_MUST_USE RefPtr<FileInfo> CreateFileInfo();
-
-  void RemoveFileInfo(int64_t aId, const MutexAutoLock& aFilesMutexLock);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileManager)
 
