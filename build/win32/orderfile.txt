@@ -8726,13 +8726,7 @@ RegisterWeakAsyncMemoryReporter
 ?NewContentViewerObj@nsDocShell@@AAE?AW4nsresult@@ABV?$nsTSubstring@D@@PAVnsIRequest@@PAVnsILoadGroup@@PAPAVnsIStreamListener@@PAPAVnsIContentViewer@@@Z
 ?CreateInstance@nsContentDLF@@UAG?AW4nsresult@@PBDPAVnsIChannel@@PAVnsILoadGroup@@ABV?$nsTSubstring@D@@PAVnsIDocShell@@PAVnsISupports@@PAPAVnsIStreamListener@@PAPAVnsIContentViewer@@@Z
 ?IsPlainTextType@nsContentUtils@@SA_NABV?$nsTSubstring@D@@@Z
-?CreateXULDocument@nsContentDLF@@QAE?AW4nsresult@@PBDPAVnsIChannel@@PAVnsILoadGroup@@PAVnsIDocShell@@PAVnsISupports@@PAPAVnsIStreamListener@@PAPAVnsIContentViewer@@@Z
-?NS_NewXULDocument@@YA?AW4nsresult@@PAPAVDocument@dom@mozilla@@@Z
 ??0XMLDocument@dom@mozilla@@QAE@PBD@Z
-?AddRef@XULDocument@dom@mozilla@@UAGKXZ
-?Release@XULDocument@dom@mozilla@@UAGKXZ
-?QueryInterface@XULDocument@dom@mozilla@@UAG?AW4nsresult@@ABUnsID@@PAPAX@Z
-?StartDocumentLoad@XULDocument@dom@mozilla@@UAE?AW4nsresult@@PBDPAVnsIChannel@@PAVnsILoadGroup@@PAVnsISupports@@PAPAVnsIStreamListener@@_NPAVnsIContentSink@@@Z
 ?GetParent@nsDocShell@@UAG?AW4nsresult@@PAPAVnsIDocShellTreeItem@@@Z
 ?GetContentDispositionHeader@nsJARChannel@@UAG?AW4nsresult@@AAV?$nsTSubstring@D@@@Z
 ??0PrototypeDocumentParser@parser@mozilla@@QAE@PAVnsIURI@@PAVDocument@dom@2@@Z
@@ -8904,12 +8898,6 @@ RegisterWeakAsyncMemoryReporter
 ?IsForceReloading@nsDocShell@@QAE_NXZ
 ?Release@PerformanceMainThread@dom@mozilla@@UAGKXZ
 ?ClearDocumentDependentSlots@nsGlobalWindowInner@@IAEXPAUJSContext@@@Z
-?WrapNode@XULDocument@dom@mozilla@@MAEPAVJSObject@@PAUJSContext@@V?$Handle@PAVJSObject@@@JS@@@Z
-?Wrap@XULDocument_Binding@dom@mozilla@@YA_NPAUJSContext@@PAVXULDocument@23@PAVnsWrapperCache@@V?$Handle@PAVJSObject@@@JS@@V?$MutableHandle@PAVJSObject@@@8@@Z
-?CreateInterfaceObjects@XULDocument_Binding@dom@mozilla@@YAXPAUJSContext@@V?$Handle@PAVJSObject@@@JS@@AAVProtoAndIfaceCache@23@_N@Z
-?Get@?$FindAssociatedGlobalForNative@VXULDocument@dom@mozilla@@$00@dom@mozilla@@SAPAVJSObject@@PAUJSContext@@V?$Handle@PAVJSObject@@@JS@@@Z
-?CreateObject@?$BindingJSObjectCreator@VXULDocument@dom@mozilla@@@dom@mozilla@@QAEXPAUJSContext@@PBUJSClass@@V?$Handle@PAVJSObject@@@JS@@PAVXULDocument@23@V?$MutableHandle@PAVJSObject@@@7@@Z
-??1?$BindingJSObjectCreator@VXULDocument@dom@mozilla@@@dom@mozilla@@QAE@XZ
 ?TakeReservedClientSource@LoadInfo@net@mozilla@@UAE?AV?$UniquePtr@VClientSource@dom@mozilla@@V?$DefaultDelete@VClientSource@dom@mozilla@@@3@@3@XZ
 ?GetController@LoadInfo@net@mozilla@@UAEABV?$Maybe@VServiceWorkerDescriptor@dom@mozilla@@@3@XZ
 ?SetForceCharset@nsDocumentViewer@@UAGXPBVEncoding@mozilla@@@Z
@@ -12456,7 +12444,6 @@ snprintf
 ?AsyncWait@NonBlockingAsyncInputStream@mozilla@@UAG?AW4nsresult@@PAVnsIInputStreamCallback@@IIPAVnsIEventTarget@@@Z
 ??0AsyncWaitRunnable@NonBlockingAsyncInputStream@mozilla@@QAE@PAV12@PAVnsIInputStreamCallback@@@Z
 ?ListenerBlockingPromise@nsBaseChannel@@EAE?AW4nsresult@@PAPAV?$MozPromise@W4nsresult@@W41@$00@mozilla@@@Z
-?EndLoad@XULDocument@dom@mozilla@@UAEXXZ
 ?QueryInterface@PrototypeDocumentContentSink@dom@mozilla@@UAG?AW4nsresult@@ABUnsID@@PAPAX@Z
 ?Release@PrototypeDocumentParser@parser@mozilla@@UAGKXZ
 ?EndLoad@nsStubDocumentObserver@@UAEXPAVDocument@dom@mozilla@@@Z

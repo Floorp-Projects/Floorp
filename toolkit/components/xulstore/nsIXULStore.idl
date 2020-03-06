@@ -25,7 +25,7 @@ interface nsIXULStore: nsISupports
 {
   /**
    * Sets a value for a specified node's attribute, except in
-   * the case below (following the original XULDocument::persist):
+   * the case below:
    * If the value is empty and if calling `hasValue` with the node's
    * document and ID and `attr` would return true, then the
    * value instead gets removed from the store (see Bug 1476680).
