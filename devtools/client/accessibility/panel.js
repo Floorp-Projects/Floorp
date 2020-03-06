@@ -65,6 +65,15 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
   );
   this.audit = this.audit.bind(this);
   this.simulate = this.simulate.bind(this);
+  this.enableAccessibility = this.enableAccessibility.bind(this);
+  this.disableAccessibility = this.disableAccessibility.bind(this);
+  this.resetAccessiblity = this.resetAccessiblity.bind(this);
+  this.startListeningForLifecycleEvents = this.startListeningForLifecycleEvents.bind(
+    this
+  );
+  this.stopListeningForLifecycleEvents = this.stopListeningForLifecycleEvents.bind(
+    this
+  );
 
   EventEmitter.decorate(this);
 }
@@ -108,11 +117,13 @@ AccessibilityPanel.prototype = {
     this.fluentBundles = await this.createFluentBundles();
 
     this.updateA11YServiceDurationTimer();
-    this.front.on("init", this.updateA11YServiceDurationTimer);
-    this.front.on("shutdown", this.updateA11YServiceDurationTimer);
-
-    this.front.on("init", this.forceUpdatePickerButton);
-    this.front.on("shutdown", this.forceUpdatePickerButton);
+    this.startListeningForLifecycleEvents({
+      init: [this.updateA11YServiceDurationTimer, this.forceUpdatePickerButton],
+      shutdown: [
+        this.updateA11YServiceDurationTimer,
+        this.forceUpdatePickerButton,
+      ],
+    });
 
     this.isReady = true;
     this.emit("ready");
@@ -180,7 +191,6 @@ AccessibilityPanel.prototype = {
     // Alright reset the flag we are about to refresh the panel.
     this.shouldRefresh = false;
     this.postContentMessage("initialize", {
-      front: this.front,
       supports: this.supports,
       fluentBundles: this.fluentBundles,
       toolbox: this._toolbox,
@@ -191,6 +201,11 @@ AccessibilityPanel.prototype = {
         .stopListeningForAccessibilityEvents,
       audit: this.audit,
       simulate: this.startup.simulator && this.simulate,
+      enableAccessibility: this.enableAccessibility,
+      disableAccessibility: this.disableAccessibility,
+      resetAccessiblity: this.resetAccessiblity,
+      startListeningForLifecycleEvents: this.startListeningForLifecycleEvents,
+      stopListeningForLifecycleEvents: this.stopListeningForLifecycleEvents,
     });
   },
 
@@ -306,6 +321,24 @@ AccessibilityPanel.prototype = {
     }
   },
 
+  startListeningForLifecycleEvents(eventMap) {
+    for (let [type, listeners] of Object.entries(eventMap)) {
+      listeners = Array.isArray(listeners) ? listeners : [listeners];
+      for (const listener of listeners) {
+        this.front.on(type, listener);
+      }
+    }
+  },
+
+  stopListeningForLifecycleEvents(eventMap) {
+    for (let [type, listeners] of Object.entries(eventMap)) {
+      listeners = Array.isArray(listeners) ? listeners : [listeners];
+      for (const listener of listeners) {
+        this.front.off(type, listener);
+      }
+    }
+  },
+
   /**
    * Perform an audit for a given filter.
    *
@@ -357,6 +390,19 @@ AccessibilityPanel.prototype = {
     return this.startup.simulator.simulate({ types });
   },
 
+  enableAccessibility() {
+    return this.front.enable();
+  },
+
+  disableAccessibility() {
+    return this.front.disable();
+  },
+
+  async resetAccessiblity() {
+    const { enabled, canBeDisabled, canBeEnabled } = this.front;
+    return { enabled, canBeDisabled, canBeEnabled };
+  },
+
   get front() {
     return this.startup.accessibility;
   },
@@ -406,13 +452,13 @@ AccessibilityPanel.prototype = {
       this.picker = null;
     }
 
-    if (this.front) {
-      this.front.off("init", this.updateA11YServiceDurationTimer);
-      this.front.off("shutdown", this.updateA11YServiceDurationTimer);
-
-      this.front.off("init", this.forceUpdatePickerButton);
-      this.front.off("shutdown", this.forceUpdatePickerButton);
-    }
+    this.stopListeningForLifecycleEvents({
+      init: [this.updateA11YServiceDurationTimer, this.forceUpdatePickerButton],
+      shutdown: [
+        this.updateA11YServiceDurationTimer,
+        this.forceUpdatePickerButton,
+      ],
+    });
 
     this._telemetry = null;
     this.panelWin.gTelemetry = null;

@@ -51,11 +51,6 @@ AccessibilityView.prototype = {
    *
    * @param {Object}
    *        Object that contains the following properties:
-   * - front                                 {Object}
-   *                                         front that can initialize
-   *                                         accessibility walker and
-   *                                         enable/disable accessibility
-   *                                         services.
    * - supports                              {JSON}
    *                                         a collection of flags indicating
    *                                         which accessibility panel features
@@ -84,9 +79,21 @@ AccessibilityView.prototype = {
    *                                         Apply simulation of a given type
    *                                         (by setting color matrices in
    *                                         docShell).
+   * - enableAccessibility                   {Function}
+   *                                         Enable accessibility services.
+   * - disableAccessibility                  {Function}
+   *                                         Disable accessibility services.
+   * - resetAccessiblity                     {Function}
+   *                                         Reset the state of the
+   *                                         accessibility services.
+   * - startListeningForLifecycleEvents      {Function}
+   *                                         Add listeners for accessibility
+   *                                         service lifecycle events.
+   * - stopListeningForLifecycleEvents       {Function}
+   *                                         Remove listeners for accessibility
+   *                                         service lifecycle events.
    */
   async initialize({
-    front,
     supports,
     fluentBundles,
     toolbox,
@@ -95,12 +102,16 @@ AccessibilityView.prototype = {
     stopListeningForAccessibilityEvents,
     audit,
     simulate,
+    enableAccessibility,
+    disableAccessibility,
+    resetAccessiblity,
+    startListeningForLifecycleEvents,
+    stopListeningForLifecycleEvents,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
-    await this.store.dispatch(reset(front, supports));
+    await this.store.dispatch(reset(resetAccessiblity, supports));
     const container = document.getElementById("content");
     const mainFrame = MainFrame({
-      accessibility: front,
       fluentBundles,
       toolbox,
       getAccessibilityTreeRoot,
@@ -108,6 +119,11 @@ AccessibilityView.prototype = {
       stopListeningForAccessibilityEvents,
       audit,
       simulate,
+      enableAccessibility,
+      disableAccessibility,
+      resetAccessiblity,
+      startListeningForLifecycleEvents,
+      stopListeningForLifecycleEvents,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);

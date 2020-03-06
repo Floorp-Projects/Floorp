@@ -53,7 +53,6 @@ const SplitBox = createFactory(
 class MainFrame extends Component {
   static get propTypes() {
     return {
-      accessibility: PropTypes.object.isRequired,
       fluentBundles: PropTypes.array.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
@@ -65,6 +64,11 @@ class MainFrame extends Component {
       stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
       audit: PropTypes.func.isRequired,
       simulate: PropTypes.func,
+      enableAccessibility: PropTypes.func.isRequired,
+      disableAccessibility: PropTypes.func.isRequired,
+      resetAccessiblity: PropTypes.func.isRequired,
+      startListeningForLifecycleEvents: PropTypes.func.isRequired,
+      stopListeningForLifecycleEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -76,8 +80,10 @@ class MainFrame extends Component {
   }
 
   componentWillMount() {
-    this.props.accessibility.on("init", this.resetAccessibility);
-    this.props.accessibility.on("shutdown", this.resetAccessibility);
+    this.props.startListeningForLifecycleEvents({
+      init: this.resetAccessibility,
+      shutdown: this.resetAccessibility,
+    });
     this.props.startListeningForAccessibilityEvents({
       "document-ready": this.resetAccessibility,
     });
@@ -91,8 +97,10 @@ class MainFrame extends Component {
   }
 
   componentWillUnmount() {
-    this.props.accessibility.off("init", this.resetAccessibility);
-    this.props.accessibility.off("shutdown", this.resetAccessibility);
+    this.props.stopListeningForLifecycleEvents({
+      init: this.resetAccessibility,
+      shutdown: this.resetAccessibility,
+    });
     this.props.stopListeningForAccessibilityEvents({
       "document-ready": this.resetAccessibility,
     });
@@ -100,8 +108,8 @@ class MainFrame extends Component {
   }
 
   resetAccessibility() {
-    const { dispatch, accessibility, supports } = this.props;
-    dispatch(reset(accessibility, supports));
+    const { dispatch, resetAccessiblity, supports } = this.props;
+    dispatch(reset(resetAccessiblity, supports));
   }
 
   get useLandscapeMode() {
@@ -124,7 +132,6 @@ class MainFrame extends Component {
    */
   render() {
     const {
-      accessibility,
       fluentBundles,
       enabled,
       auditing,
@@ -134,10 +141,18 @@ class MainFrame extends Component {
       startListeningForAccessibilityEvents,
       stopListeningForAccessibilityEvents,
       audit,
+      enableAccessibility,
+      disableAccessibility,
+      startListeningForLifecycleEvents,
+      stopListeningForLifecycleEvents,
     } = this.props;
 
     if (!enabled) {
-      return Description({ accessibility });
+      return Description({
+        enableAccessibility,
+        startListeningForLifecycleEvents,
+        stopListeningForLifecycleEvents,
+      });
     }
 
     // Audit is currently running.
@@ -148,9 +163,11 @@ class MainFrame extends Component {
       div(
         { className: "mainFrame", role: "presentation" },
         Toolbar({
-          accessibility,
           audit,
+          disableAccessibility,
           simulate,
+          startListeningForLifecycleEvents,
+          stopListeningForLifecycleEvents,
           toolboxDoc: toolbox.doc,
         }),
         isAuditing && AuditProgressOverlay(),

@@ -18,8 +18,14 @@ const {
 /**
  * Reset accessibility panel UI.
  */
-exports.reset = (accessibility, supports) => dispatch =>
-  dispatch({ accessibility, supports, type: RESET });
+exports.reset = (resetAccessiblity, supports) => async dispatch => {
+  try {
+    const { enabled, canBeDisabled, canBeEnabled } = await resetAccessiblity();
+    dispatch({ enabled, canBeDisabled, canBeEnabled, supports, type: RESET });
+  } catch (error) {
+    dispatch({ type: RESET, error });
+  }
+};
 
 /**
  * Update a "canBeDisabled" flag for accessibility service.
@@ -41,17 +47,23 @@ exports.updatePref = (name, value) => dispatch => {
 /**
  * Enable accessibility services in order to view accessible tree.
  */
-exports.enable = accessibility => dispatch =>
-  accessibility
-    .enable()
-    .then(() => dispatch({ type: ENABLE }))
-    .catch(error => dispatch({ error, type: ENABLE }));
+exports.enable = enableAccessibility => async dispatch => {
+  try {
+    await enableAccessibility();
+    dispatch({ type: ENABLE });
+  } catch (error) {
+    dispatch({ error, type: ENABLE });
+  }
+};
 
 /**
  * Enable accessibility services in order to view accessible tree.
  */
-exports.disable = accessibility => dispatch =>
-  accessibility
-    .disable()
-    .then(() => dispatch({ type: DISABLE }))
-    .catch(error => dispatch({ type: DISABLE, error }));
+exports.disable = disableAccessibility => async dispatch => {
+  try {
+    await disableAccessibility();
+    dispatch({ type: DISABLE });
+  } catch (error) {
+    dispatch({ error, type: DISABLE });
+  }
+};
