@@ -148,7 +148,6 @@ if CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES']:
 
 GeneratedFile('TelemetryHistogramData.inc',
               script='build_scripts/gen_histogram_data.py',
-              py2=True,
               inputs=histogram_files)
 GeneratedFile('TelemetryHistogramEnums.h',
               script='build_scripts/gen_histogram_enum.py',
