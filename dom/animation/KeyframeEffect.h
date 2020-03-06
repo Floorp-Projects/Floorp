@@ -164,7 +164,7 @@ class KeyframeEffect : public AnimationEffect {
   }
   void SetPseudoElement(const nsAString& aPseudoElement, ErrorResult& aRv);
 
-  void GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
+  void GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
                     ErrorResult& aRv) const;
   void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
                      ErrorResult& aRv) const;

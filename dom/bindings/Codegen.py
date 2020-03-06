@@ -109,6 +109,84 @@ def idlTypeNeedsCycleCollection(type):
         raise CycleCollectionUnsupported("Don't know whether to cycle-collect type %s" % type)
 
 
+def idlTypeNeedsCallContext(type, descriptor=None,
+                            allowTreatNonCallableAsNull=False):
+    """
+    Returns whether the given type needs error reporting via a
+    BindingCallContext for JS-to-C++ conversions.  This will happen when the
+    conversion can throw an exception due to logic in the IDL spec or
+    Gecko-specific security checks.  In particular, a type needs a
+    BindingCallContext if and only if the JS-to-C++ conversion for that type can
+    end up calling ThrowErrorMessage.
+
+    For some types this depends on the descriptor (e.g. because we do certain
+    checks only for some kinds of interfaces).
+
+    The allowTreatNonCallableAsNull optimization is there so we can avoid
+    generating an unnecessary BindingCallContext for all the event handler
+    attribute setters.
+
+    """
+    while True:
+        if type.isSequence():
+            # Sequences can always throw "not an object"
+            return True
+        if type.nullable():
+            # treatNonObjectAsNull() and treatNonCallableAsNull() are
+            # only sane things to test on nullable types, so do that now.
+            if (allowTreatNonCallableAsNull and type.isCallback() and
+                (type.treatNonObjectAsNull() or type.treatNonCallableAsNull())):
+                # This can't throw. so never needs a method description.
+                return False
+            type = type.inner
+        else:
+            break
+
+    # The float check needs to come before the isPrimitive() check,
+    # because floats are primitives too.
+    if type.isFloat():
+        # Floats can throw if restricted.
+        return not type.isUnrestricted()
+    if type.isPrimitive() and type.tag() in builtinNames:
+        # Numbers can throw if enforcing range.
+        return type.hasEnforceRange()
+    if type.isEnum():
+        # Can throw on invalid value.
+        return True
+    if type.isString():
+        # Can throw if it's a ByteString
+        return type.isByteString()
+    if type.isAny():
+        # JS-implemented interfaces do extra security checks so need a
+        # method description here.  If we have no descriptor, this
+        # might be JS-implemented thing, so it will do the security
+        # check and we need the method description.
+        return not descriptor or descriptor.interface.isJSImplemented()
+    if type.isPromise():
+        # JS-to-Promise conversion won't cause us to throw any
+        # specific exceptions, so does not need a method description.
+        return False
+    if (type.isObject() or type.isInterface() or type.isCallback() or
+        type.isDictionary() or type.isRecord()):
+        # These can all throw if a primitive is passed in, at the very least.
+        # There are some rare cases when we know we have an object, but those
+        # are not worth the complexity of optimizing for.
+        #
+        # Note that we checked the [TreatNonObjectAsNull] case already when
+        # unwrapping nullables.
+        return True
+    if type.isUnion():
+        # Can throw if a type not in the union is passed in.
+        return True
+    if type.isVoid():
+        # Clearly doesn't need a method description; we can only get here from
+        # CGHeaders trying to decide whether to include the method description
+        # header.
+        return False
+    raise TypeError("Don't know whether type '%s' needs a method description" %
+                    type)
+
+
 # TryPreserveWrapper uses the addProperty hook to preserve the wrapper of
 # non-nsISupports cycle collected objects, so if wantsAddProperty is changed
 # to not cover that case then TryPreserveWrapper will need to be changed.
@@ -1142,6 +1220,8 @@ class CGHeaders(CGWrapper):
             # Array.h, &c.)
             unrolled = t
             while True:
+                if idlTypeNeedsCallContext(unrolled):
+                    bindingHeaders.add("mozilla/dom/BindingCallContext.h")
                 if unrolled.nullable():
                     headerSet.add("mozilla/dom/Nullable.h")
                 elif unrolled.isSequence():
@@ -1381,7 +1461,11 @@ def UnionTypes(unionTypes, config):
                     # Dealing with sequences requires for-of-compatible
                     # iteration.
                     implheaders.add("js/ForOfIterator.h")
+                    # Sequences can always throw "not an object" exceptions.
+                    implheaders.add("mozilla/dom/BindingCallContext.h")
                 f = f.unroll()
+                if idlTypeNeedsCallContext(f):
+                    implheaders.add("mozilla/dom/BindingCallContext.h")
                 if f.isPromise():
                     headers.add("mozilla/dom/Promise.h")
                     # We need ToJSValue to do the Promise to JS conversion.
@@ -1485,7 +1569,11 @@ def UnionConversions(unionTypes, config):
                     # Sequences require JSAPI C++ for-of iteration code to fill
                     # them.
                     headers.add("js/ForOfIterator.h")
+                    # Sequences can always throw "not an object" exceptions.
+                    headers.add("mozilla/dom/BindingCallContext.h")
                 f = f.unroll()
+                if idlTypeNeedsCallContext(f):
+                    headers.add("mozilla/dom/BindingCallContext.h")
                 if f.isPromise():
                     headers.add("mozilla/dom/Promise.h")
                     # We need ToJSValue to do the Promise to JS conversion.
@@ -1635,8 +1723,31 @@ class CGAbstractMethod(CGThing):
         return "" if self.inline else self._define()
 
     def definition_prologue(self, fromDeclare):
+        error_reporting_label = self.error_reporting_label()
+        if error_reporting_label:
+            # We're going to want a BindingCallContext.  Rename our JSContext*
+            # arg accordingly.
+            i = 0;
+            while i < len(self.args):
+                arg = self.args[i];
+                if arg.argType == 'JSContext*':
+                    cxname = arg.name
+                    self.args[i] = Argument(arg.argType, 'cx_', arg.default)
+                    break
+                i += 1
+            if i == len(self.args):
+                raise TypeError("Must have a JSContext* to create a BindingCallContext")
+
         prologue = "%s%s%s(%s)\n{\n" % (self._template(), self._decorators(),
                                         self.name, self._argstring(fromDeclare))
+        if error_reporting_label:
+            prologue += indent(fill(
+                """
+                BindingCallContext ${cxname}(cx_, "${label}");
+                """,
+                cxname=cxname,
+                label=error_reporting_label))
+
         profiler_label = self.auto_profiler_label()
         if profiler_label:
             prologue += indent(profiler_label) + "\n"
@@ -1654,6 +1765,16 @@ class CGAbstractMethod(CGThing):
     JSContext* variable) in order to generate a profiler label for this method.
     """
     def auto_profiler_label(self):
+        return None # Override me!
+
+    """
+    Override this method to return a string to be used as the label for a
+    BindingCallContext.  If this does not return None, one of the arguments of
+    this method must be of type 'JSContext*'.  Its name will be replaced with
+    'cx_' and a BindingCallContext named 'cx' will be instantiated with the
+    given label.
+    """
+    def error_reporting_label(self):
         return None # Override me!
 
 class CGAbstractStaticMethod(CGAbstractMethod):
@@ -1906,6 +2027,11 @@ class CGClassConstructor(CGAbstractStaticMethod):
               uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             ctorName=GetConstructorNameForReporting(self.descriptor, self._ctor))
+
+    def error_reporting_label(self):
+        return CGSpecializedMethod.error_reporting_label_helper(self.descriptor,
+                                                                self._ctor,
+                                                                isConstructor=True)
 
 
 def NamedConstructorName(m):
@@ -9016,6 +9142,45 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
             method_name=method_name)
 
     @staticmethod
+    def should_have_method_description(descriptor, idlMethod):
+        """
+        Returns whether the given IDL method (static, non-static, constructor)
+        should have a method description declaration, for use in error
+        reporting.
+        """
+        # If a method has overloads, it needs a method description, because it
+        # can throw MSG_INVALID_OVERLOAD_ARGCOUNT at the very least.
+        if len(idlMethod.signatures()) != 1:
+            return True
+
+        # Methods with only one signature need a method description if one of
+        # their args needs it.
+        sig = idlMethod.signatures()[0]
+        args = sig[1]
+        return any(
+            idlTypeNeedsCallContext(
+                arg.type, descriptor,
+                allowTreatNonCallableAsNull=arg.allowTreatNonCallableAsNull())
+            for arg in args)
+
+    @staticmethod
+    def error_reporting_label_helper(descriptor, idlMethod, isConstructor):
+        """
+        Returns the method description to use for error reporting for the given
+        IDL method.  Used to implement common error_reporting_label() functions
+        across different classes.
+        """
+        if not CGSpecializedMethod.should_have_method_description(
+                descriptor, idlMethod):
+            return None
+        return GetLabelForErrorReporting(descriptor, idlMethod, isConstructor)
+
+    def error_reporting_label(self):
+        return CGSpecializedMethod.error_reporting_label_helper(self.descriptor,
+                                                                self.method,
+                                                                isConstructor=False)
+
+    @staticmethod
     def makeNativeName(descriptor, method):
         if method.underlyingAttr:
             return CGSpecializedGetter.makeNativeName(descriptor, method.underlyingAttr)
@@ -9113,6 +9278,12 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
         return CGMethodCall(nativeName, False, self.descriptor,
                             self._legacycaller)
 
+    def error_reporting_label(self):
+        # Should act like methods.
+        if not CGSpecializedMethod.should_have_method_description(
+                self.descriptor, self._legacycaller):
+            return None
+        return "%s legacy caller" % self.descriptor.interface.identifier.name
 
 class CGResolveHook(CGAbstractClassHook):
     """
@@ -9288,6 +9459,11 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
             interface_name=interface_name,
             method_name=method_name)
 
+    def error_reporting_label(self):
+        return CGSpecializedMethod.error_reporting_label_helper(self.descriptor,
+                                                                self.method,
+                                                                isConstructor=False)
+
 
 class CGSpecializedGetter(CGAbstractStaticMethod):
     """
@@ -9424,6 +9600,10 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             interface_name=interface_name,
             attr_name=attr_name)
 
+    def error_reporting_label(self):
+        # Getters never need a BindingCallContext.
+        return None
+
     @staticmethod
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
@@ -9495,6 +9675,10 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
             interface_name=interface_name,
             attr_name=attr_name)
 
+    def error_reporting_label(self):
+        # Getters never need a BindingCallContext.
+        return None
+
 
 class CGSpecializedSetter(CGAbstractStaticMethod):
     """
@@ -9556,6 +9740,20 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
             attr_name=attr_name)
 
     @staticmethod
+    def error_reporting_label_helper(descriptor, attr):
+        # Setters need a BindingCallContext if the type of the attribute needs
+        # one.
+        if not idlTypeNeedsCallContext(attr.type, descriptor,
+                                       allowTreatNonCallableAsNull=True):
+            return None
+        return GetLabelForErrorReporting(descriptor, attr,
+                                         isConstructor=False) + " setter"
+
+    def error_reporting_label(self):
+        return CGSpecializedSetter.error_reporting_label_helper(self.descriptor,
+                                                                self.attr)
+
+    @staticmethod
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
         return "Set" + MakeNativeName(descriptor.binaryNameFor(name))
@@ -9597,6 +9795,10 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
             interface_name=interface_name,
             attr_name=attr_name)
 
+    def error_reporting_label(self):
+        return CGSpecializedSetter.error_reporting_label_helper(self.descriptor,
+                                                                self.attr)
+
 
 class CGSpecializedForwardingSetter(CGSpecializedSetter):
     """
@@ -9630,6 +9832,11 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
             interface=self.descriptor.interface.identifier.name,
             forwardToAttrName=forwardToAttrName)
 
+    def error_reporting_label(self):
+        # We always need to be able to throw.
+        return GetLabelForErrorReporting(self.descriptor, self.attr,
+                                         isConstructor=False) + " setter"
+
 
 class CGSpecializedReplaceableSetter(CGSpecializedSetter):
     """
@@ -9645,6 +9852,10 @@ class CGSpecializedReplaceableSetter(CGSpecializedSetter):
         assert all(ord(c) < 128 for c in attrName)
         return ('return JS_DefineProperty(cx, obj, "%s", args[0], JSPROP_ENUMERATE);\n' %
                 attrName)
+
+    def error_reporting_label(self):
+        # We never throw directly.
+        return None
 
 
 class CGSpecializedLenientSetter(CGSpecializedSetter):
@@ -9663,6 +9874,10 @@ class CGSpecializedLenientSetter(CGSpecializedSetter):
             DeprecationWarning(cx, obj, Document::eLenientSetter);
             return true;
             """)
+
+    def error_reporting_label(self):
+        # We never throw; that's the whole point.
+        return None
 
 
 def memberReturnsNewObject(member):
@@ -12177,11 +12392,17 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             namedGet=namedGet)
 
 
+def proxySetterType(setter):
+    args = setter.signatures()[0][1]
+    # First arg is the index or name; second one is what we care about
+    return args[1].type
+
+
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
         # The usual convention is to name the ObjectOpResult out-parameter
         # `result`, but that name is a bit overloaded around here.
-        args = [Argument('JSContext*', 'cx'),
+        args = [Argument('JSContext*', 'cx_'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::Handle<JS::PropertyDescriptor>', 'desc'),
@@ -12195,10 +12416,22 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
         indexedSetter = self.descriptor.operations['IndexedSetter']
         if indexedSetter:
+            if idlTypeNeedsCallContext(proxySetterType(indexedSetter), self.descriptor):
+                cxDecl = fill(
+                    """
+                    BindingCallContext cx(cx_, "${interface} indexed setter");
+                    """,
+                    interface=self.descriptor.interface.identifier.name)
+            else:
+                cxDecl = dedent(
+                    """
+                    JSContext* cx = cx_;
+                    """)
             set += fill(
                 """
                 uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
+                  $*{cxDecl}
                   *defined = true;
                   // https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
                   // Step 1.1.  The no-indexed-setter case is handled by step 1.2.
@@ -12210,6 +12443,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                   return opresult.succeed();
                 }
                 """,
+                cxDecl=cxDecl,
                 callSetter=CGProxyIndexedSetter(self.descriptor).define())
         elif self.descriptor.supportsIndexedProperties():
             # We allow untrusted content to prevent Xrays from setting a
@@ -12227,6 +12461,17 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
         namedSetter = self.descriptor.operations['NamedSetter']
         if namedSetter:
+            if idlTypeNeedsCallContext(proxySetterType(namedSetter), self.descriptor):
+                set += fill(
+                    """
+                    BindingCallContext cx(cx_, "${interface} named setter");
+                    """,
+                    interface=self.descriptor.interface.identifier.name)
+            else:
+                set += dedent(
+                    """
+                    JSContext* cx = cx_;
+                    """)
             if self.descriptor.hasUnforgeableMembers:
                 raise TypeError("Can't handle a named setter on an interface "
                                 "that has unforgeables.  Figure out how that "
@@ -12246,6 +12491,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if self.descriptor.supportsNamedProperties():
                 set += fill(
                     """
+                    JSContext* cx = cx_;
                     bool found = false;
                     $*{presenceChecker}
 
@@ -12258,9 +12504,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if self.descriptor.isMaybeCrossOriginObject():
                 set += dedent(
                     """
-                    MOZ_ASSERT(IsPlatformObjectSameOrigin(cx, proxy),
+                    MOZ_ASSERT(IsPlatformObjectSameOrigin(cx_, proxy),
                                "Why did the MaybeCrossOriginObject defineProperty override fail?");
-                    MOZ_ASSERT(js::IsObjectInContextCompartment(proxy, cx),
+                    MOZ_ASSERT(js::IsObjectInContextCompartment(proxy, cx_),
                                "Why did the MaybeCrossOriginObject defineProperty override fail?");
                     """)
 
@@ -12871,7 +13117,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
 
 class CGDOMJSProxyHandler_setCustom(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
+        args = [Argument('JSContext*', 'cx_'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::Handle<JS::Value>', 'v'),
@@ -12902,30 +13148,56 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
                 return true;
                 """)
             callSetter = CGProxyNamedSetter(self.descriptor, tailCode, argumentHandleValue="v")
+            if idlTypeNeedsCallContext(proxySetterType(namedSetter), self.descriptor):
+                cxDecl = fill(
+                    """
+                    BindingCallContext cx(cx_, "${interface} named setter");
+                    """,
+                    interface=self.descriptor.interface.identifier.name)
+            else:
+                cxDecl = dedent(
+                    """
+                    JSContext* cx = cx_;
+                    """)
             return fill(
                 """
                 $*{assertion}
+                $*{cxDecl}
                 $*{callSetter}
                 *done = false;
                 return true;
                 """,
                 assertion=assertion,
+                cxDecl=cxDecl,
                 callSetter=callSetter.define())
 
         # As an optimization, if we are going to call an IndexedSetter, go
         # ahead and call it and have done.
         indexedSetter = self.descriptor.operations['IndexedSetter']
         if indexedSetter is not None:
+            if idlTypeNeedsCallContext(proxySetterType(indexedSetter), self.descriptor):
+                cxDecl = fill(
+                    """
+                    BindingCallContext cx(cx_, "${interface} indexed setter");
+                    """,
+                    interface=self.descriptor.interface.identifier.name)
+            else:
+                cxDecl = dedent(
+                    """
+                    JSContext* cx = cx_;
+                    """)
             setIndexed = fill(
                 """
                 uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
+                  $*{cxDecl}
                   $*{callSetter}
                   *done = true;
                   return true;
                 }
 
                 """,
+                cxDecl=cxDecl,
                 callSetter=CGProxyIndexedSetter(self.descriptor,
                                                 argumentHandleValue="v").define())
         else:
