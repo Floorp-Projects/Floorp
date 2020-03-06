@@ -69,6 +69,7 @@ class ServiceWorker;
 class ServiceWorkerDescriptor;
 class Timeout;
 class TimeoutManager;
+class WindowContext;
 class WindowGlobalChild;
 class CustomElementRegistry;
 enum class CallerType : uint32_t;
@@ -376,7 +377,8 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
     return mDoc;
   }
 
-  mozilla::dom::WindowGlobalChild* GetWindowGlobalChild() {
+  mozilla::dom::WindowContext* GetWindowContext() const;
+  mozilla::dom::WindowGlobalChild* GetWindowGlobalChild() const {
     return mWindowGlobalChild;
   }
 
