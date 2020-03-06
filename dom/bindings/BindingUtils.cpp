@@ -124,11 +124,52 @@ uint16_t GetErrorArgCount(const ErrNum aErrorNumber) {
   return GetErrorMessage(nullptr, aErrorNumber)->argCount;
 }
 
+// aErrorNumber needs to be unsigned, not an ErrNum, because the latter makes
+// va_start have undefined behavior, and we do not want undefined behavior.
 void binding_detail::ThrowErrorMessage(JSContext* aCx,
                                        const unsigned aErrorNumber, ...) {
   va_list ap;
   va_start(ap, aErrorNumber);
-  JS_ReportErrorNumberUTF8VA(aCx, GetErrorMessage, nullptr, aErrorNumber, ap);
+
+  if (!ErrorFormatHasContext[aErrorNumber]) {
+    JS_ReportErrorNumberUTF8VA(aCx, GetErrorMessage, nullptr, aErrorNumber, ap);
+    va_end(ap);
+    return;
+  }
+
+  // Our first arg is the context arg.  We want to replace nullptr with empty
+  // string, leave empty string alone, and for anything else append ": " to the
+  // end.  See also the behavior of
+  // TErrorResult::SetPendingExceptionWithMessage, which this is mirroring for
+  // exceptions that are thrown directly, not via an ErrorResult.
+  //
+  // XXXbz Once bug 1619087 is fixed, we can avoid the conversions to UTF-16
+  // here.
+  const char16_t* args[JS::MaxNumErrorArguments + 1];
+  size_t argCount = GetErrorArgCount(static_cast<ErrNum>(aErrorNumber));
+  MOZ_ASSERT(argCount > 0, "We have a context arg!");
+  // We statically assert that all these arg counts are smaller than
+  // JS::MaxNumErrorArguments already.
+  nsTArray<nsString> argHolders(argCount);
+
+  for (size_t i = 0; i < argCount; ++i) {
+    const char* arg = va_arg(ap, const char*);
+    if (i == 0) {
+      if (!arg || !*arg) {
+        // Append an empty string
+        argHolders.AppendElement();
+      } else {
+        argHolders.AppendElement(NS_ConvertUTF8toUTF16(arg));
+        argHolders[0].AppendLiteral(": ");
+      }
+    } else {
+      argHolders.AppendElement(NS_ConvertUTF8toUTF16(arg));
+    }
+    args[i] = argHolders[i].get();
+  }
+
+  JS_ReportErrorNumberUCArray(aCx, GetErrorMessage, nullptr, aErrorNumber,
+                              args);
   va_end(ap);
 }
 
@@ -1277,7 +1318,7 @@ void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
 }
 
 bool ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp) {
-  return ThrowErrorMessage<MSG_ILLEGAL_CONSTRUCTOR>(cx, "");
+  return ThrowErrorMessage<MSG_ILLEGAL_CONSTRUCTOR>(cx, nullptr);
 }
 
 bool ThrowConstructorWithoutNew(JSContext* cx, const char* name) {
