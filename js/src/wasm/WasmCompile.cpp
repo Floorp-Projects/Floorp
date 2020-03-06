@@ -78,25 +78,12 @@ uint32_t wasm::ObservedCPUFeatures() {
 
 SharedCompileArgs CompileArgs::build(JSContext* cx,
                                      ScriptedCaller&& scriptedCaller) {
-  bool baseline = BaselineCanCompile() && cx->options().wasmBaseline();
-  bool ion = IonCanCompile() && cx->options().wasmIon();
-#ifdef ENABLE_WASM_CRANELIFT
-  bool cranelift = CraneliftCanCompile() && cx->options().wasmCranelift();
-#else
-  bool cranelift = false;
-#endif
+  bool baseline = BaselineAvailable(cx);
+  bool ion = IonAvailable(cx);
+  bool cranelift = CraneliftAvailable(cx);
 
-#ifdef ENABLE_WASM_GC
-  bool gc = cx->options().wasmGc();
-#else
-  bool gc = false;
-#endif
-
-#ifdef ENABLE_WASM_BIGINT
-  bool bigInt = cx->options().isWasmBigIntEnabled();
-#else
-  bool bigInt = false;
-#endif
+  // At most one optimizing compiler.
+  MOZ_RELEASE_ASSERT(!(ion && cranelift));
 
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
@@ -104,39 +91,23 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   // is open.
   bool debug = cx->realm()->debuggerObservesAsmJS();
 
-  bool sharedMemory =
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
   bool forceTiering =
       cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
-  if (debug || gc) {
-    if (!baseline) {
-      JS_ReportErrorASCII(cx, "can't use wasm debug/gc without baseline");
-      return nullptr;
-    }
-    ion = false;
-    cranelift = false;
-  }
+  // The <Compiler>Available() predicates should ensure this.
+  MOZ_RELEASE_ASSERT(!(debug && (ion || cranelift)));
 
-  if (forceTiering && (!baseline || (!cranelift && !ion))) {
+  if (forceTiering && !(baseline && (cranelift || ion))) {
     // This can happen only in testing, and in this case we don't have a
     // proper way to signal the error, so just silently override the default,
     // instead of adding a skip-if directive to every test using debug/gc.
     forceTiering = false;
   }
 
-#ifdef ENABLE_WASM_CRANELIFT
-  if (!baseline && !ion && !cranelift) {
-    if (cx->options().wasmCranelift() && !CraneliftCanCompile()) {
-      // We're forcing to use Cranelift on a platform that doesn't support it.
-      JS_ReportErrorASCII(cx, "cranelift isn't supported on this platform");
-      return nullptr;
-    }
+  if (!(baseline || ion || cranelift)) {
+    JS_ReportErrorASCII(cx, "no WebAssembly compiler available");
+    return nullptr;
   }
-#endif
-
-  // HasCompilerSupport() should prevent failure here.
-  MOZ_RELEASE_ASSERT(baseline || ion || cranelift);
 
   CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
   if (!target) {
@@ -147,11 +118,12 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->ionEnabled = ion;
   target->craneliftEnabled = cranelift;
   target->debugEnabled = debug;
-  target->sharedMemoryEnabled = sharedMemory;
+  target->sharedMemoryEnabled =
+      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
   target->forceTiering = forceTiering;
-  target->gcEnabled = gc;
+  target->gcEnabled = wasm::GcTypesAvailable(cx);
   target->hugeMemory = wasm::IsHugeMemoryEnabled();
-  target->bigIntEnabled = bigInt;
+  target->bigIntEnabled = wasm::I64BigIntConversionAvailable(cx);
 
   return target;
 }
@@ -488,11 +460,12 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   bool bigIntEnabled = args_->bigIntEnabled;
 
   bool hasSecondTier = ionEnabled || craneliftEnabled;
-  MOZ_ASSERT_IF(gcEnabled || debugEnabled, baselineEnabled);
+  MOZ_ASSERT_IF(debugEnabled, baselineEnabled);
   MOZ_ASSERT_IF(forceTiering, baselineEnabled && hasSecondTier);
 
-  // HasCompilerSupport() should prevent failure here
+  // Various constraints in various places should prevent failure here.
   MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled || craneliftEnabled);
+  MOZ_RELEASE_ASSERT(!(ionEnabled && craneliftEnabled));
 
   uint32_t codeSectionSize = 0;
 
