@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox for Android", "General")
+    BUG_COMPONENT = ("GeckoView", "General")
 
 # List of stems to generate .cpp and .h files for.  To add a stem, add it to
 # this list and ensure that $(stem)-classes.txt exists in this directory.

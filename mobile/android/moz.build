@@ -5,32 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-    SCHEDULES.exclusive = ['android']
-
-with Files('branding/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('config/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('docs/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('geckoview/**'):
     BUG_COMPONENT = ('GeckoView', 'General')
+    SCHEDULES.exclusive = ['android']
 
 with Files('geckoview/src/main/aidl/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
 
 with Files('geckoview/src/main/java/org/mozilla/gecko/mozglue/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
-
-with Files('geckoview_example/**'):
-    BUG_COMPONENT = ('GeckoView', 'General')
-
-with Files('gradle/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('themes/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Theme and Visual Design')
