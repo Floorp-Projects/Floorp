@@ -82,17 +82,7 @@ class WaylandDMABufSurface {
   void FenceWait();
   void FenceDelete();
 
-  WaylandDMABufSurface(SurfaceType aSurfaceType)
-      : mSurfaceType(aSurfaceType),
-        mBufferModifier(0),
-        mBufferPlaneCount(0),
-        mStrides(),
-        mOffsets(),
-        mSync(0) {
-    for (auto& slot : mDmabufFds) {
-      slot = -1;
-    }
-  }
+  WaylandDMABufSurface(SurfaceType aSurfaceType);
 
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
@@ -106,6 +96,7 @@ class WaylandDMABufSurface {
 
   int mBufferPlaneCount;
   int mDmabufFds[DMABUF_BUFFER_PLANES];
+  uint32_t mDrmFormats[DMABUF_BUFFER_PLANES];
   uint32_t mStrides[DMABUF_BUFFER_PLANES];
   uint32_t mOffsets[DMABUF_BUFFER_PLANES];
 
@@ -167,9 +158,6 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   void ReleaseSurface();
 
   bool CreateWLBuffer();
-
-  void FillFdData(struct gbm_import_fd_data& aData);
-  void FillFdData(struct gbm_import_fd_modifier_data& aData);
   void ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
 
   void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
@@ -240,7 +228,6 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
 
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];
-  uint32_t mDrmFormats[DMABUF_BUFFER_PLANES];
   EGLImageKHR mEGLImage[DMABUF_BUFFER_PLANES];
   GLuint mTexture[DMABUF_BUFFER_PLANES];
   mozilla::gfx::YUVColorSpace mColorSpace;
