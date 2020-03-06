@@ -160,7 +160,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
   void AbortTransactions(bool aShouldWarn);
 
   indexedDB::PBackgroundIDBDatabaseFileChild* GetOrCreateFileActorForBlob(
-      Blob& aBlob);
+      Blob* aBlob);
 
   void NoteFinishedFileActor(
       indexedDB::PBackgroundIDBDatabaseFileChild* aFileActor);
