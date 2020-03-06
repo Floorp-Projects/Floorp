@@ -10612,15 +10612,17 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
             """,
             sourceDescription=sourceDescription)
 
-        setter = ClassMethod("SetToObject", "bool",
-                             [Argument("JSContext*", "cx"),
-                              Argument("JSObject*", "obj"),
-                              Argument("bool", "passedToJSImpl", default="false")],
-                             inline=True, bodyInHeader=True,
-                             body=body)
+        setters = [
+            ClassMethod("SetToObject", "bool",
+                        [Argument("JSContext*", "cx"),
+                         Argument("JSObject*", "obj"),
+                         Argument("bool", "passedToJSImpl", default="false")],
+                        inline=True, bodyInHeader=True,
+                        body=body)
+            ]
     elif type.isDictionary() and not type.inner.needsConversionFromJS:
         # In this case we are never initialized from JS to start with
-        setter = None
+        setters = None
     else:
         # Important: we need to not have our declName involve
         # maybe-GCing operations.
@@ -10660,20 +10662,46 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
         else:
             handleType = "JS::MutableHandle<JS::Value>"
 
-        setter = ClassMethod("TrySetTo" + name, "bool",
-                             [Argument("JSContext*", "cx"),
-                              Argument(handleType, "value"),
-                              Argument("bool&", "tryNext"),
-                              Argument("bool", "passedToJSImpl", default="false")],
-                             inline=not ownsMembers,
-                             bodyInHeader=not ownsMembers,
-                             body=jsConversion)
+        needCallContext = idlTypeNeedsCallContext(type)
+        if needCallContext:
+            cxType = "BindingCallContext&"
+        else:
+            cxType = "JSContext*"
+        setters = [
+            ClassMethod("TrySetTo" + name, "bool",
+                        [Argument(cxType, "cx"),
+                         Argument(handleType, "value"),
+                         Argument("bool&", "tryNext"),
+                         Argument("bool", "passedToJSImpl", default="false")],
+                        inline=not ownsMembers,
+                        bodyInHeader=not ownsMembers,
+                        body=jsConversion)
+            ]
+        if needCallContext:
+            # Add a method for non-binding uses of unions to allow them to set
+            # things in the union without providing a call context (though if
+            # they want good error reporting they'll provide one anyway).
+            shimBody = fill(
+                """
+                BindingCallContext cx(cx_, nullptr);
+                return TrySetTo${name}(cx, value, tryNext, passedToJSImpl);
+                """,
+                name=name)
+            setters.append(
+                ClassMethod("TrySetTo" + name, "bool",
+                            [Argument("JSContext*", "cx_"),
+                             Argument(handleType, "value"),
+                             Argument("bool&", "tryNext"),
+                             Argument("bool", "passedToJSImpl", default="false")],
+                            inline=not ownsMembers,
+                            bodyInHeader=not ownsMembers,
+                            body=shimBody))
 
     return {
         "name": name,
         "structType": structType,
         "externalType": externalType,
-        "setter": setter,
+        "setters": setters,
         "holderType": conversionInfo.holderType.define() if conversionInfo.holderType else None,
         "ctorArgs": ctorArgs,
         "ctorArgList": [Argument("JSContext*", "cx")] if ctorNeedsCx else []
@@ -10767,8 +10795,8 @@ class CGUnionStruct(CGThing):
                     bodyInHeader=not self.ownsMembers,
                     body=body % uninit))
                 if self.ownsMembers:
-                    if vars["setter"]:
-                        methods.append(vars["setter"])
+                    if vars["setters"]:
+                        methods.extend(vars["setters"])
                     # Provide a SetStringLiteral() method to support string defaults.
                     if t.isByteString() or t.isUTF8String():
                         charType = "const nsCString::char_type"
@@ -11029,8 +11057,8 @@ class CGUnionConversionStruct(CGThing):
         for t in self.type.flatMemberTypes:
             vars = getUnionTypeTemplateVars(self.type,
                                             t, self.descriptorProvider)
-            if vars["setter"]:
-                methods.append(vars["setter"])
+            if vars["setters"]:
+                methods.extend(vars["setters"])
             if vars["name"] != "Object":
                 body = fill(
                     """
