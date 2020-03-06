@@ -553,7 +553,7 @@ helperProto._l10n = new Localization(["browser/touchbar/touchbar.ftl"]);
 class TouchBarInput {
   constructor(input) {
     this._key = input.key || input.title;
-    this._title = localizedStrings[this._key] || "";
+    this._title = localizedStrings[input.title] || "";
     this._image = input.image;
     this._type = input.type;
     this._callback = input.callback;
