@@ -441,6 +441,13 @@ nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   return NS_OK;
 }
 
+bool ResolveMysteryMutableFile(IDBMutableFile* aMutableFile,
+                               const nsString& aName, const nsString& aType) {
+  MOZ_ASSERT(aMutableFile);
+  aMutableFile->SetLazyData(aName, aType);
+  return true;
+}
+
 bool StructuredCloneReadString(JSStructuredCloneReader* aReader,
                                nsCString& aString) {
   uint32_t length;
@@ -560,25 +567,6 @@ bool ReadWasmModule(JSStructuredCloneReader* aReader, WasmModuleData* aRetval) {
   return true;
 }
 
-template <typename T>
-bool WrapAsJSObject(JSContext* const aCx, T& aBaseObject,
-                    JS::MutableHandle<JSObject*> aResult) {
-  JS::Rooted<JS::Value> wrappedValue(aCx);
-  if (!ToJSValue(aCx, aBaseObject, &wrappedValue)) {
-    return false;
-  }
-
-  aResult.set(&wrappedValue.toObject());
-  return true;
-}
-
-template <typename T>
-JSObject* WrapAsJSObject(JSContext* const aCx, T& aBaseObject) {
-  JS::Rooted<JSObject*> result(aCx);
-  const bool res = WrapAsJSObject(aCx, aBaseObject, &result);
-  return res ? result : nullptr;
-}
-
 class ValueDeserializationHelper {
  public:
   static bool CreateAndWrapMutableFile(JSContext* aCx,
@@ -588,10 +576,10 @@ class ValueDeserializationHelper {
     MOZ_ASSERT(aCx);
 
     // If we have eBlob, we are in an IDB SQLite schema upgrade where we don't
-    // care about a real 'MutableFile', but we just care of having a proper
+    // care about a real 'MutableFile', but we just care of having a propert
     // |mType| flag.
-    if (aFile.Type() == StructuredCloneFile::eBlob) {
-      aFile.MutateType(StructuredCloneFile::eMutableFile);
+    if (aFile.mType == StructuredCloneFile::eBlob) {
+      aFile.mType = StructuredCloneFile::eMutableFile;
 
       // Just make a dummy object.
       JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
@@ -604,15 +592,24 @@ class ValueDeserializationHelper {
       return true;
     }
 
-    MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eMutableFile);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eMutableFile);
 
-    if (!aFile.HasMutableFile() || !NS_IsMainThread()) {
+    if (!aFile.mMutableFile || !NS_IsMainThread()) {
       return false;
     }
 
-    aFile.MutableMutableFile().SetLazyData(aData.name, aData.type);
+    if (NS_WARN_IF(!ResolveMysteryMutableFile(aFile.mMutableFile, aData.name,
+                                              aData.type))) {
+      return false;
+    }
 
-    return WrapAsJSObject(aCx, aFile.MutableMutableFile(), aResult);
+    JS::Rooted<JS::Value> wrappedMutableFile(aCx);
+    if (!ToJSValue(aCx, aFile.mMutableFile, &wrappedMutableFile)) {
+      return false;
+    }
+
+    aResult.set(&wrappedMutableFile.toObject());
+    return true;
   }
 
   static bool CreateAndWrapBlobOrFile(JSContext* aCx, IDBDatabase* aDatabase,
@@ -623,51 +620,50 @@ class ValueDeserializationHelper {
     MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
                aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
                aData.tag == SCTAG_DOM_BLOB);
-    MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eBlob);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
 
-    const auto blob = [&aFile, aDatabase, aCx]() -> RefPtr<Blob> {
-      if (aFile.HasBlob()) {
-        return aFile.BlobPtr();
+    RefPtr<Blob> blob = aFile.mBlob;
+
+    // It can happen that this IDB is chrome code, so there is no parent, but
+    // still we want to set a correct parent for the new File object.
+    nsCOMPtr<nsIGlobalObject> global;
+    if (NS_IsMainThread()) {
+      if (aDatabase && aDatabase->GetParentObject()) {
+        global = aDatabase->GetParentObject();
+      } else {
+        global = xpc::CurrentNativeGlobal(aCx);
       }
+    } else {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
 
-      // It can happen that this IDB is chrome code, so there is no parent, but
-      // still we want to set a correct parent for the new File object.
-      const auto global = [aDatabase, aCx]() -> nsCOMPtr<nsIGlobalObject> {
-        if (NS_IsMainThread()) {
-          if (aDatabase && aDatabase->GetParentObject()) {
-            return aDatabase->GetParentObject();
-          }
-          return xpc::CurrentNativeGlobal(aCx);
-        }
-        const WorkerPrivate* const workerPrivate =
-            GetCurrentThreadWorkerPrivate();
-        MOZ_ASSERT(workerPrivate);
+      WorkerGlobalScope* globalScope = workerPrivate->GlobalScope();
+      MOZ_ASSERT(globalScope);
 
-        WorkerGlobalScope* const globalScope = workerPrivate->GlobalScope();
-        MOZ_ASSERT(globalScope);
+      global = do_QueryObject(globalScope);
+    }
 
-        return do_QueryObject(globalScope);
-      }();
+    MOZ_ASSERT(global);
 
-      MOZ_ASSERT(global);
-
-      /* If we are creating an index, we do not have an mBlob but do have an
-       * FileInfo.  Unlike other index or upgrade cases, we do need a
-       * real-looking Blob/File instance because the index's key path can
-       * reference their properties.  Rather than create a fake-looking object,
-       * create a real Blob. */
+    /* If we are creating an index, we do not have an mBlob but do have an
+     * mInfo.  Unlike other index or upgrade cases, we do need a real-looking
+     * Blob/File instance because the index's key path can reference their
+     * properties.  Rather than create a fake-looking object, create a real
+     * Blob. */
+    if (!blob) {
+      MOZ_ASSERT(aFile.mFileInfo);
       const nsCOMPtr<nsIFile> file =
-          FileInfo::GetFileForFileInfo(aFile.FileInfo());
+          FileInfo::GetFileForFileInfo(*aFile.mFileInfo);
       if (!file) {
-        return nullptr;
+        return false;
       }
 
-      const auto impl = MakeRefPtr<FileBlobImpl>(file);
-      impl->SetFileId(aFile.FileInfo().Id());
-      return File::Create(global, impl);
-    }();
-    if (NS_WARN_IF(!blob)) {
-      return false;
+      const RefPtr<FileBlobImpl> impl = new FileBlobImpl(file);
+      impl->SetFileId(aFile.mFileInfo->Id());
+      blob = File::Create(global, impl);
+      if (NS_WARN_IF(!blob)) {
+        return false;
+      }
     }
 
     if (aData.tag == SCTAG_DOM_BLOB) {
@@ -688,7 +684,14 @@ class ValueDeserializationHelper {
         return false;
       }
 
-      return WrapAsJSObject(aCx, exposedBlob, aResult);
+      MOZ_ASSERT(exposedBlob);
+      JS::Rooted<JS::Value> wrappedBlob(aCx);
+      if (!ToJSValue(aCx, exposedBlob, &wrappedBlob)) {
+        return false;
+      }
+
+      aResult.set(&wrappedBlob.toObject());
+      return true;
     }
 
     blob->Impl()->SetLazyData(aData.name, aData.type, aData.size,
@@ -698,7 +701,13 @@ class ValueDeserializationHelper {
     const RefPtr<File> file = blob->ToFile();
     MOZ_ASSERT(file);
 
-    return WrapAsJSObject(aCx, file, aResult);
+    JS::Rooted<JS::Value> wrappedFile(aCx);
+    if (!ToJSValue(aCx, file, &wrappedFile)) {
+      return false;
+    }
+
+    aResult.set(&wrappedFile.toObject());
+    return true;
   }
 
   static bool CreateAndWrapWasmModule(JSContext* aCx,
@@ -706,8 +715,8 @@ class ValueDeserializationHelper {
                                       const WasmModuleData& aData,
                                       JS::MutableHandle<JSObject*> aResult) {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eWasmBytecode);
-    MOZ_ASSERT(!aFile.HasBlob());
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eWasmBytecode);
+    MOZ_ASSERT(!aFile.mBlob);
 
     // Just create a plain object here, support for de-serialization of
     // WebAssembly.Modules has been removed in bug 1561876. Full removal is
@@ -818,6 +827,8 @@ JSObject* CopyingStructuredCloneReadCallback(
     auto* const cloneInfo =
         static_cast<IDBObjectStore::StructuredCloneInfo*>(aClosure);
 
+    JS::Rooted<JSObject*> result(aCx);
+
     if (aData >= cloneInfo->mFiles.Length()) {
       MOZ_ASSERT(false, "Bad index value!");
       return nullptr;
@@ -825,40 +836,53 @@ JSObject* CopyingStructuredCloneReadCallback(
 
     StructuredCloneFile& file = cloneInfo->mFiles[aData];
 
-    switch (aTag) {
-      case SCTAG_DOM_BLOB:
-        MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
-        MOZ_ASSERT(!file.Blob().IsFile());
+    if (aTag == SCTAG_DOM_BLOB) {
+      MOZ_ASSERT(file.mType == StructuredCloneFile::eBlob);
+      MOZ_ASSERT(!file.mBlob->IsFile());
 
-        return WrapAsJSObject(aCx, file.MutableBlob());
-
-      case SCTAG_DOM_FILE: {
-        MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
-
-        JS::Rooted<JSObject*> result(aCx);
-
-        {
-          // Create a scope so ~RefPtr fires before returning an unwrapped
-          // JS::Value.
-          const RefPtr<Blob> blob = file.BlobPtr();
-          MOZ_ASSERT(blob->IsFile());
-
-          const RefPtr<File> file = blob->ToFile();
-          MOZ_ASSERT(file);
-
-          if (!WrapAsJSObject(aCx, file, &result)) {
-            return nullptr;
-          }
-        }
-
-        return result;
+      JS::Rooted<JS::Value> wrappedBlob(aCx);
+      if (NS_WARN_IF(!ToJSValue(aCx, file.mBlob, &wrappedBlob))) {
+        return nullptr;
       }
 
-      case SCTAG_DOM_MUTABLEFILE:
-        MOZ_ASSERT(file.Type() == StructuredCloneFile::eMutableFile);
+      result.set(&wrappedBlob.toObject());
 
-        return WrapAsJSObject(aCx, file.MutableMutableFile());
+      return result;
     }
+
+    if (aTag == SCTAG_DOM_FILE) {
+      MOZ_ASSERT(file.mType == StructuredCloneFile::eBlob);
+
+      {
+        // Create a scope so ~RefPtr fires before returning an unwrapped
+        // JS::Value.
+        const RefPtr<Blob> blob = file.mBlob;
+        MOZ_ASSERT(blob->IsFile());
+
+        const RefPtr<File> file = blob->ToFile();
+        MOZ_ASSERT(file);
+
+        JS::Rooted<JS::Value> wrappedFile(aCx);
+        if (NS_WARN_IF(!ToJSValue(aCx, file, &wrappedFile))) {
+          return nullptr;
+        }
+
+        result.set(&wrappedFile.toObject());
+      }
+
+      return result;
+    }
+
+    MOZ_ASSERT(file.mType == StructuredCloneFile::eMutableFile);
+
+    JS::Rooted<JS::Value> wrappedMutableFile(aCx);
+    if (NS_WARN_IF(!ToJSValue(aCx, file.mMutableFile, &wrappedMutableFile))) {
+      return nullptr;
+    }
+
+    result.set(&wrappedMutableFile.toObject());
+
+    return result;
   }
 
   return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
@@ -1317,13 +1341,14 @@ class DeserializeUpgradeValueHelper final : public Runnable {
     for (uint32_t count = mCloneReadInfo.mFiles.Length(), index = 0;
          index < count; index++) {
       const StructuredCloneFile& file = mCloneReadInfo.mFiles[index];
+      MOZ_ASSERT(file.mFileInfo);
 
-      const int64_t id = file.FileInfo().Id();
+      const int64_t id = file.mFileInfo->Id();
 
       if (index) {
         aFileIds.Append(' ');
       }
-      aFileIds.AppendInt(file.Type() == StructuredCloneFile::eBlob ? id : -id);
+      aFileIds.AppendInt(file.mType == StructuredCloneFile::eBlob ? id : -id);
     }
   }
 
@@ -1561,13 +1586,13 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
       FileAddInfo* const fileAddInfo = fileAddInfos.AppendElement(fallible);
       MOZ_ASSERT(fileAddInfo);
 
-      switch (file.Type()) {
+      switch (file.mType) {
         case StructuredCloneFile::eBlob: {
-          MOZ_ASSERT(file.HasBlob());
-          MOZ_ASSERT(!file.HasMutableFile());
+          MOZ_ASSERT(file.mBlob);
+          MOZ_ASSERT(!file.mMutableFile);
 
           PBackgroundIDBDatabaseFileChild* const fileActor =
-              database->GetOrCreateFileActorForBlob(file.MutableBlob());
+              database->GetOrCreateFileActorForBlob(file.mBlob);
           if (NS_WARN_IF(!fileActor)) {
             IDB_REPORT_INTERNAL_ERR();
             aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -1581,11 +1606,11 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
         }
 
         case StructuredCloneFile::eMutableFile: {
-          MOZ_ASSERT(file.HasMutableFile());
-          MOZ_ASSERT(!file.HasBlob());
+          MOZ_ASSERT(file.mMutableFile);
+          MOZ_ASSERT(!file.mBlob);
 
           PBackgroundMutableFileChild* const mutableFileActor =
-              file.MutableFile().GetBackgroundActor();
+              file.mMutableFile->GetBackgroundActor();
           if (NS_WARN_IF(!mutableFileActor)) {
             IDB_REPORT_INTERNAL_ERR();
             aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -1600,11 +1625,11 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
 
         case StructuredCloneFile::eWasmBytecode:
         case StructuredCloneFile::eWasmCompiled: {
-          MOZ_ASSERT(file.HasBlob());
-          MOZ_ASSERT(!file.HasMutableFile());
+          MOZ_ASSERT(file.mBlob);
+          MOZ_ASSERT(!file.mMutableFile);
 
           PBackgroundIDBDatabaseFileChild* const fileActor =
-              database->GetOrCreateFileActorForBlob(file.MutableBlob());
+              database->GetOrCreateFileActorForBlob(file.mBlob);
           if (NS_WARN_IF(!fileActor)) {
             IDB_REPORT_INTERNAL_ERR();
             aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -1612,7 +1637,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
           }
 
           fileAddInfo->file() = fileActor;
-          fileAddInfo->type() = file.Type();
+          fileAddInfo->type() = file.mType;
 
           break;
         }
