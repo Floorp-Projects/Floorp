@@ -5,15 +5,20 @@
 package org.mozilla.fenix.ext
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Patterns
 import android.webkit.URLUtil
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.publicsuffixlist.ext.urlToTrimmedHost
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import java.net.IDN
+import java.net.MalformedURLException
+import java.net.URL
 import java.util.Locale
 
 const val FILE_PREFIX = "file://"
@@ -105,4 +110,20 @@ fun String.simplifiedUrl(): String {
         }
     }
     return afterScheme
+}
+
+/**
+ * Gets a rounded drawable from a URL if possible, else null. Must be called off main thread.
+ */
+fun String.decodeUrlToRoundedDrawable(context: Context): RoundedBitmapDrawable? {
+    val avatarUrl = try {
+        URL(this)
+    } catch (e: MalformedURLException) {
+        return null
+    }
+    val bitmap = BitmapFactory.decodeStream(avatarUrl.openConnection().getInputStream())
+    val roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.resources, bitmap)
+    roundedBitmapDrawable.isCircular = true
+    roundedBitmapDrawable.setAntiAlias(true)
+    return roundedBitmapDrawable
 }
