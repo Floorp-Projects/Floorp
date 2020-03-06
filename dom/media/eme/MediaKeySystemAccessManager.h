@@ -135,8 +135,8 @@ class MediaKeySystemAccessManager final : public nsIObserver {
     nsCOMPtr<nsITimer> mTimer = nullptr;
 
     // Convenience methods to reject the wrapped promise.
-    void RejectPromiseWithInvalidAccessError(const nsAString& aReason);
-    void RejectPromiseWithNotSupportedError(const nsAString& aReason);
+    void RejectPromiseWithInvalidAccessError(const nsACString& aReason);
+    void RejectPromiseWithNotSupportedError(const nsACString& aReason);
     void RejectPromiseWithTypeError(const nsACString& aReason);
 
     void CancelTimer();
