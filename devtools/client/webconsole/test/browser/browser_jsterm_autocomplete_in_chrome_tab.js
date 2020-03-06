@@ -17,4 +17,7 @@ add_task(async function() {
   // Test typing 'docu'.
   await setInputValueForAutocompletion(hud, "docu");
   checkInputCompletionValue(hud, "ment", "'docu' completion");
+
+  info("Close autocomplete popup");
+  await closeAutocompletePopup(hud);
 });

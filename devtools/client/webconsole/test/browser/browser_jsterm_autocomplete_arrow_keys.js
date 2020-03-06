@@ -29,9 +29,9 @@ add_task(async function() {
   );
   setInputValue(hud, ".");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  const onPopUpOpen = popup.once("popup-opened");
+  const onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("win");
-  await onPopUpOpen;
+  await onAutocompleteUpdated;
   ok(popup.isOpen, "popup is open");
 
   const isOSX = Services.appinfo.OS == "Darwin";
