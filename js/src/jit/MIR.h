@@ -360,10 +360,11 @@ class AliasSet {
     TypedArrayLengthOrOffset = 1 << 9,  // A typed array's length or byteOffset
     WasmGlobalCell = 1 << 10,           // A wasm global cell
     WasmTableElement = 1 << 11,         // An element of a wasm table
-    Last = WasmTableElement,
+    WasmStackResult = 1 << 12,  // A stack result from the current function
+    Last = WasmStackResult,
     Any = Last | (Last - 1),
 
-    NumCategories = 12,
+    NumCategories = 13,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -11756,6 +11757,27 @@ class MWasmStoreGlobalCell : public MBinaryInstruction,
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmGlobalCell);
+  }
+};
+
+class MWasmStoreStackResult : public MBinaryInstruction,
+                              public NoTypePolicy::Data {
+  MWasmStoreStackResult(MDefinition* stackResultArea, uint32_t offset,
+                        MDefinition* value)
+      : MBinaryInstruction(classOpcode, stackResultArea, value),
+        offset_(offset) {}
+
+  uint32_t offset_;
+
+ public:
+  INSTRUCTION_HEADER(WasmStoreStackResult)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, stackResultArea), (1, value))
+
+  uint32_t offset() const { return offset_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::WasmStackResult);
   }
 };
 
