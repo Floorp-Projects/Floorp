@@ -48,3 +48,7 @@ function checkOrWaitUntilMediaStoppedPlaying(tab, elementId) {
     });
   });
 }
+
+function waitUntilMainMediaControllerPlaybackChanged() {
+  return BrowserUtils.promiseObserved("main-media-controller-playback-changed");
+}
