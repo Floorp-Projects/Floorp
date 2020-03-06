@@ -681,7 +681,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             }
           }
           PropertyVector& properties = stack.back().properties();
-          if (!properties.append(IdValuePair(id))) {
+          if (!properties.emplaceBack(id)) {
             return false;
           }
           token = advancePropertyColon();
