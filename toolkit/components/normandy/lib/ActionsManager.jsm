@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PreferenceRolloutAction:
     "resource://normandy/actions/PreferenceRolloutAction.jsm",
   ShowHeartbeatAction: "resource://normandy/actions/ShowHeartbeatAction.jsm",
-  SinglePreferenceExperimentAction:
-    "resource://normandy/actions/SinglePreferenceExperimentAction.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
 });
 
@@ -41,13 +39,10 @@ const actionConstructors = {
   "preference-rollback": PreferenceRollbackAction,
   "preference-rollout": PreferenceRolloutAction,
   "show-heartbeat": ShowHeartbeatAction,
-  "single-preference-experiment": SinglePreferenceExperimentAction,
 };
 
 // Legacy names used by the server and older clients for actions.
-const actionAliases = {
-  "preference-experiment": "single-preference-experiment",
-};
+const actionAliases = {};
 
 /**
  * A class to manage the actions that recipes can use in Normandy.
