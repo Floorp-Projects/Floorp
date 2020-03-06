@@ -1645,23 +1645,6 @@ bool BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
   return result;
 }
 
-bool BytecodeEmitter::emitNewInit() {
-  const size_t len = 1 + UINT32_INDEX_LEN;
-  BytecodeOffset offset;
-  if (!emitCheck(JSOp::NewInit, len, &offset)) {
-    return false;
-  }
-
-  jsbytecode* code = bytecodeSection().code(offset);
-  code[0] = jsbytecode(JSOp::NewInit);
-  code[1] = 0;
-  code[2] = 0;
-  code[3] = 0;
-  code[4] = 0;
-  bytecodeSection().updateDepth(offset);
-  return true;
-}
-
 bool BytecodeEmitter::iteratorResultShape(uint32_t* shape) {
   // No need to do any guessing for the object kind, since we know exactly how
   // many properties we plan to have.
@@ -3668,7 +3651,7 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
         return false;
       }
 
-      if (!emitNewInit()) {
+      if (!emit1(JSOp::NewInit)) {
         //          [stack] ... SET? RHS LREF* RHS TARGET
         return false;
       }
@@ -3843,7 +3826,7 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
     }
   } else {
     // Take the slow but sure way and start off with a blank object.
-    if (!emitNewInit()) {
+    if (!emit1(JSOp::NewInit)) {
       //            [stack] OBJ
       return false;
     }

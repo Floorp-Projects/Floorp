@@ -567,8 +567,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                       HandleAtom anonFunctionName);
   MOZ_MUST_USE bool emitAssignmentRhs(uint8_t offset);
 
-  MOZ_MUST_USE bool emitNewInit();
-
   MOZ_MUST_USE bool emitPrepareIteratorResult();
   MOZ_MUST_USE bool emitFinishIteratorResult(bool done);
   MOZ_MUST_USE bool iteratorResultShape(uint32_t* shape);
