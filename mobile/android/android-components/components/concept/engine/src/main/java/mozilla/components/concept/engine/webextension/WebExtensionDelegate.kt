@@ -17,83 +17,75 @@ interface WebExtensionDelegate {
     /**
      * Invoked when a web extension was installed successfully.
      *
-     * @param webExtension The installed extension.
+     * @param extension The installed extension.
      */
-    fun onInstalled(webExtension: WebExtension) = Unit
+    fun onInstalled(extension: WebExtension) = Unit
 
     /**
      * Invoked when a web extension was uninstalled successfully.
      *
-     * @param webExtension The uninstalled extension.
+     * @param extension The uninstalled extension.
      */
-    fun onUninstalled(webExtension: WebExtension) = Unit
+    fun onUninstalled(extension: WebExtension) = Unit
 
     /**
      * Invoked when a web extension was enabled successfully.
      *
-     * @param webExtension The enabled extension.
+     * @param extension The enabled extension.
      */
-    fun onEnabled(webExtension: WebExtension) = Unit
+    fun onEnabled(extension: WebExtension) = Unit
 
     /**
      * Invoked when a web extension was disabled successfully.
      *
-     * @param webExtension The disabled extension.
+     * @param extension The disabled extension.
      */
-    fun onDisabled(webExtension: WebExtension) = Unit
+    fun onDisabled(extension: WebExtension) = Unit
 
     /**
      * Invoked when a web extension attempts to open a new tab via
-     * browser.tabs.create.
+     * browser.tabs.create. Note that browser.tabs.update and browser.tabs.remove
+     * can only be observed using session-specific handlers,
+     * see [WebExtension.registerTabHandler].
      *
-     * @param webExtension An instance of [WebExtension] or null if extension
-     * was not registered with the engine.
-     * @param url the target url to be loaded in a new tab.
+     * @param extension The [WebExtension] that wants to open a new tab.
      * @param engineSession an instance of engine session to open a new tab with.
+     * @param active whether or not the new tab should be active/selected.
+     * @param url the target url to be loaded in a new tab.
      */
-    fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) = Unit
-
-    /**
-     * Invoked when a web extension attempts to close a tab via browser.tabs.remove.
-     *
-     * @param webExtension An instance of [WebExtension] or null if extension
-     * was not registered with the engine.
-     * @param engineSession then engine session fo the tab to be closed.
-     * @return true if the tab was closed, otherwise false.
-     */
-    fun onCloseTab(webExtension: WebExtension?, engineSession: EngineSession) = false
+    fun onNewTab(extension: WebExtension, engineSession: EngineSession, active: Boolean, url: String) = Unit
 
     /**
      * Invoked when a web extension defines a browser action. To listen for session-specific
      * overrides of [Action]s and other action-specific events (e.g. opening a popup)
      * see [WebExtension.registerActionHandler].
      *
-     * @param webExtension The [WebExtension] defining the browser action.
+     * @param extension The [WebExtension] defining the browser action.
      * @param action the defined browser [Action].
      */
-    fun onBrowserActionDefined(webExtension: WebExtension, action: Action) = Unit
+    fun onBrowserActionDefined(extension: WebExtension, action: Action) = Unit
 
     /**
      * Invoked when a web extension defines a page action. To listen for session-specific
      * overrides of [Action]s and other action-specific events (e.g. opening a popup)
      * see [WebExtension.registerActionHandler].
      *
-     * @param webExtension The [WebExtension] defining the browser action.
+     * @param extension The [WebExtension] defining the browser action.
      * @param action the defined page [Action].
      */
-    fun onPageActionDefined(webExtension: WebExtension, action: Action) = Unit
+    fun onPageActionDefined(extension: WebExtension, action: Action) = Unit
 
     /**
      * Invoked when a browser or page action wants to toggle a popup view.
      *
-     * @param webExtension The [WebExtension] that wants to display the popup.
+     * @param extension The [WebExtension] that wants to display the popup.
      * @param engineSession The [EngineSession] to use for displaying the popup.
      * @param action the [Action] that defines the popup.
      * @return the [EngineSession] used to display the popup, or null if no popup
      * was displayed.
      */
     fun onToggleActionPopup(
-        webExtension: WebExtension,
+        extension: WebExtension,
         engineSession: EngineSession,
         action: Action
     ): EngineSession? = null
@@ -101,12 +93,12 @@ interface WebExtensionDelegate {
     /**
      * Invoked during installation of a [WebExtension] to confirm the required permissions.
      *
-     * @param webExtension the extension being installed. The required permissions can be
+     * @param extension the extension being installed. The required permissions can be
      * accessed using [WebExtension.getMetadata] and [Metadata.permissions].
      * @return whether or not installation should process i.e. the permissions have been
      * granted.
      */
-    fun onInstallPermissionRequest(webExtension: WebExtension): Boolean = false
+    fun onInstallPermissionRequest(extension: WebExtension): Boolean = false
 
     /**
      * Invoked when a web extension has changed its permissions while trying to update to a

@@ -49,7 +49,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebExtensionController
 import java.lang.IllegalStateException
-import java.util.WeakHashMap
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -288,48 +287,6 @@ class GeckoEngine(
     ) {
         this.webExtensionDelegate = webExtensionDelegate
 
-        val tabsDelegate = object : WebExtensionController.TabDelegate {
-            // We use this map to find the engine session of a given gecko
-            // session, as we currently have no other way of accessing the
-            // list of engine sessions. This will change once the engine
-            // gets access to the browser store:
-            // https://github.com/mozilla-mobile/android-components/issues/4965
-            private val tabs = WeakHashMap<GeckoEngineSession, String>()
-
-            override fun onNewTab(
-                webExtension: org.mozilla.geckoview.WebExtension?,
-                url: String?
-            ): GeckoResult<GeckoSession>? {
-                val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
-                val geckoWebExtension = webExtension?.let {
-                    GeckoWebExtension(it.id, it.location, runtime.webExtensionController)
-                }
-                webExtensionDelegate.onNewTab(geckoWebExtension, url ?: "", geckoEngineSession)
-
-                tabs[geckoEngineSession] = webExtension?.id
-                return GeckoResult.fromValue(geckoEngineSession.geckoSession)
-            }
-
-            override fun onCloseTab(
-                webExtension: org.mozilla.geckoview.WebExtension?,
-                session: GeckoSession
-            ): GeckoResult<AllowOrDeny> {
-                val geckoEngineSession = tabs.keys.find { it.geckoSession == session } ?: return GeckoResult.DENY
-
-                return if (webExtension != null && tabs[geckoEngineSession] == webExtension.id) {
-                    val geckoWebExtension =
-                        GeckoWebExtension(webExtension.id, webExtension.location, runtime.webExtensionController)
-                    if (webExtensionDelegate.onCloseTab(geckoWebExtension, geckoEngineSession)) {
-                        GeckoResult.ALLOW
-                    } else {
-                        GeckoResult.DENY
-                    }
-                } else {
-                    GeckoResult.DENY
-                }
-            }
-        }
-
         val promptDelegate = object : WebExtensionController.PromptDelegate {
             override fun onInstallPrompt(ext: org.mozilla.geckoview.WebExtension): GeckoResult<AllowOrDeny>? {
                 val extension = GeckoWebExtension(ext, runtime.webExtensionController)
@@ -360,7 +317,6 @@ class GeckoEngine(
         }
 
         runtime.webExtensionController.promptDelegate = promptDelegate
-        runtime.webExtensionController.tabDelegate = tabsDelegate
     }
 
     /**

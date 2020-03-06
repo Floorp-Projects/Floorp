@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
@@ -20,6 +21,7 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -610,7 +612,7 @@ class GeckoEngineTest {
         )
         val ext = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             nativeExtension,
-            runtime.webExtensionController
+            runtime
         )
 
         val webExtensionsDelegate: WebExtensionDelegate = mock()
@@ -651,7 +653,7 @@ class GeckoEngineTest {
         )
         val ext = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             nativeExtension,
-            runtime.webExtensionController
+            runtime
         )
 
         val webExtensionsDelegate: WebExtensionDelegate = mock()
@@ -673,76 +675,6 @@ class GeckoEngineTest {
 
         assertTrue(onErrorCalled)
         assertEquals(expected, throwable)
-    }
-
-    @Test
-    @Suppress("Deprecation")
-    fun `web extension delegate handles opening a new tab`() {
-        val runtime: GeckoRuntime = mock()
-        val webExtensionController: WebExtensionController = mock()
-        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
-
-        val webExtensionsDelegate: WebExtensionDelegate = mock()
-        val engine = GeckoEngine(context, runtime = runtime)
-        engine.registerWebExtensionDelegate(webExtensionsDelegate)
-
-        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.TabDelegate>()
-        verify(webExtensionController).tabDelegate = geckoDelegateCaptor.capture()
-
-        val engineSessionCaptor = argumentCaptor<GeckoEngineSession>()
-        geckoDelegateCaptor.value.onNewTab(null, null)
-        verify(webExtensionsDelegate).onNewTab(eq(null), eq(""), engineSessionCaptor.capture())
-        assertNotNull(engineSessionCaptor.value)
-        assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
-
-        geckoDelegateCaptor.value.onNewTab(null, "https://www.mozilla.org")
-        verify(webExtensionsDelegate).onNewTab(eq(null), eq("https://www.mozilla.org"),
-            engineSessionCaptor.capture())
-        assertNotNull(engineSessionCaptor.value)
-        assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
-
-        val webExt = org.mozilla.geckoview.WebExtension("test", runtime.webExtensionController)
-        val geckoExtCap = argumentCaptor<mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension>()
-        geckoDelegateCaptor.value.onNewTab(webExt, "https://test-moz.org")
-        verify(webExtensionsDelegate).onNewTab(geckoExtCap.capture(), eq("https://test-moz.org"),
-            engineSessionCaptor.capture())
-        assertNotNull(geckoExtCap.value)
-        assertEquals(geckoExtCap.value.id, webExt.id)
-        assertNotNull(engineSessionCaptor.value)
-        assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
-    }
-
-    @Test
-    @Suppress("Deprecation")
-    fun `web extension delegate handles closing tab`() {
-        val webExtensionController: WebExtensionController = mock()
-        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
-
-        val webExt = org.mozilla.geckoview.WebExtension("test", runtime.webExtensionController)
-        val webExtensionsDelegate: WebExtensionDelegate = mock()
-        val engine = GeckoEngine(context, runtime = runtime)
-        engine.registerWebExtensionDelegate(webExtensionsDelegate)
-
-        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.TabDelegate>()
-        verify(webExtensionController).tabDelegate = geckoDelegateCaptor.capture()
-
-        // Web extension never opened a tab so call will not be acted on
-        geckoDelegateCaptor.value.onCloseTab(webExt, mock())
-        verify(webExtensionsDelegate, never()).onCloseTab(eq(null), any())
-
-        // Let web extension open a new tab
-        val engineSessionCaptor = argumentCaptor<GeckoEngineSession>()
-        val geckoExtCap = argumentCaptor<mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension>()
-        geckoDelegateCaptor.value.onNewTab(webExt, "https://test-moz.org")
-        verify(webExtensionsDelegate).onNewTab(any(), eq("https://test-moz.org"), engineSessionCaptor.capture())
-        engineSessionCaptor.value.geckoSession.open(runtime)
-        assertTrue(engineSessionCaptor.value.geckoSession.isOpen)
-
-        // Web extension should be able to close tab it opened
-        geckoDelegateCaptor.value.onCloseTab(webExt, engineSessionCaptor.value.geckoSession)
-        verify(webExtensionsDelegate).onCloseTab(geckoExtCap.capture(), eq(engineSessionCaptor.value))
-        assertNotNull(geckoExtCap.value)
-        assertEquals(geckoExtCap.value.id, webExt.id)
     }
 
     @Test
@@ -847,7 +779,7 @@ class GeckoEngineTest {
         val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         ))
@@ -882,7 +814,7 @@ class GeckoEngineTest {
         val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         ))
@@ -900,6 +832,36 @@ class GeckoEngineTest {
 
         whenever(webExtensionsDelegate.onToggleActionPopup(any(), any(), any())).thenReturn(mock())
         assertNotNull(actionHandlerCaptor.value.onToggleActionPopup(extension, pageAction))
+    }
+
+    @Test
+    fun `web extension delegate notified when built-in extension wants to open tab`() {
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+
+        val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime,
+            true,
+            true
+        ))
+        engine.installWebExtension(extension)
+        result.complete(null)
+
+        val tabHandlerCaptor = argumentCaptor<TabHandler>()
+        verify(extension).registerTabHandler(tabHandlerCaptor.capture())
+
+        val engineSession: EngineSession = mock()
+        tabHandlerCaptor.value.onNewTab(extension, engineSession, true, "https://mozilla.org")
+        verify(webExtensionsDelegate).onNewTab(extension, engineSession, true, "https://mozilla.org")
     }
 
     @Test
@@ -985,6 +947,43 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate notified when external extension wants to open tab`() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
+
+        val extensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.install(any())).thenReturn(result)
+        engine.installWebExtension(extId, extUrl)
+        val extension = spy(
+            GeckoWebExtension(
+                extUrl,
+                extId,
+                org.mozilla.geckoview.WebExtension.Flags.NONE,
+                runtime.webExtensionController
+            )
+        )
+        result.complete(extension)
+
+        val tabDelegateCaptor = argumentCaptor<org.mozilla.geckoview.WebExtension.TabDelegate>()
+        verify(extension).tabDelegate = tabDelegateCaptor.capture()
+
+        val createTabDetails: org.mozilla.geckoview.WebExtension.CreateTabDetails = mock()
+        tabDelegateCaptor.value.onNewTab(extension, createTabDetails)
+
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        verify(webExtensionsDelegate).onNewTab(extensionCaptor.capture(), any(), eq(false), eq(""))
+        assertEquals(extId, extensionCaptor.value.id)
+    }
+
+    @Test
     fun `web extension delegate notified of extension list change`() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
@@ -1021,7 +1020,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1058,7 +1057,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
                 "test-webext",
                 "resource://android/assets/extensions/test",
-                runtime.webExtensionController,
+                runtime,
                 true,
                 true
         )
@@ -1092,7 +1091,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1184,7 +1183,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1219,7 +1218,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1259,7 +1258,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1294,7 +1293,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )

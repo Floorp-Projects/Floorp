@@ -23,6 +23,24 @@ class WebExtensionTest {
     }
 
     @Test
+    fun `tab handler has default methods`() {
+        val tabHandler = object : TabHandler {}
+
+        tabHandler.onUpdateTab(mock(), mock(), false, "")
+        tabHandler.onCloseTab(mock(), mock())
+        tabHandler.onNewTab(mock(), mock(), false, "")
+    }
+
+    @Test
+    fun `action handler has default methods`() {
+        val actionHandler = object : ActionHandler {}
+
+        actionHandler.onPageAction(mock(), mock(), mock())
+        actionHandler.onBrowserAction(mock(), mock(), mock())
+        actionHandler.onToggleActionPopup(mock(), mock())
+    }
+
+    @Test
     fun `port holds engine session`() {
         val engineSession: EngineSession = mock()
         val port = object : Port(engineSession) {

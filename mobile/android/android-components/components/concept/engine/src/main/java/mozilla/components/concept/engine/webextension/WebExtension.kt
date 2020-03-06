@@ -92,6 +92,9 @@ abstract class WebExtension(
      * be invoked whenever browser and page action defaults change. To listen
      * for session-specific overrides see registerActionHandler(
      * EngineSession, ActionHandler).
+     *
+     * @param actionHandler the [ActionHandler] to be invoked when a browser or
+     * page action is received.
      */
     abstract fun registerActionHandler(actionHandler: ActionHandler)
 
@@ -101,8 +104,8 @@ abstract class WebExtension(
      * for the provided session.
      *
      * @param session the [EngineSession] the handler should be registered for.
-     * @param actionHandler the [ActionHandler] to invoked when a browser or
-     * page action is received.
+     * @param actionHandler the [ActionHandler] to be invoked when a
+     * session-specific browser or page action is received.
      */
     abstract fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler)
 
@@ -114,6 +117,26 @@ abstract class WebExtension(
      * @return true if an action handler is registered, otherwise false.
      */
     abstract fun hasActionHandler(session: EngineSession): Boolean
+
+    /**
+     * Registers a [TabHandler] for this web extension. This handler will
+     * be invoked whenever a web extension wants to open a new tab. To listen
+     * for session-specific events (such as [TabHandler.onCloseTab]) use
+     * registerTabHandler(EngineSession, TabHandler) instead.
+     *
+     * @param tabHandler the [TabHandler] to be invoked when the web extension
+     * wants to open a new tab.
+     */
+    abstract fun registerTabHandler(tabHandler: TabHandler)
+
+    /**
+     * Registers a [TabHandler] for the provided [EngineSession]. The handler
+     * will be invoked whenever an existing tab should be closed or updated.
+     *
+     * @param tabHandler the [TabHandler] to be invoked when the web extension
+     * wants to update or close an existing tab.
+     */
+    abstract fun registerTabHandler(session: EngineSession, tabHandler: TabHandler)
 
     /**
      * Returns additional information about this extension.
@@ -223,6 +246,45 @@ interface MessageHandler {
      * type or a org.json.JSONObject, null if no response should be sent.
      */
     fun onMessage(message: Any, source: EngineSession?): Any? = Unit
+}
+
+/**
+ * A handler for all tab related events (triggered by browser.tabs.* methods).
+ */
+interface TabHandler {
+
+    /**
+     * Invoked when a web extension attempts to open a new tab via
+     * browser.tabs.create.
+     *
+     * @param webExtension The [WebExtension] that wants to open the tab.
+     * @param engineSession an instance of engine session to open a new tab with.
+     * @param active whether or not the new tab should be active/selected.
+     * @param url the target url to be loaded in a new tab.
+     */
+    fun onNewTab(webExtension: WebExtension, engineSession: EngineSession, active: Boolean, url: String) = Unit
+
+    /**
+     * Invoked when a web extension attempts to update a tab via
+     * browser.tabs.update.
+     *
+     * @param webExtension The [WebExtension] that wants to update the tab.
+     * @param engineSession an instance of engine session to open a new tab with.
+     * @param active whether or not the new tab should be active/selected.
+     * @param url the (optional) target url to be loaded in a new tab if it has changed.
+     * @return true if the tab was updated, otherwise false.
+     */
+    fun onUpdateTab(webExtension: WebExtension, engineSession: EngineSession, active: Boolean, url: String?) = false
+
+    /**
+     * Invoked when a web extension attempts to close a tab via
+     * browser.tabs.remove.
+     *
+     * @param webExtension The [WebExtension] that wants to remove the tab.
+     * @param engineSession then engine session of the tab to be closed.
+     * @return true if the tab was closed, otherwise false.
+     */
+    fun onCloseTab(webExtension: WebExtension, engineSession: EngineSession) = false
 }
 
 /**
