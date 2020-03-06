@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 const PAGE_AUTOPLAY =
   "https://example.com/browser/dom/media/mediacontrol/tests/file_autoplay.html";
+const testVideoId = "autoplay";
 
 /**
  * This test is used to generate platform-independent media control keys event
@@ -16,19 +17,19 @@ add_task(async function setupTestingPref() {
 add_task(async function testPlayPauseAndStop() {
   info(`open autoplay media`);
   const tab = await createTabAndLoad(PAGE_AUTOPLAY);
-  await checkOrWaitUntilMediaStartedPlaying(tab);
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`pressing 'pause' key`);
   ChromeUtils.generateMediaControlKeysTestEvent("pause");
-  await checkOrWaitUntilMediaStoppedPlaying(tab);
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'play' key`);
   ChromeUtils.generateMediaControlKeysTestEvent("play");
-  await checkOrWaitUntilMediaStartedPlaying(tab);
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`pressing 'stop' key`);
   ChromeUtils.generateMediaControlKeysTestEvent("stop");
-  await checkOrWaitUntilMediaStoppedPlaying(tab);
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -37,15 +38,15 @@ add_task(async function testPlayPauseAndStop() {
 add_task(async function testPlayPause() {
   info(`open autoplay media`);
   const tab = await createTabAndLoad(PAGE_AUTOPLAY);
-  await checkOrWaitUntilMediaStartedPlaying(tab);
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`pressing 'playPause' key`);
   ChromeUtils.generateMediaControlKeysTestEvent("playPause");
-  await checkOrWaitUntilMediaStoppedPlaying(tab);
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'playPause' key`);
   ChromeUtils.generateMediaControlKeysTestEvent("playPause");
-  await checkOrWaitUntilMediaStartedPlaying(tab);
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
