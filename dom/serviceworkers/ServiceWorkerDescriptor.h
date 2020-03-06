@@ -82,10 +82,6 @@ class ServiceWorkerDescriptor final {
 
   void SetRegistrationVersion(uint64_t aVersion);
 
-  bool HandlesFetch() const;
-
-  void SetHandlesFetch(bool aHandlesFetch);
-
   // Try to determine if two workers match each other.  This is less strict
   // than an operator==() call since it ignores mutable values like State().
   bool Matches(const ServiceWorkerDescriptor& aDescriptor) const;
