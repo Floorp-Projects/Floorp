@@ -18,7 +18,7 @@ from taskgraph.optimize import OptimizationStrategy, register_strategy
 logger = logging.getLogger(__name__)
 
 # It's a list of project name which SETA is useful on
-SETA_PROJECTS = ['mozilla-inbound', 'autoland']
+SETA_PROJECTS = ['autoland']
 SETA_HIGH_PRIORITY = 1
 SETA_LOW_PRIORITY = 5
 
