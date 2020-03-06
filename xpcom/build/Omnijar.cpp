@@ -132,6 +132,32 @@ already_AddRefed<nsZipArchive> Omnijar::GetReader(nsIFile* aPath) {
   return nullptr;
 }
 
+already_AddRefed<nsZipArchive> Omnijar::GetInnerReader(
+    nsIFile* aPath, const nsACString& aEntry) {
+  MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
+
+  if (!aEntry.EqualsLiteral(MOZ_STRINGIFY(OMNIJAR_NAME))) {
+    return nullptr;
+  }
+
+  bool equals;
+  nsresult rv;
+
+  if (sPath[GRE]) {
+    rv = sPath[GRE]->Equals(aPath, &equals);
+    if (NS_SUCCEEDED(rv) && equals) {
+      return IsNested(GRE) ? GetReader(GRE) : nullptr;
+    }
+  }
+  if (sPath[APP]) {
+    rv = sPath[APP]->Equals(aPath, &equals);
+    if (NS_SUCCEEDED(rv) && equals) {
+      return IsNested(APP) ? GetReader(APP) : nullptr;
+    }
+  }
+  return nullptr;
+}
+
 nsresult Omnijar::GetURIString(Type aType, nsACString& aResult) {
   MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
 

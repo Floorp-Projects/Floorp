@@ -129,6 +129,17 @@ class Omnijar {
   static already_AddRefed<nsZipArchive> GetReader(nsIFile* aPath);
 
   /**
+   * In the case of a nested omnijar, this returns the inner reader for the
+   * omnijar if aPath points to the outer archive and aEntry is the omnijar
+   * entry name. Returns null otherwise.
+   * In concrete terms: On Android the omnijar is nested inside the apk archive.
+   * GetReader("path/to.apk") returns the outer reader and GetInnerReader(
+   * "path/to.apk", "assets/omni.ja") returns the inner reader.
+   */
+  static already_AddRefed<nsZipArchive> GetInnerReader(
+      nsIFile* aPath, const nsACString& aEntry);
+
+  /**
    * Returns the URI string corresponding to the omni.jar or directory
    * for GRE or APP. i.e. jar:/path/to/omni.jar!/ for omni.jar and
    * /path/to/base/dir/ otherwise. Returns an empty string for APP in

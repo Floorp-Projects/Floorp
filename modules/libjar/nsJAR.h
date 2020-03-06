@@ -81,7 +81,9 @@ class nsJAR final : public nsIZipReader {
   mozilla::Mutex mLock;  // protect mCache and mZip
   int64_t mMtime;
   bool mOpened;
-  bool mIsOmnijar;
+
+  // true if mZip was adopted from elsewhere and should not be closed by us.
+  bool mSkipArchiveClosing;
 
   nsresult LoadEntry(const nsACString& aFilename, nsCString& aBuf);
   int32_t ReadLine(const char** src);
