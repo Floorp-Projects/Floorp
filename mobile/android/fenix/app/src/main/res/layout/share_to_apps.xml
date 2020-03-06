@@ -27,15 +27,15 @@
         android:layout_marginBottom="@dimen/share_recent_apps_margin"
         android:background="@drawable/recent_apps_background"
         android:orientation="vertical"
-        android:paddingStart="@dimen/share_recent_apps_padding"
         android:paddingTop="@dimen/share_recent_apps_padding"
-        android:paddingEnd="@dimen/share_recent_apps_padding"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/recent_apps_link_header"
+            android:paddingStart="@dimen/share_recent_apps_padding"
+            android:paddingEnd="@dimen/share_recent_apps_padding"
             style="@style/ShareHeaderTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -73,11 +73,10 @@
         android:clipToPadding="false"
         android:minHeight="@dimen/share_list_min_height"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/share_all_apps_list_padding_start"
-        android:paddingEnd="@dimen/share_all_apps_list_padding_end"
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
         app:layout_constraintTop_toBottomOf="@id/apps_link_header"
         app:spanCount="2" />
