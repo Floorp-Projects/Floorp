@@ -83,3 +83,42 @@ add_task(async function test_tab_key_nav() {
     );
   });
 });
+
+add_task(async function testTabToCreateButton() {
+  let browser = gBrowser.selectedBrowser;
+  await SpecialPowers.spawn(browser, [], async () => {
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+
+    function waitForAnimationFrame() {
+      return new Promise(resolve => content.requestAnimationFrame(resolve));
+    }
+
+    async function tab() {
+      EventUtils.synthesizeKey("KEY_Tab", {}, content);
+      await waitForAnimationFrame();
+    }
+
+    let loginList = content.document.querySelector("login-list");
+    let loginSort = loginList.shadowRoot.getElementById("login-sort");
+    let loginListbox = loginList.shadowRoot.querySelector("ol");
+    let createButton = loginList.shadowRoot.querySelector(
+      ".create-login-button"
+    );
+    let getFocusedEl = () => loginList.shadowRoot.activeElement;
+
+    is(getFocusedEl(), null, "login-list isn't focused");
+
+    loginSort.focus();
+    await waitForAnimationFrame();
+    is(getFocusedEl(), loginSort, "login sort is focused");
+
+    await tab();
+    is(getFocusedEl(), loginListbox, "listbox is focused next");
+
+    await tab();
+    is(getFocusedEl(), createButton, "create button is after");
+
+    await tab();
+    is(getFocusedEl(), null, "login-list isn't focused again");
+  });
+});
