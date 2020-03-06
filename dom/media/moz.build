@@ -356,6 +356,7 @@ LOCAL_INCLUDES += [
     '/layout/xul',
     '/media/libyuv/libyuv/include',
     '/netwerk/base',
+    '/toolkit/content/tests/browser/',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
