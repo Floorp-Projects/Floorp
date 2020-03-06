@@ -27,7 +27,7 @@ class WaitForCondition final : public nsIRunnable {
   void Notify() { NS_DispatchToMainThread(this); }
 
  private:
-  virtual ~WaitForCondition() {}
+  virtual ~WaitForCondition() = default;
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());

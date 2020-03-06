@@ -42,11 +42,12 @@ class nsTestDHCPClient final : public nsIDHCPClient {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDHCPCLIENT
 
-  nsTestDHCPClient(){};
+  nsTestDHCPClient() = default;
+
   nsresult Init() { return NS_OK; };
 
  private:
-  ~nsTestDHCPClient(){};
+  ~nsTestDHCPClient() = default;
 };
 
 NS_IMETHODIMP
