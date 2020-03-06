@@ -22,7 +22,6 @@ job-defaults:
         retrigger: true
     dependencies:
         geckoview-nightly: geckoview-nightly
-        linux64-minidump-stackwalk: toolchain-linux64-minidump-stackwalk
     notify:
         by-level:
             '3':

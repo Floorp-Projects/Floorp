@@ -13,7 +13,7 @@ jobs:
     linux64-minidump-stackwalk:
         description: "minidump_stackwalk toolchain"
         attributes:
-            toolchain-artifact: public/build/minidump_stackwalk.tar.gz
+            toolchain-artifact: public/build/minidump_stackwalk.tar.xz
         run:
             index-search:
                 - gecko.cache.level-3.toolchains.v3.linux64-minidump-stackwalk.latest
