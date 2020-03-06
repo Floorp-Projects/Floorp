@@ -165,7 +165,6 @@ if CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES']:
 
 GeneratedFile('TelemetryScalarData.h',
               script='build_scripts/gen_scalar_data.py',
-              py2=True,
               inputs=scalar_files)
 GeneratedFile('TelemetryScalarEnums.h',
               script='build_scripts/gen_scalar_enum.py',
@@ -177,7 +176,6 @@ GeneratedFile('TelemetryScalarEnums.h',
 GeneratedFile(
     'ScalarArtifactDefinitions.json',
     script='build_scripts/gen_scalar_data.py',
-    py2=True,
     entry_point='generate_JSON_definitions',
     inputs=scalar_files)
 
