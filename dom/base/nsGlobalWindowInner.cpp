@@ -6967,7 +6967,7 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
   }
 
   int32_t value;
-  if (!ValueToPrimitive<int32_t, eDefault>(aCx, aValue, aPropName, &value)) {
+  if (!ValueToPrimitive<int32_t, eDefault>(aCx, aValue, &value)) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
   }

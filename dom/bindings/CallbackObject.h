@@ -27,7 +27,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/BindingCallContext.h"
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
@@ -350,10 +349,6 @@ class CallbackObject : public nsISupports {
 
     JSContext* GetContext() const { return mCx; }
 
-    // Safe to call this after the constructor has run without throwing on the
-    // ErrorResult it was handed.
-    BindingCallContext& GetCallContext() { return *mCallContext; }
-
    private:
     // We better not get copy-constructed
     CallSetup(const CallSetup&) = delete;
@@ -384,10 +379,6 @@ class CallbackObject : public nsISupports {
     // pop the script settings stack. Though in practice we'll often manually
     // order those two things.
     Maybe<JSAutoRealm> mAr;
-
-    // Our BindingCallContext.  This is a Maybe so we can avoid constructing it
-    // until after we have a JSContext to construct it with.
-    Maybe<BindingCallContext> mCallContext;
 
     // An ErrorResult to possibly re-throw exceptions on and whether
     // we should re-throw them.
