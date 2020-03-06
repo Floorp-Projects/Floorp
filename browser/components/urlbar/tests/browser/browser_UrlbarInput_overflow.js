@@ -4,7 +4,7 @@
 
 async function testVal(aExpected, overflowSide = "") {
   info(`Testing ${aExpected}`);
-  URLBarSetURI(makeURI(aExpected));
+  gURLBar.setURI(makeURI(aExpected));
 
   Assert.equal(
     gURLBar.selectionStart,
@@ -95,7 +95,7 @@ add_task(async function() {
   // override the value we set with an empty value.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(function() {
-    URLBarSetURI();
+    gURLBar.setURI();
     BrowserTestUtils.removeTab(tab);
   });
 
