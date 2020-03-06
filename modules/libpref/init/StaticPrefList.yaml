@@ -1353,13 +1353,9 @@
 
 # Is support for Document.getAnimations() and Element.getAnimations()
 # supported?
-#
-# Before enabling this by default, make sure also CSSPseudoElement interface
-# has been spec'ed properly, or we should add a separate pref for
-# CSSPseudoElement interface. See Bug 1174575 for further details.
 - name: dom.animations-api.getAnimations.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 # Is support for animations from the Web Animations API without 0%/100%
