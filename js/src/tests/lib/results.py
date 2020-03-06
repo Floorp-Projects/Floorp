@@ -4,8 +4,8 @@ import json
 import pipes
 import re
 
-from progressbar import NullProgressBar, ProgressBar
-from structuredlog import TestLogger
+from .progressbar import NullProgressBar, ProgressBar
+from .structuredlog import TestLogger
 
 # subprocess.list2cmdline does not properly escape for sh-like shells
 

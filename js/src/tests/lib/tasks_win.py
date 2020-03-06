@@ -5,11 +5,13 @@ from __future__ import print_function, unicode_literals, division
 
 import subprocess
 import sys
+
 from datetime import datetime, timedelta
-from progressbar import ProgressBar
-from results import NullTestOutput, TestOutput, escape_cmdline
 from threading import Thread
 from Queue import Queue, Empty
+
+from .progressbar import ProgressBar
+from .results import NullTestOutput, TestOutput, escape_cmdline
 
 
 class EndMarker:
