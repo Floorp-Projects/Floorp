@@ -10,28 +10,33 @@ class WatchpointMap {
     this._watchpoints = new Map();
   }
 
-  setWatchpoint(objActor, data) {
+  _setWatchpoint(objActor, data) {
     const { property, label, watchpointType } = data;
     const obj = objActor.rawValue();
 
-    if (this.has(obj, property)) {
-      return;
+    const desc = objActor.obj.getOwnPropertyDescriptor(property);
+
+    if (this.has(obj, property) || desc.set || desc.get || !desc.configurable) {
+      return null;
     }
 
-    const desc =
-      Object.getOwnPropertyDescriptor(obj, property) ||
-      objActor.obj.getOwnPropertyDescriptor(property);
-
-    if (desc.set || desc.get || !desc.configurable) {
-      return;
+    function getValue() {
+      return typeof desc.value === "object" && desc.value
+        ? desc.value.unsafeDereference()
+        : desc.value;
     }
-
-    const pauseAndRespond = type => {
+    function setValue(v) {
+      desc.value = objActor.obj.makeDebuggeeValue(v);
+    }
+    const maybeHandlePause = type => {
       const frame = this.thread.dbg.getNewestFrame();
-      this.thread._pauseAndRespond(frame, {
-        type: type,
-        message: label,
-      });
+
+      if (this.thread.hasMoved(frame, type) && !this.thread.skipBreakpoints) {
+        this.thread._pauseAndRespond(frame, {
+          type: type,
+          message: label,
+        });
+      }
     };
 
     if (watchpointType === "get") {
@@ -39,20 +44,11 @@ class WatchpointMap {
         configurable: desc.configurable,
         enumerable: desc.enumerable,
         set: objActor.obj.makeDebuggeeValue(v => {
-          desc.value = v;
+          setValue(v);
         }),
         get: objActor.obj.makeDebuggeeValue(() => {
-          const frame = this.thread.dbg.getNewestFrame();
-
-          if (!this.thread.hasMoved(frame, "getWatchpoint")) {
-            return false;
-          }
-
-          if (!this.thread.skipBreakpoints) {
-            pauseAndRespond("getWatchpoint");
-          }
-
-          return desc.value;
+          maybeHandlePause("getWatchpoint");
+          return getValue();
         }),
       });
     }
@@ -62,31 +58,25 @@ class WatchpointMap {
         configurable: desc.configurable,
         enumerable: desc.enumerable,
         set: objActor.obj.makeDebuggeeValue(v => {
-          const frame = this.thread.dbg.getNewestFrame();
-
-          if (!this.thread.hasMoved(frame, "setWatchpoint")) {
-            desc.value = v;
-            return;
-          }
-
-          if (!this.thread.skipBreakpoints) {
-            pauseAndRespond("setWatchpoint");
-          }
-
-          desc.value = v;
+          maybeHandlePause("setWatchpoint");
+          setValue(v);
         }),
         get: objActor.obj.makeDebuggeeValue(() => {
-          return desc.value;
+          return getValue();
         }),
       });
     }
+
+    return desc;
   }
 
   add(objActor, data) {
     // Get the object's description before calling setWatchpoint,
     // otherwise we'll get the modified property descriptor instead
-    const desc = objActor.obj.getOwnPropertyDescriptor(data.property);
-    this.setWatchpoint(objActor, data);
+    const desc = this._setWatchpoint(objActor, data);
+    if (!desc) {
+      return;
+    }
 
     const objWatchpoints =
       this._watchpoints.get(objActor.rawValue()) || new Map();
