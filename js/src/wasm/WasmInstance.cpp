@@ -117,7 +117,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-  if (fi.funcType().hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx)) {
+  if (fi.funcType().hasI64ArgOrRet() && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
     return false;
@@ -132,7 +132,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
       }
       case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
-        MOZ_ASSERT(I64BigIntConversionAvailable(cx));
+        MOZ_ASSERT(HasI64BigIntSupport(cx));
         // If bi is manipulated other than test & storing, it would need
         // to be rooted here.
         BigInt* bi = BigInt::createFromInt64(cx, *(int64_t*)&argv[i]);
@@ -1692,7 +1692,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  if (funcType->hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx)) {
+  if (funcType->hasI64ArgOrRet() && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
     return false;
@@ -1729,7 +1729,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         break;
       case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
-        MOZ_ASSERT(I64BigIntConversionAvailable(cx),
+        MOZ_ASSERT(HasI64BigIntSupport(cx),
                    "unexpected i64 flowing into callExport");
         RootedBigInt bigint(cx, ToBigInt(cx, v));
         if (!bigint) {
@@ -1848,7 +1848,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         break;
       case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
-        MOZ_ASSERT(I64BigIntConversionAvailable(cx),
+        MOZ_ASSERT(HasI64BigIntSupport(cx),
                    "unexpected i64 flowing from callExport");
         // If bi is manipulated other than test & storing, it would need
         // to be rooted here.
