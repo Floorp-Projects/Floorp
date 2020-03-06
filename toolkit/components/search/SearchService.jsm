@@ -1842,7 +1842,8 @@ SearchService.prototype = {
     let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
       locale,
       region,
-      channel
+      channel,
+      SearchUtils.distroID
     );
 
     const defaultEngine = engines[0];
