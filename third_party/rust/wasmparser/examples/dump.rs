@@ -43,7 +43,7 @@ fn main() {
                 );
             }
             ParserState::EndWasm => break,
-            ParserState::Error(ref err) => panic!("Error: {:?}", err),
+            ParserState::Error(err) => panic!("Error: {:?}", err),
             _ => println!("{:?}", state),
         }
     }

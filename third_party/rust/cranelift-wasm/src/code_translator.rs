@@ -185,10 +185,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let (params, results) = blocktype_params_results(module_translation_state, *ty)?;
             let (destination, else_data) = if params == results {
                 // It is possible there is no `else` block, so we will only
-                // allocate a block for it if/when we find the `else`. For now,
+                // allocate an block for it if/when we find the `else`. For now,
                 // we if the condition isn't true, then we jump directly to the
                 // destination block following the whole `if...end`. If we do end
-                // up discovering an `else`, then we will allocate a block for it
+                // up discovering an `else`, then we will allocate an block for it
                 // and go back and patch the jump.
                 let destination = block_with_params(builder, results, environ)?;
                 let branch_inst = builder
@@ -212,7 +212,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             builder.seal_block(next_block); // Only predecessor is the current block.
             builder.switch_to_block(next_block);
 
-            // Here we append an argument to a Block targeted by an argumentless jump instruction
+            // Here we append an argument to an Block targeted by an argumentless jump instruction
             // But in fact there are two cases:
             // - either the If does not have a Else clause, in that case ty = EmptyBlock
             //   and we add nothing;
@@ -241,7 +241,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                         // We have a branch from the head of the `if` to the `else`.
                         state.reachable = true;
 
-                        // Ensure we have a block for the `else` block (it may have
+                        // Ensure we have an block for the `else` block (it may have
                         // already been pre-allocated, see `ElseData` for details).
                         let else_block = match *else_data {
                             ElseData::NoElse { branch_inst } => {
@@ -1288,26 +1288,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().usub_sat(a, b))
         }
-        Operator::I8x16MinS | Operator::I16x8MinS | Operator::I32x4MinS => {
-            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
-            state.push1(builder.ins().imin(a, b))
-        }
-        Operator::I8x16MinU | Operator::I16x8MinU | Operator::I32x4MinU => {
-            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
-            state.push1(builder.ins().umin(a, b))
-        }
-        Operator::I8x16MaxS | Operator::I16x8MaxS | Operator::I32x4MaxS => {
-            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
-            state.push1(builder.ins().imax(a, b))
-        }
-        Operator::I8x16MaxU | Operator::I16x8MaxU | Operator::I32x4MaxU => {
-            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
-            state.push1(builder.ins().umax(a, b))
-        }
-        Operator::I8x16RoundingAverageU | Operator::I16x8RoundingAverageU => {
-            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
-            state.push1(builder.ins().avg_round(a, b))
-        }
         Operator::I8x16Neg | Operator::I16x8Neg | Operator::I32x4Neg | Operator::I64x2Neg => {
             let a = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().ineg(a))
@@ -1495,7 +1475,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I32x4Load16x4S { .. }
         | Operator::I32x4Load16x4U { .. }
         | Operator::I64x2Load32x2S { .. }
-        | Operator::I64x2Load32x2U { .. } => {
+        | Operator::I64x2Load32x2U { .. }
+        | Operator::I8x16RoundingAverageU { .. }
+        | Operator::I16x8RoundingAverageU { .. } => {
             return Err(wasm_unsupported!("proposed SIMD operator {:?}", op));
         }
     };
@@ -1831,11 +1813,6 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I8x16Sub
         | Operator::I8x16SubSaturateS
         | Operator::I8x16SubSaturateU
-        | Operator::I8x16MinS
-        | Operator::I8x16MinU
-        | Operator::I8x16MaxS
-        | Operator::I8x16MaxU
-        | Operator::I8x16RoundingAverageU
         | Operator::I8x16Mul => I8X16,
 
         Operator::I16x8Splat
@@ -1865,11 +1842,6 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I16x8Sub
         | Operator::I16x8SubSaturateS
         | Operator::I16x8SubSaturateU
-        | Operator::I16x8MinS
-        | Operator::I16x8MinU
-        | Operator::I16x8MaxS
-        | Operator::I16x8MaxU
-        | Operator::I16x8RoundingAverageU
         | Operator::I16x8Mul => I16X8,
 
         Operator::I32x4Splat
@@ -1895,10 +1867,6 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I32x4Add
         | Operator::I32x4Sub
         | Operator::I32x4Mul
-        | Operator::I32x4MinS
-        | Operator::I32x4MinU
-        | Operator::I32x4MaxS
-        | Operator::I32x4MaxU
         | Operator::F32x4ConvertI32x4S
         | Operator::F32x4ConvertI32x4U => I32X4,
 
@@ -2041,5 +2009,5 @@ pub fn wasm_param_types(params: &[ir::AbiParam], is_wasm: impl Fn(usize) -> bool
             ret.push(param.value_type);
         }
     }
-    ret
+    return ret;
 }

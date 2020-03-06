@@ -8,8 +8,7 @@
 
 use crate::state::{FuncTranslationState, ModuleTranslationState};
 use crate::translation_utils::{
-    DataIndex, ElemIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex,
-    Table, TableIndex,
+    FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table, TableIndex,
 };
 use core::convert::From;
 use cranelift_codegen::cursor::FuncCursor;
@@ -55,7 +54,7 @@ pub enum WasmError {
     #[error("Invalid input WebAssembly code at offset {offset}: {message}")]
     InvalidWebAssembly {
         /// A string describing the validation error.
-        message: std::string::String,
+        message: &'static str,
         /// The bytecode offset where the error occurred.
         offset: usize,
     },
@@ -90,10 +89,8 @@ macro_rules! wasm_unsupported {
 impl From<BinaryReaderError> for WasmError {
     /// Convert from a `BinaryReaderError` to a `WasmError`.
     fn from(e: BinaryReaderError) -> Self {
-        Self::InvalidWebAssembly {
-            message: e.message().into(),
-            offset: e.offset(),
-        }
+        let BinaryReaderError { message, offset } = e;
+        Self::InvalidWebAssembly { message, offset }
     }
 }
 
@@ -602,25 +599,6 @@ pub trait ModuleEnvironment<'data>: TargetEnvironment {
         offset: usize,
         elements: Box<[FuncIndex]>,
     ) -> WasmResult<()>;
-
-    /// Declare a passive element segment.
-    fn declare_passive_element(
-        &mut self,
-        index: ElemIndex,
-        elements: Box<[FuncIndex]>,
-    ) -> WasmResult<()>;
-
-    /// Provides the number of passive data segments up front.
-    ///
-    /// By default this does nothing, but implementations may use this to
-    /// pre-allocate memory if desired.
-    fn reserve_passive_data(&mut self, count: u32) -> WasmResult<()> {
-        let _ = count;
-        Ok(())
-    }
-
-    /// Declare a passive data segment.
-    fn declare_passive_data(&mut self, data_index: DataIndex, data: &'data [u8]) -> WasmResult<()>;
 
     /// Provides the contents of a function body.
     ///

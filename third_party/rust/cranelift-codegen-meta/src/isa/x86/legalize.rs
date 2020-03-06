@@ -43,8 +43,6 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let iadd = insts.by_name("iadd");
     let icmp = insts.by_name("icmp");
     let iconst = insts.by_name("iconst");
-    let imax = insts.by_name("imax");
-    let imin = insts.by_name("imin");
     let imul = insts.by_name("imul");
     let ineg = insts.by_name("ineg");
     let insertlane = insts.by_name("insertlane");
@@ -61,11 +59,8 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let shuffle = insts.by_name("shuffle");
     let srem = insts.by_name("srem");
     let sshr = insts.by_name("sshr");
-    let tls_value = insts.by_name("tls_value");
     let trueif = insts.by_name("trueif");
     let udiv = insts.by_name("udiv");
-    let umax = insts.by_name("umax");
-    let umin = insts.by_name("umin");
     let umulhi = insts.by_name("umulhi");
     let ushr_imm = insts.by_name("ushr_imm");
     let urem = insts.by_name("urem");
@@ -76,7 +71,6 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
 
     let x86_bsf = x86_instructions.by_name("x86_bsf");
     let x86_bsr = x86_instructions.by_name("x86_bsr");
-    let x86_pmaxs = x86_instructions.by_name("x86_pmaxs");
     let x86_pmaxu = x86_instructions.by_name("x86_pmaxu");
     let x86_pmins = x86_instructions.by_name("x86_pmins");
     let x86_pminu = x86_instructions.by_name("x86_pminu");
@@ -325,10 +319,6 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         ],
     );
 
-    group.custom_legalize(ineg, "convert_ineg");
-
-    group.custom_legalize(tls_value, "expand_tls_value");
-
     group.build_and_add_to(&mut shared.transform_groups);
 
     let mut narrow = TransformGroupBuilder::new(
@@ -562,18 +552,6 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         narrow.legalize(def!(c = icmp_(ule, a, b)), vec![def!(c = icmp(uge, b, a))]);
     }
 
-    // SIMD integer min/max
-    for ty in &[I8, I16, I32] {
-        let imin = imin.bind(vector(*ty, sse_vector_size));
-        narrow.legalize(def!(c = imin(a, b)), vec![def!(c = x86_pmins(a, b))]);
-        let umin = umin.bind(vector(*ty, sse_vector_size));
-        narrow.legalize(def!(c = umin(a, b)), vec![def!(c = x86_pminu(a, b))]);
-        let imax = imax.bind(vector(*ty, sse_vector_size));
-        narrow.legalize(def!(c = imax(a, b)), vec![def!(c = x86_pmaxs(a, b))]);
-        let umax = umax.bind(vector(*ty, sse_vector_size));
-        narrow.legalize(def!(c = umax(a, b)), vec![def!(c = x86_pmaxu(a, b))]);
-    }
-
     // SIMD fcmp greater-/less-than
     let gt = Literal::enumerator_for(&imm.floatcc, "gt");
     let lt = Literal::enumerator_for(&imm.floatcc, "lt");
@@ -634,17 +612,4 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     narrow.custom_legalize(ineg, "convert_ineg");
 
     narrow.build_and_add_to(&mut shared.transform_groups);
-
-    let mut widen = TransformGroupBuilder::new(
-        "x86_widen",
-        r#"
-    Legalize instructions by widening.
-
-    Use x86-specific instructions if needed."#,
-    )
-    .isa("x86")
-    .chain_with(shared.transform_groups.by_name("widen").id);
-
-    widen.custom_legalize(ineg, "convert_ineg");
-    widen.build_and_add_to(&mut shared.transform_groups);
 }

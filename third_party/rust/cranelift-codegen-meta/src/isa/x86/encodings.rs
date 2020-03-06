@@ -1560,7 +1560,6 @@ fn define_simd(
     let formats = &shared_defs.formats;
 
     // Shorthands for instructions.
-    let avg_round = shared.by_name("avg_round");
     let bitcast = shared.by_name("bitcast");
     let bor = shared.by_name("bor");
     let bxor = shared.by_name("bxor");
@@ -1796,14 +1795,14 @@ fn define_simd(
 
         let is_zero_128bit =
             InstructionPredicate::new_is_all_zeroes(&*formats.unary_const, "constant_handle");
-        let template = rec_vconst_optimized.opcodes(&PXOR).infer_rex();
+        let template = rec_vconst_optimized.nonrex().opcodes(&PXOR);
         e.enc_32_64_func(instruction.clone(), template, |builder| {
             builder.inst_predicate(is_zero_128bit)
         });
 
         let is_ones_128bit =
             InstructionPredicate::new_is_all_ones(&*formats.unary_const, "constant_handle");
-        let template = rec_vconst_optimized.opcodes(&PCMPEQB).infer_rex();
+        let template = rec_vconst_optimized.nonrex().opcodes(&PCMPEQB);
         e.enc_32_64_func(instruction, template, |builder| {
             builder.inst_predicate(is_ones_128bit)
         });
@@ -1817,7 +1816,7 @@ fn define_simd(
     // in memory) but some performance measurements are needed.
     for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
         let instruction = vconst.bind(vector(ty, sse_vector_size));
-        let template = rec_vconst.opcodes(&MOVUPS_LOAD).infer_rex();
+        let template = rec_vconst.nonrex().opcodes(&MOVUPS_LOAD);
         e.enc_32_64_maybe_isap(instruction, template, None); // from SSE
     }
 
@@ -1827,19 +1826,13 @@ fn define_simd(
     for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
         // Store
         let bound_store = store.bind(vector(ty, sse_vector_size)).bind(Any);
-        e.enc_32_64(
-            bound_store.clone(),
-            rec_fst.opcodes(&MOVUPS_STORE).infer_rex(),
-        );
+        e.enc_32_64(bound_store.clone(), rec_fst.opcodes(&MOVUPS_STORE));
         e.enc_32_64(bound_store.clone(), rec_fstDisp8.opcodes(&MOVUPS_STORE));
         e.enc_32_64(bound_store, rec_fstDisp32.opcodes(&MOVUPS_STORE));
 
         // Load
         let bound_load = load.bind(vector(ty, sse_vector_size)).bind(Any);
-        e.enc_32_64(
-            bound_load.clone(),
-            rec_fld.opcodes(&MOVUPS_LOAD).infer_rex(),
-        );
+        e.enc_32_64(bound_load.clone(), rec_fld.opcodes(&MOVUPS_LOAD));
         e.enc_32_64(bound_load.clone(), rec_fldDisp8.opcodes(&MOVUPS_LOAD));
         e.enc_32_64(bound_load, rec_fldDisp32.opcodes(&MOVUPS_LOAD));
 
@@ -1925,12 +1918,6 @@ fn define_simd(
     ] {
         let imul = imul.bind(vector(*ty, sse_vector_size));
         e.enc_32_64_maybe_isap(imul, rec_fa.opcodes(opcodes), *isap);
-    }
-
-    // SIMD integer average with rounding.
-    for (ty, opcodes) in &[(I8, &PAVGB[..]), (I16, &PAVGW[..])] {
-        let avgr = avg_round.bind(vector(*ty, sse_vector_size));
-        e.enc_32_64(avgr, rec_fa.opcodes(opcodes));
     }
 
     // SIMD logical operations
@@ -2406,15 +2393,6 @@ pub(crate) fn define(
     define_entity_ref(&mut e, shared_defs, settings, r);
     define_control_flow(&mut e, shared_defs, settings, r);
     define_reftypes(&mut e, shared_defs, r);
-
-    let x86_elf_tls_get_addr = x86.by_name("x86_elf_tls_get_addr");
-    let x86_macho_tls_get_addr = x86.by_name("x86_macho_tls_get_addr");
-
-    let rec_elf_tls_get_addr = r.recipe("elf_tls_get_addr");
-    let rec_macho_tls_get_addr = r.recipe("macho_tls_get_addr");
-
-    e.enc64_rec(x86_elf_tls_get_addr, rec_elf_tls_get_addr, 0);
-    e.enc64_rec(x86_macho_tls_get_addr, rec_macho_tls_get_addr, 0);
 
     e
 }
