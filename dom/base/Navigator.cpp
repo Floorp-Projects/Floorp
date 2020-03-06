@@ -1528,7 +1528,7 @@ void Navigator::FinishGetVRDisplays(bool isWebVRSupportedInwindow, Promise* p) {
     // The Window has been torn down, so there is no further work that can
     // be done.
     p->MaybeRejectWithTypeError(
-        u"Unable to return VRDisplays for a closed window.");
+        "Unable to return VRDisplays for a closed window.");
     return;
   }
 
@@ -1544,7 +1544,7 @@ void Navigator::OnXRPermissionRequestAllow() {
   if (!VRDisplay::RefreshVRDisplays(win->WindowID())) {
     for (auto& p : mVRGetDisplaysPromises) {
       // Failed to refresh, reject the promise now
-      p->MaybeRejectWithTypeError(u"Failed to find attached VR displays.");
+      p->MaybeRejectWithTypeError("Failed to find attached VR displays.");
     }
   }
 }

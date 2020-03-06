@@ -12910,7 +12910,7 @@ class PendingFullscreenChangeList {
             // Always automatically drop fullscreen changes which are
             // from a document detached from the doc shell.
             UniquePtr<T> change = TakeAndNextInternal();
-            change->MayRejectPromise(u"Document is not active");
+            change->MayRejectPromise("Document is not active");
             continue;
           }
           while (docShell && docShell != mRootShellForIteration) {
@@ -13155,11 +13155,11 @@ void Document::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit) {
                "Should have at least 1 fullscreen root when fullscreen!");
 
   if (!GetWindow()) {
-    aExit->MayRejectPromise(u"No active window");
+    aExit->MayRejectPromise("No active window");
     return;
   }
   if (!FullscreenStackTop() || FullscreenRoots::IsEmpty()) {
-    aExit->MayRejectPromise(u"Not in fullscreen mode");
+    aExit->MayRejectPromise("Not in fullscreen mode");
     return;
   }
 
@@ -13531,7 +13531,7 @@ bool Document::FullscreenElementReadyCheck(FullscreenRequest& aRequest) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     NS_WARNING("Failed to retrieve focus manager in fullscreen request.");
-    aRequest.MayRejectPromise(u"An unexpected error occurred");
+    aRequest.MayRejectPromise("An unexpected error occurred");
     return false;
   }
   if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(
@@ -13587,7 +13587,7 @@ void Document::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
                                  bool applyFullScreenDirectly) {
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
   if (!rootWin) {
-    aRequest->MayRejectPromise(u"No active window");
+    aRequest->MayRejectPromise("No active window");
     return;
   }
 
@@ -13645,7 +13645,7 @@ static void ClearPendingFullscreenRequests(Document* aDoc) {
       aDoc, PendingFullscreenChangeList::eInclusiveDescendants);
   while (!iter.AtEnd()) {
     UniquePtr<FullscreenRequest> request = iter.TakeAndNext();
-    request->MayRejectPromise(u"Fullscreen request aborted");
+    request->MayRejectPromise("Fullscreen request aborted");
   }
 }
 

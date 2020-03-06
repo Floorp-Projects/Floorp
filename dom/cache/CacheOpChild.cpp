@@ -138,7 +138,7 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
       MOZ_DIAGNOSTIC_ASSERT(actor);
       if (!actor) {
         mPromise->MaybeRejectWithTypeError(
-            u"CacheStorage.open() failed to access the storage system.");
+            "CacheStorage.open() failed to access the storage system.");
         break;
       }
 
