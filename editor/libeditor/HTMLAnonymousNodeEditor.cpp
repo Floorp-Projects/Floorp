@@ -78,7 +78,7 @@ class ElementDeletionObserver final : public nsStubMutationObserver {
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
  protected:
-  ~ElementDeletionObserver() {}
+  ~ElementDeletionObserver() = default;
   nsIContent* mNativeAnonNode;
   Element* mObservedElement;
 };

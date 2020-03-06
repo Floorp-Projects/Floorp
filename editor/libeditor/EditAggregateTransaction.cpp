@@ -13,10 +13,6 @@
 
 namespace mozilla {
 
-EditAggregateTransaction::EditAggregateTransaction() {}
-
-EditAggregateTransaction::~EditAggregateTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(EditAggregateTransaction,
                                    EditTransactionBase, mChildren)
 

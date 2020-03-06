@@ -68,8 +68,6 @@ CompositionTransaction::CompositionTransaction(
   MOZ_ASSERT(mTextNode->TextLength() >= mOffset);
 }
 
-CompositionTransaction::~CompositionTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CompositionTransaction, EditTransactionBase,
                                    mEditorBase, mTextNode)
 // mRangeList can't lead to cycles

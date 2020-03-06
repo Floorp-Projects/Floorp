@@ -36,8 +36,6 @@ InsertTextTransaction::InsertTextTransaction(
       mStringToInsert(aStringToInsert),
       mEditorBase(&aEditorBase) {}
 
-InsertTextTransaction::~InsertTextTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTransaction, EditTransactionBase,
                                    mEditorBase, mTextNode)
 

@@ -51,7 +51,7 @@ class DeleteNodeTransaction final : public EditTransactionBase {
   NS_IMETHOD RedoTransaction() override;
 
  protected:
-  virtual ~DeleteNodeTransaction();
+  virtual ~DeleteNodeTransaction() = default;
 
   // The editor for this transaction.
   RefPtr<EditorBase> mEditorBase;

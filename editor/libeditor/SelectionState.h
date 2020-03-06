@@ -30,7 +30,7 @@ struct RangeItem final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~RangeItem();
+  ~RangeItem() = default;
 
  public:
   void StoreRange(nsRange* aRange);

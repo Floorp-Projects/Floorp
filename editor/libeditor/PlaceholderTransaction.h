@@ -79,7 +79,7 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
   nsresult RememberEndingSelection();
 
  protected:
-  virtual ~PlaceholderTransaction();
+  virtual ~PlaceholderTransaction() = default;
 
   // The editor for this transaction.
   RefPtr<EditorBase> mEditorBase;

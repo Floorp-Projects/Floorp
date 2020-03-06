@@ -24,7 +24,7 @@ namespace mozilla {
  */
 class EditAggregateTransaction : public EditTransactionBase {
  protected:
-  EditAggregateTransaction();
+  EditAggregateTransaction() = default;
 
  public:
   /**
@@ -56,7 +56,7 @@ class EditAggregateTransaction : public EditTransactionBase {
   NS_IMETHOD GetName(nsAtom** aName);
 
  protected:
-  virtual ~EditAggregateTransaction();
+  virtual ~EditAggregateTransaction() = default;
 
   nsTArray<RefPtr<EditTransactionBase>> mChildren;
   RefPtr<nsAtom> mName;
