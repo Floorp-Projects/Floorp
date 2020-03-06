@@ -136,23 +136,23 @@ addTest(function InsertRover() {
   }
 });
 
-// Create a XUL document with a script element, and check its introduction type.
+// Creates a chrome document with a XUL script element, and check its introduction type.
 addTest(function XULDocumentScript() {
-  const xulFrame = document.createElement("iframe");
-  xulFrame.src = "doc_Debugger.Source.prototype.introductionType.xhtml";
-  xulFrame.onload = xulLoaded;
-  info("Appending iframe containing XUL document");
-  document.body.appendChild(xulFrame);
+  const frame = document.createElement("iframe");
+  frame.src = "doc_Debugger.Source.prototype.introductionType.xhtml";
+  frame.onload = docLoaded;
+  info("Appending iframe containing a document with a XUL script tag");
+  document.body.appendChild(frame);
 
-  function xulLoaded() {
-    info("Loaded XUL document");
-    const xulFrameDO = dbg.addDebuggee(xulFrame.contentWindow);
+  function docLoaded() {
+    info("Loaded chrome document");
+    const xulFrameDO = dbg.addDebuggee(frame.contentWindow);
     const xulFnDO = xulFrameDO.getOwnPropertyDescriptor("xulScriptFunc").value;
     is(typeof xulFnDO, "object", "XUL script element defined 'xulScriptFunc'");
     is(xulFnDO.class, "Function",
        "XUL global 'xulScriptFunc' is indeed a function");
 
-    // A XUL document's script elements' code gets shared amongst all
+    // A XUL script elements' code gets shared amongst all
     // instantiations of the document, so there's no specific DOM element
     // we can attribute the code to.
     is(xulFnDO.script.source.element, undefined,

@@ -8677,13 +8677,7 @@ RegisterWeakAsyncMemoryReporter
 ?NewContentViewerObj@nsDocShell@@AEAA?AW4nsresult@@AEBV?$nsTSubstring@D@@PEAVnsIRequest@@PEAVnsILoadGroup@@PEAPEAVnsIStreamListener@@PEAPEAVnsIContentViewer@@@Z
 ?CreateInstance@nsContentDLF@@UEAA?AW4nsresult@@PEBDPEAVnsIChannel@@PEAVnsILoadGroup@@AEBV?$nsTSubstring@D@@PEAVnsIDocShell@@PEAVnsISupports@@PEAPEAVnsIStreamListener@@PEAPEAVnsIContentViewer@@@Z
 ?IsPlainTextType@nsContentUtils@@SA_NAEBV?$nsTSubstring@D@@@Z
-?CreateXULDocument@nsContentDLF@@QEAA?AW4nsresult@@PEBDPEAVnsIChannel@@PEAVnsILoadGroup@@PEAVnsIDocShell@@PEAVnsISupports@@PEAPEAVnsIStreamListener@@PEAPEAVnsIContentViewer@@@Z
-?NS_NewXULDocument@@YA?AW4nsresult@@PEAPEAVDocument@dom@mozilla@@@Z
 ??0XMLDocument@dom@mozilla@@QEAA@PEBD@Z
-?AddRef@XULDocument@dom@mozilla@@UEAAKXZ
-?Release@XULDocument@dom@mozilla@@UEAAKXZ
-?QueryInterface@XULDocument@dom@mozilla@@UEAA?AW4nsresult@@AEBUnsID@@PEAPEAX@Z
-?StartDocumentLoad@XULDocument@dom@mozilla@@UEAA?AW4nsresult@@PEBDPEAVnsIChannel@@PEAVnsILoadGroup@@PEAVnsISupports@@PEAPEAVnsIStreamListener@@_NPEAVnsIContentSink@@@Z
 ?GetParent@nsDocShell@@UEAA?AW4nsresult@@PEAPEAVnsIDocShellTreeItem@@@Z
 ?GetContentDispositionHeader@nsJARChannel@@UEAA?AW4nsresult@@AEAV?$nsTSubstring@D@@@Z
 ??0PrototypeDocumentParser@parser@mozilla@@QEAA@PEAVnsIURI@@PEAVDocument@dom@2@@Z
@@ -8852,12 +8846,6 @@ RegisterWeakAsyncMemoryReporter
 ?IsForceReloading@nsDocShell@@QEAA_NXZ
 ?Release@PerformanceMainThread@dom@mozilla@@UEAAKXZ
 ?ClearDocumentDependentSlots@nsGlobalWindowInner@@IEAAXPEAUJSContext@@@Z
-?WrapNode@XULDocument@dom@mozilla@@MEAAPEAVJSObject@@PEAUJSContext@@V?$Handle@PEAVJSObject@@@JS@@@Z
-?Wrap@XULDocument_Binding@dom@mozilla@@YA_NPEAUJSContext@@PEAVXULDocument@23@PEAVnsWrapperCache@@V?$Handle@PEAVJSObject@@@JS@@V?$MutableHandle@PEAVJSObject@@@8@@Z
-?CreateInterfaceObjects@XULDocument_Binding@dom@mozilla@@YAXPEAUJSContext@@V?$Handle@PEAVJSObject@@@JS@@AEAVProtoAndIfaceCache@23@_N@Z
-?Get@?$FindAssociatedGlobalForNative@VXULDocument@dom@mozilla@@$00@dom@mozilla@@SAPEAVJSObject@@PEAUJSContext@@V?$Handle@PEAVJSObject@@@JS@@@Z
-?CreateObject@?$BindingJSObjectCreator@VXULDocument@dom@mozilla@@@dom@mozilla@@QEAAXPEAUJSContext@@PEBUJSClass@@V?$Handle@PEAVJSObject@@@JS@@PEAVXULDocument@23@V?$MutableHandle@PEAVJSObject@@@7@@Z
-??1?$BindingJSObjectCreator@VXULDocument@dom@mozilla@@@dom@mozilla@@QEAA@XZ
 ?TakeReservedClientSource@LoadInfo@net@mozilla@@UEAA?AV?$UniquePtr@VClientSource@dom@mozilla@@V?$DefaultDelete@VClientSource@dom@mozilla@@@3@@3@XZ
 ?GetController@LoadInfo@net@mozilla@@UEAAAEBV?$Maybe@VServiceWorkerDescriptor@dom@mozilla@@@3@XZ
 ?SetForceCharset@nsDocumentViewer@@UEAAXPEBVEncoding@mozilla@@@Z
@@ -12336,7 +12324,6 @@ snprintf
 ?AsyncWait@NonBlockingAsyncInputStream@mozilla@@UEAA?AW4nsresult@@PEAVnsIInputStreamCallback@@IIPEAVnsIEventTarget@@@Z
 ??0AsyncWaitRunnable@NonBlockingAsyncInputStream@mozilla@@QEAA@PEAV12@PEAVnsIInputStreamCallback@@@Z
 ?ListenerBlockingPromise@nsBaseChannel@@EEAA?AW4nsresult@@PEAPEAV?$MozPromise@W4nsresult@@W41@$00@mozilla@@@Z
-?EndLoad@XULDocument@dom@mozilla@@UEAAXXZ
 ?QueryInterface@PrototypeDocumentContentSink@dom@mozilla@@UEAA?AW4nsresult@@AEBUnsID@@PEAPEAX@Z
 ?Release@PrototypeDocumentParser@parser@mozilla@@UEAAKXZ
 ?EndLoad@nsStubDocumentObserver@@UEAAXPEAVDocument@dom@mozilla@@@Z
