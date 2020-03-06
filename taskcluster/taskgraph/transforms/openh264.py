@@ -15,14 +15,7 @@ transforms = TransformSequence()
 @transforms.add
 def set_mh_options(config, jobs):
     """
-    This transform enables coalescing for tasks with scm level > 1, setting the
-    name to be equal to the the first 20 chars of the sha256 of the task name
-    (label). The hashing is simply used to keep the name short, unique, and
-    alphanumeric, since it is used in AMQP routing keys.
-
-    Note, the coalescing keys themselves are not intended to be readable
-    strings or embed information. The tasks they represent contain all relevant
-    metadata.
+    This transform sets the 'openh264_rev' attribute.
     """
     for job in jobs:
         repo = job.pop('repo')
