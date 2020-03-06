@@ -6492,13 +6492,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 """
                 if (${nullCondition}) {
                   $${declName}.SetNull();
-                } else if (!ValueToPrimitive<${typeName}, ${conversionBehavior}>(cx, $${val}, &${writeLoc})) {
+                } else if (!ValueToPrimitive<${typeName}, ${conversionBehavior}>(cx, $${val}, "${sourceDescription}", &${writeLoc})) {
                   $*{exceptionCode}
                 }
                 """,
                 nullCondition=nullCondition,
                 typeName=typeName,
                 conversionBehavior=conversionBehavior,
+                sourceDescription=firstCap(sourceDescription),
                 writeLoc=writeLoc,
                 exceptionCode=exceptionCode)
     else:
@@ -6507,12 +6508,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         writeLoc = "${declName}"
         readLoc = writeLoc
         template = fill("""
-            if (!ValueToPrimitive<${typeName}, ${conversionBehavior}>(cx, $${val}, &${writeLoc})) {
+            if (!ValueToPrimitive<${typeName}, ${conversionBehavior}>(cx, $${val}, "${sourceDescription}", &${writeLoc})) {
               $*{exceptionCode}
             }
             """,
             typeName=typeName,
             conversionBehavior=conversionBehavior,
+            sourceDescription=firstCap(sourceDescription),
             writeLoc=writeLoc,
             exceptionCode=exceptionCode)
         declType = CGGeneric(typeName)
