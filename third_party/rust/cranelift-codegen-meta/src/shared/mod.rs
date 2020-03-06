@@ -1,6 +1,6 @@
 //! Shared definitions for the Cranelift intermediate language.
 
-pub mod entities;
+mod entities;
 pub mod formats;
 pub mod immediates;
 pub mod instructions;
@@ -28,7 +28,6 @@ pub(crate) struct Definitions {
     pub imm: Immediates,
     pub formats: Formats,
     pub transform_groups: TransformGroups,
-    pub entities: EntityRefs,
 }
 
 pub(crate) fn define() -> Definitions {
@@ -48,7 +47,6 @@ pub(crate) fn define() -> Definitions {
         imm: immediates,
         formats,
         transform_groups,
-        entities,
     }
 }
 
