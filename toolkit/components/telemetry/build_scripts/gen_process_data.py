@@ -42,7 +42,7 @@ def write_processes_data(processes, output):
     processes = collections.OrderedDict(processes)
 
     p("static GeckoProcessType ProcessIDToGeckoProcessType[%d] = {" % len(processes))
-    for i, (name, value) in enumerate(processes.iteritems()):
+    for i, (name, value) in enumerate(sorted(processes.items())):
         p("  /* %d: ProcessID::%s = */ %s," % (i, to_enum_label(name), value['gecko_enum']))
     p("};")
     p("")
@@ -51,7 +51,7 @@ def write_processes_data(processes, output):
     p("#else")
     p("static constexpr const char* ProcessIDToString[%d] = {" % len(processes))
     p("#endif")
-    for i, (name, value) in enumerate(processes.iteritems()):
+    for i, (name, value) in enumerate(sorted(processes.items())):
         p("  /* %d: ProcessID::%s = */ \"%s\"," % (i, to_enum_label(name), name))
     p("};")
 
