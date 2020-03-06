@@ -5,3 +5,7 @@
 .wy-nav-content {
 max-width: 80% !important;
 }
+table.docutils {
+    width: 90%;
+}
+
