@@ -5,10 +5,10 @@ async function createTabAndLoad(url) {
   return tab;
 }
 
-function checkOrWaitUntilMediaStartedPlaying(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+function checkOrWaitUntilMediaStartedPlaying(tab, elementId) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
     return new Promise(resolve => {
-      const video = content.document.getElementById("autoplay");
+      const video = content.document.getElementById(Id);
       if (!video) {
         ok(false, `can't get the media element!`);
       }
@@ -27,10 +27,10 @@ function checkOrWaitUntilMediaStartedPlaying(tab) {
   });
 }
 
-function checkOrWaitUntilMediaStoppedPlaying(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+function checkOrWaitUntilMediaStoppedPlaying(tab, elementId) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
     return new Promise(resolve => {
-      const video = content.document.getElementById("autoplay");
+      const video = content.document.getElementById(Id);
       if (!video) {
         ok(false, `can't get the media element!`);
       }
