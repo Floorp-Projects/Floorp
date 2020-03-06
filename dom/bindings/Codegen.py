@@ -9050,7 +9050,18 @@ def MakeNativeName(name):
 def GetWebExposedName(idlObject, descriptor):
     if idlObject == descriptor.operations['Stringifier']:
         return "toString"
-    return idlObject.identifier.name
+    name = idlObject.identifier.name
+    if name == '__namedsetter':
+        return "named setter"
+    if name == '__namedgetter':
+        return "named getter"
+    if name == '__indexedsetter':
+        return "indexed setter"
+    if name == '__indexedgetter':
+        return "indexed getter"
+    if name == '__legacycaller':
+        return "legacy caller"
+    return name
 
 
 def GetConstructorNameForReporting(descriptor, ctor):
@@ -9077,8 +9088,12 @@ def GetLabelForErrorReporting(descriptor, idlObject, isConstructor):
         return "%s constructor" % GetConstructorNameForReporting(descriptor, idlObject)
 
     namePrefix = descriptor.interface.identifier.name
+    name = GetWebExposedName(idlObject, descriptor)
+    if " " in name:
+        # It's got a space already, so just space-separate.
+        return "%s %s" % (namePrefix, name)
 
-    return "%s.%s" % (namePrefix, GetWebExposedName(idlObject, descriptor))
+    return "%s.%s" % (namePrefix, name)
 
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
@@ -9284,10 +9299,9 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
 
     def error_reporting_label(self):
         # Should act like methods.
-        if not CGSpecializedMethod.should_have_method_description(
-                self.descriptor, self._legacycaller):
-            return None
-        return "%s legacy caller" % self.descriptor.interface.identifier.name
+        return CGSpecializedMethod.error_reporting_label_helper(self.descriptor,
+                                                                self._legacycaller,
+                                                                isConstructor=False)
 
 class CGResolveHook(CGAbstractClassHook):
     """
@@ -12425,12 +12439,6 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             namedGet=namedGet)
 
 
-def proxySetterType(setter):
-    args = setter.signatures()[0][1]
-    # First arg is the index or name; second one is what we care about
-    return args[1].type
-
-
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
         # The usual convention is to name the ObjectOpResult out-parameter
@@ -12449,12 +12457,14 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
         indexedSetter = self.descriptor.operations['IndexedSetter']
         if indexedSetter:
-            if idlTypeNeedsCallContext(proxySetterType(indexedSetter), self.descriptor):
+            error_label = CGSpecializedMethod.error_reporting_label_helper(
+                self.descriptor, indexedSetter, isConstructor=False)
+            if error_label:
                 cxDecl = fill(
                     """
-                    BindingCallContext cx(cx_, "${interface} indexed setter");
+                    BindingCallContext cx(cx_, "${error_label}");
                     """,
-                    interface=self.descriptor.interface.identifier.name)
+                    error_label=error_label)
             else:
                 cxDecl = dedent(
                     """
@@ -12494,12 +12504,14 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
         namedSetter = self.descriptor.operations['NamedSetter']
         if namedSetter:
-            if idlTypeNeedsCallContext(proxySetterType(namedSetter), self.descriptor):
+            error_label = CGSpecializedMethod.error_reporting_label_helper(
+                self.descriptor, namedSetter, isConstructor=False)
+            if error_label:
                 set += fill(
                     """
-                    BindingCallContext cx(cx_, "${interface} named setter");
+                    BindingCallContext cx(cx_, "${error_label}");
                     """,
-                    interface=self.descriptor.interface.identifier.name)
+                    error_label=error_label)
             else:
                 set += dedent(
                     """
@@ -13181,12 +13193,14 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
                 return true;
                 """)
             callSetter = CGProxyNamedSetter(self.descriptor, tailCode, argumentHandleValue="v")
-            if idlTypeNeedsCallContext(proxySetterType(namedSetter), self.descriptor):
+            error_label = CGSpecializedMethod.error_reporting_label_helper(
+                self.descriptor, namedSetter, isConstructor=False)
+            if error_label:
                 cxDecl = fill(
                     """
-                    BindingCallContext cx(cx_, "${interface} named setter");
+                    BindingCallContext cx(cx_, "${error_label}");
                     """,
-                    interface=self.descriptor.interface.identifier.name)
+                    error_label=error_label)
             else:
                 cxDecl = dedent(
                     """
@@ -13208,12 +13222,14 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
         # ahead and call it and have done.
         indexedSetter = self.descriptor.operations['IndexedSetter']
         if indexedSetter is not None:
-            if idlTypeNeedsCallContext(proxySetterType(indexedSetter), self.descriptor):
+            error_label = CGSpecializedMethod.error_reporting_label_helper(
+                self.descriptor, indexedSetter, isConstructor=False)
+            if error_label:
                 cxDecl = fill(
                     """
-                    BindingCallContext cx(cx_, "${interface} indexed setter");
+                    BindingCallContext cx(cx_, "${error_label}");
                     """,
-                    interface=self.descriptor.interface.identifier.name)
+                    error_label=error_label)
             else:
                 cxDecl = dedent(
                     """
