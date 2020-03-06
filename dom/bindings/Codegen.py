@@ -17023,9 +17023,9 @@ class CGCallback(CGClass):
     def getMethodImpls(self, method):
         assert method.needThisHandling
         args = list(method.args)
-        # Strip out the JSContext*/JSObject* args
+        # Strip out the BindingCallContext&/JSObject* args
         # that got added.
-        assert args[0].name == "cx" and args[0].argType == "JSContext*"
+        assert args[0].name == "cx" and args[0].argType == "BindingCallContext&"
         assert args[1].name == "aThisVal" and args[1].argType == "JS::Handle<JS::Value>"
         args = args[2:]
 
@@ -17038,8 +17038,8 @@ class CGCallback(CGClass):
         # Record the names of all the arguments, so we can use them when we call
         # the private method.
         argnames = [arg.name for arg in args]
-        argnamesWithThis = ["s.GetContext()", "thisValJS"] + argnames
-        argnamesWithoutThis = ["s.GetContext()", "JS::UndefinedHandleValue"] + argnames
+        argnamesWithThis = ["s.GetCallContext()", "thisValJS"] + argnames
+        argnamesWithoutThis = ["s.GetCallContext()", "JS::UndefinedHandleValue"] + argnames
         # Now that we've recorded the argnames for our call to our private
         # method, insert our optional argument for the execution reason.
         args.append(Argument("const char*", "aExecutionReason",
@@ -17357,7 +17357,8 @@ class CallbackMember(CGNativeMember):
                 """
                 JS::RootedVector<JS::Value> argv(cx);
                 if (!argv.resize(${argCount})) {
-                  aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+                  // That threw an exception on the JSContext, and our CallSetup will do
+                  // the right thing with that.
                   return${errorReturn};
                 }
                 """,
@@ -17509,8 +17510,8 @@ class CallbackMember(CGNativeMember):
             args.append(Argument("JS::Realm*", "aRealm", "nullptr"))
             return args
         # We want to allow the caller to pass in a "this" value, as
-        # well as a JSContext.
-        return [Argument("JSContext*", "cx"),
+        # well as a BindingCallContext.
+        return [Argument("BindingCallContext&", "cx"),
                 Argument("JS::Handle<JS::Value>", "aThisVal")] + args
 
     def getCallSetup(self):
@@ -17529,11 +17530,12 @@ class CallbackMember(CGNativeMember):
         return fill(
             """
             $*{callSetup}
-            JSContext* cx = s.GetContext();
-            if (!cx) {
-              MOZ_ASSERT(aRv.Failed());
+            if (aRv.Failed()) {
               return${errorReturn};
             }
+            MOZ_ASSERT(s.GetContext());
+            BindingCallContext& cx = s.GetCallContext();
+
             """,
             callSetup=callSetup,
             errorReturn=self.getDefaultRetval())
