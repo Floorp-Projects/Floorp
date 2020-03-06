@@ -2524,7 +2524,7 @@ void ServiceWorkerManager::UpdateInternal(
   if (NS_WARN_IF(!registration)) {
     ErrorResult error;
     error.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(
-        NS_ConvertUTF8toUTF16(aScope), u"uninstalled");
+        NS_ConvertUTF8toUTF16(aScope), "uninstalled");
     aCallback->UpdateFailed(error);
 
     // In case the callback does not consume the exception

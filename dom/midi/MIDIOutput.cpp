@@ -73,7 +73,7 @@ void MIDIOutput::Send(const Sequence<uint8_t>& aData,
   // Our translation of the spec is that invalid messages in a multi-message
   // sequence will be thrown out, but that valid messages will still be used.
   if (msgArray.IsEmpty()) {
-    aRv.ThrowTypeError(u"Empty message array");
+    aRv.ThrowTypeError("Empty message array");
     return;
   }
 

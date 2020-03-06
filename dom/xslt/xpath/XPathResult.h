@@ -83,7 +83,7 @@ class XPathResult final : public nsIXPathResult,
   uint16_t ResultType() const { return mResultType; }
   double GetNumberValue(ErrorResult& aRv) const {
     if (mResultType != NUMBER_TYPE) {
-      aRv.ThrowTypeError(u"Result is not a number");
+      aRv.ThrowTypeError("Result is not a number");
       return 0;
     }
 
@@ -91,7 +91,7 @@ class XPathResult final : public nsIXPathResult,
   }
   void GetStringValue(nsAString& aStringValue, ErrorResult& aRv) const {
     if (mResultType != STRING_TYPE) {
-      aRv.ThrowTypeError(u"Result is not a string");
+      aRv.ThrowTypeError("Result is not a string");
       return;
     }
 
@@ -99,7 +99,7 @@ class XPathResult final : public nsIXPathResult,
   }
   bool GetBooleanValue(ErrorResult& aRv) const {
     if (mResultType != BOOLEAN_TYPE) {
-      aRv.ThrowTypeError(u"Result is not a boolean");
+      aRv.ThrowTypeError("Result is not a boolean");
       return false;
     }
 
@@ -107,7 +107,7 @@ class XPathResult final : public nsIXPathResult,
   }
   nsINode* GetSingleNodeValue(ErrorResult& aRv) const {
     if (!isNode()) {
-      aRv.ThrowTypeError(u"Result is not a node");
+      aRv.ThrowTypeError("Result is not a node");
       return nullptr;
     }
 
@@ -118,7 +118,7 @@ class XPathResult final : public nsIXPathResult,
   }
   uint32_t GetSnapshotLength(ErrorResult& aRv) const {
     if (!isSnapshot()) {
-      aRv.ThrowTypeError(u"Result is not a snapshot");
+      aRv.ThrowTypeError("Result is not a snapshot");
       return 0;
     }
 
@@ -127,7 +127,7 @@ class XPathResult final : public nsIXPathResult,
   nsINode* IterateNext(ErrorResult& aRv);
   nsINode* SnapshotItem(uint32_t aIndex, ErrorResult& aRv) const {
     if (!isSnapshot()) {
-      aRv.ThrowTypeError(u"Result is not a snapshot");
+      aRv.ThrowTypeError("Result is not a snapshot");
       return nullptr;
     }
 

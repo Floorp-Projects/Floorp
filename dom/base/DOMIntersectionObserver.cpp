@@ -100,7 +100,7 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
       if (!StaticPrefs::
               dom_IntersectionObserverExplicitDocumentRoot_enabled()) {
         aRv.ThrowTypeError<dom::MSG_DOES_NOT_IMPLEMENT_INTERFACE>(
-            u"'root' member of IntersectionObserverInit", u"Element");
+            "'root' member of IntersectionObserverInit", "Element");
         return nullptr;
       }
       observer->mRoot = aOptions.mRoot.Value().GetAsDocument();

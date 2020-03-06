@@ -1205,13 +1205,13 @@ already_AddRefed<Promise> ImageBitmap::Create(
   if (aCropRect.isSome()) {
     if (aCropRect->Width() == 0) {
       aRv.ThrowRangeError(
-          u"The crop rect width passed to createImageBitmap must be nonzero");
+          "The crop rect width passed to createImageBitmap must be nonzero");
       return promise.forget();
     }
 
     if (aCropRect->Height() == 0) {
       aRv.ThrowRangeError(
-          u"The crop rect height passed to createImageBitmap must be nonzero");
+          "The crop rect height passed to createImageBitmap must be nonzero");
       return promise.forget();
     }
   }

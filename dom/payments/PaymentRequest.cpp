@@ -156,7 +156,7 @@ void PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
 void PaymentRequest::IsValidPaymentMethodIdentifier(
     const nsAString& aIdentifier, ErrorResult& aRv) {
   if (aIdentifier.IsEmpty()) {
-    aRv.ThrowTypeError(u"Payment method identifier is required.");
+    aRv.ThrowTypeError("Payment method identifier is required.");
     return;
   }
   /*
@@ -301,7 +301,7 @@ void PaymentRequest::IsValidMethodData(
     JSContext* aCx, const Sequence<PaymentMethodData>& aMethodData,
     ErrorResult& aRv) {
   if (!aMethodData.Length()) {
-    aRv.ThrowTypeError(u"At least one payment method is required.");
+    aRv.ThrowTypeError("At least one payment method is required.");
     return;
   }
 

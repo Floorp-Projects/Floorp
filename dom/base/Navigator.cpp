@@ -1144,7 +1144,7 @@ bool Navigator::SendBeaconInternal(const nsAString& aUrl,
 
   // Spec disallows any schemes save for HTTP/HTTPs
   if (!uri->SchemeIs("http") && !uri->SchemeIs("https")) {
-    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>(u"Beacon", aUrl);
+    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Beacon", aUrl);
     return false;
   }
 
@@ -1367,7 +1367,7 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
                           aData.mUrl.WasPassed();
   if (!someMemberPassed) {
     aRv.ThrowTypeError(
-        u"Must have a title, text, or url in the ShareData dictionary");
+        "Must have a title, text, or url in the ShareData dictionary");
     return nullptr;
   }
 

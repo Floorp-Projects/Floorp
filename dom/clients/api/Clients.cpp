@@ -212,7 +212,7 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
   if (aURL.EqualsLiteral("about:blank")) {
     CopyableErrorResult rv;
     rv.ThrowTypeError(
-        u"Passing \"about:blank\" to Clients.openWindow is not allowed");
+        "Passing \"about:blank\" to Clients.openWindow is not allowed");
     outerPromise->MaybeReject(std::move(rv));
     return outerPromise.forget();
   }

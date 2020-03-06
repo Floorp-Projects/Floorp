@@ -1741,9 +1741,7 @@ void HTMLInputElement::SetValueAsDate(JSContext* aCx,
       return;
     }
     if (!isDate) {
-      aRv.ThrowTypeError(
-          u"Value being assigned to HTMLInputElement.valueAsDate is not a "
-          u"date.");
+      aRv.ThrowTypeError("Value being assigned is not a date.");
       return;
     }
   }
