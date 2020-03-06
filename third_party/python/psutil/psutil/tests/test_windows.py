@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
@@ -21,26 +21,26 @@ import warnings
 
 import psutil
 from psutil import WINDOWS
+from psutil._compat import FileNotFoundError
 from psutil.tests import APPVEYOR
 from psutil.tests import get_test_subprocess
 from psutil.tests import HAS_BATTERY
 from psutil.tests import mock
 from psutil.tests import PY3
+from psutil.tests import PYPY
 from psutil.tests import reap_children
 from psutil.tests import retry_on_failure
 from psutil.tests import sh
 from psutil.tests import unittest
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    try:
+
+if WINDOWS and not PYPY:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
         import win32api  # requires "pip install pypiwin32"
         import win32con
         import win32process
         import wmi  # requires "pip install wmi" / "make setup-dev-env"
-    except ImportError:
-        if os.name == 'nt':
-            raise
 
 
 cext = psutil._psplatform.cext
@@ -63,13 +63,18 @@ def wrap_exceptions(fun):
     return wrapper
 
 
+@unittest.skipIf(PYPY, "pywin32 not available on PYPY")  # skip whole module
+class TestCase(unittest.TestCase):
+    pass
+
+
 # ===================================================================
 # System APIs
 # ===================================================================
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestCpuAPIs(unittest.TestCase):
+class TestCpuAPIs(TestCase):
 
     @unittest.skipIf('NUMBER_OF_PROCESSORS' not in os.environ,
                      'NUMBER_OF_PROCESSORS env var is not available')
@@ -108,7 +113,7 @@ class TestCpuAPIs(unittest.TestCase):
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestSystemAPIs(unittest.TestCase):
+class TestSystemAPIs(TestCase):
 
     def test_nic_names(self):
         out = sh('ipconfig /all')
@@ -161,12 +166,9 @@ class TestSystemAPIs(unittest.TestCase):
                         break
                     try:
                         usage = psutil.disk_usage(ps_part.mountpoint)
-                    except OSError as err:
-                        if err.errno == errno.ENOENT:
-                            # usually this is the floppy
-                            break
-                        else:
-                            raise
+                    except FileNotFoundError:
+                        # usually this is the floppy
+                        break
                     self.assertEqual(usage.total, int(wmi_part.Size))
                     wmi_free = int(wmi_part.FreeSpace)
                     self.assertEqual(usage.free, wmi_free)
@@ -215,7 +217,7 @@ class TestSystemAPIs(unittest.TestCase):
             wmi_btime_str, "%Y%m%d%H%M%S")
         psutil_dt = datetime.datetime.fromtimestamp(psutil.boot_time())
         diff = abs((wmi_btime_dt - psutil_dt).total_seconds())
-        self.assertLessEqual(diff, 1)
+        self.assertLessEqual(diff, 3)
 
     def test_boot_time_fluctuation(self):
         # https://github.com/giampaolo/psutil/issues/1007
@@ -235,7 +237,7 @@ class TestSystemAPIs(unittest.TestCase):
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestSensorsBattery(unittest.TestCase):
+class TestSensorsBattery(TestCase):
 
     def test_has_battery(self):
         if win32api.GetPwrCapabilities()['SystemBatteriesPresent']:
@@ -296,7 +298,7 @@ class TestSensorsBattery(unittest.TestCase):
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestProcess(unittest.TestCase):
+class TestProcess(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -330,20 +332,6 @@ class TestProcess(unittest.TestCase):
     def test_send_signal(self):
         p = psutil.Process(self.pid)
         self.assertRaises(ValueError, p.send_signal, signal.SIGINT)
-
-    def test_exe_and_name(self):
-        for p in psutil.process_iter():
-            # On Windows name() is never supposed to raise AccessDenied,
-            # see https://github.com/giampaolo/psutil/issues/627
-            try:
-                name = p.name()
-            except psutil.NoSuchProcess:
-                pass
-            else:
-                try:
-                    self.assertEqual(os.path.basename(p.exe()), name)
-                except psutil.Error:
-                    continue
 
     def test_num_handles_increment(self):
         p = psutil.Process(os.getpid())
@@ -519,9 +507,26 @@ class TestProcess(unittest.TestCase):
         psutil_value = psutil.Process(self.pid).num_handles()
         self.assertEqual(psutil_value, sys_value)
 
+    def test_error_partial_copy(self):
+        # https://github.com/giampaolo/psutil/issues/875
+        exc = WindowsError()
+        exc.winerror = 299
+        with mock.patch("psutil._psplatform.cext.proc_cwd", side_effect=exc):
+            with mock.patch("time.sleep") as m:
+                p = psutil.Process()
+                self.assertRaises(psutil.AccessDenied, p.cwd)
+        self.assertGreaterEqual(m.call_count, 5)
+
+    def test_exe(self):
+        # NtQuerySystemInformation succeeds if process is gone. Make sure
+        # it raises NSP for a non existent pid.
+        pid = psutil.pids()[-1] + 99999
+        proc = psutil._psplatform.Process(pid)
+        self.assertRaises(psutil.NoSuchProcess, proc.exe)
+
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestProcessWMI(unittest.TestCase):
+class TestProcessWMI(TestCase):
     """Compare Process API results with WMI."""
 
     @classmethod
@@ -587,7 +592,7 @@ class TestProcessWMI(unittest.TestCase):
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestDualProcessImplementation(unittest.TestCase):
+class TestDualProcessImplementation(TestCase):
     """
     Certain APIs on Windows have 2 internal implementations, one
     based on documented Windows APIs, another one based
@@ -605,16 +610,6 @@ class TestDualProcessImplementation(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         reap_children()
-    # ---
-    # same tests as above but mimicks the AccessDenied failure of
-    # the first (fast) method failing with AD.
-
-    def test_name(self):
-        name = psutil.Process(self.pid).name()
-        with mock.patch("psutil._psplatform.cext.proc_exe",
-                        side_effect=psutil.AccessDenied(os.getpid())) as fun:
-            self.assertEqual(psutil.Process(self.pid).name(), name)
-            assert fun.called
 
     def test_memory_info(self):
         mem_1 = psutil.Process(self.pid).memory_info()
@@ -630,14 +625,14 @@ class TestDualProcessImplementation(unittest.TestCase):
 
     def test_create_time(self):
         ctime = psutil.Process(self.pid).create_time()
-        with mock.patch("psutil._psplatform.cext.proc_create_time",
+        with mock.patch("psutil._psplatform.cext.proc_times",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
             self.assertEqual(psutil.Process(self.pid).create_time(), ctime)
             assert fun.called
 
     def test_cpu_times(self):
         cpu_times_1 = psutil.Process(self.pid).cpu_times()
-        with mock.patch("psutil._psplatform.cext.proc_cpu_times",
+        with mock.patch("psutil._psplatform.cext.proc_times",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
             cpu_times_2 = psutil.Process(self.pid).cpu_times()
             assert fun.called
@@ -680,7 +675,7 @@ class TestDualProcessImplementation(unittest.TestCase):
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class RemoteProcessTestCase(unittest.TestCase):
+class RemoteProcessTestCase(TestCase):
     """Certain functions require calling ReadProcessMemory.
     This trivially works when called on the current process.
     Check that this works on other processes, especially when they
@@ -776,7 +771,7 @@ class RemoteProcessTestCase(unittest.TestCase):
 
 
 @unittest.skipIf(not WINDOWS, "WINDOWS only")
-class TestServices(unittest.TestCase):
+class TestServices(TestCase):
 
     def test_win_service_iter(self):
         valid_statuses = set([

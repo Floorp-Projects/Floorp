@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
@@ -19,7 +19,9 @@ import pickle
 import socket
 import stat
 
+from psutil import FREEBSD
 from psutil import LINUX
+from psutil import NETBSD
 from psutil import POSIX
 from psutil import WINDOWS
 from psutil._common import memoize
@@ -34,6 +36,7 @@ from psutil.tests import bind_socket
 from psutil.tests import bind_unix_socket
 from psutil.tests import call_until
 from psutil.tests import chdir
+from psutil.tests import CI_TESTING
 from psutil.tests import create_proc_children_pair
 from psutil.tests import create_sockets
 from psutil.tests import create_zombie_proc
@@ -179,7 +182,8 @@ class TestMisc(unittest.TestCase):
         for name in dir_psutil:
             if name in ('callable', 'error', 'namedtuple', 'tests',
                         'long', 'test', 'NUM_CPUS', 'BOOT_TIME',
-                        'TOTAL_PHYMEM'):
+                        'TOTAL_PHYMEM', 'PermissionError',
+                        'ProcessLookupError'):
                 continue
             if not name.startswith('_'):
                 try:
@@ -710,9 +714,7 @@ class TestScripts(unittest.TestCase):
     def test_procinfo(self):
         self.assert_stdout('procinfo.py', str(os.getpid()))
 
-    # can't find users on APPVEYOR or TRAVIS
-    @unittest.skipIf(APPVEYOR or TRAVIS and not psutil.users(),
-                     "unreliable on APPVEYOR or TRAVIS")
+    @unittest.skipIf(CI_TESTING and not psutil.users(), "no users")
     def test_who(self):
         self.assert_stdout('who.py')
 
@@ -765,11 +767,15 @@ class TestScripts(unittest.TestCase):
     @unittest.skipIf(not HAS_SENSORS_TEMPERATURES, "not supported")
     @unittest.skipIf(TRAVIS, "unreliable on TRAVIS")
     def test_temperatures(self):
+        if not psutil.sensors_temperatures():
+            self.skipTest("no temperatures")
         self.assert_stdout('temperatures.py')
 
     @unittest.skipIf(not HAS_SENSORS_FANS, "not supported")
     @unittest.skipIf(TRAVIS, "unreliable on TRAVIS")
     def test_fans(self):
+        if not psutil.sensors_fans():
+            self.skipTest("no fans")
         self.assert_stdout('fans.py')
 
     @unittest.skipIf(not HAS_SENSORS_BATTERY, "not supported")
@@ -1011,6 +1017,8 @@ class TestNetUtils(unittest.TestCase):
                 self.assertNotEqual(client.getsockname(), addr)
 
     @unittest.skipIf(not POSIX, "POSIX only")
+    @unittest.skipIf(NETBSD or FREEBSD,
+                     "/var/run/log UNIX socket opened by default")
     def test_unix_socketpair(self):
         p = psutil.Process()
         num_fds = p.num_fds()

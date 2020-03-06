@@ -1,6 +1,6 @@
 |  |downloads| |stars| |forks| |contributors| |coverage| |quality|
 |  |version| |py-versions| |packages| |license|
-|  |travis| |appveyor| |doc| |twitter| |tidelift|
+|  |travis| |appveyor| |cirrus| |doc| |twitter| |tidelift|
 
 .. |downloads| image:: https://img.shields.io/pypi/dm/psutil.svg
     :target: https://pepy.tech/project/psutil
@@ -22,13 +22,17 @@
     :target: https://www.codacy.com/app/g-rodola/psutil?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=giampaolo/psutil&amp;utm_campaign=Badge_Grade
     :alt: Code quality
 
-.. |travis| image:: https://img.shields.io/travis/giampaolo/psutil/master.svg?maxAge=3600&label=linux%20/%20osx
+.. |travis| image:: https://img.shields.io/travis/giampaolo/psutil/master.svg?maxAge=3600&label=Linux,%20OSX,%20PyPy
     :target: https://travis-ci.org/giampaolo/psutil
     :alt: Linux tests (Travis)
 
-.. |appveyor| image:: https://img.shields.io/appveyor/ci/giampaolo/psutil/master.svg?maxAge=3600&label=windows
+.. |appveyor| image:: https://img.shields.io/appveyor/ci/giampaolo/psutil/master.svg?maxAge=3600&label=Windows
     :target: https://ci.appveyor.com/project/giampaolo/psutil
     :alt: Windows tests (Appveyor)
+
+.. |cirrus| image:: https://img.shields.io/cirrus/github/giampaolo/psutil?label=FreeBSD
+    :target: https://cirrus-ci.com/github/giampaolo/psutil-cirrus-ci
+    :alt: FreeBSD tests (Cirrus-Ci)
 
 .. |coverage| image:: https://img.shields.io/coveralls/github/giampaolo/psutil.svg?label=test%20coverage
     :target: https://coveralls.io/github/giampaolo/psutil?branch=master
@@ -96,30 +100,36 @@ psutil currently supports the following platforms:
 - **Sun Solaris**
 - **AIX**
 
-...both **32-bit** and **64-bit** architectures. Supported Python versions are **2.6**, **2.7** and **3.4+**. `PyPy <http://pypy.org/>`__ is also known to work.
+...both **32-bit** and **64-bit** architectures. Supported Python versions are **2.6**, **2.7** and **3.4+**. `PyPy3 <http://pypy.org/>`__ is also known to work.
 
-Professional support
-====================
+psutil for enterprise
+=====================
 
 .. |tideliftlogo| image:: https://nedbatchelder.com/pix/Tidelift_Logos_RGB_Tidelift_Shorthand_On-White_small.png
-   :width: 100
+   :width: 150
    :alt: Tidelift
    :target: https://tidelift.com/subscription/pkg/pypi-psutil?utm_source=pypi-psutil&utm_medium=referral&utm_campaign=readme
 
 .. list-table::
-   :widths: 10 100
+   :widths: 10 150
 
    * - |tideliftlogo|
-     - Professional support for psutil is available as part of the
-       `Tidelift Subscription`_.
-       Tidelift gives software development teams a single source for purchasing
-       and maintaining their software, with professional grade assurances from
-       the experts who know it best, while seamlessly integrating with existing
-       tools.
-       By subscribing you will help me (`Giampaolo Rodola`_) support psutil
-       future development. Alternatively consider making a small `donation`_.
+     - The maintainer of psutil and thousands of other packages are working
+       with Tidelift to deliver commercial support and maintenance for the open
+       source dependencies you use to build your applications. Save time,
+       reduce risk, and improve code health, while paying the maintainers of
+       the exact dependencies you use.
+       `Learn more <https://tidelift.com/subscription/pkg/pypi-psutil?utm_source=pypi-psutil&utm_medium=referral&utm_campaign=enterprise&utm_term=repo>`__.
 
-.. _Tidelift Subscription: https://tidelift.com/subscription/pkg/pypi-psutil?utm_source=pypi-psutil&utm_medium=referral&utm_campaign=readme
+       By subscribing to Tidelift you will help me (`Giampaolo Rodola`_) support
+       psutil future development. Alternatively consider making a small
+       `donation`_.
+
+Security
+========
+
+To report a security vulnerability, please use the `Tidelift security
+contact`_.  Tidelift will coordinate the fix and disclosure.
 
 Example applications
 ====================
@@ -162,9 +172,7 @@ Portings
 
 - Go: https://github.com/shirou/gopsutil
 - C: https://github.com/hamon-in/cpslib
-- Node: https://github.com/christkv/node-psutil
 - Rust: https://github.com/borntyping/rust-psutil
-- Ruby: https://github.com/spacewander/posixpsutil
 - Nim: https://github.com/johnscillieri/psutil-nim
 
 
@@ -359,7 +367,7 @@ Process management
     pgids(real=1000, effective=1000, saved=1000)
     >>>
     >>> p.cpu_times()
-    pcputimes(user=1.02, system=0.31, children_user=0.32, children_system=0.1)
+    pcputimes(user=1.02, system=0.31, children_user=0.32, children_system=0.1, iowait=0.0)
     >>> p.cpu_percent(interval=1.0)
     12.1
     >>> p.cpu_affinity()
@@ -385,8 +393,8 @@ Process management
     pio(read_count=478001, write_count=59371, read_bytes=700416, write_bytes=69632, read_chars=456232, write_chars=517543)
     >>>
     >>> p.open_files()
-    [popenfile(path='/home/giampaolo/svn/psutil/setup.py', fd=3, position=0, mode='r', flags=32768),
-     popenfile(path='/var/log/monitd', fd=4, position=235542, mode='a', flags=33793)]
+    [popenfile(path='/home/giampaolo/monit.py', fd=3, position=0, mode='r', flags=32768),
+     popenfile(path='/var/log/monit.log', fd=4, position=235542, mode='a', flags=33793)]
     >>>
     >>> p.connections()
     [pconn(fd=115, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=addr(ip='10.0.0.1', port=48776), raddr=addr(ip='93.186.135.91', port=80), status='ESTABLISHED'),
@@ -428,6 +436,7 @@ Process management
     >>> p.resume()
     >>>
     >>> p.terminate()
+    >>> p.kill()
     >>> p.wait(timeout=3)
     0
     >>>
@@ -447,7 +456,7 @@ Further process APIs
 .. code-block:: python
 
     >>> import psutil
-    >>> for proc in psutil.process_iter(attrs=['pid', 'name']):
+    >>> for proc in psutil.process_iter(['pid', 'name']):
     ...     print(proc.info)
     ...
     {'pid': 1, 'name': 'systemd'}
@@ -507,3 +516,6 @@ Windows services
 
 .. _`Giampaolo Rodola`: http://grodola.blogspot.com/p/about.html
 .. _`donation`: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=A9ZS7PKKRM3S8
+.. _Tidelift security contact: https://tidelift.com/security
+.. _Tidelift Subscription: https://tidelift.com/subscription/pkg/pypi-psutil?utm_source=pypi-psutil&utm_medium=referral&utm_campaign=readme
+

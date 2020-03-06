@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -11,10 +11,11 @@ checking whether process memory usage keeps increasing between
 calls or over time.
 Note that this may produce false positives (especially on Windows
 for some reason).
+PyPy appears to be completely unstable for this framework, probably
+because of how its JIT handles memory, so tests are skipped.
 """
 
 from __future__ import print_function
-import errno
 import functools
 import gc
 import os
@@ -24,13 +25,17 @@ import time
 
 import psutil
 import psutil._common
+from psutil import FREEBSD
 from psutil import LINUX
+from psutil import MACOS
 from psutil import OPENBSD
-from psutil import OSX
 from psutil import POSIX
 from psutil import SUNOS
 from psutil import WINDOWS
+from psutil._common import bytes2human
+from psutil._compat import ProcessLookupError
 from psutil._compat import xrange
+from psutil.tests import CIRRUS
 from psutil.tests import create_sockets
 from psutil.tests import get_test_subprocess
 from psutil.tests import HAS_CPU_AFFINITY
@@ -38,14 +43,15 @@ from psutil.tests import HAS_CPU_FREQ
 from psutil.tests import HAS_ENVIRON
 from psutil.tests import HAS_IONICE
 from psutil.tests import HAS_MEMORY_MAPS
+from psutil.tests import HAS_NET_IO_COUNTERS
 from psutil.tests import HAS_PROC_CPU_NUM
 from psutil.tests import HAS_PROC_IO_COUNTERS
 from psutil.tests import HAS_RLIMIT
 from psutil.tests import HAS_SENSORS_BATTERY
 from psutil.tests import HAS_SENSORS_FANS
 from psutil.tests import HAS_SENSORS_TEMPERATURES
+from psutil.tests import PYPY
 from psutil.tests import reap_children
-from psutil.tests import run_test_module_by_name
 from psutil.tests import safe_rmpath
 from psutil.tests import skip_on_access_denied
 from psutil.tests import TESTFN
@@ -53,14 +59,14 @@ from psutil.tests import TRAVIS
 from psutil.tests import unittest
 
 
+# configurable opts
 LOOPS = 1000
 MEMORY_TOLERANCE = 4096
 RETRY_FOR = 3
+SKIP_PYTHON_IMPL = True
 
-SKIP_PYTHON_IMPL = True if TRAVIS else False
 cext = psutil._psplatform.cext
 thisproc = psutil.Process()
-SKIP_PYTHON_IMPL = True if TRAVIS else False
 
 
 # ===================================================================
@@ -73,25 +79,7 @@ def skip_if_linux():
                            "worthless on LINUX (pure python)")
 
 
-def bytes2human(n):
-    """
-    http://code.activestate.com/recipes/578019
-    >>> bytes2human(10000)
-    '9.8K'
-    >>> bytes2human(100001221)
-    '95.4M'
-    """
-    symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
-    prefix = {}
-    for i, s in enumerate(symbols):
-        prefix[s] = 1 << (i + 1) * 10
-    for s in reversed(symbols):
-        if n >= prefix[s]:
-            value = float(n) / prefix[s]
-            return '%.2f%s' % (value, s)
-    return "%sB" % n
-
-
+@unittest.skipIf(PYPY, "unreliable on PYPY")
 class TestMemLeak(unittest.TestCase):
     """Base framework class which calls a function many times and
     produces a failure if process memory usage keeps increasing
@@ -176,7 +164,7 @@ class TestMemLeak(unittest.TestCase):
     def _get_mem():
         # By using USS memory it seems it's less likely to bump
         # into false positives.
-        if LINUX or WINDOWS or OSX:
+        if LINUX or WINDOWS or MACOS:
             return thisproc.memory_full_info().uss
         else:
             return thisproc.memory_info().rss
@@ -200,8 +188,8 @@ class TestProcessObjectLeaks(TestMemLeak):
         skip = set((
             "pid", "as_dict", "children", "cpu_affinity", "cpu_percent",
             "ionice", "is_running", "kill", "memory_info_ex", "memory_percent",
-            "nice", "oneshot", "parent", "rlimit", "send_signal", "suspend",
-            "terminate", "wait"))
+            "nice", "oneshot", "parent", "parents", "rlimit", "send_signal",
+            "suspend", "terminate", "wait"))
         for name in dir(psutil.Process):
             if name.startswith('_'):
                 continue
@@ -344,8 +332,6 @@ class TestProcessObjectLeaks(TestMemLeak):
         with open(TESTFN, 'w'):
             self.execute(self.proc.open_files)
 
-    # OSX implementation is unbelievably slow
-    @unittest.skipIf(OSX, "too slow on OSX")
     @unittest.skipIf(not HAS_MEMORY_MAPS, "not supported")
     @skip_if_linux()
     def test_memory_maps(self):
@@ -382,6 +368,16 @@ class TestProcessObjectLeaks(TestMemLeak):
     @unittest.skipIf(not WINDOWS, "WINDOWS only")
     def test_proc_info(self):
         self.execute(cext.proc_info, os.getpid())
+
+
+@unittest.skipIf(not WINDOWS, "WINDOWS only")
+class TestProcessDualImplementation(TestMemLeak):
+
+    def test_cmdline_peb_true(self):
+        self.execute(cext.proc_cmdline, os.getpid(), use_peb=True)
+
+    def test_cmdline_peb_false(self):
+        self.execute(cext.proc_cmdline, os.getpid(), use_peb=False)
 
 
 class TestTerminatedProcessLeaks(TestProcessObjectLeaks):
@@ -432,9 +428,8 @@ class TestTerminatedProcessLeaks(TestProcessObjectLeaks):
             def call():
                 try:
                     return cext.proc_info(self.proc.pid)
-                except OSError as err:
-                    if err.errno != errno.ESRCH:
-                        raise
+                except ProcessLookupError:
+                    pass
 
             self.execute(call)
 
@@ -476,6 +471,7 @@ class TestModuleFunctionsLeaks(TestMemLeak):
     def test_per_cpu_times(self):
         self.execute(psutil.cpu_times, percpu=True)
 
+    @skip_if_linux()
     def test_cpu_stats(self):
         self.execute(psutil.cpu_stats)
 
@@ -484,14 +480,17 @@ class TestModuleFunctionsLeaks(TestMemLeak):
     def test_cpu_freq(self):
         self.execute(psutil.cpu_freq)
 
+    @unittest.skipIf(not WINDOWS, "WINDOWS only")
+    def test_getloadavg(self):
+        self.execute(psutil.getloadavg)
+
     # --- mem
 
     def test_virtual_memory(self):
         self.execute(psutil.virtual_memory)
 
     # TODO: remove this skip when this gets fixed
-    @unittest.skipIf(SUNOS,
-                     "worthless on SUNOS (uses a subprocess)")
+    @unittest.skipIf(SUNOS, "worthless on SUNOS (uses a subprocess)")
     def test_swap_memory(self):
         self.execute(psutil.swap_memory)
 
@@ -524,13 +523,15 @@ class TestModuleFunctionsLeaks(TestMemLeak):
 
     # --- net
 
+    @unittest.skipIf(TRAVIS and MACOS, "false positive on TRAVIS + MACOS")
+    @unittest.skipIf(CIRRUS and FREEBSD, "false positive on CIRRUS + FREEBSD")
     @skip_if_linux()
+    @unittest.skipIf(not HAS_NET_IO_COUNTERS, 'not supported')
     def test_net_io_counters(self):
         self.execute(psutil.net_io_counters, nowrap=False)
 
-    @unittest.skipIf(LINUX,
-                     "worthless on Linux (pure python)")
-    @unittest.skipIf(OSX and os.getuid() != 0, "need root access")
+    @skip_if_linux()
+    @unittest.skipIf(MACOS and os.getuid() != 0, "need root access")
     def test_net_connections(self):
         with create_sockets():
             self.execute(psutil.net_connections)
@@ -567,7 +568,6 @@ class TestModuleFunctionsLeaks(TestMemLeak):
     def test_boot_time(self):
         self.execute(psutil.boot_time)
 
-    # XXX - on Windows this produces a false positive
     @unittest.skipIf(WINDOWS, "XXX produces a false positive on Windows")
     def test_users(self):
         self.execute(psutil.users)
@@ -596,4 +596,5 @@ class TestModuleFunctionsLeaks(TestMemLeak):
 
 
 if __name__ == '__main__':
-    run_test_module_by_name(__file__)
+    from psutil.tests.runner import run
+    run(__file__)

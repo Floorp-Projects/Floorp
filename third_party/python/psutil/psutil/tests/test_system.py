@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -29,10 +29,11 @@ from psutil import OPENBSD
 from psutil import POSIX
 from psutil import SUNOS
 from psutil import WINDOWS
+from psutil._compat import FileNotFoundError
 from psutil._compat import long
-from psutil.tests import APPVEYOR
 from psutil.tests import ASCII_FS
 from psutil.tests import check_net_address
+from psutil.tests import CI_TESTING
 from psutil.tests import DEVNULL
 from psutil.tests import enum
 from psutil.tests import get_test_subprocess
@@ -44,6 +45,7 @@ from psutil.tests import HAS_SENSORS_BATTERY
 from psutil.tests import HAS_SENSORS_FANS
 from psutil.tests import HAS_SENSORS_TEMPERATURES
 from psutil.tests import mock
+from psutil.tests import PYPY
 from psutil.tests import reap_children
 from psutil.tests import retry_on_failure
 from psutil.tests import safe_rmpath
@@ -58,8 +60,7 @@ from psutil.tests import unittest
 # ===================================================================
 
 
-class TestSystemAPIs(unittest.TestCase):
-    """Tests for system-related APIs."""
+class TestProcessAPIs(unittest.TestCase):
 
     def setUp(self):
         safe_rmpath(TESTFN)
@@ -84,7 +85,7 @@ class TestSystemAPIs(unittest.TestCase):
             with self.assertRaises(psutil.AccessDenied):
                 list(psutil.process_iter())
 
-    def test_prcess_iter_w_params(self):
+    def test_prcess_iter_w_attrs(self):
         for p in psutil.process_iter(attrs=['pid']):
             self.assertEqual(list(p.info.keys()), ['pid'])
         with self.assertRaises(ValueError):
@@ -104,6 +105,8 @@ class TestSystemAPIs(unittest.TestCase):
                 self.assertGreaterEqual(p.info['pid'], 0)
             assert m.called
 
+    @unittest.skipIf(PYPY and WINDOWS,
+                     "get_test_subprocess() unreliable on PYPY + WINDOWS")
     def test_wait_procs(self):
         def callback(p):
             pids.append(p.pid)
@@ -159,6 +162,8 @@ class TestSystemAPIs(unittest.TestCase):
         for p in gone:
             self.assertTrue(hasattr(p, 'returncode'))
 
+    @unittest.skipIf(PYPY and WINDOWS,
+                     "get_test_subprocess() unreliable on PYPY + WINDOWS")
     def test_wait_procs_no_timeout(self):
         sproc1 = get_test_subprocess()
         sproc2 = get_test_subprocess()
@@ -168,11 +173,66 @@ class TestSystemAPIs(unittest.TestCase):
             p.terminate()
         gone, alive = psutil.wait_procs(procs)
 
+    def test_pid_exists(self):
+        sproc = get_test_subprocess()
+        self.assertTrue(psutil.pid_exists(sproc.pid))
+        p = psutil.Process(sproc.pid)
+        p.kill()
+        p.wait()
+        self.assertFalse(psutil.pid_exists(sproc.pid))
+        self.assertFalse(psutil.pid_exists(-1))
+        self.assertEqual(psutil.pid_exists(0), 0 in psutil.pids())
+
+    def test_pid_exists_2(self):
+        reap_children()
+        pids = psutil.pids()
+        for pid in pids:
+            try:
+                assert psutil.pid_exists(pid)
+            except AssertionError:
+                # in case the process disappeared in meantime fail only
+                # if it is no longer in psutil.pids()
+                time.sleep(.1)
+                if pid in psutil.pids():
+                    self.fail(pid)
+        pids = range(max(pids) + 5000, max(pids) + 6000)
+        for pid in pids:
+            self.assertFalse(psutil.pid_exists(pid), msg=pid)
+
+    def test_pids(self):
+        pidslist = psutil.pids()
+        procslist = [x.pid for x in psutil.process_iter()]
+        # make sure every pid is unique
+        self.assertEqual(sorted(set(pidslist)), pidslist)
+        self.assertEqual(pidslist, procslist)
+
+
+class TestMiscAPIs(unittest.TestCase):
+
     def test_boot_time(self):
         bt = psutil.boot_time()
         self.assertIsInstance(bt, float)
         self.assertGreater(bt, 0)
         self.assertLess(bt, time.time())
+
+    @unittest.skipIf(CI_TESTING and not psutil.users(), "unreliable on CI")
+    def test_users(self):
+        users = psutil.users()
+        self.assertNotEqual(users, [])
+        for user in users:
+            assert user.name, user
+            self.assertIsInstance(user.name, str)
+            self.assertIsInstance(user.terminal, (str, type(None)))
+            if user.host is not None:
+                self.assertIsInstance(user.host, (str, type(None)))
+            user.terminal
+            user.host
+            assert user.started > 0.0, user
+            datetime.datetime.fromtimestamp(user.started)
+            if WINDOWS or OPENBSD:
+                self.assertIsNone(user.pid)
+            else:
+                psutil.Process(user.pid)
 
     @unittest.skipIf(not POSIX, 'POSIX only')
     def test_PAGESIZE(self):
@@ -181,6 +241,55 @@ class TestSystemAPIs(unittest.TestCase):
         # getpagesize() returns the same value.
         import resource
         self.assertEqual(os.sysconf("SC_PAGE_SIZE"), resource.getpagesize())
+
+    def test_test(self):
+        # test for psutil.test() function
+        stdout = sys.stdout
+        sys.stdout = DEVNULL
+        try:
+            psutil.test()
+        finally:
+            sys.stdout = stdout
+
+    def test_os_constants(self):
+        names = ["POSIX", "WINDOWS", "LINUX", "MACOS", "FREEBSD", "OPENBSD",
+                 "NETBSD", "BSD", "SUNOS"]
+        for name in names:
+            self.assertIsInstance(getattr(psutil, name), bool, msg=name)
+
+        if os.name == 'posix':
+            assert psutil.POSIX
+            assert not psutil.WINDOWS
+            names.remove("POSIX")
+            if "linux" in sys.platform.lower():
+                assert psutil.LINUX
+                names.remove("LINUX")
+            elif "bsd" in sys.platform.lower():
+                assert psutil.BSD
+                self.assertEqual([psutil.FREEBSD, psutil.OPENBSD,
+                                  psutil.NETBSD].count(True), 1)
+                names.remove("BSD")
+                names.remove("FREEBSD")
+                names.remove("OPENBSD")
+                names.remove("NETBSD")
+            elif "sunos" in sys.platform.lower() or \
+                    "solaris" in sys.platform.lower():
+                assert psutil.SUNOS
+                names.remove("SUNOS")
+            elif "darwin" in sys.platform.lower():
+                assert psutil.MACOS
+                names.remove("MACOS")
+        else:
+            assert psutil.WINDOWS
+            assert not psutil.POSIX
+            names.remove("WINDOWS")
+
+        # assert all other constants are set to False
+        for name in names:
+            self.assertIs(getattr(psutil, name), False, msg=name)
+
+
+class TestMemoryAPIs(unittest.TestCase):
 
     def test_virtual_memory(self):
         mem = psutil.virtual_memory()
@@ -216,50 +325,12 @@ class TestSystemAPIs(unittest.TestCase):
         assert mem.sin >= 0, mem
         assert mem.sout >= 0, mem
 
-    def test_pid_exists(self):
-        sproc = get_test_subprocess()
-        self.assertTrue(psutil.pid_exists(sproc.pid))
-        p = psutil.Process(sproc.pid)
-        p.kill()
-        p.wait()
-        self.assertFalse(psutil.pid_exists(sproc.pid))
-        self.assertFalse(psutil.pid_exists(-1))
-        self.assertEqual(psutil.pid_exists(0), 0 in psutil.pids())
 
-    def test_pid_exists_2(self):
-        reap_children()
-        pids = psutil.pids()
-        for pid in pids:
-            try:
-                assert psutil.pid_exists(pid)
-            except AssertionError:
-                # in case the process disappeared in meantime fail only
-                # if it is no longer in psutil.pids()
-                time.sleep(.1)
-                if pid in psutil.pids():
-                    self.fail(pid)
-        pids = range(max(pids) + 5000, max(pids) + 6000)
-        for pid in pids:
-            self.assertFalse(psutil.pid_exists(pid), msg=pid)
+class TestCpuAPIs(unittest.TestCase):
 
-    def test_pids(self):
-        pidslist = psutil.pids()
-        procslist = [x.pid for x in psutil.process_iter()]
-        # make sure every pid is unique
-        self.assertEqual(sorted(set(pidslist)), pidslist)
-        self.assertEqual(pidslist, procslist)
-
-    def test_test(self):
-        # test for psutil.test() function
-        stdout = sys.stdout
-        sys.stdout = DEVNULL
-        try:
-            psutil.test()
-        finally:
-            sys.stdout = stdout
-
-    def test_cpu_count(self):
+    def test_cpu_count_logical(self):
         logical = psutil.cpu_count()
+        self.assertIsNotNone(logical)
         self.assertEqual(logical, len(psutil.cpu_times(percpu=True)))
         self.assertGreaterEqual(logical, 1)
         #
@@ -268,7 +339,12 @@ class TestSystemAPIs(unittest.TestCase):
                 cpuinfo_data = fd.read()
             if "physical id" not in cpuinfo_data:
                 raise unittest.SkipTest("cpuinfo doesn't include physical id")
+
+    def test_cpu_count_physical(self):
+        logical = psutil.cpu_count()
         physical = psutil.cpu_count(logical=False)
+        if physical is None:
+            raise self.skipTest("physical cpu_count() is None")
         if WINDOWS and sys.getwindowsversion()[:2] <= (6, 1):  # <= Vista
             self.assertIsNone(physical)
         else:
@@ -363,17 +439,16 @@ class TestSystemAPIs(unittest.TestCase):
         # Simulate some work load then make sure time have increased
         # between calls.
         tot1 = psutil.cpu_times(percpu=True)
-        stop_at = time.time() + 0.1
+        giveup_at = time.time() + 1
         while True:
-            if time.time() >= stop_at:
-                break
-        tot2 = psutil.cpu_times(percpu=True)
-        for t1, t2 in zip(tot1, tot2):
-            t1, t2 = sum(t1), sum(t2)
-            difference = t2 - t1
-            if difference >= 0.05:
-                return
-        self.fail()
+            if time.time() >= giveup_at:
+                return self.fail("timeout")
+            tot2 = psutil.cpu_times(percpu=True)
+            for t1, t2 in zip(tot1, tot2):
+                t1, t2 = psutil._cpu_busy_time(t1), psutil._cpu_busy_time(t2)
+                difference = t2 - t1
+                if difference >= 0.05:
+                    return
 
     def test_cpu_times_comparison(self):
         # Make sure the sum of all per cpu times is almost equal to
@@ -445,6 +520,55 @@ class TestSystemAPIs(unittest.TestCase):
                 for percent in cpu:
                     self._test_cpu_percent(percent, None, None)
 
+    def test_cpu_stats(self):
+        # Tested more extensively in per-platform test modules.
+        infos = psutil.cpu_stats()
+        self.assertEqual(
+            infos._fields,
+            ('ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls'))
+        for name in infos._fields:
+            value = getattr(infos, name)
+            self.assertGreaterEqual(value, 0)
+            # on AIX, ctx_switches is always 0
+            if not AIX and name in ('ctx_switches', 'interrupts'):
+                self.assertGreater(value, 0)
+
+    @unittest.skipIf(not HAS_CPU_FREQ, "not suported")
+    def test_cpu_freq(self):
+        def check_ls(ls):
+            for nt in ls:
+                self.assertEqual(nt._fields, ('current', 'min', 'max'))
+                if nt.max != 0.0:
+                    self.assertLessEqual(nt.current, nt.max)
+                for name in nt._fields:
+                    value = getattr(nt, name)
+                    self.assertIsInstance(value, (int, long, float))
+                    self.assertGreaterEqual(value, 0)
+
+        ls = psutil.cpu_freq(percpu=True)
+        if TRAVIS and not ls:
+            raise self.skipTest("skipped on Travis")
+        if FREEBSD and not ls:
+            raise self.skipTest("returns empty list on FreeBSD")
+
+        assert ls, ls
+        check_ls([psutil.cpu_freq(percpu=False)])
+
+        if LINUX:
+            self.assertEqual(len(ls), psutil.cpu_count())
+
+    @unittest.skipIf(not HAS_GETLOADAVG, "not supported")
+    def test_getloadavg(self):
+        loadavg = psutil.getloadavg()
+        assert len(loadavg) == 3
+
+        for load in loadavg:
+            self.assertIsInstance(load, float)
+            self.assertGreaterEqual(load, 0.0)
+
+
+class TestDiskAPIs(unittest.TestCase):
+
     def test_disk_usage(self):
         usage = psutil.disk_usage(os.getcwd())
         self.assertEqual(usage._fields, ('total', 'used', 'free', 'percent'))
@@ -468,9 +592,8 @@ class TestSystemAPIs(unittest.TestCase):
         # if path does not exist OSError ENOENT is expected across
         # all platforms
         fname = tempfile.mktemp()
-        with self.assertRaises(OSError) as exc:
+        with self.assertRaises(FileNotFoundError):
             psutil.disk_usage(fname)
-        self.assertEqual(exc.exception.errno, errno.ENOENT)
 
     def test_disk_usage_unicode(self):
         # See: https://github.com/giampaolo/psutil/issues/416
@@ -501,18 +624,15 @@ class TestSystemAPIs(unittest.TestCase):
                 # we cannot make any assumption about this, see:
                 # http://goo.gl/p9c43
                 disk.device
-            if SUNOS or TRAVIS:
-                # on solaris apparently mount points can also be files
-                assert os.path.exists(disk.mountpoint), disk
-            else:
-                assert os.path.isdir(disk.mountpoint), disk
+            # on modern systems mount points can also be files
+            assert os.path.exists(disk.mountpoint), disk
             assert disk.fstype, disk
 
         # all = True
         ls = psutil.disk_partitions(all=True)
         self.assertTrue(ls, msg=ls)
         for disk in psutil.disk_partitions(all=True):
-            if not WINDOWS:
+            if not WINDOWS and disk.mountpoint:
                 try:
                     os.stat(disk.mountpoint)
                 except OSError as err:
@@ -535,9 +655,53 @@ class TestSystemAPIs(unittest.TestCase):
 
         mount = find_mount_point(__file__)
         mounts = [x.mountpoint.lower() for x in
-                  psutil.disk_partitions(all=True)]
+                  psutil.disk_partitions(all=True) if x.mountpoint]
         self.assertIn(mount, mounts)
         psutil.disk_usage(mount)
+
+    @unittest.skipIf(LINUX and not os.path.exists('/proc/diskstats'),
+                     '/proc/diskstats not available on this linux version')
+    @unittest.skipIf(CI_TESTING and not psutil.disk_io_counters(),
+                     "unreliable on CI")  # no visible disks
+    def test_disk_io_counters(self):
+        def check_ntuple(nt):
+            self.assertEqual(nt[0], nt.read_count)
+            self.assertEqual(nt[1], nt.write_count)
+            self.assertEqual(nt[2], nt.read_bytes)
+            self.assertEqual(nt[3], nt.write_bytes)
+            if not (OPENBSD or NETBSD):
+                self.assertEqual(nt[4], nt.read_time)
+                self.assertEqual(nt[5], nt.write_time)
+                if LINUX:
+                    self.assertEqual(nt[6], nt.read_merged_count)
+                    self.assertEqual(nt[7], nt.write_merged_count)
+                    self.assertEqual(nt[8], nt.busy_time)
+                elif FREEBSD:
+                    self.assertEqual(nt[6], nt.busy_time)
+            for name in nt._fields:
+                assert getattr(nt, name) >= 0, nt
+
+        ret = psutil.disk_io_counters(perdisk=False)
+        assert ret is not None, "no disks on this system?"
+        check_ntuple(ret)
+        ret = psutil.disk_io_counters(perdisk=True)
+        # make sure there are no duplicates
+        self.assertEqual(len(ret), len(set(ret)))
+        for key in ret:
+            assert key, key
+            check_ntuple(ret[key])
+
+    def test_disk_io_counters_no_disks(self):
+        # Emulate a case where no disks are installed, see:
+        # https://github.com/giampaolo/psutil/issues/1062
+        with mock.patch('psutil._psplatform.disk_io_counters',
+                        return_value={}) as m:
+            self.assertIsNone(psutil.disk_io_counters(perdisk=False))
+            self.assertEqual(psutil.disk_io_counters(perdisk=True), {})
+            assert m.called
+
+
+class TestNetAPIs(unittest.TestCase):
 
     @unittest.skipIf(not HAS_NET_IO_COUNTERS, 'not supported')
     def test_net_io_counters(self):
@@ -681,150 +845,8 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertEqual(ret, {})
             assert m.called
 
-    @unittest.skipIf(LINUX and not os.path.exists('/proc/diskstats'),
-                     '/proc/diskstats not available on this linux version')
-    @unittest.skipIf(APPVEYOR and psutil.disk_io_counters() is None,
-                     "unreliable on APPVEYOR")  # no visible disks
-    def test_disk_io_counters(self):
-        def check_ntuple(nt):
-            self.assertEqual(nt[0], nt.read_count)
-            self.assertEqual(nt[1], nt.write_count)
-            self.assertEqual(nt[2], nt.read_bytes)
-            self.assertEqual(nt[3], nt.write_bytes)
-            if not (OPENBSD or NETBSD):
-                self.assertEqual(nt[4], nt.read_time)
-                self.assertEqual(nt[5], nt.write_time)
-                if LINUX:
-                    self.assertEqual(nt[6], nt.read_merged_count)
-                    self.assertEqual(nt[7], nt.write_merged_count)
-                    self.assertEqual(nt[8], nt.busy_time)
-                elif FREEBSD:
-                    self.assertEqual(nt[6], nt.busy_time)
-            for name in nt._fields:
-                assert getattr(nt, name) >= 0, nt
 
-        ret = psutil.disk_io_counters(perdisk=False)
-        assert ret is not None, "no disks on this system?"
-        check_ntuple(ret)
-        ret = psutil.disk_io_counters(perdisk=True)
-        # make sure there are no duplicates
-        self.assertEqual(len(ret), len(set(ret)))
-        for key in ret:
-            assert key, key
-            check_ntuple(ret[key])
-
-    def test_disk_io_counters_no_disks(self):
-        # Emulate a case where no disks are installed, see:
-        # https://github.com/giampaolo/psutil/issues/1062
-        with mock.patch('psutil._psplatform.disk_io_counters',
-                        return_value={}) as m:
-            self.assertIsNone(psutil.disk_io_counters(perdisk=False))
-            self.assertEqual(psutil.disk_io_counters(perdisk=True), {})
-            assert m.called
-
-    # can't find users on APPVEYOR or TRAVIS
-    @unittest.skipIf(APPVEYOR or TRAVIS and not psutil.users(),
-                     "unreliable on APPVEYOR or TRAVIS")
-    def test_users(self):
-        users = psutil.users()
-        self.assertNotEqual(users, [])
-        for user in users:
-            assert user.name, user
-            self.assertIsInstance(user.name, str)
-            self.assertIsInstance(user.terminal, (str, type(None)))
-            if user.host is not None:
-                self.assertIsInstance(user.host, (str, type(None)))
-            user.terminal
-            user.host
-            assert user.started > 0.0, user
-            datetime.datetime.fromtimestamp(user.started)
-            if WINDOWS or OPENBSD:
-                self.assertIsNone(user.pid)
-            else:
-                psutil.Process(user.pid)
-
-    def test_cpu_stats(self):
-        # Tested more extensively in per-platform test modules.
-        infos = psutil.cpu_stats()
-        self.assertEqual(
-            infos._fields,
-            ('ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls'))
-        for name in infos._fields:
-            value = getattr(infos, name)
-            self.assertGreaterEqual(value, 0)
-            # on AIX, ctx_switches is always 0
-            if not AIX and name in ('ctx_switches', 'interrupts'):
-                self.assertGreater(value, 0)
-
-    @unittest.skipIf(not HAS_CPU_FREQ, "not suported")
-    def test_cpu_freq(self):
-        def check_ls(ls):
-            for nt in ls:
-                self.assertEqual(nt._fields, ('current', 'min', 'max'))
-                if nt.max != 0.0:
-                    self.assertLessEqual(nt.current, nt.max)
-                for name in nt._fields:
-                    value = getattr(nt, name)
-                    self.assertIsInstance(value, (int, long, float))
-                    self.assertGreaterEqual(value, 0)
-
-        ls = psutil.cpu_freq(percpu=True)
-        if TRAVIS and not ls:
-            raise self.skipTest("skipped on Travis")
-        if FREEBSD and not ls:
-            raise self.skipTest("returns empty list on FreeBSD")
-
-        assert ls, ls
-        check_ls([psutil.cpu_freq(percpu=False)])
-
-        if LINUX:
-            self.assertEqual(len(ls), psutil.cpu_count())
-
-    @unittest.skipIf(not HAS_GETLOADAVG, "not supported")
-    def test_getloadavg(self):
-        loadavg = psutil.getloadavg()
-        assert len(loadavg) == 3
-
-        for load in loadavg:
-            self.assertIsInstance(load, float)
-            self.assertGreaterEqual(load, 0.0)
-
-    def test_os_constants(self):
-        names = ["POSIX", "WINDOWS", "LINUX", "MACOS", "FREEBSD", "OPENBSD",
-                 "NETBSD", "BSD", "SUNOS"]
-        for name in names:
-            self.assertIsInstance(getattr(psutil, name), bool, msg=name)
-
-        if os.name == 'posix':
-            assert psutil.POSIX
-            assert not psutil.WINDOWS
-            names.remove("POSIX")
-            if "linux" in sys.platform.lower():
-                assert psutil.LINUX
-                names.remove("LINUX")
-            elif "bsd" in sys.platform.lower():
-                assert psutil.BSD
-                self.assertEqual([psutil.FREEBSD, psutil.OPENBSD,
-                                  psutil.NETBSD].count(True), 1)
-                names.remove("BSD")
-                names.remove("FREEBSD")
-                names.remove("OPENBSD")
-                names.remove("NETBSD")
-            elif "sunos" in sys.platform.lower() or \
-                    "solaris" in sys.platform.lower():
-                assert psutil.SUNOS
-                names.remove("SUNOS")
-            elif "darwin" in sys.platform.lower():
-                assert psutil.MACOS
-                names.remove("MACOS")
-        else:
-            assert psutil.WINDOWS
-            assert not psutil.POSIX
-            names.remove("WINDOWS")
-
-        # assert all other constants are set to False
-        for name in names:
-            self.assertIs(getattr(psutil, name), False, msg=name)
+class TestSensorsAPIs(unittest.TestCase):
 
     @unittest.skipIf(not HAS_SENSORS_TEMPERATURES, "not supported")
     def test_sensors_temperatures(self):

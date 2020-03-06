@@ -51,7 +51,7 @@
  * -1: error (Python exception is set)
  */
 int
-psutil_pid_exists(long pid) {
+psutil_pid_exists(pid_t pid) {
     int ret;
 
     // No negative PID exists, plus -1 is an alias for sending signal
@@ -71,12 +71,7 @@ psutil_pid_exists(long pid) {
 #endif
     }
 
-#if defined(PSUTIL_OSX)
-    ret = kill((pid_t)pid , 0);
-#else
     ret = kill(pid , 0);
-#endif
-
     if (ret == 0)
         return 1;
     else {
@@ -111,23 +106,14 @@ psutil_pid_exists(long pid) {
  * If none of this is true we giveup and raise RuntimeError(msg).
  * This will always set a Python exception and return NULL.
  */
-int
-psutil_raise_for_pid(long pid, char *syscall_name) {
-    // Set exception to AccessDenied if pid exists else NoSuchProcess.
-    if (errno != 0) {
-        // Unlikely we get here.
-        PyErr_SetFromErrno(PyExc_OSError);
-        return 0;
-    }
-    else if (psutil_pid_exists(pid) == 0) {
-        psutil_debug("%s syscall failed and PID %i no longer exists; "
-                     "assume NoSuchProcess", syscall_name, pid);
-        NoSuchProcess("");
-    }
-    else {
-        PyErr_Format(PyExc_RuntimeError, "%s syscall failed", syscall_name);
-    }
-    return 0;
+void
+psutil_raise_for_pid(long pid, char *syscall) {
+    if (errno != 0)  // unlikely
+        PyErr_SetFromOSErrnoWithSyscall(syscall);
+    else if (psutil_pid_exists(pid) == 0)
+        NoSuchProcess(syscall);
+    else
+        PyErr_Format(PyExc_RuntimeError, "%s syscall failed", syscall);
 }
 
 
@@ -136,11 +122,11 @@ psutil_raise_for_pid(long pid, char *syscall_name) {
  */
 static PyObject *
 psutil_posix_getpriority(PyObject *self, PyObject *args) {
-    long pid;
+    pid_t pid;
     int priority;
     errno = 0;
 
-    if (! PyArg_ParseTuple(args, "l", &pid))
+    if (! PyArg_ParseTuple(args, _Py_PARSE_PID, &pid))
         return NULL;
 
 #ifdef PSUTIL_OSX
@@ -159,11 +145,11 @@ psutil_posix_getpriority(PyObject *self, PyObject *args) {
  */
 static PyObject *
 psutil_posix_setpriority(PyObject *self, PyObject *args) {
-    long pid;
+    pid_t pid;
     int priority;
     int retval;
 
-    if (! PyArg_ParseTuple(args, "li", &pid, &priority))
+    if (! PyArg_ParseTuple(args, _Py_PARSE_PID "i", &pid, &priority))
         return NULL;
 
 #ifdef PSUTIL_OSX
@@ -206,8 +192,8 @@ psutil_convert_ipaddr(struct sockaddr *addr, int family) {
             // XXX we get here on FreeBSD when processing 'lo' / AF_INET6
             // broadcast. Not sure what to do other than returning None.
             // ifconfig does not show anything BTW.
-            //PyErr_Format(PyExc_RuntimeError, gai_strerror(err));
-            //return NULL;
+            // PyErr_Format(PyExc_RuntimeError, gai_strerror(err));
+            // return NULL;
             Py_INCREF(Py_None);
             return Py_None;
         }
@@ -324,11 +310,11 @@ psutil_net_if_addrs(PyObject* self, PyObject* args) {
             goto error;
         if (PyList_Append(py_retlist, py_tuple))
             goto error;
-        Py_DECREF(py_tuple);
-        Py_DECREF(py_address);
-        Py_DECREF(py_netmask);
-        Py_DECREF(py_broadcast);
-        Py_DECREF(py_ptp);
+        Py_CLEAR(py_tuple);
+        Py_CLEAR(py_address);
+        Py_CLEAR(py_netmask);
+        Py_CLEAR(py_broadcast);
+        Py_CLEAR(py_ptp);
     }
 
     freeifaddrs(ifaddr);
@@ -354,7 +340,7 @@ error:
 static PyObject *
 psutil_net_if_mtu(PyObject *self, PyObject *args) {
     char *nic_name;
-    int sock = 0;
+    int sock = -1;
     int ret;
 #ifdef PSUTIL_SUNOS10
     struct lifreq lifr;
@@ -387,7 +373,7 @@ psutil_net_if_mtu(PyObject *self, PyObject *args) {
 #endif
 
 error:
-    if (sock != 0)
+    if (sock != -1)
         close(sock);
     return PyErr_SetFromErrno(PyExc_OSError);
 }
@@ -401,7 +387,7 @@ error:
 static PyObject *
 psutil_net_if_flags(PyObject *self, PyObject *args) {
     char *nic_name;
-    int sock = 0;
+    int sock = -1;
     int ret;
     struct ifreq ifr;
 
@@ -424,7 +410,7 @@ psutil_net_if_flags(PyObject *self, PyObject *args) {
         return Py_BuildValue("O", Py_False);
 
 error:
-    if (sock != 0)
+    if (sock != -1)
         close(sock);
     return PyErr_SetFromErrno(PyExc_OSError);
 }
@@ -579,7 +565,7 @@ int psutil_get_nic_speed(int ifm_active) {
 static PyObject *
 psutil_net_if_duplex_speed(PyObject *self, PyObject *args) {
     char *nic_name;
-    int sock = 0;
+    int sock = -1;
     int ret;
     int duplex;
     int speed;
@@ -591,7 +577,7 @@ psutil_net_if_duplex_speed(PyObject *self, PyObject *args) {
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == -1)
-        goto error;
+        return PyErr_SetFromErrno(PyExc_OSError);
     strncpy(ifr.ifr_name, nic_name, sizeof(ifr.ifr_name));
 
     // speed / duplex
@@ -614,20 +600,19 @@ psutil_net_if_duplex_speed(PyObject *self, PyObject *args) {
 
     close(sock);
     return Py_BuildValue("[ii]", duplex, speed);
-
-error:
-    if (sock != 0)
-        close(sock);
-    return PyErr_SetFromErrno(PyExc_OSError);
 }
 #endif  // net_if_stats() macOS/BSD implementation
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /*
  * define the psutil C module methods and initialize the module.
  */
-static PyMethodDef
-PsutilMethods[] = {
+static PyMethodDef mod_methods[] = {
     {"getpriority", psutil_posix_getpriority, METH_VARARGS,
      "Return process priority"},
     {"setpriority", psutil_posix_setpriority, METH_VARARGS,
@@ -645,71 +630,48 @@ PsutilMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-struct module_state {
-    PyObject *error;
-};
 
 #if PY_MAJOR_VERSION >= 3
-#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
-#else
-#define GETSTATE(m) (&_state)
-#endif
+    #define INITERR return NULL
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_psutil_posix",
+        NULL,
+        -1,
+        mod_methods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    };
 
-#if PY_MAJOR_VERSION >= 3
+    PyObject *PyInit__psutil_posix(void)
+#else  /* PY_MAJOR_VERSION */
+    #define INITERR return
 
-static int
-psutil_posix_traverse(PyObject *m, visitproc visit, void *arg) {
-    Py_VISIT(GETSTATE(m)->error);
-    return 0;
-}
-
-
-static int
-psutil_posix_clear(PyObject *m) {
-    Py_CLEAR(GETSTATE(m)->error);
-    return 0;
-}
-
-static struct PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT,
-    "psutil_posix",
-    NULL,
-    sizeof(struct module_state),
-    PsutilMethods,
-    NULL,
-    psutil_posix_traverse,
-    psutil_posix_clear,
-    NULL
-};
-
-#define INITERROR return NULL
-
-PyMODINIT_FUNC PyInit__psutil_posix(void)
-
-#else
-#define INITERROR return
-
-void init_psutil_posix(void)
-#endif
+    void init_psutil_posix(void)
+#endif  /* PY_MAJOR_VERSION */
 {
 #if PY_MAJOR_VERSION >= 3
-    PyObject *module = PyModule_Create(&moduledef);
+    PyObject *mod = PyModule_Create(&moduledef);
 #else
-    PyObject *module = Py_InitModule("_psutil_posix", PsutilMethods);
+    PyObject *mod = Py_InitModule("_psutil_posix", mod_methods);
+#endif
+    if (mod == NULL)
+        INITERR;
+
+#if defined(PSUTIL_BSD) || \
+        defined(PSUTIL_OSX) || \
+        defined(PSUTIL_SUNOS) || \
+        defined(PSUTIL_AIX)
+    if (PyModule_AddIntConstant(mod, "AF_LINK", AF_LINK)) INITERR;
 #endif
 
-#if defined(PSUTIL_BSD) || defined(PSUTIL_OSX) || defined(PSUTIL_SUNOS) || defined(PSUTIL_AIX)
-    PyModule_AddIntConstant(module, "AF_LINK", AF_LINK);
-#endif
-
-    if (module == NULL)
-        INITERROR;
+    if (mod == NULL)
+        INITERR;
 #if PY_MAJOR_VERSION >= 3
-    return module;
+    return mod;
 #endif
 }
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
@@ -22,7 +22,7 @@ from psutil import MACOS
 from psutil import OPENBSD
 from psutil import POSIX
 from psutil import SUNOS
-from psutil.tests import APPVEYOR
+from psutil.tests import CI_TESTING
 from psutil.tests import get_kernel_version
 from psutil.tests import get_test_subprocess
 from psutil.tests import HAS_NET_IO_COUNTERS
@@ -58,8 +58,7 @@ def ps(fmt, pid=None):
             cmd.append('ax')
 
     if SUNOS:
-        fmt_map = {'command', 'comm',
-                   'start', 'stime'}
+        fmt_map = set(('command', 'comm', 'start', 'stime'))
         fmt = fmt_map.get(fmt, fmt)
 
     cmd.extend(['-o', fmt])
@@ -365,13 +364,13 @@ class TestSystemAPIs(unittest.TestCase):
                     "couldn't find %s nic in 'ifconfig -a' output\n%s" % (
                         nic, output))
 
-    # can't find users on APPVEYOR or TRAVIS
-    @unittest.skipIf(APPVEYOR or TRAVIS and not psutil.users(),
-                     "unreliable on APPVEYOR or TRAVIS")
+    @unittest.skipIf(CI_TESTING and not psutil.users(), "unreliable on CI")
     @retry_on_failure()
     def test_users(self):
         out = sh("who")
         lines = out.split('\n')
+        if not lines:
+            raise self.skipTest("no users on this system")
         users = [x.split()[0] for x in lines]
         terminals = [x.split()[1] for x in lines]
         self.assertEqual(len(users), len(psutil.users()))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -47,9 +47,10 @@ Totals: access-denied=1744, calls=10020, processes=334
 
 from __future__ import print_function, division
 from collections import defaultdict
+import time
 
 import psutil
-from scriptutils import hilite
+from psutil._common import print_color
 
 
 def main():
@@ -59,6 +60,7 @@ def main():
     tot_calls = 0
     signaler = object()
     d = defaultdict(int)
+    start = time.time()
     for p in psutil.process_iter(attrs=[], ad_value=signaler):
         tot_procs += 1
         for methname, value in p.info.items():
@@ -68,20 +70,22 @@ def main():
                 d[methname] += 1
             else:
                 d[methname] += 0
+    elapsed = time.time() - start
 
     # print
     templ = "%-20s %-5s %-9s %s"
     s = templ % ("API", "AD", "Percent", "Outcome")
-    print(hilite(s, ok=None, bold=True))
-    for methname, ads in sorted(d.items(), key=lambda x: x[1]):
+    print_color(s, color=None, bold=True)
+    for methname, ads in sorted(d.items(), key=lambda x: (x[1], x[0])):
         perc = (ads / tot_procs) * 100
         outcome = "SUCCESS" if not ads else "ACCESS DENIED"
         s = templ % (methname, ads, "%6.1f%%" % perc, outcome)
-        s = hilite(s, ok=not ads)
-        print(s)
+        print_color(s, "red" if ads else None)
+    tot_perc = round((tot_ads / tot_calls) * 100, 1)
     print("-" * 50)
-    print("Totals: access-denied=%s, calls=%s, processes=%s" % (
-        tot_ads, tot_calls, tot_procs))
+    print("Totals: access-denied=%s (%s%%), calls=%s, processes=%s, "
+          "elapsed=%ss" % (tot_ads, tot_perc, tot_calls, tot_procs,
+                           round(elapsed, 2)))
 
 
 if __name__ == '__main__':

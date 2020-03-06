@@ -1,24 +1,13 @@
-Setup and running tests
-=======================
+Build, setup and running tests
+===============================
 
-If you plan on hacking on psutil this is what you're supposed to do first:
-
-- clone the GIT repository:
-
-.. code-block:: bash
-
-  $ git clone git@github.com:giampaolo/psutil.git
-
-- install test deps and GIT hooks:
+Make sure to `install <https://github.com/giampaolo/psutil/blob/master/INSTALL.rst>`__
+a C compiler first, then:
 
 .. code-block:: bash
 
+  git clone git@github.com:giampaolo/psutil.git
   make setup-dev-env
-
-- run tests:
-
-.. code-block:: bash
-
   make test
 
 - bear in mind that ``make``(see `Makefile`_) is the designated tool to run
@@ -47,7 +36,7 @@ Some useful make commands:
     make test           # run unit tests
     make test-memleaks  # run memory leak tests
     make test-coverage  # run test coverage
-    make flake8         # run PEP8 linter
+    make lint           # run Python (PEP8) and C linters
 
 There are some differences between ``make`` on UNIX and Windows.
 For instance, to run a specific Python version. On UNIX:
@@ -60,13 +49,7 @@ On Windows:
 
 .. code-block:: bat
 
-    set PYTHON=C:\python35\python.exe && make test
-
-...or:
-
-.. code-block:: bat
-
-    make -p 35 test
+    make -p C:\python35\python.exe test
 
 If you want to modify psutil and run a script on the fly which uses it do
 (on UNIX):
@@ -121,6 +104,7 @@ Make a pull request
 - commit your changes: ``git commit -am 'add some feature'``
 - push to the branch: ``git push origin new-feature``
 - create a new pull request by via github web interface
+- remember to update `HISTORY.rst`_ and `CREDITS`_ files.
 
 Continuous integration
 ======================
@@ -141,13 +125,17 @@ Both services run psutil test suite against all supported python version
 (2.6 - 3.6).
 Two icons in the home page (README) always show the build status:
 
-.. image:: https://img.shields.io/travis/giampaolo/psutil/master.svg?maxAge=3600&label=Linux%20/%20macOS
+.. image:: https://img.shields.io/travis/giampaolo/psutil/master.svg?maxAge=3600&label=Linux,%20OSX,%20PyPy
     :target: https://travis-ci.org/giampaolo/psutil
-    :alt: Linux and macOS tests (Travis)
+    :alt: Linux, macOS and PyPy3 tests (Travis)
 
 .. image:: https://img.shields.io/appveyor/ci/giampaolo/psutil/master.svg?maxAge=3600&label=Windows
     :target: https://ci.appveyor.com/project/giampaolo/psutil
     :alt: Windows tests (Appveyor)
+
+.. image:: https://img.shields.io/cirrus/github/giampaolo/psutil?label=FreeBSD
+    :target: https://cirrus-ci.com/github/giampaolo/psutil-cirrus-ci
+    :alt: FreeBSD tests (Cirrus-CI)
 
 BSD, AIX and Solaris are currently tested manually.
 
@@ -200,3 +188,5 @@ These are notes for myself (Giampaolo):
 .. _`RsT syntax`: http://docutils.sourceforge.net/docs/user/rst/quickref.htm
 .. _`sphinx`: http://sphinx-doc.org
 .. _`Travis`: https://travis-ci.org/giampaolo/psuti
+.. _`HISTORY.rst`: https://github.com/giampaolo/psutil/blob/master/HISTORY.rst
+.. _`CREDITS`: https://github.com/giampaolo/psutil/blob/master/CREDITS

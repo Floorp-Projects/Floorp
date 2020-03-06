@@ -7,7 +7,7 @@
 # Note: this module is imported by setup.py so it should not import
 # psutil or third-party modules.
 
-from __future__ import division
+from __future__ import division, print_function
 
 import contextlib
 import errno
@@ -23,6 +23,7 @@ from collections import namedtuple
 from socket import AF_INET
 from socket import SOCK_DGRAM
 from socket import SOCK_STREAM
+
 try:
     from socket import AF_INET6
 except ImportError:
@@ -37,14 +38,14 @@ if sys.version_info >= (3, 4):
 else:
     enum = None
 
+
 # can't take it from _common.py as this script is imported by setup.py
 PY3 = sys.version_info[0] == 3
 
 __all__ = [
-    # constants
+    # OS constants
     'FREEBSD', 'BSD', 'LINUX', 'NETBSD', 'OPENBSD', 'MACOS', 'OSX', 'POSIX',
     'SUNOS', 'WINDOWS',
-    'ENCODING', 'ENCODING_ERRS', 'AF_INET6',
     # connection constants
     'CONN_CLOSE', 'CONN_CLOSE_WAIT', 'CONN_CLOSING', 'CONN_ESTABLISHED',
     'CONN_FIN_WAIT1', 'CONN_FIN_WAIT2', 'CONN_LAST_ACK', 'CONN_LISTEN',
@@ -56,6 +57,8 @@ __all__ = [
     'STATUS_RUNNING', 'STATUS_SLEEPING', 'STATUS_STOPPED', 'STATUS_SUSPENDED',
     'STATUS_TRACING_STOP', 'STATUS_WAITING', 'STATUS_WAKE_KILL',
     'STATUS_WAKING', 'STATUS_ZOMBIE', 'STATUS_PARKED',
+    # other constants
+    'ENCODING', 'ENCODING_ERRS', 'AF_INET6',
     # named tuples
     'pconn', 'pcputimes', 'pctxsw', 'pgids', 'pio', 'pionice', 'popenfile',
     'pthread', 'puids', 'sconn', 'scpustats', 'sdiskio', 'sdiskpart',
@@ -64,7 +67,9 @@ __all__ = [
     'conn_tmap', 'deprecated_method', 'isfile_strict', 'memoize',
     'parse_environ_block', 'path_exists_strict', 'usage_percent',
     'supports_ipv6', 'sockfam_to_enum', 'socktype_to_enum', "wrap_numbers",
-    'bytes2human',
+    'bytes2human', 'conn_to_ntuple', 'debug',
+    # shell utils
+    'hilite', 'term_supports_colors', 'print_color',
 ]
 
 
@@ -257,7 +262,109 @@ if AF_UNIX is not None:
         "unix": ([AF_UNIX], [SOCK_STREAM, SOCK_DGRAM]),
     })
 
-del AF_INET, AF_UNIX, SOCK_STREAM, SOCK_DGRAM
+
+# =====================================================================
+# --- Exceptions
+# =====================================================================
+
+
+class Error(Exception):
+    """Base exception class. All other psutil exceptions inherit
+    from this one.
+    """
+    __module__ = 'psutil'
+
+    def __init__(self, msg=""):
+        Exception.__init__(self, msg)
+        self.msg = msg
+
+    def __repr__(self):
+        ret = "psutil.%s %s" % (self.__class__.__name__, self.msg)
+        return ret.strip()
+
+    __str__ = __repr__
+
+
+class NoSuchProcess(Error):
+    """Exception raised when a process with a certain PID doesn't
+    or no longer exists.
+    """
+    __module__ = 'psutil'
+
+    def __init__(self, pid, name=None, msg=None):
+        Error.__init__(self, msg)
+        self.pid = pid
+        self.name = name
+        self.msg = msg
+        if msg is None:
+            if name:
+                details = "(pid=%s, name=%s)" % (self.pid, repr(self.name))
+            else:
+                details = "(pid=%s)" % self.pid
+            self.msg = "process no longer exists " + details
+
+    def __path__(self):
+        return 'xxx'
+
+
+class ZombieProcess(NoSuchProcess):
+    """Exception raised when querying a zombie process. This is
+    raised on macOS, BSD and Solaris only, and not always: depending
+    on the query the OS may be able to succeed anyway.
+    On Linux all zombie processes are querable (hence this is never
+    raised). Windows doesn't have zombie processes.
+    """
+    __module__ = 'psutil'
+
+    def __init__(self, pid, name=None, ppid=None, msg=None):
+        NoSuchProcess.__init__(self, msg)
+        self.pid = pid
+        self.ppid = ppid
+        self.name = name
+        self.msg = msg
+        if msg is None:
+            args = ["pid=%s" % pid]
+            if name:
+                args.append("name=%s" % repr(self.name))
+            if ppid:
+                args.append("ppid=%s" % self.ppid)
+            details = "(%s)" % ", ".join(args)
+            self.msg = "process still exists but it's a zombie " + details
+
+
+class AccessDenied(Error):
+    """Exception raised when permission to perform an action is denied."""
+    __module__ = 'psutil'
+
+    def __init__(self, pid=None, name=None, msg=None):
+        Error.__init__(self, msg)
+        self.pid = pid
+        self.name = name
+        self.msg = msg
+        if msg is None:
+            if (pid is not None) and (name is not None):
+                self.msg = "(pid=%s, name=%s)" % (pid, repr(name))
+            elif (pid is not None):
+                self.msg = "(pid=%s)" % self.pid
+            else:
+                self.msg = ""
+
+
+class TimeoutExpired(Error):
+    """Raised on Process.wait(timeout) if timeout expires and process
+    is still alive.
+    """
+    __module__ = 'psutil'
+
+    def __init__(self, seconds, pid=None, name=None):
+        Error.__init__(self, "timeout after %s seconds" % seconds)
+        self.seconds = seconds
+        self.pid = pid
+        self.name = name
+        if (pid is not None) and (name is not None):
+            self.msg += " (pid=%s, name=%s)" % (pid, repr(name))
+        elif (pid is not None):
+            self.msg += " (pid=%s)" % self.pid
 
 
 # ===================================================================
@@ -268,12 +375,12 @@ del AF_INET, AF_UNIX, SOCK_STREAM, SOCK_DGRAM
 def usage_percent(used, total, round_=None):
     """Calculate percentage usage of 'used' against 'total'."""
     try:
-        ret = (used / total) * 100
+        ret = (float(used) / total) * 100
     except ZeroDivisionError:
-        ret = 0.0 if isinstance(used, float) or isinstance(total, float) else 0
-    if round_ is not None:
-        return round(ret, round_)
+        return 0.0
     else:
+        if round_ is not None:
+            ret = round(ret, round_)
         return ret
 
 
@@ -447,7 +554,7 @@ def sockfam_to_enum(num):
     else:  # pragma: no cover
         try:
             return socket.AddressFamily(num)
-        except (ValueError, AttributeError):
+        except ValueError:
             return num
 
 
@@ -459,9 +566,28 @@ def socktype_to_enum(num):
         return num
     else:  # pragma: no cover
         try:
-            return socket.AddressType(num)
-        except (ValueError, AttributeError):
+            return socket.SocketKind(num)
+        except ValueError:
             return num
+
+
+def conn_to_ntuple(fd, fam, type_, laddr, raddr, status, status_map, pid=None):
+    """Convert a raw connection tuple to a proper ntuple."""
+    if fam in (socket.AF_INET, AF_INET6):
+        if laddr:
+            laddr = addr(*laddr)
+        if raddr:
+            raddr = addr(*raddr)
+    if type_ == socket.SOCK_STREAM and fam in (AF_INET, AF_INET6):
+        status = status_map.get(status, CONN_NONE)
+    else:
+        status = CONN_NONE  # ignore whatever C returned to us
+    fam = sockfam_to_enum(fam)
+    type_ = socktype_to_enum(type_)
+    if pid is None:
+        return pconn(fd, fam, type_, laddr, raddr, status)
+    else:
+        return sconn(fd, fam, type_, laddr, raddr, status, pid)
 
 
 def deprecated_method(replacement):
@@ -632,3 +758,89 @@ if PY3:
 else:
     def decode(s):
         return s
+
+
+# =====================================================================
+# --- shell utils
+# =====================================================================
+
+
+@memoize
+def term_supports_colors(file=sys.stdout):
+    if os.name == 'nt':
+        return True
+    try:
+        import curses
+        assert file.isatty()
+        curses.setupterm()
+        assert curses.tigetnum("colors") > 0
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def hilite(s, color="green", bold=False):
+    """Return an highlighted version of 'string'."""
+    if not term_supports_colors():
+        return s
+    attr = []
+    colors = dict(green='32', red='91', brown='33')
+    colors[None] = '29'
+    try:
+        color = colors[color]
+    except KeyError:
+        raise ValueError("invalid color %r; choose between %s" % (
+            list(colors.keys())))
+    attr.append(color)
+    if bold:
+        attr.append('1')
+    return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), s)
+
+
+def print_color(s, color="green", bold=False, file=sys.stdout):
+    """Print a colorized version of string."""
+    if not term_supports_colors():
+        print(s, file=file)
+    elif POSIX:
+        print(hilite(s, color, bold), file=file)
+    else:
+        import ctypes
+
+        DEFAULT_COLOR = 7
+        GetStdHandle = ctypes.windll.Kernel32.GetStdHandle
+        SetConsoleTextAttribute = \
+            ctypes.windll.Kernel32.SetConsoleTextAttribute
+
+        colors = dict(green=2, red=4, brown=6)
+        colors[None] = DEFAULT_COLOR
+        try:
+            color = colors[color]
+        except KeyError:
+            raise ValueError("invalid color %r; choose between %r" % (
+                color, list(colors.keys())))
+        if bold and color <= 7:
+            color += 8
+
+        handle_id = -12 if file is sys.stderr else -11
+        GetStdHandle.restype = ctypes.c_ulong
+        handle = GetStdHandle(handle_id)
+        SetConsoleTextAttribute(handle, color)
+        try:
+            print(s, file=file)
+        finally:
+            SetConsoleTextAttribute(handle, DEFAULT_COLOR)
+
+
+if bool(os.getenv('PSUTIL_DEBUG', 0)):
+    import inspect
+
+    def debug(msg):
+        """If PSUTIL_DEBUG env var is set, print a debug message to stderr."""
+        fname, lineno, func_name, lines, index = inspect.getframeinfo(
+            inspect.currentframe().f_back)
+        print("psutil-debug [%s:%s]> %s" % (fname, lineno, msg),
+              file=sys.stderr)
+else:
+    def debug(msg):
+        pass

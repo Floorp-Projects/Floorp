@@ -5,12 +5,15 @@
 """Module which provides compatibility with older Python versions."""
 
 import collections
+import errno
 import functools
 import os
 import sys
 
 __all__ = ["PY3", "long", "xrange", "unicode", "basestring", "u", "b",
-           "callable", "lru_cache", "which"]
+           "lru_cache", "which", "get_terminal_size",
+           "FileNotFoundError", "PermissionError", "ProcessLookupError",
+           "InterruptedError", "ChildProcessError", "FileExistsError"]
 
 PY3 = sys.version_info[0] == 3
 
@@ -38,12 +41,84 @@ else:
         return s
 
 
-# removed in 3.0, reintroduced in 3.2
-try:
-    callable = callable
-except NameError:
-    def callable(obj):
-        return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
+# --- exceptions
+
+
+if PY3:
+    FileNotFoundError = FileNotFoundError  # NOQA
+    PermissionError = PermissionError  # NOQA
+    ProcessLookupError = ProcessLookupError  # NOQA
+    InterruptedError = InterruptedError  # NOQA
+    ChildProcessError = ChildProcessError  # NOQA
+    FileExistsError = FileExistsError  # NOQA
+else:
+    # https://github.com/PythonCharmers/python-future/blob/exceptions/
+    #     src/future/types/exceptions/pep3151.py
+    import platform
+
+    _singleton = object()
+
+    def instance_checking_exception(base_exception=Exception):
+        def wrapped(instance_checker):
+            class TemporaryClass(base_exception):
+
+                def __init__(self, *args, **kwargs):
+                    if len(args) == 1 and isinstance(args[0], TemporaryClass):
+                        unwrap_me = args[0]
+                        for attr in dir(unwrap_me):
+                            if not attr.startswith('__'):
+                                setattr(self, attr, getattr(unwrap_me, attr))
+                    else:
+                        super(TemporaryClass, self).__init__(*args, **kwargs)
+
+                class __metaclass__(type):
+                    def __instancecheck__(cls, inst):
+                        return instance_checker(inst)
+
+                    def __subclasscheck__(cls, classinfo):
+                        value = sys.exc_info()[1]
+                        return isinstance(value, cls)
+
+            TemporaryClass.__name__ = instance_checker.__name__
+            TemporaryClass.__doc__ = instance_checker.__doc__
+            return TemporaryClass
+
+        return wrapped
+
+    @instance_checking_exception(EnvironmentError)
+    def FileNotFoundError(inst):
+        return getattr(inst, 'errno', _singleton) == errno.ENOENT
+
+    @instance_checking_exception(EnvironmentError)
+    def ProcessLookupError(inst):
+        return getattr(inst, 'errno', _singleton) == errno.ESRCH
+
+    @instance_checking_exception(EnvironmentError)
+    def PermissionError(inst):
+        return getattr(inst, 'errno', _singleton) in (
+            errno.EACCES, errno.EPERM)
+
+    @instance_checking_exception(EnvironmentError)
+    def InterruptedError(inst):
+        return getattr(inst, 'errno', _singleton) == errno.EINTR
+
+    @instance_checking_exception(EnvironmentError)
+    def ChildProcessError(inst):
+        return getattr(inst, 'errno', _singleton) == errno.ECHILD
+
+    @instance_checking_exception(EnvironmentError)
+    def FileExistsError(inst):
+        return getattr(inst, 'errno', _singleton) == errno.EEXIST
+
+    if platform.python_implementation() != "CPython":
+        try:
+            raise OSError(errno.EEXIST, "perm")
+        except FileExistsError:
+            pass
+        except OSError:
+            raise RuntimeError(
+                "broken / incompatible Python implementation, see: "
+                "https://github.com/giampaolo/psutil/issues/1659")
 
 
 # --- stdlib additions
@@ -247,3 +322,24 @@ except ImportError:
                     if _access_check(name, mode):
                         return name
         return None
+
+
+# python 3.3
+try:
+    from shutil import get_terminal_size
+except ImportError:
+    def get_terminal_size(fallback=(80, 24)):
+        try:
+            import fcntl
+            import termios
+            import struct
+        except ImportError:
+            return fallback
+        else:
+            try:
+                # This should work on Linux.
+                res = struct.unpack(
+                    'hh', fcntl.ioctl(1, termios.TIOCGWINSZ, '1234'))
+                return (res[1], res[0])
+            except Exception:
+                return fallback

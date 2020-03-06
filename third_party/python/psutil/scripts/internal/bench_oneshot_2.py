@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -11,7 +11,7 @@ supposed to be more precise.
 
 import sys
 
-import perf  # requires "pip install perf"
+import pyperf  # requires "pip install pyperf"
 
 import psutil
 from bench_oneshot import names
@@ -37,7 +37,7 @@ def add_cmdline_args(cmd, args):
 
 
 def main():
-    runner = perf.Runner()
+    runner = pyperf.Runner()
 
     args = runner.parse_args()
     if not args.worker:

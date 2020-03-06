@@ -2,30 +2,29 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""OSX platform implementation."""
+"""macOS platform implementation."""
 
 import contextlib
 import errno
 import functools
 import os
-from socket import AF_INET
 from collections import namedtuple
 
 from . import _common
 from . import _psposix
 from . import _psutil_osx as cext
 from . import _psutil_posix as cext_posix
-from ._common import AF_INET6
+from ._common import AccessDenied
 from ._common import conn_tmap
+from ._common import conn_to_ntuple
 from ._common import isfile_strict
 from ._common import memoize_when_activated
+from ._common import NoSuchProcess
 from ._common import parse_environ_block
-from ._common import sockfam_to_enum
-from ._common import socktype_to_enum
 from ._common import usage_percent
-from ._exceptions import AccessDenied
-from ._exceptions import NoSuchProcess
-from ._exceptions import ZombieProcess
+from ._common import ZombieProcess
+from ._compat import PermissionError
+from ._compat import ProcessLookupError
 
 
 __extra__all__ = []
@@ -103,13 +102,6 @@ svmem = namedtuple(
 pmem = namedtuple('pmem', ['rss', 'vms', 'pfaults', 'pageins'])
 # psutil.Process.memory_full_info()
 pfullmem = namedtuple('pfullmem', pmem._fields + ('uss', ))
-# psutil.Process.memory_maps(grouped=True)
-pmmap_grouped = namedtuple(
-    'pmmap_grouped',
-    'path rss private swapped dirtied ref_count shadow_depth')
-# psutil.Process.memory_maps(grouped=False)
-pmmap_ext = namedtuple(
-    'pmmap_ext', 'addr perms ' + ' '.join(pmmap_grouped._fields))
 
 
 # =====================================================================
@@ -119,10 +111,17 @@ pmmap_ext = namedtuple(
 
 def virtual_memory():
     """System virtual memory as a namedtuple."""
-    total, active, inactive, wired, free = cext.virtual_mem()
+    total, active, inactive, wired, free, speculative = cext.virtual_mem()
+    # This is how Zabbix calculate avail and used mem:
+    # https://github.com/zabbix/zabbix/blob/trunk/src/libs/zbxsysinfo/
+    #     osx/memory.c
+    # Also see: https://github.com/giampaolo/psutil/issues/1277
     avail = inactive + free
-    used = active + inactive + wired
-    percent = usage_percent((total - avail), total, _round=1)
+    used = active + wired
+    # This is NOT how Zabbix calculates free mem but it matches "free"
+    # cmdline utility.
+    free -= speculative
+    percent = usage_percent((total - avail), total, round_=1)
     return svmem(total, avail, percent, used, free,
                  active, inactive, wired)
 
@@ -130,7 +129,7 @@ def virtual_memory():
 def swap_memory():
     """Swap system memory as a (total, used, free, sin, sout) tuple."""
     total, used, free, sin, sout = cext.swap_mem()
-    percent = usage_percent(used, total, _round=1)
+    percent = usage_percent(used, total, round_=1)
     return _common.sswap(total, used, free, percent, sin, sout)
 
 
@@ -174,7 +173,7 @@ def cpu_stats():
 
 def cpu_freq():
     """Return CPU frequency.
-    On OSX per-cpu frequency is not supported.
+    On macOS per-cpu frequency is not supported.
     Also, the returned frequency never changes, see:
     https://arstechnica.com/civis/viewtopic.php?f=19&t=465002
     """
@@ -213,8 +212,7 @@ def disk_partitions(all=False):
 
 
 def sensors_battery():
-    """Return battery information.
-    """
+    """Return battery information."""
     try:
         percent, minsleft, power_plugged = cext.sensors_battery()
     except NotImplementedError:
@@ -241,7 +239,7 @@ net_if_addrs = cext_posix.net_if_addrs
 
 def net_connections(kind='inet'):
     """System-wide network connections."""
-    # Note: on OSX this will fail with AccessDenied unless
+    # Note: on macOS this will fail with AccessDenied unless
     # the process is owned by root.
     ret = []
     for pid in pids():
@@ -262,12 +260,18 @@ def net_if_stats():
     names = net_io_counters().keys()
     ret = {}
     for name in names:
-        mtu = cext_posix.net_if_mtu(name)
-        isup = cext_posix.net_if_flags(name)
-        duplex, speed = cext_posix.net_if_duplex_speed(name)
-        if hasattr(_common, 'NicDuplex'):
-            duplex = _common.NicDuplex(duplex)
-        ret[name] = _common.snicstats(isup, duplex, speed, mtu)
+        try:
+            mtu = cext_posix.net_if_mtu(name)
+            isup = cext_posix.net_if_flags(name)
+            duplex, speed = cext_posix.net_if_duplex_speed(name)
+        except OSError as err:
+            # https://github.com/giampaolo/psutil/issues/1279
+            if err.errno != errno.ENODEV:
+                raise
+        else:
+            if hasattr(_common, 'NicDuplex'):
+                duplex = _common.NicDuplex(duplex)
+            ret[name] = _common.snicstats(isup, duplex, speed, mtu)
     return ret
 
 
@@ -304,16 +308,16 @@ def users():
 def pids():
     ls = cext.pids()
     if 0 not in ls:
-        # On certain OSX versions pids() C doesn't return PID 0 but
+        # On certain macOS versions pids() C doesn't return PID 0 but
         # "ps" does and the process is querable via sysctl():
         # https://travis-ci.org/giampaolo/psutil/jobs/309619941
         try:
             Process(0).create_time()
-            ls.append(0)
+            ls.insert(0, 0)
         except NoSuchProcess:
             pass
         except AccessDenied:
-            ls.append(0)
+            ls.insert(0, 0)
     return ls
 
 
@@ -328,12 +332,12 @@ def wrap_exceptions(fun):
     def wrapper(self, *args, **kwargs):
         try:
             return fun(self, *args, **kwargs)
-        except OSError as err:
-            if err.errno == errno.ESRCH:
-                raise NoSuchProcess(self.pid, self._name)
-            if err.errno in (errno.EPERM, errno.EACCES):
-                raise AccessDenied(self.pid, self._name)
-            raise
+        except ProcessLookupError:
+            raise NoSuchProcess(self.pid, self._name)
+        except PermissionError:
+            raise AccessDenied(self.pid, self._name)
+        except cext.ZombieProcessError:
+            raise ZombieProcess(self.pid, self._name, self._ppid)
     return wrapper
 
 
@@ -366,13 +370,14 @@ def catch_zombie(proc):
 class Process(object):
     """Wrapper class around underlying C implementation."""
 
-    __slots__ = ["pid", "_name", "_ppid"]
+    __slots__ = ["pid", "_name", "_ppid", "_cache"]
 
     def __init__(self, pid):
         self.pid = pid
         self._name = None
         self._ppid = None
 
+    @wrap_exceptions
     @memoize_when_activated
     def _get_kinfo_proc(self):
         # Note: should work with all PIDs without permission issues.
@@ -380,6 +385,7 @@ class Process(object):
         assert len(ret) == len(kinfo_proc_map)
         return ret
 
+    @wrap_exceptions
     @memoize_when_activated
     def _get_pidtaskinfo(self):
         # Note: should work for PIDs owned by user only.
@@ -389,12 +395,12 @@ class Process(object):
         return ret
 
     def oneshot_enter(self):
-        self._get_kinfo_proc.cache_activate()
-        self._get_pidtaskinfo.cache_activate()
+        self._get_kinfo_proc.cache_activate(self)
+        self._get_pidtaskinfo.cache_activate(self)
 
     def oneshot_exit(self):
-        self._get_kinfo_proc.cache_deactivate()
-        self._get_pidtaskinfo.cache_deactivate()
+        self._get_kinfo_proc.cache_deactivate(self)
+        self._get_pidtaskinfo.cache_deactivate(self)
 
     @wrap_exceptions
     def name(self):
@@ -516,15 +522,8 @@ class Process(object):
         ret = []
         for item in rawlist:
             fd, fam, type, laddr, raddr, status = item
-            status = TCP_STATUSES[status]
-            fam = sockfam_to_enum(fam)
-            type = socktype_to_enum(type)
-            if fam in (AF_INET, AF_INET6):
-                if laddr:
-                    laddr = _common.addr(*laddr)
-                if raddr:
-                    raddr = _common.addr(*raddr)
-            nt = _common.pconn(fd, fam, type, laddr, raddr, status)
+            nt = conn_to_ntuple(fd, fam, type, laddr, raddr, status,
+                                TCP_STATUSES)
             ret.append(nt)
         return ret
 
@@ -557,15 +556,9 @@ class Process(object):
 
     @wrap_exceptions
     def threads(self):
-        with catch_zombie(self):
-            rawlist = cext.proc_threads(self.pid)
+        rawlist = cext.proc_threads(self.pid)
         retlist = []
         for thread_id, utime, stime in rawlist:
             ntuple = _common.pthread(thread_id, utime, stime)
             retlist.append(ntuple)
         return retlist
-
-    @wrap_exceptions
-    def memory_maps(self):
-        with catch_zombie(self):
-            return cext.proc_memory_maps(self.pid)

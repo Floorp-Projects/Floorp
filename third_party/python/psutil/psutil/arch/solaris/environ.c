@@ -6,14 +6,13 @@
  * Functions specific for Process.environ().
  */
 
-#define NEW_MIB_COMPLIANT 1
 #define _STRUCTURED_PROC 1
 
 #include <Python.h>
 
 #if !defined(_LP64) && _FILE_OFFSET_BITS == 64
-#  undef _FILE_OFFSET_BITS
-#  undef _LARGEFILE64_SOURCE
+    #undef _FILE_OFFSET_BITS
+    #undef _LARGEFILE64_SOURCE
 #endif
 
 #include <sys/types.h>
