@@ -168,7 +168,6 @@ GeneratedFile('TelemetryScalarData.h',
               inputs=scalar_files)
 GeneratedFile('TelemetryScalarEnums.h',
               script='build_scripts/gen_scalar_enum.py',
-              py2=True,
               inputs=scalar_files)
 
 # Generate the JSON scalar definitions. They will only be
