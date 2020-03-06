@@ -6701,6 +6701,19 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
   uint16_t bfCacheCombo = 0;
   bool canSavePresentation =
       doc->CanSavePresentation(aNewRequest, bfCacheCombo);
+  MOZ_ASSERT_IF(canSavePresentation, bfCacheCombo == 0);
+  if (canSavePresentation && doc->IsTopLevelContentDocument()) {
+    auto* browsingContextGroup = mBrowsingContext->Group();
+    nsTArray<RefPtr<BrowsingContext>>& topLevelContext =
+        browsingContextGroup->Toplevels();
+
+    for (const auto& browsingContext : topLevelContext) {
+      if (browsingContext != mBrowsingContext) {
+        bfCacheCombo |= BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG;
+        break;
+      }
+    }
+  }
   ReportBFCacheComboTelemetry(bfCacheCombo);
 
   return doc && canSavePresentation;
@@ -6711,6 +6724,12 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
     case BFCACHE_SUCCESS:
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_BFCACHE_COMBO::BFCache_Success);
+      break;
+    case SUCCESS_NOT_ONLY_TOPLEVEL:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::BFCache_Success);
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Success_Not_Toplevel);
       break;
     case UNLOAD:
       Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Unload);

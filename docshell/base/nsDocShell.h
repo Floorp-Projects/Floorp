@@ -881,6 +881,8 @@ class nsDocShell final : public nsDocLoader,
   // we need to adjust them when necessary.
   enum BFCacheStatusCombo : uint16_t {
     BFCACHE_SUCCESS,
+    SUCCESS_NOT_ONLY_TOPLEVEL =
+        mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
     UNLOAD = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER,
     UNLOAD_REQUEST = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
                      mozilla::dom::BFCacheStatus::REQUEST,
