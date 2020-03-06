@@ -214,6 +214,7 @@ void FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
         new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, aTarget, eAutoDetect,
                      AccEvent::eCoalesceOfSameType);
     aDocument->FireDelayedEvent(event);
+    mLastFocus = aTarget;
 
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus)) logging::FocusDispatched(aTarget);
@@ -353,7 +354,6 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   RefPtr<AccEvent> focusEvent = new AccEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                              target, aEvent->FromUserInput());
   nsEventShell::FireEvent(focusEvent);
-  mLastFocus = target;
 
   if (NS_WARN_IF(target->IsDefunct())) {
     // target died during nsEventShell::FireEvent.
