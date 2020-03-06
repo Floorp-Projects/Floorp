@@ -272,17 +272,9 @@ class SkipLowValue(OptimizationStrategy):
         self.time_interval = time_interval
 
     def should_remove_task(self, task, params, _):
-        label = task.label
-
-        # we would like to return 'False, None' while it's high_value_task
-        # and we wouldn't optimize it. Otherwise, it will return 'True, None'
-        if is_low_value_task(label,
-                             params.get('project'),
-                             params.get('pushlog_id'),
-                             params.get('pushdate'),
-                             self.push_interval,
-                             self.time_interval):
-            # Always optimize away low-value tasks
-            return True
-        else:
-            return False
+        # Return True to optimize a low value task.
+        return is_low_value_task(task.label, params.get('project'),
+                                 params.get('pushlog_id'),
+                                 params.get('pushdate'),
+                                 self.push_interval,
+                                 self.time_interval)
