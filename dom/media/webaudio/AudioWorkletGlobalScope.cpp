@@ -13,6 +13,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/AudioWorkletProcessor.h"
+#include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkletPrincipals.h"
@@ -218,6 +219,7 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
     return AudioParamDescriptorMap();
   }
 
+  BindingCallContext callCx(aCx, "AudioWorkletGlobalScope.registerProcessor");
   for (uint32_t i = 0; i < length; ++i) {
     JS::Rooted<JS::Value> descriptorElement(aCx);
     if (!JS_GetElement(aCx, aDescriptorsArray, i, &descriptorElement)) {
@@ -227,7 +229,7 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 
     AudioParamDescriptor descriptor;
     nsPrintfCString sourceDescription("Element %u in parameterDescriptors", i);
-    if (!descriptor.Init(aCx, descriptorElement, sourceDescription.get())) {
+    if (!descriptor.Init(callCx, descriptorElement, sourceDescription.get())) {
       aRv.NoteJSContextException(aCx);
       return AudioParamDescriptorMap();
     }
