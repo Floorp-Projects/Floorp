@@ -34,7 +34,7 @@ class _ActionButton extends PureComponent {
     return {
       children: PropTypes.node,
       className: PropTypes.string.isRequired,
-      disabled: PropTypes.bool.isRequired,
+      disabled: PropTypes.bool,
       disabledTitle: PropTypes.string,
       onClick: PropTypes.func.isRequired,
     };
