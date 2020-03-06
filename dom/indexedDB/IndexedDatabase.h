@@ -8,10 +8,8 @@
 #define mozilla_dom_indexeddatabase_h__
 
 #include "js/StructuredClone.h"
-#include "mozilla/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "InitializedOnce.h"
 
 namespace mozilla {
 namespace dom {
@@ -35,24 +33,13 @@ struct StructuredCloneFile {
     eEndGuard
   };
 
-  StructuredCloneFile(const StructuredCloneFile&) = delete;
-  StructuredCloneFile& operator=(const StructuredCloneFile&) = delete;
-#ifdef NS_BUILD_REFCNT_LOGGING
-  // In IndexedDatabaseInlines.h
-  StructuredCloneFile(StructuredCloneFile&&);
-#else
-  StructuredCloneFile(StructuredCloneFile&&) = default;
-#endif
-  StructuredCloneFile& operator=(StructuredCloneFile&&) = delete;
+  RefPtr<Blob> mBlob;
+  RefPtr<IDBMutableFile> mMutableFile;
+  RefPtr<FileInfo> mFileInfo;
+  FileType mType;
 
   // In IndexedDatabaseInlines.h
-  inline explicit StructuredCloneFile(FileType aType);
-
-  // In IndexedDatabaseInlines.h
-  inline StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob);
-
-  // In IndexedDatabaseInlines.h
-  inline StructuredCloneFile(FileType aType, RefPtr<FileInfo> aFileInfo);
+  inline explicit StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob = {});
 
   // In IndexedDatabaseInlines.h
   inline explicit StructuredCloneFile(RefPtr<IDBMutableFile> aMutableFile);
@@ -62,52 +49,6 @@ struct StructuredCloneFile {
 
   // In IndexedDatabaseInlines.h
   inline bool operator==(const StructuredCloneFile& aOther) const;
-
-  // XXX This is only needed for a schema upgrade (UpgradeSchemaFrom19_0To20_0).
-  // If support for older schemas is dropped, we can probably remove this method
-  // and make mType const.
-  void MutateType(FileType aNewType) { mType = aNewType; }
-
-  FileType Type() const { return mType; }
-
-  const indexedDB::FileInfo& FileInfo() const {
-    return *mContents->as<RefPtr<indexedDB::FileInfo>>();
-  }
-
-  // In IndexedDatabaseInlines.h
-  RefPtr<indexedDB::FileInfo> FileInfoPtr() const;
-
-  const dom::Blob& Blob() const { return *mContents->as<RefPtr<dom::Blob>>(); }
-
-  // XXX This is currently used for a number of reasons. Bug 1620560 will remove
-  // the need for one of them, but the uses of do_GetWeakReference in
-  // IDBDatabase::GetOrCreateFileActorForBlob and WrapAsJSObject in
-  // CopyingStructuredCloneReadCallback are probably harder to change.
-  dom::Blob& MutableBlob() const { return *mContents->as<RefPtr<dom::Blob>>(); }
-
-  // In IndexedDatabaseInlines.h
-  inline RefPtr<dom::Blob> BlobPtr() const;
-
-  bool HasBlob() const { return mContents->is<RefPtr<dom::Blob>>(); }
-
-  const IDBMutableFile& MutableFile() const {
-    return *mContents->as<RefPtr<IDBMutableFile>>();
-  }
-
-  IDBMutableFile& MutableMutableFile() const {
-    return *mContents->as<RefPtr<IDBMutableFile>>();
-  }
-
-  bool HasMutableFile() const {
-    return mContents->is<RefPtr<IDBMutableFile>>();
-  }
-
- private:
-  InitializedOnce<
-      const Variant<Nothing, RefPtr<dom::Blob>, RefPtr<IDBMutableFile>,
-                    RefPtr<indexedDB::FileInfo>>>
-      mContents;
-  FileType mType;
 };
 
 struct StructuredCloneReadInfo {
