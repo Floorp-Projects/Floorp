@@ -1853,8 +1853,9 @@ static inline bool ConvertJSValueToString(
 }
 
 template <typename T>
-static inline bool ConvertJSValueToString(JSContext* cx,
-                                          JS::Handle<JS::Value> v, T& result) {
+static inline bool ConvertJSValueToString(
+    JSContext* cx, JS::Handle<JS::Value> v,
+    const char* /* unused sourceDescription */, T& result) {
   return ConvertJSValueToString(cx, v, eStringify, eStringify, result);
 }
 
@@ -1864,9 +1865,9 @@ MOZ_MUST_USE bool NormalizeUSVString(
     binding_detail::FakeString<char16_t>& aString);
 
 template <typename T>
-static inline bool ConvertJSValueToUSVString(JSContext* cx,
-                                             JS::Handle<JS::Value> v,
-                                             T& result) {
+static inline bool ConvertJSValueToUSVString(
+    JSContext* cx, JS::Handle<JS::Value> v,
+    const char* /* unused sourceDescription */, T& result) {
   if (!ConvertJSValueToString(cx, v, eStringify, eStringify, result)) {
     return false;
   }
@@ -1899,12 +1900,15 @@ inline bool ConvertIdToString(JSContext* cx, JS::HandleId id, T& result,
   return true;
 }
 
-bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
-                                bool nullable, nsACString& result);
+bool ConvertJSValueToByteString(BindingCallContext& cx, JS::Handle<JS::Value> v,
+                                bool nullable, const char* sourceDescription,
+                                nsACString& result);
 
-inline bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
+inline bool ConvertJSValueToByteString(BindingCallContext& cx,
+                                       JS::Handle<JS::Value> v,
+                                       const char* sourceDescription,
                                        nsACString& result) {
-  return ConvertJSValueToByteString(cx, v, false, result);
+  return ConvertJSValueToByteString(cx, v, false, sourceDescription, result);
 }
 
 template <typename T>

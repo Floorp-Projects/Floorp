@@ -882,7 +882,8 @@ bool Base64Encode(JSContext* cx, HandleValue val, MutableHandleValue out) {
   MOZ_ASSERT(cx);
 
   nsAutoCString encodedString;
-  if (!ConvertJSValueToByteString(cx, val, false, encodedString)) {
+  BindingCallContext callCx(cx, "Base64Encode");
+  if (!ConvertJSValueToByteString(callCx, val, false, "value", encodedString)) {
     return false;
   }
 
@@ -905,7 +906,8 @@ bool Base64Decode(JSContext* cx, HandleValue val, MutableHandleValue out) {
   MOZ_ASSERT(cx);
 
   nsAutoCString encodedString;
-  if (!ConvertJSValueToByteString(cx, val, false, encodedString)) {
+  BindingCallContext callCx(cx, "Base64Decode");
+  if (!ConvertJSValueToByteString(callCx, val, false, "value", encodedString)) {
     return false;
   }
 
