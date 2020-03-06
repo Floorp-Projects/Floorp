@@ -21,7 +21,6 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For FastBaseKeyframe etc.
-#include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/Document.h"  // For Document::AreWebAnimationsImplicitKeyframesEnabled
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffect.h"  // For PropertyValuesPair etc.
@@ -414,14 +413,15 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
     // value).
     if (!value.isObject() && !value.isNullOrUndefined()) {
       dom::ThrowErrorMessage<dom::MSG_NOT_OBJECT>(
-          aCx, aContext, "Element of sequence<Keyframe> argument");
+          aCx,
+          nsPrintfCString("%sElement of sequence<Keyframe> argument", aContext)
+              .get());
       return false;
     }
 
     // Convert the JS value into a BaseKeyframe dictionary value.
     dom::binding_detail::FastBaseKeyframe keyframeDict;
-    BindingCallContext callCx(aCx, aContext);
-    if (!keyframeDict.Init(callCx, value,
+    if (!keyframeDict.Init(aCx, value,
                            "Element of sequence<Keyframe> argument")) {
       // This may happen if the value type of the member of BaseKeyframe is
       // invalid. e.g. `offset` only accept a double value, so if we provide a
@@ -993,8 +993,8 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
   // Convert the object to a property-indexed keyframe dictionary to
   // get its explicit dictionary members.
   dom::binding_detail::FastBasePropertyIndexedKeyframe keyframeDict;
-  // XXXbz Pass in the method name from callers and set up a BindingCallContext?
-  if (!keyframeDict.Init(aCx, aValue, "BasePropertyIndexedKeyframe argument")) {
+  if (!keyframeDict.Init(aCx, aValue, "BasePropertyIndexedKeyframe argument",
+                         false)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

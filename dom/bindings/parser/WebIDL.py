@@ -2122,14 +2122,6 @@ class IDLType(IDLObject):
     def __str__(self):
         return str(self.name)
 
-    def prettyName(self):
-        """
-        A name that looks like what this type is named in the IDL spec.  By default
-        this is just our .name, but types that have more interesting spec
-        representations should override this.
-        """
-        return str(self.name)
-
     def isType(self):
         return True
 
@@ -2361,9 +2353,6 @@ class IDLNullableType(IDLParametrizedType):
     def __str__(self):
         return self.inner.__str__() + "OrNull"
 
-    def prettyName(self):
-        return self.inner.prettyName() + "?"
-
     def nullable(self):
         return True
 
@@ -2523,9 +2512,6 @@ class IDLSequenceType(IDLParametrizedType):
     def __str__(self):
         return self.inner.__str__() + "Sequence"
 
-    def prettyName(self):
-        return "sequence<%s>" % self.inner.prettyName()
-
     def nullable(self):
         return False
 
@@ -2607,9 +2593,6 @@ class IDLRecordType(IDLParametrizedType):
     def __str__(self):
         return self.keyType.__str__() + self.inner.__str__() + "Record"
 
-    def prettyName(self):
-        return "record<%s, %s>" % (self.keyType.prettyName(), self.inner.prettyName())
-
     def isRecord(self):
         return True
 
@@ -2658,9 +2641,6 @@ class IDLUnionType(IDLType):
     def __hash__(self):
         assert self.isComplete()
         return self.name.__hash__()
-
-    def prettyName(self):
-        return "(" + " or ".join(m.prettyName() for m in self.memberTypes) + ")"
 
     def isVoid(self):
         return False
@@ -3098,9 +3078,6 @@ class IDLPromiseType(IDLParametrizedType):
     def __str__(self):
         return self.inner.__str__() + "Promise"
 
-    def prettyName(self):
-        return "Promise<%s>" % self.inner.prettyName()
-
     def isPromise(self):
         return True
 
@@ -3208,42 +3185,6 @@ class IDLBuiltinType(IDLType):
         Types.ReadableStream: IDLType.Tags.interface,
     }
 
-    PrettyNames = {
-        Types.byte: "byte",
-        Types.octet: "octet",
-        Types.short: "short",
-        Types.unsigned_short: "unsigned short",
-        Types.long: "long",
-        Types.unsigned_long: "unsigned long",
-        Types.long_long: "long long",
-        Types.unsigned_long_long: "unsigned long long",
-        Types.boolean: "boolean",
-        Types.unrestricted_float: "unrestricted float",
-        Types.float: "float",
-        Types.unrestricted_double: "unrestricted double",
-        Types.double: "double",
-        Types.any: "any",
-        Types.domstring: "DOMString",
-        Types.bytestring: "ByteString",
-        Types.usvstring: "USVString",
-        Types.utf8string: "USVString", # That's what it is in spec terms
-        Types.jsstring: "USVString", # Again, that's what it is in spec terms
-        Types.object: "object",
-        Types.void: "void",
-        Types.ArrayBuffer: "ArrayBuffer",
-        Types.ArrayBufferView: "ArrayBufferView",
-        Types.Int8Array: "Int8Array",
-        Types.Uint8Array: "Uint8Array",
-        Types.Uint8ClampedArray: "Uint8ClampedArray",
-        Types.Int16Array: "Int16Array",
-        Types.Uint16Array: "Uint16Array",
-        Types.Int32Array: "Int32Array",
-        Types.Uint32Array: "Uint32Array",
-        Types.Float32Array: "Float32Array",
-        Types.Float64Array: "Float64Array",
-        Types.ReadableStream: "ReadableStream",
-    }
-
     def __init__(self, location, name, type, clamp=False, enforceRange=False, treatNullAsEmpty=False,
                  allowShared=False, attrLocation=[]):
         """
@@ -3290,9 +3231,6 @@ class IDLBuiltinType(IDLType):
             assert self.isBufferSource()
             return "MaybeShared" + str(self.name)
         return str(self.name)
-
-    def prettyName(self):
-        return IDLBuiltinType.PrettyNames[self._typeTag]
 
     def clamped(self, attrLocation):
         if not self._clamped:

@@ -12,7 +12,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const text =
-    "TypeError: Request constructor: 'foo' (value of 'redirect' member of RequestInit) is not a valid value " +
+    "TypeError: 'redirect' member of RequestInit 'foo' is not a valid value " +
     "for enumeration RequestRedirect";
   await executeAndWaitForMessage(
     hud,

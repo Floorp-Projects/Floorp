@@ -37,7 +37,7 @@ class CallbackInterface : public CallbackObject {
                        aIncumbentGlobal) {}
 
  protected:
-  bool GetCallableProperty(BindingCallContext& cx, JS::Handle<jsid> aPropId,
+  bool GetCallableProperty(JSContext* cx, JS::Handle<jsid> aPropId,
                            JS::MutableHandle<JS::Value> aCallable);
 
   // See CallbackObject for an explanation of the arguments.

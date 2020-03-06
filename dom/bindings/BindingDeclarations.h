@@ -34,8 +34,6 @@ class nsWrapperCache;
 namespace mozilla {
 namespace dom {
 
-class BindingCallContext;
-
 // Struct that serves as a base class for all dictionaries.  Particularly useful
 // so we can use std::is_base_of to detect dictionary template arguments.
 struct DictionaryBase {

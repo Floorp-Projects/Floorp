@@ -90,8 +90,8 @@ struct TimingParams {
       if (durationInMs >= 0) {
         result.emplace(StickyTimeDuration::FromMilliseconds(durationInMs));
       } else {
-        nsPrintfCString err("Duration (%g) must be nonnegative", durationInMs);
-        aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+        aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+            NS_LITERAL_STRING("duration"));
       }
     } else if (!aDuration.GetAsString().EqualsLiteral("auto")) {
       aRv.ThrowTypeError<dom::MSG_INVALID_DURATION_ERROR>(
@@ -102,21 +102,15 @@ struct TimingParams {
 
   static void ValidateIterationStart(double aIterationStart, ErrorResult& aRv) {
     if (aIterationStart < 0) {
-      nsPrintfCString err("Iteration start (%g) must not be negative",
-                          aIterationStart);
-      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+      aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+          NS_LITERAL_STRING("iterationStart"));
     }
   }
 
   static void ValidateIterations(double aIterations, ErrorResult& aRv) {
-    if (IsNaN(aIterations)) {
-      aRv.ThrowTypeError(u"Iterations must not be NaN");
-      return;
-    }
-
-    if (aIterations < 0) {
-      nsPrintfCString err("Iterations (%g) must not be negative", aIterations);
-      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+    if (IsNaN(aIterations) || aIterations < 0) {
+      aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+          NS_LITERAL_STRING("iterations"));
     }
   }
 
