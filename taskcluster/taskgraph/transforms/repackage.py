@@ -382,7 +382,7 @@ def _generate_task_output_files(task, worker_implementation, repackage_config, l
     if worker_implementation == ('docker-worker', 'linux'):
         local_prefix = '/builds/worker/workspace/'
     elif worker_implementation == ('generic-worker', 'windows'):
-        local_prefix = ''
+        local_prefix = 'workspace/'
     else:
         raise NotImplementedError(
             'Unsupported worker implementation: "{}"'.format(worker_implementation))
@@ -391,7 +391,7 @@ def _generate_task_output_files(task, worker_implementation, repackage_config, l
     for config in repackage_config:
         output_files.append({
             'type': 'file',
-            'path': '{}build/outputs/{}{}'
+            'path': '{}outputs/{}{}'
                     .format(local_prefix, locale_output_path, config['output']),
             'name': '{}/{}{}'.format(artifact_prefix, locale_output_path, config['output']),
         })
