@@ -26,7 +26,13 @@ def dependentlibs_win32_objdump(lib):
     for line in proc.stdout:
         match = re.match('\s+DLL Name: (\S+)', line)
         if match:
-            deps.append(match.group(1))
+            # The DLL Name found might be mixed-case or upper-case. When cross-compiling,
+            # the actual DLLs in dist/bin are all lowercase, whether they are produced
+            # by the build system or copied from WIN32_REDIST_DIR. By turning everything
+            # to lowercase, we ensure we always find the files.
+            # At runtime, when Firefox reads the dependentlibs.list file on Windows, the
+            # case doesn't matter.
+            deps.append(match.group(1).lower())
     proc.wait()
     return deps
 
