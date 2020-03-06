@@ -2899,12 +2899,17 @@ nsresult EditorBase::NotifyDocumentListeners(
       }
       // Needs to store all listeners before notifying ComposerCommandsUpdate
       // since notifying it might change mDocStateListeners.
-      AutoDocumentStateListenerArray listeners(mDocStateListeners);
+      const AutoDocumentStateListenerArray listeners(mDocStateListeners);
       if (composerCommandsUpdate) {
         composerCommandsUpdate->OnBeforeHTMLEditorDestroyed();
       }
       for (auto& listener : listeners) {
-        nsresult rv = listener->NotifyDocumentWillBeDestroyed();
+        // MOZ_KnownLive because 'listeners' is guaranteed to
+        // keep it alive.
+        //
+        // This can go away once
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+        nsresult rv = MOZ_KnownLive(listener)->NotifyDocumentWillBeDestroyed();
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2931,12 +2936,18 @@ nsresult EditorBase::NotifyDocumentListeners(
       }
       // Needs to store all listeners before notifying ComposerCommandsUpdate
       // since notifying it might change mDocStateListeners.
-      AutoDocumentStateListenerArray listeners(mDocStateListeners);
+      const AutoDocumentStateListenerArray listeners(mDocStateListeners);
       if (composerCommandsUpdate) {
         composerCommandsUpdate->OnHTMLEditorDirtyStateChanged(mDocDirtyState);
       }
       for (auto& listener : listeners) {
-        nsresult rv = listener->NotifyDocumentStateChanged(mDocDirtyState);
+        // MOZ_KnownLive because 'listeners' is guaranteed to
+        // keep it alive.
+        //
+        // This can go away once
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+        nsresult rv =
+            MOZ_KnownLive(listener)->NotifyDocumentStateChanged(mDocDirtyState);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }

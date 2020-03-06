@@ -168,9 +168,15 @@ uint32_t ResizeObserverController::BroadcastAllActiveObservations() {
 
   // Copy the observers as this invokes the callbacks and could register and
   // unregister observers at will.
-  nsTArray<RefPtr<ResizeObserver>> observers(mResizeObservers);
+  const nsTArray<RefPtr<ResizeObserver>> observers(mResizeObservers);
   for (auto& observer : observers) {
-    uint32_t targetDepth = observer->BroadcastActiveObservations();
+    // MOZ_KnownLive because 'observers' is guaranteed to keep it
+    // alive.
+    //
+    // This can go away once
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+    uint32_t targetDepth =
+        MOZ_KnownLive(observer)->BroadcastActiveObservations();
     if (targetDepth < shallowestTargetDepth) {
       shallowestTargetDepth = targetDepth;
     }

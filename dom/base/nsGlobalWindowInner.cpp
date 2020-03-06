@@ -7423,9 +7423,15 @@ void nsPIDOMWindowInner::BroadcastReport(Report* aReport) {
 }
 
 void nsPIDOMWindowInner::NotifyReportingObservers() {
-  nsTArray<RefPtr<ReportingObserver>> reportingObservers(mReportingObservers);
-  for (RefPtr<ReportingObserver>& observer : reportingObservers) {
-    observer->MaybeNotify();
+  const nsTArray<RefPtr<ReportingObserver>> reportingObservers(
+      mReportingObservers);
+  for (auto& observer : reportingObservers) {
+    // MOZ_KnownLive because 'reportingObservers' is guaranteed to
+    // keep it alive.
+    //
+    // This can go away once
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+    MOZ_KnownLive(observer)->MaybeNotify();
   }
 }
 
