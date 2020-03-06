@@ -405,6 +405,19 @@ async function cleanupPasswordNotifications(
   }
 }
 
+async function clearMessageCache(browser) {
+  await SpecialPowers.spawn(browser, [], async () => {
+    const { LoginManagerChild } = ChromeUtils.import(
+      "resource://gre/modules/LoginManagerChild.jsm",
+      this
+    );
+    let docState = LoginManagerChild.forWindow(content).stateForDocument(
+      content.document
+    );
+    docState.lastSubmittedValuesByRootElement = new content.WeakMap();
+  });
+}
+
 /**
  * Checks the doorhanger's username and password.
  *
@@ -682,6 +695,7 @@ function listenForTestNotification(expectedMessage, count = 1) {
     LoginManagerParent.setListenerForTests((msg, data) => {
       if (msg == expectedMessage && --count == 0) {
         LoginManagerParent.setListenerForTests(null);
+        info("listenForTestNotification, resolving for message: " + msg);
         resolve(data);
       }
     });
@@ -735,6 +749,7 @@ async function changeContentFormValues(browser, selectorValues) {
 }
 
 async function changeContentInputValue(browser, selector, str) {
+  await SimpleTest.promiseFocus(browser.ownerGlobal);
   let oldValue = await ContentTask.spawn(browser, [selector], function(sel) {
     return content.document.querySelector(sel).value;
   });
@@ -743,22 +758,23 @@ async function changeContentInputValue(browser, selector, str) {
     info("no change needed to value of " + selector + ": " + oldValue);
     return;
   }
-  let changedPromise = ContentTask.spawn(browser, [selector], async function(
-    sel
-  ) {
-    let input = content.document.querySelector(sel);
+  info(`changeContentInputValue: from "${oldValue}" to "${str}"`);
+  await ContentTask.spawn(browser, { selector, str }, async function({
+    selector,
+    str,
+  }) {
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    let input = content.document.querySelector(selector);
     input.focus();
     input.select();
-    await ContentTaskUtils.waitForEvent(input, "change");
-    info("change event on " + sel + ": " + input.value);
+    await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
+    let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
+    if (str) {
+      await EventUtils.sendString(str, content);
+    }
+    input.blur();
+    await changedPromise;
   });
-
-  await SimpleTest.promiseFocus(browser);
-  await EventUtils.synthesizeKey("KEY_Backspace");
-  if (str) {
-    await EventUtils.sendString(str);
-  }
-  info("waiting for changedPromise");
-  await EventUtils.synthesizeKey("KEY_Tab");
-  await changedPromise;
+  info("Input value changed");
+  await TestUtils.waitForTick();
 }
