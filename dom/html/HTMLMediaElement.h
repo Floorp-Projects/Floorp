@@ -1335,6 +1335,15 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // process in order to keep its playing state correct.
   void NotifyMediaControlPlaybackStateChanged();
 
+  // After media has been paused, trigger a timer to stop listening to the media
+  // control key events.
+  void CreateStopMediaControlTimerIfNeeded();
+  static void StopMediaControlTimerCallback(nsITimer* aTimer, void* aClosure);
+
+  // Clear the timer when we want to continue listening to the media control
+  // key events.
+  void ClearStopMediaControlTimerIfNeeded();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
@@ -1552,6 +1561,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Timer used to simulate video-suspend.
   nsCOMPtr<nsITimer> mVideoDecodeSuspendTimer;
+
+  // Timer used to stop listening media control events.
+  nsCOMPtr<nsITimer> mStopMediaControlTimer;
 
   // Encrypted Media Extension media keys.
   RefPtr<MediaKeys> mMediaKeys;

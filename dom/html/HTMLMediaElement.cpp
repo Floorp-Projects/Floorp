@@ -136,6 +136,11 @@ extern mozilla::LazyLogModule gAutoplayPermissionLog;
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
           ("HTMLMediaElement=%p, " msg, this, ##__VA_ARGS__))
 
+#undef CONTROLLER_TIMER_LOG
+#define CONTROLLER_TIMER_LOG(element, msg, ...) \
+  MOZ_LOG(gMediaControlLog, LogLevel::Debug,    \
+          ("HTMLMediaElement=%p, " msg, element, ##__VA_ARGS__))
+
 #define LOG(type, msg) MOZ_LOG(gMediaElementLog, type, msg)
 #define LOG_EVENT(type, msg) MOZ_LOG(gMediaElementEventsLog, type, msg)
 
@@ -3208,6 +3213,9 @@ void HTMLMediaElement::Pause(ErrorResult& aRv) {
 
   // We don't need to resume media which is paused explicitly by user.
   ClearResumeDelayedMediaPlaybackAgentIfNeeded();
+
+  // Start timer to trigger stopping listening to media control key events.
+  CreateStopMediaControlTimerIfNeeded();
 
   if (!oldPaused) {
     FireTimeUpdate(false);
@@ -7691,6 +7699,10 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
     return;
   }
 
+  // As we would like to start listening to media control event again so we
+  // should clear the timer, which is used to stop listening to the event.
+  ClearStopMediaControlTimerIfNeeded();
+
   if (!mMediaControlEventListener) {
     mMediaControlEventListener = new MediaControlEventListener(this);
   }
@@ -7716,6 +7728,42 @@ void HTMLMediaElement::StopListeningMediaControlEventIfNeeded() {
   if (mMediaControlEventListener && mMediaControlEventListener->IsStarted()) {
     mMediaControlEventListener->NotifyMediaStoppedPlaying();
     mMediaControlEventListener->Stop();
+  }
+}
+
+/* static */
+void HTMLMediaElement::StopMediaControlTimerCallback(nsITimer* aTimer,
+                                                     void* aClosure) {
+  MOZ_ASSERT(NS_IsMainThread());
+  auto element = static_cast<HTMLMediaElement*>(aClosure);
+  CONTROLLER_TIMER_LOG(element,
+                       "Runnning stop media control timmer callback function");
+  element->StopListeningMediaControlEventIfNeeded();
+  element->mStopMediaControlTimer = nullptr;
+}
+
+void HTMLMediaElement::CreateStopMediaControlTimerIfNeeded() {
+  MOZ_ASSERT(NS_IsMainThread());
+  // We would create timer only when `mMediaControlEventListener` exists and has
+  // been started.
+  if (mStopMediaControlTimer || !mMediaControlEventListener ||
+      !mMediaControlEventListener->IsStarted()) {
+    return;
+  }
+  MEDIACONTROL_LOG("Start stop media control timer");
+  NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mStopMediaControlTimer), StopMediaControlTimerCallback,
+      this, StaticPrefs::media_mediacontrol_stopcontrol_timer_ms(),
+      nsITimer::TYPE_ONE_SHOT,
+      "HTMLMediaElement::StopMediaControlTimerCallback",
+      mMainThreadEventTarget);
+}
+
+void HTMLMediaElement::ClearStopMediaControlTimerIfNeeded() {
+  if (mStopMediaControlTimer) {
+    MEDIACONTROL_LOG("Cancel stop media control timer");
+    mStopMediaControlTimer->Cancel();
+    mStopMediaControlTimer = nullptr;
   }
 }
 
