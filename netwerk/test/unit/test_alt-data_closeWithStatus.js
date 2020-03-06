@@ -69,13 +69,18 @@ function contentHandler(metadata, response) {
   }
 }
 
-function check_has_alt_data_in_index(aHasAltData) {
+function check_has_alt_data_in_index(aHasAltData, callback) {
   if (inChildProcess()) {
+    callback();
     return;
   }
-  var hasAltData = {};
-  cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
-  Assert.equal(hasAltData.value, aHasAltData);
+
+  syncWithCacheIOThread(() => {
+    var hasAltData = {};
+    cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
+    Assert.equal(hasAltData.value, aHasAltData);
+    callback();
+  }, true);
 }
 
 function run_test() {
@@ -107,26 +112,29 @@ function readServerContent(request, buffer) {
 
   Assert.equal(buffer, responseContent);
   Assert.equal(cc.alternativeDataType, "");
-  check_has_alt_data_in_index(false);
+  check_has_alt_data_in_index(false, () => {
+    if (!inChildProcess()) {
+      currentThread = Services.tm.currentThread;
+    }
 
-  if (!inChildProcess()) {
-    currentThread = Services.tm.currentThread;
-  }
+    executeSoon(() => {
+      var os = cc.openAlternativeOutputStream(
+        altContentType,
+        altContent.length
+      );
 
-  executeSoon(() => {
-    var os = cc.openAlternativeOutputStream(altContentType, altContent.length);
-
-    var aos = os.QueryInterface(Ci.nsIAsyncOutputStream);
-    aos.asyncWait(
-      _ => {
-        os.write(altContent, altContent.length);
-        aos.closeWithStatus(Cr.NS_ERROR_FAILURE);
-        executeSoon(flushAndReadServerContentAgain);
-      },
-      0,
-      0,
-      currentThread
-    );
+      var aos = os.QueryInterface(Ci.nsIAsyncOutputStream);
+      aos.asyncWait(
+        _ => {
+          os.write(altContent, altContent.length);
+          aos.closeWithStatus(Cr.NS_ERROR_FAILURE);
+          executeSoon(flushAndReadServerContentAgain);
+        },
+        0,
+        0,
+        currentThread
+      );
+    });
   });
 }
 
@@ -160,6 +168,5 @@ function readServerContentAgainCB(request, buffer) {
 
   Assert.equal(buffer, responseContent);
   Assert.equal(cc.alternativeDataType, "");
-  check_has_alt_data_in_index(false);
-  httpServer.stop(do_test_finished);
+  check_has_alt_data_in_index(false, () => httpServer.stop(do_test_finished));
 }
