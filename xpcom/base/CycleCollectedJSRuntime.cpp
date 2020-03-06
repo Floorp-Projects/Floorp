@@ -1396,16 +1396,26 @@ void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus,
                                   OOMState::Recovered);
       }
 
-      // Do any deferred finalization of native objects. Normally we do this
-      // incrementally for an incremental GC, and immediately for a
-      // non-incremental GC, on the basis that the type of GC reflects how
-      // urgently resources should be destroyed. However under some
-      // circumstances (such as in js::InternalCallOrConstruct) we can end up
-      // running a non-incremental GC when there is a pending exception, and the
-      // finalizers are not set up to handle that. In that case, just run them
-      // later, after we've returned to the event loop.
-      bool finalizeIncrementally =
-          JS::WasIncrementalGC(mJSRuntime) || JS_IsExceptionPending(aContext);
+      // Do any deferred finalization of native objects. We will run the
+      // finalizer later after we've returned to the event loop if any of
+      // three conditions hold:
+      // a) The GC is incremental. In this case, we probably care about pauses.
+      // b) There is a pending exception. The finalizers are not set up to run
+      // in that state.
+      // c) The GC was triggered for internal JS engine reasons. If this is the
+      // case, then we may be in the middle of running some code that the JIT
+      // has assumed can't have certain kinds of side effects. Finalizers can do
+      // all sorts of things, such as run JS, so we want to run them later.
+      // However, if we're shutting down, we need to destroy things immediately.
+      //
+      // Why do we ever bother finalizing things immediately if that's so
+      // questionable? In some situations, such as while testing or in low
+      // memory situations, we really want to free things right away.
+      bool finalizeIncrementally = JS::WasIncrementalGC(mJSRuntime) ||
+                                   JS_IsExceptionPending(aContext) ||
+                                   (JS::InternalGCReason(aReason) &&
+                                    aReason != JS::GCReason::DESTROY_RUNTIME);
+
       FinalizeDeferredThings(
           finalizeIncrementally ? CycleCollectedJSContext::FinalizeIncrementally
                                 : CycleCollectedJSContext::FinalizeNow);
