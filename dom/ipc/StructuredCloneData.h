@@ -73,7 +73,7 @@ class SharedJSAllocatedData final {
   size_t DataLength() const { return mData.Size(); }
 
  private:
-  ~SharedJSAllocatedData() {}
+  ~SharedJSAllocatedData() = default;
 
   JSStructuredCloneData mData;
 };

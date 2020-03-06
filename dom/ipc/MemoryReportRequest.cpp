@@ -90,7 +90,7 @@ MemoryReportRequestClient::MemoryReportRequestClient(
   }
 }
 
-MemoryReportRequestClient::~MemoryReportRequestClient() {}
+MemoryReportRequestClient::~MemoryReportRequestClient() = default;
 
 class HandleReportCallback final : public nsIHandleReportCallback {
  public:

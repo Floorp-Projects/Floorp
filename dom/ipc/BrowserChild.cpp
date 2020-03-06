@@ -4045,7 +4045,7 @@ BrowserChildMessageManager::BrowserChildMessageManager(
     : ContentFrameMessageManager(new nsFrameMessageManager(aBrowserChild)),
       mBrowserChild(aBrowserChild) {}
 
-BrowserChildMessageManager::~BrowserChildMessageManager() {}
+BrowserChildMessageManager::~BrowserChildMessageManager() = default;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowserChildMessageManager)
 

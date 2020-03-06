@@ -187,7 +187,7 @@ class ProcessPriorityManagerChild final : public nsIObserver {
   static StaticRefPtr<ProcessPriorityManagerChild> sSingleton;
 
   ProcessPriorityManagerChild();
-  ~ProcessPriorityManagerChild() {}
+  ~ProcessPriorityManagerChild() = default;
   DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManagerChild);
 
   void Init();
