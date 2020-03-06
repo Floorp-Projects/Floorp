@@ -323,7 +323,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
                                        : fallbackCredentials;
 
   if (mode == RequestMode::Navigate) {
-    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>(u"navigate");
+    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>("navigate");
     return nullptr;
   }
   if (aInit.IsAnyMemberPresent() && request->Mode() == RequestMode::Navigate) {
@@ -535,7 +535,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     request->GetMethod(method);
     // method is guaranteed to be uppercase due to step 14.2 above.
     if (method.EqualsLiteral("HEAD") || method.EqualsLiteral("GET")) {
-      aRv.ThrowTypeError(u"HEAD or GET Request cannot have a body.");
+      aRv.ThrowTypeError("HEAD or GET Request cannot have a body.");
       return nullptr;
     }
   }

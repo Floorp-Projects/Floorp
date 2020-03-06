@@ -91,7 +91,7 @@ void SVGAnimatedEnumeration::SetBaseValue(uint16_t aValue,
     }
     mapping++;
   }
-  return aRv.ThrowTypeError(u"Invalid SVGAnimatedEnumeration base value");
+  return aRv.ThrowTypeError("Invalid SVGAnimatedEnumeration base value");
 }
 
 void SVGAnimatedEnumeration::SetAnimValue(uint16_t aValue,

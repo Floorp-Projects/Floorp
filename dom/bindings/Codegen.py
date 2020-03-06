@@ -5740,13 +5740,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             getPromiseGlobal = fill(
                 """
                 if (!$${val}.isObject()) {
-                  aRv.ThrowTypeError<MSG_NOT_OBJECT>(u"${sourceDescription}");
+                  aRv.ThrowTypeError<MSG_NOT_OBJECT>("${sourceDescription}");
                   return nullptr;
                 }
                 JSObject* unwrappedVal = js::CheckedUnwrapStatic(&$${val}.toObject());
                 if (!unwrappedVal) {
                   // A slight lie, but not much of one, for a dead object wrapper.
-                  aRv.ThrowTypeError<MSG_NOT_OBJECT>(u"${sourceDescription}");
+                  aRv.ThrowTypeError<MSG_NOT_OBJECT>("${sourceDescription}");
                   return nullptr;
                 }
                 globalObj = JS::GetNonCCWObjectGlobal(unwrappedVal);

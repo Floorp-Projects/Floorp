@@ -535,7 +535,7 @@ void IDBTypedCursor<CursorType>::Advance(const uint32_t aCount,
   AssertIsOnOwningThread();
 
   if (!aCount) {
-    aRv.ThrowTypeError(u"0 (Zero) is not a valid advance count.");
+    aRv.ThrowTypeError("0 (Zero) is not a valid advance count.");
     return;
   }
 

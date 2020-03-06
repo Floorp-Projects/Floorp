@@ -763,8 +763,8 @@ void Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
   if (aCurrentTime.IsNull()) {
     if (!GetCurrentTimeAsDuration().IsNull()) {
       aRv.ThrowTypeError(
-          u"Current time is resolved but trying to set it to an unresolved "
-          u"time");
+          "Current time is resolved but trying to set it to an unresolved "
+          "time");
     }
     return;
   }

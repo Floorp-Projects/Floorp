@@ -149,7 +149,7 @@ bool WindowNamedPropertiesHandler::defineProperty(
     JS::ObjectOpResult& result) const {
   ErrorResult rv;
   rv.ThrowTypeError(
-      u"Not allowed to define a property on the named properties object.");
+      "Not allowed to define a property on the named properties object.");
   MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
   return false;
 }

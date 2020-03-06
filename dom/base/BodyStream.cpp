@@ -342,7 +342,7 @@ void BodyStream::ErrorPropagation(JSContext* aCx,
   ErrorResult rv;
   // XXXbz can we come up with a better error message here to tell the
   // consumer what went wrong?
-  rv.ThrowTypeError(u"Error in body stream");
+  rv.ThrowTypeError("Error in body stream");
 
   JS::Rooted<JS::Value> errorValue(aCx);
   bool ok = ToJSValue(aCx, std::move(rv), &errorValue);

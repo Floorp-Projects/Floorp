@@ -158,20 +158,6 @@ struct CStringArrayAppender {
     Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
   }
 
-  // Also allow passing u"" instances for our args.
-  template <int N, typename... Ts>
-  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
-                     const char16_t (&aFirst)[N], Ts&&... aOtherArgs) {
-    if (aCount == 0) {
-      MOZ_ASSERT(false,
-                 "There should not be more string arguments provided than are "
-                 "required by the ErrNum.");
-      return;
-    }
-    aArgs.AppendElement(NS_ConvertUTF16toUTF8(aFirst));
-    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
-  }
-
   // Allow passing nsACString instances for our args.
   template <typename... Ts>
   static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
@@ -374,12 +360,17 @@ class TErrorResult {
     this->template ThrowTypeError<dom::MSG_ONE_OFF_TYPEERR>(aMessage);
   }
 
+  inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowTypeError(const nsACString& aMessage) {
+    this->template ThrowTypeError<dom::MSG_ONE_OFF_TYPEERR>(aMessage);
+  }
+
   // To be used when throwing a TypeError with a completely custom
   // message string that's a string literal that's only used in one spot.
   template <int N>
   void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowTypeError(const char16_t (&aMessage)[N]) {
-    ThrowTypeError(nsLiteralString(aMessage));
+  ThrowTypeError(const char (&aMessage)[N]) {
+    ThrowTypeError(nsLiteralCString(aMessage));
   }
 
   template <dom::ErrNum errorNumber, typename... Ts>
@@ -398,12 +389,17 @@ class TErrorResult {
     this->template ThrowRangeError<dom::MSG_ONE_OFF_RANGEERR>(aMessage);
   }
 
+  inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowRangeError(const nsACString& aMessage) {
+    this->template ThrowRangeError<dom::MSG_ONE_OFF_RANGEERR>(aMessage);
+  }
+
   // To be used when throwing a RangeError with a completely custom
   // message string that's a string literal that's only used in one spot.
   template <int N>
   void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowRangeError(const char16_t (&aMessage)[N]) {
-    ThrowRangeError(nsLiteralString(aMessage));
+  ThrowRangeError(const char (&aMessage)[N]) {
+    ThrowRangeError(nsLiteralCString(aMessage));
   }
 
   bool IsErrorWithMessage() const {
