@@ -137,6 +137,70 @@ struct StringArrayAppender {
   }
 };
 
+struct CStringArrayAppender {
+  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount) {
+    MOZ_RELEASE_ASSERT(aCount == 0,
+                       "Must give at least as many string arguments as are "
+                       "required by the ErrNum.");
+  }
+
+  // Allow passing nsAString instances for our args.
+  template <typename... Ts>
+  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
+                     const nsAString& aFirst, Ts&&... aOtherArgs) {
+    if (aCount == 0) {
+      MOZ_ASSERT(false,
+                 "There should not be more string arguments provided than are "
+                 "required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(NS_ConvertUTF16toUTF8(aFirst));
+    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
+  }
+
+  // Also allow passing u"" instances for our args.
+  template <int N, typename... Ts>
+  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
+                     const char16_t (&aFirst)[N], Ts&&... aOtherArgs) {
+    if (aCount == 0) {
+      MOZ_ASSERT(false,
+                 "There should not be more string arguments provided than are "
+                 "required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(NS_ConvertUTF16toUTF8(aFirst));
+    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
+  }
+
+  // Allow passing nsACString instances for our args.
+  template <typename... Ts>
+  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
+                     const nsACString& aFirst, Ts&&... aOtherArgs) {
+    if (aCount == 0) {
+      MOZ_ASSERT(false,
+                 "There should not be more string arguments provided than are "
+                 "required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(aFirst);
+    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
+  }
+
+  // Allow passing "" instances for our args.
+  template <int N, typename... Ts>
+  static void Append(nsTArray<nsCString>& aArgs, uint16_t aCount,
+                     const char (&aFirst)[N], Ts&&... aOtherArgs) {
+    if (aCount == 0) {
+      MOZ_ASSERT(false,
+                 "There should not be more string arguments provided than are "
+                 "required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(nsLiteralCString(aFirst));
+    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
+  }
+};
+
 }  // namespace dom
 
 class ErrorResult;
@@ -479,8 +543,8 @@ class TErrorResult {
 
   // Helper method that creates a new Message for this TErrorResult,
   // and returns the arguments array from that Message.
-  nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber,
-                                               nsresult errorType);
+  nsTArray<nsCString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber,
+                                                nsresult errorType);
 
   template <dom::ErrNum errorNumber, typename... Ts>
   void ThrowErrorWithMessage(nsresult errorType, Ts&&... messageArgs) {
@@ -493,7 +557,7 @@ class TErrorResult {
 
     ClearUnionData();
 
-    nsTArray<nsString>& messageArgsArray =
+    nsTArray<nsCString>& messageArgsArray =
         CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
     if (dom::ErrorFormatHasContext[errorNumber]) {
@@ -506,8 +570,8 @@ class TErrorResult {
       --argCount;
       messageArgsArray.AppendElement();
     }
-    dom::StringArrayAppender::Append(messageArgsArray, argCount,
-                                     std::forward<Ts>(messageArgs)...);
+    dom::CStringArrayAppender::Append(messageArgsArray, argCount,
+                                      std::forward<Ts>(messageArgs)...);
 #ifdef DEBUG
     mUnionState = HasMessage;
 #endif  // DEBUG
