@@ -181,6 +181,30 @@ const mockV5Data = {
   },
 };
 
+const migrationsInfo = [
+  {
+    migration: PreferenceExperiments.migrations.migration01MoveExperiments,
+    dataBefore: mockV1Data,
+    dataAfter: mockV2Data,
+  },
+  {
+    migration: PreferenceExperiments.migrations.migration02MultiPreference,
+    dataBefore: mockV2Data,
+    dataAfter: mockV3Data,
+  },
+  {
+    migration: PreferenceExperiments.migrations.migration03AddActionName,
+    dataBefore: mockV3Data,
+    dataAfter: mockV4Data,
+  },
+  {
+    migration: PreferenceExperiments.migrations.migration04RenameNameToSlug,
+    dataBefore: mockV4Data,
+    dataAfter: mockV5Data,
+  },
+  // Migration 5 is not a simple data migration. This style of tests does not apply to it.
+];
+
 /**
  * Make a mock `JsonFile` object with a no-op `saveSoon` method and a deep copy
  * of the data passed.
@@ -196,27 +220,30 @@ function makeMockJsonFile(data = {}) {
 
 /** Test that each migration results in the expected data */
 add_task(async function test_migrations() {
-  let mockJsonFile = makeMockJsonFile(mockV1Data);
-  await PreferenceExperiments.migrations.migration01MoveExperiments(
-    mockJsonFile
-  );
-  Assert.deepEqual(mockJsonFile.data, mockV2Data);
+  for (const { migration, dataAfter, dataBefore } of migrationsInfo) {
+    let mockJsonFile = makeMockJsonFile(dataBefore);
+    await migration(mockJsonFile);
+    Assert.deepEqual(
+      mockJsonFile.data,
+      dataAfter,
+      `Migration ${migration.name} should result in the expected data`
+    );
+  }
+});
 
-  mockJsonFile = makeMockJsonFile(mockV2Data);
-  await PreferenceExperiments.migrations.migration02MultiPreference(
-    mockJsonFile
-  );
-  Assert.deepEqual(mockJsonFile.data, mockV3Data);
-
-  mockJsonFile = makeMockJsonFile(mockV3Data);
-  await PreferenceExperiments.migrations.migration03AddActionName(mockJsonFile);
-  Assert.deepEqual(mockJsonFile.data, mockV4Data);
-
-  mockJsonFile = makeMockJsonFile(mockV4Data);
-  await PreferenceExperiments.migrations.migration04RenameNameToSlug(
-    mockJsonFile
-  );
-  Assert.deepEqual(mockJsonFile.data, mockV5Data);
+add_task(async function migrations_are_idempotent() {
+  for (const { migration, dataBefore } of migrationsInfo) {
+    const mockJsonFileOnce = makeMockJsonFile(dataBefore);
+    const mockJsonFileTwice = makeMockJsonFile(dataBefore);
+    await migration(mockJsonFileOnce);
+    await migration(mockJsonFileTwice);
+    await migration(mockJsonFileTwice);
+    Assert.deepEqual(
+      mockJsonFileOnce.data,
+      mockJsonFileTwice.data,
+      "migrating data twice should be idempotent for " + migration.name
+    );
+  }
 });
 
 add_task(async function migration03KeepsActionName() {
@@ -231,26 +258,51 @@ add_task(async function migration03KeepsActionName() {
   Assert.deepEqual(mockJsonFile.data, migratedData);
 });
 
-add_task(async function migrations_are_idempotent() {
-  let dataVersions = [
-    [PreferenceExperiments.migrations.migration01MoveExperiments, mockV1Data],
-    [PreferenceExperiments.migrations.migration02MultiPreference, mockV2Data],
-    [PreferenceExperiments.migrations.migration03AddActionName, mockV3Data],
-    [PreferenceExperiments.migrations.migration04RenameNameToSlug, mockV4Data],
-  ];
-  for (const [migration, mockOldData] of dataVersions) {
-    const mockJsonFileOnce = makeMockJsonFile(mockOldData);
-    const mockJsonFileTwice = makeMockJsonFile(mockOldData);
-    await migration(mockJsonFileOnce);
-    await migration(mockJsonFileTwice);
-    await migration(mockJsonFileTwice);
+// Test that migration 5 works as expected
+decorate_task(
+  PreferenceExperiments.withMockExperiments([
+    NormandyTestUtils.factories.preferenceStudyFactory({
+      actionName: "PreferenceExperimentAction",
+      expired: false,
+    }),
+    NormandyTestUtils.factories.preferenceStudyFactory({
+      actionName: "SinglePreferenceExperimentAction",
+      expired: false,
+    }),
+  ]),
+  async function migration05Works([expKeep, expExpire]) {
+    // pre check
+    const activeSlugsBefore = (await PreferenceExperiments.getAllActive()).map(
+      e => e.slug
+    );
     Assert.deepEqual(
-      mockJsonFileOnce.data,
-      mockJsonFileTwice.data,
-      "migrating data twice should be idempotent for " + migration.name
+      activeSlugsBefore,
+      [expKeep.slug, expExpire.slug],
+      "Both experiments should be present and active before the migration"
+    );
+
+    // run the migration
+    await PreferenceExperiments.migrations.migration05RemoveOldAction();
+
+    // verify behavior
+    const activeSlugsAfter = (await PreferenceExperiments.getAllActive()).map(
+      e => e.slug
+    );
+    Assert.deepEqual(
+      activeSlugsAfter,
+      [expKeep.slug],
+      "The single pref experiment should be ended by the migration"
+    );
+    const allSlugsAfter = (await PreferenceExperiments.getAll()).map(
+      e => e.slug
+    );
+    Assert.deepEqual(
+      allSlugsAfter,
+      [expKeep.slug, expExpire.slug],
+      "Both experiments should still exist after the migration"
     );
   }
-});
+);
 
 // clearAllExperimentStorage
 decorate_task(

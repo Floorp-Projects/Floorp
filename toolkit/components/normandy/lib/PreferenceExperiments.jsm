@@ -47,6 +47,9 @@
  *   A random ID generated at time of enrollment. It should be included on all
  *   telemetry related to this experiment. It should not be re-used by other
  *   studies, or any other purpose. May be null on old experiments.
+ * @property {string} actionName
+ *   The action who knows about this experiment and is responsible for cleaning
+ *   it up. This should correspond to the `name` of some BaseAction subclass.
  */
 
 /**
@@ -940,6 +943,26 @@ var PreferenceExperiments = {
         }
       }
       storage.saveSoon();
+    },
+
+    async migration05RemoveOldAction() {
+      const experiments = await PreferenceExperiments.getAllActive();
+      for (const experiment of experiments) {
+        if (experiment.actionName == "SinglePreferenceExperimentAction") {
+          try {
+            await PreferenceExperiments.stop(experiment.slug, {
+              resetValue: true,
+              reason: "migration-removing-single-pref-action",
+            });
+          } catch (e) {
+            log.error(
+              `Stopping preference experiment ${
+                experiment.slug
+              } during migration failed: ${e}`
+            );
+          }
+        }
+      }
     },
   },
 };
