@@ -5357,7 +5357,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             unionArgumentObj += ".SetValue()" if isOwningUnion else ".ref()"
 
         memberTypes = type.flatMemberTypes
-        names = []
+        prettyNames = []
 
         interfaceMemberTypes = filter(lambda t: t.isNonCallbackInterface(), memberTypes)
         if len(interfaceMemberTypes) > 0:
@@ -5367,7 +5367,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 interfaceObject.append(
                     CGGeneric("(failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext" %
                               (unionArgumentObj, name)))
-                names.append(name)
+                prettyNames.append(memberType.prettyName())
             interfaceObject = CGWrapper(CGList(interfaceObject, " ||\n"),
                                         pre="done = ", post=";\n\n", reindent=True)
         else:
@@ -5376,11 +5376,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         sequenceObjectMemberTypes = filter(lambda t: t.isSequence(), memberTypes)
         if len(sequenceObjectMemberTypes) > 0:
             assert len(sequenceObjectMemberTypes) == 1
-            name = getUnionMemberName(sequenceObjectMemberTypes[0])
+            memberType = sequenceObjectMemberTypes[0]
+            name = getUnionMemberName(memberType)
             sequenceObject = CGGeneric(
                 "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n" %
                 (unionArgumentObj, name))
-            names.append(name)
+            prettyNames.append(memberType.prettyName())
         else:
             sequenceObject = None
 
@@ -5392,29 +5393,31 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             callbackObject = CGGeneric(
                 "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n" %
                 (unionArgumentObj, name))
-            names.append(name)
+            prettyNames.append(memberType.prettyName())
         else:
             callbackObject = None
 
         dictionaryMemberTypes = filter(lambda t: t.isDictionary(), memberTypes)
         if len(dictionaryMemberTypes) > 0:
             assert len(dictionaryMemberTypes) == 1
-            name = getUnionMemberName(dictionaryMemberTypes[0])
+            memberType = dictionaryMemberTypes[0]
+            name = getUnionMemberName(memberType)
             setDictionary = CGGeneric(
                 "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n" %
                 (unionArgumentObj, name))
-            names.append(name)
+            prettyNames.append(memberType.prettyName())
         else:
             setDictionary = None
 
         recordMemberTypes = filter(lambda t: t.isRecord(), memberTypes)
         if len(recordMemberTypes) > 0:
             assert len(recordMemberTypes) == 1
-            name = getUnionMemberName(recordMemberTypes[0])
+            memberType = recordMemberTypes[0]
+            name = getUnionMemberName(memberType)
             recordObject = CGGeneric(
                 "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n" %
                 (unionArgumentObj, name))
-            names.append(name)
+            prettyNames.append(memberType.prettyName())
         else:
             recordObject = None
 
@@ -5428,7 +5431,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                "%s"
                                "}\n"
                                "done = true;\n" % (unionArgumentObj, indent(exceptionCode)))
-            names.append(objectMemberTypes[0].name)
+            prettyNames.append(objectMemberTypes[0].prettyName())
         else:
             object = None
 
@@ -5527,7 +5530,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             """,
             exceptionCode=exceptionCode,
             desc=firstCap(sourceDescription),
-            names=", ".join(names)))
+            names=", ".join(prettyNames)))
 
         templateBody = CGWrapper(CGIndenter(CGList([templateBody, throw])), pre="{\n", post="}\n")
 
@@ -5652,7 +5655,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 CGGeneric("return false;\n"),
                 ('!%s.RawSetAs%s(%s).Init(cx, JS::NullHandleValue, "Member of %s")'
                  % (declLoc, getUnionMemberName(defaultValue.type),
-                    ctorArgs, type)))
+                    ctorArgs, type.prettyName())))
             templateBody = CGIfElseWrapper("!(${haveValue})",
                                            initDictionaryWithNull,
                                            templateBody)
@@ -10566,7 +10569,8 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                    "tryNext = true;\n"
                    "return true;\n" % (prefix, name))
 
-    sourceDescription = "member of %s" % unionType
+    sourceDescription = ("%s branch of %s" %
+                         (type.prettyName(), unionType.prettyName()))
 
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
