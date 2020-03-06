@@ -166,7 +166,7 @@ def generate_JSON_definitions(output, *filenames):
             'products': event.products,
         })
 
-    json.dump(event_definitions, output)
+    json.dump(event_definitions, output, sort_keys=True)
 
 
 def main(output, *filenames):
