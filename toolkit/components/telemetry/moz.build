@@ -151,7 +151,6 @@ GeneratedFile('TelemetryHistogramData.inc',
               inputs=histogram_files)
 GeneratedFile('TelemetryHistogramEnums.h',
               script='build_scripts/gen_histogram_enum.py',
-              py2=True,
               inputs=histogram_files)
 GeneratedFile('TelemetryHistogramNameMap.h',
               script='build_scripts/gen_histogram_phf.py',
