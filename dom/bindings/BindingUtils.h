@@ -18,6 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/DOMJSClass.h"
@@ -194,19 +195,20 @@ inline bool IsDOMObject(JSObject* obj) {
 // If mayBeWrapper is false, obj can just be a JSObject*, and U anything that a
 // T* can be assigned to.
 //
-// CxType is in practice allowed to be either decltype(nullptr) or JSContext*.
-// If it's decltype(nullptr) we will do a CheckedUnwrapStatic and it's the
-// caller's responsibility to make sure they're not trying to work with Window
-// or Location objects.  Otherwise we'll do a CheckedUnwrapDynamic.  This all
-// only matters if mayBeWrapper is true; if it's false just pass nullptr for
-// the cx arg.
+// The cx arg is in practice allowed to be either nullptr or JSContext* or a
+// BindingCallContext reference.  If it's nullptr we will do a
+// CheckedUnwrapStatic and it's the caller's responsibility to make sure they're
+// not trying to work with Window or Location objects.  Otherwise we'll do a
+// CheckedUnwrapDynamic.  This all only matters if mayBeWrapper is true; if it's
+// false just pass nullptr for the cx arg.
 namespace binding_detail {
 template <class T, bool mayBeWrapper, typename U, typename V, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObjectInternal(V& obj, U& value,
                                                 prototypes::ID protoID,
                                                 uint32_t protoDepth,
-                                                CxType cx) {
+                                                const CxType& cx) {
   static_assert(IsSame<CxType, JSContext*>::value ||
+                    IsSame<CxType, BindingCallContext>::value ||
                     IsSame<CxType, decltype(nullptr)>::value,
                 "Unexpected CxType");
 
@@ -325,7 +327,7 @@ struct MutableValueHandleWrapper {
 // UnwrapObject overloads that ensure we have a MutableHandle to keep it alive.
 template <prototypes::ID PrototypeID, class T, typename U, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObject(JS::MutableHandle<JSObject*> obj,
-                                        U& value, CxType cx) {
+                                        U& value, const CxType& cx) {
   binding_detail::MutableObjectHandleWrapper wrapper(obj);
   return binding_detail::UnwrapObjectInternal<T, true>(
       wrapper, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth, cx);
@@ -333,7 +335,7 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObject(JS::MutableHandle<JSObject*> obj,
 
 template <prototypes::ID PrototypeID, class T, typename U, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObject(JS::MutableHandle<JS::Value> obj,
-                                        U& value, CxType cx) {
+                                        U& value, const CxType& cx) {
   MOZ_ASSERT(obj.isObject());
   binding_detail::MutableValueHandleWrapper wrapper(obj);
   return binding_detail::UnwrapObjectInternal<T, true>(
@@ -343,21 +345,21 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObject(JS::MutableHandle<JS::Value> obj,
 // UnwrapObject overloads that ensure we have a strong ref to keep it alive.
 template <prototypes::ID PrototypeID, class T, typename U, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObject(JSObject* obj, RefPtr<U>& value,
-                                        CxType cx) {
+                                        const CxType& cx) {
   return binding_detail::UnwrapObjectInternal<T, true>(
       obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth, cx);
 }
 
 template <prototypes::ID PrototypeID, class T, typename U, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObject(JSObject* obj, nsCOMPtr<U>& value,
-                                        CxType cx) {
+                                        const CxType& cx) {
   return binding_detail::UnwrapObjectInternal<T, true>(
       obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth, cx);
 }
 
 template <prototypes::ID PrototypeID, class T, typename U, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObject(JSObject* obj, OwningNonNull<U>& value,
-                                        CxType cx) {
+                                        const CxType& cx) {
   return binding_detail::UnwrapObjectInternal<T, true>(
       obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth, cx);
 }
@@ -365,7 +367,7 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObject(JSObject* obj, OwningNonNull<U>& value,
 // An UnwrapObject overload that just calls one of the JSObject* ones.
 template <prototypes::ID PrototypeID, class T, typename U, typename CxType>
 MOZ_ALWAYS_INLINE nsresult UnwrapObject(JS::Handle<JS::Value> obj, U& value,
-                                        CxType cx) {
+                                        const CxType& cx) {
   MOZ_ASSERT(obj.isObject());
   return UnwrapObject<PrototypeID, T>(&obj.toObject(), value, cx);
 }
