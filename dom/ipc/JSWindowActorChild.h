@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/JSWindowActor.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -22,7 +23,6 @@ template <typename>
 struct Nullable;
 
 class Document;
-class WindowGlobalChild;
 class WindowProxyHolder;
 
 }  // namespace dom
@@ -51,7 +51,7 @@ class JSWindowActorChild final : public JSWindowActor {
     return MakeAndAddRef<JSWindowActorChild>(global);
   }
 
-  WindowGlobalChild* GetManager() const;
+  WindowGlobalChild* GetManager() const override;
   void Init(const nsAString& aName, WindowGlobalChild* aManager);
   void StartDestroy();
   void AfterDestroy();
