@@ -36,7 +36,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -60,7 +60,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -84,7 +84,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -107,7 +107,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: build/openh264/artifacts
+                  path: workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -128,7 +128,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: build/openh264/artifacts
+                  path: workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -149,7 +149,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: build/openh264/artifacts
+                  path: workspace/openh264/artifacts
                   type: directory
         run:
             using: mozharness
@@ -170,7 +170,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         # This rev includes Android Makefile fixes from after
         # the 1.8.1 release
@@ -199,7 +199,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         # This rev includes Android Makefile fixes from after
         # the 1.8.1 release
@@ -228,7 +228,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         # This rev includes Android Makefile fixes from after
         # the 1.8.1 release
@@ -257,7 +257,7 @@ jobs:
             max-run-time: 1800
             artifacts:
                 - name: private/openh264
-                  path: /builds/worker/workspace/build/openh264/artifacts
+                  path: /builds/worker/workspace/openh264/artifacts
                   type: directory
         # This rev includes Android Makefile fixes from after
         # the 1.8.1 release

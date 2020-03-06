@@ -27,12 +27,12 @@ job-defaults:
         max-run-time: 7200
         env:
             # Online in order to download the per-architecture AARs.
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+            GRADLE_USER_HOME: "/builds/worker/checkouts/build/gecko/mobile/android/gradle/dotgradle-online"
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
             MOZ_ANDROID_FAT_AAR_ARCHITECTURES: "armeabi-v7a,arm64-v8a,x86,x86_64"
         artifacts:
             - name: public/build/maven
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/maven/
               type: directory
             - name: public/build
               path: /builds/worker/artifacts/
