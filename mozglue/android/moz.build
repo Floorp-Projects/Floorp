@@ -8,8 +8,11 @@ EXPORTS += [
     'APKOpen.h',
 ]
 
+EXPORTS.mozilla += ['Ashmem.h']
+
 SOURCES += [
     'APKOpen.cpp',
+    'Ashmem.cpp',
     'NativeCrypto.cpp',
     'nsGeckoUtils.cpp',
     'NSSBridge.cpp',
