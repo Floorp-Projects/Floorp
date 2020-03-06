@@ -104,7 +104,6 @@ const NormandyTestUtils = {
           lastSeen: new Date().toJSON(),
           experimentType: "exp",
           enrollmentId: NormandyUtils.generateUuid(),
-          actionName: "PreferenceExperimentAction",
         },
         attrs,
         {

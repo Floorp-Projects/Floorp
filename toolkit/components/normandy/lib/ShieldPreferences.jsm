@@ -9,8 +9,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
-  BranchedAddonStudyAction:
-    "resource://normandy/actions/BranchedAddonStudyAction.jsm",
+  AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
   PreferenceExperiments: "resource://normandy/lib/PreferenceExperiments.jsm",
@@ -49,7 +48,7 @@ var ShieldPreferences = {
       case PREF_OPT_OUT_STUDIES_ENABLED: {
         prefValue = Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED);
         if (!prefValue) {
-          const action = new BranchedAddonStudyAction();
+          const action = new AddonStudyAction();
           const studyPromises = (await AddonStudies.getAll()).map(study => {
             if (!study.active) {
               return null;
