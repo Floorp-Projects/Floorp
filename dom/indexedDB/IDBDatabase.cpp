@@ -746,7 +746,7 @@ void IDBDatabase::AbortTransactions(bool aShouldWarn) {
       // additional strong references here.
       WeakTransactionArray transactionsThatNeedWarning;
 
-      for (RefPtr<IDBTransaction>& transaction : transactionsToAbort) {
+      for (const auto& transaction : transactionsToAbort) {
         MOZ_ASSERT(transaction);
         MOZ_ASSERT(!transaction->IsFinished());
 
