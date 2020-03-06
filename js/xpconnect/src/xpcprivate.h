@@ -789,7 +789,6 @@ extern bool XPC_WN_GetterSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS compartment.
 
-class nsXPCComponentsBase;
 class XPCWrappedNativeScope final
     : public mozilla::LinkedListElement<XPCWrappedNativeScope> {
  public:
@@ -803,7 +802,7 @@ class XPCWrappedNativeScope final
     return mWrappedNativeProtoMap.get();
   }
 
-  nsXPCComponentsBase* GetComponents() const { return mComponents; }
+  nsXPCComponents* GetComponents() const { return mComponents; }
 
   bool AttachComponentsObject(JSContext* aCx);
 
@@ -890,7 +889,7 @@ class XPCWrappedNativeScope final
  private:
   mozilla::UniquePtr<Native2WrappedNativeMap> mWrappedNativeMap;
   mozilla::UniquePtr<ClassInfo2WrappedNativeProtoMap> mWrappedNativeProtoMap;
-  RefPtr<nsXPCComponentsBase> mComponents;
+  RefPtr<nsXPCComponents> mComponents;
   JS::Compartment* mCompartment;
 
   JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
@@ -1890,13 +1889,12 @@ class nsXPCException {
 };
 
 /***************************************************************************/
-// 'Components' object implementations. nsXPCComponentsBase has the
-// less-privileged stuff that we're willing to expose to XBL.
+// 'Components' object implementation.
 
-class nsXPCComponentsBase : public nsIXPCComponentsBase {
+class nsXPCComponents final : public nsIXPCComponents {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCCOMPONENTSBASE
+  NS_DECL_NSIXPCCOMPONENTS
 
  public:
   void SystemIsBeingShutDown() { ClearMembers(); }
@@ -1904,32 +1902,15 @@ class nsXPCComponentsBase : public nsIXPCComponentsBase {
   XPCWrappedNativeScope* GetScope() { return mScope; }
 
  protected:
-  virtual ~nsXPCComponentsBase();
+  ~nsXPCComponents();
 
-  explicit nsXPCComponentsBase(XPCWrappedNativeScope* aScope);
-  virtual void ClearMembers();
+  explicit nsXPCComponents(XPCWrappedNativeScope* aScope);
+  void ClearMembers();
 
   XPCWrappedNativeScope* mScope;
 
-  // Unprivileged members from nsIXPCComponentsBase.
   RefPtr<nsXPCComponents_Interfaces> mInterfaces;
   RefPtr<nsXPCComponents_Results> mResults;
-
-  friend class XPCWrappedNativeScope;
-};
-
-class nsXPCComponents : public nsXPCComponentsBase, public nsIXPCComponents {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIXPCCOMPONENTSBASE(nsXPCComponentsBase::)
-  NS_DECL_NSIXPCCOMPONENTS
-
- protected:
-  explicit nsXPCComponents(XPCWrappedNativeScope* aScope);
-  virtual ~nsXPCComponents();
-  virtual void ClearMembers() override;
-
-  // Privileged members added by nsIXPCComponents.
   RefPtr<nsXPCComponents_Classes> mClasses;
   RefPtr<nsXPCComponents_ID> mID;
   RefPtr<nsXPCComponents_Exception> mException;
