@@ -67,7 +67,7 @@ static void GetAddrStr(const in_common_addr* aAddr, uint8_t aFamily,
 
 class NetlinkAddress {
  public:
-  NetlinkAddress() {}
+  NetlinkAddress() = default;
 
   uint8_t Family() const { return mIfam.ifa_family; }
   uint32_t GetIndex() const { return mIfam.ifa_index; }
@@ -236,7 +236,7 @@ class NetlinkNeighbor {
 
 class NetlinkLink {
  public:
-  NetlinkLink() {}
+  NetlinkLink() = default;
 
   bool IsUp() const {
     return (mIface.ifi_flags & IFF_RUNNING) &&
@@ -586,7 +586,7 @@ class NetlinkRtMsg : public NetlinkMsg {
 NetlinkService::LinkInfo::LinkInfo(UniquePtr<NetlinkLink>&& aLink)
     : mLink(std::move(aLink)), mIsUp(false) {}
 
-NetlinkService::LinkInfo::~LinkInfo() {}
+NetlinkService::LinkInfo::~LinkInfo() = default;
 
 bool NetlinkService::LinkInfo::UpdateStatus() {
   LOG(("NetlinkService::LinkInfo::UpdateStatus"));

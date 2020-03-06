@@ -26,7 +26,7 @@ LazyLogModule gSocketProcessLog("socketprocess");
 SocketProcessImpl::SocketProcessImpl(ProcessId aParentPid)
     : ProcessChild(aParentPid) {}
 
-SocketProcessImpl::~SocketProcessImpl() {}
+SocketProcessImpl::~SocketProcessImpl() = default;
 
 bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
 #ifdef OS_POSIX

@@ -230,7 +230,7 @@ bool nsPreflightCache::CacheEntry::CheckRequest(
       return e.token.Equals(header, comparator);
     }
 
-    const nsCaseInsensitiveCStringComparator comparator;
+    const nsCaseInsensitiveCStringComparator comparator{};
   } checker;
   for (uint32_t i = 0; i < aHeaders.Length(); ++i) {
     if (!mHeaders.Contains(aHeaders[i], checker)) {

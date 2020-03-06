@@ -356,7 +356,7 @@ AddrInfo::AddrInfo(const AddrInfo* src) {
   }
 }
 
-AddrInfo::~AddrInfo() {}
+AddrInfo::~AddrInfo() = default;
 
 void AddrInfo::AddAddress(NetAddrElement* address) {
   MOZ_ASSERT(address, "Cannot add the address to an uninitialized list");
