@@ -34,14 +34,8 @@ cppunit:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
             default: null
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
+    tier: default
+    run-on-projects: built-projects
 
 gtest:
     description: "GTests run"
@@ -53,7 +47,6 @@ gtest:
             windows.*-shippable/.*: []  # permafails on shippable
             windows.*-pgo/.*: []  # permafails on pgo too
             windows.*-nightly/.*: []  # permafails on nightly too
-            windows10-aarch64/opt: []  # gtests don't build on Windows PGO
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
     target:
@@ -67,7 +60,6 @@ gtest:
             windows10-64-shippable.*: 3
             windows10-64-pgo.*: 3
             windows10-64-asan.*: 3
-            windows10-aarch64.*: 2
             linux.*64-ccov/opt: 3
             default: default
 
@@ -123,5 +115,4 @@ jittest:
     tier:
         by-test-platform:
             android-hw.*: 2
-            windows10-aarch64.*: 2
             default: default

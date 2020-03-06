@@ -12,20 +12,15 @@ job-defaults:
     workdir: /home/cltbld
     run-on-projects:
         by-test-name:
-            raptor-tp6-\d{1,2}-firefox(?!-cold):
-                by-test-platform:
-                    windows10-aarch64/opt: ['try']
-                    default: ['try', 'mozilla-central']
+            raptor-tp6-\d{1,2}-firefox(?!-cold): ['try', 'mozilla-central']
             default:
                 by-test-platform:
                     windows10-64-ref-hw-2017/opt: ['try']
-                    windows10-aarch64/opt: ['try']
                     (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
                     macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
                     default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
-            windows10-aarch64/.*: 2
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
             default: 1
@@ -403,10 +398,7 @@ raptor-unity-webgl-firefox:
     variants: ["fission"]
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: ['try', 'mozilla-central']
+    run-on-projects: ['try', 'mozilla-central']
     tier: 3
     mozharness:
         extra-options:
@@ -666,10 +658,7 @@ raptor-youtube-playback-firefox:
     try-name: raptor-youtube-playback-firefox
     treeherder-symbol: Rap(ytp)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64/opt: 3600
-            default: 2700
+    max-run-time: 2700
     tier: 2
     mozharness:
         extra-options:
@@ -680,10 +669,7 @@ raptor-youtube-playback-firefox-profiling:
     try-name: raptor-youtube-playback-firefox-profiling
     treeherder-symbol: Rap-Prof(ytp)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64/opt: 6000
-            default: 4000
+    max-run-time: 4000
     tier: 2
     mozharness:
         extra-options:
@@ -982,10 +968,7 @@ raptor-jetstream2-firefox:
     variants: ["fission"]
     try-name: raptor-jetstream2-firefox
     treeherder-symbol: Rap(js2)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central', 'try']
     tier: 3
     max-run-time: 8000
     mozharness:
@@ -999,10 +982,7 @@ raptor-jetstream2-firefox-profiling:
     description: "Raptor Jetstream2 on Firefox with Gecko Profiling"
     try-name: raptor-jetstream2-firefox-profiling
     treeherder-symbol: Rap-Prof(js2)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 8000
     tier: 3
     mozharness:
@@ -1053,7 +1033,6 @@ browsertime-speedometer:
     run-on-projects:
         by-test-platform:
             .*-ref-hw-2017/.*: []
-            windows10-aarch64/opt: ['try']
             default: ['integration', 'try']
     variants: ["fission"]
     apps: ["firefox"]
@@ -1069,7 +1048,6 @@ browsertime-ares6:
     run-on-projects:
         by-test-platform:
             .*-ref-hw-2017/.*: []
-            windows10-aarch64/opt: ['try']
             default: ['integration', 'try']
     variants: ["fission"]
     apps: ["firefox"]
