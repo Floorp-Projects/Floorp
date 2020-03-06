@@ -114,6 +114,7 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win32.py
+            tooltool-downloads: internal
         fetches:
             toolchain:
                 - win64-clang-cl
@@ -135,6 +136,7 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win64.py
+            tooltool-downloads: internal
         fetches:
             toolchain:
                 - win64-clang-cl
@@ -156,6 +158,7 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win64-aarch64.py
+            tooltool-downloads: internal
         fetches:
             toolchain:
                 - win64-clang-cl
