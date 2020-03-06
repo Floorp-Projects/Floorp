@@ -88,6 +88,9 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
 
   void InvokeCallback(CallbackFunction willDestroy);
 
+  void LogMessage(const char* aCallerName,
+                  const JSWindowActorMessageMeta* aMetadata = nullptr);
+
  private:
   friend class ::nsQueryActor;  // for QueryInterfaceActor
 
