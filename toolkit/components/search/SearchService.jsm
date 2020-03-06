@@ -734,6 +734,22 @@ SearchService.prototype = {
 
       await this._loadEngines(cache);
 
+      // If we've got this far, but the application is now shutting down,
+      // then we need to abandon any further work, especially not writing
+      // the cache. We do this, because the add-on manager has also
+      // started shutting down and as a result, we might have an incomplete
+      // picture of the installed search engines. Writing the cache at
+      // this stage would potentially mean the user would loose their engine
+      // data.
+      // We will however, rebuild the cache on next start up if we detect
+      // it is necessary.
+      if (Services.startup.shuttingDown) {
+        SearchUtils.log("_init: abandoning init due to shutting down");
+        this._initRV = Cr.NS_ERROR_ABORT;
+        this._initObservers.reject(this._initRV);
+        return this._initRV;
+      }
+
       // Make sure the current list of engines is persisted, without the need to wait.
       SearchUtils.log("_init: engines loaded, writing cache");
       this._buildCache();
@@ -1523,7 +1539,7 @@ SearchService.prototype = {
         // it is necessary.
         if (Services.startup.shuttingDown) {
           SearchUtils.log("_reInit: abandoning reInit due to shutting down");
-          this._initObservers.reject();
+          this._initObservers.reject(Cr.NS_ERROR_ABORT);
           return;
         }
 
