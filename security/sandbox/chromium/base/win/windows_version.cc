@@ -220,15 +220,7 @@ base::Version OSInfo::Kernel32BaseVersion() const {
           FilePath(FILE_PATH_LITERAL("kernelbase.dll")));
     }
     CHECK(file_version_info);
-    const uint32_t major =
-        HIWORD(file_version_info->fixed_file_info()->dwFileVersionMS);
-    const uint32_t minor =
-        LOWORD(file_version_info->fixed_file_info()->dwFileVersionMS);
-    const uint32_t build =
-        HIWORD(file_version_info->fixed_file_info()->dwFileVersionLS);
-    const uint32_t patch =
-        LOWORD(file_version_info->fixed_file_info()->dwFileVersionLS);
-    return base::Version(std::vector<uint32_t>{major, minor, build, patch});
+    return file_version_info->GetFileVersion();
   }());
   return *version;
 }

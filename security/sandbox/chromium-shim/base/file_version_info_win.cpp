@@ -33,14 +33,12 @@ LanguageAndCodePage* GetTranslate(const void* data) {
   return nullptr;
 }
 
-VS_FIXEDFILEINFO* GetVsFixedFileInfo(const void* data) {
-  VS_FIXEDFILEINFO* fixed_file_info = nullptr;
-  UINT length;
-  if (::VerQueryValue(data, L"\\", reinterpret_cast<void**>(&fixed_file_info),
-                      &length)) {
-    return fixed_file_info;
-  }
-  return nullptr;
+const VS_FIXEDFILEINFO& GetVsFixedFileInfo(const void* data) {
+  static constexpr wchar_t kRoot[] = L"\\";
+  LPVOID fixed_file_info = nullptr;
+  UINT dummy_size;
+  CHECK(::VerQueryValue(data, kRoot, &fixed_file_info, &dummy_size));
+  return *static_cast<VS_FIXEDFILEINFO*>(fixed_file_info);
 }
 
 }  // namespace
@@ -68,6 +66,13 @@ FileVersionInfoWin::CreateFileVersionInfoWin(const base::FilePath& file_path) {
 
   return base::WrapUnique(new FileVersionInfoWin(
       std::move(data), translate->language, translate->code_page));
+}
+
+base::Version FileVersionInfoWin::GetFileVersion() const {
+  return base::Version({HIWORD(fixed_file_info_.dwFileVersionMS),
+                        LOWORD(fixed_file_info_.dwFileVersionMS),
+                        HIWORD(fixed_file_info_.dwFileVersionLS),
+                        LOWORD(fixed_file_info_.dwFileVersionLS)});
 }
 
 FileVersionInfoWin::FileVersionInfoWin(std::vector<uint8_t>&& data,
