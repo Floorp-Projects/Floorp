@@ -163,6 +163,9 @@ win64-fuzzing/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+    optimization:
+        fuzzing-builds:
+            - windows
 
 win64-plain/debug:
     description: "Win64 Debug Plain"
@@ -918,6 +921,9 @@ win64-asan-fuzzing/opt:
             - win64-sccache
             - win64-nasm
             - win64-node
+    optimization:
+        fuzzing-builds:
+            - windows
 
 win32-devedition/opt:
     description: "Win32 Dev Edition (shippable)"

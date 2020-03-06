@@ -210,6 +210,7 @@ OptimizationSchema = voluptuous.Any(
     {'test': list(schedules.ALL_COMPONENTS)},
     {'test-inclusive': list(schedules.ALL_COMPONENTS)},
     {'test-try': list(schedules.ALL_COMPONENTS)},
+    {'fuzzing-builds': list(schedules.ALL_COMPONENTS)},
 )
 
 # shortcut for a string where task references are allowed
