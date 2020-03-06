@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import codecs
+import io
 import itertools
 import logging
 import os
@@ -133,7 +134,8 @@ def config_status(config):
 
     # Write out a file so the build backend knows to re-run configure when
     # relevant Python changes.
-    with open('config_status_deps.in', 'w') as fh:
+    with io.open('config_status_deps.in', 'w', encoding='utf-8',
+                 newline='\n') as fh:
         for f in itertools.chain(config['CONFIG_STATUS_DEPS'],
                                  iter_modules_in_path(config['TOPOBJDIR'],
                                                       config['TOPSRCDIR'])):

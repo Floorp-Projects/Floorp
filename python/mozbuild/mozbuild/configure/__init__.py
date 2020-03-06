@@ -401,7 +401,8 @@ class ConfigureSandbox(dict):
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
         elif moz_logger:
-            handler = logging.FileHandler('config.log', mode='w', delay=True)
+            handler = logging.FileHandler('config.log', mode='w', delay=True,
+                                          encoding='utf-8')
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 

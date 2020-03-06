@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import io
 import logging
 import os
 import re
@@ -955,7 +956,7 @@ class RecursiveMakeBackend(MakeBackend):
                 obj.topobjdir = bf.environment.topobjdir
                 obj.config = bf.environment
                 self._create_makefile(obj, stub=stub)
-                with open(obj.output_path) as fh:
+                with io.open(obj.output_path, encoding='utf-8') as fh:
                     content = fh.read()
                     # Directories with a Makefile containing a tools target, or
                     # XPI_PKGNAME or INSTALL_EXTENSION_ID can't be skipped and
