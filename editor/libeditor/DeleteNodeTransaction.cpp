@@ -29,8 +29,6 @@ DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
       mNodeToDelete(&aNodeToDelete),
       mParentNode(aNodeToDelete.GetParentNode()) {}
 
-DeleteNodeTransaction::~DeleteNodeTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTransactionBase,
                                    mEditorBase, mNodeToDelete, mParentNode,
                                    mRefNode)
