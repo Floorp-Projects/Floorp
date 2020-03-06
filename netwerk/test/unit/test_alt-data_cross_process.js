@@ -58,13 +58,18 @@ function contentHandler(metadata, response) {
   }
 }
 
-function check_has_alt_data_in_index(aHasAltData) {
+function check_has_alt_data_in_index(aHasAltData, callback) {
   if (inChildProcess()) {
+    callback();
     return;
   }
-  var hasAltData = {};
-  cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
-  Assert.equal(hasAltData.value, aHasAltData);
+
+  syncWithCacheIOThread(() => {
+    var hasAltData = {};
+    cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
+    Assert.equal(hasAltData.value, aHasAltData);
+    callback();
+  }, true);
 }
 
 function run_test() {
@@ -90,14 +95,17 @@ function readServerContent(request, buffer) {
 
   Assert.equal(buffer, responseContent);
   Assert.equal(cc.alternativeDataType, "");
-  check_has_alt_data_in_index(false);
+  check_has_alt_data_in_index(false, () => {
+    executeSoon(() => {
+      var os = cc.openAlternativeOutputStream(
+        altContentType,
+        altContent.length
+      );
+      os.write(altContent, altContent.length);
+      os.close();
 
-  executeSoon(() => {
-    var os = cc.openAlternativeOutputStream(altContentType, altContent.length);
-    os.write(altContent, altContent.length);
-    os.close();
-
-    executeSoon(flushAndOpenAltChannel);
+      executeSoon(flushAndOpenAltChannel);
+    });
   });
 }
 
