@@ -229,6 +229,10 @@ ALL_PROCESSES += [
     # Old versions of Digital Guardian, bug 1318858
     DllBlocklistEntry("dgapi.dll", (7, 5, 0, 0xffff)),
     DllBlocklistEntry("dgapi64.dll", (7, 5, 0, 0xffff)),
+
+    # Old versions of COMODO Internet Security
+    DllBlocklistEntry("IseGuard32.dll", (1, 6, 13835, 184)),
+    DllBlocklistEntry("IseGuard64.dll", (1, 6, 13835, 184)),
 ]
 
 ALL_PROCESSES_TESTS += [
