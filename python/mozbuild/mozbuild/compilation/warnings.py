@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
+import io
 import json
 import os
 import re
@@ -227,7 +228,7 @@ class WarningsDatabase(object):
         """
 
         # Need to calculate up front since we are mutating original object.
-        filenames = self._files.keys()
+        filenames = list(six.iterkeys(self._files))
         for filename in filenames:
             if not os.path.exists(filename):
                 del self._files[filename]
@@ -255,7 +256,8 @@ class WarningsDatabase(object):
                     normalized = list(v2)
                 obj['files'][k][k2] = normalized
 
-        json.dump(obj, fh, indent=2)
+        to_write = six.ensure_text(json.dumps(obj, indent=2))
+        fh.write(to_write)
 
     def deserialize(self, fh):
         """Load serialized content from a handle into the current instance."""
@@ -276,7 +278,7 @@ class WarningsDatabase(object):
 
     def load_from_file(self, filename):
         """Load the database from a file."""
-        with open(filename, 'r') as fh:
+        with io.open(filename, 'r', encoding='utf-8') as fh:
             self.deserialize(fh)
 
     def save_to_file(self, filename):
@@ -287,7 +289,7 @@ class WarningsDatabase(object):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-        with open(filename, 'w') as fh:
+        with io.open(filename, 'w', encoding='utf-8', newline='\n') as fh:
             self.serialize(fh)
 
 

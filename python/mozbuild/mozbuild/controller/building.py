@@ -349,8 +349,11 @@ class BuildMonitor(MozbuildObject):
                     os.environ['UPLOAD_PATH'])
             else:
                 build_resources_path = self._get_state_filename('build_resources.json')
-            with open(build_resources_path, 'w') as fh:
-                json.dump(self.resources.as_dict(), fh, indent=2)
+            with io.open(build_resources_path, 'w',
+                         encoding='utf-8', newline='\n') as fh:
+                to_write = six.ensure_text(
+                    json.dumps(self.resources.as_dict(), indent=2))
+                fh.write(to_write)
         except Exception as e:
             self.log(logging.WARNING, 'build_resources_error',
                      {'msg': str(e)},
@@ -778,7 +781,7 @@ class StaticAnalysisOutputManager(OutputManager):
             self.monitor._warnings_database.save_to_file(path)
 
         else:
-            with open(path, 'w') as f:
+            with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(self.raw)
 
         self.log(logging.INFO, 'write_output',
@@ -1149,7 +1152,7 @@ class BuildDriver(MozbuildObject):
                                                    add_extra_dependencies)
                     depfile = os.path.join(self.topsrcdir, 'build',
                                            'dumbmake-dependencies')
-                    with open(depfile) as f:
+                    with io.open(depfile, encoding='utf-8', newline='\n') as f:
                         dm = dependency_map(f.readlines())
                     new_pairs = list(add_extra_dependencies(target_pairs, dm))
                     self.log(logging.DEBUG, 'dumbmake',
@@ -1244,7 +1247,8 @@ class BuildDriver(MozbuildObject):
                                            "Generated.txt")
 
             if os.path.exists(pathToThirdparty):
-                with open(pathToThirdparty) as f, open(pathToGenerated) as g:
+                with io.open(pathToThirdparty, encoding='utf-8', newline='\n') as f, \
+                     io.open(pathToGenerated, encoding='utf-8', newline='\n') as g:
                     # Normalize the path (no trailing /)
                     suppress = f.readlines() + g.readlines()
                     LOCAL_SUPPRESS_DIRS = tuple(s.strip('/') for s in suppress)
@@ -1435,11 +1439,12 @@ class BuildDriver(MozbuildObject):
     def _write_mozconfig_json(self):
         mozconfig_json = os.path.join(self.topobjdir, '.mozconfig.json')
         with FileAvoidWrite(mozconfig_json) as fh:
-            json.dump({
+            to_write = six.ensure_text(json.dumps({
                 'topsrcdir': self.topsrcdir,
                 'topobjdir': self.topobjdir,
                 'mozconfig': self.mozconfig,
-            }, fh, sort_keys=True, indent=2)
+            }, sort_keys=True, indent=2))
+            fh.write(to_write)
 
     def _run_client_mk(self, target=None, line_handler=None, jobs=0,
                        verbose=None, keep_going=False, append_env=None):
