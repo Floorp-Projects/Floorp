@@ -37,6 +37,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
             '/security/sandbox/chromium-shim',
         ]
 
+        OS_LIBS += [
+            'version',
+        ]
+
         USE_LIBS += [
             'sandbox_s',
         ]
