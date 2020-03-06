@@ -90,8 +90,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    throw a TypeError and abort these steps.
    */
   if (!JS::IsConstructor(constructorUnwrapped)) {
-    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(
-        u"Argument 2 of AudioWorkletGlobalScope.registerProcessor");
+    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(u"Argument 2");
     return;
   }
 
@@ -112,9 +111,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    TypeError and abort all these steps.
    */
   if (!prototype.isObject()) {
-    aRv.ThrowTypeError<MSG_NOT_OBJECT>(
-        u"Argument 2 of AudioWorkletGlobalScope.registerProcessor "
-        u"processorCtor.prototype");
+    aRv.ThrowTypeError<MSG_NOT_OBJECT>(u"processorCtor.prototype");
     return;
   }
   /**

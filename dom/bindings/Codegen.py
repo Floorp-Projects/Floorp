@@ -4567,7 +4567,7 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
                  isCallbackReturnValue, sourceDescription):
         CastableObjectUnwrapper.__init__(
             self, descriptor, source, mutableSource, target,
-            'ThrowErrorMessage<MSG_DOES_NOT_IMPLEMENT_INTERFACE>(cx, "%s", "%s");\n'
+            'cx.ThrowErrorMessage<MSG_DOES_NOT_IMPLEMENT_INTERFACE>("%s", "%s");\n'
             '%s' % (sourceDescription, descriptor.interface.identifier.name,
                     exceptionCode),
             exceptionCode,
@@ -4877,13 +4877,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     def onFailureNotAnObject(failureCode):
         return CGGeneric(
             failureCode or
-            ('ThrowErrorMessage<MSG_NOT_OBJECT>(cx, "%s");\n'
+            ('cx.ThrowErrorMessage<MSG_NOT_OBJECT>("%s");\n'
              '%s' % (firstCap(sourceDescription), exceptionCode)))
 
     def onFailureBadType(failureCode, typeName):
         return CGGeneric(
             failureCode or
-            ('ThrowErrorMessage<MSG_DOES_NOT_IMPLEMENT_INTERFACE>(cx, "%s", "%s");\n'
+            ('cx.ThrowErrorMessage<MSG_DOES_NOT_IMPLEMENT_INTERFACE>("%s", "%s");\n'
              '%s' % (firstCap(sourceDescription), typeName, exceptionCode)))
 
     # It's a failure in the committed-to conversion, not a failure to match up
@@ -4891,13 +4891,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     # throw an exception unconditionally.
     def onFailureIsShared():
         return CGGeneric(
-            'ThrowErrorMessage<MSG_TYPEDARRAY_IS_SHARED>(cx, "%s");\n'
+            'cx.ThrowErrorMessage<MSG_TYPEDARRAY_IS_SHARED>("%s");\n'
              '%s' % (firstCap(sourceDescription), exceptionCode))
 
     def onFailureNotCallable(failureCode):
         return CGGeneric(
             failureCode or
-            ('ThrowErrorMessage<MSG_NOT_CALLABLE>(cx, "%s");\n'
+            ('cx.ThrowErrorMessage<MSG_NOT_CALLABLE>("%s");\n'
              '%s' % (firstCap(sourceDescription), exceptionCode)))
 
     # A helper function for handling default values.  Takes a template
@@ -5006,7 +5006,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 #pragma clang diagnostic ignored "-Wunreachable-code-return"
                 #endif // __clang__
                 if (($${passedToJSImpl}) && !CallerSubsumes($${val})) {
-                  ThrowErrorMessage<MSG_PERMISSION_DENIED_TO_PASS_ARG>(cx, "${sourceDescription}");
+                  cx.ThrowErrorMessage<MSG_PERMISSION_DENIED_TO_PASS_ARG>("${sourceDescription}");
                   $*{exceptionCode}
                 }
                 #ifdef __clang__
@@ -5034,7 +5034,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         assert not isEnforceRange and not isClamp and not isAllowShared
 
         if failureCode is None:
-            notSequence = ('ThrowErrorMessage<MSG_NOT_SEQUENCE>(cx, "%s");\n'
+            notSequence = ('cx.ThrowErrorMessage<MSG_NOT_SEQUENCE>("%s");\n'
                            "%s" % (firstCap(sourceDescription), exceptionCode))
         else:
             notSequence = failureCode
@@ -5171,7 +5171,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     if type.isRecord():
         assert not isEnforceRange and not isClamp and not isAllowShared
         if failureCode is None:
-            notRecord = ('ThrowErrorMessage<MSG_NOT_OBJECT>(cx, "%s");\n'
+            notRecord = ('cx.ThrowErrorMessage<MSG_NOT_OBJECT>("%s");\n'
                          "%s" % (firstCap(sourceDescription), exceptionCode))
         else:
             notRecord = failureCode
@@ -5520,7 +5520,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
               $*{exceptionCode}
             }
             if (!done) {
-              ThrowErrorMessage<MSG_NOT_IN_UNION>(cx, "${desc}", "${names}");
+              cx.ThrowErrorMessage<MSG_NOT_IN_UNION>("${desc}", "${names}");
               $*{exceptionCode}
             }
             """,
@@ -6223,7 +6223,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             handleInvalidEnumValueCode=handleInvalidEnumValueCode,
             exceptionCode=exceptionCode,
             enumLoc=enumLoc,
-            sourceDescription=firstCap(sourceDescription))
+            sourceDescription=sourceDescription)
 
         setNull = "${declName}.SetNull();\n"
 
@@ -6326,7 +6326,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 #pragma clang diagnostic ignored "-Wunreachable-code-return"
                 #endif // __clang__
                 if (($${passedToJSImpl}) && !CallerSubsumes($${val})) {
-                  ThrowErrorMessage<MSG_PERMISSION_DENIED_TO_PASS_ARG>(cx, "${sourceDescription}");
+                  cx.ThrowErrorMessage<MSG_PERMISSION_DENIED_TO_PASS_ARG>("${sourceDescription}");
                   $*{exceptionCode}
                 }
                 #ifdef __clang__
@@ -6523,7 +6523,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if lenientFloatCode is not None:
             nonFiniteCode = lenientFloatCode
         else:
-            nonFiniteCode = ('ThrowErrorMessage<MSG_NOT_FINITE>(cx, "%s");\n'
+            nonFiniteCode = ('cx.ThrowErrorMessage<MSG_NOT_FINITE>("%s");\n'
                              "%s" % (firstCap(sourceDescription), exceptionCode))
 
         # We're appending to an if-block brace, so strip trailing whitespace
@@ -8074,12 +8074,10 @@ class CGPerSignatureCall(CGThing):
             # Pass in our thisVal
             argsPre.append("args.thisv()")
 
-        ourName = GetLabelForErrorReporting(descriptor, idlNode, isConstructor)
-
         if idlNode.isMethod():
-            argDescription = "argument %(index)d of " + ourName
+            argDescription = "argument %(index)d"
         elif setter:
-            argDescription = "value being assigned to %s" % ourName
+            argDescription = "value being assigned"
         else:
             assert self.argCount == 0
 
@@ -8188,7 +8186,7 @@ class CGPerSignatureCall(CGThing):
                                                           idlNode.maplikeOrSetlikeOrIterable,
                                                           idlNode.identifier.name))
         else:
-            context = ourName
+            context = GetLabelForErrorReporting(descriptor, idlNode, isConstructor)
             if getter:
                 context = context + " getter"
             elif setter:
@@ -8470,7 +8468,7 @@ class CGMethodCall(CGThing):
         CGThing.__init__(self)
 
         methodName = GetLabelForErrorReporting(descriptor, method, isConstructor)
-        argDesc = "argument %d of " + methodName
+        argDesc = "argument %d"
 
         if method.getExtendedAttribute("UseCounter"):
             useCounterName = methodName.replace(".", "_")
@@ -8840,8 +8838,8 @@ class CGMethodCall(CGThing):
                 # Just throw; we have no idea what we're supposed to
                 # do with this.
                 caseBody.append(CGGeneric(
-                    'return ThrowErrorMessage<MSG_OVERLOAD_RESOLUTION_FAILED>(cx, "%d", "%d", "%s");\n' %
-                    (distinguishingIndex + 1, argCount, methodName)))
+                    'return cx.ThrowErrorMessage<MSG_OVERLOAD_RESOLUTION_FAILED>("%d", "%d");\n' %
+                    (distinguishingIndex + 1, argCount)))
 
             argCountCases.append(CGCase(str(argCount), CGList(caseBody)))
 
@@ -8852,15 +8850,14 @@ class CGMethodCall(CGThing):
         overloadCGThings.append(
             CGSwitch("argcount",
                      argCountCases,
-                     CGGeneric(fill(
+                     CGGeneric(dedent(
                          """
                          // Using nsPrintfCString here would require including that
                          // header.  Let's not worry about it.
                          nsAutoCString argCountStr;
                          argCountStr.AppendPrintf("%u", args.length());
-                         return ThrowErrorMessage<MSG_INVALID_OVERLOAD_ARGCOUNT>(cx, "${methodName}", argCountStr.get());
-                         """,
-                         methodName=methodName))))
+                         return cx.ThrowErrorMessage<MSG_INVALID_OVERLOAD_ARGCOUNT>(argCountStr.get());
+                         """))))
         overloadCGThings.append(
             CGGeneric('MOZ_CRASH("We have an always-returning default case");\n'
                       'return false;\n'))
@@ -9824,7 +9821,7 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
             }
 
             if (!v.isObject()) {
-              return ThrowErrorMessage<MSG_NOT_OBJECT>(cx, "${interface}.${attr}");
+              return cx.ThrowErrorMessage<MSG_NOT_OBJECT>("${interface}.${attr}");
             }
 
             JS::Rooted<JSObject*> targetObj(cx, &v.toObject());
@@ -10607,7 +10604,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
         body = body + fill(
             """
             if (passedToJSImpl && !CallerSubsumes(obj)) {
-              ThrowErrorMessage<MSG_PERMISSION_DENIED_TO_PASS_ARG>(cx, "${sourceDescription}");
+              cx.ThrowErrorMessage<MSG_PERMISSION_DENIED_TO_PASS_ARG>("${sourceDescription}");
               return false;
             }
             return true;
@@ -10616,7 +10613,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
 
         setters = [
             ClassMethod("SetToObject", "bool",
-                        [Argument("JSContext*", "cx"),
+                        [Argument("BindingCallContext&", "cx"),
                          Argument("JSObject*", "obj"),
                          Argument("bool", "passedToJSImpl", default="false")],
                         inline=True, bodyInHeader=True,
@@ -14153,7 +14150,7 @@ class CGDictionary(CGThing):
             body += dedent(
                 """
                 if (!IsConvertibleToDictionary(val)) {
-                  return ThrowErrorMessage<MSG_NOT_DICTIONARY>(cx, sourceDescription);
+                  return cx.ThrowErrorMessage<MSG_NOT_DICTIONARY>(sourceDescription);
                 }
 
                 """)
@@ -14729,7 +14726,7 @@ class CGDictionary(CGThing):
                   // Don't error out if we have no cx.  In that
                   // situation the caller is default-constructing us and we'll
                   // just assume they know what they're doing.
-                  return ThrowErrorMessage<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(cx, "%s");
+                  return cx.ThrowErrorMessage<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>("%s");
                 }
                 """ % self.getMemberSourceDescription(member))
             conversionReplacements["convert"] = indent(conversionReplacements["convert"]).rstrip()
@@ -16896,11 +16893,12 @@ class CGJSImplClass(CGBindingImplClass):
             if (!args.requireAtLeast(cx, "${ifaceName}._create", 2)) {
               return false;
             }
+            BindingCallContext callCx(cx, "${ifaceName}._create");
             if (!args[0].isObject()) {
-              return ThrowErrorMessage<MSG_NOT_OBJECT>(cx, "Argument 1 of ${ifaceName}._create");
+              return callCx.ThrowErrorMessage<MSG_NOT_OBJECT>("Argument 1");
             }
             if (!args[1].isObject()) {
-              return ThrowErrorMessage<MSG_NOT_OBJECT>(cx, "Argument 2 of ${ifaceName}._create");
+              return callCx.ThrowErrorMessage<MSG_NOT_OBJECT>("Argument 2");
             }
 
             // GlobalObject will go through wrappers as needed for us, and
@@ -18401,7 +18399,7 @@ class CGIterableMethodGenerator(CGGeneric):
             CGGeneric.__init__(self, fill(
                 """
                 if (!JS::IsCallable(arg0)) {
-                  ThrowErrorMessage<MSG_NOT_CALLABLE>(cx, "Argument 1 of ${ifaceName}.forEach");
+                  cx.ThrowErrorMessage<MSG_NOT_CALLABLE>("Argument 1");
                   return false;
                 }
                 JS::AutoValueArray<3> callArgs(cx);
