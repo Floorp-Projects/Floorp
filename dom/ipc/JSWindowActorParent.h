@@ -12,9 +12,16 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/JSWindowActor.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+
+namespace mozilla {
+namespace dom {
+
+class WindowGlobalParent;
+
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 namespace dom {
@@ -35,7 +42,7 @@ class JSWindowActorParent final : public JSWindowActor {
 
   nsIGlobalObject* GetParentObject() const override;
 
-  WindowGlobalParent* GetManager() const override;
+  WindowGlobalParent* GetManager() const;
   void Init(const nsAString& aName, WindowGlobalParent* aManager);
   void StartDestroy();
   void AfterDestroy();
