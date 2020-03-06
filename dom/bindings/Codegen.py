@@ -5275,7 +5275,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
               ${keyType} propName;
               // This will just throw if idVal is a Symbol, like the spec says
               // to do.
-              if (!${keyConversionFunction}(cx, idVal, propName)) {
+              if (!${keyConversionFunction}(cx, idVal, "key of ${sourceDescription}", propName)) {
                 $*{exceptionCode}
               }
 
@@ -5311,6 +5311,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             hashKeyType=hashKeyType,
             keyType=keyType,
             keyConversionFunction=keyConversionFunction,
+            sourceDescription=sourceDescription,
             typeName=typeName,
             valueType=valueInfo.declType.define(),
             valueConversion=valueConversion)
@@ -6158,11 +6159,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         nullable = toStringBool(type.nullable())
 
         conversionCode = fill("""
-            if (!ConvertJSValueToByteString(cx, $${val}, ${nullable}, $${declName})) {
+            if (!ConvertJSValueToByteString(cx, $${val}, ${nullable}, "${sourceDescription}", $${declName})) {
               $*{exceptionCode}
             }
             """,
             nullable=nullable,
+            sourceDescription=sourceDescription,
             exceptionCode=exceptionCode)
 
         if defaultValue is not None:
