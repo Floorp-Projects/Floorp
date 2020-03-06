@@ -560,6 +560,25 @@ bool ReadWasmModule(JSStructuredCloneReader* aReader, WasmModuleData* aRetval) {
   return true;
 }
 
+template <typename T>
+bool WrapAsJSObject(JSContext* const aCx, T& aBaseObject,
+                    JS::MutableHandle<JSObject*> aResult) {
+  JS::Rooted<JS::Value> wrappedValue(aCx);
+  if (!ToJSValue(aCx, aBaseObject, &wrappedValue)) {
+    return false;
+  }
+
+  aResult.set(&wrappedValue.toObject());
+  return true;
+}
+
+template <typename T>
+JSObject* WrapAsJSObject(JSContext* const aCx, T& aBaseObject) {
+  JS::Rooted<JSObject*> result(aCx);
+  const bool res = WrapAsJSObject(aCx, aBaseObject, &result);
+  return res ? static_cast<JSObject*>(result) : nullptr;
+}
+
 class ValueDeserializationHelper {
  public:
   static bool CreateAndWrapMutableFile(JSContext* aCx,
@@ -593,13 +612,7 @@ class ValueDeserializationHelper {
 
     aFile.MutableMutableFile().SetLazyData(aData.name, aData.type);
 
-    JS::Rooted<JS::Value> wrappedMutableFile(aCx);
-    if (!ToJSValue(aCx, aFile.MutableMutableFile(), &wrappedMutableFile)) {
-      return false;
-    }
-
-    aResult.set(&wrappedMutableFile.toObject());
-    return true;
+    return WrapAsJSObject(aCx, aFile.MutableMutableFile(), aResult);
   }
 
   static bool CreateAndWrapBlobOrFile(JSContext* aCx, IDBDatabase* aDatabase,
@@ -675,14 +688,7 @@ class ValueDeserializationHelper {
         return false;
       }
 
-      MOZ_ASSERT(exposedBlob);
-      JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (!ToJSValue(aCx, exposedBlob, &wrappedBlob)) {
-        return false;
-      }
-
-      aResult.set(&wrappedBlob.toObject());
-      return true;
+      return WrapAsJSObject(aCx, exposedBlob, aResult);
     }
 
     blob->Impl()->SetLazyData(aData.name, aData.type, aData.size,
@@ -692,13 +698,7 @@ class ValueDeserializationHelper {
     const RefPtr<File> file = blob->ToFile();
     MOZ_ASSERT(file);
 
-    JS::Rooted<JS::Value> wrappedFile(aCx);
-    if (!ToJSValue(aCx, file, &wrappedFile)) {
-      return false;
-    }
-
-    aResult.set(&wrappedFile.toObject());
-    return true;
+    return WrapAsJSObject(aCx, file, aResult);
   }
 
   static bool CreateAndWrapWasmModule(JSContext* aCx,
@@ -818,8 +818,6 @@ JSObject* CopyingStructuredCloneReadCallback(
     auto* const cloneInfo =
         static_cast<IDBObjectStore::StructuredCloneInfo*>(aClosure);
 
-    JS::Rooted<JSObject*> result(aCx);
-
     if (aData >= cloneInfo->mFiles.Length()) {
       MOZ_ASSERT(false, "Bad index value!");
       return nullptr;
@@ -831,18 +829,13 @@ JSObject* CopyingStructuredCloneReadCallback(
       MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
       MOZ_ASSERT(!file.Blob().IsFile());
 
-      JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (NS_WARN_IF(!ToJSValue(aCx, file.MutableBlob(), &wrappedBlob))) {
-        return nullptr;
-      }
-
-      result.set(&wrappedBlob.toObject());
-
-      return result;
+      return WrapAsJSObject(aCx, file.MutableBlob());
     }
 
     if (aTag == SCTAG_DOM_FILE) {
       MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
+
+      JS::Rooted<JSObject*> result(aCx);
 
       {
         // Create a scope so ~RefPtr fires before returning an unwrapped
@@ -853,12 +846,9 @@ JSObject* CopyingStructuredCloneReadCallback(
         const RefPtr<File> file = blob->ToFile();
         MOZ_ASSERT(file);
 
-        JS::Rooted<JS::Value> wrappedFile(aCx);
-        if (NS_WARN_IF(!ToJSValue(aCx, file, &wrappedFile))) {
+        if (!WrapAsJSObject(aCx, file, &result)) {
           return nullptr;
         }
-
-        result.set(&wrappedFile.toObject());
       }
 
       return result;
@@ -866,15 +856,7 @@ JSObject* CopyingStructuredCloneReadCallback(
 
     MOZ_ASSERT(file.Type() == StructuredCloneFile::eMutableFile);
 
-    JS::Rooted<JS::Value> wrappedMutableFile(aCx);
-    if (NS_WARN_IF(
-            !ToJSValue(aCx, file.MutableMutableFile(), &wrappedMutableFile))) {
-      return nullptr;
-    }
-
-    result.set(&wrappedMutableFile.toObject());
-
-    return result;
+    return WrapAsJSObject(aCx, file.MutableMutableFile());
   }
 
   return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
