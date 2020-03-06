@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import io
 import json
 import logging
 import mozpack.path as mozpath
@@ -146,7 +147,7 @@ class MozbuildObject(ProcessExecutionMixin):
         mozconfig = MozconfigLoader.AUTODETECT
 
         def load_mozinfo(path):
-            info = json.load(open(path, 'rt'))
+            info = json.load(io.open(path, 'rt', encoding='utf-8'))
             topsrcdir = info.get('topsrcdir')
             topobjdir = os.path.dirname(path)
             mozconfig = info.get('mozconfig')
@@ -215,7 +216,7 @@ class MozbuildObject(ProcessExecutionMixin):
             return True
 
         deps = []
-        with open(dep_file, 'r') as fh:
+        with io.open(dep_file, 'r', encoding='utf-8', newline='\n') as fh:
             deps = fh.read().splitlines()
 
         mtime = os.path.getmtime(output)
@@ -240,7 +241,7 @@ class MozbuildObject(ProcessExecutionMixin):
         # we last built the backend, re-generate the backend if
         # so.
         outputs = []
-        with open(backend_file, 'r') as fh:
+        with io.open(backend_file, 'r', encoding='utf-8', newline='\n') as fh:
             outputs = fh.read().splitlines()
         for output in outputs:
             if not os.path.isfile(mozpath.join(self.topobjdir, output)):

@@ -14,6 +14,7 @@ import difflib
 import errno
 import functools
 import hashlib
+import io
 import itertools
 import os
 import pprint
@@ -51,6 +52,12 @@ def exec_(object, globals=None, locals=None):
     which happen with older versions of python 2.7.
     """
     exec(object, globals, locals)
+
+
+def _open(path, mode):
+    if 'b' in mode:
+        return io.open(path, mode)
+    return io.open(path, mode, encoding='utf-8', newline='\n')
 
 
 def hash_file(path, hasher=None):
@@ -259,7 +266,7 @@ class FileAvoidWrite(BytesIO):
         old_content = None
 
         try:
-            existing = open(self.name, self.mode)
+            existing = _open(self.name, self.mode)
             existed = True
         except IOError:
             pass
@@ -280,7 +287,10 @@ class FileAvoidWrite(BytesIO):
             writemode = 'w'
             if self._binary_mode:
                 writemode += 'b'
-            with open(self.name, writemode) as file:
+                buf = six.ensure_binary(buf)
+            else:
+                buf = six.ensure_text(buf)
+            with _open(self.name, writemode) as file:
                 file.write(buf)
 
         self._generate_diff(buf, old_content)
