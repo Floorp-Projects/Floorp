@@ -511,6 +511,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitPropertyListObjLiteral(ListNode* obj,
                                                ObjLiteralFlags flags);
 
+  MOZ_MUST_USE bool emitDestructuringRestExclusionSetObjLiteral(
+      ListNode* pattern);
+
   MOZ_MUST_USE bool emitObjLiteralArray(ParseNode* arrayHead, bool isCow);
 
   // Is a field value OBJLITERAL-compatible?
