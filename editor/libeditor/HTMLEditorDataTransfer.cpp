@@ -543,9 +543,12 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     //     the case of list and list item handling.  And may be it may have
     //     been set not current time.  So, I think that we should ignore it.
     if (!inserted || NS_FAILED(rv)) {
+      // MOZ_KnownLive because 'arrayOfTopMostChildContents' is guaranteed to
+      // keep it alive.
       EditorDOMPoint insertedPoint =
           InsertNodeIntoProperAncestorWithTransaction(
-              content, pointToInsert, SplitAtEdges::eDoNotCreateEmptyContainer);
+              MOZ_KnownLive(content), pointToInsert,
+              SplitAtEdges::eDoNotCreateEmptyContainer);
       if (insertedPoint.IsSet()) {
         lastInsertedContent = content;
         pointToInsert = insertedPoint;

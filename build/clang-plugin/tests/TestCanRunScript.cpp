@@ -559,3 +559,59 @@ MOZ_CAN_RUN_SCRIPT void test_pointer_to_ref_1(RefCountedBase& arg) {
 MOZ_CAN_RUN_SCRIPT void test_pointer_to_ref_2(RefCountedBase& arg) {
   test2(&arg);
 }
+
+struct DisallowMemberArgsViaReferenceAlias {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    RefPtr<RefCountedBase>& bogus = mRefCounted;
+    bogus->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'bogus' is neither.}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    RefPtr<RefCountedBase>& bogus = mRefCounted;
+    test2(bogus); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'bogus' is neither.}}
+  }
+};
+
+struct DisallowMemberArgsViaReferenceAlias2 {
+  RefPtr<RefCountedBase> mRefCountedArr[2];
+  MOZ_CAN_RUN_SCRIPT void foo1() {
+    for (RefPtr<RefCountedBase>& item : mRefCountedArr) {
+      item->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item' is neither.}}
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void foo2() {
+    for (auto& item : mRefCountedArr) {
+      item->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item' is neither.}}
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void foo3() {
+    for (RefPtr<RefCountedBase> item : mRefCountedArr) {
+      item->method_test();
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void foo4() {
+    for (auto item : mRefCountedArr) {
+      item->method_test();
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void bar1() {
+    for (RefPtr<RefCountedBase>& item : mRefCountedArr) {
+      test2(item); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item' is neither.}}
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void bar2() {
+    for (auto& item : mRefCountedArr) {
+      test2(item); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item' is neither.}}
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void bar3() {
+    for (RefPtr<RefCountedBase> item : mRefCountedArr) {
+      test2(item);
+    }
+  }
+  MOZ_CAN_RUN_SCRIPT void bar4() {
+    for (auto item : mRefCountedArr) {
+      test2(item);
+    }
+  }
+};
