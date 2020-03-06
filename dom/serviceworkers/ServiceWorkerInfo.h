@@ -126,6 +126,7 @@ class ServiceWorkerInfo final : public nsIServiceWorkerInfo {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch == Unknown);
     mHandlesFetch = aHandlesFetch ? Enabled : Disabled;
+    mDescriptor.SetHandlesFetch(aHandlesFetch);
   }
 
   void SetRegistrationVersion(uint64_t aVersion);
