@@ -18,6 +18,8 @@ use crate::prim_store::{
 };
 use crate::prim_store::PrimitiveInstanceKind;
 
+/// Maximum resolution in device pixels at which line decorations are rasterized.
+pub const MAX_LINE_DECORATION_RESOLUTION: u32 = 4096;
 
 #[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
