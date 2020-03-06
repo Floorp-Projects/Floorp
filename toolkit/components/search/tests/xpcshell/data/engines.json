@@ -7,6 +7,7 @@
       "orderHint": 10000,
       "appliesTo": [{
         "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["gd"] } },
         "default": "yes"
       }]
     },
@@ -31,6 +32,9 @@
         "included": { "everywhere": true },
         "excluded": { "locales": { "matches": ["de", "fr"] } },
         "default": "no"
+      }, {
+        "included": { "locales": { "matches": ["gd"] } },
+        "orderHint": 9000
       }]
     },
     {
@@ -54,10 +58,14 @@
       "orderHint": 9000,
       "appliesTo": [{
         "included": { "locales": { "matches": ["en-US", "fr"] } },
-        "excluded": {
-          "regions": ["ru"]
-        },
+        "excluded": { "regions": ["ru"] },
         "default": "no"
+      }, {
+        "included": { "locales": { "matches": ["gd"] } },
+        "default": "yes",
+        "webExtension": {
+          "locales": ["gd"]
+        }
       }]
     },
     {

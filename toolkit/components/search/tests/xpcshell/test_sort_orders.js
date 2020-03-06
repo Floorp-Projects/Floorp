@@ -13,6 +13,8 @@ const modernConfig = Services.prefs.getBoolPref(
   false
 );
 
+const SEARCH_PREF = SearchUtils.BROWSER_SEARCH_PREF;
+
 const EXPECTED_ORDER = [
   // Default engines
   "Test search engine",
@@ -125,5 +127,30 @@ add_task(async function test_engine_sort_with_distro() {
   // so our added engine gets sorted to the end.
   expected.splice(modernConfig ? expected.length : 5, 0, "nonbuiltin1");
 
+  await checkOrder("getEngines", expected);
+
+  Services.prefs.clearUserPref(`${SEARCH_PREF}order.extra.bar`);
+  Services.prefs.clearUserPref(`${SEARCH_PREF}order.extra.foo`);
+  Services.prefs.clearUserPref(`${SEARCH_PREF}order.1`);
+  Services.prefs.clearUserPref(`${SEARCH_PREF}order.2`);
+});
+
+add_task(async function test_engine_sort_with_locale() {
+  if (!modernConfig) {
+    return;
+  }
+  Services.locale.availableLocales = ["gd"];
+  Services.locale.requestedLocales = ["gd"];
+
+  const expected = [
+    "engine-resourceicon-gd",
+    "engine-pref",
+    "engine-rel-searchform-purpose",
+    "engine-chromeicon",
+    "Test search engine (Reordered)",
+  ];
+
+  await asyncReInit();
+  await checkOrder("getDefaultEngines", expected);
   await checkOrder("getEngines", expected);
 });
