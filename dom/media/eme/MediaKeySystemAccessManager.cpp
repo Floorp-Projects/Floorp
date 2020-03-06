@@ -62,7 +62,7 @@ void MediaKeySystemAccessManager::PendingRequest::
 }
 
 void MediaKeySystemAccessManager::PendingRequest::RejectPromiseWithTypeError(
-    const nsAString& aReason) {
+    const nsACString& aReason) {
   if (mPromise) {
     mPromise->MaybeRejectWithTypeError(aReason);
   }
@@ -146,7 +146,7 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
       // In this case, there is no browser because the Navigator object has
       // been disconnected from its window. Thus, reject the promise.
       aRequest->mPromise->MaybeRejectWithTypeError(
-          u"Browsing context is no longer available");
+          "Browsing context is no longer available");
     } else {
       // In this case, there is no browser because e10s is off. Proceed with
       // the request with support since this scenario is always supported.
@@ -347,7 +347,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   // 1. If keySystem is the empty string, return a promise rejected with a newly
   // created TypeError.
   if (aRequest->mKeySystem.IsEmpty()) {
-    aRequest->mPromise->MaybeRejectWithTypeError(u"Key system string is empty");
+    aRequest->mPromise->MaybeRejectWithTypeError("Key system string is empty");
     // Don't notify DecoderDoctor, as there's nothing we or the user can
     // do to fix this situation; the site is using the API wrong.
     return;
@@ -356,7 +356,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   // newly created TypeError.
   if (aRequest->mConfigs.IsEmpty()) {
     aRequest->mPromise->MaybeRejectWithTypeError(
-        u"Candidate MediaKeySystemConfigs is empty");
+        "Candidate MediaKeySystemConfigs is empty");
     // Don't notify DecoderDoctor, as there's nothing we or the user can
     // do to fix this situation; the site is using the API wrong.
     return;

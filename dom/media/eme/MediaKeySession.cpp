@@ -228,7 +228,7 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
   // with a newly created TypeError.
   if (aInitDataType.IsEmpty()) {
     promise->MaybeRejectWithTypeError(
-        u"Empty initDataType passed to MediaKeySession.generateRequest()");
+        "Empty initDataType passed to MediaKeySession.generateRequest()");
     EME_LOG(
         "MediaKeySession[%p,'%s'] GenerateRequest() failed, empty initDataType",
         this, NS_ConvertUTF16toUTF8(mSessionId).get());
@@ -241,7 +241,7 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
   CopyArrayBufferViewOrArrayBufferData(aInitData, data);
   if (data.IsEmpty()) {
     promise->MaybeRejectWithTypeError(
-        u"Empty initData passed to MediaKeySession.generateRequest()");
+        "Empty initData passed to MediaKeySession.generateRequest()");
     EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, empty initData",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     return promise.forget();
@@ -277,7 +277,7 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
     // If the preceding step failed, reject promise with a newly created
     // TypeError.
     promise->MaybeRejectWithTypeError(
-        u"initData sanitization failed in MediaKeySession.generateRequest()");
+        "initData sanitization failed in MediaKeySession.generateRequest()");
     EME_LOG(
         "MediaKeySession[%p,'%s'] GenerateRequest() initData sanitization "
         "failed",
@@ -344,7 +344,7 @@ already_AddRefed<Promise> MediaKeySession::Load(const nsAString& aSessionId,
   // created TypeError.
   if (aSessionId.IsEmpty()) {
     promise->MaybeRejectWithTypeError(
-        u"Trying to load a session with empty session ID");
+        "Trying to load a session with empty session ID");
     // "The sessionId parameter is empty."
     EME_LOG("MediaKeySession[%p,''] Load() failed, no sessionId", this);
     return promise.forget();
@@ -355,7 +355,7 @@ already_AddRefed<Promise> MediaKeySession::Load(const nsAString& aSessionId,
   // a newly created TypeError.
   if (mSessionType == MediaKeySessionType::Temporary) {
     promise->MaybeRejectWithTypeError(
-        u"Trying to load() into a non-persistent session");
+        "Trying to load() into a non-persistent session");
     EME_LOG(
         "MediaKeySession[%p,''] Load() failed, can't load in a non-persistent "
         "session",
@@ -416,7 +416,7 @@ already_AddRefed<Promise> MediaKeySession::Update(
   CopyArrayBufferViewOrArrayBufferData(aResponse, data);
   if (data.IsEmpty()) {
     promise->MaybeRejectWithTypeError(
-        u"Empty response buffer passed to MediaKeySession.update()");
+        "Empty response buffer passed to MediaKeySession.update()");
     EME_LOG("MediaKeySession[%p,'%s'] Update() failed, empty response buffer",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     return promise.forget();

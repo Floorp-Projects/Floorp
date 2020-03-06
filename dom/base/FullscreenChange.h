@@ -41,15 +41,15 @@ class FullscreenChange : public LinkedListElement<FullscreenChange> {
     }
   }
 
-  void MayRejectPromise(const nsAString& aMessage) {
+  void MayRejectPromise(const nsACString& aMessage) {
     if (mPromise) {
       MOZ_ASSERT(mPromise->State() == Promise::PromiseState::Pending);
       mPromise->MaybeRejectWithTypeError(aMessage);
     }
   }
   template <int N>
-  void MayRejectPromise(const char16_t (&aMessage)[N]) {
-    MayRejectPromise(nsLiteralString(aMessage));
+  void MayRejectPromise(const char (&aMessage)[N]) {
+    MayRejectPromise(nsLiteralCString(aMessage));
   }
 
  protected:
@@ -102,7 +102,7 @@ class FullscreenRequest : public FullscreenChange {
       presContext->RefreshDriver()->ScheduleFullscreenEvent(
           std::move(pendingEvent));
     }
-    MayRejectPromise(u"Fullscreen request denied");
+    MayRejectPromise("Fullscreen request denied");
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("DOM"), Document(),
                                     nsContentUtils::eDOM_PROPERTIES, aReason);
