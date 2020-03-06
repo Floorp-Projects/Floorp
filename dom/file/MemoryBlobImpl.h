@@ -37,27 +37,28 @@ class MemoryBlobImpl final : public BaseBlobImpl {
   // Blob constructor.
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength,
                  const nsAString& aContentType)
-      : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aContentType,
-                     aLength),
+      : BaseBlobImpl(aContentType, aLength),
         mDataOwner(new DataOwner(aMemoryBuffer, aLength)) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  virtual void CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
-  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
-                                                 uint64_t aLength,
-                                                 const nsAString& aContentType,
-                                                 ErrorResult& aRv) override;
+  already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
+                                         const nsAString& aContentType,
+                                         ErrorResult& aRv) override;
 
-  virtual bool IsMemoryFile() const override { return true; }
+  bool IsMemoryFile() const override { return true; }
 
   size_t GetAllocationSize() const override { return mLength; }
 
   size_t GetAllocationSize(
       FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override {
     return GetAllocationSize();
+  }
+
+  void GetBlobImplType(nsAString& aBlobImplType) const override {
+    aBlobImplType = NS_LITERAL_STRING("MemoryBlobImpl");
   }
 
   class DataOwner final : public mozilla::LinkedListElement<DataOwner> {
@@ -147,8 +148,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
   // File constructor.
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)
-      : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aName, aContentType,
-                     aLength, aLastModifiedDate),
+      : BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate),
         mDataOwner(new DataOwner(aMemoryBuffer, aLength)) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
@@ -156,8 +156,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
   // Create slice
   MemoryBlobImpl(const MemoryBlobImpl* aOther, uint64_t aStart,
                  uint64_t aLength, const nsAString& aContentType)
-      : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aContentType,
-                     aOther->mStart + aStart, aLength),
+      : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength),
         mDataOwner(aOther->mDataOwner) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
