@@ -13,7 +13,12 @@
 // This array should be sorted by `spec` attribute.
 const Types = (exports.__TypesForTests = [
   {
-    types: ["accessible", "accessiblewalker", "accessibility"],
+    types: [
+      "accessible",
+      "accessiblewalker",
+      "accessibility",
+      "parentaccessibility",
+    ],
     spec: "devtools/shared/specs/accessibility",
     front: "devtools/shared/fronts/accessibility",
   },

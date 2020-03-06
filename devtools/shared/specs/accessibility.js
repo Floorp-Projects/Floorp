@@ -222,10 +222,12 @@ const accessibilitySpec = generateActorSpec({
     shutdown: {
       type: "shutdown",
     },
+    // TODO: Deprecated. Remove after Fx75.
     "can-be-disabled-change": {
       type: "canBeDisabledChange",
       canBeDisabled: Arg(0, "boolean"),
     },
+    // TODO: Deprecated. Remove after Fx75.
     "can-be-enabled-change": {
       type: "canBeEnabledChange",
       canBeEnabled: Arg(0, "boolean"),
@@ -251,6 +253,40 @@ const accessibilitySpec = generateActorSpec({
         simulator: RetVal("nullable:simulator"),
       },
     },
+    // TODO: Deprecated. Remove after Fx75.
+    enable: {
+      request: {},
+      response: {},
+    },
+    // TODO: Deprecated. Remove after Fx75.
+    disable: {
+      request: {},
+      response: {},
+    },
+  },
+});
+
+const parentAccessibilitySpec = generateActorSpec({
+  typeName: "parentaccessibility",
+
+  events: {
+    "can-be-disabled-change": {
+      type: "canBeDisabledChange",
+      canBeDisabled: Arg(0, "boolean"),
+    },
+    "can-be-enabled-change": {
+      type: "canBeEnabledChange",
+      canBeEnabled: Arg(0, "boolean"),
+    },
+  },
+
+  methods: {
+    bootstrap: {
+      request: {},
+      response: {
+        state: RetVal("json"),
+      },
+    },
     enable: {
       request: {},
       response: {},
@@ -265,4 +301,5 @@ const accessibilitySpec = generateActorSpec({
 exports.accessibleSpec = accessibleSpec;
 exports.accessibleWalkerSpec = accessibleWalkerSpec;
 exports.accessibilitySpec = accessibilitySpec;
+exports.parentAccessibilitySpec = parentAccessibilitySpec;
 exports.simulatorSpec = simulatorSpec;

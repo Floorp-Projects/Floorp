@@ -6,26 +6,20 @@
 
 const { Cc, Ci } = require("chrome");
 const Services = require("Services");
+const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
+const {
+  parentAccessibilitySpec,
+} = require("devtools/shared/specs/accessibility");
+
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
-/**
- * A helper class that does all the work related to accessibility service
- * lifecycle (initialization, shutdown, consumer changes, etc) in parent
- * parent process. It is not guaranteed that the AccessibilityActor starts in
- * parent process and thus triggering these lifecycle functions directly is
- * extremely unreliable.
- */
-class AccessibilityParent {
-  constructor(mm, prefix) {
-    this._msgName = `debug:${prefix}accessibility`;
-    this.onAccessibilityMessage = this.onAccessibilityMessage.bind(this);
-    this.setMessageManager(mm);
+const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
+  initialize(conn) {
+    Actor.prototype.initialize.call(this, conn);
 
     this.userPref = Services.prefs.getIntPref(
       PREF_ACCESSIBILITY_FORCE_DISABLED
     );
-    Services.obs.addObserver(this, "a11y-consumers-changed");
-    Services.prefs.addObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
 
     if (this.enabled && !this.accService) {
       // Set a local reference to an accessibility service if accessibility was
@@ -36,65 +30,16 @@ class AccessibilityParent {
       );
     }
 
-    this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
-      topic: "initialized",
-      data: {
-        enabled: this.enabled,
-        canBeDisabled: this.canBeDisabled,
-        canBeEnabled: this.canBeEnabled,
-      },
-    });
-  }
+    Services.obs.addObserver(this, "a11y-consumers-changed");
+    Services.prefs.addObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
+  },
 
-  /**
-   * Set up message manager listener to listen for messages coming from the
-   * AccessibilityActor when it is instantiated in the child process.
-   *
-   * @param {Object} mm
-   *        Message manager that corresponds to the current content tab.
-   */
-  setMessageManager(mm) {
-    if (this.messageManager === mm) {
-      return;
-    }
-
-    if (this.messageManager) {
-      // If the browser was swapped we need to reset the message manager.
-      const oldMM = this.messageManager;
-      oldMM.removeMessageListener(this._msgName, this.onAccessibilityMessage);
-    }
-
-    this.messageManager = mm;
-    if (mm) {
-      mm.addMessageListener(this._msgName, this.onAccessibilityMessage);
-    }
-  }
-
-  /**
-   * Content AccessibilityActor message listener.
-   *
-   * @param  {String} msg
-   *         Name of the action to perform.
-   */
-  onAccessibilityMessage(msg) {
-    const { action } = msg.json;
-    switch (action) {
-      case "enable":
-        this.enable();
-        break;
-
-      case "disable":
-        this.disable();
-        break;
-
-      case "disconnect":
-        this.destroy();
-        break;
-
-      default:
-        break;
-    }
-  }
+  bootstrap() {
+    return {
+      canBeDisabled: this.canBeDisabled,
+      canBeEnabled: this.canBeEnabled,
+    };
+  },
 
   observe(subject, topic, data) {
     if (topic === "a11y-consumers-changed") {
@@ -104,10 +49,7 @@ class AccessibilityParent {
       // about PlatformAPI consumer changes because when set, we can no longer
       // disable accessibility service.
       const { PlatformAPI } = JSON.parse(data);
-      this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
-        topic: "can-be-disabled-change",
-        data: !PlatformAPI,
-      });
+      this.emit("can-be-disabled-change", !PlatformAPI);
     } else if (
       !this.disabling &&
       topic === "nsPref:changed" &&
@@ -118,12 +60,9 @@ class AccessibilityParent {
       // prevent it from starting in the future. Note: we also check
       // this.disabling state when handling this pref change because this is how
       // we disable the accessibility inspector itself.
-      this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
-        topic: "can-be-enabled-change",
-        data: Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED) < 1,
-      });
+      this.emit("can-be-enabled-change", this.canBeEnabled);
     }
-  }
+  },
 
   /**
    * A getter that indicates if accessibility service is enabled.
@@ -133,7 +72,7 @@ class AccessibilityParent {
    */
   get enabled() {
     return Services.appinfo.accessibilityEnabled;
-  }
+  },
 
   /**
    * A getter that indicates if the accessibility service can be disabled.
@@ -151,7 +90,7 @@ class AccessibilityParent {
     }
 
     return true;
-  }
+  },
 
   /**
    * A getter that indicates if the accessibility service can be enabled.
@@ -161,7 +100,7 @@ class AccessibilityParent {
    */
   get canBeEnabled() {
     return Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED) < 1;
-  }
+  },
 
   /**
    * Enable accessibility service (via XPCOM service).
@@ -174,7 +113,7 @@ class AccessibilityParent {
     this.accService = Cc["@mozilla.org/accessibilityService;1"].getService(
       Ci.nsIAccessibilityService
     );
-  }
+  },
 
   /**
    * Force disable accessibility service. This method removes the reference to
@@ -200,42 +139,18 @@ class AccessibilityParent {
     // start again (when value is below 1).
     Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, this.userPref);
     delete this.disabling;
-  }
+  },
 
   /**
    * Destroy thie helper class, remove all listeners and if possible disable
    * accessibility service in the parent process.
    */
   destroy() {
+    Actor.prototype.destroy.call(this);
     Services.obs.removeObserver(this, "a11y-consumers-changed");
     Services.prefs.removeObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
-    this.setMessageManager(null);
     this.accService = null;
-  }
-}
+  },
+});
 
-/**
- * Setup function that runs in parent process and setups AccessibleActor bits
- * that must always run in parent process.
- *
- * @param  {Object} options.mm
- *         Message manager that corresponds to the current content tab.
- * @param  {String} options.prefix
- *         Unique prefix for message manager messages.
- * @return {Object}
- *         Defines event listeners for when client disconnects or browser gets
- *         swapped.
- */
-function setupParentProcess({ mm, prefix }) {
-  let accessibility = new AccessibilityParent(mm, prefix);
-
-  return {
-    onBrowserSwap: newMM => accessibility.setMessageManager(newMM),
-    onDisconnected: () => {
-      accessibility.destroy();
-      accessibility = null;
-    },
-  };
-}
-
-exports.setupParentProcess = setupParentProcess;
+exports.ParentAccessibilityActor = ParentAccessibilityActor;
