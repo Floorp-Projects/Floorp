@@ -27,7 +27,6 @@ job-template:
     worker-type: 'b-win2012'
     mozharness:
         use-magic-mh-args: false
-        use-caches: false
         config:
             by-build-platform:
                 win32\b.*:

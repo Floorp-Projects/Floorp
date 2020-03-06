@@ -177,7 +177,6 @@ jobs:
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
-            use-caches: false
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
             config:
@@ -210,7 +209,6 @@ jobs:
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
         run:
-            use-caches: false
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
             config:
