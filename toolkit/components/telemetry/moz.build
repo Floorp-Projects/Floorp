@@ -210,7 +210,6 @@ processes_files = [
 
 GeneratedFile('TelemetryProcessEnums.h',
               script='build_scripts/gen_process_enum.py',
-              py2=True,
               inputs=processes_files)
 
 
