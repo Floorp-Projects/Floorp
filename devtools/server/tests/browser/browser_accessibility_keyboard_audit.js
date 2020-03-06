@@ -26,12 +26,14 @@ const {
 } = require("devtools/shared/constants");
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    parentAccessibility,
+    a11yWalker,
+  } = await initAccessibilityFrontsForUrl(
     `${MAIN_DOMAIN}doc_accessibility_keyboard_audit.html`
   );
-
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  await accessibility.enable();
 
   const tests = [
     [
@@ -367,8 +369,7 @@ add_task(async function() {
     "Combobox lists (invisible) are excluded from semantics rule."
   );
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

@@ -80,15 +80,29 @@ async function initLayoutFrontForUrl(url) {
   return { inspector, walker, layout, target };
 }
 
-async function initAccessibilityFrontForUrl(url) {
-  const target = await addTabTarget(url);
-  const inspector = await target.getFront("inspector");
-  const walker = inspector.walker;
+async function initAccessibilityFrontsForUrl(
+  url,
+  { enableByDefault = true } = {}
+) {
+  const { inspector, walker, target } = await initInspectorFront(url);
+  const parentAccessibility = await target.client.mainRoot.getFront(
+    "parentaccessibility"
+  );
   const accessibility = await target.getFront("accessibility");
-
   await accessibility.bootstrap();
+  const a11yWalker = accessibility.accessibleWalkerFront;
+  if (enableByDefault) {
+    await parentAccessibility.enable();
+  }
 
-  return { inspector, walker, accessibility, target };
+  return {
+    inspector,
+    walker,
+    accessibility,
+    parentAccessibility,
+    a11yWalker,
+    target,
+  };
 }
 
 function initDevToolsServer() {
@@ -322,7 +336,8 @@ function getA11yInitOrShutdownPromise() {
  * Wait for accessibility service to shut down. We consider it shut down when
  * an "a11y-init-or-shutdown" event is received with a value of "0".
  */
-async function waitForA11yShutdown() {
+async function waitForA11yShutdown(parentAccessibility) {
+  await parentAccessibility.disable();
   if (!Services.appinfo.accessibilityEnabled) {
     return;
   }

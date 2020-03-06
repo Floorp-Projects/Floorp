@@ -36,12 +36,14 @@ const {
 } = require("devtools/shared/constants");
 
 add_task(async function() {
-  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    walker,
+    a11yWalker,
+    parentAccessibility,
+  } = await initAccessibilityFrontsForUrl(
     `${MAIN_DOMAIN}doc_accessibility_text_label_audit.html`
   );
-
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  await accessibility.enable();
 
   const tests = [
     ["Button menu with inner content", "#buttonmenu-1", null],
@@ -1157,8 +1159,7 @@ add_task(async function() {
     "Audit result for document is correct."
   );
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

@@ -10,7 +10,11 @@ const {
 
 // Checks for the AccessibleWalkerActor audit.
 add_task(async function() {
-  const { target, accessibility } = await initAccessibilityFrontForUrl(
+  const {
+    target,
+    a11yWalker,
+    parentAccessibility,
+  } = await initAccessibilityFrontsForUrl(
     MAIN_DOMAIN + "doc_accessibility_audit.html"
   );
 
@@ -145,15 +149,10 @@ add_task(async function() {
     }
   }
 
-  const a11yWalker = accessibility.accessibleWalkerFront;
-  ok(a11yWalker, "The AccessibleWalkerFront was returned");
-  await accessibility.enable();
-
   await checkWalkerAudit(a11yWalker, 3);
   await checkWalkerAudit(a11yWalker, 2, { types: [AUDIT_TYPE.CONTRAST] });
 
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
   gBrowser.removeCurrentTab();
 });
