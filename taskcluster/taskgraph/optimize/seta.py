@@ -57,7 +57,7 @@ class SETA(object):
     def query_low_value_tasks(self, project):
         # Request the set of low value tasks from the SETA service.  Low value
         # tasks will be optimized out of the task graph.
-        low_value_tasks = []
+        low_value_tasks = set()
 
         # we want to get low priority taskcluster jobs
         url_low = SETA_ENDPOINT % (project, 'taskcluster', SETA_LOW_PRIORITY)
@@ -83,7 +83,7 @@ class SETA(object):
                              kwargs={'timeout': 60, 'headers': ''})
             task_list = json.loads(response.content).get('jobtypes', '')
 
-            high_value_tasks = set([])
+            high_value_tasks = set()
             if type(task_list) == dict and len(task_list) > 0:
                 if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
                     high_value_tasks = set(task_list.values()[0])
@@ -92,7 +92,7 @@ class SETA(object):
             def only_android_raptor(task):
                 return task.startswith('test-android') and 'raptor' in task
 
-            high_value_android_tasks = list(filter(only_android_raptor, high_value_tasks))
+            high_value_android_tasks = set(filter(only_android_raptor, high_value_tasks))
             low_value_tasks.update(high_value_android_tasks)
 
             seta_conversions = {
@@ -134,14 +134,14 @@ class SETA(object):
                 return False
 
             # Now rip out from low value things that were high value in opt
-            low_value_tasks = set([x for x in low_value_tasks if not new_as_old_is_high_value(x)])
+            low_value_tasks = {
+                x for x in low_value_tasks if not new_as_old_is_high_value(x)
+            }
 
             # ensure no non-fuzzing build tasks slipped in, we never want to optimize out those
-            low_value_tasks = set([x for x in low_value_tasks
-                                   if 'build' not in x or 'fuzzing' in x])
-
-            # Strip out any duplicates from the above conversions
-            low_value_tasks = list(set(low_value_tasks))
+            low_value_tasks = {
+                x for x in low_value_tasks if 'build' not in x or 'fuzzing' in x
+            }
 
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
