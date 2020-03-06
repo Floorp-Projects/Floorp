@@ -2622,8 +2622,9 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
       RefPtr<Element> deletedCell;
       HTMLEditor::GetCellFromRange(range, getter_AddRefs(deletedCell));
       if (!deletedCell) {
-        SelectionRefPtr()->RemoveRangeAndUnselectFramesAndNotifyListeners(
-            *range, IgnoreErrors());
+        MOZ_KnownLive(SelectionRefPtr())
+            ->RemoveRangeAndUnselectFramesAndNotifyListeners(*range,
+                                                             IgnoreErrors());
         rangeCount--;
         i--;
       }

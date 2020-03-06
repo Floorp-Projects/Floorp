@@ -100,7 +100,9 @@ class nsRange final : public mozilla::dom::AbstractRange,
   /**
    * Called when the range is added/removed from a Selection.
    */
-  void SetSelection(mozilla::dom::Selection* aSelection);
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetSelection(
+      mozilla::dom::Selection* aSelection);
 
   /**
    * Returns pointer to a Selection if the range is associated with a Selection.
