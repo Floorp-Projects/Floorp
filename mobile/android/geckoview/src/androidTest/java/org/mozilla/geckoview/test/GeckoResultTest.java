@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeoutException;
 
@@ -396,5 +397,111 @@ public class GeckoResultTest {
     @Test(expected = IllegalThreadStateException.class)
     public void pollWithLooper() throws Throwable {
         new GeckoResult<Void>().poll();
+    }
+
+    @UiThreadTest
+    @Test
+    public void cancelNoDelegate() {
+        GeckoResult<Void> result = new GeckoResult<Void>();
+        result.cancel().accept(value -> {
+            assertThat("Cancellation should fail", value, equalTo(false));
+            done();
+        });
+        waitUntilDone();
+    }
+
+    private GeckoResult<Integer> createCancellableResult() {
+        GeckoResult<Integer> result = new GeckoResult<>();
+        result.setCancellationDelegate(new GeckoResult.CancellationDelegate() {
+            @Override
+            public GeckoResult<Boolean> cancel() {
+                return GeckoResult.fromValue(true);
+            }
+        });
+
+        return result;
+    }
+
+    @UiThreadTest
+    @Test
+    public void cancelSuccess() {
+        GeckoResult<Integer> result = createCancellableResult();
+
+        result.cancel().accept(value -> {
+            assertThat("Cancel should succeed", value, equalTo(true));
+            result.exceptionally(exception -> {
+                assertThat("Exception should match", exception, instanceOf(CancellationException.class));
+                done();
+
+                return null;
+            });
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
+    public void cancelCompleted() {
+        GeckoResult<Integer> result = createCancellableResult();
+        result.complete(42);
+        result.cancel().accept(value -> {
+            assertThat("Cancel should fail", value, equalTo(false));
+            done();
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
+    public void cancelParent() {
+        GeckoResult<Integer> result = createCancellableResult();
+        GeckoResult<Integer> result2 = result.then(value -> GeckoResult.fromValue(42));
+
+        result.cancel().accept(value -> {
+            assertThat("Cancel should succeed", value, equalTo(true));
+            result2.exceptionally(exception -> {
+                assertThat("Exception should match", exception, instanceOf(CancellationException.class));
+                done();
+
+                return null;
+            });
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
+    public void cancelChildParentNotComplete() {
+        GeckoResult<Integer> result = new GeckoResult<Integer>()
+                .then(value -> createCancellableResult())
+                .then(value -> new GeckoResult<Integer>());
+
+        result.cancel().accept(value -> {
+            assertThat("Cancel should fail", value, equalTo(false));
+            done();
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
+    public void cancelChildParentComplete() {
+        final GeckoResult<Integer> result = GeckoResult.fromValue(42)
+                .then(value -> createCancellableResult())
+                .then(value -> new GeckoResult<Integer>());
+
+        final Handler handler = new Handler();
+        handler.post(() -> {
+            result.cancel().accept(value -> {
+                assertThat("Cancel should succeed", value, equalTo(true));
+                done();
+            });
+        });
+
+        waitUntilDone();
     }
 }
