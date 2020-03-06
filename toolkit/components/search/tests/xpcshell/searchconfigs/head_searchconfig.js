@@ -497,9 +497,9 @@ class SearchConfigTest {
       }
       if (rule.telemetryId) {
         this.assertEqual(
-          engine._shortName,
+          engine.telemetryId,
           rule.telemetryId,
-          `Should have the correct shortName ${location}.`
+          `Should have the correct telemetryId ${location}.`
         );
       }
     }
