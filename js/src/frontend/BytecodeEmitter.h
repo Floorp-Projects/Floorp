@@ -508,7 +508,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                      PropListType type, bool isInner = false);
 
-  MOZ_MUST_USE bool emitPropertyListObjLiteral(ListNode* obj, PropListType type,
+  MOZ_MUST_USE bool emitPropertyListObjLiteral(ListNode* obj,
                                                ObjLiteralFlags flags);
 
   MOZ_MUST_USE bool emitObjLiteralArray(ParseNode* arrayHead, bool isCow);
