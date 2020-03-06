@@ -26,7 +26,7 @@ class InspectAction extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       disabled: PropTypes.bool,
       target: Types.debugTarget.isRequired,
-      title: Types.string,
+      title: PropTypes.string,
     };
   }
 
