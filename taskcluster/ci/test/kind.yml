@@ -13,7 +13,6 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.tests:transforms
     - taskgraph.transforms.job:transforms
-    - taskgraph.transforms.coalesce:transforms
     - taskgraph.transforms.task:transforms
 
 # Each stanza in a file pointed to by 'jobs-from' describes a particular test
