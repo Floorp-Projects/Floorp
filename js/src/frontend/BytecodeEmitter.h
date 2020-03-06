@@ -497,8 +497,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Can we use the object-literal writer either in singleton-object mode (with
   // values) or in template mode (field names only, no values) for the property
   // list?
-  void isPropertyListObjLiteralCompatible(ListNode* obj, PropListType type,
-                                          bool* withValues,
+  void isPropertyListObjLiteralCompatible(ListNode* obj, bool* withValues,
                                           bool* withoutValues);
   bool isArrayObjLiteralCompatible(ParseNode* arrayHead);
 
