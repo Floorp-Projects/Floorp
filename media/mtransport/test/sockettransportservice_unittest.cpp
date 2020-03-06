@@ -116,7 +116,7 @@ class SocketHandler : public nsASocketHandler {
   NS_DECL_ISUPPORTS
 
  protected:
-  virtual ~SocketHandler() {}
+  virtual ~SocketHandler() = default;
 
  private:
   SocketTransportServiceTest* test_;

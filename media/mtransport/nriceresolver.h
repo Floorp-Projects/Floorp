@@ -106,7 +106,8 @@ class NrIceResolver {
     NS_DECL_THREADSAFE_ISUPPORTS
 
    private:
-    virtual ~PendingResolution(){};
+    virtual ~PendingResolution() = default;
+
     nsCOMPtr<nsIEventTarget> thread_;
     uint16_t port_;
     int transport_;

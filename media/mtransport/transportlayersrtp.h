@@ -20,7 +20,7 @@ class TransportLayerDtls;
 class TransportLayerSrtp final : public TransportLayer {
  public:
   explicit TransportLayerSrtp(TransportLayerDtls& dtls);
-  virtual ~TransportLayerSrtp(){};
+  virtual ~TransportLayerSrtp() = default;
 
   // Transport layer overrides.
   void WasInserted() override;

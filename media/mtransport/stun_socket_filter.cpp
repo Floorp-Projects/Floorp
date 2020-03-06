@@ -90,7 +90,7 @@ class STUNUDPSocketFilter : public nsISocketFilter {
   NS_DECL_NSISOCKETFILTER
 
  private:
-  virtual ~STUNUDPSocketFilter() {}
+  virtual ~STUNUDPSocketFilter() = default;
 
   bool filter_incoming_packet(const mozilla::net::NetAddr* remote_addr,
                               const uint8_t* data, uint32_t len);
@@ -225,7 +225,7 @@ class STUNTCPSocketFilter : public nsISocketFilter {
   NS_DECL_NSISOCKETFILTER
 
  private:
-  virtual ~STUNTCPSocketFilter() {}
+  virtual ~STUNTCPSocketFilter() = default;
 
   bool filter_incoming_packet(const uint8_t* data, uint32_t len);
 

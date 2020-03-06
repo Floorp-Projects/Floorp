@@ -90,7 +90,7 @@ class DtlsIdentity final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DtlsIdentity)
 
  private:
-  ~DtlsIdentity() {}
+  ~DtlsIdentity() = default;
   DISALLOW_COPY_ASSIGN(DtlsIdentity);
 
   UniqueSECKEYPrivateKey private_key_;
