@@ -32,14 +32,7 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
   if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
     const Maybe<ServiceWorkerDescriptor>& controller =
         loadInfo->GetController();
-    // If the controller doesn't handle fetch events, return false
-    // TODO: https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
-    //       17.2. May need to schedule a soft-update.
-    if (controller.isSome()) {
-      *aShouldIntercept = controller.ref().HandlesFetch();
-    } else {
-      *aShouldIntercept = false;
-    }
+    *aShouldIntercept = controller.isSome();
     return NS_OK;
   }
 
@@ -48,7 +41,7 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
 
   // First check with the ServiceWorkerManager for a matching service worker.
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm || !swm->IsAvailable(principal, aURI, aChannel)) {
+  if (!swm || !swm->IsAvailable(principal, aURI)) {
     return NS_OK;
   }
 
