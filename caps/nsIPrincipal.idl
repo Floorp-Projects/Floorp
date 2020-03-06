@@ -451,12 +451,6 @@ interface nsIPrincipal : nsISerializable
     */
     [infallible] readonly attribute boolean isOnion;
 
-    /*
-     * Returns true if the Domain Policy allows js execution
-     * for the Principals URI
-     */
-    readonly attribute boolean isScriptAllowedByPolicy;
-
     /**
      * Returns if the principal is for an IP address.
      */
