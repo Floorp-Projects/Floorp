@@ -9,6 +9,7 @@
 #include "ClassifierDummyChannel.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -488,7 +489,7 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
   }
 
   bool isAllowListed = false;
-  rv = AntiTrackingCommon::IsOnContentBlockingAllowList(
+  rv = ContentBlockingAllowList::Check(
       cbAllowListPrincipal, NS_UsePrivateBrowsing(aChannel), isAllowListed);
   if (NS_FAILED(rv)) {  // normal for some loads, no need to print a warning
     return false;

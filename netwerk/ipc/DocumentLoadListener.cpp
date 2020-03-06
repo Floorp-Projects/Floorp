@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocumentLoadListener.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
@@ -402,7 +403,7 @@ bool DocumentLoadListener::Open(
       // ContentBlockingAllowListPrincipal.
       OriginAttributes attrs;
       aLoadInfo->GetOriginAttributes(&attrs);
-      AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
+      ContentBlockingAllowList::RecomputePrincipal(
           uriBeingLoaded, attrs,
           getter_AddRefs(contentBlockingAllowListPrincipal));
     } else if (topWindow) {
