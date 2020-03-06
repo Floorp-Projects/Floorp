@@ -414,6 +414,19 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     this.fronts.set(typeName, front);
     return front;
   }
+
+  /*
+   * This function returns true if the root actor has a registered global actor
+   * with a given name.
+   * @param {String} actorName
+   *        The name of a global actor.
+   *
+   * @return {Boolean}
+   */
+  async hasActor(actorName) {
+    const rootForm = await this.rootForm;
+    return !!rootForm[actorName + "Actor"];
+  }
 }
 exports.RootFront = RootFront;
 registerFront(RootFront);

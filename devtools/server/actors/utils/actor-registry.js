@@ -156,6 +156,19 @@ const ActorRegistry = {
       constructor: "PerfActor",
       type: { global: true },
     });
+    /**
+     * Always register parent accessibility actor as a global module. This
+     * actor is responsible for all top level accessibility actor functionality
+     * that relies on the parent process.
+     */
+    this.registerModule(
+      "devtools/server/actors/accessibility/parent-accessibility",
+      {
+        prefix: "parentAccessibility",
+        constructor: "ParentAccessibilityActor",
+        type: { global: true },
+      }
+    );
   },
 
   /**
