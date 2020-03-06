@@ -1442,7 +1442,7 @@ static bool GetScriptPlainObjectProperties(
   for (size_t i = 0; i < nobj->getDenseInitializedLength(); i++) {
     Value v = nobj->getDenseElement(i);
     if (!v.isMagic(JS_ELEMENTS_HOLE) &&
-        !properties.append(IdValuePair(INT_TO_JSID(i), v))) {
+        !properties.emplaceBack(INT_TO_JSID(i), v)) {
       return false;
     }
   }
