@@ -47,11 +47,21 @@ nextWindowMessage().then(
 /**
  * The following are helper functions
  */
-function startMediaPlayback() {
+async function startMediaPlayback() {
   info(`wait until media starts playing`);
   const video = document.getElementById("testVideo");
-  video.play();
-  return new Promise(r => video.onplaying = r);
+  await video.play();
+  // As we can't observe `main-media-controller-playback-changed` notification,
+  // which can only be observed in the chrome process. Therefore, we use a
+  // workaround instead which is to wait for a while to ensure that the
+  // controller has already been created in the chrome process.
+  let timeupdatecount = 0;
+  await new Promise(r => video.ontimeupdate = () => {
+    if (++timeupdatecount == 3) {
+      video.ontimeupdate = null;
+      r();
+    }
+  });
 }
 
 function createSessionInMainFrame() {
