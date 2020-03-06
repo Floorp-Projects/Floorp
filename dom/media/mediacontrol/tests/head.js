@@ -5,8 +5,8 @@ async function createTabAndLoad(url) {
   return tab;
 }
 
-async function checkOrWaitUntilMediaStartedPlaying(tab) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+function checkOrWaitUntilMediaStartedPlaying(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     return new Promise(resolve => {
       const video = content.document.getElementById("autoplay");
       if (!video) {
@@ -27,8 +27,8 @@ async function checkOrWaitUntilMediaStartedPlaying(tab) {
   });
 }
 
-async function checkOrWaitUntilMediaStoppedPlaying(tab) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+function checkOrWaitUntilMediaStoppedPlaying(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     return new Promise(resolve => {
       const video = content.document.getElementById("autoplay");
       if (!video) {
