@@ -13,7 +13,7 @@ export type Grip = {
   userDisplayName?: string,
   name: string,
   extensible: boolean,
-  location: {
+  location?: {
     url: string,
     line: number,
     column: number,

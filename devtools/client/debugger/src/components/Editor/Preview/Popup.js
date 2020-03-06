@@ -114,6 +114,7 @@ export class Popup extends Component<Props> {
       <div
         className="preview-popup"
         onClick={() =>
+          location &&
           selectSourceURL(cx, location.url, {
             line: location.line,
           })
