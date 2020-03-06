@@ -1138,7 +1138,7 @@ def midl_names(c_compiler, toolchain_prefix):
             widl = prefixed + widl
         return widl
 
-    return ('midl',)
+    return ('midl.exe',)
 
 @depends(target, '--enable-compile-environment')
 def check_for_midl(target, compile_environment):

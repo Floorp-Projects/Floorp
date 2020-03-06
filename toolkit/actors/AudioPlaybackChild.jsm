@@ -7,43 +7,6 @@
 var EXPORTED_SYMBOLS = ["AudioPlaybackChild"];
 
 class AudioPlaybackChild extends JSWindowActorChild {
-  receiveMessage({ name, data }) {
-    switch (name) {
-      case "AudioPlayback":
-        this.handleMediaControlMessage(data.type);
-        break;
-    }
-  }
-
-  handleMediaControlMessage(msg) {
-    let utils = this.contentWindow.windowUtils;
-    if (!utils) {
-      return;
-    }
-
-    let suspendTypes = Ci.nsISuspendedTypes;
-    switch (msg) {
-      case "lostAudioFocus":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
-        break;
-      case "lostAudioFocusTransiently":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE;
-        break;
-      case "gainAudioFocus":
-        utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
-        break;
-      case "mediaControlPaused":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
-        break;
-      case "mediaControlStopped":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
-        break;
-      default:
-        dump("Error : wrong media control msg!\n");
-        break;
-    }
-  }
-
   observe(subject, topic, data) {
     if (topic === "audio-playback") {
       let name = "AudioPlayback:";

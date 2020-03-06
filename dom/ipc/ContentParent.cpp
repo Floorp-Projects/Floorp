@@ -5884,6 +5884,19 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaSessionUpdated(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNotifyUpdateMediaMetadata(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Maybe<MediaMetadataBase>& aMetadata) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  if (RefPtr<MediaController> controller =
+          aContext.get_canonical()->GetMediaController()) {
+    controller->UpdateMetadata(aContext.ContextId(), aMetadata);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
     ModulePaths&& aModPaths, bool aRunAtNormalPriority,
     GetModulesTrustResolver&& aResolver) {

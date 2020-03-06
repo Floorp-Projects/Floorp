@@ -160,8 +160,6 @@ partial interface HTMLMediaElement {
   readonly attribute double computedVolume;
   [Pref="media.useAudioChannelService.testing"]
   readonly attribute boolean computedMuted;
-  [Pref="media.useAudioChannelService.testing"]
-  readonly attribute unsigned long computedSuspended;
 };
 
 /*

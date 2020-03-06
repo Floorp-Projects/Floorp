@@ -7408,7 +7408,7 @@
   value: false
   mirror: always
 
-# This pref controls whether to use SimpleHttpChannel off main thread.
+# This pref controls whether to use TRRServiceChannel off main thread.
 - name: network.trr.fetch_off_main_thread
   type: RelaxedAtomicBool
   value: false

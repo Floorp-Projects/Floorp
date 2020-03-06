@@ -106,6 +106,9 @@ android-x86-fuzzing/debug:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        fuzzing-builds:
+            - android
 
 android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
@@ -578,3 +581,6 @@ android-x86_64-asan-fuzzing/opt:
         toolchain:
             - linux64-clang-android-cross
             - linux64-sccache
+    optimization:
+        fuzzing-builds:
+            - android

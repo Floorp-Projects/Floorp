@@ -152,10 +152,6 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
         if not allow_missing or value:
             raise FatalCheckError('Cannot find %s' % what)
 
-    @depends_if(check, progs, when=when)
-    def normalized_for_config(value, progs):
-        return ':' if value is None else value
-
-    set_config(var, normalized_for_config)
+    set_config(var, check)
 
     return check

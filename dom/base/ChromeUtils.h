@@ -24,6 +24,7 @@ class ArrayBufferViewOrArrayBuffer;
 class BrowsingContext;
 class IdleRequestCallback;
 struct IdleRequestOptions;
+struct MediaMetadataInit;
 class MozQueryInterface;
 class PrecompiledScript;
 class Promise;
@@ -201,6 +202,10 @@ class ChromeUtils {
 
   static void GenerateMediaControlKeysTestEvent(
       const GlobalObject& aGlobal, MediaControlKeysTestEvent aEvent);
+
+  // This function would only be used for testing.
+  static void GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
+                                            MediaMetadataInit& aMetadata);
 };
 
 }  // namespace dom

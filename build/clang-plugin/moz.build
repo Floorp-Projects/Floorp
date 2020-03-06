@@ -93,6 +93,7 @@ DIRS += [
     'tests',
 ]
 
+include('external/sources.mozbuild')
 
 # In the current moz.build world, we need to override essentially every
 # variable to limit ourselves to what we need to build the clang plugin.

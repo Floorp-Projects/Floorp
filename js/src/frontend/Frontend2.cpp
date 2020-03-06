@@ -121,6 +121,22 @@ class AutoFreeSmooshResult {
   }
 };
 
+// Free given SmooshParseResult on leaving scope.
+class AutoFreeSmooshParseResult {
+  SmooshParseResult* result_;
+
+ public:
+  AutoFreeSmooshParseResult() = delete;
+
+  explicit AutoFreeSmooshParseResult(SmooshParseResult* result)
+      : result_(result) {}
+  ~AutoFreeSmooshParseResult() {
+    if (result_) {
+      free_smoosh_parse_result(*result_);
+    }
+  }
+};
+
 void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
                               int errorNumber, ...) {
   va_list args;
@@ -214,19 +230,31 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
 }
 
 bool SmooshParseScript(JSContext* cx, const uint8_t* bytes, size_t length) {
-  if (test_parse_script(bytes, length)) {
-    return true;
+  SmooshParseResult result = test_parse_script(bytes, length);
+  AutoFreeSmooshParseResult afspr(&result);
+  if (result.error.data) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             result.unimplemented ? JSMSG_SMOOSH_UNIMPLEMENTED
+                                                  : JSMSG_SMOOSH_COMPILE_ERROR,
+                             reinterpret_cast<const char*>(result.error.data));
+    return false;
   }
-  JS_ReportErrorASCII(cx, "Smoosh parse script failed");
-  return false;
+
+  return true;
 }
 
 bool SmooshParseModule(JSContext* cx, const uint8_t* bytes, size_t length) {
-  if (test_parse_module(bytes, length)) {
-    return true;
+  SmooshParseResult result = test_parse_module(bytes, length);
+  AutoFreeSmooshParseResult afspr(&result);
+  if (result.error.data) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             result.unimplemented ? JSMSG_SMOOSH_UNIMPLEMENTED
+                                                  : JSMSG_SMOOSH_COMPILE_ERROR,
+                             reinterpret_cast<const char*>(result.error.data));
+    return false;
   }
-  JS_ReportErrorASCII(cx, "Smoosh parse module failed");
-  return false;
+
+  return true;
 }
 
 }  // namespace frontend

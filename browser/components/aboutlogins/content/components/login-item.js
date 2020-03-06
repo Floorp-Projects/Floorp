@@ -776,7 +776,6 @@ export default class LoginItem extends HTMLElement {
     this._passwordInput.tabIndex = inputTabIndex;
     if (shouldEdit) {
       this.dataset.editing = true;
-      this._originInput.focus();
     } else {
       delete this.dataset.editing;
       // Only reset the reveal checkbox when exiting 'edit' mode
@@ -812,6 +811,7 @@ export default class LoginItem extends HTMLElement {
     // if a new login is being created.
     if (this.dataset.isNewLogin) {
       this._originDisplayInput.replaceWith(this._originInput);
+      this._originInput.focus();
     } else {
       this._originInput.replaceWith(this._originDisplayInput);
     }

@@ -46,7 +46,6 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
-            windows10-aarch64/opt: ['try']
             default: built-projects
     chunks:
         by-test-platform:
@@ -56,12 +55,10 @@ xpcshell:
             linux1804-64(-qr)?/debug: 6
             .*-tsan/opt: 8
             windows(7-32|10-64)(-shippable|-devedition|-asan|.*-qr)?/.*: 2
-            windows10-aarch64/opt: 3
             default: 5
     max-run-time:
         by-test-platform:
             macosx.*(?!-ccov)...../.*: 5400
-            windows10-aarch64/.*: 3600
             windows(7-32|10-64)(-shippable)?/opt: 5400
             .*-ccov/.*: 5400
             .*-tsan/opt: 7200
@@ -70,7 +67,6 @@ xpcshell:
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
-            windows10-aarch64.*: 2
             default: default
     fetches:
         toolchain:

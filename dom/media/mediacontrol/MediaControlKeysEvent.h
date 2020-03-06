@@ -5,6 +5,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYSEVENT_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYSEVENT_H_
 
+#include "mozilla/dom/MediaMetadata.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -84,6 +85,9 @@ class MediaControlKeysEventSource {
 
   virtual void SetPlaybackState(PlaybackState aState);
   virtual PlaybackState GetPlaybackState() const;
+
+  // Override this method if the event source needs to handle the metadata.
+  virtual void SetMediaMetadata(const MediaMetadataBase& aMetadata) {}
 
  protected:
   virtual ~MediaControlKeysEventSource() = default;

@@ -1256,6 +1256,10 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotifyMediaSessionUpdated(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aIsCreated);
 
+  mozilla::ipc::IPCResult RecvNotifyUpdateMediaMetadata(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const Maybe<MediaMetadataBase>& aMetadata);
+
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);

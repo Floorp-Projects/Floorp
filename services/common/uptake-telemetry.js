@@ -119,9 +119,25 @@ class UptakeTelemetry {
    * - `CUSTOM_4_ERROR`: Update source specific error #4.
    * - `CUSTOM_5_ERROR`: Update source specific error #5.
    *
+   * Only supported in Events Telemetry:
+   *
+   * - `SHUTDOWN_ERROR`: Error occuring during shutdown.
+   *
    * @type {Object}
    */
   static get STATUS() {
+    return {
+      ...UptakeTelemetry.HISTOGRAM_LABELS,
+      // Events only.
+      SHUTDOWN_ERROR: "shutdown_error",
+    };
+  }
+
+  /**
+   * Labels that are defined in the histogram.
+   * See `toolkit/components/telemetry/Histograms.json`.
+   */
+  static get HISTOGRAM_LABELS() {
     return {
       UP_TO_DATE: "up_to_date",
       SUCCESS: "success",
@@ -198,11 +214,14 @@ class UptakeTelemetry {
       );
     }
 
-    // Report via histogram in main ping.
-    // Note: this is the legacy equivalent of the above event. We keep it for continuity.
-    Services.telemetry
-      .getKeyedHistogramById(TELEMETRY_HISTOGRAM_ID)
-      .add(source, status);
+    // Only report to histograms if status is an official label.
+    if (Object.values(UptakeTelemetry.HISTOGRAM_LABELS).includes(status)) {
+      // Report via histogram in main ping.
+      // Note: this is the legacy equivalent of the above event. We keep it for continuity.
+      Services.telemetry
+        .getKeyedHistogramById(TELEMETRY_HISTOGRAM_ID)
+        .add(source, status);
+    }
   }
 }
 

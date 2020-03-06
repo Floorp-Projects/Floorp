@@ -32,9 +32,11 @@ apt_packages+=('gcc-multilib')
 apt_packages+=('gir1.2-gnomebluetooth-1.0')
 apt_packages+=('git')
 apt_packages+=('gnome-icon-theme')
+apt_packages+=('gstreamer1.0-gtk3')
 apt_packages+=('gstreamer1.0-plugins-base')
 apt_packages+=('gstreamer1.0-plugins-good')
 apt_packages+=('gstreamer1.0-tools')
+apt_packages+=('gstreamer1.0-pulseaudio')
 apt_packages+=('language-pack-en-base')
 apt_packages+=('libc6-dbg')
 apt_packages+=('libasound2-dev')
@@ -153,17 +155,22 @@ valgrind date
 
 # Build a list of packages to purge from the image.
 apt_packages=()
-apt_packages+=('*alsa*')
+apt_packages+=('*cheese*')
+apt_packages+=('example-content')
 apt_packages+=('git')
 apt_packages+=('gnome-calendar')
 apt_packages+=('gnome-initial-setup')
 apt_packages+=('gnome-mahjongg')
 apt_packages+=('gnome-mines')
 apt_packages+=('gnome-sudoku')
+apt_packages+=('libx11-doc')
+apt_packages+=('manpages-dev')
+apt_packages+=('orca')
+apt_packages+=('rhythmbox')
+apt_packages+=('thunderbird')
 apt_packages+=('ubuntu-release-upgrader*')
 apt_packages+=('update-manager-core')
 apt_packages+=('update-manager')
-apt_packages+=('*whoopsie*')
 apt_packages+=('yelp')
 
 # Purge unnecessary packages
@@ -177,8 +184,6 @@ rm -rf /usr/share/help /usr/share/doc /usr/share/man
 
 # Remove all locale files other than en_US.UTF-8
 rm -rf /usr/share/locale/   /usr/share/locale-langpack/     /usr/share/locales/
-echo "en_US.UTF-8 UTF-8" > /var/lib/locales/supported.d/en
-locale-gen
 
 # Further cleanup
 cd /

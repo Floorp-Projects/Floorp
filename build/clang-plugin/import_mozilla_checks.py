@@ -36,6 +36,7 @@ def copy_dir_contents(src, dest):
 
 def write_cmake(module_path):
     names = ['  ' + os.path.basename(f) for f in glob.glob("%s/*.cpp" % module_path)]
+    names += ['  ' + os.path.basename(f) for f in glob.glob("%s/external/*.cpp" % module_path)]
     with open(os.path.join(module_path, 'CMakeLists.txt'), 'w') as f:
         f.write("""set(LLVM_LINK_COMPONENTS support)
 

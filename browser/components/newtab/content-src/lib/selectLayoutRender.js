@@ -132,13 +132,37 @@ export const selectLayoutRender = ({
   };
 
   const handleComponent = component => {
+    if (
+      component.spocs &&
+      component.spocs.positions &&
+      component.spocs.positions.length
+    ) {
+      const placement = component.placement || {};
+      const placementName = placement.name || "spocs";
+      const spocsData = spocs.data[placementName];
+      if (
+        spocs.loaded &&
+        spocsData &&
+        spocsData.items &&
+        spocsData.items.length
+      ) {
+        return {
+          ...component,
+          data: {
+            spocs: spocsData.items
+              .filter(spoc => spoc && !spocs.blocked.includes(spoc.url))
+              .map((spoc, index) => ({
+                ...spoc,
+                pos: index,
+              })),
+          },
+        };
+      }
+    }
     return {
       ...component,
       data: {
-        spocs: handleSpocs([], component).map((spoc, index) => ({
-          ...spoc,
-          pos: index,
-        })),
+        spocs: [],
       },
     };
   };

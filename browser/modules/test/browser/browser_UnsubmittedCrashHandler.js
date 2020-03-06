@@ -115,6 +115,7 @@ function createPendingCrashReports(howMany, accessDate) {
     ServerURL: SERVER_URL,
     TelemetryServerURL: "http://telemetry.mozilla.org/",
     TelemetryClientId: "c69e7487-df10-4c98-ab1a-c85660feecf3",
+    TelemetrySessionId: "22af5a41-6e84-4112-b1f7-4cb12cb6f6a5",
   });
 
   return (async function() {
@@ -160,6 +161,7 @@ function waitForSubmittedReports(reportIDs) {
             "ServerURL",
             "TelemetryClientId",
             "TelemetryServerURL",
+            "TelemetrySessionId",
           ];
           for (const key of blockedAnnotations) {
             Assert.ok(

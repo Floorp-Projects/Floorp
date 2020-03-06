@@ -55,10 +55,7 @@ mochitest-plain:
     description: "Mochitest plain run"
     treeherder-symbol: M()
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     chunks:
         by-test-platform:
             android-em-7.*: 4
@@ -88,15 +85,9 @@ mochitest-a11y:
     description: "Mochitest a11y run"
     treeherder-symbol: M(a11y)
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     e10s: false
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
+    run-on-projects: built-projects
     mozharness:
         mochitest-flavor: a11y
 
@@ -112,10 +103,7 @@ mochitest-browser-chrome:
             linux.*64(-qr)?/opt: ['mozilla-central']
             windows10-64(-qr)?/opt: ['mozilla-central']
             default: []
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     fission-tier:
         by-test-platform:
             linux.*64/debug: 1
@@ -135,7 +123,6 @@ mochitest-browser-chrome:
             windows7-32/debug: 5400
             windows10-64/debug: 5400
             windows10-64-ccov/.*: 10800
-            windows10-aarch64/*: 7200
             macosx.*64-ccov/.*: 10800
             linux.*/debug: 5400
             windows10-64-qr/debug: 5400
@@ -172,10 +159,7 @@ mochitest-chrome:
     description: "Mochitest chrome run"
     treeherder-symbol: M(c)
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     chunks:
         by-test-platform:
             .*-ccov/.*: 3
@@ -183,7 +167,6 @@ mochitest-chrome:
             .*-asan/opt: 3
             .*-tsan/opt: 6
             (linux.*64|windows.*-..|macosx10..)/debug: 3
-            windows10-aarch64/.*: 3
             default: 2
     max-run-time: 3600
     e10s: false
@@ -197,10 +180,7 @@ mochitest-devtools-chrome:
         name: mochitest-devtools-chrome
     treeherder-symbol: M(dt)
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time:
         by-test-platform:
             windows10-64-ccov/.*: 10800
@@ -233,10 +213,7 @@ mochitest-gpu:
     loopback-video: true
     fission-run-on-projects: []
     fission-tier: 2
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     virtualization: virtual-with-gpu
     e10s: true
     mozharness:
@@ -340,10 +317,7 @@ mochitest-webgl1-core:
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time:
         by-test-platform:
             macosx.*64-ccov/.*: 7200
@@ -363,10 +337,7 @@ mochitest-webgl1-ext:
             default: 1
     e10s: true
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time: 2700
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -384,10 +355,7 @@ mochitest-webgl2-core:
             default: 1
     e10s: true
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -402,10 +370,7 @@ mochitest-webgl2-ext:
     chunks: 4
     e10s: true
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time: 2700
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -421,10 +386,7 @@ mochitest-webgl2-deqp:
     chunks: 4
     e10s: true
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -438,10 +400,7 @@ mochitest-webgpu:
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: default
     max-run-time:
         by-test-platform:
             macosx.*64-ccov/.*: 7200

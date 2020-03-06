@@ -357,9 +357,6 @@ class nsAndroidBridge final : public nsIAndroidBridge, public nsIObserver {
   void AddObservers();
   void RemoveObservers();
 
-  void UpdateAudioPlayingWindows(bool aPlaying);
-
-  int32_t mAudibleWindowsNum;
   nsCOMPtr<nsIAndroidEventDispatcher> mEventDispatcher;
 
  protected:

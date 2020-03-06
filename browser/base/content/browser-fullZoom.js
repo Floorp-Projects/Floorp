@@ -273,10 +273,11 @@ var FullZoom = {
     }
 
     // The PDF viewer zooming isn't handled by `ZoomManager`, ensure that the
-    // browser zoom level always gets reset on load.
+    // browser zoom level always gets reset to 100% on load (to prevent the
+    // UI elements of the PDF viewer from being zoomed in/out on load).
     if (this._isPDFViewer(browser)) {
       this._applyPrefToZoom(
-        undefined,
+        1,
         browser,
         this._notifyOnLocationChange.bind(this, browser)
       );
@@ -409,15 +410,19 @@ var FullZoom = {
    * @return A promise which resolves when the zoom reset has been applied.
    */
   reset: function FullZoom_reset(browser = gBrowser.selectedBrowser) {
+    let forceValue;
     if (browser.currentURI.spec.startsWith("about:reader")) {
       browser.messageManager.sendAsyncMessage("Reader:ResetZoom");
     } else if (this._isPDFViewer(browser)) {
       browser.messageManager.sendAsyncMessage("PDFJS:ZoomReset");
+      // Ensure that the UI elements of the PDF viewer won't be zoomed in/out
+      // on reset, even if/when browser default zoom value is not set to 100%.
+      forceValue = 1;
     }
     let token = this._getBrowserToken(browser);
     let result = ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
-        ZoomManager.setZoomForBrowser(browser, value);
+        ZoomManager.setZoomForBrowser(browser, forceValue || value);
         this._ignorePendingZoomAccesses(browser);
       }
     });

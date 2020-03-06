@@ -9,5 +9,6 @@ DiagnosticsMatcher::DiagnosticsMatcher(CompilerInstance &CI) {
   cls##_.registerMatchers(&AstMatcher);                                        \
   cls##_.registerPPCallbacks(CI);
 #include "Checks.inc"
+#include "external/ExternalChecks.inc"
 #undef CHECK
 }

@@ -54,10 +54,9 @@ static constexpr Entry kEntries[] = {
 
     properties = runpy.run_path(dataFile)["data"]
     properties = filter(exposed_on_getcs, properties)
-    properties.sort(key=order_key)
 
     TEMPLATE = "  {{ eCSSProperty_{}, &nsComputedDOMStyle::{} }},\n"
-    for p in properties:
+    for p in sorted(properties, key=order_key):
         output.write(TEMPLATE.format(p.id, getter_entry(p)))
 
     output.write("};\n")

@@ -19,6 +19,7 @@ public:
   void addCheckFactories(ClangTidyCheckFactories &CheckFactories) override {
 #define CHECK(cls, name) CheckFactories.registerCheck<cls>("mozilla-" name);
 #include "Checks.inc"
+#include "external/ExternalChecks.inc"
 #undef CHECK
   }
 };

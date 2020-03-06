@@ -7,5 +7,5 @@
 
 def add_define(out_file, in_path, expr, num = ''):
     out_file.write('#define %s %s\n' % (expr, num))
-    with open(in_path, 'r') as fh:
+    with open(in_path, 'r', encoding='utf-8') as fh:
         out_file.write(fh.read())

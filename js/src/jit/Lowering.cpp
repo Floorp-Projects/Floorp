@@ -472,10 +472,8 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
       tempFixed(CallTempReg1),   // object register
       tempFixed(CallTempReg2));  // stack counter register
 
-  // Bailout is needed in the case of possible non-JSFunction callee or too
-  // many values in the arguments array.  I'm going to use NonJSFunctionCallee
-  // for the code even if that is not an adequate description.
-  assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+  // Bailout is needed in the case of too many values in the arguments array.
+  assignSnapshot(lir, Bailout_TooManyArguments);
 
   defineReturn(lir, apply);
   assignSafepoint(lir, apply);
@@ -495,14 +493,37 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
       tempFixed(CallTempReg1),   // object register
       tempFixed(CallTempReg2));  // stack counter register
 
-  // Bailout is needed in the case of possible non-JSFunction callee,
-  // too many values in the array, or empty space at the end of the
-  // array.  I'm going to use NonJSFunctionCallee for the code even
-  // if that is not an adequate description.
-  assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+  // Bailout is needed in the case of too many values in the array, or empty
+  // space at the end of the array.
+  assignSnapshot(lir, Bailout_TooManyArguments);
 
   defineReturn(lir, apply);
   assignSafepoint(lir, apply);
+}
+
+void LIRGenerator::visitConstructArray(MConstructArray* mir) {
+  MOZ_ASSERT(mir->getFunction()->type() == MIRType::Object);
+  MOZ_ASSERT(mir->getElements()->type() == MIRType::Elements);
+  MOZ_ASSERT(mir->getNewTarget()->type() == MIRType::Object);
+  MOZ_ASSERT(mir->getThis()->type() == MIRType::Value);
+
+  // Assert if the return value is already erased.
+  static_assert(CallTempReg2 != JSReturnReg_Type);
+  static_assert(CallTempReg2 != JSReturnReg_Data);
+
+  auto* lir = new (alloc()) LConstructArrayGeneric(
+      useFixedAtStart(mir->getFunction(), CallTempReg3),
+      useFixedAtStart(mir->getElements(), CallTempReg0),
+      useFixedAtStart(mir->getNewTarget(), CallTempReg1),
+      useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5),
+      tempFixed(CallTempReg2));
+
+  // Bailout is needed in the case of too many values in the array, or empty
+  // space at the end of the array.
+  assignSnapshot(lir, Bailout_TooManyArguments);
+
+  defineReturn(lir, mir);
+  assignSafepoint(lir, mir);
 }
 
 void LIRGenerator::visitBail(MBail* bail) {
@@ -4321,6 +4342,18 @@ void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
 
 void LIRGenerator::visitWasmParameter(MWasmParameter* ins) {
   ABIArg abi = ins->abi();
+  if (ins->type() == MIRType::StackResults) {
+    // Functions that return stack results receive an extra incoming parameter
+    // with type MIRType::StackResults.  This value is a pointer to fresh
+    // memory.  Here we treat it as if it were in fact MIRType::Pointer.
+    auto* lir = new (alloc()) LWasmParameter;
+    LDefinition def(LDefinition::TypeFrom(MIRType::Pointer),
+                    LDefinition::FIXED);
+    def.setOutput(abi.argInRegister() ? LAllocation(abi.reg())
+                                      : LArgument(abi.offsetFromArgBase()));
+    define(lir, ins, def);
+    return;
+  }
   if (abi.argInRegister()) {
 #if defined(JS_NUNBOX32)
     if (abi.isGeneralRegPair()) {
@@ -4437,11 +4470,43 @@ void LIRGenerator::visitWasmRegister64Result(MWasmRegister64Result* ins) {
 }
 
 void LIRGenerator::visitWasmStackResultArea(MWasmStackResultArea* ins) {
-  MOZ_CRASH("unimplemented");
+  MOZ_ASSERT(ins->type() == MIRType::StackResults);
+  auto* lir = new (alloc()) LWasmStackResultArea(temp());
+  uint32_t vreg = getVirtualRegister();
+  lir->setDef(0,
+              LDefinition(vreg, LDefinition::STACKRESULTS, LDefinition::STACK));
+  ins->setVirtualRegister(vreg);
+  add(lir, ins);
 }
 
 void LIRGenerator::visitWasmStackResult(MWasmStackResult* ins) {
-  MOZ_CRASH("unimplemented");
+  MWasmStackResultArea* area = ins->resultArea()->toWasmStackResultArea();
+  LDefinition::Policy pol = LDefinition::STACK;
+
+  if (ins->type() == MIRType::Int64) {
+    auto* lir = new (alloc()) LWasmStackResult64;
+    lir->setOperand(0, use(area, LUse(LUse::STACK, /* usedAtStart = */ true)));
+    uint32_t vreg = getVirtualRegister();
+    LDefinition::Type typ = LDefinition::GENERAL;
+#if defined(JS_NUNBOX32)
+    getVirtualRegister();
+    lir->setDef(INT64LOW_INDEX, LDefinition(vreg + INT64LOW_INDEX, typ, pol));
+    lir->setDef(INT64HIGH_INDEX, LDefinition(vreg + INT64HIGH_INDEX, typ, pol));
+#else
+    lir->setDef(0, LDefinition(vreg, typ, pol));
+#endif
+    ins->setVirtualRegister(vreg);
+    add(lir, ins);
+    return;
+  }
+
+  auto* lir = new (alloc()) LWasmStackResult;
+  lir->setOperand(0, use(area, LUse(LUse::STACK, /* usedAtStart = */ true)));
+  uint32_t vreg = getVirtualRegister();
+  LDefinition::Type typ = LDefinition::TypeFrom(ins->type());
+  lir->setDef(0, LDefinition(vreg, typ, pol));
+  ins->setVirtualRegister(vreg);
+  add(lir, ins);
 }
 
 void LIRGenerator::visitWasmCall(MWasmCall* ins) {

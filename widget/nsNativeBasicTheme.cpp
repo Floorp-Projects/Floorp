@@ -148,6 +148,24 @@ static Rect FixAspectRatio(const Rect& aRect) {
   return rect;
 }
 
+// This pushes and pops a clip rect to the draw target.
+//
+// This is done to reduce fuzz in places where we may have antialiasing, because
+// skia is not clip-invariant: given different clips, it does not guarantee the
+// same result, even if the painted content doesn't intersect the clips.
+//
+// This is a bit sad, overall, but...
+struct MOZ_RAII AutoClipRect {
+  AutoClipRect(DrawTarget& aDt, const Rect& aRect) : mDt(aDt) {
+    mDt.PushClipRect(aRect);
+  }
+
+  ~AutoClipRect() { mDt.PopClip(); }
+
+ private:
+  DrawTarget& mDt;
+};
+
 static void PaintRoundedRectWithBorder(DrawTarget* aDrawTarget,
                                        const Rect& aRect,
                                        const Color& aBackgroundColor,
@@ -223,8 +241,14 @@ static void PaintIndeterminateMark(DrawTarget* aDrawTarget, const Rect& aRect,
 
 static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
                               const EventStates& aState, uint32_t aDpi) {
+  const float kBorderWidth = 2.0f * aDpi;
+
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  AppendEllipseToPath(builder, aRect.Center(), aRect.Size());
+
+  // Deflate for the same reason as PaintRoundedRectWithBorder. Note that the
+  // size is the diameter, so we just shrink by the border width once.
+  Size size(aRect.Size() - Size(kBorderWidth, kBorderWidth));
+  AppendEllipseToPath(builder, aRect.Center(), size);
   RefPtr<Path> ellipse = builder->Finish();
 
   Color backgroundColor;
@@ -233,7 +257,7 @@ static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
 
   aDrawTarget->Fill(ellipse, ColorPattern(ToDeviceColor(backgroundColor)));
   aDrawTarget->Stroke(ellipse, ColorPattern(ToDeviceColor(borderColor)),
-                      StrokeOptions(2.0f * aDpi));
+                      StrokeOptions(kBorderWidth));
 }
 
 static void PaintCheckedRadioButton(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -315,9 +339,9 @@ static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
                       StrokeOptions(2.0f * aDpi));
 }
 
-static void PaintMenulistButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                                const Rect& aRect, const EventStates& aState,
-                                uint32_t aDpi) {
+static void PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                                     const Rect& aRect,
+                                     const EventStates& aState, uint32_t aDpi) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
                                                       NS_EVENT_STATE_ACTIVE);
@@ -534,9 +558,9 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   EventStates eventState = GetContentState(aFrame, aAppearance);
 
   Rect devPxRect = NSRectToSnappedRect(aRect, twipsPerPixel, *dt);
+  AutoClipRect clip(*dt, devPxRect);
 
-  if (aAppearance == StyleAppearance::MenulistButton ||
-      aAppearance == StyleAppearance::MozMenulistButton) {
+  if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     bool isHTML = IsHTMLContent(aFrame);
     nsIFrame* parentFrame = aFrame->GetParent();
     bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
@@ -577,12 +601,12 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       break;
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
       PaintMenulist(dt, devPxRect, eventState, dpi);
       break;
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
-      PaintMenulistButton(aFrame, dt, devPxRect, eventState, dpi);
+    case StyleAppearance::MozMenulistArrowButton:
+      PaintMenulistArrowButton(aFrame, dt, devPxRect, eventState, dpi);
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
@@ -662,13 +686,13 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     // author-specified padding.
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
     case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
       aResult->SizeTo(7 * dpi, 8 * dpi, 7 * dpi, 8 * dpi);
@@ -694,53 +718,8 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
                                            nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
                                            nsRect* aOverflowRect) {
-  nsIntMargin overflow;
-  switch (aAppearance) {
-    case StyleAppearance::Button:
-    case StyleAppearance::MozMacDisclosureButtonOpen:
-    case StyleAppearance::MozMacDisclosureButtonClosed:
-    case StyleAppearance::MozMacHelpButton:
-    case StyleAppearance::Toolbarbutton:
-    case StyleAppearance::NumberInput:
-    case StyleAppearance::Textfield:
-    case StyleAppearance::Textarea:
-    case StyleAppearance::Searchfield:
-    case StyleAppearance::Listbox:
-    case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
-    case StyleAppearance::MenulistTextfield:
-    case StyleAppearance::Checkbox:
-    case StyleAppearance::Radio:
-    case StyleAppearance::Tab:
-    case StyleAppearance::FocusOutline: {
-      overflow.SizeTo(2, 2, 2, 2);
-      break;
-    }
-    case StyleAppearance::ProgressBar: {
-      // Progress bars draw a 2 pixel white shadow under their progress
-      // indicators.
-      overflow.bottom = 2;
-      break;
-    }
-    case StyleAppearance::Meter: {
-      // Meter bars overflow their boxes by about 2 pixels.
-      overflow.SizeTo(2, 2, 2, 2);
-      break;
-    }
-    default:
-      break;
-  }
-
-  if (overflow != nsIntMargin()) {
-    int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
-    aOverflowRect->Inflate(nsMargin(NSIntPixelsToAppUnits(overflow.top, p2a),
-                                    NSIntPixelsToAppUnits(overflow.right, p2a),
-                                    NSIntPixelsToAppUnits(overflow.bottom, p2a),
-                                    NSIntPixelsToAppUnits(overflow.left, p2a)));
-    return true;
-  }
-
+  // TODO(bug 1620360): This should return non-zero for
+  // StyleAppearance::FocusOutline, if we implement outline-style: auto.
   return false;
 }
 
@@ -765,35 +744,6 @@ nsNativeBasicTheme::WidgetStateChanged(nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        nsAtom* aAttribute, bool* aShouldRepaint,
                                        const nsAttrValue* aOldValue) {
-  // Some widget types just never change state.
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::Toolbox:
-    case StyleAppearance::Toolbar:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Tooltip:
-    case StyleAppearance::Tabpanels:
-    case StyleAppearance::Tabpanel:
-    case StyleAppearance::Dialog:
-    case StyleAppearance::Menupopup:
-    case StyleAppearance::Groupbox:
-    case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgressBar:
-    case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::Meter:
-    case StyleAppearance::Meterchunk:
-    case StyleAppearance::MozMacVibrancyLight:
-    case StyleAppearance::MozMacVibrancyDark:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark:
-      *aShouldRepaint = false;
-      return NS_OK;
-    default:
-      break;
-  }
-
   if (!aAttribute) {
     // Hover/focus/active changed.  Always repaint.
     *aShouldRepaint = true;
@@ -820,22 +770,8 @@ nsNativeBasicTheme::WidgetStateChanged(nsIFrame* aFrame,
 NS_IMETHODIMP
 nsNativeBasicTheme::ThemeChanged() { return NS_OK; }
 
-bool nsNativeBasicTheme::WidgetAppearanceDependsOnWindowFocus(
-    StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-    case StyleAppearance::MozWindowFrameBottom:
-    case StyleAppearance::MozWindowButtonClose:
-    case StyleAppearance::MozWindowButtonMinimize:
-    case StyleAppearance::MozWindowButtonMaximize:
-    case StyleAppearance::MozWindowButtonRestore:
-      return true;
-    default:
-      return false;
-  }
+bool nsNativeBasicTheme::WidgetAppearanceDependsOnWindowFocus(StyleAppearance) {
+  return false;
 }
 
 nsITheme::ThemeGeometryType nsNativeBasicTheme::ThemeGeometryTypeForWidget(
@@ -878,7 +814,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
@@ -889,7 +825,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
 
 bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
   switch (aAppearance) {
-    case StyleAppearance::MozMenulistButton:
+    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
       return false;

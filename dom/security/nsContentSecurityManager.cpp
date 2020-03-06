@@ -793,8 +793,7 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   //    which should never be loaded into system privileged contexts
   // b) remote documents/frames
   //    which generally should also never be loaded into system
-  //    privileged contexts but with some exceptions, like e.g. the
-  //    discoverURL.
+  //    privileged contexts but with some exceptions.
   if (contentPolicyType == nsIContentPolicy::TYPE_SCRIPT) {
     if (StaticPrefs::
             dom_security_skip_remote_script_assertion_in_system_priv_context()) {
@@ -818,31 +817,6 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     return NS_OK;
   }
 
-  // FIXME The discovery feature in about:addons uses the SystemPrincpal.
-  // We should remove the exception for AMO with bug 1544011.
-  static nsAutoCString sDiscoveryPrePath;
-  static bool recvdPrefValues = false;
-  if (!recvdPrefValues) {
-    nsAutoCString discoveryURLString;
-    Preferences::GetCString("extensions.webservice.discoverURL",
-                            discoveryURLString);
-    // discoverURL is by default suffixed with parameters in path like
-    // /%LOCALE%/ so, we use the prePath for comparison
-    nsCOMPtr<nsIURI> discoveryURL;
-    NS_NewURI(getter_AddRefs(discoveryURL), discoveryURLString);
-    if (discoveryURL) {
-      discoveryURL->GetPrePath(sDiscoveryPrePath);
-    }
-    recvdPrefValues = true;
-  }
-  nsAutoCString requestedPrePath;
-  finalURI->GetPrePath(requestedPrePath);
-
-  if (requestedPrePath.Equals(sDiscoveryPrePath)) {
-    return NS_OK;
-  }
-  nsAutoCString requestedURL;
-  finalURI->GetAsciiSpec(requestedURL);
   if (xpc::AreNonLocalConnectionsDisabled()) {
     bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
         "security.disallow_non_local_systemprincipal_in_tests");
@@ -855,6 +829,9 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     // but other mochitest are exempt from this
     return NS_OK;
   }
+
+  nsAutoCString requestedURL;
+  finalURI->GetAsciiSpec(requestedURL);
   MOZ_LOG(
       sCSMLog, LogLevel::Warning,
       ("SystemPrincipal must not load remote documents. URL: %s", requestedURL)

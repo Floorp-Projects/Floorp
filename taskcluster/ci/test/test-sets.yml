@@ -487,28 +487,9 @@ mingwclang-tests-opt:
     - mochitest-gpu
 
 windows-aarch64-tests:
-    - cppunit
     - crashtest
-    - gtest
-    - marionette
-    - mochitest-plain
-    - mochitest-a11y
-    - mochitest-browser-chrome
-    - mochitest-chrome
-    - mochitest-devtools-chrome
-    - mochitest-gpu
     - mochitest-media
-    - mochitest-remote
-    - mochitest-webgl1-core
-    - mochitest-webgl1-ext
-    - mochitest-webgl2-core
-    - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
-    - web-platform-tests
-    - web-platform-tests-crashtests
-    - web-platform-tests-reftests
-    - xpcshell
 
 windows-talos:
     - talos-bcv

@@ -1484,14 +1484,9 @@ nsExternalAppHandler::GetDialogParent() {
     dialogParent = do_QueryInterface(mBrowsingContext->GetDOMWindow());
   }
   if (!dialogParent && mBrowsingContext && XRE_IsParentProcess()) {
-    WindowGlobalParent* parent =
-        mBrowsingContext->Canonical()->GetCurrentWindowGlobal();
-    if (parent) {
-      RefPtr<BrowserParent> browserParent = parent->GetBrowserParent();
-      if (browserParent && browserParent->GetOwnerElement()) {
-        dialogParent = do_QueryInterface(
-            browserParent->GetOwnerElement()->OwnerDoc()->GetWindow());
-      }
+    RefPtr<Element> element = mBrowsingContext->Top()->GetEmbedderElement();
+    if (element) {
+      dialogParent = do_QueryInterface(element->OwnerDoc()->GetWindow());
     }
   }
   return dialogParent.forget();
