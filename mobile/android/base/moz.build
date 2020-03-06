@@ -5,10 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('locales/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 # The recursive make backend treats the first output specially: it's passed as

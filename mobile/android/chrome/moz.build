@@ -6,9 +6,6 @@
 
 # NOTE: I think there are a few other possible components in this directory
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('geckoview/**'):
     BUG_COMPONENT = ('GeckoView', 'General')
 
 DIRS += ['geckoview']
