@@ -27,6 +27,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'AtomList.h',
+    'BindingCallContext.h',
     'BindingDeclarations.h',
     'BindingIPCUtils.h',
     'BindingUtils.h',
