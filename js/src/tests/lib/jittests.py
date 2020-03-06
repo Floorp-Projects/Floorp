@@ -16,13 +16,13 @@ from collections import namedtuple
 from datetime import datetime
 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
-    from tasks_unix import run_all_tests
+    from .tasks_unix import run_all_tests
 else:
-    from tasks_win import run_all_tests
+    from .tasks_win import run_all_tests
 
-from progressbar import ProgressBar, NullProgressBar
-from results import TestOutput, escape_cmdline
-from structuredlog import TestLogger
+from .progressbar import ProgressBar, NullProgressBar
+from .results import TestOutput, escape_cmdline
+from .structuredlog import TestLogger
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
@@ -203,7 +203,7 @@ class JitTest:
         # For each list of jit flags, make a copy of the test.
         return [self.copy_and_extend_jitflags(v) for v in variants]
 
-    COOKIE = '|jit-test|'
+    COOKIE = b'|jit-test|'
 
     # We would use 500019 (5k19), but quit() only accepts values up to 127, due to fuzzers
     SKIPPED_EXIT_STATUS = 59
@@ -212,10 +212,10 @@ class JitTest:
     @classmethod
     def find_directives(cls, file_name):
         meta = ''
-        line = open(file_name).readline()
+        line = open(file_name, "rb").readline()
         i = line.find(cls.COOKIE)
         if i != -1:
-            meta = ';' + line[i + len(cls.COOKIE):].strip('\n')
+            meta = ';' + line[i + len(cls.COOKIE):].decode(errors='strict').strip('\n')
         return meta
 
     @classmethod

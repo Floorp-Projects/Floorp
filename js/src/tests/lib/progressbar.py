@@ -1,13 +1,14 @@
 # Text progress bar library, like curl or scp.
 
-from datetime import datetime, timedelta
 import math
 import sys
 
+from datetime import datetime, timedelta
+
 if sys.platform.startswith('win'):
-    from terminal_win import Terminal
+    from .terminal_win import Terminal
 else:
-    from terminal_unix import Terminal
+    from .terminal_unix import Terminal
 
 
 class NullProgressBar(object):

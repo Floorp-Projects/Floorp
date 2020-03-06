@@ -42,7 +42,6 @@ py2commands="
     ide
     import-pr
     install
-    jit-test
     jsapi-tests
     jsshell-bench
     jstestbrowser
