@@ -15,8 +15,8 @@ import os
 import shlex
 import sys
 import tempfile
-import textwrap
 import platform
+
 from os.path import abspath, dirname, isfile, realpath
 from contextlib import contextmanager
 from copy import copy
@@ -92,150 +92,140 @@ def parse_args():
         requested_paths :set<str>: Test paths specially requested on the CLI.
         excluded_paths :set<str>: Test paths specifically excluded by the CLI.
     """
-    from optparse import OptionParser, OptionGroup
-    op = OptionParser(usage=textwrap.dedent("""
-        %prog [OPTIONS] JS_SHELL [TESTS]
+    from argparse import ArgumentParser
+    op = ArgumentParser(
+        description='Run jstests JS shell tests',
+        epilog='Shell output format: [ pass | fail | timeout | skip ] progress | time')
+    op.add_argument('--xul-info', dest='xul_info_src',
+                    help='config data for xulRuntime'
+                    ' (avoids search for config/autoconf.mk)')
 
-        Shell output format: [ pass | fail | timeout | skip ] progress | time
-        """).strip())
-    op.add_option('--xul-info', dest='xul_info_src',
-                  help='config data for xulRuntime'
-                  ' (avoids search for config/autoconf.mk)')
+    harness_og = op.add_argument_group("Harness Controls", "Control how tests are run.")
+    harness_og.add_argument('-j', '--worker-count', type=int,
+                            default=max(1, get_cpu_count()),
+                            help='Number of tests to run in parallel'
+                            ' (default %(default)s)')
+    harness_og.add_argument('-t', '--timeout', type=float, default=150.0,
+                            help='Set maximum time a test is allows to run'
+                            ' (in seconds).')
+    harness_og.add_argument('--show-slow', action='store_true',
+                            help='Show tests taking longer than a minimum time'
+                            ' (in seconds).')
+    harness_og.add_argument('--slow-test-threshold', type=float, default=5.0,
+                            help='Time in seconds a test can take until it is'
+                            'considered slow (default %(default)s).')
+    harness_og.add_argument('-a', '--args', dest='shell_args', default='',
+                            help='Extra args to pass to the JS shell.')
+    harness_og.add_argument('--feature-args', dest='feature_args', default='',
+                            help='Extra args to pass to the JS shell even when feature-testing.')
+    harness_og.add_argument('--jitflags', dest='jitflags', default='none',
+                            type=str,
+                            help='IonMonkey option combinations. One of all,'
+                            ' debug, ion, and none (default %(default)s).')
+    harness_og.add_argument('--tbpl', action='store_true',
+                            help='Runs each test in all configurations tbpl'
+                            ' tests.')
+    harness_og.add_argument('--tbpl-debug', action='store_true',
+                            help='Runs each test in some faster configurations'
+                            ' tbpl tests.')
+    harness_og.add_argument('-g', '--debug', action='store_true',
+                            help='Run a test in debugger.')
+    harness_og.add_argument('--debugger', default='gdb -q --args',
+                            help='Debugger command.')
+    harness_og.add_argument('-J', '--jorendb', action='store_true',
+                            help='Run under JS debugger.')
+    harness_og.add_argument('--passthrough', action='store_true',
+                            help='Run tests with stdin/stdout attached to'
+                            ' caller.')
+    harness_og.add_argument('--test-reflect-stringify', dest="test_reflect_stringify",
+                            help="instead of running tests, use them to test the "
+                            "Reflect.stringify code in specified file")
+    harness_og.add_argument('--valgrind', action='store_true',
+                            help='Run tests in valgrind.')
+    harness_og.add_argument('--valgrind-args', default='',
+                            help='Extra args to pass to valgrind.')
+    harness_og.add_argument('--rr', action='store_true',
+                            help='Run tests under RR record-and-replay debugger.')
+    harness_og.add_argument('-C', '--check-output', action='store_true',
+                            help='Run tests to check output for different jit-flags')
 
-    harness_og = OptionGroup(op, "Harness Controls",
-                             "Control how tests are run.")
-    harness_og.add_option('-j', '--worker-count', type=int,
-                          default=max(1, get_cpu_count()),
-                          help='Number of tests to run in parallel'
-                          ' (default %default)')
-    harness_og.add_option('-t', '--timeout', type=float, default=150.0,
-                          help='Set maximum time a test is allows to run'
-                          ' (in seconds).')
-    harness_og.add_option('--show-slow', action='store_true',
-                          help='Show tests taking longer than a minimum time'
-                          ' (in seconds).')
-    harness_og.add_option('--slow-test-threshold', type=float, default=5.0,
-                          help='Time in seconds a test can take until it is'
-                          'considered slow (default %default).')
-    harness_og.add_option('-a', '--args', dest='shell_args', default='',
-                          help='Extra args to pass to the JS shell.')
-    harness_og.add_option('--feature-args', dest='feature_args', default='',
-                          help='Extra args to pass to the JS shell even when feature-testing.')
-    harness_og.add_option('--jitflags', dest='jitflags', default='none',
-                          type='string',
-                          help='IonMonkey option combinations. One of all,'
-                          ' debug, ion, and none (default %default).')
-    harness_og.add_option('--tbpl', action='store_true',
-                          help='Runs each test in all configurations tbpl'
-                          ' tests.')
-    harness_og.add_option('--tbpl-debug', action='store_true',
-                          help='Runs each test in some faster configurations'
-                          ' tbpl tests.')
-    harness_og.add_option('-g', '--debug', action='store_true',
-                          help='Run a test in debugger.')
-    harness_og.add_option('--debugger', default='gdb -q --args',
-                          help='Debugger command.')
-    harness_og.add_option('-J', '--jorendb', action='store_true',
-                          help='Run under JS debugger.')
-    harness_og.add_option('--passthrough', action='store_true',
-                          help='Run tests with stdin/stdout attached to'
-                          ' caller.')
-    harness_og.add_option('--test-reflect-stringify', dest="test_reflect_stringify",
-                          help="instead of running tests, use them to test the "
-                          "Reflect.stringify code in specified file")
-    harness_og.add_option('--valgrind', action='store_true',
-                          help='Run tests in valgrind.')
-    harness_og.add_option('--valgrind-args', default='',
-                          help='Extra args to pass to valgrind.')
-    harness_og.add_option('--rr', action='store_true',
-                          help='Run tests under RR record-and-replay debugger.')
-    harness_og.add_option('-C', '--check-output', action='store_true',
-                          help='Run tests to check output for different jit-flags')
-    op.add_option_group(harness_og)
+    input_og = op.add_argument_group("Inputs", "Change what tests are run.")
+    input_og.add_argument('-f', '--file', dest='test_file', action='append',
+                          help='Get tests from the given file.')
+    input_og.add_argument('-x', '--exclude-file', action='append',
+                          help='Exclude tests from the given file.')
+    input_og.add_argument('--wpt', dest='wpt',
+                          choices=['enabled', 'disabled', 'if-running-everything'],
+                          default='if-running-everything',
+                          help="Enable or disable shell web-platform-tests "
+                          "(default: enable if no test paths are specified).")
+    input_og.add_argument('--include', action='append', dest='requested_paths', default=[],
+                          help='Include the given test file or directory.')
+    input_og.add_argument('--exclude', action='append', dest='excluded_paths', default=[],
+                          help='Exclude the given test file or directory.')
+    input_og.add_argument('-d', '--exclude-random', dest='random',
+                          action='store_false',
+                          help='Exclude tests marked as "random."')
+    input_og.add_argument('--run-skipped', action='store_true',
+                          help='Run tests marked as "skip."')
+    input_og.add_argument('--run-only-skipped', action='store_true',
+                          help='Run only tests marked as "skip."')
+    input_og.add_argument('--run-slow-tests', action='store_true',
+                          help='Do not skip tests marked as "slow."')
+    input_og.add_argument('--no-extensions', action='store_true',
+                          help='Run only tests conforming to the ECMAScript 5'
+                          ' standard.')
+    input_og.add_argument('--repeat', type=int, default=1,
+                          help='Repeat tests the given number of times.')
 
-    input_og = OptionGroup(op, "Inputs", "Change what tests are run.")
-    input_og.add_option('-f', '--file', dest='test_file', action='append',
-                        help='Get tests from the given file.')
-    input_og.add_option('-x', '--exclude-file', action='append',
-                        help='Exclude tests from the given file.')
-    input_og.add_option('--wpt', dest='wpt',
-                        type='choice',
-                        choices=['enabled', 'disabled', 'if-running-everything'],
-                        default='if-running-everything',
-                        help="Enable or disable shell web-platform-tests "
-                        "(default: enable if no test paths are specified).")
-    input_og.add_option('--include', action='append', dest='requested_paths', default=[],
-                        help='Include the given test file or directory.')
-    input_og.add_option('--exclude', action='append', dest='excluded_paths', default=[],
-                        help='Exclude the given test file or directory.')
-    input_og.add_option('-d', '--exclude-random', dest='random',
-                        action='store_false',
-                        help='Exclude tests marked as "random."')
-    input_og.add_option('--run-skipped', action='store_true',
-                        help='Run tests marked as "skip."')
-    input_og.add_option('--run-only-skipped', action='store_true',
-                        help='Run only tests marked as "skip."')
-    input_og.add_option('--run-slow-tests', action='store_true',
-                        help='Do not skip tests marked as "slow."')
-    input_og.add_option('--no-extensions', action='store_true',
-                        help='Run only tests conforming to the ECMAScript 5'
-                        ' standard.')
-    input_og.add_option('--repeat', type=int, default=1,
-                        help='Repeat tests the given number of times.')
-    op.add_option_group(input_og)
+    output_og = op.add_argument_group("Output", "Modify the harness and tests output.")
+    output_og.add_argument('-s', '--show-cmd', action='store_true',
+                           help='Show exact commandline used to run each test.')
+    output_og.add_argument('-o', '--show-output', action='store_true',
+                           help="Print each test's output to the file given by"
+                           " --output-file.")
+    output_og.add_argument('-F', '--failed-only', action='store_true',
+                           help="If a --show-* option is given, only print"
+                           " output for failed tests.")
+    output_og.add_argument('--no-show-failed', action='store_true',
+                           help="Don't print output for failed tests"
+                           " (no-op with --show-output).")
+    output_og.add_argument('-O', '--output-file',
+                           help='Write all output to the given file'
+                           ' (default: stdout).')
+    output_og.add_argument('--failure-file',
+                           help='Write all not-passed tests to the given file.')
+    output_og.add_argument('--no-progress', dest='hide_progress',
+                           action='store_true',
+                           help='Do not show the progress bar.')
+    output_og.add_argument('--tinderbox', dest='format', action='store_const',
+                           const='automation',
+                           help='Use automation-parseable output format.')
+    output_og.add_argument('--format', dest='format', default='none',
+                           choices=['automation', 'none'],
+                           help='Output format. Either automation or none'
+                           ' (default %(default)s).')
+    output_og.add_argument('--log-wptreport', dest='wptreport', action='store',
+                           help='Path to write a Web Platform Tests report (wptreport)')
 
-    output_og = OptionGroup(op, "Output",
-                            "Modify the harness and tests output.")
-    output_og.add_option('-s', '--show-cmd', action='store_true',
-                         help='Show exact commandline used to run each test.')
-    output_og.add_option('-o', '--show-output', action='store_true',
-                         help="Print each test's output to the file given by"
-                         " --output-file.")
-    output_og.add_option('-F', '--failed-only', action='store_true',
-                         help="If a --show-* option is given, only print"
-                         " output for failed tests.")
-    output_og.add_option('--no-show-failed', action='store_true',
-                         help="Don't print output for failed tests"
-                         " (no-op with --show-output).")
-    output_og.add_option('-O', '--output-file',
-                         help='Write all output to the given file'
-                         ' (default: stdout).')
-    output_og.add_option('--failure-file',
-                         help='Write all not-passed tests to the given file.')
-    output_og.add_option('--no-progress', dest='hide_progress',
-                         action='store_true',
-                         help='Do not show the progress bar.')
-    output_og.add_option('--tinderbox', dest='format', action='store_const',
-                         const='automation',
-                         help='Use automation-parseable output format.')
-    output_og.add_option('--format', dest='format', default='none',
-                         type='choice', choices=['automation', 'none'],
-                         help='Output format. Either automation or none'
-                         ' (default %default).')
-    output_og.add_option('--log-wptreport', dest='wptreport', action='store',
-                         help='Path to write a Web Platform Tests report (wptreport)')
-    op.add_option_group(output_og)
+    special_og = op.add_argument_group("Special", "Special modes that do not run tests.")
+    special_og.add_argument('--make-manifests', metavar='BASE_TEST_PATH',
+                            help='Generate reftest manifest files.')
 
-    special_og = OptionGroup(op, "Special",
-                             "Special modes that do not run tests.")
-    special_og.add_option('--make-manifests', metavar='BASE_TEST_PATH',
-                          help='Generate reftest manifest files.')
-    op.add_option_group(special_og)
-    options, args = op.parse_args()
+    op.add_argument('--js-shell', metavar='JS_SHELL',
+                    help='JS shell to run tests with')
+    options, args = op.parse_known_args()
 
-    # Acquire the JS shell given on the command line.
-    options.js_shell = None
-    requested_paths = set(options.requested_paths)
-    if len(args) > 0:
-        options.js_shell = abspath(args[0])
-        requested_paths |= set(args[1:])
+    # Need a shell unless in a special mode.
+    if not options.make_manifests:
+        if not args:
+            op.error('missing JS_SHELL argument')
+        options.js_shell = os.path.abspath(args.pop(0))
 
-    # If we do not have a shell, we must be in a special mode.
-    if options.js_shell is None and not options.make_manifests:
-        op.error('missing JS_SHELL argument')
+    requested_paths = set(args)
 
     # Valgrind, gdb, and rr are mutually exclusive.
-    if sum(map(lambda e: 1 if e else 0, [options.valgrind, options.debug, options.rr])) > 1:
+    if sum(map(bool, (options.valgrind, options.debug, options.rr))) > 1:
         op.error("--valgrind, --debug, and --rr are mutually exclusive.")
 
     # Fill the debugger field, as needed.

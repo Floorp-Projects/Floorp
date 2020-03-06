@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import os
 import re
+import six
 import sys
 from subprocess import Popen, PIPE
 
@@ -258,7 +259,7 @@ def _emit_manifest_at(location, relative, test_gen, depth):
     filename = os.path.join(location, 'jstests.list')
     manifest = []
     numTestFiles = 0
-    for k, test_list in manifests.iteritems():
+    for k, test_list in six.iteritems(manifests):
         fullpath = os.path.join(location, k)
         if os.path.isdir(fullpath):
             manifest.append("include " + k + "/jstests.list")
