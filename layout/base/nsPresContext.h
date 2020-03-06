@@ -175,7 +175,7 @@ class nsPresContext : public nsISupports,
 
   mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
-  void DispatchCharSetChange(NotNull<const Encoding*> aCharSet);
+  void DocumentCharSetChanged(NotNull<const Encoding*> aCharSet);
 
   /**
    * Returns the parent prescontext for this one. Returns null if this is a
@@ -266,11 +266,16 @@ class nsPresContext : public nsISupports,
    *
    * For the restyle hint argument, see RestyleManager::RebuildAllStyleData.
    * Also rebuild the user font set and counter style manager.
+   *
+   * FIXME(emilio): The name of this is an utter lie. We should probably call
+   * this PostGlobalStyleChange or something, as it doesn't really rebuild
+   * anything unless you tell it to via the change hint / restyle hint
+   * machinery.
    */
   void RebuildAllStyleData(nsChangeHint, const mozilla::RestyleHint&);
   /**
    * Just like RebuildAllStyleData, except (1) asynchronous and (2) it
-   * doesn't rebuild the user font set.
+   * doesn't rebuild the user font set / counter-style manager / etc.
    */
   void PostRebuildAllStyleDataEvent(nsChangeHint, const mozilla::RestyleHint&);
 
@@ -1015,10 +1020,6 @@ class nsPresContext : public nsISupports,
   void NotifyContentfulPaint();
   void NotifyDOMContentFlushed();
 
-  bool UsesRootEMUnits() const { return mUsesRootEMUnits; }
-
-  void SetUsesRootEMUnits(bool aValue) { mUsesRootEMUnits = aValue; }
-
   bool UsesExChUnits() const { return mUsesExChUnits; }
 
   void SetUsesExChUnits(bool aValue) { mUsesExChUnits = aValue; }
@@ -1098,8 +1099,6 @@ class nsPresContext : public nsISupports,
   // Used by the PresShell to force a reflow when some aspect of font info
   // has been updated, potentially affecting font selection and layout.
   void ForceReflowForFontInfoUpdate();
-
-  void DoChangeCharSet(NotNull<const Encoding*> aCharSet);
 
   /**
    * Checks for MozAfterPaint listeners on the document
@@ -1288,9 +1287,10 @@ class nsPresContext : public nsISupports,
   // Are we currently drawing an SVG glyph?
   unsigned mIsGlyph : 1;
 
-  // Does the associated document use root-em (rem) units?
-  unsigned mUsesRootEMUnits : 1;
   // Does the associated document use ex or ch units?
+  //
+  // TODO(emilio): It's a bit weird that this lives here but all the other
+  // relevant bits live in Device on the rust side.
   unsigned mUsesExChUnits : 1;
 
   // Is the current mCounterStyleManager valid?

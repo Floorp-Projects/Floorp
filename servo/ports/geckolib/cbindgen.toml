@@ -431,6 +431,9 @@ renaming_overrides_prefixing = true
   static inline StyleRestyleHint RestyleSubtree();
   static inline StyleRestyleHint RecascadeSubtree();
   static inline StyleRestyleHint ForAnimations();
+  // Returns true if this change hint is guaranteed to at least recascade all
+  // elements in the subtree of the element it is applied to.
+  inline bool DefinitelyRecascadesAllSubtree() const;
 """
 
 "TextTransform" = """
