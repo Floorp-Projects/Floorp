@@ -400,6 +400,7 @@ export const strings = {
   },
 
   signature: {
+    "1.2.840.113549.1.1.4": "MD5 with RSA Encryption",
     "1.2.840.113549.1.1.5": "SHA-1 with RSA Encryption",
     "1.2.840.113549.1.1.11": "SHA-256 with RSA Encryption",
     "1.2.840.113549.1.1.12": "SHA-384 with RSA Encryption",
