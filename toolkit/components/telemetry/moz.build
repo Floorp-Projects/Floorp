@@ -189,7 +189,6 @@ if CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES']:
     event_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES'])
 
 GeneratedFile('TelemetryEventData.h', script='build_scripts/gen_event_data.py',
-              py2=True,
               inputs=event_files)
 
 GeneratedFile('TelemetryEventEnums.h', script='build_scripts/gen_event_enum.py',
@@ -200,7 +199,6 @@ GeneratedFile('TelemetryEventEnums.h', script='build_scripts/gen_event_enum.py',
 # used in artifact or "build faster" builds.
 GeneratedFile('EventArtifactDefinitions.json',
               script='build_scripts/gen_event_data.py',
-              py2=True,
               entry_point='generate_JSON_definitions', inputs=event_files)
 
 # Move the events JSON file to the directory where the Firefox binary is.
