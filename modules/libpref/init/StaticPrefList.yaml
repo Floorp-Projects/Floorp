@@ -7411,7 +7411,7 @@
 # This pref controls whether to use TRRServiceChannel off main thread.
 - name: network.trr.fetch_off_main_thread
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Allow the network changed event to get sent when a network topology or setup
