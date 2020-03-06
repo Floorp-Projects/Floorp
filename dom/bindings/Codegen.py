@@ -14177,7 +14177,26 @@ class CGDictionary(CGThing):
         body += "return true;\n"
 
         return ClassMethod("Init", "bool", [
-            Argument('JSContext*', 'cx'),
+            Argument('BindingCallContext&', 'cx'),
+            Argument('JS::Handle<JS::Value>', 'val'),
+            Argument('const char*', 'sourceDescription', default='"Value"'),
+            Argument('bool', 'passedToJSImpl', default='false')
+        ], body=body)
+
+    def initWithoutCallContextMethod(self):
+        """
+        This function outputs the body of an Init() method for the dictionary
+        that takes just a JSContext*.  This is needed for non-binding consumers.
+        """
+        body = dedent(
+            """
+            // We don't want to use sourceDescription for our context here;
+            // that's not really what it's formatted for.
+            BindingCallContext cx(cx_, nullptr);
+            return Init(cx, val, sourceDescription, passedToJSImpl);
+            """)
+        return ClassMethod("Init", "bool", [
+            Argument('JSContext*', 'cx_'),
             Argument('JS::Handle<JS::Value>', 'val'),
             Argument('const char*', 'sourceDescription', default='"Value"'),
             Argument('bool', 'passedToJSImpl', default='false')
@@ -14475,7 +14494,7 @@ class CGDictionary(CGThing):
             baseConstructors = None
 
         if d.needsConversionFromJS:
-            initArgs = "nullptr, JS::NullHandleValue",
+            initArgs = "nullptr, JS::NullHandleValue"
         else:
             initArgs =""
         ctors = [
@@ -14501,6 +14520,7 @@ class CGDictionary(CGThing):
 
         if d.needsConversionFromJS:
             methods.append(self.initMethod())
+            methods.append(self.initWithoutCallContextMethod())
         else:
             methods.append(self.simpleInitMethod())
 
