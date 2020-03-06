@@ -14,10 +14,7 @@ job-defaults:
         by-test-platform:
             linux.*64/debug: ['fission']
             default: ['fission']
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
+    run-on-projects: built-projects
     fission-run-on-projects:
         by-test-platform:
             linux.*64-qr/debug: ['trunk']
@@ -238,7 +235,7 @@ mochitest-media:
         by-test-platform:
             android-hw-.*/opt: ['try']
             android-hw-.*-api-16/(?:debug|pgo)?: ['try', 'trunk', 'mozilla-beta', 'mozilla-release']
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/.*: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
             default: built-projects
     variants:
         by-test-platform:
