@@ -133,7 +133,10 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
       message_id: "SIMPLIFIED_ABOUT_WELCOME"
-    });
+    }); // Captures user has seen about:welcome by setting
+    // firstrun.didSeeAboutWelcome pref to true
+
+    window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN");
   }
 
   handleStartBtnClick() {
@@ -154,7 +157,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       className: "trailheadCards"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "trailheadCardsInner"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_HeroText__WEBPACK_IMPORTED_MODULE_2__["HeroText"], {
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_HeroText__WEBPACK_IMPORTED_MODULE_2__["HeroText"], {
       title: props.title,
       subtitle: props.subtitle
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_FxCards__WEBPACK_IMPORTED_MODULE_3__["FxCards"], {
@@ -165,7 +168,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       className: "start-button",
       "data-l10n-id": props.startButton.string_id,
       onClick: this.handleStartBtnClick
-    })));
+    }))));
   }
 
 }
