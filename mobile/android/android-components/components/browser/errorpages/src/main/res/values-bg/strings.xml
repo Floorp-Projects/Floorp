@@ -67,12 +67,94 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Достъп до порта ограничен от съображения за сигурност</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Търсеният адрес съдържа порт (напр., <q>mozilla.org:80</q> за порт 80 на mozilla.org), който обикновено се използва за цели, <em>различни</em> от разглеждане. От съображения за сигурност мрежовият четец прекъсна заявката.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Връзката е прекъсната</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Опасен вид файл</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul> <li>Моля, свържете се със собствениците на сайта, за да ги информирате за проблема.</li> </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Грешка поради повредено съдържание</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Страницата не може да бъде показана поради грешка при прехвърляне на данните.</p><ul><li>Моля, свържете се със собствениците на сайта, за да ги информирате за проблема.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Съдържанието се срина</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Страницата не може да бъде показана поради грешка при прехвърляне на данните.</p><ul><li>Моля, свържете се със собствениците на сайта, за да ги информирате за проблема.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Грешка в кодировката на съдържанието</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Страницата не може да бъде показана, защото използва невалиден или неподдържан вид компресия.</p><ul><li>Моля, свържете се със собствениците на сайта, за да ги информирате за проблема.</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Адресът не е намерен</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Няма връзка с интернет</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Проверете мрежовата си свързаност или опитайте да презаредите страницата след малко.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Презареждане</string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Недействителен адрес</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Адресът е в неразпознаваема форма. Моля, проверете адресната лента за грешки и опитайте отново.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Адресът е недействителен</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+  <li>Адресите обикновено изглеждат така <strong>http://www.example.com/</strong></li>
+  <li>Уверете се, че използвате прави наклонени черти (т.е. <strong>/</strong>).</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Неизвестен протокол</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Адресът използва протокол (напр. <q>wxyz://</q>), който мрежовият четец не разпознава, така че не може да се установи връзка със страницата.</p><ul><li>Опитвате ли да се свържете с мултимедиен ресурс или друга нетекстова услуга? Проверете страницата за допълнителни изисквания.</li><li>Някои протоколи изискват софтуер или приставка от трета страна.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Файлът не е намерен</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+  <li>Дали ресурсът не е преименуван, премахнат или преместен?</li>
+  <li>Има ли грешка в правописа, регистъра на буквите или друга техническа грешка?</li>
+  <li>Имате ли права за достъп до желания ресурс?</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Отказан достъп до файла</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+  <li>Може да е премахнат, преместен или правата му да ограничават достъпа.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Мрежовият посредник отказа свързване</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Четецът е настроен да използва мрежов посредник, но той отказва връзката.</p><ul><li>Правилно ли е настроен? Проверете настройките и опитайте отново.</li><li>Мрежовият посредник разрешава ли свързване от вашата мрежа?</li><li>Ако все още има проблем, се обърнете за помощ към мрежовия администратор или своя доставчик на интернет.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Мрежовият посредник не е намерен</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Четецът е настроен да използва мрежов посредник, но той не може да бъде намерен.</p><ul><li>Правилно ли е настроен? Проверете настройките и опитайте отново.</li><li>Устройството свързано ли е към работеща мрежа?</li><li>Ако все още има проблем, се обърнете за помощ към мрежовия администратор или своя доставчик на интернет.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Враждебна страница</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Страницата %1$s е докладвана като враждебна и е блокирана спрямо вашите настройки за безопасност.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Нежелана страница</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Страницата %1$s е докладвана за сервиране на нежелан софтуер и е блокирана спрямо вашите настройки за безопасност.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Зловредна страница</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Страницата %1$s е докладвана като потенциално зловредна и е блокирана спрямо вашите настройки за безопасност.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Измамническа страница</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Страницата %1$s е докладвана като измамническа и е блокирана спрямо вашите настройки за безопасност.</p>]]></string>
+</resources>

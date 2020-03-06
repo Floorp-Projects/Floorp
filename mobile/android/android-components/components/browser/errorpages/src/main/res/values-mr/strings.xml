@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">पृष्ठ दाखल करण्यात समस्या</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">पुनः प्रयत्न करा</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">मागे जा</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">विनंती पूर्ण करू शकत नाही</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>या समस्येबद्दल किंवा त्रुटीबद्दल अतिरिक्त माहिती सध्या उपलब्ध नाही.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">सुरक्षीत जोडणी अयशस्वी</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>प्राप्त माहितीची अधिप्रमाणता तपासता न आल्यामुळे आपणास इच्छिक पृष्ठ पाहता येणार नाही.</li>
+        <li>कृपया संकेतस्थळाच्या मालकाला या अडचणी विषयी अवगत करा.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">सुरक्षीत जोडणी अयशस्वी</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>ही सर्व्हर च्या संयोजनातील अडचण असू शकते किंवा कोणीतरी या सर्व्हर सारखे रूप घेऊन फसवत असू शकते.</li>
+        <li>आपण या सर्व्हरशी पूर्वी यशस्वीरित्या जुळवणी स्थापीत केली असल्यास, त्रुटी तात्पूर्ती असू शकते, व आपण पुनःप्रयत्न करू शकता.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">प्रगत…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>कोणीतरी साईटचे प्रतिरूपण करत असावे आपण पुढे जाऊ नये.</label>
+        <br><br>
+        <label>वेबसाईट प्रमाणपत्राद्वारे आपली ओळख सिद्ध करतात. <b>%2$s</b> ला %1$s विश्वासार्ह मानत नाही कारण याचा प्रमाणपत्रदाता अज्ञात आहे, प्रमाणपत्र स्व-स्वाक्षरीकृत आहे किंवा सर्व्हर योग्य मध्यस्थ प्रमाणपत्र पाठवत नाही.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">मागे जा (शिफारसीय)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">जोखीम स्वीकारा आणि पुढे चला</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">जोडणी मध्ये अडथळा</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">जोडणी कालबाह्य झाली</string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">जोडणी होऊ शकत नाही</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">सर्व्हरकडून अनपेक्षित प्रतिसाद</string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">पृष्ठ योग्यरित्या पुनर्निर्देशित होत नाही</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">ऑफलाइन मोड</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">सुरक्षा कारणास्तव पोर्ट प्रतिबंधित</string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">जोडणी पुनःप्रस्थापित करण्यात आली</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">असुरक्षीत फाइल प्रकार</string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">दुषीत मजकूर त्रुटी</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">मजकूर भग्न झाला</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">मजकूर एन्कोडींग त्रुटी</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">पत्ता आढळला नाही</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">इंटरनेट जोडणी नाही</string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">पुन्हा लोड करा</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">अवैध पत्ता</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">पत्ता वैध नाही</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">अज्ञात प्रोटोकॉल</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">फाइल आढळली नाही</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">फाइल वापर नाकारण्यात आला</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">प्रॉक्सी सर्व्हरने जोडणी नकारली</string>
+
+    </resources>
