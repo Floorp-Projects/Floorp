@@ -19,11 +19,9 @@ class BaseBlobImpl : public BlobImpl {
 
  public:
   // File constructor.
-  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aName,
-               const nsAString& aContentType, uint64_t aLength,
-               int64_t aLastModifiedDate)
-      : mBlobImplType(aBlobImplType),
-        mIsFile(true),
+  BaseBlobImpl(const nsAString& aName, const nsAString& aContentType,
+               uint64_t aLength, int64_t aLastModifiedDate)
+      : mIsFile(true),
         mContentType(aContentType),
         mName(aName),
         mStart(0),
@@ -35,10 +33,8 @@ class BaseBlobImpl : public BlobImpl {
   }
 
   // Blob constructor without starting point.
-  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aContentType,
-               uint64_t aLength)
-      : mBlobImplType(aBlobImplType),
-        mIsFile(false),
+  BaseBlobImpl(const nsAString& aContentType, uint64_t aLength)
+      : mIsFile(false),
         mContentType(aContentType),
         mStart(0),
         mLength(aLength),
@@ -49,10 +45,8 @@ class BaseBlobImpl : public BlobImpl {
   }
 
   // Blob constructor with starting point.
-  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aContentType,
-               uint64_t aStart, uint64_t aLength)
-      : mBlobImplType(aBlobImplType),
-        mIsFile(false),
+  BaseBlobImpl(const nsAString& aContentType, uint64_t aStart, uint64_t aLength)
+      : mIsFile(false),
         mContentType(aContentType),
         mStart(aStart),
         mLength(aLength),
@@ -123,7 +117,7 @@ class BaseBlobImpl : public BlobImpl {
   virtual bool IsFile() const override { return mIsFile; }
 
   virtual void GetBlobImplType(nsAString& aBlobImplType) const override {
-    aBlobImplType = mBlobImplType;
+    aBlobImplType = NS_LITERAL_STRING("BaseBlobImpl");
   }
 
  protected:
@@ -135,8 +129,6 @@ class BaseBlobImpl : public BlobImpl {
    * The implementation is thread safe.
    */
   static uint64_t NextSerialNumber();
-
-  const nsString mBlobImplType;
 
   bool mIsFile;
 
