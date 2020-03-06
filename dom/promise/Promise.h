@@ -139,15 +139,15 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
     MaybeReject(std::move(res));
   }
 
-  inline void MaybeRejectWithTypeError(const nsAString& aMessage) {
+  inline void MaybeRejectWithTypeError(const nsACString& aMessage) {
     ErrorResult res;
     res.ThrowTypeError(aMessage);
     MaybeReject(std::move(res));
   }
 
   template <int N>
-  void MaybeRejectWithTypeError(const char16_t (&aMessage)[N]) {
-    MaybeRejectWithTypeError(nsLiteralString(aMessage));
+  void MaybeRejectWithTypeError(const char (&aMessage)[N]) {
+    MaybeRejectWithTypeError(nsLiteralCString(aMessage));
   }
 
   template <ErrNum errorNumber, typename... Ts>
@@ -157,15 +157,15 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
     MaybeReject(std::move(res));
   }
 
-  inline void MaybeRejectWithRangeError(const nsAString& aMessage) {
+  inline void MaybeRejectWithRangeError(const nsACString& aMessage) {
     ErrorResult res;
     res.ThrowRangeError(aMessage);
     MaybeReject(std::move(res));
   }
 
   template <int N>
-  void MaybeRejectWithRangeError(const char16_t (&aMessage)[N]) {
-    MaybeRejectWithRangeError(nsLiteralString(aMessage));
+  void MaybeRejectWithRangeError(const char (&aMessage)[N]) {
+    MaybeRejectWithRangeError(nsLiteralCString(aMessage));
   }
 
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be

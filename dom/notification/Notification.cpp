@@ -2168,7 +2168,7 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
   // with a TypeError exception, and terminate these substeps."
   if (NS_WARN_IF(aRv.Failed()) ||
       permission == NotificationPermission::Denied) {
-    p->MaybeRejectWithTypeError(u"Permission to show Notification denied.");
+    p->MaybeRejectWithTypeError("Permission to show Notification denied.");
     return p.forget();
   }
 

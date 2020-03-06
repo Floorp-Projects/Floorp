@@ -186,7 +186,7 @@ already_AddRefed<DetailedPromise> MediaKeys::SetServerCertificate(
   CopyArrayBufferViewOrArrayBufferData(aCert, data);
   if (data.IsEmpty()) {
     promise->MaybeRejectWithTypeError(
-        u"Empty certificate passed to MediaKeys.setServerCertificate()");
+        "Empty certificate passed to MediaKeys.setServerCertificate()");
     return promise.forget();
   }
 

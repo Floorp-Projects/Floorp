@@ -61,29 +61,29 @@ class DetailedPromise : public Promise {
   template <ErrNum errorNumber, typename... Ts>
   void MaybeRejectWithTypeError(Ts&&... aMessageArgs) = delete;
 
-  inline void MaybeRejectWithTypeError(const nsAString& aMessage) {
+  inline void MaybeRejectWithTypeError(const nsACString& aMessage) {
     ErrorResult res;
     res.ThrowTypeError(aMessage);
-    MaybeReject(std::move(res), NS_ConvertUTF16toUTF8(aMessage));
+    MaybeReject(std::move(res), aMessage);
   }
 
   template <int N>
-  void MaybeRejectWithTypeError(const char16_t (&aMessage)[N]) {
-    MaybeRejectWithTypeError(nsLiteralString(aMessage));
+  void MaybeRejectWithTypeError(const char (&aMessage)[N]) {
+    MaybeRejectWithTypeError(nsLiteralCString(aMessage));
   }
 
   template <ErrNum errorNumber, typename... Ts>
   void MaybeRejectWithRangeError(Ts&&... aMessageArgs) = delete;
 
-  inline void MaybeRejectWithRangeError(const nsAString& aMessage) {
+  inline void MaybeRejectWithRangeError(const nsACString& aMessage) {
     ErrorResult res;
     res.ThrowRangeError(aMessage);
-    MaybeReject(std::move(res), NS_ConvertUTF16toUTF8(aMessage));
+    MaybeReject(std::move(res), aMessage);
   }
 
   template <int N>
-  void MaybeRejectWithRangeError(const char16_t (&aMessage)[N]) {
-    MaybeRejectWithRangeError(nsLiteralString(aMessage));
+  void MaybeRejectWithRangeError(const char (&aMessage)[N]) {
+    MaybeRejectWithRangeError(nsLiteralCString(aMessage));
   }
 
  private:
