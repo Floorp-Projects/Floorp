@@ -19,7 +19,7 @@ class nsStunUDPSocketFilterHandler : public nsISocketFilterHandler {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISOCKETFILTERHANDLER
  private:
-  virtual ~nsStunUDPSocketFilterHandler() {}
+  virtual ~nsStunUDPSocketFilterHandler() = default;
 };
 
 #define NS_STUN_TCP_SOCKET_FILTER_HANDLER_CID \
@@ -35,7 +35,7 @@ class nsStunTCPSocketFilterHandler : public nsISocketFilterHandler {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISOCKETFILTERHANDLER
  private:
-  virtual ~nsStunTCPSocketFilterHandler() {}
+  virtual ~nsStunTCPSocketFilterHandler() = default;
 };
 
 #endif  // stun_socket_filter_h__

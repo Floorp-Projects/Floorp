@@ -240,7 +240,7 @@ class has_slots_interface {
 
   // Doesn't really need to be virtual, but is for backwards compatibility
   // (it was virtual in a previous version of sigslot).
-  virtual ~has_slots_interface() {}
+  virtual ~has_slots_interface() = default;
 
  public:
   void signal_connect(_signal_base_interface* sender) {
@@ -269,7 +269,7 @@ class _signal_base_interface {
   _signal_base_interface(slot_disconnect_t disc, slot_duplicate_t dupl)
       : m_slot_disconnect(disc), m_slot_duplicate(dupl) {}
 
-  ~_signal_base_interface() {}
+  ~_signal_base_interface() = default;
 
  public:
   void slot_disconnect(has_slots_interface* pslot) {
@@ -544,7 +544,7 @@ class signal_with_thread_policy : public _signal_base<mt_policy> {
   typedef typename base::connections_list connections_list;
 
  public:
-  signal_with_thread_policy() {}
+  signal_with_thread_policy() = default;
 
   template <class desttype>
   void connect(desttype* pclass, void (desttype::*pmemfun)(Args...)) {

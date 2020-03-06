@@ -22,7 +22,7 @@ class StunAddrsListener {
   NS_IMETHOD_(MozExternalRefCountType) Release();
 
  protected:
-  virtual ~StunAddrsListener() {}
+  virtual ~StunAddrsListener() = default;
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -47,7 +47,7 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
   void Cancel();
 
  protected:
-  virtual ~StunAddrsRequestChild() {}
+  virtual ~StunAddrsRequestChild() = default;
 
   virtual mozilla::ipc::IPCResult RecvOnMDNSQueryComplete(
       const nsCString& aHostname, const Maybe<nsCString>& aAddress) override;

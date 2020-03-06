@@ -91,7 +91,7 @@ class TransportLayerLoopback : public TransportLayer {
     NS_DECL_NSINAMED
 
    private:
-    virtual ~Deliverer() {}
+    virtual ~Deliverer() = default;
 
     DISALLOW_COPY_ASSIGN(Deliverer);
 

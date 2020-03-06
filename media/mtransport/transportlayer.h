@@ -41,7 +41,7 @@ class TransportLayer : public sigslot::has_slots<> {
   // Is this a stream or datagram flow
   TransportLayer() : state_(TS_NONE), flow_id_(), downward_(nullptr) {}
 
-  virtual ~TransportLayer() {}
+  virtual ~TransportLayer() = default;
 
   // Called to initialize
   nsresult Init();  // Called by Insert() to set up -- do not override
