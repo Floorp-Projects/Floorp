@@ -8093,20 +8093,13 @@ bool BytecodeEmitter::emitConditionalExpression(
 }
 
 // Check for an object-literal property list that can be handled by the
-// ObjLiteral writer. We immediately rule out class bodies. Then, we ensure
-// that for each `prop: value` pair, the key is a constant name or numeric
-// index, there is no accessor specified, and the value can be encoded by an
-// ObjLiteral instruction (constant number, string, boolean, null/undefined).
+// ObjLiteral writer. We ensure that for each `prop: value` pair, the key is a
+// constant name or numeric index, there is no accessor specified, and the value
+// can be encoded by an ObjLiteral instruction (constant number, string,
+// boolean, null/undefined).
 void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
-                                                         PropListType type,
                                                          bool* withValues,
                                                          bool* withoutValues) {
-  if (type == ClassBody) {
-    *withValues = false;
-    *withoutValues = false;
-    return;
-  }
-
   bool keysOK = true;
   bool valuesOK = true;
   int propCount = 0;
@@ -9102,8 +9095,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
 
   bool useObjLiteral = false;
   bool useObjLiteralValues = false;
-  isPropertyListObjLiteralCompatible(objNode, ObjectLiteral,
-                                     &useObjLiteralValues, &useObjLiteral);
+  isPropertyListObjLiteralCompatible(objNode, &useObjLiteralValues,
+                                     &useObjLiteral);
 
   // We can't rely on the ObjLiteral-constructed object's values to be used if
   // we're only using ObjLiteral to build a template for JSOp::NewObject instead
