@@ -141,15 +141,6 @@ async function openFormInNewTab(url, formValues, taskFn) {
                 "Check autofilled password value"
               );
             }
-            if (props.hasOwnProperty("setValue")) {
-              let gotInput = ContentTaskUtils.waitForEvent(
-                field,
-                "input",
-                "field value changed"
-              );
-              field.setUserInput(props.setValue);
-              await gotInput;
-            }
           }
           props = usernameProps;
           if (props) {
@@ -161,18 +152,44 @@ async function openFormInNewTab(url, formValues, taskFn) {
                 "Check autofilled username value"
               );
             }
-            if (props.hasOwnProperty("setValue")) {
-              let gotInput = ContentTaskUtils.waitForEvent(
-                field,
-                "input",
-                "field value changed"
-              );
-              field.setUserInput(props.setValue);
-              await gotInput;
-            }
           }
         }
       );
+
+      if (formValues.password && formValues.password.setValue !== undefined) {
+        info(
+          "Editing the password, expectedMessage? " +
+            formValues.password.expectedMessage
+        );
+        let messagePromise = formValues.password.expectedMessage
+          ? listenForTestNotification(formValues.password.expectedMessage)
+          : Promise.resolve();
+        await changeContentInputValue(
+          browser,
+          formValues.password.selector,
+          formValues.password.setValue
+        );
+        await messagePromise;
+        info("messagePromise resolved");
+      }
+
+      if (formValues.username && formValues.username.setValue !== undefined) {
+        info(
+          "Editing the username, expectedMessage? " +
+            formValues.username.expectedMessage
+        );
+        let messagePromise = formValues.username.expectedMessage
+          ? listenForTestNotification(formValues.username.expectedMessage)
+          : Promise.resolve();
+        await changeContentInputValue(
+          browser,
+          formValues.username.selector,
+          formValues.username.setValue
+        );
+        await messagePromise;
+        info("messagePromise resolved");
+      }
+
       await taskFn(browser);
     }
   );
@@ -334,6 +351,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
@@ -396,6 +414,7 @@ add_task(async function autocomplete_generated_password_saved_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: {
         selector: usernameInputSelector,
@@ -489,11 +508,14 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: {
         selector: usernameInputSelector,
         expectedValue: "",
         setValue: "myusername",
+        // with an empty password value, no message is sent for a username change
+        expectedMessage: "",
       },
     },
     async function taskFn(browser) {
@@ -560,6 +582,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
@@ -626,6 +649,7 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
@@ -730,11 +754,14 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: {
         selector: usernameInputSelector,
         expectedValue: "olduser",
         setValue: "differentuser",
+        // with an empty password value, no message is sent for a username change
+        expectedMessage: "",
       },
     },
     async function taskFn(browser) {
@@ -1011,7 +1038,6 @@ add_task(
         );
 
         info("Waiting to openAndVerifyDoorhanger");
-        // also moves focus, producing another onPasswordEditedOrGenerated message from content
         let notif = await openAndVerifyDoorhanger(browser, "password-change", {
           dismissed: true,
           anchorExtraAttr: "attention",
@@ -1113,11 +1139,14 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "",
       },
       username: {
         selector: usernameInputSelector,
         expectedValue: "user1",
         setValue: "",
+        // with an empty password value, no message is sent for a username change
+        expectedMessage: "",
       },
     },
     async function taskFn(browser) {
@@ -1295,6 +1324,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
   // * the auto-saved login should not be deleted
   // * the metadata for the matching login should be updated
   // * the by-origin cache for the password should point at the autosaved login
+
   await SpecialPowers.pushPrefEnv({
     set: [["signon.passwordEditCapture.enabled", true]],
   });
@@ -1307,15 +1337,18 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: {
         selector: usernameInputSelector,
         expectedValue: "user1",
         setValue: "",
+        // with an empty password value, no message is sent for a username change
+        expectedMessage: "",
       },
     },
     async function taskFn(browser) {
-      await SimpleTest.promiseFocus(browser.ownerGlobal);
+      await SimpleTest.promiseFocus(browser);
 
       // first, create an auto-saved login with generated password
       let storageChangedPromise = TestUtils.topicObserved(
@@ -1328,11 +1361,8 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
         "popupshown"
       );
 
-      info("waiting to fill generated password using context menu");
-      await doFillGeneratedPasswordContextMenuItem(
-        browser,
-        passwordInputSelector
-      );
+      info("Filling generated password from AC menu");
+      await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
 
       info("waiting for dismissed password-change notification");
       await waitForDoorhanger(browser, "password-change");
@@ -1390,11 +1420,13 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       let PN = notif.owner;
       PN.panel.hidePopup();
       await promiseHidden;
+      await TestUtils.waitForTick();
 
       // now update the form with the user1 username and password
       info(`updating form`);
-      let passwordEditedMessage = listenForTestNotification(
-        "PasswordEditedOrGenerated"
+      let passwordEditedMessages = listenForTestNotification(
+        "PasswordEditedOrGenerated",
+        2
       );
       let passwordChangeDoorhangerPromise = waitForDoorhanger(
         browser,
@@ -1407,6 +1439,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       );
       hintPromiseShown.then(() => (hintDidShow = true));
 
+      info("Entering username and password for the previously saved login");
       await changeContentFormValues(browser, {
         [passwordInputSelector]: user1LoginSnapshot.password,
         [usernameInputSelector]: user1LoginSnapshot.username,
@@ -1415,7 +1448,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
         "form edited, waiting for test notification of PasswordEditedOrGenerated"
       );
 
-      await passwordEditedMessage;
+      await passwordEditedMessages;
       info("Resolved listenForTestNotification promise");
 
       await passwordChangeDoorhangerPromise;
