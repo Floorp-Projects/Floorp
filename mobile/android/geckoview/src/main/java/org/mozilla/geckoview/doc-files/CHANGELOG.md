@@ -50,6 +50,9 @@ exclude: true
   ([bug 1614894]({{bugzilla}}1603673)), to enable or check Web Manifest support.
 - Added [`GeckoDisplay.safeAreaInsetsChanged`][75.18] to notify the content of [safe area insets][75.19].
   ([bug 1503656]({{bugzilla}}1503656))
+- Added [`GeckoResult#cancel()`][75.22], [`GeckoResult#setCancellationDelegate()`][75.22],
+  and [`GeckoResult.CancellationDelegate`][75.23]. This adds the optional ability to cancel
+  an operation behind a pending `GeckoResult`.
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
@@ -71,6 +74,9 @@ exclude: true
 [75.18]: {{javadoc_uri}}/GeckoDisplay.html#safeAreaInsetsChanged-int-int-int-int-
 [75.19]: https://developer.mozilla.org/en-US/docs/Web/CSS/env
 [75.20]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_POSTPONED-
+[75.21]: {{javadoc_uri}}/GeckoResult.html#cancel--
+[75.22]: {{javadoc_uri}}/GeckoResult.html#setCancellationDelegate-CancellationDelegate-
+[75.23]: {{javadoc_uri}}/GeckoResult.CancellationDelegate.html
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -634,4 +640,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2d95173aa2669bb1ed0acff26af3978047ec274c
+[api-version]: a27452c94c0eafb6ace5de104476989671ca5250
