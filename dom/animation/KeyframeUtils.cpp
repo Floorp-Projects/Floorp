@@ -414,9 +414,7 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
     // value).
     if (!value.isObject() && !value.isNullOrUndefined()) {
       dom::ThrowErrorMessage<dom::MSG_NOT_OBJECT>(
-          aCx,
-          nsPrintfCString("%sElement of sequence<Keyframe> argument", aContext)
-              .get());
+          aCx, aContext, "Element of sequence<Keyframe> argument");
       return false;
     }
 

@@ -224,7 +224,7 @@ void KeyframeEffect::SetKeyframes(JSContext* aContext,
                                   JS::Handle<JSObject*> aKeyframes,
                                   ErrorResult& aRv) {
   nsTArray<Keyframe> keyframes = KeyframeUtils::GetKeyframesFromObject(
-      aContext, mDocument, aKeyframes, "KeyframeEffect.setKeyframes: ", aRv);
+      aContext, mDocument, aKeyframes, "KeyframeEffect.setKeyframes", aRv);
   if (aRv.Failed()) {
     return;
   }

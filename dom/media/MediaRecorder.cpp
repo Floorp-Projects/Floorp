@@ -1799,7 +1799,7 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   // Allow recording from audio node only when pref is on.
   if (!Preferences::GetBool("media.recorder.audio_node.enabled", false)) {
     // Pretending that this constructor is not defined.
-    NS_NAMED_LITERAL_STRING(argStr, "Argument 1 of MediaRecorder.constructor");
+    NS_NAMED_LITERAL_STRING(argStr, "Argument 1");
     NS_NAMED_LITERAL_STRING(typeStr, "MediaStream");
     aRv.ThrowTypeError<MSG_DOES_NOT_IMPLEMENT_INTERFACE>(argStr, typeStr);
     return nullptr;
