@@ -219,6 +219,47 @@ channels.
       ]}
     }
 
+Distributions
+-------------
+
+Distributions may be specified to be included or excluded in an ``appliesTo``
+section. The ``distributions`` field in the ``application`` section is an array
+of distribution identifiers. The identifiers match those supplied by the
+``distribution.id`` preference.
+
+In the following, ``web@ext`` would be included in only the ``cake``
+distribution. ``web1@ext`` would be excluded from the ``apples`` distribution
+but included in the main desktop application, and all other distributions.
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "application": {
+            "distributions": ["cake"]
+          }
+        }
+      ]}
+    },
+    {
+      "webExtension": {
+        "id": "web1@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "application": {
+            "excludedDistributions": ["apples"]
+          }
+        }
+      ]}
+    }
+
 Version
 -------
 

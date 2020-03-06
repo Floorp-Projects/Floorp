@@ -67,6 +67,24 @@
           },
           "uniqueItems": true
         },
+        "distributions": {
+          "type": "array",
+          "title": "Distributions",
+          "description": "Which distributions this applies to.",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "excludedDistributions": {
+          "type": "array",
+          "title": "Exlucuded Distributions",
+          "description": "Which distributions this does not apply to.",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
         "minVersion": {
           "type": "string",
           "title": "Minimum Version",
