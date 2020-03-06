@@ -8539,7 +8539,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 }
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
-                                                 PropListType type,
                                                  ObjLiteralFlags flags) {
   ObjLiteralCreationData data(cx);
   data.writer().beginObject(flags);
@@ -9115,7 +9114,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     // fixups so that at GC-publish time at the end of parse, the full (case 1)
     // or template-without-values (case 2) object can be allocated and the
     // bytecode can be patched to refer to it.
-    if (!emitPropertyListObjLiteral(objNode, ObjectLiteral, flags)) {
+    if (!emitPropertyListObjLiteral(objNode, flags)) {
       //              [stack] OBJ
       return false;
     }
