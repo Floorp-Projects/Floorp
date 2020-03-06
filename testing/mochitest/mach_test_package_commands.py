@@ -67,9 +67,10 @@ def run_mochitest_android(context, args):
 
     config = context.mozharness_config
     if config:
-        args.remoteWebServer = config['remote_webserver']
-        args.httpPort = config['emulator']['http_port']
-        args.sslPort = config['emulator']['ssl_port']
+        host = os.environ.get("HOST_IP", "10.0.2.2")
+        args.remoteWebServer = config.get('remote_webserver', host)
+        args.httpPort = config.get('http_port', 8854)
+        args.sslPort = config.get('ssl_port', 4454)
         args.adbPath = config['exes']['adb'] % {'abs_work_dir': context.mozharness_workdir}
 
     from runtestsremote import run_test_harness
