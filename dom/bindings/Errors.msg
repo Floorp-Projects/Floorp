@@ -39,12 +39,8 @@ MSG_DEF(MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE, 2, false, JSEXN_TYPEERR, "
 MSG_DEF(MSG_NOT_IN_UNION, 2, false, JSEXN_TYPEERR, "{0} could not be converted to any of: {1}.")
 MSG_DEF(MSG_ILLEGAL_CONSTRUCTOR, 1, true, JSEXN_TYPEERR, "{0}Illegal constructor.")
 MSG_DEF(MSG_CONSTRUCTOR_WITHOUT_NEW, 1, false, JSEXN_TYPEERR, "{0} constructor: 'new' is required")
-// It would be nice to give MSG_ENFORCE_RANGE_NON_FINITE a context, but it's
-// not used with ErrorResult.
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1613753 tracks threading the
-// context through to it in a useful way.
-MSG_DEF(MSG_ENFORCE_RANGE_NON_FINITE, 1, false, JSEXN_TYPEERR, "Non-finite value is out of range for {0}.")
-MSG_DEF(MSG_ENFORCE_RANGE_OUT_OF_RANGE, 2, true, JSEXN_TYPEERR, "{0}Value is out of range for {1}.")
+MSG_DEF(MSG_ENFORCE_RANGE_NON_FINITE, 3, true, JSEXN_TYPEERR, "{0}{1} is not a finite value, so is out of range for {2}.")
+MSG_DEF(MSG_ENFORCE_RANGE_OUT_OF_RANGE, 3, true, JSEXN_TYPEERR, "{0}{1} is out of range for {2}.")
 MSG_DEF(MSG_NOT_SEQUENCE, 1, false, JSEXN_TYPEERR, "{0} can't be converted to a sequence.")
 MSG_DEF(MSG_NOT_DICTIONARY, 1, false, JSEXN_TYPEERR, "{0} can't be converted to a dictionary.")
 MSG_DEF(MSG_OVERLOAD_RESOLUTION_FAILED, 3, false, JSEXN_TYPEERR, "Argument {0} is not valid for any of the {1}-argument overloads of {2}.")
