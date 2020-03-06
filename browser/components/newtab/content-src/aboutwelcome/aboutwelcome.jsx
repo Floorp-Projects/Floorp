@@ -33,6 +33,12 @@ class AboutWelcome extends React.PureComponent {
 
   handleStartBtnClick() {
     AboutWelcomeUtils.handleUserAction(this.props.startButton.action);
+    const ping = {
+      event: "CLICK_BUTTON",
+      message_id: this.props.startButton.message_id,
+      id: "ABOUT_WELCOME",
+    };
+    window.AWSendEventTelemetry(ping);
   }
 
   render() {

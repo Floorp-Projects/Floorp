@@ -138,6 +138,12 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
 
   handleStartBtnClick() {
     _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
+    const ping = {
+      event: "CLICK_BUTTON",
+      message_id: this.props.startButton.message_id,
+      id: "ABOUT_WELCOME"
+    };
+    window.AWSendEventTelemetry(ping);
   }
 
   render() {
@@ -471,6 +477,7 @@ const DEFAULT_WELCOME_CONTENT = {
   },
   startButton: {
     string_id: "onboarding-start-browsing-button-label",
+    message_id: "START_BROWSING_BUTTON",
     action: {
       type: "OPEN_AWESOME_BAR"
     }
