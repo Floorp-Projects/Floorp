@@ -3282,7 +3282,7 @@ nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener(
   aContent->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
 }
 
-nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener() {}
+nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener() = default;
 
 NS_IMPL_ISUPPORTS(nsPluginDOMContextMenuListener, nsIDOMEventListener)
 

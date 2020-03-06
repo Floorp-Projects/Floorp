@@ -1130,7 +1130,7 @@ class FDMonitor : public Monitor {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FDMonitor)
 
  private:
-  ~FDMonitor() {}
+  ~FDMonitor() = default;
 };
 
 /**

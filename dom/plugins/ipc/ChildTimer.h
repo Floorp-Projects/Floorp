@@ -26,7 +26,7 @@ class ChildTimer {
    */
   ChildTimer(PluginInstanceChild* instance, uint32_t interval, bool repeat,
              TimerFunc func);
-  ~ChildTimer() {}
+  ~ChildTimer() = default;
 
   uint32_t ID() const { return mID; }
 

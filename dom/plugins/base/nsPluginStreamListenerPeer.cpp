@@ -528,7 +528,7 @@ class ChannelRedirectProxyCallback : public nsIAsyncVerifyRedirectCallback {
         mOldChannel(oldChannel),
         mNewChannel(newChannel) {}
 
-  ChannelRedirectProxyCallback() {}
+  ChannelRedirectProxyCallback() = default;
 
   NS_DECL_ISUPPORTS
 
@@ -543,7 +543,7 @@ class ChannelRedirectProxyCallback : public nsIAsyncVerifyRedirectCallback {
   }
 
  private:
-  virtual ~ChannelRedirectProxyCallback() {}
+  virtual ~ChannelRedirectProxyCallback() = default;
 
   nsWeakPtr mWeakListener;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mParent;
