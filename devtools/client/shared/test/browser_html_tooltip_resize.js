@@ -48,7 +48,7 @@ add_task(async function() {
 
   // Resize the content
   div.style.cssText = "width: 200px; height: 30px";
-  tooltip.updateContainerBounds(box1, { position: "top" });
+  tooltip.show(box1, { position: "top" });
 
   // The panel should have moved 100px to the left and 10px down
   const updatedPanelBounds = tooltip.panel
