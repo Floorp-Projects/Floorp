@@ -8547,10 +8547,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   for (ParseNode* propdef : obj->contents()) {
-    MOZ_ASSERT(propdef->is<BinaryNode>());
     BinaryNode* prop = &propdef->as<BinaryNode>();
     ParseNode* key = prop->left();
-    MOZ_ASSERT(key->is<NameNode>() || key->is<NumericLiteral>());
 
     if (key->is<NameNode>()) {
       uint32_t propNameIndex = 0;
@@ -8559,7 +8557,6 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
       }
       data.writer().setPropName(propNameIndex);
     } else {
-      MOZ_ASSERT(key->is<NumericLiteral>());
       double numValue = key->as<NumericLiteral>().value();
       int32_t i = 0;
       DebugOnly<bool> numIsInt =
