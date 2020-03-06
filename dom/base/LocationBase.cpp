@@ -31,6 +31,7 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIURI> sourceURI;
   ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
 
   // Get security manager.
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
@@ -71,51 +72,35 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
       do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
   nsCOMPtr<Document> doc = incumbent ? incumbent->GetDoc() : nullptr;
 
-  if (doc) {
-    nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
-    docOriginalURI = doc->GetOriginalURI();
-    docCurrentURI = doc->GetDocumentURI();
-    rv = doc->NodePrincipal()->GetURI(getter_AddRefs(principalURI));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return nullptr;
-    }
-
-    triggeringPrincipal = doc->NodePrincipal();
-    referrerPolicy = doc->GetReferrerPolicy();
-
-    bool urisEqual = false;
-    if (docOriginalURI && docCurrentURI && principalURI) {
-      principalURI->Equals(docOriginalURI, &urisEqual);
-    }
-    if (urisEqual) {
-      sourceURI = docCurrentURI;
-    } else {
-      // Use principalURI as long as it is not an NullPrincipalURI.  We
-      // could add a method such as GetReferrerURI to principals to make this
-      // cleaner, but given that we need to start using Source Browsing
-      // Context for referrer (see Bug 960639) this may be wasted effort at
-      // this stage.
-      if (principalURI && !principalURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME)) {
-        sourceURI = principalURI;
-      }
-    }
-  } else {
-    // No document; just use our subject principal as the triggering principal.
-    triggeringPrincipal = &aSubjectPrincipal;
-  }
-
   // Create load info
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
 
-  loadState->SetTriggeringPrincipal(triggeringPrincipal);
-  if (doc) {
-    loadState->SetCsp(doc->GetCsp());
+  if (!doc) {
+    // No document; just use our subject principal as the triggering principal.
+    loadState->SetTriggeringPrincipal(&aSubjectPrincipal);
+    return loadState.forget();
   }
 
-  if (sourceURI) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(sourceURI, referrerPolicy);
+  nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
+  docOriginalURI = doc->GetOriginalURI();
+  docCurrentURI = doc->GetDocumentURI();
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+
+  triggeringPrincipal = doc->NodePrincipal();
+  referrerPolicy = doc->GetReferrerPolicy();
+
+  bool urisEqual = false;
+  if (docOriginalURI && docCurrentURI && principal) {
+    principal->EqualsURI(docOriginalURI, &urisEqual);
+  }
+  if (urisEqual) {
+    referrerInfo = new ReferrerInfo(docCurrentURI, referrerPolicy);
+  } else {
+    principal->CreateReferrerInfo(referrerPolicy, getter_AddRefs(referrerInfo));
+  }
+  loadState->SetTriggeringPrincipal(triggeringPrincipal);
+  loadState->SetCsp(doc->GetCsp());
+  if (referrerInfo) {
     loadState->SetReferrerInfo(referrerInfo);
   }
 
