@@ -39,11 +39,13 @@ class Toolbar extends Component {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      accessibility: PropTypes.object.isRequired,
+      disableAccessibility: PropTypes.func.isRequired,
       canBeDisabled: PropTypes.bool.isRequired,
       toolboxDoc: PropTypes.object.isRequired,
       audit: PropTypes.func.isRequired,
       simulate: PropTypes.func,
+      startListeningForLifecycleEvents: PropTypes.func.isRequired,
+      stopListeningForLifecycleEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -59,17 +61,15 @@ class Toolbar extends Component {
   }
 
   componentWillMount() {
-    this.props.accessibility.on(
-      "can-be-disabled-change",
-      this.onCanBeDisabledChange
-    );
+    this.props.startListeningForLifecycleEvents({
+      "can-be-disabled-change": this.onCanBeDisabledChange,
+    });
   }
 
   componentWillUnmount() {
-    this.props.accessibility.off(
-      "can-be-disabled-change",
-      this.onCanBeDisabledChange
-    );
+    this.props.stopListeningForLifecycleEvents({
+      "can-be-disabled-change": this.onCanBeDisabledChange,
+    });
   }
 
   onCanBeDisabledChange(canBeDisabled) {
@@ -77,10 +77,10 @@ class Toolbar extends Component {
   }
 
   onDisable() {
-    const { accessibility, dispatch } = this.props;
+    const { disableAccessibility, dispatch } = this.props;
     this.setState({ disabling: true });
 
-    dispatch(disable(accessibility))
+    dispatch(disable(disableAccessibility))
       .then(() => this.setState({ disabling: false }))
       .catch(() => this.setState({ disabling: false }));
   }

@@ -44,9 +44,11 @@ const {
 class Description extends Component {
   static get propTypes() {
     return {
-      accessibility: PropTypes.object.isRequired,
       canBeEnabled: PropTypes.bool,
       dispatch: PropTypes.func.isRequired,
+      enableAccessibility: PropTypes.func.isRequired,
+      startListeningForLifecycleEvents: PropTypes.func.isRequired,
+      stopListeningForLifecycleEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -62,28 +64,26 @@ class Description extends Component {
   }
 
   componentWillMount() {
-    this.props.accessibility.on(
-      "can-be-enabled-change",
-      this.onCanBeEnabledChange
-    );
+    this.props.startListeningForLifecycleEvents({
+      "can-be-enabled-change": this.onCanBeEnabledChange,
+    });
   }
 
   componentWillUnmount() {
-    this.props.accessibility.off(
-      "can-be-enabled-change",
-      this.onCanBeEnabledChange
-    );
+    this.props.stopListeningForLifecycleEvents({
+      "can-be-enabled-change": this.onCanBeEnabledChange,
+    });
   }
 
   onEnable() {
-    const { accessibility, dispatch } = this.props;
+    const { enableAccessibility, dispatch } = this.props;
     this.setState({ enabling: true });
 
     if (gTelemetry) {
       gTelemetry.scalarAdd(A11Y_SERVICE_ENABLED_COUNT, 1);
     }
 
-    dispatch(enable(accessibility))
+    dispatch(enable(enableAccessibility))
       .then(() => this.setState({ enabling: false }))
       .catch(() => this.setState({ enabling: false }));
   }
