@@ -9,7 +9,7 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:minHeight="?android:attr/listPreferredItemHeightSmall">
+    android:minHeight="?android:attr/listPreferredItemHeight">
 
     <ImageView
         android:id="@+id/favicon_image"
@@ -28,7 +28,6 @@
         android:id="@+id/domainView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:layout_marginEnd="12dp"
         android:layout_weight="1"
         android:ellipsize="middle"
@@ -37,9 +36,11 @@
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:textColor="?primaryText"
+        app:layout_constraintBottom_toTopOf="@id/userView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/favicon_image"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />
 
     <TextView
@@ -47,7 +48,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="4dp"
         android:layout_weight="1"
         android:ellipsize="middle"
         android:paddingStart="?android:attr/listPreferredItemPaddingStart"
@@ -58,5 +58,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/favicon_image"
         app:layout_constraintTop_toBottomOf="@id/domainView"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />
 </androidx.constraintlayout.widget.ConstraintLayout>

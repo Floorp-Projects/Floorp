@@ -38,14 +38,19 @@ class SavedLoginsFragmentStore(initialState: SavedLoginsFragmentState) :
  * Actions to dispatch through the `SavedLoginsStore` to modify `SavedLoginsFragmentState` through the reducer.
  */
 sealed class SavedLoginsFragmentAction : Action {
+    data class FilterLogins(val newText: String?) : SavedLoginsFragmentAction()
     data class UpdateLogins(val list: List<SavedLoginsItem>) : SavedLoginsFragmentAction()
 }
 
 /**
  * The state for the Saved Logins Screen
- * @property items List of logins to display
+ * @property items Source of truth of list of logins
+ * @property items Filtered (or not) list of logins to display
  */
-data class SavedLoginsFragmentState(val items: List<SavedLoginsItem>) : State
+data class SavedLoginsFragmentState(
+    val items: List<SavedLoginsItem>,
+    val filteredItems: List<SavedLoginsItem>
+) : State
 
 /**
  * The SavedLoginsState Reducer.
@@ -55,6 +60,16 @@ private fun savedLoginsStateReducer(
     action: SavedLoginsFragmentAction
 ): SavedLoginsFragmentState {
     return when (action) {
-        is SavedLoginsFragmentAction.UpdateLogins -> state.copy(items = action.list)
+        is SavedLoginsFragmentAction.UpdateLogins -> state.copy(
+            items = action.list,
+            filteredItems = action.list
+        )
+        is SavedLoginsFragmentAction.FilterLogins -> {
+            if (action.newText.isNullOrBlank()) {
+                state.copy(filteredItems = state.items)
+            } else {
+                state.copy(filteredItems = state.items.filter { it.url.contains(action.newText) })
+            }
+        }
     }
 }
