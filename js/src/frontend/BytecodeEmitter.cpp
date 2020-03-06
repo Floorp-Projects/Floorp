@@ -3803,33 +3803,65 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
   return true;
 }
 
+static bool IsDestructuringRestExclusionSetObjLiteralCompatible(
+    ListNode* pattern) {
+  int32_t propCount = 0;
+  for (ParseNode* member : pattern->contents()) {
+    if (member->isKind(ParseNodeKind::Spread)) {
+      MOZ_ASSERT(!member->pn_next, "unexpected trailing element after spread");
+      break;
+    }
+
+    propCount++;
+
+    if (member->isKind(ParseNodeKind::MutateProto)) {
+      continue;
+    }
+
+    ParseNode* key = member->as<BinaryNode>().left();
+    if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
+        key->isKind(ParseNodeKind::StringExpr)) {
+      continue;
+    }
+
+    // Number and BigInt keys aren't yet supported. Computed property names need
+    // to be added dynamically.
+    MOZ_ASSERT(key->isKind(ParseNodeKind::NumberExpr) ||
+               key->isKind(ParseNodeKind::BigIntExpr) ||
+               key->isKind(ParseNodeKind::ComputedName));
+    return false;
+  }
+
+  if (propCount >= PropertyTree::MAX_HEIGHT) {
+    // JSOp::NewObject cannot accept dictionary-mode objects.
+    return false;
+  }
+
+  return true;
+}
+
 bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ObjectExpr));
   MOZ_ASSERT(pattern->last()->isKind(ParseNodeKind::Spread));
 
-  BytecodeOffset offset = bytecodeSection().offset();
-  if (!emitNewInit()) {
-    return false;
-  }
-
-  // Try to construct the shape of the object as we go, so we can emit a
-  // JSOp::NewObject with the final shape instead.
-  // In the case of computed property names and indices, we cannot fix the
-  // shape at bytecode compile time. When the shape cannot be determined,
-  // |obj| is nulled out.
-
-  // No need to do any guessing for the object kind, since we know the upper
-  // bound of how many properties we plan to have.
-  gc::AllocKind kind = gc::GetGCObjectKind(pattern->count() - 1);
-  RootedPlainObject obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject));
-  if (!obj) {
-    return false;
+  // See if we can use ObjLiteral to construct the exclusion set object.
+  if (IsDestructuringRestExclusionSetObjLiteralCompatible(pattern)) {
+    if (!emitDestructuringRestExclusionSetObjLiteral(pattern)) {
+      //            [stack] OBJ
+      return false;
+    }
+  } else {
+    // Take the slow but sure way and start off with a blank object.
+    if (!emitNewInit()) {
+      //            [stack] OBJ
+      return false;
+    }
   }
 
   RootedAtom pnatom(cx);
   for (ParseNode* member : pattern->contents()) {
     if (member->isKind(ParseNodeKind::Spread)) {
+      MOZ_ASSERT(!member->pn_next, "unexpected trailing element after spread");
       break;
     }
 
@@ -3849,7 +3881,6 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
       } else {
         // Otherwise this is a computed property name which needs to
         // be added dynamically.
-        obj.set(nullptr);
         continue;
       }
     }
@@ -3860,7 +3891,6 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
     }
 
     if (isIndex) {
-      obj.set(nullptr);
       if (!emit1(JSOp::InitElem)) {
         return false;
       }
@@ -3870,29 +3900,9 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
         return false;
       }
 
-      if (obj) {
-        MOZ_ASSERT(!obj->inDictionaryMode());
-        Rooted<jsid> id(cx, AtomToId(pnatom));
-        if (!NativeDefineDataProperty(cx, obj, id, UndefinedHandleValue,
-                                      JSPROP_ENUMERATE)) {
-          return false;
-        }
-        if (obj->inDictionaryMode()) {
-          obj.set(nullptr);
-        }
-      }
-
       if (!emitAtomOp(JSOp::InitProp, index)) {
         return false;
       }
-    }
-  }
-
-  if (obj) {
-    // The object survived and has a predictable shape: update the
-    // original bytecode.
-    if (!replaceNewInitWithNewObject(obj, offset)) {
-      return false;
     }
   }
 
@@ -8589,6 +8599,59 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                 ? JSOp::Object
                 : isInnerSingleton ? JSOp::NewObjectWithGroup : JSOp::NewObject;
   if (!emitIndexOp(op, gcThingIndex)) {
+    //              [stack] OBJ
+    return false;
+  }
+
+  return true;
+}
+
+bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
+    ListNode* pattern) {
+  // Use |NoValues| to keep the flags consistent with their usage for normal
+  // object literal creation, where |NoValues| is always used in conjunction
+  // with |NewObject|.
+  ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
+
+  ObjLiteralCreationData data(cx);
+  data.writer().beginObject(flags);
+
+  for (ParseNode* member : pattern->contents()) {
+    if (member->isKind(ParseNodeKind::Spread)) {
+      MOZ_ASSERT(!member->pn_next, "unexpected trailing element after spread");
+      break;
+    }
+
+    JSAtom* atom;
+    if (member->isKind(ParseNodeKind::MutateProto)) {
+      atom = cx->names().proto;
+    } else {
+      ParseNode* key = member->as<BinaryNode>().left();
+      atom = key->as<NameNode>().atom();
+    }
+
+    uint32_t propNameIndex = 0;
+    if (!data.addAtom(atom, &propNameIndex)) {
+      return false;
+    }
+    data.writer().setPropName(propNameIndex);
+
+    if (!data.writer().propWithUndefinedValue()) {
+      return false;
+    }
+  }
+
+  uint32_t gcThingIndex = 0;
+  if (!perScriptData().gcThingList().append(std::move(data), &gcThingIndex)) {
+    return false;
+  }
+
+  // If we want to squeeze out a little more performance, we could switch to the
+  // `JSOp::Object` opcode, because the exclusion set object is never exposed to
+  // the user, so it's safe to bake the object into the bytecode. But first we
+  // need to make sure this won't interfere with XDR, cf. the
+  // `RealmBehaviors::singletonsAsTemplates_` flag.
+  if (!emitIndexOp(JSOp::NewObject, gcThingIndex)) {
     //              [stack] OBJ
     return false;
   }
