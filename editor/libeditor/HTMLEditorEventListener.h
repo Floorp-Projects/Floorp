@@ -21,8 +21,6 @@ class HTMLEditorEventListener final : public EditorEventListener {
         mListeningToMouseMoveEventForGrabber(false),
         mListeningToResizeEvent(false) {}
 
-  virtual ~HTMLEditorEventListener() {}
-
   // nsIDOMEventListener
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleEvent(dom::Event* aEvent) override;

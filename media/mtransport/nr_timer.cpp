@@ -73,7 +73,7 @@ class nrappkitCallback {
  public:
   nrappkitCallback(NR_async_cb cb, void* cb_arg, const char* function, int line)
       : cb_(cb), cb_arg_(cb_arg), function_(function), line_(line) {}
-  virtual ~nrappkitCallback() {}
+  virtual ~nrappkitCallback() = default;
 
   virtual void Cancel() = 0;
 
@@ -115,7 +115,7 @@ class nrappkitTimerCallback : public nrappkitCallback,
 
  private:
   nsCOMPtr<nsITimer> timer_;
-  virtual ~nrappkitTimerCallback() {}
+  virtual ~nrappkitTimerCallback() = default;
 };
 
 NS_IMPL_ISUPPORTS(nrappkitTimerCallback, nsITimerCallback, nsINamed)
@@ -145,7 +145,7 @@ class nrappkitScheduledCallback : public nrappkitCallback {
 
   virtual void Cancel() override { cb_ = nullptr; }
 
-  ~nrappkitScheduledCallback() {}
+  ~nrappkitScheduledCallback() = default;
 };
 
 }  // namespace mozilla

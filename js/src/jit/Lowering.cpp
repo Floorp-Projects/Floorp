@@ -4328,6 +4328,22 @@ void LIRGenerator::visitWasmStoreGlobalCell(MWasmStoreGlobalCell* ins) {
   }
 }
 
+void LIRGenerator::visitWasmStoreStackResult(MWasmStoreStackResult* ins) {
+  MDefinition* stackResultArea = ins->stackResultArea();
+  MDefinition* value = ins->value();
+  size_t offs = ins->offset();
+  LInstruction* lir;
+  if (value->type() == MIRType::Int64) {
+    lir = new (alloc()) LWasmStoreSlotI64(useInt64Register(value),
+                                          useRegister(stackResultArea), offs);
+  } else {
+    MOZ_ASSERT(value->type() != MIRType::RefOrNull);
+    lir = new (alloc()) LWasmStoreSlot(
+        useRegister(value), useRegister(stackResultArea), offs, value->type());
+  }
+  add(lir, ins);
+}
+
 void LIRGenerator::visitWasmDerivedPointer(MWasmDerivedPointer* ins) {
   LAllocation base = useRegisterAtStart(ins->base());
   define(new (alloc()) LWasmDerivedPointer(base), ins);

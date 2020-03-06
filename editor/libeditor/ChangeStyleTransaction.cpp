@@ -63,8 +63,6 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMPL_ADDREF_INHERITED(ChangeStyleTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(ChangeStyleTransaction, EditTransactionBase)
 
-ChangeStyleTransaction::~ChangeStyleTransaction() {}
-
 // Answers true if aValue is in the string list of white-space separated values
 // aValueList.
 bool ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,

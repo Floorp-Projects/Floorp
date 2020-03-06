@@ -32,15 +32,13 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
       const nsAString& aContentType, int64_t aLastModifiedDate,
       uint64_t aLength, const nsAString& aBlobImplType);
 
-  virtual void CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
-  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
-                                                 uint64_t aLength,
-                                                 const nsAString& aContentType,
-                                                 ErrorResult& aRv) override;
+  already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
+                                         const nsAString& aContentType,
+                                         ErrorResult& aRv) override;
 
-  virtual bool IsMemoryFile() const override { return true; }
+  bool IsMemoryFile() const override { return true; }
 
   int64_t GetFileId() override { return mFileId; }
 
@@ -82,6 +80,8 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   void MaybeRegisterMemoryReporter();
 
   nsCOMPtr<nsIInputStream> mInputStream;
+
+  nsString mBlobImplType;
 
   nsString mFullPath;
   bool mIsDirectory;

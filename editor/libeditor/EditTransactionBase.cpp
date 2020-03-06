@@ -24,8 +24,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EditTransactionBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EditTransactionBase)
 
-EditTransactionBase::~EditTransactionBase() {}
-
 NS_IMETHODIMP
 EditTransactionBase::RedoTransaction() { return DoTransaction(); }
 

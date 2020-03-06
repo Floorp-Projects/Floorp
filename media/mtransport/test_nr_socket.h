@@ -193,7 +193,7 @@ class TestNat {
  private:
   std::set<TestNrSocket*> sockets_;
 
-  ~TestNat() {}
+  ~TestNat() = default;
 };
 
 /**
@@ -251,7 +251,7 @@ class TestNrSocket : public NrSocketBase {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UdpPacket);
 
    private:
-    ~UdpPacket() {}
+    ~UdpPacket() = default;
   };
 
   class PortMapping {

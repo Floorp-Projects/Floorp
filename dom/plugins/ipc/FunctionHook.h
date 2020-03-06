@@ -30,7 +30,7 @@ class FunctionHookArray;
 
 class FunctionHook {
  public:
-  virtual ~FunctionHook() {}
+  virtual ~FunctionHook() = default;
 
   virtual FunctionHookId FunctionId() const = 0;
 

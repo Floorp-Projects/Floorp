@@ -22,9 +22,7 @@ already_AddRefed<StringBlobImpl> StringBlobImpl::Create(
 
 StringBlobImpl::StringBlobImpl(const nsACString& aData,
                                const nsAString& aContentType)
-    : BaseBlobImpl(NS_LITERAL_STRING("StringBlobImpl"), aContentType,
-                   aData.Length()),
-      mData(aData) {}
+    : BaseBlobImpl(aContentType, aData.Length()), mData(aData) {}
 
 StringBlobImpl::~StringBlobImpl() { UnregisterWeakMemoryReporter(this); }
 

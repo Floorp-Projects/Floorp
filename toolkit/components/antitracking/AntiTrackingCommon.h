@@ -119,14 +119,6 @@ class AntiTrackingCommon final {
 
   static bool HasUserInteraction(nsIPrincipal* aPrincipal);
 
-  // This API allows consumers to get notified when the anti-tracking component
-  // settings change.  After this callback is called, an anti-tracking check
-  // that has been previously performed with the same parameters may now return
-  // a different result.
-  typedef std::function<void()> AntiTrackingSettingsChangedCallback;
-  static void OnAntiTrackingSettingsChanged(
-      const AntiTrackingSettingsChangedCallback& aCallback);
-
   // For IPC only.
   typedef MozPromise<nsresult, bool, true> FirstPartyStorageAccessGrantPromise;
   static RefPtr<FirstPartyStorageAccessGrantPromise>
@@ -135,24 +127,6 @@ class AntiTrackingCommon final {
       const nsCString& aTrackingOrigin, int aAllowMode,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
-
-  // Check whether a principal is on the content blocking allow list.
-  // aPrincipal should be a "content blocking allow list principal".
-  // This principal can be obtained from the load info object for top-level
-  // windows.
-  static nsresult IsOnContentBlockingAllowList(
-      nsIPrincipal* aContentBlockingAllowListPrincipal, bool aIsPrivateBrowsing,
-      bool& aIsAllowListed);
-
-  // Computes the principal used to check the content blocking allow list for a
-  // top-level document based on the document principal.  This function is used
-  // right after setting up the document principal.
-  static void ComputeContentBlockingAllowListPrincipal(
-      nsIPrincipal* aDocumentPrincipal, nsIPrincipal** aPrincipal);
-
-  static void RecomputeContentBlockingAllowListPrincipal(
-      nsIURI* aURIBeingLoaded, const OriginAttributes& aAttrs,
-      nsIPrincipal** aPrincipal);
 
   enum class BlockingDecision {
     eBlock,

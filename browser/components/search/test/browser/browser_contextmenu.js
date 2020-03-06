@@ -73,7 +73,7 @@ async function checkContextMenu(
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     win.gBrowser,
-    "data:text/plain;charset=utf8,test%20search"
+    "https://example.com/browser/browser/components/search/test/browser/test_search.html"
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
@@ -107,7 +107,7 @@ async function checkContextMenu(
   Assert.ok(searchItem, "Got search context menu item");
   Assert.equal(
     searchItem.label,
-    "Search " + expectedName + " for \u201ctest search\u201d",
+    "Search " + expectedName + " for \u201ctest%20search\u201d",
     "Check context menu label"
   );
   Assert.equal(
@@ -118,10 +118,18 @@ async function checkContextMenu(
 
   let loaded = BrowserTestUtils.waitForNewTab(
     win.gBrowser,
-    expectedBaseUrl + "?test=test+search&ie=utf-8&channel=contextsearch"
+    expectedBaseUrl,
+    true
   );
   searchItem.click();
   let searchTab = await loaded;
+  let browser = win.gBrowser.selectedBrowser;
+  await SpecialPowers.spawn(browser, [], async function() {
+    Assert.ok(
+      !/error/.test(content.document.body.innerHTML),
+      "Ensure there were no errors loading the search page"
+    );
+  });
 
   searchItem = contextMenu.getElementsByAttribute(
     "id",
@@ -152,7 +160,7 @@ add_task(async function test_normalWindow() {
   await checkContextMenu(
     window,
     ENGINE_NAME,
-    "https://example.com/browser/browser/components/search/test/browser/",
+    "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs",
     PRIVATE_ENGINE_NAME
   );
 });
@@ -179,7 +187,7 @@ add_task(async function test_normalWindow_sameDefaults() {
   await checkContextMenu(
     window,
     ENGINE_NAME,
-    "https://example.com/browser/browser/components/search/test/browser/"
+    "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs"
   );
 });
 
@@ -200,6 +208,6 @@ add_task(async function test_privateWindow_no_separate_engine() {
   await checkContextMenu(
     win,
     ENGINE_NAME,
-    "https://example.com/browser/browser/components/search/test/browser/"
+    "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs"
   );
 });

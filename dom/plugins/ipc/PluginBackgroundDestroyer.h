@@ -42,8 +42,8 @@ class PluginBackgroundDestroyerParent
  */
 class PluginBackgroundDestroyerChild : public PPluginBackgroundDestroyerChild {
  public:
-  PluginBackgroundDestroyerChild() {}
-  virtual ~PluginBackgroundDestroyerChild() {}
+  PluginBackgroundDestroyerChild() = default;
+  virtual ~PluginBackgroundDestroyerChild() = default;
 
  private:
   // Implementing this for good hygiene.

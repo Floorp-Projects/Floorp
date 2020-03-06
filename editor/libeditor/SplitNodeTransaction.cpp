@@ -41,8 +41,6 @@ SplitNodeTransaction::SplitNodeTransaction(
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightNode.GetContainerAsContent());
 }
 
-SplitNodeTransaction::~SplitNodeTransaction() {}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
                                    mEditorBase, mStartOfRightNode, mParent,
                                    mNewLeftNode)

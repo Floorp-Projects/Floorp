@@ -185,9 +185,6 @@ EXTRA_JS_MODULES += [
     'FirstStartup.jsm',
     'FormLikeFactory.jsm',
     'Geometry.jsm',
-    'GMPExtractorWorker.js',
-    'GMPInstallManager.jsm',
-    'GMPUtils.jsm',
     'HiddenFrame.jsm',
     'Http.jsm',
     'IgnoreLists.jsm',
@@ -251,6 +248,9 @@ EXTRA_PP_JS_MODULES += [
 
 if 'Android' != CONFIG['OS_TARGET']:
     EXTRA_JS_MODULES += [
+        'GMPExtractorWorker.js',
+        'GMPInstallManager.jsm',
+        'GMPUtils.jsm',
         'LightweightThemeConsumer.jsm',
     ]
 

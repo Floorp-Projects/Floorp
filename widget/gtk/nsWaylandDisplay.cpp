@@ -169,6 +169,15 @@ GbmFormat* nsWaylandDisplay::GetExactGbmFormat(int aFormat) {
   return nullptr;
 }
 
+void nsWaylandDisplay::AddFormat(bool aHasAlpha, int aFormat) {
+  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
+  format->mIsSupported = true;
+  format->mHasAlpha = aHasAlpha;
+  format->mFormat = aFormat;
+  format->mModifiersCount = 0;
+  format->mModifiers = nullptr;
+}
+
 void nsWaylandDisplay::AddFormatModifier(bool aHasAlpha, int aFormat,
                                          uint32_t mModifierHi,
                                          uint32_t mModifierLo) {
@@ -266,6 +275,8 @@ static void global_registry_handler(void* data, wl_registry* registry,
     LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
     display->SetDmabuf(dmabuf);
     zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
+  } else if (strcmp(interface, "wl_drm") == 0) {
+    LOGDMABUF(("wl_drm is available."));
   }
 }
 
@@ -484,12 +495,12 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
     return false;
   }
 
+  // Those are configured by dmabuf_listener call
   if (!display->GetGbmFormat(/* aHasAlpha */ false) ||
       !display->GetGbmFormat(/* aHasAlpha */ true)) {
-    LOGDMABUF(
-        ("Failed to create obtain pixel format, DMABUF/DRM won't be "
-         "available!"));
-    return false;
+    LOGDMABUF(("Failed to create obtain modifier pixel format"));
+    display->AddFormat(/* aHasAlpha */ true, GBM_FORMAT_ARGB8888);
+    display->AddFormat(/* aHasAlpha */ false, GBM_FORMAT_XRGB8888);
   }
 
   sIsDMABufEnabled = true;
@@ -521,7 +532,6 @@ void* nsGbmLib::sXf86DrmLibHandle = nullptr;
 bool nsGbmLib::sLibLoaded = false;
 CreateDeviceFunc nsGbmLib::sCreateDevice;
 CreateFunc nsGbmLib::sCreate;
-ImportFunc nsGbmLib::sImport;
 CreateWithModifiersFunc nsGbmLib::sCreateWithModifiers;
 GetModifierFunc nsGbmLib::sGetModifier;
 GetStrideFunc nsGbmLib::sGetStride;
@@ -538,12 +548,12 @@ DrmPrimeHandleToFDFunc nsGbmLib::sDrmPrimeHandleToFD;
 
 bool nsGbmLib::IsLoaded() {
   return sCreateDevice != nullptr && sCreate != nullptr &&
-         sCreateWithModifiers != nullptr && sImport != nullptr &&
-         sGetModifier != nullptr && sGetStride != nullptr &&
-         sGetFd != nullptr && sDestroy != nullptr && sMap != nullptr &&
-         sUnmap != nullptr && sGetPlaneCount != nullptr &&
+         sCreateWithModifiers != nullptr && sGetModifier != nullptr &&
+         sGetStride != nullptr && sGetFd != nullptr && sDestroy != nullptr &&
+         sMap != nullptr && sUnmap != nullptr && sGetPlaneCount != nullptr &&
          sGetHandleForPlane != nullptr && sGetStrideForPlane != nullptr &&
-         sGetOffset != nullptr && sDeviceIsFormatSupported != nullptr;
+         sGetOffset != nullptr && sDeviceIsFormatSupported != nullptr &&
+         sDrmPrimeHandleToFD != nullptr;
 }
 
 bool nsGbmLib::IsAvailable() {
@@ -551,13 +561,6 @@ bool nsGbmLib::IsAvailable() {
     return false;
   }
   return IsLoaded();
-}
-
-bool nsGbmLib::IsModifierAvailable() {
-  if (!Load()) {
-    return false;
-  }
-  return IsLoaded() && sDrmPrimeHandleToFD != nullptr;
 }
 
 bool nsGbmLib::Load() {
@@ -574,7 +577,6 @@ bool nsGbmLib::Load() {
     sCreate = (CreateFunc)dlsym(sGbmLibHandle, "gbm_bo_create");
     sCreateWithModifiers = (CreateWithModifiersFunc)dlsym(
         sGbmLibHandle, "gbm_bo_create_with_modifiers");
-    sImport = (ImportFunc)dlsym(sGbmLibHandle, "gbm_bo_import");
     sGetModifier = (GetModifierFunc)dlsym(sGbmLibHandle, "gbm_bo_get_modifier");
     sGetStride = (GetStrideFunc)dlsym(sGbmLibHandle, "gbm_bo_get_stride");
     sGetFd = (GetFdFunc)dlsym(sGbmLibHandle, "gbm_bo_get_fd");
@@ -591,18 +593,15 @@ bool nsGbmLib::Load() {
     sDeviceIsFormatSupported = (DeviceIsFormatSupportedFunc)dlsym(
         sGbmLibHandle, "gbm_device_is_format_supported");
 
+    sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
+    if (!sXf86DrmLibHandle) {
+      LOGDMABUF(("Failed to load %s, dmabuf isn't available.\n", DRMLIB_NAME));
+      return false;
+    }
+    sDrmPrimeHandleToFD =
+        (DrmPrimeHandleToFDFunc)dlsym(sXf86DrmLibHandle, "drmPrimeHandleToFD");
     if (!IsLoaded()) {
       LOGDMABUF(("Failed to load all symbols from %s\n", GBMLIB_NAME));
-    }
-
-    sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
-    if (sXf86DrmLibHandle) {
-      sDrmPrimeHandleToFD = (DrmPrimeHandleToFDFunc)dlsym(sXf86DrmLibHandle,
-                                                          "drmPrimeHandleToFD");
-      if (!sDrmPrimeHandleToFD) {
-        LOGDMABUF(("Failed to load %s, gbm modifiers are not available.\n",
-                   DRMLIB_NAME));
-      }
     }
   }
 

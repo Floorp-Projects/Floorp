@@ -1599,39 +1599,26 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 }
 
 static int32_t GdkX11ScreenGetNumberOfDesktops(GdkScreen* screen) {
-  static auto sGdkX11ScreenGetNumberOfDesktops = (int32_t(*)(GdkScreen*))dlsym(
-      RTLD_DEFAULT, "gdk_x11_screen_get_number_of_desktops");
+  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+  GdkAtom type_returned;
+  int format_returned;
+  int length_returned;
+  long* number_of_desktops;
 
-  if (MOZ_UNLIKELY(!sGdkX11ScreenGetNumberOfDesktops)) {
-    LOG(("    gdk_x11_screen_get_number_of_desktops is not available!\n"));
+  if (!gdk_property_get(gdk_screen_get_root_window(screen),
+                        gdk_atom_intern("_NET_NUMBER_OF_DESKTOPS", FALSE),
+                        cardinal_atom,
+                        0,          // offset
+                        INT32_MAX,  // length
+                        FALSE,      // delete
+                        &type_returned, &format_returned, &length_returned,
+                        (guchar**)&number_of_desktops)) {
     return 0;
   }
 
-  return (*sGdkX11ScreenGetNumberOfDesktops)(screen);
-}
-
-static uint32_t GdkX11WindowGetDesktop(GdkWindow* window) {
-  static auto sGdkX11WindowGetDesktop = (uint32_t(*)(GdkWindow*))dlsym(
-      RTLD_DEFAULT, "gdk_x11_window_get_desktop");
-
-  if (MOZ_UNLIKELY(!sGdkX11WindowGetDesktop)) {
-    LOG(("    gdk_x11_window_get_desktop is not available!\n"));
-    return 1;
-  }
-
-  return (*sGdkX11WindowGetDesktop)(window);
-}
-
-static void GdkX11WindowMoveToDesktop(GdkWindow* window, int32_t desktop) {
-  static auto sGdkX11WindowMoveToDesktop = (void (*)(GdkWindow*, int32_t))dlsym(
-      RTLD_DEFAULT, "gdk_x11_window_move_to_desktop");
-
-  if (MOZ_UNLIKELY(!sGdkX11WindowMoveToDesktop)) {
-    LOG(("    gdk_x11_window_move_to_desktop is not available!\n"));
-    return;
-  }
-
-  (*sGdkX11WindowMoveToDesktop)(window, desktop);
+  auto desktops = int32_t(number_of_desktops[0]);
+  g_free(number_of_desktops);
+  return desktops;
 }
 
 int32_t nsWindow::GetWorkspaceID() {
@@ -1644,7 +1631,25 @@ int32_t nsWindow::GetWorkspaceID() {
     return 0;
   }
 
-  return GdkX11WindowGetDesktop(gdk_window);
+  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+  GdkAtom type_returned;
+  int format_returned;
+  int length_returned;
+  long* wm_desktop;
+
+  if (!gdk_property_get(gdk_window, gdk_atom_intern("_NET_WM_DESKTOP", FALSE),
+                        cardinal_atom,
+                        0,          // offset
+                        INT32_MAX,  // length
+                        FALSE,      // delete
+                        &type_returned, &format_returned, &length_returned,
+                        (guchar**)&wm_desktop)) {
+    return 0;
+  }
+
+  auto desktop = int32_t(wm_desktop[0]);
+  g_free(wm_desktop);
+  return desktop;
 }
 
 void nsWindow::MoveToWorkspace(int32_t workspaceID) {
@@ -1658,11 +1663,37 @@ void nsWindow::MoveToWorkspace(int32_t workspaceID) {
     return;
   }
   GdkScreen* screen = gdk_window_get_screen(gdk_window);
-  if (workspaceID > GdkX11ScreenGetNumberOfDesktops(screen)) {
+  if (workspaceID > GdkX11ScreenGetNumberOfDesktops(screen) - 1) {
     return;
   }
 
-  GdkX11WindowMoveToDesktop(gdk_window, workspaceID);
+  // This code is inspired by some found in the 'gxtuner' project.
+  // https://github.com/brummer10/gxtuner/blob/792d453da0f3a599408008f0f1107823939d730d/deskpager.cpp#L50
+  XEvent xevent;
+  guint value = workspaceID;
+  Display* xdisplay = gdk_x11_get_default_xdisplay();
+  Window root_win = GDK_WINDOW_XID(gdk_screen_get_root_window(screen));
+  GdkDisplay* display = gdk_window_get_display(gdk_window);
+  Atom type = gdk_x11_get_xatom_by_name_for_display(display, "_NET_WM_DESKTOP");
+
+  xevent.type = ClientMessage;
+  xevent.xclient.type = ClientMessage;
+  xevent.xclient.serial = 0;
+  xevent.xclient.send_event = TRUE;
+  xevent.xclient.display = xdisplay;
+  xevent.xclient.window = GDK_WINDOW_XID(gdk_window);
+  xevent.xclient.message_type = type;
+  xevent.xclient.format = 32;
+  xevent.xclient.data.l[0] = value;
+  xevent.xclient.data.l[1] = CurrentTime;
+  xevent.xclient.data.l[2] = 0;
+  xevent.xclient.data.l[3] = 0;
+  xevent.xclient.data.l[4] = 0;
+
+  XSendEvent(xdisplay, root_win, FALSE,
+             SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
+
+  XFlush(xdisplay);
 }
 
 typedef void (*SetUserTimeFunc)(GdkWindow* aWindow, guint32 aTimestamp);

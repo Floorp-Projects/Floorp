@@ -40,9 +40,10 @@ add_task(async function setup() {
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
   if (gModernConfig) {
-    cacheTemplate.version = 2;
+    cacheTemplate.version = 4;
     delete cacheTemplate.visibleDefaultEngines;
   } else {
+    cacheTemplate.version = 3;
     // The list of visibleDefaultEngines needs to match or the cache will be ignored.
     cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
   }

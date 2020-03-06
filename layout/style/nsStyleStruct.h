@@ -1807,7 +1807,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
   bool HasMask() const;
 
   bool HasNonScalingStroke() const {
-    return mVectorEffect == NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE;
+    return mVectorEffect == mozilla::StyleVectorEffect::NonScalingStroke;
   }
 
   // geometry properties
@@ -1828,7 +1828,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
   float mStopOpacity;
   float mFloodOpacity;
 
-  uint8_t mVectorEffect;  // NS_STYLE_VECTOR_EFFECT_*
+  mozilla::StyleVectorEffect mVectorEffect;
   mozilla::StyleMaskType mMaskType;
 };
 

@@ -6,7 +6,7 @@ add_task(async function() {
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
     Services.prefs.clearUserPref(PREF_TRIMURLS);
-    URLBarSetURI();
+    gURLBar.setURI();
   });
 
   Services.prefs.setBoolPref(PREF_TRIMURLS, true);

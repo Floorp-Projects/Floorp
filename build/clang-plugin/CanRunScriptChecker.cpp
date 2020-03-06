@@ -55,8 +55,8 @@
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
   auto StackSmartPtr =
-      ignoreTrivials(declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
-                                 hasType(isSmartPtrToRefCounted())));
+      ignoreTrivials(declRefExpr(to(varDecl(hasAutomaticStorageDuration(),
+                                            hasType(isSmartPtrToRefCounted())))));
   auto ConstMemberOfThisSmartPtr =
       memberExpr(hasType(isSmartPtrToRefCounted()), hasType(isConstQualified()),
                  hasObjectExpression(cxxThisExpr()));

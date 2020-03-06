@@ -30,7 +30,7 @@ namespace {
 class TimerTest : public MtransportTest {
  public:
   TimerTest() : MtransportTest(), handle_(nullptr), fired_(false) {}
-  virtual ~TimerTest() {}
+  virtual ~TimerTest() = default;
 
   int ArmTimer(int timeout) {
     int ret;

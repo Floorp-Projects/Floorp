@@ -77,7 +77,7 @@ class CompositionTransaction final : public EditTransactionBase {
                                   const TextRangeArray* aRanges);
 
  private:
-  ~CompositionTransaction();
+  virtual ~CompositionTransaction() = default;
 
   nsresult SetSelectionForRanges();
 

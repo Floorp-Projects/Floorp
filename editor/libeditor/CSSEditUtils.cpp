@@ -278,8 +278,6 @@ CSSEditUtils::CSSEditUtils(HTMLEditor* aHTMLEditor)
   mIsCSSPrefChecked = Preferences::GetBool("editor.use_css", mIsCSSPrefChecked);
 }
 
-CSSEditUtils::~CSSEditUtils() {}
-
 // Answers true if we have some CSS equivalence for the HTML style defined
 // by aProperty and/or aAttribute for the node aNode
 

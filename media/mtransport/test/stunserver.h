@@ -107,7 +107,7 @@ class TestStunTcpServer : public TestStunServer {
   virtual nr_socket* GetSendingSocket(nr_socket* sock);
 
  protected:
-  TestStunTcpServer() {}
+  TestStunTcpServer() = default;
   static void accept_cb(NR_SOCKET sock, int how, void* cb_arg);
 
  private:

@@ -758,8 +758,7 @@ enum class StyleColorInterpolation : uint8_t {
 };
 
 // vector-effect
-#define NS_STYLE_VECTOR_EFFECT_NONE 0
-#define NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE 1
+enum class StyleVectorEffect : uint8_t { None = 0, NonScalingStroke = 1 };
 
 // 3d Transforms - Backface visibility
 #define NS_STYLE_BACKFACE_VISIBILITY_VISIBLE 1

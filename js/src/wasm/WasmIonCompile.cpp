@@ -72,6 +72,10 @@ class CallCompileState {
   // Reserved argument for passing Instance* to builtin instance method calls.
   ABIArg instanceArg_;
 
+  // The stack area in which the callee will write stack return values, or
+  // nullptr if no stack results.
+  MWasmStackResultArea* stackResultArea_ = nullptr;
+
   // Only FunctionCompiler should be directly manipulating CallCompileState.
   friend class FunctionCompiler;
 };
@@ -111,6 +115,7 @@ class FunctionCompiler {
 
   // TLS pointer argument to the current function.
   MWasmParameter* tlsPointer_;
+  MWasmParameter* stackResultPointer_;
 
  public:
   FunctionCompiler(const ModuleEnvironment& env, Decoder& decoder,
@@ -129,7 +134,8 @@ class FunctionCompiler {
         maxStackArgBytes_(0),
         loopDepth_(0),
         blockDepth_(0),
-        tlsPointer_(nullptr) {}
+        tlsPointer_(nullptr),
+        stackResultPointer_(nullptr) {}
 
   const ModuleEnvironment& env() const { return env_; }
   IonOpIter& iter() { return iter_; }
@@ -156,12 +162,15 @@ class FunctionCompiler {
     }
 
     for (ABIArgIter i(args); !i.done(); i++) {
-      MOZ_ASSERT(!args.isSyntheticStackResultPointerArg(i.index()),
-                 "multiple results for wasm functions unimplemented");
-      MOZ_ASSERT(i.mirType() != MIRType::Pointer);
       MWasmParameter* ins = MWasmParameter::New(alloc(), *i, i.mirType());
       curBlock_->add(ins);
-      curBlock_->initSlot(info().localSlot(args.naturalIndex(i.index())), ins);
+      if (args.isSyntheticStackResultPointerArg(i.index())) {
+        MOZ_ASSERT(stackResultPointer_ == nullptr);
+        stackResultPointer_ = ins;
+      } else {
+        curBlock_->initSlot(info().localSlot(args.naturalIndex(i.index())),
+                            ins);
+      }
       if (!mirGen_.ensureBallast()) {
         return false;
       }
@@ -1003,6 +1012,43 @@ class FunctionCompiler {
     return passArgWorker(argDef, ToMIRType(type), call);
   }
 
+  // If the call returns results on the stack, prepare a stack area to receive
+  // them, and pass the address of the stack area to the callee as an additional
+  // argument.
+  bool passStackResultAreaCallArg(const ResultType& resultType,
+                                  CallCompileState* call) {
+    if (inDeadCode()) {
+      return true;
+    }
+    ABIResultIter iter(resultType);
+    while (!iter.done() && iter.cur().inRegister()) {
+      iter.next();
+    }
+    if (iter.done()) {
+      // No stack results.
+      return true;
+    }
+
+    auto* stackResultArea = MWasmStackResultArea::New(alloc());
+    if (!stackResultArea) {
+      return false;
+    }
+    if (!stackResultArea->init(alloc(), iter.remaining())) {
+      return false;
+    }
+    for (uint32_t base = iter.index(); !iter.done(); iter.next()) {
+      MWasmStackResultArea::StackResult loc(iter.cur().stackOffset(),
+                                            ToMIRType(iter.cur().type()));
+      stackResultArea->initResult(iter.index() - base, loc);
+    }
+    curBlock_->add(stackResultArea);
+    if (!passArg(stackResultArea, MIRType::Pointer, call)) {
+      return false;
+    }
+    call->stackResultArea_ = stackResultArea;
+    return true;
+  }
+
   bool finishCall(CallCompileState* call) {
     if (inDeadCode()) {
       return true;
@@ -1053,36 +1099,56 @@ class FunctionCompiler {
     return true;
   }
 
-  bool collectCallResults(const ResultType& type, DefVector* results) {
+  bool collectCallResults(const ResultType& type,
+                          MWasmStackResultArea* stackResultArea,
+                          DefVector* results) {
     if (!results->reserve(type.length())) {
       return false;
     }
 
-    for (ABIResultIter i(type); !i.done(); i.next()) {
-      MOZ_ASSERT(i.index() == 0, "multiple values to be implemented");
-      const ABIResult& result = i.cur();
-      MOZ_ASSERT(result.inRegister(), "stack results to be implemented");
-      MInstruction* def;
-      switch (result.type().kind()) {
-        case wasm::ValType::I32:
-          def = MWasmRegisterResult::New(alloc(), MIRType::Int32, result.gpr());
-          break;
-        case wasm::ValType::I64:
-          def = MWasmRegister64Result::New(alloc(), result.gpr64());
-          break;
-        case wasm::ValType::F32:
-          def = MWasmFloatRegisterResult::New(alloc(), MIRType::Float32,
-                                              result.fpr());
-          break;
-        case wasm::ValType::F64:
-          def = MWasmFloatRegisterResult::New(alloc(), MIRType::Double,
-                                              result.fpr());
-          break;
-        case wasm::ValType::Ref:
-          def = MWasmRegisterResult::New(alloc(), MIRType::RefOrNull,
-                                         result.gpr());
-          break;
+    // The result iterator goes in the order in which results would be popped
+    // off; we want the order in which they would be pushed.
+    ABIResultIter iter(type);
+    uint32_t stackResultCount = 0;
+    while (!iter.done()) {
+      if (iter.cur().onStack()) {
+        stackResultCount++;
       }
+      iter.next();
+    }
+
+    for (iter.switchToPrev(); !iter.done(); iter.prev()) {
+      const ABIResult& result = iter.cur();
+      MInstruction* def;
+      if (result.inRegister()) {
+        switch (result.type().kind()) {
+          case wasm::ValType::I32:
+            def =
+                MWasmRegisterResult::New(alloc(), MIRType::Int32, result.gpr());
+            break;
+          case wasm::ValType::I64:
+            def = MWasmRegister64Result::New(alloc(), result.gpr64());
+            break;
+          case wasm::ValType::F32:
+            def = MWasmFloatRegisterResult::New(alloc(), MIRType::Float32,
+                                                result.fpr());
+            break;
+          case wasm::ValType::F64:
+            def = MWasmFloatRegisterResult::New(alloc(), MIRType::Double,
+                                                result.fpr());
+            break;
+          case wasm::ValType::Ref:
+            def = MWasmRegisterResult::New(alloc(), MIRType::RefOrNull,
+                                           result.gpr());
+            break;
+        }
+      } else {
+        MOZ_ASSERT(stackResultArea);
+        MOZ_ASSERT(stackResultCount);
+        uint32_t idx = --stackResultCount;
+        def = MWasmStackResult::New(alloc(), stackResultArea, idx);
+      }
+
       if (!def) {
         return false;
       }
@@ -1114,7 +1180,7 @@ class FunctionCompiler {
 
     curBlock_->add(ins);
 
-    return collectCallResults(resultType, results);
+    return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
   bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
@@ -1159,7 +1225,7 @@ class FunctionCompiler {
 
     curBlock_->add(ins);
 
-    return collectCallResults(resultType, results);
+    return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
   bool callImport(unsigned globalDataOffset, uint32_t lineOrBytecode,
@@ -1181,7 +1247,7 @@ class FunctionCompiler {
 
     curBlock_->add(ins);
 
-    return collectCallResults(resultType, results);
+    return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
   bool builtinCall(const SymbolicAddressSignature& builtin,
@@ -1236,19 +1302,50 @@ class FunctionCompiler {
 
   inline bool inDeadCode() const { return curBlock_ == nullptr; }
 
-  void returnValues(const DefVector& values) {
+  bool returnValues(const DefVector& values) {
     if (inDeadCode()) {
-      return;
+      return true;
     }
-
-    MOZ_ASSERT(values.length() <= 1, "until multi-return");
 
     if (values.empty()) {
       curBlock_->end(MWasmReturnVoid::New(alloc()));
     } else {
-      curBlock_->end(MWasmReturn::New(alloc(), values[0]));
+      ResultType resultType = ResultType::Vector(funcType().results());
+      ABIResultIter iter(resultType);
+      // Switch to iterate in FIFO order instead of the default LIFO.
+      while (!iter.done()) {
+        iter.next();
+      }
+      iter.switchToPrev();
+      for (uint32_t i = 0; !iter.done(); iter.prev(), i++) {
+        if (!mirGen().ensureBallast()) {
+          return false;
+        }
+        const ABIResult& result = iter.cur();
+        if (result.onStack()) {
+          MOZ_ASSERT(iter.remaining() > 1);
+          if (result.type().isReference()) {
+            auto* loc = MWasmDerivedPointer::New(alloc(), stackResultPointer_,
+                                                 result.stackOffset());
+            curBlock_->add(loc);
+            auto* store =
+                MWasmStoreRef::New(alloc(), tlsPointer_, loc, values[i],
+                                   AliasSet::WasmStackResult);
+            curBlock_->add(store);
+          } else {
+            auto* store = MWasmStoreStackResult::New(
+                alloc(), stackResultPointer_, result.stackOffset(), values[i]);
+            curBlock_->add(store);
+          }
+        } else {
+          MOZ_ASSERT(iter.remaining() == 1);
+          MOZ_ASSERT(i + 1 == values.length());
+          curBlock_->end(MWasmReturn::New(alloc(), values[i]));
+        }
+      }
     }
     curBlock_ = nullptr;
+    return true;
   }
 
   void unreachableTrap() {
@@ -1949,7 +2046,9 @@ static bool EmitEnd(FunctionCompiler& f) {
       if (!f.finishBlock(&postJoinDefs)) {
         return false;
       }
-      f.returnValues(postJoinDefs);
+      if (!f.returnValues(postJoinDefs)) {
+        return false;
+      }
       return f.iter().readFunctionEnd(f.iter().end());
     case LabelKind::Block:
       if (!f.finishBlock(&postJoinDefs)) {
@@ -2048,8 +2147,7 @@ static bool EmitReturn(FunctionCompiler& f) {
     return false;
   }
 
-  f.returnValues(values);
-  return true;
+  return f.returnValues(values);
 }
 
 static bool EmitUnreachable(FunctionCompiler& f) {
@@ -2070,6 +2168,11 @@ static bool EmitCallArgs(FunctionCompiler& f, const FuncType& funcType,
     if (!f.passArg(args[i], funcType.args()[i], call)) {
       return false;
     }
+  }
+
+  ResultType resultType = ResultType::Vector(funcType.results());
+  if (!f.passStackResultAreaCallArg(resultType, call)) {
+    return false;
   }
 
   return f.finishCall(call);

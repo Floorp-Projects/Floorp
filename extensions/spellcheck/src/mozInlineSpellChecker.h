@@ -222,8 +222,10 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   /**
    * @param aRange needs to be kept alive by the caller.
    */
-  nsresult RemoveRange(mozilla::dom::Selection* aSpellCheckSelection,
-                       nsRange* aRange);
+  // TODO: annotate with `MOZ_CAN_RUN_SCRIPT` instead
+  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1620540).
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  RemoveRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
   nsresult AddRange(mozilla::dom::Selection* aSpellCheckSelection,
                     nsRange* aRange);
   bool SpellCheckSelectionIsFull() {

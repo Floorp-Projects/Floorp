@@ -63,7 +63,7 @@ function test() {
 
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(prefname);
-    URLBarSetURI();
+    gURLBar.setURI();
   });
 
   gBrowser.selectedBrowser.focus();

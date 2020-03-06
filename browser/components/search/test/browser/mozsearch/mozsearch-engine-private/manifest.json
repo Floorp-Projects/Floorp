@@ -34,7 +34,8 @@
           "purpose": "keyword",
           "value": "keywordsearch"
         }
-      ]
+      ],
+      "search_url_post_params": "foo=bar"
     }
   }
 }

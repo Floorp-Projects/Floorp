@@ -23,7 +23,7 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace dom {
 
-BrowserBridgeParent::BrowserBridgeParent() {}
+BrowserBridgeParent::BrowserBridgeParent() = default;
 
 BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 

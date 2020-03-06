@@ -46,7 +46,7 @@ jobs:
             env:
                 # clang-tidy needs a recent libstdc++, which can be found in the clang
                 # toolchain.
-                LD_LIBRARY_PATH: /builds/worker/workspace/build/src/clang/lib
+                LD_LIBRARY_PATH: /builds/worker/checkouts/gecko/clang/lib
                 PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
         run:
             config:

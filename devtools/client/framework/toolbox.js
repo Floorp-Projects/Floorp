@@ -68,6 +68,14 @@ loader.lazyRequireGetter(
   "devtools/client/framework/actions/index",
   true
 );
+
+loader.lazyRequireGetter(
+  this,
+  "selectThread",
+  "devtools/client/framework/actions/index",
+  true
+);
+
 loader.lazyRequireGetter(
   this,
   "AppConstants",
@@ -597,6 +605,11 @@ Toolbox.prototype = {
 
   isBrowserToolbox: function() {
     return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
+  },
+
+  selectThread(threadActor) {
+    const thread = this.target.client.getFrontByID(threadActor);
+    this.store.dispatch(selectThread(thread));
   },
 
   getSelectedThreadFront: function() {

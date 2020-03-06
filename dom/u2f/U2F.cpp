@@ -180,7 +180,8 @@ void U2F::ExecuteCallback(T& aResp, nsMainThreadPtrHandle<C>& aCb) {
   MOZ_ASSERT(aCb);
 
   ErrorResult error;
-  aCb->Call(aResp, error);
+  RefPtr<C> temp = aCb.get();  // Make sure it stays alive
+  temp->Call(aResp, error);
   NS_WARNING_ASSERTION(!error.Failed(), "dom::U2F::Promise callback failed");
   error.SuppressException();  // Useful exceptions already emitted
 }

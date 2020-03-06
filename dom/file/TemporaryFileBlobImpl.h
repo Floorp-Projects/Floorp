@@ -27,21 +27,20 @@ class TemporaryFileBlobImpl final : public FileBlobImpl {
   explicit TemporaryFileBlobImpl(nsIFile* aFile, const nsAString& aContentType);
 
   // Overrides
-  virtual void CreateInputStream(nsIInputStream** aInputStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aInputStream,
+                         ErrorResult& aRv) override;
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
     aBlobImplType = NS_LITERAL_STRING("TemporaryFileBlobImpl");
   }
 
  protected:
-  virtual ~TemporaryFileBlobImpl();
+  ~TemporaryFileBlobImpl();
 
  private:
-  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
-                                                 uint64_t aLength,
-                                                 const nsAString& aContentType,
-                                                 ErrorResult& aRv) override;
+  already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
+                                         const nsAString& aContentType,
+                                         ErrorResult& aRv) override;
 };
 
 }  // namespace dom

@@ -196,7 +196,7 @@ class DummySocket : public NrSocketBase {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DummySocket, override);
 
  private:
-  ~DummySocket() {}
+  ~DummySocket() = default;
 
   DISALLOW_COPY_ASSIGN(DummySocket);
 

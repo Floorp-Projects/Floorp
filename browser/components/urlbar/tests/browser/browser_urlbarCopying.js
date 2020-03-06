@@ -22,7 +22,7 @@ function test() {
     Services.prefs.clearUserPref(trimPref);
     Services.prefs.clearUserPref(phishyUserPassPref);
     Services.prefs.clearUserPref(decodeURLpref);
-    URLBarSetURI();
+    gURLBar.setURI();
   });
 
   Services.prefs.setBoolPref(trimPref, true);

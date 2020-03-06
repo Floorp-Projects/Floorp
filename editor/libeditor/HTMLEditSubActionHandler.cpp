@@ -3178,12 +3178,19 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
       iter.AppendAllNodesToArray(arrayOfTopChildren);
 
       // Now that we have the list, delete non-table elements
-      size_t countOfTopChildren = arrayOfTopChildren.Length();
-      for (size_t i = 0; i < countOfTopChildren; i++) {
-        OwningNonNull<nsIContent>& content = arrayOfTopChildren[0];
+      for (auto& content : arrayOfTopChildren) {
         // XXX After here, the child contents in the array may have been moved
         //     to somewhere or removed.  We should handle it.
-        nsresult rv = DeleteElementsExceptTableRelatedElements(content);
+        //
+        // MOZ_KnownLive because 'arrayOfTopChildren' is guaranteed to
+        // keep it alive.
+        //
+        // Even with https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 fixed
+        // this might need to stay, because 'arrayOfTopChildren' is not const,
+        // so it's not obvious how to prove via static analysis that it won't
+        // change and release us.
+        nsresult rv =
+            DeleteElementsExceptTableRelatedElements(MOZ_KnownLive(content));
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -3202,7 +3209,6 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
                    !IsVisibleBRElement(content);
           }
         }
-        arrayOfTopChildren.RemoveElementAt(0);
       }
     }
 
@@ -3860,7 +3866,10 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
         return result;
       }
       offset = result.NextInsertionPointRef().Offset();
-      DebugOnly<nsresult> rvIgnored = DeleteNodeWithTransaction(*content);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+      // keep it alive.
+      DebugOnly<nsresult> rvIgnored =
+          DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_WARN_IF(Destroyed())) {
         return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3876,8 +3885,11 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
       continue;
     }
     // XXX Different from the above block, we ignore error of moving nodes.
+    // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+    // keep it alive.
     MoveNodeResult moveNodeResult = MoveNodeOrChildren(
-        content, EditorDOMPoint(aPointToInsert.GetContainer(), offset));
+        MOZ_KnownLive(content),
+        EditorDOMPoint(aPointToInsert.GetContainer(), offset));
     if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
       return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -3990,7 +4002,10 @@ nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
   }
 
   for (const auto& child : childList) {
-    nsresult rv = DeleteElementsExceptTableRelatedElements(child);
+    // MOZ_KnownLive because 'childList' is guaranteed to
+    // keep it alive.
+    nsresult rv =
+        DeleteElementsExceptTableRelatedElements(MOZ_KnownLive(child));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4199,7 +4214,9 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     // if only breaks, delete them
     if (bOnlyBreaks) {
       for (auto& content : arrayOfContents) {
-        nsresult rv = DeleteNodeWithTransaction(*content);
+        // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+        // keep it alive.
+        nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
         if (NS_WARN_IF(Destroyed())) {
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -4808,7 +4825,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     // Delete anything that was in the list of nodes
     while (!arrayOfContents.IsEmpty()) {
       OwningNonNull<nsIContent>& content = arrayOfContents[0];
-      rv = DeleteNodeWithTransaction(*content);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+      // keep it alive.
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5131,7 +5150,9 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     // XXX We don't need to remove the nodes from the array for performance.
     while (!arrayOfContents.IsEmpty()) {
       OwningNonNull<nsIContent>& content = arrayOfContents[0];
-      rv = DeleteNodeWithTransaction(*content);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+      // keep it alive.
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5173,7 +5194,10 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     }
 
     if (HTMLEditUtils::IsList(atContent.GetContainer())) {
-      nsresult rv = IndentListChild(&curList, atContent, content);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+      // keep it alive.
+      nsresult rv =
+          IndentListChild(&curList, atContent, MOZ_KnownLive(content));
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -5226,7 +5250,10 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     }
 
     // tuck the node into the end of the active blockquote
-    nsresult rv = MoveNodeToEndWithTransaction(content, *curQuote);
+    // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+    // keep it alive.
+    nsresult rv =
+        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curQuote);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -5317,7 +5344,9 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     // XXX We don't need to remove the nodes from the array for performance.
     while (!arrayOfContents.IsEmpty()) {
       OwningNonNull<nsIContent>& content = arrayOfContents[0];
-      rv = DeleteNodeWithTransaction(*content);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+      // keep it alive.
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5358,7 +5387,10 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     }
 
     if (HTMLEditUtils::IsList(atContent.GetContainer())) {
-      nsresult rv = IndentListChild(&curList, atContent, content);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+      // keep it alive.
+      nsresult rv =
+          IndentListChild(&curList, atContent, MOZ_KnownLive(content));
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -5458,7 +5490,9 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     }
 
     // tuck the node into the end of the active blockquote
-    rv = MoveNodeToEndWithTransaction(content, *curQuote);
+    // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+    // keep it alive.
+    rv = MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curQuote);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -6535,7 +6569,10 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
     }
 
     // Tuck the node into the end of the active div
-    nsresult rv = MoveNodeToEndWithTransaction(content, *createdDivElement);
+    //
+    // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it alive.
+    nsresult rv = MoveNodeToEndWithTransaction(MOZ_KnownLive(content),
+                                               *createdDivElement);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -6564,8 +6601,10 @@ nsresult HTMLEditor::AlignContentsInAllTableCellsAndListItems(
 
   // Now that we have the list, align their contents as requested
   for (auto& tableCellOrListItemElement : arrayOfTableCellsAndListItems) {
-    nsresult rv = AlignBlockContentsWithDivElement(tableCellOrListItemElement,
-                                                   aAlignType);
+    // MOZ_KnownLive because 'arrayOfTableCellsAndListItems' is guaranteed to
+    // keep it alive.
+    nsresult rv = AlignBlockContentsWithDivElement(
+        MOZ_KnownLive(tableCellOrListItemElement), aAlignType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7591,7 +7630,8 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
   // Now bust up inlines.
   nsresult rv = NS_OK;
   for (auto& item : Reversed(rangeItemArray)) {
-    rv = SplitParentInlineElementsAtRangeEdges(*item);
+    // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
+    rv = SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       break;
     }
@@ -7765,8 +7805,10 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
         if (HTMLEditor::NodeIsInlineStatic(content) && IsContainer(content) &&
             !EditorBase::IsTextNode(content)) {
           AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfInlineContents;
-          nsresult rv =
-              SplitElementsAtEveryBRElement(content, arrayOfInlineContents);
+          // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
+          // alive.
+          nsresult rv = SplitElementsAtEveryBRElement(MOZ_KnownLive(content),
+                                                      arrayOfInlineContents);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -7913,7 +7955,8 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
 
     // Move break outside of container and also put in node list
     EditorDOMPoint atNextNode(splitNodeResult.GetNextNode());
-    nsresult rv = MoveNodeWithTransaction(brElement, atNextNode);
+    // MOZ_KnownLive because 'arrayOfBRElements' is guaranteed to keep it alive.
+    nsresult rv = MoveNodeWithTransaction(MOZ_KnownLive(brElement), atNextNode);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -8738,7 +8781,9 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
       // note: doesn't matter if we set mNewBlockElement multiple times.
     }
 
-    nsresult rv = MoveNodeToEndWithTransaction(content, *curBlock);
+    // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to/ keep it alive.
+    nsresult rv =
+        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curBlock);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -8981,7 +9026,9 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       if (curBlock) {
         // Forget any previous block used for previous inline nodes
         curBlock = nullptr;
-        nsresult rv = DeleteNodeWithTransaction(*content);
+        // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
+        // alive.
+        nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -9022,7 +9069,11 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       // Remember our new block for postprocessing
       TopLevelEditSubActionDataRef().mNewBlockElement = curBlock;
       // Note: doesn't matter if we set mNewBlockElement multiple times.
-      nsresult rv = MoveNodeToEndWithTransaction(content, *curBlock);
+      //
+      // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
+      // alive.
+      nsresult rv =
+          MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curBlock);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9092,7 +9143,13 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
 
       // This is a continuation of some inline nodes that belong together in
       // the same block item.  Use curBlock.
-      nsresult rv = MoveNodeToEndWithTransaction(content, *curBlock);
+      //
+      // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
+      // alive.  We could try to make that a rvalue ref and create a const array
+      // on the stack here, but callers are passing in auto arrays, and we don't
+      // want to introduce copies..
+      nsresult rv =
+          MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curBlock);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9915,7 +9972,9 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
   // now delete the empty nodes
   for (OwningNonNull<nsIContent>& emptyContent : arrayOfEmptyContents) {
     if (IsModifiableNode(emptyContent)) {
-      rv = DeleteNodeWithTransaction(emptyContent);
+      // MOZ_KnownLive because 'arrayOfEmptyContents' is guaranteed to keep it
+      // alive.
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyContent));
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9940,7 +9999,8 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
         return NS_ERROR_FAILURE;
       }
     }
-    rv = DeleteNodeWithTransaction(emptyCite);
+    // MOZ_KnownLive because 'arrayOfEmptyCites' is guaranteed to keep it alive.
+    rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyCite));
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -10690,7 +10750,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     // XXX We don't need to remove items from the array.
     while (!arrayOfContents.IsEmpty()) {
       OwningNonNull<nsIContent>& curNode = arrayOfContents[0];
-      rv = DeleteNodeWithTransaction(*curNode);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it alive.
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*curNode));
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -10777,7 +10838,9 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       // Move current node (maybe, assumed as a list item element) into the
       // new list element in the target `<div>` element to be positioned
       // absolutely.
-      rv = MoveNodeToEndWithTransaction(content, *createdListElement);
+      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it alive.
+      rv = MoveNodeToEndWithTransaction(MOZ_KnownLive(content),
+                                        *createdListElement);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -10882,7 +10945,9 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       }
     }
 
-    rv = MoveNodeToEndWithTransaction(content, *targetDivElement);
+    // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it alive.
+    rv =
+        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *targetDivElement);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }

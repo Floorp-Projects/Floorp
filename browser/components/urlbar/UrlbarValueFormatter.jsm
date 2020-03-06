@@ -168,7 +168,7 @@ class UrlbarValueFormatter {
       try {
         this._inGetUrlMetaData = true;
         this.window.gBrowser.userTypedValue = null;
-        this.window.URLBarSetURI(uriInfo.fixedURI);
+        this.urlbarInput.setURI(uriInfo.fixedURI);
         return this._getUrlMetaData();
       } finally {
         this._inGetUrlMetaData = false;

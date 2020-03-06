@@ -70,9 +70,15 @@
       // When a menulist contains something other than XUL menuitems, we need
       // to manage focus with aria-activedescendant.
       info("Testing opening a menupopup with aria-activedescendant");
-      let focused = PromEvents.waitForEvent(EVENT_FOCUS, "menupopup_ad_div");
+      let popupDiv1 = getNode("menupopup_ad_div1");
+      let focused = PromEvents.waitForEvent(EVENT_FOCUS, popupDiv1);
       let popup = getNode("menupopup_ad");
       popup.openPopup();
+      await focused;
+      info("Testing removal of previous active descendant + setting new active descendant");
+      focused = PromEvents.waitForEvent(EVENT_FOCUS, "menupopup_ad_div2");
+      popupDiv1.remove();
+      popup.setAttribute("aria-activedescendant", "menupopup_ad_div2");
       await focused;
       popup.hidePopup();
 
@@ -134,8 +140,9 @@
       </menulist>
 
       <menulist>
-        <menupopup id="menupopup_ad" aria-activedescendant="menupopup_ad_div">
-          <div id="menupopup_ad_div" role="option"></div>
+        <menupopup id="menupopup_ad" aria-activedescendant="menupopup_ad_div1">
+          <div id="menupopup_ad_div1" role="option"></div>
+          <div id="menupopup_ad_div2" role="option"></div>
         </menupopup>
       </menulist>
 

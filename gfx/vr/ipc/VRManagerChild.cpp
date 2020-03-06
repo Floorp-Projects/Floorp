@@ -154,8 +154,7 @@ void VRManagerChild::UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
   nsTArray<uint32_t> disconnectedDisplays;
   nsTArray<uint32_t> connectedDisplays;
 
-  nsTArray<RefPtr<VRDisplayClient>> prevDisplays;
-  prevDisplays = mDisplays;
+  const nsTArray<RefPtr<VRDisplayClient>> prevDisplays(mDisplays);
 
   // Check if any displays have been disconnected
   for (auto& display : prevDisplays) {
@@ -199,7 +198,11 @@ void VRManagerChild::UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
         if (!aDisplayInfo.GetIsConnected() && prevInfo.GetIsConnected()) {
           disconnectedDisplays.AppendElement(aDisplayInfo.GetDisplayID());
         }
-        display->UpdateDisplayInfo(aDisplayInfo);
+        // MOZ_KnownLive because 'prevDisplays' is guaranteed to keep it alive.
+        //
+        // This can go away once
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+        MOZ_KnownLive(display)->UpdateDisplayInfo(aDisplayInfo);
         displays.AppendElement(display);
         isNewDisplay = false;
         break;
@@ -492,9 +495,13 @@ void VRManagerChild::FireDOMVRDisplayDisconnectEventInternal(
 void VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal(
     uint32_t aDisplayID) {
   // Iterate over a copy of mListeners, as dispatched events may modify it.
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
+  const nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
   for (auto& listener : listeners) {
-    listener->NotifyVRDisplayPresentChange(aDisplayID);
+    // MOZ_KnownLive because 'listeners' is guaranteed to keep it alive.
+    //
+    // This can go away once
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+    MOZ_KnownLive(listener)->NotifyVRDisplayPresentChange(aDisplayID);
   }
 }
 

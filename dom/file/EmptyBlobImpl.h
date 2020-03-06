@@ -18,18 +18,19 @@ class EmptyBlobImpl final : public BaseBlobImpl {
 
   // Blob constructor.
   explicit EmptyBlobImpl(const nsAString& aContentType)
-      : BaseBlobImpl(NS_LITERAL_STRING("EmptyBlobImpl"), aContentType,
-                     0 /* aLength */) {}
+      : BaseBlobImpl(aContentType, 0 /* aLength */) {}
 
-  virtual void CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
-  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
-                                                 uint64_t aLength,
-                                                 const nsAString& aContentType,
-                                                 ErrorResult& aRv) override;
+  already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
+                                         const nsAString& aContentType,
+                                         ErrorResult& aRv) override;
 
-  virtual bool IsMemoryFile() const override { return true; }
+  bool IsMemoryFile() const override { return true; }
+
+  void GetBlobImplType(nsAString& aBlobImplType) const override {
+    aBlobImplType = NS_LITERAL_STRING("EmptyBlobImpl");
+  }
 
  private:
   ~EmptyBlobImpl() = default;

@@ -1283,7 +1283,7 @@ nsresult HyperTextAccessible::SetSelectionRange(int32_t aStartPos,
   // some input controls
   if (isFocusable) TakeFocus();
 
-  dom::Selection* domSel = DOMSelection();
+  RefPtr<dom::Selection> domSel = DOMSelection();
   NS_ENSURE_STATE(domSel);
 
   // Set up the selection.
@@ -1577,7 +1577,7 @@ bool HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
     return false;
   }
 
-  dom::Selection* domSel = DOMSelection();
+  RefPtr<dom::Selection> domSel = DOMSelection();
   if (!domSel) return false;
 
   RefPtr<nsRange> range;
@@ -1615,7 +1615,7 @@ bool HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
 }
 
 bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {
-  dom::Selection* domSel = DOMSelection();
+  RefPtr<dom::Selection> domSel = DOMSelection();
   if (!domSel) return false;
 
   if (aSelectionNum < 0 ||

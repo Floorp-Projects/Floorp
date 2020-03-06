@@ -136,7 +136,7 @@ class ContentListener final : public nsIDOMEventListener {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
  protected:
-  ~ContentListener() {}
+  ~ContentListener() = default;
   BrowserChild* mBrowserChild;
 };
 
