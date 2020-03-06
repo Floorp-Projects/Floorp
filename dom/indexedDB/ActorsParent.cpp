@@ -16723,6 +16723,14 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t& aUsage) {
   return NS_OK;
 }
 
+void FileManager::RemoveFileInfo(const int64_t aId,
+                                 const MutexAutoLock& aFilesMutexLock) {
+#ifdef DEBUG
+  aFilesMutexLock.AssertOwns(IndexedDatabaseManager::FileMutex());
+#endif
+  mFileInfos.Remove(aId);
+}
+
 /*******************************************************************************
  * QuotaClient
  ******************************************************************************/
