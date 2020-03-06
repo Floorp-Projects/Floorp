@@ -244,6 +244,7 @@ decorate_task(
     // Will timeout if notifications were not received.
     await startPromise;
     await endPromise;
+    ok(true, "The test should pass without timing out");
   }
 );
 
@@ -270,16 +271,19 @@ decorate_task(
     reportRecipeStub
   ) {
     const matchRecipe = {
+      id: 1,
       name: "match",
       action: "matchAction",
       filter_expression: "true",
     };
     const noMatchRecipe = {
+      id: 2,
       name: "noMatch",
       action: "noMatchAction",
       filter_expression: "false",
     };
     const missingRecipe = {
+      id: 3,
       name: "missing",
       action: "missingAction",
       filter_expression: "true",
@@ -302,6 +306,17 @@ decorate_task(
     );
     await rsCollection.db.saveLastModified(42);
     rsCollection.db.close();
+
+    let recipesFromRS = (await RecipeRunner._remoteSettingsClientForTesting.get()).map(
+      ({ recipe, signature }) => recipe
+    );
+    // Sort the records by id so that they match the order in the assertion
+    recipesFromRS.sort((a, b) => a.id - b.id);
+    Assert.deepEqual(
+      recipesFromRS,
+      [matchRecipe, noMatchRecipe, missingRecipe],
+      "The recipes should be accesible from Remote Settings"
+    );
 
     await RecipeRunner.run();
 
