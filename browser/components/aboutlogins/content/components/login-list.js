@@ -264,24 +264,23 @@ export default class LoginList extends HTMLElement {
       }
       case "keyup":
       case "keydown": {
-        this._handleTabbingToExternalElements(event);
+        if (event.type == "keydown") {
+          this._handleTabbingToExternalElements(event);
 
-        if (
-          this.shadowRoot.activeElement &&
-          this.shadowRoot.activeElement.closest("ol")
-        ) {
-          // Since Space, ArrowUp and ArrowDown will perform actions, prevent
-          // them from also scrolling the list.
           if (
-            event.type == "keydown" &&
+            this.shadowRoot.activeElement &&
+            this.shadowRoot.activeElement.closest("ol") &&
             (event.key == " " ||
               event.key == "ArrowUp" ||
               event.key == "ArrowDown")
           ) {
+            // Since Space, ArrowUp and ArrowDown will perform actions, prevent
+            // them from also scrolling the list.
             event.preventDefault();
           }
-          this._handleKeyboardNavWithinList(event);
         }
+
+        this._handleKeyboardNavWithinList(event);
         break;
       }
     }
