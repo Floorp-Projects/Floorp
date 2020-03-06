@@ -32,12 +32,12 @@ class ColorPickerParent : public PColorPickerParent {
     void Destroy();
 
    private:
-    ~ColorPickerShownCallback() {}
+    ~ColorPickerShownCallback() = default;
     ColorPickerParent* mColorPickerParent;
   };
 
  private:
-  virtual ~ColorPickerParent() {}
+  virtual ~ColorPickerParent() = default;
 
   bool CreateColorPicker();
 

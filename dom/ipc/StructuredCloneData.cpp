@@ -56,7 +56,7 @@ StructuredCloneData::StructuredCloneData(
           StructuredCloneHolder::StructuredCloneScope::UnknownDestination);
 }
 
-StructuredCloneData::~StructuredCloneData() {}
+StructuredCloneData::~StructuredCloneData() = default;
 
 StructuredCloneData& StructuredCloneData::operator=(
     StructuredCloneData&& aOther) {
