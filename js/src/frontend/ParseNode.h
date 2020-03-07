@@ -45,8 +45,6 @@
 
 namespace js {
 
-class ArrayObject;
-
 namespace frontend {
 
 class ParseContext;
@@ -2027,8 +2025,6 @@ class OptionalPropertyByValue : public PropertyByValueBase {
  * TaggedTemplate.
  */
 class CallSiteNode : public ListNode {
-  MOZ_MUST_USE ArrayObject* getArrayValue(JSContext* cx, ListNode* cookedOrRaw);
-
  public:
   explicit CallSiteNode(uint32_t begin)
       : ListNode(ParseNodeKind::CallSiteObj, TokenPos(begin, begin + 1)) {}
@@ -2037,14 +2033,6 @@ class CallSiteNode : public ListNode {
     bool match = node.isKind(ParseNodeKind::CallSiteObj);
     MOZ_ASSERT_IF(match, node.is<ListNode>());
     return match;
-  }
-
-  MOZ_MUST_USE ArrayObject* getCookedArrayValue(JSContext* cx) {
-    return getArrayValue(cx, this);
-  }
-
-  MOZ_MUST_USE ArrayObject* getRawArrayValue(JSContext* cx) {
-    return getArrayValue(cx, rawNodes());
   }
 
   ListNode* rawNodes() const {

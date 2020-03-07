@@ -924,14 +924,9 @@ bool BytecodeEmitter::emitInternedObjectOp(uint32_t index, JSOp op) {
   return emitIndexOp(op, index);
 }
 
-bool BytecodeEmitter::emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2,
+bool BytecodeEmitter::emitObjectPairOp(uint32_t index1, uint32_t index2,
                                        JSOp op) {
-  uint32_t index1, index2;
-  if (!perScriptData().gcThingList().append(objbox1, &index1) ||
-      !perScriptData().gcThingList().append(objbox2, &index2)) {
-    return false;
-  }
-
+  MOZ_ASSERT(index1 + 1 == index2, "object pair indices must be adjacent");
   return emitInternedObjectOp(index1, op);
 }
 
@@ -4369,7 +4364,8 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   return true;
 }
 
-ArrayObject* CallSiteNode::getArrayValue(JSContext* cx, ListNode* cookedOrRaw) {
+bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
+                                              uint32_t* arrayIndex) {
   uint32_t count = cookedOrRaw->count();
   ParseNode* pn = cookedOrRaw->head();
 
@@ -4382,49 +4378,39 @@ ArrayObject* CallSiteNode::getArrayValue(JSContext* cx, ListNode* cookedOrRaw) {
     MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  RootedValueVector values(cx);
-  if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), count)) {
-    return nullptr;
-  }
+  ObjLiteralCreationData data(cx);
+  ObjLiteralFlags flags(ObjLiteralFlag::Array);
+  data.writer().beginObject(flags);
+  data.writer().beginDenseArrayElements();
+
   size_t idx;
   for (idx = 0; pn; idx++, pn = pn->pn_next) {
-    if (pn->isKind(ParseNodeKind::TemplateStringExpr)) {
-      values[idx].setString(pn->as<NameNode>().atom());
-    } else {
-      MOZ_ASSERT(pn->isKind(ParseNodeKind::RawUndefinedExpr));
-      values[idx].setUndefined();
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::TemplateStringExpr) ||
+               pn->isKind(ParseNodeKind::RawUndefinedExpr));
+
+    if (!emitObjLiteralValue(&data, pn)) {
+      return false;
     }
   }
   MOZ_ASSERT(idx == count);
 
-  return ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
-                                     TenuredObject);
+  return perScriptData().gcThingList().append(std::move(data), arrayIndex);
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
-  ArrayObject* cookedValues = callSiteObj->getCookedArrayValue(cx);
-  if (!cookedValues) {
+  uint32_t cookedIndex;
+  if (!emitCallSiteObjectArray(callSiteObj, &cookedIndex)) {
     return false;
   }
 
-  ObjectBox* objbox1 = parser->newObjectBox(cookedValues);
-  if (!objbox1) {
-    return false;
-  }
-
-  ArrayObject* rawValues = callSiteObj->getRawArrayValue(cx);
-  if (!rawValues) {
-    return false;
-  }
-
-  ObjectBox* objbox2 = parser->newObjectBox(rawValues);
-  if (!objbox2) {
+  uint32_t rawIndex;
+  if (!emitCallSiteObjectArray(callSiteObj->rawNodes(), &rawIndex)) {
     return false;
   }
 
   MOZ_ASSERT(sc->hasCallSiteObj());
 
-  return emitObjectPairOp(objbox1, objbox2, JSOp::CallSiteObj);
+  return emitObjectPairOp(cookedIndex, rawIndex, JSOp::CallSiteObj);
 }
 
 bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {
