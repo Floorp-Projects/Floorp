@@ -342,7 +342,7 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 306630-1.html 306630-1-ref.html
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
-skip-if(browserIsFission) == 306660-3.html 306660-3-ref.html
+== 306660-3.html 306660-3-ref.html
 == 307076-1.html 307076-1-ref.html
 == 307102-1.html 307102-1-ref.html
 == 307102-2.html 307102-2-ref.html
@@ -1234,7 +1234,7 @@ fuzzy-if(webrender,16-16,3392-4020) == chrome://reftest/content/bugs/463217-1.xh
 == 472769-3.html 472769-3-ref.html
 == chrome://reftest/content/bugs/473847-1.xhtml chrome://reftest/content/bugs/473847-1-ref.xhtml
 == 474417-1.html 474417-1-ref.html
-fuzzy-if(skiaContent,0-1,0-5) random-if(browserIsFission) == 474472-1.html 474472-1-ref.html
+fuzzy-if(skiaContent,0-1,0-5) == 474472-1.html 474472-1-ref.html
 == 475986-1a.html 475986-1-ref.html
 == 475986-1b.html 475986-1-ref.html
 == 475986-1c.html 475986-1-ref.html
@@ -1736,7 +1736,7 @@ fuzzy-if(Android,0-4,0-400) == 815593-1.html 815593-1-ref.html
 == 816876-2b.xhtml 816876-2-ref.xhtml
 fuzzy-if(skiaContent,0-1,0-5) == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
-fuzzy-if(skiaContent,0-1,0-5) random-if(webrender&&browserIsFission) == 818276-1.html 818276-1-ref.html
+fuzzy-if(skiaContent,0-1,0-5) == 818276-1.html 818276-1-ref.html
 fuzzy-if(asyncPan,0-190,0-510) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-510) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 825999.html 825999-ref.html # Bug 1392106
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
