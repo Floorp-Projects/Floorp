@@ -22,10 +22,16 @@ const { EventEmitter } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const PRIVATE_BROWSING_PERMISSION = {
+  permissions: ["internal:privateBrowsingAllowed"],
+  origins: [],
+};
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
   Management: "resource://gre/modules/Extension.jsm",
 });
@@ -268,9 +274,11 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
     disabledFlags.push("appDisabled");
   }
   let baseURL = "";
+  let privateBrowsingAllowed = false;
   const policy = WebExtensionPolicy.getByID(id);
   if (policy) {
     baseURL = policy.getURL();
+    privateBrowsingAllowed = policy.privateBrowsingAllowed;
   }
   return {
     webExtensionId: id,
@@ -294,6 +302,7 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
       signedState,
       icons,
       baseURL,
+      privateBrowsingAllowed,
     },
   };
 }
@@ -488,6 +497,8 @@ var GeckoViewWebExtension = {
 
     const scope = Extension.getBootstrapScope(aId, file);
     scope.allowContentMessaging = allowContentMessaging;
+    // Always allow built-in extensions to run in private browsing
+    ExtensionPermissions.add(aId, PRIVATE_BROWSING_PERMISSION);
     this.extensionScopes.set(aId, scope);
 
     await scope.startup(params, undefined);
@@ -509,7 +520,7 @@ var GeckoViewWebExtension = {
   },
 
   async extensionById(aId) {
-    let scope = this.extensionScopes.get(aId);
+    const scope = this.extensionScopes.get(aId);
     if (!scope) {
       // Check if this is an installed extension we haven't seen yet
       const addon = await AddonManager.getAddonByID(aId);
@@ -517,10 +528,7 @@ var GeckoViewWebExtension = {
         debug`Could not find extension with id=${aId}`;
         return null;
       }
-      scope = {
-        allowContentMessaging: false,
-        extension: addon,
-      };
+      return addon;
     }
 
     return scope.extension;
@@ -542,6 +550,23 @@ var GeckoViewWebExtension = {
     );
 
     return promise;
+  },
+
+  async setPrivateBrowsingAllowed(aId, aAllowed) {
+    if (aAllowed) {
+      await ExtensionPermissions.add(aId, PRIVATE_BROWSING_PERMISSION);
+    } else {
+      await ExtensionPermissions.remove(aId, PRIVATE_BROWSING_PERMISSION);
+    }
+
+    // Reload the extension if it is already enabled.  This ensures any change
+    // on the private browsing permission is properly handled.
+    const addon = await this.extensionById(aId);
+    if (addon.isActive) {
+      await addon.reload();
+    }
+
+    return exportExtension(addon, addon.userPermissions, /* aSourceURI */ null);
   },
 
   async uninstallWebExtension(aId) {
@@ -753,6 +778,20 @@ var GeckoViewWebExtension = {
             /* aSourceURI */ null
           ),
         });
+        break;
+      }
+
+      case "GeckoView:WebExtension:SetPBAllowed": {
+        const { extensionId, allowed } = aData;
+        try {
+          const extension = await this.setPrivateBrowsingAllowed(
+            extensionId,
+            allowed
+          );
+          aCallback.onSuccess({ extension });
+        } catch (ex) {
+          aCallback.onError(`Unexpected error: ${ex}`);
+        }
         break;
       }
 

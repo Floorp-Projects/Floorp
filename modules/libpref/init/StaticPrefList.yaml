@@ -3118,7 +3118,7 @@
 # Private browsing opt-in is only supported on Firefox desktop.
 - name: extensions.allowPrivateBrowsingByDefault
   type: bool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 # This pref governs whether we enable content script CSP in extensions.
