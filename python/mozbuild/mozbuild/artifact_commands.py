@@ -190,11 +190,13 @@ class PackageFrontend(MachCommandBase):
         )
         import redo
         import requests
+        import time
 
         from taskgraph.util.taskcluster import (
             get_artifact_url,
         )
 
+        start = time.time()
         self._set_log_level(verbose)
         # Normally, we'd use self.log_manager.enable_unstructured(),
         # but that enables all logging, while we only really want tooltool's
@@ -429,5 +431,21 @@ class PackageFrontend(MachCommandBase):
             ensureParentDir(artifact_manifest)
             with open(artifact_manifest, 'w') as fh:
                 json.dump(artifacts, fh, indent=4, sort_keys=True)
+
+        if 'MOZ_AUTOMATION' in os.environ:
+            end = time.time()
+
+            perfherder_data = {
+                'framework': {'name': 'build_metrics'},
+                'suites': [{
+                    'name': 'mach_artifact_toolchain',
+                    'value': end - start,
+                    'lowerIsBetter': True,
+                    'shouldAlert': False,
+                    'subtests': [],
+                }],
+            }
+            self.log(logging.INFO, 'perfherder', {'data': json.dumps(perfherder_data)},
+                     'PERFHERDER_DATA: {data}')
 
         return 0
