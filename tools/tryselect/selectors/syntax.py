@@ -113,7 +113,7 @@ class SyntaxParser(BaseTryParser):
         '--setenv': {
             'action': 'append',
             'dest': 'setenv',
-            'help': 'Set the corresponding variable in the test environment for'
+            'help': 'Set the corresponding variable in the test environment for '
                     'applicable harnesses.',
         },
         '-f': {
