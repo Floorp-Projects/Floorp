@@ -58,6 +58,8 @@ static const Color sButtonHoverColor(Color(0.94f, 0.94f, 0.96f));
 static const Color sButtonActiveColor(Color(0.88f, 0.88f, 0.90f));
 static const Color sWhiteColor(Color(1.0f, 1.0f, 1.0f, 0.0f));
 
+static const CSSIntCoord kMinimumWidgetSize = 17;
+
 }  // namespace widget
 }  // namespace mozilla
 
@@ -396,13 +398,14 @@ static void PaintRangeInputBackground(DrawTarget* aDrawTarget,
                                       uint32_t aDpi,
                                       bool aHorizontal) {
   Rect rect(aRect);
+  const LayoutDeviceCoord kVerticalSize = kMinimumWidgetSize * 0.25f * aDpi;
 
   if (aHorizontal) {
-    rect.y += (rect.height - rect.height / 4) / 2;
-    rect.height /= 4;
+    rect.y += (rect.height - kVerticalSize) / 2;
+    rect.height = kVerticalSize;
   } else {
-    rect.x += (rect.width - rect.width / 4) / 2;
-    rect.width /= 4;
+    rect.x += (rect.width - kVerticalSize) / 2;
+    rect.width = kVerticalSize;
   }
 
   aDrawTarget->FillRect(
@@ -736,7 +739,8 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          StyleAppearance aAppearance,
                                          LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable) {
-  aResult->width = aResult->height = 17 * GetDPIRatio(aFrame);
+  aResult->width = aResult->height =
+      static_cast<uint32_t>(kMinimumWidgetSize) * GetDPIRatio(aFrame);
   *aIsOverridable = true;
   return NS_OK;
 }
