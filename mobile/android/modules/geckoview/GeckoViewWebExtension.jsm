@@ -267,6 +267,11 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
   if (embedderDisabled) {
     disabledFlags.push("appDisabled");
   }
+  let baseURL = "";
+  const policy = WebExtensionPolicy.getByID(id);
+  if (policy) {
+    baseURL = policy.getURL();
+  }
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
@@ -288,6 +293,7 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
       blocklistState,
       signedState,
       icons,
+      baseURL,
     },
   };
 }

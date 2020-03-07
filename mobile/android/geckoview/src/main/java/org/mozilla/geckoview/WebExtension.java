@@ -1778,6 +1778,12 @@ public class WebExtension {
         public final @EnabledFlags int disabledFlags;
 
         /**
+         * Root URL for this extension's pages. Can be used to determine if a given URL
+         * belongs to this extension.
+         */
+        public final @NonNull String baseUrl;
+
+        /**
          * Whether this extension is enabled or not.
          */
         public final boolean enabled;
@@ -1800,6 +1806,7 @@ public class WebExtension {
             signedState = SignedStateFlags.UNKNOWN;
             disabledFlags = 0;
             enabled = true;
+            baseUrl = null;
         }
 
         /* package */ MetaData(final GeckoBundle bundle) {
@@ -1816,6 +1823,7 @@ public class WebExtension {
             isRecommended = bundle.getBoolean("isRecommended");
             blocklistState = bundle.getInt("blocklistState", BlocklistStateFlags.NOT_BLOCKED);
             enabled = bundle.getBoolean("enabled", false);
+            baseUrl = bundle.getString("baseURL");
 
             int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
             if (signedState <= SignedStateFlags.LAST) {

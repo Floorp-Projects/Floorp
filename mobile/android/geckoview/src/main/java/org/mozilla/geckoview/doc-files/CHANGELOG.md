@@ -53,6 +53,9 @@ exclude: true
 - Added [`GeckoResult#cancel()`][75.22], [`GeckoResult#setCancellationDelegate()`][75.22],
   and [`GeckoResult.CancellationDelegate`][75.23]. This adds the optional ability to cancel
   an operation behind a pending `GeckoResult`.
+- Added [`baseUrl`][75.24] to [`WebExtension.MetaData`][75.25] to expose the
+  base URL for all WebExtension pages for a given extension.
+  ([bug 1560048]({{bugzilla}}1560048))
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
@@ -77,6 +80,8 @@ exclude: true
 [75.21]: {{javadoc_uri}}/GeckoResult.html#cancel--
 [75.22]: {{javadoc_uri}}/GeckoResult.html#setCancellationDelegate-CancellationDelegate-
 [75.23]: {{javadoc_uri}}/GeckoResult.CancellationDelegate.html
+[75.24]: {{javadoc_uri}}/WebExtension.MetaData.html#baseUrl
+[75.25]: {{javadoc_uri}}/WebExtension.MetaData.html
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -640,4 +645,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: a27452c94c0eafb6ace5de104476989671ca5250
+[api-version]: 9a5f829b35bacd2c1f1a6f94c394ffb93b1b0513
