@@ -12,11 +12,17 @@ export class CollectionCardGrid extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onDismissClick = this.onDismissClick.bind(this);
+    this.state = {
+      dismissed: false,
+    };
   }
 
   onDismissClick() {
     const { data } = this.props;
     if (this.props.dispatch && data && data.spocs && data.spocs.length) {
+      this.setState({
+        dismissed: true,
+      });
       const pos = 0;
       const source = this.props.type.toUpperCase();
       // Grab the available items in the array to dismiss.
@@ -47,6 +53,7 @@ export class CollectionCardGrid extends React.PureComponent {
   render() {
     const { data, dismissible } = this.props;
     if (
+      this.state.dismissed ||
       !data ||
       !data.spocs ||
       !data.spocs[0] ||

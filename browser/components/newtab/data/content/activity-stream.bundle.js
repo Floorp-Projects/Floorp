@@ -6310,6 +6310,9 @@ class CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   constructor(props) {
     super(props);
     this.onDismissClick = this.onDismissClick.bind(this);
+    this.state = {
+      dismissed: false
+    };
   }
 
   onDismissClick() {
@@ -6318,6 +6321,9 @@ class CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     } = this.props;
 
     if (this.props.dispatch && data && data.spocs && data.spocs.length) {
+      this.setState({
+        dismissed: true
+      });
       const pos = 0;
       const source = this.props.type.toUpperCase(); // Grab the available items in the array to dismiss.
       // This fires a ping for all items available, even if below the fold.
@@ -6352,7 +6358,7 @@ class CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       dismissible
     } = this.props;
 
-    if (!data || !data.spocs || !data.spocs[0] || // We only display complete collections.
+    if (this.state.dismissed || !data || !data.spocs || !data.spocs[0] || // We only display complete collections.
     data.spocs.length < 3) {
       return null;
     }
