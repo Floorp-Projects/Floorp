@@ -231,7 +231,7 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting:
-      "trailheadTriplet in ['supercharge', 'static'] || ( 'dynamic' in trailheadTriplet && usesFirefoxSync == false)",
+      "(trailheadTriplet in ['supercharge', 'static'] || ( 'dynamic' in trailheadTriplet && usesFirefoxSync == false)) && isChinaRepack == false",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -253,7 +253,7 @@ const ONBOARDING_MESSAGES = () => [
     },
     // Use service oauth client_id to identify 'Firefox Monitor' service attached to Firefox Account
     // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
-    targeting: `trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_OAUTH_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
+    targeting: `(trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_OAUTH_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))) && isChinaRepack == false`,
     trigger: { id: "showOnboarding" },
   },
   {
@@ -290,7 +290,7 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting: "trailheadTriplet == 'payoff'",
+    targeting: "trailheadTriplet == 'payoff' && isChinaRepack == false",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -361,7 +361,7 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting: "trailheadTriplet == 'multidevice'",
+    targeting: "trailheadTriplet == 'multidevice' && isChinaRepack == false",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -381,7 +381,7 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting: "'dynamic' in trailheadTriplet",
+    targeting: "'dynamic' in trailheadTriplet && isChinaRepack == false",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -405,7 +405,7 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting: "trailheadTriplet == 'payoff'",
+    targeting: "trailheadTriplet == 'payoff' && isChinaRepack == false",
     trigger: { id: "showOnboarding" },
   },
   {
