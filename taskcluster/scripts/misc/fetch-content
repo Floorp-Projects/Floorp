@@ -584,6 +584,7 @@ def api(root_url, service, version, path):
 
 
 def command_task_artifacts(args):
+    start = time.monotonic()
     fetches = json.loads(os.environ['MOZ_FETCHES'])
     downloads = []
     for fetch in fetches:
@@ -604,6 +605,19 @@ def command_task_artifacts(args):
         downloads.append((url, extdir, fetch['extract']))
 
     fetch_urls(downloads)
+    end = time.monotonic()
+
+    perfherder_data = {
+        'framework': {'name': 'build_metrics'},
+        'suites': [{
+            'name': 'fetch_content',
+            'value': end - start,
+            'lowerIsBetter': True,
+            'shouldAlert': False,
+            'subtests': [],
+        }],
+    }
+    print('PERFHERDER_DATA: {}'.format(json.dumps(perfherder_data)), file=sys.stderr)
 
 
 def main():
