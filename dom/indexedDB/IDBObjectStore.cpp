@@ -825,38 +825,44 @@ JSObject* CopyingStructuredCloneReadCallback(
 
     StructuredCloneFile& file = cloneInfo->mFiles[aData];
 
-    if (aTag == SCTAG_DOM_BLOB) {
-      MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
-      MOZ_ASSERT(!file.Blob().IsFile());
+    switch (static_cast<StructuredCloneTags>(aTag)) {
+      case SCTAG_DOM_BLOB:
+        MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
+        MOZ_ASSERT(!file.Blob().IsFile());
 
-      return WrapAsJSObject(aCx, file.MutableBlob());
-    }
+        return WrapAsJSObject(aCx, file.MutableBlob());
 
-    if (aTag == SCTAG_DOM_FILE) {
-      MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
+      case SCTAG_DOM_FILE: {
+        MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
 
-      JS::Rooted<JSObject*> result(aCx);
+        JS::Rooted<JSObject*> result(aCx);
 
-      {
-        // Create a scope so ~RefPtr fires before returning an unwrapped
-        // JS::Value.
-        const RefPtr<Blob> blob = file.BlobPtr();
-        MOZ_ASSERT(blob->IsFile());
+        {
+          // Create a scope so ~RefPtr fires before returning an unwrapped
+          // JS::Value.
+          const RefPtr<Blob> blob = file.BlobPtr();
+          MOZ_ASSERT(blob->IsFile());
 
-        const RefPtr<File> file = blob->ToFile();
-        MOZ_ASSERT(file);
+          const RefPtr<File> file = blob->ToFile();
+          MOZ_ASSERT(file);
 
-        if (!WrapAsJSObject(aCx, file, &result)) {
-          return nullptr;
+          if (!WrapAsJSObject(aCx, file, &result)) {
+            return nullptr;
+          }
         }
+
+        return result;
       }
 
-      return result;
+      case SCTAG_DOM_MUTABLEFILE:
+        MOZ_ASSERT(file.Type() == StructuredCloneFile::eMutableFile);
+
+        return WrapAsJSObject(aCx, file.MutableMutableFile());
+
+      default:
+        // This cannot be reached due to the if condition before.
+        break;
     }
-
-    MOZ_ASSERT(file.Type() == StructuredCloneFile::eMutableFile);
-
-    return WrapAsJSObject(aCx, file.MutableMutableFile());
   }
 
   return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
