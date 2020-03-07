@@ -8438,48 +8438,6 @@ class Utils final : public PBackgroundIndexedDBUtilsParent {
       int32_t* aDBRefCnt, int32_t* aSliceRefCnt, bool* aResult) override;
 };
 
-class GetFileReferencesHelper final : public Runnable {
-  PersistenceType mPersistenceType;
-  nsCString mOrigin;
-  nsString mDatabaseName;
-  int64_t mFileId;
-
-  mozilla::Mutex mMutex;
-  mozilla::CondVar mCondVar;
-  int32_t mMemRefCnt;
-  int32_t mDBRefCnt;
-  int32_t mSliceRefCnt;
-  bool mResult;
-  bool mWaiting;
-
- public:
-  GetFileReferencesHelper(PersistenceType aPersistenceType,
-                          const nsACString& aOrigin,
-                          const nsAString& aDatabaseName, int64_t aFileId)
-      : Runnable("dom::indexedDB::GetFileReferencesHelper"),
-        mPersistenceType(aPersistenceType),
-        mOrigin(aOrigin),
-        mDatabaseName(aDatabaseName),
-        mFileId(aFileId),
-        mMutex("GetFileReferencesHelper::mMutex"),
-        mCondVar(mMutex, "GetFileReferencesHelper::mCondVar"),
-        mMemRefCnt(-1),
-        mDBRefCnt(-1),
-        mSliceRefCnt(-1),
-        mResult(false),
-        mWaiting(true) {}
-
-  nsresult DispatchAndReturnFileReferences(int32_t* aMemRefCnt,
-                                           int32_t* aDBRefCnt,
-                                           int32_t* aSliceRefCnt,
-                                           bool* aResult);
-
- private:
-  ~GetFileReferencesHelper() override = default;
-
-  NS_DECL_NSIRUNNABLE
-};
-
 /*******************************************************************************
  * Other class declarations
  ******************************************************************************/
@@ -10220,6 +10178,78 @@ struct PopulateResponseHelper<IDBCursorType::IndexKey>
     return aResponse->get_ArrayOfIndexKeyCursorResponse();
   }
 };
+
+nsresult DispatchAndReturnFileReferences(
+    PersistenceType aPersistenceType, const nsACString& aOrigin,
+    const nsAString& aDatabaseName, const int64_t aFileId,
+    int32_t* const aMemRefCnt, int32_t* const aDBRefCnt,
+    int32_t* const aSliceRefCnt, bool* const aResult) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aMemRefCnt);
+  MOZ_ASSERT(aDBRefCnt);
+  MOZ_ASSERT(aSliceRefCnt);
+  MOZ_ASSERT(aResult);
+
+  *aResult = false;
+  *aMemRefCnt = -1;
+  *aDBRefCnt = -1;
+  *aSliceRefCnt = -1;
+
+  mozilla::Monitor monitor(__func__);
+  bool waiting = true;
+
+  auto lambda = [&] {
+    AssertIsOnIOThread();
+
+    {
+      IndexedDatabaseManager* const mgr = IndexedDatabaseManager::Get();
+      MOZ_ASSERT(mgr);
+
+      const RefPtr<FileManager> fileManager =
+          mgr->GetFileManager(aPersistenceType, aOrigin, aDatabaseName);
+
+      if (fileManager) {
+        const RefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(aFileId);
+
+        if (fileInfo) {
+          fileInfo->GetReferences(aMemRefCnt, aDBRefCnt, aSliceRefCnt);
+
+          if (*aMemRefCnt != -1) {
+            // We added an extra temp ref, so account for that accordingly.
+            (*aMemRefCnt)--;
+          }
+
+          *aResult = true;
+        }
+      }
+    }
+
+    mozilla::MonitorAutoLock lock(monitor);
+    MOZ_ASSERT(waiting);
+
+    waiting = false;
+    lock.Notify();
+  };
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  // XXX can't we simply use NS_DISPATCH_SYNC instead of using a monitor?
+  const nsresult rv = quotaManager->IOThread()->Dispatch(
+      NS_NewRunnableFunction("GetFileReferences", std::move(lambda)),
+      NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mozilla::MonitorAutoLock autolock(monitor);
+  while (waiting) {
+    autolock.Wait();
+  }
+
+  return NS_OK;
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -27445,80 +27475,14 @@ mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<GetFileReferencesHelper> helper = new GetFileReferencesHelper(
-      aPersistenceType, aOrigin, aDatabaseName, aFileId);
-
-  nsresult rv = helper->DispatchAndReturnFileReferences(aRefCnt, aDBRefCnt,
-                                                        aSliceRefCnt, aResult);
+  nsresult rv = DispatchAndReturnFileReferences(
+      aPersistenceType, aOrigin, aDatabaseName, aFileId, aRefCnt, aDBRefCnt,
+      aSliceRefCnt, aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
   return IPC_OK();
-}
-
-nsresult GetFileReferencesHelper::DispatchAndReturnFileReferences(
-    int32_t* aMemRefCnt, int32_t* aDBRefCnt, int32_t* aSliceRefCnt,
-    bool* aResult) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aMemRefCnt);
-  MOZ_ASSERT(aDBRefCnt);
-  MOZ_ASSERT(aSliceRefCnt);
-  MOZ_ASSERT(aResult);
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mozilla::MutexAutoLock autolock(mMutex);
-  while (mWaiting) {
-    mCondVar.Wait();
-  }
-
-  *aMemRefCnt = mMemRefCnt;
-  *aDBRefCnt = mDBRefCnt;
-  *aSliceRefCnt = mSliceRefCnt;
-  *aResult = mResult;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GetFileReferencesHelper::Run() {
-  AssertIsOnIOThread();
-
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  MOZ_ASSERT(mgr);
-
-  RefPtr<FileManager> fileManager =
-      mgr->GetFileManager(mPersistenceType, mOrigin, mDatabaseName);
-
-  if (fileManager) {
-    RefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(mFileId);
-
-    if (fileInfo) {
-      fileInfo->GetReferences(&mMemRefCnt, &mDBRefCnt, &mSliceRefCnt);
-
-      if (mMemRefCnt != -1) {
-        // We added an extra temp ref, so account for that accordingly.
-        mMemRefCnt--;
-      }
-
-      mResult = true;
-    }
-  }
-
-  mozilla::MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mWaiting);
-
-  mWaiting = false;
-  mCondVar.Notify();
-
-  return NS_OK;
 }
 
 void PermissionRequestHelper::OnPromptComplete(
