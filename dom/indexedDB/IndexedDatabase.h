@@ -33,13 +33,21 @@ struct StructuredCloneFile {
     eEndGuard
   };
 
-  RefPtr<Blob> mBlob;
-  RefPtr<IDBMutableFile> mMutableFile;
-  RefPtr<FileInfo> mFileInfo;
-  FileType mType;
+  StructuredCloneFile(const StructuredCloneFile&) = delete;
+  StructuredCloneFile& operator=(const StructuredCloneFile&) = delete;
+#ifdef NS_BUILD_REFCNT_LOGGING
+  // In IndexedDatabaseInlines.h
+  StructuredCloneFile(StructuredCloneFile&&);
+#else
+  StructuredCloneFile(StructuredCloneFile&&) = default;
+#endif
+  StructuredCloneFile& operator=(StructuredCloneFile&&) = delete;
 
   // In IndexedDatabaseInlines.h
   inline explicit StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob = {});
+
+  // In IndexedDatabaseInlines.h
+  inline StructuredCloneFile(FileType aType, RefPtr<FileInfo> aFileInfo);
 
   // In IndexedDatabaseInlines.h
   inline explicit StructuredCloneFile(RefPtr<IDBMutableFile> aMutableFile);
@@ -49,6 +57,43 @@ struct StructuredCloneFile {
 
   // In IndexedDatabaseInlines.h
   inline bool operator==(const StructuredCloneFile& aOther) const;
+
+  // XXX This is only needed for a schema upgrade (UpgradeSchemaFrom19_0To20_0).
+  // If support for older schemas is dropped, we can probably remove this method
+  // and make mType const.
+  void MutateType(FileType aNewType) { mType = aNewType; }
+
+  FileType Type() const { return mType; }
+
+  const indexedDB::FileInfo& FileInfo() const { return *mFileInfo; }
+
+  // In IndexedDatabaseInlines.h
+  RefPtr<indexedDB::FileInfo> FileInfoPtr() const;
+
+  const dom::Blob& Blob() const { return *mBlob; }
+
+  // XXX This is currently used for a number of reasons. Bug 1620560 will remove
+  // the need for one of them, but the uses of do_GetWeakReference in
+  // IDBDatabase::GetOrCreateFileActorForBlob and WrapAsJSObject in
+  // CopyingStructuredCloneReadCallback are probably harder to change.
+  dom::Blob& MutableBlob() const { return *mBlob; }
+
+  // In IndexedDatabaseInlines.h
+  inline RefPtr<dom::Blob> BlobPtr() const;
+
+  bool HasBlob() const { return mBlob; }
+
+  const IDBMutableFile& MutableFile() const { return *mMutableFile; }
+
+  IDBMutableFile& MutableMutableFile() const { return *mMutableFile; }
+
+  bool HasMutableFile() const { return mMutableFile; }
+
+ private:
+  RefPtr<dom::Blob> mBlob;
+  RefPtr<IDBMutableFile> mMutableFile;
+  RefPtr<indexedDB::FileInfo> mFileInfo;
+  FileType mType;
 };
 
 struct StructuredCloneReadInfo {
