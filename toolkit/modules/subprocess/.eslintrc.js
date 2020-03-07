@@ -1,15 +1,13 @@
 "use strict";
 
 module.exports = {
-  "extends": "../../components/extensions/.eslintrc.js",
+  extends: "../../components/extensions/.eslintrc.js",
 
-  "env": {
+  env: {
     "mozilla/chrome-worker": true,
   },
-  "plugins": [
-    "mozilla"
-  ],
-  "rules": {
+  plugins: ["mozilla"],
+  rules: {
     "no-console": "off",
   },
 };

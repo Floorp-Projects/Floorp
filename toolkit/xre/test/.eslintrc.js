@@ -1,9 +1,9 @@
 "use strict";
 
 module.exports = {
-  "extends": [
+  extends: [
     "plugin:mozilla/mochitest-test",
     "plugin:mozilla/browser-test",
-    "plugin:mozilla/xpcshell-test"
-  ]
+    "plugin:mozilla/xpcshell-test",
+  ],
 };

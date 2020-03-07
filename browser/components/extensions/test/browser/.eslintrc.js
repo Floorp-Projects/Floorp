@@ -1,11 +1,11 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "webextensions": true,
+  env: {
+    webextensions: true,
   },
 
-  "rules": {
+  rules: {
     "no-shadow": 0,
   },
 };

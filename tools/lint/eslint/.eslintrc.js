@@ -1,16 +1,16 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "node": true
+  env: {
+    node: true,
   },
 
-  "rules": {
-    "camelcase": ["error", { "properties": "never" }],
+  rules: {
+    camelcase: ["error", { properties: "never" }],
     "handle-callback-err": ["error", "er"],
     "no-shadow": "error",
     "no-undef-init": "error",
     "one-var": ["error", "never"],
-    "strict": ["error", "global"],
+    strict: ["error", "global"],
   },
 };

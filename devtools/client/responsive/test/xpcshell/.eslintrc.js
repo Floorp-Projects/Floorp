@@ -2,5 +2,5 @@
 
 module.exports = {
   // Extend from the shared list of defined globals for xpcshell.
-  "extends": "../../../../.eslintrc.xpcshell.js"
+  extends: "../../../../.eslintrc.xpcshell.js",
 };

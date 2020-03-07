@@ -3,5 +3,5 @@
 module.exports = {
   globals: {
     cloneInto: true,
-  }
+  },
 };

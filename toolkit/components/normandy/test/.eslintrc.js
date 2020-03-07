@@ -2,6 +2,6 @@
 
 module.exports = {
   rules: {
-    "require-yield": 0
-  }
+    "require-yield": 0,
+  },
 };
