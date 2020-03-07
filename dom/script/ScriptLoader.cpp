@@ -2733,6 +2733,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       rv = InitDebuggerDataForModuleTree(cx, request);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      TRACE_FOR_TEST(aRequest->Element(), "scriptloader_evaluate_module");
       rv = nsJSUtils::ModuleEvaluate(cx, module);
       MOZ_ASSERT(NS_FAILED(rv) == aes.HasException());
 
@@ -2747,6 +2748,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
         FinishDynamicImport(cx, request, rv);
       }
 
+      TRACE_FOR_TEST_NONE(aRequest->Element(), "scriptloader_no_encode");
       aRequest->mCacheInfo = nullptr;
     } else {
       // Update our current script.
