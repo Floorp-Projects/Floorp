@@ -238,8 +238,10 @@ class WebExtensionTest : BaseSessionTest() {
         val dummy = sessionRule.waitForResult(
                 controller.install("resource://android/assets/web_extensions/dummy.xpi"))
 
-        assertTrue((dummy.metaData!!.optionsPageUrl ?: "").matches("^moz-extension://.*/options.html$".toRegex()));
-        assertEquals(dummy.metaData!!.openOptionsPageInTab, true);
+        val metadata = dummy.metaData!!
+        assertTrue((metadata.optionsPageUrl ?: "").matches("^moz-extension://[0-9a-f\\-]*/options.html$".toRegex()));
+        assertEquals(metadata.openOptionsPageInTab, true);
+        assertTrue(metadata.baseUrl.matches("^moz-extension://[0-9a-f\\-]*/$".toRegex()))
 
         sessionRule.waitForResult(controller.uninstall(dummy))
     }
