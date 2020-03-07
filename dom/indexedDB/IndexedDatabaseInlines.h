@@ -21,30 +21,36 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
+inline StructuredCloneFile::StructuredCloneFile(FileType aType)
+    : mContents{Nothing()}, mType{aType} {
+  MOZ_COUNT_CTOR(StructuredCloneFile);
+}
+
 inline StructuredCloneFile::StructuredCloneFile(FileType aType,
                                                 RefPtr<dom::Blob> aBlob)
-    : mBlob{std::move(aBlob)}, mType{aType} {
+    : mContents{std::move(aBlob)}, mType{aType} {
+  MOZ_ASSERT(eBlob == aType || eStructuredClone == aType);
+  MOZ_ASSERT(mContents->as<RefPtr<dom::Blob>>());
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
 inline StructuredCloneFile::StructuredCloneFile(
     FileType aType, RefPtr<indexedDB::FileInfo> aFileInfo)
-    : mFileInfo{std::move(aFileInfo)}, mType{aType} {
+    : mContents{std::move(aFileInfo)}, mType{aType} {
+  MOZ_ASSERT(mContents->as<RefPtr<indexedDB::FileInfo>>());
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
 inline StructuredCloneFile::StructuredCloneFile(
     RefPtr<IDBMutableFile> aMutableFile)
-    : mMutableFile{std::move(aMutableFile)}, mType{eMutableFile} {
+    : mContents{std::move(aMutableFile)}, mType{eMutableFile} {
+  MOZ_ASSERT(mContents->as<RefPtr<IDBMutableFile>>());
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 inline StructuredCloneFile::StructuredCloneFile(StructuredCloneFile&& aOther)
-    : mBlob{std::move(aOther.mBlob)},
-      mMutableFile{std::move(aOther.mMutableFile)},
-      mFileInfo{std::move(aOther.mFileInfo)},
-      mType{aOther.mType} {
+    : mContents{std::move(aOther.mContents)}, mType{aOther.mType} {
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 #endif
@@ -54,19 +60,16 @@ inline StructuredCloneFile::~StructuredCloneFile() {
 }
 
 inline RefPtr<indexedDB::FileInfo> StructuredCloneFile::FileInfoPtr() const {
-  return mFileInfo;
+  return mContents->as<RefPtr<indexedDB::FileInfo>>();
 }
 
 inline RefPtr<dom::Blob> StructuredCloneFile::BlobPtr() const {
-  MOZ_ASSERT(HasBlob());
-  return mBlob;
+  return mContents->as<RefPtr<dom::Blob>>();
 }
 
 inline bool StructuredCloneFile::operator==(
     const StructuredCloneFile& aOther) const {
-  return this->mBlob == aOther.mBlob &&
-         this->mMutableFile == aOther.mMutableFile &&
-         this->mFileInfo == aOther.mFileInfo && this->mType == aOther.mType;
+  return this->mType == aOther.mType && *this->mContents == *aOther.mContents;
 }
 
 inline StructuredCloneReadInfo::StructuredCloneReadInfo(

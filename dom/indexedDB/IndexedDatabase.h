@@ -8,8 +8,10 @@
 #define mozilla_dom_indexeddatabase_h__
 
 #include "js/StructuredClone.h"
+#include "mozilla/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "InitializedOnce.h"
 
 namespace mozilla {
 namespace dom {
@@ -44,7 +46,10 @@ struct StructuredCloneFile {
   StructuredCloneFile& operator=(StructuredCloneFile&&) = delete;
 
   // In IndexedDatabaseInlines.h
-  inline explicit StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob = {});
+  inline explicit StructuredCloneFile(FileType aType);
+
+  // In IndexedDatabaseInlines.h
+  inline StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob);
 
   // In IndexedDatabaseInlines.h
   inline StructuredCloneFile(FileType aType, RefPtr<FileInfo> aFileInfo);
@@ -65,34 +70,43 @@ struct StructuredCloneFile {
 
   FileType Type() const { return mType; }
 
-  const indexedDB::FileInfo& FileInfo() const { return *mFileInfo; }
+  const indexedDB::FileInfo& FileInfo() const {
+    return *mContents->as<RefPtr<indexedDB::FileInfo>>();
+  }
 
   // In IndexedDatabaseInlines.h
   RefPtr<indexedDB::FileInfo> FileInfoPtr() const;
 
-  const dom::Blob& Blob() const { return *mBlob; }
+  const dom::Blob& Blob() const { return *mContents->as<RefPtr<dom::Blob>>(); }
 
   // XXX This is currently used for a number of reasons. Bug 1620560 will remove
   // the need for one of them, but the uses of do_GetWeakReference in
   // IDBDatabase::GetOrCreateFileActorForBlob and WrapAsJSObject in
   // CopyingStructuredCloneReadCallback are probably harder to change.
-  dom::Blob& MutableBlob() const { return *mBlob; }
+  dom::Blob& MutableBlob() const { return *mContents->as<RefPtr<dom::Blob>>(); }
 
   // In IndexedDatabaseInlines.h
   inline RefPtr<dom::Blob> BlobPtr() const;
 
-  bool HasBlob() const { return mBlob; }
+  bool HasBlob() const { return mContents->is<RefPtr<dom::Blob>>(); }
 
-  const IDBMutableFile& MutableFile() const { return *mMutableFile; }
+  const IDBMutableFile& MutableFile() const {
+    return *mContents->as<RefPtr<IDBMutableFile>>();
+  }
 
-  IDBMutableFile& MutableMutableFile() const { return *mMutableFile; }
+  IDBMutableFile& MutableMutableFile() const {
+    return *mContents->as<RefPtr<IDBMutableFile>>();
+  }
 
-  bool HasMutableFile() const { return mMutableFile; }
+  bool HasMutableFile() const {
+    return mContents->is<RefPtr<IDBMutableFile>>();
+  }
 
  private:
-  RefPtr<dom::Blob> mBlob;
-  RefPtr<IDBMutableFile> mMutableFile;
-  RefPtr<indexedDB::FileInfo> mFileInfo;
+  InitializedOnce<
+      const Variant<Nothing, RefPtr<dom::Blob>, RefPtr<IDBMutableFile>,
+                    RefPtr<indexedDB::FileInfo>>>
+      mContents;
   FileType mType;
 };
 
