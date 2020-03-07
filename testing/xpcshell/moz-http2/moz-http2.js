@@ -864,6 +864,17 @@ function handleRequest(req, res) {
     res.writeHead(200, "OK");
     res.end('["http://' + req.headers.host + '"]');
     return;
+  } else if (u.pathname === "/stale-while-revalidate-loop-test") {
+    res.setHeader(
+      "Cache-Control",
+      "s-maxage=86400, stale-while-revalidate=86400, immutable"
+    );
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Length", "1");
+    res.writeHead(200, "OK");
+    res.end("1");
+    return;
   }
 
   // for PushService tests.
