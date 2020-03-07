@@ -45,6 +45,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [scoreThreshold](#scorethreshold)
 * [messageImpressions](#messageimpressions)
 * [blockedCountByType](#blockedcountbytype)
+* [isChinaRepack](#ischinarepack)
 
 ## Detailed usage
 
@@ -647,4 +648,15 @@ Object {
   fingerprinterCount: 3,
   socialCount: 2
 }
+```
+
+### `isChinaRepack`
+
+Does the user use [the partner repack distributed by Mozilla Online](https://github.com/mozilla-partners/mozillaonline),
+a wholly owned subsidiary of the Mozilla Corporation that operates in China.
+
+#### Definition
+
+```ts
+declare const isChinaRepack: boolean;
 ```
