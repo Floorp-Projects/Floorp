@@ -60,6 +60,16 @@ module.exports = {
   plugins: ["mozilla"],
   overrides: [
     {
+      // All .eslintrc.js files are in the node environment, so turn that
+      // on here.
+      // https://github.com/eslint/eslint/issues/13008
+      files: [".eslintrc.js"],
+      env: {
+        node: true,
+        browser: false,
+      },
+    },
+    {
       files: [
         "*.html",
         "*.xhtml",

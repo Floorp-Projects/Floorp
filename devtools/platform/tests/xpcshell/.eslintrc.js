@@ -1,3 +1,5 @@
+"use strict";
+
 // Parent config file for all devtools xpcshell files.
 module.exports = {
   extends: ["plugin:mozilla/xpcshell-test"],
