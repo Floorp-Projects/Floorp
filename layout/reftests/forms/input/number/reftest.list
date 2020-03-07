@@ -1,9 +1,9 @@
 # sanity checks:
 # not valid on Android where type=number looks like type=text
-skip-if(Android) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
-skip-if(Android) != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
+skip-if(Android&&nativeThemePref) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+skip-if(Android&&nativeThemePref) != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
 # only valid on Android where type=number looks the same as type=text
-skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthemed-ref.html
+skip-if(!(Android&&nativeThemePref)) == number-same-as-text-unthemed.html number-same-as-text-unthemed-ref.html
 
 # should look the same as type=text, except for the spin box
 == number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
@@ -32,7 +32,7 @@ skip-if(Android) == number-max-height-1.html number-max-height-1-ref.html
 skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
 
 # number of significant fractional digits:
-== number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-1) == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
 
 # focus
 fuzzy-if(skiaContent,0-2,0-5) needs-focus == focus-handling.html focus-handling-ref.html

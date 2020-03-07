@@ -56,6 +56,6 @@ skip-if(Android) == range-border-background.html range-border-background-ref.htm
 # is an internal reftest for now.
 == range-percent-intrinsic-size-2b.html range-percent-intrinsic-size-2b-ref.html
 
-== auto-size.html auto-size-ref.html
+fails-if(!nativeThemePref) == auto-size.html auto-size-ref.html # bug 1620297
 == range-track-bg.html range-track-bg-ref.html
 != track-default-rendering.html track-default-rendering-ref.html
