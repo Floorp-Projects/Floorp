@@ -482,8 +482,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitInternedScopeOp(uint32_t index, JSOp op);
   MOZ_MUST_USE bool emitInternedObjectOp(uint32_t index, JSOp op);
-  MOZ_MUST_USE bool emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2,
-                                     JSOp op);
+  MOZ_MUST_USE bool emitObjectPairOp(uint32_t index1, uint32_t index2, JSOp op);
   MOZ_MUST_USE bool emitRegExp(uint32_t index);
 
   MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(
@@ -706,6 +705,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool setFunName(FunctionBox* fun, JSAtom* name);
   MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
 
+  MOZ_MUST_USE bool emitCallSiteObjectArray(ListNode* cookedOrRaw,
+                                            uint32_t* arrayIndex);
   MOZ_MUST_USE bool emitCallSiteObject(CallSiteNode* callSiteObj);
   MOZ_MUST_USE bool emitTemplateString(ListNode* templateString);
   MOZ_MUST_USE bool emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
