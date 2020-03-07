@@ -17250,7 +17250,7 @@ void QuotaClient::StopIdleMaintenance() {
     mCurrentMaintenance->Abort();
   }
 
-  for (RefPtr<Maintenance>& maintenance : mMaintenanceQueue) {
+  for (const auto& maintenance : mMaintenanceQueue) {
     maintenance->Abort();
   }
 }
@@ -23089,7 +23089,7 @@ void TransactionBase::CommitOp::CommitOrRollbackAutoIncrementCounts() {
              mTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
              mTransaction->GetMode() == IDBTransaction::Mode::VersionChange);
 
-  nsTArray<RefPtr<FullObjectStoreMetadata>>& metadataArray =
+  const auto& metadataArray =
       mTransaction->mModifiedAutoIncrementObjectStoreMetadataArray;
 
   if (!metadataArray.IsEmpty()) {
