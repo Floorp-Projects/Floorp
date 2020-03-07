@@ -1,27 +1,27 @@
 module.exports = {
   // When adding items to this file please check for effects on sub-directories.
-  "parser": "babel-eslint",
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "ecmaFeatures": {
-      "jsx": true
+  parser: "babel-eslint",
+  parserOptions: {
+    ecmaVersion: 2018,
+    ecmaFeatures: {
+      jsx: true,
     },
-    "sourceType": "module"
+    sourceType: "module",
   },
-  "env": {
-    "node": true
+  env: {
+    node: true,
   },
-  "plugins": [
+  plugins: [
     "import", // require("eslint-plugin-import")
     "react", // require("eslint-plugin-react")
     "jsx-a11y", // require("eslint-plugin-jsx-a11y")
   ],
-  "settings": {
-    "react": {
-      "version": "16.2.0"
-    }
+  settings: {
+    react: {
+      version: "16.2.0",
+    },
   },
-  "extends": [
+  extends: [
     "eslint:recommended",
     "plugin:jsx-a11y/recommended", // require("eslint-plugin-jsx-a11y")
     "plugin:mozilla/recommended", // require("eslint-plugin-mozilla") require("eslint-plugin-fetch-options") require("eslint-plugin-html") require("eslint-plugin-no-unsanitized")
@@ -31,10 +31,10 @@ module.exports = {
     "plugin:prettier/recommended", // require("eslint-plugin-prettier")
     "prettier/react", // require("eslint-config-prettier")
   ],
-  "overrides": [
+  overrides: [
     {
       // These files use fluent-dom to insert content
-      "files": [
+      files: [
         "content-src/aboutwelcome/components/HeroText.jsx",
         "content-src/asrouter/templates/OnboardingMessage/**",
         "content-src/asrouter/templates/FirstRun/**",
@@ -45,28 +45,28 @@ module.exports = {
         "content-src/components/MoreRecommendations/MoreRecommendations.jsx",
         "content-src/components/CollapsibleSection/CollapsibleSection.jsx",
         "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx",
-        "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx"
+        "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx",
       ],
-      "rules": {
+      rules: {
         "jsx-a11y/anchor-has-content": 0,
         "jsx-a11y/heading-has-content": 0,
-      }
+      },
     },
     {
       // Use a configuration that's more appropriate for JSMs
-      "files": "**/*.jsm",
-      "parserOptions": {
-        "sourceType": "script"
+      files: "**/*.jsm",
+      parserOptions: {
+        sourceType: "script",
       },
-      "env": {
-        "node": false
+      env: {
+        node: false,
       },
-      "rules": {
-        "no-implicit-globals": 0
-      }
-    }
+      rules: {
+        "no-implicit-globals": 0,
+      },
+    },
   ],
-  "rules": {
+  rules: {
     "fetch-options/no-fetch-credentials": 2,
 
     "react/jsx-boolean-value": [2, "always"],
@@ -89,16 +89,16 @@ module.exports = {
     "react/no-unknown-property": 2,
     "react/require-render-return": 2,
 
-    "accessor-pairs": [2, {"setWithoutGet": true, "getWithoutSet": false}],
+    "accessor-pairs": [2, { setWithoutGet: true, getWithoutSet: false }],
     "array-callback-return": 2,
     "block-scoped-var": 2,
     "callback-return": 0,
-    "camelcase": 0,
+    camelcase: 0,
     "capitalized-comments": 0,
     "class-methods-use-this": 0,
     "consistent-this": [2, "use-bind"],
     "default-case": 0,
-    "eqeqeq": 2,
+    eqeqeq: 2,
     "for-direction": 2,
     "func-name-matching": 2,
     "func-names": 0,
@@ -118,9 +118,9 @@ module.exports = {
     "max-nested-callbacks": [2, 4],
     "max-params": [2, 6],
     "max-statements": [2, 50],
-    "max-statements-per-line": [2, {"max": 2}],
+    "max-statements-per-line": [2, { max: 2 }],
     "multiline-comment-style": 0,
-    "new-cap": [2, {"newIsCap": true, "capIsNew": false}],
+    "new-cap": [2, { newIsCap: true, capIsNew: false }],
     "newline-after-var": 0,
     "newline-before-return": 0,
     "no-alert": 2,
@@ -136,7 +136,7 @@ module.exports = {
     "no-eq-null": 2,
     "no-extend-native": 2,
     "no-extra-label": 2,
-    "no-implicit-coercion": [2, {"allow": ["!!"]}],
+    "no-implicit-coercion": [2, { allow: ["!!"] }],
     "no-implicit-globals": 2,
     "no-inline-comments": 0,
     "no-invalid-this": 0,
@@ -186,22 +186,35 @@ module.exports = {
     "operator-assignment": [2, "always"],
     "padding-line-between-statements": 0,
     "prefer-const": 0, // TODO: Change to `1`?
-    "prefer-destructuring": [2, {"AssignmentExpression": {"array": true}, "VariableDeclarator": {"array": true, "object": true}}],
+    "prefer-destructuring": [
+      2,
+      {
+        AssignmentExpression: { array: true },
+        VariableDeclarator: { array: true, object: true },
+      },
+    ],
     "prefer-numeric-literals": 2,
     "prefer-promise-reject-errors": 2,
     "prefer-reflect": 0,
     "prefer-rest-params": 2,
     "prefer-spread": 2,
     "prefer-template": 2,
-    "radix": [2, "always"],
+    radix: [2, "always"],
     "require-await": 2,
     "require-jsdoc": 0,
     "sort-keys": 0,
     "sort-vars": 2,
-    "strict": 0,
+    strict: 0,
     "symbol-description": 2,
-    "valid-jsdoc": [0, {"requireReturn": false, "requireParamDescription": false, "requireReturnDescription": false}],
+    "valid-jsdoc": [
+      0,
+      {
+        requireReturn: false,
+        requireParamDescription: false,
+        requireReturnDescription: false,
+      },
+    ],
     "vars-on-top": 2,
-    "yoda": [2, "never"]
-  }
+    yoda: [2, "never"],
+  },
 };

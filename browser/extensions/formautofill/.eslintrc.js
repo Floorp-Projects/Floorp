@@ -1,34 +1,41 @@
 "use strict";
 
 module.exports = {
-  "rules": {
+  rules: {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": "error",
     "mozilla/no-aArgs": "error",
     "mozilla/var-only-at-top-level": "error",
 
-    "valid-jsdoc": ["error", {
-      "prefer": {
-        "return": "returns",
+    "valid-jsdoc": [
+      "error",
+      {
+        prefer: {
+          return: "returns",
+        },
+        preferType: {
+          Boolean: "boolean",
+          Number: "number",
+          String: "string",
+          bool: "boolean",
+        },
+        requireParamDescription: false,
+        requireReturn: false,
+        requireReturnDescription: false,
       },
-      "preferType": {
-        "Boolean": "boolean",
-        "Number": "number",
-        "String": "string",
-        "bool": "boolean",
-      },
-      "requireParamDescription": false,
-      "requireReturn": false,
-      "requireReturnDescription": false,
-    }],
+    ],
 
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 
     // No declaring variables that are never used
-    "no-unused-vars": ["error", {
-      "args": "none", "vars": "all"
-    }],
+    "no-unused-vars": [
+      "error",
+      {
+        args: "none",
+        vars: "all",
+      },
+    ],
 
     // No using variables before defined
     "no-use-before-define": "error",
@@ -38,7 +45,7 @@ module.exports = {
     "block-scoped-var": "error",
 
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", {"max": 26}],
+    complexity: ["error", { max: 26 }],
 
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 4],
@@ -60,25 +67,30 @@ module.exports = {
     "no-return-assign": "error",
 
     // Require use of the second argument for parseInt().
-    "radix": "error",
+    radix: "error",
 
     // Require "use strict" to be defined globally in the script.
-    "strict": ["error", "global"],
+    strict: ["error", "global"],
 
     // Disallow Yoda conditions (where literal value comes first).
-    "yoda": "error",
+    yoda: "error",
 
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",
   },
 
-  "overrides": [{
-    "files": "test/unit/head.js",
-    "rules": {
-      "no-unused-vars": ["error", {
-        "args": "none",
-        "vars": "local",
-      }],
+  overrides: [
+    {
+      files: "test/unit/head.js",
+      rules: {
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "local",
+          },
+        ],
+      },
     },
-  }],
+  ],
 };

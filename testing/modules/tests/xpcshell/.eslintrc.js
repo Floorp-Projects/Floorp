@@ -1,7 +1,5 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/xpcshell-test"
-  ]
+  extends: ["plugin:mozilla/xpcshell-test"],
 };

@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-  "rules": {
-    "no-eval": "off"
+  rules: {
+    "no-eval": "off",
   },
 };

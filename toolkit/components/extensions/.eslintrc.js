@@ -1,44 +1,46 @@
 "use strict";
 
 module.exports = {
-
-  "globals": {
+  globals: {
     // These are defined in the WebExtension script scopes by ExtensionCommon.jsm
-    "Cc": true,
-    "Ci": true,
-    "Cr": true,
-    "Cu": true,
-    "AppConstants": true,
-    "ExtensionAPI": true,
-    "ExtensionCommon": true,
-    "ExtensionUtils": true,
-    "extensions": true,
-    "global": true,
-    "require": false,
-    "Services": true,
-    "XPCOMUtils": true,
+    Cc: true,
+    Ci: true,
+    Cr: true,
+    Cu: true,
+    AppConstants: true,
+    ExtensionAPI: true,
+    ExtensionCommon: true,
+    ExtensionUtils: true,
+    extensions: true,
+    global: true,
+    require: false,
+    Services: true,
+    XPCOMUtils: true,
   },
 
-  "rules": {
+  rules: {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": "error",
     "mozilla/no-aArgs": "error",
     "mozilla/var-only-at-top-level": "error",
 
-    "valid-jsdoc": ["error", {
-      "prefer": {
-        "return": "returns",
+    "valid-jsdoc": [
+      "error",
+      {
+        prefer: {
+          return: "returns",
+        },
+        preferType: {
+          Boolean: "boolean",
+          Number: "number",
+          String: "string",
+          bool: "boolean",
+        },
+        requireParamDescription: false,
+        requireReturn: false,
+        requireReturnDescription: false,
       },
-      "preferType": {
-        "Boolean": "boolean",
-        "Number": "number",
-        "String": "string",
-        "bool": "boolean",
-      },
-      "requireParamDescription": false,
-      "requireReturn": false,
-      "requireReturnDescription": false,
-    }],
+    ],
 
     // Functions are not required to consistently return something or nothing
     "consistent-return": "off",
@@ -54,9 +56,14 @@ module.exports = {
     "no-unused-expressions": "error",
 
     // No declaring variables that are never used
-    "no-unused-vars": ["error", {
-      "args": "none", "vars": "all", "varsIgnorePattern": "^console$"
-    }],
+    "no-unused-vars": [
+      "error",
+      {
+        args: "none",
+        vars: "all",
+        varsIgnorePattern: "^console$",
+      },
+    ],
 
     // No using variables before defined
     "no-use-before-define": "error",
@@ -66,7 +73,7 @@ module.exports = {
     "block-scoped-var": "error",
 
     // Warn about cyclomatic complexity in functions.
-    "complexity": "error",
+    complexity: "error",
 
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
@@ -78,7 +85,7 @@ module.exports = {
 
     // Allow using == instead of ===, in the interest of landing something since
     // the devtools codebase is split on convention here.
-    "eqeqeq": "off",
+    eqeqeq: "off",
 
     // Don't require function expressions to have a name.
     // This makes the code more verbose and hard to read. Our engine already
@@ -103,7 +110,7 @@ module.exports = {
     // Don't require a capital letter for constructors, only check if all new
     // operators are followed by a capital letter. Don't warn when capitalized
     // functions are used without the new operator.
-    "new-cap": ["off", {"capIsNew": false}],
+    "new-cap": ["off", { capIsNew: false }],
 
     // Allow use of bitwise operators.
     "no-bitwise": "off",
@@ -130,7 +137,7 @@ module.exports = {
     "no-inline-comments": "off",
 
     // Disallow use of labels for anything other then loops and switches.
-    "no-labels": ["error", {"allowLoop": true}],
+    "no-labels": ["error", { allowLoop: true }],
 
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "error",
@@ -191,20 +198,20 @@ module.exports = {
     "one-var": "off",
 
     // Require use of the second argument for parseInt().
-    "radix": "error",
+    radix: "error",
 
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
 
     // Require "use strict" to be defined globally in the script.
-    "strict": ["error", "global"],
+    strict: ["error", "global"],
 
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": "off",
 
     // Disallow Yoda conditions (where literal value comes first).
-    "yoda": "error",
+    yoda: "error",
 
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",
@@ -213,13 +220,18 @@ module.exports = {
     "no-label-var": "error",
   },
 
-  "overrides": [{
-    "files": "test/xpcshell/head*.js",
-    "rules": {
-      "no-unused-vars": ["error", {
-        "args": "none",
-        "vars": "local",
-      }],
+  overrides: [
+    {
+      files: "test/xpcshell/head*.js",
+      rules: {
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "local",
+          },
+        ],
+      },
     },
-  }],
+  ],
 };

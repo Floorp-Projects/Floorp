@@ -2,5 +2,5 @@
 
 module.exports = {
   // Extend from the common devtools mochitest eslintrc config.
-  "extends": "../../../.eslintrc.mochitests.js"
+  extends: "../../../.eslintrc.mochitests.js",
 };

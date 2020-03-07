@@ -16,12 +16,15 @@ module.exports = {
       },
     },
     {
-      "files": "test/unit/head.js",
-      "rules": {
-        "no-unused-vars": ["error", {
-          "args": "none",
-          "vars": "local",
-        }],
+      files: "test/unit/head.js",
+      rules: {
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "local",
+          },
+        ],
       },
     },
   ],
@@ -29,37 +32,49 @@ module.exports = {
     "mozilla/var-only-at-top-level": "error",
 
     "block-scoped-var": "error",
-    complexity: ["error", {
-      max: 20,
-    }],
+    complexity: [
+      "error",
+      {
+        max: 20,
+      },
+    ],
     "max-nested-callbacks": ["error", 4],
     "no-console": ["error", { allow: ["error"] }],
     "no-fallthrough": "error",
     "no-multi-str": "error",
     "no-proto": "error",
     "no-unused-expressions": "error",
-    "no-unused-vars": ["error", {
-      args: "none",
-      vars: "all"
-    }],
-    "no-use-before-define": ["error", {
-      functions: false,
-    }],
+    "no-unused-vars": [
+      "error",
+      {
+        args: "none",
+        vars: "all",
+      },
+    ],
+    "no-use-before-define": [
+      "error",
+      {
+        functions: false,
+      },
+    ],
     radix: "error",
-    "valid-jsdoc": ["error", {
-      prefer: {
-        return: "returns",
+    "valid-jsdoc": [
+      "error",
+      {
+        prefer: {
+          return: "returns",
+        },
+        preferType: {
+          Boolean: "boolean",
+          Number: "number",
+          String: "string",
+          bool: "boolean",
+        },
+        requireParamDescription: false,
+        requireReturn: false,
+        requireReturnDescription: false,
       },
-      preferType: {
-        Boolean: "boolean",
-        Number: "number",
-        String: "string",
-        bool: "boolean",
-      },
-      requireParamDescription: false,
-      requireReturn: false,
-      requireReturnDescription: false,
-    }],
+    ],
     yoda: "error",
   },
 };

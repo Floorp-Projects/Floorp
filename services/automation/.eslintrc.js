@@ -1,10 +1,13 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "browser": true
+  env: {
+    browser: true,
   },
-  "rules": {
-    "no-unused-vars": ["error", {"args": "none", "varsIgnorePattern": "^EXPORTED_SYMBOLS|^Sync"}],
-  }
+  rules: {
+    "no-unused-vars": [
+      "error",
+      { args: "none", varsIgnorePattern: "^EXPORTED_SYMBOLS|^Sync" },
+    ],
+  },
 };

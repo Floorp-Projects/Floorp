@@ -1,8 +1,8 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "browser": true,
-    "webextensions": true,
+  env: {
+    browser: true,
+    webextensions: true,
   },
 };
