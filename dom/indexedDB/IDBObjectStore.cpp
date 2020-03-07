@@ -441,12 +441,6 @@ nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   return NS_OK;
 }
 
-bool ResolveMysteryMutableFile(IDBMutableFile& aMutableFile,
-                               const nsString& aName, const nsString& aType) {
-  aMutableFile.SetLazyData(aName, aType);
-  return true;
-}
-
 bool StructuredCloneReadString(JSStructuredCloneReader* aReader,
                                nsCString& aString) {
   uint32_t length;
@@ -597,10 +591,7 @@ class ValueDeserializationHelper {
       return false;
     }
 
-    if (NS_WARN_IF(!ResolveMysteryMutableFile(aFile.MutableMutableFile(),
-                                              aData.name, aData.type))) {
-      return false;
-    }
+    aFile.MutableMutableFile().SetLazyData(aData.name, aData.type);
 
     JS::Rooted<JS::Value> wrappedMutableFile(aCx);
     if (!ToJSValue(aCx, aFile.MutableMutableFile(), &wrappedMutableFile)) {
