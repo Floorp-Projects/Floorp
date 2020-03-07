@@ -1646,32 +1646,29 @@ bool BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
 }
 
 bool BytecodeEmitter::iteratorResultShape(uint32_t* shape) {
-  // No need to do any guessing for the object kind, since we know exactly how
-  // many properties we plan to have.
-  gc::AllocKind kind = gc::GetGCObjectKind(2);
-  RootedPlainObject obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject));
-  if (!obj) {
-    return false;
+  // Use |NoValues| to keep the flags consistent with their usage for normal
+  // object literal creation, where |NoValues| is always used in conjunction
+  // with |NewObject|.
+  ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
+
+  ObjLiteralCreationData data(cx);
+  data.writer().beginObject(flags);
+
+  for (auto name : {&JSAtomState::value, &JSAtomState::done}) {
+    HandlePropertyName propName = cx->names().*name;
+
+    uint32_t propNameIndex = 0;
+    if (!data.addAtom(propName, &propNameIndex)) {
+      return false;
+    }
+    data.writer().setPropName(propNameIndex);
+
+    if (!data.writer().propWithUndefinedValue()) {
+      return false;
+    }
   }
 
-  Rooted<jsid> value_id(cx, NameToId(cx->names().value));
-  Rooted<jsid> done_id(cx, NameToId(cx->names().done));
-  if (!NativeDefineDataProperty(cx, obj, value_id, UndefinedHandleValue,
-                                JSPROP_ENUMERATE)) {
-    return false;
-  }
-  if (!NativeDefineDataProperty(cx, obj, done_id, UndefinedHandleValue,
-                                JSPROP_ENUMERATE)) {
-    return false;
-  }
-
-  ObjectBox* objbox = parser->newObjectBox(obj);
-  if (!objbox) {
-    return false;
-  }
-
-  return perScriptData().gcThingList().append(objbox, shape);
+  return perScriptData().gcThingList().append(std::move(data), shape);
 }
 
 bool BytecodeEmitter::emitPrepareIteratorResult() {
