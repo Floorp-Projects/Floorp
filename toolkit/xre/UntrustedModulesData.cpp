@@ -13,6 +13,7 @@
 #include "mozilla/FileUtilsWin.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WinDllServices.h"
@@ -301,6 +302,35 @@ bool ProcessedModuleLoadEvent::IsTrusted() const {
   return mModule->IsTrusted();
 }
 
+void UntrustedModulesData::VerifyConsistency() const {
+  if (!mIsDiagnosticsAssertEnabled) {
+    return;
+  }
+
+  for (auto& evt : mEvents) {
+    MOZ_DIAGNOSTIC_ASSERT(evt.mModule, "Empty module");
+    MOZ_DIAGNOSTIC_ASSERT(!evt.mModule->mResolvedNtName.IsEmpty(),
+                          "Empty mResolvedNtName");
+    MOZ_DIAGNOSTIC_ASSERT(mModules.Get(evt.mModule->mResolvedNtName, nullptr),
+                          "No match in the table");
+  }
+}
+
+/* static */
+bool UntrustedModulesData::IsDiagnosticsAssertEnabled() {
+#ifdef NIGHTLY_BUILD
+  // Trigger MOZ_DIAGNOSTIC_ASSERT with a probability of 1/16
+  constexpr double kDiagnosticsAssertRatio = 0.0625;
+
+  constexpr uint64_t kBoundary =
+      std::numeric_limits<uint64_t>::max() * kDiagnosticsAssertRatio;
+  Maybe<uint64_t> randomNum = RandomUint64();
+  return randomNum.isSome() && randomNum.value() <= kBoundary;
+#else
+  return false;
+#endif
+}
+
 void UntrustedModulesData::AddNewLoads(
     const ModulesMap& aModules, Vector<ProcessedModuleLoadEvent>&& aEvents,
     Vector<Telemetry::ProcessedStack>&& aStacks) {
@@ -319,6 +349,9 @@ void UntrustedModulesData::AddNewLoads(
     }
 
     RefPtr<ModuleRecord> rec(iter.Data());
+    if (mIsDiagnosticsAssertEnabled) {
+      MOZ_DIAGNOSTIC_ASSERT(rec->mResolvedNtName == iter.Key());
+    }
     addPtr.OrInsert([rec = std::move(rec)]() { return rec; });
   }
 
