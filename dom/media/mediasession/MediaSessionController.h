@@ -68,6 +68,8 @@ class MediaSessionController {
   nsString GetDefaultFaviconURL() const;
   nsString GetDefaultTitle() const;
   MediaMetadataBase CreateDefaultMetadata() const;
+  void FillMissingTitleAndArtworkIfNeeded(MediaMetadataBase& aMetadata) const;
+
   void UpdateActiveMediaSessionContextId();
 
   nsDataHashtable<nsUint64HashKey, Maybe<MediaMetadataBase>> mMetadataMap;
