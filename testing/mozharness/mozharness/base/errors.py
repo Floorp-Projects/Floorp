@@ -35,57 +35,6 @@ BaseErrorList = [{
     'level': ERROR
 }]
 
-# For ssh, scp, rsync over ssh
-SSHErrorList = BaseErrorList + [{
-    'substr': r'''Name or service not known''',
-    'level': ERROR
-}, {
-    'substr': r'''Could not resolve hostname''',
-    'level': ERROR
-}, {
-    'substr': r'''POSSIBLE BREAK-IN ATTEMPT''',
-    'level': WARNING
-}, {
-    'substr': r'''Network error:''',
-    'level': ERROR
-}, {
-    'substr': r'''Access denied''',
-    'level': ERROR
-}, {
-    'substr': r'''Authentication refused''',
-    'level': ERROR
-}, {
-    'substr': r'''Out of memory''',
-    'level': ERROR
-}, {
-    'substr': r'''Connection reset by peer''',
-    'level': WARNING
-}, {
-    'substr': r'''Host key verification failed''',
-    'level': ERROR
-}, {
-    'substr': r'''WARNING:''',
-    'level': WARNING
-}, {
-    'substr': r'''rsync error:''',
-    'level': ERROR
-}, {
-    'substr': r'''Broken pipe:''',
-    'level': ERROR
-}, {
-    'substr': r'''Permission denied:''',
-    'level': ERROR
-}, {
-    'substr': r'''connection unexpectedly closed''',
-    'level': ERROR
-}, {
-    'substr': r'''Warning: Identity file''',
-    'level': ERROR
-}, {
-    'substr': r'''command-line line 0: Missing argument''',
-    'level': ERROR
-}]
-
 HgErrorList = BaseErrorList + [{
     'regex': re.compile(r'''^abort:'''),
     'level': ERROR,
