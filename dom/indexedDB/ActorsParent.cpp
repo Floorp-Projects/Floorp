@@ -5533,12 +5533,13 @@ class DatabaseOperationBase : public Runnable,
 
   bool HasFailed() const { return NS_FAILED(mResultCode); }
 
-  static nsresult GetStructuredCloneReadInfoFromStatement(
-      mozIStorageStatement* aStatement, uint32_t aDataIndex,
-      uint32_t aFileIdsIndex, const FileManager& aFileManager,
-      StructuredCloneReadInfo* aInfo) {
-    return GetStructuredCloneReadInfoFromSource(
-        aStatement, aDataIndex, aFileIdsIndex, aFileManager, aInfo);
+  static Result<StructuredCloneReadInfo, nsresult>
+  GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
+                                          uint32_t aDataIndex,
+                                          uint32_t aFileIdsIndex,
+                                          const FileManager& aFileManager) {
+    return GetStructuredCloneReadInfoFromSource(aStatement, aDataIndex,
+                                                aFileIdsIndex, aFileManager);
   }
 
  protected:
@@ -5569,12 +5570,13 @@ class DatabaseOperationBase : public Runnable,
 
   static uint64_t ReinterpretDoubleAsUInt64(double aDouble);
 
-  static nsresult GetStructuredCloneReadInfoFromValueArray(
-      mozIStorageValueArray* aValues, uint32_t aDataIndex,
-      uint32_t aFileIdsIndex, const FileManager& aFileManager,
-      StructuredCloneReadInfo* aInfo) {
-    return GetStructuredCloneReadInfoFromSource(
-        aValues, aDataIndex, aFileIdsIndex, aFileManager, aInfo);
+  static Result<StructuredCloneReadInfo, nsresult>
+  GetStructuredCloneReadInfoFromValueArray(mozIStorageValueArray* aValues,
+                                           uint32_t aDataIndex,
+                                           uint32_t aFileIdsIndex,
+                                           const FileManager& aFileManager) {
+    return GetStructuredCloneReadInfoFromSource(aValues, aDataIndex,
+                                                aFileIdsIndex, aFileManager);
   }
 
   static nsresult BindKeyRangeToStatement(const SerializedKeyRange& aKeyRange,
@@ -5618,18 +5620,21 @@ class DatabaseOperationBase : public Runnable,
 
  private:
   template <typename T>
-  static nsresult GetStructuredCloneReadInfoFromSource(
-      T* aSource, uint32_t aDataIndex, uint32_t aFileIdsIndex,
-      const FileManager& aFileManager, StructuredCloneReadInfo* aInfo);
+  static Result<StructuredCloneReadInfo, nsresult>
+  GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
+                                       uint32_t aFileIdsIndex,
+                                       const FileManager& aFileManager);
 
-  static nsresult GetStructuredCloneReadInfoFromBlob(
-      const uint8_t* aBlobData, uint32_t aBlobDataLength,
-      const FileManager& aFileManager, const nsAString& aFileIds,
-      StructuredCloneReadInfo* aInfo);
+  static Result<StructuredCloneReadInfo, nsresult>
+  GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
+                                     uint32_t aBlobDataLength,
+                                     const FileManager& aFileManager,
+                                     const nsAString& aFileIds);
 
-  static nsresult GetStructuredCloneReadInfoFromExternalBlob(
-      uint64_t aIntData, const FileManager& aFileManager,
-      const nsAString& aFileIds, StructuredCloneReadInfo* aInfo);
+  static Result<StructuredCloneReadInfo, nsresult>
+  GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
+                                             const FileManager& aFileManager,
+                                             const nsAString& aFileIds);
 
   template <typename KeyTransformation>
   static nsresult MaybeBindKeyToStatement(
@@ -10136,12 +10141,14 @@ struct ValuePopulateResponseHelper {
 
     constexpr auto offset = StatementHasIndexKeyBindings ? 2 : 0;
 
-    const nsresult rv =
+    auto cloneInfoOrErr =
         DatabaseOperationBase::GetStructuredCloneReadInfoFromStatement(
-            aStmt, 2 + offset, 1 + offset, *aCursor.mFileManager, &mCloneInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+            aStmt, 2 + offset, 1 + offset, *aCursor.mFileManager);
+    if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
+      return cloneInfoOrErr.unwrapErr();
     }
+
+    mCloneInfo = cloneInfoOrErr.unwrap();
 
     if (mCloneInfo.mHasPreprocessInfo) {
       IDB_WARNING("Preprocessing for cursors not yet implemented!");
@@ -19099,11 +19106,17 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     return NS_ERROR_UNEXPECTED;
   }
 
-  StructuredCloneReadInfo cloneInfo(JS::StructuredCloneScope::DifferentProcess);
-  DatabaseOperationBase::GetStructuredCloneReadInfoFromValueArray(
-      aArguments, 1, 0, *mFileManager, &cloneInfo);
+  auto cloneInfoOrError =
+      DatabaseOperationBase::GetStructuredCloneReadInfoFromValueArray(
+          aArguments, 1, 0, *mFileManager);
+  if (NS_WARN_IF(cloneInfoOrError.isErr())) {
+    return cloneInfoOrError.unwrapErr();
+  }
+
+  auto cloneInfo = cloneInfoOrError.unwrap();
 
   nsAutoString fileIds;
+  // XXX does this really need non-const cloneInfo?
   rv = IDBObjectStore::DeserializeUpgradeValueToFileIds(cloneInfo, fileIds);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -19174,17 +19187,17 @@ uint64_t DatabaseOperationBase::ReinterpretDoubleAsUInt64(double aDouble) {
 
 // static
 template <typename T>
-nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
+Result<StructuredCloneReadInfo, nsresult>
+DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
     T* aSource, uint32_t aDataIndex, uint32_t aFileIdsIndex,
-    const FileManager& aFileManager, StructuredCloneReadInfo* aInfo) {
+    const FileManager& aFileManager) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
-  MOZ_ASSERT(aInfo);
 
   int32_t columnType;
   nsresult rv = aSource->GetTypeOfIndex(aDataIndex, &columnType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB ||
@@ -19193,7 +19206,7 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
   bool isNull;
   rv = aSource->GetIsNull(aFileIdsIndex, &isNull);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   nsString fileIds;
@@ -19203,7 +19216,7 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
   } else {
     rv = aSource->GetString(aFileIdsIndex, fileIds);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -19211,36 +19224,30 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
     uint64_t intData;
     rv = aSource->GetInt64(aDataIndex, reinterpret_cast<int64_t*>(&intData));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
-    rv = GetStructuredCloneReadInfoFromExternalBlob(intData, aFileManager,
-                                                    fileIds, aInfo);
-  } else {
-    const uint8_t* blobData;
-    uint32_t blobDataLength;
-    rv = aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = GetStructuredCloneReadInfoFromBlob(blobData, blobDataLength,
-                                            aFileManager, fileIds, aInfo);
+    return GetStructuredCloneReadInfoFromExternalBlob(intData, aFileManager,
+                                                      fileIds);
   }
+
+  const uint8_t* blobData;
+  uint32_t blobDataLength;
+  rv = aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  return NS_OK;
+  return GetStructuredCloneReadInfoFromBlob(blobData, blobDataLength,
+                                            aFileManager, fileIds);
 }
 
 // static
-nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
+Result<StructuredCloneReadInfo, nsresult>
+DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     const uint8_t* aBlobData, uint32_t aBlobDataLength,
-    const FileManager& aFileManager, const nsAString& aFileIds,
-    StructuredCloneReadInfo* aInfo) {
+    const FileManager& aFileManager, const nsAString& aFileIds) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aInfo);
 
   AUTO_PROFILER_LABEL(
       "DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob", DOM);
@@ -19251,12 +19258,12 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   size_t uncompressedLength;
   if (NS_WARN_IF(!snappy::GetUncompressedLength(compressed, compressedLength,
                                                 &uncompressedLength))) {
-    return NS_ERROR_FILE_CORRUPTED;
+    return Err(NS_ERROR_FILE_CORRUPTED);
   }
 
   AutoTArray<uint8_t, 512> uncompressed;
   if (NS_WARN_IF(!uncompressed.SetLength(uncompressedLength, fallible))) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   char* const uncompressedBuffer =
@@ -19264,73 +19271,76 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
 
   if (NS_WARN_IF(!snappy::RawUncompress(compressed, compressedLength,
                                         uncompressedBuffer))) {
-    return NS_ERROR_FILE_CORRUPTED;
+    return Err(NS_ERROR_FILE_CORRUPTED);
   }
 
-  if (!aInfo->mData.AppendBytes(uncompressedBuffer, uncompressed.Length())) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  StructuredCloneReadInfo info(JS::StructuredCloneScope::DifferentProcess);
+  if (!info.mData.AppendBytes(uncompressedBuffer, uncompressed.Length())) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
-      return filesOrErr.unwrapErr();
+      return Err(filesOrErr.unwrapErr());
     }
 
-    aInfo->mFiles = filesOrErr.unwrap();
+    info.mFiles = filesOrErr.unwrap();
   }
 
-  return NS_OK;
+  return info;
 }
 
 // static
-nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
+Result<StructuredCloneReadInfo, nsresult>
+DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
     uint64_t aIntData, const FileManager& aFileManager,
-    const nsAString& aFileIds, StructuredCloneReadInfo* aInfo) {
+    const nsAString& aFileIds) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aInfo);
 
   AUTO_PROFILER_LABEL(
       "DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob", DOM);
 
   nsresult rv;
 
+  StructuredCloneReadInfo info(JS::StructuredCloneScope::DifferentProcess);
+
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
-      return filesOrErr.unwrapErr();
+      return Err(filesOrErr.unwrapErr());
     }
 
-    aInfo->mFiles = filesOrErr.unwrap();
+    info.mFiles = filesOrErr.unwrap();
   }
 
   // Higher and lower 32 bits described
   // in ObjectStoreAddOrPutRequestOp::DoDatabaseWork.
   const uint32_t index = uint32_t(aIntData & 0xFFFFFFFF);
 
-  if (index >= aInfo->mFiles.Length()) {
+  if (index >= info.mFiles.Length()) {
     MOZ_ASSERT(false, "Bad index value!");
-    return NS_ERROR_UNEXPECTED;
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
   if (IndexedDatabaseManager::PreprocessingEnabled()) {
-    aInfo->mHasPreprocessInfo = true;
-    return NS_OK;
+    info.mHasPreprocessInfo = true;
+    return info;
   }
 
-  StructuredCloneFile& file = aInfo->mFiles[index];
+  StructuredCloneFile& file = info.mFiles[index];
   MOZ_ASSERT(file.Type() == StructuredCloneFile::eStructuredClone);
 
   const nsCOMPtr<nsIFile> nativeFile =
       FileInfo::GetFileForFileInfo(file.FileInfo());
   if (NS_WARN_IF(!nativeFile)) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   nsCOMPtr<nsIInputStream> fileInputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), nativeFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   const auto snappyInputStream =
@@ -19342,20 +19352,19 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
     uint32_t numRead;
     rv = snappyInputStream->Read(buffer, sizeof(buffer), &numRead);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      break;
+      return Err(rv);
     }
 
     if (!numRead) {
       break;
     }
 
-    if (NS_WARN_IF(!aInfo->mData.AppendBytes(buffer, numRead))) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      break;
+    if (NS_WARN_IF(!info.mData.AppendBytes(buffer, numRead))) {
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   } while (true);
 
-  return rv;
+  return info;
 }
 
 // static
@@ -24099,20 +24108,22 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 #endif
 
-  StructuredCloneReadInfo cloneInfo(JS::StructuredCloneScope::DifferentProcess);
-  nsresult rv = GetStructuredCloneReadInfoFromValueArray(
+  auto cloneInfoOrErr = GetStructuredCloneReadInfoFromValueArray(
       aValues,
       /* aDataIndex */ 3,
-      /* aFileIdsIndex */ 2, *mOp->mFileManager, &cloneInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+      /* aFileIdsIndex */ 2, *mOp->mFileManager);
+  if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
+    return Err(cloneInfoOrErr.unwrapErr());
   }
+
+  auto cloneInfo = cloneInfoOrErr.unwrap();
 
   const IndexMetadata& metadata = mOp->mMetadata;
   const IndexOrObjectStoreId& objectStoreId = mOp->mObjectStoreId;
 
   AutoTArray<IndexUpdateInfo, 32> updateInfos;
   ErrorResult errorResult;
+  // XXX does this really need a non-const cloneInfo?
   IDBObjectStore::DeserializeIndexValueToUpdateInfos(
       metadata.id(), metadata.keyPath(), metadata.multiEntry(),
       metadata.locale(), cloneInfo, updateInfos, errorResult);
@@ -24127,7 +24138,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 
     // No changes needed, just return the original value.
     int32_t valueType;
-    rv = aValues->GetTypeOfIndex(1, &valueType);
+    nsresult rv = aValues->GetTypeOfIndex(1, &valueType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24167,7 +24178,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 
   Key key;
-  rv = key.SetFromValueArray(aValues, 0);
+  nsresult rv = key.SetFromValueArray(aValues, 0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25587,19 +25598,18 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
 
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    StructuredCloneReadInfo* cloneInfo = mResponse.AppendElement(fallible);
-    if (NS_WARN_IF(!cloneInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    auto cloneInfoOrErr = GetStructuredCloneReadInfoFromStatement(
+        &*stmt, 1, 0, *mDatabase->GetFileManager());
+    if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
+      return Err(cloneInfoOrErr.unwrapErr());
     }
 
-    rv = GetStructuredCloneReadInfoFromStatement(
-        &*stmt, 1, 0, *mDatabase->GetFileManager(), cloneInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (cloneInfo->mHasPreprocessInfo) {
+    if (cloneInfoOrErr.inspect().mHasPreprocessInfo) {
       mPreprocessInfoCount++;
+    }
+
+    if (NS_WARN_IF(!mResponse.EmplaceBack(fallible, cloneInfoOrErr.unwrap()))) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -26173,20 +26183,19 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    StructuredCloneReadInfo* cloneInfo = mResponse.AppendElement(fallible);
-    if (NS_WARN_IF(!cloneInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    auto cloneInfoOrErr = GetStructuredCloneReadInfoFromStatement(
+        &*stmt, 1, 0, *mDatabase->GetFileManager());
+    if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
+      return cloneInfoOrErr.unwrapErr();
     }
 
-    rv = GetStructuredCloneReadInfoFromStatement(
-        &*stmt, 1, 0, *mDatabase->GetFileManager(), cloneInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (cloneInfo->mHasPreprocessInfo) {
+    if (cloneInfoOrErr.inspect().mHasPreprocessInfo) {
       IDB_WARNING("Preprocessing for indexes not yet implemented!");
       return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    if (NS_WARN_IF(!mResponse.EmplaceBack(fallible, cloneInfoOrErr.unwrap()))) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
