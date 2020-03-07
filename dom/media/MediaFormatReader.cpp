@@ -99,6 +99,8 @@ void MediaFormatReader::ShutdownPromisePool::Track(
 }
 
 void MediaFormatReader::DecoderData::ShutdownDecoder() {
+  MOZ_ASSERT(mOwner->OnTaskQueue());
+
   MutexAutoLock lock(mMutex);
 
   if (!mDecoder) {
@@ -131,6 +133,8 @@ void MediaFormatReader::DecoderData::ShutdownDecoder() {
 }
 
 void MediaFormatReader::DecoderData::Flush() {
+  MOZ_ASSERT(mOwner->OnTaskQueue());
+
   if (mFlushing || mFlushed) {
     // Flush still pending or already flushed, nothing more to do.
     return;
