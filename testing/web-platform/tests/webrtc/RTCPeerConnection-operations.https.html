@@ -89,7 +89,68 @@ promise_test(async t => {
   assert_equals(await haveState, "rejected", "promise rejected on same task");
 }, "addIceCandidate must detect InvalidStateError synchronously when chain is empty");
 
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const transceiver = pc.addTransceiver("audio");
+  transceiver.stop();
+  const p = transceiver.sender.replaceTrack(null);
+  const haveState = promiseStateFinal(p);
+  try {
+    await p;
+    assert_unreached("Control. Must not succeed");
+  } catch (e) {
+    assert_equals(e.name, "InvalidStateError");
+  }
+  assert_equals(await haveState, "rejected", "promise rejected on same task");
+}, "replaceTrack must detect InvalidStateError synchronously when chain is empty and transceiver is stopped");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const transceiver = pc.addTransceiver("audio");
+  transceiver.stop();
+  const parameters = transceiver.sender.getParameters();
+  const p = transceiver.sender.setParameters(parameters);
+  const haveState = promiseStateFinal(p);
+  try {
+    await p;
+    assert_unreached("Control. Must not succeed");
+  } catch (e) {
+    assert_equals(e.name, "InvalidStateError");
+  }
+  assert_equals(await haveState, "rejected", "promise rejected on same task");
+}, "setParameters must detect InvalidStateError synchronously always when transceiver is stopped");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const {track} = new RTCPeerConnection().addTransceiver("audio").receiver;
+  assert_not_equals(track, null);
+  const p = pc.getStats(track);
+  const haveState = promiseStateFinal(p);
+  try {
+    await p;
+    assert_unreached("Control. Must not succeed");
+  } catch (e) {
+    assert_equals(e.name, "InvalidAccessError");
+  }
+  assert_equals(await haveState, "rejected", "promise rejected on same task");
+}, "pc.getStats must detect InvalidAccessError synchronously always");
+
 // Helper builds on above tests to check if operations queue is empty or not.
+//
+// Meaning of "empty": Because this helper uses the sloppy promiseStateFinal,
+// it purposely only detects operations on the chain that block the current run
+// of the event loop. In other words, it won't detect operations on the chain
+// that resolve on the emptying of the microtask queue at the end of this run
+// of the event loop.
+//
+// Specifically: It does not detect the negotiationneeded event which is now
+// fired from a chained synchronous function in the spec. It returns true
+// in that case if nothing else is on the chain. Tests below rely on
+// this behavior.
+
 async function isOperationsChainEmpty(pc) {
   let p, error;
   const signalingState = pc.signalingState;
@@ -138,7 +199,7 @@ promise_test(async t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const p = pc.createOffer();
-  assert_false(await isOperationsChainEmpty(pc), "Non-empty queue");
+  assert_false(await isOperationsChainEmpty(pc), "Non-empty chain");
   await p;
 }, "createOffer uses operations chain");
 
@@ -147,7 +208,7 @@ promise_test(async t => {
   t.add_cleanup(() => pc.close());
   await pc.setRemoteDescription(await pc.createOffer());
   const p = pc.createAnswer();
-  assert_false(await isOperationsChainEmpty(pc), "Non-empty queue");
+  assert_false(await isOperationsChainEmpty(pc), "Non-empty chain");
   await p;
 }, "createAnswer uses operations chain");
 
@@ -157,7 +218,7 @@ promise_test(async t => {
   const offer = await pc.createOffer();
   assert_true(await isOperationsChainEmpty(pc), "Empty before");
   const p = pc.setLocalDescription(offer);
-  assert_false(await isOperationsChainEmpty(pc), "Non-empty queue");
+  assert_false(await isOperationsChainEmpty(pc), "Non-empty chain");
   await p;
 }, "setLocalDescription uses operations chain");
 
@@ -167,7 +228,7 @@ promise_test(async t => {
   const offer = await pc.createOffer();
   assert_true(await isOperationsChainEmpty(pc), "Empty before");
   const p = pc.setRemoteDescription(offer);
-  assert_false(await isOperationsChainEmpty(pc), "Non-empty queue");
+  assert_false(await isOperationsChainEmpty(pc), "Non-empty chain");
   await p;
 }, "setRemoteDescription uses operations chain");
 
@@ -183,9 +244,70 @@ promise_test(async t => {
   const {candidate} = await new Promise(r => pc1.onicecandidate = r);
   await pc2.setRemoteDescription(offer);
   const p = pc2.addIceCandidate(candidate);
-  assert_false(await isOperationsChainEmpty(pc2), "Non-empty queue");
+  assert_false(await isOperationsChainEmpty(pc2), "Non-empty chain");
   await p;
 }, "addIceCandidate uses operations chain");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const transceiver = pc.addTransceiver("audio");
+  await new Promise(r => pc.onnegotiationneeded = r);
+  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  const p = transceiver.sender.replaceTrack(null);
+  assert_false(await isOperationsChainEmpty(pc), "Non-empty chain");
+  await p;
+}, "replaceTrack uses operations chain");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const transceiver = pc.addTransceiver("audio");
+  await new Promise(r => pc.onnegotiationneeded = r);
+  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  const parameters = transceiver.sender.getParameters();
+  const p = transceiver.sender.setParameters(parameters);
+  const haveState = promiseStateFinal(p);
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
+  assert_equals(await haveState, "pending", "Method is async");
+  await p;
+}, "setParameters does NOT use the operations chain");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const p = pc.getStats();
+  const haveState = promiseStateFinal(p);
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
+  assert_equals(await haveState, "pending", "Method is async");
+  await p;
+}, "pc.getStats does NOT use the operations chain");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const {sender} = pc.addTransceiver("audio");
+  await new Promise(r => pc.onnegotiationneeded = r);
+  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  const p = sender.getStats();
+  const haveState = promiseStateFinal(p);
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
+  assert_equals(await haveState, "pending", "Method is async");
+  await p;
+}, "sender.getStats does NOT use the operations chain");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const {receiver} = pc.addTransceiver("audio");
+  await new Promise(r => pc.onnegotiationneeded = r);
+  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  const p = receiver.getStats();
+  const haveState = promiseStateFinal(p);
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
+  assert_equals(await haveState, "pending", "Method is async");
+  await p;
+}, "receiver.getStats does NOT use the operations chain");
 
 promise_test(async t => {
   const pc1 = new RTCPeerConnection();
