@@ -13,7 +13,6 @@ author: Jordan Lund
 
 """
 
-import copy
 import sys
 import os
 
@@ -23,13 +22,12 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 import mozharness.base.script as script
 from mozharness.mozilla.building.buildbase import BUILD_BASE_CONFIG_OPTIONS, \
     BuildingConfig, BuildScript
-from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
 
 
-class FxDesktopBuild(BuildScript, TryToolsMixin, object):
+class FxDesktopBuild(BuildScript, object):
     def __init__(self):
         buildscript_kwargs = {
-            'config_options': BUILD_BASE_CONFIG_OPTIONS + copy.deepcopy(try_config_options),
+            'config_options': BUILD_BASE_CONFIG_OPTIONS,
             'all_actions': [
                 'get-secrets',
                 'clobber',
@@ -89,10 +87,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         return self.abs_dirs
 
         # Actions {{{2
-
-    def set_extra_try_arguments(self, action, success=None):
-        """ Override unneeded method from TryToolsMixin """
-        pass
 
     @script.PreScriptRun
     def suppress_windows_modal_dialogs(self, *args, **kwargs):
