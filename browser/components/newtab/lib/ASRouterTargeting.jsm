@@ -4,6 +4,8 @@
 
 const SEARCH_REGION_PREF = "browser.search.region";
 const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
+const DISTRIBUTION_ID_PREF = "distribution.id";
+const DISTRIBUTION_ID_CHINA_REPACK = "MozillaOnline";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -554,6 +556,14 @@ const TargetingGetters = {
   },
   get scoreThreshold() {
     return ASRouterPreferences.personalizedCfrThreshold;
+  },
+  get isChinaRepack() {
+    return (
+      Services.prefs
+        .getDefaultBranch(null)
+        .getCharPref(DISTRIBUTION_ID_PREF, "default") ===
+      DISTRIBUTION_ID_CHINA_REPACK
+    );
   },
 };
 

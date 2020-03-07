@@ -987,3 +987,50 @@ add_task(async function checkPatternsValid() {
     Assert.ok(new MatchPatternSet(message.trigger.patterns));
   }
 });
+
+add_task(async function check_isChinaRepack() {
+  const prefDefaultBranch = Services.prefs.getDefaultBranch("distribution.");
+  const messages = [
+    { id: "msg_for_china_repack", targeting: "isChinaRepack == true" },
+    { id: "msg_for_everyone_else", targeting: "isChinaRepack == false" },
+  ];
+
+  is(
+    await ASRouterTargeting.Environment.isChinaRepack,
+    false,
+    "Fx w/o partner repack info set is not China repack"
+  );
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages })).id,
+    "msg_for_everyone_else",
+    "should select the message for non China repack users"
+  );
+
+  prefDefaultBranch.setCharPref("id", "MozillaOnline");
+
+  is(
+    await ASRouterTargeting.Environment.isChinaRepack,
+    true,
+    "Fx with `distribution.id` set to `MozillaOnline` is China repack"
+  );
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages })).id,
+    "msg_for_china_repack",
+    "should select the message for China repack users"
+  );
+
+  prefDefaultBranch.setCharPref("id", "Example");
+
+  is(
+    await ASRouterTargeting.Environment.isChinaRepack,
+    false,
+    "Fx with `distribution.id` set to other string is not China repack"
+  );
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages })).id,
+    "msg_for_everyone_else",
+    "should select the message for non China repack users"
+  );
+
+  prefDefaultBranch.deleteBranch("");
+});
