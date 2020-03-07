@@ -10,10 +10,9 @@ UPLOAD_DIR=$HOME/artifacts
 
 cd $GECKO_PATH
 export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:$HOME/.cargo/bin
-cargo install --version 0.1.23 cargo-vendor
 cd gfx/wr/
 mkdir .cargo
-cargo-vendor vendor --relative-path --sync ./Cargo.toml > .cargo/config
+cargo vendor --sync ./Cargo.toml > .cargo/config
 mkdir wrench-deps
 mv vendor .cargo wrench-deps/
 mkdir wrench-deps/cargo-apk
