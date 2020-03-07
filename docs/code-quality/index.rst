@@ -138,7 +138,7 @@ In this document, we try to list these all tools.
      - Upstream
    * - Infer
      -
-     - `bug 1175203 <https://bugzilla.mozilla.org/show_bug.cgi?id=1175203`_
+     - `bug 1175203 <https://bugzilla.mozilla.org/show_bug.cgi?id=1175203>`_
      -
      - https://github.com/facebook/infer
 
