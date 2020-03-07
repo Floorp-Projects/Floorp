@@ -1565,6 +1565,7 @@ package org.mozilla.geckoview {
 
   public class WebExtension.MetaData {
     ctor protected MetaData();
+    field public final boolean allowedInPrivateBrowsing;
     field @NonNull public final String baseUrl;
     field public final int blocklistState;
     field @Nullable public final String creatorName;
@@ -1643,6 +1644,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable @Deprecated public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
+    method @NonNull @AnyThread public GeckoResult<WebExtension> setAllowedInPrivateBrowsing(@NonNull WebExtension, boolean);
     method @UiThread public void setDebuggerDelegate(@NonNull WebExtensionController.DebuggerDelegate);
     method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @AnyThread public void setTabActive(@NonNull GeckoSession, boolean);

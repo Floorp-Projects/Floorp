@@ -93,6 +93,7 @@ GeckoViewStartup.prototype = {
             "GeckoView:WebExtension:List",
             "GeckoView:WebExtension:PortDisconnect",
             "GeckoView:WebExtension:PortMessageFromApp",
+            "GeckoView:WebExtension:SetPBAllowed",
             "GeckoView:WebExtension:Uninstall",
             "GeckoView:WebExtension:Update",
           ],
