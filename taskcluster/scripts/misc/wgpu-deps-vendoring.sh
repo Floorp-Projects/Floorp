@@ -10,10 +10,9 @@ UPLOAD_DIR=$HOME/artifacts
 
 cd $GECKO_PATH
 export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:$HOME/.cargo/bin
-cargo install --version 0.1.23 cargo-vendor
 cd gfx/wgpu/
 mkdir .cargo
-cargo-vendor vendor --relative-path --sync ./Cargo.toml > .cargo/config
+cargo vendor --sync ./Cargo.toml > .cargo/config
 mkdir wgpu-deps
 mv vendor .cargo wgpu-deps/
 mkdir wgpu-deps/cargo-apk
