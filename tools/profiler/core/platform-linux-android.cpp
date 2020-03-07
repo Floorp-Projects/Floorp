@@ -406,9 +406,17 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
   // the signal ourselves instead of relying on itimer provides much better
   // accuracy.
-  if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
+  //
+  // N_STACK_BYTES are needed to store backtrace information, so use that plus
+  // some extra as the minimum stack size for the sampler thread to ensure that
+  // it doesn't overflow.
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr) != 0 ||
+      pthread_attr_setstacksize(&attr, lul::N_STACK_BYTES + 20 * 1024) != 0 ||
+      pthread_create(&mThread, &attr, ThreadEntry, this) != 0) {
     MOZ_CRASH("pthread_create failed");
   }
+  pthread_attr_destroy(&attr);
 }
 
 SamplerThread::~SamplerThread() {
