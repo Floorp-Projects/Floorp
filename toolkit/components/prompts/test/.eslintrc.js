@@ -1,14 +1,12 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/mochitest-test"
-  ],
-  "globals": {
-    "Assert": true,
+  extends: ["plugin:mozilla/mochitest-test"],
+  globals: {
+    Assert: true,
   },
-  "rules": {
+  rules: {
     // ownerGlobal doesn't exist in content privileged windows.
     "mozilla/use-ownerGlobal": "off",
-  }
+  },
 };

@@ -2,11 +2,11 @@
 
 module.exports = {
   env: {
-    "jquery": true
+    jquery: true,
   },
   globals: {
-    "apply": true,
-    "applyChunks": true,
-    "tasks": true
-  }
+    apply: true,
+    applyChunks: true,
+    tasks: true,
+  },
 };

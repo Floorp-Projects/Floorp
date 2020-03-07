@@ -1,64 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 module.exports = {
-  "parser": "babel-eslint",
-  "plugins": [
+  parser: "babel-eslint",
+  plugins: [
     "react",
     "mozilla",
     "flowtype",
     "babel",
     "prettier",
     "import",
-    "file-header"
+    "file-header",
   ],
-  "globals": {
-    "atob": true,
-    "btoa": true,
-    "Cc": true,
-    "Ci": true,
-    "Components": true,
-    "console": true,
-    "Cr": true,
-    "Cu": true,
-    "devtools": true,
-    "dump": true,
-    "EventEmitter": true,
-    "isWorker": true,
-    "loader": true,
-    "reportError": true,
-    "Services": true,
-    "Task": true,
-    "XPCNativeWrapper": true,
-    "XPCOMUtils": true,
-    "_Iterator": true,
-    "__dirname": true,
-    "process": true,
-    "global": true,
-    "L10N": true
+  globals: {
+    atob: true,
+    btoa: true,
+    Cc: true,
+    Ci: true,
+    Components: true,
+    console: true,
+    Cr: true,
+    Cu: true,
+    devtools: true,
+    dump: true,
+    EventEmitter: true,
+    isWorker: true,
+    loader: true,
+    reportError: true,
+    Services: true,
+    Task: true,
+    XPCNativeWrapper: true,
+    XPCOMUtils: true,
+    _Iterator: true,
+    __dirname: true,
+    process: true,
+    global: true,
+    L10N: true,
   },
-  "extends": [
+  extends: [
     "prettier",
     "prettier/flowtype",
     "prettier/react",
-    "plugin:jest/recommended"
+    "plugin:jest/recommended",
   ],
-  "parserOptions": {
-    "ecmaVersion": 2016,
-    "sourceType": "module",
-    "ecmaFeatures": { "jsx": true },
+  parserOptions: {
+    ecmaVersion: 2016,
+    sourceType: "module",
+    ecmaFeatures: { jsx: true },
 
     // When the linter runs from the MC root, it won't pick up this project's
     // babel.config.js, so we explicitly set Babel's root location so that
     // it knows where to look.
-    "babelOptions": {
-      "root": __dirname,
+    babelOptions: {
+      root: __dirname,
     },
   },
-  "env": {
-    "es6": true,
-    "browser": true,
-    "commonjs": true,
-    "jest": true
+  env: {
+    es6: true,
+    browser: true,
+    commonjs: true,
+    jest: true,
   },
-  "rules": {
+  rules: {
     // These are the rules that have been configured so far to match the
     // devtools coding style.
 
@@ -81,8 +85,8 @@ module.exports = {
     "react/sort-comp": [
       1,
       {
-        order: ["propTypes", "everything-else", "render"]
-      }
+        order: ["propTypes", "everything-else", "render"],
+      },
     ],
 
     // Check for import errors.
@@ -100,9 +104,9 @@ module.exports = {
     // since only let and const are used, see "no-var").
     "block-scoped-var": 2,
     // Require camel case names
-    "camelcase": ["error", { "properties": "never" }],
+    camelcase: ["error", { properties: "never" }],
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", { "max": 22 }],
+    complexity: ["error", { max: 22 }],
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": 0,
@@ -113,7 +117,7 @@ module.exports = {
     "dot-notation": 2,
     // Allow using == instead of ===, in the interest of landing something since
     // the devtools codebase is split on convention here.
-    "eqeqeq": 0,
+    eqeqeq: 0,
     // Don't require function expressions to have a name.
     // This makes the code more verbose and hard to read. Our engine already
     // does a fantastic job assigning a name to the function, which includes
@@ -139,7 +143,7 @@ module.exports = {
     // Require a capital letter for constructors, only check if all new
     // operators are followed by a capital letter. Don't warn when capitalized
     // functions are used without the new operator.
-    "new-cap": [2, { "capIsNew": false }],
+    "new-cap": [2, { capIsNew: false }],
     // Disallow use of the Array constructor.
     "no-array-constructor": 2,
     // Allow use of bitwise operators.
@@ -211,9 +215,9 @@ module.exports = {
     "prefer-const": [
       "error",
       {
-        "destructuring": "all",
-        "ignoreReadBeforeAssign": false
-      }
+        destructuring: "all",
+        ignoreReadBeforeAssign: false,
+      },
     ],
     // Disallow reassignments of native objects.
     "no-native-reassign": 2,
@@ -283,7 +287,7 @@ module.exports = {
     // statement.
     "no-unreachable": 2,
     // Disallow global and local variables that arent used, but allow unused function arguments.
-    "no-unused-vars": [2, { "vars": "all", "args": "none" }],
+    "no-unused-vars": [2, { vars: "all", args: "none" }],
     // Allow using variables before they are defined.
     "no-use-before-define": 0,
     // We use var-only-at-top-level instead of no-var as we allow top level
@@ -300,12 +304,12 @@ module.exports = {
     // Allow more than one variable declaration per function.
     "one-var": 0,
     // Require use of the second argument for parseInt().
-    "radix": 2,
+    radix: 2,
     // Dont require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": 0,
     // Require "use strict" to be defined globally in the script.
-    "strict": [2, "global"],
+    strict: [2, "global"],
     // Disallow comparisons with the value NaN.
     "use-isnan": 2,
     // Warn about invalid JSDoc comments.
@@ -318,7 +322,7 @@ module.exports = {
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": 0,
     // Disallow Yoda conditions (where literal value comes first).
-    "yoda": 2,
+    yoda: 2,
 
     // And these are the rules that haven't been discussed so far, and that are
     // disabled for now until we introduce them, one at a time.
@@ -382,12 +386,11 @@ module.exports = {
       [
         "This Source Code Form is subject to the terms of the Mozilla Public",
         "License, v. 2.0. If a copy of the MPL was not distributed with this",
-        "file, You can obtain one at <http://mozilla.org/MPL/2.0/>."
+        "file, You can obtain one at <http://mozilla.org/MPL/2.0/>.",
       ],
       "block",
-      ["-\\*-(.*)-\\*-", "eslint(.*)", "vim(.*)"]
+      ["-\\*-(.*)-\\*-", "eslint(.*)", "vim(.*)"],
     ],
     "consistent-return": "off",
-
-  }
-}
+  },
+};

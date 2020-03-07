@@ -1,22 +1,20 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "webextensions": true,
+  env: {
+    webextensions: true,
   },
 
   globals: {
-    "getTestConfig": false,
-    "startMark": true,
-    "endMark": true,
-    "name": true,
+    getTestConfig: false,
+    startMark: true,
+    endMark: true,
+    name: true,
   },
 
-  "plugins": [
-    "mozilla"
-  ],
+  plugins: ["mozilla"],
 
-  "rules": {
-    "mozilla/avoid-Date-timing": "error"
-  }
+  rules: {
+    "mozilla/avoid-Date-timing": "error",
+  },
 };

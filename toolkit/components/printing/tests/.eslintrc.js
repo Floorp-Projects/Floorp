@@ -1,8 +1,5 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/chrome-test",
-    "plugin:mozilla/browser-test"
-  ],
+  extends: ["plugin:mozilla/chrome-test", "plugin:mozilla/browser-test"],
 };

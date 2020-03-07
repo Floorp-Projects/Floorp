@@ -1,12 +1,12 @@
 "use strict";
 
 module.exports = {
-  "globals": {
+  globals: {
     // JS files in this folder are commonly xpcshell scripts where |arguments|
     // is defined in the global scope.
-    "arguments": false
+    arguments: false,
   },
-  "rules": {
+  rules: {
     // Enforce return statements in callbacks of array methods.
     "array-callback-return": "error",
 
@@ -27,7 +27,7 @@ module.exports = {
     "no-console": "error",
 
     // Disallow constant expressions in conditions (except for loops).
-    "no-constant-condition": ["error", { "checkLoops": false }],
+    "no-constant-condition": ["error", { checkLoops: false }],
 
     // Disallow extending of native objects.
     "no-extend-native": "error",
@@ -58,16 +58,19 @@ module.exports = {
     "no-useless-escape": "error",
 
     // Require "use strict" to be defined globally in the script.
-    "strict": ["error", "global"],
+    strict: ["error", "global"],
 
     // Enforce valid JSDoc comments.
-    "valid-jsdoc": ["error", {
-      "requireParamDescription": false,
-      "requireReturn": false,
-      "requireReturnDescription": false,
-    }],
+    "valid-jsdoc": [
+      "error",
+      {
+        requireParamDescription: false,
+        requireReturn: false,
+        requireReturnDescription: false,
+      },
+    ],
 
     // Disallow Yoda conditions.
-    "yoda": ["error", "never"],
-  }
+    yoda: ["error", "never"],
+  },
 };

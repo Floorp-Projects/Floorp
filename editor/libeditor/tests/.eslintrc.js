@@ -1,16 +1,11 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/browser-test",
-    "plugin:mozilla/mochitest-test",
-  ],
+  extends: ["plugin:mozilla/browser-test", "plugin:mozilla/mochitest-test"],
 
-  "plugins": [
-    "no-unsanitized",
-  ],
+  plugins: ["no-unsanitized"],
 
-  "rules": {
+  rules: {
     "no-unsanitized/property": "off",
   },
 };

@@ -1,17 +1,13 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/mochitest-test",
-  ],
-  "plugins": [
-    "mozilla"
-  ],
-  "rules": {
+  extends: ["plugin:mozilla/mochitest-test"],
+  plugins: ["mozilla"],
+  rules: {
     "no-shadow": "off",
   },
-  "globals": {
-    "AbortController": true,
-    "AbortSignal": true
-  }
+  globals: {
+    AbortController: true,
+    AbortSignal: true,
+  },
 };

@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-  "rules": {
+  rules: {
     "no-shadow": "off",
-  }
+  },
 };

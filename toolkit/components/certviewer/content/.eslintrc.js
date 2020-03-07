@@ -1,13 +1,13 @@
 module.exports = {
-  "parserOptions": {
-    "sourceType": "module",
+  parserOptions: {
+    sourceType: "module",
   },
-  "env": {
-    "node": true
+  env: {
+    node: true,
   },
-  "globals": {
-    "asn1js": true,
-    "pvutils": true,
-    "pkijs": true,
+  globals: {
+    asn1js: true,
+    pvutils: true,
+    pkijs: true,
   },
-}
+};

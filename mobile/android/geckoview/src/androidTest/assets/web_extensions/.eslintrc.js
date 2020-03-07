@@ -1,14 +1,14 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "webextensions": true,
+  env: {
+    webextensions: true,
   },
-  "globals": {
-    "ExtensionAPI": true,
+  globals: {
+    ExtensionAPI: true,
     // available to frameScripts
-    "addMessageListener": false,
-    "content": false,
-    "sendAsyncMessage": false,
-  }
+    addMessageListener: false,
+    content: false,
+    sendAsyncMessage: false,
+  },
 };

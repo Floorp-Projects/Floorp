@@ -1,5 +1,5 @@
 "use strict";
 
 module.exports = {
-  "extends": "../.eslintrc.mocha.js"
+  extends: "../.eslintrc.mocha.js",
 };

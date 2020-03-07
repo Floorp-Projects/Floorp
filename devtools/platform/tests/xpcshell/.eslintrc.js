@@ -1,11 +1,9 @@
 // Parent config file for all devtools xpcshell files.
 module.exports = {
-  "extends": [
-    "plugin:mozilla/xpcshell-test"
-  ],
-  "rules": {
+  extends: ["plugin:mozilla/xpcshell-test"],
+  rules: {
     // Allow non-camelcase so that run_test doesn't produce a warning.
-    "camelcase": "off",
+    camelcase: "off",
     // Allow using undefined variables so that tests can refer to functions
     // and variables defined in head.js files, without having to maintain a
     // list of globals in each .eslintrc file.
@@ -15,5 +13,5 @@ module.exports = {
     "block-scoped-var": "off",
     // Tests can always import anything.
     "mozilla/reject-some-requires": "off",
-  }
-}
+  },
+};

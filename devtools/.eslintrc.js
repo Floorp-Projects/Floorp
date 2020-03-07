@@ -1,155 +1,153 @@
 "use strict";
 
 module.exports = {
-  "plugins": [
-    "react"
-  ],
-  "globals": {
-    "exports": true,
-    "isWorker": true,
-    "loader": true,
-    "module": true,
-    "reportError": true,
-    "require": true,
+  plugins: ["react"],
+  globals: {
+    exports: true,
+    isWorker: true,
+    loader: true,
+    module: true,
+    reportError: true,
+    require: true,
   },
-  "overrides": [{
-    "files": [
-      "client/framework/**",
-    ],
-    "rules": {
-      "no-return-assign": "off",
-    }
-  }, {
-    "files": [
-      "client/shared/*.jsm",
-    ],
-    "rules": {
-      "camelcase": "off",
-    }
-  }, {
-    "files": [
-      "client/framework/**",
-      "client/shared/*.jsm",
-      "client/shared/widgets/*.jsm",
-      "client/storage/VariablesView.jsm",
-    ],
-    "rules": {
-      "consistent-return": "off",
-    }
-  }, {
-    "files": [
-      "client/framework/**",
-    ],
-    "rules": {
-      "max-nested-callbacks": "off",
-    }
-  }, {
-    "files": [
-      "client/framework/**",
-      "client/shared/*.jsm",
-      "client/shared/widgets/*.jsm",
-      "client/storage/VariablesView.jsm",
-      "shared/webconsole/test/chrome/*.html",
-    ],
-    "rules": {
-      "mozilla/no-aArgs": "off",
-    }
-  }, {
-    "files": [
-      "client/framework/test/**",
-    ],
-    "rules": {
-      "mozilla/var-only-at-top-level": "off",
-    }
-  }, {
-    "files": [
-      "client/framework/**",
-      "client/shared/widgets/*.jsm",
-      "client/storage/VariablesView.jsm",
-    ],
-    "rules": {
-      "no-shadow": "off",
-    }
-  }, {
-    "files": [
-      "client/framework/**",
-    ],
-    "rules": {
-      "strict": "off",
-    }
-  }, {
-    // For all head*.js files, turn off no-unused-vars at a global level
-    "files": [
-      "**/head*.js",
-    ],
-    "rules": {
-      "no-unused-vars": ["error", {"args": "none", "vars": "local"}],
-    }
-  }, {
-    // For all server files, prevent requiring devtools/client modules.
-    "files": [
-      "server/**",
-      // The rule also applies to all `shared` files, with the exception of
-      // shared/fronts.
-      // This first pattern matches files in a shared subfolder other than "fronts".
-      "shared/!(fronts)/**",
-      // This second pattern matches files directly under shared.
-      "shared/*.**",
-    ],
-    "rules": {
-      "mozilla/reject-some-requires": ["error", "^(resource\://)?devtools/client"],
-    }
-  }, {
-    // Cu, Cc etc... are not available in most devtools modules loaded by require.
-    "files": [
-      "**"
-    ],
-    "excludedFiles": [
-      // Enable the rule on JSM, test head files and some specific files.
-      "**/*.jsm",
-      "**/test/**/head.js",
-      "**/test/**/shared-head.js",
-      "client/debugger/test/mochitest/code_frame-script.js",
-      "client/inspector/animation-old/test/doc_frame_script.js",
-      "client/inspector/animation/test/doc_frame_script.js",
-      "client/inspector/rules/test/doc_frame_script.js",
-      "client/inspector/shared/test/doc_frame_script.js",
-      "client/jsonview/converter-observer.js",
-      "client/jsonview/test/doc_frame_script.js",
-      "client/responsive.html/browser/content.js",
-      "client/shared/browser-loader.js",
-      "server/actors/webconsole/content-process-forward.js",
-      "server/actors/worker/service-worker-process.js",
-      "server/startup/content-process.js",
-      "server/startup/frame.js",
-      "shared/base-loader.js",
-      "shared/worker/loader.js",
-      "startup/aboutdebugging-registration.js",
-      "startup/aboutdevtools/aboutdevtools-registration.js",
-      "startup/aboutdevtoolstoolbox-registration.js",
-      "startup/devtools-startup.js",
-    ],
-    "rules": {
-      "mozilla/no-define-cc-etc": "off",
-    }
-  }, {
-    // All DevTools files should avoid relative paths.
-    "files": [
-      "**"
-    ],
-    "excludedFiles": [
-      // Debugger modules have a custom bundling logic which relies on relative
-      // paths.
-      "client/debugger/**",
-      // `client/shared/build` contains node helpers to build the debugger and
-      // not devtools modules.
-      "client/shared/build/**",
-    ],
-    "rules": {
-      "mozilla/reject-relative-requires": "error",
-    }
-  }],
-  "rules": {
+  overrides: [
+    {
+      files: ["client/framework/**"],
+      rules: {
+        "no-return-assign": "off",
+      },
+    },
+    {
+      files: ["client/shared/*.jsm"],
+      rules: {
+        camelcase: "off",
+      },
+    },
+    {
+      files: [
+        "client/framework/**",
+        "client/shared/*.jsm",
+        "client/shared/widgets/*.jsm",
+        "client/storage/VariablesView.jsm",
+      ],
+      rules: {
+        "consistent-return": "off",
+      },
+    },
+    {
+      files: ["client/framework/**"],
+      rules: {
+        "max-nested-callbacks": "off",
+      },
+    },
+    {
+      files: [
+        "client/framework/**",
+        "client/shared/*.jsm",
+        "client/shared/widgets/*.jsm",
+        "client/storage/VariablesView.jsm",
+        "shared/webconsole/test/chrome/*.html",
+      ],
+      rules: {
+        "mozilla/no-aArgs": "off",
+      },
+    },
+    {
+      files: ["client/framework/test/**"],
+      rules: {
+        "mozilla/var-only-at-top-level": "off",
+      },
+    },
+    {
+      files: [
+        "client/framework/**",
+        "client/shared/widgets/*.jsm",
+        "client/storage/VariablesView.jsm",
+      ],
+      rules: {
+        "no-shadow": "off",
+      },
+    },
+    {
+      files: ["client/framework/**"],
+      rules: {
+        strict: "off",
+      },
+    },
+    {
+      // For all head*.js files, turn off no-unused-vars at a global level
+      files: ["**/head*.js"],
+      rules: {
+        "no-unused-vars": ["error", { args: "none", vars: "local" }],
+      },
+    },
+    {
+      // For all server files, prevent requiring devtools/client modules.
+      files: [
+        "server/**",
+        // The rule also applies to all `shared` files, with the exception of
+        // shared/fronts.
+        // This first pattern matches files in a shared subfolder other than "fronts".
+        "shared/!(fronts)/**",
+        // This second pattern matches files directly under shared.
+        "shared/*.**",
+      ],
+      rules: {
+        "mozilla/reject-some-requires": [
+          "error",
+          "^(resource://)?devtools/client",
+        ],
+      },
+    },
+    {
+      // Cu, Cc etc... are not available in most devtools modules loaded by require.
+      files: ["**"],
+      excludedFiles: [
+        // Enable the rule on JSM, test head files and some specific files.
+        "**/*.jsm",
+        "**/test/**/head.js",
+        "**/test/**/shared-head.js",
+        "client/debugger/test/mochitest/code_frame-script.js",
+        "client/inspector/animation-old/test/doc_frame_script.js",
+        "client/inspector/animation/test/doc_frame_script.js",
+        "client/inspector/rules/test/doc_frame_script.js",
+        "client/inspector/shared/test/doc_frame_script.js",
+        "client/jsonview/converter-observer.js",
+        "client/jsonview/test/doc_frame_script.js",
+        "client/responsive.html/browser/content.js",
+        "client/shared/browser-loader.js",
+        "server/actors/webconsole/content-process-forward.js",
+        "server/actors/worker/service-worker-process.js",
+        "server/startup/content-process.js",
+        "server/startup/frame.js",
+        "shared/base-loader.js",
+        "shared/worker/loader.js",
+        "startup/aboutdebugging-registration.js",
+        "startup/aboutdevtools/aboutdevtools-registration.js",
+        "startup/aboutdevtoolstoolbox-registration.js",
+        "startup/devtools-startup.js",
+      ],
+      rules: {
+        "mozilla/no-define-cc-etc": "off",
+      },
+    },
+    {
+      // All DevTools files should avoid relative paths.
+      files: ["**"],
+      excludedFiles: [
+        // Debugger modules have a custom bundling logic which relies on relative
+        // paths.
+        "client/debugger/**",
+        // `client/shared/build` contains node helpers to build the debugger and
+        // not devtools modules.
+        "client/shared/build/**",
+      ],
+      rules: {
+        "mozilla/reject-relative-requires": "error",
+      },
+    },
+  ],
+  rules: {
     // These are the rules that have been configured so far to match the
     // devtools coding style.
 
@@ -160,9 +158,12 @@ module.exports = {
     // devtools/shared/platform is special; see the README.md in that
     // directory for details.  We reject requires using explicit
     // subdirectories of this directory.
-    "mozilla/reject-some-requires": ["error", "^devtools/shared/platform/(chome|content)/"],
+    "mozilla/reject-some-requires": [
+      "error",
+      "^devtools/shared/platform/(chome|content)/",
+    ],
     "mozilla/var-only-at-top-level": "error",
-    "mozilla/use-chromeutils-import": ["error", {allowCu: true}],
+    "mozilla/use-chromeutils-import": ["error", { allowCu: true }],
 
     // Rules from the React plugin
     "react/display-name": "error",
@@ -173,49 +174,47 @@ module.exports = {
     "react/no-unknown-property": "error",
     "react/prefer-es6-class": ["off", "always"],
     "react/prop-types": "error",
-    "react/sort-comp": ["error", {
-      order: [
-        "static-methods",
-        "lifecycle",
-        "everything-else",
-        "render"
-      ],
-      groups: {
-        lifecycle: [
-          "displayName",
-          "propTypes",
-          "contextTypes",
-          "childContextTypes",
-          "mixins",
-          "statics",
-          "defaultProps",
-          "constructor",
-          "getDefaultProps",
-          "getInitialState",
-          "state",
-          "getChildContext",
-          "componentWillMount",
-          "componentDidMount",
-          "componentWillReceiveProps",
-          "shouldComponentUpdate",
-          "componentWillUpdate",
-          "componentDidUpdate",
-          "componentWillUnmount"
-        ]
-      }
-    }],
+    "react/sort-comp": [
+      "error",
+      {
+        order: ["static-methods", "lifecycle", "everything-else", "render"],
+        groups: {
+          lifecycle: [
+            "displayName",
+            "propTypes",
+            "contextTypes",
+            "childContextTypes",
+            "mixins",
+            "statics",
+            "defaultProps",
+            "constructor",
+            "getDefaultProps",
+            "getInitialState",
+            "state",
+            "getChildContext",
+            "componentWillMount",
+            "componentDidMount",
+            "componentWillReceiveProps",
+            "shouldComponentUpdate",
+            "componentWillUpdate",
+            "componentDidUpdate",
+            "componentWillUnmount",
+          ],
+        },
+      },
+    ],
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
     "block-scoped-var": "error",
     // Require camel case names
-    "camelcase": ["error", { "properties": "never" }],
+    camelcase: ["error", { properties: "never" }],
     // Warn about cyclomatic complexity in functions.
     // 20 is ESLint's default, and we want to keep it this way to prevent new highly
     // complex functions from being introduced. However, because Mozilla's eslintrc has
     // some other value defined, we need to override it here. See bug 1553449 for more
     // information on complex DevTools functions that are currently excluded.
-    "complexity": ["error", 20],
+    complexity: ["error", 20],
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": "off",
@@ -224,7 +223,7 @@ module.exports = {
     "default-case": "off",
     // Allow using == instead of ===, in the interest of landing something since
     // the devtools codebase is split on convention here.
-    "eqeqeq": "off",
+    eqeqeq: "off",
     // Don't require function expressions to have a name.
     // This makes the code more verbose and hard to read. Our engine already
     // does a fantastic job assigning a name to the function, which includes
@@ -245,7 +244,7 @@ module.exports = {
     // Require a capital letter for constructors, only check if all new
     // operators are followed by a capital letter. Don't warn when capitalized
     // functions are used without the new operator.
-    "new-cap": ["error", {"capIsNew": false}],
+    "new-cap": ["error", { capIsNew: false }],
     // Allow use of bitwise operators.
     "no-bitwise": "off",
     // Allow using the console API.
@@ -291,10 +290,13 @@ module.exports = {
     // Don't restrict usage of specified node modules (not a node environment).
     "no-restricted-modules": "off",
     // Prevent using some properties
-    "no-restricted-properties": ["error", {
-      "property": "setupInParent",
-      "message": "avoid child/parent communication with setupInParent"
-    }],
+    "no-restricted-properties": [
+      "error",
+      {
+        property: "setupInParent",
+        message: "avoid child/parent communication with setupInParent",
+      },
+    ],
     // Disallow use of assignment in return statement. It is preferable for a
     // single line of code to have only one easily predictable effect.
     "no-return-assign": "error",
@@ -316,7 +318,7 @@ module.exports = {
     "no-undefined": "off",
     // Disallow global and local variables that aren't used, but allow unused
     // function arguments.
-    "no-unused-vars": ["error", {"args": "none", "vars": "all"}],
+    "no-unused-vars": ["error", { args: "none", vars: "all" }],
     // Allow using variables before they are defined.
     "no-use-before-define": "off",
     // We use var-only-at-top-level instead of no-var as we allow top level
@@ -331,14 +333,14 @@ module.exports = {
     // Allow more than one variable declaration per function.
     "one-var": "off",
     // Enforce using `let` only when variables are reassigned.
-    "prefer-const": ["error", { "destructuring": "all" }],
+    "prefer-const": ["error", { destructuring: "all" }],
     // Require use of the second argument for parseInt().
-    "radix": "error",
+    radix: "error",
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
     // Require "use strict" to be defined globally in the script.
-    "strict": ["error", "global"],
+    strict: ["error", "global"],
     // Warn about invalid JSDoc comments.
     // Disabled for now because of https://github.com/eslint/eslint/issues/2270
     // The rule fails on some jsdoc comments like in:
@@ -347,7 +349,7 @@ module.exports = {
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": "off",
     // Disallow Yoda conditions (where literal value comes first).
-    "yoda": "error",
+    yoda: "error",
 
     // And these are the rules that haven't been discussed so far, and that are
     // disabled for now until we introduce them, one at a time.
@@ -398,5 +400,5 @@ module.exports = {
     // require assignment operator shorthand where possible or prohibit it
     // entirely
     "operator-assignment": "off",
-  }
+  },
 };

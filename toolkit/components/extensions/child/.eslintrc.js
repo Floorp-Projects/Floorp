@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-  "globals": {
-    "EventManager": true,
+  globals: {
+    EventManager: true,
   },
 };
