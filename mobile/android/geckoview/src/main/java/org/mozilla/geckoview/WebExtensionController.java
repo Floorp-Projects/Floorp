@@ -492,6 +492,35 @@ public class WebExtensionController {
         });
     }
 
+    /**
+     * Set whether an extension should be allowed to run in private browsing or not.
+     *
+     * @param extension the {@link WebExtension} instance to modify.
+     * @param allowed true if this extension should be allowed to run in private browsing pages,
+     *                false otherwise.
+     * @return the updated {@link WebExtension} instance.
+     */
+    @NonNull
+    @AnyThread
+    public GeckoResult<WebExtension> setAllowedInPrivateBrowsing(
+            final @NonNull WebExtension extension,
+            final boolean allowed) {
+        final WebExtensionController.WebExtensionResult result =
+                new WebExtensionController.WebExtensionResult("extension");
+
+        final GeckoBundle bundle = new GeckoBundle(2);
+        bundle.putString("extensionId", extension.id);
+        bundle.putBoolean("allowed", allowed);
+
+        EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:SetPBAllowed",
+                bundle, result);
+
+        return result.then(newExtension -> {
+            registerWebExtension(newExtension);
+            return GeckoResult.fromValue(newExtension);
+        });
+    }
+
     // TODO: Bug 1601067 make public
     GeckoResult<WebExtension> installBuiltIn(final String uri) {
         final WebExtensionResult result = new WebExtensionResult("extension");
