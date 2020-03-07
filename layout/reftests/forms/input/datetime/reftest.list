@@ -11,7 +11,7 @@ defaults pref(dom.forms.datetime,true)
 
 # content should not overflow on small width/height
 == time-small-width.html time-small-width-ref.html
-== time-small-height.html time-small-height-ref.html
+fuzzy-if(!nativeThemePref,25-25,2-2) == time-small-height.html time-small-height-ref.html # Minor outline 1px shift
 == time-small-width-height.html time-small-width-height-ref.html
 
 # content (text) should be left aligned
