@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<style>
+  @keyframes test {
+    0% {
+    }
+  }
+</style>
+<script>
+  var sheet = document.styleSheets[0];
+  var rule = sheet.cssRules[0];
+  var keyframe = rule.cssRules[0];
+  rule.deleteRule("0%");
+  sheet.deleteRule(0);
+  rule = null;
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  keyframe.parentRule;
+</script>
