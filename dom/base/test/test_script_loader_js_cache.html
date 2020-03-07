@@ -24,7 +24,10 @@
             "scriptloader_bytecode_failed": "bytecode_failed"
           },
           "scriptloader_no_encode": "source_exec"
-        }
+        },
+        "scriptloader_evaluate_module": {
+          "scriptloader_no_encode": "source_exec"
+        },
       },
       "scriptloader_load_bytecode": {
         "scriptloader_fallback": {
@@ -86,6 +89,7 @@
       iwin.addEventListener("scriptloader_load_bytecode", log_event);
       iwin.addEventListener("scriptloader_generate_bytecode", log_event);
       iwin.addEventListener("scriptloader_execute", log_event);
+      iwin.addEventListener("scriptloader_evaluate_module", log_event);
       iwin.addEventListener("scriptloader_encode", log_event);
       iwin.addEventListener("scriptloader_no_encode", log_event);
       iwin.addEventListener("scriptloader_bytecode_saved", log_event);
@@ -155,6 +159,11 @@
       assert_equals(await stateMachineResult2, "bytecode_exec",
                     "[5] ScriptLoadRequest status after visit with no SRI");
 
+      // Load a page that uses the same script as a module and verify that we
+      // re-parse it from source.
+      stateMachineResult = WaitForScriptTagEvent("file_js_cache_module.html");
+      assert_equals(await stateMachineResult, "source_exec",
+                    "[6] ScriptLoadRequest status for a module");
     }, "Check the JS bytecode cache");
 
     promise_test(async function() {
