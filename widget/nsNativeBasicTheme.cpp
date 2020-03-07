@@ -393,10 +393,17 @@ static void PaintSpinnerButton(DrawTarget* aDrawTarget, const Rect& aRect,
 static void PaintRangeInputBackground(DrawTarget* aDrawTarget,
                                       const Rect& aRect,
                                       const EventStates& aState,
-                                      uint32_t aDpi) {
+                                      uint32_t aDpi,
+                                      bool aHorizontal) {
   Rect rect(aRect);
-  rect.y += (rect.height - rect.height / 4) / 2;
-  rect.height /= 4;
+
+  if (aHorizontal) {
+    rect.y += (rect.height - rect.height / 4) / 2;
+    rect.height /= 4;
+  } else {
+    rect.x += (rect.width - rect.width / 4) / 2;
+    rect.width /= 4;
+  }
 
   aDrawTarget->FillRect(
       rect, ColorPattern(ToDeviceColor(sRangeInputBackgroundColor)));
@@ -613,7 +620,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintSpinnerButton(dt, devPxRect, eventState, aAppearance, dpi);
       break;
     case StyleAppearance::Range:
-      PaintRangeInputBackground(dt, devPxRect, eventState, dpi);
+      PaintRangeInputBackground(dt, devPxRect, eventState, dpi, IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
       // TODO: Paint Range Thumb
