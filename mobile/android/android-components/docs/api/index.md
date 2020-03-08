@@ -205,6 +205,7 @@
 | [mozilla.components.support.base.log](mozilla.components.support.base.log/index.md) |  |
 | [mozilla.components.support.base.log.logger](mozilla.components.support.base.log.logger/index.md) |  |
 | [mozilla.components.support.base.log.sink](mozilla.components.support.base.log.sink/index.md) |  |
+| [mozilla.components.support.base.memory](mozilla.components.support.base.memory/index.md) |  |
 | [mozilla.components.support.base.observer](mozilla.components.support.base.observer/index.md) |  |
 | [mozilla.components.support.base.utils](mozilla.components.support.base.utils/index.md) |  |
 | [mozilla.components.support.ktx.android.arch.lifecycle](mozilla.components.support.ktx.android.arch.lifecycle/index.md) |  |

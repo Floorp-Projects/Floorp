@@ -2,7 +2,7 @@
 
 # LinkEngineSessionAction
 
-`data class LinkEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L363)
+`data class LinkEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L368)
 
 Attaches the provided [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) to the session with the provided [sessionId](session-id.md).
 

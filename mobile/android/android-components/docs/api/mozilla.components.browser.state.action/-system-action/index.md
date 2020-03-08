@@ -10,7 +10,7 @@
 
 | Name | Summary |
 |---|---|
-| [LowMemoryAction](-low-memory-action.md) | `object LowMemoryAction : `[`SystemAction`](./index.md)<br>Optimizes the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional resources if the system is in a low memory condition. |
+| [LowMemoryAction](-low-memory-action/index.md) | `data class LowMemoryAction : `[`SystemAction`](./index.md)<br>Optimizes the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional resources if the system is in a low memory condition. |
 
 ### Extension Functions
 
@@ -22,4 +22,4 @@
 
 | Name | Summary |
 |---|---|
-| [LowMemoryAction](-low-memory-action.md) | `object LowMemoryAction : `[`SystemAction`](./index.md)<br>Optimizes the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional resources if the system is in a low memory condition. |
+| [LowMemoryAction](-low-memory-action/index.md) | `data class LowMemoryAction : `[`SystemAction`](./index.md)<br>Optimizes the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional resources if the system is in a low memory condition. |

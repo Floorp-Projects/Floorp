@@ -2,7 +2,7 @@
 
 # ensureValid
 
-`suspend fun ensureValid(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L217)
+`suspend fun ensureValid(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L218)
 
 Overrides [LoginsStorage.ensureValid](../../mozilla.components.concept.storage/-logins-storage/ensure-valid.md)
 

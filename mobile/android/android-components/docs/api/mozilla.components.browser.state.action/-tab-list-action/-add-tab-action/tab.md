@@ -2,7 +2,7 @@
 
 # tab
 
-`val tab: `[`TabSessionState`](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L57)
+`val tab: `[`TabSessionState`](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L62)
 
 the [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) to add
 
