@@ -122,9 +122,7 @@ class ConsoleTable extends Component {
         className: "new-consoletable",
         role: "grid",
         style: {
-          gridTemplateColumns: `repeat(${columns.size}, calc(100% / ${
-            columns.size
-          }))`,
+          gridTemplateColumns: `repeat(${columns.size}, calc(100% / ${columns.size}))`,
         },
       },
       this.getHeaders(columns),

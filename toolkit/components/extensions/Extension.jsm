@@ -2527,9 +2527,7 @@ class Extension extends ExtensionData {
         await ExtensionStorageIDB.selectedBackendPromises.get(this);
       } catch (err) {
         Cu.reportError(
-          `Error while waiting for extension data migration on shutdown: ${
-            this.policy.debugName
-          } - ${err.message}::${err.stack}`
+          `Error while waiting for extension data migration on shutdown: ${this.policy.debugName} - ${err.message}::${err.stack}`
         );
       }
       this.state = "Shutdown: Storage complete";
@@ -2588,9 +2586,7 @@ class Extension extends ExtensionData {
     this.state = `Shutdown: Emitted shutdown: ${result === TIMED_OUT}`;
     if (result === TIMED_OUT) {
       Cu.reportError(
-        `Timeout while waiting for extension child to shutdown: ${
-          this.policy.debugName
-        }`
+        `Timeout while waiting for extension child to shutdown: ${this.policy.debugName}`
       );
     }
 

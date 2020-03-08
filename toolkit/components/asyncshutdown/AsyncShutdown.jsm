@@ -692,9 +692,7 @@ function Barrier(name) {
       }
       if (!this._waitForMe) {
         throw new Error(
-          `Phase "${
-            this._name
-          }" is finished, it is too late to register completion condition "${name}"`
+          `Phase "${this._name}" is finished, it is too late to register completion condition "${name}"`
         );
       }
       debug(`Adding blocker ${name} for phase ${this._name}`);

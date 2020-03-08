@@ -41,15 +41,11 @@ async function checkWindowOuterSize(ui, zoom_level) {
       // Some of the drift is also due to full zoom scaling effects; see Bug 1577775.
       ok(
         Math.abs(content.outerWidth - width) <= 2,
-        `window.outerWidth zoom ${zoom} should be ${width} and we got ${
-          content.outerWidth
-        }.`
+        `window.outerWidth zoom ${zoom} should be ${width} and we got ${content.outerWidth}.`
       );
       ok(
         Math.abs(content.outerHeight - height) <= 2,
-        `window.outerHeight zoom ${zoom} should be ${height} and we got ${
-          content.outerHeight
-        }.`
+        `window.outerHeight zoom ${zoom} should be ${height} and we got ${content.outerHeight}.`
       );
     }
   );
@@ -64,30 +60,22 @@ async function checkWindowScreenSize(ui, zoom_level) {
 
       ok(
         Math.abs(screen.availWidth - width) <= 2,
-        `screen.availWidth zoom ${zoom} should be ${width} and we got ${
-          screen.availWidth
-        }.`
+        `screen.availWidth zoom ${zoom} should be ${width} and we got ${screen.availWidth}.`
       );
 
       ok(
         Math.abs(screen.availHeight - height) <= 2,
-        `screen.availHeight zoom ${zoom} should be ${height} and we got ${
-          screen.availHeight
-        }.`
+        `screen.availHeight zoom ${zoom} should be ${height} and we got ${screen.availHeight}.`
       );
 
       ok(
         Math.abs(screen.width - width) <= 2,
-        `screen.width zoom " ${zoom} should be ${width} and we got ${
-          screen.width
-        }.`
+        `screen.width zoom " ${zoom} should be ${width} and we got ${screen.width}.`
       );
 
       ok(
         Math.abs(screen.height - height) <= 2,
-        `screen.height zoom " ${zoom} should be ${height} and we got ${
-          screen.height
-        }.`
+        `screen.height zoom " ${zoom} should be ${height} and we got ${screen.height}.`
       );
     }
   );

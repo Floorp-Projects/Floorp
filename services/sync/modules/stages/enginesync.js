@@ -254,9 +254,7 @@ EngineSynchronizer.prototype = {
         // Failure due to a shutdown exception should prevent other engines
         // trying to start and immediately failing.
         this._log.info(
-          `${
-            engine.name
-          } was interrupted by shutdown; no other engines will sync`
+          `${engine.name} was interrupted by shutdown; no other engines will sync`
         );
         return false;
       }

@@ -1786,9 +1786,7 @@ class BootstrapScope {
         );
       } else {
         logger.debug(
-          `Calling bootstrap method ${aMethod} on ${addon.id} version ${
-            addon.version
-          }`
+          `Calling bootstrap method ${aMethod} on ${addon.id} version ${addon.version}`
         );
 
         this._beforeCallBootstrapMethod(aMethod, params, aReason);

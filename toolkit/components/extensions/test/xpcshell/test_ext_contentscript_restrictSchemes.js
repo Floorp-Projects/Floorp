@@ -23,9 +23,7 @@ function makeExtension(id, isPrivileged) {
         browser.test.assertEq(
           "resource://foo/file_sample.html",
           document.documentURI,
-          `Loaded content script into the correct document (extension: ${
-            browser.runtime.id
-          })`
+          `Loaded content script into the correct document (extension: ${browser.runtime.id})`
         );
         browser.test.sendMessage(`content-script-${browser.runtime.id}`);
       },

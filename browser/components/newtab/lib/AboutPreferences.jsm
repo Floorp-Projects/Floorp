@@ -230,9 +230,7 @@ this.AboutPreferences = class AboutPreferences {
       }
 
       const subChecks = [];
-      const fullName = `browser.newtabpage.activity-stream.${
-        sectionData.pref.feed
-      }`;
+      const fullName = `browser.newtabpage.activity-stream.${sectionData.pref.feed}`;
       const pref = Preferences.get(fullName);
 
       // Add a checkbox pref for any nested preferences

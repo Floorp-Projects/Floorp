@@ -128,18 +128,14 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 
 function promiseNodeVisible(node) {
   info(
-    `promiseNodeVisible waiting, node.id=${node.id} node.localeName=${
-      node.localName
-    }\n`
+    `promiseNodeVisible waiting, node.id=${node.id} node.localeName=${node.localName}\n`
   );
   let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     let bounds = dwu.getBoundsWithoutFlushing(node);
     if (bounds.width > 0 && bounds.height > 0) {
       info(
-        `promiseNodeVisible OK, node.id=${node.id} node.localeName=${
-          node.localName
-        }\n`
+        `promiseNodeVisible OK, node.id=${node.id} node.localeName=${node.localName}\n`
       );
       return true;
     }

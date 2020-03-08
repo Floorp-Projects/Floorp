@@ -170,9 +170,7 @@ add_task(async function testPageActionPopupReflow() {
 
   ok(
     dims.window.innerHeight > 36,
-    `Panel window height (${
-      dims.window.innerHeight
-    }px) should be taller than two lines of text.`
+    `Panel window height (${dims.window.innerHeight}px) should be taller than two lines of text.`
   );
 
   is(

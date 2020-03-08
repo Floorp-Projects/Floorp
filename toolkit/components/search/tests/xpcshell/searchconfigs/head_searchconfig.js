@@ -545,9 +545,7 @@ class SearchConfigTest {
         this.assertOk(
           submission.uri.host.endsWith(rules.domain),
           `Should have the correct domain for type: ${urlType} ${location}.
-           Got "${submission.uri.host}", expected to end with "${
-            rules.domain
-          }".`
+           Got "${submission.uri.host}", expected to end with "${rules.domain}".`
         );
       }
     }
@@ -572,18 +570,14 @@ class SearchConfigTest {
       const submissionQueryParams = submission.uri.query.split("&");
       this.assertOk(
         submissionQueryParams.includes(code),
-        `Expected "${code}" in url "${
-          submission.uri.spec
-        }" from purpose "${purpose}" ${location}`
+        `Expected "${code}" in url "${submission.uri.spec}" from purpose "${purpose}" ${location}`
       );
 
       const paramName = code.split("=")[0];
       this.assertOk(
         submissionQueryParams.filter(param => param.startsWith(paramName))
           .length == 1,
-        `Expected only one "${paramName}" parameter in "${
-          submission.uri.spec
-        }" from purpose "${purpose}" ${location}`
+        `Expected only one "${paramName}" parameter in "${submission.uri.spec}" from purpose "${purpose}" ${location}`
       );
     }
   }
@@ -603,9 +597,7 @@ class SearchConfigTest {
       const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
       this.assertOk(
         submission.uri.query.split("&").includes(rule.searchUrlCode),
-        `Expected "${rule.searchUrlCode}" in search url "${
-          submission.uri.spec
-        }"`
+        `Expected "${rule.searchUrlCode}" in search url "${submission.uri.spec}"`
       );
     }
     if (rule.searchFormUrlCode) {
@@ -619,9 +611,7 @@ class SearchConfigTest {
       const submission = engine.getSubmission("test", URLTYPE_SUGGEST_JSON);
       this.assertOk(
         submission.uri.query.split("&").includes(rule.suggestUrlCode),
-        `Expected "${rule.suggestUrlCode}" in suggestion url "${
-          submission.uri.spec
-        }"`
+        `Expected "${rule.suggestUrlCode}" in suggestion url "${submission.uri.spec}"`
       );
     }
   }

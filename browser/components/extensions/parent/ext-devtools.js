@@ -340,9 +340,7 @@ class DevToolsPageDefinition {
 
     if (this.devtoolsPageForTarget.size > 0) {
       throw new Error(
-        `Leaked ${
-          this.devtoolsPageForTarget.size
-        } DevToolsPage instances in devtoolsPageForTarget Map`
+        `Leaked ${this.devtoolsPageForTarget.size} DevToolsPage instances in devtoolsPageForTarget Map`
       );
     }
   }

@@ -315,9 +315,7 @@ ExtensionManager = {
             if (registeredContentScripts.has(data.scriptId)) {
               Cu.reportError(
                 new Error(
-                  `Registering ${type} ${data.scriptId} on ${
-                    data.id
-                  } more than once`
+                  `Registering ${type} ${data.scriptId} on ${data.id} more than once`
                 )
               );
             } else {

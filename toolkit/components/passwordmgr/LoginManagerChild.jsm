@@ -788,9 +788,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
   _deferHandlingEventUntilDocumentVisible(event, document, fn) {
     log(
-      `document.visibilityState: ${document.visibilityState}, defer handling ${
-        event.type
-      }`
+      `document.visibilityState: ${document.visibilityState}, defer handling ${event.type}`
     );
     let onVisibleTasks = this._visibleTasksByDocument.get(document);
     if (!onVisibleTasks) {
@@ -1630,9 +1628,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     if (usernameField && usernameField.value.match(/[•\*]{3,}/)) {
       log(
-        `usernameField.value "${
-          usernameField.value
-        }" looks munged, setting to null`
+        `usernameField.value "${usernameField.value}" looks munged, setting to null`
       );
       usernameField = null;
     }

@@ -197,11 +197,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       EXPECTED_ABOUTLOGINS_REMOTE_TYPE
     ) {
       throw new Error(
-        `AboutLoginsParent: Received ${
-          message.name
-        } message the remote type didn't match expectations: ${
-          this.browsingContext.embedderElement.remoteType
-        } == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
+        `AboutLoginsParent: Received ${message.name} message the remote type didn't match expectations: ${this.browsingContext.embedderElement.remoteType} == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
       );
     }
 
@@ -428,9 +424,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         });
         if (logins.length != 1) {
           log.warn(
-            `AboutLogins:UpdateLogin: expected to find a login for guid: ${
-              loginUpdates.guid
-            } but found ${logins.length}`
+            `AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${logins.length}`
           );
           return;
         }

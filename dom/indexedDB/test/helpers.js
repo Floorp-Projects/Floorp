@@ -343,9 +343,7 @@ function assertThrowsInstanceOf(f, ctor, msg) {
   }
 
   if (fullmsg === undefined) {
-    fullmsg = `Assertion failed: expected exception ${
-      ctor.name
-    }, no exception thrown`;
+    fullmsg = `Assertion failed: expected exception ${ctor.name}, no exception thrown`;
   }
   if (msg !== undefined) {
     fullmsg += " - " + msg;

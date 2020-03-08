@@ -103,9 +103,7 @@ add_task(async function test_management_uninstall_prompt_uninstall() {
   equal(promptService._confirmExArgs[1], `Uninstall ${manifest.name}`);
   equal(
     promptService._confirmExArgs[2],
-    `The extension “${
-      manifest.name
-    }” is requesting to be uninstalled. What would you like to do?`
+    `The extension “${manifest.name}” is requesting to be uninstalled. What would you like to do?`
   );
   equal(promptService._confirmExArgs[4], "Uninstall");
   equal(promptService._confirmExArgs[5], "Keep Installed");

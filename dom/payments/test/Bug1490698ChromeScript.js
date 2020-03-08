@@ -147,22 +147,16 @@ addMessageListener("interact-with-payment", function() {
   try {
     acceptPayment(DummyUIService.requestId);
     emitTestFail(
-      `${
-        DummyUIService.testName
-      }: Got unexpected success when accepting PaymentRequest.`
+      `${DummyUIService.testName}: Got unexpected success when accepting PaymentRequest.`
     );
   } catch (err) {
     if (err.name !== "NS_ERROR_FAILURE") {
       emitTestFail(
-        `${DummyUIService.testName}: Got unexpected '${
-          err.name
-        }' when accepting PaymentRequest.`
+        `${DummyUIService.testName}: Got unexpected '${err.name}' when accepting PaymentRequest.`
       );
     } else {
       emitTestPass(
-        `${
-          DummyUIService.testName
-        }: Got expected 'NS_ERROR_FAILURE' when accepting PaymentRequest.`
+        `${DummyUIService.testName}: Got expected 'NS_ERROR_FAILURE' when accepting PaymentRequest.`
       );
     }
   }
@@ -170,22 +164,16 @@ addMessageListener("interact-with-payment", function() {
   try {
     rejectPayment(DummyUIService.requestId);
     emitTestFail(
-      `${
-        DummyUIService.testName
-      }: Got unexpected success when rejecting PaymentRequest.`
+      `${DummyUIService.testName}: Got unexpected success when rejecting PaymentRequest.`
     );
   } catch (err) {
     if (err.name !== "NS_ERROR_FAILURE") {
       emitTestFail(
-        `${DummyUIService.testName}: Got unexpected '${
-          err.name
-        }' when rejecting PaymentRequest.`
+        `${DummyUIService.testName}: Got unexpected '${err.name}' when rejecting PaymentRequest.`
       );
     } else {
       emitTestPass(
-        `${
-          DummyUIService.testName
-        }: Got expected 'NS_ERROR_FAILURE' when rejecting PaymentRequest.`
+        `${DummyUIService.testName}: Got expected 'NS_ERROR_FAILURE' when rejecting PaymentRequest.`
       );
     }
   }
@@ -196,22 +184,16 @@ addMessageListener("interact-with-payment", function() {
       "error shippping option"
     );
     emitTestFail(
-      `${
-        DummyUIService.testName
-      }: Got unexpected success when changing shippingOption.`
+      `${DummyUIService.testName}: Got unexpected success when changing shippingOption.`
     );
   } catch (err) {
     if (err.name !== "NS_ERROR_FAILURE") {
       emitTestFail(
-        `${DummyUIService.testName}: Got unexpected '${
-          err.name
-        }' when changin shippingOption.`
+        `${DummyUIService.testName}: Got unexpected '${err.name}' when changin shippingOption.`
       );
     } else {
       emitTestPass(
-        `${
-          DummyUIService.testName
-        }: Got expected 'NS_ERROR_FAILURE' when changing shippingOption.`
+        `${DummyUIService.testName}: Got expected 'NS_ERROR_FAILURE' when changing shippingOption.`
       );
     }
   }
@@ -219,22 +201,16 @@ addMessageListener("interact-with-payment", function() {
   try {
     paymentSrv.changeShippingOption(DummyUIService.requestId, billingAddress);
     emitTestFail(
-      `${
-        DummyUIService.testName
-      }: Got unexpected success when changing shippingAddress.`
+      `${DummyUIService.testName}: Got unexpected success when changing shippingAddress.`
     );
   } catch (err) {
     if (err.name !== "NS_ERROR_FAILURE") {
       emitTestFail(
-        `${DummyUIService.testName}: Got unexpected '${
-          err.name
-        }' when changing shippingAddress.`
+        `${DummyUIService.testName}: Got unexpected '${err.name}' when changing shippingAddress.`
       );
     } else {
       emitTestPass(
-        `${
-          DummyUIService.testName
-        }: Got expected 'NS_ERROR_FAILURE' when changing shippingAddress.`
+        `${DummyUIService.testName}: Got expected 'NS_ERROR_FAILURE' when changing shippingAddress.`
       );
     }
   }

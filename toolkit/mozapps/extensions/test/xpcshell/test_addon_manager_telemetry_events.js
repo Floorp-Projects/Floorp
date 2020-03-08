@@ -493,9 +493,7 @@ add_task(async function test_update_telemetry_events() {
       const download_time = parseInt(updateEvents[i].extra.download_time, 10);
       ok(
         !isNaN(download_time) && download_time > 0,
-        `Got a download_time extra in ${
-          updateEvents[i].extra.step
-        } events: ${download_time}`
+        `Got a download_time extra in ${updateEvents[i].extra.step} events: ${download_time}`
       );
 
       delete updateEvents[i].extra.download_time;

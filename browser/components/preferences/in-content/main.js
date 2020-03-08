@@ -2420,9 +2420,7 @@ var gMainPane = {
                 .join(", ");
               Cu.reportError(
                 new Error(
-                  `Preferred handler for ${
-                    handlerInfo.type
-                  } not in list of possible handlers!? (List: ${possible})`
+                  `Preferred handler for ${handlerInfo.type} not in list of possible handlers!? (List: ${possible})`
                 )
               );
               menu.selectedItem = askMenuItem;

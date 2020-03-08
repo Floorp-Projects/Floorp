@@ -715,9 +715,7 @@ this.AntiTracking = {
         if (options.errorMessageDomains) {
           ok(
             msg.errorMessage.includes(options.errorMessageDomains[index]),
-            `Error message domain ${
-              options.errorMessageDomains[index]
-            } (${index}) found in "${msg.errorMessage}"`
+            `Error message domain ${options.errorMessageDomains[index]} (${index}) found in "${msg.errorMessage}"`
           );
           index++;
         }

@@ -1290,9 +1290,7 @@ class ChildAPIManager {
     }
     if (!map.removedIds.has(data.listenerId)) {
       Services.console.logStringMessage(
-        `Unknown listener at childId=${data.childId} path=${
-          data.path
-        } listenerId=${data.listenerId}\n`
+        `Unknown listener at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`
       );
     }
   }

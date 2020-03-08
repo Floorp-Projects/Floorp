@@ -1774,9 +1774,7 @@ async function reftestWait(url, remote) {
     win.innerHeight < document.documentElement.scrollHeight
   ) {
     logger.warn(
-      `${url} overflows viewport (width: ${
-        document.documentElement.scrollWidth
-      }, height: ${document.documentElement.scrollHeight})`
+      `${url} overflows viewport (width: ${document.documentElement.scrollWidth}, height: ${document.documentElement.scrollHeight})`
     );
   }
 }

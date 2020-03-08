@@ -357,9 +357,7 @@ class UserScript {
     try {
       const debugName = this.extension.policy.debugName;
       Cu.reportError(
-        `An unexpected apiScript error occurred for '${debugName}': ${err} :: ${
-          err.stack
-        }`
+        `An unexpected apiScript error occurred for '${debugName}': ${err} :: ${err.stack}`
       );
     } catch (e) {}
 

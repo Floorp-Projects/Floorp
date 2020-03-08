@@ -39,15 +39,11 @@ add_task(async function init() {
     set: [
       ["browser.urlbar.update1.searchTips", true],
       [
-        `browser.urlbar.tipShownCount.${
-          UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
-        }`,
+        `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`,
         0,
       ],
       [
-        `browser.urlbar.tipShownCount.${
-          UrlbarProviderSearchTips.TIP_TYPE.REDIRECT
-        }`,
+        `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`,
         0,
       ],
     ],

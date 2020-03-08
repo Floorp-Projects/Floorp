@@ -230,9 +230,7 @@ function testOptionColors(index, item, menulist) {
   if (expected.unstyled) {
     ok(
       !item.hasAttribute("customoptionstyling"),
-      `Item ${index} should not have any custom option styling: ${
-        item.outerHTML
-      }`
+      `Item ${index} should not have any custom option styling: ${item.outerHTML}`
     );
   } else {
     is(

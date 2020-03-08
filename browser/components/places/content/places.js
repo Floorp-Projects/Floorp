@@ -62,9 +62,7 @@ var PlacesOrganizer = {
   _places: null,
 
   _initFolderTree() {
-    this._places.place = `place:type=${
-      Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY
-    }&excludeItems=1&expandQueries=0`;
+    this._places.place = `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY}&excludeItems=1&expandQueries=0`;
   },
 
   /**

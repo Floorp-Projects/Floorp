@@ -141,9 +141,7 @@ class _ASRouterPreferences {
     const config = providers.find(p => p.id === id);
     if (!config) {
       Cu.reportError(
-        `Cannot set enabled state for '${id}' because the pref ${
-          this._providerPrefBranch
-        }${id} does not exist or is not correctly formatted.`
+        `Cannot set enabled state for '${id}' because the pref ${this._providerPrefBranch}${id} does not exist or is not correctly formatted.`
       );
       return;
     }

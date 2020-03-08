@@ -306,9 +306,7 @@ async function checkState(test, lastTest, callback) {
     equal(
       blocked,
       addon[test],
-      `Blocklist state should match expected for extension ${
-        addon.id
-      }, test ${test}`
+      `Blocklist state should match expected for extension ${addon.id}, test ${test}`
     );
   }
 
@@ -316,9 +314,7 @@ async function checkState(test, lastTest, callback) {
     equal(
       await plugin.isBlocklisted(),
       plugin[test],
-      `Blocklist state should match expected for plugin ${
-        plugin.name
-      }, test ${test}`
+      `Blocklist state should match expected for plugin ${plugin.name}, test ${test}`
     );
   }
 
@@ -328,9 +324,7 @@ async function checkState(test, lastTest, callback) {
       if (plugin[test] && !plugin[lastTest]) {
         ok(
           gNewBlocks.includes(`${plugin.name} ${plugin.version}`),
-          `Plugin ${
-            plugin.name
-          } should have been listed in the blocklist notification for test ${test}`
+          `Plugin ${plugin.name} should have been listed in the blocklist notification for test ${test}`
         );
         expected++;
       }

@@ -36,15 +36,11 @@ add_task(async function test_onHighlighted() {
         browser.test.assertEq(
           JSON.stringify(expected),
           JSON.stringify(events),
-          `Should get ${
-            expected.length
-          } expected onHighlighted events when ${action}`
+          `Should get ${expected.length} expected onHighlighted events when ${action}`
         );
         if (unexpected.length) {
           browser.test.fail(
-            `${
-              unexpected.length
-            } unexpected onHighlighted events when ${action}: ` +
+            `${unexpected.length} unexpected onHighlighted events when ${action}: ` +
               JSON.stringify(unexpected)
           );
         }

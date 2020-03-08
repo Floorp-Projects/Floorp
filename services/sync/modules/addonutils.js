@@ -350,9 +350,7 @@ AddonUtilsInternal.prototype = {
       let scheme = addon.sourceURI.scheme;
       if (scheme != "https") {
         this._log.info(
-          `Skipping install of add-on "${
-            addon.id
-          }" because sourceURI's scheme of "${scheme}" is not trusted`
+          `Skipping install of add-on "${addon.id}" because sourceURI's scheme of "${scheme}" is not trusted`
         );
         return false;
       }

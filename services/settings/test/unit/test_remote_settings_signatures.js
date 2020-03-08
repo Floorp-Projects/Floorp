@@ -154,9 +154,7 @@ add_task(async function test_check_synchronization_with_signatures() {
       const sampled = available.length > 1 ? available.shift() : available[0];
       if (!sampled) {
         do_throw(
-          `unexpected ${request.method} request for ${request.path}?${
-            request.queryString
-          }`
+          `unexpected ${request.method} request for ${request.path}?${request.queryString}`
         );
       }
 

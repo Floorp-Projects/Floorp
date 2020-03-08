@@ -150,9 +150,7 @@ var Authentication = {
       let deleteResult = await fetch(restmailURI, { method: "DELETE" });
       if (!deleteResult.ok) {
         Logger.logInfo(
-          `Warning: Got non-success status ${
-            deleteResult.status
-          } when deleting emails`
+          `Warning: Got non-success status ${deleteResult.status} when deleting emails`
         );
         return false;
       }

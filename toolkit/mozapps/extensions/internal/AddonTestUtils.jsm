@@ -147,9 +147,7 @@ class MockBarrier {
         } catch (e) {
           Cu.reportError(e);
           dump(
-            `Shutdown blocker '${name}' for ${this.name} threw error: ${e} :: ${
-              e.stack
-            }\n`
+            `Shutdown blocker '${name}' for ${this.name} threw error: ${e} :: ${e.stack}\n`
           );
         }
       })

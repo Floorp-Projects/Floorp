@@ -89,9 +89,7 @@ async function openContextMenuForPasswordInput(browser) {
         "contextmenu",
         event => {
           info(
-            `Received event on target: ${event.target.nodeName}, type: ${
-              event.target.type
-            }`
+            `Received event on target: ${event.target.nodeName}, type: ${event.target.type}`
           );
           content.console.log("got contextmenu event: ", event);
           resolve(event);

@@ -253,9 +253,7 @@ add_task(async function test_user_defined_commands() {
       is(
         message,
         testCommand.name,
-        `Expected onCommand listener to fire with the correct name: ${
-          testCommand.name
-        }`
+        `Expected onCommand listener to fire with the correct name: ${testCommand.name}`
       );
     }
   }

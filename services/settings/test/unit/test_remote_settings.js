@@ -813,9 +813,7 @@ function handleResponse(request, response) {
     const sample = getSampleResponse(request, server.identity.primaryPort);
     if (!sample) {
       do_throw(
-        `unexpected ${request.method} request for ${request.path}?${
-          request.queryString
-        }`
+        `unexpected ${request.method} request for ${request.path}?${request.queryString}`
       );
     }
 

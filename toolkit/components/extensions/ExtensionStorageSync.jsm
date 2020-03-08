@@ -683,9 +683,7 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
       // This should never happen. Keys should be created (and
       // synced) at the beginning of the sync cycle.
       throw new Error(
-        `tried to encrypt records for ${
-          this.extensionId
-        }, but key is not present`
+        `tried to encrypt records for ${this.extensionId}, but key is not present`
       );
     }
     return collectionKeys.keyForCollection(this.extensionId);
@@ -1174,9 +1172,7 @@ class ExtensionStorageSync {
 
         if (keyResolution.accepted.uuid != cryptoKeyRecord.uuid) {
           log.info(
-            `Detected a new UUID (${keyResolution.accepted.uuid}, was ${
-              cryptoKeyRecord.uuid
-            }). Resetting sync status for everything.`
+            `Detected a new UUID (${keyResolution.accepted.uuid}, was ${cryptoKeyRecord.uuid}). Resetting sync status for everything.`
           );
           await this.cryptoCollection.resetSyncStatus();
 

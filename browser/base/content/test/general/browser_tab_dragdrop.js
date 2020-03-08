@@ -76,15 +76,11 @@ async function cleanupObjectValue(browser) {
       win.checkObjectValueListener
     );
     info(
-      `about to delete checkObjectValueListener: ${
-        win.checkObjectValueListener
-      }`
+      `about to delete checkObjectValueListener: ${win.checkObjectValueListener}`
     );
     delete win.checkObjectValueListener;
     info(
-      `deleted objectValue (${win.objectValue}) and checkObjectValueListener (${
-        win.checkObjectValueListener
-      })`
+      `deleted objectValue (${win.objectValue}) and checkObjectValueListener (${win.checkObjectValueListener})`
     );
   });
   info("exiting cleanupObjectValue");

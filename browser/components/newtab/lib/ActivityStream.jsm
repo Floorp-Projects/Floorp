@@ -184,9 +184,7 @@ const PREFS_CONFIG = new Map([
             showSpocs(args) ? "default_spocs_on" : "default_spocs_off"
           }`,
           stories_referrer: "https://getpocket.com/recommendations",
-          topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${
-            args.locale
-          }`,
+          topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
           model_keys: [
             "nmf_model_animals",
             "nmf_model_business",

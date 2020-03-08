@@ -771,9 +771,7 @@ var ThirdPartyCookies = {
         break;
       default:
         Cu.reportError(
-          `Error: Unknown cookieBehavior pref when updating subview: ${
-            this.behaviorPref
-          }`
+          `Error: Unknown cookieBehavior pref when updating subview: ${this.behaviorPref}`
         );
         break;
     }
@@ -2333,9 +2331,7 @@ var gProtectionsHandler = {
         this._protectionsPopupSendReportButton.disabled = false;
         if (!response.ok) {
           Cu.reportError(
-            `Content Blocking report to ${reportEndpoint} failed with status ${
-              response.status
-            }`
+            `Content Blocking report to ${reportEndpoint} failed with status ${response.status}`
           );
           this._protectionsPopupSiteNotWorkingReportError.hidden = false;
         } else {

@@ -390,9 +390,7 @@ const MessageLoaderUtils = {
       messages = [];
       MessageLoaderUtils.reportError(
         new Error(
-          `Tried to load messages for ${
-            provider.id
-          } but the result was not an Array.`
+          `Tried to load messages for ${provider.id} but the result was not an Array.`
         )
       );
     }

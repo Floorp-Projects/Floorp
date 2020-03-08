@@ -113,16 +113,12 @@ add_task(async function test_CertificateError() {
 
   await TestUtils.waitForCondition(
     () => hostText.value === browser.currentURI.displayPrePath,
-    `Value of owner should be "${
-      browser.currentURI.displayPrePath
-    }" instead got "${hostText.value}".`
+    `Value of owner should be "${browser.currentURI.displayPrePath}" instead got "${hostText.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => permList.childElementCount === permissions.length,
-    `Value of verifier should be ${permissions.length}, instead got ${
-      permList.childElementCount
-    }.`
+    `Value of verifier should be ${permissions.length}, instead got ${permList.childElementCount}.`
   );
 
   pageInfo.close();
@@ -165,16 +161,12 @@ add_task(async function test_NetworkError() {
 
   await TestUtils.waitForCondition(
     () => hostText.value === browser.currentURI.displayPrePath,
-    `Value of host should be should be "${
-      browser.currentURI.displayPrePath
-    }" instead got "${hostText.value}".`
+    `Value of host should be should be "${browser.currentURI.displayPrePath}" instead got "${hostText.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => permList.childElementCount === permissions.length,
-    `Value of permissions list should be ${permissions.length}, instead got ${
-      permList.childElementCount
-    }.`
+    `Value of permissions list should be ${permissions.length}, instead got ${permList.childElementCount}.`
   );
 
   pageInfo.close();

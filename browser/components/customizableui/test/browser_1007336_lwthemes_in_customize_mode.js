@@ -109,9 +109,7 @@ add_task(async function() {
   ok(!button.disabled, "Reset button should not be disabled anymore");
   ok(
     /light/i.test(themesButtonIcon.style.backgroundImage),
-    `Button should show light theme thumbnail - was: "${
-      themesButtonIcon.style.backgroundImage
-    }"`
+    `Button should show light theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`
   );
 
   popupShownPromise = popupShown(popup);
@@ -141,9 +139,7 @@ add_task(async function() {
 
   ok(
     !themesButtonIcon.style.backgroundImage,
-    `Button should show fallback theme thumbnail - was: "${
-      themesButtonIcon.style.backgroundImage
-    }"`
+    `Button should show fallback theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`
   );
 
   popupShownPromise = popupShown(popup);

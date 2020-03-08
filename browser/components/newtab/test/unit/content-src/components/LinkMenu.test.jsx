@@ -399,9 +399,7 @@ describe("<LinkMenu>", () => {
     options
       .filter(o => o.type !== "separator")
       .forEach(option => {
-        it(`should fire a ${option.action.type} action for ${
-          option.id
-        } with the expected data`, () => {
+        it(`should fire a ${option.action.type} action for ${option.id} with the expected data`, () => {
           option.onClick();
 
           if (option.impression && option.userEvent) {
@@ -439,9 +437,7 @@ describe("<LinkMenu>", () => {
             assert.deepEqual(option.action.data, expectedActionData[option.id]);
           }
         });
-        it(`should fire a UserEvent action for ${
-          option.id
-        } if configured`, () => {
+        it(`should fire a UserEvent action for ${option.id} if configured`, () => {
           if (option.userEvent) {
             option.onClick();
             const [action] = dispatch.secondCall.args;

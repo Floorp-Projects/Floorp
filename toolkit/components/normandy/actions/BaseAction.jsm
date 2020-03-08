@@ -58,9 +58,7 @@ class BaseAction {
       // Sometimes err.message is editable. If it is, add helpful details.
       // Otherwise log the helpful details and move on.
       try {
-        err.message = `Could not initialize action ${this.name}: ${
-          err.message
-        }`;
+        err.message = `Could not initialize action ${this.name}: ${err.message}`;
       } catch (_e) {
         this.log.error(
           `Could not initialize action ${this.name}, error follows.`
@@ -152,9 +150,7 @@ class BaseAction {
     if (this.state !== BaseAction.STATE_READY) {
       Uptake.reportRecipe(recipe, Uptake.RECIPE_ACTION_DISABLED);
       this.log.warn(
-        `Skipping recipe ${recipe.name} because ${
-          this.name
-        } was disabled during preExecution.`
+        `Skipping recipe ${recipe.name} because ${this.name} was disabled during preExecution.`
       );
       return;
     }
@@ -244,9 +240,7 @@ class BaseAction {
           status = Uptake.ACTION_POST_EXECUTION_ERROR;
           // Sometimes Error.message can be updated in place. This gives better messages when debugging errors.
           try {
-            err.message = `Could not run postExecution hook for ${this.name}: ${
-              err.message
-            }`;
+            err.message = `Could not run postExecution hook for ${this.name}: ${err.message}`;
           } catch (err) {
             // Sometimes Error.message cannot be updated. Log a warning, and move on.
             this.log.debug(`Could not run postExecution hook for ${this.name}`);
@@ -259,18 +253,14 @@ class BaseAction {
       }
       case BaseAction.STATE_DISABLED: {
         this.log.debug(
-          `Skipping post-execution hook for ${
-            this.name
-          } because it is disabled.`
+          `Skipping post-execution hook for ${this.name} because it is disabled.`
         );
         status = Uptake.ACTION_SUCCESS;
         break;
       }
       case BaseAction.STATE_FAILED: {
         this.log.debug(
-          `Skipping post-execution hook for ${
-            this.name
-          } because it failed during pre-execution.`
+          `Skipping post-execution hook for ${this.name} because it failed during pre-execution.`
         );
         // Don't report a status. A status should have already been reported by this.fail().
         break;

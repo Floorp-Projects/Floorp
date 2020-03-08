@@ -167,9 +167,7 @@ this.windows = class extends ExtensionAPI {
           if (needResize) {
             if (createData.state !== null && createData.state != "normal") {
               return Promise.reject({
-                message: `"state": "${
-                  createData.state
-                }" may not be combined with "left", "top", "width", or "height"`,
+                message: `"state": "${createData.state}" may not be combined with "left", "top", "width", or "height"`,
               });
             }
             createData.state = "normal";
@@ -389,9 +387,7 @@ this.windows = class extends ExtensionAPI {
               updateInfo.height !== null
             ) {
               return Promise.reject({
-                message: `"state": "${
-                  updateInfo.state
-                }" may not be combined with "left", "top", "width", or "height"`,
+                message: `"state": "${updateInfo.state}" may not be combined with "left", "top", "width", or "height"`,
               });
             }
           }

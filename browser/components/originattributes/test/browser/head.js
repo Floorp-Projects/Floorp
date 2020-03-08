@@ -383,9 +383,7 @@ this.IsolationTestTools = {
         if (aGetResultImmediately) {
           try {
             info(
-              `Immediately get result from tab A for ${
-                TEST_MODE_NAMES[aMode]
-              } test`
+              `Immediately get result from tab A for ${TEST_MODE_NAMES[aMode]} test`
             );
             for (let getResultFunc of aGetResultFuncs) {
               resultsA.push(await getResultFunc(tabInfoA.browser));

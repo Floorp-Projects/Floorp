@@ -1144,9 +1144,7 @@ this.tabs = class extends ExtensionAPI {
             FullZoom.setZoom(zoom, nativeTab.linkedBrowser);
           } else {
             return Promise.reject({
-              message: `Zoom value ${zoom} out of range (must be between ${
-                ZoomManager.MIN
-              } and ${ZoomManager.MAX})`,
+              message: `Zoom value ${zoom} out of range (must be between ${ZoomManager.MIN} and ${ZoomManager.MAX})`,
             });
           }
 

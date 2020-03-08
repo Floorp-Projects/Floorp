@@ -245,9 +245,7 @@ var gHomePane = {
           element.getAttribute("data-preference-related");
         if (!pref) {
           throw new Error(
-            `Element with id ${
-              element.id
-            } did not have preference or data-preference-related attribute defined.`
+            `Element with id ${element.id} did not have preference or data-preference-related attribute defined.`
           );
         }
 

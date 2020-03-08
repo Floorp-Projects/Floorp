@@ -397,9 +397,7 @@ add_task(async function check_port_properties() {
   checkProperties(portFromInit, "inited port");
   ok(
     ["about:blank", TEST_URL].includes(portFromInit.browser.currentURI.spec),
-    `inited port browser is either still blank or already at the target url - got ${
-      portFromInit.browser.currentURI.spec
-    }`
+    `inited port browser is either still blank or already at the target url - got ${portFromInit.browser.currentURI.spec}`
   );
   is(portFromInit.loaded, false, "inited port has not been loaded yet");
   is(portFromInit.url, TEST_URL, "got expected url");

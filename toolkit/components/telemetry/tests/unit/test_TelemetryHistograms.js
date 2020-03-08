@@ -1427,9 +1427,7 @@ add_task(async function test_valid_os_smoketest() {
   Assert.throws(
     () => Telemetry.getHistogramById(nonExistingProbe),
     /NS_ERROR_FAILURE/,
-    `Should throw on ${nonExistingProbe} probe that's not available on ${
-      AppConstants.platform
-    }`
+    `Should throw on ${nonExistingProbe} probe that's not available on ${AppConstants.platform}`
   );
 
   let h = Telemetry.getHistogramById(existingProbe);

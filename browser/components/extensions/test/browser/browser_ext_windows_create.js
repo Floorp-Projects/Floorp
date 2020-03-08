@@ -33,9 +33,7 @@ add_task(async function testWindowCreate() {
             // "maximized" states.
             browser.test.assertTrue(
               window.state == "normal" || window.state == "maximized",
-              `Expected window.state (currently ${
-                window.state
-              }) to be "normal" but will accept "maximized"`
+              `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`
             );
           } else {
             browser.test.assertEq(

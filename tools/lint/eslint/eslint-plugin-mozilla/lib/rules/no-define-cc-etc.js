@@ -27,9 +27,7 @@ module.exports = function(context) {
       ) {
         context.report(
           node,
-          `${
-            node.id.name
-          } is now defined in global scope, a separate definition is no longer necessary.`
+          `${node.id.name} is now defined in global scope, a separate definition is no longer necessary.`
         );
       }
 
@@ -41,9 +39,7 @@ module.exports = function(context) {
           ) {
             context.report(
               node,
-              `${
-                property.value.name
-              } is now defined in global scope, a separate definition is no longer necessary.`
+              `${property.value.name} is now defined in global scope, a separate definition is no longer necessary.`
             );
           }
         }

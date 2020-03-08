@@ -69,9 +69,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.querySelector(
-          `#footer-asrouter-container .SimpleSnippet a[href='${
-            msg.content.links.syncLink.url
-          }']`
+          `#footer-asrouter-container .SimpleSnippet a[href='${msg.content.links.syncLink.url}']`
         ),
       "Should render an anchor with the correct href"
     );

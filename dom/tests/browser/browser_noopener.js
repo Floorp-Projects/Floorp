@@ -39,9 +39,7 @@ async function doTests(private, container) {
   }
 
   for (let test of TESTS) {
-    const testid = `${
-      test.id
-    } (private=${private}, container=${container}, alwaysNewWindow=${alwaysNewWindow})`;
+    const testid = `${test.id} (private=${private}, container=${container}, alwaysNewWindow=${alwaysNewWindow})`;
     let originalTab = BrowserTestUtils.addTab(
       window.gBrowser,
       TEST_URL,

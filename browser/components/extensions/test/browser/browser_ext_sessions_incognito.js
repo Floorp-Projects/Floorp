@@ -65,9 +65,7 @@ add_task(async function test_sessions_tab_value_private() {
             await browser.test.assertRejects(
               browser.sessions.restore(pbw.sessionId),
               /Could not restore object/,
-              `should not be able to restore incognito session ID ${
-                pbw.sessionId
-              } session data`
+              `should not be able to restore incognito session ID ${pbw.sessionId} session data`
             );
           }
         }
