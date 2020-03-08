@@ -413,7 +413,7 @@ class GCRuntime {
   void updateMemoryCountersOnGCStart();
 
   void setGCCallback(JSGCCallback callback, void* data);
-  void callGCCallback(JSGCStatus status) const;
+  void callGCCallback(JSGCStatus status, JS::GCReason reason) const;
   void setObjectsTenuredCallback(JSObjectsTenuredCallback callback, void* data);
   void callObjectsTenuredCallback();
   MOZ_MUST_USE bool addFinalizeCallback(JSFinalizeCallback callback,
@@ -667,7 +667,7 @@ class GCRuntime {
                                                  SliceBudget& budget);
 
   friend class AutoCallGCCallbacks;
-  void maybeCallGCCallback(JSGCStatus status);
+  void maybeCallGCCallback(JSGCStatus status, JS::GCReason reason);
 
   void purgeRuntime();
   MOZ_MUST_USE bool beginMarkPhase(JS::GCReason reason, AutoGCSession& session);
