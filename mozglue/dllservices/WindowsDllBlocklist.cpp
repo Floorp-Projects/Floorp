@@ -473,6 +473,11 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
         goto continue_loading;
       }
 
+      if ((info->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
+          (sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
+        goto continue_loading;
+      }
+
       unsigned long long fVersion = DllBlockInfo::ALL_VERSIONS;
 
       if (info->mMaxVersion != DllBlockInfo::ALL_VERSIONS) {

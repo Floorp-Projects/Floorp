@@ -59,6 +59,7 @@ BLOCK_WIN8PLUS_ONLY = 'BLOCK_WIN8PLUS_ONLY'
 BLOCK_WIN8_ONLY = 'BLOCK_WIN8_ONLY'
 USE_TIMESTAMP = 'USE_TIMESTAMP'
 CHILD_PROCESSES_ONLY = 'CHILD_PROCESSES_ONLY'
+BROWSER_PROCESS_ONLY = 'BROWSER_PROCESS_ONLY'
 SUBSTITUTE_LSP_PASSTHROUGH = 'SUBSTITUTE_LSP_PASSTHROUGH'
 
 # Only these flags are available in the input script
@@ -355,12 +356,11 @@ LSP_OUTPUT_SPEC = [
 
 GENERATED_BLOCKLIST_FILES = [
     BlocklistDescriptor('A11y', ['BROWSER_PROCESS'], outspec=A11Y_OUTPUT_SPEC),
-    # Child is not used by anything at the moment, so we'll just leave this
-    # descriptor commented out for now.
-    # BlocklistDescriptor('Child', ['ALL_PROCESSES', 'CHILD_PROCESSES']),
     BlocklistDescriptor('Launcher', ALL_DEFINITION_LISTS, flagspec={
+                        'BROWSER_PROCESS': {BROWSER_PROCESS_ONLY},
                         'CHILD_PROCESSES': {CHILD_PROCESSES_ONLY}}),
     BlocklistDescriptor('Legacy', ALL_DEFINITION_LISTS, flagspec={
+                        'BROWSER_PROCESS': {BROWSER_PROCESS_ONLY},
                         'CHILD_PROCESSES': {CHILD_PROCESSES_ONLY}}),
     # Roughed-in for the moment; we'll enable this in bug 1238735
     # BlocklistDescriptor('LSP', ALL_DEFINITION_LISTS, outspec=LSP_OUTPUT_SPEC),
