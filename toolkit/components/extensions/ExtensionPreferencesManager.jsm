@@ -415,13 +415,16 @@ this.ExtensionPreferencesManager = {
    *
    * @param {string} id           The extension id.
    * @param {string} permission   The permission name from the extension manifest.
+   * @returns {Promise}           A promise that resolves when all related settings are removed.
    */
-  async removeSettingsForPermission(id, permission) {
+  removeSettingsForPermission(id, permission) {
+    let removePromises = [];
     settingsMap.forEach((setting, name) => {
       if (setting.permission == permission) {
-        this.removeSetting(id, name);
+        removePromises.push(this.removeSetting(id, name));
       }
     });
+    return Promise.all(removePromises);
   },
 
   /**

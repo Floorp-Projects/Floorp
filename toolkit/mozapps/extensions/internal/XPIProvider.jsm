@@ -126,7 +126,7 @@ const XPI_PERMISSION = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD = 24 * 60 * 60;
 
-const DB_SCHEMA = 31;
+const DB_SCHEMA = 32;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -2042,6 +2042,10 @@ class BootstrapScope {
     let extraArgs = {
       oldVersion: this.addon.version,
       newVersion: newAddon.version,
+      userPermissions: newAddon.userPermissions,
+      optionalPermissions: newAddon.optionalPermissions,
+      oldPermissions: this.addon.userPermissions,
+      oldOptionalPermissions: this.addon.optionalPermissions,
     };
 
     let callUpdate = this.addon.isWebExtension && newAddon.isWebExtension;
@@ -2651,10 +2655,16 @@ var XPIProvider = {
 
       let promise;
       if (existing) {
-        promise = bootstrap.update(existing, false, () => {
-          cleanup();
-          XPIDatabase.makeAddonLocationVisible(id, existing.location);
-        });
+        // We need manifest data before calling update.
+        promise = XPIInstall.loadManifestFromFile(
+          existing.file,
+          existing.location
+        ).then(existingAddon =>
+          bootstrap.update(existingAddon, false, () => {
+            cleanup();
+            XPIDatabase.makeAddonLocationVisible(id, existing.location);
+          })
+        );
       } else {
         promise = bootstrap.uninstall().then(cleanup);
       }

@@ -523,7 +523,7 @@ async function loadManifestFromWebManifest(aPackage) {
   addon.iconURL = null;
   addon.icons = manifest.icons || {};
   addon.userPermissions = extension.manifestPermissions;
-
+  addon.optionalPermissions = extension.manifestOptionalPermissions;
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   function getLocale(aLocale) {
@@ -3712,6 +3712,7 @@ var XPIInstall = {
   newVersionReason,
   recursiveRemove,
   syncLoadManifest,
+  loadManifestFromFile,
 
   // Keep track of in-progress operations that support cancel()
   _inProgress: [],
