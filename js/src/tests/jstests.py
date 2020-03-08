@@ -552,7 +552,7 @@ def main():
                 print('    {}'.format(tc.path))
             return 2
 
-        cmd = test_gen.next().get_command(prefix)
+        cmd = next(test_gen).get_command(prefix)
         if options.show_cmd:
             print(list2cmdline(cmd))
         with changedir(test_dir), change_env(test_environment):
