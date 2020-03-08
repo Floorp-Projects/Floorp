@@ -186,6 +186,11 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
     return BlockAction::Allow;
   }
 
+  if ((aInfo->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
+      (gBlocklistInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
+    return BlockAction::Allow;
+  }
+
   if (aInfo->mMaxVersion == DllBlockInfo::ALL_VERSIONS) {
     return BlockAction::Deny;
   }
