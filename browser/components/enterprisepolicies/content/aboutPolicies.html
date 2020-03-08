@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -6,35 +5,35 @@
 -->
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
     <head>
-        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
-        <title data-l10n-id="about-policies-title"/>
-        <link rel="stylesheet" href="chrome://browser/content/policies/aboutPolicies.css" type="text/css" />
-        <link rel="localization" href="branding/brand.ftl"/>
-        <link rel="localization" href="browser/branding/sync-brand.ftl"/>
-        <link rel="localization" href="browser/aboutPolicies.ftl"/>
-        <link rel="localization" href="browser/policies/policies-descriptions.ftl"/>
-        <script src="chrome://browser/content/policies/aboutPolicies.js" />
+        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+        <title data-l10n-id="about-policies-title"></title>
+        <link rel="stylesheet" href="chrome://browser/content/policies/aboutPolicies.css">
+        <link rel="localization" href="branding/brand.ftl">
+        <link rel="localization" href="browser/branding/sync-brand.ftl">
+        <link rel="localization" href="browser/aboutPolicies.ftl">
+        <link rel="localization" href="browser/policies/policies-descriptions.ftl">
+        <script src="chrome://browser/content/policies/aboutPolicies.js"></script>
     </head>
     <body id="body">
         <div id="categories">
             <div class="category" selected="true" id="category-active">
-                <img class="category-icon" src="chrome://browser/content/policies/policies-active.svg"></img>
+                <img class="category-icon" src="chrome://browser/content/policies/policies-active.svg">
                 <label class="category-name" data-l10n-id="active-policies-tab"></label>
             </div>
             <div class="category" id="category-documentation">
-                <img class="category-icon" src="chrome://browser/content/policies/policies-documentation.svg"></img>
+                <img class="category-icon" src="chrome://browser/content/policies/policies-documentation.svg">
                 <label class="category-name" data-l10n-id="documentation-tab"></label>
             </div>
             <div class="category" id="category-errors">
-                <img class="category-icon" src="chrome://browser/content/policies/policies-error.svg"></img>
+                <img class="category-icon" src="chrome://browser/content/policies/policies-error.svg">
                 <label class="category-name" data-l10n-id="errors-tab"></label>
             </div>
         </div>
         <div class="main-content">
             <div class="header">
-                <div id="sectionTitle" class="header-name" data-l10n-id="active-policies-tab"/>
+                <div id="sectionTitle" class="header-name" data-l10n-id="active-policies-tab"></div>
             </div>
 
             <div id="active" class="tab active">
@@ -43,11 +42,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th data-l10n-id="policy-name"/>
-                            <th data-l10n-id="policy-value"/>
+                            <th data-l10n-id="policy-name"></th>
+                            <th data-l10n-id="policy-value"></th>
                         </tr>
                     </thead>
-                    <tbody id="activeContent" />
+                    <tbody id="activeContent"></tbody>
                 </table>
             </div>
 
@@ -55,10 +54,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th data-l10n-id="policy-name"/>
+                            <th data-l10n-id="policy-name"></th>
                         </tr>
                     </thead>
-                    <tbody id="documentationContent" />
+                    <tbody id="documentationContent"></tbody>
                 </table>
             </div>
 
@@ -66,10 +65,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th data-l10n-id="policy-errors"/>
+                            <th data-l10n-id="policy-errors"></th>
                         </tr>
                     </thead>
-                    <tbody id="errorsContent" />
+                    <tbody id="errorsContent"></tbody>
                 </table>
             </div>
         </div>
