@@ -150,6 +150,7 @@ const PROP_JSON_FIELDS = [
   "dependencies",
   "incognito",
   "userPermissions",
+  "optionalPermissions",
   "icons",
   "iconURL",
   "blocklistState",
@@ -1198,6 +1199,10 @@ AddonWrapper = class {
 
   get userPermissions() {
     return addonFor(this).userPermissions;
+  }
+
+  get optionalPermissions() {
+    return addonFor(this).optionalPermissions;
   }
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {
