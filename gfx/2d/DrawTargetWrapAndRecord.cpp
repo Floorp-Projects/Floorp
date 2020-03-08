@@ -262,8 +262,9 @@ struct AdjustedPattern final {
         ConicGradientPattern* conGradPat =
             static_cast<ConicGradientPattern*>(mOrigPattern);
         mPattern = new (mConGradPat) ConicGradientPattern(
-            conGradPat->mCenter, conGradPat->mAngle,
-            GetGradientStops(conGradPat->mStops), conGradPat->mMatrix);
+            conGradPat->mCenter, conGradPat->mAngle, conGradPat->mStartOffset,
+            conGradPat->mEndOffset, GetGradientStops(conGradPat->mStops),
+            conGradPat->mMatrix);
         return mPattern;
       }
       default:

@@ -38,9 +38,11 @@ gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
 }
 
 // conic
-gfxPattern::gfxPattern(gfxFloat cx, gfxFloat cy, gfxFloat angle)
+gfxPattern::gfxPattern(gfxFloat cx, gfxFloat cy, gfxFloat angle,
+                       gfxFloat startOffset, gfxFloat endOffset)
     : mExtend(ExtendMode::CLAMP) {
-  mGfxPattern.InitConicGradientPattern(Point(cx, cy), angle, nullptr);
+  mGfxPattern.InitConicGradientPattern(Point(cx, cy), angle, startOffset,
+                                       endOffset, nullptr);
 }
 
 // Azure
