@@ -355,7 +355,7 @@ def main(argv):
             except Exception as e:
                 sys.exit(str(e))
         else:
-            tc = job_list.next()
+            tc = next(job_list)
 
         if options.debugger == 'gdb':
             debug_cmd = ['gdb', '--args']
