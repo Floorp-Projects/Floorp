@@ -513,3 +513,6 @@ skip script test262/intl402/NumberFormat/constructor-order.js
 skip script test262/intl402/Locale/constructor-non-iana-canon.js
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
+
+# DST issues, bug 1620825.
+skip script test262/built-ins/Date/parse/without-utc-offset.js
