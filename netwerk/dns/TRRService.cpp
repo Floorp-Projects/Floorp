@@ -109,16 +109,13 @@ nsresult TRRService::Init() {
       do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
   RebuildSuffixList(nls);
 
-  if (StaticPrefs::network_trr_fetch_off_main_thread()) {
-    nsCOMPtr<nsIThread> thread;
-    if (NS_FAILED(
-            NS_NewNamedThread("TRR Background", getter_AddRefs(thread)))) {
-      NS_WARNING("NS_NewNamedThread failed!");
-      return NS_ERROR_FAILURE;
-    }
-
-    sTRRBackgroundThread = thread;
+  nsCOMPtr<nsIThread> thread;
+  if (NS_FAILED(NS_NewNamedThread("TRR Background", getter_AddRefs(thread)))) {
+    NS_WARNING("NS_NewNamedThread failed!");
+    return NS_ERROR_FAILURE;
   }
+
+  sTRRBackgroundThread = thread;
 
   LOG(("Initialized TRRService\n"));
   return NS_OK;
