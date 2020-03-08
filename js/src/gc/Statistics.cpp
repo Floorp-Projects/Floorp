@@ -76,6 +76,10 @@ JS_PUBLIC_API const char* JS::ExplainGCReason(JS::GCReason reason) {
   }
 }
 
+JS_PUBLIC_API bool JS::InternalGCReason(JS::GCReason reason) {
+  return reason < JS::GCReason::FIRST_FIREFOX_REASON;
+}
+
 const char* js::gcstats::ExplainAbortReason(gc::AbortReason reason) {
   switch (reason) {
 #define SWITCH_REASON(name, _) \
