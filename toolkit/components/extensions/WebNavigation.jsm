@@ -226,9 +226,7 @@ var Manager = {
           );
         default:
           Cu.reportError(
-            `Received unexpected result type ${
-              acData.result.type
-            }, falling back to typed transition.`
+            `Received unexpected result type ${acData.result.type}, falling back to typed transition.`
           );
           // Fallback on "typed" if the type is unknown.
           tabTransitionData.typed = true;

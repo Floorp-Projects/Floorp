@@ -41,9 +41,7 @@ add_task(async function test_support_selection() {
   Assert.equal(fields.length, 2, "Should be testing two elements");
 
   info(
-    `Checking background colors and colors for ${
-      fields.length
-    } toolbar input fields.`
+    `Checking background colors and colors for ${fields.length} toolbar input fields.`
   );
   for (let field of fields) {
     info(`Testing ${field.id || field.className}`);

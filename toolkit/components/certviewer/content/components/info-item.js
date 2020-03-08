@@ -110,9 +110,7 @@ export class InfoItem extends HTMLElement {
     for (let i = 0; i < certArray.length; i++) {
       encodedCertArray.push(
         encodeURI(
-          `-----BEGIN CERTIFICATE-----\r\n${
-            certArray[i]
-          }\r\n-----END CERTIFICATE-----\r\n`
+          `-----BEGIN CERTIFICATE-----\r\n${certArray[i]}\r\n-----END CERTIFICATE-----\r\n`
         )
       );
     }

@@ -35,9 +35,7 @@ module.exports = function(context) {
 
       context.report(
         node,
-        `{Array/String}.${
-          node.expression.callee.property.name
-        } doesn't modify the instance in-place`
+        `{Array/String}.${node.expression.callee.property.name} doesn't modify the instance in-place`
       );
     },
   };

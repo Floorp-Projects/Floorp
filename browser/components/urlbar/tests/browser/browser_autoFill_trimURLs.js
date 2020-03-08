@@ -56,9 +56,7 @@ async function promiseTestResult(test) {
   Assert.equal(
     result.displayed.title,
     test.resultListDisplayTitle,
-    `Autocomplete result should have displayed title as expected for search '${
-      test.search
-    }'`
+    `Autocomplete result should have displayed title as expected for search '${test.search}'`
   );
 
   Assert.equal(
@@ -70,9 +68,7 @@ async function promiseTestResult(test) {
   Assert.equal(
     result.type,
     test.resultListType,
-    `Autocomplete result should have searchengine for the type for search '${
-      test.search
-    }'`
+    `Autocomplete result should have searchengine for the type for search '${test.search}'`
   );
 
   Assert.equal(

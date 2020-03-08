@@ -74,17 +74,13 @@ add_task(async function unsupportedSchemes() {
       for (let pattern of testcase.matchingPatterns) {
         browser.test.assertTrue(
           menuIds.includes(pattern),
-          `Menu item with targetUrlPattern="${pattern}" should be shown at ${
-            testcase.testUrl
-          }`
+          `Menu item with targetUrlPattern="${pattern}" should be shown at ${testcase.testUrl}`
         );
       }
       for (let pattern of testcase.nonmatchingPatterns) {
         browser.test.assertFalse(
           menuIds.includes(pattern),
-          `Menu item with targetUrlPattern="${pattern}" should not be shown at ${
-            testcase.testUrl
-          }`
+          `Menu item with targetUrlPattern="${pattern}" should not be shown at ${testcase.testUrl}`
         );
       }
       testcase = null;

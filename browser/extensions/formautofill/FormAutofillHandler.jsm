@@ -72,9 +72,7 @@ class FormAutofillSection {
     if (!this.isValidSection()) {
       this.fieldDetails = [];
       log.debug(
-        `Ignoring ${
-          this.constructor.name
-        } related fields since it is an invalid section`
+        `Ignoring ${this.constructor.name} related fields since it is an invalid section`
       );
     }
 

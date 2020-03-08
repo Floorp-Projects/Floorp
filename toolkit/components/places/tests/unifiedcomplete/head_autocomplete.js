@@ -341,9 +341,7 @@ async function check_autocomplete(test) {
 
         if (!found) {
           do_throw(
-            `Didn't find the current result ("${result.value}", "${
-              result.comment
-            }") in matches`
+            `Didn't find the current result ("${result.value}", "${result.comment}") in matches`
           );
         } // ' (Emacs syntax highlighting fix)
       }

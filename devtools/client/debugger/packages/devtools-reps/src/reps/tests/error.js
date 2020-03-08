@@ -521,9 +521,7 @@ describe("Error - renderStacktrace prop", () => {
           return frames.map(frame =>
             dom.li(
               { className: "frame" },
-              `Function ${frame.functionName} called from ${frame.filename}:${
-                frame.lineNumber
-              }:${frame.columnNumber}\n`
+              `Function ${frame.functionName} called from ${frame.filename}:${frame.lineNumber}:${frame.columnNumber}\n`
             )
           );
         },
@@ -541,9 +539,7 @@ describe("Error - renderStacktrace prop", () => {
           return frames.map(frame =>
             dom.li(
               { className: "frame" },
-              `Function ${frame.functionName} called from ${frame.filename}:${
-                frame.lineNumber
-              }:${frame.columnNumber}\n`
+              `Function ${frame.functionName} called from ${frame.filename}:${frame.lineNumber}:${frame.columnNumber}\n`
             )
           );
         },

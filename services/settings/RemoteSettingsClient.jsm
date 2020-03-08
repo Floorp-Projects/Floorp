@@ -292,9 +292,7 @@ class RemoteSettingsClient extends EventEmitter {
       await kintoCollection.db.close();
     } catch (err) {
       console.warn(
-        `Error retrieving the getLastModified timestamp from ${
-          this.identifier
-        } RemoteSettingClient`,
+        `Error retrieving the getLastModified timestamp from ${this.identifier} RemoteSettingClient`,
         err
       );
     }
@@ -590,9 +588,7 @@ class RemoteSettingsClient extends EventEmitter {
           // remote collection.
           try {
             console.warn(
-              `Signature verified failed for ${
-                this.identifier
-              }. Retry from scratch`
+              `Signature verified failed for ${this.identifier}. Retry from scratch`
             );
             syncResult = await this._retrySyncFromScratch(
               kintoCollection,

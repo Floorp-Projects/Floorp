@@ -31,9 +31,7 @@ function monitorConsole(msgs) {
   addMessageListener("waitForConsole", () => {
     sendAsyncMessage("consoleDone", {
       ok: counter >= msgs.length,
-      message: `monitorConsole | messages left expected at least ${
-        msgs.length
-      } got ${counter}`,
+      message: `monitorConsole | messages left expected at least ${msgs.length} got ${counter}`,
     });
     Services.console.unregisterListener(listener);
   });

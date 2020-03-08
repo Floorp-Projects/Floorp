@@ -123,9 +123,7 @@ async function testPopupSize(
     // precision.
     ok(
       Math.abs(win.innerWidth - innerWidth) <= 1,
-      `Window width should return to approximately its original value (${
-        win.innerWidth
-      } ~= ${innerWidth})`
+      `Window width should return to approximately its original value (${win.innerWidth} ~= ${innerWidth})`
     );
 
     await closeBrowserAction(extension, browserWin);
@@ -176,9 +174,7 @@ async function testPopupSize(
       is(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
       ok(
         panelRect.bottom >= origPanelRect.bottom,
-        `Panel has not shrunk from original size (${panelRect.bottom} >= ${
-          origPanelRect.bottom
-        })`
+        `Panel has not shrunk from original size (${panelRect.bottom} >= ${origPanelRect.bottom})`
       );
 
       let screenBottom =
@@ -192,17 +188,13 @@ async function testPopupSize(
       is(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
       ok(
         panelRect.top <= origPanelRect.top,
-        `Panel has not shrunk from original size (${panelRect.top} <= ${
-          origPanelRect.top
-        })`
+        `Panel has not shrunk from original size (${panelRect.top} <= ${origPanelRect.top})`
       );
 
       let panelTop = browserWin.mozInnerScreenY + panelRect.top;
       ok(
         panelTop >= browserWin.screen.availTop,
-        `Top of popup should be on-screen. (${panelTop} >= ${
-          browserWin.screen.availTop
-        })`
+        `Top of popup should be on-screen. (${panelTop} >= ${browserWin.screen.availTop})`
       );
     }
   };

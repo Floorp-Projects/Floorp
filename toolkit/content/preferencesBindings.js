@@ -386,9 +386,7 @@ const Preferences = (window.Preferences = (function() {
     }
 
     _reportUnknownType() {
-      const msg = `Preference with id=${this.id} has unknown type ${
-        this.type
-      }.`;
+      const msg = `Preference with id=${this.id} has unknown type ${this.type}.`;
       Services.console.logStringMessage(msg);
     }
 

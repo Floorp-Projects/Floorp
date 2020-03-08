@@ -332,9 +332,7 @@ class Proxy {
           [p.socksProxy, p.socksProxyPort] = fromHost("socks", json.socksProxy);
           p.socksVersion = assert.positiveInteger(
             json.socksVersion,
-            pprint`Expected "socksVersion" to be a positive integer, got ${
-              json.socksVersion
-            }`
+            pprint`Expected "socksVersion" to be a positive integer, got ${json.socksVersion}`
           );
         }
         if (typeof json.noProxy != "undefined") {

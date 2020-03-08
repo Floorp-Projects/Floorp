@@ -225,9 +225,7 @@ add_task(async function sendMessageResponseGC() {
 
           browser.test.assertTrue(
             /^moz-extension:\/\/[\w-]+\/%7B[\w-]+%7D\.js/.test(error.fileName),
-            `Promise rejected with the correct error filename: ${
-              error.fileName
-            }`
+            `Promise rejected with the correct error filename: ${error.fileName}`
           );
 
           browser.test.assertEq(

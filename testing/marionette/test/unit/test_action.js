@@ -53,9 +53,7 @@ add_test(function test_processPointerParameters() {
   let parametersData;
   for (let d of ["foo", "", "get", "Get"]) {
     parametersData = { pointerType: d };
-    let message = `parametersData: [pointerType: ${
-      parametersData.pointerType
-    }]`;
+    let message = `parametersData: [pointerType: ${parametersData.pointerType}]`;
     check(/Unknown pointerType/, message, parametersData);
   }
   parametersData.pointerType = "mouse"; // TODO "pen";

@@ -410,9 +410,7 @@ class TelemetryRecord {
 
     if (this.currentEngine) {
       log.error(
-        `Being told that engine ${engineName} has started, but current engine ${
-          this.currentEngine.name
-        } hasn't stopped`
+        `Being told that engine ${engineName} has started, but current engine ${this.currentEngine.name} hasn't stopped`
       );
       // Just discard the current engine rather than making up data for it.
     }

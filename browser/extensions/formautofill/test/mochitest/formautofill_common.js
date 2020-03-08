@@ -192,23 +192,17 @@ async function triggerAutofillAndCheckProfile(profile) {
               if (hadEditor) {
                 ok(
                   beforeInputFired,
-                  `"beforeinput" event should've been fired before "input" event on ${
-                    element.tagName
-                  }`
+                  `"beforeinput" event should've been fired before "input" event on ${element.tagName}`
                 );
               } else {
                 ok(
                   beforeInputFired,
-                  `"beforeinput" event should've been fired before "input" event on ${
-                    element.tagName
-                  }`
+                  `"beforeinput" event should've been fired before "input" event on ${element.tagName}`
                 );
               }
               ok(
                 event instanceof InputEvent,
-                `"input" event should be dispatched with InputEvent interface on ${
-                  element.tagName
-                }`
+                `"input" event should be dispatched with InputEvent interface on ${element.tagName}`
               );
               is(
                 event.inputType,
@@ -229,9 +223,7 @@ async function triggerAutofillAndCheckProfile(profile) {
               );
               ok(
                 event instanceof Event && !(event instanceof UIEvent),
-                `"input" event should be dispatched with Event interface on ${
-                  element.tagName
-                }`
+                `"input" event should be dispatched with Event interface on ${element.tagName}`
               );
             }
             is(

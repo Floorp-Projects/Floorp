@@ -361,9 +361,7 @@ ConnectionData.prototype = Object.freeze({
     }
     if (this._closeRequested) {
       throw new Error(
-        `${
-          this._identifier
-        }: cannot execute operation ${name}, the connection is already closing`
+        `${this._identifier}: cannot execute operation ${name}, the connection is already closing`
       );
     }
 

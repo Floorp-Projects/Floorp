@@ -59,9 +59,7 @@ add_task(async function test_validate_manifest() {
       } catch (e) {
         ok(
           false,
-          `FAIL manifest for ${
-            xpi.leafName
-          } in locale ${locale} failed ${e} :: ${e.stack}`
+          `FAIL manifest for ${xpi.leafName} in locale ${locale} failed ${e} :: ${e.stack}`
         );
       }
     }

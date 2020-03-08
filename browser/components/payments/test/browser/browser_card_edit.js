@@ -33,9 +33,7 @@ async function add_link(aOptions = {}) {
       info("add_link, aOptions: " + JSON.stringify(aOptions, null, 2));
       await navigateToAddCardPage(frame);
       info(`add_link, from the add card page,
-          verifyPersistCheckbox with expectPersist: ${
-            aOptions.expectDefaultCardPersist
-          }`);
+          verifyPersistCheckbox with expectPersist: ${aOptions.expectDefaultCardPersist}`);
       await verifyPersistCheckbox(frame, {
         checkboxSelector: "basic-card-form .persist-checkbox",
         expectPersist: aOptions.expectDefaultCardPersist,

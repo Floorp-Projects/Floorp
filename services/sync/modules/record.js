@@ -1137,9 +1137,7 @@ PostQueue.prototype = {
       // bad if we think we are.
       if (this.batchID) {
         throw new Error(
-          `Flush called when no queued records but we are in a batch ${
-            this.batchID
-          }`
+          `Flush called when no queued records but we are in a batch ${this.batchID}`
         );
       }
       return;
@@ -1230,9 +1228,7 @@ PostQueue.prototype = {
 
     if (this.batchID != responseBatchID) {
       throw new Error(
-        `Invalid client/server batch state - client has ${
-          this.batchID
-        }, server has ${responseBatchID}`
+        `Invalid client/server batch state - client has ${this.batchID}, server has ${responseBatchID}`
       );
     }
 

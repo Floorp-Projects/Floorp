@@ -318,9 +318,7 @@ add_task(async function test_kinto_sync() {
       const sampled = getSampleResponse(request, server.identity.primaryPort);
       if (!sampled) {
         do_throw(
-          `unexpected ${request.method} request for ${request.path}?${
-            request.queryString
-          }`
+          `unexpected ${request.method} request for ${request.path}?${request.queryString}`
         );
       }
 

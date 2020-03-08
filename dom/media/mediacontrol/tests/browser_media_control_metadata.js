@@ -344,9 +344,7 @@ function isCurrentMetadataEqualTo(metadata) {
   is(
     current.artwork.length,
     metadata.artwork.length,
-    `artwork length '${current.artwork.length}' is equal to ${
-      metadata.artwork.length
-    }`
+    `artwork length '${current.artwork.length}' is equal to ${metadata.artwork.length}`
   );
   for (let idx = 0; idx < metadata.artwork.length; idx++) {
     // the current src we got would be a completed path of the image, so we do
@@ -354,23 +352,17 @@ function isCurrentMetadataEqualTo(metadata) {
     // metadata's file name. Eg. "http://foo/bar.jpg" v.s. "bar.jpg"
     ok(
       current.artwork[idx].src.includes(metadata.artwork[idx].src),
-      `artwork src '${current.artwork[idx].src}' includes ${
-        metadata.artwork[idx].src
-      }`
+      `artwork src '${current.artwork[idx].src}' includes ${metadata.artwork[idx].src}`
     );
     is(
       current.artwork[idx].sizes,
       metadata.artwork[idx].sizes,
-      `artwork sizes '${current.artwork[idx].sizes}' is equal to ${
-        metadata.artwork[idx].sizes
-      }`
+      `artwork sizes '${current.artwork[idx].sizes}' is equal to ${metadata.artwork[idx].sizes}`
     );
     is(
       current.artwork[idx].type,
       metadata.artwork[idx].type,
-      `artwork type '${current.artwork[idx].type}' is equal to ${
-        metadata.artwork[idx].type
-      }`
+      `artwork type '${current.artwork[idx].type}' is equal to ${metadata.artwork[idx].type}`
     );
   }
 }

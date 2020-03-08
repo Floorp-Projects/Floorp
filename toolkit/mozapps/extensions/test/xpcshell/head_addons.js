@@ -307,9 +307,7 @@ var BootstrapMonitor = {
   checkMatches(method, lastMethod, params, { params: lastParams } = {}) {
     ok(
       lastParams,
-      `Expecting matching ${lastMethod} call for add-on ${
-        params.id
-      } ${method} call`
+      `Expecting matching ${lastMethod} call for add-on ${params.id} ${method} call`
     );
 
     if (method == "update") {
@@ -335,9 +333,7 @@ var BootstrapMonitor = {
 
       ok(
         params.resourceURI.equals(lastParams.resourceURI),
-        `params.resourceURI should match: "${params.resourceURI.spec}" == "${
-          lastParams.resourceURI.spec
-        }"`
+        `params.resourceURI should match: "${params.resourceURI.spec}" == "${lastParams.resourceURI.spec}"`
       );
     }
   },

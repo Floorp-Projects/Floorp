@@ -67,9 +67,7 @@ function eventToString(event) {
     info += `, state: ${stateStr}, is enabled: ${event.isEnabled}`;
   } else if (event instanceof nsIAccessibleTextChangeEvent) {
     let tcType = event.isInserted ? "inserted" : "removed";
-    info += `, start: ${event.start}, length: ${
-      event.length
-    }, ${tcType} text: ${event.modifiedText}`;
+    info += `, start: ${event.start}, length: ${event.length}, ${tcType} text: ${event.modifiedText}`;
   }
 
   info += `. Target: ${prettyName(event.accessible)}`;

@@ -39,9 +39,7 @@ add_task(async function test_support_theme_frame() {
   let style = window.getComputedStyle(docEl);
   Assert.ok(
     style.backgroundImage.includes("face.png"),
-    `The backgroundImage should use face.png. Actual value is: ${
-      style.backgroundImage
-    }`
+    `The backgroundImage should use face.png. Actual value is: ${style.backgroundImage}`
   );
   Assert.equal(
     style.backgroundColor,

@@ -111,9 +111,7 @@ function showRequest(requestId) {
       );
     } catch (error) {
       emitTestFail(
-        `Unexpected error (${
-          error.name
-        }) when calling PaymentRequestService::changePaymentMethod`
+        `Unexpected error (${error.name}) when calling PaymentRequestService::changePaymentMethod`
       );
     }
     return;

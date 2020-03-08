@@ -62,9 +62,7 @@ add_task(async function test_support_toolbar_field_properties() {
   Assert.equal(fields.length, 2, "Should be testing two elements");
 
   info(
-    `Checking toolbar background colors and colors for ${
-      fields.length
-    } toolbar fields.`
+    `Checking toolbar background colors and colors for ${fields.length} toolbar fields.`
   );
   for (let field of fields) {
     info(`Testing ${field.id || field.className}`);

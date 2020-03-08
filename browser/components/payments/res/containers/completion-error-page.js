@@ -45,9 +45,7 @@ export default class CompletionErrorPage extends HandleEventMixin(
 
     if (this.id && page && page.id !== this.id) {
       log.debug(
-        `CompletionErrorPage: no need to further render inactive page: ${
-          page.id
-        }`
+        `CompletionErrorPage: no need to further render inactive page: ${page.id}`
       );
       return;
     }

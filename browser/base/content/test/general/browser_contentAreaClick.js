@@ -219,9 +219,7 @@ var gClickHandler = {
     is(
       event.type,
       wantedEvent,
-      `${
-        gCurrentTest.desc
-      }:Handler received a ${wantedEvent} event on ${linkId}`
+      `${gCurrentTest.desc}:Handler received a ${wantedEvent} event on ${linkId}`
     );
 
     let isPanelClick = linkId == "panellink";

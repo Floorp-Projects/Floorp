@@ -149,9 +149,7 @@ var Subprocess = {
     ).then(isExecutable => {
       if (!isExecutable) {
         let error = new Error(
-          `File at path "${
-            options.command
-          }" does not exist, or is not executable`
+          `File at path "${options.command}" does not exist, or is not executable`
         );
         error.errorCode = SubprocessConstants.ERROR_BAD_EXECUTABLE;
         throw error;

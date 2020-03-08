@@ -340,9 +340,7 @@ add_task(async function test_webRequest_duelingAuth() {
   let ex2 = getExtension(config);
   await ex2.startup();
 
-  let requestUrl = `${BASE_URL}/authenticate.sjs?realm=${config.realm}&user=${
-    authCredentials.username
-  }&pass=${authCredentials.password}`;
+  let requestUrl = `${BASE_URL}/authenticate.sjs?realm=${config.realm}&user=${authCredentials.username}&pass=${authCredentials.password}`;
   let contentPage = await ExtensionTestUtils.loadContentPage(requestUrl);
   await Promise.all([
     exNone.awaitMessage("onBeforeRequest"),
@@ -390,9 +388,7 @@ add_task(async function test_webRequest_auth_proxy() {
     browser.webRequest.onAuthRequired.addListener(
       details => {
         browser.test.log(
-          `handlingExt onAuthRequired called with ${details.requestId} ${
-            details.url
-          }`
+          `handlingExt onAuthRequired called with ${details.requestId} ${details.url}`
         );
         if (details.isProxy) {
           browser.test.succeed("providing proxy authorization");

@@ -90,9 +90,7 @@ add_task(async function test_tokenizer() {
     },
     {
       desc: "double boundary restriction char",
-      searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARK}test${
-        UrlbarTokenizer.RESTRICT.TITLE
-      }`,
+      searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARK}test${UrlbarTokenizer.RESTRICT.TITLE}`,
       expectedTokens: [
         {
           value: UrlbarTokenizer.RESTRICT.BOOKMARK,
@@ -106,9 +104,7 @@ add_task(async function test_tokenizer() {
     },
     {
       desc: "double non-combinable restriction char, single char string",
-      searchString: `t${UrlbarTokenizer.RESTRICT.BOOKMARK}${
-        UrlbarTokenizer.RESTRICT.SEARCH
-      }`,
+      searchString: `t${UrlbarTokenizer.RESTRICT.BOOKMARK}${UrlbarTokenizer.RESTRICT.SEARCH}`,
       expectedTokens: [
         {
           value: `t${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
@@ -122,9 +118,7 @@ add_task(async function test_tokenizer() {
     },
     {
       desc: "only boundary restriction chars",
-      searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARK}${
-        UrlbarTokenizer.RESTRICT.TITLE
-      }`,
+      searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARK}${UrlbarTokenizer.RESTRICT.TITLE}`,
       expectedTokens: [
         {
           value: UrlbarTokenizer.RESTRICT.BOOKMARK,
@@ -164,9 +158,7 @@ add_task(async function test_tokenizer() {
     },
     {
       desc: "multiple boundary restriction chars suffix",
-      searchString: `test ${UrlbarTokenizer.RESTRICT.HISTORY} ${
-        UrlbarTokenizer.RESTRICT.TAG
-      }`,
+      searchString: `test ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TAG}`,
       expectedTokens: [
         { value: "test", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
         {
@@ -181,9 +173,7 @@ add_task(async function test_tokenizer() {
     },
     {
       desc: "multiple boundary restriction chars prefix",
-      searchString: `${UrlbarTokenizer.RESTRICT.HISTORY} ${
-        UrlbarTokenizer.RESTRICT.TAG
-      } test`,
+      searchString: `${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TAG} test`,
       expectedTokens: [
         {
           value: UrlbarTokenizer.RESTRICT.HISTORY,

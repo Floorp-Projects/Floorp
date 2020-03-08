@@ -47,9 +47,7 @@ exports.MarkerDOMUtils = {
     hbox.setAttribute("align", "center");
 
     const bullet = doc.createXULElement("hbox");
-    bullet.className = `marker-details-bullet marker-color-${
-      blueprint.colorName
-    }`;
+    bullet.className = `marker-details-bullet marker-color-${blueprint.colorName}`;
 
     const title = MarkerBlueprintUtils.getMarkerLabel(marker);
     const label = doc.createXULElement("label");

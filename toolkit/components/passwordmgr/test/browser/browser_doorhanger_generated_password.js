@@ -1238,9 +1238,7 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
         "Form submitted with expected password"
       );
       info(
-        `form was submitted, got username/password ${submitResults.username}/${
-          submitResults.password
-        }`
+        `form was submitted, got username/password ${submitResults.username}/${submitResults.password}`
       );
 
       await waitForDoorhanger(browser, "password-change");

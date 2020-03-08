@@ -231,9 +231,7 @@ var FxAccountsConfig = {
     });
     if (!resp.success) {
       log.error(
-        `Received HTTP response code ${
-          resp.status
-        } from configuration object request`
+        `Received HTTP response code ${resp.status} from configuration object request`
       );
       if (resp.body) {
         log.debug("Got error response", resp.body);

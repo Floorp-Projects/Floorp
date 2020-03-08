@@ -187,9 +187,8 @@ FinderIterator.prototype = {
       ) {
         if (kDebug) {
           Cu.reportError(
-            `We're currently iterating over '${
-              this._currentParams.word
-            }', not '${word}'\n` + new Error().stack
+            `We're currently iterating over '${this._currentParams.word}', not '${word}'\n` +
+              new Error().stack
           );
         }
         this._listeners.delete(listener);

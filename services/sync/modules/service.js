@@ -1087,9 +1087,7 @@ Sync11Service.prototype = {
       );
     } else if (configResponse.status != 200) {
       this._log.warn(
-        `info/configuration returned ${
-          configResponse.status
-        } - using default configuration`
+        `info/configuration returned ${configResponse.status} - using default configuration`
       );
       this.errorHandler.checkServerError(configResponse);
       return false;

@@ -1185,9 +1185,7 @@ SyncServer.prototype = {
               let wbo = coll.wbo(wboID);
               if (xius < wbo.modified) {
                 this._log.info(
-                  `x-if-unmodified-since mismatch - request wants ${xius} but wbo has ${
-                    wbo.modified
-                  }`
+                  `x-if-unmodified-since mismatch - request wants ${xius} but wbo has ${wbo.modified}`
                 );
                 respond(412, "precondition failed", "precondition failed");
                 return undefined;

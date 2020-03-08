@@ -331,9 +331,7 @@ add_task(async function test_bookmark_repair_integration() {
     );
     ok(
       restoredBookmarkInfo,
-      `Missing bookmark ${
-        bookmarkInfo.guid
-      } should be downloaded to initial client`
+      `Missing bookmark ${bookmarkInfo.guid} should be downloaded to initial client`
     );
     checkRecordedEvents([
       {

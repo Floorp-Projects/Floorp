@@ -221,9 +221,7 @@ TabStore.prototype = {
 
     if (records.length != tabs.length) {
       this._log.warn(
-        `Can't fit all tabs in sync payload: have ${
-          tabs.length
-        }, but can only fit ${records.length}.`
+        `Can't fit all tabs in sync payload: have ${tabs.length}, but can only fit ${records.length}.`
       );
     }
 

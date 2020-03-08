@@ -176,9 +176,7 @@ add_task(async function test_sideload_uninstall() {
     Assert.equal(
       addon.scope !== AddonManager.SCOPE_PROFILE,
       file.exists(),
-      `file remains after uninstall for non-profile sideloads, scope ${
-        addon.scope
-      }`
+      `file remains after uninstall for non-profile sideloads, scope ${addon.scope}`
     );
   }
   addons = await AddonManager.getAddonsByTypes(["extension"]);

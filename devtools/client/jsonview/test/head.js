@@ -110,9 +110,7 @@ async function addJsonViewTab(
       const { document } = content;
       while (docReadyStates.indexOf(document.readyState) < docReadyIndex) {
         info(
-          `DocReadyState is "${document.readyState}". Await "${
-            data.docReadyState
-          }"`
+          `DocReadyState is "${document.readyState}". Await "${data.docReadyState}"`
         );
         await new Promise(resolve => {
           document.addEventListener("readystatechange", resolve, {
@@ -124,9 +122,7 @@ async function addJsonViewTab(
       // Wait until the app readyState suffices.
       while (appReadyStates.indexOf(JSONView.readyState) < appReadyIndex) {
         info(
-          `AppReadyState is "${JSONView.readyState}". Await "${
-            data.appReadyState
-          }"`
+          `AppReadyState is "${JSONView.readyState}". Await "${data.appReadyState}"`
         );
         await new Promise(resolve => {
           content.addEventListener("AppReadyStateChange", resolve, {

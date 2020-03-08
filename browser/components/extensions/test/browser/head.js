@@ -894,9 +894,7 @@ async function startIncognitoMonitorExtension() {
       }
       browser.test.assertFalse(
         tab.incognito,
-        `tabs.${eventName} ${
-          tab.id
-        }: monitor extension got expected incognito value`
+        `tabs.${eventName} ${tab.id}: monitor extension got expected incognito value`
       );
       seenTabs.set(tab.id, tab);
     }
@@ -964,9 +962,7 @@ async function startIncognitoMonitorExtension() {
       }
       browser.test.assertFalse(
         window.incognito,
-        `windows.onRemoved ${
-          window.id
-        }: monitor extension got expected incognito value`
+        `windows.onRemoved ${window.id}: monitor extension got expected incognito value`
       );
     });
     browser.windows.onFocusChanged.addListener(async windowId => {
@@ -985,9 +981,7 @@ async function startIncognitoMonitorExtension() {
       }
       browser.test.assertFalse(
         window.incognito,
-        `windows.onFocusChanged ${
-          window.id
-        }: monitor extesion got expected incognito value`
+        `windows.onFocusChanged ${window.id}: monitor extesion got expected incognito value`
       );
       seenWindows.set(window.id, window);
     });

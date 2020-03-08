@@ -447,9 +447,7 @@ EdgeBookmarksMigrator.prototype = {
           new URL(bookmark.URL);
         } catch (ex) {
           Cu.reportError(
-            `Ignoring ${
-              bookmark.URL
-            } when importing from Edge because of exception: ${ex}`
+            `Ignoring ${bookmark.URL} when importing from Edge because of exception: ${ex}`
           );
           continue;
         }

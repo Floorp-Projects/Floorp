@@ -23,9 +23,7 @@ const ABOUT_HOME_URL = "about:home";
 const DEFAULT_OPTIONS = {
   dispatch(action) {
     throw new Error(
-      `\nMessageChannel: Received action ${
-        action.type
-      }, but no dispatcher was defined.\n`
+      `\nMessageChannel: Received action ${action.type}, but no dispatcher was defined.\n`
     );
   },
   pageURL: ABOUT_NEW_TAB_URL,
