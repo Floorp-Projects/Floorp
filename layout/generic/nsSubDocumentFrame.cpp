@@ -976,6 +976,7 @@ nsFrameLoader* nsSubDocumentFrame::FrameLoader() const {
 
 void nsSubDocumentFrame::ResetFrameLoader() {
   mFrameLoader = nullptr;
+  ClearDisplayItems();
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
 }
 
