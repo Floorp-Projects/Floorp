@@ -527,9 +527,12 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           mat.preRotate(angle, cx, cy);
         }
 
+        SkTileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
         sk_sp<SkShader> shader = SkGradientShader::MakeSweep(
             cx, cy, &stops->mColors.front(), &stops->mPositions.front(),
-            stops->mCount, 0, &mat);
+            stops->mCount, mode, 360 * pat.mStartOffset, 360 * pat.mEndOffset,
+            0, &mat);
+
         if (shader) {
           aPaint.setShader(shader);
         } else {

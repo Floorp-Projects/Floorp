@@ -298,14 +298,22 @@ class RadialGradientPattern : public Pattern {
 class ConicGradientPattern : public Pattern {
  public:
   /// For constructor parameter description, see member data documentation.
-  ConicGradientPattern(const Point& aCenter, Float aAngle,
-                       GradientStops* aStops, const Matrix& aMatrix = Matrix())
-      : mCenter(aCenter), mAngle(aAngle), mStops(aStops), mMatrix(aMatrix) {}
+  ConicGradientPattern(const Point& aCenter, Float aAngle, Float aStartOffset,
+                       Float aEndOffset, GradientStops* aStops,
+                       const Matrix& aMatrix = Matrix())
+      : mCenter(aCenter),
+        mAngle(aAngle),
+        mStartOffset(aStartOffset),
+        mEndOffset(aEndOffset),
+        mStops(aStops),
+        mMatrix(aMatrix) {}
 
   PatternType GetType() const override { return PatternType::CONIC_GRADIENT; }
 
   Point mCenter;  //!< Center of the gradient
   Float mAngle;   //!< Start angle of gradient
+  Float mStartOffset;  // Offset of first stop
+  Float mEndOffset;    // Offset of last stop
   RefPtr<GradientStops>
       mStops;      /**< GradientStops object for this gradient, this
                         should match the backend type of the draw target
