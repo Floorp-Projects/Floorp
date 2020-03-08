@@ -508,3 +508,7 @@ skip script test262/language/expressions/super/call-proto-not-ctor.js
 
 # Tests expects RangeError, but should instead expect TypeError.
 skip script test262/intl402/NumberFormat/constructor-order.js
+
+# DST issues, bug 1620825.
+skip script test262/built-ins/Date/parse/without-utc-offset.js
+
