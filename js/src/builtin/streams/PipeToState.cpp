@@ -18,12 +18,12 @@
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter
-#include "js/Class.h"       // JSClass, JSCLASS_HAS_RESERVED_SLOTS
-#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
+#include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
 #include "vm/JSContext-inl.h"  // JSContext::check
-#include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance
+#include "vm/JSObject-inl.h"   // js::NewBuiltinClassInstance
 
 using JS::Handle;
 using JS::Int32Value;

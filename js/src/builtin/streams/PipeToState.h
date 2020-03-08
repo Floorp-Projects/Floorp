@@ -15,10 +15,10 @@
 
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStreamDefaultReader
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
-#include "js/Class.h"         // JSClass
-#include "js/RootingAPI.h"    // JS::Handle
-#include "js/Value.h"         // JS::Int32Value, JS::ObjectValue
-#include "vm/NativeObject.h"  // js::NativeObject
+#include "js/Class.h"                                     // JSClass
+#include "js/RootingAPI.h"                                // JS::Handle
+#include "js/Value.h"          // JS::Int32Value, JS::ObjectValue
+#include "vm/NativeObject.h"   // js::NativeObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
 class JS_PUBLIC_API JSObject;
