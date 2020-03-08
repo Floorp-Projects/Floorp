@@ -799,14 +799,14 @@ void TRRServiceChannel::ProcessAltService() {
     return;
   }
 
-  nsAutoCString scheme;
+  nsCString scheme;
   mURI->GetScheme(scheme);
   bool isHttp = scheme.EqualsLiteral("http");
   if (!isHttp && !scheme.EqualsLiteral("https")) {
     return;
   }
 
-  nsAutoCString altSvc;
+  nsCString altSvc;
   Unused << mResponseHead->GetHeader(nsHttp::Alternate_Service, altSvc);
   if (altSvc.IsEmpty()) {
     return;
@@ -817,7 +817,7 @@ void TRRServiceChannel::ProcessAltService() {
     return;
   }
 
-  nsAutoCString originHost;
+  nsCString originHost;
   int32_t originPort = 80;
   mURI->GetPort(&originPort);
   if (NS_FAILED(mURI->GetAsciiHost(originHost))) {
@@ -832,10 +832,25 @@ void TRRServiceChannel::ProcessAltService() {
     proxyInfo = do_QueryInterface(mProxyInfo);
   }
 
-  AltSvcMapping::ProcessHeader(
-      altSvc, scheme, originHost, originPort, mUsername, GetTopWindowOrigin(),
-      mPrivateBrowsing, IsIsolated(), callbacks, proxyInfo,
-      mCaps & NS_HTTP_DISALLOW_SPDY, OriginAttributes());
+  nsCString topWindowOrigin = GetTopWindowOrigin();
+  bool isIsolated = IsIsolated();
+  auto processHeaderTask = [altSvc, scheme, originHost, originPort,
+                            userName(mUsername), topWindowOrigin,
+                            privateBrowsing(mPrivateBrowsing), isIsolated,
+                            callbacks, proxyInfo, caps(mCaps)]() {
+    AltSvcMapping::ProcessHeader(
+        altSvc, scheme, originHost, originPort, userName, topWindowOrigin,
+        privateBrowsing, isIsolated, callbacks, proxyInfo,
+        caps & NS_HTTP_DISALLOW_SPDY, OriginAttributes());
+  };
+
+  if (NS_IsMainThread()) {
+    processHeaderTask();
+    return;
+  }
+
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "TRRServiceChannel::ProcessAltService", std::move(processHeaderTask)));
 }
 
 NS_IMETHODIMP
