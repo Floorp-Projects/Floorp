@@ -393,9 +393,7 @@ function* synthesizeNativeTouchSequences(
     if (aPositions[i].length != aTouchIds.length) {
       throw new Error(
         `aPositions[${i}] did not have the expected number of positions; ` +
-          `expected ${aTouchIds.length} touch points but found ${
-            aPositions[i].length
-          }`
+          `expected ${aTouchIds.length} touch points but found ${aPositions[i].length}`
       );
     }
     for (let j = 0; j < aTouchIds.length; j++) {

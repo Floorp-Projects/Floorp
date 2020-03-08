@@ -430,9 +430,7 @@ const AbuseReporter = {
 
     if (!SUPPORTED_ADDON_TYPES.includes(report.addon.type)) {
       throw new Error(
-        `Addon type "${
-          report.addon.type
-        }" is not currently supported by the integrated abuse reporting feature`
+        `Addon type "${report.addon.type}" is not currently supported by the integrated abuse reporting feature`
       );
     }
 

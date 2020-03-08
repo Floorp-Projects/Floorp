@@ -363,9 +363,7 @@ add_task(async function() {
       if (!expected) {
         record(
           false,
-          `unexpected ${marker.operation} on ${
-            marker.filename
-          } in ${procName} process`,
+          `unexpected ${marker.operation} on ${marker.filename} in ${procName} process`,
           undefined,
           "  " + getStackFromProfile(profile, marker.stackId).join("\n  ")
         );

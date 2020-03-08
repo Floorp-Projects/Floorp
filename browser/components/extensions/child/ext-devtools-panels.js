@@ -179,9 +179,7 @@ class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
         extensionURL.host !== sidebarPageURL.host
       ) {
         throw new context.cloneScope.Error(
-          `Invalid sidebar URL: ${
-            sidebarPageURL.href
-          } is not a valid extension URL`
+          `Invalid sidebar URL: ${sidebarPageURL.href} is not a valid extension URL`
         );
       }
 

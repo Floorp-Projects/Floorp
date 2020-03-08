@@ -114,9 +114,7 @@ async function postFrom(start, target) {
         // eslint-disable-next-line no-unsanitized/property
         content.document.body.innerHTML = `
         <form method="post" action="${target}">
-          <input type="text" name="initialRemoteType" value="${
-            Services.appinfo.remoteType
-          }">
+          <input type="text" name="initialRemoteType" value="${Services.appinfo.remoteType}">
           <input type="submit" id="submit">
         </form>`;
       });

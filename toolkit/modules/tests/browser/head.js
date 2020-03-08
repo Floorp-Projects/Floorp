@@ -153,9 +153,7 @@ function promiseTestHighlighterOutput(
           if (!lastMaskNode && expectedResult.rectCount !== 0) {
             Assert.ok(
               false,
-              `No mask node found, but expected ${
-                expectedResult.rectCount
-              } rects.`
+              `No mask node found, but expected ${expectedResult.rectCount} rects.`
             );
           }
 

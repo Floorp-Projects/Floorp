@@ -368,9 +368,7 @@ add_task(async function testContentBlockingStrictCategory() {
         is(
           Services.prefs.getIntPref(NCB_PREF),
           Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-          `${NCB_PREF} has been set to ${
-            Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN
-          }`
+          `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN}`
         );
         break;
       case "cookieBehavior2":
@@ -384,27 +382,21 @@ add_task(async function testContentBlockingStrictCategory() {
         is(
           Services.prefs.getIntPref(NCB_PREF),
           Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
-          `${NCB_PREF} has been set to ${
-            Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
-          }`
+          `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN}`
         );
         break;
       case "cookieBehavior4":
         is(
           Services.prefs.getIntPref(NCB_PREF),
           Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-          `${NCB_PREF} has been set to ${
-            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
-          }`
+          `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`
         );
         break;
       case "cookieBehavior5":
         is(
           Services.prefs.getIntPref(NCB_PREF),
           Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
-          `${NCB_PREF} has been set to ${
-            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
-          }`
+          `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
         );
         break;
       default:

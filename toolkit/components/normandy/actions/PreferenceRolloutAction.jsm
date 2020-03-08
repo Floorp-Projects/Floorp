@@ -103,9 +103,7 @@ class PreferenceRolloutAction extends BaseAction {
           default: {
             Cu.reportError(
               new Error(
-                `Updated pref rollout in unexpected state: ${
-                  existingRollout.state
-                }`
+                `Updated pref rollout in unexpected state: ${existingRollout.state}`
               )
             );
           }
@@ -179,9 +177,7 @@ class PreferenceRolloutAction extends BaseAction {
         });
         // Throw so that this recipe execution is marked as a failure
         throw new Error(
-          `Cannot start rollout ${slug}. Preference ${
-            prefSpec.preferenceName
-          } is already managed.`
+          `Cannot start rollout ${slug}. Preference ${prefSpec.preferenceName} is already managed.`
         );
       }
       const existingPrefType = Services.prefs.getPrefType(
@@ -242,9 +238,7 @@ class PreferenceRolloutAction extends BaseAction {
       if (oldValue !== newPrefSpecs.get(prefSpec.preferenceName).value) {
         anyChanged = true;
         this.log.debug(
-          `updating ${existingRollout.slug}: ${
-            prefSpec.preferenceName
-          } value changed from ${oldValue} to ${prefSpec.value}`
+          `updating ${existingRollout.slug}: ${prefSpec.preferenceName} value changed from ${oldValue} to ${prefSpec.value}`
         );
         PrefUtils.setPref("default", prefSpec.preferenceName, prefSpec.value);
       }

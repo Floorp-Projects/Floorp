@@ -119,17 +119,13 @@ var NativeManifests = {
 
         if (manifest.type !== type) {
           Cu.reportError(
-            `Native manifest ${path} has type property ${
-              manifest.type
-            } (expected ${type})`
+            `Native manifest ${path} has type property ${manifest.type} (expected ${type})`
           );
           return null;
         }
         if (manifest.name !== name) {
           Cu.reportError(
-            `Native manifest ${path} has name property ${
-              manifest.name
-            } (expected ${name})`
+            `Native manifest ${path} has name property ${manifest.name} (expected ${name})`
           );
           return null;
         }

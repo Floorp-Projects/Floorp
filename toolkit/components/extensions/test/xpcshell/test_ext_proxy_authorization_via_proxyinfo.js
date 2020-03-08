@@ -35,9 +35,7 @@ function getExtension(background) {
     manifest: {
       permissions: ["proxy", "webRequest", "webRequestBlocking", "<all_urls>"],
     },
-    background: `(${background})(${
-      proxy.identity.primaryPort
-    }, "${proxyToken}")`,
+    background: `(${background})(${proxy.identity.primaryPort}, "${proxyToken}")`,
   });
 }
 

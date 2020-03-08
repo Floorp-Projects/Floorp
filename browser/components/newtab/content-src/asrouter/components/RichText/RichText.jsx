@@ -60,9 +60,7 @@ export function convertLinks(
 export function RichText(props) {
   if (!RICH_TEXT_KEYS.includes(props.localization_id)) {
     throw new Error(
-      `ASRouter: ${
-        props.localization_id
-      } is not a valid rich text property. If you want it to be processed, you need to add it to asrouter/rich-text-strings.js`
+      `ASRouter: ${props.localization_id} is not a valid rich text property. If you want it to be processed, you need to add it to asrouter/rich-text-strings.js`
     );
   }
   return (

@@ -229,9 +229,7 @@ class PingCentre {
       ) {
         continue;
       }
-      let expString = `${experimentID}:${
-        activeExperiments[experimentID].branch
-      }`;
+      let expString = `${experimentID}:${activeExperiments[experimentID].branch}`;
       experimentsString = experimentsString.concat(`${expString};`);
     }
     return experimentsString;

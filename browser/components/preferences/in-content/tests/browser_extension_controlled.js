@@ -1057,9 +1057,7 @@ add_task(async function testExtensionControlledProxyConfig() {
         is(
           element.disabled,
           disabled,
-          `Manual proxy controls should be ${controlState} - control: ${
-            element.outerHTML
-          }.`
+          `Manual proxy controls should be ${controlState} - control: ${element.outerHTML}.`
         );
       }
       for (let element of controls.pacControls) {
@@ -1067,18 +1065,14 @@ add_task(async function testExtensionControlledProxyConfig() {
         is(
           element.disabled,
           disabled,
-          `PAC proxy controls should be ${controlState} - control: ${
-            element.outerHTML
-          }.`
+          `PAC proxy controls should be ${controlState} - control: ${element.outerHTML}.`
         );
       }
       for (let element of controls.otherControls) {
         is(
           element.disabled,
           isControlled,
-          `Other proxy controls should be ${controlState} - control: ${
-            element.outerHTML
-          }.`
+          `Other proxy controls should be ${controlState} - control: ${element.outerHTML}.`
         );
       }
     } else {

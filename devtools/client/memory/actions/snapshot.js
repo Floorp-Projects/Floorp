@@ -148,9 +148,7 @@ const readSnapshot = (exports.readSnapshot = TaskCache.declareCacheableTask({
     const snapshot = getSnapshot(getState(), id);
     assert(
       [states.SAVED, states.IMPORTING].includes(snapshot.state),
-      `Should only read a snapshot once. Found snapshot in state ${
-        snapshot.state
-      }`
+      `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`
     );
 
     let creationTime;

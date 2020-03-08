@@ -38,9 +38,7 @@ async function background(tabCount, testFn) {
         browser.test.assertEq(
           expected[i],
           results[i],
-          `${name}: successorTabId of tab ${i} in mapping should be ${
-            expected[i]
-          }`
+          `${name}: successorTabId of tab ${i} in mapping should be ${expected[i]}`
         );
       }
     };

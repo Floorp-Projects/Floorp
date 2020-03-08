@@ -56,18 +56,14 @@ function checkPrefGetters(stats, max, whitelist = {}) {
         Assert.lessOrEqual(
           whitelistItem.min,
           count,
-          `Whitelist item ${pref} should be accessed at least ${
-            whitelistItem.min
-          } times.`
+          `Whitelist item ${pref} should be accessed at least ${whitelistItem.min} times.`
         );
       }
       if (whitelistItem.max) {
         Assert.lessOrEqual(
           count,
           whitelistItem.max,
-          `Whitelist item ${pref} should be accessed at most ${
-            whitelistItem.max
-          } times.`
+          `Whitelist item ${pref} should be accessed at most ${whitelistItem.max} times.`
         );
       }
       delete whitelist[pref];

@@ -2872,9 +2872,7 @@ async function synthesizePlainDragAndDrop(aParams) {
   }
 
   function rectToString(aRect) {
-    return `left: ${aRect.left}, top: ${aRect.top}, right: ${
-      aRect.right
-    }, bottom: ${aRect.bottom}`;
+    return `left: ${aRect.left}, top: ${aRect.top}, right: ${aRect.right}, bottom: ${aRect.bottom}`;
   }
 
   if (logFunc) {

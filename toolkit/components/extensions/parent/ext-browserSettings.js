@@ -256,9 +256,7 @@ this.browserSettings = class extends ExtensionAPI {
             set: details => {
               if (!["mouseup", "mousedown"].includes(details.value)) {
                 throw new ExtensionError(
-                  `${
-                    details.value
-                  } is not a valid value for contextMenuShowEvent.`
+                  `${details.value} is not a valid value for contextMenuShowEvent.`
                 );
               }
               if (
@@ -414,9 +412,7 @@ this.browserSettings = class extends ExtensionAPI {
                 )
               ) {
                 throw new ExtensionError(
-                  `${
-                    details.value
-                  } is not a valid value for overrideDocumentColors.`
+                  `${details.value} is not a valid value for overrideDocumentColors.`
                 );
               }
               let prefValue = 0; // initialize to 0 - auto/high-contrast-only

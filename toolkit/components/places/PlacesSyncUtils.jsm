@@ -1599,9 +1599,7 @@ var reparentOrphans = async function(db, item) {
       // Reparenting can fail if we have a corrupted or incomplete tree
       // where an item's parent is one of its descendants.
       BookmarkSyncLog.trace(
-        `reparentOrphans: Attempting to move item ${
-          orphanGuids[i]
-        } to new parent ${item.recordId}`
+        `reparentOrphans: Attempting to move item ${orphanGuids[i]} to new parent ${item.recordId}`
       );
       await PlacesUtils.bookmarks.update({
         guid: orphanGuids[i],
@@ -1611,9 +1609,7 @@ var reparentOrphans = async function(db, item) {
       });
     } catch (ex) {
       BookmarkSyncLog.error(
-        `reparentOrphans: Failed to reparent item ${orphanGuids[i]} to ${
-          item.recordId
-        }`,
+        `reparentOrphans: Failed to reparent item ${orphanGuids[i]} to ${item.recordId}`,
         ex
       );
     }
@@ -1635,9 +1631,7 @@ async function insertSyncBookmark(db, insertInfo) {
     );
   } else {
     BookmarkSyncLog.debug(
-      `insertSyncBookmark: Item ${insertInfo.recordId} is an orphan: parent ${
-        insertInfo.parentRecordId
-      } doesn't exist; reparenting to unfiled`
+      `insertSyncBookmark: Item ${insertInfo.recordId} is an orphan: parent ${insertInfo.parentRecordId} doesn't exist; reparenting to unfiled`
     );
     insertInfo.parentRecordId = "unfiled";
   }
@@ -1802,9 +1796,7 @@ async function updateSyncBookmark(db, updateInfo) {
     if (BookmarkSyncLog.level <= Log.Level.Warn) {
       let oldRecordId = BookmarkSyncUtils.guidToRecordId(oldBookmarkItem.guid);
       BookmarkSyncLog.warn(
-        `updateSyncBookmark: Local ${oldRecordId} kind = ${oldKind}; remote ${
-          updateInfo.recordId
-        } kind = ${updateInfo.kind}. Deleting and recreating`
+        `updateSyncBookmark: Local ${oldRecordId} kind = ${oldKind}; remote ${updateInfo.recordId} kind = ${updateInfo.kind}. Deleting and recreating`
       );
     }
   }
@@ -1854,9 +1846,7 @@ async function updateSyncBookmark(db, updateInfo) {
         // the item as an orphan. We'll annotate it with its real parent after
         // updating.
         BookmarkSyncLog.trace(
-          `updateSyncBookmark: Item ${
-            updateInfo.recordId
-          } is an orphan: could not find parent ${requestedParentRecordId}`
+          `updateSyncBookmark: Item ${updateInfo.recordId} is an orphan: could not find parent ${requestedParentRecordId}`
         );
         delete updateInfo.parentRecordId;
       }

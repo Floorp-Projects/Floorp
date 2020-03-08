@@ -95,9 +95,7 @@ async function setupManifests(modules) {
     default:
       ok(
         false,
-        `Loading of PKCS#11 modules is not supported on ${
-          AppConstants.platform
-        }`
+        `Loading of PKCS#11 modules is not supported on ${AppConstants.platform}`
       );
   }
 }

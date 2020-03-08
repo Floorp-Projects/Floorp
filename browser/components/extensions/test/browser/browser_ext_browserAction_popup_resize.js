@@ -33,9 +33,7 @@ add_task(async function testBrowserActionPopupResize() {
     Assert.lessOrEqual(
       Math.abs(dims.window.innerHeight - expected),
       1,
-      `Panel window should be ${expected}px tall (was ${
-        dims.window.innerHeight
-      })`
+      `Panel window should be ${expected}px tall (was ${dims.window.innerHeight})`
     );
     is(
       dims.body.clientHeight,

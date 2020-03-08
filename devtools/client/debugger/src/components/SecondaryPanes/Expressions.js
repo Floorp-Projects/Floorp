@@ -331,9 +331,9 @@ class Expressions extends Component<Props, State> {
             onFocus={this.onFocus}
             value={!editing ? inputValue : ""}
             ref={c => (this._input = c)}
-            {...features.autocompleteExpression && {
+            {...(features.autocompleteExpression && {
               list: "autocomplete-matches",
-            }}
+            })}
           />
           {this.renderAutoCompleteMatches()}
           <input type="submit" style={{ display: "none" }} />
@@ -367,9 +367,9 @@ class Expressions extends Component<Props, State> {
             onFocus={this.onFocus}
             value={editing ? inputValue : expression.input}
             ref={c => (this._input = c)}
-            {...features.autocompleteExpression && {
+            {...(features.autocompleteExpression && {
               list: "autocomplete-matches",
-            }}
+            })}
           />
           {this.renderAutoCompleteMatches()}
           <input type="submit" style={{ display: "none" }} />

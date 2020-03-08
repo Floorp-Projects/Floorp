@@ -62,9 +62,7 @@ class AddonRollbackAction extends BaseAction {
           }
         } else {
           this.log.warn(
-            `Could not uninstall addon ${
-              rollout.addonId
-            } for rollback ${rolloutSlug}: it is not installed.`
+            `Could not uninstall addon ${rollout.addonId} for rollback ${rolloutSlug}: it is not installed.`
           );
         }
 

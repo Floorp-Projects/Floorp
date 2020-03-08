@@ -65,9 +65,7 @@ add_task(async function test_bookmarks_excludeQueries() {
   let expectedGuids = [bm.guid, folderShortcut.guid];
   let query = {},
     options = {};
-  let queryString = `place:parent=${
-    PlacesUtils.bookmarks.unfiledGuid
-  }&excludeQueries=1`;
+  let queryString = `place:parent=${PlacesUtils.bookmarks.unfiledGuid}&excludeQueries=1`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
 
   let root = PlacesUtils.history.executeQuery(query.value, options.value).root;

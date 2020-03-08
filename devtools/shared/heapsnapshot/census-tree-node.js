@@ -75,9 +75,7 @@ CensusTreeNodeCacheValue.prototype = null;
  */
 CensusTreeNodeCache.hashFrame = function(frame) {
   // eslint-disable-next-line max-len
-  return `FRAME,${frame.functionDisplayName},${frame.source},${frame.line},${
-    frame.column
-  },${frame.asyncCause}`;
+  return `FRAME,${frame.functionDisplayName},${frame.source},${frame.line},${frame.column},${frame.asyncCause}`;
 };
 
 /**

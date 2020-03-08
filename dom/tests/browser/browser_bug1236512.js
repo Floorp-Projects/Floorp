@@ -44,9 +44,7 @@ async function waitContentVisibilityChange(aIsHidden, aBrowser) {
         true /* capture */,
         aEvent => {
           info(
-            `visibilitychange: ${content.document.hidden} ${
-              content.document.visibilityState
-            }`
+            `visibilitychange: ${content.document.hidden} ${content.document.visibilityState}`
           );
           return (
             content.document.hidden === aExpectedResult &&

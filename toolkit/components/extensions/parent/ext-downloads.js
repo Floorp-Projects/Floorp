@@ -834,9 +834,7 @@ this.downloads = class extends ExtensionAPI {
             return OS.File.remove(item.filename, { ignoreAbsent: false }).catch(
               err => {
                 return Promise.reject({
-                  message: `Could not remove download id ${
-                    item.id
-                  } because the file doesn't exist`,
+                  message: `Could not remove download id ${item.id} because the file doesn't exist`,
                 });
               }
             );
@@ -862,9 +860,7 @@ this.downloads = class extends ExtensionAPI {
             }
             if (item.state != "in_progress") {
               return Promise.reject({
-                message: `Download ${id} cannot be paused since it is in state ${
-                  item.state
-                }`,
+                message: `Download ${id} cannot be paused since it is in state ${item.state}`,
               });
             }
 
@@ -916,9 +912,7 @@ this.downloads = class extends ExtensionAPI {
                 dirobj.launch();
               } else {
                 throw new Error(
-                  `Download directory ${
-                    dirobj.path
-                  } is not actually a directory`
+                  `Download directory ${dirobj.path} is not actually a directory`
                 );
               }
             })

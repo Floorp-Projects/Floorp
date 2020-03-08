@@ -491,9 +491,7 @@ var RecipeRunner = {
       result = await FilterExpressions.eval(recipe.filter_expression, context);
     } catch (err) {
       log.error(
-        `Error checking filter for "${recipe.name}". Filter: [${
-          recipe.filter_expression
-        }]. Error: "${err}"`
+        `Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`
       );
       await Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
       return BaseAction.suitability.FILTER_ERROR;

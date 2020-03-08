@@ -153,9 +153,7 @@ class Runtime extends ContentProcessDomain {
       context = this.contexts.get(request.executionContextId);
       if (!context) {
         throw new Error(
-          `Unable to find execution context with id: ${
-            request.executionContextId
-          }`
+          `Unable to find execution context with id: ${request.executionContextId}`
         );
       }
     }

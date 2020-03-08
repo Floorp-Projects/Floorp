@@ -128,9 +128,7 @@ class ShowHeartbeatAction extends BaseAction {
         // show the number of hours since the last heartbeat, with at most 1 decimal point.
         const hoursAgo = Math.floor(duration / 1000 / 60 / 6) / 10;
         this.log.debug(
-          `A heartbeat was shown too recently (${hoursAgo} hours), skipping recipe ${
-            recipe.id
-          }.`
+          `A heartbeat was shown too recently (${hoursAgo} hours), skipping recipe ${recipe.id}.`
         );
         return false;
       }
@@ -141,9 +139,7 @@ class ShowHeartbeatAction extends BaseAction {
         // Don't show if we've ever shown before
         if (await recipeStorage.getItem("lastShown")) {
           this.log.debug(
-            `Heartbeat for "once" recipe ${
-              recipe.id
-            } has been shown before, skipping.`
+            `Heartbeat for "once" recipe ${recipe.id} has been shown before, skipping.`
           );
           return false;
         }
@@ -154,9 +150,7 @@ class ShowHeartbeatAction extends BaseAction {
         // Show a heartbeat again only if the user has not interacted with it before
         if (await recipeStorage.getItem("lastInteraction")) {
           this.log.debug(
-            `Heartbeat for "nag" recipe ${
-              recipe.id
-            } has already been interacted with, skipping.`
+            `Heartbeat for "nag" recipe ${recipe.id} has already been interacted with, skipping.`
           );
           return false;
         }
@@ -173,9 +167,7 @@ class ShowHeartbeatAction extends BaseAction {
             // show the number of hours since the last time this hearbeat was shown, with at most 1 decimal point.
             const hoursAgo = Math.floor(duration / 1000 / 60 / 6) / 10;
             this.log.debug(
-              `Heartbeat for "xdays" recipe ${
-                recipe.id
-              } ran in the last ${repeatEvery} days, skipping. (${hoursAgo} hours ago)`
+              `Heartbeat for "xdays" recipe ${recipe.id} ran in the last ${repeatEvery} days, skipping. (${hoursAgo} hours ago)`
             );
             return false;
           }

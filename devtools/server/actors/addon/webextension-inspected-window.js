@@ -78,9 +78,7 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
     Ci.nsIScriptError
   );
 
-  const msg = `The extension "${name}" is not allowed to access ${
-    reportedURI.spec
-  }`;
+  const msg = `The extension "${name}" is not allowed to access ${reportedURI.spec}`;
 
   const innerWindowId = window.windowUtils.currentInnerWindowID;
 

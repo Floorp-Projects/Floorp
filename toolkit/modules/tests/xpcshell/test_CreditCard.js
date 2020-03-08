@@ -429,9 +429,7 @@ add_task(async function test_network() {
     Assert.equal(
       await card.network,
       testCase.expectedNetwork,
-      `The expectedNetwork ${card.network} should match the card network ${
-        testCase.expectedNetwork
-      }`
+      `The expectedNetwork ${card.network} should match the card network ${testCase.expectedNetwork}`
     );
   }
 });

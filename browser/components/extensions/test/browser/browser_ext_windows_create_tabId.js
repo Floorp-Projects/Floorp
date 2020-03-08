@@ -13,9 +13,7 @@ function assertNoLeaksInTabTracker() {
     if (!nativeTab.ownerGlobal) {
       ok(
         false,
-        `A tab with tabId ${tabId} has been leaked in the tabTracker ("${
-          nativeTab.title
-        }")`
+        `A tab with tabId ${tabId} has been leaked in the tabTracker ("${nativeTab.title}")`
       );
     }
   }

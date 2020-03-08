@@ -75,9 +75,7 @@ async function testSummaryGraphDelaySign() {
       is(
         delaySignEl.style.marginInlineStart,
         expectedResult.marginInlineStart,
-        `marginInlineStart position should be ${
-          expectedResult.marginInlineStart
-        }`
+        `marginInlineStart position should be ${expectedResult.marginInlineStart}`
       );
       is(
         delaySignEl.style.width,
@@ -88,9 +86,7 @@ async function testSummaryGraphDelaySign() {
       if (expectedResult.additionalClass) {
         ok(
           delaySignEl.classList.contains(expectedResult.additionalClass),
-          `delay sign element should have ${
-            expectedResult.additionalClass
-          } class`
+          `delay sign element should have ${expectedResult.additionalClass} class`
         );
       } else {
         ok(

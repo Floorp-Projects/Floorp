@@ -5,9 +5,7 @@
 
 const worker = new Worker("suspendTimeouts_worker.js");
 worker.onerror = error => {
-  const message = `error from worker: ${error.filename}:${error.lineno}: ${
-    error.message
-  }`;
+  const message = `error from worker: ${error.filename}:${error.lineno}: ${error.message}`;
   throw new Error(message);
 };
 

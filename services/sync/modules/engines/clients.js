@@ -1191,9 +1191,7 @@ ClientStore.prototype = {
       let truncatedCommands = Utils.tryFitItems(commands, maxPayloadSize);
       if (truncatedCommands.length != record.commands.length) {
         this._log.warn(
-          `Removing commands from client ${id} (from ${
-            record.commands.length
-          } to ${truncatedCommands.length})`
+          `Removing commands from client ${id} (from ${record.commands.length} to ${truncatedCommands.length})`
         );
         // Restore original order.
         record.commands = truncatedCommands.sort(

@@ -122,9 +122,7 @@ function sasslint() {
   let errorString;
   filesWithIssues.forEach(file => {
     file.messages.forEach(messageObj => {
-      errorString = `${file.filePath}(${messageObj.line}, ${
-        messageObj.column
-      }): ${messageObj.message} (${messageObj.ruleId})`;
+      errorString = `${file.filePath}(${messageObj.line}, ${messageObj.column}): ${messageObj.message} (${messageObj.ruleId})`;
       errs.push(errorString);
     });
   });

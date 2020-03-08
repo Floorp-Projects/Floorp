@@ -5,23 +5,17 @@ const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 const expectedRoots = [
   {
     title: "OrganizerQueryHistory",
-    uri: `place:sort=${
-      Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
-    }&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY}`,
+    uri: `place:sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING}&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY}`,
     guid: "history____v",
   },
   {
     title: "OrganizerQueryDownloads",
-    uri: `place:transition=${
-      Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
-    }&sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING}`,
+    uri: `place:transition=${Ci.nsINavHistoryService.TRANSITION_DOWNLOAD}&sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING}`,
     guid: "downloads__v",
   },
   {
     title: "TagsFolderTitle",
-    uri: `place:sort=${
-      Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING
-    }&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT}`,
+    uri: `place:sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING}&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT}`,
     guid: "tags_______v",
   },
   {

@@ -708,18 +708,14 @@ var GeckoViewWebExtension = {
           (!(uri instanceof Ci.nsIFileURL) && !(uri instanceof Ci.nsIJARURI))
         ) {
           aCallback.onError(
-            `Extension does not point to a resource URI or a file URL. extension=${
-              aData.locationUri
-            }`
+            `Extension does not point to a resource URI or a file URL. extension=${aData.locationUri}`
           );
           return;
         }
 
         if (uri.fileName != "" && uri.fileExtension != "xpi") {
           aCallback.onError(
-            `Extension does not point to a folder or an .xpi file. Hint: the path needs to end with a "/" to be considered a folder. extension=${
-              aData.locationUri
-            }`
+            `Extension does not point to a folder or an .xpi file. Hint: the path needs to end with a "/" to be considered a folder. extension=${aData.locationUri}`
           );
           return;
         }
@@ -737,9 +733,7 @@ var GeckoViewWebExtension = {
           aData.allowContentMessaging
         ).then(aCallback.onSuccess, error =>
           aCallback.onError(
-            `An error occurred while registering the WebExtension ${
-              aData.locationUri
-            }: ${error}.`
+            `An error occurred while registering the WebExtension ${aData.locationUri}: ${error}.`
           )
         );
         break;

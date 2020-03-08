@@ -166,9 +166,7 @@ var NativeApp = class extends EventEmitter {
       .then(len => {
         if (len > NativeApp.maxRead) {
           throw new ExtensionError(
-            `Native application tried to send a message of ${len} bytes, which exceeds the limit of ${
-              NativeApp.maxRead
-            } bytes.`
+            `Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`
           );
         }
         return this.proc.stdout.readJSON(len);

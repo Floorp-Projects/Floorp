@@ -67,9 +67,9 @@ var gFxaPairDeviceDialog = {
         FxAccountsPairingFlow.start({ emitter: this._emitter }),
       ]);
       const imgData = QR.encodeToDataURI(uri, "L");
-      document.getElementById("qrContainer").style.backgroundImage = `url("${
-        imgData.src
-      }")`;
+      document.getElementById(
+        "qrContainer"
+      ).style.backgroundImage = `url("${imgData.src}")`;
       document
         .getElementById("qrWrapper")
         .setAttribute("pairing-status", "ready");
@@ -84,9 +84,9 @@ var gFxaPairDeviceDialog = {
       "https://accounts.firefox.com/pair",
       "L"
     );
-    document.getElementById("qrContainer").style.backgroundImage = `url("${
-      imgData.src
-    }")`;
+    document.getElementById(
+      "qrContainer"
+    ).style.backgroundImage = `url("${imgData.src}")`;
   },
 
   onError(err) {

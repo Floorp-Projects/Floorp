@@ -139,9 +139,7 @@ async function testInstall(browser, args, steps, description) {
               for (let key of Object.keys(props)) {
                 if (received[key] != props[key]) {
                   throw new Error(
-                    `AddonInstall property ${key} was ${
-                      received[key]
-                    } but expected ${props[key]}`
+                    `AddonInstall property ${key} was ${received[key]} but expected ${props[key]}`
                   );
                 }
               }

@@ -96,9 +96,7 @@ class Injections {
       injection.active = true;
     } else {
       console.error(
-        `Provided function ${
-          injection.customFunc
-        } wasn't found in functions list`
+        `Provided function ${injection.customFunc} wasn't found in functions list`
       );
     }
   }

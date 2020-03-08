@@ -89,9 +89,7 @@ add_task(async function() {
       is(
         actual.disposition,
         expected.disposition,
-        `Expected "${event}" to have fired with disposition: "${
-          expected.disposition
-        }".`
+        `Expected "${event}" to have fired with disposition: "${expected.disposition}".`
       );
     }
   }

@@ -593,9 +593,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
        * information that should still be helpful, and is less likely to be
        * unsafe.
        */
-      const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${
-        error.columnNumber
-      } ${error.name}`;
+      const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
       TelemetryEvents.sendEvent(
         "enrollFailed",
         "addon_study",
@@ -624,9 +622,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
        * information that should still be helpful, and is less likely to be
        * unsafe.
        */
-      const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${
-        error.columnNumber
-      } ${error.name}`;
+      const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
       TelemetryEvents.sendEvent(
         "updateFailed",
         "addon_study",
@@ -667,9 +663,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         await addon.uninstall();
       } else {
         this.log.warn(
-          `Could not uninstall addon ${study.addonId} for recipe ${
-            study.recipeId
-          }: it is not installed.`
+          `Could not uninstall addon ${study.addonId} for recipe ${study.recipeId}: it is not installed.`
         );
       }
     }

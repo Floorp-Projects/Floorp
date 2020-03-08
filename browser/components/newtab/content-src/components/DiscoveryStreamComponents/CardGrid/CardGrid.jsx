@@ -55,9 +55,7 @@ export class CardGrid extends React.PureComponent {
 
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${
-          this.props.border
-        } ds-card-grid-${divisibility}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}`}
       >
         {cards}
       </div>

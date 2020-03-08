@@ -188,9 +188,7 @@ class WebConsoleConnectionProxy {
 
     if (response.error) {
       throw new Error(
-        `Web Console getCachedMessages error: ${response.error} ${
-          response.message
-        }`
+        `Web Console getCachedMessages error: ${response.error} ${response.message}`
       );
     }
 

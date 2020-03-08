@@ -110,9 +110,7 @@ function expectLoadSomewhere(ssb, where, win = window) {
       if (where != "tab") {
         Assert.ok(
           false,
-          `Did not expect ${
-            tab.linkedBrowser.currentURI.spec
-          } to load in a new tab.`
+          `Did not expect ${tab.linkedBrowser.currentURI.spec} to load in a new tab.`
         );
         BrowserTestUtils.removeTab(tab);
         reject(new Error("Page unexpectedly loaded in a new tab."));

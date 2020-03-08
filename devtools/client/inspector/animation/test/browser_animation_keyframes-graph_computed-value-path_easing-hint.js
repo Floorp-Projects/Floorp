@@ -301,9 +301,7 @@ add_task(async function() {
           is(
             interactionEl.getAttribute("width"),
             expectedHint.rect.width,
-            `width of <rect> in ${hintTarget} should be ${
-              expectedHint.rect.width
-            }`
+            `width of <rect> in ${hintTarget} should be ${expectedHint.rect.width}`
           );
         }
 

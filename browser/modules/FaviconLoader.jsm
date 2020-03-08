@@ -225,9 +225,7 @@ class FaviconLoad {
       if (!this.channel.requestSucceeded) {
         this._deferred.reject(
           Components.Exception(
-            `Favicon at "${this.icon.iconUri.spec}" failed to load: ${
-              this.channel.responseStatusText
-            }.`,
+            `Favicon at "${this.icon.iconUri.spec}" failed to load: ${this.channel.responseStatusText}.`,
             Cr.NS_ERROR_FAILURE
           )
         );
@@ -291,9 +289,7 @@ class FaviconLoad {
 
         if (!type) {
           throw Components.Exception(
-            `Favicon at "${
-              this.icon.iconUri.spec
-            }" did not match a known mimetype.`,
+            `Favicon at "${this.icon.iconUri.spec}" did not match a known mimetype.`,
             Cr.NS_ERROR_FAILURE
           );
         }

@@ -425,9 +425,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     }
   } catch (err) {
     extension.logWarning(
-      `storage.local data migration cancelled, unable to open IDB connection: ${
-        err.message
-      }::${err.stack}`
+      `storage.local data migration cancelled, unable to open IDB connection: ${err.message}::${err.stack}`
     );
 
     DataMigrationTelemetry.recordResult({
@@ -449,9 +447,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
       // access it, and so we log the error but we don't stop the extension from switching to
       // the IndexedDB backend.
       extension.logWarning(
-        `Unable to access extension storage.local data file: ${
-          fileErr.message
-        }::${fileErr.stack}`
+        `Unable to access extension storage.local data file: ${fileErr.message}::${fileErr.stack}`
       );
       return false;
     });
@@ -478,9 +474,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
 
       await idbConn.set(data);
       Services.console.logStringMessage(
-        `storage.local data successfully migrated to IDB Backend for ${
-          extension.policy.debugName
-        }.`
+        `storage.local data successfully migrated to IDB Backend for ${extension.policy.debugName}.`
       );
     }
 
@@ -739,9 +733,7 @@ this.ExtensionStorageIDB = {
         } else {
           reject(
             new Error(
-              `Failed to persist storage for principal: ${
-                storagePrincipal.originNoSuffix
-              }`
+              `Failed to persist storage for principal: ${storagePrincipal.originNoSuffix}`
             )
           );
         }
@@ -801,9 +793,7 @@ this.ExtensionStorageIDB = {
           errorMessage = String(error);
           break;
         case "QuotaExceededError":
-          errorMessage = `${
-            error.name
-          }: storage.local API call exceeded its quota limitations.`;
+          errorMessage = `${error.name}: storage.local API call exceeded its quota limitations.`;
           break;
       }
     }

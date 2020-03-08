@@ -79,9 +79,7 @@ add_task(async function test_proxy_settings() {
     },
     incognitoOverride: "spanning",
     useAddonManager: "temporary",
-    background: `(${background})("${proxy.identity.primaryHost}", ${
-      proxy.identity.primaryPort
-    })`,
+    background: `(${background})("${proxy.identity.primaryHost}", ${proxy.identity.primaryPort})`,
   });
 
   await promiseStartupManager();

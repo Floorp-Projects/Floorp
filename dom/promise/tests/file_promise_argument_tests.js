@@ -168,9 +168,7 @@ function runPromiseArgumentTests(finishFunc) {
     .catch(function(e) {
       ok(
         false,
-        `Exception thrown: ${e}@${location.pathname}:${e.lineNumber}:${
-          e.columnNumber
-        }`
+        `Exception thrown: ${e}@${location.pathname}:${e.lineNumber}:${e.columnNumber}`
       );
       finishFunc();
     });

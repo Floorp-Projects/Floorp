@@ -70,9 +70,7 @@
       }
     }
     if (summaries.length) {
-      let groupName = `Instrumentation data for custom elements in ${
-        document.documentURI
-      }`;
+      let groupName = `Instrumentation data for custom elements in ${document.documentURI}`;
       console[collapsed ? "groupCollapsed" : "group"](groupName);
       console.log(
         `Total function calls ${totalCalls} and total time spent inside ${totalTime.toFixed(

@@ -186,9 +186,7 @@ function dropText(text, expectedURLs, ignoreFirstWindow = false) {
 async function drop(dragData, expectedURLs, ignoreFirstWindow = false) {
   let dragDataString = JSON.stringify(dragData);
   info(
-    `Starting test for dragData:${dragDataString}; expectedURLs.length:${
-      expectedURLs.length
-    }`
+    `Starting test for dragData:${dragDataString}; expectedURLs.length:${expectedURLs.length}`
   );
   let EventUtils = {};
   Services.scriptloader.loadSubScript(

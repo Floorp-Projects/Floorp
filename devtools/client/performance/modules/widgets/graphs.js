@@ -489,9 +489,7 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
     // log an error.
     if (!data) {
       console.error(
-        `FrameNode#${
-          frameNode.location
-        } does not have optimizations data to render.`
+        `FrameNode#${frameNode.location} does not have optimizations data to render.`
       );
       return;
     }

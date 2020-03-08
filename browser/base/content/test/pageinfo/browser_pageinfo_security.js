@@ -115,25 +115,19 @@ add_task(async function test_image() {
 
   await TestUtils.waitForCondition(
     () => owner.value === "This website does not supply ownership information.",
-    `Value of owner should be should be "This website does not supply ownership information." instead got "${
-      owner.value
-    }".`
+    `Value of owner should be should be "This website does not supply ownership information." instead got "${owner.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => verifier.value === "Mozilla Testing",
-    `Value of verifier should be "Mozilla Testing", instead got "${
-      verifier.value
-    }".`
+    `Value of verifier should be "Mozilla Testing", instead got "${verifier.value}".`
   );
 
   let browser = gBrowser.selectedBrowser;
 
   await TestUtils.waitForCondition(
     () => domain.value === browser.currentURI.displayHost,
-    `Value of domain should be ${
-      browser.currentURI.displayHost
-    }, instead got "${domain.value}".`
+    `Value of domain should be ${browser.currentURI.displayHost}, instead got "${domain.value}".`
   );
 
   pageInfo.close();
@@ -175,23 +169,17 @@ add_task(async function test_CertificateError() {
 
   await TestUtils.waitForCondition(
     () => owner.value === "This website does not supply ownership information.",
-    `Value of owner should be should be "This website does not supply ownership information." instead got "${
-      owner.value
-    }".`
+    `Value of owner should be should be "This website does not supply ownership information." instead got "${owner.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => verifier.value === "Mozilla Testing",
-    `Value of verifier should be "Mozilla Testing", instead got "${
-      verifier.value
-    }".`
+    `Value of verifier should be "Mozilla Testing", instead got "${verifier.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => domain.value === browser.currentURI.displayHost,
-    `Value of domain should be ${
-      browser.currentURI.displayHost
-    }, instead got "${domain.value}".`
+    `Value of domain should be ${browser.currentURI.displayHost}, instead got "${domain.value}".`
   );
 
   pageInfo.close();
@@ -217,23 +205,17 @@ add_task(async function test_SecurityHTTP() {
 
   await TestUtils.waitForCondition(
     () => owner.value === "This website does not supply ownership information.",
-    `Value of owner should be should be "This website does not supply ownership information." instead got "${
-      owner.value
-    }".`
+    `Value of owner should be should be "This website does not supply ownership information." instead got "${owner.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => verifier.value === "Not specified",
-    `Value of verifier should be "Not specified", instead got "${
-      verifier.value
-    }".`
+    `Value of verifier should be "Not specified", instead got "${verifier.value}".`
   );
 
   await TestUtils.waitForCondition(
     () => domain.value === gBrowser.selectedBrowser.currentURI.displayHost,
-    `Value of domain should be ${
-      gBrowser.selectedBrowser.currentURI.displayHost
-    }, instead got "${domain.value}".`
+    `Value of domain should be ${gBrowser.selectedBrowser.currentURI.displayHost}, instead got "${domain.value}".`
   );
 
   pageInfo.close();

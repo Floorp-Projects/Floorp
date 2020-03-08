@@ -63,9 +63,7 @@ async function runTestcase(aTab, aTestcase) {
   Assert.notEqual(
     initialPid,
     finalPid,
-    `Navigating from ${URL_BEFORE_NAVIGATION} to ${
-      aTab.linkedBrowser.currentURI.spec
-    } should have resulted in a different PID.`
+    `Navigating from ${URL_BEFORE_NAVIGATION} to ${aTab.linkedBrowser.currentURI.spec} should have resulted in a different PID.`
   );
 }
 

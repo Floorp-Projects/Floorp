@@ -94,9 +94,7 @@ add_task(async function popup_mousedown_test() {
   await withHttpServer(serverInfo, async server => {
     let connectionNumber = server.connectionNumber;
     let searchString = "ocal";
-    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
-      serverInfo.port
-    }/`;
+    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}/`;
     info(`Searching for '${searchString}'`);
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -147,9 +145,7 @@ add_task(async function test_autofill() {
       fireInputEvent: true,
     });
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
-      serverInfo.port
-    }/`;
+    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}/`;
     Assert.equal(details.url, completeValue, `Autofilled value is as expected`);
     await UrlbarTestUtils.promiseSpeculativeConnections(
       server,
@@ -180,9 +176,7 @@ add_task(async function test_autofill_privateContext() {
       fireInputEvent: true,
     });
     let details = await UrlbarTestUtils.getDetailsOfResultAt(privateWin, 0);
-    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
-      serverInfo.port
-    }/`;
+    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}/`;
     Assert.equal(details.url, completeValue, `Autofilled value is as expected`);
     await UrlbarTestUtils.promiseSpeculativeConnections(
       server,

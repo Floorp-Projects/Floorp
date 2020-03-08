@@ -2534,9 +2534,7 @@ var SessionStoreInternal = {
     aReplaceBrowsingContext
   ) {
     debug(
-      `[process-switch]: performing switch from ${
-        aBrowser.remoteType
-      } to ${aRemoteType}`
+      `[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`
     );
 
     // Don't try to switch tabs before delayed startup is completed.

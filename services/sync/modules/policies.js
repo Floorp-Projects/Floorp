@@ -463,9 +463,7 @@ SyncScheduler.prototype = {
         }
         if (subject.newFailed) {
           this._log.error(
-            `Engine ${data} found ${
-              subject.newFailed
-            } new records that failed to apply`
+            `Engine ${data} found ${subject.newFailed} new records that failed to apply`
           );
         }
         break;

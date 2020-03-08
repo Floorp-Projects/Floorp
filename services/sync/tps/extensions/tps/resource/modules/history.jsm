@@ -113,9 +113,7 @@ var HistoryEntry = {
     for (let itemvisit of item.visits) {
       all_items_found = all_items_found && "found" in itemvisit;
       Logger.logInfo(
-        `History entry for ${item.uri}, type: ${itemvisit.type}, date: ${
-          itemvisit.date
-        }` +
+        `History entry for ${item.uri}, type: ${itemvisit.type}, date: ${itemvisit.date}` +
           `(${itemvisit.date *
             60 *
             60 *

@@ -224,9 +224,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
   async startRepairs(validationInfo, flowID) {
     if (this._currentState != STATE.NOT_REPAIRING) {
       log.info(
-        `Can't start a repair - repair with ID ${
-          this._flowID
-        } is already in progress`
+        `Can't start a repair - repair with ID ${this._flowID} is already in progress`
       );
       return false;
     }
@@ -478,9 +476,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       CommonUtils.difference(this._currentIDs, response.ids)
     );
     log.info(
-      `repair response from ${clientID} provided "${
-        response.ids
-      }", remaining now "${remainingIDs}"`
+      `repair response from ${clientID} provided "${response.ids}", remaining now "${remainingIDs}"`
     );
     this._currentIDs = remainingIDs;
     if (remainingIDs.length) {
@@ -670,9 +666,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
 
       if (toUpload.size || toDelete.size) {
         log.debug(
-          `repair request will upload ${toUpload.size} items and delete ${
-            toDelete.size
-          } items`
+          `repair request will upload ${toUpload.size} items and delete ${toDelete.size} items`
         );
         // whew - now add these items to the tracker "weakly" (ie, they will not
         // persist in the case of a restart, but that's OK - we'll then end up here

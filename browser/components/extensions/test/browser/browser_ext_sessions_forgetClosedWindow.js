@@ -73,9 +73,7 @@ add_task(async function test_sessions_forget_closed_window() {
   let errMsg = await extension.awaitMessage("forget-reject");
   is(
     errMsg,
-    `Could not find closed window using sessionId ${
-      recentlyClosedWindow.sessionId
-    }.`
+    `Could not find closed window using sessionId ${recentlyClosedWindow.sessionId}.`
   );
 
   extension.sendMessage("check-sessions");

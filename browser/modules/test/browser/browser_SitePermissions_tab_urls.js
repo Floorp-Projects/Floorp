@@ -71,9 +71,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
             state: SitePermissions.BLOCK,
             scope: SitePermissions.SCOPE_TEMPORARY,
           },
-          `${principal.URI.spec} should share tab permissions with ${
-            principal2.URI.spec
-          }`
+          `${principal.URI.spec} should share tab permissions with ${principal2.URI.spec}`
         );
       }
 
@@ -121,9 +119,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
               state: SitePermissions.UNKNOWN,
               scope: SitePermissions.SCOPE_PERSISTENT,
             },
-            `${principal.URI.spec} should not share tab permissions with ${
-              principal2.URI.spec
-            }`
+            `${principal.URI.spec} should not share tab permissions with ${principal2.URI.spec}`
           );
         }
       }

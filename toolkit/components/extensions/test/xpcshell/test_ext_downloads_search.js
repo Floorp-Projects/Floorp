@@ -258,9 +258,7 @@ add_task(async function test_search() {
         equal(
           id,
           downloadIds[expected[idx]],
-          `search() for ${description} returned ${
-            expected[idx]
-          } in position ${idx}`
+          `search() for ${description} returned ${expected[idx]} in position ${idx}`
         );
       });
     } else {

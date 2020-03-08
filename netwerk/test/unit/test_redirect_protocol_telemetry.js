@@ -27,9 +27,7 @@ add_task(async function check_protocols() {
     let location =
       responseProtocol == "data"
         ? "data:text/plain,test"
-        : `${responseProtocol}://localhost:${
-            httpserv.identity.primaryPort
-          }/content`;
+        : `${responseProtocol}://localhost:${httpserv.identity.primaryPort}/content`;
     response.setHeader("Location", location, false);
     response.setHeader("Cache-Control", "no-cache", false);
   }

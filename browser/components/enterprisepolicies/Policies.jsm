@@ -1828,9 +1828,7 @@ function installAddonFromURL(url, extensionID) {
       onDownloadEnded: install => {
         if (extensionID && install.addon.id != extensionID) {
           log.error(
-            `Add-on downloaded from ${url} had unexpected id (got ${
-              install.addon.id
-            } expected ${extensionID})`
+            `Add-on downloaded from ${url} had unexpected id (got ${install.addon.id} expected ${extensionID})`
           );
           install.removeListener(listener);
           install.cancel();

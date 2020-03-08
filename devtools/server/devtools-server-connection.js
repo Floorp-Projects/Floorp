@@ -387,9 +387,7 @@ DevToolsServerConnection.prototype = {
     } else {
       ret = {
         error: "unrecognizedPacketType",
-        message: `Actor ${actor.actorID} does not recognize the packet type '${
-          packet.type
-        }'`,
+        message: `Actor ${actor.actorID} does not recognize the packet type '${packet.type}'`,
       };
     }
 

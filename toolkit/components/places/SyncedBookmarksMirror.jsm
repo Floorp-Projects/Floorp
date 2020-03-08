@@ -1541,9 +1541,7 @@ async function initializeMirrorDatabase(db) {
     /* The server modified time, in milliseconds. */
     serverModified INTEGER NOT NULL DEFAULT 0,
     needsMerge BOOLEAN NOT NULL DEFAULT 0,
-    validity INTEGER NOT NULL DEFAULT ${
-      Ci.mozISyncedBookmarksMerger.VALIDITY_VALID
-    },
+    validity INTEGER NOT NULL DEFAULT ${Ci.mozISyncedBookmarksMerger.VALIDITY_VALID},
     isDeleted BOOLEAN NOT NULL DEFAULT 0,
     kind INTEGER NOT NULL DEFAULT -1,
     /* The creation date, in milliseconds. */
@@ -1842,9 +1840,7 @@ async function initializeTempMirrorEntities(db) {
                      WHERE b.fk = NEW.placeId AND
                            p.title = NEW.tag AND
                            p.parent = (SELECT id FROM moz_bookmarks
-                                       WHERE guid = '${
-                                         PlacesUtils.bookmarks.tagsGuid
-                                       }')),
+                                       WHERE guid = '${PlacesUtils.bookmarks.tagsGuid}')),
                     GENERATE_GUID()),
              (SELECT b.id FROM moz_bookmarks b
               JOIN moz_bookmarks p ON p.id = b.parent
@@ -1854,9 +1850,7 @@ async function initializeTempMirrorEntities(db) {
               JOIN moz_bookmarks p ON p.id = b.parent
               WHERE p.title = NEW.tag AND
                     p.parent = (SELECT id FROM moz_bookmarks
-                                WHERE guid = '${
-                                  PlacesUtils.bookmarks.tagsGuid
-                                }')),
+                                WHERE guid = '${PlacesUtils.bookmarks.tagsGuid}')),
              ${PlacesUtils.bookmarks.TYPE_BOOKMARK}, NEW.placeId,
              NEW.lastModifiedMicroseconds,
              NEW.lastModifiedMicroseconds

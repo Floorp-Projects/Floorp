@@ -631,9 +631,7 @@ var TESTS = [
       "chrome://branding/locale/brand.properties"
     );
     let brandShortName = brandBundle.GetStringFromName("brandShortName");
-    let message = `XPI Test could not be installed because it is not compatible with ${brandShortName} ${
-      Services.appinfo.version
-    }.`;
+    let message = `XPI Test could not be installed because it is not compatible with ${brandShortName} ${Services.appinfo.version}.`;
     is(
       notification.getAttribute("label"),
       message,

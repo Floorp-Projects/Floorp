@@ -356,9 +356,7 @@ class FrameListContent extends Component {
           {
             className: "ws-connection-closed-message",
           },
-          `${CONNECTION_CLOSED_TEXT}: ${closedConnectionDetails.code} ${
-            closedConnectionDetails.reason
-          }`
+          `${CONNECTION_CLOSED_TEXT}: ${closedConnectionDetails.code} ${closedConnectionDetails.reason}`
         ),
       hr({
         ref: "scrollAnchor",

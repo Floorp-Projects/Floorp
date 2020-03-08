@@ -35,9 +35,7 @@ const GeckoViewTelemetryController = {
     TelemetryUtils.setTelemetryRecordingFlags();
 
     debug`setup -
-           canRecordPrereleaseData ${
-             Services.telemetry.canRecordPrereleaseData
-           },
+           canRecordPrereleaseData ${Services.telemetry.canRecordPrereleaseData},
            canRecordReleaseData ${Services.telemetry.canRecordReleaseData}`;
 
     if (GeckoViewUtils.IS_PARENT_PROCESS) {

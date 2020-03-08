@@ -625,9 +625,7 @@ class FirefoxDataProvider {
             if (res.error) {
               reject(
                 new Error(
-                  `Error while calling method ${clientMethodName}: ${
-                    res.message
-                  }`
+                  `Error while calling method ${clientMethodName}: ${res.message}`
                 )
               );
             }

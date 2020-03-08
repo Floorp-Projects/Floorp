@@ -74,9 +74,7 @@ add_task(async function oopProcessSwap() {
         is(
           frameId,
           oopinfo.browsingContextId,
-          `BrowsingContext should not have changed (${frameId} != ${
-            oopinfo.browsingContextId
-          })`
+          `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`
         );
       }
       is(oopinfo.location, WEB, "correct location");
@@ -158,9 +156,7 @@ add_task(async function oopOriginProcessSwap() {
         is(
           frameId,
           oopinfo.browsingContextId,
-          `BrowsingContext should not have changed (${frameId} != ${
-            oopinfo.browsingContextId
-          })`
+          `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`
         );
       }
       is(oopinfo.location, ORG_POSTMSG, "correct location");

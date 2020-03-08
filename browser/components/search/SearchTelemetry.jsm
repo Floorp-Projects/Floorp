@@ -797,9 +797,7 @@ class ContentHandler {
     let item = this._findBrowserItemForURL(info.url);
     if (!item) {
       LOG(
-        `Expected to report URI for ${
-          info.url
-        } with ads but couldn't find the information`
+        `Expected to report URI for ${info.url} with ads but couldn't find the information`
       );
       return;
     }

@@ -388,9 +388,7 @@ async function testItem(testCase, node) {
       );
       rowCells.forEach((cell, i) => {
         const expected = expectedRow[i];
-        const info = `${
-          testCase.info
-        } | row ${rowIndex} cell ${i} has the expected content`;
+        const info = `${testCase.info} | row ${rowIndex} cell ${i} has the expected content`;
 
         if (isRegex(expected)) {
           ok(expected.test(cell), info);

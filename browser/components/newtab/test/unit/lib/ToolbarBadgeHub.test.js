@@ -311,9 +311,7 @@ describe("ToolbarBadgeHub", () => {
       assert.calledWithExactly(
         fakeElement.setAttribute,
         "aria-labelledby",
-        `toolbarbutton-notification-description ${
-          whatsnewMessage.content.target
-        }`
+        `toolbarbutton-notification-description ${whatsnewMessage.content.target}`
       );
     });
     it("should attach fluent id to description", () => {

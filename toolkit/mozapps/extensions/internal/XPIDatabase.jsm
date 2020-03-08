@@ -1649,9 +1649,7 @@ this.XPIDatabase = {
         // don't know about (bug 902956)
         this._recordStartupError(`schemaMismatch-${inputAddons.schemaVersion}`);
         logger.debug(
-          `JSON schema mismatch: expected ${DB_SCHEMA}, actual ${
-            inputAddons.schemaVersion
-          }`
+          `JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`
         );
       }
 
@@ -1746,9 +1744,7 @@ this.XPIDatabase = {
           }
         } else {
           logger.warn(
-            `Extensions database ${
-              this.jsonFile.path
-            } exists but is not readable; rebuilding`,
+            `Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`,
             error
           );
           this._loadError = error;
@@ -2789,9 +2785,7 @@ this.XPIDatabaseReconcile = {
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
         throw new Error(
-          `Invalid addon ID: expected addon ID ${aId}, found ${
-            aNewAddon.id
-          } in manifest`
+          `Invalid addon ID: expected addon ID ${aId}, found ${aNewAddon.id} in manifest`
         );
       }
 
@@ -2845,9 +2839,7 @@ this.XPIDatabaseReconcile = {
       );
       if (aLocation.scope & disablingScopes) {
         logger.warn(
-          `Disabling foreign installed add-on ${aNewAddon.id} in ${
-            aLocation.name
-          }`
+          `Disabling foreign installed add-on ${aNewAddon.id} in ${aLocation.name}`
         );
         aNewAddon.userDisabled = true;
         aNewAddon.seen = false;

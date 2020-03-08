@@ -21,9 +21,7 @@ class TestMessageManagerProxy extends MessageManagerProxy {
   async setupPingPongListeners() {
     await this.contentPage.loadFrameScript(`() => {
       this.addMessageListener("test:MessageManagerProxy:Ping", ({data}) => {
-        this.sendAsyncMessage("test:MessageManagerProxy:Pong", "${
-          this.identifier
-        }:" + data);
+        this.sendAsyncMessage("test:MessageManagerProxy:Pong", "${this.identifier}:" + data);
       });
     }`);
 

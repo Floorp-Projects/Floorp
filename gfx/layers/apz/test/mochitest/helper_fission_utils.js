@@ -59,9 +59,7 @@ function loadOOPIFrame(iframeElementId, iframePage) {
   return async function() {
     if (window.location.href.startsWith("https://example.com/")) {
       dump(
-        `WARNING: Calling loadOOPIFrame from ${
-          window.location.href
-        } so the iframe may not be OOP\n`
+        `WARNING: Calling loadOOPIFrame from ${window.location.href} so the iframe may not be OOP\n`
       );
       ok(false, "Current origin is not example.com:443");
     }
