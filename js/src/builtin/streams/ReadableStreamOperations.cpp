@@ -13,9 +13,9 @@
 
 #include "jsapi.h"  // JS_SetPrivate
 
-#include "builtin/Array.h"    // js::NewDenseFullyAllocatedArray
-#include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
-#include "builtin/streams/PipeToState.h"     // js::PipeToState
+#include "builtin/Array.h"                // js::NewDenseFullyAllocatedArray
+#include "builtin/Promise.h"              // js::RejectPromiseWithPendingError
+#include "builtin/streams/PipeToState.h"  // js::PipeToState
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamDefaultController{Close,Enqueue}, js::ReadableStreamControllerError, js::SourceAlgorithms
