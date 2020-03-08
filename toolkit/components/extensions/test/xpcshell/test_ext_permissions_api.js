@@ -89,6 +89,7 @@ add_task(async function test_geo_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: { gecko: { id: "geo-test@test" } },
       optional_permissions: ["geolocation"],
     },
     useAddonManager: "permanent",
@@ -120,7 +121,31 @@ add_task(async function test_geo_permissions() {
       Services.perms.UNKNOWN_ACTION,
       "geolocation not allowed after removed"
     );
+
+    // re-grant to test update removal
+    extension.sendMessage("request");
+    ok(await extension.awaitMessage("done"), "permission granted");
+    equal(
+      Services.perms.testPermissionFromPrincipal(principal, "geo"),
+      Services.perms.ALLOW_ACTION,
+      "geolocation allowed after re-requested"
+    );
   });
+
+  // We should not have geo permission after this upgrade.
+  await extension.upgrade({
+    manifest: {
+      applications: { gecko: { id: "geo-test@test" } },
+    },
+    useAddonManager: "permanent",
+  });
+
+  equal(
+    Services.perms.testPermissionFromPrincipal(principal, "geo"),
+    Services.perms.UNKNOWN_ACTION,
+    "geolocation not allowed after upgrade"
+  );
+
   await extension.unload();
 });
 
