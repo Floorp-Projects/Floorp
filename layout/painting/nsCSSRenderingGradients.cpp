@@ -897,7 +897,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
   // This keeps the gradient line as large as the box and doesn't
   // lets us avoiding having to get padding correct for stops
   // at 0 and 1
-  if (!mGradient->Repeating() || stopDelta == 0.0) {
+  if (!mGradient->Repeating() || (!mGradient->IsConic() && stopDelta == 0.0)) {
     stopOrigin = std::min(stopOrigin, 0.0);
     stopEnd = std::max(stopEnd, 1.0);
   }
@@ -951,7 +951,8 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
       matrix.PreTranslate(-mLineStart);
     }
   } else {
-    gradientPattern = new gfxPattern(mCenter.x, mCenter.y, mAngle);
+    gradientPattern =
+        new gfxPattern(mCenter.x, mCenter.y, mAngle, stopOrigin, stopEnd);
   }
   // Use a pattern transform to take account of source and dest rects
   matrix.PreTranslate(gfxPoint(mPresContext->CSSPixelsToDevPixels(aSrc.x),

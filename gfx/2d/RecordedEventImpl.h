@@ -1680,6 +1680,8 @@ inline void RecordedEvent::StorePattern(PatternStorage& aDestination,
           static_cast<const ConicGradientPattern*>(&aSource);
       store->mCenter = pat->mCenter;
       store->mAngle = pat->mAngle;
+      store->mStartOffset = pat->mStartOffset;
+      store->mEndOffset = pat->mEndOffset;
       store->mMatrix = pat->mMatrix;
       store->mStops = pat->mStops.get();
       return;
@@ -1832,7 +1834,8 @@ inline void RecordedEvent::OutputSimplePatternInfo(
           reinterpret_cast<const ConicGradientPatternStorage*>(
               &aStorage.mStorage);
       aOutput << "ConicGradient (Center: (" << store->mCenter.x << ", "
-              << store->mCenter.y << ") Angle: " << store->mAngle;
+              << store->mCenter.y << ") Angle: " << store->mAngle
+              << " Range:" << store->mStartOffset << " - " << store->mEndOffset;
       return;
     }
     case PatternType::SURFACE: {
@@ -2183,7 +2186,8 @@ struct GenericPattern {
         ConicGradientPatternStorage* storage =
             reinterpret_cast<ConicGradientPatternStorage*>(&mStorage->mStorage);
         mPattern = new (mConGradPat) ConicGradientPattern(
-            storage->mCenter, storage->mAngle,
+            storage->mCenter, storage->mAngle, storage->mStartOffset,
+            storage->mEndOffset,
             storage->mStops ? mTranslator->LookupGradientStops(storage->mStops)
                             : nullptr,
             storage->mMatrix);
