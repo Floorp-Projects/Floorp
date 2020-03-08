@@ -4595,7 +4595,8 @@ struct MajorGC {
   int32_t phases;
 };
 
-static void majorGC(JSContext* cx, JSGCStatus status, void* data) {
+static void majorGC(JSContext* cx, JSGCStatus status, JS::GCReason reason,
+                    void* data) {
   auto info = static_cast<MajorGC*>(data);
   if (!(info->phases & (1 << status))) {
     return;
@@ -4614,7 +4615,8 @@ struct MinorGC {
   bool active;
 };
 
-static void minorGC(JSContext* cx, JSGCStatus status, void* data) {
+static void minorGC(JSContext* cx, JSGCStatus status, JS::GCReason reason,
+                    void* data) {
   auto info = static_cast<MinorGC*>(data);
   if (!(info->phases & (1 << status))) {
     return;
@@ -4633,7 +4635,8 @@ static void minorGC(JSContext* cx, JSGCStatus status, void* data) {
 static MajorGC majorGCInfo;
 static MinorGC minorGCInfo;
 
-static void enterNullRealm(JSContext* cx, JSGCStatus status, void* data) {
+static void enterNullRealm(JSContext* cx, JSGCStatus status,
+                           JS::GCReason reason, void* data) {
   JSAutoNullableRealm enterRealm(cx, nullptr);
 }
 

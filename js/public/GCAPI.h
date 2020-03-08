@@ -356,8 +356,6 @@ typedef void (*JSTraceDataOp)(JSTracer* trc, void* data);
 
 typedef enum JSGCStatus { JSGC_BEGIN, JSGC_END } JSGCStatus;
 
-typedef void (*JSGCCallback)(JSContext* cx, JSGCStatus status, void* data);
-
 typedef void (*JSObjectsTenuredCallback)(JSContext* cx, void* data);
 
 typedef enum JSFinalizeStatus {
@@ -956,6 +954,9 @@ extern JS_PUBLIC_API void SetLowMemoryState(JSContext* cx, bool newState);
 extern JS_FRIEND_API void NotifyGCRootsRemoved(JSContext* cx);
 
 } /* namespace JS */
+
+typedef void (*JSGCCallback)(JSContext* cx, JSGCStatus status,
+                             JS::GCReason reason, void* data);
 
 /**
  * Register externally maintained GC roots.

@@ -818,13 +818,14 @@ void CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData) {
 
 /* static */
 void CycleCollectedJSRuntime::GCCallback(JSContext* aContext,
-                                         JSGCStatus aStatus, void* aData) {
+                                         JSGCStatus aStatus,
+                                         JS::GCReason aReason, void* aData) {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
 
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Runtime() == self);
 
-  self->OnGC(aContext, aStatus);
+  self->OnGC(aContext, aStatus, aReason);
 }
 
 /* static */
@@ -1379,7 +1380,8 @@ void CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
       annotation, nsDependentCString(OOMStateToString(aNewState)));
 }
 
-void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus) {
+void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus,
+                                   JS::GCReason aReason) {
   switch (aStatus) {
     case JSGC_BEGIN:
       nsCycleCollector_prepareForGarbageCollection();
