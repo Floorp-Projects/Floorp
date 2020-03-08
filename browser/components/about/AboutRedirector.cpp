@@ -62,7 +62,7 @@ static const RedirEntry kRedirMap[] = {
     {"tabcrashed", "chrome://browser/content/aboutTabCrashed.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT},
-    {"policies", "chrome://browser/content/policies/aboutPolicies.xhtml",
+    {"policies", "chrome://browser/content/policies/aboutPolicies.html",
      nsIAboutModule::ALLOW_SCRIPT},
     {"privatebrowsing", "chrome://browser/content/aboutPrivateBrowsing.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
