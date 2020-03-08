@@ -148,7 +148,8 @@ class CycleCollectedJSRuntime {
 
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
-  static void GCCallback(JSContext* aContext, JSGCStatus aStatus, void* aData);
+  static void GCCallback(JSContext* aContext, JSGCStatus aStatus,
+                         JS::GCReason aReason, void* aData);
   static void GCSliceCallback(JSContext* aContext, JS::GCProgress aProgress,
                               const JS::GCDescription& aDesc);
   static void GCNurseryCollectionCallback(JSContext* aContext,
@@ -208,7 +209,7 @@ class CycleCollectedJSRuntime {
   void SetLargeAllocationFailure(OOMState aNewState);
 
   void AnnotateAndSetOutOfMemory(OOMState* aStatePtr, OOMState aNewState);
-  void OnGC(JSContext* aContext, JSGCStatus aStatus);
+  void OnGC(JSContext* aContext, JSGCStatus aStatus, JS::GCReason aReason);
   void OnOutOfMemory();
   void OnLargeAllocationFailure();
 
