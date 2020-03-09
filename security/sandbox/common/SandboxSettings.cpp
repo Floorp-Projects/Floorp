@@ -41,6 +41,17 @@ int GetEffectiveContentSandboxLevel() {
 
 bool IsContentSandboxEnabled() { return GetEffectiveContentSandboxLevel() > 0; }
 
+int GetEffectiveSocketProcessSandboxLevel() {
+  if (PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS_SANDBOX")) {
+    return 0;
+  }
+
+  int level =
+      StaticPrefs::security_sandbox_socket_process_level_DoNotUseDirectly();
+
+  return level;
+}
+
 #if defined(XP_MACOSX)
 int ClampFlashSandboxLevel(const int aLevel) {
   const int minLevel = 0;
