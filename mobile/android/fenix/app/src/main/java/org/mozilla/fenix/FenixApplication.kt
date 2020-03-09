@@ -37,6 +37,7 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.push.PushFxaIntegration
+import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
@@ -181,6 +182,9 @@ open class FenixApplication : LocaleAwareApplication() {
 
             // Install the AutoPush singleton to receive messages.
             PushProcessor.install(it)
+
+            // WebPush integration to observe and deliver push messages to engine.
+            WebPushEngineIntegration(components.core.engine, it).start()
 
             // Perform a one-time initialization of the account manager if a message is received.
             PushFxaIntegration(it, lazy { components.backgroundServices.accountManager }).launch()
