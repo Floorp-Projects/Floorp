@@ -110,7 +110,7 @@ class ScopeCheckingGetCallback : public nsINotificationStorageCallback {
   NS_IMETHOD Done() override = 0;
 
  protected:
-  virtual ~ScopeCheckingGetCallback() {}
+  virtual ~ScopeCheckingGetCallback() = default;
 
   nsTArray<NotificationStrings> mStrings;
 };
@@ -153,7 +153,7 @@ class NotificationStorageCallback final : public ScopeCheckingGetCallback {
   }
 
  private:
-  virtual ~NotificationStorageCallback() {}
+  virtual ~NotificationStorageCallback() = default;
 
   nsCOMPtr<nsIGlobalObject> mWindow;
   RefPtr<Promise> mPromise;
@@ -450,7 +450,7 @@ class NotificationTask : public Runnable {
   Run() override;
 
  protected:
-  virtual ~NotificationTask() {}
+  virtual ~NotificationTask() = default;
 
   UniquePtr<NotificationRef> mNotificationRef;
   NotificationAction mAction;
@@ -994,7 +994,7 @@ class ServiceWorkerNotificationObserver final : public nsIObserver {
   }
 
  private:
-  ~ServiceWorkerNotificationObserver() {}
+  ~ServiceWorkerNotificationObserver() = default;
 
   const nsString mScope;
   const nsString mID;
@@ -1732,7 +1732,7 @@ class WorkerGetCallback final : public ScopeCheckingGetCallback {
   }
 
  private:
-  ~WorkerGetCallback() {}
+  ~WorkerGetCallback() = default;
 };
 
 NS_IMPL_ISUPPORTS(WorkerGetCallback, nsINotificationStorageCallback)
@@ -1789,7 +1789,7 @@ class WorkerGetRunnable final : public Runnable {
   }
 
  private:
-  ~WorkerGetRunnable() {}
+  ~WorkerGetRunnable() = default;
 };
 
 // static
