@@ -1154,7 +1154,10 @@ void nsFrameConstructorState::AddChild(
   }
 }
 
-void nsFrameConstructorState::ProcessFrameInsertions(
+// Some of this function's callers recurse 1000 levels deep in crashtests. On
+// platforms where stack limits are low, we can't afford to incorporate this
+// function's `AutoTArray`s into its callers' stack frames, so disable inlining.
+MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     AbsoluteFrameList& aFrameList, ChildListID aChildListID) {
 #define NS_NONXUL_LIST_TEST                                                  \
   (&aFrameList == &mFloatedList && aChildListID == nsIFrame::kFloatList) ||  \
