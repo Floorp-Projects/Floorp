@@ -202,6 +202,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         }],
         [["--host"], {
             "dest": "host",
+            "type": "str",
+            "default": "127.0.0.1",
             "help": "Hostname from which to serve urls (default: 127.0.0.1). "
                     "The value HOST_IP will cause the value of host to be "
                     "to be loaded from the environment variable HOST_IP.",
