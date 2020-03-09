@@ -645,6 +645,10 @@ var gIdentityHandler = {
       host = "about:" + this._uri.filePath;
     }
 
+    if (this._uri.schemeIs("chrome")) {
+      host = this._uri.spec;
+    }
+
     let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(
       this._uri.displaySpec
     );
