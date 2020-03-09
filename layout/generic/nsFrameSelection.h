@@ -725,8 +725,6 @@ class nsFrameSelection final {
                                                     CaretAssociateHint aHint,
                                                     bool aJumpLines);
 
-  bool AdjustForMaintainedSelection(nsIContent* aContent, int32_t aOffset);
-
   /**
    * @param aReasons potentially multiple of the reasons defined in
    * nsISelectionListener.idl.
@@ -859,6 +857,13 @@ class nsFrameSelection final {
   TableSelection mTableSelection;
 
   struct MaintainedRange {
+    /**
+     * @return true iff the point (aContent, aOffset) is inside and not at the
+     * boundaries of mRange.
+     */
+    bool AdjustNormalSelection(const nsIContent* aContent, int32_t aOffset,
+                               mozilla::dom::Selection& aNormalSelection) const;
+
     RefPtr<nsRange> mRange;
     nsSelectionAmount mAmount = eSelectNoAmount;
   };
