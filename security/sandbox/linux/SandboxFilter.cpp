@@ -1503,9 +1503,45 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
     }
   }
 
+  Maybe<ResultExpr> EvaluateSocketCall(int aCall,
+                                       bool aHasArgs) const override {
+    switch (aCall) {
+      case SYS_BIND:
+        return Some(Allow());
+
+      case SYS_SOCKET:
+        return Some(Allow());
+
+      case SYS_CONNECT:
+        return Some(Allow());
+
+      case SYS_RECVFROM:
+      case SYS_SENDTO:
+      case SYS_SENDMMSG:
+        return Some(Allow());
+
+      case SYS_RECV:
+      case SYS_SEND:
+      case SYS_GETSOCKOPT:
+      case SYS_SETSOCKOPT:
+      case SYS_GETSOCKNAME:
+      case SYS_GETPEERNAME:
+      case SYS_SHUTDOWN:
+      case SYS_ACCEPT:
+      case SYS_ACCEPT4:
+        return Some(Allow());
+
+      default:
+        return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
+    }
+  }
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       case __NR_getrusage:
+        return Allow();
+
+      case __NR_prctl:
         return Allow();
 
       case __NR_ioctl: {
@@ -1573,6 +1609,11 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
 
 #ifdef DESKTOP
       // This section is borrowed from ContentSandboxPolicy
+      CASES_FOR_getrlimit:
+      CASES_FOR_getresuid:
+      CASES_FOR_getresgid:
+        return Allow();
+
       case __NR_prlimit64: {
         // Allow only the getrlimit() use case.  (glibc seems to use
         // only pid 0 to indicate the current process; pid == getpid()
@@ -1585,6 +1626,12 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
             .Else(InvalidSyscall());
       }
 #endif  // DESKTOP
+
+      CASES_FOR_getuid:
+      CASES_FOR_getgid:
+      CASES_FOR_geteuid:
+      CASES_FOR_getegid:
+        return Allow();
 
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
