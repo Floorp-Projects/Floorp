@@ -10,8 +10,10 @@ const {
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   HIDE_PROFILER_DIALOG,
   NETWORK_LOCATIONS_UPDATE_SUCCESS,
+  PROFILER_PAGE_CONTEXT,
   SELECT_PAGE_SUCCESS,
   SHOW_PROFILER_DIALOG,
+  SWITCH_PROFILER_CONTEXT,
   TEMPORARY_EXTENSION_INSTALL_FAILURE,
   TEMPORARY_EXTENSION_INSTALL_SUCCESS,
   USB_RUNTIMES_SCAN_START,
@@ -29,6 +31,7 @@ function UiState(
     isAdbReady: false,
     isScanningUsb: false,
     networkLocations: locations,
+    profilerContext: PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE,
     selectedPage: null,
     showProfilerDialog: false,
     showHiddenAddons,
@@ -68,11 +71,20 @@ function uiReducer(state = UiState(), action) {
     }
 
     case SHOW_PROFILER_DIALOG: {
-      return Object.assign({}, state, { showProfilerDialog: true });
+      return Object.assign({}, state, {
+        showProfilerDialog: true,
+        // Always start in the devtools-remote view.
+        profilerContext: "devtools-remote",
+      });
     }
 
     case HIDE_PROFILER_DIALOG: {
       return Object.assign({}, state, { showProfilerDialog: false });
+    }
+
+    case SWITCH_PROFILER_CONTEXT: {
+      const { profilerContext } = action;
+      return Object.assign({}, state, { profilerContext });
     }
 
     case USB_RUNTIMES_SCAN_START: {

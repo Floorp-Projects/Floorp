@@ -28,6 +28,7 @@ const actionTypes = {
   DISCONNECT_RUNTIME_START: "DISCONNECT_RUNTIME_START",
   DISCONNECT_RUNTIME_SUCCESS: "DISCONNECT_RUNTIME_SUCCESS",
   HIDE_PROFILER_DIALOG: "HIDE_PROFILER_DIALOG",
+  SWITCH_PROFILER_CONTEXT: "SWITCH_PROFILER_CONTEXT",
   NETWORK_LOCATIONS_UPDATE_FAILURE: "NETWORK_LOCATIONS_UPDATE_FAILURE",
   NETWORK_LOCATIONS_UPDATE_START: "NETWORK_LOCATIONS_UPDATE_START",
   NETWORK_LOCATIONS_UPDATE_SUCCESS: "NETWORK_LOCATIONS_UPDATE_SUCCESS",
@@ -150,6 +151,16 @@ const USB_STATES = {
   UPDATING_USB: "UPDATING_USB",
 };
 
+/**
+ * These constants reference the performance-new's concept of a PageContext.
+ * These are defined in devtools/client/performance-new/@types/perf.d.ts
+ * about:debugging only uses the remote variants of the PageContexts.
+ */
+const PROFILER_PAGE_CONTEXT = {
+  DEVTOOLS_REMOTE: "devtools-remote",
+  ABOUTPROFILING_REMOTE: "aboutprofiling-remote",
+};
+
 // flatten constants
 module.exports = Object.assign(
   {},
@@ -165,6 +176,7 @@ module.exports = Object.assign(
     SERVICE_WORKER_FETCH_STATES,
     SERVICE_WORKER_STATUSES,
     USB_STATES,
+    PROFILER_PAGE_CONTEXT,
   },
   actionTypes
 );

@@ -6,6 +6,8 @@
  * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
  * @typedef {import("../@types/perf").PopupWindow} PopupWindow
  * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").PageContext} PageContext
  */
 "use strict";
 
@@ -71,33 +73,37 @@ const {
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.
+ *
+ * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
+ * @param {PageContext} pageContext - The context that the UI is being loaded in under.
+ * @param {(() => void)} [openRemoteDevTools] Optionally provide a way to go back to
+ *                                            the remote devtools page.
  */
-
-document.addEventListener("DOMContentLoaded", async () => {
+async function gInit(perfFront, pageContext, openRemoteDevTools) {
   const store = createStore(reducers);
-  const perfFrontInterface = new ActorReadyGeckoProfilerInterface();
-  const supportedFeatures = await perfFrontInterface.getSupportedFeatures();
+  const supportedFeatures = await perfFront.getSupportedFeatures();
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
   store.dispatch(
     actions.initializeStore({
-      perfFront: perfFrontInterface,
+      perfFront,
       receiveProfile,
       supportedFeatures,
       presets,
       // Get the preferences from the current browser
-      recordingPreferences: getRecordingPreferences("aboutprofiling"),
+      recordingPreferences: getRecordingPreferences(pageContext),
       /**
        * @param {RecordingStateFromPreferences} newRecordingPreferences
        */
       setRecordingPreferences: newRecordingPreferences =>
-        setRecordingPreferences("aboutprofiling", newRecordingPreferences),
+        setRecordingPreferences(pageContext, newRecordingPreferences),
 
       // The popup doesn't need to support remote symbol tables from the debuggee.
       // Only get the symbols from this browser.
       getSymbolTableGetter: () => getSymbolsFromThisBrowser,
-      pageContext: "aboutprofiling",
+      pageContext,
+      openRemoteDevTools,
     })
   );
 
@@ -116,8 +122,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   );
 
   window.addEventListener("unload", function() {
-    // The perf front interface needs to be unloaded in order to remove event handlers.
-    // Not doing so leads to leaks.
-    perfFrontInterface.destroy();
+    // Do not destroy the perf front if working remotely, about:debugging will do
+    // this for us.
+    if (pageContext !== "aboutprofiling-remote") {
+      // The perf front interface needs to be unloaded in order to remove event handlers.
+      // Not doing so leads to leaks.
+      perfFront.destroy();
+    }
   });
-});
+}
+
+// Automatically initialize the page if it's not a remote connection, otherwise
+// the page will be initialized by about:debugging.
+if (window.location.hash !== "#remote") {
+  document.addEventListener("DOMContentLoaded", () => {
+    gInit(new ActorReadyGeckoProfilerInterface(), "aboutprofiling");
+  });
+}
