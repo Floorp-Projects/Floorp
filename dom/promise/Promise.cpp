@@ -369,7 +369,7 @@ namespace {
 class PromiseNativeHandlerShim final : public PromiseNativeHandler {
   RefPtr<PromiseNativeHandler> mInner;
 
-  ~PromiseNativeHandlerShim() {}
+  ~PromiseNativeHandlerShim() = default;
 
  public:
   explicit PromiseNativeHandlerShim(PromiseNativeHandler* aInner)
@@ -625,7 +625,7 @@ class PromiseWorkerProxyRunnable : public WorkerRunnable {
   }
 
  protected:
-  ~PromiseWorkerProxyRunnable() {}
+  ~PromiseWorkerProxyRunnable() = default;
 
  private:
   RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
