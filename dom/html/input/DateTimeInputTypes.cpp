@@ -266,6 +266,73 @@ bool TimeInputType::ConvertNumberToString(mozilla::Decimal aValue,
   return true;
 }
 
+bool TimeInputType::HasReversedRange() const {
+  mozilla::Decimal maximum = mInputElement->GetMaximum();
+  if (maximum.isNaN()) {
+    return false;
+  }
+
+  mozilla::Decimal minimum = mInputElement->GetMinimum();
+  if (minimum.isNaN()) {
+    return false;
+  }
+
+  return maximum < minimum;
+}
+
+bool TimeInputType::IsReversedRangeUnderflowAndOverflow() const {
+  mozilla::Decimal maximum = mInputElement->GetMaximum();
+  mozilla::Decimal minimum = mInputElement->GetMinimum();
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+
+  MOZ_ASSERT(HasReversedRange(), "Must have reserved range.");
+
+  if (value.isNaN()) {
+    return false;
+  }
+
+  // When an element has a reversed range, and the value is more than the
+  // maximum and less than the minimum the element is simultaneously suffering
+  // from an underflow and suffering from an overflow.
+  return value > maximum && value < minimum;
+}
+
+bool TimeInputType::IsRangeOverflow() const {
+  return HasReversedRange() ? IsReversedRangeUnderflowAndOverflow()
+                            : DateTimeInputTypeBase::IsRangeOverflow();
+}
+
+bool TimeInputType::IsRangeUnderflow() const {
+  return HasReversedRange() ? IsReversedRangeUnderflowAndOverflow()
+                            : DateTimeInputTypeBase::IsRangeUnderflow();
+}
+
+nsresult TimeInputType::GetReversedRangeUnderflowAndOverflowMessage(
+    nsAString& aMessage) {
+  nsAutoString maxStr;
+  mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+
+  nsAutoString minStr;
+  mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+
+  return nsContentUtils::FormatMaybeLocalizedString(
+      aMessage, nsContentUtils::eDOM_PROPERTIES,
+      "FormValidationTimeReversedRangeUnderflowAndOverflow",
+      mInputElement->OwnerDoc(), minStr, maxStr);
+}
+
+nsresult TimeInputType::GetRangeOverflowMessage(nsAString& aMessage) {
+  return HasReversedRange()
+             ? GetReversedRangeUnderflowAndOverflowMessage(aMessage)
+             : DateTimeInputTypeBase::GetRangeOverflowMessage(aMessage);
+}
+
+nsresult TimeInputType::GetRangeUnderflowMessage(nsAString& aMessage) {
+  return HasReversedRange()
+             ? GetReversedRangeUnderflowAndOverflowMessage(aMessage)
+             : DateTimeInputTypeBase::GetRangeUnderflowMessage(aMessage);
+}
+
 // input type=week
 
 bool WeekInputType::ConvertStringToNumber(
