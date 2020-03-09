@@ -250,7 +250,9 @@ static int GetEffectiveSandboxLevel(GeckoProcessType aType) {
     case GeckoProcessType_RDD:
       return PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") == nullptr ? 1 : 0;
     case GeckoProcessType_Socket:
-      return PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS_SANDBOX") == nullptr ? 1 : 0;
+      // GetEffectiveSocketProcessSandboxLevel is main-thread-only due to prefs.
+      MOZ_ASSERT(NS_IsMainThread());
+      return GetEffectiveSocketProcessSandboxLevel();
     default:
       return 0;
   }

@@ -7945,6 +7945,12 @@
   mirror: always
   do_not_use_directly: true # Consumers should use SandboxSettings to ask.
 
+- name: security.sandbox.socket.process.level
+  type: int32_t
+  value: 0
+  mirror: always
+  do_not_use_directly: true # Consumers should use SandboxSettings to ask.
+
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   # Whether win32k is disabled for content processes.
   # true means win32k system calls are not permitted.
