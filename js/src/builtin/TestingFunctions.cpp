@@ -672,28 +672,26 @@ static bool GCParameter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static void SetAllowRelazification(JSContext* cx, bool allow) {
-  JSRuntime* rt = cx->runtime();
-  MOZ_ASSERT(rt->allowRelazificationForTesting != allow);
-  rt->allowRelazificationForTesting = allow;
-
-  for (AllScriptFramesIter i(cx); !i.done(); ++i) {
-    i.script()->setDoNotRelazify(allow);
-  }
-}
-
 static bool RelazifyFunctions(JSContext* cx, unsigned argc, Value* vp) {
   // Relazifying functions on GC is usually only done for compartments that are
   // not active. To aid fuzzing, this testing function allows us to relazify
   // even if the compartment is active.
 
   CallArgs args = CallArgsFromVp(argc, vp);
-  SetAllowRelazification(cx, true);
+
+  // Disable relazification of all scripts on stack. It is a pervasive
+  // assumption in the engine that running scripts still have bytecode.
+  for (AllScriptFramesIter i(cx); !i.done(); ++i) {
+    i.script()->setDoNotRelazify();
+  }
+
+  cx->runtime()->allowRelazificationForTesting = true;
 
   JS::PrepareForFullGC(cx);
   JS::NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
 
-  SetAllowRelazification(cx, false);
+  cx->runtime()->allowRelazificationForTesting = false;
+
   args.rval().setUndefined();
   return true;
 }
