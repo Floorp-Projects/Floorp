@@ -15,7 +15,7 @@
 #include "HttpLog.h"
 #include "LoadInfo.h"
 #include "mozIThirdPartyUtil.h"
-#include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ConsoleReportCollector.h"
@@ -2014,7 +2014,7 @@ HttpBaseChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) {
 NS_IMETHODIMP
 HttpBaseChannel::GetTopWindowURI(nsIURI** aTopWindowURI) {
   nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(this);
+      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(this);
   return GetTopWindowURI(uriBeingLoaded, aTopWindowURI);
 }
 
