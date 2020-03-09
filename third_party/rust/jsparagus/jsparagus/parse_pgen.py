@@ -265,5 +265,5 @@ if __name__ == '__main__':
     if sys.argv[1:] == ['--regenerate']:
         regenerate()
     else:
-        print("usage: python -m jsparagus.parse_pgen --renegerate")
+        print("usage: python -m jsparagus.parse_pgen --regenerate")
         sys.exit(1)

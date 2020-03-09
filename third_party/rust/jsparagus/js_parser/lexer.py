@@ -260,7 +260,7 @@ class JSLexer(jsparagus.lexer.FlatStringLexer):
             # the parser rewind the lexer one token and ask for it again in
             # that case, so that the lexer asks the can-accept question again.
             point = match.start(1)
-            if self.parser.can_accept_terminal('RegularExpressionLiteral'):
+            if self.parser.can_accept_terminal(self, 'RegularExpressionLiteral'):
                 match = REGEXP_RE.match(self.src, point)
                 if match is None:
                     if closing:

@@ -37,12 +37,14 @@ namespace frontend {
 
 class SmooshScriptStencil : public ScriptStencil {
   const SmooshResult& result_;
+  CompilationInfo& compilationInfo_;
+  JSAtom** allAtoms_ = nullptr;
 
   void init() {
     lineno = result_.lineno;
     column = result_.column;
 
-    natoms = result_.strings.len;
+    natoms = result_.atoms.len;
 
     ngcthings = 1;
 
@@ -73,7 +75,9 @@ class SmooshScriptStencil : public ScriptStencil {
   }
 
  public:
-  explicit SmooshScriptStencil(const SmooshResult& result) : result_(result) {
+  explicit SmooshScriptStencil(const SmooshResult& result,
+                               CompilationInfo& compilationInfo)
+      : result_(result), compilationInfo_(compilationInfo) {
     init();
   }
 
@@ -83,14 +87,31 @@ class SmooshScriptStencil : public ScriptStencil {
     return true;
   }
 
-  virtual bool initAtomMap(JSContext* cx, GCPtrAtom* atoms) const {
+  virtual void initAtomMap(GCPtrAtom* atoms) const {
     for (uint32_t i = 0; i < natoms; i++) {
-      const CVec<uint8_t>& string = result_.strings.data[i];
+      size_t index = result_.atoms.data[i];
+      atoms[i] = allAtoms_[index];
+    }
+  }
+
+  bool createAtoms(JSContext* cx) {
+    size_t numAtoms = result_.all_atoms.len;
+
+    auto& alloc = compilationInfo_.allocScope.alloc();
+
+    allAtoms_ = alloc.newArray<JSAtom*>(numAtoms);
+    if (!allAtoms_) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    for (size_t i = 0; i < numAtoms; i++) {
+      const CVec<uint8_t>& string = result_.all_atoms.data[i];
       JSAtom* atom = AtomizeUTF8Chars(cx, (const char*)string.data, string.len);
       if (!atom) {
         return false;
       }
-      atoms[i] = atom;
+      allAtoms_[i] = atom;
     }
 
     return true;
@@ -206,7 +227,11 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   RootedScript script(cx,
                       JSScript::Create(cx, cx->global(), options, sso, extent));
 
-  SmooshScriptStencil stencil(smoosh);
+  SmooshScriptStencil stencil(smoosh, compilationInfo);
+  if (!stencil.createAtoms(cx)) {
+    return nullptr;
+  }
+
   if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
     return nullptr;
   }

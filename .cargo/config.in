@@ -20,7 +20,7 @@ tag = "v0.2.0"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
-rev = "0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+rev = "d05542e55d4cb6510930b81e4890eece7f737ca7"
 
 [source."https://github.com/kvark/spirv_cross"]
 branch = "wgpu"

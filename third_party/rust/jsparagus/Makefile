@@ -4,6 +4,7 @@ HANDLER_INFO_OUT = jsparagus/emit/collect_handler_info/info.json
 RS_TABLES_OUT = crates/generated_parser/src/parser_tables_generated.rs
 RS_AST_OUT = crates/ast/src/types_generated.rs \
 	crates/ast/src/type_id_generated.rs \
+	crates/ast/src/dump_generated.rs \
 	crates/ast/src/visit_generated.rs \
 	crates/ast/src/source_location_accessor_generated.rs \
 	crates/generated_parser/src/stack_value_generated.rs
@@ -29,6 +30,7 @@ STANDARD_ES_GRAMMAR_OUT = js_parser/es.esgrammar
 # Incomplete list of files that contribute to the dump file.
 SOURCE_FILES = \
 jsparagus/gen.py \
+jsparagus/actions.py \
 jsparagus/types.py \
 js_parser/esgrammar.pgen \
 js_parser/generate_js_parser_tables.py \
@@ -73,4 +75,8 @@ check: all
 jsdemo: $(PY_OUT)
 	$(PYTHON) -m js_parser.try_it
 
-.PHONY: all check jsdemo rust
+update-opcodes-m-u:
+	$(PYTHON) crates/emitter/scripts/update_opcodes.py \
+		../mozilla-unified ./
+
+.PHONY: all check jsdemo rust update-opcodes-m-u

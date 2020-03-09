@@ -18,15 +18,15 @@ class JSParser(jsparagus.runtime.Parser):
         jsparagus.runtime.Parser.__init__(
             self,
             parser_tables.actions,
-            parser_tables.ctns,
-            parser_tables.reductions,
-            parser_tables.special_cases,
             parser_tables.error_codes,
             Script_entry_state,
-            parser_tables.DefaultBuilder()
+            parser_tables.DefaultMethods()
         )
 
-    def on_recover(self, error_code, lexer, t):
+    def clone(self):
+        return JSParser()
+
+    def on_recover(self, error_code, lexer, stv):
         """Check that ASI error recovery is really acceptable."""
         if error_code == 'asi':
             # ASI is allowed in three places:
@@ -37,7 +37,7 @@ class JSParser(jsparagus.runtime.Parser):
             #
             # The other quirks of ASI are implemented by massaging the syntax,
             # in parse_esgrammar.py.
-            if not self.closed and t != '}' and not lexer.saw_line_terminator():
+            if not self.closed and stv.term != '}' and not lexer.saw_line_terminator():
                 lexer.throw("missing semicolon")
         else:
             # ASI is always allowed in this one state.

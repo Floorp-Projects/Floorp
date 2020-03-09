@@ -2,6 +2,7 @@
 
 pub mod arena;
 pub mod associated_data;
+pub mod source_atom_set;
 pub mod source_location;
 
 mod source_location_accessor_generated;
@@ -19,6 +20,10 @@ pub mod visit {
 mod type_id_generated;
 pub mod type_id {
     pub use crate::type_id_generated::*;
+}
+mod dump_generated;
+pub mod dump {
+    pub use crate::dump_generated::*;
 }
 
 pub use source_location::SourceLocation;

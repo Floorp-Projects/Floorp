@@ -1,4 +1,4 @@
-use super::emitter::{BytecodeOffset};
+use super::emitter::BytecodeOffset;
 use crate::ast_emitter::AstEmitter;
 
 #[derive(Debug)]
@@ -14,14 +14,31 @@ pub enum JumpKind {
 #[must_use]
 pub struct JumpPatchEmitter {
     offset: BytecodeOffset,
+    depth: usize,
 }
 impl JumpPatchEmitter {
-    pub fn patch(self, emitter: &mut AstEmitter) {
+    pub fn patch_merge(self, emitter: &mut AstEmitter) {
         // TODO: if multiple jumps arrive at same point, only single JumpTarget
         // should be emitted. See:
         // https://searchfox.org/mozilla-central/rev/49ed791eec93335abfe6c2880f84c324e73e47e6/js/src/frontend/BytecodeEmitter.cpp#371-377
         emitter.emit.patch_jump_target(vec![self.offset]);
         emitter.emit.jump_target();
+
+        // If the previous opcode fall-through, it should have the same stack
+        // depth.
+        debug_assert!(emitter.emit.stack_depth() == self.depth);
+    }
+
+    pub fn patch_not_merge(self, emitter: &mut AstEmitter) {
+        // TODO: if multiple jumps arrive at same point, only single JumpTarget
+        // should be emitted. See:
+        // https://searchfox.org/mozilla-central/rev/49ed791eec93335abfe6c2880f84c324e73e47e6/js/src/frontend/BytecodeEmitter.cpp#371-377
+        emitter.emit.patch_jump_target(vec![self.offset]);
+        emitter.emit.jump_target();
+
+        // If the previous opcode doesn't fall-through, overwrite the stack
+        // depth.
+        emitter.emit.set_stack_depth(self.depth);
     }
 }
 
@@ -32,15 +49,16 @@ pub struct ForwardJumpEmitter {
 }
 impl ForwardJumpEmitter {
     pub fn emit(&mut self, emitter: &mut AstEmitter) -> JumpPatchEmitter {
-        let offset: BytecodeOffset = emitter.emit.bytecode_offset();
+        let offset = emitter.emit.bytecode_offset();
         self.emit_jump(emitter);
+        let depth = emitter.emit.stack_depth();
 
         // The JITs rely on a jump target being emitted after the
         // conditional jump
         if self.should_fallthrough() {
             emitter.emit.jump_target();
         }
-        JumpPatchEmitter { offset: offset }
+        JumpPatchEmitter { offset, depth }
     }
 
     fn should_fallthrough(&mut self) -> bool {
@@ -64,16 +82,16 @@ impl ForwardJumpEmitter {
                 emitter.emit.coalesce(placeholder_offset);
             }
             JumpKind::LogicalOr { .. } => {
-                emitter.emit.or(placeholder_offset);
+                emitter.emit.or_(placeholder_offset);
             }
             JumpKind::LogicalAnd { .. } => {
-                emitter.emit.and(placeholder_offset);
+                emitter.emit.and_(placeholder_offset);
             }
             JumpKind::IfEq { .. } => {
                 emitter.emit.if_eq(placeholder_offset);
             }
             JumpKind::Goto { .. } => {
-                emitter.emit.goto(placeholder_offset);
+                emitter.emit.goto_(placeholder_offset);
             }
         }
     }
