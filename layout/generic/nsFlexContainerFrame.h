@@ -287,18 +287,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                     nscoord aMainGapSize, nscoord aCrossGapSize,
                     bool aHasLineClampEllipsis);
 
-  /**
-   * Checks whether our child-frame list "mFrames" is sorted, using the given
-   * IsLessThanOrEqual function, and sorts it if it's not already sorted.
-   *
-   * XXXdholbert Once we support pagination, we need to make this function
-   * check our continuations as well (or wrap it in a function that does).
-   *
-   * @return true if we had to sort mFrames, false if it was already sorted.
-   */
-  template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-  bool SortChildrenIfNeeded();
-
   // Protected flex-container-specific methods / member-vars
 #ifdef DEBUG
   void SanityCheckAnonymousFlexItems() const;
