@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_ContentBlockingLog_h
 #define mozilla_dom_ContentBlockingLog_h
 
-#include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_browser.h"
@@ -18,18 +18,20 @@
 #include "nsTArray.h"
 #include "nsWindowSizes.h"
 
+class nsIPrincipal;
+
 namespace mozilla {
 namespace dom {
 
 class ContentBlockingLog final {
-  typedef AntiTrackingCommon::StorageAccessGrantedReason
+  typedef ContentBlockingNotifier::StorageAccessGrantedReason
       StorageAccessGrantedReason;
 
   struct LogEntry {
     uint32_t mType;
     uint32_t mRepeatCount;
     bool mBlocked;
-    Maybe<AntiTrackingCommon::StorageAccessGrantedReason> mReason;
+    Maybe<ContentBlockingNotifier::StorageAccessGrantedReason> mReason;
     nsTArray<nsCString> mTrackingFullHashes;
   };
 
@@ -87,12 +89,12 @@ class ContentBlockingLog final {
   // ContentBlockingLog from content processes.
   Maybe<uint32_t> RecordLogParent(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
       const nsTArray<nsCString>& aTrackingFullHashes);
 
   void RecordLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
       const nsTArray<nsCString>& aTrackingFullHashes) {
     RecordLogInternal(aOrigin, aType, aBlocked, aReason, aTrackingFullHashes);
   }
@@ -241,8 +243,8 @@ class ContentBlockingLog final {
  private:
   void RecordLogInternal(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
-          Nothing(),
+      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>&
+          aReason = Nothing(),
       const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>()) {
     DebugOnly<bool> isCookiesBlockedTracker =
         aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||

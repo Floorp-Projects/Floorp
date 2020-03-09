@@ -34,6 +34,7 @@ EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
     'AntiTrackingIPCUtils.h',
     'ContentBlockingAllowList.h',
+    'ContentBlockingNotifier.h',
     'StorageAccess.h',
     'StoragePrincipalHelper.h',
     'URLDecorationStripper.h',
@@ -41,7 +42,9 @@ EXPORTS.mozilla = [
 
 UNIFIED_SOURCES += [
     'AntiTrackingCommon.cpp',
+    'AntiTrackingUtils.cpp',
     'ContentBlockingAllowList.cpp',
+    'ContentBlockingNotifier.cpp',
     'SettingsChangeObserver.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
