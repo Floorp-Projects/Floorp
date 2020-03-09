@@ -8,17 +8,33 @@ This project contains TypeScript types in JSDoc comments. To run the type checke
 
 ## Overall Architecture
 
-Note: this architecture is in flux right now, check out [Bug 1597371](https://bugzilla.mozilla.org/show_bug.cgi?id=1597371) for more details. The docs below will need updating once the migration is complete, but as of the time of this writing the migration is partway done.
+This project has a few different views explained below.
 
-The performance panel is split into two different modes. There is the DevTools panel mode, and the browser menu bar "popup" mode. The UI is implemented for both in `devtools/client/performance-new`, and many codepaths are shared. Both use the same React/Redux setup, but then each are configured with slightly different workflows. These are documented below.
+### DevTools
 
-### DevTools Panel
+This is a simplified recording panel that includes a preset dropdown. It's embedded in the DevTools. It's not the preferred way to use the profiler, but is included so that users are comfortable with existing workflows. This is built using React/Redux. The store's code is shared by all the views, but each view initializes it separately. The popup does not use React/Redux (explained later). When editing a custom preset, it takes you to "about:profiling" in a new tab.
 
-This panel works similarly to the other DevTools panels. The `devtools/client/performance-new/initializer.js` is in charge of initializing the page specifically for the DevTools workflow. This script creates a `PerfActor` that is then used for talking to the Gecko Profiler component on the debuggee. This path is specifically optimized for targeting Firefox running on Android phones. This workflow can also target the current browser, but the overhead from DevTools can skew the results, making the performance profile less accurate.
+This panel works similarly to the other DevTools panels. The `devtools/client/performance-new/initializer.js` is in charge of initializing the page specifically for the DevTools workflow. This script creates a `PerfActor` that is then used for talking to the Gecko Profiler component.
+
+### DevTools Remote
+
+This is the same UI and codebase as the DevTools panel, but it's accessible from about:debugging for remote targets. It uses the PerfFront for a remote target to profile on the remote device. When editing a custom preset, it takes you to "about:profiling" in the same modal.
+
+This page is initialized with the `PerfActor`, but it will target a remote debuggee, like an Android Phone.
+
+### about:profiling
+
+This view uses React/Redux for the UI, and is a full page for configuring the profiler. There are no controls for recording a profile, only editing the settings. It shares the same Redux store code as DevTools (instantiated separately), but uses different React components.
+
+### about:profiling Remote
+
+This is the remote view of the about:profiling page. It is embedded in the about:debugging profiler modal dialog, and it is initialized by about:debugging. It uses preferences that are postfixed with ".remote", so that a second set of preferences are shared for how remote profiling is configured.
 
 ### Profiler Popup
 
-The popup can be enabled by going to `Tools -> Web Developer -> Enable Profiler Toolbar Icon". This then runs the initializer in`devtools/client/performance-new/popup/initializer.js`, and configures the UI to work in a configuration that is optimized for profiling the current browser. The Gecko Profiler is turned on (using the ActorReadyGeckoProfilerInterface), and is queried directly–bypassing the DevTools' remote debugging protocol.
+The popup can be enabled by going to `Tools -> Web Developer -> Enable Profiler Toolbar Icon", or by visiting [profiler.firefox.com] and clicking `Enable Profiler Menu Button`. This UI is not a React Redux app, but has a vanilla browser chrome implementation. This was done to make the popup as fast as possible, with a trade-off of some complexity with dealing with the non-standard (i.e. not a normal webpage) browser chrome environment. The popup is designed to be as low overhead as possible in order to get the cleanest performance profiles. Special care must be taken to not impact browser startup times when working with this implementation, as it also turns on the global profiler shortcuts.
+
+At the time of this writing, the popup feature is not enabled by default. This pref is `"devtools.performance.popup.feature-flag"`.
 
 ## Injecting profiles into [profiler.firefox.com]
 
