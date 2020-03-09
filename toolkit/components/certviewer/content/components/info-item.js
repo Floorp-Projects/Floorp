@@ -38,6 +38,7 @@ export class InfoItem extends HTMLElement {
     // existing labels and avoid duplicates.
     let stringMapping = {
       signaturealgorithm: "signature-algorithm",
+      "rfc-822-name": "email-address",
     };
     let fluentID = stringMapping[labelId] || labelId;
 
@@ -48,6 +49,10 @@ export class InfoItem extends HTMLElement {
     let info = this.shadowRoot.querySelector(".info");
     if (this.item.info.hasOwnProperty("utc")) {
       this.handleTimeZone(info);
+      return;
+    }
+    if (labelId === "other-name") {
+      info.setAttribute("data-l10n-id", "certificate-viewer-unsupported");
       return;
     }
     if (typeof this.item.info === "boolean") {
