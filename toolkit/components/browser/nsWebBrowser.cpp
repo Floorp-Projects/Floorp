@@ -1135,7 +1135,7 @@ nsWebBrowser::SetFocus() {
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   return fm ? fm->SetFocusedWindow(window) : NS_OK;
 }
 
@@ -1271,7 +1271,7 @@ bool nsWebBrowser::PaintWindow(nsIWidget* aWidget,
 }
 
 void nsWebBrowser::FocusActivate() {
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (fm && window) {
     fm->WindowRaised(window);
@@ -1279,7 +1279,7 @@ void nsWebBrowser::FocusActivate() {
 }
 
 void nsWebBrowser::FocusDeactivate() {
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (fm && window) {
     fm->WindowLowered(window);
