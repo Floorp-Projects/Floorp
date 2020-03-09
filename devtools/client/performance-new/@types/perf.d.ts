@@ -58,6 +58,7 @@ export interface PerfFront {
   isLockedForPrivateBrowsing: () => MaybePromise<boolean>;
   on: (type: string, listener: () => void) => void;
   off: (type: string, listener: () => void) => void;
+  destroy: () => void,
   /**
    * This method was was added in Firefox 72.
    */
@@ -97,7 +98,11 @@ export type RecordingState =
 // We are currently migrating to a new UX workflow with about:profiling.
 // This type provides an easy way to change the implementation based
 // on context.
-export type PageContext = "devtools" | "devtools-remote" | "aboutprofiling";
+export type PageContext =
+  | "devtools"
+  | "devtools-remote"
+  | "aboutprofiling"
+  | "aboutprofiling-remote";
 
 export interface State {
   recordingState: RecordingState;
@@ -221,6 +226,11 @@ export interface InitializedValues {
   // by the actor system. This compatibility can be required when the ESR version
   // is running at least Firefox 72.
   supportedFeatures: string[] | null
+  // Allow different devtools contexts to open about:profiling with different methods.
+  // e.g. via a new tab, or page navigation.
+  openAboutProfiling?: () => void,
+  // Allow about:profiling to switch back to the remote devtools panel.
+  openRemoteDevTools?: () => void,
 }
 
 /**
@@ -268,6 +278,8 @@ export type Action =
       setRecordingPreferences: SetRecordingPreferences;
       presets: Presets;
       pageContext: PageContext;
+      openAboutProfiling?: () => void,
+      openRemoteDevTools?: () => void,
       recordingSettingsFromPreferences: RecordingStateFromPreferences;
       getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
       supportedFeatures: string[] | null;
@@ -287,6 +299,8 @@ export interface InitializeStoreValues {
   recordingPreferences: RecordingStateFromPreferences;
   supportedFeatures: string[] | null;
   getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+  openAboutProfiling?: () => void;
+  openRemoteDevTools?: () => void;
 }
 
 export type PopupBackgroundFeatures = { [feature: string]: boolean };

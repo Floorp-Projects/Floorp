@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const {
   createFactory,
   PureComponent,
@@ -16,24 +17,80 @@ const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 const Types = require("devtools/client/aboutdebugging/src/types/index");
+const {
+  PROFILER_PAGE_CONTEXT,
+} = require("devtools/client/aboutdebugging/src/constants");
 
 /**
- * This component a modal dialog containing the performance profiler UI.
+ * This component is a modal dialog containing the performance profiler UI. It uses
+ * the simplified DevTools panel located in devtools/client/performance-new. When
+ * using a custom preset, and editing the settings, the page context switches
+ * to about:profiling, which receives the PerfFront of the remote debuggee.
  */
 class ProfilerDialog extends PureComponent {
   static get propTypes() {
     return {
       runtimeDetails: Types.runtimeDetails.isRequired,
-      dispatch: PropTypes.func.isRequired,
+      profilerContext: PropTypes.string.isRequired,
+      hideProfilerDialog: PropTypes.func.isRequired,
+      switchProfilerContext: PropTypes.func.isRequired,
     };
   }
 
   hide() {
-    this.props.dispatch(Actions.hideProfilerDialog());
+    this.props.hideProfilerDialog();
+  }
+
+  /**
+   * The profiler iframe can either be the simplified devtools recording panel,
+   * or the more detailed about:profiling settings page.
+   */
+  renderProfilerIframe() {
+    const {
+      runtimeDetails: { clientWrapper },
+      switchProfilerContext,
+      profilerContext,
+    } = this.props;
+
+    let src, onLoad;
+
+    switch (profilerContext) {
+      case PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE:
+        src = clientWrapper.getPerformancePanelUrl();
+        onLoad = e => {
+          clientWrapper.loadPerformanceProfiler(e.target.contentWindow, () => {
+            switchProfilerContext(PROFILER_PAGE_CONTEXT.ABOUTPROFILING_REMOTE);
+          });
+        };
+        break;
+
+      case PROFILER_PAGE_CONTEXT.ABOUTPROFILING_REMOTE:
+        src = "about:profiling#remote";
+        onLoad = e => {
+          clientWrapper.loadAboutProfiling(e.target.contentWindow, () => {
+            switchProfilerContext(PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE);
+          });
+        };
+        break;
+
+      default:
+        throw new Error(`Unhandled profiler context: "${profilerContext}"`);
+    }
+
+    return dom.iframe({
+      key: profilerContext,
+      className: "profiler-dialog__frame",
+      src,
+      onLoad,
+    });
   }
 
   render() {
-    const { clientWrapper } = this.props.runtimeDetails;
+    const { profilerContext, switchProfilerContext } = this.props;
+    const dialogSizeClassName =
+      profilerContext === PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE
+        ? "profiler-dialog__inner--medium"
+        : "profiler-dialog__inner--large";
 
     return dom.div(
       {
@@ -42,7 +99,7 @@ class ProfilerDialog extends PureComponent {
       },
       dom.article(
         {
-          className: "profiler-dialog__inner qa-profiler-dialog",
+          className: `profiler-dialog__inner ${dialogSizeClassName} qa-profiler-dialog`,
           onClick: e => e.stopPropagation(),
         },
         dom.header(
@@ -63,23 +120,37 @@ class ProfilerDialog extends PureComponent {
           dom.button(
             {
               className: "ghost-button qa-profiler-dialog-close",
-              onClick: () => this.hide(),
+              onClick: () => {
+                if (profilerContext === PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE) {
+                  this.hide();
+                } else {
+                  switchProfilerContext(PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE);
+                }
+              },
             },
             dom.img({
               src: "chrome://devtools/skin/images/close.svg",
             })
           )
         ),
-        dom.iframe({
-          className: "profiler-dialog__frame",
-          src: clientWrapper.getPerformancePanelUrl(),
-          onLoad: e => {
-            clientWrapper.loadPerformanceProfiler(e.target.contentWindow);
-          },
-        })
+        this.renderProfilerIframe()
       )
     );
   }
 }
 
-module.exports = ProfilerDialog;
+const mapStateToProps = state => {
+  return {
+    profilerContext: state.ui.profilerContext,
+  };
+};
+
+const mapDispatchToProps = {
+  hideProfilerDialog: Actions.hideProfilerDialog,
+  switchProfilerContext: Actions.switchProfilerContext,
+};
+
+module.exports = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProfilerDialog);

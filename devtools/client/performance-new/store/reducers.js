@@ -185,6 +185,8 @@ function initializedValues(state = null, action) {
         pageContext: action.pageContext,
         getSymbolTableGetter: action.getSymbolTableGetter,
         supportedFeatures: action.supportedFeatures,
+        openAboutProfiling: action.openAboutProfiling,
+        openRemoteDevTools: action.openRemoteDevTools,
       };
     default:
       return state;
