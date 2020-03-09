@@ -31,31 +31,20 @@ XPCOM_MANIFESTS += [
 ]
 
 EXPORTS.mozilla = [
+    'AntiTrackingCommon.h',
     'AntiTrackingIPCUtils.h',
-    'AntiTrackingRedirectHeuristic.h',
-    'AntiTrackingUtils.h',
-    'ContentBlocking.h',
     'ContentBlockingAllowList.h',
-    'ContentBlockingLog.h',
-    'ContentBlockingNotifier.h',
-    'ContentBlockingUserInteraction.h',
     'StorageAccess.h',
     'StoragePrincipalHelper.h',
     'URLDecorationStripper.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AntiTrackingRedirectHeuristic.cpp',
-    'AntiTrackingUtils.cpp',
-    'ContentBlocking.cpp',
+    'AntiTrackingCommon.cpp',
     'ContentBlockingAllowList.cpp',
-    'ContentBlockingLog.cpp',
-    'ContentBlockingNotifier.cpp',
-    'ContentBlockingUserInteraction.cpp',
     'SettingsChangeObserver.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
-    'TemporaryAccessGrantObserver.cpp',
     'URLDecorationStripper.cpp',
 ]
 
