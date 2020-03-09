@@ -146,6 +146,12 @@ TRRServiceChannel::AsyncOpen(nsIStreamListener* aListener) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsAutoCString scheme;
+  mURI->GetScheme(scheme);
+  if (!scheme.LowerCaseEqualsLiteral("https")) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = NS_CheckPortSafety(mURI);
   if (NS_FAILED(rv)) {
     ReleaseListeners();
