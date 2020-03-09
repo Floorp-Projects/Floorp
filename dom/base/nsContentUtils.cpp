@@ -33,7 +33,6 @@
 #include "gfxDrawable.h"
 #include "ImageOps.h"
 #include "mozAutoDocUpdate.h"
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"

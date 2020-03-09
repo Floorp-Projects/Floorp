@@ -7,7 +7,6 @@
 #include "UrlClassifierFeatureTrackingAnnotation.h"
 
 #include "Classifier.h"
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"

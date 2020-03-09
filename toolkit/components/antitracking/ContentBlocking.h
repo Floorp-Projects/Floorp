@@ -25,19 +25,12 @@ namespace mozilla {
 
 class OriginAttributes;
 
-class AntiTrackingCommon final {
+class ContentBlocking final {
  public:
-  // Normally we would include PContentParent.h here and use the
-  // ipc::FirstPartyStorageAccessGrantedForOriginResolver type which maps to
-  // the same underlying type, but that results in Windows compilation errors,
-  // so we use the underlying type to avoid the #include here.
-  typedef std::function<void(const bool&)>
-      FirstPartyStorageAccessGrantedForOriginResolver;
-
   // This method returns true if the URI has first party storage access when
   // loaded inside the passed 3rd party context tracking resource window.
   // If the window is first party context, please use
-  // MaybeIsFirstPartyStorageAccessGrantedFor();
+  // ApproximateAllowAccessForWithoutChannel();
   //
   // aRejectedReason could be set to one of these values if passed and if the
   // storage permission is not granted:
@@ -46,31 +39,29 @@ class AntiTrackingCommon final {
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
-  static bool IsFirstPartyStorageAccessGrantedFor(
-      nsPIDOMWindowInner* a3rdPartyTrackingWindow, nsIURI* aURI,
-      uint32_t* aRejectedReason);
+  static bool ShouldAllowAccessFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
+                                   nsIURI* aURI, uint32_t* aRejectedReason);
 
-  // Note: you should use IsFirstPartyStorageAccessGrantedFor() passing the
-  // nsIChannel! Use this method _only_ if the channel is not available.
-  // For first party window, it's impossible to know if the aURI is a tracking
-  // resource synchronously, so here we return the best guest: if we are sure
-  // that the permission is granted for the origin of aURI, this method returns
-  // true, otherwise false.
-  static bool MaybeIsFirstPartyStorageAccessGrantedFor(
+  // Note: you should use ShouldAllowAccessFor() passing the nsIChannel! Use
+  // this method _only_ if the channel is not available.  For first party
+  // window, it's impossible to know if the aURI is a tracking resource
+  // synchronously, so here we return the best guest: if we are sure that the
+  // permission is granted for the origin of aURI, this method returns true,
+  // otherwise false.
+  static bool ApproximateAllowAccessForWithoutChannel(
       nsPIDOMWindowInner* aFirstPartyWindow, nsIURI* aURI);
 
   // It returns true if the URI has access to the first party storage.
   // aChannel can be a 3rd party channel, or not.
-  // See IsFirstPartyStorageAccessGrantedFor(window) to see the possible values
-  // of aRejectedReason.
-  static bool IsFirstPartyStorageAccessGrantedFor(nsIChannel* aChannel,
-                                                  nsIURI* aURI,
-                                                  uint32_t* aRejectedReason);
+  // See ShouldAllowAccessFor(window) to see the possible values of
+  // aRejectedReason.
+  static bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
+                                   uint32_t* aRejectedReason);
 
   // This method checks if the principal has the permission to access to the
   // first party storage.
-  static bool IsFirstPartyStorageAccessGrantedFor(
-      nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings);
+  static bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
+                                   nsICookieJarSettings* aCookieJarSettings);
 
   enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
@@ -93,16 +84,14 @@ class AntiTrackingCommon final {
   typedef std::function<RefPtr<StorageAccessFinalCheckPromise>()>
       PerformFinalChecks;
   typedef MozPromise<int, bool, true> StorageAccessGrantPromise;
-  static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
-  AddFirstPartyStorageAccessGrantedFor(
+  static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise> AllowAccessFor(
       nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
   // For IPC only.
-  typedef MozPromise<nsresult, bool, true> FirstPartyStorageAccessGrantPromise;
-  static RefPtr<FirstPartyStorageAccessGrantPromise>
-  SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
+  typedef MozPromise<nsresult, bool, true> ParentAccessGrantPromise;
+  static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
       nsIPrincipal* aPrincipal, nsIPrincipal* aTrackingPrinciapl,
       const nsCString& aTrackingOrigin, int aAllowMode,
       uint64_t aExpirationTime =
