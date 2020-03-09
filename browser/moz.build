@@ -55,7 +55,6 @@ if CONFIG['MOZ_GPSD']:
 JS_PREFERENCE_PP_FILES += [
     'app/profile/firefox.js',
 ]
-FINAL_TARGET_FILES += ['app/blocklist.xml']
 FINAL_TARGET_FILES.defaults += ['app/permissions']
 
 with Files("**"):

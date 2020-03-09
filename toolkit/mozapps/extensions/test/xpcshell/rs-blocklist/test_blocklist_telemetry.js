@@ -37,39 +37,6 @@ add_task(async function test_setup() {
   await AddonTestUtils.promiseStartupManager();
 });
 
-add_task(async function test_blocklist_useXML_scalar() {
-  // In this folder, `useXML` is already set, and set to false, ie we're using remote settings,
-  // Blocklist.jsm module is loaded explicitly here to ensure that BlocklistTelemetry
-  // has been able to record its initial value and it is watching for changes of the pref.
-  ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
-
-  assertTelemetryScalars({
-    "blocklist.useXML": false,
-    "blocklist.lastModified_rs_addons": undefined,
-    "blocklist.lastModified_rs_plugins": undefined,
-  });
-
-  // Switch to XML:
-  Services.prefs.setBoolPref("extensions.blocklist.useXML", true);
-
-  // The useXML scalar should be updated, the lastModified_rs_* scalars should
-  // still be empty.
-  assertTelemetryScalars({
-    "blocklist.useXML": true,
-    "blocklist.lastModified_rs_addons": undefined,
-    "blocklist.lastModified_rs_plugins": undefined,
-  });
-
-  // Switch back to RemoteSettings:
-  Services.prefs.setBoolPref("extensions.blocklist.useXML", false);
-
-  assertTelemetryScalars({
-    "blocklist.useXML": false,
-    "blocklist.lastModified_rs_addons": undefined,
-    "blocklist.lastModified_rs_plugins": undefined,
-  });
-});
-
 add_task(async function test_blocklist_lastModified_rs_scalars() {
   const now = Date.now();
 
@@ -120,7 +87,6 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   ]);
 
   assertTelemetryScalars({
-    "blocklist.useXML": false,
     "blocklist.lastModified_rs_addons": undefined,
     "blocklist.lastModified_rs_plugins": lastEntryTimesUTC.plugins,
   });
@@ -134,7 +100,6 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   ]);
 
   assertTelemetryScalars({
-    "blocklist.useXML": false,
     "blocklist.lastModified_rs_addons": lastEntryTimesUTC.addons,
     "blocklist.lastModified_rs_plugins": lastEntryTimesUTC.plugins,
   });
