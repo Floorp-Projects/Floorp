@@ -6,6 +6,7 @@
 
 #include "AntiTrackingLog.h"
 #include "AntiTrackingCommon.h"
+#include "AntiTrackingUtils.h"
 
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -48,7 +49,6 @@
 #include "prtime.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
-#define ANTITRACKING_CONSOLE_CATEGORY NS_LITERAL_CSTRING("Content Blocking")
 
 namespace mozilla {
 
@@ -60,8 +60,6 @@ using namespace mozilla;
 using mozilla::dom::BrowsingContext;
 using mozilla::dom::ContentChild;
 using mozilla::dom::Document;
-
-static const uint32_t kMaxConsoleOutputDelayMs = 100;
 
 namespace {
 
@@ -178,229 +176,6 @@ int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
   }
 
   return aCookieJarSettings->GetCookieBehavior();
-}
-
-void RunConsoleReportingRunnable(already_AddRefed<nsIRunnable>&& aRunnable) {
-  if (StaticPrefs::privacy_restrict3rdpartystorage_console_lazy()) {
-    nsresult rv = NS_DispatchToCurrentThreadQueue(std::move(aRunnable),
-                                                  kMaxConsoleOutputDelayMs,
-                                                  EventQueuePriority::Idle);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-  } else {
-    nsCOMPtr<nsIRunnable> runnable(std::move(aRunnable));
-    nsresult rv = runnable->Run();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-  }
-}
-
-void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
-                             uint32_t aRejectedReason) {
-  MOZ_ASSERT(aWindowID);
-  MOZ_ASSERT(aURI);
-  MOZ_ASSERT(
-      aRejectedReason == 0 ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
-
-  nsAutoString sourceLine;
-  uint32_t lineNumber = 0, columnNumber = 0;
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
-  }
-
-  nsCOMPtr<nsIURI> uri(aURI);
-
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "ReportBlockingToConsoleDelayed", [aWindowID, sourceLine, lineNumber,
-                                         columnNumber, uri, aRejectedReason]() {
-        const char* message = nullptr;
-        nsAutoCString category;
-        // When changing this list, please make sure to update the corresponding
-        // code in antitracking_head.js (inside _createTask).
-        switch (aRejectedReason) {
-          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION:
-            message = "CookieBlockedByPermission";
-            category = NS_LITERAL_CSTRING("cookieBlockedPermission");
-            break;
-
-          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER:
-            message = "CookieBlockedTracker";
-            category = NS_LITERAL_CSTRING("cookieBlockedTracker");
-            break;
-
-          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL:
-            message = "CookieBlockedAll";
-            category = NS_LITERAL_CSTRING("cookieBlockedAll");
-            break;
-
-          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
-            message = "CookieBlockedForeign";
-            category = NS_LITERAL_CSTRING("cookieBlockedForeign");
-            break;
-
-          default:
-            return;
-        }
-
-        MOZ_ASSERT(message);
-
-        // Strip the URL of any possible username/password and make it ready
-        // to be presented in the UI.
-        nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-        NS_ENSURE_TRUE_VOID(urifixup);
-        nsCOMPtr<nsIURI> exposableURI;
-        nsresult rv =
-            urifixup->CreateExposableURI(uri, getter_AddRefs(exposableURI));
-        NS_ENSURE_SUCCESS_VOID(rv);
-
-        AutoTArray<nsString, 1> params;
-        CopyUTF8toUTF16(exposableURI->GetSpecOrDefault(),
-                        *params.AppendElement());
-
-        nsAutoString errorText;
-        rv = nsContentUtils::FormatLocalizedString(
-            nsContentUtils::eNECKO_PROPERTIES, message, params, errorText);
-        NS_ENSURE_SUCCESS_VOID(rv);
-
-        nsContentUtils::ReportToConsoleByWindowID(
-            errorText, nsIScriptError::warningFlag, category, aWindowID,
-            nullptr, sourceLine, lineNumber, columnNumber);
-      });
-
-  RunConsoleReportingRunnable(runnable.forget());
-}
-
-void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
-                             uint32_t aRejectedReason) {
-  MOZ_ASSERT(aChannel && aURI);
-
-  uint64_t windowID;
-
-  if (XRE_IsParentProcess()) {
-    // Get the top-level window ID from the top-level BrowsingContext
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    RefPtr<dom::BrowsingContext> bc;
-    loadInfo->GetBrowsingContext(getter_AddRefs(bc));
-
-    if (!bc || bc->IsDiscarded()) {
-      return;
-    }
-
-    bc = bc->Top();
-    RefPtr<dom::WindowGlobalParent> wgp =
-        bc->Canonical()->GetCurrentWindowGlobal();
-    if (!wgp) {
-      return;
-    }
-
-    windowID = wgp->InnerWindowId();
-  } else {
-    nsresult rv;
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel, &rv);
-
-    if (!httpChannel) {
-      return;
-    }
-
-    rv = httpChannel->GetTopLevelContentWindowId(&windowID);
-    if (NS_FAILED(rv) || !windowID) {
-      windowID = nsContentUtils::GetInnerWindowID(httpChannel);
-    }
-  }
-
-  ReportBlockingToConsole(windowID, aURI, aRejectedReason);
-}
-
-void ReportUnblockingToConsole(
-    nsPIDOMWindowInner* aWindow, const nsAString& aTrackingOrigin,
-    AntiTrackingCommon::StorageAccessGrantedReason aReason) {
-  nsCOMPtr<nsIPrincipal> principal =
-      nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
-  if (NS_WARN_IF(!principal)) {
-    return;
-  }
-
-  RefPtr<Document> doc = aWindow->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return;
-  }
-
-  nsAutoString trackingOrigin(aTrackingOrigin);
-
-  nsAutoString sourceLine;
-  uint32_t lineNumber = 0, columnNumber = 0;
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
-  }
-
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "ReportUnblockingToConsoleDelayed",
-      [doc, principal, trackingOrigin, sourceLine, lineNumber, columnNumber,
-       aReason]() {
-        nsAutoString origin;
-        nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        // Not adding grantedOrigin yet because we may not want it later.
-        AutoTArray<nsString, 3> params = {origin, trackingOrigin};
-        const char* messageWithSameOrigin = nullptr;
-
-        switch (aReason) {
-          case AntiTrackingCommon::eStorageAccessAPI:
-            messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
-            break;
-
-          case AntiTrackingCommon::eOpenerAfterUserInteraction:
-            [[fallthrough]];
-          case AntiTrackingCommon::eOpener:
-            messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
-            break;
-        }
-
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, ANTITRACKING_CONSOLE_CATEGORY, doc,
-            nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin, params,
-            nullptr, sourceLine, lineNumber, columnNumber);
-      });
-
-  RunConsoleReportingRunnable(runnable.forget());
-}
-
-already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
-  Document* document = aWindow->GetExtantDoc();
-  if (!document) {
-    return nullptr;
-  }
-
-  nsIChannel* channel = document->GetChannel();
-  if (!channel) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> pwin =
-      aWindow->GetBrowsingContext()->Top()->GetDOMWindow();
-
-  if (!pwin) {
-    return nullptr;
-  }
-
-  return pwin.forget();
 }
 
 class TemporaryAccessGrantCacheKey : public PLDHashEntryHdr {
@@ -636,175 +411,17 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
   return true;
 }
 
-// This API finishes the remaining work left in NotifyBlockingDecisionInternal.
-void NotifyAllowDecisionInternal(nsIChannel* aReportingChannel,
-                                 nsIChannel* aTrackingChannel, nsIURI* aURI,
-                                 nsPIDOMWindowOuter* aWindow) {
-  nsAutoCString trackingOrigin;
-  if (aURI) {
-    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
-  }
-
-  // This can be called in either the parent process or the child processes.
-
-  // Now send the generic "cookies loaded" notifications, from the most generic
-  // to the most specific.
-  AntiTrackingCommon::NotifyContentBlockingEvent(
-      aWindow, aReportingChannel, aTrackingChannel, false,
-      nsIWebProgressListener::STATE_COOKIES_LOADED, trackingOrigin);
-
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(aTrackingChannel);
-  if (!classifiedChannel) {
-    return;
-  }
-
-  uint32_t classificationFlags =
-      classifiedChannel->GetThirdPartyClassificationFlags();
-  if (classificationFlags &
-      nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_TRACKING) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(
-        aWindow, aReportingChannel, aTrackingChannel, false,
-        nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER, trackingOrigin);
-  }
-
-  if (classificationFlags &
-      nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(
-        aWindow, aReportingChannel, aTrackingChannel, false,
-        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
-        trackingOrigin);
-  }
-}
-
-void NotifyBlockingDecisionInternal(
-    nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel,
-    AntiTrackingCommon::BlockingDecision aDecision, uint32_t aRejectedReason,
-    nsIURI* aURI, nsPIDOMWindowOuter* aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  // When this is called with system priviledged, the decision should always be
-  // ALLOW, and we can also stop processing this event.
-  if (nsGlobalWindowOuter::Cast(aWindow)->GetPrincipal() ==
-      nsContentUtils::GetSystemPrincipal()) {
-    MOZ_DIAGNOSTIC_ASSERT(aDecision ==
-                          AntiTrackingCommon::BlockingDecision::eAllow);
-    return;
-  }
-
-  nsAutoCString trackingOrigin;
-  if (aURI) {
-    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
-  }
-
-  if (aDecision == AntiTrackingCommon::BlockingDecision::eBlock) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(
-        aWindow, aReportingChannel, aTrackingChannel, true, aRejectedReason,
-        trackingOrigin);
-
-    ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
-  }
-
-  NotifyAllowDecisionInternal(aReportingChannel, aTrackingChannel, aURI,
-                              aWindow);
-}
-
-void NotifyBlockingDecisionInternal(
-    nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel,
-    AntiTrackingCommon::BlockingDecision aDecision, uint32_t aRejectedReason,
-    nsIURI* aURI) {
-  // Can be called only in the parent process when there is no window.
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  nsAutoCString trackingOrigin;
-  if (aURI) {
-    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
-  }
-
-  if (aDecision == AntiTrackingCommon::BlockingDecision::eBlock) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(
-        nullptr, aReportingChannel, aTrackingChannel, true, aRejectedReason,
-        trackingOrigin);
-
-    ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
-  }
-
-  NotifyAllowDecisionInternal(aReportingChannel, aTrackingChannel, aURI,
-                              nullptr);
-}
-
-// Send a message to notify OnContentBlockingEvent in the parent, which will
-// update the ContentBlockingLog in the parent.
-void NotifyContentBlockingEventInChild(
-    nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
-    nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
-    const nsACString& aTrackingOrigin,
-    const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_ASSERT(aWindow);
-
-  RefPtr<dom::BrowserChild> browserChild = dom::BrowserChild::GetFrom(aWindow);
-  NS_ENSURE_TRUE_VOID(browserChild);
-
-  nsTArray<nsCString> trackingFullHashes;
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(aTrackingChannel);
-
-  if (classifiedChannel) {
-    Unused << classifiedChannel->GetMatchedTrackingFullHashes(
-        trackingFullHashes);
-  }
-
-  browserChild->NotifyContentBlockingEvent(aRejectedReason, aReportingChannel,
-                                           aBlocked, aTrackingOrigin,
-                                           trackingFullHashes, aReason);
-}
-
-// Update the ContentBlockingLog of the top-level WindowGlobalParent of
-// the reporting channel.
-void NotifyContentBlockingEventInParent(
-    nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel, bool aBlocked,
-    uint32_t aRejectedReason, const nsACString& aTrackingOrigin,
-    const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aReportingChannel->LoadInfo();
-  RefPtr<dom::BrowsingContext> bc;
-  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
-
-  if (!bc || bc->IsDiscarded()) {
-    return;
-  }
-
-  bc = bc->Top();
-  RefPtr<dom::WindowGlobalParent> wgp =
-      bc->Canonical()->GetCurrentWindowGlobal();
-  NS_ENSURE_TRUE_VOID(wgp);
-
-  nsTArray<nsCString> trackingFullHashes;
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(aTrackingChannel);
-
-  if (classifiedChannel) {
-    Unused << classifiedChannel->GetMatchedTrackingFullHashes(
-        trackingFullHashes);
-  }
-
-  wgp->NotifyContentBlockingEvent(aRejectedReason, aReportingChannel, aBlocked,
-                                  aTrackingOrigin, trackingFullHashes, aReason);
-}
-
 }  // namespace
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
 AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
-    StorageAccessGrantedReason aReason,
+    ContentBlockingNotifier::StorageAccessGrantedReason aReason,
     const AntiTrackingCommon::PerformFinalChecks& aPerformFinalChecks) {
   MOZ_ASSERT(aParentWindow);
 
   switch (aReason) {
-    case eOpener:
+    case ContentBlockingNotifier::eOpener:
       if (!StaticPrefs::
               privacy_restrict3rdpartystorage_heuristic_window_open()) {
         LOG(
@@ -814,7 +431,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
         return StorageAccessGrantPromise::CreateAndReject(false, __func__);
       }
       break;
-    case eOpenerAfterUserInteraction:
+    case ContentBlockingNotifier::eOpenerAfterUserInteraction:
       if (!StaticPrefs::
               privacy_restrict3rdpartystorage_heuristic_opened_window_after_interaction()) {
         LOG(
@@ -976,12 +593,14 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
               "refusing to add a first-party storage permission to access it",
               _spec),
              trackingPrincipal);
-    NotifyBlockingDecision(aParentWindow, BlockingDecision::eBlock,
-                           blockReason);
+    ContentBlockingNotifier::OnDecision(
+        aParentWindow, ContentBlockingNotifier::BlockingDecision::eBlock,
+        blockReason);
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = GetTopWindow(parentWindow);
+  nsCOMPtr<nsPIDOMWindowOuter> pwin =
+      AntiTrackingUtils::GetTopWindow(parentWindow);
   if (!pwin) {
     LOG(("Couldn't get the top window"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
@@ -1003,12 +622,12 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     nsIChannel* channel =
         pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
-    NotifyContentBlockingEvent(
+    ContentBlockingNotifier::OnEvent(
         pwin, channel, parentWindow->GetExtantDoc()->GetChannel(), false,
         blockReason, trackingOrigin, Some(aReason));
 
-    ReportUnblockingToConsole(parentWindow,
-                              NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
+    ContentBlockingNotifier::ReportUnblockingToConsole(
+        parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
@@ -1741,111 +1360,6 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
 }
 
 /* static */
-void AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
-                                                BlockingDecision aDecision,
-                                                uint32_t aRejectedReason) {
-  MOZ_ASSERT(
-      aRejectedReason == 0 ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
-  MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
-             aDecision == BlockingDecision::eAllow);
-
-  if (!aChannel) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-
-  // Can be called in EITHER the parent or child process.
-  // Window is only needed while in child processes.
-  if (XRE_IsParentProcess()) {
-    NotifyBlockingDecisionInternal(aChannel, aChannel, aDecision,
-                                   aRejectedReason, uri);
-    return;
-  }
-
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-  if (!thirdPartyUtil) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uriBeingLoaded = MaybeGetDocumentURIBeingLoaded(aChannel);
-  nsCOMPtr<mozIDOMWindowProxy> win;
-  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, uriBeingLoaded,
-                                                       getter_AddRefs(win));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(win);
-  if (!pwin) {
-    return;
-  }
-
-  NotifyBlockingDecisionInternal(aChannel, aChannel, aDecision, aRejectedReason,
-                                 uri, pwin);
-}
-
-/* static */
-void AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
-                                                BlockingDecision aDecision,
-                                                uint32_t aRejectedReason) {
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(
-      aRejectedReason == 0 ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
-  MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
-             aDecision == BlockingDecision::eAllow);
-
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = GetTopWindow(aWindow);
-  if (!pwin) {
-    return;
-  }
-
-  nsPIDOMWindowInner* inner = pwin->GetCurrentInnerWindow();
-  if (!inner) {
-    return;
-  }
-  Document* pwinDoc = inner->GetExtantDoc();
-  if (!pwinDoc) {
-    return;
-  }
-  nsIChannel* channel = pwinDoc->GetChannel();
-  if (!channel) {
-    return;
-  }
-
-  Document* document = aWindow->GetExtantDoc();
-  if (!document) {
-    return;
-  }
-  nsIURI* uri = document->GetDocumentURI();
-  nsIChannel* trackingChannel = document->GetChannel();
-
-  NotifyBlockingDecisionInternal(channel, trackingChannel, aDecision,
-                                 aRejectedReason, uri, pwin);
-}
-
-/* static */
 void AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal) {
   if (!aPrincipal) {
     // The content process may have sent us garbage data.
@@ -1929,40 +1443,6 @@ already_AddRefed<nsIURI> AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(
     }
   }
   return uriBeingLoaded.forget();
-}
-
-/* static */
-void AntiTrackingCommon::NotifyContentBlockingEvent(nsIChannel* aChannel,
-                                                    uint32_t aRejectedReason) {
-  MOZ_ASSERT(XRE_IsParentProcess() && aChannel);
-
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-
-  nsAutoCString trackingOrigin;
-  if (uri) {
-    Unused << nsContentUtils::GetASCIIOrigin(uri, trackingOrigin);
-  }
-
-  return AntiTrackingCommon::NotifyContentBlockingEvent(
-      nullptr, aChannel, aChannel, true, aRejectedReason, trackingOrigin);
-}
-
-/* static */
-void AntiTrackingCommon::NotifyContentBlockingEvent(
-    nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
-    nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
-    const nsACString& aTrackingOrigin,
-    const Maybe<StorageAccessGrantedReason>& aReason) {
-  if (XRE_IsParentProcess()) {
-    NotifyContentBlockingEventInParent(aReportingChannel, aTrackingChannel,
-                                       aBlocked, aRejectedReason,
-                                       aTrackingOrigin, aReason);
-  } else {
-    NotifyContentBlockingEventInChild(
-        aWindow, aReportingChannel, aTrackingChannel, aBlocked, aRejectedReason,
-        aTrackingOrigin, aReason);
-  }
 }
 
 /* static */

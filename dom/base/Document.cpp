@@ -15066,7 +15066,7 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
   // We don't care when the asynchronous work finishes here.
   Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       NodePrincipal(), openerInner,
-      AntiTrackingCommon::eOpenerAfterUserInteraction);
+      ContentBlockingNotifier::eOpenerAfterUserInteraction);
 }
 
 namespace {
@@ -15721,7 +15721,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
         return std::move(p);
       };
       AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
-          NodePrincipal(), inner, AntiTrackingCommon::eStorageAccessAPI,
+          NodePrincipal(), inner, ContentBlockingNotifier::eStorageAccessAPI,
           performFinalChecks)
           ->Then(
               GetCurrentThreadSerialEventTarget(), __func__,

@@ -10,6 +10,7 @@
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentBlockingAllowList.h"
+#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -211,7 +212,7 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
     if (!state) {
       state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
     }
-    AntiTrackingCommon::NotifyContentBlockingEvent(channel, state);
+    ContentBlockingNotifier::OnEvent(channel, state);
 
     return NS_OK;
   }
@@ -443,7 +444,7 @@ void UrlClassifierCommon::AnnotateChannel(nsIChannel* aChannel,
       IsCryptominingClassificationFlag(aClassificationFlags);
 
   if (validClassificationFlags && isThirdPartyWithTopLevelWinURI) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(aChannel, aLoadingState);
+    ContentBlockingNotifier::OnEvent(aChannel, aLoadingState);
   }
 
   if (isThirdPartyWithTopLevelWinURI &&

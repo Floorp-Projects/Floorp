@@ -300,16 +300,16 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   bool disabled = StorageDisabledByAntiTrackingInternal(
       aWindow, aChannel, aPrincipal, aURI, cookieJarSettings, aRejectedReason);
   if (aWindow) {
-    AntiTrackingCommon::NotifyBlockingDecision(
+    ContentBlockingNotifier::OnDecision(
         aWindow,
-        disabled ? AntiTrackingCommon::BlockingDecision::eBlock
-                 : AntiTrackingCommon::BlockingDecision::eAllow,
+        disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
+                 : ContentBlockingNotifier::BlockingDecision::eAllow,
         aRejectedReason);
   } else if (aChannel) {
-    AntiTrackingCommon::NotifyBlockingDecision(
+    ContentBlockingNotifier::OnDecision(
         aChannel,
-        disabled ? AntiTrackingCommon::BlockingDecision::eBlock
-                 : AntiTrackingCommon::BlockingDecision::eAllow,
+        disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
+                 : ContentBlockingNotifier::BlockingDecision::eAllow,
         aRejectedReason);
   }
   return disabled;
