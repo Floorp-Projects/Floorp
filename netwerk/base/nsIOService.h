@@ -19,6 +19,7 @@
 #include "nsDataHashtable.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Mutex.h"
 #include "prtime.h"
 #include "nsICaptivePortalService.h"
 
@@ -219,6 +220,7 @@ class nsIOService final : public nsIIOService,
   // cached categories
   nsCategoryCache<nsIChannelEventSink> mChannelEventSinks;
 
+  Mutex mMutex;
   nsTArray<int32_t> mRestrictedPortList;
 
   static bool sIsDataURIUniqueOpaqueOrigin;
