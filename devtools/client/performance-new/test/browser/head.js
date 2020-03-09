@@ -345,7 +345,7 @@ function getActiveConfiguration() {
   );
 
   info("Start the profiler with the current about:profiling configuration.");
-  startProfiler();
+  startProfiler("aboutprofiling");
 
   // Immediately pause the sampling, to make sure the test runs fast. The profiler
   // only needs to be started to initialize the configuration.
