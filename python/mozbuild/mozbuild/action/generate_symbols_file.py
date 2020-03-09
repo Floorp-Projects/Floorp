@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import buildconfig
 import os
-from StringIO import StringIO
+from io import StringIO
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import DefinesAction
 
