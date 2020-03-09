@@ -1888,7 +1888,7 @@ void nsMathMLChar::PaintForeground(nsIFrame* aForFrame,
     fgColor = LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground,
                                     fgColor);
   }
-  aRenderingContext.SetColor(Color::FromABGR(fgColor));
+  aRenderingContext.SetColor(sRGBColor::FromABGR(fgColor));
   aRenderingContext.Save();
   nsRect r = mRect + aPt;
   ApplyTransforms(&aRenderingContext,

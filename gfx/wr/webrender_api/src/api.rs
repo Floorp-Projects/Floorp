@@ -852,6 +852,8 @@ pub enum FrameMsg {
     ///
     HitTest(Option<PipelineId>, WorldPoint, HitTestFlags, MsgSender<HitTestResult>),
     ///
+    RequestHitTester(MsgSender<Arc<dyn ApiHitTester>>),
+    ///
     SetPan(DeviceIntPoint),
     ///
     Scroll(ScrollLocation, WorldPoint),
@@ -889,6 +891,7 @@ impl fmt::Debug for FrameMsg {
         f.write_str(match *self {
             FrameMsg::UpdateEpoch(..) => "FrameMsg::UpdateEpoch",
             FrameMsg::HitTest(..) => "FrameMsg::HitTest",
+            FrameMsg::RequestHitTester(..) => "FrameMsg::RequestHitTester",
             FrameMsg::SetPan(..) => "FrameMsg::SetPan",
             FrameMsg::Scroll(..) => "FrameMsg::Scroll",
             FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
@@ -1680,6 +1683,16 @@ impl RenderApi {
         rx.recv().unwrap()
     }
 
+    /// Synchronously request an object that can perform fast hit testing queries.
+    pub fn request_hit_tester(&self, document_id: DocumentId) -> Arc<dyn ApiHitTester> {
+        let (tx, rx) = channel::msg_channel().unwrap();
+        self.send_frame_msg(
+            document_id,
+            FrameMsg::RequestHitTester(tx)
+        );
+        rx.recv().unwrap()
+    }
+
     /// Setup the output region in the framebuffer for a given document.
     pub fn set_document_view(
         &self,
@@ -2012,6 +2025,18 @@ impl NotificationRequest {
             handler.notify(self.when);
         }
     }
+}
+
+/// An object that can perform hit-testing without doing synchronous queries to
+/// the RenderBackendThread.
+pub trait ApiHitTester: Send + Sync {
+    /// Does a hit test on display items in the specified document, at the given
+    /// point. If a pipeline_id is specified, it is used to further restrict the
+    /// hit results so that only items inside that pipeline are matched. If the
+    /// HitTestFlags argument contains the FIND_ALL flag, then the vector of hit
+    /// results will contain all display items that match, ordered from front
+    /// to back.
+    fn hit_test(&self, pipeline_id: Option<PipelineId>, point: WorldPoint, flags: HitTestFlags) -> HitTestResult;
 }
 
 impl Drop for NotificationRequest {

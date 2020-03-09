@@ -1218,7 +1218,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     dt->FillRect(Rect(0, 0, size.width, size.height),
-                 ColorPattern(Color(1.0f, 1.0f, 1.0f, 1.0f)));
+                 ColorPattern(ToDeviceColor(sRGBColor::OpaqueWhite())));
     IntPoint point;
     point.x = (size.width - surface->GetSize().width) / 2;
     point.y = (size.height - surface->GetSize().height) / 2;

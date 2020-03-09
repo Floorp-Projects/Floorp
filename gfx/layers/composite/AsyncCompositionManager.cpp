@@ -588,7 +588,7 @@ static void ApplyAnimatedValue(
       // meet currentColor on the compositor.
       nscolor color =
           Servo_AnimationValue_GetColor(aValues[0], NS_RGBA(0, 0, 0, 0));
-      aLayer->AsColorLayer()->SetColor(gfx::Color::FromABGR(color));
+      aLayer->AsColorLayer()->SetColor(gfx::ToDeviceColor(color));
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), color);
 
       layerCompositor->SetShadowOpacity(aLayer->GetOpacity());

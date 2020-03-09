@@ -89,8 +89,9 @@ static void ComposeExtraMask(DrawTarget* aTarget, SourceSurface* aExtraMask,
 
   Matrix origin = aTarget->GetTransform();
   aTarget->SetTransform(aExtraMasksTransform * aTarget->GetTransform());
-  aTarget->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), aExtraMask,
-                       Point(0, 0), DrawOptions(1.0, CompositionOp::OP_IN));
+  aTarget->MaskSurface(ColorPattern(DeviceColor(0.0, 0.0, 0.0, 1.0)),
+                       aExtraMask, Point(0, 0),
+                       DrawOptions(1.0, CompositionOp::OP_IN));
   aTarget->SetTransform(origin);
 }
 

@@ -228,7 +228,7 @@ ComputedStyle* nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(
 #ifdef DEBUG
 static void PaintDebugPlaceholder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                   const nsRect& aDirtyRect, nsPoint aPt) {
-  ColorPattern cyan(ToDeviceColor(Color(0.f, 1.f, 1.f, 1.f)));
+  ColorPattern cyan(ToDeviceColor(sRGBColor(0.f, 1.f, 1.f, 1.f)));
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
   nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);

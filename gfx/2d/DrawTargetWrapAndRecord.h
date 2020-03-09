@@ -78,7 +78,8 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aOperator Composition operator used
    */
   virtual void DrawSurfaceWithShadow(SourceSurface* aSurface,
-                                     const Point& aDest, const Color& aColor,
+                                     const Point& aDest,
+                                     const DeviceColor& aColor,
                                      const Point& aOffset, Float aSigma,
                                      CompositionOp aOperator) override;
 

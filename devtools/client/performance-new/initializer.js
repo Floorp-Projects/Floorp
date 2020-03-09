@@ -8,6 +8,9 @@
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("./@types/perf").PageContext} PageContext
+ * @typedef {import("./@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("./@types/perf").Store} Store
  */
 "use strict";
 
@@ -35,8 +38,8 @@
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
-const DevToolsAndPopup = React.createFactory(
-  require("devtools/client/performance-new/components/DevToolsAndPopup")
+const DevToolsPanel = React.createFactory(
+  require("devtools/client/performance-new/components/DevToolsPanel")
 );
 const ProfilerEventHandling = React.createFactory(
   require("devtools/client/performance-new/components/ProfilerEventHandling")
@@ -48,17 +51,16 @@ const actions = require("devtools/client/performance-new/store/actions");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   receiveProfile,
-  getRecordingPreferencesFromDebuggee,
-  setRecordingPreferencesOnDebuggee,
   createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
 const {
-  getDefaultRecordingPreferencesForOlderFirefox,
+  setRecordingPreferences,
   presets,
-} = ChromeUtils.import(
+  getRecordingPreferences,
+} = /** @type {import("resource://devtools/client/performance-new/popup/background.jsm.js")} */ (ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
-);
+));
 
 /**
  * This file initializes the DevTools Panel UI. It is in charge of initializing
@@ -70,31 +72,39 @@ const {
  * Initialize the panel by creating a redux store, and render the root component.
  *
  * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
- * @param {PreferenceFront} preferenceFront - Used to get the recording preferences from the device.
+ * @param {PageContext} pageContext - The context that the UI is being loaded in under.
+ * @param {(() => void)?} openAboutProfiling - Optional call to open about:profiling
  */
-async function gInit(perfFront, preferenceFront) {
+async function gInit(perfFront, pageContext, openAboutProfiling) {
   const store = createStore(reducers);
+  // Get the supported features from the debuggee. If the debuggee is before
+  // Firefox 72, then return null, as the actor does not support that feature.
+  // We can't use `target.actorHasMethod`, because the target is not provided
+  // when remote debugging. Unfortunately, this approach means that if this
+  // function throws a real error, it will get swallowed here.
+  //
+  // Wrap the the getSupportedFeatures call in a Promise, as the method returns a
+  // `MaybePromise<string[]>`, and we want to be able to run catch().
+  const supportedFeatures = await Promise.resolve(
+    perfFront.getSupportedFeatures()
+  ).catch(() => null);
 
-  // Send the initial requests in parallel.
-  const [recordingPreferences, supportedFeatures] = await Promise.all([
-    // Pull the default recording settings from the background.jsm module. Update them
-    // according to what's in the target's preferences. This way the preferences are
-    // stored on the target. This could be useful for something like Android where you
-    // might want to tweak the settings.
-    getRecordingPreferencesFromDebuggee(
-      preferenceFront,
-      getDefaultRecordingPreferencesForOlderFirefox()
-    ),
-    // Get the supported features from the debuggee. If the debuggee is before
-    // Firefox 72, then return null, as the actor does not support that feature.
-    // We can't use `target.actorHasMethod`, because the target is not provided
-    // when remote debugging. Unfortunately, this approach means that if this
-    // function throws a real error, it will get swallowed here.
-    Promise.resolve(perfFront.getSupportedFeatures()).catch(() => null),
-  ]);
+  if (!openAboutProfiling) {
+    openAboutProfiling = () => {
+      const { openTrustedLink } = require("devtools/client/shared/link");
+      openTrustedLink("about:profiling", {});
+    };
+  }
 
-  // This panel doesn't support presets yet, make sure it's always set to custom.
-  recordingPreferences.presetName = "custom";
+  {
+    // Expose the store as a global, for testing.
+    const anyWindow = /** @type {any} */ (window);
+    const panelWindow = /** @type {PanelWindow} */ (anyWindow);
+    // The store variable is a `ReduxStore`, not our `Store` type, as defined
+    // in perf.d.ts. Coerce it into the `Store` type.
+    const anyStore = /** @type {any} */ (store);
+    panelWindow.gStore = anyStore;
+  }
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
@@ -102,9 +112,10 @@ async function gInit(perfFront, preferenceFront) {
     actions.initializeStore({
       perfFront,
       receiveProfile,
-      recordingPreferences,
+      recordingPreferences: getRecordingPreferences(pageContext),
       presets,
       supportedFeatures,
+      openAboutProfiling,
       pageContext: "devtools",
 
       // Go ahead and hide the implementation details for the component on how the
@@ -113,10 +124,7 @@ async function gInit(perfFront, preferenceFront) {
        * @param {RecordingStateFromPreferences} newRecordingPreferences
        */
       setRecordingPreferences: newRecordingPreferences =>
-        setRecordingPreferencesOnDebuggee(
-          preferenceFront,
-          newRecordingPreferences
-        ),
+        setRecordingPreferences(pageContext, newRecordingPreferences),
 
       // Configure the getSymbolTable function for the DevTools workflow.
       // See createMultiModalGetSymbolTableFn for more information.
@@ -139,7 +147,7 @@ async function gInit(perfFront, preferenceFront) {
         React.Fragment,
         null,
         ProfilerEventHandling(),
-        DevToolsAndPopup()
+        DevToolsPanel()
       )
     ),
     document.querySelector("#root")

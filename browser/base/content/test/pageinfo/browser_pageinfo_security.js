@@ -243,7 +243,7 @@ add_task(async function test_SiteData() {
     // waiting for them to be filled in.
     // We only wait for the right unit to appear, since this number is intermittently
     // varying by slight amounts on infra machines.
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => label.textContent.includes(size[1]),
       "Should show site data usage in the security section."
     );
@@ -263,7 +263,7 @@ add_task(async function test_SiteData() {
     totalUsage = await SiteDataTestUtils.getQuotaUsage(TEST_ORIGIN);
     is(totalUsage, 0, "The total usage should be 0");
 
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => label.textContent == "No",
       "Should show no site data usage in the security section."
     );
@@ -290,7 +290,7 @@ add_task(async function test_Cookies() {
 
     // The usage details are filled asynchronously, so we assert that they're present by
     // waiting for them to be filled in.
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => label.textContent.includes("cookies"),
       "Should show cookies in the security section."
     );
@@ -316,7 +316,7 @@ add_task(async function test_Cookies() {
       "Cookies from the base domain should be cleared"
     );
 
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => label.textContent == "No",
       "Should show no cookies in the security section."
     );

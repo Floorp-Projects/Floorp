@@ -9,7 +9,7 @@ display it as part of a DOM window or hand it off to something else.
 
 It is generally used when loading content for display to the user, normally from
 ``nsDocShell`` for display as a webpage or ``nsObjectLoadingContent`` for display inside
-a webpage's ``<object>`` tag. The normal entrypoint is throught ``nsIURILoader::OpenURI``.
+a webpage's ``<object>`` tag. The normal entrypoint is through ``nsIURILoader::OpenURI``.
 
 The URI loader starts the load and registers an ``nsDocumentOpenInfo`` as a stream
 listener for the content. Once headers have been received `DispatchContent <https://searchfox.org/mozilla-central/search?q=nsDocumentOpenInfo%3A%3ADispatchContent&path=>`_

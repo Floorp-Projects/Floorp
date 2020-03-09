@@ -53,7 +53,7 @@ add_task(async function() {
 
   const wait = waitForDOM(document, ".CodeMirror-code");
   const onResponseContent = monitor.panelWin.api.once(
-    EVENTS.RECEIVED_RESPONSE_CONTENT
+    TEST_EVENTS.RECEIVED_RESPONSE_CONTENT
   );
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(

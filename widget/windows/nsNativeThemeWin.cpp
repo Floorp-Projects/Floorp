@@ -4151,7 +4151,7 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner: {
-      ctx->SetColor(Color::FromABGR(trackColor));
+      ctx->SetColor(sRGBColor::FromABGR(trackColor));
       ctx->Rectangle(rect);
       ctx->Fill();
       return true;
@@ -4186,7 +4186,7 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
                               : (darkScrollbar ? NS_RGBA(249, 249, 250, 102)
                                                : NS_RGB(205, 205, 205));
       faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
-      ctx->SetColor(Color::FromABGR(faceColor));
+      ctx->SetColor(sRGBColor::FromABGR(faceColor));
       ctx->Rectangle(bgRect);
       ctx->Fill();
       break;
@@ -4196,7 +4196,7 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
       nscolor buttonColor = GetScrollbarButtonColor(trackColor, eventStates);
-      ctx->SetColor(Color::FromABGR(buttonColor));
+      ctx->SetColor(sRGBColor::FromABGR(buttonColor));
       ctx->Rectangle(bgRect);
       ctx->Fill();
 
@@ -4241,7 +4241,7 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
       ctx->ClosePath();
       // And paint the arrow.
       nscolor arrowColor = GetScrollbarArrowColor(buttonColor);
-      ctx->SetColor(Color::FromABGR(arrowColor));
+      ctx->SetColor(sRGBColor::FromABGR(arrowColor));
       ctx->Fill();
       break;
     }

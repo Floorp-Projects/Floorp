@@ -201,13 +201,10 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has an entry in Realm::debugScriptMap.
   HasDebugScript = 1 << 13,
 
-  // Do not relazify this script. This is used by the relazify() testing
-  // function for scripts that are on the stack and also by the AutoDelazify
-  // RAII class. Usually we don't relazify functions in compartments with
-  // scripts on the stack, but the relazify() testing function overrides that,
-  // and sometimes we're working with a cross-compartment function and need to
-  // keep it from relazifying.
-  DoNotRelazify = 1 << 14,
+  // Script has an associated LazyScript that may be used for relazification.
+  // This flag may be used to prevent relazification from happening.
+  // NOTE: Must check for isRelazifiable() before setting this flag.
+  AllowRelazify = 1 << 14,
 
   // IonMonkey compilation hints.
 

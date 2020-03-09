@@ -22,7 +22,7 @@ function test() {
     const Actions = windowRequire(
       "devtools/client/netmonitor/src/actions/index"
     );
-    const { EVENTS } = windowRequire(
+    const { EVENTS, TEST_EVENTS } = windowRequire(
       "devtools/client/netmonitor/src/constants"
     );
     const {
@@ -46,7 +46,7 @@ function test() {
       );
     }
 
-    expectEvent(EVENTS.NETWORK_EVENT, async () => {
+    expectEvent(TEST_EVENTS.NETWORK_EVENT, async () => {
       is(
         getSelectedRequest(store.getState()),
         null,
@@ -164,7 +164,7 @@ function test() {
       );
     });
 
-    expectEvent(EVENTS.RECEIVED_REQUEST_HEADERS, async () => {
+    expectEvent(TEST_EVENTS.RECEIVED_REQUEST_HEADERS, async () => {
       await waitForRequestData(store, ["requestHeaders"]);
 
       const requestItem = getSortedRequests(store.getState())[0];
@@ -195,7 +195,7 @@ function test() {
       );
     });
 
-    expectEvent(EVENTS.RECEIVED_REQUEST_COOKIES, async () => {
+    expectEvent(TEST_EVENTS.RECEIVED_REQUEST_COOKIES, async () => {
       await waitForRequestData(store, ["requestCookies"]);
 
       const requestItem = getSortedRequests(store.getState())[0];
@@ -219,11 +219,11 @@ function test() {
       );
     });
 
-    monitor.panelWin.api.once(EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
+    monitor.panelWin.api.once(TEST_EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
       ok(false, "Trap listener: this request doesn't have any post data.");
     });
 
-    expectEvent(EVENTS.RECEIVED_RESPONSE_HEADERS, async () => {
+    expectEvent(TEST_EVENTS.RECEIVED_RESPONSE_HEADERS, async () => {
       await waitForRequestData(store, ["responseHeaders"]);
 
       const requestItem = getSortedRequests(store.getState())[0];
@@ -252,7 +252,7 @@ function test() {
       );
     });
 
-    expectEvent(EVENTS.RECEIVED_RESPONSE_COOKIES, async () => {
+    expectEvent(TEST_EVENTS.RECEIVED_RESPONSE_COOKIES, async () => {
       await waitForRequestData(store, ["responseCookies"]);
 
       const requestItem = getSortedRequests(store.getState())[0];
@@ -276,7 +276,7 @@ function test() {
       );
     });
 
-    expectEvent(EVENTS.STARTED_RECEIVING_RESPONSE, async () => {
+    expectEvent(TEST_EVENTS.STARTED_RECEIVING_RESPONSE, async () => {
       await waitForRequestData(store, [
         "httpVersion",
         "status",

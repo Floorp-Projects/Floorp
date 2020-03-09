@@ -9,6 +9,7 @@
 
 #include "nsAtom.h"
 #include "nsTHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsStringFwd.h"
 
@@ -18,10 +19,11 @@ class ShadowParts final {
  public:
   ShadowParts(ShadowParts&&) = default;
   ShadowParts(const ShadowParts&) = delete;
-
   static ShadowParts Parse(const nsAString&);
 
-  nsAtom* Get(nsAtom* aName) const { return mMappings.GetWeak(aName); }
+  using PartList = AutoTArray<RefPtr<nsAtom>, 1>;
+
+  PartList* Get(nsAtom* aName) const { return mMappings.Get(aName); }
 
   nsAtom* GetReverse(nsAtom* aName) const {
     return mReverseMappings.GetWeak(aName);
@@ -36,7 +38,7 @@ class ShadowParts final {
 
   // TODO(emilio): If the two hashtables take a lot of memory we should consider
   // just using an nsTArray<Pair<>> or something.
-  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsAtom> mMappings;
+  nsClassHashtable<nsRefPtrHashKey<nsAtom>, PartList> mMappings;
   nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsAtom> mReverseMappings;
 };
 

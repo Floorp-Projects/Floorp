@@ -9,7 +9,7 @@ import six
 from click.utils import LazyFile
 from six.moves import shlex_quote
 
-from ._compat import install_req_from_line
+from ._compat import PIP_VERSION, InstallCommand, install_req_from_line
 from .click import style
 
 UNSAFE_PACKAGES = {"setuptools", "distribute", "pip"}
@@ -20,6 +20,7 @@ COMPILE_EXCLUDE_OPTIONS = {
     "--upgrade",
     "--upgrade-package",
     "--verbose",
+    "--cache-dir",
 }
 
 
@@ -136,7 +137,7 @@ def as_tuple(ireq):
     if not is_pinned_requirement(ireq):
         raise TypeError("Expected a pinned InstallRequirement, got {}".format(ireq))
 
-    name = key_from_req(ireq.req)
+    name = key_from_ireq(ireq)
     version = next(iter(ireq.specifier._specs))._spec[1]
     extras = tuple(sorted(ireq.extras))
     return name, version, extras
@@ -185,7 +186,7 @@ def lookup_table(values, key=None, keyval=None, unique=False, use_lists=False):
     ...     'q': ['qux', 'quux']
     ... }
 
-    The values of the resulting lookup table will be values, not sets.
+    The values of the resulting lookup table will be lists, not sets.
 
     For extra power, you can even change the values while building up the LUT.
     To do so, use the `keyval` function instead of the `key` arg:
@@ -368,3 +369,25 @@ def get_compile_command(click_ctx):
                 )
 
     return " ".join(["pip-compile"] + sorted(left_args) + sorted(right_args))
+
+
+def create_install_command():
+    """
+    Return an instance of InstallCommand.
+    """
+    if PIP_VERSION < (19, 3):
+        return InstallCommand()
+
+    from pip._internal.commands import create_command
+
+    return create_command("install")
+
+
+def get_trusted_hosts(finder):
+    """
+    Returns an iterable of trusted hosts from a given finder.
+    """
+    if PIP_VERSION < (19, 2):
+        return (host for _, host, _ in finder.secure_origins)
+
+    return finder.trusted_hosts

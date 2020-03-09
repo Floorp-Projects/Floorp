@@ -21,7 +21,7 @@ class ServiceWorkerClient;
 class NotificationEvent final : public ExtendableEvent {
  protected:
   explicit NotificationEvent(EventTarget* aOwner);
-  ~NotificationEvent() {}
+  ~NotificationEvent() = default;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED

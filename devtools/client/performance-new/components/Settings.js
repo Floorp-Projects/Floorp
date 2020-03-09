@@ -12,7 +12,6 @@
  * @property {string} threadsString
  * @property {string[]} objdirs
  * @property {string[] | null} supportedFeatures
- * @property {PageContext} pageContext
  */
 
 /**
@@ -36,8 +35,9 @@
 /**
  * @typedef {import("../@types/perf").PopupWindow} PopupWindow
  * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../@types/perf").FeatureDescription} FeatureDescription
+ *
  * @typedef {StateProps & DispatchProps} Props
- * @typedef {import("../@types/perf").PageContext} PageContext
  */
 
 /**
@@ -60,8 +60,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const {
   div,
-  details,
-  summary,
   label,
   input,
   span,
@@ -81,8 +79,7 @@ const DirectoryPicker = createFactory(
 const {
   makeExponentialScale,
   formatFileSize,
-  calculateOverhead,
-  UnhandledCaseError,
+  featureDescriptions,
 } = require("devtools/client/performance-new/utils");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("devtools/client/performance-new/store/actions");
@@ -94,8 +91,6 @@ const {
 // sizeof(double) + sizeof(char)
 // http://searchfox.org/mozilla-central/rev/e8835f52eff29772a57dca7bcc86a9a312a23729/tools/profiler/core/ProfileEntry.h#73
 const PROFILE_ENTRY_SIZE = 9;
-
-const NOTCHES = Array(22).fill("discrete-level-notch");
 
 /**
  * @typedef {{ name: string, id: string, title: string }} ThreadColumn
@@ -170,120 +165,6 @@ const threadColumns = [
 ];
 
 /**
- * @typedef {Object} FeatureCheckbox
- * @property {string} name
- * @property {string} value
- * @property {string} title
- * @property {boolean} [recommended]
- * @property {string} [disabledReason]
- * }}
- */
-
-/**
- * @type {FeatureCheckbox[]}
- */
-const featureCheckboxes = [
-  {
-    name: "Native Stacks",
-    value: "stackwalk",
-    title:
-      "Record native stacks (C++ and Rust). This is not available on all platforms.",
-    recommended: true,
-    disabledReason: "Native stack walking is not supported on this platform.",
-  },
-  {
-    name: "JavaScript",
-    value: "js",
-    title:
-      "Record JavaScript stack information, and interleave it with native stacks.",
-    recommended: true,
-  },
-  {
-    name: "Responsiveness",
-    value: "responsiveness",
-    title: "Collect thread responsiveness information.",
-    recommended: true,
-  },
-  {
-    name: "Java",
-    value: "java",
-    title: "Profile Java code",
-    disabledReason: "This feature is only available on Android.",
-  },
-  {
-    name: "Native Leaf Stack",
-    value: "leaf",
-    title:
-      "Record the native memory address of the leaf-most stack. This could be " +
-      "useful on platforms that do not support stack walking.",
-  },
-  {
-    name: "No Periodic Sampling",
-    value: "nostacksampling",
-    title: "Disable interval-based stack sampling",
-  },
-  {
-    name: "Main Thread IO",
-    value: "mainthreadio",
-    title: "Record main thread I/O markers.",
-  },
-  {
-    name: "Privacy",
-    value: "privacy",
-    title: "Remove some potentially user-identifiable information.",
-  },
-  {
-    name: "Sequential Styling",
-    value: "seqstyle",
-    title: "Disable parallel traversal in styling.",
-  },
-  {
-    name: "JIT Optimizations",
-    value: "trackopts",
-    title: "Track JIT optimizations in the JS engine.",
-  },
-  {
-    name: "TaskTracer",
-    value: "tasktracer",
-    title: "Enable TaskTracer (Experimental.)",
-    disabledReason:
-      "TaskTracer requires a custom build with the environment variable MOZ_TASK_TRACER set.",
-  },
-  {
-    name: "Screenshots",
-    value: "screenshots",
-    title: "Record screenshots of all browser windows.",
-  },
-  {
-    name: "JSTracer",
-    value: "jstracer",
-    title: "Trace JS engine (Experimental.)",
-    disabledReason:
-      "JS Tracer is currently disabled due to crashes. See Bug 1565788.",
-  },
-  {
-    name: "Preference Read",
-    value: "preferencereads",
-    title: "Track Preference Reads",
-  },
-  {
-    name: "IPC Messages",
-    value: "ipcmessages",
-    title: "Track IPC messages.",
-  },
-  {
-    name: "JS Allocations",
-    value: "jsallocations",
-    title: "Track JavaScript allocations (Experimental.)",
-  },
-  {
-    name: "Native Allocations",
-    value: "nativeallocations",
-    title: "Track native allocations (Experimental.)",
-  },
-];
-
-/**
  * This component manages the settings for recording a performance profile.
  * @extends {React.PureComponent<Props, State>}
  */
@@ -313,35 +194,6 @@ class Settings extends PureComponent {
 
     this._intervalExponentialScale = makeExponentialScale(0.01, 100);
     this._entriesExponentialScale = makeExponentialScale(100000, 100000000);
-  }
-
-  _renderNotches() {
-    const { interval, entries, features } = this.props;
-    const overhead = calculateOverhead(interval, entries, features);
-    const notchCount = 22;
-    const notches = [];
-    for (let i = 0; i < notchCount; i++) {
-      const active =
-        i <= Math.round(overhead * (NOTCHES.length - 1))
-          ? "active"
-          : "inactive";
-
-      let level = "normal";
-      if (i > 16) {
-        level = "critical";
-      } else if (i > 10) {
-        level = "warning";
-      }
-      notches.push(
-        div({
-          key: i,
-          className:
-            `perf-settings-notch perf-settings-notch-${level} ` +
-            `perf-settings-notch-${active}`,
-        })
-      );
-    }
-    return notches;
   }
 
   /**
@@ -442,12 +294,11 @@ class Settings extends PureComponent {
 
   _renderThreads() {
     const { temporaryThreadText } = this.state;
-    const { pageContext, threads } = this.props;
+    const { threads } = this.props;
 
     return renderSection(
       "perf-settings-threads-summary",
       "Threads",
-      pageContext,
       div(
         null,
         div(
@@ -504,12 +355,18 @@ class Settings extends PureComponent {
   }
 
   /**
-   * @param {FeatureCheckbox} featureCheckbox
+   * @param {FeatureDescription} featureDescription
    * @param {boolean} showUnsupportedFeatures
    */
-  _renderFeatureCheckbox(featureCheckbox, showUnsupportedFeatures) {
+  _renderFeatureCheckbox(featureDescription, showUnsupportedFeatures) {
     const { supportedFeatures } = this.props;
-    const { name, value, title, recommended, disabledReason } = featureCheckbox;
+    const {
+      name,
+      value,
+      title,
+      recommended,
+      disabledReason,
+    } = featureDescription;
     let isSupported = true;
     if (supportedFeatures !== null && !supportedFeatures.includes(value)) {
       isSupported = false;
@@ -565,31 +422,29 @@ class Settings extends PureComponent {
     return renderSection(
       "perf-settings-features-summary",
       "Features",
-      this.props.pageContext,
       div(
         null,
         // Render the supported features first.
-        featureCheckboxes.map(featureCheckbox =>
-          this._renderFeatureCheckbox(featureCheckbox, false)
+        featureDescriptions.map(featureDescription =>
+          this._renderFeatureCheckbox(featureDescription, false)
         ),
         h3(
           { className: "perf-settings-features-disabled-title" },
           "The following features are currently unavailable:"
         ),
         // Render the unsupported features second.
-        featureCheckboxes.map(featureCheckbox =>
-          this._renderFeatureCheckbox(featureCheckbox, true)
+        featureDescriptions.map(featureDescription =>
+          this._renderFeatureCheckbox(featureDescription, true)
         )
       )
     );
   }
 
   _renderLocalBuildSection() {
-    const { objdirs, pageContext } = this.props;
+    const { objdirs } = this.props;
     return renderSection(
       "perf-settings-local-build-summary",
       "Local build",
-      pageContext,
       div(
         null,
         p(
@@ -607,40 +462,11 @@ class Settings extends PureComponent {
     );
   }
 
-  /**
-   * For now, render different titles depending on the context.
-   * @return {string}
-   */
-  _renderTitle() {
-    const { pageContext } = this.props;
-    switch (pageContext) {
-      case "aboutprofiling":
-        return "Buffer Settings";
-      case "devtools":
-        return "Recording Settings";
-      default:
-        throw new UnhandledCaseError(pageContext, "PageContext");
-    }
-  }
-
   render() {
     return section(
       { className: "perf-settings" },
-      this.props.pageContext === "aboutprofiling"
-        ? h1(null, "Full Settings")
-        : null,
-      h2({ className: "perf-settings-title" }, this._renderTitle()),
-      // The new about:profiling will implement a different overhead mechanism.
-      this.props.pageContext === "aboutprofiling"
-        ? null
-        : div(
-            { className: "perf-settings-row" },
-            label({ className: "perf-settings-label" }, "Overhead:"),
-            div(
-              { className: "perf-settings-value perf-settings-notches" },
-              this._renderNotches()
-            )
-          ),
+      h1(null, "Full Settings"),
+      h2({ className: "perf-settings-title" }, "Buffer Settings"),
       Range({
         label: "Sampling interval:",
         value: this.props.interval,
@@ -699,63 +525,20 @@ function _entriesTextDisplay(value) {
   return formatFileSize(value * PROFILE_ENTRY_SIZE);
 }
 
-function _handleToggle() {
-  /** @type {any} **/
-  const anyWindow = window;
-  /** @type {PopupWindow} */
-  const popupWindow = anyWindow;
-
-  if (popupWindow.gResizePopup) {
-    popupWindow.gResizePopup(document.body.clientHeight);
-  }
-}
-
 /**
  * about:profiling doesn't need to collapse the children into details/summary,
  * but the popup and devtools do (for now).
  *
  * @param {string} id
  * @param {React.ReactNode} title
- * @param {PageContext} pageContext
  * @param {React.ReactNode} children
  * @returns React.ReactNode
  */
-function renderSection(id, title, pageContext, children) {
-  switch (pageContext) {
-    case "devtools":
-      // Render the section with a dropdown summary.
-      return details(
-        {
-          className: "perf-settings-details",
-          // @ts-ignore - The React type definitions don't know about onToggle.
-          onToggle: _handleToggle,
-        },
-        summary(
-          {
-            className: "perf-settings-summary",
-            id,
-          },
-          // Concatenating strings like this isn't very localizable, but it should go
-          // away by the time we localize these components.
-          title + ":"
-        ),
-        // Contain the overflow of the slide down animation with the first div.
-        div(
-          { className: "perf-settings-details-contents" },
-          // Provide a second <div> element for the contents of the slide down
-          // animation.
-          div({ className: "perf-settings-details-contents-slider" }, children)
-        )
-      );
-    case "aboutprofiling":
-      // Render the section without a dropdown summary.
-      return div(
-        { className: "perf-settings-sections" },
-        div(null, h2(null, title), children)
-      );
-    default:
-      throw new UnhandledCaseError(pageContext, "PageContext");
-  }
+function renderSection(id, title, children) {
+  return div(
+    { className: "perf-settings-sections" },
+    div(null, h2(null, title), children)
+  );
 }
 
 /**
@@ -771,7 +554,6 @@ function mapStateToProps(state) {
     threadsString: selectors.getThreadsString(state),
     objdirs: selectors.getObjdirs(state),
     supportedFeatures: selectors.getSupportedFeatures(state),
-    pageContext: selectors.getPageContext(state),
   };
 }
 

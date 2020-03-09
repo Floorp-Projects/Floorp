@@ -7,7 +7,7 @@
 #include "nsGkAtoms.h"
 #include "txXPathNode.h"
 
-txNamespaceMap::txNamespaceMap() {}
+txNamespaceMap::txNamespaceMap() = default;
 
 txNamespaceMap::txNamespaceMap(const txNamespaceMap& aOther)
     : mPrefixes(aOther.mPrefixes) {

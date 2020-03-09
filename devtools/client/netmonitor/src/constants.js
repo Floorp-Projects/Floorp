@@ -93,6 +93,44 @@ const ACTIVITY_TYPE = {
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {
+  // When a network event is added to the view
+  REQUEST_ADDED: "NetMonitor:RequestAdded",
+
+  // When request headers begin receiving.
+  UPDATING_REQUEST_HEADERS: "NetMonitor:NetworkEventUpdating:RequestHeaders",
+
+  // When request cookies begin receiving.
+  UPDATING_REQUEST_COOKIES: "NetMonitor:NetworkEventUpdating:RequestCookies",
+
+  // When request post data begins receiving.
+  UPDATING_REQUEST_POST_DATA: "NetMonitor:NetworkEventUpdating:RequestPostData",
+
+  // When security information begins receiving.
+  UPDATING_SECURITY_INFO: "NetMonitor:NetworkEventUpdating:SecurityInfo",
+
+  // When response headers begin receiving.
+  UPDATING_RESPONSE_HEADERS: "NetMonitor:NetworkEventUpdating:ResponseHeaders",
+
+  // When response cookies begin receiving.
+  UPDATING_RESPONSE_COOKIES: "NetMonitor:NetworkEventUpdating:ResponseCookies",
+
+  // When event timings begin and finish receiving.
+  UPDATING_EVENT_TIMINGS: "NetMonitor:NetworkEventUpdating:EventTimings",
+  RECEIVED_EVENT_TIMINGS: "NetMonitor:NetworkEventUpdated:EventTimings",
+
+  // When response content updates receiving.
+  UPDATING_RESPONSE_CONTENT: "NetMonitor:NetworkEventUpdating:ResponseContent",
+
+  UPDATING_RESPONSE_CACHE: "NetMonitor:NetworkEventUpdating:ResponseCache",
+
+  // Fired once the connection is established
+  CONNECTED: "connected",
+
+  // When request payload (HTTP details data) are fetched from the backend.
+  PAYLOAD_READY: "NetMonitor:PayloadReady",
+};
+
+const TEST_EVENTS = {
   // When a network or timeline event is received.
   // See https://developer.mozilla.org/docs/Tools/Web_Console/remoting for
   // more information about what each packet is supposed to deliver.
@@ -100,53 +138,34 @@ const EVENTS = {
   NETWORK_EVENT_UPDATED: "NetMonitor:NetworkEventUpdated",
   TIMELINE_EVENT: "NetMonitor:TimelineEvent",
 
-  // When a network event is added to the view
-  REQUEST_ADDED: "NetMonitor:RequestAdded",
+  // When response content begins receiving.
+  STARTED_RECEIVING_RESPONSE: "NetMonitor:NetworkEventUpdating:ResponseStart",
 
-  // When request headers begin and finish receiving.
-  UPDATING_REQUEST_HEADERS: "NetMonitor:NetworkEventUpdating:RequestHeaders",
+  // When request headers finish receiving.
   RECEIVED_REQUEST_HEADERS: "NetMonitor:NetworkEventUpdated:RequestHeaders",
 
-  // When request cookies begin and finish receiving.
-  UPDATING_REQUEST_COOKIES: "NetMonitor:NetworkEventUpdating:RequestCookies",
-  RECEIVED_REQUEST_COOKIES: "NetMonitor:NetworkEventUpdated:RequestCookies",
-
-  // When request post data begins and finishes receiving.
-  UPDATING_REQUEST_POST_DATA: "NetMonitor:NetworkEventUpdating:RequestPostData",
-  RECEIVED_REQUEST_POST_DATA: "NetMonitor:NetworkEventUpdated:RequestPostData",
-
-  // When security information begins and finishes receiving.
-  UPDATING_SECURITY_INFO: "NetMonitor:NetworkEventUpdating:SecurityInfo",
-  RECEIVED_SECURITY_INFO: "NetMonitor:NetworkEventUpdated:SecurityInfo",
-
-  // When response headers begin and finish receiving.
-  UPDATING_RESPONSE_HEADERS: "NetMonitor:NetworkEventUpdating:ResponseHeaders",
+  // When response headers finish receiving.
   RECEIVED_RESPONSE_HEADERS: "NetMonitor:NetworkEventUpdated:ResponseHeaders",
 
-  // When response cookies begin and finish receiving.
-  UPDATING_RESPONSE_COOKIES: "NetMonitor:NetworkEventUpdating:ResponseCookies",
+  // When request cookies finish receiving.
+  RECEIVED_REQUEST_COOKIES: "NetMonitor:NetworkEventUpdated:RequestCookies",
+
+  // When request post data finishes receiving.
+  RECEIVED_REQUEST_POST_DATA: "NetMonitor:NetworkEventUpdated:RequestPostData",
+
+  // When security information finishes receiving.
+  RECEIVED_SECURITY_INFO: "NetMonitor:NetworkEventUpdated:SecurityInfo",
+
+  // When response cookies finish receiving.
   RECEIVED_RESPONSE_COOKIES: "NetMonitor:NetworkEventUpdated:ResponseCookies",
 
-  // When event timings begin and finish receiving.
-  UPDATING_EVENT_TIMINGS: "NetMonitor:NetworkEventUpdating:EventTimings",
-  RECEIVED_EVENT_TIMINGS: "NetMonitor:NetworkEventUpdated:EventTimings",
+  RECEIVED_RESPONSE_CACHE: "NetMonitor:NetworkEventUpdated:ResponseCache",
 
-  // When response content begins, updates and finishes receiving.
-  STARTED_RECEIVING_RESPONSE: "NetMonitor:NetworkEventUpdating:ResponseStart",
-  UPDATING_RESPONSE_CONTENT: "NetMonitor:NetworkEventUpdating:ResponseContent",
+  // When response content finishes receiving.
   RECEIVED_RESPONSE_CONTENT: "NetMonitor:NetworkEventUpdated:ResponseContent",
 
   // When stack-trace finishes receiving.
   RECEIVED_EVENT_STACKTRACE: "NetMonitor:NetworkEventUpdated:StackTrace",
-
-  UPDATING_RESPONSE_CACHE: "NetMonitor:NetworkEventUpdating:ResponseCache",
-  RECEIVED_RESPONSE_CACHE: "NetMonitor:NetworkEventUpdated:ResponseCache",
-
-  // Fired once the connection is established
-  CONNECTED: "connected",
-
-  // When request payload (HTTP details data) are fetched from the backend.
-  PAYLOAD_READY: "NetMonitor:PayloadReady",
 
   // When throttling is set on the backend.
   THROTTLING_CHANGED: "NetMonitor:ThrottlingChanged",
@@ -514,6 +533,7 @@ const BLOCKED_REASON_MESSAGES = {
 const general = {
   ACTIVITY_TYPE,
   EVENTS,
+  TEST_EVENTS,
   FILTER_SEARCH_DELAY: 200,
   UPDATE_PROPS,
   HEADERS,

@@ -8,6 +8,7 @@ const Services = require("Services");
 const {
   ACTIVITY_TYPE,
   EVENTS,
+  TEST_EVENTS,
 } = require("devtools/client/netmonitor/src/constants");
 const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
 const {
@@ -304,7 +305,7 @@ class FirefoxConnector {
       this.actions.addTimingMarker(event);
     }
 
-    this.emitForTests(EVENTS.TIMELINE_EVENT, event);
+    this.emitForTests(TEST_EVENTS.TIMELINE_EVENT, event);
   }
 
   /**
@@ -499,7 +500,7 @@ class FirefoxConnector {
       });
     }
 
-    this.emitForTests(EVENTS.THROTTLING_CHANGED, { profile });
+    this.emitForTests(TEST_EVENTS.THROTTLING_CHANGED, { profile });
   }
 
   /**

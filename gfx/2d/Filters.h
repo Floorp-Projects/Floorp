@@ -417,7 +417,7 @@ class FilterNode : public external::AtomicRefCounted<FilterNode> {
   virtual void SetAttribute(uint32_t aIndex, const Point3D&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Color&) {
+  virtual void SetAttribute(uint32_t aIndex, const DeviceColor&) {
     MOZ_CRASH("GFX: FilterNode");
   }
   virtual void SetAttribute(uint32_t aIndex, const Float* aFloat,

@@ -80,6 +80,7 @@
 #  include "nsAccessibilityService.h"
 #endif
 #include "gfxConfig.h"
+#include "gfxUtils.h"  // for ToDeviceColor
 #include "mozilla/layers/CompositorSession.h"
 #include "VRManagerChild.h"
 #include "gfxConfig.h"
@@ -2204,7 +2205,7 @@ void nsBaseWidget::DefaultFillScrollCapture(DrawTarget* aSnapshotDrawTarget) {
   gfx::IntSize dtSize = aSnapshotDrawTarget->GetSize();
   aSnapshotDrawTarget->FillRect(
       gfx::Rect(0, 0, dtSize.width, dtSize.height),
-      gfx::ColorPattern(gfx::Color::FromABGR(kScrollCaptureFillColor)),
+      gfx::ColorPattern(gfx::ToDeviceColor(kScrollCaptureFillColor)),
       gfx::DrawOptions(1.f, gfx::CompositionOp::OP_SOURCE));
   aSnapshotDrawTarget->Flush();
 }

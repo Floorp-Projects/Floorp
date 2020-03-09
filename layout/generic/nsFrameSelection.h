@@ -674,7 +674,7 @@ class nsFrameSelection final {
                              nsIFrame** aFrameOut) const;
 
   /**
-   * MaintainSelection will track the current selection as being "sticky".
+   * MaintainSelection will track the normal selection as being "sticky".
    * Dragging or extending selection will never allow for a subset
    * (or the whole) of the maintained selection to become unselected.
    * Primary use: double click selecting then dragging on second click
@@ -724,8 +724,6 @@ class nsFrameSelection final {
                                                     uint32_t aContentOffset,
                                                     CaretAssociateHint aHint,
                                                     bool aJumpLines);
-
-  bool AdjustForMaintainedSelection(nsIContent* aContent, int32_t aOffset);
 
   /**
    * @param aReasons potentially multiple of the reasons defined in
@@ -858,9 +856,29 @@ class nsFrameSelection final {
 
   TableSelection mTableSelection;
 
-  // maintain selection
-  RefPtr<nsRange> mMaintainRange;
-  nsSelectionAmount mMaintainedAmount = eSelectNoAmount;
+  struct MaintainedRange {
+    /**
+     * @return true iff the point (aContent, aOffset) is inside and not at the
+     * boundaries of mRange.
+     */
+    bool AdjustNormalSelection(const nsIContent* aContent, int32_t aOffset,
+                               mozilla::dom::Selection& aNormalSelection) const;
+
+    /**
+     * @param aScrollViewStop see `nsPeekOffsetStruct::mScrollViewStop`.
+     */
+    void AdjustContentOffsets(nsIFrame::ContentOffsets& aOffsets,
+                              bool aScrollViewStop) const;
+
+    void MaintainAnchorFocusRange(
+        const mozilla::dom::Selection& aNormalSelection,
+        nsSelectionAmount aAmount);
+
+    RefPtr<nsRange> mRange;
+    nsSelectionAmount mAmount = eSelectNoAmount;
+  };
+
+  MaintainedRange mMaintainedRange;
 
   // batching
   int32_t mBatching = 0;

@@ -25,9 +25,12 @@ Jazzband aims to give full access to all members, including performing releases,
 
 To help keeping track of the releases and their changes, here's the current release process:
 - Check to see if any recently merged PRs are missing from the milestone of the version about to be released.
-- Push an update to the [CHANGELOG](CHANGELOG.md) with the version, date and using the one-line descriptions
+- Create a branch for the release. *Ex: release-3.4.0*.
+- Update the [CHANGELOG](CHANGELOG.md) with the version, date and using the one-line descriptions
   from the PRs included in the milestone of the version.
   Check the previous release changelog format for an example. Don't forget the "Thanks @contributor" mentions.
+- Push the branch to your fork and create a pull request.
+- Merge the pull request after the changes being approved.
 - Make sure that the tests/CI still pass.
 - Once ready, go to `Github pip-tools Homepage > releases tab > Draft a new release` and type in:
   - *Tag version:* The exact version number, following [Semantic Versioning](https://blog.versioneye.com/2014/01/16/semantic-versioning/). *Ex: 3.4.0*

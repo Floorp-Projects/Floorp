@@ -519,13 +519,13 @@ struct MOZ_STACK_CLASS BufferAlphaColor {
 
   ~BufferAlphaColor() = default;
 
-  void PushSolidColor(const gfxRect& aBounds, const Color& aAlphaColor,
+  void PushSolidColor(const gfxRect& aBounds, const DeviceColor& aAlphaColor,
                       uint32_t appsPerDevUnit) {
     mContext->Save();
     mContext->SnappedClip(gfxRect(
         aBounds.X() / appsPerDevUnit, aBounds.Y() / appsPerDevUnit,
         aBounds.Width() / appsPerDevUnit, aBounds.Height() / appsPerDevUnit));
-    mContext->SetColor(Color(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
+    mContext->SetDeviceColor(DeviceColor(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
     mContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aAlphaColor.a);
   }
 
@@ -550,7 +550,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
 
   bool skipDrawing = mSkipDrawing;
   if (aParams.drawMode & DrawMode::GLYPH_FILL) {
-    Color currentColor;
+    DeviceColor currentColor;
     if (aParams.context->GetDeviceColor(currentColor) && currentColor.a == 0 &&
         !aParams.context->GetTextDrawer()) {
       skipDrawing = true;
@@ -576,7 +576,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   // synthetic bolding draws glyphs twice ==> colors with opacity won't draw
   // correctly unless first drawn without alpha
   BufferAlphaColor syntheticBoldBuffer(aParams.context);
-  Color currentColor;
+  DeviceColor currentColor;
   bool mayNeedBuffering =
       aParams.drawMode & DrawMode::GLYPH_FILL &&
       aParams.context->HasNonOpaqueNonTransparentColor(currentColor) &&

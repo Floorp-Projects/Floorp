@@ -63,7 +63,7 @@ def get_yamllint_binary(mc_root):
 
     # yamllint is vendored in mozilla-central: let's use this
     # if no environment variable is found.
-    return os.path.join(mc_root, 'third_party', 'python', 'yamllint')
+    return os.path.join(mc_root, 'third_party', 'python', 'yamllint', 'yamllint')
 
 
 def _run_pip(*args):

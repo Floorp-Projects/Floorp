@@ -297,7 +297,8 @@ class nsCookieService final : public nsICookieService,
                             nsDependentCSubstring& aTokenString,
                             nsDependentCSubstring& aTokenValue,
                             bool& aEqualsFound);
-  static bool ParseAttributes(nsCString& aCookieHeader,
+  static bool ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
+                              nsCString& aCookieHeader,
                               mozilla::net::CookieStruct& aCookieData,
                               nsACString& aExpires, nsACString& aMaxage,
                               bool& aAcceptedByParser);
@@ -347,6 +348,11 @@ class nsCookieService final : public nsICookieService,
   nsresult RemoveCookiesFromExactHost(
       const nsACString& aHost,
       const mozilla::OriginAttributesPattern& aPattern);
+
+  static void LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
+                                  uint32_t aErrorFlags, const nsACString& aMsg,
+                                  const nsACString& aCookieName,
+                                  const nsAString& aMDNURL = VoidString());
 
   // cached members.
   nsCOMPtr<nsICookiePermission> mPermissionService;

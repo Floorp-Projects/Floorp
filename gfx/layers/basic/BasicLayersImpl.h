@@ -88,7 +88,7 @@ void PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer);
 
 // Fill the rect with the source, using a mask and opacity, if present
 void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Rect& aRect,
-                      const gfx::Color& aColor,
+                      const gfx::DeviceColor& aColor,
                       const gfx::DrawOptions& aOptions,
                       gfx::SourceSurface* aMaskSource = nullptr,
                       const gfx::Matrix* aMaskTransform = nullptr);
@@ -105,11 +105,12 @@ void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
                       gfx::SamplingFilter aSamplingFilter,
                       const gfx::DrawOptions& aOptions, Layer* aMaskLayer);
 void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
-                      const gfx::Rect& aRect, const gfx::Color& aColor,
+                      const gfx::Rect& aRect, const gfx::DeviceColor& aColor,
                       const gfx::DrawOptions& aOptions, Layer* aMaskLayer);
 
 void FillPathWithMask(gfx::DrawTarget* aDT, const gfx::Path* aPath,
-                      const gfx::Rect& aClipRect, const gfx::Color& aColor,
+                      const gfx::Rect& aClipRect,
+                      const gfx::DeviceColor& aColor,
                       const gfx::DrawOptions& aOptions,
                       gfx::SourceSurface* aMaskSource = nullptr,
                       const gfx::Matrix* aMaskTransform = nullptr);

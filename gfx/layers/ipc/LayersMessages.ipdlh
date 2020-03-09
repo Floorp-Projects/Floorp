@@ -15,7 +15,7 @@ include "ImageLayers.h";
 
 using mozilla::gfx::Glyph from "mozilla/gfx/2D.h";
 using mozilla::gfx::SamplingFilter from "mozilla/gfx/2D.h";
-using struct mozilla::gfx::Color from "mozilla/gfx/2D.h";
+using struct mozilla::gfx::DeviceColor from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Point from "mozilla/gfx/Point.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
@@ -119,7 +119,7 @@ union TimingFunction {
   StepFunction;
 };
 
-struct LayerColor { Color value; };
+struct LayerColor { DeviceColor value; };
 
 union Animatable {
   null_t;
@@ -264,12 +264,6 @@ struct ContainerLayerAttributes {
   float inheritedXScale;
   float inheritedYScale;
   float presShellResolution;
-};
-
-struct GlyphArray
-{
-  LayerColor color;
-  Glyph[] glyphs;
 };
 
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };

@@ -387,6 +387,41 @@ bool WarpBuilder::build_ResumeIndex(BytecodeLocation loc) {
   return true;
 }
 
+bool WarpBuilder::build_BigInt(BytecodeLocation loc) {
+  BigInt* bi = loc.getBigInt(script_);
+  pushConstant(BigIntValue(bi));
+  return true;
+}
+
+bool WarpBuilder::build_String(BytecodeLocation loc) {
+  JSAtom* atom = loc.getAtom(script_);
+  pushConstant(StringValue(atom));
+  return true;
+}
+
+bool WarpBuilder::build_Symbol(BytecodeLocation loc) {
+  uint32_t which = loc.getSymbolIndex();
+  JS::Symbol* sym = mirGen_.runtime->wellKnownSymbols().get(which);
+  pushConstant(SymbolValue(sym));
+  return true;
+}
+
+bool WarpBuilder::build_RegExp(BytecodeLocation loc) {
+  RegExpObject* reObj = loc.getRegExp(script_);
+
+  // TODO: once we can easily pass per-op state from WarpOracle to WarpBuilder,
+  // use that for hasShared (reading that off-thread is racy). For now always
+  // take the slow path.
+  bool hasShared = false;
+
+  MRegExp* regexp =
+      MRegExp::New(alloc(), /* constraints = */ nullptr, reObj, hasShared);
+  current->add(regexp);
+  current->push(regexp);
+
+  return true;
+}
+
 bool WarpBuilder::build_Return(BytecodeLocation) {
   MDefinition* def = current->pop();
 
@@ -409,6 +444,14 @@ bool WarpBuilder::build_RetRval(BytecodeLocation) {
   current->end(ret);
 
   setTerminatedBlock();
+  return true;
+}
+
+bool WarpBuilder::build_SetRval(BytecodeLocation) {
+  MOZ_ASSERT(!script_->noScriptRval());
+
+  MDefinition* rval = current->pop();
+  current->setSlot(info().returnValueSlot(), rval);
   return true;
 }
 
@@ -533,6 +576,8 @@ bool WarpBuilder::build_Mul(BytecodeLocation loc) { return buildBinaryOp(loc); }
 bool WarpBuilder::build_Div(BytecodeLocation loc) { return buildBinaryOp(loc); }
 
 bool WarpBuilder::build_Mod(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Pow(BytecodeLocation loc) { return buildBinaryOp(loc); }
 
 bool WarpBuilder::build_BitAnd(BytecodeLocation loc) {
   return buildBinaryOp(loc);
@@ -917,4 +962,156 @@ bool WarpBuilder::build_Goto(BytecodeLocation loc) {
   }
 
   return buildForwardGoto(loc.getJumpTarget());
+}
+
+bool WarpBuilder::build_DebugCheckSelfHosted(BytecodeLocation loc) {
+#ifdef DEBUG
+  MDefinition* val = current->pop();
+  MDebugCheckSelfHosted* check = MDebugCheckSelfHosted::New(alloc(), val);
+  current->add(check);
+  current->push(check);
+  if (!resumeAfter(check, loc)) {
+    return false;
+  }
+#endif
+  return true;
+}
+
+bool WarpBuilder::build_DynamicImport(BytecodeLocation loc) {
+  MDefinition* specifier = current->pop();
+  MDynamicImport* ins = MDynamicImport::New(alloc(), specifier);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_Not(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MNot* ins = MNot::New(alloc(), value, /* constraints = */ nullptr);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_ToString(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MToString* ins =
+      MToString::New(alloc(), value, MToString::SideEffectHandling::Supported);
+  current->add(ins);
+  current->push(ins);
+  MOZ_ASSERT(ins->isEffectful());
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::usesEnvironmentChain() const {
+  return script_->jitScript()->usesEnvironmentChain();
+}
+
+bool WarpBuilder::build_DefVar(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* env = current->environmentChain();
+  MDefVar* defvar = MDefVar::New(alloc(), env);
+  current->add(defvar);
+  return resumeAfter(defvar, loc);
+}
+
+bool WarpBuilder::buildDefLexicalOp(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* env = current->environmentChain();
+  MDefLexical* defLexical = MDefLexical::New(alloc(), env);
+  current->add(defLexical);
+  return resumeAfter(defLexical, loc);
+}
+
+bool WarpBuilder::build_DefLet(BytecodeLocation loc) {
+  return buildDefLexicalOp(loc);
+}
+
+bool WarpBuilder::build_DefConst(BytecodeLocation loc) {
+  return buildDefLexicalOp(loc);
+}
+
+bool WarpBuilder::build_DefFun(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* fun = current->pop();
+  MDefinition* env = current->environmentChain();
+  MDefFun* deffun = MDefFun::New(alloc(), fun, env);
+  current->add(deffun);
+  return resumeAfter(deffun, loc);
+}
+
+bool WarpBuilder::build_BindVar(BytecodeLocation) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* env = current->environmentChain();
+  MCallBindVar* ins = MCallBindVar::New(alloc(), env);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_MutateProto(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MDefinition* obj = current->peek(-1);
+  MMutateProto* mutate = MMutateProto::New(alloc(), obj, value);
+  current->add(mutate);
+  return resumeAfter(mutate, loc);
+}
+
+bool WarpBuilder::build_Callee(BytecodeLocation) {
+  // TODO: handle inlined callees when we implement inlining.
+  MInstruction* callee = MCallee::New(alloc());
+  current->add(callee);
+  current->push(callee);
+  return true;
+}
+
+bool WarpBuilder::build_ClassConstructor(BytecodeLocation loc) {
+  jsbytecode* pc = loc.toRawBytecode();
+  auto* constructor = MClassConstructor::New(alloc(), pc);
+  current->add(constructor);
+  current->push(constructor);
+  return resumeAfter(constructor, loc);
+}
+
+bool WarpBuilder::build_DerivedConstructor(BytecodeLocation loc) {
+  jsbytecode* pc = loc.toRawBytecode();
+  MDefinition* prototype = current->pop();
+  auto* constructor = MDerivedClassConstructor::New(alloc(), prototype, pc);
+  current->add(constructor);
+  current->push(constructor);
+  return resumeAfter(constructor, loc);
+}
+
+bool WarpBuilder::build_ToAsyncIter(BytecodeLocation loc) {
+  MDefinition* nextMethod = current->pop();
+  MDefinition* iterator = current->pop();
+  MToAsyncIter* ins = MToAsyncIter::New(alloc(), iterator, nextMethod);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_ToId(BytecodeLocation loc) {
+  MDefinition* index = current->pop();
+  MToId* ins = MToId::New(alloc(), index);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_Typeof(BytecodeLocation) {
+  // TODO: remove MTypeOf::inputType_ and unbox in foldsTo instead.
+  MDefinition* input = current->pop();
+  MTypeOf* ins = MTypeOf::New(alloc(), input, MIRType::Value);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_TypeofExpr(BytecodeLocation loc) {
+  return build_Typeof(loc);
 }

@@ -140,3 +140,31 @@ function waitForManyEvents(ui, delay) {
     ui.on("media-list-changed", onEvent);
   });
 }
+
+/**
+ * Creates a new style sheet in the Style Editor
+
+ * @param {StyleEditorUI} ui
+ *        Current StyleEditorUI on which to simulate pressing the + button.
+ * @param {Window} panelWindow
+ *        The panelWindow property of the current Style Editor panel.
+ */
+function createNewStyleSheet(ui, panelWindow) {
+  info("Creating a new stylesheet now");
+
+  return new Promise(resolve => {
+    ui.once("editor-added", editor => {
+      editor.getSourceEditor().then(resolve);
+    });
+
+    waitForFocus(function() {
+      // create a new style sheet
+      const newButton = panelWindow.document.querySelector(
+        ".style-editor-newButton"
+      );
+      ok(newButton, "'new' button exists");
+
+      EventUtils.synthesizeMouseAtCenter(newButton, {}, panelWindow);
+    }, panelWindow);
+  });
+}

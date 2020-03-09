@@ -22,7 +22,7 @@
  */
 class nsCSSFilterInstance {
   using StyleFilter = mozilla::StyleFilter;
-  typedef mozilla::gfx::Color Color;
+  typedef mozilla::gfx::sRGBColor sRGBColor;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
   typedef mozilla::gfx::IntPoint IntPoint;
   typedef mozilla::gfx::Size Size;
@@ -103,7 +103,7 @@ class nsCSSFilterInstance {
    * Converts an nscolor to a Color, suitable for use as a
    * FilterPrimitiveDescription attribute.
    */
-  Color ToAttributeColor(nscolor aColor);
+  sRGBColor ToAttributeColor(nscolor aColor);
 
   /**
    * Converts a blur radius in frame space to filter space.

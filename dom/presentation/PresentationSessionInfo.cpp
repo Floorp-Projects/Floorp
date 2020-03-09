@@ -122,7 +122,7 @@ class TCPPresentationChannelDescription final
       : mAddress(aAddress), mPort(aPort) {}
 
  private:
-  ~TCPPresentationChannelDescription() {}
+  ~TCPPresentationChannelDescription() = default;
 
   nsCString mAddress;
   uint16_t mPort;

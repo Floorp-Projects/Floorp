@@ -36,3 +36,8 @@
   margin-inline-start: -1px;
   margin-inline-end: 4px;
 }
+
+.frames-group .group-description {
+  padding-inline-start: 6px;
+}
+

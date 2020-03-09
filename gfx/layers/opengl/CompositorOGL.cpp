@@ -396,7 +396,8 @@ bool CompositorOGL::Initialize(nsCString* const out_failureReason) {
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   // initialise a common shader to check that we can actually compile a shader
-  RefPtr<EffectSolidColor> effect = new EffectSolidColor(Color(0, 0, 0, 0));
+  RefPtr<EffectSolidColor> effect =
+      new EffectSolidColor(DeviceColor(0, 0, 0, 0));
   ShaderConfigOGL config = GetShaderConfigFor(effect);
   if (!GetShaderProgramFor(config)) {
     *out_failureReason = "FEATURE_FAILURE_OPENGL_COMPILE_SHADER";
@@ -944,7 +945,8 @@ void CompositorOGL::EndRenderingToNativeLayer() {
     float g = float(rand()) / float(RAND_MAX);
     float b = float(rand()) / float(RAND_MAX);
     EffectChain effectChain;
-    effectChain.mPrimaryEffect = new EffectSolidColor(Color(r, g, b, 0.2f));
+    effectChain.mPrimaryEffect =
+        new EffectSolidColor(DeviceColor(r, g, b, 0.2f));
     // If we're clipping the render target to the invalid rect, then the
     // current render target is still clipped, so just fill the bounds.
     IntRect rect = mCurrentRenderTarget->GetRect();
@@ -1502,7 +1504,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   // Determine the color if this is a color shader and fold the opacity into
   // the color since color shaders don't have an opacity uniform.
-  Color color;
+  DeviceColor color;
   if (aEffectChain.mPrimaryEffect->mType == EffectTypes::SOLID_COLOR) {
     EffectSolidColor* effectSolidColor =
         static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());

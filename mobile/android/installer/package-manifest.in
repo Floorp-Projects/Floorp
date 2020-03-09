@@ -91,7 +91,6 @@
 ; [Base Browser Files]
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
-@BINPATH@/blocklist.xml
 @BINPATH@/defaults/settings/blocklists/addons.json
 @BINPATH@/defaults/settings/security-state/onecrl.json
 

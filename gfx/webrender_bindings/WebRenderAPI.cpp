@@ -193,8 +193,9 @@ void TransactionBuilder::RemovePipeline(PipelineId aPipelineId) {
 }
 
 void TransactionBuilder::SetDisplayList(
-    gfx::Color aBgColor, Epoch aEpoch, const wr::LayoutSize& aViewportSize,
-    wr::WrPipelineId pipeline_id, const wr::LayoutSize& content_size,
+    const gfx::DeviceColor& aBgColor, Epoch aEpoch,
+    const wr::LayoutSize& aViewportSize, wr::WrPipelineId pipeline_id,
+    const wr::LayoutSize& content_size,
     wr::BuiltDisplayListDescriptor dl_descriptor, wr::Vec<uint8_t>& dl_data) {
   wr_transaction_set_display_list(mTxn, aEpoch, ToColorF(aBgColor),
                                   aViewportSize, pipeline_id, content_size,
@@ -330,6 +331,10 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
                        mUseTripleBuffering, mSyncHandle, mRenderRoot);
   renderApi->mRootApi = this;  // Hold root api
   renderApi->mRootDocumentApi = this;
+  if (mFastHitTester) {
+    renderApi->mFastHitTester = wr_hit_tester_clone(mFastHitTester);
+  }
+
   return renderApi.forget();
 }
 
@@ -366,11 +371,17 @@ WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
       mUseDComp(aUseDComp),
       mUseTripleBuffering(aUseTripleBuffering),
       mSyncHandle(aSyncHandle),
-      mRenderRoot(aRenderRoot) {}
+      mRenderRoot(aRenderRoot),
+      mFastHitTester(nullptr) {}
 
 WebRenderAPI::~WebRenderAPI() {
   if (!mRootDocumentApi) {
     wr_api_delete_document(mDocHandle);
+  }
+
+  if (mFastHitTester) {
+    wr_hit_tester_delete(mFastHitTester);
+    mFastHitTester = nullptr;
   }
 
   if (!mRootApi) {
@@ -465,6 +476,30 @@ bool WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
   uint16_t serialized = static_cast<uint16_t>(aOutHitInfo.serialize());
   const bool result = wr_api_hit_test(mDocHandle, aPoint, &aOutPipelineId,
                                       &aOutScrollId, &serialized);
+
+  if (result) {
+    aOutSideBits = ExtractSideBitsFromHitInfoBits(serialized);
+    aOutHitInfo.deserialize(serialized);
+  }
+  return result;
+}
+
+bool WebRenderAPI::FastHitTest(const wr::WorldPoint& aPoint,
+                               wr::WrPipelineId& aOutPipelineId,
+                               layers::ScrollableLayerGuid::ViewID& aOutScrollId,
+                               gfx::CompositorHitTestInfo& aOutHitInfo,
+                               SideBits& aOutSideBits) {
+  static_assert(DoesCompositorHitTestInfoFitIntoBits<16>(),
+                "CompositorHitTestFlags MAX value has to be less than number "
+                "of bits in uint16_t");
+
+  if (!mFastHitTester) {
+    mFastHitTester = wr_api_request_hit_tester(mDocHandle);
+  }
+
+  uint16_t serialized = static_cast<uint16_t>(aOutHitInfo.serialize());
+  const bool result = wr_hit_tester_hit_test(mFastHitTester, aPoint, &aOutPipelineId,
+                                             &aOutScrollId, &serialized);
 
   if (result) {
     aOutSideBits = ExtractSideBitsFromHitInfoBits(serialized);

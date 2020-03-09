@@ -590,19 +590,19 @@ bool gfxContext::ClipContainsRect(const gfxRect& aRect) {
 
 // rendering sources
 
-void gfxContext::SetColor(const Color& aColor) {
+void gfxContext::SetColor(const sRGBColor& aColor) {
   CURRENTSTATE_CHANGED()
   CurrentState().pattern = nullptr;
   CurrentState().color = ToDeviceColor(aColor);
 }
 
-void gfxContext::SetDeviceColor(const Color& aColor) {
+void gfxContext::SetDeviceColor(const DeviceColor& aColor) {
   CURRENTSTATE_CHANGED()
   CurrentState().pattern = nullptr;
   CurrentState().color = aColor;
 }
 
-bool gfxContext::GetDeviceColor(Color& aColorOut) {
+bool gfxContext::GetDeviceColor(DeviceColor& aColorOut) {
   if (CurrentState().pattern) {
     return CurrentState().pattern->GetSolidColor(aColorOut);
   }

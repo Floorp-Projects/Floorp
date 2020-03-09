@@ -20,7 +20,7 @@ class SDBResult : public nsISDBResult {
   explicit SDBResult(const nsACString& aData);
 
  private:
-  virtual ~SDBResult() {}
+  virtual ~SDBResult() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISDBRESULT

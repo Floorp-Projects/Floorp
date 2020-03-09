@@ -12,10 +12,9 @@
 
 namespace mozilla {
 namespace dom {
-class FontListEntry;
+class SystemFontListEntry;
 };
 };  // namespace mozilla
-using mozilla::dom::FontListEntry;
 
 class FontNameCache;
 typedef struct FT_FaceRec_* FT_Face;
@@ -24,6 +23,8 @@ class WillShutdownObserver;
 class FTUserFontData;
 
 class FT2FontEntry : public gfxFT2FontEntryBase {
+  using FontListEntry = mozilla::dom::SystemFontListEntry;
+
  public:
   explicit FT2FontEntry(const nsACString& aFaceName)
       : gfxFT2FontEntryBase(aFaceName), mFTFontIndex(0) {}
@@ -107,6 +108,8 @@ class FT2FontEntry : public gfxFT2FontEntryBase {
 };
 
 class FT2FontFamily : public gfxFontFamily {
+  using FontListEntry = mozilla::dom::SystemFontListEntry;
+
  public:
   explicit FT2FontFamily(const nsACString& aName) : gfxFontFamily(aName) {}
 
@@ -115,6 +118,8 @@ class FT2FontFamily : public gfxFontFamily {
 };
 
 class gfxFT2FontList : public gfxPlatformFontList {
+  using FontListEntry = mozilla::dom::SystemFontListEntry;
+
  public:
   gfxFT2FontList();
   virtual ~gfxFT2FontList();
@@ -137,7 +142,7 @@ class gfxFT2FontList : public gfxPlatformFontList {
 
   void WriteCache();
 
-  void GetSystemFontList(nsTArray<FontListEntry>* retValue);
+  void ReadSystemFontList(nsTArray<FontListEntry>* aList);
 
   static gfxFT2FontList* PlatformFontList() {
     return static_cast<gfxFT2FontList*>(

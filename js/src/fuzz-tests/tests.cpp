@@ -33,8 +33,6 @@ static JSObject* jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals) {
   JS::RealmOptions options;
   options.creationOptions()
       .setStreamsEnabled(true)
-      .setFieldsEnabled(false)
-      .setAwaitFixEnabled(true)
       .setWeakRefsEnabled(true);
   return JS_NewGlobalObject(cx, getGlobalClass(), principals,
                             JS::FireOnNewGlobalHook, options);

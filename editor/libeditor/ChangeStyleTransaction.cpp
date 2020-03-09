@@ -8,7 +8,7 @@
 #include "mozilla/dom/Element.h"  // for Element
 #include "nsAString.h"            // for nsAString::Append, etc.
 #include "nsCRT.h"                // for nsCRT::IsAsciiSpace
-#include "nsDebug.h"              // for NS_ENSURE_SUCCESS, etc.
+#include "nsDebug.h"              // for NS_WARNING, etc.
 #include "nsError.h"              // for NS_ERROR_NULL_POINTER, etc.
 #include "nsGkAtoms.h"            // for nsGkAtoms, etc.
 #include "nsICSSDeclaration.h"    // for nsICSSDeclaration.
@@ -140,10 +140,12 @@ void ChangeStyleTransaction::RemoveValueFromListOfValues(
   aValues.Assign(outString);
 }
 
-NS_IMETHODIMP
-ChangeStyleTransaction::DoTransaction() {
+NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
+  // TODO: Change mElement to RefPtr<nsStyleElement>.
   nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
-  NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!inlineStyles)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
 
@@ -156,7 +158,10 @@ ChangeStyleTransaction::DoTransaction() {
 
   nsAutoString values;
   nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("nsICSSDeclaration::GetPropertyPriorityValue() failed");
+    return rv;
+  }
   mUndoValue.Assign(values);
 
   // Does this property accept more than one value? (bug 62682)
@@ -169,26 +174,29 @@ ChangeStyleTransaction::DoTransaction() {
       RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
-        ErrorResult res;
-        cssDecl->RemoveProperty(propertyNameString, returnString, res);
-        if (NS_WARN_IF(res.Failed())) {
-          return res.StealNSResult();
+        ErrorResult error;
+        cssDecl->RemoveProperty(propertyNameString, returnString, error);
+        if (error.Failed()) {
+          NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
+          return error.StealNSResult();
         }
       } else {
-        ErrorResult res;
+        ErrorResult error;
         nsAutoString priority;
         cssDecl->GetPropertyPriority(propertyNameString, priority);
         cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
-                             priority, res);
-        if (NS_WARN_IF(res.Failed())) {
-          return res.StealNSResult();
+                             priority, error);
+        if (error.Failed()) {
+          NS_WARNING("nsICSSDeclaration::SetProperty() failed");
+          return error.StealNSResult();
         }
       }
     } else {
-      ErrorResult res;
-      cssDecl->RemoveProperty(propertyNameString, returnString, res);
-      if (NS_WARN_IF(res.Failed())) {
-        return res.StealNSResult();
+      ErrorResult error;
+      cssDecl->RemoveProperty(propertyNameString, returnString, error);
+      if (error.Failed()) {
+        NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
+        return error.StealNSResult();
       }
     }
   } else {
@@ -200,24 +208,32 @@ ChangeStyleTransaction::DoTransaction() {
     } else {
       values.Assign(mValue);
     }
-    ErrorResult res;
+    ErrorResult error;
     cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
-                         priority, res);
-    if (NS_WARN_IF(res.Failed())) {
-      return res.StealNSResult();
+                         priority, error);
+    if (error.Failed()) {
+      NS_WARNING("nsICSSDeclaration::SetProperty() failed");
+      return error.StealNSResult();
     }
   }
 
   // Let's be sure we don't keep an empty style attribute
   uint32_t length = cssDecl->Length();
   if (!length) {
-    rv = mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+        mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Element::UnsetAttr(nsGkAtoms::style) failed");
+      return rv;
+    }
   } else {
     mRedoAttributeWasSet = true;
   }
 
-  return cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
+  rv = cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "nsICSSDeclaration::GetPropertyValue() failed");
+  return rv;
 }
 
 nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
@@ -228,36 +244,48 @@ nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
     mProperty->ToUTF8String(propertyNameString);
 
     nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
-    NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
+    if (NS_WARN_IF(!inlineStyles)) {
+      return NS_ERROR_INVALID_ARG;
+    }
     nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
 
-    ErrorResult rv;
+    ErrorResult error;
     if (aValue.IsEmpty()) {
       // An empty value means we have to remove the property
       nsAutoString returnString;
-      cssDecl->RemoveProperty(propertyNameString, returnString, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        return rv.StealNSResult();
+      cssDecl->RemoveProperty(propertyNameString, returnString, error);
+      if (error.Failed()) {
+        NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
+        return error.StealNSResult();
       }
     }
     // Let's recreate the declaration as it was
     nsAutoString priority;
     cssDecl->GetPropertyPriority(propertyNameString, priority);
     cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(aValue),
-                         priority, rv);
-    return rv.StealNSResult();
+                         priority, error);
+    NS_WARNING_ASSERTION(!error.Failed(),
+                         "nsICSSDeclaration::SetProperty() failed");
+    return error.StealNSResult();
   }
-  return mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+  nsresult rv = mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Element::UnsetAttr(nsGkAtoms::style) failed");
+  return rv;
 }
 
-NS_IMETHODIMP
-ChangeStyleTransaction::UndoTransaction() {
-  return SetStyle(mUndoAttributeWasSet, mUndoValue);
+NS_IMETHODIMP ChangeStyleTransaction::UndoTransaction() {
+  nsresult rv = SetStyle(mUndoAttributeWasSet, mUndoValue);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "ChangeStyleTransaction::SetStyle() failed");
+  return rv;
 }
 
-NS_IMETHODIMP
-ChangeStyleTransaction::RedoTransaction() {
-  return SetStyle(mRedoAttributeWasSet, mRedoValue);
+NS_IMETHODIMP ChangeStyleTransaction::RedoTransaction() {
+  nsresult rv = SetStyle(mRedoAttributeWasSet, mRedoValue);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "ChangeStyleTransaction::SetStyle() failed");
+  return rv;
 }
 
 // True if the CSS property accepts more than one value

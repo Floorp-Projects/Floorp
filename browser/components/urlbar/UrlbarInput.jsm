@@ -278,7 +278,7 @@ class UrlbarInput {
       // only if there's no opener (bug 370555).
       if (
         this.window.isInitialPage(uri) &&
-        this.window.checkEmptyPageOrigin(
+        BrowserUtils.checkEmptyPageOrigin(
           this.window.gBrowser.selectedBrowser,
           uri
         )
@@ -297,7 +297,7 @@ class UrlbarInput {
         !this.window.isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
     } else if (
       this.window.isInitialPage(value) &&
-      this.window.checkEmptyPageOrigin(this.window.gBrowser.selectedBrowser)
+      BrowserUtils.checkEmptyPageOrigin(this.window.gBrowser.selectedBrowser)
     ) {
       value = "";
       valid = true;

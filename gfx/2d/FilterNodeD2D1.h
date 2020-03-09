@@ -40,7 +40,7 @@ class FilterNodeD2D1 : public FilterNode {
   virtual void SetAttribute(uint32_t aIndex, const Point3D& aValue);
   virtual void SetAttribute(uint32_t aIndex, const Size& aValue);
   virtual void SetAttribute(uint32_t aIndex, const IntSize& aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Color& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const DeviceColor& aValue);
   virtual void SetAttribute(uint32_t aIndex, const Rect& aValue);
   virtual void SetAttribute(uint32_t aIndex, const IntRect& aValue);
   virtual void SetAttribute(uint32_t aIndex, bool aValue);

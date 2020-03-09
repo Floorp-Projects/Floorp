@@ -82,9 +82,9 @@ class nsJSThunk : public nsIInputStream {
 //
 NS_IMPL_ISUPPORTS(nsJSThunk, nsIInputStream)
 
-nsJSThunk::nsJSThunk() {}
+nsJSThunk::nsJSThunk() = default;
 
-nsJSThunk::~nsJSThunk() {}
+nsJSThunk::~nsJSThunk() = default;
 
 nsresult nsJSThunk::Init(nsIURI* uri) {
   NS_ENSURE_ARG_POINTER(uri);
@@ -408,7 +408,7 @@ nsJSChannel::nsJSChannel()
       mIsActive(false),
       mOpenedStreamChannel(false) {}
 
-nsJSChannel::~nsJSChannel() {}
+nsJSChannel::~nsJSChannel() = default;
 
 nsresult nsJSChannel::StopAll() {
   nsresult rv = NS_ERROR_UNEXPECTED;
