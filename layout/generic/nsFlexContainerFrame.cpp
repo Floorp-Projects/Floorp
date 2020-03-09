@@ -4166,7 +4166,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   // Check to see if we need to create a computed info structure, to
   // be filled out for use by devtools.
-  CreateOrClearFlexContainerInfo();
+  ComputedFlexContainerInfo* containerInfo = CreateOrClearFlexContainerInfo();
 
   // If we're being fragmented into a constrained BSize, then subtract off
   // borderpadding BStart from that constrained BSize, to get the available
@@ -4210,7 +4210,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   DoFlexLayout(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
                contentBoxCrossSize, flexContainerAscent,
                availableBSizeForContent, lines, struts, axisTracker,
-               mainGapSize, crossGapSize, hasLineClampEllipsis);
+               mainGapSize, crossGapSize, hasLineClampEllipsis, containerInfo);
 
   if (!struts.IsEmpty()) {
     // We're restarting flex layout, with new knowledge of collapsed items.
@@ -4219,7 +4219,13 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     DoFlexLayout(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
                  contentBoxCrossSize, flexContainerAscent,
                  availableBSizeForContent, lines, struts, axisTracker,
-                 mainGapSize, crossGapSize, hasLineClampEllipsis);
+                 mainGapSize, crossGapSize, hasLineClampEllipsis,
+                 containerInfo);
+  }
+
+  // Finally update our line and item measurements in our containerInfo.
+  if (MOZ_UNLIKELY(containerInfo)) {
+    UpdateFlexLineAndItemInfo(*containerInfo, lines);
   }
 }
 
@@ -4313,9 +4319,10 @@ void nsFlexContainerFrame::CalculatePackingSpace(
   *aPackingSpaceRemaining -= totalEdgePackingSpace;
 }
 
-void nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
+ComputedFlexContainerInfo*
+nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
   if (!HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
-    return;
+    return nullptr;
   }
 
   // NS_STATE_FLEX_GENERATE_COMPUTED_VALUES will never be cleared. That's
@@ -4331,6 +4338,8 @@ void nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
     info = new ComputedFlexContainerInfo();
     SetProperty(FlexContainerInfo(), info);
   }
+
+  return info;
 }
 
 void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
@@ -4543,7 +4552,8 @@ void nsFlexContainerFrame::DoFlexLayout(
     nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
     nscoord aAvailableBSizeForContent, LinkedList<FlexLine>& aLines,
     nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis) {
+    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aLines.isEmpty(), "Caller should pass an empty line-list!");
 
@@ -4568,20 +4578,20 @@ void nsFlexContainerFrame::DoFlexLayout(
   // FlexItems during layout that would not otherwise be saved (like
   // size adjustments). We'll later fix up the line properties,
   // because the correct values aren't available yet.
-  ComputedFlexContainerInfo* containerInfo = nullptr;
-  if (HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
-    containerInfo = GetProperty(FlexContainerInfo());
-    MOZ_ASSERT(containerInfo, "::Reflow() should have created container info.");
+  if (aContainerInfo) {
+    MOZ_ASSERT(HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES),
+               "We should only have the info struct if "
+               "NS_STATE_FLEX_GENERATE_COMPUTED_VALUES state bit is set!");
 
     if (!aStruts.IsEmpty()) {
       // We restarted DoFlexLayout, and may have stale mLines to clear:
-      containerInfo->mLines.Clear();
+      aContainerInfo->mLines.Clear();
     } else {
-      MOZ_ASSERT(containerInfo->mLines.IsEmpty(), "Shouldn't have lines yet.");
+      MOZ_ASSERT(aContainerInfo->mLines.IsEmpty(), "Shouldn't have lines yet.");
     }
 
-    CreateFlexLineAndFlexItemInfo(*containerInfo, aLines);
-    ComputeFlexDirections(*containerInfo, aAxisTracker);
+    CreateFlexLineAndFlexItemInfo(*aContainerInfo, aLines);
+    ComputeFlexDirections(*aContainerInfo, aAxisTracker);
   }
 
   aContentBoxMainSize =
@@ -4592,7 +4602,7 @@ void nsFlexContainerFrame::DoFlexLayout(
   for (FlexLine* line = aLines.getFirst(); line;
        line = line->getNext(), ++lineIndex) {
     ComputedFlexLineInfo* lineInfo =
-        containerInfo ? &containerInfo->mLines[lineIndex] : nullptr;
+        aContainerInfo ? &aContainerInfo->mLines[lineIndex] : nullptr;
     line->ResolveFlexibleLengths(aContentBoxMainSize, lineInfo);
   }
 
@@ -4725,8 +4735,8 @@ void nsFlexContainerFrame::DoFlexLayout(
                                   aAxisTracker);
 
     // See if we need to extract some computed info for this line.
-    if (MOZ_UNLIKELY(containerInfo)) {
-      ComputedFlexLineInfo& lineInfo = containerInfo->mLines[lineIndex];
+    if (MOZ_UNLIKELY(aContainerInfo)) {
+      ComputedFlexLineInfo& lineInfo = aContainerInfo->mLines[lineIndex];
       lineInfo.mCrossStart = crossAxisPosnTracker.Position();
     }
 
@@ -4963,11 +4973,6 @@ void nsFlexContainerFrame::DoFlexLayout(
                                  aStatus);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize)
-
-  // Finally update our line and item measurements in our containerInfo.
-  if (MOZ_UNLIKELY(containerInfo)) {
-    UpdateFlexLineAndItemInfo(*containerInfo, aLines);
-  }
 }
 
 void nsFlexContainerFrame::MoveFlexItemToFinalPosition(

@@ -279,13 +279,19 @@ class nsFlexContainerFrame final : public nsContainerFrame {
       nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
       nscoord aAvailableBSizeForContent, mozilla::LinkedList<FlexLine>& aLines,
       nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
-      nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis);
+      nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+      ComputedFlexContainerInfo* const aContainerInfo);
 
   /**
-   * This function creates a new ComputedFlexContainerInfo or clear the existing
-   * one.
+   * If our devtools have requested a ComputedFlexContainerInfo for this flex
+   * container, this method ensures that we have one (and if one already exists,
+   * this method reinitializes it to look like a freshly-created one).
+   *
+   * @return the pointer to a freshly created or reinitialized
+   *         ComputedFlexContainerInfo if our devtools have requested it;
+   *         otherwise nullptr.
    */
-  void CreateOrClearFlexContainerInfo();
+  ComputedFlexContainerInfo* CreateOrClearFlexContainerInfo();
 
   /**
    * Helpers for DoFlexLayout to computed fields in ComputedFlexContainerInfo.
