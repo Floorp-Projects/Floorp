@@ -108,7 +108,7 @@ class UDPSocket final : public DOMEventTargetHelper,
     void Disconnect() { mSocket = nullptr; }
 
    private:
-    virtual ~ListenerProxy() {}
+    virtual ~ListenerProxy() = default;
 
     UDPSocket* mSocket;
   };
