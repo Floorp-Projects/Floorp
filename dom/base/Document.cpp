@@ -12,6 +12,7 @@
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"
 #include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
@@ -15784,7 +15785,7 @@ Document::AutomaticStorageAccessCanBeGranted() {
 
 bool Document::AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal) {
   nsAutoCString prefix;
-  AntiTrackingCommon::CreateStoragePermissionKey(aPrincipal, prefix);
+  AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
 
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
