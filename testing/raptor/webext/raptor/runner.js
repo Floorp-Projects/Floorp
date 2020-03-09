@@ -186,7 +186,6 @@ async function getTestSettings() {
 
   // write options to storage that our content script needs to know
   if (isGecko) {
-    await ext.storage.local.clear();
     await ext.storage.local.set({ settings });
   } else {
     await new Promise(resolve => {
@@ -726,6 +725,14 @@ async function raptorRunner() {
   }
 }
 
+async function delayedstart() {
+  // Delay the start of raptorRunner a bit to help
+  // with intermittent failures.
+  setTimeout(function() {
+    raptorRunner();
+  }, 5000);
+}
+
 function raptorLog(text, level = "info") {
   let prefix = "";
 
@@ -737,7 +744,8 @@ function raptorLog(text, level = "info") {
 }
 
 if (window.addEventListener) {
-  window.addEventListener("load", raptorRunner);
+  raptorLog("waiting for load event...");
+  window.addEventListener("load", delayedstart);
   postToControlServer("status", "Attaching event listener successful!");
 } else {
   postToControlServer("status", "Attaching event listener failed!");
