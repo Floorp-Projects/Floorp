@@ -537,7 +537,9 @@ const PDFViewerApplication = {
   async _initializeViewerComponents() {
     const appConfig = this.appConfig;
     this.overlayManager = new _overlay_manager.OverlayManager();
-    const eventBus = appConfig.eventBus || (0, _ui_utils.getGlobalEventBus)(_app_options.AppOptions.get("eventBusDispatchToDOM"));
+    const eventBus = appConfig.eventBus || new _ui_utils.EventBus({
+      dispatchToDOM: _app_options.AppOptions.get("eventBusDispatchToDOM")
+    });
     this.eventBus = eventBus;
     const pdfRenderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
     pdfRenderingQueue.onIdle = this.cleanup.bind(this);
@@ -1466,43 +1468,80 @@ const PDFViewerApplication = {
     } = this;
     _boundEvents.beforePrint = this.beforePrint.bind(this);
     _boundEvents.afterPrint = this.afterPrint.bind(this);
-    eventBus.on("resize", webViewerResize);
-    eventBus.on("hashchange", webViewerHashchange);
-    eventBus.on("beforeprint", _boundEvents.beforePrint);
-    eventBus.on("afterprint", _boundEvents.afterPrint);
-    eventBus.on("pagerendered", webViewerPageRendered);
-    eventBus.on("updateviewarea", webViewerUpdateViewarea);
-    eventBus.on("pagechanging", webViewerPageChanging);
-    eventBus.on("scalechanging", webViewerScaleChanging);
-    eventBus.on("rotationchanging", webViewerRotationChanging);
-    eventBus.on("sidebarviewchanged", webViewerSidebarViewChanged);
-    eventBus.on("pagemode", webViewerPageMode);
-    eventBus.on("namedaction", webViewerNamedAction);
-    eventBus.on("presentationmodechanged", webViewerPresentationModeChanged);
-    eventBus.on("presentationmode", webViewerPresentationMode);
-    eventBus.on("openfile", webViewerOpenFile);
-    eventBus.on("print", webViewerPrint);
-    eventBus.on("download", webViewerDownload);
-    eventBus.on("firstpage", webViewerFirstPage);
-    eventBus.on("lastpage", webViewerLastPage);
-    eventBus.on("nextpage", webViewerNextPage);
-    eventBus.on("previouspage", webViewerPreviousPage);
-    eventBus.on("zoomin", webViewerZoomIn);
-    eventBus.on("zoomout", webViewerZoomOut);
-    eventBus.on("zoomreset", webViewerZoomReset);
-    eventBus.on("pagenumberchanged", webViewerPageNumberChanged);
-    eventBus.on("scalechanged", webViewerScaleChanged);
-    eventBus.on("rotatecw", webViewerRotateCw);
-    eventBus.on("rotateccw", webViewerRotateCcw);
-    eventBus.on("switchscrollmode", webViewerSwitchScrollMode);
-    eventBus.on("scrollmodechanged", webViewerScrollModeChanged);
-    eventBus.on("switchspreadmode", webViewerSwitchSpreadMode);
-    eventBus.on("spreadmodechanged", webViewerSpreadModeChanged);
-    eventBus.on("documentproperties", webViewerDocumentProperties);
-    eventBus.on("find", webViewerFind);
-    eventBus.on("findfromurlhash", webViewerFindFromUrlHash);
-    eventBus.on("updatefindmatchescount", webViewerUpdateFindMatchesCount);
-    eventBus.on("updatefindcontrolstate", webViewerUpdateFindControlState);
+
+    eventBus._on("resize", webViewerResize);
+
+    eventBus._on("hashchange", webViewerHashchange);
+
+    eventBus._on("beforeprint", _boundEvents.beforePrint);
+
+    eventBus._on("afterprint", _boundEvents.afterPrint);
+
+    eventBus._on("pagerendered", webViewerPageRendered);
+
+    eventBus._on("updateviewarea", webViewerUpdateViewarea);
+
+    eventBus._on("pagechanging", webViewerPageChanging);
+
+    eventBus._on("scalechanging", webViewerScaleChanging);
+
+    eventBus._on("rotationchanging", webViewerRotationChanging);
+
+    eventBus._on("sidebarviewchanged", webViewerSidebarViewChanged);
+
+    eventBus._on("pagemode", webViewerPageMode);
+
+    eventBus._on("namedaction", webViewerNamedAction);
+
+    eventBus._on("presentationmodechanged", webViewerPresentationModeChanged);
+
+    eventBus._on("presentationmode", webViewerPresentationMode);
+
+    eventBus._on("openfile", webViewerOpenFile);
+
+    eventBus._on("print", webViewerPrint);
+
+    eventBus._on("download", webViewerDownload);
+
+    eventBus._on("firstpage", webViewerFirstPage);
+
+    eventBus._on("lastpage", webViewerLastPage);
+
+    eventBus._on("nextpage", webViewerNextPage);
+
+    eventBus._on("previouspage", webViewerPreviousPage);
+
+    eventBus._on("zoomin", webViewerZoomIn);
+
+    eventBus._on("zoomout", webViewerZoomOut);
+
+    eventBus._on("zoomreset", webViewerZoomReset);
+
+    eventBus._on("pagenumberchanged", webViewerPageNumberChanged);
+
+    eventBus._on("scalechanged", webViewerScaleChanged);
+
+    eventBus._on("rotatecw", webViewerRotateCw);
+
+    eventBus._on("rotateccw", webViewerRotateCcw);
+
+    eventBus._on("switchscrollmode", webViewerSwitchScrollMode);
+
+    eventBus._on("scrollmodechanged", webViewerScrollModeChanged);
+
+    eventBus._on("switchspreadmode", webViewerSwitchSpreadMode);
+
+    eventBus._on("spreadmodechanged", webViewerSpreadModeChanged);
+
+    eventBus._on("documentproperties", webViewerDocumentProperties);
+
+    eventBus._on("find", webViewerFind);
+
+    eventBus._on("findfromurlhash", webViewerFindFromUrlHash);
+
+    eventBus._on("updatefindmatchescount", webViewerUpdateFindMatchesCount);
+
+    eventBus._on("updatefindcontrolstate", webViewerUpdateFindControlState);
   },
 
   bindWindowEvents() {
@@ -1553,43 +1592,81 @@ const PDFViewerApplication = {
       eventBus,
       _boundEvents
     } = this;
-    eventBus.off("resize", webViewerResize);
-    eventBus.off("hashchange", webViewerHashchange);
-    eventBus.off("beforeprint", _boundEvents.beforePrint);
-    eventBus.off("afterprint", _boundEvents.afterPrint);
-    eventBus.off("pagerendered", webViewerPageRendered);
-    eventBus.off("updateviewarea", webViewerUpdateViewarea);
-    eventBus.off("pagechanging", webViewerPageChanging);
-    eventBus.off("scalechanging", webViewerScaleChanging);
-    eventBus.off("rotationchanging", webViewerRotationChanging);
-    eventBus.off("sidebarviewchanged", webViewerSidebarViewChanged);
-    eventBus.off("pagemode", webViewerPageMode);
-    eventBus.off("namedaction", webViewerNamedAction);
-    eventBus.off("presentationmodechanged", webViewerPresentationModeChanged);
-    eventBus.off("presentationmode", webViewerPresentationMode);
-    eventBus.off("openfile", webViewerOpenFile);
-    eventBus.off("print", webViewerPrint);
-    eventBus.off("download", webViewerDownload);
-    eventBus.off("firstpage", webViewerFirstPage);
-    eventBus.off("lastpage", webViewerLastPage);
-    eventBus.off("nextpage", webViewerNextPage);
-    eventBus.off("previouspage", webViewerPreviousPage);
-    eventBus.off("zoomin", webViewerZoomIn);
-    eventBus.off("zoomout", webViewerZoomOut);
-    eventBus.off("zoomreset", webViewerZoomReset);
-    eventBus.off("pagenumberchanged", webViewerPageNumberChanged);
-    eventBus.off("scalechanged", webViewerScaleChanged);
-    eventBus.off("rotatecw", webViewerRotateCw);
-    eventBus.off("rotateccw", webViewerRotateCcw);
-    eventBus.off("switchscrollmode", webViewerSwitchScrollMode);
-    eventBus.off("scrollmodechanged", webViewerScrollModeChanged);
-    eventBus.off("switchspreadmode", webViewerSwitchSpreadMode);
-    eventBus.off("spreadmodechanged", webViewerSpreadModeChanged);
-    eventBus.off("documentproperties", webViewerDocumentProperties);
-    eventBus.off("find", webViewerFind);
-    eventBus.off("findfromurlhash", webViewerFindFromUrlHash);
-    eventBus.off("updatefindmatchescount", webViewerUpdateFindMatchesCount);
-    eventBus.off("updatefindcontrolstate", webViewerUpdateFindControlState);
+
+    eventBus._off("resize", webViewerResize);
+
+    eventBus._off("hashchange", webViewerHashchange);
+
+    eventBus._off("beforeprint", _boundEvents.beforePrint);
+
+    eventBus._off("afterprint", _boundEvents.afterPrint);
+
+    eventBus._off("pagerendered", webViewerPageRendered);
+
+    eventBus._off("updateviewarea", webViewerUpdateViewarea);
+
+    eventBus._off("pagechanging", webViewerPageChanging);
+
+    eventBus._off("scalechanging", webViewerScaleChanging);
+
+    eventBus._off("rotationchanging", webViewerRotationChanging);
+
+    eventBus._off("sidebarviewchanged", webViewerSidebarViewChanged);
+
+    eventBus._off("pagemode", webViewerPageMode);
+
+    eventBus._off("namedaction", webViewerNamedAction);
+
+    eventBus._off("presentationmodechanged", webViewerPresentationModeChanged);
+
+    eventBus._off("presentationmode", webViewerPresentationMode);
+
+    eventBus._off("openfile", webViewerOpenFile);
+
+    eventBus._off("print", webViewerPrint);
+
+    eventBus._off("download", webViewerDownload);
+
+    eventBus._off("firstpage", webViewerFirstPage);
+
+    eventBus._off("lastpage", webViewerLastPage);
+
+    eventBus._off("nextpage", webViewerNextPage);
+
+    eventBus._off("previouspage", webViewerPreviousPage);
+
+    eventBus._off("zoomin", webViewerZoomIn);
+
+    eventBus._off("zoomout", webViewerZoomOut);
+
+    eventBus._off("zoomreset", webViewerZoomReset);
+
+    eventBus._off("pagenumberchanged", webViewerPageNumberChanged);
+
+    eventBus._off("scalechanged", webViewerScaleChanged);
+
+    eventBus._off("rotatecw", webViewerRotateCw);
+
+    eventBus._off("rotateccw", webViewerRotateCcw);
+
+    eventBus._off("switchscrollmode", webViewerSwitchScrollMode);
+
+    eventBus._off("scrollmodechanged", webViewerScrollModeChanged);
+
+    eventBus._off("switchspreadmode", webViewerSwitchSpreadMode);
+
+    eventBus._off("spreadmodechanged", webViewerSpreadModeChanged);
+
+    eventBus._off("documentproperties", webViewerDocumentProperties);
+
+    eventBus._off("find", webViewerFind);
+
+    eventBus._off("findfromurlhash", webViewerFindFromUrlHash);
+
+    eventBus._off("updatefindmatchescount", webViewerUpdateFindMatchesCount);
+
+    eventBus._off("updatefindcontrolstate", webViewerUpdateFindControlState);
+
     _boundEvents.beforePrint = null;
     _boundEvents.afterPrint = null;
   },
@@ -3001,25 +3078,15 @@ class EventBus {
   }
 
   on(eventName, listener) {
-    let eventListeners = this._listeners[eventName];
-
-    if (!eventListeners) {
-      eventListeners = [];
-      this._listeners[eventName] = eventListeners;
-    }
-
-    eventListeners.push(listener);
+    this._on(eventName, listener, {
+      external: true
+    });
   }
 
   off(eventName, listener) {
-    const eventListeners = this._listeners[eventName];
-    let i;
-
-    if (!eventListeners || (i = eventListeners.indexOf(listener)) < 0) {
-      return;
-    }
-
-    eventListeners.splice(i, 1);
+    this._off(eventName, listener, {
+      external: true
+    });
   }
 
   dispatch(eventName) {
@@ -3036,12 +3103,60 @@ class EventBus {
     }
 
     const args = Array.prototype.slice.call(arguments, 1);
-    eventListeners.slice(0).forEach(function (listener) {
+    let externalListeners;
+    eventListeners.slice(0).forEach(function ({
+      listener,
+      external
+    }) {
+      if (external) {
+        if (!externalListeners) {
+          externalListeners = [];
+        }
+
+        externalListeners.push(listener);
+        return;
+      }
+
       listener.apply(null, args);
     });
 
+    if (externalListeners) {
+      externalListeners.forEach(function (listener) {
+        listener.apply(null, args);
+      });
+      externalListeners = null;
+    }
+
     if (this._dispatchToDOM) {
       this._dispatchDOMEvent(eventName, args);
+    }
+  }
+
+  _on(eventName, listener, options = null) {
+    let eventListeners = this._listeners[eventName];
+
+    if (!eventListeners) {
+      this._listeners[eventName] = eventListeners = [];
+    }
+
+    eventListeners.push({
+      listener,
+      external: options ? options.external : false
+    });
+  }
+
+  _off(eventName, listener, options = null) {
+    const eventListeners = this._listeners[eventName];
+
+    if (!eventListeners) {
+      return;
+    }
+
+    for (let i = 0, ii = eventListeners.length; i < ii; i++) {
+      if (eventListeners[i].listener === listener) {
+        eventListeners.splice(i, 1);
+        return;
+      }
     }
   }
 
@@ -3077,6 +3192,8 @@ exports.EventBus = EventBus;
 let globalEventBus = null;
 
 function getGlobalEventBus(dispatchToDOM = false) {
+  console.error("getGlobalEventBus is deprecated, use a manually created EventBus instance instead.");
+
   if (!globalEventBus) {
     globalEventBus = new EventBus({
       dispatchToDOM
@@ -3552,10 +3669,11 @@ class PDFCursorTools {
   }
 
   _addEventListeners() {
-    this.eventBus.on("switchcursortool", evt => {
+    this.eventBus._on("switchcursortool", evt => {
       this.switchTool(evt.tool);
     });
-    this.eventBus.on("presentationmodechanged", evt => {
+
+    this.eventBus._on("presentationmodechanged", evt => {
       if (evt.switchInProgress) {
         return;
       }
@@ -4216,7 +4334,8 @@ class PDFSidebar {
     this.attachmentsButton.addEventListener("click", () => {
       this.switchView(SidebarView.ATTACHMENTS);
     });
-    this.eventBus.on("outlineloaded", evt => {
+
+    this.eventBus._on("outlineloaded", evt => {
       const outlineCount = evt.outlineCount;
       this.outlineButton.disabled = !outlineCount;
 
@@ -4226,7 +4345,8 @@ class PDFSidebar {
         this.switchView(SidebarView.THUMBS);
       }
     });
-    this.eventBus.on("attachmentsloaded", evt => {
+
+    this.eventBus._on("attachmentsloaded", evt => {
       if (evt.attachmentsCount) {
         this.attachmentsButton.disabled = false;
 
@@ -4247,7 +4367,8 @@ class PDFSidebar {
         }
       });
     });
-    this.eventBus.on("presentationmodechanged", evt => {
+
+    this.eventBus._on("presentationmodechanged", evt => {
       if (!evt.active && !evt.switchInProgress && this.isThumbnailViewVisible) {
         this._updateThumbnailViewer();
       }
@@ -4472,7 +4593,8 @@ class PDFAttachmentViewer {
     this.eventBus = eventBus;
     this.downloadManager = downloadManager;
     this.reset();
-    this.eventBus.on("fileattachmentannotation", this._appendAttachment.bind(this));
+
+    this.eventBus._on("fileattachmentannotation", this._appendAttachment.bind(this));
   }
 
   reset(keepRenderedCapability = false) {
@@ -4651,10 +4773,11 @@ class PDFDocumentProperties {
     this.overlayManager.register(this.overlayName, this.container, this.close.bind(this));
 
     if (eventBus) {
-      eventBus.on("pagechanging", evt => {
+      eventBus._on("pagechanging", evt => {
         this._currentPageNumber = evt.pageNumber;
       });
-      eventBus.on("rotationchanging", evt => {
+
+      eventBus._on("rotationchanging", evt => {
         this._pagesRotation = evt.pagesRotation;
       });
     }
@@ -4914,7 +5037,7 @@ var _pdf_find_controller = __webpack_require__(15);
 const MATCHES_COUNT_LIMIT = 1000;
 
 class PDFFindBar {
-  constructor(options, eventBus = (0, _ui_utils.getGlobalEventBus)(), l10n = _ui_utils.NullL10n) {
+  constructor(options, eventBus, l10n = _ui_utils.NullL10n) {
     this.opened = false;
     this.bar = options.bar || null;
     this.toggleButton = options.toggleButton || null;
@@ -4926,7 +5049,7 @@ class PDFFindBar {
     this.findResultsCount = options.findResultsCount || null;
     this.findPreviousButton = options.findPreviousButton || null;
     this.findNextButton = options.findNextButton || null;
-    this.eventBus = eventBus;
+    this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
     this.l10n = l10n;
     this.toggleButton.addEventListener("click", () => {
       this.toggle();
@@ -4963,7 +5086,8 @@ class PDFFindBar {
     this.entireWord.addEventListener("click", () => {
       this.dispatchEvent("entirewordchange");
     });
-    this.eventBus.on("resize", this._adjustWidth.bind(this));
+
+    this.eventBus._on("resize", this._adjustWidth.bind(this));
   }
 
   reset() {
@@ -5162,14 +5286,14 @@ function normalize(text) {
 class PDFFindController {
   constructor({
     linkService,
-    eventBus = (0, _ui_utils.getGlobalEventBus)()
+    eventBus
   }) {
     this._linkService = linkService;
-    this._eventBus = eventBus;
+    this._eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
 
     this._reset();
 
-    eventBus.on("findbarclose", this._onFindBarClose.bind(this));
+    eventBus._on("findbarclose", this._onFindBarClose.bind(this));
   }
 
   get highlightMatches() {
@@ -5918,18 +6042,21 @@ class PDFHistory {
     this.reset();
     this._boundEvents = null;
     this._isViewerInPresentationMode = false;
-    this.eventBus.on("presentationmodechanged", evt => {
+
+    this.eventBus._on("presentationmodechanged", evt => {
       this._isViewerInPresentationMode = evt.active || evt.switchInProgress;
     });
-    this.eventBus.on("pagesinit", () => {
+
+    this.eventBus._on("pagesinit", () => {
       this._isPagesLoaded = false;
 
       const onPagesLoaded = evt => {
-        this.eventBus.off("pagesloaded", onPagesLoaded);
+        this.eventBus._off("pagesloaded", onPagesLoaded);
+
         this._isPagesLoaded = !!evt.pagesCount;
       };
 
-      this.eventBus.on("pagesloaded", onPagesLoaded);
+      this.eventBus._on("pagesloaded", onPagesLoaded);
     });
   }
 
@@ -6378,7 +6505,9 @@ class PDFHistory {
       popState: this._popState.bind(this),
       pageHide: this._pageHide.bind(this)
     };
-    this.eventBus.on("updateviewarea", this._boundEvents.updateViewarea);
+
+    this.eventBus._on("updateviewarea", this._boundEvents.updateViewarea);
+
     window.addEventListener("popstate", this._boundEvents.popState);
     window.addEventListener("pagehide", this._boundEvents.pageHide);
   }
@@ -6388,7 +6517,8 @@ class PDFHistory {
       return;
     }
 
-    this.eventBus.off("updateviewarea", this._boundEvents.updateViewarea);
+    this.eventBus._off("updateviewarea", this._boundEvents.updateViewarea);
+
     window.removeEventListener("popstate", this._boundEvents.popState);
     window.removeEventListener("pagehide", this._boundEvents.pageHide);
     this._boundEvents = null;
@@ -6928,7 +7058,8 @@ class PDFOutlineViewer {
     this.linkService = linkService;
     this.eventBus = eventBus;
     this.reset();
-    eventBus.on("toggleoutlinetree", this.toggleOutlineTree.bind(this));
+
+    eventBus._on("toggleoutlinetree", this.toggleOutlineTree.bind(this));
   }
 
   reset() {
@@ -7603,10 +7734,12 @@ class PDFSidebarResizer {
       window.addEventListener("mousemove", _boundEvents.mouseMove);
       window.addEventListener("mouseup", _boundEvents.mouseUp);
     });
-    this.eventBus.on("sidebarviewchanged", evt => {
+
+    this.eventBus._on("sidebarviewchanged", evt => {
       this.sidebarOpen = !!(evt && evt.view);
     });
-    this.eventBus.on("resize", evt => {
+
+    this.eventBus._on("resize", evt => {
       if (!evt || evt.source !== window) {
         return;
       }
@@ -8725,7 +8858,7 @@ class BaseViewer {
       this._buffer.push(pageView);
     };
 
-    this.eventBus.on("pagerender", this._onBeforeDraw);
+    this.eventBus._on("pagerender", this._onBeforeDraw);
 
     this._onAfterDraw = evt => {
       if (evt.cssTransform || onePageRenderedCapability.settled) {
@@ -8733,11 +8866,14 @@ class BaseViewer {
       }
 
       onePageRenderedCapability.resolve();
-      this.eventBus.off("pagerendered", this._onAfterDraw);
+
+      this.eventBus._off("pagerendered", this._onAfterDraw);
+
       this._onAfterDraw = null;
     };
 
-    this.eventBus.on("pagerendered", this._onAfterDraw);
+    this.eventBus._on("pagerendered", this._onAfterDraw);
+
     firstPagePromise.then(firstPdfPage => {
       const scale = this.currentScale;
       const viewport = firstPdfPage.getViewport({
@@ -8871,12 +9007,14 @@ class BaseViewer {
     this._spreadMode = _ui_utils.SpreadMode.NONE;
 
     if (this._onBeforeDraw) {
-      this.eventBus.off("pagerender", this._onBeforeDraw);
+      this.eventBus._off("pagerender", this._onBeforeDraw);
+
       this._onBeforeDraw = null;
     }
 
     if (this._onAfterDraw) {
-      this.eventBus.off("pagerendered", this._onAfterDraw);
+      this.eventBus._off("pagerendered", this._onAfterDraw);
+
       this._onAfterDraw = null;
     }
 
@@ -9321,10 +9459,10 @@ class BaseViewer {
     return false;
   }
 
-  createTextLayerBuilder(textLayerDiv, pageIndex, viewport, enhanceTextSelection = false) {
+  createTextLayerBuilder(textLayerDiv, pageIndex, viewport, enhanceTextSelection = false, eventBus) {
     return new _text_layer_builder.TextLayerBuilder({
       textLayerDiv,
-      eventBus: this.eventBus,
+      eventBus,
       pageIndex,
       viewport,
       findController: this.isInPresentationMode ? null : this.findController,
@@ -9961,7 +10099,7 @@ class PDFPageView {
         div.appendChild(textLayerDiv);
       }
 
-      textLayer = this.textLayerFactory.createTextLayerBuilder(textLayerDiv, this.id - 1, this.viewport, this.textLayerMode === _ui_utils.TextLayerMode.ENABLE_ENHANCE);
+      textLayer = this.textLayerFactory.createTextLayerBuilder(textLayerDiv, this.id - 1, this.viewport, this.textLayerMode === _ui_utils.TextLayerMode.ENABLE_ENHANCE, this.eventBus);
     }
 
     this.textLayer = textLayer;
@@ -10270,7 +10408,7 @@ class TextLayerBuilder {
         }
       };
 
-      this.eventBus.on("updatetextlayermatches", this._onUpdateTextLayerMatches);
+      this.eventBus._on("updatetextlayermatches", this._onUpdateTextLayerMatches);
     }
   }
 
@@ -10281,7 +10419,8 @@ class TextLayerBuilder {
     }
 
     if (this._onUpdateTextLayerMatches) {
-      this.eventBus.off("updatetextlayermatches", this._onUpdateTextLayerMatches);
+      this.eventBus._off("updatetextlayermatches", this._onUpdateTextLayerMatches);
+
       this._onUpdateTextLayerMatches = null;
     }
   }
@@ -10524,12 +10663,13 @@ class TextLayerBuilder {
 exports.TextLayerBuilder = TextLayerBuilder;
 
 class DefaultTextLayerFactory {
-  createTextLayerBuilder(textLayerDiv, pageIndex, viewport, enhanceTextSelection = false) {
+  createTextLayerBuilder(textLayerDiv, pageIndex, viewport, enhanceTextSelection = false, eventBus) {
     return new TextLayerBuilder({
       textLayerDiv,
       pageIndex,
       viewport,
-      enhanceTextSelection
+      enhanceTextSelection,
+      eventBus
     });
   }
 
@@ -10678,8 +10818,9 @@ class SecondaryToolbar {
 
     this._bindSpreadModeListener(options);
 
-    this.eventBus.on("resize", this._setMaxHeight.bind(this));
-    this.eventBus.on("baseviewerinit", evt => {
+    this.eventBus._on("resize", this._setMaxHeight.bind(this));
+
+    this.eventBus._on("baseviewerinit", evt => {
       if (evt.source instanceof _pdf_single_page_viewer.PDFSinglePageViewer) {
         this.toolbarButtonContainer.classList.add("hiddenScrollModeButtons", "hiddenSpreadModeButtons");
       } else {
@@ -10752,7 +10893,7 @@ class SecondaryToolbar {
   }
 
   _bindCursorToolsListener(buttons) {
-    this.eventBus.on("cursortoolchanged", function ({
+    this.eventBus._on("cursortoolchanged", function ({
       tool
     }) {
       buttons.cursorSelectToolButton.classList.toggle("toggled", tool === _pdf_cursor_tools.CursorTool.SELECT);
@@ -10773,8 +10914,9 @@ class SecondaryToolbar {
       buttons.spreadEvenButton.disabled = isScrollModeHorizontal;
     }
 
-    this.eventBus.on("scrollmodechanged", scrollModeChanged);
-    this.eventBus.on("secondarytoolbarreset", evt => {
+    this.eventBus._on("scrollmodechanged", scrollModeChanged);
+
+    this.eventBus._on("secondarytoolbarreset", evt => {
       if (evt.source === this) {
         scrollModeChanged({
           mode: _ui_utils.ScrollMode.VERTICAL
@@ -10792,8 +10934,9 @@ class SecondaryToolbar {
       buttons.spreadEvenButton.classList.toggle("toggled", mode === _ui_utils.SpreadMode.EVEN);
     }
 
-    this.eventBus.on("spreadmodechanged", spreadModeChanged);
-    this.eventBus.on("secondarytoolbarreset", evt => {
+    this.eventBus._on("spreadmodechanged", spreadModeChanged);
+
+    this.eventBus._on("secondarytoolbarreset", evt => {
       if (evt.source === this) {
         spreadModeChanged({
           mode: _ui_utils.SpreadMode.NONE
@@ -10871,7 +11014,8 @@ var _pdfjsLib = __webpack_require__(4);
 class PDFSinglePageViewer extends _base_viewer.BaseViewer {
   constructor(options) {
     super(options);
-    this.eventBus.on("pagesinit", evt => {
+
+    this.eventBus._on("pagesinit", evt => {
       this._ensurePageViewVisible();
     });
   }
@@ -11115,7 +11259,8 @@ class Toolbar {
       });
     });
     scaleSelect.oncontextmenu = _ui_utils.noContextMenuHandler;
-    this.eventBus.on("localized", () => {
+
+    this.eventBus._on("localized", () => {
       this._wasLocalized = true;
 
       this._adjustScaleWidth();
