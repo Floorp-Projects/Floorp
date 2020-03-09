@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocumentLoadListener.h"
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
@@ -381,7 +382,7 @@ bool DocumentLoadListener::Open(
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(mChannel);
+      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(mChannel);
   CanonicalBrowsingContext* bc = GetBrowsingContext();
   RefPtr<WindowGlobalParent> topWindow =
       GetTopWindowExcludingExtensionAccessibleContentFrames(bc, uriBeingLoaded);
