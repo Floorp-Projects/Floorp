@@ -28,7 +28,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Permissions, mWindow)
 
 Permissions::Permissions(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
-Permissions::~Permissions() {}
+Permissions::~Permissions() = default;
 
 JSObject* Permissions::WrapObject(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto) {
