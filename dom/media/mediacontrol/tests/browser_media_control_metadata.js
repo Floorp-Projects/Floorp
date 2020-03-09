@@ -132,6 +132,37 @@ add_task(async function testMetadataWithoutTitleAndArtwork() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testMetadataInPrivateBrowsing() {
+  info(`create a private window`);
+  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  info(`open media page`);
+  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY, privateWindow);
+
+  info(`start media`);
+  await playMedia(tab);
+
+  info(`set metadata`);
+  let metadata = {
+    title: "foo",
+    artist: "bar",
+    album: "foo",
+    artwork: [{ src: "bar.jpg", sizes: "128x128", type: "image/jpeg" }],
+  };
+  await setMediaMetadata(tab, metadata);
+
+  info(`should use default metadata because of in private browsing mode`);
+  await isUsingDefaultMetadata(tab, { isPrivateBrowsing: true });
+
+  info(`remove tab`);
+  await BrowserTestUtils.removeTab(tab);
+
+  info(`close private window`);
+  await BrowserTestUtils.closeWindow(privateWindow);
+});
+
 add_task(async function testSetMetadataFromMediaSessionAPI() {
   info(`open media page`);
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
@@ -340,11 +371,23 @@ function pauseMedia(tab) {
   });
 }
 
-async function isUsingDefaultMetadata(tab) {
+async function isUsingDefaultMetadata(tab, options = {}) {
   let metadata = ChromeUtils.getCurrentActiveMediaMetadata();
-  await SpecialPowers.spawn(tab.linkedBrowser, [metadata.title], title => {
-    is(title, content.document.title, "Using website title as a default title");
-  });
+  if (options.isPrivateBrowsing) {
+    is(
+      metadata.title,
+      "Firefox is playing media",
+      "Using generic title to not expose sensitive information"
+    );
+  } else {
+    await SpecialPowers.spawn(tab.linkedBrowser, [metadata.title], title => {
+      is(
+        title,
+        content.document.title,
+        "Using website title as a default title"
+      );
+    });
+  }
   is(metadata.artwork.length, 1, "Default metada contains one artwork");
   ok(
     metadata.artwork[0].src.includes(defaultFaviconName),

@@ -1,7 +1,8 @@
 /* eslint-disable no-undef */
 
-async function createTabAndLoad(url) {
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
+async function createTabAndLoad(url, inputWindow = null) {
+  const browser = inputWindow ? inputWindow.gBrowser : window.gBrowser;
+  let tab = await BrowserTestUtils.openNewForegroundTab(browser, url);
   return tab;
 }
 
