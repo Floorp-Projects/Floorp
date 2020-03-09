@@ -161,7 +161,7 @@ class PostMessageRunnable final : public CancelableRunnable {
   }
 
  private:
-  ~PostMessageRunnable() {}
+  ~PostMessageRunnable() = default;
 
   RefPtr<MessagePort> mPort;
   RefPtr<SharedMessageBody> mData;
