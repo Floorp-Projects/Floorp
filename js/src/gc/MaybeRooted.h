@@ -13,13 +13,13 @@
 #ifndef gc_MaybeRooted_h
 #define gc_MaybeRooted_h
 
+#include "mozilla/Assertions.h"  // MOZ_CRASH
 #include "mozilla/Attributes.h"  // MOZ_IMPLICIT, MOZ_RAII
 
 #include <type_traits>  // std::true_type
 
 #include "gc/Allocator.h"   // js::AllowGC, js::CanGC, js::NoGC
-#include "js/ComparisonOperators.h"  // JS::detail::DefineComparisonOps
-#include "js/RootingAPI.h"  // js::{Rooted,MutableHandle}Base, JS::SafelyInitialized, DECLARE_POINTER_{CONSTREF,ASSIGN}_OPS, DECLARE_NONPOINTER_{,MUTABLE_}ACCESSOR_METHODS, JS::Rooted, JS::{,Mutable}Handle
+#include "js/RootingAPI.h"  // js::{Rooted,MutableHandle}Base, js::detail::DefineComparisonOps, JS::SafelyInitialized, DECLARE_POINTER_{CONSTREF,ASSIGN}_OPS, DECLARE_NONPOINTER_{,MUTABLE_}ACCESSOR_METHODS, JS::Rooted, JS::{,Mutable}Handle
 
 namespace js {
 
@@ -51,22 +51,14 @@ class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>> {
   FakeRooted(const FakeRooted&) = delete;
 };
 
-}  // namespace js
-
-namespace JS {
-
 namespace detail {
 
 template <typename T>
-struct DefineComparisonOps<js::FakeRooted<T>> : std::true_type {
-  static const T& get(const js::FakeRooted<T>& v) { return v.get(); }
+struct DefineComparisonOps<FakeRooted<T>> : std::true_type {
+  static const T& get(const FakeRooted<T>& v) { return v.get(); }
 };
 
 }  // namespace detail
-
-}  // namespace JS
-
-namespace js {
 
 /**
  * Interface substitute for MutableHandle<T> which is not required to point to
@@ -95,22 +87,14 @@ class FakeMutableHandle
   T* ptr;
 };
 
-}  // namespace js
-
-namespace JS {
-
 namespace detail {
 
 template <typename T>
-struct DefineComparisonOps<js::FakeMutableHandle<T>> : std::true_type {
-  static const T& get(const js::FakeMutableHandle<T>& v) { return v.get(); }
+struct DefineComparisonOps<FakeMutableHandle<T>> : std::true_type {
+  static const T& get(const FakeMutableHandle<T>& v) { return v.get(); }
 };
 
 }  // namespace detail
-
-}  // namespace JS
-
-namespace js {
 
 /**
  * Types for a variable that either should or shouldn't be rooted, depending on
