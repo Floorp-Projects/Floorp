@@ -15,7 +15,8 @@ export interface PanelWindow {
   gToolbox?: any;
   gInit(perfFront: PerfFront, preferenceFront: PageContext): void;
   gDestroy(): void;
-  gReportReady?(): void
+  gReportReady?(): void;
+  gIsPanelDestroyed?: boolean;
 }
 
 /**

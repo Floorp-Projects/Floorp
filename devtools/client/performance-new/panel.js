@@ -56,6 +56,7 @@ class PerformancePanel {
    */
   async _doOpen() {
     this.panelWin.gToolbox = this.toolbox;
+    this.panelWin.gIsPanelDestroyed = false;
 
     const perfFront = await this.target.client.mainRoot.getFront("perf");
 
@@ -82,6 +83,7 @@ class PerformancePanel {
     this.panelWin.gDestroy();
     this.emit("destroyed");
     this._destroyed = true;
+    this.panelWin.gIsPanelDestroyed = true;
   }
 }
 
