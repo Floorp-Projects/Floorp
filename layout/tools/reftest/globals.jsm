@@ -38,8 +38,7 @@ for (let [key, val] of Object.entries({
   EXPECTED_PASS: 0,
   EXPECTED_FAIL: 1,
   EXPECTED_RANDOM: 2,
-  EXPECTED_DEATH: 3,     // test must be skipped to avoid e.g. crash/hang
-  EXPECTED_FUZZY: 4,
+  EXPECTED_FUZZY: 3,
 
   // types of preference value we might want to set for a specific test
   PREF_BOOLEAN: 0,

@@ -497,7 +497,7 @@ function StartTests()
         // tURLs is a temporary array containing all active tests
         var tURLs = new Array();
         for (var i = 0; i < g.urls.length; ++i) {
-            if (g.urls[i].expected == EXPECTED_DEATH)
+            if (g.urls[i].skip)
                 continue;
 
             if (g.urls[i].needsFocus && !Focus())
@@ -601,7 +601,7 @@ function BuildUseCounts()
     g.uriUseCounts = {};
     for (var i = 0; i < g.urls.length; ++i) {
         var url = g.urls[i];
-        if (url.expected != EXPECTED_DEATH &&
+        if (!url.skip &&
             (url.type == TYPE_REFTEST_EQUAL ||
              url.type == TYPE_REFTEST_NOTEQUAL)) {
             if (url.prefSettings1.length == 0) {
@@ -646,7 +646,7 @@ function StartCurrentTest()
     while (g.urls.length > 0) {
         var test = g.urls[0];
         logger.testStart(test.identifier);
-        if (test.expected == EXPECTED_DEATH) {
+        if (test.skip) {
             ++g.testResults.Skip;
             logger.testEnd(test.identifier, "SKIP");
             g.urls.shift();
