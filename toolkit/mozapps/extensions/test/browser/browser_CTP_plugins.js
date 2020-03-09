@@ -15,45 +15,22 @@ function updateBlocklist(aURL, aCallback) {
     SimpleTest.executeSoon(aCallback);
   };
   Services.obs.addObserver(observer, "plugin-blocklist-updated");
-  if (Services.prefs.getBoolPref("extensions.blocklist.useXML", true)) {
-    info("Loading plugin data " + aURL + " using xml implementation.");
-    Services.prefs.setCharPref("extensions.blocklist.url", aURL);
-    var blocklistNotifier = Cc[
-      "@mozilla.org/extensions/blocklist;1"
-    ].getService(Ci.nsITimerCallback);
-    blocklistNotifier.notify(null);
+  info("Loading plugin data " + aURL);
+  if (aURL.endsWith("blockNoPlugins")) {
+    AddonTestUtils.loadBlocklistRawData({ plugins: [] });
+  } else if (aURL.endsWith("blockPluginHard")) {
+    AddonTestUtils.loadBlocklistRawData({
+      plugins: [
+        {
+          matchFilename: "libnptest\\.so|nptest\\.dll|Test\\.plugin",
+          versionRange: [{ severity: "2" }],
+          blockID: "p9999",
+        },
+      ],
+    });
   } else {
-    info("Loading plugin data " + aURL + " using remote settings.");
-    if (aURL.endsWith("blockNoPlugins.xml")) {
-      AddonTestUtils.loadBlocklistRawData({ plugins: [] });
-    } else if (aURL.endsWith("blockPluginHard.xml")) {
-      AddonTestUtils.loadBlocklistRawData({
-        plugins: [
-          {
-            matchFilename: "libnptest\\.so|nptest\\.dll|Test\\.plugin",
-            versionRange: [{ severity: "2" }],
-            blockID: "p9999",
-          },
-        ],
-      });
-    } else {
-      ok(false, "Should never be asked to update to unknown blocklist data.");
-    }
+    ok(false, "Should never be asked to update to unknown blocklist data.");
   }
-}
-
-var _originalBlocklistURL = null;
-function setAndUpdateBlocklist(aURL, aCallback) {
-  if (!_originalBlocklistURL) {
-    _originalBlocklistURL = Services.prefs.getCharPref(
-      "extensions.blocklist.url"
-    );
-  }
-  updateBlocklist(aURL, aCallback);
-}
-
-function resetBlocklist() {
-  Services.prefs.setCharPref("extensions.blocklist.url", _originalBlocklistURL);
 }
 
 function setPluginActivateState({ managerWindow, pluginId, activateState }) {
@@ -225,16 +202,12 @@ add_task(async function test_blocklisted_plugin_disabled() {
     let pluginTag = getTestPluginTag();
     pluginTag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
     await new Promise(resolve => {
-      setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", resolve);
+      updateBlocklist(gHttpTestRoot + "blockNoPlugins", resolve);
     });
-    resetBlocklist();
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.blocklist.suppressUI", true],
-      ["extensions.blocklist.useXML", true],
-    ],
+    set: [["extensions.blocklist.suppressUI", true]],
   });
 
   // Causes appDisabled to be set.
@@ -242,18 +215,11 @@ add_task(async function test_blocklisted_plugin_disabled() {
     // Ensure to reset the blocklist if this test exits earlier because
     // of a failure.
     registerCleanupFunction(ensurePluginEnabled);
-    setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml", resolve);
+    updateBlocklist(gHttpTestRoot + "blockPluginHard", resolve);
   });
 
   await checkPlugins();
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.blocklist.useXML", false]],
-  });
-  await checkPlugins();
-
-  // Clear the blocklist and all prefs on the stack.
-  await ensurePluginEnabled();
   // Using flushPrefEnv instead of 2x popPrefEnv to work around bug 1557397.
   await SpecialPowers.flushPrefEnv();
 });

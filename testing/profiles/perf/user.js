@@ -44,7 +44,6 @@ user_pref("dom.disable_window_move_resize", true);
 user_pref("dom.push.connection.enabled", false);
 user_pref("extensions.autoDisableScopes", 10);
 user_pref("extensions.blocklist.enabled", false);
-user_pref("extensions.blocklist.url", "http://127.0.0.1/extensions-dummy/blocklistURL");
 user_pref("extensions.checkCompatibility", false);
 user_pref("extensions.getAddons.get.url", "http://127.0.0.1/extensions-dummy/repositoryGetURL");
 user_pref("extensions.getAddons.search.browseURL", "http://127.0.0.1/extensions-dummy/repositoryBrowseURL");
