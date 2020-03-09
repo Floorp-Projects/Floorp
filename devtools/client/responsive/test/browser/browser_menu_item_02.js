@@ -12,42 +12,48 @@ const isMenuCheckedFor = ({ document }) => {
   return menu.getAttribute("checked") === "true";
 };
 
-addRDMTask(async function() {
-  const window1 = await BrowserTestUtils.openNewBrowserWindow();
-  const { gBrowser } = window1;
+addRDMTask(
+  null,
+  async function() {
+    const window1 = await BrowserTestUtils.openNewBrowserWindow();
+    const { gBrowser } = window1;
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL }, async function(
-    browser
-  ) {
-    const tab = gBrowser.getTabForBrowser(browser);
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: TEST_URL },
+      async function(browser) {
+        const tab = gBrowser.getTabForBrowser(browser);
+
+        is(
+          window1,
+          Services.wm.getMostRecentWindow("navigator:browser"),
+          "The new window is the active one"
+        );
+
+        ok(!isMenuCheckedFor(window1), "RDM menu item is unchecked by default");
+
+        const { ui } = await openRDM(tab);
+        await waitForDeviceAndViewportState(ui);
+
+        ok(isMenuCheckedFor(window1), "RDM menu item is checked with RDM open");
+
+        await closeRDM(tab);
+
+        ok(
+          !isMenuCheckedFor(window1),
+          "RDM menu item is unchecked with RDM closed"
+        );
+      }
+    );
+
+    await BrowserTestUtils.closeWindow(window1);
 
     is(
-      window1,
+      window,
       Services.wm.getMostRecentWindow("navigator:browser"),
-      "The new window is the active one"
+      "The original window is the active one"
     );
 
-    ok(!isMenuCheckedFor(window1), "RDM menu item is unchecked by default");
-
-    await openRDM(tab);
-
-    ok(isMenuCheckedFor(window1), "RDM menu item is checked with RDM open");
-
-    await closeRDM(tab);
-
-    ok(
-      !isMenuCheckedFor(window1),
-      "RDM menu item is unchecked with RDM closed"
-    );
-  });
-
-  await BrowserTestUtils.closeWindow(window1);
-
-  is(
-    window,
-    Services.wm.getMostRecentWindow("navigator:browser"),
-    "The original window is the active one"
-  );
-
-  ok(!isMenuCheckedFor(window), "RDM menu item is unchecked");
-});
+    ok(!isMenuCheckedFor(window), "RDM menu item is unchecked");
+  },
+  { usingBrowserUI: true, onlyPrefAndTask: true }
+);
