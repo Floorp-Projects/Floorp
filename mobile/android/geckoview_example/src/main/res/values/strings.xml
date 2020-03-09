@@ -28,6 +28,7 @@
     <string name="remote_debugging">Remote Debugging</string>
     <string name="forward">Forward</string>
     <string name="reload">Reload</string>
+    <string name="settings">Settings...</string>
     <string name="crashed_title">GeckoView Example Crashed</string>
     <string name="crashed_text">Tap to report to Mozilla.</string>
     <string name="crashed_ignore">Ignore</string>
@@ -45,4 +46,9 @@
     <string name="install">Install</string>
     <string name="cancel">Cancel</string>
     <string name="addon_uri">WebExtension xpi URL</string>
+
+    # Preference Keys
+    <string name="key_tracking_protection">tracking_protection</string>
+    <string name="key_autoplay">autoplay</string>
+    <string name="key_remote_debugging">remote_debugging</string>
 </resources>

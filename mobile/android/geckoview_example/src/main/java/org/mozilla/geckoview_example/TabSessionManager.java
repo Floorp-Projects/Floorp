@@ -46,6 +46,9 @@ public class TabSessionManager {
     }
 
     public TabSession getSession(int index) {
+        if (index >= mTabSessions.size()) {
+            return null;
+        }
         return mTabSessions.get(index);
     }
 
