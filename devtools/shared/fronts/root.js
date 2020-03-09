@@ -58,56 +58,6 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
     this._client = client;
   }
-  /**
-   * Retrieve all service worker registrations with their corresponding workers.
-   * @param {Array} [workerTargets] (optional)
-   *        Array containing the result of a call to `listAllWorkerTargets`.
-   *        (this exists to avoid duplication of calls to that method)
-   * @return {Object[]} result - An Array of Objects with the following format
-   *         - {result[].registration} - The registration front
-   *         - {result[].workers} Array of form-like objects for service workers
-   */
-  async listAllServiceWorkers(workerTargets) {
-    const result = [];
-    const { registrations } = await this.listServiceWorkerRegistrations();
-    const allWorkers = workerTargets
-      ? workerTargets
-      : await this.listAllWorkerTargets();
-
-    for (const registrationFront of registrations) {
-      // TODO: add all workers to the result. See Bug 1612897
-      const latestWorker =
-        registrationFront.activeWorker ||
-        registrationFront.waitingWorker ||
-        registrationFront.installingWorker ||
-        registrationFront.evaluatingWorker;
-
-      if (latestWorker !== null) {
-        const latestWorkerFront = allWorkers.find(
-          workerFront => workerFront.id === latestWorker.id
-        );
-        if (latestWorkerFront) {
-          registrationFront.workerTargetFront = latestWorkerFront;
-        }
-        // TODO: return only the worker targets. See Bug 1620605
-        result.push({
-          registration: registrationFront,
-          workers: [
-            {
-              id: registrationFront.id,
-              name: latestWorker.url,
-              state: latestWorker.state,
-              stateText: latestWorker.stateText,
-              url: latestWorker.url,
-              workerTargetFront: latestWorkerFront,
-            },
-          ],
-        });
-      }
-    }
-
-    return result;
-  }
 
   /**
    * Retrieve all service worker registrations as well as workers from the parent and
@@ -125,35 +75,116 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    *           Array of WorkerTargetActor forms, containing other workers.
    */
   async listAllWorkers() {
-    const allWorkers = await this.listAllWorkerTargets();
-    const serviceWorkers = await this.listAllServiceWorkers(allWorkers);
+    let registrations = [];
+    let workers = [];
+
+    try {
+      // List service worker registrations
+      ({ registrations } = await this.listServiceWorkerRegistrations());
+
+      workers = await this.listAllWorkerTargets();
+    } catch (e) {
+      // Something went wrong, maybe our client is disconnected?
+    }
 
     const result = {
-      service: serviceWorkers
-        .map(({ registration, workers }) => {
-          return workers.map(worker => {
-            return Object.assign(worker, {
-              registrationFront: registration,
-              fetch: registration.fetch,
-            });
-          });
-        })
-        .flat(),
+      service: [],
       shared: [],
       other: [],
     };
 
-    allWorkers.forEach(front => {
+    registrations.forEach(front => {
+      const {
+        activeWorker,
+        waitingWorker,
+        installingWorker,
+        evaluatingWorker,
+      } = front;
+      const newestWorker =
+        activeWorker || waitingWorker || installingWorker || evaluatingWorker;
+
+      // All the information is simply mirrored from the registration front.
+      // However since registering workers will fetch similar information from the worker
+      // target front and will not have a service worker registration front, consumers
+      // should not read meta data directly on the registration front instance.
+      result.service.push({
+        active: front.active,
+        fetch: front.fetch,
+        id: front.id,
+        lastUpdateTime: front.lastUpdateTime,
+        name: front.url,
+        registrationFront: front,
+        scope: front.scope,
+        url: front.url,
+        newestWorkerId: newestWorker && newestWorker.id,
+      });
+    });
+
+    workers.forEach(front => {
       const worker = {
         id: front.id,
-        url: front.url,
         name: front.url,
+        url: front.url,
         workerTargetFront: front,
       };
-
       switch (front.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-          // do nothing, since we already fetched them in `serviceWorkers`
+          const registration = result.service.find(r => {
+            // If registrationFront is missing, it means this entry is actually
+            // a workerFront that has been augmented and pushed to
+            // result.service in an earlier iteration.
+            // This should no longer happen after Bug 1595964 is resolved.
+            if (!r.registrationFront) {
+              // We can safely return false here since `r` is not a full
+              // service worker registration, but merely a worker.
+              return false;
+            }
+
+            /**
+             * Older servers will not define `ServiceWorkerFront.id` (the value
+             * of `r.newestWorkerId`), and a `ServiceWorkerFront`'s ID will only
+             * match its corresponding WorkerTargetFront's ID if their
+             * underlying actors are "connected" - this is only guaranteed with
+             * parent-intercept mode. The `if` statement is for backward
+             * compatibility and can be removed when the release channel is
+             * >= FF69 _and_ parent-intercept is stable (which definitely won't
+             * happen when the release channel is < FF69).
+             */
+            const { isParentInterceptEnabled } = r.registrationFront.traits;
+            if (!r.newestWorkerId || !isParentInterceptEnabled) {
+              return r.scope === front.scope;
+            }
+
+            return r.newestWorkerId === front.id;
+          });
+
+          if (registration) {
+            // Before bug 1595964, URLs were not available for registrations
+            // whose worker's main script is being evaluated. Now, URLs are
+            // always available, and this test deals with older servers.
+            // @backward-compatibility: remove in Firefox 75
+            if (!registration.url) {
+              registration.name = registration.url = front.url;
+            }
+            registration.workerTargetFront = front;
+          } else {
+            // If we are missing the registration, augment the worker front with
+            // fields expected on service worker registration fronts so that it
+            // can be displayed in UIs handling on service worker registrations.
+
+            // When does this happen:
+            // A - If parent intercept is disabled:
+            //   If a service worker registration could not be found, this means we are in
+            //   e10s, and registrations are not forwarded to other processes until they
+            //   reach the activated state.
+            // B - If parent intercept is enabled:
+            //   This can apparently happen when the registration is currently
+            //   in evaluating state. Cleanup is tracked in Bug 1595964.
+            worker.fetch = front.fetch;
+            worker.scope = front.scope;
+            worker.active = false;
+            result.service.push(worker);
+          }
           break;
         case Ci.nsIWorkerDebugger.TYPE_SHARED:
           result.shared.push(worker);
