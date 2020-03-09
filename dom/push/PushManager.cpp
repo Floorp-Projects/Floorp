@@ -132,7 +132,7 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
   }
 
  private:
-  ~GetSubscriptionResultRunnable() {}
+  ~GetSubscriptionResultRunnable() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
@@ -185,7 +185,7 @@ class GetSubscriptionCallback final : public nsIPushSubscriptionCallback {
   }
 
  protected:
-  ~GetSubscriptionCallback() {}
+  ~GetSubscriptionCallback() = default;
 
  private:
   RefPtr<PromiseWorkerProxy> mProxy;
@@ -272,7 +272,7 @@ class GetSubscriptionRunnable final : public Runnable {
   }
 
  private:
-  ~GetSubscriptionRunnable() {}
+  ~GetSubscriptionRunnable() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
@@ -308,7 +308,7 @@ class PermissionResultRunnable final : public WorkerRunnable {
   }
 
  private:
-  ~PermissionResultRunnable() {}
+  ~PermissionResultRunnable() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
@@ -340,7 +340,7 @@ class PermissionStateRunnable final : public Runnable {
   }
 
  private:
-  ~PermissionStateRunnable() {}
+  ~PermissionStateRunnable() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
 };
@@ -363,7 +363,7 @@ PushManager::PushManager(const nsAString& aScope) : mScope(aScope) {
 #endif
 }
 
-PushManager::~PushManager() {}
+PushManager::~PushManager() = default;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushManager, mGlobal, mImpl)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushManager)

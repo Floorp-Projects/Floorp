@@ -24,9 +24,9 @@
 namespace mozilla {
 namespace dom {
 
-PushNotifier::PushNotifier() {}
+PushNotifier::PushNotifier() = default;
 
-PushNotifier::~PushNotifier() {}
+PushNotifier::~PushNotifier() = default;
 
 NS_IMPL_CYCLE_COLLECTION_0(PushNotifier)
 
@@ -149,7 +149,7 @@ nsresult PushNotifier::Dispatch(PushDispatcher& aDispatcher) {
 
 PushData::PushData(const nsTArray<uint8_t>& aData) : mData(aData) {}
 
-PushData::~PushData() {}
+PushData::~PushData() = default;
 
 NS_IMPL_CYCLE_COLLECTION_0(PushData)
 
@@ -205,7 +205,7 @@ PushData::Binary(nsTArray<uint8_t>& aData) {
 PushMessage::PushMessage(nsIPrincipal* aPrincipal, nsIPushData* aData)
     : mPrincipal(aPrincipal), mData(aData) {}
 
-PushMessage::~PushMessage() {}
+PushMessage::~PushMessage() = default;
 
 NS_IMPL_CYCLE_COLLECTION(PushMessage, mPrincipal, mData)
 
@@ -239,7 +239,7 @@ PushDispatcher::PushDispatcher(const nsACString& aScope,
                                nsIPrincipal* aPrincipal)
     : mScope(aScope), mPrincipal(aPrincipal) {}
 
-PushDispatcher::~PushDispatcher() {}
+PushDispatcher::~PushDispatcher() = default;
 
 nsresult PushDispatcher::HandleNoChildProcesses() { return NS_OK; }
 
@@ -308,7 +308,7 @@ PushMessageDispatcher::PushMessageDispatcher(
       mMessageId(aMessageId),
       mData(aData) {}
 
-PushMessageDispatcher::~PushMessageDispatcher() {}
+PushMessageDispatcher::~PushMessageDispatcher() = default;
 
 nsresult PushMessageDispatcher::NotifyObservers() {
   nsCOMPtr<nsIPushData> data;
@@ -357,7 +357,7 @@ PushSubscriptionChangeDispatcher::PushSubscriptionChangeDispatcher(
     const nsACString& aScope, nsIPrincipal* aPrincipal)
     : PushDispatcher(aScope, aPrincipal) {}
 
-PushSubscriptionChangeDispatcher::~PushSubscriptionChangeDispatcher() {}
+PushSubscriptionChangeDispatcher::~PushSubscriptionChangeDispatcher() = default;
 
 nsresult PushSubscriptionChangeDispatcher::NotifyObservers() {
   return DoNotifyObservers(mPrincipal, OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
@@ -396,7 +396,8 @@ PushSubscriptionModifiedDispatcher::PushSubscriptionModifiedDispatcher(
     const nsACString& aScope, nsIPrincipal* aPrincipal)
     : PushDispatcher(aScope, aPrincipal) {}
 
-PushSubscriptionModifiedDispatcher::~PushSubscriptionModifiedDispatcher() {}
+PushSubscriptionModifiedDispatcher::~PushSubscriptionModifiedDispatcher() =
+    default;
 
 nsresult PushSubscriptionModifiedDispatcher::NotifyObservers() {
   return DoNotifyObservers(mPrincipal, OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED,
@@ -423,7 +424,7 @@ PushErrorDispatcher::PushErrorDispatcher(const nsACString& aScope,
                                          uint32_t aFlags)
     : PushDispatcher(aScope, aPrincipal), mMessage(aMessage), mFlags(aFlags) {}
 
-PushErrorDispatcher::~PushErrorDispatcher() {}
+PushErrorDispatcher::~PushErrorDispatcher() = default;
 
 nsresult PushErrorDispatcher::NotifyObservers() { return NS_OK; }
 
