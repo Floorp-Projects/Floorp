@@ -39,7 +39,7 @@ def get_generated_sources():
 
     # First, get the list of generated sources produced by the build backend.
     gen_sources = os.path.join(buildconfig.topobjdir, 'generated-sources.json')
-    with open(gen_sources, 'rb') as f:
+    with open(gen_sources, 'r') as f:
         data = json.load(f)
     for f in data['sources']:
         yield f, mozpath.join(buildconfig.topobjdir, f)
