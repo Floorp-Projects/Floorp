@@ -217,7 +217,7 @@
         return false;
       }
 
-      if (!checkEmptyPageOrigin(browser)) {
+      if (!BrowserUtils.checkEmptyPageOrigin(browser)) {
         return false;
       }
 

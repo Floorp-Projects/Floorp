@@ -56,6 +56,64 @@ var BrowserUtils = {
   },
 
   /**
+   * Check whether a page can be considered as 'empty', that its URI
+   * reflects its origin, and that if it's loaded in a tab, that tab
+   * could be considered 'empty' (e.g. like the result of opening
+   * a 'blank' new tab).
+   *
+   * We have to do more than just check the URI, because especially
+   * for things like about:blank, it is possible that the opener or
+   * some other page has control over the contents of the page.
+   *
+   * @param {Browser} browser
+   *        The browser whose page we're checking.
+   * @param {nsIURI} [uri]
+   *        The URI against which we're checking (the browser's currentURI
+   *        if omitted).
+   *
+   * @return {boolean} false if the page was opened by or is controlled by
+   *         arbitrary web content, unless that content corresponds with the URI.
+   *         true if the page is blank and controlled by a principal matching
+   *         that URI (or the system principal if the principal has no URI)
+   */
+  checkEmptyPageOrigin(browser, uri = browser.currentURI) {
+    // If another page opened this page with e.g. window.open, this page might
+    // be controlled by its opener.
+    if (browser.hasContentOpener) {
+      return false;
+    }
+    let contentPrincipal = browser.contentPrincipal;
+    // Not all principals have URIs...
+    if (contentPrincipal.URI) {
+      // There are two special-cases involving about:blank. One is where
+      // the user has manually loaded it and it got created with a null
+      // principal. The other involves the case where we load
+      // some other empty page in a browser and the current page is the
+      // initial about:blank page (which has that as its principal, not
+      // just URI in which case it could be web-based). Especially in
+      // e10s, we need to tackle that case specifically to avoid race
+      // conditions when updating the URL bar.
+      //
+      // Note that we check the documentURI here, since the currentURI on
+      // the browser might have been set by SessionStore in order to
+      // support switch-to-tab without having actually loaded the content
+      // yet.
+      let uriToCheck = browser.documentURI || uri;
+      if (
+        (uriToCheck.spec == "about:blank" &&
+          contentPrincipal.isNullPrincipal) ||
+        contentPrincipal.URI.spec == "about:blank"
+      ) {
+        return true;
+      }
+      return contentPrincipal.URI.equals(uri);
+    }
+    // ... so for those that don't have them, enforce that the page has the
+    // system principal (this matches e.g. on about:newtab).
+    return contentPrincipal.isSystemPrincipal;
+  },
+
+  /**
    * urlSecurityCheck: JavaScript wrapper for checkLoadURIWithPrincipal
    * and checkLoadURIStrWithPrincipal.
    * If |aPrincipal| is not allowed to link to |aURL|, this function throws with
