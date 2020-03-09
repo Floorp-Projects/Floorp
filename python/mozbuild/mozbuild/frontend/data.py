@@ -190,7 +190,7 @@ class ComputedFlags(ContextDerived):
             if value:
                 for dest_var in dest_vars:
                     flags[dest_var].extend(value)
-        return flags.items()
+        return sorted(flags.items())
 
 
 class XPIDLModule(ContextDerived):

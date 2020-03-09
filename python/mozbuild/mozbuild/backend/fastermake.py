@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from operator import itemgetter
 import six
 
 from mozbuild.backend.base import PartialBackend
@@ -194,12 +195,12 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
 
         # Add information for install manifests.
         mk.add_statement('INSTALL_MANIFESTS = %s'
-                         % ' '.join(self._install_manifests.keys()))
+                         % ' '.join(sorted(self._install_manifests.keys())))
 
         # Add dependencies we inferred:
-        for target, deps in six.iteritems(self._dependencies):
+        for target, deps in sorted(six.iteritems(self._dependencies)):
             mk.create_rule([target]).add_dependencies(
-                '$(TOPOBJDIR)/%s' % d for d in deps)
+                '$(TOPOBJDIR)/%s' % d for d in sorted(deps))
 
         # This is not great, but it's better to have some dependencies on these Python files.
         python_deps = [
@@ -208,9 +209,9 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
             '$(TOPSRCDIR)/third_party/python/compare-locales/compare_locales/paths.py',
         ]
         # Add l10n dependencies we inferred:
-        for target, deps in six.iteritems(self._l10n_dependencies):
+        for target, deps in sorted(six.iteritems(self._l10n_dependencies)):
             mk.create_rule([target]).add_dependencies(
-                '%s' % d[0] for d in deps)
+                '%s' % d[0] for d in sorted(deps, key=itemgetter(0)))
             for (merge, ref_file, l10n_file) in deps:
                 rule = mk.create_rule([merge]).add_dependencies(
                     [ref_file, l10n_file] + python_deps)

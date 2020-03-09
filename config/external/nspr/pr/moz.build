@@ -16,12 +16,10 @@ AllowCompilerWarnings()
 DEFINES['_NSPR_BUILD_'] = True
 if CONFIG['OS_ARCH'] == 'Linux':
     OS_LIBS += CONFIG['REALTIME_LIBS']
-    DEFINES.update(
-        LINUX=True,
-        HAVE_FCNTL_FILE_LOCKING=True,
-        HAVE_POINTER_LOCALTIME_R=True,
-        _GNU_SOURCE=True,
-    )
+    DEFINES['LINUX'] = True
+    DEFINES['HAVE_FCNTL_FILE_LOCKING'] = True
+    DEFINES['HAVE_POINTER_LOCALTIME_R'] = True
+    DEFINES['_GNU_SOURCE'] = True
     SOURCES += ['/nsprpub/pr/src/md/unix/linux.c']
     if CONFIG['CPU_ARCH'] == 'x86_64':
         SOURCES += ['/nsprpub/pr/src/md/unix/os_Linux_x86_64.s']
@@ -31,11 +29,9 @@ if CONFIG['OS_ARCH'] == 'Linux':
     elif CONFIG['CPU_ARCH'] == 'ppc':
         SOURCES += ['/nsprpub/pr/src/md/unix/os_Linux_ppc.s']
 elif CONFIG['OS_TARGET'] in ('FreeBSD', 'OpenBSD', 'NetBSD'):
-    DEFINES.update(
-        HAVE_BSD_FLOCK=True,
-        HAVE_SOCKLEN_T=True,
-        HAVE_POINTER_LOCALTIME_R=True,
-    )
+    DEFINES['HAVE_BSD_FLOCK'] = True
+    DEFINES['HAVE_SOCKLEN_T'] = True
+    DEFINES['HAVE_POINTER_LOCALTIME_R'] = True
     DEFINES[CONFIG['OS_TARGET'].upper()] = True
     SOURCES += ['/nsprpub/pr/src/md/unix/%s.c' % CONFIG['OS_TARGET'].lower()]
 elif CONFIG['OS_TARGET'] == 'Darwin':
@@ -44,19 +40,13 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
     DEFINES['FD_SETSIZE'] = 4096
     DEFINES['_DARWIN_UNLIMITED_SELECT'] = True
     if not CONFIG['HOST_MAJOR_VERSION']:
-        DEFINES.update(
-            HAS_CONNECTX=True,
-        )
+        DEFINES['HAS_CONNECTX'] = True
     elif CONFIG['HOST_MAJOR_VERSION'] >= '15':
-        DEFINES.update(
-            HAS_CONNECTX=True,
-        )
-    DEFINES.update(
-        DARWIN=True,
-        HAVE_BSD_FLOCK=True,
-        HAVE_SOCKLEN_T=True,
-        HAVE_POINTER_LOCALTIME_R=True,
-    )
+        DEFINES['HAS_CONNECTX'] = True
+    DEFINES['DARWIN'] = True
+    DEFINES['HAVE_BSD_FLOCK'] = True
+    DEFINES['HAVE_SOCKLEN_T'] = True
+    DEFINES['HAVE_POINTER_LOCALTIME_R'] = True
     SOURCES += [
         '/nsprpub/pr/src/md/unix/darwin.c',
         '/nsprpub/pr/src/md/unix/os_Darwin.s',
@@ -64,12 +54,10 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
     if not CONFIG['MOZ_IOS']:
         DEFINES['HAVE_CRT_EXTERNS_H'] = True
 elif CONFIG['OS_TARGET'] == 'SunOS':
-    DEFINES.update(
-        HAVE_FCNTL_FILE_LOCKING=True,
-        HAVE_SOCKLEN_T=True,
-        _PR_HAVE_OFF64_T=True,
-        _PR_INET6=True,
-    )
+    DEFINES['HAVE_FCNTL_FILE_LOCKING'] = True
+    DEFINES['HAVE_SOCKLEN_T'] = True
+    DEFINES['_PR_HAVE_OFF64_T'] = True
+    DEFINES['_PR_INET6'] = True
     DEFINES['SOLARIS'] = True
     SOURCES += ['/nsprpub/pr/src/md/unix/solaris.c']
     if CONFIG['CPU_ARCH'] == 'x86_64':
@@ -86,15 +74,13 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
         'mswsock',
         'winmm',
     ]
-    DEFINES.update(
-        XP_PC=True,
-        WIN32=True,
-        # For historical reasons we use the WIN95 NSPR target instead of
-        # WINNT.
-        WIN95=True,
-        WINNT=False,
-        _PR_GLOBAL_THREADS_ONLY=True,
-    )
+    DEFINES['XP_PC'] = True
+    DEFINES['WIN32'] = True
+    # For historical reasons we use the WIN95 NSPR target instead of
+    # WINNT.
+    DEFINES['WIN95'] = True
+    DEFINES['WINNT'] = False
+    DEFINES['_PR_GLOBAL_THREADS_ONLY'] = True
     if not CONFIG['DEBUG']:
       DEFINES['DO_NOT_WAIT_FOR_CONNECT_OVERLAPPED_OPERATIONS'] = True
     if CONFIG['CPU_ARCH'] == 'x86_64':
