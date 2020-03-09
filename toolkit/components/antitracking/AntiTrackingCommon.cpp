@@ -7,6 +7,7 @@
 #include "AntiTrackingLog.h"
 #include "AntiTrackingCommon.h"
 #include "AntiTrackingUtils.h"
+#include "TemporaryAccessGrantObserver.h"
 
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
@@ -161,137 +162,6 @@ int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
   }
 
   return aCookieJarSettings->GetCookieBehavior();
-}
-
-class TemporaryAccessGrantCacheKey : public PLDHashEntryHdr {
- public:
-  typedef Pair<nsCOMPtr<nsIPrincipal>, nsCString> KeyType;
-  typedef const KeyType* KeyTypePointer;
-
-  explicit TemporaryAccessGrantCacheKey(KeyTypePointer aKey)
-      : mPrincipal(aKey->first()), mType(aKey->second()) {}
-  TemporaryAccessGrantCacheKey(TemporaryAccessGrantCacheKey&& aOther) = default;
-
-  ~TemporaryAccessGrantCacheKey() = default;
-
-  KeyType GetKey() const { return MakePair(mPrincipal, mType); }
-  bool KeyEquals(KeyTypePointer aKey) const {
-    return !!mPrincipal == !!aKey->first() && mType == aKey->second() &&
-           (mPrincipal ? (mPrincipal->Equals(aKey->first())) : true);
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    if (!aKey) {
-      return 0;
-    }
-
-    BasePrincipal* bp = BasePrincipal::Cast(aKey->first());
-    return HashGeneric(bp->GetOriginNoSuffixHash(), bp->GetOriginSuffixHash(),
-                       HashString(aKey->second()));
-  }
-
-  enum { ALLOW_MEMMOVE = true };
-
- private:
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCString mType;
-};
-
-class TemporaryAccessGrantObserver final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  static void Create(nsPermissionManager* aPM, nsIPrincipal* aPrincipal,
-                     const nsACString& aType) {
-    MOZ_ASSERT(XRE_IsParentProcess());
-
-    if (!sObservers) {
-      sObservers = MakeUnique<ObserversTable>();
-    }
-    Unused << sObservers
-                  ->LookupForAdd(MakePair(nsCOMPtr<nsIPrincipal>(aPrincipal),
-                                          nsCString(aType)))
-                  .OrInsert([&]() -> nsITimer* {
-                    // Only create a new observer if we don't have a matching
-                    // entry in our hashtable.
-                    nsCOMPtr<nsITimer> timer;
-                    RefPtr<TemporaryAccessGrantObserver> observer =
-                        new TemporaryAccessGrantObserver(aPM, aPrincipal,
-                                                         aType);
-                    nsresult rv = NS_NewTimerWithObserver(
-                        getter_AddRefs(timer), observer,
-                        24 * 60 * 60 * 1000,  // 24 hours
-                        nsITimer::TYPE_ONE_SHOT);
-
-                    if (NS_SUCCEEDED(rv)) {
-                      observer->SetTimer(timer);
-                      return timer;
-                    }
-                    timer->Cancel();
-                    return nullptr;
-                  });
-  }
-
-  void SetTimer(nsITimer* aTimer) {
-    mTimer = aTimer;
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    }
-  }
-
- private:
-  TemporaryAccessGrantObserver(nsPermissionManager* aPM,
-                               nsIPrincipal* aPrincipal,
-                               const nsACString& aType)
-      : mPM(aPM), mPrincipal(aPrincipal), mType(aType) {
-    MOZ_ASSERT(XRE_IsParentProcess(),
-               "Enforcing temporary access grant lifetimes can only be done in "
-               "the parent process");
-  }
-
-  ~TemporaryAccessGrantObserver() = default;
-
- private:
-  typedef nsDataHashtable<TemporaryAccessGrantCacheKey, nsCOMPtr<nsITimer>>
-      ObserversTable;
-  static UniquePtr<ObserversTable> sObservers;
-  nsCOMPtr<nsITimer> mTimer;
-  RefPtr<nsPermissionManager> mPM;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCString mType;
-};
-
-UniquePtr<TemporaryAccessGrantObserver::ObserversTable>
-    TemporaryAccessGrantObserver::sObservers;
-
-NS_IMPL_ISUPPORTS(TemporaryAccessGrantObserver, nsIObserver)
-
-NS_IMETHODIMP
-TemporaryAccessGrantObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                      const char16_t* aData) {
-  if (strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC) == 0) {
-    Unused << mPM->RemoveFromPrincipal(mPrincipal, mType);
-
-    MOZ_ASSERT(sObservers);
-    sObservers->Remove(MakePair(mPrincipal, mType));
-  } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
-    }
-    sObservers.reset();
-  }
-
-  return NS_OK;
 }
 
 bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
