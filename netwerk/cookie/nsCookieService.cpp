@@ -118,6 +118,10 @@ static const uint32_t kCookieQuotaPerHost = 150;
 static const uint32_t kMaxBytesPerCookie = 4096;
 static const uint32_t kMaxBytesPerPath = 1024;
 
+// XXX This is not the final URL. See bug 1620334.
+#define SAMESITE_MDN_URL \
+  NS_LITERAL_STRING("https://developer.mozilla.org/docs/Web/HTTP/Cookies")
+
 // pref string constants
 static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
 static const char kPrefMaxCookiesPerHost[] = "network.cookie.maxPerHost";
@@ -3862,7 +3866,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
         aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
         sameSiteSet = true;
       } else {
-        LogMessageToConsole(aChannel, aHostURI,
+        LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
                             NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
                             aCookieData.name());
       }
@@ -3877,22 +3881,34 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
 
   // If same-site is set to 'none' but this is not a secure context, let's abort
   // the parsing.
-  if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
-      StaticPrefs::network_cookie_sameSite_noneRequiresSecure() &&
-      !aCookieData.isSecure() &&
+  if (!aCookieData.isSecure() &&
       aCookieData.sameSite() == nsICookie::SAMESITE_NONE) {
-    LogMessageToConsole(aChannel, aHostURI,
-                        NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
-                        aCookieData.name());
-    return newCookie;
+    if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+        StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
+      LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                          NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
+                          aCookieData.name());
+      return newCookie;
+    }
+
+    // if sameSite=lax by default is disabled, we want to warn the user.
+    LogMessageToConsole(
+        aChannel, aHostURI, nsIScriptError::warningFlag,
+        NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecureForBeta"),
+        aCookieData.name(), SAMESITE_MDN_URL);
   }
 
-  if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
-      aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
+  if (aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
-    LogMessageToConsole(aChannel, aHostURI,
-                        NS_LITERAL_CSTRING("CookieLaxForced"),
-                        aCookieData.name());
+    if (StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+      LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                          NS_LITERAL_CSTRING("CookieLaxForced"),
+                          aCookieData.name());
+    } else {
+      LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
+                          NS_LITERAL_CSTRING("CookieLaxForcedForBeta"),
+                          aCookieData.name(), SAMESITE_MDN_URL);
+    }
   }
 
   // Cookie accepted.
@@ -3904,8 +3920,10 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
 
 // static
 void nsCookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
+                                          uint32_t aErrorFlags,
                                           const nsACString& aMsg,
-                                          const nsACString& aCookieName) {
+                                          const nsACString& aCookieName,
+                                          const nsAString& aMDNURL) {
   MOZ_ASSERT(aURI);
 
   nsCOMPtr<HttpBaseChannel> httpChannel = do_QueryInterface(aChannel);
@@ -3921,9 +3939,13 @@ void nsCookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
 
   AutoTArray<nsString, 1> params = {NS_ConvertUTF8toUTF16(aCookieName)};
 
-  httpChannel->AddConsoleReport(
-      nsIScriptError::infoFlag, NS_LITERAL_CSTRING("Security"),
-      nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0, aMsg, params);
+  if (!aMDNURL.IsEmpty()) {
+    params.AppendElement(aMDNURL);
+  }
+
+  httpChannel->AddConsoleReport(aErrorFlags, NS_LITERAL_CSTRING("Security"),
+                                nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
+                                aMsg, params);
 }
 
 /******************************************************************************
