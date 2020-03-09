@@ -12,6 +12,7 @@
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
 #include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/FetchBinding.h"
@@ -530,10 +531,10 @@ bool Navigator::CookieEnabled() {
   bool granted = AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       mWindow, contentURI, &rejectedReason);
 
-  AntiTrackingCommon::NotifyBlockingDecision(
+  ContentBlockingNotifier::OnDecision(
       mWindow,
-      granted ? AntiTrackingCommon::BlockingDecision::eAllow
-              : AntiTrackingCommon::BlockingDecision::eBlock,
+      granted ? ContentBlockingNotifier::BlockingDecision::eAllow
+              : ContentBlockingNotifier::BlockingDecision::eBlock,
       rejectedReason);
   return granted;
 }
