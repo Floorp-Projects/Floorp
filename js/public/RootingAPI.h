@@ -18,7 +18,6 @@
 
 #include "jspubtd.h"
 
-#include "js/ComparisonOperators.h"  // JS::detail::DefineComparisonOps
 #include "js/GCAnnotations.h"
 #include "js/GCPolicyAPI.h"
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
@@ -200,6 +199,11 @@ struct PersistentRootedMarker;
 
 namespace JS {
 
+template <typename T>
+class Rooted;
+template <typename T>
+class PersistentRooted;
+
 JS_FRIEND_API void HeapObjectPostWriteBarrier(JSObject** objp, JSObject* prev,
                                               JSObject* next);
 JS_FRIEND_API void HeapStringPostWriteBarrier(JSString** objp, JSString* prev,
@@ -368,15 +372,6 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
   T ptr;
 };
 
-namespace detail {
-
-template <typename T>
-struct DefineComparisonOps<Heap<T>> : std::true_type {
-  static const T& get(const Heap<T>& v) { return v.unbarrieredGet(); }
-};
-
-}  // namespace detail
-
 static MOZ_ALWAYS_INLINE bool ObjectIsTenured(JSObject* obj) {
   return !js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(obj));
 }
@@ -530,15 +525,6 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>> {
   uintptr_t bits;
 };
 
-namespace detail {
-
-template <typename T>
-struct DefineComparisonOps<TenuredHeap<T>> : std::true_type {
-  static const T get(const TenuredHeap<T>& v) { return v.unbarrieredGetPtr(); }
-};
-
-}  // namespace detail
-
 // std::swap uses a stack temporary, which prevents classes like Heap<T>
 // from being declared MOZ_HEAP_CLASS.
 template <typename T>
@@ -560,13 +546,6 @@ static MOZ_ALWAYS_INLINE bool ObjectIsMarkedGray(
   return ObjectIsMarkedGray(obj.unbarrieredGetPtr());
 }
 
-template <typename T>
-class MutableHandle;
-template <typename T>
-class Rooted;
-template <typename T>
-class PersistentRooted;
-
 /**
  * Reference to a T that has been rooted elsewhere. This is most useful
  * as a parameter type, which guarantees that the T lvalue is properly
@@ -577,7 +556,7 @@ class PersistentRooted;
  */
 template <typename T>
 class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
-  friend class MutableHandle<T>;
+  friend class JS::MutableHandle<T>;
 
  public:
   using ElementType = T;
@@ -659,15 +638,6 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
   const T* ptr;
 };
 
-namespace detail {
-
-template <typename T>
-struct DefineComparisonOps<Handle<T>> : std::true_type {
-  static const T& get(const Handle<T>& v) { return v.get(); }
-};
-
-}  // namespace detail
-
 /**
  * Similar to a handle, but the underlying storage can be changed. This is
  * useful for outparams.
@@ -722,15 +692,6 @@ class MOZ_STACK_CLASS MutableHandle
 
   T* ptr;
 };
-
-namespace detail {
-
-template <typename T>
-struct DefineComparisonOps<MutableHandle<T>> : std::true_type {
-  static const T& get(const MutableHandle<T>& v) { return v.get(); }
-};
-
-}  // namespace detail
 
 } /* namespace JS */
 
@@ -1155,15 +1116,6 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   Rooted(const Rooted&) = delete;
 } JS_HAZ_ROOTED;
 
-namespace detail {
-
-template <typename T>
-struct DefineComparisonOps<Rooted<T>> : std::true_type {
-  static const T& get(const Rooted<T>& v) { return v.get(); }
-};
-
-}  // namespace detail
-
 } /* namespace JS */
 
 namespace js {
@@ -1437,15 +1389,6 @@ class PersistentRooted
   detail::MaybeWrapped<T> ptr;
 } JS_HAZ_ROOTED;
 
-namespace detail {
-
-template <typename T>
-struct DefineComparisonOps<PersistentRooted<T>> : std::true_type {
-  static const T& get(const PersistentRooted<T>& v) { return v.get(); }
-};
-
-}  // namespace detail
-
 } /* namespace JS */
 
 namespace js {
@@ -1492,6 +1435,192 @@ void CallTraceCallbackOnNonHeap(T* v, const TraceCallbacks& aCallbacks,
 
 } /* namespace gc */
 
+namespace detail {
+
+// DefineComparisonOps is a trait which selects which wrapper classes to define
+// operator== and operator!= for. It supplies a getter function to extract the
+// value to compare. This is used to avoid triggering the automatic read
+// barriers where appropriate.
+//
+// If DefineComparisonOps is not specialized for a particular wrapper you may
+// get errors such as 'invalid operands to binary expression' or 'no match for
+// operator==' when trying to compare against instances of the wrapper.
+
+template <typename T>
+struct DefineComparisonOps : mozilla::FalseType {};
+
+template <typename T>
+struct DefineComparisonOps<JS::Heap<T>> : mozilla::TrueType {
+  static const T& get(const JS::Heap<T>& v) { return v.unbarrieredGet(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<JS::TenuredHeap<T>> : mozilla::TrueType {
+  static const T get(const JS::TenuredHeap<T>& v) {
+    return v.unbarrieredGetPtr();
+  }
+};
+
+template <typename T>
+struct DefineComparisonOps<JS::Rooted<T>> : mozilla::TrueType {
+  static const T& get(const JS::Rooted<T>& v) { return v.get(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<JS::Handle<T>> : mozilla::TrueType {
+  static const T& get(const JS::Handle<T>& v) { return v.get(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<JS::MutableHandle<T>> : mozilla::TrueType {
+  static const T& get(const JS::MutableHandle<T>& v) { return v.get(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<JS::PersistentRooted<T>> : mozilla::TrueType {
+  static const T& get(const JS::PersistentRooted<T>& v) { return v.get(); }
+};
+
+} /* namespace detail */
 } /* namespace js */
+
+// Overload operator== and operator!= for all types with the DefineComparisonOps
+// trait using the supplied getter.
+//
+// There are four cases:
+
+// Case 1: comparison between two wrapper objects.
+
+template <typename T, typename U>
+typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value &&
+                               js::detail::DefineComparisonOps<U>::value,
+                           bool>::Type
+operator==(const T& a, const U& b) {
+  return js::detail::DefineComparisonOps<T>::get(a) ==
+         js::detail::DefineComparisonOps<U>::get(b);
+}
+
+template <typename T, typename U>
+typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value &&
+                               js::detail::DefineComparisonOps<U>::value,
+                           bool>::Type
+operator!=(const T& a, const U& b) {
+  return !(a == b);
+}
+
+// Case 2: comparison between a wrapper object and its unwrapped element type.
+
+template <typename T>
+typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value,
+                           bool>::Type
+operator==(const T& a, const typename T::ElementType& b) {
+  return js::detail::DefineComparisonOps<T>::get(a) == b;
+}
+
+template <typename T>
+typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value,
+                           bool>::Type
+operator!=(const T& a, const typename T::ElementType& b) {
+  return !(a == b);
+}
+
+template <typename T>
+typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value,
+                           bool>::Type
+operator==(const typename T::ElementType& a, const T& b) {
+  return a == js::detail::DefineComparisonOps<T>::get(b);
+}
+
+template <typename T>
+typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value,
+                           bool>::Type
+operator!=(const typename T::ElementType& a, const T& b) {
+  return !(a == b);
+}
+
+// Case 3: For pointer wrappers, comparison between the wrapper and a const
+// element pointer.
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator==(
+    const typename mozilla::RemovePointer<typename T::ElementType>::Type* a,
+    const T& b) {
+  return a == js::detail::DefineComparisonOps<T>::get(b);
+}
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator!=(
+    const typename mozilla::RemovePointer<typename T::ElementType>::Type* a,
+    const T& b) {
+  return !(a == b);
+}
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator==(
+    const T& a,
+    const typename mozilla::RemovePointer<typename T::ElementType>::Type* b) {
+  return js::detail::DefineComparisonOps<T>::get(a) == b;
+}
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator!=(
+    const T& a,
+    const typename mozilla::RemovePointer<typename T::ElementType>::Type* b) {
+  return !(a == b);
+}
+
+// Case 4: For pointer wrappers, comparison between the wrapper and nullptr.
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator==(std::nullptr_t a, const T& b) {
+  return a == js::detail::DefineComparisonOps<T>::get(b);
+}
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator!=(std::nullptr_t a, const T& b) {
+  return !(a == b);
+}
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator==(const T& a, std::nullptr_t b) {
+  return js::detail::DefineComparisonOps<T>::get(a) == b;
+}
+
+template <typename T>
+typename mozilla::EnableIf<
+    js::detail::DefineComparisonOps<T>::value &&
+        mozilla::IsPointer<typename T::ElementType>::value,
+    bool>::Type
+operator!=(const T& a, std::nullptr_t b) {
+  return !(a == b);
+}
 
 #endif /* js_RootingAPI_h */
