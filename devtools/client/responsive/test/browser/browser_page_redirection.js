@@ -10,19 +10,24 @@ const CUSTOM_USER_AGENT = "Mozilla/5.0 (Test Device) Firefox/74.0";
 
 addRDMTask(
   null,
-  async ({ browser, ui }) => {
+  async () => {
     reloadOnUAChange(true);
 
     registerCleanupFunction(() => {
       reloadOnUAChange(false);
     });
 
+    const tab = await addTab("http://example.com/");
+    const browser = tab.linkedBrowser;
+
+    const { ui } = await openRDM(tab);
+    await waitForDeviceAndViewportState(ui);
+
     info("Change the user agent");
     await changeUserAgentInput(ui, CUSTOM_USER_AGENT);
     await testUserAgent(ui, CUSTOM_USER_AGENT);
 
     info("Open network monitor");
-    const tab = ui.tab;
     const monitor = await openNetworkMonitor(tab);
     const {
       connector: monitorConnector,
@@ -46,8 +51,11 @@ addRDMTask(
       );
       is(userAgent, CUSTOM_USER_AGENT, `Sent user agent is correct for ${url}`);
     }
+
+    await closeRDM(tab);
+    await removeTab(tab);
   },
-  { usingBrowserUI: true }
+  { usingBrowserUI: true, onlyPrefAndTask: true }
 );
 
 async function openNetworkMonitor(tab) {
