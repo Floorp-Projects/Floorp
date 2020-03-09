@@ -96,7 +96,7 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"networking", "chrome://global/content/aboutNetworking.html",
      nsIAboutModule::ALLOW_SCRIPT},
-    {"performance", "chrome://global/content/aboutPerformance.xhtml",
+    {"performance", "chrome://global/content/aboutPerformance.html",
      nsIAboutModule::ALLOW_SCRIPT},
     {"plugins", "chrome://global/content/plugins.html",
      nsIAboutModule::URI_MUST_LOAD_IN_CHILD},

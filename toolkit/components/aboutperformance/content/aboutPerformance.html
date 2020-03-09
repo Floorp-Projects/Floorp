@@ -1,0 +1,29 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:;img-src data:; object-src 'none'">
+    <title data-l10n-id="about-performance-title"></title>
+    <link rel="icon" id="favicon" href="chrome://global/skin/icons/performance.svg">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="localization" href="toolkit/about/aboutPerformance.ftl">
+    <script src="chrome://global/content/aboutPerformance.js"></script>
+    <link rel="stylesheet" href="chrome://global/content/aboutPerformance.css">
+  </head>
+  <body>
+    <table id="dispatch-table">
+      <thead id="dispatch-thead">
+        <tr>
+          <td class="clickable" id="column-name" data-l10n-id="column-name"></td>
+          <td class="clickable" id="column-type" data-l10n-id="column-type"></td>
+          <td class="clickable" id="column-energy-impact" data-l10n-id="column-energy-impact"></td>
+          <td class="clickable" id="column-memory" data-l10n-id="column-memory"></td>
+          <td></td><!-- actions -->
+        </tr>
+      </thead>
+      <tbody id="dispatch-tbody"></tbody>
+    </table>
+  </body>
+</html>
