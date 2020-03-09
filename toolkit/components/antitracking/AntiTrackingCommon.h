@@ -13,8 +13,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_privacy.h"
 
-#define USER_INTERACTION_PERM NS_LITERAL_CSTRING("storageAccessAPI")
-
 class nsIChannel;
 class nsICookieJarSettings;
 class nsIPermission;
@@ -100,10 +98,6 @@ class AntiTrackingCommon final {
       nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
-
-  static void StoreUserInteractionFor(nsIPrincipal* aPrincipal);
-
-  static bool HasUserInteraction(nsIPrincipal* aPrincipal);
 
   // For IPC only.
   typedef MozPromise<nsresult, bool, true> FirstPartyStorageAccessGrantPromise;

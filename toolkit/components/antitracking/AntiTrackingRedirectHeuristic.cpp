@@ -8,6 +8,7 @@
 #include "AntiTrackingRedirectHeuristic.h"
 #include "AntiTrackingCommon.h"
 #include "ContentBlockingAllowList.h"
+#include "ContentBlockingUserInteraction.h"
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
@@ -136,7 +137,7 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
-  if (!AntiTrackingCommon::HasUserInteraction(trackingPrincipal)) {
+  if (!ContentBlockingUserInteraction::Exists(trackingPrincipal)) {
     LOG_SPEC2(("Ignoring redirect for %s to %s because no user-interaction on "
                "tracker",
                _spec1, _spec2),

@@ -17,6 +17,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ContentBlockingAllowList.h"
+#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditorCommands.h"
@@ -15167,7 +15168,7 @@ class UserIntractionTimer final : public Runnable,
     // If the document is not gone, let's reset its timer flag.
     nsCOMPtr<Document> document = do_QueryReferent(mDocument);
     if (document) {
-      AntiTrackingCommon::StoreUserInteractionFor(mPrincipal);
+      ContentBlockingUserInteraction::Observe(mPrincipal);
       document->ResetUserInteractionTimer();
     }
   }
@@ -15213,7 +15214,7 @@ void Document::MaybeStoreUserInteractionAsPermission() {
 
   if (!mUserHasInteracted) {
     // First interaction, let's store this info now.
-    AntiTrackingCommon::StoreUserInteractionFor(NodePrincipal());
+    ContentBlockingUserInteraction::Observe(NodePrincipal());
     return;
   }
 
