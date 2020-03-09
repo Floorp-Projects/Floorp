@@ -4230,20 +4230,24 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
       : MUnaryInstruction(classOpcode, def), sideEffects_(sideEffects) {
     setResultType(MIRType::String);
 
-    if (input()->mightBeType(MIRType::Object) ||
-        input()->mightBeType(MIRType::Symbol)) {
+    if (JitOptions.warpBuilder) {
       mightHaveSideEffects_ = true;
-    }
+    } else {
+      if (input()->mightBeType(MIRType::Object) ||
+          input()->mightBeType(MIRType::Symbol)) {
+        mightHaveSideEffects_ = true;
+      }
 
-    // If this instruction is not effectful, mark it as movable and set the
-    // Guard flag if needed. If the operation is effectful it won't be optimized
-    // anyway so there's no need to set any flags.
-    if (!isEffectful()) {
-      setMovable();
-      // Objects might override toString; Symbol throws. We bailout in those
-      // cases and run side-effects in baseline instead.
-      if (mightHaveSideEffects_) {
-        setGuard();
+      // If this instruction is not effectful, mark it as movable and set the
+      // Guard flag if needed. If the operation is effectful it won't be
+      // optimized anyway so there's no need to set any flags.
+      if (!isEffectful()) {
+        setMovable();
+        // Objects might override toString; Symbol throws. We bailout in those
+        // cases and run side-effects in baseline instead.
+        if (mightHaveSideEffects_) {
+          setGuard();
+        }
       }
     }
   }
