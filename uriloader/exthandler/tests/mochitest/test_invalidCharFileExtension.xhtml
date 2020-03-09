@@ -10,32 +10,11 @@
 <script type="text/javascript">
 <![CDATA[
 
-var unsafeBidiChars = [
-  "\xe2\x80\xaa", // LRE
-  "\xe2\x80\xab", // RLE
-  "\xe2\x80\xac", // PDF
-  "\xe2\x80\xad", // LRO
-  "\xe2\x80\xae",  // RLO
-];
-
 var tests = [
-  "{1}.test",
-  "{1}File.test",
-  "Fi{1}le.test",
-  "File{1}.test",
-  "File.{1}test",
-  "File.te{1}st",
-  "File.test{1}",
-  "File.{1}",
+  ["test.png:large", "test.png large.png"],
+  ["test.png/large", "test.png_large.png"],
+  [":test.png::large:", "test.png large.png"],
 ];
-
-function replace(name, x) {
-  return name.replace(/\{1\}/, x);
-}
-
-function sanitize(name) {
-  return replace(name, "_");
-}
 
 const INSECURE_REGISTER_PREF = "dom.registerProtocolHandler.insecure.enabled";
 
@@ -44,21 +23,17 @@ add_task(async function() {
   let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
   let chromeScript = SpecialPowers.loadChromeScript(url);
 
-  for (let test of tests) {
-    for (let char of unsafeBidiChars) {
-      let promiseName = new Promise(function(resolve) {
-        chromeScript.addMessageListener("suggestedFileName",
-                                        function listener(data) {
-          chromeScript.removeMessageListener("suggestedFileName", listener);
-          resolve(data);
-        });
+  for (let [name, expected] of tests) {
+    let promiseName = new Promise(function(resolve) {
+      chromeScript.addMessageListener("suggestedFileName",
+                                      function listener(data) {
+        chromeScript.removeMessageListener("suggestedFileName", listener);
+        resolve(data);
       });
-      let name = replace(test, char);
-      let expected = sanitize(test);
-      document.getElementById("test").src =
-        "unsafeBidiFileName.sjs?name=" + encodeURIComponent(name);
-      is((await promiseName), expected, "got the expected sanitized name");
-    }
+    });
+    document.getElementById("test").src =
+      "invalidCharFileExtension.sjs?name=" + encodeURIComponent(name);
+    is((await promiseName), expected, "got the expected sanitized name");
   }
 
   let promise = new Promise(function(resolve) {
