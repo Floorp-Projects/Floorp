@@ -13,7 +13,8 @@ import {
 
 export interface PanelWindow {
   gToolbox?: any;
-  gInit(perfFront: PerfFront, preferenceFront: PageContext): void;
+  gStore?: Store;
+  gInit(perfFront: PerfFront, pageContext: PageContext): void;
   gDestroy(): void;
   gReportReady?(): void;
   gIsPanelDestroyed?: boolean;
