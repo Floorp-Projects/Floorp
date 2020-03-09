@@ -22,6 +22,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIWebProgressListener.h"
 #include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
@@ -6867,7 +6868,7 @@ nsGlobalWindowOuter::Observe(nsISupports* aSupports, const char* aTopic,
     if (!principal) {
       return NS_OK;
     }
-    if (!AntiTrackingCommon::IsStorageAccessPermission(permission, principal)) {
+    if (!AntiTrackingUtils::IsStorageAccessPermission(permission, principal)) {
       return NS_OK;
     }
     if (!nsCRT::strcmp(aData, u"deleted")) {

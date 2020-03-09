@@ -101,16 +101,6 @@ class AntiTrackingCommon final {
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
-  // Given a principal, returns the storage permission key that will be used for
-  // the principal.  Returns true on success.
-  static bool CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
-                                         nsACString& aKey);
-
-  // Returns true if the permission passed in is a storage access permission
-  // for the passed in principal argument.
-  static bool IsStorageAccessPermission(nsIPermission* aPermission,
-                                        nsIPrincipal* aPrincipal);
-
   static void StoreUserInteractionFor(nsIPrincipal* aPrincipal);
 
   static bool HasUserInteraction(nsIPrincipal* aPrincipal);
