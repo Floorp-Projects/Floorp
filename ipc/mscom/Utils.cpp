@@ -446,9 +446,9 @@ bool IsClassThreadAwareInprocServer(REFCLSID aClsid) {
 
   // Ensure that the threading model is one of the known values that indicates
   // that the class can operate natively (ie, no proxying) inside a MTA.
-  return threadingModel.EqualsLiteral("Both") ||
-         threadingModel.EqualsLiteral("Free") ||
-         threadingModel.EqualsLiteral("Neutral");
+  return threadingModel.LowerCaseEqualsLiteral("both") ||
+         threadingModel.LowerCaseEqualsLiteral("free") ||
+         threadingModel.LowerCaseEqualsLiteral("neutral");
 }
 #endif  // defined(MOZILLA_INTERNAL_API)
 
