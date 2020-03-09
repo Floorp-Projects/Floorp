@@ -789,17 +789,16 @@ toolbarspring {
   max-width: 112px;
 }
 
-:root[customizing] toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
-:root[customizing] toolbarspring {
-  /* In customize mode, expand the springs slightly so that they
-     can be manipulated with the mouse. */
+#nav-bar toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
+#nav-bar toolbarspring {
+  -moz-box-flex: 80;
+  /* We shrink the flexible spacers, but not to nothing so they can be
+   * manipulated in customize mode; the next rule shrinks them further
+   * outside customize mode. */
   min-width: 10px;
 }
 
-#nav-bar:not([customizing]) toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
 #nav-bar:not([customizing]) toolbarspring {
-  /* In the navbar allow them to shrink further, making space for the url. */
-  -moz-box-flex: 80;
   min-width: 1px;
 }
 
