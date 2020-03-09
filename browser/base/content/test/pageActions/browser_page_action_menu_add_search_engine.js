@@ -381,7 +381,7 @@ add_task(async function urlbarOne() {
 
     // Clean up.
     PageActions.actionForID("addSearchEngine").pinnedToUrlbar = false;
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return !BrowserPageActions.urlbarButtonNodeForActionID("addSearchEngine");
     });
   });
@@ -568,7 +568,7 @@ add_task(async function urlbarMany() {
 
     // Clean up.
     PageActions.actionForID("addSearchEngine").pinnedToUrlbar = false;
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return !BrowserPageActions.urlbarButtonNodeForActionID("addSearchEngine");
     });
   });
