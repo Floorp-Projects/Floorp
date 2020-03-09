@@ -264,7 +264,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     mPromises.AppendElement(aPromise);
   }
 
-  ~WorkletFetchHandler() {}
+  ~WorkletFetchHandler() = default;
 
   void AddPromise(Promise* aPromise) {
     MOZ_ASSERT(aPromise);
