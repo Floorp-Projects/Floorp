@@ -30,7 +30,7 @@ class nsOSPermissionRequestBase : public nsIOSPermissionRequest,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOSPERMISSIONREQUEST
 
-  nsOSPermissionRequestBase(){};
+  nsOSPermissionRequestBase() = default;
 
  protected:
   nsresult GetPromise(JSContext* aCx, RefPtr<Promise>& aPromiseOut);
