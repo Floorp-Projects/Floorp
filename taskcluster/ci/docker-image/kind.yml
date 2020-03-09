@@ -240,6 +240,8 @@ jobs:
         symbol: I(pip)
     firefox-snap:
         symbol: I(snap)
+    firefox-flatpak:
+        symbol: I(flatpak)
     webrender:
         symbol: I(webrender)
         parent: debian9-base

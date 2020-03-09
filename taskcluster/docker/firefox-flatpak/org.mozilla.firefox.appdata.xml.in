@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+  <id type="desktop">org.mozilla.firefox</id>
+  <launchable type="desktop-id">org.mozilla.firefox.desktop</launchable>
+  <name>Firefox</name>
+  <summary>Firefox Web Browser</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MPL-2.0</project_license>
+  <description>
+    <p><strong>The new Firefox</strong></p>
+    <p>Meet Firefox Quantum. Fast for good.</p>
+    <p>Features:</p>
+    <ul>
+    <li>A powerful, new engine that’s built for rapidfire performance.</li>
+    <li>Better, faster page loading that uses less computer memory.</li>
+    <li>Gorgeous design and smart features for intelligent browsing.</li>
+    </ul>
+    <p><strong>Now 2x faster</strong></p>
+    <p>Crazy powerful browser engine? Check. Less time waiting around for
+    pages to load? Also, check. Firefox Quantum is twice as fast as Firefox
+    was before.</p>
+    <p><strong>Smooth browsing</strong></p>
+    <p>Whether you’ve opened 10 or 1000, switching between tabs is faster than ever with Firefox’s new, responsive engine.</p>
+    <p><strong>Seriously Private Browsing</strong></p>
+    <p>The most powerful private browsing mode with added tracking protection.</p>
+    <ul>
+    <li><p>Private Browsing</p>
+    <ul>
+    <li>Firefox blocks online trackers while you browse and won’t remember your history after you’re done.</li>
+    </ul>
+    </li>
+    <li><p>Tracking Protection</p>
+    <ul>
+    <li>Some ads have hidden trackers that follow you online. Rude. We know. That’s why our powerful tool stops them cold.</li>
+    </ul>
+    </li>
+    <li><p>Faster Page Loading</p>
+    <ul>
+    <li>By blocking some ads and scripts that bog down browsing, pages load up to 44% faster. Now that’s a win-win.</li>
+    </ul>
+    </li>
+    </ul>
+    <p><strong>Customization Features</strong></p>
+    <ul>
+    <li><p>Extensions</p>
+    </li>
+    <li><p>Customize Firefox with thousands of extensions like LastPass, uBlock Origin, Evernote and more.</p>
+    </li>
+    <li><p>Themes</p>
+    <ul>
+    <li>Make over Firefox to suit your mood! Choose a new look from our theme categories or create your own.</li>
+    </ul>
+    </li>
+    </ul>
+    <p><strong>Sync your devices</strong></p>
+    <ul>
+    <li>Seamlessly access passwords, bookmarks and more. Plus, use our Send
+    Tabs feature to instantly share open tabs between desktop, mobile and
+    tablet.</li>
+    </ul>
+    <p><strong>Browse for good</strong></p>
+    <p>Firefox is made by Mozilla, the non-profit champions of a healthy
+    internet. Mozilla also tackles issues like privacy, misinformation and
+    trolling by investing in fellowships, campaigns and new technologies
+    designed to make the internet healthier.</p>
+  </description>
+  <releases>
+	<release version="$VERSION" date="$DATE"/>
+  </releases>
+  <keywords>
+    <keyword>mozilla</keyword>
+    <keyword>internet</keyword>
+    <keyword>web</keyword>
+  </keywords>
+  <content_rating type="oars-1.1" />
+  <url type="homepage">https://www.mozilla.org/firefox/</url>
+  <url type="donation">https://donate.mozilla.org/</url>
+  <url type="bugtracker">https://bugzilla.mozilla.org/</url>
+  <url type="help">https://support.mozilla.org/</url>
+  <url type="translate">https://wiki.mozilla.org/L10n:Starting_a_localization</url>
+
+  <screenshots>
+    <screenshot type="default">https://raw.githubusercontent.com/hughsie/fedora-appstream/master/screenshots-extra/firefox/a.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/hughsie/fedora-appstream/master/screenshots-extra/firefox/b.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/hughsie/fedora-appstream/master/screenshots-extra/firefox/c.png</screenshot>
+  </screenshots>
+</application>

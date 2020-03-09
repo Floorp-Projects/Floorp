@@ -312,9 +312,17 @@ release-snap-repackage
 ----------------------
 Generate an installer using Ubuntu's Snap format.
 
+release-flatpak-repackage
+-------------------------
+Generate an installer using Flathub's Flatpak format.
+
 release-snap-push
 -----------------
 Pushes Snap repackage on Snap store.
+
+release-flatpak-push
+--------------------
+Pushes Flatpak repackage on Flathub
 
 release-secondary-snap-push
 ---------------------------

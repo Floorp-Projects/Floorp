@@ -1194,6 +1194,23 @@ def build_push_snap_payload(config, task, task_def):
     }
 
 
+@payload_builder('push-flatpak', schema={
+    Required('channel'): text_type,
+    Required('upstream-artifacts'): [{
+        Required('taskId'): taskref_or_string,
+        Required('taskType'): text_type,
+        Required('paths'): [text_type],
+    }],
+})
+def build_push_flatpak_payload(config, task, task_def):
+    worker = task['worker']
+
+    task_def['payload'] = {
+        'channel': worker['channel'],
+        'upstreamArtifacts':  worker['upstream-artifacts'],
+    }
+
+
 @payload_builder('shipit-shipped', schema={
     Required('release-name'): text_type,
 })
