@@ -86,15 +86,24 @@ class VendorPython(MozbuildObject):
 
         requirements = {}
         with open(spec, 'r') as f:
+            comments = []
             for line in f.readlines():
-                name, version = line.rstrip().split('==')
-                requirements[name] = version
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    comments.append(line)
+                    continue
+                name, version = line.split('==')
+                requirements[name] = version, comments
+                comments = []
+
         for package in packages:
             name, version = package.split('==')
-            requirements[name] = version
+            requirements[name] = version, []
 
         with open(spec, 'w') as f:
-            for name, version in sorted(requirements.items()):
+            for name, (version, comments) in sorted(requirements.items()):
+                if comments:
+                    f.write('{}\n'.format('\n'.join(comments)))
                 f.write('{}=={}\n'.format(name, version))
 
     def _extract(self, src, dest):
