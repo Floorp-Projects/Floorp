@@ -207,7 +207,7 @@ class ShaderProgramOGL {
     SetUniform(KnownUniform::BackdropTexture, aUnit);
   }
 
-  void SetRenderColor(const gfx::Color& aColor) {
+  void SetRenderColor(const gfx::DeviceColor& aColor) {
     SetUniform(KnownUniform::RenderColor, aColor);
   }
 
@@ -278,7 +278,7 @@ class ShaderProgramOGL {
   }
 
   void SetUniform(KnownUniform::KnownUniformName aKnownUniform,
-                  const gfx::Color& aColor) {
+                  const gfx::DeviceColor& aColor) {
     ASSERT_THIS_PROGRAM;
     NS_ASSERTION(
         aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,

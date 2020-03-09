@@ -41,7 +41,10 @@ static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
     // interact with the content behind the text.
     Float alphaValue = Float(0xFF - new_row[x]) / 255.0f;
     Float baseValue = sBackgroundOpacity * (1.0f - alphaValue);
-    Color pixelColor(baseValue, baseValue, baseValue, baseValue + alphaValue);
+    // FIXME(aosmond): PNGs may have color profiles. Should we be checking for
+    // that and performing color management?
+    sRGBColor pixelColor(baseValue, baseValue, baseValue,
+                         baseValue + alphaValue);
     dst[x] = pixelColor.ToABGR();
   }
 }
@@ -147,10 +150,13 @@ void TextRenderer::RenderTextToDrawTarget(DrawTarget* aDrawTarget,
   }
 
   // Initialize the DrawTarget to transparent white.
+  // FIXME(aosmond): Should the background be color managed if we color manage
+  // the glyphs or is this part of a mask?
   IntSize size = aDrawTarget->GetSize();
-  aDrawTarget->FillRect(Rect(0, 0, size.width, size.height),
-                        ColorPattern(Color(1.0, 1.0, 1.0, sBackgroundOpacity)),
-                        DrawOptions(1.0, CompositionOp::OP_SOURCE));
+  aDrawTarget->FillRect(
+      Rect(0, 0, size.width, size.height),
+      ColorPattern(DeviceColor(1.0, 1.0, 1.0, sBackgroundOpacity)),
+      DrawOptions(1.0, CompositionOp::OP_SOURCE));
 
   IntPoint currentPos;
 

@@ -249,6 +249,10 @@ static int GetEffectiveSandboxLevel(GeckoProcessType aType) {
       return 0;
     case GeckoProcessType_RDD:
       return PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") == nullptr ? 1 : 0;
+    case GeckoProcessType_Socket:
+      // GetEffectiveSocketProcessSandboxLevel is main-thread-only due to prefs.
+      MOZ_ASSERT(NS_IsMainThread());
+      return GetEffectiveSocketProcessSandboxLevel();
     default:
       return 0;
   }
@@ -296,6 +300,12 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
   }
 
   switch (aType) {
+    case GeckoProcessType_Socket:
+      if (level >= 1) {
+        canChroot = true;
+        flags |= CLONE_NEWIPC;
+      }
+      break;
     case GeckoProcessType_GMPlugin:
     case GeckoProcessType_RDD:
       if (level >= 1) {

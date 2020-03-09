@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+const {
+  EVENTS,
+  TEST_EVENTS,
+} = require("devtools/client/netmonitor/src/constants");
 const {
   Payloads,
 } = require("devtools/client/netmonitor/src/connector/chrome/utils");
@@ -119,7 +122,7 @@ class CDPConnector {
     this.update(requestId, {
       requestHeaders: header,
     }).then(() => {
-      window.emit(EVENTS.RECEIVED_REQUEST_HEADERS, header);
+      window.emit(TEST_EVENTS.RECEIVED_REQUEST_HEADERS, header);
     });
   }
 
@@ -136,7 +139,7 @@ class CDPConnector {
 
   updateResponseState(requestId, state) {
     this.update(requestId, state).then(() => {
-      window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, requestId);
+      window.emit(TEST_EVENTS.STARTED_RECEIVING_RESPONSE, requestId);
     });
   }
 
@@ -147,7 +150,7 @@ class CDPConnector {
     this.update(requestId, {
       responseHeaders: header,
     }).then(() => {
-      window.emit(EVENTS.RECEIVED_RESPONSE_HEADERS, header);
+      window.emit(TEST_EVENTS.RECEIVED_RESPONSE_HEADERS, header);
     });
   }
 
@@ -188,7 +191,7 @@ class CDPConnector {
       return;
     }
     this.actions.updateRequest(requestId, payload, true).then(() => {
-      window.emit(EVENTS.RECEIVED_RESPONSE_CONTENT, requestId);
+      window.emit(TEST_EVENTS.RECEIVED_RESPONSE_CONTENT, requestId);
     });
   }
 
@@ -199,7 +202,7 @@ class CDPConnector {
     this.update(requestId, {
       requestPostData: postData,
     }).then(() => {
-      window.emit(EVENTS.RECEIVED_REQUEST_POST_DATA, requestId);
+      window.emit(TEST_EVENTS.RECEIVED_REQUEST_POST_DATA, requestId);
     });
   }
 

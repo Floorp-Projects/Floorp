@@ -10,7 +10,9 @@
 #include "vm/BytecodeLocation.h"
 
 #include "vm/JSScript.h"
+
 #include "vm/BytecodeUtil-inl.h"
+#include "vm/JSScript-inl.h"
 
 namespace js {
 
@@ -30,10 +32,28 @@ inline uint32_t BytecodeLocation::bytecodeToOffset(
   return script->pcToOffset(this->rawBytecode_);
 }
 
+inline JSAtom* BytecodeLocation::getAtom(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  return script->getAtom(this->rawBytecode_);
+}
+
 inline PropertyName* BytecodeLocation::getPropertyName(
     const JSScript* script) const {
   MOZ_ASSERT(this->isValid());
   return script->getName(this->rawBytecode_);
+}
+
+inline JS::BigInt* BytecodeLocation::getBigInt(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  MOZ_ASSERT(is(JSOp::BigInt));
+  return script->getBigInt(this->rawBytecode_);
+}
+
+inline js::RegExpObject* BytecodeLocation::getRegExp(
+    const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  MOZ_ASSERT(is(JSOp::RegExp));
+  return script->getRegExp(this->rawBytecode_);
 }
 
 inline Scope* BytecodeLocation::innermostScope(const JSScript* script) const {

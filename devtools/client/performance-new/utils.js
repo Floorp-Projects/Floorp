@@ -5,6 +5,7 @@
 /**
  * @typedef {import("./@types/perf").NumberScaler} NumberScaler
  * @typedef {import("./@types/perf").ScaleFunctions} ScaleFunctions
+ * @typedef {import("./@types/perf").FeatureDescription} FeatureDescription
  */
 "use strict";
 
@@ -130,6 +131,10 @@ function scaleRangeWithClamping(
 
 /**
  * Use some heuristics to guess at the overhead of the recording settings.
+ *
+ * TODO - Bug 1597383. The UI for this has been removed, but it needs to be reworked
+ * for new overhead calculations. Keep it for now in tree.
+ *
  * @param {number} interval
  * @param {number} bufferSize
  * @param {string[]} features - List of the selected features.
@@ -258,6 +263,110 @@ class UnhandledCaseError extends Error {
   }
 }
 
+/**
+ * @type {FeatureDescription[]}
+ */
+const featureDescriptions = [
+  {
+    name: "Native Stacks",
+    value: "stackwalk",
+    title:
+      "Record native stacks (C++ and Rust). This is not available on all platforms.",
+    recommended: true,
+    disabledReason: "Native stack walking is not supported on this platform.",
+  },
+  {
+    name: "JavaScript",
+    value: "js",
+    title:
+      "Record JavaScript stack information, and interleave it with native stacks.",
+    recommended: true,
+  },
+  {
+    name: "Responsiveness",
+    value: "responsiveness",
+    title: "Collect thread responsiveness information.",
+    recommended: true,
+  },
+  {
+    name: "Java",
+    value: "java",
+    title: "Profile Java code",
+    disabledReason: "This feature is only available on Android.",
+  },
+  {
+    name: "Native Leaf Stack",
+    value: "leaf",
+    title:
+      "Record the native memory address of the leaf-most stack. This could be " +
+      "useful on platforms that do not support stack walking.",
+  },
+  {
+    name: "No Periodic Sampling",
+    value: "nostacksampling",
+    title: "Disable interval-based stack sampling",
+  },
+  {
+    name: "Main Thread IO",
+    value: "mainthreadio",
+    title: "Record main thread I/O markers.",
+  },
+  {
+    name: "Privacy",
+    value: "privacy",
+    title: "Remove some potentially user-identifiable information.",
+  },
+  {
+    name: "Sequential Styling",
+    value: "seqstyle",
+    title: "Disable parallel traversal in styling.",
+  },
+  {
+    name: "JIT Optimizations",
+    value: "trackopts",
+    title: "Track JIT optimizations in the JS engine.",
+  },
+  {
+    name: "TaskTracer",
+    value: "tasktracer",
+    title: "Enable TaskTracer (Experimental.)",
+    disabledReason:
+      "TaskTracer requires a custom build with the environment variable MOZ_TASK_TRACER set.",
+  },
+  {
+    name: "Screenshots",
+    value: "screenshots",
+    title: "Record screenshots of all browser windows.",
+  },
+  {
+    name: "JSTracer",
+    value: "jstracer",
+    title: "Trace JS engine (Experimental.)",
+    disabledReason:
+      "JS Tracer is currently disabled due to crashes. See Bug 1565788.",
+  },
+  {
+    name: "Preference Read",
+    value: "preferencereads",
+    title: "Track Preference Reads",
+  },
+  {
+    name: "IPC Messages",
+    value: "ipcmessages",
+    title: "Track IPC messages.",
+  },
+  {
+    name: "JS Allocations",
+    value: "jsallocations",
+    title: "Track JavaScript allocations (Experimental.)",
+  },
+  {
+    name: "Native Allocations",
+    value: "nativeallocations",
+    title: "Track native allocations (Experimental.)",
+  },
+];
+
 module.exports = {
   formatFileSize,
   makeExponentialScale,
@@ -265,4 +374,5 @@ module.exports = {
   calculateOverhead,
   withCommonPathPrefixRemoved,
   UnhandledCaseError,
+  featureDescriptions,
 };

@@ -163,6 +163,13 @@ class FramePayload extends Component {
     // json payload
     const { json } = isJSON(payload);
     if (json) {
+      const actionCablePayload = this.parseActionCable(json);
+      if (actionCablePayload) {
+        return {
+          formattedData: actionCablePayload,
+          formattedDataTitle: "Action Cable",
+        };
+      }
       return {
         formattedData: json,
         formattedDataTitle: "JSON",
@@ -235,6 +242,21 @@ class FramePayload extends Component {
     }
 
     return null;
+  }
+
+  parseActionCable(payload) {
+    const identifier = payload.identifier && isJSON(payload.identifier).json;
+    const data = payload.data && isJSON(payload.data).json;
+    if (!data && !identifier) {
+      return null;
+    }
+    if (identifier) {
+      payload.identifier = identifier;
+    }
+    if (data) {
+      payload.data = data;
+    }
+    return payload;
   }
 
   render() {

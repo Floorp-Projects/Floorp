@@ -78,3 +78,12 @@ def test_get_dependencies_rejects_non_pinned_requirements(from_line, repository)
     not_a_pinned_req = from_line("django>1.6")
     with raises(TypeError):
         repository.get_dependencies(not_a_pinned_req)
+
+
+def test_get_hashes(from_line, repository):
+    ireq = from_line("django==1.8")
+    expected = {
+        "test:123",
+        "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    }
+    assert repository.get_hashes(ireq) == expected

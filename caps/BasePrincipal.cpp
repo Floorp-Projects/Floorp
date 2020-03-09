@@ -972,6 +972,21 @@ BasePrincipal::GetLocalStorageQuotaKey(nsACString& aKey) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BasePrincipal::GetIsScriptAllowedByPolicy(bool* aIsScriptAllowedByPolicy) {
+  *aIsScriptAllowedByPolicy = false;
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return ssm->PolicyAllowsScript(prinURI, aIsScriptAllowedByPolicy);
+}
+
 bool SiteIdentifier::Equals(const SiteIdentifier& aOther) const {
   MOZ_ASSERT(IsInitialized());
   MOZ_ASSERT(aOther.IsInitialized());

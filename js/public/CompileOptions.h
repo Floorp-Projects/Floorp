@@ -123,7 +123,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool sourceIsLazy = false;
   bool allowHTMLComments = true;
   bool hideScriptFromDebugger = false;
-  bool fieldsEnabledOption = true;
 
   /**
    * |introductionType| is a statically allocated C string: one of "eval",

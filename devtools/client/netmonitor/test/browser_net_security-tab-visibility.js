@@ -44,7 +44,7 @@ add_task(async function() {
 
   for (const testcase of TEST_DATA) {
     info("Testing Security tab visibility for " + testcase.desc);
-    const onNewItem = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
+    const onNewItem = monitor.panelWin.api.once(TEST_EVENTS.NETWORK_EVENT);
     const onComplete = testcase.isBroken
       ? waitForSecurityBrokenNetworkEvent()
       : waitForNetworkEvents(monitor, 1);

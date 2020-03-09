@@ -455,7 +455,7 @@ class PluginInstanceChild : public PPluginInstanceChild {
 
   // Paint plugin content rectangle to surface with bg color filling
   void PaintRectToSurface(const nsIntRect& aRect, gfxASurface* aSurface,
-                          const gfx::Color& aColor);
+                          const gfx::DeviceColor& aColor);
 
   // Render plugin content to surface using
   // white/black image alpha extraction algorithm

@@ -6118,7 +6118,7 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   if (!shadowContext) return;
 
   aParams.context->Save();
-  aParams.context->SetColor(Color::FromABGR(shadowColor));
+  aParams.context->SetColor(sRGBColor::FromABGR(shadowColor));
 
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't
@@ -6472,7 +6472,7 @@ void nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
       aDecorationOverrideColor
           ? *aDecorationOverrideColor
           : nsLayoutUtils::GetColor(this, &nsStyleText::mTextEmphasisColor);
-  aContext->SetColor(Color::FromABGR(color));
+  aContext->SetColor(sRGBColor::FromABGR(color));
   gfx::Point pt;
   if (!isTextCombined) {
     pt = aTextBaselinePt;
@@ -6794,7 +6794,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
                                 ? NS_RGBA(0, 0, 0, 255)
                                 : textPaintStyle.GetTextColor();
   if (aOpacity != 1.0f) {
-    gfx::Color gfxColor = gfx::Color::FromABGR(foregroundColor);
+    gfx::sRGBColor gfxColor = gfx::sRGBColor::FromABGR(foregroundColor);
     gfxColor.a *= aOpacity;
     foregroundColor = gfxColor.ToABGR();
   }
@@ -6803,7 +6803,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
                                 ? NS_RGBA(0, 0, 0, 255)
                                 : textPaintStyle.GetWebkitTextStrokeColor();
   if (aOpacity != 1.0f) {
-    gfx::Color gfxColor = gfx::Color::FromABGR(textStrokeColor);
+    gfx::sRGBColor gfxColor = gfx::sRGBColor::FromABGR(textStrokeColor);
     gfxColor.a *= aOpacity;
     textStrokeColor = gfxColor.ToABGR();
   }
@@ -6858,7 +6858,7 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
     auto* textDrawer = aParams.context->GetTextDrawer();
     if (NS_GET_A(aParams.textColor) != 0 || textDrawer ||
         aParams.textStrokeWidth == 0.0f) {
-      aParams.context->SetColor(Color::FromABGR(aParams.textColor));
+      aParams.context->SetColor(sRGBColor::FromABGR(aParams.textColor));
     } else {
       params.drawMode = DrawMode::GLYPH_STROKE;
     }

@@ -150,7 +150,7 @@ function testWithAwait() {
     assertEq(promise.promiseState, "fulfilled");
 
     // Async function's promise should have expected value.
-    if (onPromiseSettledCount == 3) {
+    if (onPromiseSettledCount == 2) {
       assertEq(promise.promiseValue, "expected");
     }
   };

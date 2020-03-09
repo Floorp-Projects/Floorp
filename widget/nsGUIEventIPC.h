@@ -74,6 +74,8 @@ struct ParamTraits<mozilla::WidgetEvent> {
       // Reset cross process dispatching state here because the event has not
       // been dispatched to different process from current process.
       aResult->ResetCrossProcessDispatchingState();
+      // Mark the event comes from another process.
+      aResult->MarkAsComingFromAnotherProcess();
     }
     return ret;
   }

@@ -22,7 +22,6 @@ add_task(async function() {
       gTestRoot + "blockNoPlugins",
       gTestBrowser
     );
-    resetBlocklist();
     gTestBrowser = null;
     gBrowser.removeCurrentTab();
     window.focus();

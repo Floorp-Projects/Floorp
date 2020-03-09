@@ -167,18 +167,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  bool getFieldsEnabled() const { return fields_; }
-  RealmCreationOptions& setFieldsEnabled(bool flag) {
-    fields_ = flag;
-    return *this;
-  }
-
-  bool getAwaitFixEnabled() const { return awaitFix_; }
-  RealmCreationOptions& setAwaitFixEnabled(bool flag) {
-    awaitFix_ = flag;
-    return *this;
-  }
-
   bool getWeakRefsEnabled() const { return weakRefs_; }
   RealmCreationOptions& setWeakRefsEnabled(bool flag) {
     weakRefs_ = flag;
@@ -234,8 +222,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool byobStreamReaders_ = false;
   bool writableStreams_ = false;
   bool readableStreamPipeTo_ = false;
-  bool fields_ = false;
-  bool awaitFix_ = false;
   bool weakRefs_ = false;
   bool toSource_ = false;
   bool propertyErrorMessageFix_ = false;

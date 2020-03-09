@@ -2061,12 +2061,6 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
 
   const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
 
-  // FIXME: Remove this check when full multi-value function returns land.
-  // Bug 1585909.
-  if (funcType.results().length() > MaxFuncResults) {
-    return fail("too many returns in signature");
-  }
-
 #ifdef WASM_PRIVATE_REFTYPES
   if (env_.tables[*tableIndex].importedOrExported &&
       funcType.exposesTypeIndex()) {
@@ -2130,12 +2124,6 @@ inline bool OpIter<Policy>::readOldCallIndirect(uint32_t* funcTypeIndex,
   }
 
   const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
-
-  // FIXME: Remove this check when full multi-value function returns land.
-  // Bug 1585909.
-  if (funcType.results().length() > MaxFuncResults) {
-    return fail("too many returns in signature");
-  }
 
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;

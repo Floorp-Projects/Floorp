@@ -810,6 +810,10 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     return;
   }
 
+  if (aHTMLEditor.IsSelectionRangeContainerNotContent()) {
+    return;
+  }
+
   // For now, just return first alignment.  We don't check if it's mixed.
   // This is for efficiency given that our current UI doesn't care if it's
   // mixed.
@@ -828,6 +832,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   EditorRawDOMPoint atBodyOrDocumentElement(bodyOrDocumentElement);
 
   nsRange* firstRange = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
+  MOZ_ASSERT(firstRange);
   if (NS_WARN_IF(!firstRange)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -1005,6 +1010,10 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
                                                       EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
+  }
+
+  if (aHTMLEditor.IsSelectionRangeContainerNotContent()) {
     return;
   }
 
@@ -4079,6 +4088,10 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
     return result;
   }
 
+  if (IsSelectionRangeContainerNotContent()) {
+    return EditActionIgnored();
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // XXX EditSubAction::eCreateOrChangeDefinitionListItem and
@@ -4176,6 +4189,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     const nsAString& aBulletType,
     SelectAllOfCurrentList aSelectAllOfCurrentList) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
 
@@ -4870,6 +4884,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
 
 nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     return NS_OK;
@@ -4915,9 +4930,17 @@ EditActionResult HTMLEditor::IndentAsSubAction() {
     return result;
   }
 
+  if (IsSelectionRangeContainerNotContent()) {
+    return EditActionIgnored();
+  }
+
   result |= HandleIndentAtSelection();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
     return result;
+  }
+
+  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
@@ -5018,6 +5041,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
 
 EditActionResult HTMLEditor::HandleIndentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -5045,6 +5069,10 @@ EditActionResult HTMLEditor::HandleIndentAtSelection() {
     }
   }
 
+  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
   if (IsCSSEnabled()) {
     nsresult rv = HandleCSSIndentAtSelection();
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -5058,6 +5086,7 @@ EditActionResult HTMLEditor::HandleIndentAtSelection() {
 
 nsresult HTMLEditor::HandleCSSIndentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -5080,6 +5109,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelection() {
 
 nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
@@ -5266,6 +5296,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
 
 nsresult HTMLEditor::HandleHTMLIndentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -5524,9 +5555,17 @@ EditActionResult HTMLEditor::OutdentAsSubAction() {
     return result;
   }
 
+  if (IsSelectionRangeContainerNotContent()) {
+    return EditActionIgnored();
+  }
+
   result |= HandleOutdentAtSelection();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
     return result;
+  }
+
+  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
@@ -5538,6 +5577,7 @@ EditActionResult HTMLEditor::OutdentAsSubAction() {
 
 EditActionResult HTMLEditor::HandleOutdentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -6222,6 +6262,10 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
     return result;
   }
 
+  if (IsSelectionRangeContainerNotContent()) {
+    return EditActionIgnored();
+  }
+
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -6229,6 +6273,10 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
 
   if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = EnsureCaretNotAfterPaddingBRElement();
@@ -6266,6 +6314,10 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
     return EditActionHandled(rv);
   }
 
+  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
   rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
@@ -6274,6 +6326,9 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
 }
 
 nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
+
   AutoSelectionRestorer restoreSelectionLater(*this);
 
   // Convert the selection ranges into "promoted" selection ranges: This
@@ -6337,6 +6392,9 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
   }
 
   if (createEmptyDivElement) {
+    if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+    }
     EditActionResult result =
         AlignContentsAtSelectionWithEmptyDivElement(aAlignType);
     NS_WARNING_ASSERTION(
@@ -6356,6 +6414,7 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
 EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
     const nsAString& aAlignType) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
@@ -7826,6 +7885,7 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
 
 Element* HTMLEditor::GetParentListElementAtSelection() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
   for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); ++i) {
     nsRange* range = SelectionRefPtr()->GetRangeAt(i);
@@ -10676,6 +10736,10 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionHandled(rv);
+  }
+
+  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();

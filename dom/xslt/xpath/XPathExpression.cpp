@@ -52,7 +52,7 @@ XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
       mDocument(do_GetWeakReference(aDocument)),
       mCheckDocument(aDocument != nullptr) {}
 
-XPathExpression::~XPathExpression() {}
+XPathExpression::~XPathExpression() = default;
 
 already_AddRefed<XPathResult> XPathExpression::EvaluateWithContext(
     JSContext* aCx, nsINode& aContextNode, uint32_t aContextPosition,

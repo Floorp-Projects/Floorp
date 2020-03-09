@@ -91,7 +91,7 @@ class TransactionBuilder final {
 
   void RemovePipeline(PipelineId aPipelineId);
 
-  void SetDisplayList(gfx::Color aBgColor, Epoch aEpoch,
+  void SetDisplayList(const gfx::DeviceColor& aBgColor, Epoch aEpoch,
                       const wr::LayoutSize& aViewportSize,
                       wr::WrPipelineId pipeline_id,
                       const wr::LayoutSize& content_size,
@@ -233,9 +233,22 @@ class WebRenderAPI final {
 
   wr::WindowId GetId() const { return mId; }
 
+  /// Send a blocking hit-testing query to the render backend thread.
   bool HitTest(const wr::WorldPoint& aPoint, wr::WrPipelineId& aOutPipelineId,
                layers::ScrollableLayerGuid::ViewID& aOutScrollId,
                gfx::CompositorHitTestInfo& aOutHitInfo, SideBits& aOutSideBits);
+
+  /// Do a non-blocking hit-testing query on a shared version of the hit testing
+  /// information.
+  ///
+  /// This does not guarantee ordering between the query and in-flight transactions,
+  /// but only blocks on a synchronous message to the render backend thread the first
+  /// time the function is called.
+  /// This generally returns much faster than `HitTest`.
+  bool FastHitTest(const wr::WorldPoint& aPoint, wr::WrPipelineId& aOutPipelineId,
+                   layers::ScrollableLayerGuid::ViewID& aOutScrollId,
+                   gfx::CompositorHitTestInfo& aOutHitInfo,
+                   SideBits& aOutSideBits);
 
   void SendTransaction(TransactionBuilder& aTxn);
 
@@ -326,6 +339,8 @@ class WebRenderAPI final {
   // each document).
   RefPtr<wr::WebRenderAPI> mRootApi;
   RefPtr<wr::WebRenderAPI> mRootDocumentApi;
+
+  WrHitTester* mFastHitTester;
 
   friend class DisplayListBuilder;
   friend class layers::WebRenderBridgeParent;

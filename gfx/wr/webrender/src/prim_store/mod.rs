@@ -2137,7 +2137,7 @@ impl PrimitiveStore {
                         cluster.spatial_node_index,
                         frame_state.clip_chain_stack.current_clips_array(),
                         &frame_context.spatial_tree,
-                        &mut frame_state.data_stores.clip,
+                        &frame_state.data_stores.clip,
                     );
 
                     let clip_chain = frame_state

@@ -126,15 +126,25 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
 
 MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
   MediaMetadataBase metadata;
+  metadata.mTitle = GetDefaultTitle();
+  metadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
+
+  LOG("Default media metadata, title=%s, album src=%s",
+      NS_ConvertUTF16toUTF8(metadata.mTitle).get(),
+      NS_ConvertUTF16toUTF8(metadata.mArtwork[0].mSrc).get());
+  return metadata;
+}
+
+nsString MediaSessionController::GetDefaultTitle() const {
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBCId);
   if (!bc) {
-    return metadata;
+    return EmptyString();
   }
 
   RefPtr<WindowGlobalParent> globalParent = bc->GetCurrentWindowGlobal();
   if (!globalParent) {
-    return metadata;
+    return EmptyString();
   }
 
   // The media metadata would be shown on the virtual controller interface. For
@@ -142,32 +152,22 @@ MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
   // and lockscreen. Therefore, what information we provide via metadata is
   // quite important, because if we're in private browsing, we don't want to
   // expose details about what website the user is browsing on the lockscreen.
-  bool inPrivateBrowsing = false;
-  if (RefPtr<Element> element = bc->GetEmbedderElement()) {
-    inPrivateBrowsing =
-        nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
-  }
-
-  if (inPrivateBrowsing) {
+  nsString defaultTitle;
+  if (IsInPrivateBrowsing()) {
     // TODO : maybe need l10n?
     if (nsCOMPtr<nsIXULAppInfo> appInfo =
             do_GetService("@mozilla.org/xre/app-info;1")) {
       nsCString appName;
       appInfo->GetName(appName);
-      CopyUTF8toUTF16(appName, metadata.mTitle);
+      CopyUTF8toUTF16(appName, defaultTitle);
     } else {
-      metadata.mTitle.AssignLiteral("Firefox");
+      defaultTitle.AssignLiteral("Firefox");
     }
-    metadata.mTitle.AppendLiteral(" is playing media");
+    defaultTitle.AppendLiteral(" is playing media");
   } else {
-    metadata.mTitle = globalParent->GetDocumentTitle();
+    defaultTitle = globalParent->GetDocumentTitle();
   }
-  metadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
-
-  LOG("Default media metadata, title=%s, album src=%s",
-      NS_ConvertUTF16toUTF8(metadata.mTitle).get(),
-      NS_ConvertUTF16toUTF8(metadata.mArtwork[0].mSrc).get());
-  return metadata;
+  return defaultTitle;
 }
 
 nsString MediaSessionController::GetDefaultFaviconURL() const {
@@ -197,15 +197,46 @@ nsString MediaSessionController::GetDefaultFaviconURL() const {
 }
 
 MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
-  // If we don't have active media session, or active media session doesn't have
-  // media metadata, then we should create a default metadata which is using
-  // website's title and favicon as artist name and album cover.
-  if (mActiveMediaSessionContextId) {
+  // If we don't have active media session, active media session doesn't have
+  // media metadata, or we're in private browsing mode, then we should create a
+  // default metadata which is using website's title and favicon as title and
+  // artwork.
+  if (mActiveMediaSessionContextId && !IsInPrivateBrowsing()) {
     Maybe<MediaMetadataBase> metadata =
         mMetadataMap.Get(*mActiveMediaSessionContextId);
-    return metadata ? *metadata : CreateDefaultMetadata();
+    if (!metadata) {
+      return CreateDefaultMetadata();
+    }
+    FillMissingTitleAndArtworkIfNeeded(*metadata);
+    return *metadata;
   }
   return CreateDefaultMetadata();
+}
+
+void MediaSessionController::FillMissingTitleAndArtworkIfNeeded(
+    MediaMetadataBase& aMetadata) const {
+  // If the metadata doesn't set its title and artwork properly, we would like
+  // to use default title and favicon instead in order to prevent showing
+  // nothing on the virtual control interface.
+  if (aMetadata.mTitle.IsEmpty()) {
+    aMetadata.mTitle = GetDefaultTitle();
+  }
+  if (aMetadata.mArtwork.IsEmpty()) {
+    aMetadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
+  }
+}
+
+bool MediaSessionController::IsInPrivateBrowsing() const {
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(mTopLevelBCId);
+  if (!bc) {
+    return false;
+  }
+  RefPtr<Element> element = bc->GetEmbedderElement();
+  if (!element) {
+    return false;
+  }
+  return nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
 }
 
 }  // namespace dom

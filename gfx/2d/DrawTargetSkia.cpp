@@ -431,7 +431,7 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
                             const Rect* aBounds = nullptr) {
   switch (aPattern.GetType()) {
     case PatternType::COLOR: {
-      Color color = static_cast<const ColorPattern&>(aPattern).mColor;
+      DeviceColor color = static_cast<const ColorPattern&>(aPattern).mColor;
       aPaint.setColor(ColorToSkColor(color, aAlpha));
       break;
     }
@@ -700,7 +700,7 @@ void DrawTargetSkia::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
 
 void DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                            const Point& aDest,
-                                           const Color& aColor,
+                                           const DeviceColor& aColor,
                                            const Point& aOffset, Float aSigma,
                                            CompositionOp aOperator) {
   if (aSurface->GetSize().IsEmpty()) {
@@ -1195,7 +1195,7 @@ void BorrowedCGContext::ReturnCGContextToDrawTarget(DrawTarget* aDT,
 
 static void SetFontColor(CGContextRef aCGContext, CGColorSpaceRef aColorSpace,
                          const Pattern& aPattern) {
-  const Color& color = static_cast<const ColorPattern&>(aPattern).mColor;
+  const DeviceColor& color = static_cast<const ColorPattern&>(aPattern).mColor;
   CGColorRef textColor = ColorToCGColor(aColorSpace, color);
   CGContextSetFillColorWithColor(aCGContext, textColor);
   CGColorRelease(textColor);
@@ -1274,7 +1274,7 @@ bool DrawTargetSkia::FillGlyphsWithCG(ScaledFont* aFont,
 static bool HasFontSmoothingBackgroundColor(ScaledFont* aFont) {
   // This should generally only be true if we have a popup context menu
   if (aFont && aFont->GetType() == FontType::MAC) {
-    Color fontSmoothingBackgroundColor =
+    DeviceColor fontSmoothingBackgroundColor =
         static_cast<ScaledFontMac*>(aFont)->FontSmoothingBackgroundColor();
     return fontSmoothingBackgroundColor.a > 0;
   }

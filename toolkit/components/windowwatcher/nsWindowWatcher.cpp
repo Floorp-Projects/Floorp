@@ -1442,7 +1442,7 @@ nsWindowWatcher::HasWindowCreator(bool* aResult) {
 NS_IMETHODIMP
 nsWindowWatcher::GetActiveWindow(mozIDOMWindowProxy** aActiveWindow) {
   *aActiveWindow = nullptr;
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     return fm->GetActiveWindow(aActiveWindow);
   }

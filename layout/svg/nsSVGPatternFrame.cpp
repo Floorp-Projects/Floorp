@@ -675,7 +675,7 @@ already_AddRefed<gfxPattern> nsSVGPatternFrame::GetPaintServerPattern(
     mozilla::StyleSVGPaint nsStyleSVG::*aFillOrStroke, float aGraphicOpacity,
     imgDrawingParams& aImgParams, const gfxRect* aOverrideBounds) {
   if (aGraphicOpacity == 0.0f) {
-    return do_AddRef(new gfxPattern(Color()));
+    return do_AddRef(new gfxPattern(DeviceColor()));
   }
 
   // Paint it!

@@ -112,7 +112,7 @@ void TCPSocketChildBase::AddIPDLReference() {
   this->AddRef();
 }
 
-TCPSocketChild::~TCPSocketChild() {}
+TCPSocketChild::~TCPSocketChild() = default;
 
 mozilla::ipc::IPCResult TCPSocketChild::RecvUpdateBufferedAmount(
     const uint32_t& aBuffered, const uint32_t& aTrackingNumber) {

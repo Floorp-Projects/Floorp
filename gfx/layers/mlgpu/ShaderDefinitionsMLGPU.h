@@ -154,16 +154,16 @@ struct SimpleTraits {
 
 struct ColorTraits : public SimpleTraits {
   ColorTraits(const ItemInfo& aItem, const gfx::Rect& aRect,
-              const gfx::Color& aColor)
+              const gfx::DeviceColor& aColor)
       : SimpleTraits(aItem, aRect), mColor(aColor) {}
 
   // Color data is the same across all vertex types.
   template <typename VertexType>
-  const gfx::Color& MakeVertexData(const VertexType& aIgnore) const {
+  const gfx::DeviceColor& MakeVertexData(const VertexType& aIgnore) const {
     return mColor;
   }
 
-  gfx::Color mColor;
+  gfx::DeviceColor mColor;
 };
 
 struct TexturedTraits : public SimpleTraits {

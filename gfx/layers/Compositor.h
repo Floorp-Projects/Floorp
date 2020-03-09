@@ -360,7 +360,7 @@ class Compositor : public TextureSourceProvider {
   /**
    * Draw an unfilled solid color rect. Typically used for debugging overlays.
    */
-  void SlowDrawRect(const gfx::Rect& aRect, const gfx::Color& color,
+  void SlowDrawRect(const gfx::Rect& aRect, const gfx::DeviceColor& color,
                     const gfx::IntRect& aClipRect = gfx::IntRect(),
                     const gfx::Matrix4x4& aTransform = gfx::Matrix4x4(),
                     int aStrokeWidth = 1);
@@ -368,13 +368,13 @@ class Compositor : public TextureSourceProvider {
   /**
    * Draw a solid color filled rect. This is a simple DrawQuad helper.
    */
-  void FillRect(const gfx::Rect& aRect, const gfx::Color& color,
+  void FillRect(const gfx::Rect& aRect, const gfx::DeviceColor& color,
                 const gfx::IntRect& aClipRect = gfx::IntRect(),
                 const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
-  void SetClearColor(const gfx::Color& aColor) { mClearColor = aColor; }
+  void SetClearColor(const gfx::DeviceColor& aColor) { mClearColor = aColor; }
 
-  void SetDefaultClearColor(const gfx::Color& aColor) {
+  void SetDefaultClearColor(const gfx::DeviceColor& aColor) {
     mDefaultClearColor = aColor;
   }
 
@@ -688,8 +688,8 @@ class Compositor : public TextureSourceProvider {
 
   bool mIsDestroyed;
 
-  gfx::Color mClearColor;
-  gfx::Color mDefaultClearColor;
+  gfx::DeviceColor mClearColor;
+  gfx::DeviceColor mDefaultClearColor;
 
   bool mRecordFrames = false;
 

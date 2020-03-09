@@ -28,6 +28,10 @@
 #include "ProcessUtils.h"
 #include "SocketProcessBridgeParent.h"
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+#  include "mozilla/Sandbox.h"
+#endif
+
 #ifdef MOZ_GECKO_PROFILER
 #  include "ChildProfilerController.h"
 #endif
@@ -169,6 +173,18 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvSetOffline(
 
   io->SetOffline(aOffline);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvInitLinuxSandbox(
+    const Maybe<ipc::FileDescriptor>& aBrokerFd) {
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  int fd = -1;
+  if (aBrokerFd.isSome()) {
+    fd = aBrokerFd.value().ClonePlatformHandle().release();
+  }
+  SetSocketProcessSandbox(fd);
+#endif  // XP_LINUX && MOZ_SANDBOX
   return IPC_OK();
 }
 

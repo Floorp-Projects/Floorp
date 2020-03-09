@@ -438,7 +438,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     float g = float(rand()) / float(RAND_MAX);
     float b = float(rand()) / float(RAND_MAX);
     dt->FillRect(gfx::Rect(origin.x, origin.y, size.width, size.height),
-                 gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
+                 gfx::ColorPattern(gfx::DeviceColor(r, g, b, 0.5)));
   }
 
   if (aDirtyRect) {
