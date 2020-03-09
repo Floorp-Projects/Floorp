@@ -20,15 +20,16 @@ public class ContextUtils {
 
     private ContextUtils() {}
 
-    /**
-     * @return {@link android.content.pm.PackageInfo#firstInstallTime} for the context's package.
-     */
-    public static PackageInfo getCurrentPackageInfo(final Context context) {
+    public static PackageInfo getCurrentPackageInfo(final Context context, final int flags) {
         try {
-            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), flags);
         } catch (PackageManager.NameNotFoundException e) {
             throw new AssertionError("Should not happen: Can't get package info of own package");
         }
+    }
+
+    public static PackageInfo getCurrentPackageInfo(final Context context) {
+        return getCurrentPackageInfo(context, 0);
     }
 
     public static boolean isPackageInstalled(final Context context, final String packageName) {
