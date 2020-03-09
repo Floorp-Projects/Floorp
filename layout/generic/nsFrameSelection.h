@@ -864,6 +864,12 @@ class nsFrameSelection final {
     bool AdjustNormalSelection(const nsIContent* aContent, int32_t aOffset,
                                mozilla::dom::Selection& aNormalSelection) const;
 
+    /**
+     * @param aScrollViewStop see `nsPeekOffsetStruct::mScrollViewStop`.
+     */
+    void AdjustContentOffsets(nsIFrame::ContentOffsets& aOffsets,
+                              bool aScrollViewStop) const;
+
     void MaintainAnchorFocusRange(
         const mozilla::dom::Selection& aNormalSelection,
         nsSelectionAmount aAmount);
