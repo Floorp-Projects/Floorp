@@ -4456,9 +4456,6 @@ pref("snav.enabled", false);
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
-// The URL of the Firefox Accounts auth server backend
-pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
-
 // Presentation Device
 pref("dom.presentation.tcp_server.debug", false);
 pref("dom.presentation.discovery.enabled", false);
@@ -4836,6 +4833,9 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // The maximum number of immediate resyncs to trigger for changes made during
   // a sync.
   pref("services.sync.maxResyncs", 5);
+
+  // The URL of the Firefox Accounts auth server backend
+  pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 #endif // MOZ_SERVICES_SYNC
 
 // Marionette is the remote protocol that lets OOP programs communicate with,
