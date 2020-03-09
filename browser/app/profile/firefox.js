@@ -2274,13 +2274,7 @@ pref("devtools.aboutdebugging.collapsibilities.temporaryExtension", false);
 // Map top-level await expressions in the console
 pref("devtools.debugger.features.map-await-expression", true);
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-pref("devtools.debugger.features.async-captured-stacks", true);
-pref("devtools.debugger.features.async-live-stacks", false);
-#else
 pref("devtools.debugger.features.async-live-stacks", true);
-pref("devtools.debugger.features.async-captured-stacks", false);
-#endif
 
 // Disable autohide for DevTools popups and tooltips.
 // This is currently not exposed by any UI to avoid making
