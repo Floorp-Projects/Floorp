@@ -344,7 +344,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mEndSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mAppendStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mUnselectCellOnMouseUp)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaintainRange)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaintainedRange.mRange)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLimiter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -363,7 +363,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mEndSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mAppendStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mUnselectCellOnMouseUp)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaintainRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaintainedRange.mRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLimiter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -978,16 +978,16 @@ nsresult nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount) {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
 
-  mMaintainedAmount = aAmount;
+  mMaintainedRange.mAmount = aAmount;
 
   const nsRange* anchorFocusRange =
       mDomSelections[index]->GetAnchorFocusRange();
   if (anchorFocusRange && aAmount != eSelectNoAmount) {
-    mMaintainRange = anchorFocusRange->CloneRange();
+    mMaintainedRange.mRange = anchorFocusRange->CloneRange();
     return NS_OK;
   }
 
-  mMaintainRange = nullptr;
+  mMaintainedRange.mRange = nullptr;
   return NS_OK;
 }
 
@@ -1068,7 +1068,9 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent* aNode,
 
 bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
                                                     int32_t aOffset) {
-  if (!mMaintainRange) return false;
+  if (!mMaintainedRange.mRange) {
+    return false;
+  }
 
   if (!aContent) {
     return false;
@@ -1077,10 +1079,10 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index]) return false;
 
-  nsINode* rangeStartNode = mMaintainRange->GetStartContainer();
-  nsINode* rangeEndNode = mMaintainRange->GetEndContainer();
-  int32_t rangeStartOffset = mMaintainRange->StartOffset();
-  int32_t rangeEndOffset = mMaintainRange->EndOffset();
+  nsINode* rangeStartNode = mMaintainedRange.mRange->GetStartContainer();
+  nsINode* rangeEndNode = mMaintainedRange.mRange->GetEndContainer();
+  int32_t rangeStartOffset = mMaintainedRange.mRange->StartOffset();
+  int32_t rangeEndOffset = mMaintainedRange.mRange->EndOffset();
 
   const Maybe<int32_t> relToStart = nsContentUtils::ComparePoints(
       rangeStartNode, rangeStartOffset, aContent, aOffset);
@@ -1107,7 +1109,7 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
       (*relToEnd < 0 &&
        mDomSelections[index]->GetDirection() == eDirPrevious)) {
     // Set the current range to the maintained range.
-    mDomSelections[index]->ReplaceAnchorFocusRange(mMaintainRange);
+    mDomSelections[index]->ReplaceAnchorFocusRange(mMaintainedRange.mRange);
     if (*relToStart < 0 && *relToEnd > 0) {
       // We're inside the maintained selection, just keep it selected.
       return true;
@@ -1130,7 +1132,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
   InvalidateDesiredPos();
 
   if (aFocusMode != FocusMode::kExtendSelection) {
-    mMaintainRange = nullptr;
+    mMaintainedRange.mRange = nullptr;
     if (!IsValidSelectionPoint(aNewFocus)) {
       mAncestorLimiter = nullptr;
     }
@@ -1178,9 +1180,9 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
     return;
 
   // Adjust offsets according to maintained amount
-  if (mMaintainRange && mMaintainedAmount != eSelectNoAmount) {
-    nsINode* rangenode = mMaintainRange->GetStartContainer();
-    int32_t rangeOffset = mMaintainRange->StartOffset();
+  if (mMaintainedRange.mRange && mMaintainedRange.mAmount != eSelectNoAmount) {
+    nsINode* rangenode = mMaintainedRange.mRange->GetStartContainer();
+    int32_t rangeOffset = mMaintainedRange.mRange->StartOffset();
     const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
         rangenode, rangeOffset, offsets.content, offsets.offset);
     if (NS_WARN_IF(!relativePosition)) {
@@ -1191,7 +1193,7 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
     }
 
     nsDirection direction = *relativePosition > 0 ? eDirPrevious : eDirNext;
-    nsSelectionAmount amount = mMaintainedAmount;
+    nsSelectionAmount amount = mMaintainedRange.mAmount;
     if (amount == eSelectBeginLine && direction == eDirNext)
       amount = eSelectEndLine;
 

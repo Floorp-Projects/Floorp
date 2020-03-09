@@ -858,9 +858,12 @@ class nsFrameSelection final {
 
   TableSelection mTableSelection;
 
-  // maintain selection
-  RefPtr<nsRange> mMaintainRange;
-  nsSelectionAmount mMaintainedAmount = eSelectNoAmount;
+  struct MaintainedRange {
+    RefPtr<nsRange> mRange;
+    nsSelectionAmount mAmount = eSelectNoAmount;
+  };
+
+  MaintainedRange mMaintainedRange;
 
   // batching
   int32_t mBatching = 0;
