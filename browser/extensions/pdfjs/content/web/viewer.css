@@ -913,6 +913,9 @@ html[dir='rtl'] .splitToolbarButton > .toolbarButton {
               0 0 1px rgba(0, 0, 0, 0.05);
   z-index: 199;
 }
+.dropdownToolbarButton:hover {
+  background-color: rgba(0, 0, 0, 0.26);
+}
 .splitToolbarButton > .toolbarButton {
   position: relative;
 }
@@ -1048,13 +1051,18 @@ html[dir='rtl'] .dropdownToolbarButton {
   width: 140px;
   padding: 0;
   overflow: hidden;
-  background: url(images/toolbarButton-menuArrows.png) no-repeat;
 }
-html[dir='ltr'] .dropdownToolbarButton {
-  background-position: 95%;
+.dropdownToolbarButton::after {
+  position: absolute;
+  display: inline-block;
+  top: 4px;
+  content: url(images/toolbarButton-menuArrows.png);
 }
-html[dir='rtl'] .dropdownToolbarButton {
-  background-position: 5%;
+html[dir='ltr'] .dropdownToolbarButton::after {
+  right: 8px;
+}
+html[dir='rtl'] .dropdownToolbarButton::after {
+  left: 8px;
 }
 
 .dropdownToolbarButton > select {
@@ -1932,9 +1940,16 @@ html[dir='rtl'] #documentPropertiesOverlay .row > * {
     background-size: 16px 17px;
   }
 
-  .dropdownToolbarButton {
-    background: url(images/toolbarButton-menuArrows@2x.png) no-repeat;
-    background-size: 7px 16px;
+  .dropdownToolbarButton::after {
+    transform: scale(0.5);
+    top: -5px;
+    content: url(images/toolbarButton-menuArrows@2x.png);
+  }
+  html[dir='ltr'] .dropdownToolbarButton::after {
+    right: 4px;
+  }
+  html[dir='rtl'] .dropdownToolbarButton::after {
+    left: 4px;
   }
 
   html[dir='ltr'] .toolbarButton#sidebarToggle::before {

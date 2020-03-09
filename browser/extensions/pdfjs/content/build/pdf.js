@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.392';
-var pdfjsBuild = 'e1586016';
+var pdfjsVersion = '2.4.407';
+var pdfjsBuild = '25693c6b';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1205,7 +1205,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.4.392',
+    apiVersion: '2.4.407',
     source: {
       data: source.data,
       url: source.url,
@@ -3150,9 +3150,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.392';
+const version = '2.4.407';
 exports.version = version;
-const build = 'e1586016';
+const build = '25693c6b';
 exports.build = build;
 
 /***/ }),
@@ -3734,7 +3734,8 @@ class BaseFontLoader {
   }
 
   get isFontLoadingAPISupported() {
-    (0, _util.unreachable)("Abstract method `isFontLoadingAPISupported`.");
+    const supported = typeof document !== "undefined" && !!document.fonts;
+    return (0, _util.shadow)(this, "isFontLoadingAPISupported", supported);
   }
 
   get isSyncFontLoadingSupported() {
@@ -3755,10 +3756,6 @@ let FontLoader;
 exports.FontLoader = FontLoader;
 {
   exports.FontLoader = FontLoader = class MozcentralFontLoader extends BaseFontLoader {
-    get isFontLoadingAPISupported() {
-      return (0, _util.shadow)(this, "isFontLoadingAPISupported", typeof document !== "undefined" && !!document.fonts);
-    }
-
     get isSyncFontLoadingSupported() {
       return (0, _util.shadow)(this, "isSyncFontLoadingSupported", true);
     }
@@ -5382,7 +5379,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       }
 
       if (vertical) {
-        current.y -= x * textHScale;
+        current.y -= x;
       } else {
         current.x += x * textHScale;
       }
