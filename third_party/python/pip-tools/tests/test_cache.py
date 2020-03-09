@@ -17,9 +17,9 @@ def _read_cache_file_helper(to_write):
     :param str to_write: the content to write to the file
     :yield: the path to the temporary file
     """
+    # Create the file and write to it
+    cache_file = NamedTemporaryFile(mode="w", delete=False)
     try:
-        # Create the file and write to it
-        cache_file = NamedTemporaryFile(mode="w", delete=False)
         cache_file.write(to_write)
         cache_file.close()
 
