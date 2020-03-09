@@ -79,8 +79,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using mozilla::dom::SystemFontListEntry;
-using mozilla::dom::FontFamilyListEntry;
 
 // indexes into the NSArray objects that the Cocoa font manager returns
 // as the available members of a family
@@ -875,7 +873,7 @@ void gfxMacPlatformFontList::AddFamily(CFStringRef aFamily) {
   AddFamily(NS_ConvertUTF16toUTF8(familyName), isHiddenSystemFont);
 }
 
-void gfxMacPlatformFontList::ReadSystemFontList(nsTArray<SystemFontListEntry>* aList) {
+void gfxMacPlatformFontList::ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList) {
   // Note: We rely on the records for mSystemTextFontFamilyName and
   // mSystemDisplayFontFamilyName (if present) being *before* the main
   // font list, so that those names are known in the content process
@@ -912,9 +910,7 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
     // the GetXPCOMProcessAttributes message, because it's much faster than
     // querying Core Text again in the child.
     auto& fontList = dom::ContentChild::GetSingleton()->SystemFontList();
-    for (SystemFontListEntry& fle : fontList) {
-      MOZ_ASSERT(fle.type() == SystemFontListEntry::Type::TFontFamilyListEntry);
-      FontFamilyListEntry& ffe(fle);
+    for (FontFamilyListEntry& ffe : fontList) {
       switch (ffe.entryType()) {
         case kStandardFontFamily:
           AddFamily(ffe.familyName(), false);

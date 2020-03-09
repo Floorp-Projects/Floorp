@@ -213,6 +213,8 @@ class gfxFontconfigFont : public gfxFT2FontBase {
 };
 
 class gfxFcPlatformFontList : public gfxPlatformFontList {
+  using FontPatternListEntry = mozilla::dom::SystemFontListEntry;
+
  public:
   gfxFcPlatformFontList();
 
@@ -227,8 +229,7 @@ class gfxFcPlatformFontList : public gfxPlatformFontList {
   void GetFontList(nsAtom* aLangGroup, const nsACString& aGenericFamily,
                    nsTArray<nsString>& aListOfFonts) override;
 
-  void ReadSystemFontList(
-      nsTArray<mozilla::dom::SystemFontListEntry>* retValue);
+  void ReadSystemFontList(nsTArray<FontPatternListEntry>* retValue);
 
   gfxFontEntry* CreateFontEntry(
       mozilla::fontlist::Face* aFace,

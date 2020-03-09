@@ -32,11 +32,11 @@ class gfxAndroidPlatform : public gfxPlatform {
 
   gfxImageFormat GetOffscreenFormat() override { return mOffscreenFormat; }
 
-  // to support IPC font list (sharing between chrome and content)
-  void GetSystemFontList(nsTArray<FontListEntry>* retValue);
-
   // platform implementations of font functions
   gfxPlatformFontList* CreatePlatformFontList() override;
+
+  void ReadSystemFontList(
+      nsTArray<mozilla::dom::SystemFontListEntry>* aFontList) override;
 
   void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
                               nsTArray<const char*>& aFontList) override;
