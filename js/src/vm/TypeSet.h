@@ -737,10 +737,11 @@ enum class DOMObjectKind : uint8_t { Proxy, Native, Unknown };
 
 class TemporaryTypeSet : public TypeSet {
  public:
-  TemporaryTypeSet() {}
+  TemporaryTypeSet() { MOZ_ASSERT(!jit::JitOptions.warpBuilder); }
   TemporaryTypeSet(LifoAlloc* alloc, Type type);
 
   TemporaryTypeSet(uint32_t flags, ObjectKey** objectSet) {
+    MOZ_ASSERT(!jit::JitOptions.warpBuilder);
     this->flags = flags;
     this->objectSet = objectSet;
   }

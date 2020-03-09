@@ -946,8 +946,10 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp,
       // other types as the result type encodes all needed information.
       MOZ_ASSERT_IF(IsInsideNursery(&vp.toObject()),
                     IonCompilationCanUseNurseryPointers());
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, &vp.toObject()));
+      if (!JitOptions.warpBuilder) {
+        setResultTypeSet(
+            MakeSingletonTypeSet(alloc, constraints, &vp.toObject()));
+      }
       break;
     case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
@@ -962,7 +964,9 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp,
       //
       // TODO We could track uninitialized lexicals more precisely by tracking
       // them in type sets.
-      setResultTypeSet(MakeUnknownTypeSet(alloc));
+      if (!JitOptions.warpBuilder) {
+        setResultTypeSet(MakeUnknownTypeSet(alloc));
+      }
       break;
     default:
       MOZ_CRASH("Unexpected type");
@@ -2401,7 +2405,9 @@ MBox::MBox(TempAllocator& alloc, MDefinition* ins)
   if (ins->resultTypeSet()) {
     setResultTypeSet(ins->resultTypeSet());
   } else if (ins->type() != MIRType::Value) {
-    setResultTypeSet(MakeMIRTypeSet(alloc, ins->type()));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(MakeMIRTypeSet(alloc, ins->type()));
+    }
   }
   setMovable();
 }

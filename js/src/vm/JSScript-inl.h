@@ -91,7 +91,7 @@ inline JSScript* BaseScript::asJSScript() {
 
 }  // namespace js
 
-inline JSFunction* JSScript::getFunction(size_t index) {
+inline JSFunction* JSScript::getFunction(size_t index) const {
   JSObject* obj = getObject(index);
   MOZ_RELEASE_ASSERT(obj->is<JSFunction>(), "Script object is not JSFunction");
   JSFunction* fun = &obj->as<JSFunction>();
@@ -99,18 +99,18 @@ inline JSFunction* JSScript::getFunction(size_t index) {
   return fun;
 }
 
-inline JSFunction* JSScript::getFunction(jsbytecode* pc) {
+inline JSFunction* JSScript::getFunction(jsbytecode* pc) const {
   return getFunction(GET_UINT32_INDEX(pc));
 }
 
-inline js::RegExpObject* JSScript::getRegExp(size_t index) {
+inline js::RegExpObject* JSScript::getRegExp(size_t index) const {
   JSObject* obj = getObject(index);
   MOZ_RELEASE_ASSERT(obj->is<js::RegExpObject>(),
                      "Script object is not RegExpObject");
   return &obj->as<js::RegExpObject>();
 }
 
-inline js::RegExpObject* JSScript::getRegExp(jsbytecode* pc) {
+inline js::RegExpObject* JSScript::getRegExp(jsbytecode* pc) const {
   JSObject* obj = getObject(pc);
   MOZ_RELEASE_ASSERT(obj->is<js::RegExpObject>(),
                      "Script object is not RegExpObject");

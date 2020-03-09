@@ -38,6 +38,10 @@ namespace jit {
   _(Int32)                  \
   _(Double)                 \
   _(ResumeIndex)            \
+  _(BigInt)                 \
+  _(String)                 \
+  _(Symbol)                 \
+  _(RegExp)                 \
   _(Pop)                    \
   _(PopN)                   \
   _(Dup)                    \
