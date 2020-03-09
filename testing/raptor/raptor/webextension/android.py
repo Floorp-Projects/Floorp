@@ -391,7 +391,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
             if not self.device.is_dir(remote_dir):
                 return
             self.device.pull(remote_dir, dump_dir)
-            mozcrash.log_crashes(LOG, dump_dir, self.config["symbols_path"])
+            self.crashes += mozcrash.log_crashes(LOG, dump_dir, self.config["symbols_path"])
         finally:
             try:
                 shutil.rmtree(dump_dir)
