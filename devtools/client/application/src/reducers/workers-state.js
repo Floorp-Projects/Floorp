@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 const {
   UPDATE_CAN_DEBUG_WORKERS,
   UPDATE_WORKERS,
@@ -19,19 +17,6 @@ function WorkersState() {
   };
 }
 
-function buildWorkerDataFromFronts({ registration, workers }) {
-  return workers.map(worker => ({
-    id: worker.id,
-    isActive: worker.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
-    scope: registration.scope,
-    lastUpdateTime: registration.lastUpdateTime, // only available for active worker
-    url: worker.url,
-    registrationFront: registration,
-    workerTargetFront: worker.workerTargetFront,
-    stateText: worker.stateText,
-  }));
-}
-
 function workersReducer(state = WorkersState(), action) {
   switch (action.type) {
     case UPDATE_CAN_DEBUG_WORKERS: {
@@ -41,9 +26,7 @@ function workersReducer(state = WorkersState(), action) {
     }
     case UPDATE_WORKERS: {
       const { workers } = action;
-      return Object.assign({}, state, {
-        list: workers.map(buildWorkerDataFromFronts).flat(),
-      });
+      return Object.assign({}, state, { list: workers });
     }
     default:
       return state;

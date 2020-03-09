@@ -56,6 +56,10 @@ serviceworker-worker-status-running = Running
 # Service Worker status. A stopped service worker is registered but not currently active.
 serviceworker-worker-status-stopped = Stopped
 
+# Service Worker status. A registering service worker is not yet registered and cannot be
+# started or debugged.
+serviceworker-worker-status-registering = Registering
+
 # Text displayed when no service workers are visible for the current page. Clicking on the
 # link will open https://developer-mozilla-org/docs/Web/API/Service_Worker_API/Using_Service_Workers
 serviceworker-empty-intro = You need to register a Service Worker to inspect it here. <a>Learn more</a>
