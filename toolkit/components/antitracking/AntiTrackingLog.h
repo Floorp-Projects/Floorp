@@ -21,10 +21,10 @@ static const nsCString::size_type sMaxSpecLength = 128;
   PR_BEGIN_MACRO                                                    \
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {   \
     nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));           \
-    _specStr.Truncate(std::min(_specStr.Length(), sMaxSpecLength)); \
     if (uri) {                                                      \
       _specStr = (uri)->GetSpecOrDefault();                         \
     }                                                               \
+    _specStr.Truncate(std::min(_specStr.Length(), sMaxSpecLength)); \
     const char* _spec = _specStr.get();                             \
     LOG(format);                                                    \
   }                                                                 \
@@ -34,16 +34,16 @@ static const nsCString::size_type sMaxSpecLength = 128;
   PR_BEGIN_MACRO                                                      \
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {     \
     nsAutoCString _specStr1(NS_LITERAL_CSTRING("(null)"));            \
-    _specStr1.Truncate(std::min(_specStr1.Length(), sMaxSpecLength)); \
     if (uri1) {                                                       \
       _specStr1 = (uri1)->GetSpecOrDefault();                         \
     }                                                                 \
+    _specStr1.Truncate(std::min(_specStr1.Length(), sMaxSpecLength)); \
     const char* _spec1 = _specStr1.get();                             \
     nsAutoCString _specStr2(NS_LITERAL_CSTRING("(null)"));            \
-    _specStr2.Truncate(std::min(_specStr2.Length(), sMaxSpecLength)); \
     if (uri2) {                                                       \
       _specStr2 = (uri2)->GetSpecOrDefault();                         \
     }                                                                 \
+    _specStr2.Truncate(std::min(_specStr2.Length(), sMaxSpecLength)); \
     const char* _spec2 = _specStr2.get();                             \
     LOG(format);                                                      \
   }                                                                   \
@@ -53,10 +53,10 @@ static const nsCString::size_type sMaxSpecLength = 128;
   PR_BEGIN_MACRO                                                    \
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {   \
     nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));           \
-    _specStr.Truncate(std::min(_specStr.Length(), sMaxSpecLength)); \
     if (principal) {                                                \
       (principal)->GetAsciiSpec(_specStr);                          \
     }                                                               \
+    _specStr.Truncate(std::min(_specStr.Length(), sMaxSpecLength)); \
     const char* _spec = _specStr.get();                             \
     LOG(format);                                                    \
   }                                                                 \
