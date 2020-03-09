@@ -2,7 +2,7 @@
 
 # version
 
-`val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L448)
+`val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L473)
 
 Overrides [Engine.version](../../mozilla.components.concept.engine/-engine/version.md)
 

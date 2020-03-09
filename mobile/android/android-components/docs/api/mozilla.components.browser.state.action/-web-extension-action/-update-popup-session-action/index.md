@@ -2,7 +2,7 @@
 
 # UpdatePopupSessionAction
 
-`data class UpdatePopupSessionAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L327)
+`data class UpdatePopupSessionAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L332)
 
 Keeps track of the last session used to display an extension action popup.
 
