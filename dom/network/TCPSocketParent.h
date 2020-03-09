@@ -48,7 +48,7 @@ class TCPSocketParent : public mozilla::net::PTCPSocketParent,
  public:
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
-  TCPSocketParent() {}
+  TCPSocketParent() = default;
 
   mozilla::ipc::IPCResult RecvOpen(const nsString& aHost, const uint16_t& aPort,
                                    const bool& useSSL,
