@@ -1,0 +1,10 @@
+[
+  {
+    "size": 37875625,
+    "visibility": "public",
+    "digest": "d66234c9ca692d03412dd194b3f47c098e8ee1b17b178034fc86e0d8ada4d4f6cd1fbcfb62b7e7016539a878b1274ef83451a0acaca7011efaacb291fa52918d",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-5.0.1-windows.zip",
+    "unpack": true
+  }
+]

@@ -85,6 +85,7 @@ Http2Layer._handle_remote_settings_changed = _remote_settings_changed
 
 class AlternateServerPlayback:
     def __init__(self):
+
         ctx.master.addons.remove(ctx.master.addons.get("serverplayback"))
         self.flowmap = {}
         self.configured = False
@@ -93,6 +94,9 @@ class AlternateServerPlayback:
         self._done = False
         self._replayed = 0
         self._not_replayed = 0
+        self.mitm_version = ctx.mitmproxy.version.MITMPROXY
+
+        ctx.log.info("MitmProxy version: %s" % self.mitm_version)
 
     def load(self, loader):
         loader.add_option(
@@ -112,16 +116,30 @@ class AlternateServerPlayback:
         """
         for i in flows:
             if i.type == 'websocket':
+                # Mitmproxy can't replay WebSocket packages.
                 ctx.log.info(
-                    "Request is a WebSocketFlow. Removing from request list as WebSockets"
-                    " are dissabled "
+                    "Recorded response is a WebSocketFlow. Removing from recording list as"
+                    "  WebSockets are disabled"
                 )
             elif i.response:
-                l = self.flowmap.setdefault(self._hash(i), [])
-                l.append(i)
+                # check if recorded request has a response associated
+                if self.mitm_version == "5.0.1":
+                    if i.response.content:
+                        # Mitmproxy 5.0.1 Cannot assemble flow with missing content
+
+                        l = self.flowmap.setdefault(self._hash(i), [])
+                        l.append(i)
+                    else:
+                        ctx.log.info(
+                             "Recorded response %s has no content. Removing from recording list"
+                             % i.request.url
+                        )
+                if self.mitm_version == "4.0.4":
+                    l = self.flowmap.setdefault(self._hash(i), [])
+                    l.append(i)
             else:
                 ctx.log.info(
-                    "Request %s has no response. Removing from request list"
+                    "Recorded request %s has no response. Removing from recording list"
                     % i.request.url
                 )
         ctx.master.addons.trigger("update", [])
