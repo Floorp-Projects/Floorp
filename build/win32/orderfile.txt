@@ -19404,6 +19404,7 @@ Gecko_BeginWritingCString
 ?ShouldEnableClassifier@UrlClassifierCommon@net@mozilla@@SA_NPAVnsIChannel@@@Z
 ?AddonMayLoad@UrlClassifierCommon@net@mozilla@@SA_NPAVnsIChannel@@PAVnsIURI@@@Z
 ?GetTopWindowURI@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@PAPAVnsIURI@@@Z
+?MaybeGetDocumentURIBeingLoaded@AntiTrackingCommon@mozilla@@SA?AU?$already_AddRefed@VnsIURI@@@@PAVnsIChannel@@@Z
 ?GetTopWindowURI@HttpBaseChannel@net@mozilla@@IAE?AW4nsresult@@PAVnsIURI@@PAPAV5@@Z
 XPCOMService_GetThirdPartyUtil
 ?GetTopWindowForChannel@ThirdPartyUtil@@UAG?AW4nsresult@@PAVnsIChannel@@PAVnsIURI@@PAPAVmozIDOMWindowProxy@@@Z
@@ -19531,6 +19532,7 @@ XPCOMService_GetThirdPartyUtil
 ?IsTrackingClassificationFlag@UrlClassifierCommon@net@mozilla@@SA_NI@Z
 ?DeQueue@nsHostResolver@@AAEXAAV?$LinkedList@V?$RefPtr@VnsHostRecord@@@@@mozilla@@PAPAVAddrHostRecord@@@Z
 ?popFirst@?$LinkedList@V?$RefPtr@VnsHostRecord@@@@@mozilla@@QAE?AV?$RefPtr@VnsHostRecord@@@@XZ
+?IsFirstPartyStorageAccessGrantedFor@AntiTrackingCommon@mozilla@@SA_NPAVnsIHttpChannel@@PAVnsIURI@@PAI@Z
 ?GetTopLevelPrincipal@LoadInfo@net@mozilla@@UAEPAVnsIPrincipal@@XZ
 ?GetIsMainDocumentChannel@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@PA_N@Z
 ?GetAddrInfo@net@mozilla@@YA?AW4nsresult@@ABV?$nsTSubstring@D@@GGPAPAVAddrInfo@12@_N@Z
@@ -19546,10 +19548,12 @@ XPCOMService_GetThirdPartyUtil
 ?extensions_cookiesBehavior_overrideOnTopLevel@StaticPrefs@mozilla@@SA_NXZ
 ?GetChannelId@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@PA_K@Z
 ??$?0PAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@@?$PairHelper@PAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@$00$0A@@detail@mozilla@@IAE@$$QAPAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@$$QAV?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@2@@Z
+?OnAntiTrackingSettingsChanged@AntiTrackingCommon@mozilla@@SAXABV?$function@$$A6AXXZ@std@@@Z
 ?first@?$PairHelper@PAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@$00$0A@@detail@mozilla@@IBEABQAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@XZ
 ??4?$UniquePtr@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@@mozilla@@QAEAAV01@$$QAV01@@Z
 ??$AppendElement@ABV?$function@$$A6AXXZ@std@@UnsTArrayInfallibleAllocator@@@?$nsTArray_Impl@V?$function@$$A6AXXZ@std@@UnsTArrayInfallibleAllocator@@@@IAEPAV?$function@$$A6AXXZ@std@@ABV12@@Z
 ??$EnsureCapacity@UnsTArrayInfallibleAllocator@@@?$nsTArray_base@UnsTArrayInfallibleAllocator@@U?$nsTArray_CopyWithConstructors@V?$function@$$A6AXXZ@std@@@@@@IAE?AUnsTArrayInfallibleResult@@II@Z
+?IsOnContentBlockingAllowList@AntiTrackingCommon@mozilla@@SA?AW4nsresult@@PAVnsIURI@@_NW4ContentBlockingAllowListPurpose@12@AA_N@Z
 ?TestPermissionOriginNoSuffix@nsPermissionManager@@UAG?AW4nsresult@@ABV?$nsTSubstring@D@@0PAI@Z
 ?NS_IsSafeTopLevelNav@@YA_NPAVnsIChannel@@@Z
 ?IsSafeMethod@nsHttpRequestHead@net@mozilla@@QAE_NXZ
@@ -26364,6 +26368,7 @@ Gecko_AppendPropertyValuePair
 ?QueryInterface@imgLoader@@UAG?AW4nsresult@@ABUnsID@@PAPAX@Z
 ?FindEntryProperties@imgLoader@@UAG?AW4nsresult@@PAVnsIURI@@PAVDocument@dom@mozilla@@PAPAVnsIProperties@@@Z
 ?IsThirdPartyTrackingResourceWindow@nsContentUtils@@SA_NPAVnsPIDOMWindowInner@@@Z
+?MaybeIsFirstPartyStorageAccessGrantedFor@AntiTrackingCommon@mozilla@@SA_NPAVnsPIDOMWindowInner@@PAVnsIURI@@@Z
 ??$CreateAndResolve@_N@?$MozPromise@H_N$00@mozilla@@SA?AV?$RefPtr@V?$MozPromise@H_N$00@mozilla@@@@$$QA_NPBD@Z
 ?AdjustPriority@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@H@Z
 ?SetTimingEnabled@imgRequestProxy@@UAG?AW4nsresult@@_N@Z

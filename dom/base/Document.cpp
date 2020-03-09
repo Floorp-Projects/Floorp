@@ -11,13 +11,11 @@
 #include "AudioChannelService.h"
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"
-#include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/ContentBlockingAllowList.h"
-#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditorCommands.h"
@@ -15066,9 +15064,9 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
   }
 
   // We don't care when the asynchronous work finishes here.
-  Unused << ContentBlocking::AllowAccessFor(
+  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       NodePrincipal(), openerInner,
-      ContentBlockingNotifier::eOpenerAfterUserInteraction);
+      AntiTrackingCommon::eOpenerAfterUserInteraction);
 }
 
 namespace {
@@ -15168,7 +15166,7 @@ class UserIntractionTimer final : public Runnable,
     // If the document is not gone, let's reset its timer flag.
     nsCOMPtr<Document> document = do_QueryReferent(mDocument);
     if (document) {
-      ContentBlockingUserInteraction::Observe(mPrincipal);
+      AntiTrackingCommon::StoreUserInteractionFor(mPrincipal);
       document->ResetUserInteractionTimer();
     }
   }
@@ -15214,7 +15212,7 @@ void Document::MaybeStoreUserInteractionAsPermission() {
 
   if (!mUserHasInteracted) {
     // First interaction, let's store this info now.
-    ContentBlockingUserInteraction::Observe(NodePrincipal());
+    AntiTrackingCommon::StoreUserInteractionFor(NodePrincipal());
     return;
   }
 
@@ -15639,11 +15637,10 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
       RefPtr<Document> self(this);
 
-      auto performFinalChecks =
-          [inner,
-           self]() -> RefPtr<ContentBlocking::StorageAccessFinalCheckPromise> {
-        RefPtr<ContentBlocking::StorageAccessFinalCheckPromise::Private> p =
-            new ContentBlocking::StorageAccessFinalCheckPromise::Private(
+      auto performFinalChecks = [inner, self]()
+          -> RefPtr<AntiTrackingCommon::StorageAccessFinalCheckPromise> {
+        RefPtr<AntiTrackingCommon::StorageAccessFinalCheckPromise::Private> p =
+            new AntiTrackingCommon::StorageAccessFinalCheckPromise::Private(
                 __func__);
         RefPtr<StorageAccessPermissionRequest> sapr =
             StorageAccessPermissionRequest::Create(
@@ -15652,7 +15649,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                 [p] {
                   Telemetry::AccumulateCategorical(
                       Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
-                  p->Resolve(ContentBlocking::eAllow, __func__);
+                  p->Resolve(AntiTrackingCommon::eAllow, __func__);
                 },
                 // Block
                 [p] {
@@ -15697,10 +15694,10 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                 MOZ_ASSERT_IF(pr2 != PromptResult::Granted,
                               pr2 == PromptResult::Denied);
                 if (pr2 == PromptResult::Granted) {
-                  ContentBlocking::StorageAccessPromptChoices choice =
-                      ContentBlocking::eAllow;
+                  AntiTrackingCommon::StorageAccessPromptChoices choice =
+                      AntiTrackingCommon::eAllow;
                   if (autoGrant) {
-                    choice = ContentBlocking::eAllowAutoGrant;
+                    choice = AntiTrackingCommon::eAllowAutoGrant;
                   }
                   if (!autoGrant) {
                     p->Resolve(choice, __func__);
@@ -15723,8 +15720,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
         return std::move(p);
       };
-      ContentBlocking::AllowAccessFor(
-          NodePrincipal(), inner, ContentBlockingNotifier::eStorageAccessAPI,
+      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
+          NodePrincipal(), inner, AntiTrackingCommon::eStorageAccessAPI,
           performFinalChecks)
           ->Then(
               GetCurrentThreadSerialEventTarget(), __func__,
@@ -15787,7 +15784,7 @@ Document::AutomaticStorageAccessCanBeGranted() {
 
 bool Document::AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal) {
   nsAutoCString prefix;
-  AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
+  AntiTrackingCommon::CreateStoragePermissionKey(aPrincipal, prefix);
 
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
@@ -16047,11 +16044,11 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
     return mActiveStoragePrincipal;
   }
 
-  // We use the lower-level ContentBlocking API here to ensure this
+  // We use the lower-level AntiTrackingCommon API here to ensure this
   // check doesn't send notifications.
   uint32_t rejectedReason = 0;
-  if (ContentBlocking::ShouldAllowAccessFor(inner, GetDocumentURI(),
-                                            &rejectedReason)) {
+  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+          inner, GetDocumentURI(), &rejectedReason)) {
     return mActiveStoragePrincipal = NodePrincipal();
   }
 

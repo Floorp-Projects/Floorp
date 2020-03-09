@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ContentBlockingLog_h
-#define mozilla_ContentBlockingLog_h
+#ifndef mozilla_dom_ContentBlockingLog_h
+#define mozilla_dom_ContentBlockingLog_h
 
-#include "mozilla/ContentBlockingNotifier.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_browser.h"
@@ -18,19 +18,18 @@
 #include "nsTArray.h"
 #include "nsWindowSizes.h"
 
-class nsIPrincipal;
-
 namespace mozilla {
+namespace dom {
 
 class ContentBlockingLog final {
-  typedef ContentBlockingNotifier::StorageAccessGrantedReason
+  typedef AntiTrackingCommon::StorageAccessGrantedReason
       StorageAccessGrantedReason;
 
   struct LogEntry {
     uint32_t mType;
     uint32_t mRepeatCount;
     bool mBlocked;
-    Maybe<ContentBlockingNotifier::StorageAccessGrantedReason> mReason;
+    Maybe<AntiTrackingCommon::StorageAccessGrantedReason> mReason;
     nsTArray<nsCString> mTrackingFullHashes;
   };
 
@@ -88,12 +87,12 @@ class ContentBlockingLog final {
   // ContentBlockingLog from content processes.
   Maybe<uint32_t> RecordLogParent(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
       const nsTArray<nsCString>& aTrackingFullHashes);
 
   void RecordLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
       const nsTArray<nsCString>& aTrackingFullHashes) {
     RecordLogInternal(aOrigin, aType, aBlocked, aReason, aTrackingFullHashes);
   }
@@ -242,8 +241,8 @@ class ContentBlockingLog final {
  private:
   void RecordLogInternal(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>&
-          aReason = Nothing(),
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          Nothing(),
       const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>()) {
     DebugOnly<bool> isCookiesBlockedTracker =
         aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
@@ -425,6 +424,7 @@ class ContentBlockingLog final {
   OriginDataTable mLog;
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #endif

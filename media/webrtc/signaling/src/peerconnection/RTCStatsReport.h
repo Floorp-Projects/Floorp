@@ -18,7 +18,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/UniquePtr.h"
 #include "prtime.h"  // PR_Now
-#include "mozilla/MozPromise.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"  // RTCStatsCollection
 

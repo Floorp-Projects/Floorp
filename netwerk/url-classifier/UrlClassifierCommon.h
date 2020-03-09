@@ -7,8 +7,8 @@
 #ifndef mozilla_net_UrlClassifierCommon_h
 #define mozilla_net_UrlClassifierCommon_h
 
-#include "mozilla/Logging.h"
 #include "nsString.h"
+#include "mozilla/AntiTrackingCommon.h"
 
 #include <vector>
 
