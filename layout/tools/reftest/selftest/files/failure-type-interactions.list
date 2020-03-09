@@ -1,0 +1,11 @@
+# interactions between skip and fail
+skip-if(true) fails          == skip-if_fails.html ref.html
+skip-if(true) fails-if(true) == skip-if_fails-if.html ref.html
+skip fails                   == skip_fails.html ref.html
+skip-if(false) fails         == fails.html ref.html
+fails skip-if(true)          == fails_skip-if.html ref.html
+fails-if(true) skip-if(true) == fails-if_skip-if.html ref.html
+fails skip                   == fails_skip.html ref.html
+fails-if(false) skip         == skip.html ref.html
+skip-if(true) fails skip-if(false) == skip-if-true_fails_skip-if-false ref.html
+skip-if(false) fails skip-if(true) == skip-if-false_fails_skip-if-true ref.html
