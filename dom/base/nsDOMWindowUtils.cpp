@@ -2573,9 +2573,7 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
-  *aResult = v1.ComputeDistance(property, v2, computedStyle);
+  *aResult = v1.ComputeDistance(property, v2);
   return NS_OK;
 }
 
