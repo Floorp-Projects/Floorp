@@ -75,7 +75,10 @@ CreateElementTransaction::DoTransaction() {
   RefPtr<EditorBase> editorBase(mEditorBase);
 
   mNewNode = editorBase->CreateHTMLContent(mTag);
-  NS_ENSURE_STATE(mNewNode);
+  if (!mNewNode) {
+    NS_WARNING("EditorBase::CreateHTMLContent() failed");
+    return NS_ERROR_FAILURE;
+  }
 
   // Try to insert formatting whitespace for the new node:
   OwningNonNull<Element> newElement(*mNewNode);
@@ -83,11 +86,14 @@ CreateElementTransaction::DoTransaction() {
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditorBase::ToGenericNSResult(rv);
   }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::MarkElementDirty() failed, but ignored");
 
   // Insert the new node
   ErrorResult error;
   InsertNewNode(error);
-  if (NS_WARN_IF(error.Failed())) {
+  if (error.Failed()) {
+    NS_WARNING("CreateElementTransaction::InsertNewNode() failed");
     return error.StealNSResult();
   }
 
@@ -98,20 +104,21 @@ CreateElementTransaction::DoTransaction() {
   }
 
   RefPtr<Selection> selection = editorBase->GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  EditorRawDOMPoint afterNewNode(mNewNode);
-  if (NS_WARN_IF(!afterNewNode.AdvanceOffset())) {
+  EditorRawDOMPoint afterNewNode(EditorRawDOMPoint::After(mNewNode));
+  if (NS_WARN_IF(!afterNewNode.IsSet())) {
     // If mutation observer or mutation event listener moved or removed the
     // new node, we hit this case.  Should we use script blocker while we're
     // in this method?
     return NS_ERROR_FAILURE;
   }
-  selection->Collapse(afterNewNode, error);
-  if (error.Failed()) {
-    NS_WARNING("selection could not be collapsed after insert");
-    error.SuppressException();
-  }
+  IgnoredErrorResult ignoredError;
+  selection->Collapse(afterNewNode, ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                       "Selection::Collapse() failed, but ignored");
   return NS_OK;
 }
 
@@ -119,12 +126,14 @@ void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
   if (mPointToInsert.IsSetAndValid()) {
     if (mPointToInsert.IsEndOfContainer()) {
       mPointToInsert.GetContainer()->AppendChild(*mNewNode, aError);
-      NS_WARNING_ASSERTION(!aError.Failed(), "Failed to append the new node");
+      NS_WARNING_ASSERTION(!aError.Failed(),
+                           "nsINode::AppendChild() failed, but ignored");
       return;
     }
     mPointToInsert.GetContainer()->InsertBefore(
         *mNewNode, mPointToInsert.GetChild(), aError);
-    NS_WARNING_ASSERTION(!aError.Failed(), "Failed to insert the new node");
+    NS_WARNING_ASSERTION(!aError.Failed(),
+                         "nsINode::InsertBefore() failed, but ignored");
     return;
   }
 
@@ -138,25 +147,22 @@ void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
   // If mPointToInsert has only offset and it's not valid, we need to treat
   // it as pointing end of the container.
   mPointToInsert.GetContainer()->AppendChild(*mNewNode, aError);
-  NS_WARNING_ASSERTION(!aError.Failed(), "Failed to append the new node");
+  NS_WARNING_ASSERTION(!aError.Failed(),
+                       "nsINode::AppendChild() failed, but ignored");
 }
 
-NS_IMETHODIMP
-CreateElementTransaction::UndoTransaction() {
+NS_IMETHODIMP CreateElementTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   ErrorResult error;
   mPointToInsert.GetContainer()->RemoveChild(*mNewNode, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
+  return error.StealNSResult();
 }
 
-NS_IMETHODIMP
-CreateElementTransaction::RedoTransaction() {
+NS_IMETHODIMP CreateElementTransaction::RedoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -169,10 +175,9 @@ CreateElementTransaction::RedoTransaction() {
   // Now, reinsert mNewNode
   ErrorResult error;
   InsertNewNode(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(!error.Failed(),
+                       "CreateElementTransaction::InsertNewNode() failed");
+  return error.StealNSResult();
 }
 
 already_AddRefed<Element> CreateElementTransaction::GetNewNode() {
