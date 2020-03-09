@@ -10,6 +10,7 @@ compatibility, and ready inputs to an Android multi-architecture fat AAR build.
 from __future__ import absolute_import, unicode_literals, print_function
 
 import argparse
+import six
 import sys
 
 from collections import (
@@ -70,7 +71,7 @@ def fat_aar(distdir, aars_paths, no_process=False, no_compatibility_check=False)
                     diffs['{}!/{}'.format(path, r)][fingerprint].append(arch)
 
             else:
-                fingerprint = sha1(fileobj.open().read()).hexdigest()
+                fingerprint = sha1(six.ensure_binary(fileobj.open().read())).hexdigest()
                 # There's no need to distinguish `target.maven.zip` from `assets/omni.ja` here,
                 # since in practice they will never overlap.
                 diffs[path][fingerprint].append(arch)
@@ -99,9 +100,9 @@ def fat_aar(distdir, aars_paths, no_process=False, no_compatibility_check=False)
         return '\n'.join(sorted(
             '  {archs} -> {fingerprint}'.format(archs=', '.join(sorted(archs)),
                                                 fingerprint=fingerprint)
-            for fingerprint, archs in ds.iteritems()))
+            for fingerprint, archs in ds.items()))
 
-    for p, ds in sorted(diffs.iteritems()):
+    for p, ds in sorted(diffs.items()):
         if len(ds) <= 1:
             # Only one hash across all inputs: roll on.
             continue
@@ -113,7 +114,7 @@ def fat_aar(distdir, aars_paths, no_process=False, no_compatibility_check=False)
 
         not_allowed[p] = ds
 
-    for p, ds in not_allowed.iteritems():
+    for p, ds in not_allowed.items():
         print('Disallowed: Path "{path}" has architecture-specific versions:\n{ds_repr}'.format(
                  path=p, ds_repr=format_diffs(ds)))
 
