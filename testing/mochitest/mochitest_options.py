@@ -393,6 +393,12 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Start the browser JS debugger before running the test. Implies --no-autorun.",
           }],
+        [["--jsdebugger-path"],
+         {"default": None,
+          "dest": "jsdebuggerPath",
+          "help": "Path to a Firefox binary that will be used to run the toolbox. Should "
+                  "be used together with --jsdebugger."
+          }],
         [["--debug-on-failure"],
          {"action": "store_true",
           "default": False,
@@ -716,6 +722,10 @@ class MochitestArguments(ArgumentContainer):
         if options.debugOnFailure and not options.jsdebugger:
             parser.error(
                 "--debug-on-failure requires --jsdebugger.")
+
+        if options.jsdebuggerPath and not options.jsdebugger:
+            parser.error(
+                "--jsdebugger-path requires --jsdebugger.")
 
         if options.debuggerArgs and not options.debugger:
             parser.error(
