@@ -200,6 +200,7 @@ nsIOService::nsIOService()
       mHttpHandlerAlreadyShutingDown(false),
       mNetworkLinkServiceInitialized(false),
       mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY),
+      mMutex("nsIOService::mMutex"),
       mTotalRequests(0),
       mCacheWon(0),
       mNetWon(0),
@@ -1321,15 +1322,25 @@ nsIOService::AllowPort(int32_t inPort, const char* scheme, bool* _retval) {
     return NS_OK;
   }
 
+  nsTArray<int32_t> restrictedPortList;
+  {
+    MutexAutoLock lock(mMutex);
+    restrictedPortList.Assign(mRestrictedPortList);
+  }
+
   // first check to see if the port is in our blacklist:
-  int32_t badPortListCnt = mRestrictedPortList.Length();
+  int32_t badPortListCnt = restrictedPortList.Length();
   for (int i = 0; i < badPortListCnt; i++) {
-    if (port == mRestrictedPortList[i]) {
+    if (port == restrictedPortList[i]) {
       *_retval = false;
 
       // check to see if the protocol wants to override
       if (!scheme) return NS_OK;
 
+      // We don't support get protocol handler off main thread.
+      if (!NS_IsMainThread()) {
+        return NS_OK;
+      }
       nsCOMPtr<nsIProtocolHandler> handler;
       nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
       if (NS_FAILED(rv)) return rv;
@@ -1407,7 +1418,11 @@ void nsIOService::PrefsChanged(const char* pref) {
 
 void nsIOService::ParsePortList(const char* pref, bool remove) {
   nsAutoCString portList;
-
+  nsTArray<int32_t> restrictedPortList;
+  {
+    MutexAutoLock lock(mMutex);
+    restrictedPortList.Assign(std::move(mRestrictedPortList));
+  }
   // Get a pref string and chop it up into a list of ports.
   Preferences::GetCString(pref, portList);
   if (!portList.IsVoid()) {
@@ -1424,10 +1439,10 @@ void nsIOService::ParsePortList(const char* pref, bool remove) {
           int32_t curPort;
           if (remove) {
             for (curPort = portBegin; curPort <= portEnd; curPort++)
-              mRestrictedPortList.RemoveElement(curPort);
+              restrictedPortList.RemoveElement(curPort);
           } else {
             for (curPort = portBegin; curPort <= portEnd; curPort++)
-              mRestrictedPortList.AppendElement(curPort);
+              restrictedPortList.AppendElement(curPort);
           }
         }
       } else {
@@ -1435,13 +1450,16 @@ void nsIOService::ParsePortList(const char* pref, bool remove) {
         int32_t port = portListArray[index].ToInteger(&aErrorCode);
         if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
           if (remove)
-            mRestrictedPortList.RemoveElement(port);
+            restrictedPortList.RemoveElement(port);
           else
-            mRestrictedPortList.AppendElement(port);
+            restrictedPortList.AppendElement(port);
         }
       }
     }
   }
+
+  MutexAutoLock lock(mMutex);
+  mRestrictedPortList.Assign(std::move(restrictedPortList));
 }
 
 class nsWakeupNotifier : public Runnable {
