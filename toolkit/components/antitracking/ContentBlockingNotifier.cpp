@@ -434,7 +434,7 @@ void ContentBlockingNotifier::OnDecision(nsIChannel* aChannel,
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(aChannel);
+      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(aChannel);
   nsCOMPtr<mozIDOMWindowProxy> win;
   nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, uriBeingLoaded,
                                                        getter_AddRefs(win));
