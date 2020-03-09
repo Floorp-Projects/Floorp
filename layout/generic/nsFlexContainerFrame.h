@@ -273,14 +273,16 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                             flex line, if any such items exist. Otherwise,
    *                             nscoord_MIN.
    */
-  void DoFlexLayout(
-      ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
-      nsReflowStatus& aStatus, nscoord& aContentBoxMainSize,
-      nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
-      nscoord aAvailableBSizeForContent, mozilla::LinkedList<FlexLine>& aLines,
-      nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
-      nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
-      ComputedFlexContainerInfo* const aContainerInfo);
+  void DoFlexLayout(const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
+                    nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
+                    nscoord& aFlexContainerAscent,
+                    nscoord aAvailableBSizeForContent,
+                    mozilla::LinkedList<FlexLine>& aLines,
+                    nsTArray<StrutInfo>& aStruts,
+                    const FlexboxAxisTracker& aAxisTracker,
+                    nscoord aMainGapSize, nscoord aCrossGapSize,
+                    bool aHasLineClampEllipsis,
+                    ComputedFlexContainerInfo* const aContainerInfo);
 
   /**
    * If our devtools have requested a ComputedFlexContainerInfo for this flex
@@ -426,6 +428,27 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                            nsReflowStatus& aStatus) const;
 
   void SizeItemInCrossAxis(ReflowInput& aChildReflowInput, FlexItem& aItem);
+
+  /**
+   * This method computes flex container's final size and baseline.
+   *
+   * @param aContentBoxMainSize the final content-box main-size of the flex
+   *                            container.
+   * @param aContentBoxCrossSize the final content-box cross-size of the flex
+   *                             container.
+   * @param aFlexContainerAscent the flex container's ascent, if one has been
+   *                             determined from its children. (If there are no
+   *                             children, pass nscoord_MIN to synthesize a
+   *                             value from the flex container itself).
+   */
+  void ComputeFinalSize(ReflowOutput& aDesiredSize,
+                        const ReflowInput& aReflowInput,
+                        nsReflowStatus& aStatus,
+                        const nscoord aContentBoxMainSize,
+                        const nscoord aContentBoxCrossSize,
+                        nscoord aFlexContainerAscent,
+                        mozilla::LinkedList<FlexLine>& aLines,
+                        const FlexboxAxisTracker& aAxisTracker);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any
