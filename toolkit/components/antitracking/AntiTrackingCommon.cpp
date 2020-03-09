@@ -47,8 +47,6 @@
 #include "nsScriptSecurityManager.h"
 #include "prtime.h"
 
-#define ANTITRACKING_PERM_KEY "3rdPartyStorage"
-
 namespace mozilla {
 
 LazyLogModule gAntiTrackingLog("AntiTracking");
@@ -96,18 +94,6 @@ bool GetParentPrincipalAndTrackingOrigin(
   }
   return true;
 };
-
-void CreatePermissionKey(const nsCString& aTrackingOrigin,
-                         nsACString& aPermissionKey) {
-  MOZ_ASSERT(aPermissionKey.IsEmpty());
-
-  static const nsLiteralCString prefix =
-      NS_LITERAL_CSTRING(ANTITRACKING_PERM_KEY "^");
-
-  aPermissionKey.SetCapacity(prefix.Length() + aTrackingOrigin.Length());
-  aPermissionKey.Append(prefix);
-  aPermissionKey.Append(aTrackingOrigin);
-}
 
 // This internal method returns ACCESS_DENY if the access is denied,
 // ACCESS_DEFAULT if unknown, some other access code if granted.
@@ -610,7 +596,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
        topLevelStoragePrincipal,
        aReason](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     nsAutoCString permissionKey;
-    CreatePermissionKey(trackingOrigin, permissionKey);
+    AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin,
+                                                  permissionKey);
 
     // Let's store the permission in the current parent window.
     topInnerWindow->SaveStorageAccessGranted(permissionKey);
@@ -737,7 +724,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
   }
 
   nsAutoCString type;
-  CreatePermissionKey(aTrackingOrigin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin, type);
 
   LOG(
       ("Computed permission key: %s, expiry: %u, proceeding to save in the "
@@ -756,54 +743,6 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
 
   LOG(("Result: %s", NS_SUCCEEDED(rv) ? "success" : "failure"));
   return FirstPartyStorageAccessGrantPromise::CreateAndResolve(rv, __func__);
-}
-
-// static
-bool AntiTrackingCommon::CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
-                                                    nsACString& aKey) {
-  if (!aPrincipal) {
-    return false;
-  }
-
-  nsAutoCString origin;
-  nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  CreatePermissionKey(origin, aKey);
-  return true;
-}
-
-// static
-bool AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
-                                                   nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aPermission);
-  MOZ_ASSERT(aPrincipal);
-
-  // The permission key may belong either to a tracking origin on the same
-  // origin as the granted origin, or on another origin as the granted origin
-  // (for example when a tracker in a third-party context uses window.open to
-  // open another origin where that second origin would be the granted origin.)
-  // But even in the second case, the type of the permission would still be
-  // formed by concatenating the granted origin to the end of the type name
-  // (see CreatePermissionKey).  Therefore, we pass in the same argument to
-  // both tracking origin and granted origin here in order to compute the
-  // shorter permission key and will then do a prefix match on the type of the
-  // input permission to see if it is a storage access permission or not.
-  nsAutoCString permissionKey;
-  bool result = CreateStoragePermissionKey(aPrincipal, permissionKey);
-  if (NS_WARN_IF(!result)) {
-    return false;
-  }
-
-  nsAutoCString type;
-  nsresult rv = aPermission->GetType(type);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return StringBeginsWith(type, permissionKey);
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
@@ -997,7 +936,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   nsAutoCString type;
-  CreatePermissionKey(trackingOrigin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
 
   if (topInnerWindow->HasStorageAccessGranted(type)) {
     LOG(("Permission stored in the window. All good."));
@@ -1260,7 +1199,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   nsAutoCString type;
-  CreatePermissionKey(trackingOrigin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
 
   uint32_t privateBrowsingId = 0;
   rv = channelPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
@@ -1351,7 +1290,7 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
   nsIPrincipal* parentPrincipal = parentDocument->NodePrincipal();
 
   nsAutoCString type;
-  CreatePermissionKey(origin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(origin, type);
 
   return CheckAntiTrackingPermission(
       parentPrincipal, type,
