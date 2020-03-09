@@ -17,7 +17,7 @@
 /**
  * Creates a new generate-id function call
  **/
-GenerateIdFunctionCall::GenerateIdFunctionCall() {}
+GenerateIdFunctionCall::GenerateIdFunctionCall() = default;
 
 /**
  * Evaluates this Expr based on the given context node and processor state

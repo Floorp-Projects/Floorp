@@ -21,7 +21,7 @@ class txIEvalContext;
  */
 class txXPathResultComparator {
  public:
-  virtual ~txXPathResultComparator() {}
+  virtual ~txXPathResultComparator() = default;
 
   /*
    * Compares two XPath results. Returns -1 if val1 < val2,
