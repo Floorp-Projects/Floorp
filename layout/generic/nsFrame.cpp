@@ -568,7 +568,8 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
        (content &&
         // Form controls shouldn't become inflation containers.
         (content->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup,
-                                      nsGkAtoms::select, nsGkAtoms::input)))) &&
+                                      nsGkAtoms::select, nsGkAtoms::input,
+                                      nsGkAtoms::button)))) &&
       !(aFrame->IsXULBoxFrame() && aFrame->GetParent()->IsXULBoxFrame());
   NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) || isInline ||
                    // br frames and mathml frames report being line
