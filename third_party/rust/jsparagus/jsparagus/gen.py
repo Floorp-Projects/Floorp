@@ -30,6 +30,8 @@ import collections
 import io
 import pickle
 import sys
+import itertools
+import math
 
 from .ordered import OrderedSet, OrderedFrozenSet
 
@@ -37,11 +39,21 @@ from .grammar import (Grammar,
                       NtDef, Production, Some, CallMethod, InitNt,
                       is_concrete_element,
                       Optional, Exclude, Literal, UnicodeCategory, Nt, Var,
-                      NoLineTerminatorHere, ErrorSymbol,
+                      End, NoLineTerminatorHere, ErrorSymbol,
                       LookaheadRule, lookahead_contains, lookahead_intersect)
+from .actions import (Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag,
+                      PushFlag, PopFlag, FunCall, Seq)
 from . import emit
 from .runtime import ACCEPT, ErrorToken
 
+def keep_until(iterable, pred):
+    """Filter an iterable generator or list and keep all elements until the first
+    time the predicate becomes true, including the element where the predicate
+    is true. All elements after are skipped."""
+    for e in iterable:
+        yield e
+        if pred(e):
+            return
 
 # *** Operations on grammars **************************************************
 
@@ -176,6 +188,12 @@ def check_cycle_free(grammar):
                     elif isinstance(e, UnicodeCategory):
                         # This production consume a class of character,
                         # therefore it cannot correspond to an empty cycle.
+                        break
+                    elif isinstance(e, End):
+                        # This production consume the End meta-character,
+                        # therefore it cannot correspond to an empty cycle,
+                        # even if this character is expect to be produced
+                        # infinitely once the end is reached.
                         break
                     else:
                         # Optional is not possible because we called
@@ -578,7 +596,14 @@ def expand_all_optional_elements(grammar):
     """
     expanded_grammar = {}
 
-    empties = empty_nt_set(grammar)
+    # This was capturing the set of empty production to simplify the work of
+    # the previous algorithm which was trying to determine the lookahead.
+    # However, with the LR0Generator this is no longer needed as we are
+    # generating deliberatly inconsistent parse table states, which are then
+    # properly fixed by adding lookahead information where needed, and without
+    # bugs!
+    # empties = empty_nt_set(grammar)
+    empties = {}
 
     # Put all the productions in one big list, so each one has an index. We
     # will use the indices in the action table (as reduce action payloads).
@@ -641,20 +666,6 @@ def expand_all_optional_elements(grammar):
     return (grammar.with_nonterminals(expanded_grammar),
             prods,
             prods_with_indexes_by_nt)
-
-
-def remove_empty_productions(grammar):
-    """Return a clone of `grammar` with empty right-hand sides removed.
-
-    All empty productions are removed except any for the goal nonterminals,
-    so the grammar still recognizes the same language.
-    """
-    goal_nts = set(grammar.goals())
-    return grammar.with_nonterminals({
-        nt: NtDef((), [p for p in nt_def.rhs_list
-                       if len(p.body) > 0 or nt in goal_nts], nt_def.type)
-        for nt, nt_def in grammar.nonterminals.items()
-    })
 
 
 # *** The path algorithm ******************************************************
@@ -1571,53 +1582,1724 @@ class ParserStates:
         return obj
 
 
-def generate_parser_states(grammar, *, verbose=False, progress=False):
+class CanonicalGrammar:
+    __slots__ = "prods", "prods_with_indexes_by_nt", "grammar"
+    def __init__(self, grammar, old = False):
+        assert isinstance(grammar, Grammar)
+
+        # Step by step, we check the grammar and lower it to a more primitive form.
+        grammar = expand_parameterized_nonterminals(grammar)
+        check_cycle_free(grammar)
+        # check_lookahead_rules(grammar)
+        check_no_line_terminator_here(grammar)
+        grammar, prods, prods_with_indexes_by_nt = expand_all_optional_elements(
+            grammar)
+        self.prods = prods
+        self.prods_with_indexes_by_nt = prods_with_indexes_by_nt
+        self.grammar = grammar
+
+# An edge in a Parse table is a tuple of a source state and the term followed
+# to exit this state. The destination is not saved here as it can easily be
+# inferred by looking it up in the parse table.
+#
+# Note, the term might be `None` if no term is specified yet. This is useful
+# when manipulating a list of edges and we know that we are taking transitions
+# from a given state, but not yet with which term.
+#
+#   state: Index of the state from which this directed edge is coming from.
+#
+#   term: Edge transition value, this can be a terminal, non-terminal or an
+#       action to be executed on an epsilon transition.
+Edge = collections.namedtuple("Edge", "src term")
+
+def edge_str(edge):
+    assert isinstance(edge, (Edge, Edge))
+    return "{} -- {} -->".format(edge.src, str(edge.term))
+
+# Structure used to report conflict while creating or merging states.
+class Conflict(Exception):
+    pass
+
+class StateAndTransitions:
+    """This is one state of the parse table, which has transitions based on
+    terminals (text), non-terminals (grammar rules) and epsilon (reduce).
+
+    In this model epsilon transitions are used to represent code to be executed
+    such as reduce actions and any others actions.
+    """
+
+    __slots__ = [
+        "index",        # Numerical index of this state.
+        "terminals",    # Terminals map.
+        "nonterminals", # Non-terminals map.
+        "errors",       # List of error symbol transitions.
+        "epsilon",      # List of epsilon transitions with associated actions.
+        "locations",    # Ordered set of LRItems (grammar position).
+        "delayed_actions", # Ordered set of Actions which are pushed to the
+                        # next state after a conflict.
+        "backedges",    # Set of back edges and whether these are expected to
+                        # be on the parser stack or not.
+        "_hash",        # Hash to identify states which have to be merged. This
+                        # hash is composed of LRItems of the LR0 grammar, and
+                        # actions performed on it since.
+    ]
+
+    def __init__(self, index, locations, delayed_actions = OrderedFrozenSet()):
+        assert isinstance(locations, OrderedFrozenSet)
+        assert isinstance(delayed_actions, OrderedFrozenSet)
+        self.index = index
+        self.terminals = {}
+        self.nonterminals = {}
+        self.errors = {}
+        self.epsilon = []
+        self.locations = locations
+        self.delayed_actions = delayed_actions
+        self.backedges = OrderedSet()
+        # NOTE: The hash of a state depends on its location in the LR0
+        # parse-table, as well as the actions which have not yet been executed.
+        def hashed_content():
+            for item in sorted(self.locations):
+                yield item.prod_index
+                yield item.offset
+            yield "delayed_actions"
+            for action in sorted(delayed_actions):
+                yield hash(action)
+
+        self._hash = hash(tuple(hashed_content()))
+
+    def is_inconsistent(self):
+        "Returns True if the state transitions are inconsistent."
+        # TODO: We could easily allow having a state with non-terminal
+        # transition and other epsilon transitions, as the non-terminal shift
+        # transitions are a form of condition based on the fact that a
+        # non-terminal, produced by a reduce action is consumed by the
+        # automaton.
+        if len(self.terminals) + len(self.nonterminals) + len(self.errors) > 0 and len(self.epsilon) > 0:
+            return True
+        elif len(self.epsilon) == 1:
+            if any(k.is_inconsistent() for k, s in self.epsilon):
+                return True
+        elif len(self.epsilon) > 1:
+            if any(k.is_inconsistent() for k, s in self.epsilon):
+                return True
+            # If all the out-going edges are FilterFlags, with the same flag
+            # and different values, then this state remains consistent, as this
+            # can be implemented as a deterministic switch statement.
+            if any(not k.is_condition() for k, s in self.epsilon):
+                return True
+            if any(not isinstance(k.condition(), FilterFlag) for k, s in self.epsilon):
+                return True
+            if len(set(k.condition().flag for k, s in self.epsilon)) > 1:
+                return True
+            if len(self.epsilon) != len(set(k.condition().value for k, s in self.epsilon)):
+                return True
+        else:
+            try:
+                self.get_error_symbol()
+            except ValueError:
+                return True
+        return False
+
+    def shifted_edges(self):
+        for k, s in self.terminals.items():
+            yield (k, s)
+        for k, s in self.nonterminals.items():
+            yield (k, s)
+        for k, s in self.errors.items():
+            yield (k, s)
+
+    def edges(self):
+        for k, s in self.terminals.items():
+            yield (k, s)
+        for k, s in self.nonterminals.items():
+            yield (k, s)
+        for k, s in self.errors.items():
+            yield (k, s)
+        for k, s in self.epsilon:
+            yield (k, s)
+
+    def rewrite_state_indexes(self, state_map):
+        self.index = state_map[self.index]
+        self.terminals = {
+            k: state_map[s] for k, s in self.terminals.items()
+        }
+        self.nonterminals = {
+            k: state_map[s] for k, s in self.nonterminals.items()
+        }
+        self.errors = {
+            k: state_map[s] for k, s in self.errors.items()
+        }
+        self.epsilon = [
+            (k, state_map[s]) for k, s in self.epsilon
+        ]
+        self.backedges = set(
+            Edge(state_map[s], k) for s, k in self.backedges
+        )
+
+    def get_error_symbol(self):
+        if len(self.errors) > 1:
+            raise ValueError("More than one error symbol on the same state.")
+        else:
+            return next(iter(self.errors), None)
+
+    def __contains__(self, term):
+        if isinstance(term, Action):
+            for t, s in self.epsilon:
+                if t == term:
+                    return True
+            return False
+        elif isinstance(term, Nt):
+            return term in self.nonterminals
+        elif isinstance(term, ErrorSymbol):
+            return term in self.errors
+        else:
+            return term in self.terminals
+
+    def __getitem__(self, term):
+        if isinstance(term, Action):
+            for t, s in self.epsilon:
+                if t == term:
+                    return s
+            raise KeyError(term)
+        elif isinstance(term, Nt):
+            return self.nonterminals[term]
+        if isinstance(term, ErrorSymbol):
+            return self.errors[term]
+        else:
+            return self.terminals[term]
+
+    def get(self, term, default):
+        try:
+            return self.__getitem__(term)
+        except KeyError:
+            return default
+
+    def __str__(self):
+        conflict = ""
+        if self.is_inconsistent():
+            conflict = " (inconsistent)"
+        return "{}{}:\n{}".format(self.index, conflict, "\n".join([
+            "\t{} --> {}".format(k, s) for k, s in self.edges()]))
+
+    def __eq__(self, other):
+        assert isinstance(other, StateAndTransitions)
+        if sorted(self.locations) != sorted(other.locations):
+            return False
+        if sorted(self.delayed_actions) != sorted(other.delayed_actions):
+            return False
+        return True
+
+    def __hash__(self):
+        return self._hash
+
+
+def on_stack(grammar, term):
+    """Returns whether an element of a production is consuming stack space or
+    not."""
+    if isinstance(term, Nt):
+        return True
+    elif grammar.is_terminal(term):
+        return True
+    elif isinstance(term, LookaheadRule):
+        return False
+    elif isinstance(term, ErrorSymbol):
+        return True
+    elif isinstance(term, End):
+        return True
+    elif term is NoLineTerminatorHere:
+        # No line terminator is a property of the next token being shifted. It
+        # is implemented as an action which once shifted past the next term,
+        # will check whether the previous term shifted is on a new line.
+        return False
+    raise ValueError(term)
+
+def callmethods_to_funcalls(expr, pop, ret, depth, funcalls):
+    # TODO: find a way to carry alias sets to here.
+    alias_set = ["parser"]
+    if isinstance(expr, int):
+        stack_index = pop - expr
+        if depth == 0:
+            expr = FunCall("id", alias_set, alias_set, (stack_index,), ret)
+            funcalls.append(expr)
+            return ret
+        else:
+            return stack_index
+    elif isinstance(expr, Some):
+        res = callmethods_to_funcalls(expr.inner, pop, ret, depth, funcalls)
+        return Some(res)
+    elif expr is None:
+        return None
+    elif isinstance(expr, CallMethod):
+        def convert_args(args):
+            for i, arg in enumerate(args):
+                yield callmethods_to_funcalls(arg, pop, ret + "_{}".format(i), depth + 1, funcalls)
+        args = tuple(convert_args(expr.args))
+        expr = FunCall(expr.method, alias_set, alias_set, args, ret)
+        funcalls.append(expr)
+        return ret
+    elif expr == "accept":
+        expr = FunCall("accept", alias_set, alias_set, (), ret)
+        funcalls.append(expr)
+        return ret
+    else:
+        raise ValueError(expr)
+
+class LR0Generator:
+    """Provide a way to iterate over the grammar, given a set of LR items."""
+    __slots__ = [
+        "grammar",
+        "lr_items",
+        "key",
+        "_hash",
+    ]
+
+    def __init__(self, grammar, lr_items = []):
+        self.grammar = grammar
+        self.lr_items = OrderedFrozenSet(lr_items)
+        # This is used to reuse states which have already been encoded.
+        self.key = "".join(repr((item.prod_index, item.offset)) + "\n"
+                           for item in sorted(self.lr_items))
+        self._hash = hash(self.key)
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __hash__(self):
+        return self._hash
+
+    def __str__(self):
+        s = ""
+        for lr_item in self.lr_items:
+            s += self.grammar.grammar.lr_item_to_str(self.grammar.prods, lr_item)
+            s += "\n"
+        return s
+
+    @staticmethod
+    def start(grammar, nt):
+        assert isinstance(grammar, CanonicalGrammar)
+        assert isinstance(grammar.grammar, Grammar)
+        lr_items = []
+        # Visit the initial non-terminal, as well as all the non-terminals
+        # which are at the left of each productions.
+        todo = collections.deque()
+        visited_nts = []
+        todo.append(nt)
+        while todo:
+            nt = todo.popleft()
+            if nt in visited_nts:
+                continue
+            visited_nts.append(nt)
+            for prod_index, _ in grammar.prods_with_indexes_by_nt[nt]:
+                assert isinstance(prod_index, int)
+                lr_items.append(LRItem(
+                    prod_index = prod_index,
+                    offset = 0,
+                    lookahead = None,
+                    followed_by = tuple(),
+                ))
+
+                prod = grammar.prods[prod_index]
+                assert isinstance(prod, Prod)
+                try:
+                    term = prod.rhs[0]
+                    if isinstance(term, Nt):
+                        todo.append(term)
+                except IndexError:
+                    pass
+        return LR0Generator(grammar, lr_items)
+
+    def transitions(self):
+        """Returns the dictionary which maps the state transitions with the next
+        LR0Generators. This can be used to generate the states and the
+        transitions between the states of an LR0 parse table."""
+        followed_by = collections.defaultdict(lambda: [])
+        for lr_item in self.lr_items:
+            self.item_transitions(lr_item, followed_by)
+
+        for k, lr_items in followed_by.items():
+            followed_by[k] = LR0Generator(self.grammar, lr_items)
+
+        return followed_by
+
+    def item_transitions(self, lr_item, followed_by):
+        """Given one LR Item, register all the transitions and LR Items reachables
+        through these transitions."""
+        prod = self.grammar.prods[lr_item.prod_index]
+        assert isinstance(prod, Prod)
+
+        # Read the term located at the offset in the production.
+        if lr_item.offset < len(prod.rhs):
+            term = prod.rhs[lr_item.offset]
+            if isinstance(term, Nt):
+                pass
+            elif self.grammar.grammar.is_terminal(term):
+                pass
+            elif isinstance(term, LookaheadRule):
+                term = Lookahead(term.set, term.positive)
+            elif isinstance(term, ErrorSymbol):
+                # ErrorSymbol as considered as terminals. These terminals would
+                # be produced by the error handling code which produces these
+                # error symbols on-demand.
+                pass
+            elif isinstance(term, End):
+                # End is considered as a terminal which is produduced once by
+                # the lexer upon reaching the end. However, the parser might
+                # finish without consuming the End terminal, if there is no
+                # ambiguity on whether the End is expected.
+                pass
+            elif term is NoLineTerminatorHere:
+                # Check whether the following terminal is on a new line. If
+                # not, this would produce a syntax error. The argument is the
+                # terminal offset.
+                term = CheckNotOnNewLine()
+
+        elif lr_item.offset == len(prod.rhs):
+            # Add the reduce operation as a state transition in the generated
+            # parse table. (TODO: this supposed that the canonical form did not
+            # move the reduce action to be part of the production)
+            pop = sum(1 for e in prod.rhs if on_stack(self.grammar.grammar, e))
+            term = Reduce(prod.nt, pop)
+            expr = prod.reducer
+            if expr is not None:
+                funcalls = []
+                callmethods_to_funcalls(expr, pop, "value", 0, funcalls)
+                term = Seq(funcalls + [term])
+        else:
+            # No edges after the reduce operation.
+            return
+
+
+        # Add terminals, non-terminals and lookahead actions, as transitions to
+        # the next LR Item.
+        new_transition = term not in followed_by
+        followed_by[term].append(LRItem(
+            prod_index = lr_item.prod_index,
+            offset = lr_item.offset + 1,
+            lookahead = None,
+            followed_by = tuple(),
+        ))
+
+        # If the term is a non-terminal, then recursively add transitions from
+        # the beginning of all the productions which are matching this
+        # non-terminal.
+        #
+        # Only do it once per non-terminal to avoid infinite recursion on
+        # left-recursive grammars.
+        if isinstance(term, Nt) and new_transition:
+            for prod_index, _ in self.grammar.prods_with_indexes_by_nt[term]:
+                assert isinstance(prod_index, int)
+                self.item_transitions(LRItem(
+                    prod_index = prod_index,
+                    offset = 0,
+                    lookahead = None,
+                    followed_by = tuple(),
+                ), followed_by)
+
+# To fix inconsistencies of the grammar, we have to traverse the grammar both
+# forward by using the lookahead and backward by using the parser's emulated
+# stack recovered from reduce actions.
+#
+# To do so we define the notion of abstract parser state (APS), which is a
+# tuple which represent the known state of the parser, as:
+#   (stack, shift, lookahead, actions)
+#
+#   stack: This is the stack at the location where we started investigating.
+#          Which means that the last element of the stack would be the location
+#          where we started.
+#
+#   shift: This is the stack computed after the traversal of edges. It is
+#          reduced each time a reduce action is encountered, and the rest of
+#          the production content is added back to the stack, as newly acquired
+#          context. The last element is the last state reached through the
+#          sequence of lookahead and actions.
+#
+#   lookahead: This is the list of terminals encountered while pushing edges
+#          through the list of terminals.
+#
+#   actions: This is the list of actions that would be executed as we push
+#          edges. Maybe we should rename this history. This is a list of edges
+#          taken, which helps tracking which state got visited since we
+#          started.
+#
+#   replay: This is the list of lookahead terminals and non-terminals which
+#          remains to be executed. This represents the fact that reduce actions
+#          are popping elements which are below the top of the stack, and add
+#          them back to the stack.
+#
+APS = collections.namedtuple("APS", "stack shift lookahead actions replay")
+
+def aps_str(aps, name = "aps"):
+    return """{}.stack = [{}]
+{}.shift = [{}]
+{}.lookahead = [{}]
+{}.actions = [{}]
+{}.replay = [{}]
+    """.format(
+        name, " ".join(edge_str(e) for e in aps.stack),
+        name, " ".join(edge_str(e) for e in aps.shift),
+        name, ", ".join(repr(e) for e in aps.lookahead),
+        name, " ".join(edge_str(e) for e in aps.actions),
+        name, ", ".join(repr(e) for e in aps.replay)
+    )
+
+def aps_lanes_str(aps_lanes, header = "lanes:", name = "\taps"):
+    return "{}\n{}".format(header, "\n".join(aps_str(aps, name) for aps in aps_lanes))
+
+def is_valid_aps(aps):
+    "Returns whether an APS contains the right content."
+    check = True
+    check &= all(isinstance(st, Edge) for st in aps.stack)
+    check &= all(isinstance(sh, Edge) for sh in aps.shift)
+    check &= all(not isinstance(la, Action) for la in aps.lookahead)
+    check &= all(isinstance(ac, Edge) for ac in aps.actions)
+    check &= all(not isinstance(rp, Action) for rp in aps.replay)
+    return check
+
+class ParseTable:
+    """The parser can be represented as a matrix of state transitions where on one
+    side we have the current state, and on the other we have the expected
+    terminal, non-terminal or epsilon transition.
+
+            a   b   c   A   B   C   #1   #2   #3
+          +---+---+---+---+---+---+----+----+----+
+      s1  |   |   |   |   |   |   |    |    |    |
+      s2  |   |   |   |   |   |   |    |    |    |
+      s3  |   |   |   |   |   |   |    |    |    |
+       .  |   |   |   |   |   |   |    |    |    |
+       .  |   |   |   |   |   |   |    |    |    |
+       .  |   |   |   |   |   |   |    |    |    |
+      s67 |   |   |   |   |   |   |    |    |    |
+      s68 |   |   |   |   |   |   |    |    |    |
+      s69 |   |   |   |   |   |   |    |    |    |
+          +---+---+---+---+---+---+----+----+----+
+
+    The terminals `a` are the token which are read from the input. The
+    non-terminals `A` are the token which are pushed by the reduce actions of
+    the epsilon transitions. The epsilon transitions `#1` are the actions which
+    have to be executed as code by the parser.
+
+    A parse table is inconsistent if there is any state which has an epsilon
+    transitions and terminals/non-terminals transitions (shift-reduce
+    conflict), or a state with more than one epsilon transitions (reduce-reduce
+    conflict). This is equivalent to having a non deterministic state machine.
+
+    """
+
+    __slots__ = [
+        # Map of actions identifier to the corresponding object.
+        "actions",
+        # Map of state identifier to the corresponding object.
+        "states",
+        # Map of state object to the corresponding identifer.
+        "state_cache",
+        # List of (Nt, states) tuples which are the entry point of the state
+        # machine.
+        "named_goals",
+        # List of terminals.
+        "terminals",
+        # List of non-terminals.
+        "nonterminals",
+        # Set of existing flags.
+        "flags",
+        # Carry the info to be used when generating debug_context. If False,
+        # then no debug_context is ever produced.
+        "debug_info",
+    ]
+
+    def __init__(self, grammar, verbose = False, progress = False, debug = False):
+        self.actions = []
+        self.states = []
+        self.state_cache = {}
+        self.named_goals = []
+        self.terminals = grammar.grammar.terminals
+        self.nonterminals = list(grammar.grammar.nonterminals.keys())
+        self.debug_info = debug
+        self.create_lr0_table(grammar, verbose, progress)
+        self.fix_inconsistent_table(verbose, progress)
+        # TODO: Optimize chains of actions into sequences.
+        # Optimize by removing unused states.
+        self.remove_all_unreachable_state(verbose, progress)
+        # TODO: Statically compute replayed terms. (maybe?)
+        # Fold paths which have the same ending.
+        self.fold_identical_endings(verbose, progress)
+        # Split shift states from epsilon states.
+        self.group_epsilon_states(verbose, progress)
+
+    def save(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def load(cls, filename):
+        with open(filename, 'rb') as f:
+            obj = pickle.load(f)
+            if len(f.read()) != 0:
+                raise ValueError("file has unexpected extra bytes at end")
+        if not isinstance(obj, cls):
+            raise TypeError("file contains wrong kind of object: expected {}, got {}"
+                            .format(cls.__name__, obj.__class__.__name__))
+        return obj
+
+    def is_inconsistent(self):
+        "Returns True if the grammar contains any inconsistent state."
+        for s in self.states:
+            if s is not None and s.is_inconsistent():
+                return True
+        return False
+
+    def new_state(self, locations, delayed_actions = OrderedFrozenSet()):
+        """Get or create state with an LR0 location and delayed actions. Returns a tuple
+        where the first element is whether the element is newly created, and
+        the second element is the State object."""
+        index = len(self.states)
+        state = StateAndTransitions(index, locations, delayed_actions)
+        try:
+            return False, self.state_cache[state]
+        except KeyError:
+            self.state_cache[state] = state
+            self.states.append(state)
+            return True, state
+
+    def get_state(self, locations, delayed_actions = OrderedFrozenSet()):
+        """Like new_state(), but only returns the state without returning whether it is
+        newly created or not."""
+        _, state = self.new_state(locations, delayed_actions)
+        return state
+
+    def remove_state(self, s, maybe_unreachable_set):
+        state = self.states[s]
+        # print("Remove state {}".format(state))
+        self.clear_edges(state, maybe_unreachable_set)
+        del self.state_cache[state]
+        self.states[s] = None
+
+    def add_edge(self, src, term, dest):
+        assert isinstance(src, StateAndTransitions)
+        assert term not in src
+        assert isinstance(dest, int) and dest < len(self.states)
+        if isinstance(term, Action):
+            src.epsilon.append((term, dest))
+        elif isinstance(term, Nt):
+            src.nonterminals[term] = dest
+        elif isinstance(term, ErrorSymbol):
+            src.errors[term] = dest
+        else:
+            src.terminals[term] = dest
+        self.states[dest].backedges.add(Edge(src.index, term))
+
+    def remove_backedge(self, src, term, dest, maybe_unreachable_set):
+        self.states[dest].backedges.remove(Edge(src.index, term))
+        maybe_unreachable_set.add(dest)
+
+    def replace_edge(self, src, term, dest, maybe_unreachable_set):
+        assert isinstance(src, StateAndTransitions)
+        assert isinstance(dest, int) and dest < len(self.states)
+        try:
+            old_dest = src[term]
+            self.remove_backedge(src, term, old_dest, maybe_unreachable_set)
+        except:
+            pass
+        if isinstance(term, Action):
+            src.epsilon = [ (t, d) for t, d in src.epsilon if t != term ]
+            src.epsilon.append((term, dest))
+        elif isinstance(term, Nt):
+            src.nonterminals[term] = dest
+        elif isinstance(term, ErrorSymbol):
+            src.errors[term] = dest
+        else:
+            src.terminals[term] = dest
+        self.states[dest].backedges.add(Edge(src.index, term))
+
+    def clear_edges(self, src, maybe_unreachable_set):
+        """Remove all existing edges, in order to replace them by new one. This is used
+        when resolving shift-reduce conflicts."""
+        assert isinstance(src, StateAndTransitions)
+        for term, dest in src.edges():
+            self.remove_backedge(src, term, dest, maybe_unreachable_set)
+        src.terminals = {}
+        src.nonterminals = {}
+        src.errors = {}
+        src.epsilon = []
+
+    def remove_unreachable_states(self, maybe_unreachable_set):
+        # TODO: This function is incomplete in case of loops, some cycle might
+        # remain isolated while not being reachable from the init states. We
+        # should maintain a notion of depth per-state, such that we can
+        # identify loops by noticing the all backedges have a larger depth than
+        # the current state.
+        _, init = zip(*self.named_goals)
+        init = set(init)
+        check_set = maybe_unreachable_set
+        while maybe_unreachable_set:
+            next_set = set()
+            for s in maybe_unreachable_set:
+                # Check if the state is reachable, if not remove the state and
+                # fill the next_set with all outgoing edges.
+                if len(self.states[s].backedges) == 0 and s not in init:
+                    self.remove_state(s, next_set)
+            maybe_unreachable_set = next_set
+
+    def is_reachable_state(self, s):
+        """Check whether the current state is reachable or not."""
+        assert isinstance(s, int)
+        if self.states[s] is None:
+            return False
+        reachable_back = set()
+        todo = [s]
+        while todo:
+            s = todo.pop()
+            reachable_back.add(s)
+            for s, _ in self.states[s].backedges:
+                if s not in reachable_back:
+                    todo.append(s)
+        for _, s in self.named_goals:
+            if s in reachable_back:
+                return True
+        return False
+
+    def get_flag_for(self, nts):
+        nts = OrderedFrozenSet(nts)
+        self.flags.add(nts)
+        return "_".join(["flag", *nts])
+
+    def create_lr0_table(self, grammar, verbose, progress):
+        if verbose or progress:
+            print("Create LR(0) parse table.")
+        assert isinstance(grammar, CanonicalGrammar)
+        assert isinstance(grammar.grammar, Grammar)
+
+        goals = grammar.grammar.goals()
+        self.named_goals = []
+
+        # Temporarily record tuples of (LR0Generator, StateAndTransition)
+        # objects used for visiting the grammar.
+        todo = collections.deque()
+        # Record the starting goals in the todo list.
+        for nt in goals:
+            init_nt = Nt(InitNt(nt), ())
+            it = LR0Generator.start(grammar, init_nt)
+            s = self.get_state(it.lr_items)
+            todo.append((it, s))
+            self.named_goals.append((nt, s.index))
+
+        # Iterate the grammar with sets of LR Items abstracted by the
+        # LR0Generator, and create new states in the parse table as long as new
+        # sets of LR Items are discovered.
+        def visit_grammar():
+            while todo:
+                yield # progress bar.
+                # TODO: Compare stack / queue, for the traversal of the states.
+                s_it, s = todo.popleft()
+                if verbose:
+                    print("\nVisiting:\n{}".format(s_it))
+                for k, sk_it in s_it.transitions().items():
+                    locations = sk_it.lr_items
+                    if not self.is_term_shifted(k):
+                        locations = OrderedFrozenSet()
+                    is_new, sk = self.new_state(locations)
+                    if is_new:
+                        todo.append((sk_it, sk))
+
+                    # Add the edge from s to sk with k.
+                    self.add_edge(s, k, sk.index)
+        consume(visit_grammar(), progress)
+
+    def is_term_shifted(self, term):
+        return not (isinstance(term, Action) and term.update_stack())
+
+    def is_valid_path(self, path, state = None):
+        """This function is used to check a list of edges and returns whether it
+        corresponds to a valid path within the parse table. This is useful when
+        merging sequences of edges from various locations."""
+        if not state and path != []:
+            state = path[0].src
+        while path:
+            edge = path[0]
+            path = path[1:]
+            if state != edge.src:
+                return False
+            term = edge.term
+            if term == None and len(path) == 0:
+                return True
+            try:
+                state = self.states[state][term]
+            except:
+                return False
+        return True
+
+    def shifted_path_to(self, n, right_of):
+        "Compute all paths with n shifted terms, ending with state."
+        assert isinstance(right_of, list) and len(right_of) >= 1
+        if n == 0:
+            yield right_of
+        state = right_of[0].src
+        assert isinstance(state, int)
+        for edge in self.states[state].backedges:
+            if not self.is_term_shifted(edge.term):
+                print(repr(edge))
+                print(self.states[edge.src])
+            assert self.is_term_shifted(edge.term)
+            if self.term_is_stacked(edge.term):
+                s_n = n - 1
+                if n == 0:
+                    continue
+            else:
+                s_n = n
+            from_edge = Edge(edge.src, edge.term)
+            for path in self.shifted_path_to(s_n, [from_edge] + right_of):
+                yield path
+
+    def reduce_path(self, shifted):
+        """Compute all paths which might be reduced by a given action. This function
+        assumes that the state is reachable from the starting goals, and that
+        the depth which is being queried has valid answers."""
+        assert len(shifted) >= 1
+        action = shifted[-1].term
+        assert action.update_stack()
+        reducer = action.reduce_with()
+        assert isinstance(reducer, Reduce)
+        depth = reducer.pop + reducer.replay
+        if depth > 0:
+            # We are readucing at least one element from the stack.
+            stacked = [i for i, e in enumerate(shifted) if self.term_is_stacked(e.term)]
+            if len(stacked) < depth:
+                # We have not shifted enough elements to cover the full reduce
+                # rule, start looking for context using backedges.
+                shifted_from = 0
+                depth -= len(stacked)
+            else:
+                # We shifted much more elements than necessary for reducing,
+                # just start from the first stacked element which correspond to
+                # consuming all stack element reduced.
+                shifted_from = stacked[-depth]
+                depth = 0
+            shifted_end = shifted[shifted_from:]
+        else:
+            # We are reducing no element from the stack.
+            shifted_end = shifted[-1:]
+        error_paths = []
+        success_paths = []
+        for path in self.shifted_path_to(depth, shifted_end):
+            head = self.states[path[0].src]
+            if reducer.nt not in head.nonterminals:
+                error_paths.append(path)
+                continue
+            success_paths.append(path)
+            assert reducer.nt in head.nonterminals
+            to = head.nonterminals[reducer.nt]
+            yield path, [Edge(path[0].src, reducer.nt), Edge(to, None)]
+        # When dealing with inconsistent states, we have to walk epsilon
+        # backedges. This can lead us to have path where the head is not
+        # reducing, increasing the number of error_paths.
+        assert success_paths != []
+        if error_paths:
+            def stacked_path(path):
+                return tuple(e for e in path if self.term_is_stacked(e.term))
+            stack_success_paths = set(map(stacked_path, success_paths))
+            for path in error_paths:
+                if stacked_path(path) not in stack_success_paths:
+                    for p in success_paths:
+                        print("Success path: {}".format(" ".join(map(edge_str, p))))
+                    head = self.states[path[0].src]
+                    print("\n".join([
+                        "Reduce path does not start with a state capable of shifting the non-terminal {}.",
+                        "The Reduce path is: {}",
+                        "The starting state is {}",
+                        "{} backedges are: {}"
+                    ]).format(reducer.nt, " ".join(map(edge_str, path)), head,
+                              len(head.backedges), ", ".join(map(edge_str, head.backedges))))
+                    assert reducer.nt in head.nonterminals
+
+    def term_is_stacked(self, term):
+        return not isinstance(term, Action)
+
+    def aps_start(self, state, replay = []):
+        "Return a parser state only knowing the state at which we are currently."
+        edge = Edge(state, None)
+        return APS([edge], [edge], [], [], replay)
+
+    def aps_next(self, aps):
+        """Visit all the states of the parse table, as-if we were running a
+        Generalized LR parser.
+
+        However, instead parsing content, we use this algorithm to generate
+        both the content which remains to be parsed as well as the context
+        which might lead us to be in the state which from which we started.
+
+        This algorithm takes an APS (Abstract Parser State), and consider all
+        edges of the parse table, unless restricted by one of the previously
+        encountered actions. These restrictions, such as replayed lookahead or
+        the path which might be reduced are used for filtering out states which
+        are not handled by this parse table.
+
+        For each edge, this functions recursively calls it-self and calls the
+        visit functions to know whether to stop or continue, and to capture the
+        result.
+
+        """
+        assert is_valid_aps(aps)
+        st, sh, la, ac, rp = aps
+        last_edge = sh[-1]
+        state = self.states[last_edge.src]
+        if aps.replay == []:
+            for term, to in state.shifted_edges():
+                edge = Edge(last_edge.src, term)
+                new_sh = aps.shift[:-1] + [edge]
+                to = Edge(to, None)
+                yield APS(st, new_sh + [to], la + [term], ac + [edge], rp)
+        else:
+            term = aps.replay[0]
+            rp = aps.replay[1:]
+            if term in state:
+                edge = Edge(last_edge.src, term)
+                new_sh = aps.shift[:-1] + [edge]
+                to = state[term]
+                to = Edge(to, None)
+                yield APS(st, new_sh + [to], la, ac + [edge], rp)
+
+        term = None
+        rp = aps.replay
+        for a, to in state.epsilon:
+            edge = Edge(last_edge.src, a)
+            prev_sh = aps.shift[:-1] + [edge]
+            # TODO: Add support for Lookahead and flag manipulation rules, as
+            # both of these would invalide potential reduce paths.
+            if a.update_stack():
+                reducer = a.reduce_with()
+                for path, reduced_path in self.reduce_path(prev_sh):
+                    # reduce_paths contains the chains of state shifted,
+                    # including epsilon transitions, in order to reduce the
+                    # nonterminal. When reducing, the stack is resetted to
+                    # head, and the nonterminal `term.nt` is pushed, to resume
+                    # in the state `to`.
+
+                    # print("Compare shifted path, with reduced path:\n\tshifted = {}\n\treduced = {}, \n\taction = {},\n\tnew_path = {}\n".format(
+                    #     " ".join(edge_str(e) for e in prev_sh),
+                    #     " ".join(edge_str(e) for e in path),
+                    #     str(a),
+                    #     " ".join(edge_str(e) for e in reduced_path),
+                    # ))
+                    if prev_sh[-len(path):] != path[-len(prev_sh):]:
+                        # If the reduced production does not match the shifted
+                        # state, then this reduction does not apply. This is
+                        # the equivalent result as splitting the parse table
+                        # based on the predecessor.
+                        continue
+
+                    # The stack corresponds to the stack present at the
+                    # starting point. The shift list correspond to the actual
+                    # parser stack as we iterate through the state machine.
+                    # Each time we consume all the shift list, this implies
+                    # that we had extra stack elements which were not present
+                    # initially, and therefore we are learning about the
+                    # context.
+                    new_st = path[:max(len(path) - len(prev_sh), 0)] + st
+                    assert self.is_valid_path(new_st)
+
+                    # The shift list corresponds to the stack which is used in
+                    # an LR parser, in addition to all the states which are
+                    # epsilon transitions. We pop from this list the reduced
+                    # path, as long as it matches. Then all popped elements are
+                    # replaced by the state that we visit after replaying the
+                    # non-terminal reduced by this action.
+                    new_sh = prev_sh[:-len(path)] + reduced_path
+                    assert self.is_valid_path(new_sh)
+
+                    # When reducing, we replay terms which got previously
+                    # pushed on the stack as our lookahead. These terms are
+                    # computed here such that we can traverse the graph from
+                    # `to` state, using the replayed terms.
+                    new_replay = []
+                    if reducer.replay > 0:
+                        new_replay = [ edge.term for edge in path if self.term_is_stacked(edge.term) ]
+                        new_replay = new_replay[-reducer.replay:]
+                    new_replay = new_replay + rp
+                    new_la = la[:max(len(la) - reducer.replay, 0)]
+                    yield APS(new_st, new_sh, new_la, ac + [edge], new_replay)
+            else:
+                to = Edge(to, None)
+                yield APS(st, prev_sh + [to], la, ac + [edge], rp)
+
+    def aps_visitor(self, aps, visit):
+        todo = []
+        todo.append(aps)
+        while todo:
+            aps = todo.pop()
+            cont = visit(aps)
+            if not cont:
+                continue
+            todo.extend(self.aps_next(aps))
+
+    def lanes(self, state):
+        """Compute the lanes from the amount of lookahead available. Only consider
+        context when reduce states are encountered."""
+        assert isinstance(state, int)
+        record = []
+        def visit(aps):
+            has_shift_loop = len(aps.shift) != 1 + len(set(zip(aps.shift, aps.shift[1:])))
+            has_stack_loop = len(aps.stack) != 1 + len(set(zip(aps.stack, aps.stack[1:])))
+            has_lookahead = len(aps.lookahead) >= 1
+            stop = has_shift_loop or has_stack_loop or has_lookahead
+            # print("\t{} = {} or {} or {}".format(
+            #     stop, has_shift_loop, has_stack_loop, has_lookahead))
+            # print(aps_str(aps, "\tvisitor"))
+            if stop:
+                print("lanes_visit stop:")
+                print(aps_str(aps, "\trecord"))
+                record.append(aps)
+            return not stop
+        self.aps_visitor(self.aps_start(state), visit)
+        return record
+
+    def context_lanes(self, state):
+        """Compute lanes, such that each reduce action can have set of unique stack to
+        reach the given state. The stacks are assumed to be loop-free by
+        reducing edges at most once.
+
+        In order to avoid attempting to eagerly solve everything using context
+        information, we break this loop as soon as we have one token of
+        lookahead in a case which does not have enough context.
+
+        The return value is a tuple where the first element is a boolean which
+        is True if we should fallback on solving this issue with more
+        lookahead, and the second is the list of APS lanes which are providing
+        enough context to disambiguate the inconsistency of the given state."""
+        assert isinstance(state, int)
+        def not_interesting(aps):
+            reduce_list = [e for e in aps.actions if self.is_term_shifted(e.term)]
+            has_reduce_loop = len(reduce_list) != len(set(reduce_list))
+            return has_reduce_loop
+
+        # The context is a dictionary which maps all stack suffixes from an APS
+        # stack. It is mapped to a list of tuples, where the each tuple is the
+        # index with the APS stack and the APS action used to follow this path.
+        context = collections.defaultdict(lambda: [])
+        def has_enough_context(aps):
+            try:
+                assert aps.actions[0] in context[tuple(aps.stack)]
+                # Check the number of different actions which can reach this
+                # location. If there is more than 1, then we do not have enough
+                # context.
+                return len(set(context[tuple(aps.stack)])) <= 1
+            except IndexError:
+                return False
+
+        collect = [self.aps_start(state)]
+        enough_context = False
+        while not enough_context:
+            # print("collect.len = {}".format(len(collect)))
+            # Fill the context dictionary with all the sub-stack which might be
+            # encountered by other APS.
+            recurse = []
+            context = collections.defaultdict(lambda: [])
+            while collect:
+                aps = collect.pop()
+                recurse.append(aps)
+                if aps.actions == []:
+                    continue
+                for i in range(len(aps.stack)):
+                    context[tuple(aps.stack[i:])].append(aps.actions[0])
+            assert collect == []
+
+            # print("recurse.len = {}".format(len(recurse)))
+            # Iterate over APS which do not yet have enough context information
+            # to uniquely identify a single action.
+            enough_context = True
+            while recurse:
+                aps = recurse.pop()
+                if not_interesting(aps):
+                    # print("discard uninteresting context lane:")
+                    # print(aps_str(aps, "\tcontext"))
+                    continue
+                if has_enough_context(aps):
+                    collect.append(aps)
+                    continue
+                # If we have not enough context but some lookahead is
+                # available, attempt to first solve this issue using more
+                # lookahead before attempting to use context information.
+                if len(aps.lookahead) >= 1:
+                    # print("discard context_lanes due to lookahead:")
+                    # for aps in itertools.chain(collect, recurse, [aps]):
+                    #     print(aps_str(aps, "\tcontext"))
+                    return True, []
+                enough_context = False
+                # print("extend starting at:\n{}".format(aps_str(aps, "\tcontext")))
+                collect.extend(self.aps_next(aps))
+            assert recurse == []
+
+        # print("context_lanes:")
+        # for aps in collect:
+        #     print(aps_str(aps, "\tcontext"))
+
+        return False, collect
+
+        def visit(aps):
+            reduce_list = [e for e in aps.actions if self.is_term_shifted(e.term)]
+            has_reduce_loop = len(reduce_list) != len(set(reduce_list))
+            has_lookahead = len(aps.lookahead) >= 1
+            stop = has_shift_loop or has_stack_loop or has_lookahead
+            # print("\t{} = {} or {} or {}".format(
+            #     stop, has_shift_loop, has_stack_loop, has_lookahead))
+            # print(aps_str(aps, "\tvisitor"))
+            if stop:
+                print("lanes_visit stop:")
+                print(aps_str(aps, "\trecord"))
+                record.append(aps)
+            return not stop
+        self.aps_visitor(self.aps_start(state), visit)
+        return record
+
+    def lookahead_lanes(self, state):
+        """Compute lanes to collect all lookahead symbols available. After each reduce
+        action, there is no need to consider the same non-terminal multiple
+        times, we are only interested in lookahead token and not in the context
+        information provided by reducing action."""
+        assert isinstance(state, int)
+        record = []
+        # After the first reduce action, we do not want to spend too much
+        # resource visiting edges which would give us the same information.
+        # Therefore, if we already reduce an action to a given state, then we
+        # skip looking for lookahead that we already visited.
+        #
+        # Set of (first-reduce-action, reducing-base, last-edge)
+        seen_edge_after_reduce = set()
+        def visit(aps):
+            # Note, this suppose that we are not considering flags when
+            # computing, as flag might prevent some lookahead investigations.
+            first_reduce = next((e for e in aps.actions[:-1] if not self.is_term_shifted(e.term)), None)
+            if first_reduce:
+                reduce_key = (first_reduce, aps.shift[0].src, aps.actions[-1].term)
+            has_seen_edge_after_reduce = first_reduce and reduce_key in seen_edge_after_reduce
+            has_lookahead = len(aps.lookahead) >= 1
+            stop = has_seen_edge_after_reduce or has_lookahead
+            # print(aps_str(aps, "\tvisitor"))
+            if stop:
+                if has_lookahead:
+                    record.append(aps)
+            if first_reduce:
+                seen_edge_after_reduce.add(reduce_key)
+            return not stop
+        self.aps_visitor(self.aps_start(state), visit)
+        return record
+
+    def fix_with_context(self, s, aps_lanes):
+        raise ValueError("fix_with_context: Not Implemented")
+        # This strategy is about using context information. By using chains of
+        # reduce actions, we are able to increase the knowledge of the stack
+        # content. The stack content is the context which can be used to
+        # determine how to consider a reduction. The stack content is also
+        # called a lane, as defined in the Lane Table algorithm.
+        #
+        # To add context information to the current graph, we add flags
+        # manipulation actions.
+        #
+        # Consider each edge as having an implicit function which can map one
+        # flag value to another. The following implements a unification
+        # algorithm which is attempting to solve the question of what is the
+        # flag value, and where it should be changed.
+        #
+        # NOTE: (nbp) I would not be surprised if there is a more specialized
+        # algorithm, but I failed to find one so far, and this problem
+        # definitely looks like a unification problem.
+        Id = collections.namedtuple("Id", "edge")
+        Eq = collections.namedtuple("Eq", "flag_in edge flag_out")
+        Var = collections.namedtuple("Var", "n")
+        SubSt = collections.namedtuple("SubSt", "var by")
+
+        # Unify expression, and return one substitution if both expressions
+        # can be unified.
+        def unify_expr(expr1, expr2, swapped = False):
+            if isinstance(expr1, Eq) and isinstance(expr2, Id):
+                if expr1.edge != expr2.edge:
+                    # Different edges are ok, but produce no substituions.
+                    return True
+                if isinstance(expr1.flag_in, Var):
+                    return SubSt(expr1.flag_in, expr1.flag_out)
+                if isinstance(expr1.flag_out, Var):
+                    return SubSt(expr1.flag_out, expr1.flag_in)
+                # We are unifying with a relation which consider the current
+                # function as an identity function. Having different values as
+                # input and output fails the unification rule.
+                return expr1.flag_out == expr1.flag_in
+            if isinstance(expr1, Eq) and isinstance(expr2, Eq):
+                if expr1.edge != expr2.edge:
+                    # Different edges are ok, but produce no substituions.
+                    return True
+                if expr1.flag_in == None and isinstance(expr2.flag_in, Var):
+                    return SubSt(expr2.flag_in, None)
+                if expr1.flag_out == None and isinstance(expr2.flag_out, Var):
+                    return SubSt(expr2.flag_out, None)
+                if expr1.flag_in == expr2.flag_in:
+                    if isinstance(expr1.flag_out, Var):
+                        return SubSt(expr1.flag_out, expr2.flag_out)
+                    elif isinstance(expr2.flag_out, Var):
+                        return SubSt(expr2.flag_out, expr1.flag_out)
+                    # Reject solutions which are not deterministic. We do not
+                    # want the same input flag to have multiple outputs.
+                    return expr1.flag_out == expr2.flag_out
+                if expr1.flag_out == expr2.flag_out:
+                    if isinstance(expr1.flag_in, Var):
+                        return SubSt(expr1.flag_in, expr2.flag_in)
+                    elif isinstance(expr2.flag_in, Var):
+                        return SubSt(expr2.flag_in, expr1.flag_in)
+                    return True
+            if not swapped:
+                return unify_expr(expr2, expr1, True)
+            return True
+
+        # Apply substituion rule to an expression.
+        def subst_expr(subst, expr):
+            if expr == subst.var:
+                return True, subst.by
+            if isinstance(expr, Eq):
+                subst1, flag_in = subst_expr(subst, expr.flag_in)
+                subst2, flag_out = subst_expr(subst, expr.flag_out)
+                return subst1 or subst2, Eq(flag_in, expr.edge, flag_out)
+            return False, expr
+
+        # Add an expression to an existing knowledge based which is relying on
+        # a set of free variables.
+        def unify_with(expr, knowledge, free_vars):
+            old_knowledge = knowledge
+            old_free_Vars = free_vars
+            while True:
+                subst = None
+                for rel in knowledge:
+                    subst = unify_expr(rel, expr)
+                    if subst == False:
+                        raise Error("Failed to find a coherent solution")
+                    if subst == True:
+                        continue
+                    break
+                else:
+                    return knowledge + [expr], free_vars
+                free_vars = [fv for fv in free_vars if fv != subst.var]
+                # Substitue variables, and re-add rules which have substituted
+                # vars to check the changes to other rules, in case 2 rules are
+                # now in conflict or in case we can propagate more variable
+                # changes.
+                subst_rules = [subst_expr(subst, k) for k in knowledge]
+                knowledge = [rule for changed, rule in subst_rule if not changed]
+                for changed, rule in subst_rule:
+                    if not changed:
+                        continue
+                    knowledge, free_vars = unify_with(rule, knowledge, free_vars)
+
+        # Register boundary conditions as part of the knowledge based, i-e that
+        # reduce actions are expecting to see the flag value matching the
+        # reduced non-terminal, and that we have no flag value at the start of
+        # every lane head.
+        #
+        # TODO: Catch exceptions from the unify function in case we do not yet
+        # have enough context to disambiguate.
+        rules = []
+        free_vars = []
+        last_free = 0
+        maybe_id_edges = set()
+        nts = set()
+        for aps in aps_lanes:
+            assert len(aps.stack) >= 1
+            flag_in = None
+            for edge in aps.stack[-1]:
+                i = last_free
+                last_free += 1
+                free_vars.append(Var(i))
+                rule = Eq(flag_in, edge, Var(i))
+                rules, free_vars = unify_with(rule, rules, free_vars)
+                flag_in = Var(i)
+                if flag_in != None:
+                    maybe_id_edges.add(Id(edge))
+            edge = aps.stack[-1]
+            nt = edge.term.reduce_with().nt
+            rule = Eq(nt, edge, None)
+            rules, free_vars = unify_with(rule, rules, free_vars)
+            nts.add(nt)
+
+        # We want to produce a parse table where most of the node are ignoring
+        # the content of the flag which is being added. Thus we want to find a
+        # solution where most edges are the identical function.
+        def fill_with_id_functions(rules, free_vars, maybe_id_edges):
+            min_rules, min_vars = rules, free_vars
+            for num_id_edges in reversed(range(len(maybe_id_edges))):
+                for id_edges in itertools.combinations(edges, num_id_edges):
+                    try:
+                        for edge in id_edges:
+                            new_rules, new_free_vars = unify_with(rule, rules, free_vars)
+                            if new_free_vars == []:
+                                return new_rules, new_free_vars
+                            if len(new_free_vars) < len(min_free_vars):
+                                min_vars = new_free_vars
+                                min_rules = new_rules
+                    except:
+                        pass
+            return rules, free_vars
+
+        rules, free_vars = fill_with_id_functions(rules, free_vars, maybe_id_edges)
+        if free_vars != []:
+            raise Error("Hum … maybe we can try to iterate over the remaining free-variable.")
+        print("debug: Great we found a solution for a reduce-reduce conflict")
+
+        # The set of rules describe the function that each edge is expected to
+        # support. If there is an Id(edge), then we know that we do not have to
+        # change the graph for the given edge. If the rule is Eq(A, edge, B),
+        # then we have to (filter A & pop) and push B, except if A or B is
+        # None.
+        #
+        # For each edge, collect the set of rules concerning the edge to
+        # determine which edges have to be transformed to add the filter&pop
+        # and push actions.
+        edge_rules = collections.defaultdict(lambda: [])
+        for rule in rules:
+            if isinstance(rule, Id):
+                edge_rules[rule.edge] = None
+            elif isinstance(rule, Eq):
+                if edge_rules[rule.edge] != None:
+                    edge_rules[rule.edge].append(rule)
+
+        maybe_unreachable_set = set()
+        flag_name = self.get_flag_for(nts)
+        for edge, rules in edge_rules.items():
+            # If the edge is an identity function, then skip doing any
+            # modifications on it.
+            if rules == None:
+                continue
+            # Otherwise, create a new state and transition for each mapping.
+            src = self.states[edge.src]
+            dest = src[edge.term]
+            dest_state = self.states[dest]
+            # TODO: Add some information to avoid having identical hashes as
+            # the destination.
+            actions = []
+            for rule in OrderedFrozenSet(rules):
+                assert isinstance(rule, Eq)
+                seq = []
+                if rule.flag_in != None:
+                    seq.append(FilterFlag(flag_name, True))
+                    if rule.flag_in != rule.flag_out:
+                        seq.append(PopFlag(flag_name))
+                if rule.flag_out != None and rule.flag_in != rule.flag_out:
+                    seq.append(PushFlag(flag_name, rule.flag_out))
+                actions.append(Seq(seq))
+            # Assert that we do not map flag_in more than once.
+            assert len(set(eq.flag_in for eq in rules)) < len(rules)
+            # Create the new state and add edges.
+            is_new, switch = self.new_state(dest.locations, OrderedFrozenSet(actions))
+            assert is_new
+            for seq in actions:
+                self.add_edge(switch, seq, dest)
+
+            # Replace the edge from src to dest, by an edge from src to the
+            # newly created switch state, which then decide which flag to set
+            # before going to the destination target.
+            self.replace_edge(src, edge.term, switch, maybe_unreachable_set)
+
+        self.remove_unreachable_states(maybe_unreachable_set)
+        pass
+
+    def fix_with_lookahead(self, s, aps_lanes):
+        # Find the list of terminals following each actions (even reduce
+        # actions).
+        assert all(len(aps.lookahead) >= 1 for aps in aps_lanes)
+        maybe_unreachable_set = set()
+        # For each shifted term, associate a set of state and actions which
+        # would have to be executed.
+        shift_map = collections.defaultdict(lambda: [])
+        for aps in aps_lanes:
+            actions = aps.actions
+            assert isinstance(actions[-1], Edge)
+            assert actions[-1].term == aps.lookahead[0]
+            src = actions[-1].src
+            term = actions[-1].term
+            # No need to consider any action beyind the first reduced action
+            # since the reduced action is in charge of replaying the lookahead
+            # terms.
+            actions = list(keep_until(actions[:-1], lambda edge: not self.is_term_shifted(edge.term)))
+            assert all(isinstance(edge.term, Action) for edge in actions)
+
+            # Change the order of the shifted term, shift all actions by 1 with
+            # the given lookahead term, in order to match the newly generated
+            # state machine.
+            #
+            # Shifting actions with the list of shifted terms is used to record
+            # the number of terms to be replayed, as well as verifying whether
+            # Lookahead filter actions should accept or reject this lane.
+            new_actions = []
+            accept = True
+            for edge in actions:
+                new_term = edge.term.shifted_action(term)
+                if new_term == False:
+                    accept = False
+                    break
+                elif new_term == True:
+                    continue
+                new_actions.append(Edge(edge.src, new_term))
+            if accept:
+                target = self.states[src][term]
+                target = self.states[target]
+                shift_map[term].append((target, new_actions))
+
+        # Restore the new state machine based on a given state to use as a base
+        # and the shift_map corresponding to edges.
+        def restore_edges(state, shift_map, depth):
+            assert isinstance(state, StateAndTransitions)
+            # print("{}starting with {}\n".format(depth, state))
+            edges = {}
+            for term, actions_list in shift_map.items():
+                # print("{}term: {}, lists: {}\n".format(depth, repr(term), repr(actions_list)))
+                # Collect all the states reachable after shifting the term.
+                # Compute the unique name, based on the locations and actions
+                # which are delayed.
+                locations = OrderedSet()
+                delayed = OrderedSet()
+                new_shift_map = collections.defaultdict(lambda: [])
+                recurse = False
+                if not self.is_term_shifted(term):
+                    # There is no more target after a reduce action.
+                    actions_list = []
+                for target, actions in actions_list:
+                    assert isinstance(target, StateAndTransitions)
+                    locations |= target.locations
+                    delayed |= target.delayed_actions
+                    if actions != []:
+                        # Pull edges, with delayed actions.
+                        edge = actions[0]
+                        assert isinstance(edge, Edge)
+                        for action in actions:
+                            delayed.add(action.term)
+                        new_shift_map[edge.term].append((target, actions[1:]))
+                        recurse = True
+                    else:
+                        # Pull edges, as a copy of existing edges.
+                        for next_term, next_dest in target.edges():
+                            next_dest = self.states[next_dest]
+                            new_shift_map[next_term].append((next_dest, []))
+
+                locations = OrderedFrozenSet(locations)
+                delayed = OrderedFrozenSet(delayed)
+                is_new, new_target = self.new_state(locations, delayed)
+                # print("{}is_new = {}, index = {}".format(depth, is_new, new_target.index))
+                # print("{}Add: {} -- {} --> {}".format(depth, state.index, str(term), new_target.index))
+                edges[term] = new_target.index
+                # print("{}continue: (is_new: {}) or (recurse: {})".format(depth, is_new, recurse))
+                if is_new or recurse:
+                    restore_edges(new_target, new_shift_map, depth + "  ")
+
+            self.clear_edges(state, maybe_unreachable_set)
+            for term, target in edges.items():
+                self.add_edge(state, term, target)
+            # print("{}replaced by {}\n".format(depth, state))
+
+        state = self.states[s]
+        restore_edges(state, shift_map, "")
+        self.remove_unreachable_states(maybe_unreachable_set)
+
+    def fix_inconsistent_state(self, s, verbose):
+        # Fix inconsistent states works one state at a time. The goal is to
+        # achieve the same method as the Lane Tracer, but instead of building a
+        # table to then mutate the parse state, we mutate the parse state
+        # directly.
+        #
+        # This strategy is simpler, and should be able to reproduce the same
+        # graph mutations as seen with Lane Table algorithm. One of the problem
+        # with the Lane Table algorithm is that it assume reduce operations,
+        # and as such it does not apply simply to epsilon transitions which are
+        # used as conditions on the parse table.
+        #
+        # By using push-flag and filter-flag actions, we are capable to
+        # decompose the Lane Table transformation of the parse table into
+        # multiple steps which are working one step at a time, and with less
+        # table state duplication.
+
+        state = self.states[s]
+        if state is None or not state.is_inconsistent():
+            return False
+
+        all_reduce = all( a.update_stack() for a, _ in state.epsilon )
+        any_shift = (len(state.terminals) + len(state.nonterminals) + len(state.errors)) > 0
+        try_with_context = all_reduce and not any_shift
+        try_with_lookahead = not try_with_context
+        # if verbose:
+        #     print(aps_lanes_str(aps_lanes, "fix_inconsistent_state:", "\taps"))
+        if try_with_context:
+            if verbose:
+                print("\tFix with context.")
+            try_with_lookahead, aps_lanes = self.context_lanes(s)
+            if not try_with_lookahead:
+                assert aps_lanes != []
+                self.fix_with_context(s, aps_lanes)
+            elif verbose:
+                print("\tFallback on fixing with lookahead.")
+        if try_with_lookahead:
+            if verbose:
+                print("\tFix with lookahead.")
+            aps_lanes = self.lookahead_lanes(s)
+            assert aps_lanes != []
+            self.fix_with_lookahead(s, aps_lanes)
+        return True
+
+
+    def fix_inconsistent_table(self, verbose, progress):
+        """The parse table might be inconsistent. We fix the parse table by looking
+        around the inconsistent states for more context. Either by looking at the
+        potential stack state which might lead to the inconsistent state, or by
+        increasing the lookahead."""
+        if verbose or progress:
+            print("Fix parse table inconsistencies.")
+
+        todo = collections.deque()
+        for state in self.states:
+            if state.is_inconsistent():
+                todo.append(state.index)
+
+        if verbose and todo:
+            print("\n".join([
+                "\nGrammar is inconsistent.",
+                "\tNumber of States = {}",
+                "\tNumber of inconsistencies found = {}"]).format(
+                    len(self.states), len(todo)))
+
+        count = 0
+        def visit_table():
+            nonlocal count
+            unreachable = []
+            while todo:
+                while todo:
+                    yield # progress bar.
+                    # TODO: Compare stack / queue, for the traversal of the states.
+                    s = todo.popleft()
+                    if not self.is_reachable_state(s):
+                        # NOTE: We do not fix unreachable states, as we might
+                        # not be able to compute the reduce actions. However,
+                        # we should not clean edges not backedges as the state
+                        # might become reachable later on, since states are
+                        # shared if they have the same locations.
+                        unreachable.append(s)
+                        continue
+                    assert self.states[s].is_inconsistent()
+                    start_len = len(self.states)
+                    if verbose:
+                        count = count + 1
+                        print("Fixing state {}\n".format(self.states[s]))
+                    try:
+                        self.fix_inconsistent_state(s, verbose)
+                    except:
+                        self.debug_info = True
+                        raise ValueError(
+                            "Error while fixing conflict in state {}\n\n"
+                            "In the following grammar productions:\n{}"
+                            .format(self.states[s], self.debug_context(s, "\n", "\t"))
+                        )
+                    new_inconsistent_states = [
+                        s.index for s in self.states[start_len:]
+                        if s.is_inconsistent()
+                    ]
+                    if verbose:
+                        print("\tAdding {} states".format(len(self.states[start_len:])))
+                        print("\tWith {} inconsistent states".format(len(new_inconsistent_states)))
+                    todo.extend(new_inconsistent_states)
+
+                # Check whether none of the previously inconsistent and
+                # unreahable state became reachable. If so add it back to the
+                # todo list.
+                still_unreachable = []
+                for s in unreachable:
+                    if self.is_reachable_state(s):
+                        todo.append(s)
+                    else:
+                        still_unreachable.append(s)
+                unreachable = still_unreachable
+
+        consume(visit_table(), progress)
+        if verbose:
+            print("\n".join([
+                "\nGrammar is now consistent.",
+                "\tNumber of States = {}",
+                "\tNumber of inconsistencies solved = {}"]).format(
+                    len(self.states), count))
+        assert not self.is_inconsistent()
+
+    def remove_all_unreachable_state(self, verbose, progress):
+        self.states = [s for s in self.states if s is not None]
+        state_map = { s.index: i for i, s in enumerate(self.states) }
+        for s in self.states:
+            s.rewrite_state_indexes(state_map)
+
+    def fold_identical_endings(self, verbose, progress):
+        # If 2 states have the same outgoing edges, then we can merge the 2
+        # states into a single state, and rewrite all the backedges leading to
+        # these states to be replaced by edges going to the reference state.
+        if verbose or progress:
+            print("Fold identical endings.")
+        maybe_unreachable = set()
+        def rewrite_backedges(state_list):
+            # All states have the same outgoing edges. Thus we replace all of
+            # them by a single state.
+            ref = state_list[0]
+            replace_edges = [e for s in state_list[1:] for e in s.backedges]
+            hit = False
+            for src, term in replace_edges:
+                src = self.states[src]
+                # print("replace {} -- {} --> {}, by {} -- {} --> {}".format(src.index, term, src[term], src.index, term, ref.index))
+                self.replace_edge(src, term, ref.index, maybe_unreachable)
+                hit = True
+            return hit
+
+        def rewrite_if_same_outedges(state_list):
+            outedges = collections.defaultdict(lambda: [])
+            for s in state_list:
+                outedges[tuple(s.edges())].append(s)
+            hit = False
+            for same in outedges.values():
+                if len(same) > 1:
+                    hit = rewrite_backedges(same) or hit
+            return hit
+
+        def visit_table():
+            hit = True
+            while hit:
+                yield # progress bar.
+                hit = rewrite_if_same_outedges(self.states)
+        consume(visit_table(), progress)
+
+        self.remove_unreachable_states(maybe_unreachable)
+        self.remove_all_unreachable_state(verbose, progress)
+
+
+    def group_epsilon_states(self, verbose, progress):
+        shift_states = [s for s in self.states if len(s.epsilon) == 0]
+        action_states = [s for s in self.states if len(s.epsilon) > 0]
+        self.states = []
+        self.states.extend(shift_states)
+        self.states.extend(action_states)
+        state_map = { s.index: i for i, s in enumerate(self.states) }
+        for s in self.states:
+            s.rewrite_state_indexes(state_map)
+
+    def count_shift_states(self):
+        return sum(1 for s in self.states if len(s.epsilon) == 0)
+    def count_action_states(self):
+        return sum(1 for s in self.states if len(s.epsilon) > 0)
+
+    def prepare_debug_context(self):
+        """To better filter out the traversal of the grammar in debug context, we
+        pre-compute for each state the maximal depth of each state within a
+        production. Therefore, if visiting a state no increases the reducing
+        depth beyind the ability to shrink the shift list to 0, then we can
+        stop going deeper, as we entered a different production. """
+        depths = collections.defaultdict(lambda: [])
+        for s in self.states:
+            if s is None:
+                continue
+            for t, d in s.epsilon:
+                if self.is_term_shifted(t):
+                    continue
+                for path, _ in self.reduce_path([Edge(s.index, t)]):
+                    for i, edge in enumerate(path):
+                        depths[edge.src].append(i + 1)
+        depths = { s: max(ds) for s, ds in depths.items() }
+        return depths
+
+
+    def debug_context(self, state, split_txt = "; ", prefix = ""):
+        "Reconstruct the grammar production by traversing the parse table."
+        assert isinstance(state, int)
+        if self.debug_info is False:
+            return ""
+        if self.debug_info is True:
+            self.debug_info = self.prepare_debug_context()
+        record = []
+        def visit(aps):
+            # Stop after reducing once.
+            if aps.actions == []:
+                return True
+            last = aps.actions[-1].term
+            is_reduce = not self.is_term_shifted(last)
+            has_shift_loop = len(aps.shift) != 1 + len(set(zip(aps.shift, aps.shift[1:])))
+            can_reduce_later = True
+            try:
+                can_reduce_later = self.debug_info[aps.shift[-1].src] >= len(aps.shift)
+            except KeyError:
+                can_reduce_later = False
+            stop = is_reduce or has_shift_loop or not can_reduce_later
+            # Record state which are reducing at most all the shifted states.
+            save = stop and len(aps.shift) == 2
+            save = save and isinstance(aps.shift[0].term, Nt)
+            save = save and not self.is_term_shifted(aps.actions[-1].term)
+            if save:
+                record.append(aps)
+            return not stop
+        self.aps_visitor(self.aps_start(state), visit)
+
+        context = OrderedSet()
+        for aps in record:
+            assert aps.actions != []
+            assert aps.actions[-1].term.update_stack()
+            reducer = aps.actions[-1].term.reduce_with()
+            replay = reducer.replay
+            before = [repr(e.term) for e in aps.stack[:-1]]
+            after = [repr(e.term) for e in aps.actions[:-1]]
+            prod = before + ["\N{MIDDLE DOT}"] + after
+            if replay < len(after) and replay > 0:
+                del prod[-replay:]
+                replay = 0
+            if replay > len(after):
+                replay += 1
+            if replay > 0:
+                prod = prod[:-replay] + ["[lookahead:"] + prod[-replay:] + ["]"]
+            txt = "{}{} ::= {}".format(
+                prefix,
+                repr(aps.actions[-1].term.reduce_with().nt),
+                " ".join(prod)
+            )
+            context.add(txt)
+
+        if split_txt == None:
+            return context
+        return split_txt.join(txt for txt in sorted(context))
+
+
+def generate_parser_states(grammar, *, verbose=False, progress=False, debug=False):
     assert isinstance(grammar, Grammar)
-
-    # Step by step, we check the grammar and lower it to a more primitive form.
-    grammar = expand_parameterized_nonterminals(grammar)
-    check_cycle_free(grammar)
-    check_lookahead_rules(grammar)
-    check_no_line_terminator_here(grammar)
-    grammar, prods, prods_with_indexes_by_nt = expand_all_optional_elements(
-        grammar)
-    grammar = remove_empty_productions(grammar)
-
-    # Now the grammar is in its final form. Compute information about it that
-    # we can cache and use during the main part of the algorithm below.
-    start = start_sets(grammar)
-    start_set_cache = make_start_set_cache(grammar, prods, start)
-    follow = follow_sets(grammar, prods_with_indexes_by_nt, start_set_cache)
-    context = PgenContext(
-        grammar, prods, prods_with_indexes_by_nt, start, start_set_cache, follow)
-
-    # Run the core LR table generation algorithm.
-    return analyze_states(context, prods, verbose=verbose, progress=progress)
+    grammar = CanonicalGrammar(grammar)
+    parse_table = ParseTable(grammar, verbose, progress, debug)
+    return parse_table
 
 
-def generate_parser(out, source, *, verbose=False, progress=False, target='python', handler_info=None):
+def generate_parser(out, source, *, verbose=False, progress=False, debug=False, target='python', handler_info=None):
     assert target in ('python', 'rust')
 
     if isinstance(source, Grammar):
-        parser_states = generate_parser_states(
+        grammar = CanonicalGrammar(source)
+        parser_data = generate_parser_states(
             source, verbose=verbose, progress=progress)
+    elif isinstance(source, ParseTable):
+        parser_data = source
+        parser_data.debug_info = debug
     elif isinstance(source, ParserStates):
-        parser_states = source
+        parser_data = source
     else:
         raise TypeError("unrecognized source: {!r}".format(source))
 
     if target == 'rust':
-        emit.write_rust_parser(out, parser_states, handler_info)
+        if isinstance(parser_data, ParseTable):
+            emit.write_rust_parse_table(out, parser_data, handler_info)
+        else:
+            raise ValueError("Unexpected parser_data kind")
     else:
-        emit.write_python_parser(out, parser_states)
+        if isinstance(parser_data, ParseTable):
+            emit.write_python_parse_table(out, parser_data)
+        else:
+            raise ValueError("Unexpected parser_data kind")
 
 
-def compile(grammar):
+def compile(grammar, verbose = False):
     assert isinstance(grammar, Grammar)
     out = io.StringIO()
     generate_parser(out, grammar)
     scope = {}
-    # print(out.getvalue())
+    if verbose:
+        with open("parse_with_python.py", "w") as f:
+            f.write(out.getvalue())
     exec(out.getvalue(), scope)
     return scope['Parser']
 

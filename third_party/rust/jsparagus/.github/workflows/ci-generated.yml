@@ -18,6 +18,24 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: "3.7"
+    - name: Setup Git Profile
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    - name: Revert Previous Change and Merge Master
+      run: |
+        if git ls-remote origin | grep refs/heads/ci_generated; then
+          # If the remote branch exists.
+          git fetch origin
+
+          # Merge master, discarding changes in origin/ci_generated
+          MASTER_REV=$(git log -1 master --pretty=%H)
+          git checkout -b ci_generated-master origin/master
+          git merge origin/ci_generated -m "Merge master ${MASTER_REV}" -s ours --allow-unrelated-histories
+        else
+          # Otherwise, just start from master branch.
+          git checkout -b ci_generated-master
+        fi
     - name: Generate Files
       run: |
         make init-venv && make all
@@ -26,12 +44,11 @@ jobs:
     - name: Commit files
       run: |
         git add .
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git commit -m "Add Generated Files" -a
+        MASTER_REV=$(git log -1 master --pretty=%H)
+        git commit -m "Add Generated Files for ${MASTER_REV}" -a
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ci_generated
-        force: true
+

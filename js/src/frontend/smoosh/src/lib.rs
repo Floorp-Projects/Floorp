@@ -17,9 +17,12 @@
 
 use bumpalo;
 use jsparagus::ast::types::Program;
+use jsparagus::ast::source_atom_set::SourceAtomSet;
 use jsparagus::emitter::{emit, EmitError, EmitOptions, EmitResult};
 use jsparagus::parser::{parse_module, parse_script, ParseError, ParseOptions};
 use std::{mem, slice, str};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[repr(C)]
 pub struct CVec<T> {
@@ -62,7 +65,8 @@ pub struct SmooshResult {
     unimplemented: bool,
     error: CVec<u8>,
     bytecode: CVec<u8>,
-    strings: CVec<CVec<u8>>,
+    atoms: CVec<usize>,
+    all_atoms: CVec<CVec<u8>>,
 
     /// Line and column numbers for the first character of source.
     lineno: usize,
@@ -103,6 +107,44 @@ pub struct SmooshResult {
     has_module_goal: bool,
 }
 
+impl SmooshResult {
+    fn unimplemented() -> Self {
+        Self::unimplemented_or_error(true, CVec::empty())
+    }
+
+    fn error(message: String) -> Self {
+        let error = CVec::from(format!("{}\0", message).into_bytes());
+        Self::unimplemented_or_error(false, error)
+    }
+
+    fn unimplemented_or_error(unimplemented: bool, error: CVec<u8>) -> Self {
+        Self {
+            unimplemented,
+            error,
+            bytecode: CVec::empty(),
+            atoms: CVec::empty(),
+            all_atoms: CVec::empty(),
+            lineno: 0,
+            column: 0,
+            main_offset: 0,
+            max_fixed_slots: 0,
+            maximum_stack_depth: 0,
+            body_scope_index: 0,
+            num_ic_entries: 0,
+            num_type_sets: 0,
+            strict: false,
+            bindings_accessed_dynamically: false,
+            has_call_site_obj: false,
+            is_for_eval: false,
+            is_module: false,
+            is_function: false,
+            has_non_syntactic_scope: false,
+            needs_function_environment_objects: false,
+            has_module_goal: false,
+        }
+    }
+}
+
 enum SmooshError {
     GenericError(String),
     NotImplemented,
@@ -120,11 +162,12 @@ pub unsafe extern "C" fn run_smoosh(
             unimplemented: false,
             error: CVec::empty(),
             bytecode: CVec::from(result.bytecode),
-            strings: CVec::from(
+            atoms: CVec::from(result.atoms.drain(..).map(|s| s.into_raw()).collect()),
+            all_atoms: CVec::from(
                 result
-                    .strings
+                    .all_atoms
                     .drain(..)
-                    .map(|s| CVec::from(s.into_bytes()))
+                    .map(|a| CVec::from(a.into_bytes()))
                     .collect(),
             ),
             lineno: result.lineno,
@@ -145,52 +188,8 @@ pub unsafe extern "C" fn run_smoosh(
             needs_function_environment_objects: result.needs_function_environment_objects,
             has_module_goal: result.has_module_goal,
         },
-        Err(SmooshError::GenericError(message)) => SmooshResult {
-            unimplemented: false,
-            error: CVec::from(format!("{}\0", message).into_bytes()),
-            bytecode: CVec::empty(),
-            strings: CVec::empty(),
-            lineno: 0,
-            column: 0,
-            main_offset: 0,
-            max_fixed_slots: 0,
-            maximum_stack_depth: 0,
-            body_scope_index: 0,
-            num_ic_entries: 0,
-            num_type_sets: 0,
-            strict: false,
-            bindings_accessed_dynamically: false,
-            has_call_site_obj: false,
-            is_for_eval: false,
-            is_module: false,
-            is_function: false,
-            has_non_syntactic_scope: false,
-            needs_function_environment_objects: false,
-            has_module_goal: false,
-        },
-        Err(SmooshError::NotImplemented) => SmooshResult {
-            unimplemented: true,
-            error: CVec::empty(),
-            bytecode: CVec::empty(),
-            strings: CVec::empty(),
-            lineno: 0,
-            column: 0,
-            main_offset: 0,
-            max_fixed_slots: 0,
-            maximum_stack_depth: 0,
-            body_scope_index: 0,
-            num_ic_entries: 0,
-            num_type_sets: 0,
-            strict: false,
-            bindings_accessed_dynamically: false,
-            has_call_site_obj: false,
-            is_for_eval: false,
-            is_module: false,
-            is_function: false,
-            has_non_syntactic_scope: false,
-            needs_function_environment_objects: false,
-            has_module_goal: false,
-        },
+        Err(SmooshError::GenericError(message)) => SmooshResult::error(message),
+        Err(SmooshError::NotImplemented) => SmooshResult::unimplemented(),
     }
 }
 
@@ -200,7 +199,7 @@ pub struct SmooshParseResult {
     error: CVec<u8>,
 }
 
-fn convert_parse_result<'alloc, T>(r: jsparagus::parser::Result<'alloc, T>) -> SmooshParseResult {
+fn convert_parse_result<'alloc, T>(r: jsparagus::parser::Result<T>) -> SmooshParseResult {
     match r {
         Ok(_) => SmooshParseResult {
             unimplemented: false,
@@ -238,7 +237,8 @@ pub unsafe extern "C" fn test_parse_script(text: *const u8, text_len: usize) -> 
     };
     let allocator = bumpalo::Bump::new();
     let parse_options = ParseOptions::new();
-    convert_parse_result(parse_script(&allocator, text, &parse_options))
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    convert_parse_result(parse_script(&allocator, text, &parse_options, atoms))
 }
 
 #[no_mangle]
@@ -254,29 +254,31 @@ pub unsafe extern "C" fn test_parse_module(text: *const u8, text_len: usize) -> 
     };
     let allocator = bumpalo::Bump::new();
     let parse_options = ParseOptions::new();
-    convert_parse_result(parse_module(&allocator, text, &parse_options))
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    convert_parse_result(parse_module(&allocator, text, &parse_options, atoms))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn free_smoosh_parse_result(result: SmooshParseResult) {
     let _ = result.error.into();
-    //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn free_smoosh(result: SmooshResult) {
+    let _ = result.error.into();
     let _ = result.bytecode.into();
-    for v in result.strings.into() {
+    let _ = result.atoms.into();
+    for v in result.all_atoms.into() {
         let _ = v.into();
     }
-    let _ = result.error.into();
     //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
 }
 
 fn smoosh(text: &str, options: &SmooshCompileOptions) -> Result<EmitResult, SmooshError> {
     let allocator = bumpalo::Bump::new();
     let parse_options = ParseOptions::new();
-    let parse_result = match parse_script(&allocator, text, &parse_options) {
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    let parse_result = match parse_script(&allocator, text, &parse_options, atoms.clone()) {
         Ok(result) => result,
         Err(err) => match err {
             ParseError::NotImplemented(_) => {
@@ -291,7 +293,8 @@ fn smoosh(text: &str, options: &SmooshCompileOptions) -> Result<EmitResult, Smoo
 
     let mut emit_options = EmitOptions::new();
     emit_options.no_script_rval = options.no_script_rval;
-    match emit(&mut Program::Script(parse_result.unbox()), &emit_options) {
+    match emit(&mut Program::Script(parse_result.unbox()), &emit_options,
+               atoms.replace(SourceAtomSet::new_uninitialized())) {
         Ok(result) => Ok(result),
         Err(EmitError::NotImplemented(message)) => {
             println!("Unimplemented: {}", message);

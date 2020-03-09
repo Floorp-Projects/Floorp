@@ -836,7 +836,7 @@ ExpressionStatement[Yield, Await] :
 IfStatement[Yield, Await, Return] :
   `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] `else` Statement[?Yield, ?Await, ?Return]
     => if_statement($0, $2, $4, Some($6))
-  `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] [lookahead != `else`]
     => if_statement($0, $2, $4, None)
   `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` Statement[?Yield, ?Await, ?Return]
     => if_statement($0, $2, make_block_stmt_from_function_decl($4), Some($6))
@@ -844,7 +844,7 @@ IfStatement[Yield, Await, Return] :
     => if_statement($0, $2, $4, Some(make_block_stmt_from_function_decl($6)))
   `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` FunctionDeclaration[?Yield, ?Await, ~Default]
     => if_statement($0, $2, make_block_stmt_from_function_decl($4), Some(make_block_stmt_from_function_decl($6)))
-  `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default]
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] [lookahead != `else`]
     => if_statement($0, $2, make_block_stmt_from_function_decl($4), None)
 
 

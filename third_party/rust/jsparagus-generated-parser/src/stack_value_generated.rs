@@ -18,7 +18,7 @@ pub enum StackValue<'alloc> {
     ArrayExpressionElement(arena::Box<'alloc, ArrayExpressionElement<'alloc>>),
     ArrowExpressionBody(arena::Box<'alloc, ArrowExpressionBody<'alloc>>),
     AssignmentTarget(arena::Box<'alloc, AssignmentTarget<'alloc>>),
-    AssignmentTargetIdentifier(arena::Box<'alloc, AssignmentTargetIdentifier<'alloc>>),
+    AssignmentTargetIdentifier(arena::Box<'alloc, AssignmentTargetIdentifier>),
     AssignmentTargetMaybeDefault(arena::Box<'alloc, AssignmentTargetMaybeDefault<'alloc>>),
     AssignmentTargetPattern(arena::Box<'alloc, AssignmentTargetPattern<'alloc>>),
     AssignmentTargetProperty(arena::Box<'alloc, AssignmentTargetProperty<'alloc>>),
@@ -27,7 +27,7 @@ pub enum StackValue<'alloc> {
     AssignmentTargetWithDefault(arena::Box<'alloc, AssignmentTargetWithDefault<'alloc>>),
     BinaryOperator(arena::Box<'alloc, BinaryOperator>),
     Binding(arena::Box<'alloc, Binding<'alloc>>),
-    BindingIdentifier(arena::Box<'alloc, BindingIdentifier<'alloc>>),
+    BindingIdentifier(arena::Box<'alloc, BindingIdentifier>),
     BindingPattern(arena::Box<'alloc, BindingPattern<'alloc>>),
     BindingProperty(arena::Box<'alloc, BindingProperty<'alloc>>),
     BindingPropertyIdentifier(arena::Box<'alloc, BindingPropertyIdentifier<'alloc>>),
@@ -46,14 +46,14 @@ pub enum StackValue<'alloc> {
     ComputedPropertyName(arena::Box<'alloc, ComputedPropertyName<'alloc>>),
     CoverParenthesized(arena::Box<'alloc, CoverParenthesized<'alloc>>),
     DataProperty(arena::Box<'alloc, DataProperty<'alloc>>),
-    Directive(arena::Box<'alloc, Directive<'alloc>>),
+    Directive(arena::Box<'alloc, Directive>),
     Export(arena::Box<'alloc, Export<'alloc>>),
-    ExportAllFrom(arena::Box<'alloc, ExportAllFrom<'alloc>>),
+    ExportAllFrom(arena::Box<'alloc, ExportAllFrom>),
     ExportDeclaration(arena::Box<'alloc, ExportDeclaration<'alloc>>),
     ExportDefault(arena::Box<'alloc, ExportDefault<'alloc>>),
     ExportFrom(arena::Box<'alloc, ExportFrom<'alloc>>),
-    ExportFromSpecifier(arena::Box<'alloc, ExportFromSpecifier<'alloc>>),
-    ExportLocalSpecifier(arena::Box<'alloc, ExportLocalSpecifier<'alloc>>),
+    ExportFromSpecifier(arena::Box<'alloc, ExportFromSpecifier>),
+    ExportLocalSpecifier(arena::Box<'alloc, ExportLocalSpecifier>),
     ExportLocals(arena::Box<'alloc, ExportLocals<'alloc>>),
     Expression(arena::Box<'alloc, Expression<'alloc>>),
     ExpressionOrSuper(arena::Box<'alloc, ExpressionOrSuper<'alloc>>),
@@ -61,15 +61,15 @@ pub enum StackValue<'alloc> {
     Function(arena::Box<'alloc, Function<'alloc>>),
     FunctionBody(arena::Box<'alloc, FunctionBody<'alloc>>),
     Getter(arena::Box<'alloc, Getter<'alloc>>),
-    Identifier(arena::Box<'alloc, Identifier<'alloc>>),
-    IdentifierExpression(arena::Box<'alloc, IdentifierExpression<'alloc>>),
-    IdentifierName(arena::Box<'alloc, IdentifierName<'alloc>>),
+    Identifier(arena::Box<'alloc, Identifier>),
+    IdentifierExpression(arena::Box<'alloc, IdentifierExpression>),
+    IdentifierName(arena::Box<'alloc, IdentifierName>),
     IfStatement(arena::Box<'alloc, IfStatement<'alloc>>),
     Import(arena::Box<'alloc, Import<'alloc>>),
     ImportDeclaration(arena::Box<'alloc, ImportDeclaration<'alloc>>),
-    ImportNamespace(arena::Box<'alloc, ImportNamespace<'alloc>>),
-    ImportSpecifier(arena::Box<'alloc, ImportSpecifier<'alloc>>),
-    Label(arena::Box<'alloc, Label<'alloc>>),
+    ImportNamespace(arena::Box<'alloc, ImportNamespace>),
+    ImportSpecifier(arena::Box<'alloc, ImportSpecifier>),
+    Label(arena::Box<'alloc, Label>),
     MemberAssignmentTarget(arena::Box<'alloc, MemberAssignmentTarget<'alloc>>),
     MemberExpression(arena::Box<'alloc, MemberExpression<'alloc>>),
     Method(arena::Box<'alloc, Method<'alloc>>),
@@ -84,23 +84,23 @@ pub enum StackValue<'alloc> {
     OptionalChain(arena::Box<'alloc, OptionalChain<'alloc>>),
     Parameter(arena::Box<'alloc, Parameter<'alloc>>),
     PrivateFieldExpression(arena::Box<'alloc, PrivateFieldExpression<'alloc>>),
-    PrivateIdentifier(arena::Box<'alloc, PrivateIdentifier<'alloc>>),
+    PrivateIdentifier(arena::Box<'alloc, PrivateIdentifier>),
     Program(arena::Box<'alloc, Program<'alloc>>),
     PropertyName(arena::Box<'alloc, PropertyName<'alloc>>),
     Script(arena::Box<'alloc, Script<'alloc>>),
     Setter(arena::Box<'alloc, Setter<'alloc>>),
-    ShorthandProperty(arena::Box<'alloc, ShorthandProperty<'alloc>>),
+    ShorthandProperty(arena::Box<'alloc, ShorthandProperty>),
     SimpleAssignmentTarget(arena::Box<'alloc, SimpleAssignmentTarget<'alloc>>),
     Statement(arena::Box<'alloc, Statement<'alloc>>),
     StaticMemberAssignmentTarget(arena::Box<'alloc, StaticMemberAssignmentTarget<'alloc>>),
     StaticMemberExpression(arena::Box<'alloc, StaticMemberExpression<'alloc>>),
-    StaticPropertyName(arena::Box<'alloc, StaticPropertyName<'alloc>>),
+    StaticPropertyName(arena::Box<'alloc, StaticPropertyName>),
     SwitchCase(arena::Box<'alloc, SwitchCase<'alloc>>),
     SwitchDefault(arena::Box<'alloc, SwitchDefault<'alloc>>),
-    TemplateElement(arena::Box<'alloc, TemplateElement<'alloc>>),
+    TemplateElement(arena::Box<'alloc, TemplateElement>),
     TemplateExpression(arena::Box<'alloc, TemplateExpression<'alloc>>),
     TemplateExpressionElement(arena::Box<'alloc, TemplateExpressionElement<'alloc>>),
-    Token(arena::Box<'alloc, Token<'alloc>>),
+    Token(arena::Box<'alloc, Token>),
     UnaryOperator(arena::Box<'alloc, UnaryOperator>),
     UpdateOperator(arena::Box<'alloc, UpdateOperator>),
     VariableDeclaration(arena::Box<'alloc, VariableDeclaration<'alloc>>),
@@ -108,7 +108,7 @@ pub enum StackValue<'alloc> {
     VariableDeclarationOrAssignmentTarget(arena::Box<'alloc, VariableDeclarationOrAssignmentTarget<'alloc>>),
     VariableDeclarationOrExpression(arena::Box<'alloc, VariableDeclarationOrExpression<'alloc>>),
     VariableDeclarator(arena::Box<'alloc, VariableDeclarator<'alloc>>),
-    VariableReference(arena::Box<'alloc, VariableReference<'alloc>>),
+    VariableReference(arena::Box<'alloc, VariableReference>),
     VecArrayExpressionElement(arena::Box<'alloc, arena::Vec<'alloc, ArrayExpressionElement<'alloc>>>),
     VecBindingProperty(arena::Box<'alloc, arena::Vec<'alloc, BindingProperty<'alloc>>>),
     VecClassElement(arena::Box<'alloc, arena::Vec<'alloc, arena::Box<'alloc, ClassElement<'alloc>>>>),
@@ -207,7 +207,7 @@ impl<'alloc> StackValueItem<'alloc> for AssignmentTarget<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for AssignmentTargetIdentifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for AssignmentTargetIdentifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::AssignmentTargetIdentifier(v) => Ok(v),
@@ -288,7 +288,7 @@ impl<'alloc> StackValueItem<'alloc> for Binding<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for BindingIdentifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for BindingIdentifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::BindingIdentifier(v) => Ok(v),
@@ -459,7 +459,7 @@ impl<'alloc> StackValueItem<'alloc> for DataProperty<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for Directive<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for Directive {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::Directive(v) => Ok(v),
@@ -477,7 +477,7 @@ impl<'alloc> StackValueItem<'alloc> for Export<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for ExportAllFrom<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for ExportAllFrom {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::ExportAllFrom(v) => Ok(v),
@@ -513,7 +513,7 @@ impl<'alloc> StackValueItem<'alloc> for ExportFrom<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for ExportFromSpecifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for ExportFromSpecifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::ExportFromSpecifier(v) => Ok(v),
@@ -522,7 +522,7 @@ impl<'alloc> StackValueItem<'alloc> for ExportFromSpecifier<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for ExportLocalSpecifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for ExportLocalSpecifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::ExportLocalSpecifier(v) => Ok(v),
@@ -594,7 +594,7 @@ impl<'alloc> StackValueItem<'alloc> for Getter<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for Identifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for Identifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::Identifier(v) => Ok(v),
@@ -603,7 +603,7 @@ impl<'alloc> StackValueItem<'alloc> for Identifier<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for IdentifierExpression<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for IdentifierExpression {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::IdentifierExpression(v) => Ok(v),
@@ -612,7 +612,7 @@ impl<'alloc> StackValueItem<'alloc> for IdentifierExpression<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for IdentifierName<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for IdentifierName {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::IdentifierName(v) => Ok(v),
@@ -648,7 +648,7 @@ impl<'alloc> StackValueItem<'alloc> for ImportDeclaration<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for ImportNamespace<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for ImportNamespace {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::ImportNamespace(v) => Ok(v),
@@ -657,7 +657,7 @@ impl<'alloc> StackValueItem<'alloc> for ImportNamespace<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for ImportSpecifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for ImportSpecifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::ImportSpecifier(v) => Ok(v),
@@ -666,7 +666,7 @@ impl<'alloc> StackValueItem<'alloc> for ImportSpecifier<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for Label<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for Label {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::Label(v) => Ok(v),
@@ -801,7 +801,7 @@ impl<'alloc> StackValueItem<'alloc> for PrivateFieldExpression<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for PrivateIdentifier<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for PrivateIdentifier {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::PrivateIdentifier(v) => Ok(v),
@@ -846,7 +846,7 @@ impl<'alloc> StackValueItem<'alloc> for Setter<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for ShorthandProperty<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for ShorthandProperty {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::ShorthandProperty(v) => Ok(v),
@@ -891,7 +891,7 @@ impl<'alloc> StackValueItem<'alloc> for StaticMemberExpression<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for StaticPropertyName<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for StaticPropertyName {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::StaticPropertyName(v) => Ok(v),
@@ -918,7 +918,7 @@ impl<'alloc> StackValueItem<'alloc> for SwitchDefault<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for TemplateElement<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for TemplateElement {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::TemplateElement(v) => Ok(v),
@@ -945,7 +945,7 @@ impl<'alloc> StackValueItem<'alloc> for TemplateExpressionElement<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for Token<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for Token {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::Token(v) => Ok(v),
@@ -1017,7 +1017,7 @@ impl<'alloc> StackValueItem<'alloc> for VariableDeclarator<'alloc> {
     }
 }
 
-impl<'alloc> StackValueItem<'alloc> for VariableReference<'alloc> {
+impl<'alloc> StackValueItem<'alloc> for VariableReference {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {
             StackValue::VariableReference(v) => Ok(v),
@@ -1154,7 +1154,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, AssignmentTarget<'alloc
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, AssignmentTargetIdentifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, AssignmentTargetIdentifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::AssignmentTargetIdentifier(self))
@@ -1217,7 +1217,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Binding<'alloc>> {
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, BindingIdentifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, BindingIdentifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::BindingIdentifier(self))
@@ -1350,7 +1350,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, DataProperty<'alloc>> {
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Directive<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Directive> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::Directive(self))
@@ -1364,7 +1364,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Export<'alloc>> {
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportAllFrom<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportAllFrom> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::ExportAllFrom(self))
@@ -1392,14 +1392,14 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportFrom<'alloc>> {
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportFromSpecifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportFromSpecifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::ExportFromSpecifier(self))
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportLocalSpecifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ExportLocalSpecifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::ExportLocalSpecifier(self))
@@ -1455,21 +1455,21 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Getter<'alloc>> {
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Identifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Identifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::Identifier(self))
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, IdentifierExpression<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, IdentifierExpression> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::IdentifierExpression(self))
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, IdentifierName<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, IdentifierName> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::IdentifierName(self))
@@ -1497,21 +1497,21 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ImportDeclaration<'allo
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ImportNamespace<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ImportNamespace> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::ImportNamespace(self))
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ImportSpecifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ImportSpecifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::ImportSpecifier(self))
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Label<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Label> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::Label(self))
@@ -1616,7 +1616,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, PrivateFieldExpression<
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, PrivateIdentifier<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, PrivateIdentifier> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::PrivateIdentifier(self))
@@ -1651,7 +1651,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Setter<'alloc>> {
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ShorthandProperty<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, ShorthandProperty> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::ShorthandProperty(self))
@@ -1686,7 +1686,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, StaticMemberExpression<
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, StaticPropertyName<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, StaticPropertyName> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::StaticPropertyName(self))
@@ -1707,7 +1707,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, SwitchDefault<'alloc>> 
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, TemplateElement<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, TemplateElement> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::TemplateElement(self))
@@ -1728,7 +1728,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, TemplateExpressionEleme
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Token<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Token> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::Token(self))
@@ -1784,7 +1784,7 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, VariableDeclarator<'all
     }
 }
 
-impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, VariableReference<'alloc>> {
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, VariableReference> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::VariableReference(self))

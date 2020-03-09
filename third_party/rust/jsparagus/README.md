@@ -43,6 +43,67 @@ When it's done, you can:
 
 *   `cd crates/driver && cargo run` to test the JS parser and bytecode emitter.
 
+## Benchmarking
+
+### Fine-grain Benchmarks
+
+Fine-grain benchmarks are used to detect regression by focusing on each part of
+the parser at one time, exercising only this one part. The benchmarks are not
+meant to represent any real code sample, but to focus on executing specific
+functions of the parser.
+
+To run this parser, you should execute the following command at the root of the
+repository:
+
+```sh
+cd crates/parser
+cargo bench
+```
+
+### Real-world JavaScript
+
+Real world benchmarks are used to track the overall evolution of performance over
+time. The benchmarks are meant to represent realistic production use cases.
+
+To benchmark the AST generation, we use SpiderMonkey integration to execute the
+parser and compare it against SpiderMonkey's default parser. Therefore, to run
+this benchmark, we have to first compile SpiderMonkey, then execute SpiderMonkey
+shell on the benchmark. (The following instructions assume that `~` is the
+directory where all projects are checked out)
+
+* Generate Parse Tables:
+
+  ```sh
+  cd ~/jsparagus/
+  make init
+  make all
+  ```
+
+* Compile an optimized version of [SpiderMonkey's JavaScript shell](https://github.com/mozilla/gecko-dev):
+
+  ```sh
+  cd ~/mozilla/js/src/
+  # set the jsparagus' path to the abosulte path to ~/jsparagus.
+  $EDITOR frontend/smoosh/Cargo.toml
+  ../../mach vendor rust
+  # Create a build directory
+  mkdir obj.opt
+  cd obj.opt
+  # Build SpiderMonkey
+  ../configure --enable-nspr-build --enable-smoosh --enable-debug-symbols=-ggdb3 --disable-debug --enable-optimize --enable-release --disable-tests
+  make
+  ```
+
+* Execute the [real-js-samples](https://github.com/nbp/real-js-samples/) benchmark:
+
+  ```sh
+  cd ~/real-js-samples/
+  ~/mozilla/js/src/obj.opt/dist/bin/js ./20190416.js
+  ```
+
+This should return the overall time taken to parse all the Script once, in the
+cases where there is no error. The goal is to minimize the number of
+nano-seconds per bytes.
 
 ## Limitations
 

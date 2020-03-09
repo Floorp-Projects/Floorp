@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Simplified commit hook to format the files which were changed in the current commit
 #
