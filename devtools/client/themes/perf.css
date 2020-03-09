@@ -30,10 +30,11 @@
 }
 
 .perf-button-image {
-  vertical-align: text-top;
-  padding-inline-end: 4px;
+  vertical-align: middle;
+  padding-inline-start: 8px;
+  width: 13px;
   -moz-context-properties: fill;
-  fill: var(--theme-icon-color);
+  fill: #fff;
 }
 
 .perf-button-container {
@@ -47,7 +48,9 @@
 }
 
 .perf-additional-message {
-  margin: 10px;
+  font-size: 13px;
+  font-weight: bold;
+  font-style: italic;
 }
 
 .perf > * {
@@ -55,6 +58,7 @@
 }
 
 .perf-description {
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -67,6 +71,7 @@
   text-decoration: underline;
   white-space: nowrap;
   cursor: pointer;
+  font-size: inherit;
 }
 
 /* Settings */
@@ -328,7 +333,6 @@
 
 /* See https://design.firefox.com/photon/components/buttons.html for the spec */
 .perf-photon-button {
-  --blue-50-a30: rgba(10, 132, 255, 0.3);
   padding: 0 8px;
   border: none;
   margin: 0;
@@ -375,14 +379,15 @@
 }
 
 .perf-photon-button[disabled] {
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 .perf-photon-button.perf-button {
   margin: 10px;
 }
 
-button.perf-photon-button:focus {
+button.perf-photon-button:focus,
+.perf-presets-select:focus {
   box-shadow: 0 0 0 1px var(--blue-50) inset, 0 0 0 1px var(--blue-50),
     0 0 0 4px var(--blue-50-a30);
   outline: 0;
@@ -397,72 +402,70 @@ a.perf-photon-button:focus {
   height: 24px;
 }
 
-/* Photon message bar - https://design.firefox.com/photon/components/message-bars.html */
+.perf-presets-hr {
+  width: 100%;
+  border: 1px solid var(--grey-30);
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
 
-.perf-photon-message-bar {
+.perf-presets {
   display: flex;
   width: 100%;
-  min-height: 32px;
-  box-sizing: border-box;
-  align-items: center;
-  padding: 0 4px;
-  border-radius: 4px;
+  margin-block: 12px;
+}
+
+.perf-presets-settings {
+  margin-inline-end: 17px;
+  margin-block: 3px;
   font-size: 13px;
+  font-weight: bold;
+}
+
+.perf-presets-description {
+  margin-block: 13px;
+}
+
+.perf-presets-select {
+  /* Layout */
+  position: relative;
+  min-width: 186px;
+  padding-block: 3px;
+  padding-inline: 5px;
+  border: 1px solid transparent;
+
+  /* Presentational: */
+  -moz-appearance: none;
+  background-color: var(--grey-20);
+  background-image: url('chrome://global/skin/icons/arrow-dropdown-12.svg');
+  background-position: right 4px center;
+  background-repeat: no-repeat;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  color: inherit !important;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.4;
+  text-decoration: none;
 }
 
-.perf-photon-message-bar-warning {
-  /* This should include an info icon, but it's left out since it's probably not worth
-   * adding and maintaining an extra icon here. */
-  padding: 4px 8px;
-  background: var(--yellow-50);
-  color: var(--yellow-90);
-  fill: var(--yellow-90);
+.perf-presets-select:hover {
+  border: 1px solid var(--grey-30);
 }
 
-.perf-photon-message-bar-warning-icon {
-  background: url("chrome://global/skin/icons/warning.svg");
-  -moz-context-properties: fill;
-  width: 16px;
-  height: 16px;
-  margin: 4px;
+.perf-presets-select:focus {
+  box-shadow:
+    0 0 0 2px var(--blue-50),
+    0 0 0 6px var(--blue-50-a30);
+  outline: 0;
 }
 
-.perf-photon-message-bar .perf-photon-button {
-  margin-inline-start: 8px;
+.perf-presets-custom {
+  padding-inline: 10px;
+  margin-block: 13px;
+  line-height: 1.3;
 }
 
-.perf-photon-message-bar-warning .perf-photon-button {
-  background-color: var(--yellow-60);
-}
-
-.perf-photon-message-bar-warning .perf-photon-button:hover {
-  background-color: var(--yellow-70);
-}
-
-.perf-photon-message-bar-warning .perf-photon-button:hover:active {
-  background-color: var(--yellow-80);
-}
-
-/* Restart prompt */
-
-.perf-env-restart {
-  /* Create an empty space at the top of the page. */
-  width: 100%;
-  height: 38px;
-}
-
-.perf-env-restart-fixed {
-  /* This style is for the floating bar */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-
-  /* Create a new stacking context, so that the fixed positioning will be over the
-   * rest of the components */
-  z-index: 1;
-
-  border-radius: 0;
+.perf-presets-custom-bold {
+  font-weight: bold;
 }
