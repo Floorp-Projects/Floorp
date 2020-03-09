@@ -111,7 +111,7 @@ PresentationRequest::PresentationRequest(nsPIDOMWindowInner* aWindow,
                                          nsTArray<nsString>&& aUrls)
     : DOMEventTargetHelper(aWindow), mUrls(std::move(aUrls)) {}
 
-PresentationRequest::~PresentationRequest() {}
+PresentationRequest::~PresentationRequest() = default;
 
 bool PresentationRequest::Init() { return true; }
 
