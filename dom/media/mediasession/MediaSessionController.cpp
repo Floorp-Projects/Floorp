@@ -126,15 +126,25 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
 
 MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
   MediaMetadataBase metadata;
+  metadata.mTitle = GetDefaultTitle();
+  metadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
+
+  LOG("Default media metadata, title=%s, album src=%s",
+      NS_ConvertUTF16toUTF8(metadata.mTitle).get(),
+      NS_ConvertUTF16toUTF8(metadata.mArtwork[0].mSrc).get());
+  return metadata;
+}
+
+nsString MediaSessionController::GetDefaultTitle() const {
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBCId);
   if (!bc) {
-    return metadata;
+    return EmptyString();
   }
 
   RefPtr<WindowGlobalParent> globalParent = bc->GetCurrentWindowGlobal();
   if (!globalParent) {
-    return metadata;
+    return EmptyString();
   }
 
   // The media metadata would be shown on the virtual controller interface. For
@@ -148,26 +158,22 @@ MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
         nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
   }
 
+  nsString defaultTitle;
   if (inPrivateBrowsing) {
     // TODO : maybe need l10n?
     if (nsCOMPtr<nsIXULAppInfo> appInfo =
             do_GetService("@mozilla.org/xre/app-info;1")) {
       nsCString appName;
       appInfo->GetName(appName);
-      CopyUTF8toUTF16(appName, metadata.mTitle);
+      CopyUTF8toUTF16(appName, defaultTitle);
     } else {
-      metadata.mTitle.AssignLiteral("Firefox");
+      defaultTitle.AssignLiteral("Firefox");
     }
-    metadata.mTitle.AppendLiteral(" is playing media");
+    defaultTitle.AppendLiteral(" is playing media");
   } else {
-    metadata.mTitle = globalParent->GetDocumentTitle();
+    defaultTitle = globalParent->GetDocumentTitle();
   }
-  metadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
-
-  LOG("Default media metadata, title=%s, album src=%s",
-      NS_ConvertUTF16toUTF8(metadata.mTitle).get(),
-      NS_ConvertUTF16toUTF8(metadata.mArtwork[0].mSrc).get());
-  return metadata;
+  return defaultTitle;
 }
 
 nsString MediaSessionController::GetDefaultFaviconURL() const {
