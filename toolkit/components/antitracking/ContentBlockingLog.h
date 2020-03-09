@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ContentBlockingLog_h
-#define mozilla_dom_ContentBlockingLog_h
+#ifndef mozilla_ContentBlockingLog_h
+#define mozilla_ContentBlockingLog_h
 
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/JSONWriter.h"
@@ -21,7 +21,6 @@
 class nsIPrincipal;
 
 namespace mozilla {
-namespace dom {
 
 class ContentBlockingLog final {
   typedef ContentBlockingNotifier::StorageAccessGrantedReason
@@ -426,7 +425,6 @@ class ContentBlockingLog final {
   OriginDataTable mLog;
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
 #endif
