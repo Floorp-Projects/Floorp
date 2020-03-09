@@ -165,8 +165,7 @@ bool AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
 }
 
 double AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
-                                       const AnimationValue& aOther,
-                                       ComputedStyle* aComputedStyle) const {
+                                       const AnimationValue& aOther) const {
   if (IsNull() || aOther.IsNull()) {
     return 0.0;
   }
