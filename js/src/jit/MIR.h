@@ -6498,7 +6498,9 @@ class MRegExp : public MNullaryInstruction {
         source_(source),
         hasShared_(hasShared) {
     setResultType(MIRType::Object);
-    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, source));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, source));
+    }
   }
 
  public:

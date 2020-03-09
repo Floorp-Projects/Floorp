@@ -16,6 +16,7 @@ namespace js {
 using RawBytecodeLocationOffset = uint32_t;
 
 class PropertyName;
+class RegExpObject;
 
 class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset_;
@@ -89,7 +90,15 @@ class BytecodeLocation {
   int32_t jumpOffset() const { return GET_JUMP_OFFSET(rawBytecode_); }
   int32_t codeOffset() const { return GET_CODE_OFFSET(rawBytecode_); }
 
-  PropertyName* getPropertyName(const JSScript* script) const;
+  inline JSAtom* getAtom(const JSScript* script) const;
+  inline PropertyName* getPropertyName(const JSScript* script) const;
+  inline JS::BigInt* getBigInt(const JSScript* script) const;
+  inline js::RegExpObject* getRegExp(const JSScript* script) const;
+
+  uint32_t getSymbolIndex() const {
+    MOZ_ASSERT(is(JSOp::Symbol));
+    return GET_UINT8(rawBytecode_);
+  }
 
   Scope* innermostScope(const JSScript* script) const;
 

@@ -323,6 +323,8 @@ bool js::ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id,
 /////////////////////////////////////////////////////////////////////
 
 TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, Type type) {
+  MOZ_ASSERT(!jit::JitOptions.warpBuilder);
+
   if (type.isUnknown()) {
     flags |= TYPE_FLAG_BASE_MASK;
     return;

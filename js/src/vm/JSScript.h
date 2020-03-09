@@ -2964,12 +2964,12 @@ class JSScript : public js::BaseScript {
     return getAtom(pc)->asPropertyName();
   }
 
-  JSObject* getObject(size_t index) {
+  JSObject* getObject(size_t index) const {
     MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<JSObject>();
   }
 
-  JSObject* getObject(jsbytecode* pc) {
+  JSObject* getObject(jsbytecode* pc) const {
     MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
     return getObject(GET_UINT32_INDEX(pc));
   }
@@ -2988,18 +2988,18 @@ class JSScript : public js::BaseScript {
     return getScope(GET_UINT32_INDEX(pc));
   }
 
-  inline JSFunction* getFunction(size_t index);
-  inline JSFunction* getFunction(jsbytecode* pc);
+  inline JSFunction* getFunction(size_t index) const;
+  inline JSFunction* getFunction(jsbytecode* pc) const;
 
-  inline js::RegExpObject* getRegExp(size_t index);
-  inline js::RegExpObject* getRegExp(jsbytecode* pc);
+  inline js::RegExpObject* getRegExp(size_t index) const;
+  inline js::RegExpObject* getRegExp(jsbytecode* pc) const;
 
-  js::BigInt* getBigInt(size_t index) {
+  js::BigInt* getBigInt(size_t index) const {
     MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<js::BigInt>();
   }
 
-  js::BigInt* getBigInt(jsbytecode* pc) {
+  js::BigInt* getBigInt(jsbytecode* pc) const {
     MOZ_ASSERT(containsPC(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_BIGINT);
     return getBigInt(GET_UINT32_INDEX(pc));
