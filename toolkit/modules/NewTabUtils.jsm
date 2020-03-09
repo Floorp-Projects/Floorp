@@ -56,10 +56,6 @@ ChromeUtils.defineModuleGetter(
   "chrome://pocket/content/Pocket.jsm"
 );
 
-const { BrowserWindowTracker } = ChromeUtils.import(
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
-
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
@@ -92,11 +88,6 @@ const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
 
 // Some default seconds ago for Activity Stream recent requests
 const ACTIVITY_STREAM_DEFAULT_RECENT = 5 * 24 * 60 * 60;
-
-// The fallback value for the width of smallFavicon in pixels.
-// This value will be multiplied by the current window's devicePixelRatio.
-// If devicePixelRatio cannot be found, it will be multiplied by 2.
-const DEFAULT_SMALL_FAVICON_WIDTH = 16;
 
 const POCKET_UPDATE_TIME = 24 * 60 * 60 * 1000; // 1 day
 const POCKET_INACTIVE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -922,59 +913,39 @@ var ActivityStreamProvider = {
         let encodedData = btoa(String.fromCharCode.apply(null, link.favicon));
         link.favicon = `data:${link.mimeType};base64,${encodedData}`;
       }
-
-      if (link.smallFavicon) {
-        let encodedData = btoa(
-          String.fromCharCode.apply(null, link.smallFavicon)
-        );
-        link.smallFavicon = `data:${link.smallFaviconMimeType};base64,${encodedData}`;
-      }
       delete link.mimeType;
-      delete link.smallFaviconMimeType;
       return link;
     });
   },
 
   /**
-   * Get favicon data (and metadata) for a uri. Fetches both the largest favicon
-   * available, for Activity Stream; and a normal-sized favicon, for the Urlbar.
+   * Get favicon data (and metadata) for a uri.
    *
-   * @param {nsIURI} aUri Page to check for favicon data
-   * @param {number} preferredFaviconWidth
-   *   The preferred width of the of the normal-sized favicon in pixels.
-   * @returns A promise of an object (possibly empty) containing the data.
+   * @param aUri {nsIURI} Page to check for favicon data
+   * @returns A promise of an object (possibly null) containing the data
    */
-  async _loadIcons(aUri, preferredFaviconWidth) {
-    let iconData = {};
-    // Fetch the largest icon available.
-    let faviconData = await PlacesUtils.promiseFaviconData(aUri, 0);
-    Object.assign(iconData, {
-      favicon: faviconData.data,
-      faviconLength: faviconData.dataLen,
-      faviconRef: faviconData.uri.ref,
-      faviconSize: faviconData.size,
-      mimeType: faviconData.mimeType,
-    });
-
-    // Also fetch a smaller icon.
-    faviconData = await PlacesUtils.promiseFaviconData(
-      aUri,
-      preferredFaviconWidth
+  _getIconData(aUri) {
+    // Use 0 to get the biggest width available
+    const preferredWidth = 0;
+    return new Promise(resolve =>
+      PlacesUtils.favicons.getFaviconDataForPage(
+        aUri,
+        // Package up the icon data in an object if we have it; otherwise null
+        (iconUri, faviconLength, favicon, mimeType, faviconSize) =>
+          resolve(
+            iconUri
+              ? {
+                  favicon,
+                  faviconLength,
+                  faviconRef: iconUri.ref,
+                  faviconSize,
+                  mimeType,
+                }
+              : null
+          ),
+        preferredWidth
+      )
     );
-    Object.assign(
-      iconData,
-      faviconData
-        ? {
-            smallFavicon: faviconData.data,
-            smallFaviconLength: faviconData.dataLen,
-            smallFaviconRef: faviconData.uri.ref,
-            smallFaviconSize: faviconData.size,
-            smallFaviconMimeType: faviconData.mimeType,
-          }
-        : {}
-    );
-
-    return iconData;
   },
 
   /**
@@ -988,11 +959,6 @@ var ActivityStreamProvider = {
    *                    length, and favicon size (width)
    */
   _addFavicons(aLinks) {
-    const win = BrowserWindowTracker.getTopWindow();
-    // We fetch two copies of a page's favicon: the largest available, for
-    // Activity Stream; and a smaller size appropriate for the Urlbar.
-    const preferredFaviconWidth =
-      DEFAULT_SMALL_FAVICON_WIDTH * (win ? win.devicePixelRatio : 2);
     // Each link in the array needs a favicon for it's page - so we fire off a
     // promise for each link to compute the favicon data and attach it back to
     // the original link object. We must wait until all favicons for the array
@@ -1010,7 +976,7 @@ var ActivityStreamProvider = {
             let iconData;
             try {
               let linkUri = Services.io.newURI(link.url);
-              iconData = await this._loadIcons(linkUri, preferredFaviconWidth);
+              iconData = await this._getIconData(linkUri);
 
               // Switch the scheme to try again with the other
               if (!iconData) {
@@ -1018,17 +984,14 @@ var ActivityStreamProvider = {
                   .mutate()
                   .setScheme(linkUri.scheme === "https" ? "http" : "https")
                   .finalize();
-                iconData = await this._loadIcons(
-                  linkUri,
-                  preferredFaviconWidth
-                );
+                iconData = await this._getIconData(linkUri);
               }
             } catch (e) {
               // We just won't put icon data on the link
             }
 
             // Add the icon data to the link if we have any
-            resolve(Object.assign(link, iconData));
+            resolve(Object.assign(link, iconData || {}));
           })
       )
     );
