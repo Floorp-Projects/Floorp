@@ -6,7 +6,6 @@
 
 #include "UrlClassifierFeatureCryptominingProtection.h"
 
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsContentUtils.h"

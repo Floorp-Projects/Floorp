@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -175,9 +175,8 @@ static bool StorageDisabledByAntiTrackingInternal(
 
   if (aWindow) {
     nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
-    return !documentURI ||
-           !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-               aWindow, documentURI, &aRejectedReason);
+    return !documentURI || !ContentBlocking::ShouldAllowAccessFor(
+                               aWindow, documentURI, &aRejectedReason);
   }
 
   if (aChannel) {
@@ -187,13 +186,12 @@ static bool StorageDisabledByAntiTrackingInternal(
       return false;
     }
 
-    return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-        aChannel, uri, &aRejectedReason);
+    return !ContentBlocking::ShouldAllowAccessFor(aChannel, uri,
+                                                  &aRejectedReason);
   }
 
   MOZ_ASSERT(aPrincipal);
-  return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-      aPrincipal, aCookieJarSettings);
+  return !ContentBlocking::ShouldAllowAccessFor(aPrincipal, aCookieJarSettings);
 }
 
 namespace mozilla {

@@ -21,8 +21,8 @@
 #include "nsIPermissionManager.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIWebProgressListener.h"
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
@@ -2482,8 +2482,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     // permission has been granted already.
     // Don't notify in this case, since we would be notifying the user
     // needlessly.
-    mHasStorageAccess = AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-        newInnerWindow, uri, nullptr);
+    mHasStorageAccess =
+        ContentBlocking::ShouldAllowAccessFor(newInnerWindow, uri, nullptr);
   }
 
   return NS_OK;
@@ -7184,8 +7184,8 @@ void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
       aURI, doc->NodePrincipal()->OriginAttributesRef());
 
   // We don't care when the asynchronous work finishes here.
-  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
-      principal, inner, ContentBlockingNotifier::eOpener);
+  Unused << ContentBlocking::AllowAccessFor(principal, inner,
+                                            ContentBlockingNotifier::eOpener);
 }
 
 //*****************************************************************************

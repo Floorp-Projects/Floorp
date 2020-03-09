@@ -6,7 +6,6 @@
 
 #include "AntiTrackingLog.h"
 #include "ContentBlockingNotifier.h"
-#include "AntiTrackingCommon.h"
 #include "AntiTrackingUtils.h"
 
 #include "mozilla/AbstractEventQueue.h"

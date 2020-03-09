@@ -25,7 +25,6 @@
 #include "js/ContextOptions.h"
 #include "js/LocaleSensitive.h"
 #include "mozilla/AbstractThread.h"
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
