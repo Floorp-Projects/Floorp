@@ -6,10 +6,7 @@
 add_task(async function test() {
   info("Test what happens when a recording is interrupted by another tool.");
 
-  const {
-    revertRecordingPreferences,
-    stopProfiler: stopProfilerByAnotherTool,
-  } = ChromeUtils.import(
+  const { stopProfiler: stopProfilerByAnotherTool } = ChromeUtils.import(
     "resource://devtools/client/performance-new/popup/background.jsm.js"
   );
 
@@ -42,6 +39,4 @@ add_task(async function test() {
       "The client is ready to record again, even though it was interrupted."
     );
   });
-
-  revertRecordingPreferences();
 });

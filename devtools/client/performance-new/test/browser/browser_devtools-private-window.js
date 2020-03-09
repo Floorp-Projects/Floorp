@@ -7,10 +7,6 @@
 add_task(async function test() {
   info("Test opening a private browsing window while the profiler is active.");
 
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-
   await withDevToolsPanel(async document => {
     const getRecordingState = setupGetRecordingState(document);
 
@@ -58,6 +54,4 @@ add_task(async function test() {
       "The panel is available to record again."
     );
   });
-
-  revertRecordingPreferences();
 });
