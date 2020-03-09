@@ -13,7 +13,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
+  const { TEST_EVENTS } = windowRequire(
+    "devtools/client/netmonitor/src/constants"
+  );
   const { getSelectedRequest, getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
   );
@@ -35,7 +37,7 @@ add_task(async function() {
     "There should be no selected item in the requests menu."
   );
 
-  const networkEvent = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
+  const networkEvent = monitor.panelWin.api.once(TEST_EVENTS.NETWORK_EVENT);
   tab.linkedBrowser.reload();
   await networkEvent;
 

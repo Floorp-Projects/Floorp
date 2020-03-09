@@ -35,7 +35,10 @@ const {
   getUrlHost,
   getUrlScheme,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+const {
+  EVENTS,
+  TEST_EVENTS,
+} = require("devtools/client/netmonitor/src/constants");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 /* eslint-disable no-unused-vars, max-len */
@@ -210,13 +213,16 @@ function waitForTimelineMarkers(monitor) {
       info(`Got marker: ${marker.name}`);
       markers.push(marker);
       if (markers.length == 2) {
-        monitor.panelWin.api.off(EVENTS.TIMELINE_EVENT, handleTimelineEvent);
+        monitor.panelWin.api.off(
+          TEST_EVENTS.TIMELINE_EVENT,
+          handleTimelineEvent
+        );
         info("Got two timeline markers, done waiting");
         resolve(markers);
       }
     }
 
-    monitor.panelWin.api.on(EVENTS.TIMELINE_EVENT, handleTimelineEvent);
+    monitor.panelWin.api.on(TEST_EVENTS.TIMELINE_EVENT, handleTimelineEvent);
   });
 }
 
@@ -267,13 +273,13 @@ function waitForAllRequestsFinished(monitor) {
       }
 
       // All requests are done - unsubscribe from events and resolve!
-      window.api.off(EVENTS.NETWORK_EVENT, onRequest);
+      window.api.off(TEST_EVENTS.NETWORK_EVENT, onRequest);
       window.api.off(EVENTS.PAYLOAD_READY, onTimings);
       info("All requests finished");
       resolve();
     }
 
-    window.api.on(EVENTS.NETWORK_EVENT, onRequest);
+    window.api.on(TEST_EVENTS.NETWORK_EVENT, onRequest);
     window.api.on(EVENTS.PAYLOAD_READY, onTimings);
   });
 }
@@ -432,7 +438,7 @@ function waitForNetworkEvents(monitor, getRequests) {
         return;
       }
       networkEvent++;
-      maybeResolve(EVENTS.NETWORK_EVENT, actor, networkInfo);
+      maybeResolve(TEST_EVENTS.NETWORK_EVENT, actor, networkInfo);
     }
 
     function onPayloadReady(actor) {
@@ -467,13 +473,13 @@ function waitForNetworkEvents(monitor, getRequests) {
 
       // Wait until networkEvent & payloadReady finish for each request.
       if (networkEvent >= getRequests && payloadReady >= getRequests) {
-        panel.api.off(EVENTS.NETWORK_EVENT, onNetworkEvent);
+        panel.api.off(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
         panel.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
         executeSoon(resolve);
       }
     }
 
-    panel.api.on(EVENTS.NETWORK_EVENT, onNetworkEvent);
+    panel.api.on(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
     panel.api.on(EVENTS.PAYLOAD_READY, onPayloadReady);
   });
 }
@@ -969,7 +975,7 @@ async function showColumn(monitor, column) {
 async function selectIndexAndWaitForSourceEditor(monitor, index) {
   const document = monitor.panelWin.document;
   const onResponseContent = monitor.panelWin.api.once(
-    EVENTS.RECEIVED_RESPONSE_CONTENT
+    TEST_EVENTS.RECEIVED_RESPONSE_CONTENT
   );
   // Select the request first, as it may try to fetch whatever is the current request's
   // responseContent if we select the ResponseTab first.

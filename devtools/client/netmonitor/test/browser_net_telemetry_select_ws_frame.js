@@ -65,7 +65,7 @@ add_task(async function() {
   // Wait for the payload to be resolved (LongString)
   const payloadResolved = waitFor(
     monitor.panelWin.api,
-    EVENTS.LONGSTRING_RESOLVED
+    TEST_EVENTS.LONGSTRING_RESOLVED
   );
 
   // Select frame

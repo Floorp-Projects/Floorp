@@ -73,13 +73,13 @@ function waitForRequestsFinished(monitor, event) {
       }
 
       // All requests are done - unsubscribe from events and resolve!
-      window.api.off(EVENTS.NETWORK_EVENT, onRequest);
+      window.api.off(TEST_EVENTS.NETWORK_EVENT, onRequest);
       window.api.off(EVENTS.RECEIVED_EVENT_TIMINGS, onEventRequest);
       info("All requests finished");
       resolve();
     }
 
-    window.api.on(EVENTS.NETWORK_EVENT, onRequest);
+    window.api.on(TEST_EVENTS.NETWORK_EVENT, onRequest);
     window.api.on(EVENTS.RECEIVED_EVENT_TIMINGS, onEventRequest);
   });
 }
