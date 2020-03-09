@@ -841,7 +841,10 @@ pref("devtools.console.stdout.content", false, sticky);
 // Controls whether EventEmitter module throws dump message on each emit
 pref("toolkit.dump.emit", false);
 
-// Preferences for the new performance panel.
+// Preferences for the new performance panel. Note that some preferences are duplicated
+// with a ".remote" postfix. This is because we have one set of preference for local
+// profiling, and a second set for remote profiling.
+
 // This pref configures the base URL for the profiler.firefox.com instance to
 // use. This is useful so that a developer can change it while working on
 // profiler.firefox.com, or in tests. This isn't exposed directly to the user.
@@ -850,26 +853,33 @@ pref("devtools.performance.recording.ui-base-url", "https://profiler.firefox.com
 // The preset to use for the recording settings. If set to "custom" then the pref
 // values below will be used.
 pref("devtools.performance.recording.preset", "web-developer");
+pref("devtools.performance.recording.preset.remote", "web-developer");
 // Profiler buffer size. It is the maximum number of 8-bytes entries in the
 // profiler's buffer. 10000000 is ~80mb.
 pref("devtools.performance.recording.entries", 10000000);
+pref("devtools.performance.recording.entries.remote", 10000000);
 // Profiler interval in microseconds. 1000µs is 1ms
 pref("devtools.performance.recording.interval", 1000);
+pref("devtools.performance.recording.interval.remote", 1000);
 // Profiler duration of entries in the profiler's buffer in seconds.
 // `0` means no time limit for the markers, they roll off naturally from the
 // circular buffer.
 pref("devtools.performance.recording.duration", 0);
+pref("devtools.performance.recording.duration.remote", 0);
 // Profiler feature set. See tools/profiler/core/platform.cpp for features and
-// explanations. Android additionally has "java" feature but other features must
-// be the same. If you intend to change the default value of this pref, please
-// don't forget to change the mobile/android/app/mobile.js accordingly.
-pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"stackwalk\"]");
+// explanations. Remote profiling also includes the java feature by default.
+// If the remote debuggee isn't an Android phone, then this feature will
+// be ignored.
+pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"stackwalk\",\"screenshots\"]");
+pref("devtools.performance.recording.features.remote", "[\"js\",\"leaf\",\"stackwalk\",\"screenshots\",\"java\"]");
 // Threads to be captured by the profiler.
 pref("devtools.performance.recording.threads", "[\"GeckoMain\",\"Compositor\",\"Renderer\"]");
+pref("devtools.performance.recording.threads.remote", "[\"GeckoMain\",\"Compositor\",\"Renderer\"]");
 // A JSON array of strings, where each string is a file path to an objdir on
 // the host machine. This is used in order to look up symbol information from
 // build artifacts of local builds.
 pref("devtools.performance.recording.objdirs", "[]");
+pref("devtools.performance.recording.objdirs.remote", "[]");
 // The popup will display some introductory text the first time it is displayed.
 pref("devtools.performance.popup.intro-displayed", false);
 

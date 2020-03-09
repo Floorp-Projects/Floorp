@@ -5,6 +5,7 @@
 /**
  * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
  * @typedef {import("../@types/perf").PopupWindow} PopupWindow
+ * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  */
 "use strict";
 
@@ -42,8 +43,8 @@
  * JSM module, that can be shared with the DevTools keyboard shortcut manager.
  */
 const {
-  getRecordingPreferencesFromBrowser,
-  setRecordingPreferencesOnBrowser,
+  getRecordingPreferences,
+  setRecordingPreferences,
   getSymbolsFromThisBrowser,
   presets,
 } = ChromeUtils.import(
@@ -86,9 +87,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       supportedFeatures,
       presets,
       // Get the preferences from the current browser
-      recordingPreferences: getRecordingPreferencesFromBrowser(),
-      // In the popup, the preferences are stored directly on the current browser.
-      setRecordingPreferences: setRecordingPreferencesOnBrowser,
+      recordingPreferences: getRecordingPreferences("aboutprofiling"),
+      /**
+       * @param {RecordingStateFromPreferences} newRecordingPreferences
+       */
+      setRecordingPreferences: newRecordingPreferences =>
+        setRecordingPreferences("aboutprofiling", newRecordingPreferences),
+
       // The popup doesn't need to support remote symbol tables from the debuggee.
       // Only get the symbols from this browser.
       getSymbolTableGetter: () => getSymbolsFromThisBrowser,
