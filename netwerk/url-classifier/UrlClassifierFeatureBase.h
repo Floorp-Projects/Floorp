@@ -11,7 +11,6 @@
 #include "nsIUrlClassifierSkipListService.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#include "mozilla/AntiTrackingCommon.h"
 
 namespace mozilla {
 namespace net {
