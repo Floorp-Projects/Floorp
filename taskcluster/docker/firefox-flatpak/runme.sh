@@ -1,0 +1,121 @@
+#!/bin/bash
+
+set -xe
+
+# Required env variables
+
+test "$VERSION"
+test "$BUILD_NUMBER"
+test "$CANDIDATES_DIR"
+test "$L10N_CHANGESETS"
+
+# Optional env variables
+: WORKSPACE                     "${WORKSPACE:=/home/worker/workspace}"
+: ARTIFACTS_DIR                 "${ARTIFACTS_DIR:=/home/worker/artifacts}"
+
+pwd
+
+SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TARGET_TAR_GZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.gz"
+SOURCE_DEST="${WORKSPACE}/source"
+FREEDESKTOP_VERSION="19.08"
+FIREFOX_BASEAPP_CHANNEL="stable"
+
+
+# XXX: these commands are temporarily, there's an upcoming fix in the upstream Docker image
+# that we work on top of, from `freedesktopsdk`, that will make these two lines go away eventually
+mkdir -p /root /tmp /var/tmp
+mkdir -p "$ARTIFACTS_DIR"
+rm -rf "$SOURCE_DEST" && mkdir -p "$SOURCE_DEST"
+
+# XXX ensure we have a clean slate in the local flatpak repo
+rm -rf ~/.local/share/flatpak/
+
+
+CURL="curl --location --retry 10 --retry-delay 10"
+
+# Download en-US linux64 binary
+$CURL -o "${WORKSPACE}/firefox.tar.bz2" \
+    "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/en-US/firefox-${VERSION}.tar.bz2"
+
+# Use list of locales to fetch L10N XPIs
+$CURL -o "${WORKSPACE}/l10n_changesets.json" "$L10N_CHANGESETS"
+locales=$(python3 "$SCRIPT_DIRECTORY/extract_locales_from_l10n_json.py" "${WORKSPACE}/l10n_changesets.json")
+
+DISTRIBUTION_DIR="$SOURCE_DEST/distribution"
+
+mkdir -p "$DISTRIBUTION_DIR/extensions"
+for locale in $locales; do
+    $CURL -o "$DISTRIBUTION_DIR/extensions/langpack-${locale}@firefox.mozilla.org.xpi" \
+        "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
+done
+
+# Add a group policy file to disable app updates, as those are handled by Flathub
+cp -v "$SCRIPT_DIRECTORY/policies.json" "$DISTRIBUTION_DIR"
+
+envsubst < "$SCRIPT_DIRECTORY/org.mozilla.firefox.appdata.xml.in" > "${WORKSPACE}/org.mozilla.firefox.appdata.xml"
+cp -v "$SCRIPT_DIRECTORY/org.mozilla.firefox.desktop" "$WORKSPACE"
+cp -v "$SCRIPT_DIRECTORY/distribution.ini" "$WORKSPACE"
+cp -v "$SCRIPT_DIRECTORY/default-preferences.js" "$WORKSPACE"
+cp -v "$SCRIPT_DIRECTORY/launch-script.sh" "$WORKSPACE"
+cd "${WORKSPACE}"
+
+flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install -y flathub org.mozilla.Firefox.BaseApp//${FIREFOX_BASEAPP_CHANNEL} --no-deps
+
+# XXX: this command is temporarily, there's an upcoming fix in the upstream Docker image
+# that we work on top of, from `freedesktopsdk`, that will make these two lines go away eventually
+mkdir -p build
+cp -r ~/.local/share/flatpak/app/org.mozilla.Firefox.BaseApp/current/active/files build/files
+
+ARCH=$(flatpak --default-arch)
+cat <<EOF > build/metadata
+[Application]
+name=org.mozilla.firefox
+runtime=org.freedesktop.Platform/${ARCH}/${FREEDESKTOP_VERSION}
+sdk=org.freedesktop.Sdk/${ARCH}/${FREEDESKTOP_VERSION}
+base=app/org.mozilla.Firefox.BaseApp/${ARCH}/${FIREFOX_BASEAPP_CHANNEL}
+EOF
+
+appdir=build/files
+install -d "${appdir}/lib/"
+(cd "${appdir}/lib/" && tar jxf "${WORKSPACE}/firefox.tar.bz2")
+install -D -m644 -t "${appdir}/share/appdata" org.mozilla.firefox.appdata.xml
+install -D -m644 -t "${appdir}/share/applications" org.mozilla.firefox.desktop
+for size in 16 32 48 64 128; do
+    install -D -m644 "${appdir}/lib/firefox/browser/chrome/icons/default/default${size}.png" "${appdir}/share/icons/hicolor/${size}x${size}/apps/org.mozilla.firefox.png"
+done
+install -D -m644 -t "${appdir}/lib/firefox/distribution/extensions" "${DISTRIBUTION_DIR}"/extensions/*
+install -D -m644 -t "${appdir}/lib/firefox/distribution" distribution.ini
+install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
+install -D -m755 launch-script.sh "${appdir}/bin/firefox"
+
+flatpak build-finish build                                      \
+        --share=ipc --socket=x11                                \
+        --share=network                                         \
+        --socket=pulseaudio                                     \
+        --persist=.mozilla                                      \
+        --filesystem=xdg-download:rw                            \
+        --device=dri                                            \
+        --filesystem=xdg-run/dconf                              \
+        --filesystem=xdg-config/dconf:ro                        \
+        --talk-name=ca.desrt.dconf                              \
+        --env=DCONF_USER_CONFIG_DIR=.config/dconf               \
+        --talk-name=org.freedesktop.FileManager1                \
+        --system-talk-name=org.freedesktop.NetworkManager       \
+        --talk-name=org.a11y.Bus                                \
+        --talk-name=org.gnome.SessionManager                    \
+        --talk-name=org.freedesktop.ScreenSaver                 \
+        --talk-name="org.gtk.vfs.*"                             \
+        --command=firefox
+
+flatpak build-export --disable-sandbox repo build
+flatpak build-update-repo repo
+tar cvfz flatpak.tar.gz repo
+
+mv -- flatpak.tar.gz "$TARGET_TAR_GZ_FULL_PATH"
+
+# XXX: if we ever wanted to go back to building flatpak bundles, we can revert this command; useful for testing individual artifacts, not publishable
+# flatpak build-bundle "$WORKSPACE"/repo org.mozilla.firefox.flatpak org.mozilla.firefox
+# TARGET_FULL_PATH="$ARTIFACTS_DIR/target.flatpak"
+# mv -- *.flatpak "$TARGET_FULL_PATH"
