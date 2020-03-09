@@ -71,7 +71,7 @@ void nsPartChannel::SetContentDisposition(
   nsCOMPtr<nsIURI> uri;
   GetURI(getter_AddRefs(uri));
   NS_GetFilenameFromDisposition(mContentDispositionFilename,
-                                mContentDispositionHeader, uri);
+                                mContentDispositionHeader);
   mContentDisposition =
       NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
 }
