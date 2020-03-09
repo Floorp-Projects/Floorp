@@ -3,7 +3,7 @@
 set -xe
 
 # Things to be set by task definition.
-# --pinset --hsts --hpkp --blocklist
+# --pinset --hsts --hpkp
 # -b branch
 # --use-mozilla-central
 # -p firefox
@@ -30,11 +30,6 @@ fi
 if [ -n "${DO_HPKP}" ]
 then
   PARAMS="${PARAMS} --hpkp"
-fi
-
-if [ -n "${DO_BLOCKLIST}" ]
-then
-  PARAMS="${PARAMS} --blocklist"
 fi
 
 if [ -n "${DO_REMOTE_SETTINGS}" ]
