@@ -193,7 +193,7 @@ analyzed locally.
 Generate Per Test Code Coverage Locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To generate the JSON files containg coverage information locally, simply
+To generate the JSON files containing coverage information locally, simply
 add an extra argument called ``--jscov-dir-prefix`` which accepts a
 directory as it's input and stores the resulting data in that directory.
 For example, to collect code coverage for the entire Mochitest suite:
