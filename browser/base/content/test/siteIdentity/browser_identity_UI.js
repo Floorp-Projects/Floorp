@@ -57,6 +57,11 @@ var tests = [
     location: "about:reader?url=http://example.com",
     hostForDisplay: "example.com",
   },
+  {
+    name: "chrome:",
+    location: "chrome://global/skin/in-content/info-pages.css",
+    hostForDisplay: "chrome://global/skin/in-content/info-pages.css",
+  },
 ];
 
 add_task(async function test() {
