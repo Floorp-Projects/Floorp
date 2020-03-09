@@ -20,10 +20,6 @@ job-defaults:
                 by-project:
                     mozilla-(central|beta|esr.*): "1"
                     default: ""
-            DO_BLOCKLIST:
-                by-project:
-                    mozilla-(central|beta|release|esr.*): "1"
-                    default: ""
             DO_REMOTE_SETTINGS:
                 by-project:
                     mozilla-(central|beta|release|esr.*): "1"
@@ -41,7 +37,7 @@ job-defaults:
 jobs:
     hsts-hpkp-blocklist:
         name: periodic_file_update
-        description: HSTS, HPKP, Blocklist and remote settings update
+        description: HSTS, HPKP and remote settings update
         run-on-projects: []  # Only run via cron
         treeherder:
             kind: build
@@ -66,9 +62,6 @@ jobs:
                   type: file
                 - name: 'public/build/StaticHPKPins.h.diff'
                   path: '/home/worker/artifacts/StaticHPKPins.h.diff'
-                  type: file
-                - name: 'public/build/blocklist.diff'
-                  path: '/home/worker/artifacts/blocklist.diff'
                   type: file
                 - name: 'public/build/remote-settings.diff'
                   path: '/home/worker/artifacts/remote-settings.diff'

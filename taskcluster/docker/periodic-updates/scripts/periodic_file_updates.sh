@@ -14,7 +14,7 @@ Usage: $(basename "$0") [-p product]
            # Use archive.m.o instead of the taskcluster index to get xpcshell
            [--use-ftp-builds]
            # One (or more) of the following actions must be specified.
-           --hsts | --hpkp | --blocklist
+           --hsts | --hpkp | --remote-settings | --suffix-list
            -b branch
 
 EOF
@@ -30,8 +30,6 @@ APPROVAL=false
 COMMIT_AUTHOR='ffxbld <ffxbld@mozilla.com>'
 REPODIR=''
 APP_DIR=''
-APP_ID=''
-APP_NAME=''
 HGHOST="hg.mozilla.org"
 STAGEHOST="archive.mozilla.org"
 WGET="wget -nv"
@@ -65,13 +63,6 @@ HPKP_PRELOAD_INPUT="${DATADIR}/${HPKP_PRELOAD_INC}"
 HPKP_PRELOAD_OUTPUT="${DATADIR}/${HPKP_PRELOAD_INC}.out"
 HPKP_UPDATED=false
 
-DO_BLOCKLIST=false
-BLOCKLIST_URL_AMO=''
-BLOCKLIST_URL_HG=''
-BLOCKLIST_LOCAL_AMO="blocklist_amo.xml"
-BLOCKLIST_LOCAL_HG="blocklist_hg.xml"
-BLOCKLIST_UPDATED=false
-
 DO_REMOTE_SETTINGS=false
 REMOTE_SETTINGS_SERVER=''
 REMOTE_SETTINGS_INPUT="${DATADIR}/remote-settings.in"
@@ -90,7 +81,6 @@ ARTIFACTS_DIR="${ARTIFACTS_DIR:-.}"
 # Defaults
 HSTS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${HSTS_DIFF_ARTIFACT:-"nsSTSPreloadList.diff"}"
 HPKP_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${HPKP_DIFF_ARTIFACT:-"StaticHPKPins.h.diff"}"
-BLOCKLIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${BLOCKLIST_DIFF_ARTIFACT:-"blocklist.diff"}"
 REMOTE_SETTINGS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${REMOTE_SETTINGS_DIFF_ARTIFACT:-"remote-settings.diff"}"
 SUFFIX_LIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${SUFFIX_LIST_DIFF_ARTIFACT:-"effective_tld_names.diff"}"
 
@@ -298,40 +288,9 @@ function compare_suffix_lists {
   rm -f "${HG_SUFFIX_LOCAL}"
   ${WGET} -O "${HG_SUFFIX_LOCAL}" "${HG_SUFFIX_URL}"
 
-  echo "INFO: diffing in-tree blocklist against the blocklist from AMO..."
+  echo "INFO: diffing in-tree suffix list against the suffix list from AMO..."
   ${DIFF} ${GITHUB_SUFFIX_LOCAL} ${HG_SUFFIX_LOCAL} | tee "${SUFFIX_LIST_DIFF_ARTIFACT}"
   if [ -s "${SUFFIX_LIST_DIFF_ARTIFACT}" ]
-  then
-    return 0
-  fi
-  return 1
-}
-
-# Downloads the current in-tree blocklist file.
-# Downloads the current blocklist file from AMO.
-# Compares the AMO blocklist with the in-tree blocklist to determine whether we need to update.
-function compare_blocklist_files {
-  BLOCKLIST_URL_AMO="https://blocklist.addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
-  BLOCKLIST_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/app/blocklist.xml"
-
-  cd "${BASEDIR}"
-  rm -f ${BLOCKLIST_LOCAL_AMO}
-  echo "INFO: ${WGET} -O ${BLOCKLIST_LOCAL_AMO} ${BLOCKLIST_URL_AMO}"
-  ${WGET} -O "${BLOCKLIST_LOCAL_AMO}" "${BLOCKLIST_URL_AMO}"
-
-  rm -f ${BLOCKLIST_LOCAL_HG}
-  echo "INFO: ${WGET} -O ${BLOCKLIST_LOCAL_HG} ${BLOCKLIST_URL_HG}"
-  ${WGET} -O "${BLOCKLIST_LOCAL_HG}" "${BLOCKLIST_URL_HG}"
-
-  # The downloaded files should be non-empty and have a valid xml header
-  # if they were retrieved properly, and some random HTML garbage if not.
-  # set -x catches these
-  is_valid_xml ${BLOCKLIST_LOCAL_AMO}
-  is_valid_xml ${BLOCKLIST_LOCAL_HG}
-
-  echo "INFO: diffing in-tree blocklist against the blocklist from AMO..."
-  ${DIFF} ${BLOCKLIST_LOCAL_HG} ${BLOCKLIST_LOCAL_AMO} | tee "${BLOCKLIST_DIFF_ARTIFACT}"
-  if [ -s "${BLOCKLIST_DIFF_ARTIFACT}" ]
   then
     return 0
   fi
@@ -398,11 +357,6 @@ function stage_hpkp_files {
   cp -f "${HPKP_PRELOAD_OUTPUT}" "${REPODIR}/security/manager/ssl/${HPKP_PRELOAD_INC}"
 }
 
-function stage_blocklist_files {
-  cd "${BASEDIR}"
-  cp -f ${BLOCKLIST_LOCAL_AMO} ${REPODIR}/${APP_DIR}/app/blocklist.xml
-}
-
 function stage_remote_settings_files {
   cd "${BASEDIR}"
   cp -a "${REMOTE_SETTINGS_OUTPUT}"/* "${REPODIR}${REMOTE_SETTINGS_DIR}"
@@ -458,7 +412,6 @@ while [ $# -gt 0 ]; do
     --pinset) DO_PRELOAD_PINSET=true ;;
     --hsts) DO_HSTS=true ;;
     --hpkp) DO_HPKP=true ;;
-    --blocklist) DO_BLOCKLIST=true ;;
     --remote-settings) DO_REMOTE_SETTINGS=true ;;
     --suffix-list) DO_SUFFIX_LIST=true ;;
     -r) REPODIR="$2"; shift ;;
@@ -479,9 +432,9 @@ if [ "${BRANCH}" == "" ]; then
 fi
 
 # Must choose at least one update action.
-if [ "$DO_HSTS" == "false" ] && [ "$DO_HPKP" == "false" ] && [ "$DO_BLOCKLIST" == "false" ] && [ "$DO_REMOTE_SETTINGS" == "false" ] && [ "$DO_SUFFIX_LIST" == "false" ]
+if [ "$DO_HSTS" == "false" ] && [ "$DO_HPKP" == "false" ] && [ "$DO_REMOTE_SETTINGS" == "false" ] && [ "$DO_SUFFIX_LIST" == "false" ]
 then
-  echo "Error: you must specify at least one action from: --hsts, --hpkp, --blocklist, --remote-settings" >&2
+  echo "Error: you must specify at least one action from: --hsts, --hpkp, --remote-settings, or --suffix-list" >&2
   usage
   exit 13
 fi
@@ -490,14 +443,10 @@ fi
 case "${PRODUCT}" in
   thunderbird)
     APP_DIR="mail"
-    APP_ID="%7B3550f703-e582-4d05-9a08-453d09bdfdc6%7D"
-    APP_NAME="Thunderbird"
     COMMIT_AUTHOR="tbirdbld <tbirdbld@thunderbird.net>"
     ;;
   firefox)
     APP_DIR="browser"
-    APP_ID="%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D"
-    APP_NAME="Firefox"
     ;;
   *)
     echo "Error: Invalid product specified"
@@ -570,12 +519,6 @@ if [ "${DO_HPKP}" == "true" ]; then
     HPKP_UPDATED=true
   fi
 fi
-if [ "${DO_BLOCKLIST}" == "true" ]; then
-  if compare_blocklist_files
-  then
-    BLOCKLIST_UPDATED=true
-  fi
-fi
 if [ "${DO_REMOTE_SETTINGS}" == "true" ]; then
   if compare_remote_settings_files
   then
@@ -590,7 +533,7 @@ if [ "${DO_SUFFIX_LIST}" == "true" ]; then
 fi
 
 
-if [ "${HSTS_UPDATED}" == "false" ] && [ "${HPKP_UPDATED}" == "false" ] && [ "${BLOCKLIST_UPDATED}" == "false" ] && [ "${REMOTE_SETTINGS_UPDATED}" == "false" ] && [ "${SUFFIX_LIST_UPDATED}" == "false" ]; then
+if [ "${HSTS_UPDATED}" == "false" ] && [ "${HPKP_UPDATED}" == "false" ] && [ "${REMOTE_SETTINGS_UPDATED}" == "false" ] && [ "${SUFFIX_LIST_UPDATED}" == "false" ]; then
   echo "INFO: no updates required. Exiting."
   exit 0
 else
@@ -613,12 +556,6 @@ if [ "${HPKP_UPDATED}" == "true" ]
 then
   stage_hpkp_files
   COMMIT_MESSAGE="${COMMIT_MESSAGE} HPKP"
-fi
-
-if [ "${BLOCKLIST_UPDATED}" == "true" ]
-then
-  stage_blocklist_files
-  COMMIT_MESSAGE="${COMMIT_MESSAGE} blocklist"
 fi
 
 if [ "${REMOTE_SETTINGS_UPDATED}" == "true" ]

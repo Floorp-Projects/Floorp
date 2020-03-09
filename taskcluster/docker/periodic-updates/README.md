@@ -1,7 +1,7 @@
 
 ==Periodic File Updates==
 
-This docker image examines the in-tree files for HSTS preload data, HPKP pinning and blocklist.xml, and
+This docker image examines the in-tree files for HSTS preload data, HPKP pinning and blocklisting, and
 will produce a diff for each necessary to update the in-tree files.
 
 If given a conduit API token, it will also use the arcanist client to submit the commits for review.
@@ -12,13 +12,13 @@ If given a conduit API token, it will also use the arcanist client to submit the
 ```sh
 docker build -t hsts-local --no-cache --rm .
 
-docker run -e DO_HSTS=1 -e DO_HPKP=1 -e DO_BLOCKLIST=1 -e PRODUCT="firefox" -e BRANCH="mozilla-central" -e USE_MOZILLA_CENTRAL=1 hsts-local
+docker run -e DO_HSTS=1 -e DO_HPKP=1 -e PRODUCT="firefox" -e BRANCH="mozilla-central" -e USE_MOZILLA_CENTRAL=1 hsts-local
 ```
 
 HSTS checks will only be run if the `DO_HSTS` environment variable is set.
-Likewise for `DO_HPKP` and the HPKP checks, and `DO_BLOCKLIST` and the
-blocklist checks. Environment variables are used rather than command line
-arguments to make constructing taskcluster tasks easier.
+Likewise for `DO_HPKP` and the HPKP checks. Environment variables are used
+rather than command line arguments to make constructing taskcluster tasks
+easier.
 
 To prevent a full build when landing with Phabricator, set the `DONTBUILD`
 environment variable.
@@ -75,7 +75,6 @@ payload:
   env:
     DO_HSTS: 1
     DO_HPKP: 1
-    DO_BLOCKLIST: 1
     PRODUCT: firefox
     BRANCH: mozilla-central
     USE_MOZILLA_CENTRAL: 1
