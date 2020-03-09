@@ -204,6 +204,8 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
         except NotImplementedError:  # not implemented for Chrome
             pass
 
+        self.crashes += self.runner.crashed
+
     def clean_up(self):
         self.runner.stop()
 
