@@ -382,11 +382,6 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
       mActivityGeneration(aActivityGeneration),
       mIntervalMicroseconds(
           std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5)))) {
-  pthread_attr_t attr;
-  if (pthread_attr_init(&attr) != 0) {
-    MOZ_CRASH("pthread_attr_init failed");
-  }
-
 #if defined(USE_LUL_STACKWALK)
   lul::LUL* lul = CorePS::Lul(aLock);
   if (!lul) {
@@ -406,22 +401,14 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
       RunLulUnitTests(&nTests, &nTestsPassed, lul);
     }
   }
-
-  // N_STACK_BYTES are needed to store backtrace information, so use that plus
-  // some extra as the minimum stack size for the sampler thread to ensure that
-  // it doesn't overflow.
-  if (pthread_attr_setstacksize(&attr, lul::N_STACK_BYTES + 20 * 1024) != 0) {
-    MOZ_CRASH("pthread_attr_setstacksize failed");
-  }
 #endif
 
   // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
   // the signal ourselves instead of relying on itimer provides much better
   // accuracy.
-  if (pthread_create(&mThread, &attr, ThreadEntry, this) != 0) {
+  if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
     MOZ_CRASH("pthread_create failed");
   }
-  pthread_attr_destroy(&attr);
 }
 
 SamplerThread::~SamplerThread() {
