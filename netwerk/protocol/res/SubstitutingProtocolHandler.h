@@ -9,7 +9,6 @@
 
 #include "nsISubstitutingProtocolHandler.h"
 
-#include "nsISubstitutionObserver.h"
 #include "nsDataHashtable.h"
 #include "nsStandardURL.h"
 #include "nsJARURI.h"
@@ -112,10 +111,6 @@ class SubstitutingProtocolHandler {
   RWLock mSubstitutionsLock;
   nsDataHashtable<nsCStringHashKey, SubstitutionEntry> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
-
-  // The list of observers added with AddObserver that will be
-  // notified when substitutions are set or unset.
-  nsTArray<nsCOMPtr<nsISubstitutionObserver>> mObservers;
 
   // Returns a SubstitutingJARURI if |aUrl| maps to a |jar:| URI,
   // otherwise will return |aURL|
