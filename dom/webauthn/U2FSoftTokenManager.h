@@ -30,7 +30,7 @@ class U2FSoftTokenManager final : public U2FTokenTransport {
   void Cancel() override;
 
  private:
-  ~U2FSoftTokenManager() {}
+  ~U2FSoftTokenManager() = default;
   nsresult Init();
 
   nsresult IsRegistered(const nsTArray<uint8_t>& aKeyHandle,

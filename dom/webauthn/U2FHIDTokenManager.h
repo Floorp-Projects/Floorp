@@ -135,7 +135,7 @@ class U2FHIDTokenManager final : public U2FTokenTransport {
   void HandleSignResult(UniquePtr<U2FResult>&& aResult);
 
  private:
-  ~U2FHIDTokenManager() {}
+  ~U2FHIDTokenManager() = default;
 
   void ClearPromises() {
     mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);

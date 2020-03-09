@@ -25,7 +25,7 @@ typedef MozPromise<WebAuthnGetAssertionResult, nsresult, true> U2FSignPromise;
 class U2FTokenTransport {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(U2FTokenTransport);
-  U2FTokenTransport() {}
+  U2FTokenTransport() = default;
 
   virtual RefPtr<U2FRegisterPromise> Register(
       const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) = 0;
