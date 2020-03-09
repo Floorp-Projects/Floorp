@@ -979,7 +979,7 @@ ifndef MOZ_DEBUG
 endif
 endif
 	@echo 'Packaging $(XPI_PKGNAME).xpi...'
-	$(call py_action,zip,-C $(FINAL_TARGET) ../$(XPI_PKGNAME).xpi '*')
+	$(call py3_action,zip,-C $(FINAL_TARGET) ../$(XPI_PKGNAME).xpi '*')
 endif
 
 # See comment above about moving this out of the tools tier.
@@ -1159,7 +1159,7 @@ PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS
 $(PP_TARGETS_ALL_RESULTS):
 	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
 	$(RM) '$@'
-	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) '$<' -o '$@')
+	$(call py3_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) '$<' -o '$@')
 
 $(filter %.css,$(PP_TARGETS_ALL_RESULTS)): PP_TARGET_FLAGS+=--marker %
 

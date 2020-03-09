@@ -1591,13 +1591,13 @@ class RecursiveMakeBackend(MakeBackend):
                                        mozpath.relpath(obj.path,
                                                        obj.install_target))),
             ]
-            rule.add_commands(['$(call py_action,buildlist,%s)' %
+            rule.add_commands(['$(call py3_action,buildlist,%s)' %
                                ' '.join(args)])
         args = [
             mozpath.join('$(DEPTH)', obj.path),
             make_quote(shell_quote(str(obj.entry))),
         ]
-        rule.add_commands(['$(call py_action,buildlist,%s)' % ' '.join(args)])
+        rule.add_commands(['$(call py3_action,buildlist,%s)' % ' '.join(args)])
         fragment.dump(backend_file.fh, removal_guard=False)
 
         self._no_skip['misc'].add(obj.relsrcdir)
@@ -1683,7 +1683,7 @@ class RecursiveMakeBackend(MakeBackend):
             rule.add_dependencies([source])
             rule.add_commands([
                 '$(RM) $@',
-                '$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) '
+                '$(call py3_action,preprocessor,$(DEFINES) $(ACDEFINES) '
                 '$< -o $@)'
             ])
 
@@ -1738,7 +1738,7 @@ class RecursiveMakeBackend(MakeBackend):
                 # static to preprocessed don't end up writing to a symlink,
                 # which would modify content in the source directory.
                 '$(RM) $@',
-                '$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) '
+                '$(call py3_action,preprocessor,$(DEFINES) $(ACDEFINES) '
                 '$< -o $@)'
             ])
 
