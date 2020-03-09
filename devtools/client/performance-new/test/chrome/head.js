@@ -158,27 +158,6 @@ Object.getOwnPropertyNames(perfDescription.methods).forEach(methodName => {
 });
 
 /**
- * Set a React-friendly input value. Doing this the normal way doesn't work.
- *
- * See: https://github.com/facebook/react/issues/10135#issuecomment-314441175
- */
-function setReactFriendlyInputValue(element, value) {
-  const valueSetter = Object.getOwnPropertyDescriptor(element, "value").set;
-  const prototype = Object.getPrototypeOf(element);
-  const prototypeValueSetter = Object.getOwnPropertyDescriptor(
-    prototype,
-    "value"
-  ).set;
-
-  if (valueSetter && valueSetter !== prototypeValueSetter) {
-    prototypeValueSetter.call(element, value);
-  } else {
-    valueSetter.call(element, value);
-  }
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-}
-
-/**
  * This is a helper function to correctly mount the Perf component, and provide
  * mocks where needed.
  */
