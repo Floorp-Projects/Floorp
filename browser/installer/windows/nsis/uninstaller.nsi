@@ -453,6 +453,11 @@ Section "Uninstall"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry"
 !endif
 
+!ifdef MOZ_UPDATE_AGENT
+  ; Unregister the update agent
+  nsExec::Exec '"$INSTDIR\updateagent.exe" unregister-task "${UpdateAgentFullName} $AppUserModelID"'
+!endif
+
   ${un.RemovePrecompleteEntries} "false"
 
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
