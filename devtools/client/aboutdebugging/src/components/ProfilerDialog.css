@@ -34,11 +34,19 @@
 .profiler-dialog__inner {
   background-color: var(--white-100);
   display: grid;
-  height: calc(var(--base-unit) * 150); /* 600px */
   grid-template-rows: max-content auto;
   max-height: calc(100% - calc(var(--base-unit) * 25)); /* 100% - 100px */
   position: fixed;
+}
+
+.profiler-dialog__inner--medium {
   width: calc(var(--base-unit) * 150); /* 600px */
+  height: calc(var(--base-unit) * 150); /* 600px */
+}
+
+.profiler-dialog__inner--large {
+  width: calc(var(--base-unit) * 200); /* 800px */
+  height: calc(var(--base-unit) * 175); /* 700px */
 }
 
 .profiler-dialog__mask {

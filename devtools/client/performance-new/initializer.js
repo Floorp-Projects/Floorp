@@ -71,8 +71,9 @@ const {
  *
  * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
  * @param {PageContext} pageContext - The context that the UI is being loaded in under.
+ * @param {(() => void)?} openAboutProfiling - Optional call to open about:profiling
  */
-async function gInit(perfFront, pageContext) {
+async function gInit(perfFront, pageContext, openAboutProfiling) {
   const store = createStore(reducers);
   // Get the supported features from the debuggee. If the debuggee is before
   // Firefox 72, then return null, as the actor does not support that feature.
@@ -86,6 +87,13 @@ async function gInit(perfFront, pageContext) {
     perfFront.getSupportedFeatures()
   ).catch(() => null);
 
+  if (!openAboutProfiling) {
+    openAboutProfiling = () => {
+      const { openTrustedLink } = require("devtools/client/shared/link");
+      openTrustedLink("about:profiling", {});
+    };
+  }
+
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
   store.dispatch(
@@ -95,6 +103,7 @@ async function gInit(perfFront, pageContext) {
       recordingPreferences: getRecordingPreferences(pageContext),
       presets,
       supportedFeatures,
+      openAboutProfiling,
       pageContext: "devtools",
 
       // Go ahead and hide the implementation details for the component on how the

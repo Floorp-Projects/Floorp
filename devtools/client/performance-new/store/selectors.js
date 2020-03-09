@@ -57,6 +57,28 @@ const getPresets = state => getInitializedValues(state).presets;
 const getPresetName = state => state.presetName;
 
 /**
+ * When remote profiling, there will be a back button to the settings.
+ *
+ * @type {Selector<(() => void) | undefined>}
+ */
+const getOpenRemoteDevTools = state =>
+  getInitializedValues(state).openRemoteDevTools;
+
+/**
+ * Get the functon to open about:profiling. This assumes that the function exists,
+ * otherwise it will throw an error.
+ *
+ * @type {Selector<() => void>}
+ */
+const getOpenAboutProfiling = state => {
+  const { openAboutProfiling } = getInitializedValues(state);
+  if (!openAboutProfiling) {
+    throw new Error("Expected to get an openAboutProfiling function.");
+  }
+  return openAboutProfiling;
+};
+
+/**
  * Warning! This function returns a new object on every run, and so should not
  * be used directly as a React prop.
  *
@@ -138,6 +160,8 @@ module.exports = {
   getObjdirs,
   getPresets,
   getPresetName,
+  getOpenRemoteDevTools,
+  getOpenAboutProfiling,
   getRecordingSettings,
   getInitializedValues,
   getPerfFront,
