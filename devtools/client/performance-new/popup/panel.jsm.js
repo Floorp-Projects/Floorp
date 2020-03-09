@@ -130,8 +130,8 @@ function createViewControllers(state, elements) {
     },
 
     updatePresets() {
-      const { presets, getRecordingPreferencesFromBrowser } = lazyBackground();
-      const { presetName } = getRecordingPreferencesFromBrowser();
+      const { presets, getRecordingPreferences } = lazyBackground();
+      const { presetName } = getRecordingPreferences("aboutprofiling");
       const preset = presets[presetName];
       if (preset) {
         elements.presetDescription.style.display = "block";
@@ -280,7 +280,7 @@ function addPopupEventHandlers(state, elements, view) {
   });
 
   addHandler(elements.startRecording, "click", () => {
-    startProfiler();
+    startProfiler("aboutprofiling");
   });
 
   addHandler(elements.stopAndDiscard, "click", () => {
@@ -298,7 +298,7 @@ function addPopupEventHandlers(state, elements, view) {
   });
 
   addHandler(elements.presetsMenuList, "command", () => {
-    changePreset(elements.presetsMenuList.value);
+    changePreset("aboutprofiling", elements.presetsMenuList.value);
     view.updatePresets();
   });
 

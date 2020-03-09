@@ -8,6 +8,7 @@
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("./@types/perf").PageContext} PageContext
  */
 "use strict";
 
@@ -48,17 +49,16 @@ const actions = require("devtools/client/performance-new/store/actions");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   receiveProfile,
-  getRecordingPreferencesFromDebuggee,
-  setRecordingPreferencesOnDebuggee,
   createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
 const {
-  getDefaultRecordingPreferencesForOlderFirefox,
+  setRecordingPreferences,
   presets,
-} = ChromeUtils.import(
+  getRecordingPreferences,
+} = /** @type {import("resource://devtools/client/performance-new/popup/background.jsm.js")} */ (ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
-);
+));
 
 /**
  * This file initializes the DevTools Panel UI. It is in charge of initializing
@@ -70,28 +70,21 @@ const {
  * Initialize the panel by creating a redux store, and render the root component.
  *
  * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
- * @param {PreferenceFront} preferenceFront - Used to get the recording preferences from the device.
+ * @param {PageContext} pageContext - The context that the UI is being loaded in under.
  */
-async function gInit(perfFront, preferenceFront) {
+async function gInit(perfFront, pageContext) {
   const store = createStore(reducers);
-
-  // Send the initial requests in parallel.
-  const [recordingPreferences, supportedFeatures] = await Promise.all([
-    // Pull the default recording settings from the background.jsm module. Update them
-    // according to what's in the target's preferences. This way the preferences are
-    // stored on the target. This could be useful for something like Android where you
-    // might want to tweak the settings.
-    getRecordingPreferencesFromDebuggee(
-      preferenceFront,
-      getDefaultRecordingPreferencesForOlderFirefox()
-    ),
-    // Get the supported features from the debuggee. If the debuggee is before
-    // Firefox 72, then return null, as the actor does not support that feature.
-    // We can't use `target.actorHasMethod`, because the target is not provided
-    // when remote debugging. Unfortunately, this approach means that if this
-    // function throws a real error, it will get swallowed here.
-    Promise.resolve(perfFront.getSupportedFeatures()).catch(() => null),
-  ]);
+  // Get the supported features from the debuggee. If the debuggee is before
+  // Firefox 72, then return null, as the actor does not support that feature.
+  // We can't use `target.actorHasMethod`, because the target is not provided
+  // when remote debugging. Unfortunately, this approach means that if this
+  // function throws a real error, it will get swallowed here.
+  //
+  // Wrap the the getSupportedFeatures call in a Promise, as the method returns a
+  // `MaybePromise<string[]>`, and we want to be able to run catch().
+  const supportedFeatures = await Promise.resolve(
+    perfFront.getSupportedFeatures()
+  ).catch(() => null);
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
@@ -99,7 +92,7 @@ async function gInit(perfFront, preferenceFront) {
     actions.initializeStore({
       perfFront,
       receiveProfile,
-      recordingPreferences,
+      recordingPreferences: getRecordingPreferences(pageContext),
       presets,
       supportedFeatures,
       pageContext: "devtools",
@@ -110,10 +103,7 @@ async function gInit(perfFront, preferenceFront) {
        * @param {RecordingStateFromPreferences} newRecordingPreferences
        */
       setRecordingPreferences: newRecordingPreferences =>
-        setRecordingPreferencesOnDebuggee(
-          preferenceFront,
-          newRecordingPreferences
-        ),
+        setRecordingPreferences(pageContext, newRecordingPreferences),
 
       // Configure the getSymbolTable function for the DevTools workflow.
       // See createMultiModalGetSymbolTableFn for more information.

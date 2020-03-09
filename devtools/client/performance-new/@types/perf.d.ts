@@ -13,7 +13,7 @@ import {
 
 export interface PanelWindow {
   gToolbox?: any;
-  gInit(perfFront: any, preferenceFront: any): void;
+  gInit(perfFront: PerfFront, preferenceFront: PageContext): void;
   gDestroy(): void;
   gReportReady?(): void
 }
@@ -96,7 +96,7 @@ export type RecordingState =
 // We are currently migrating to a new UX workflow with about:profiling.
 // This type provides an easy way to change the implementation based
 // on context.
-export type PageContext = "devtools" | "aboutprofiling";
+export type PageContext = "devtools" | "devtools-remote" | "aboutprofiling";
 
 export interface State {
   recordingState: RecordingState;
@@ -157,7 +157,7 @@ export type ReceiveProfile = (
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
-export type SetRecordingPreferences = (settings: RecordingStateFromPreferences) => MaybePromise<void>;
+export type SetRecordingPreferences = (settings: RecordingStateFromPreferences) => void;
 
 /**
  * This is the type signature for a function to restart the browser with a given
