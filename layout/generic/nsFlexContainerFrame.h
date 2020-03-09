@@ -387,11 +387,36 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   nscoord GetMainSizeFromReflowInput(const ReflowInput& aReflowInput,
                                      const FlexboxAxisTracker& aAxisTracker);
 
+  /**
+   * Resolves the content-box main-size of a flex container frame,
+   * primarily based on:
+   * - the "tentative" main size, taken from the reflow input ("tentative"
+   *    because it may be unconstrained or may run off the page).
+   * - the available BSize (needed if the main axis is the block axis).
+   * - the sizes of our lines of flex items.
+   *
+   * Guaranteed to return a definite length, i.e. not NS_UNCONSTRAINEDSIZE,
+   * aside from cases with huge lengths which happen to compute to that value.
+   *
+   * This corresponds to "Determine the main size of the flex container" step in
+   * the spec. https://drafts.csswg.org/css-flexbox-1/#algo-main-container
+   *
+   * (Note: This function should be structurally similar to
+   * 'ComputeCrossSize()', except that here, the caller has already grabbed the
+   * tentative size from the reflow input.)
+   */
+  nscoord ComputeMainSize(const ReflowInput& aReflowInput,
+                          const FlexboxAxisTracker& aAxisTracker,
+                          nscoord aTentativeMainSize,
+                          nscoord aAvailableBSizeForContent,
+                          const FlexLine* aFirstLine,
+                          nsReflowStatus& aStatus) const;
+
   nscoord ComputeCrossSize(const ReflowInput& aReflowInput,
                            const FlexboxAxisTracker& aAxisTracker,
                            nscoord aSumLineCrossSizes,
                            nscoord aAvailableBSizeForContent, bool* aIsDefinite,
-                           nsReflowStatus& aStatus);
+                           nsReflowStatus& aStatus) const;
 
   void SizeItemInCrossAxis(ReflowInput& aChildReflowInput, FlexItem& aItem);
 
