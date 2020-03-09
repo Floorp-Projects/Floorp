@@ -976,18 +976,12 @@ nsresult nsFrameSelection::GetFrameFromLevel(nsIFrame* aFrameIn,
 
 nsresult nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount) {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
-
-  mMaintainedRange.mAmount = aAmount;
-
-  const nsRange* anchorFocusRange =
-      mDomSelections[index]->GetAnchorFocusRange();
-  if (anchorFocusRange && aAmount != eSelectNoAmount) {
-    mMaintainedRange.mRange = anchorFocusRange->CloneRange();
-    return NS_OK;
+  if (!mDomSelections[index]) {
+    return NS_ERROR_NULL_POINTER;
   }
 
-  mMaintainedRange.mRange = nullptr;
+  mMaintainedRange.MaintainAnchorFocusRange(*mDomSelections[index], aAmount);
+
   return NS_OK;
 }
 
@@ -1118,6 +1112,21 @@ bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
     aNormalSelection.SetDirection(*relToStart > 0 ? eDirPrevious : eDirNext);
   }
   return false;
+}
+
+void nsFrameSelection::MaintainedRange::MaintainAnchorFocusRange(
+    const Selection& aNormalSelection, const nsSelectionAmount aAmount) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
+  mAmount = aAmount;
+
+  const nsRange* anchorFocusRange = aNormalSelection.GetAnchorFocusRange();
+  if (anchorFocusRange && aAmount != eSelectNoAmount) {
+    mRange = anchorFocusRange->CloneRange();
+    return;
+  }
+
+  mRange = nullptr;
 }
 
 nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
