@@ -613,7 +613,7 @@ already_AddRefed<UnscaledFont> Factory::CreateUnscaledFontFromFontDescriptor(
 #ifdef XP_DARWIN
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForMacFont(
     CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-    const Color& aFontSmoothingBackgroundColor, bool aUseFontSmoothing,
+    const DeviceColor& aFontSmoothingBackgroundColor, bool aUseFontSmoothing,
     bool aApplySyntheticBold) {
   return MakeAndAddRef<ScaledFontMac>(aCGFont, aUnscaledFont, aSize, false,
                                       aFontSmoothingBackgroundColor,

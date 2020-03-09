@@ -153,7 +153,7 @@ class DrawSurfaceCommand : public DrawingCommand {
 class DrawSurfaceWithShadowCommand : public DrawingCommand {
  public:
   DrawSurfaceWithShadowCommand(SourceSurface* aSurface, const Point& aDest,
-                               const Color& aColor, const Point& aOffset,
+                               const DeviceColor& aColor, const Point& aOffset,
                                Float aSigma, CompositionOp aOperator)
       : mSurface(aSurface),
         mDest(aDest),
@@ -192,7 +192,7 @@ class DrawSurfaceWithShadowCommand : public DrawingCommand {
  private:
   RefPtr<SourceSurface> mSurface;
   Point mDest;
-  Color mColor;
+  DeviceColor mColor;
   Point mOffset;
   Float mSigma;
   CompositionOp mOperator;

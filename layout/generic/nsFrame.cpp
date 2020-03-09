@@ -2342,15 +2342,15 @@ class nsDisplaySelectionOverlay : public nsPaintedDisplayItem {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   NS_DISPLAY_DECL_NAME("SelectionOverlay", TYPE_SELECTION_OVERLAY)
  private:
-  Color ComputeColor() const;
+  DeviceColor ComputeColor() const;
 
-  static Color ComputeColorFromSelectionStyle(ComputedStyle&);
-  static Color ApplyTransparencyIfNecessary(nscolor);
+  static DeviceColor ComputeColorFromSelectionStyle(ComputedStyle&);
+  static DeviceColor ApplyTransparencyIfNecessary(nscolor);
 
   int16_t mSelectionValue;
 };
 
-Color nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(nscolor aColor) {
+DeviceColor nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(nscolor aColor) {
   // If it has already alpha, leave it like that.
   if (NS_GET_A(aColor) != 255) {
     return ToDeviceColor(aColor);
@@ -2358,18 +2358,18 @@ Color nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(nscolor aColor) {
 
   // NOTE(emilio): Blink and WebKit do something slightly different here, and
   // blend the color with white instead, both for overlays and text backgrounds.
-  auto color = Color::FromABGR(aColor);
+  auto color = sRGBColor::FromABGR(aColor);
   color.a = 0.5;
   return ToDeviceColor(color);
 }
 
-Color nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(
+DeviceColor nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(
     ComputedStyle& aStyle) {
   return ApplyTransparencyIfNecessary(
       aStyle.GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor));
 }
 
-Color nsDisplaySelectionOverlay::ComputeColor() const {
+DeviceColor nsDisplaySelectionOverlay::ComputeColor() const {
   LookAndFeel::ColorID colorID;
   if (RefPtr<ComputedStyle> style =
           mFrame->ComputeSelectionStyle(mSelectionValue)) {
@@ -2754,8 +2754,8 @@ static void PaintDebugBorder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                              const nsRect& aDirtyRect, nsPoint aPt) {
   nsRect r(aPt, aFrame->GetSize());
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  Color blueOrRed(aFrame->HasView() ? Color(0.f, 0.f, 1.f, 1.f)
-                                    : Color(1.f, 0.f, 0.f, 1.f));
+  sRGBColor blueOrRed(aFrame->HasView() ? sRGBColor(0.f, 0.f, 1.f, 1.f)
+                                        : sRGBColor(1.f, 0.f, 0.f, 1.f));
   aDrawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel),
                           ColorPattern(ToDeviceColor(blueOrRed)));
 }
@@ -2764,7 +2764,7 @@ static void PaintEventTargetBorder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                    const nsRect& aDirtyRect, nsPoint aPt) {
   nsRect r(aPt, aFrame->GetSize());
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  ColorPattern purple(ToDeviceColor(Color(.5f, 0.f, .5f, 1.f)));
+  ColorPattern purple(ToDeviceColor(sRGBColor(.5f, 0.f, .5f, 1.f)));
   aDrawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel), purple);
 }
 

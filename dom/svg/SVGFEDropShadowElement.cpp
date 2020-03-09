@@ -92,11 +92,12 @@ FilterPrimitiveDescription SVGFEDropShadowElement::GetPrimitiveDescription(
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     const nsStyleSVGReset* styleSVGReset = frame->Style()->StyleSVGReset();
-    Color color(Color::FromABGR(styleSVGReset->mFloodColor.CalcColor(frame)));
+    sRGBColor color(
+        sRGBColor::FromABGR(styleSVGReset->mFloodColor.CalcColor(frame)));
     color.a *= styleSVGReset->mFloodOpacity;
     atts.mColor = color;
   } else {
-    atts.mColor = Color();
+    atts.mColor = sRGBColor();
   }
   return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }

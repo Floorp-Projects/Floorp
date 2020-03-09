@@ -1189,7 +1189,7 @@ bool WebRenderBridgeParent::SetDisplayList(
       }
       aTxn.SetDocumentView(rect);
     }
-    gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
+    gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
     aTxn.SetDisplayList(clearColor, aWrEpoch,
                         wr::ToLayoutSize(RoundedToInt(aRect).Size()),
                         mPipelineId, aContentSize, aDLDesc, dlData);
@@ -2300,7 +2300,8 @@ bool WebRenderBridgeParent::SampleAnimations(
             wr::ToWrOpacityProperty(iter.Key(), value->Opacity()));
       } else if (value->Is<nscolor>()) {
         colorArray.AppendElement(wr::ToWrColorProperty(
-            iter.Key(), gfx::Color::FromABGR(value->Color())));
+            iter.Key(),
+            ToDeviceColor(gfx::sRGBColor::FromABGR(value->Color()))));
       }
     }
   }

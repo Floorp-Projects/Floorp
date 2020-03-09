@@ -2087,7 +2087,7 @@ void FrameLayerBuilder::FlashPaint(gfxContext* aContext) {
   float r = float(rand()) / float(RAND_MAX);
   float g = float(rand()) / float(RAND_MAX);
   float b = float(rand()) / float(RAND_MAX);
-  aContext->SetColor(Color(r, g, b, 0.4f));
+  aContext->SetColor(sRGBColor(r, g, b, 0.4f));
   aContext->Paint();
 }
 
@@ -3396,7 +3396,7 @@ already_AddRefed<Layer> ContainerState::PrepareImageLayer(
 already_AddRefed<Layer> ContainerState::PrepareColorLayer(
     PaintedLayerData* aData) {
   RefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(aData->mLayer);
-  colorLayer->SetColor(Color::FromABGR(aData->mSolidColor));
+  colorLayer->SetColor(ToDeviceColor(aData->mSolidColor));
 
   // Copy transform
   colorLayer->SetBaseTransform(aData->mLayer->GetBaseTransform());
@@ -7496,8 +7496,8 @@ already_AddRefed<Layer> ContainerState::CreateMaskLayer(
     context->Multiply(ThebesMatrix(imageTransform));
 
     // paint the clipping rects with alpha to create the mask
-    aClip.FillIntersectionOfRoundedRectClips(context, Color(1.f, 1.f, 1.f, 1.f),
-                                             newData.mAppUnitsPerDevPixel);
+    aClip.FillIntersectionOfRoundedRectClips(
+        context, DeviceColor::MaskOpaqueWhite(), newData.mAppUnitsPerDevPixel);
 
     // build the image and container
     MOZ_ASSERT(aLayer->Manager() == mManager);

@@ -181,32 +181,32 @@ TEST(Gfx, CompositorSimpleTree)
 
     {  // background
       ColorLayer* colorLayer = layers[1]->AsColorLayer();
-      colorLayer->SetColor(Color(1.f, 0.f, 1.f, 1.f));
+      colorLayer->SetColor(DeviceColor(1.f, 0.f, 1.f, 1.f));
       colorLayer->SetBounds(
           colorLayer->GetVisibleRegion().GetBounds().ToUnknownRect());
     }
 
     {
       ColorLayer* colorLayer = layers[2]->AsColorLayer();
-      colorLayer->SetColor(Color(1.f, 0.f, 0.f, 1.f));
+      colorLayer->SetColor(DeviceColor(1.f, 0.f, 0.f, 1.f));
       colorLayer->SetBounds(
           colorLayer->GetVisibleRegion().GetBounds().ToUnknownRect());
     }
 
     {
       ColorLayer* colorLayer = layers[3]->AsColorLayer();
-      colorLayer->SetColor(Color(0.f, 0.f, 1.f, 1.f));
+      colorLayer->SetColor(DeviceColor(0.f, 0.f, 1.f, 1.f));
       colorLayer->SetBounds(
           colorLayer->GetVisibleRegion().GetBounds().ToUnknownRect());
     }
 
     RefPtr<DrawTarget> refDT = CreateDT();
     refDT->FillRect(Rect(0, 0, gCompWidth, gCompHeight),
-                    ColorPattern(Color(1.f, 0.f, 1.f, 1.f)));
+                    ColorPattern(DeviceColor(1.f, 0.f, 1.f, 1.f)));
     refDT->FillRect(Rect(0, 0, 100, 100),
-                    ColorPattern(Color(1.f, 0.f, 0.f, 1.f)));
+                    ColorPattern(DeviceColor(1.f, 0.f, 0.f, 1.f)));
     refDT->FillRect(Rect(0, 50, 100, 100),
-                    ColorPattern(Color(0.f, 0.f, 1.f, 1.f)));
+                    ColorPattern(DeviceColor(0.f, 0.f, 1.f, 1.f)));
     EXPECT_TRUE(CompositeAndCompare(layerManager, refDT));
   }
 }

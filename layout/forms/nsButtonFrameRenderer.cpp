@@ -165,8 +165,8 @@ bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
     }
     float blurRadius =
         float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
-    gfx::Color shadowColor =
-        nsCSSRendering::GetShadowColor(shadow.base, mFrame, 1.0);
+    gfx::DeviceColor shadowColor =
+        ToDeviceColor(nsCSSRendering::GetShadowColor(shadow.base, mFrame, 1.0));
 
     LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
         nsPoint(shadow.base.horizontal.ToAppUnits(),

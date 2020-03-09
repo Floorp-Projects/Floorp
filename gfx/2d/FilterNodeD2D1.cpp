@@ -817,7 +817,7 @@ void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntSize& aValue) {
   mEffect->SetValue(heightProp, (UINT)value.height);
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Color& aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const DeviceColor& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 

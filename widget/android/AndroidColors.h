@@ -11,11 +11,16 @@
 namespace mozilla {
 namespace widget {
 
-static const gfx::Color sAndroidBackgroundColor(gfx::Color(1.0f, 1.0f, 1.0f));
-static const gfx::Color sAndroidBorderColor(gfx::Color(0.73f, 0.73f, 0.73f));
-static const gfx::Color sAndroidCheckColor(gfx::Color(0.19f, 0.21f, 0.23f));
-static const gfx::Color sAndroidDisabledColor(gfx::Color(0.88f, 0.88f, 0.88f));
-static const gfx::Color sAndroidActiveColor(gfx::Color(0.94f, 0.94f, 0.94f));
+static const gfx::sRGBColor sAndroidBackgroundColor(gfx::sRGBColor(1.0f, 1.0f,
+                                                                   1.0f));
+static const gfx::sRGBColor sAndroidBorderColor(gfx::sRGBColor(0.73f, 0.73f,
+                                                               0.73f));
+static const gfx::sRGBColor sAndroidCheckColor(gfx::sRGBColor(0.19f, 0.21f,
+                                                              0.23f));
+static const gfx::sRGBColor sAndroidDisabledColor(gfx::sRGBColor(0.88f, 0.88f,
+                                                                 0.88f));
+static const gfx::sRGBColor sAndroidActiveColor(gfx::sRGBColor(0.94f, 0.94f,
+                                                               0.94f));
 
 }  // namespace widget
 }  // namespace mozilla

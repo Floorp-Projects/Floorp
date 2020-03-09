@@ -532,7 +532,7 @@ already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
     mAzureScaledFont = Factory::CreateScaledFontForMacFont(
         GetCGFontRef(), GetUnscaledFont(), GetAdjustedSize(),
-        Color::FromABGR(mFontSmoothingBackgroundColor),
+        ToDeviceColor(mFontSmoothingBackgroundColor),
         !mStyle.useGrayscaleAntialiasing, IsSyntheticBold());
     if (!mAzureScaledFont) {
       return nullptr;

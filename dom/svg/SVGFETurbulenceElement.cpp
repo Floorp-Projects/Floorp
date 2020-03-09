@@ -110,7 +110,7 @@ FilterPrimitiveDescription SVGFETurbulenceElement::GetPrimitiveDescription(
       return FilterPrimitiveDescription();
     }
     FloodAttributes atts;
-    atts.mColor = Color(0.5, 0.5, 0.5, 0.5);
+    atts.mColor = sRGBColor(0.5, 0.5, 0.5, 0.5);
     return FilterPrimitiveDescription(AsVariant(std::move(atts)));
   }
 

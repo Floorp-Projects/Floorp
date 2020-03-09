@@ -1245,7 +1245,7 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
     case StyleAppearance::Dialog:
       aBuilder.PushRect(
           bounds, bounds, true,
-          wr::ToColorF(Color::FromABGR(LookAndFeel::GetColor(
+          wr::ToColorF(ToDeviceColor(LookAndFeel::GetColor(
               LookAndFeel::ColorID::WindowBackground, NS_RGBA(0, 0, 0, 0)))));
       return true;
 

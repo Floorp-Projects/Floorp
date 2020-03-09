@@ -21,7 +21,7 @@ class gfxPattern final {
   NS_INLINE_DECL_REFCOUNTING(gfxPattern)
 
  public:
-  explicit gfxPattern(const mozilla::gfx::Color& aColor);
+  explicit gfxPattern(const mozilla::gfx::DeviceColor& aColor);
   // gradients
   gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1);  // linear
   gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0, gfxFloat cx1,
@@ -31,7 +31,7 @@ class gfxPattern final {
   gfxPattern(mozilla::gfx::SourceSurface* aSurface,
              const mozilla::gfx::Matrix& aPatternToUserSpace);
 
-  void AddColorStop(gfxFloat offset, const mozilla::gfx::Color& c);
+  void AddColorStop(gfxFloat offset, const mozilla::gfx::DeviceColor& c);
   void SetColorStops(mozilla::gfx::GradientStops* aStops);
 
   // This should only be called on a cairo pattern that we want to use with
@@ -60,7 +60,7 @@ class gfxPattern final {
   mozilla::gfx::SamplingFilter SamplingFilter() const;
 
   /* returns TRUE if it succeeded */
-  bool GetSolidColor(mozilla::gfx::Color& aColorOut);
+  bool GetSolidColor(mozilla::gfx::DeviceColor& aColorOut);
 
  private:
   // Private destructor, to discourage deletion outside of Release():

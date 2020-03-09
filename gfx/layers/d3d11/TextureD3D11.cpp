@@ -340,7 +340,7 @@ bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
   }
   if (mNeedsClearWhite) {
     mDrawTarget->FillRect(Rect(0, 0, mSize.width, mSize.height),
-                          ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+                          ColorPattern(DeviceColor(1.0, 1.0, 1.0, 1.0)));
     mNeedsClearWhite = false;
   }
 

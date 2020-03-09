@@ -366,7 +366,7 @@ typedef gfx::Matrix4x4Typed<ParentLayerPixel, ParentLayerPixel>
 typedef gfx::Matrix4x4Typed<CSSTransformedLayerPixel, ParentLayerPixel>
     AsyncTransformMatrix;
 
-typedef Array<gfx::Color, 4> BorderColors;
+typedef Array<gfx::DeviceColor, 4> BorderColors;
 typedef Array<LayerSize, 4> BorderCorners;
 typedef Array<LayerCoord, 4> BorderWidths;
 typedef Array<StyleBorderStyle, 4> BorderStyles;

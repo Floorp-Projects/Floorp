@@ -929,7 +929,7 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
 
   switch (aEffectChain.mPrimaryEffect->mType) {
     case EffectTypes::SOLID_COLOR: {
-      Color color =
+      DeviceColor color =
           static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get())
               ->mColor;
       mPSConstants.layerColor[0] = color.r * color.a * aOpacity;

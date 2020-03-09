@@ -486,8 +486,9 @@ static void PaintMaskSurface(const PaintFramesParams& aParams,
       if (svgMask) {
         Matrix tmp = aMaskDT->GetTransform();
         aMaskDT->SetTransform(Matrix());
-        aMaskDT->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), svgMask,
-                             Point(0, 0), DrawOptions(1.0, compositionOp));
+        aMaskDT->MaskSurface(ColorPattern(DeviceColor(0.0, 0.0, 0.0, 1.0)),
+                             svgMask, Point(0, 0),
+                             DrawOptions(1.0, compositionOp));
         aMaskDT->SetTransform(tmp);
       }
     } else if (svgReset->mMask.mLayers[i].mImage.IsResolved()) {
@@ -806,7 +807,7 @@ bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams) {
     if (!maskUsage.shouldGenerateMaskLayer) {
       // Only have basic-shape clip-path effect. Fill clipped region by
       // opaque white.
-      ctx.SetColor(Color(1.0, 1.0, 1.0, 1.0));
+      ctx.SetDeviceColor(DeviceColor::MaskOpaqueWhite());
       ctx.Fill();
 
       return true;
@@ -1014,7 +1015,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
     gfxRect drawingRect = nsLayoutUtils::RectToGfxRect(
         aParams.borderArea, frame->PresContext()->AppUnitsPerDevPixel());
     context.SnappedRectangle(drawingRect);
-    Color overlayColor(0.0f, 0.0f, 0.0f, 0.8f);
+    sRGBColor overlayColor(0.0f, 0.0f, 0.0f, 0.8f);
     if (maskUsage.shouldGenerateMaskLayer) {
       overlayColor.r = 1.0f;  // red represents css positioned mask.
     }

@@ -708,7 +708,7 @@ static Rect RectWithEdges(int32_t aTop, int32_t aRight, int32_t aBottom,
 
 void LayerManagerComposite::DrawBorder(const IntRect& aOuter,
                                        int32_t aBorderWidth,
-                                       const Color& aColor,
+                                       const DeviceColor& aColor,
                                        const Matrix4x4& aTransform) {
   EffectChain effects;
   effects.mPrimaryEffect = new EffectSolidColor(aColor);
@@ -736,12 +736,13 @@ void LayerManagerComposite::DrawTranslationWarningOverlay(
   // Black blorder
   IntRect blackBorderBounds(aBounds);
   blackBorderBounds.Deflate(4);
-  DrawBorder(blackBorderBounds, 6, Color(0, 0, 0, 1), Matrix4x4());
+  DrawBorder(blackBorderBounds, 6, DeviceColor(0, 0, 0, 1), Matrix4x4());
 
   // Warning border, yellow to red
   IntRect warnBorder(aBounds);
   warnBorder.Deflate(5);
-  DrawBorder(warnBorder, 4, Color(1, 1.f - mWarningLevel, 0, 1), Matrix4x4());
+  DrawBorder(warnBorder, 4, DeviceColor(1, 1.f - mWarningLevel, 0, 1),
+             Matrix4x4());
 }
 
 static uint16_t sFrameCount = 0;
@@ -777,7 +778,8 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
       // If we have an unused APZ transform on this composite, draw a 20x20 red
       // box in the top-right corner
       EffectChain effects;
-      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(1, 0, 0, 1));
+      effects.mPrimaryEffect =
+          new EffectSolidColor(gfx::DeviceColor(1, 0, 0, 1));
       mCompositor->DrawQuad(gfx::Rect(aBounds.Width() - 20, 0, 20, 20), aBounds,
                             effects, alpha, gfx::Matrix4x4());
 
@@ -789,7 +791,8 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
       // in the top-right corner, to the left of the unused-apz-transform
       // warning box
       EffectChain effects;
-      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(1, 1, 0, 1));
+      effects.mPrimaryEffect =
+          new EffectSolidColor(gfx::DeviceColor(1, 1, 0, 1));
       mCompositor->DrawQuad(gfx::Rect(aBounds.Width() - 40, 0, 20, 20), aBounds,
                             effects, alpha, gfx::Matrix4x4());
 
@@ -870,7 +873,7 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
         RefPtr<DrawTarget> dt =
             mUnusedTransformWarningLayer->NextSurfaceAsDrawTarget(
                 IntRect(0, 0, 20, 20), BackendType::SKIA);
-        dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 0, 0, 1)));
+        dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(DeviceColor(1, 0, 0, 1)));
         mUnusedTransformWarningLayer->NotifySurfaceReady();
       }
       mUnusedTransformWarningLayer->SetPosition(
@@ -891,7 +894,7 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
         RefPtr<DrawTarget> dt =
             mDisabledApzWarningLayer->NextSurfaceAsDrawTarget(
                 IntRect(0, 0, 20, 20), BackendType::SKIA);
-        dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 1, 0, 1)));
+        dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(DeviceColor(1, 1, 0, 1)));
         mDisabledApzWarningLayer->NotifySurfaceReady();
       }
       mDisabledApzWarningLayer->SetPosition(

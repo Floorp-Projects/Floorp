@@ -97,7 +97,7 @@ void DrawTargetDual::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
 
 void DrawTargetDual::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                            const Point& aDest,
-                                           const Color& aColor,
+                                           const DeviceColor& aColor,
                                            const Point& aOffset, Float aSigma,
                                            CompositionOp aOp) {
   DualSurface surface(aSurface);
@@ -114,8 +114,8 @@ void DrawTargetDual::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
 }
 
 void DrawTargetDual::ClearRect(const Rect& aRect) {
-  mA->FillRect(aRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-  mB->FillRect(aRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+  mA->FillRect(aRect, ColorPattern(DeviceColor::MaskOpaqueBlack()));
+  mB->FillRect(aRect, ColorPattern(DeviceColor::MaskOpaqueWhite()));
 }
 
 void DrawTargetDual::CopySurface(SourceSurface* aSurface,

@@ -3772,7 +3772,7 @@ already_AddRefed<Layer> nsDisplaySolidColor::BuildLayer(
       return nullptr;
     }
   }
-  layer->SetColor(gfx::Color::FromABGR(mColor));
+  layer->SetColor(ToDeviceColor(mColor));
 
   const int32_t appUnitsPerDevPixel =
       mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -3846,7 +3846,7 @@ void nsDisplaySolidColorRegion::Paint(nsDisplayListBuilder* aBuilder,
                                       gfxContext* aCtx) {
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  ColorPattern color(mColor);
+  ColorPattern color(ToDeviceColor(mColor));
   for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
     Rect rect =
         NSRectToSnappedRect(iter.Get(), appUnitsPerDevPixel, *drawTarget);
@@ -5129,7 +5129,7 @@ LayerState nsDisplayBackgroundColor::GetLayerState(
 already_AddRefed<Layer> nsDisplayBackgroundColor::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  if (mColor == Color()) {
+  if (mColor == sRGBColor()) {
     return nullptr;
   }
 
@@ -5141,7 +5141,7 @@ already_AddRefed<Layer> nsDisplayBackgroundColor::BuildLayer(
       return nullptr;
     }
   }
-  layer->SetColor(mColor);
+  layer->SetColor(ToDeviceColor(mColor));
 
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   layer->SetBounds(mBackgroundRect.ToNearestPixels(appUnitsPerDevPixel));
@@ -5163,7 +5163,7 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (mColor == Color()) {
+  if (mColor == sRGBColor()) {
     return true;
   }
 
@@ -5202,7 +5202,7 @@ void nsDisplayBackgroundColor::PaintWithClip(nsDisplayListBuilder* aBuilder,
                                              const DisplayItemClip& aClip) {
   MOZ_ASSERT(!HasBackgroundClipText());
 
-  if (mColor == Color()) {
+  if (mColor == sRGBColor()) {
     return;
   }
 
@@ -5245,7 +5245,7 @@ void nsDisplayBackgroundColor::PaintWithClip(nsDisplayListBuilder* aBuilder,
 
 void nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                      gfxContext* aCtx) {
-  if (mColor == Color()) {
+  if (mColor == sRGBColor()) {
     return;
   }
 
@@ -5348,7 +5348,7 @@ already_AddRefed<Layer> nsDisplayClearBackground::BuildLayer(
       return nullptr;
     }
   }
-  layer->SetColor(Color());
+  layer->SetColor(DeviceColor());
   layer->SetMixBlendMode(gfx::CompositionOp::OP_SOURCE);
 
   bool snap;
@@ -5609,7 +5609,7 @@ bool nsDisplayCaret::CreateWebRenderCommands(
   nsRect hookRect;
   mCaret->ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
 
-  gfx::Color color = ToDeviceColor(frame->GetCaretColorAt(contentOffset));
+  gfx::DeviceColor color = ToDeviceColor(frame->GetCaretColorAt(contentOffset));
   LayoutDeviceRect devCaretRect = LayoutDeviceRect::FromAppUnits(
       caretRect + ToReferenceFrame(), appUnitsPerDevPixel);
   LayoutDeviceRect devHookRect = LayoutDeviceRect::FromAppUnits(
@@ -5877,7 +5877,7 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
 
       float blurRadius =
           float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
-      gfx::Color shadowColor =
+      gfx::sRGBColor shadowColor =
           nsCSSRendering::GetShadowColor(shadow.base, mFrame, mOpacity);
 
       // We don't move the shadow rect here since WR does it for us
@@ -5909,8 +5909,8 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
 
       aBuilder.PushBoxShadow(deviceBoxRect, deviceClipRect, !BackfaceIsHidden(),
                              deviceBoxRect, wr::ToLayoutVector2D(shadowOffset),
-                             wr::ToColorF(shadowColor), blurRadius,
-                             spreadRadius, borderRadius,
+                             wr::ToColorF(ToDeviceColor(shadowColor)),
+                             blurRadius, spreadRadius, borderRadius,
                              wr::BoxShadowClipMode::Outset);
     }
   }
@@ -6020,7 +6020,7 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
       LayoutDeviceRect deviceBoxRect =
           LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
       wr::LayoutRect deviceClipRect = wr::ToLayoutRect(clipRect);
-      Color shadowColor =
+      sRGBColor shadowColor =
           nsCSSRendering::GetShadowColor(shadow.base, aFrame, 1.0);
 
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
@@ -6043,8 +6043,9 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
       aBuilder.PushBoxShadow(
           wr::ToLayoutRect(deviceBoxRect), deviceClipRect,
           !aFrame->BackfaceIsHidden(), wr::ToLayoutRect(deviceBoxRect),
-          wr::ToLayoutVector2D(shadowOffset), wr::ToColorF(shadowColor),
-          blurRadius, spreadRadius, borderRadius, wr::BoxShadowClipMode::Inset);
+          wr::ToLayoutVector2D(shadowOffset),
+          wr::ToColorF(ToDeviceColor(shadowColor)), blurRadius, spreadRadius,
+          borderRadius, wr::BoxShadowClipMode::Inset);
     }
   }
 }

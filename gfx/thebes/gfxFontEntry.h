@@ -251,9 +251,9 @@ class gfxFontEntry {
 
   bool TryGetColorGlyphs();
   bool GetColorLayersInfo(uint32_t aGlyphId,
-                          const mozilla::gfx::Color& aDefaultColor,
+                          const mozilla::gfx::DeviceColor& aDefaultColor,
                           nsTArray<uint16_t>& layerGlyphs,
-                          nsTArray<mozilla::gfx::Color>& layerColors);
+                          nsTArray<mozilla::gfx::DeviceColor>& layerColors);
 
   // Access to raw font table data (needed for Harfbuzz):
   // returns a pointer to data owned by the fontEntry or the OS,

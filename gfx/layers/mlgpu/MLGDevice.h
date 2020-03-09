@@ -308,11 +308,11 @@ class MLGDevice {
       MLGRenderTargetFlags aFlags = MLGRenderTargetFlags::Default) = 0;
 
   // Clear a render target to the given color, or clear a depth buffer.
-  virtual void Clear(MLGRenderTarget* aRT, const gfx::Color& aColor) = 0;
+  virtual void Clear(MLGRenderTarget* aRT, const gfx::DeviceColor& aColor) = 0;
   virtual void ClearDepthBuffer(MLGRenderTarget* aRT) = 0;
 
   // This is only available if CanUseClearView() returns true.
-  virtual void ClearView(MLGRenderTarget* aRT, const gfx::Color& aColor,
+  virtual void ClearView(MLGRenderTarget* aRT, const gfx::DeviceColor& aColor,
                          const gfx::IntRect* aRects, size_t aNumRects) = 0;
 
   // Drawing Commands

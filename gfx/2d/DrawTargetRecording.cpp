@@ -161,7 +161,7 @@ class FilterNodeRecording : public FilterNode {
   FORWARD_SET_ATTRIBUTE(const Matrix&, MATRIX);
   FORWARD_SET_ATTRIBUTE(const Matrix5x4&, MATRIX5X4);
   FORWARD_SET_ATTRIBUTE(const Point3D&, POINT3D);
-  FORWARD_SET_ATTRIBUTE(const Color&, COLOR);
+  FORWARD_SET_ATTRIBUTE(const DeviceColor&, COLOR);
 
 #undef FORWARD_SET_ATTRIBUTE
 
@@ -372,7 +372,7 @@ void DrawTargetRecording::DrawDependentSurface(
 }
 
 void DrawTargetRecording::DrawSurfaceWithShadow(
-    SourceSurface* aSurface, const Point& aDest, const Color& aColor,
+    SourceSurface* aSurface, const Point& aDest, const DeviceColor& aColor,
     const Point& aOffset, Float aSigma, CompositionOp aOp) {
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "DrawSurfaceWithShadow");
 

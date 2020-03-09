@@ -214,9 +214,9 @@ class MLGDeviceD3D11 final : public MLGDevice {
 
   RefPtr<MLGTexture> CreateTexture(TextureSource* aSource) override;
 
-  void Clear(MLGRenderTarget* aRT, const gfx::Color& aColor) override;
+  void Clear(MLGRenderTarget* aRT, const gfx::DeviceColor& aColor) override;
   void ClearDepthBuffer(MLGRenderTarget* aRT) override;
-  void ClearView(MLGRenderTarget* aRT, const gfx::Color& aColor,
+  void ClearView(MLGRenderTarget* aRT, const gfx::DeviceColor& aColor,
                  const gfx::IntRect* aRects, size_t aNumRects) override;
   void Draw(uint32_t aVertexCount, uint32_t aOffset) override;
   void DrawInstanced(uint32_t aVertexCountPerInstance, uint32_t aInstanceCount,

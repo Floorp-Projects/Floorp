@@ -241,7 +241,8 @@ class TextDrawTarget : public DrawTarget {
     }
   }
 
-  void AppendSelectionRect(const LayoutDeviceRect& aRect, const Color& aColor) {
+  void AppendSelectionRect(const LayoutDeviceRect& aRect,
+                           const DeviceColor& aColor) {
     auto rect = wr::ToLayoutRect(aRect);
     auto color = wr::ToColorF(aColor);
     mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
@@ -262,7 +263,7 @@ class TextDrawTarget : public DrawTarget {
   // as the top-left corner of the rect.
   void AppendDecoration(const Point& aStart, const Point& aEnd,
                         const float aThickness, const bool aVertical,
-                        const Color& aColor, const uint8_t aStyle) {
+                        const DeviceColor& aColor, const uint8_t aStyle) {
     auto pos = LayoutDevicePoint::FromUnknownPoint(aStart);
     LayoutDeviceSize size;
 
@@ -306,7 +307,7 @@ class TextDrawTarget : public DrawTarget {
   // different, and trying to merge the concept is more of a mess than it's
   // worth.
   void AppendWavyDecoration(const Rect& aBounds, const float aThickness,
-                            const bool aVertical, const Color& aColor) {
+                            const bool aVertical, const DeviceColor& aColor) {
     wr::Line decoration;
 
     decoration.bounds =
@@ -442,7 +443,7 @@ class TextDrawTarget : public DrawTarget {
   }
 
   void DrawSurfaceWithShadow(SourceSurface* aSurface, const Point& aDest,
-                             const Color& aColor, const Point& aOffset,
+                             const DeviceColor& aColor, const Point& aOffset,
                              Float aSigma, CompositionOp aOperator) override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
   }

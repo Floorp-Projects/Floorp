@@ -226,11 +226,11 @@ class ColorPattern : public Pattern {
  public:
   // Explicit because consumers should generally use ToDeviceColor when
   // creating a ColorPattern.
-  explicit ColorPattern(const Color& aColor) : mColor(aColor) {}
+  explicit ColorPattern(const DeviceColor& aColor) : mColor(aColor) {}
 
   PatternType GetType() const override { return PatternType::COLOR; }
 
-  Color mColor;
+  DeviceColor mColor;
 };
 
 /**
@@ -1175,7 +1175,8 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    * @param aOperator Composition operator used
    */
   virtual void DrawSurfaceWithShadow(SourceSurface* aSurface,
-                                     const Point& aDest, const Color& aColor,
+                                     const Point& aDest,
+                                     const DeviceColor& aColor,
                                      const Point& aOffset, Float aSigma,
                                      CompositionOp aOperator) = 0;
 
@@ -1800,8 +1801,8 @@ class GFX2D_API Factory {
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont> CreateScaledFontForMacFont(
       CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-      const Color& aFontSmoothingBackgroundColor, bool aUseFontSmoothing = true,
-      bool aApplySyntheticBold = false);
+      const DeviceColor& aFontSmoothingBackgroundColor,
+      bool aUseFontSmoothing = true, bool aApplySyntheticBold = false);
 #endif
 
 #ifdef MOZ_WIDGET_GTK
