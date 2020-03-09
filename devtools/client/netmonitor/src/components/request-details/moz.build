@@ -8,4 +8,6 @@ DevToolsModules(
     'ParamsPanel.js',
     'PropertiesView.js',
     'SecurityPanel.js',
+    'StackTracePanel.js',
+    'TimingsPanel.js'
 )
