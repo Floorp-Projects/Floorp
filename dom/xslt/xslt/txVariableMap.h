@@ -24,7 +24,7 @@ class txVariableMapBase {
   void removeVariable(const txExpandedName& aName);
 
  protected:
-  txVariableMapBase() {}
+  txVariableMapBase() = default;
   ~txVariableMapBase();
 
   txExpandedNameMap<txAExprResult> mMap;
@@ -49,7 +49,7 @@ class txParameterMap : public txVariableMapBase {
   NS_INLINE_DECL_REFCOUNTING(txParameterMap)
 
  private:
-  ~txParameterMap() {}
+  ~txParameterMap() = default;
 };
 
 inline txVariableMapBase::~txVariableMapBase() {

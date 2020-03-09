@@ -23,8 +23,7 @@
 
 using namespace mozilla::dom;
 
-txXPathTreeWalker::txXPathTreeWalker(const txXPathTreeWalker& aOther)
-    : mPosition(aOther.mPosition) {}
+txXPathTreeWalker::txXPathTreeWalker(const txXPathTreeWalker& aOther) = default;
 
 txXPathTreeWalker::txXPathTreeWalker(const txXPathNode& aNode)
     : mPosition(aNode) {}
