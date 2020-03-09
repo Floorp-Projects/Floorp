@@ -682,7 +682,7 @@ static bool RelazifyFunctions(JSContext* cx, unsigned argc, Value* vp) {
   // Disable relazification of all scripts on stack. It is a pervasive
   // assumption in the engine that running scripts still have bytecode.
   for (AllScriptFramesIter i(cx); !i.done(); ++i) {
-    i.script()->setDoNotRelazify();
+    i.script()->clearAllowRelazify();
   }
 
   cx->runtime()->allowRelazificationForTesting = true;
@@ -1122,8 +1122,7 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
 
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
   args.rval().setBoolean(fun->hasBytecode() &&
-                         fun->nonLazyScript()->maybeLazyScript() &&
-                         fun->nonLazyScript()->isRelazifiable());
+                         fun->nonLazyScript()->allowRelazify());
   return true;
 }
 

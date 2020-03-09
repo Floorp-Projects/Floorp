@@ -1144,7 +1144,10 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (!sourceObjectArg) {
       xdrFlags |= OwnSource;
     }
-    if (script->maybeLazyScript()) {
+    // If script allows relazifying back to a LazyScript we must save that lazy
+    // script. If the lazy script only existed for the Debugger, we do not
+    // preserve it.
+    if (script->allowRelazify()) {
       xdrFlags |= HasLazyScript;
     }
   }
@@ -1289,6 +1292,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     if (mode == XDR_DECODE) {
       script->setLazyScript(lazy);
+      script->setAllowRelazify();
     }
   }
 
@@ -1407,6 +1411,11 @@ void JSScript::setDefaultClassConstructorSpan(
   // Since this script has been changed to point into the user's source, we
   // can clear its self-hosted flag, allowing Debugger to see it.
   clearFlag(ImmutableFlags::SelfHosted);
+
+  // Even though the script was cloned from the self-hosted template, we cannot
+  // delazify back to a SelfHostedLazyScript. The script is no longer marked as
+  // SelfHosted either.
+  clearAllowRelazify();
 }
 
 bool JSScript::initScriptCounts(JSContext* cx) {
@@ -5647,8 +5656,8 @@ void JSScript::AutoDelazify::holdScript(JS::HandleFunction fun) {
       JSAutoRealm ar(cx_, fun);
       script_ = JSFunction::getOrCreateScript(cx_, fun);
       if (script_) {
-        oldDoNotRelazify_ = script_->hasFlag(MutableFlags::DoNotRelazify);
-        script_->setDoNotRelazify(true);
+        oldAllowRelazify_ = script_->allowRelazify();
+        script_->clearAllowRelazify();
       }
     }
   }
@@ -5658,7 +5667,7 @@ void JSScript::AutoDelazify::dropScript() {
   // Don't touch script_ if it's in the self-hosting realm, see the comment
   // in holdScript.
   if (script_ && !script_->realm()->isSelfHostingRealm()) {
-    script_->setDoNotRelazify(oldDoNotRelazify_);
+    script_->setAllowRelazify(oldAllowRelazify_);
   }
   script_ = nullptr;
 }
