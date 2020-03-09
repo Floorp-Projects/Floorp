@@ -7,7 +7,7 @@
 #include "mozilla/net/UrlClassifierCommon.h"
 
 #include "ClassifierDummyChannel.h"
-#include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingNotifier.h"
@@ -228,7 +228,7 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(channel);
+      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(channel);
   nsCOMPtr<mozIDOMWindowProxy> win;
   rv = thirdPartyUtil->GetTopWindowForChannel(channel, uriBeingLoaded,
                                               getter_AddRefs(win));
