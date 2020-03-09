@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-  content/global/aboutPerformance.xhtml               (content/aboutPerformance.xhtml)
+  content/global/aboutPerformance.html                (content/aboutPerformance.html)
   content/global/aboutPerformance.js                  (content/aboutPerformance.js)
   content/global/aboutPerformance.css                 (content/aboutPerformance.css)
