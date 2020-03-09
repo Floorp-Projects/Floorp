@@ -90,7 +90,6 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
   JS::RealmOptions options;
   options.creationOptions()
       .setStreamsEnabled(true)
-      .setFieldsEnabled(true)
       .setWeakRefsEnabled(true)
       .setSharedMemoryAndAtomicsEnabled(true);
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,

@@ -744,7 +744,6 @@ bool xpc::ExtraWarningsForSystemJS() { return false; }
 
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
-static mozilla::Atomic<bool> sFieldsEnabled(false);
 
 static mozilla::Atomic<bool> sPropertyErrorMessageFixEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
@@ -758,7 +757,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setStreamsEnabled(sStreamsEnabled)
       .setWritableStreamsEnabled(
           StaticPrefs::javascript_options_writable_streams())
-      .setFieldsEnabled(sFieldsEnabled)
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(sWeakRefsEnabled);
 }
@@ -926,8 +924,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
-  sFieldsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.fields");
   sPropertyErrorMessageFixEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "property_error_message_fix");
 #ifdef NIGHTLY_BUILD
