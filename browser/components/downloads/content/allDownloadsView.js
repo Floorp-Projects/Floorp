@@ -228,7 +228,7 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
   window.addEventListener(
     "resize",
     () => {
-      this._ensureVisibleElementsAreActive();
+      this._ensureVisibleElementsAreActive(true);
     },
     true
   );
@@ -247,69 +247,97 @@ DownloadsPlacesView.prototype = {
   set active(val) {
     this._active = val;
     if (this._active) {
-      this._ensureVisibleElementsAreActive();
+      this._ensureVisibleElementsAreActive(true);
     }
     return this._active;
   },
 
-  _ensureVisibleElementsAreActive() {
+  /**
+   * Ensure the custom element contents are created and shown for each
+   * visible element in the list.
+   *
+   * @param debounce whether to use a short timeout rather than running
+   *                 immediately. The default is running immediately. If you
+   *                 pass `true`, we'll run on a 10ms timeout. This is used to
+   *                 avoid running this code lots while scrolling or resizing.
+   */
+  _ensureVisibleElementsAreActive(debounce = false) {
     if (
       !this.active ||
-      this._ensureVisibleTimer ||
+      (debounce && this._ensureVisibleTimer) ||
       !this._richlistbox.firstChild
     ) {
       return;
     }
 
-    this._ensureVisibleTimer = setTimeout(() => {
-      delete this._ensureVisibleTimer;
-      if (!this._richlistbox.firstChild) {
-        return;
-      }
+    if (debounce) {
+      this._ensureVisibleTimer = setTimeout(() => {
+        this._internalEnsureVisibleElementsAreActive();
+      }, 10);
+    } else {
+      this._internalEnsureVisibleElementsAreActive();
+    }
+  },
 
-      let rlbRect = this._richlistbox.getBoundingClientRect();
-      let winUtils = window.windowUtils;
-      let nodes = winUtils.nodesFromRect(
-        rlbRect.left,
-        rlbRect.top,
-        0,
-        rlbRect.width,
-        rlbRect.height,
-        0,
-        true,
-        false,
-        false
-      );
-      // nodesFromRect returns nodes in z-index order, and for the same z-index
-      // sorts them in inverted DOM order, thus starting from the one that would
-      // be on top.
-      let firstVisibleNode, lastVisibleNode;
-      for (let node of nodes) {
-        if (node.localName === "richlistitem" && node._shell) {
-          node._shell.ensureActive();
-          // The first visible node is the last match.
-          firstVisibleNode = node;
-          // While the last visible node is the first match.
-          if (!lastVisibleNode) {
-            lastVisibleNode = node;
-          }
+  _internalEnsureVisibleElementsAreActive() {
+    // If there are no children, we can't do anything so bail out.
+    // However, avoid clearing the timer because there may be children
+    // when the timer fires.
+    if (!this._richlistbox.firstChild) {
+      // If we were called asynchronously (debounced), we need to delete
+      // the timer variable to ensure we are called again if another
+      // debounced call comes in.
+      delete this._ensureVisibleTimer;
+      return;
+    }
+
+    if (this._ensureVisibleTimer) {
+      clearTimeout(this._ensureVisibleTimer);
+      delete this._ensureVisibleTimer;
+    }
+
+    let rlbRect = this._richlistbox.getBoundingClientRect();
+    let winUtils = window.windowUtils;
+    let nodes = winUtils.nodesFromRect(
+      rlbRect.left,
+      rlbRect.top,
+      0,
+      rlbRect.width,
+      rlbRect.height,
+      0,
+      true,
+      false,
+      false
+    );
+    // nodesFromRect returns nodes in z-index order, and for the same z-index
+    // sorts them in inverted DOM order, thus starting from the one that would
+    // be on top.
+    let firstVisibleNode, lastVisibleNode;
+    for (let node of nodes) {
+      if (node.localName === "richlistitem" && node._shell) {
+        node._shell.ensureActive();
+        // The first visible node is the last match.
+        firstVisibleNode = node;
+        // While the last visible node is the first match.
+        if (!lastVisibleNode) {
+          lastVisibleNode = node;
         }
       }
+    }
 
-      // Also activate the first invisible nodes in both boundaries (that is,
-      // above and below the visible area) to ensure proper keyboard navigation
-      // in both directions.
-      let nodeBelowVisibleArea = lastVisibleNode && lastVisibleNode.nextSibling;
-      if (nodeBelowVisibleArea && nodeBelowVisibleArea._shell) {
-        nodeBelowVisibleArea._shell.ensureActive();
-      }
+    // Also activate the first invisible nodes in both boundaries (that is,
+    // above and below the visible area) to ensure proper keyboard navigation
+    // in both directions.
+    let nodeBelowVisibleArea = lastVisibleNode && lastVisibleNode.nextSibling;
+    if (nodeBelowVisibleArea && nodeBelowVisibleArea._shell) {
+      nodeBelowVisibleArea._shell.ensureActive();
+    }
 
-      let nodeAboveVisibleArea =
-        firstVisibleNode && firstVisibleNode.previousSibling;
-      if (nodeAboveVisibleArea && nodeAboveVisibleArea._shell) {
-        nodeAboveVisibleArea._shell.ensureActive();
-      }
-    }, 10);
+    let nodeAboveVisibleArea =
+      firstVisibleNode && firstVisibleNode.previousSibling;
+    if (nodeAboveVisibleArea && nodeAboveVisibleArea._shell) {
+      nodeAboveVisibleArea._shell.ensureActive();
+    }
   },
 
   _place: "",
@@ -716,7 +744,7 @@ DownloadsPlacesView.prototype = {
   },
 
   onScroll() {
-    this._ensureVisibleElementsAreActive();
+    this._ensureVisibleElementsAreActive(true);
   },
 
   onSelect() {
