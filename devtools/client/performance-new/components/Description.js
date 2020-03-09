@@ -64,20 +64,10 @@ class Description extends PureComponent {
       { className: "perf-description" },
       p(
         null,
-        "This new recording panel is a bit different from the existing " +
-          "performance panel. It records the entire browser, and then opens up " +
-          "and shares the profile with ",
+        "Recordings launch ",
         this.renderLink("https://profiler.firefox.com", "profiler.firefox.com"),
-        ", a Mozilla performance analysis tool."
-      ),
-      p(
-        null,
-        "This is still a prototype. Join along or file bugs at: ",
-        this.renderLink(
-          "https://github.com/firefox-devtools/profiler",
-          "github.com/firefox-devtools/profiler"
-        ),
-        "."
+        " in a new tab. All data is stored locally, but you can choose to upload it",
+        " for sharing."
       )
     );
   }

@@ -6,7 +6,8 @@
 DevToolsModules(
     'AboutProfiling.js',
     'Description.js',
-    'DevToolsAndPopup.js',
+    'DevToolsPanel.js',
+    'DevToolsPresetSelection.js',
     'DirectoryPicker.js',
     'Presets.js',
     'ProfilerEventHandling.js',
