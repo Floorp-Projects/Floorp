@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsEffectiveTLDService.h"
+#include "nsIURI.h"
 #include "nsIURIMutator.h"
 
 namespace {
