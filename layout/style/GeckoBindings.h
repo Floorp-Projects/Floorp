@@ -106,7 +106,8 @@ void Gecko_DestroyStyleChildrenIterator(mozilla::dom::StyleChildrenIterator*);
 const nsINode* Gecko_GetNextStyleChild(mozilla::dom::StyleChildrenIterator*);
 
 nsAtom* Gecko_Element_ImportedPart(const nsAttrValue*, nsAtom*);
-nsAtom* Gecko_Element_ExportedPart(const nsAttrValue*, nsAtom*);
+nsAtom** Gecko_Element_ExportedParts(const nsAttrValue*, nsAtom*,
+                                     size_t* aOutLength);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
                                    SheetLoadDataHolder);
