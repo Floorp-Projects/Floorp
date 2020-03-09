@@ -317,7 +317,7 @@ class BrowserParent final : public PBrowserParent,
       const uint32_t& aEvent, const RequestData& aRequestData,
       const bool aBlocked, const nsACString& aTrackingOrigin,
       nsTArray<nsCString>&& aTrackingFullHashes,
-      const Maybe<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>&
+      const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
           aReason);
 
   mozilla::ipc::IPCResult RecvNavigationFinished();

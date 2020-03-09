@@ -30,6 +30,8 @@ static LazyLogModule gContentBlockingLog("ContentBlockingLog");
 
 typedef Telemetry::OriginMetricID OriginMetricID;
 
+namespace dom {
+
 // sync with TelemetryOriginData.inc
 NS_NAMED_LITERAL_CSTRING(ContentBlockingLog::kDummyOriginHash, "PAGELOAD");
 
@@ -108,7 +110,7 @@ static void ReportOriginSingleHash(OriginMetricID aId,
 
 Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-    const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
+    const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
     const nsTArray<nsCString>& aTrackingFullHashes) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -291,4 +293,5 @@ void ContentBlockingLog::ReportOrigins() {
   }
 }
 
+}  // namespace dom
 }  // namespace mozilla
