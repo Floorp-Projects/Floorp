@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.392';
-const pdfjsBuild = 'e1586016';
+const pdfjsVersion = '2.4.407';
+const pdfjsBuild = '25693c6b';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.392';
+    const workerVersion = '2.4.407';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -20562,6 +20562,24 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       return glyphs;
     },
 
+    ensureStateFont(state) {
+      if (state.font) {
+        return;
+      }
+
+      const reason = new _util.FormatError("Missing setFont (Tf) operator before text rendering operator.");
+
+      if (this.options.ignoreErrors) {
+        this.handler.send("UnsupportedFeature", {
+          featureId: _util.UNSUPPORTED_FEATURES.font
+        });
+        (0, _util.warn)(`ensureStateFont: "${reason}".`);
+        return;
+      }
+
+      throw reason;
+    },
+
     setGState: function PartialEvaluator_setGState(resources, gState, operatorList, task, stateManager) {
       var gStateObj = [];
       var gStateKeys = gState.getKeys();
@@ -21031,10 +21049,20 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               return;
 
             case _util.OPS.showText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               args[0] = self.handleText(args[0], stateManager.state);
               break;
 
             case _util.OPS.showSpacedText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               var arr = args[0];
               var combinedGlyphs = [];
               var arrLength = arr.length;
@@ -21055,12 +21083,22 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
 
             case _util.OPS.nextLineShowText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               operatorList.addOp(_util.OPS.nextLine);
               args[0] = self.handleText(args[0], stateManager.state);
               fn = _util.OPS.showText;
               break;
 
             case _util.OPS.nextLineSetSpacingShowText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               operatorList.addOp(_util.OPS.nextLine);
               operatorList.addOp(_util.OPS.setWordSpacing, [args.shift()]);
               operatorList.addOp(_util.OPS.setCharSpacing, [args.shift()]);
@@ -21637,6 +21675,11 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
 
             case _util.OPS.showSpacedText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               var items = args[0];
               var offset;
 
@@ -21678,16 +21721,31 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
 
             case _util.OPS.showText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               buildTextContentItem(args[0]);
               break;
 
             case _util.OPS.nextLineShowText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               flushTextContentItem();
               textState.carriageReturn();
               buildTextContentItem(args[0]);
               break;
 
             case _util.OPS.nextLineSetSpacingShowText:
+              if (!stateManager.state.font) {
+                self.ensureStateFont(stateManager.state);
+                continue;
+              }
+
               flushTextContentItem();
               textState.wordSpacing = args[0];
               textState.charSpacing = args[1];
@@ -38194,13 +38252,19 @@ var Type1Parser = function Type1ParserClosure() {
           output = [14];
         }
 
-        program.charstrings.push({
+        const charStringObject = {
           glyphName: glyph,
           charstring: output,
           width: charString.width,
           lsb: charString.lsb,
           seac: charString.seac
-        });
+        };
+
+        if (glyph === ".notdef") {
+          program.charstrings.unshift(charStringObject);
+        } else {
+          program.charstrings.push(charStringObject);
+        }
 
         if (properties.builtInEncoding) {
           const index = properties.builtInEncoding.indexOf(glyph);
