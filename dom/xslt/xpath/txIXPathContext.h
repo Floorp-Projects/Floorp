@@ -27,7 +27,7 @@ class txXPathNode;
 
 class txIParseContext {
  public:
-  virtual ~txIParseContext() {}
+  virtual ~txIParseContext() = default;
 
   /*
    * Return a namespaceID for a given prefix.
@@ -66,7 +66,7 @@ class txIParseContext {
  */
 class txIMatchContext {
  public:
-  virtual ~txIMatchContext() {}
+  virtual ~txIMatchContext() = default;
 
   /*
    * Return the ExprResult associated with the variable with the

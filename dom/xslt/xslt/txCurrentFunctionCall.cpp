@@ -13,7 +13,7 @@
 /**
  * Creates a new current function call
  **/
-CurrentFunctionCall::CurrentFunctionCall() {}
+CurrentFunctionCall::CurrentFunctionCall() = default;
 
 /*
  * Evaluates this Expr

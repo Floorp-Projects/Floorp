@@ -512,7 +512,7 @@ nsresult txProcessingInstruction::execute(txExecutionState& aEs) {
 txPushNewContext::txPushNewContext(nsAutoPtr<Expr>&& aSelect)
     : mSelect(std::move(aSelect)), mBailTarget(nullptr) {}
 
-txPushNewContext::~txPushNewContext() {}
+txPushNewContext::~txPushNewContext() = default;
 
 nsresult txPushNewContext::execute(txExecutionState& aEs) {
   RefPtr<txAExprResult> exprRes;

@@ -19,8 +19,7 @@ class txExpandedName {
   txExpandedName(int32_t aNsID, nsAtom* aLocalName)
       : mNamespaceID(aNsID), mLocalName(aLocalName) {}
 
-  txExpandedName(const txExpandedName& aOther)
-      : mNamespaceID(aOther.mNamespaceID), mLocalName(aOther.mLocalName) {}
+  txExpandedName(const txExpandedName& aOther) = default;
 
   nsresult init(const nsAString& aQName, txNamespaceMap* aResolver,
                 bool aUseDefault);
@@ -32,11 +31,7 @@ class txExpandedName {
 
   bool isNull() { return mNamespaceID == kNameSpaceID_None && !mLocalName; }
 
-  txExpandedName& operator=(const txExpandedName& rhs) {
-    mNamespaceID = rhs.mNamespaceID;
-    mLocalName = rhs.mLocalName;
-    return *this;
-  }
+  txExpandedName& operator=(const txExpandedName& rhs) = default;
 
   bool operator==(const txExpandedName& rhs) const {
     return ((mLocalName == rhs.mLocalName) &&
