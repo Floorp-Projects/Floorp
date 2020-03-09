@@ -1409,7 +1409,14 @@ class FxaAccountManagerTest {
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountStorage = mock<AccountStorage>()
         val accountObserver: AccountObserver = mock()
-        val manager = prepareHappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, this.coroutineContext)
+        val manager = prepareHappyAuthenticationFlow(
+            mockAccount,
+            profile,
+            accountStorage,
+            accountObserver,
+            this.coroutineContext,
+            setOf(DeviceCapability.SEND_TAB)
+        )
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
         verify(accountObserver, never()).onLoggedOut()
@@ -1423,6 +1430,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
+        `when`(constellation.refreshDevicesAsync()).thenReturn(CompletableDeferred(true))
 
         assertTrue(manager.finishAuthenticationAsync(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)).await())
 
@@ -1432,8 +1440,16 @@ class FxaAccountManagerTest {
         // Recovery flow will hit this API, and will recover if it returns 'true'.
         `when`(mockAccount.checkAuthorizationStatusAsync(eq("profile"))).thenReturn(CompletableDeferred(true))
 
+        verify(constellation, times(1)).initDeviceAsync(any(), any(), any())
+        verify(constellation, times(1)).refreshDevicesAsync()
+        verify(constellation, never()).ensureCapabilitiesAsync(any())
         // At this point, we're logged in. Trigger a 401.
         manager.encounteredAuthError()
+
+        // During recovery, neither `init` nor `refresh` nor `ensure` calls should not have been made.
+        verify(constellation, times(1)).initDeviceAsync(any(), any(), any())
+        verify(constellation, times(1)).refreshDevicesAsync()
+        verify(constellation, never()).ensureCapabilitiesAsync(any())
 
         // Since we've recovered, outside observers should not have witnessed the momentary problem state.
         verify(accountObserver, never()).onAuthenticationProblems()
@@ -1782,7 +1798,8 @@ class FxaAccountManagerTest {
         profile: Profile,
         accountStorage: AccountStorage,
         accountObserver: AccountObserver,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
+        capabilities: Set<DeviceCapability> = emptySet()
     ): FxaAccountManager {
 
         `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
@@ -1795,7 +1812,7 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
                 ServerConfig.release("dummyId", "bad://url"),
-                accountStorage, coroutineContext = coroutineContext
+                accountStorage, capabilities, coroutineContext = coroutineContext
         ) {
             mockAccount
         }
