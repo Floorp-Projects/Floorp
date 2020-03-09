@@ -46,8 +46,7 @@ bool DeleteNodeTransaction::CanDoIt() const {
   return true;
 }
 
-NS_IMETHODIMP
-DeleteNodeTransaction::DoTransaction() {
+NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!CanDoIt())) {
     return NS_OK;
   }
@@ -70,11 +69,11 @@ DeleteNodeTransaction::DoTransaction() {
 
   ErrorResult error;
   mParentNode->RemoveChild(*mNodeToDelete, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
   return error.StealNSResult();
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 DeleteNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!CanDoIt())) {
     // This is a legal state, the transaction is a no-op.
@@ -86,24 +85,25 @@ DeleteNodeTransaction::UndoTransaction() {
   nsCOMPtr<nsINode> nodeToDelete = mNodeToDelete;
   nsCOMPtr<nsIContent> refNode = mRefNode;
   parent->InsertBefore(*nodeToDelete, refNode, error);
-  if (NS_WARN_IF(error.Failed())) {
+  if (error.Failed()) {
+    NS_WARNING("nsINode::InsertBefore() failed");
     return error.StealNSResult();
   }
   if (!editorBase->AsHTMLEditor() && nodeToDelete->IsText()) {
     uint32_t length = nodeToDelete->AsText()->TextLength();
     if (length > 0) {
-      error = MOZ_KnownLive(editorBase->AsTextEditor())
-                  ->DidInsertText(length, 0, length);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
+      nsresult rv = MOZ_KnownLive(editorBase->AsTextEditor())
+                        ->DidInsertText(length, 0, length);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("TextEditor::DidInsertText() failed");
+        return rv;
       }
     }
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DeleteNodeTransaction::RedoTransaction() {
+NS_IMETHODIMP DeleteNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!CanDoIt())) {
     // This is a legal state, the transaction is a no-op.
     return NS_OK;
@@ -120,6 +120,7 @@ DeleteNodeTransaction::RedoTransaction() {
 
   ErrorResult error;
   mParentNode->RemoveChild(*mNodeToDelete, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
   return error.StealNSResult();
 }
 
