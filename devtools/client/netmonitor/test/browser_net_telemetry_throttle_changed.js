@@ -28,7 +28,7 @@ add_task(async function() {
   // here. Instead use querySelector on the toolbox top document, where the context menu
   // will be rendered.
   toolbox.topWindow.document.querySelector("menuitem[label='GPRS']").click();
-  await waitFor(monitor.panelWin.api, EVENTS.THROTTLING_CHANGED);
+  await waitFor(monitor.panelWin.api, TEST_EVENTS.THROTTLING_CHANGED);
 
   // Verify existence of the telemetry event.
   checkTelemetryEvent(
