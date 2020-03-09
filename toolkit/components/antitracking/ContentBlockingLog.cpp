@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "AntiTrackingLog.h"
 #include "ContentBlockingLog.h"
 
 #include "nsITrackingDBService.h"
@@ -24,13 +25,7 @@ namespace mozilla {
 
 using ipc::AutoIPCStream;
 
-static LazyLogModule gContentBlockingLog("ContentBlockingLog");
-#define LOG(fmt, ...) \
-  MOZ_LOG(gContentBlockingLog, LogLevel::Debug, (fmt, ##__VA_ARGS__))
-
 typedef Telemetry::OriginMetricID OriginMetricID;
-
-namespace dom {
 
 // sync with TelemetryOriginData.inc
 NS_NAMED_LITERAL_CSTRING(ContentBlockingLog::kDummyOriginHash, "PAGELOAD");
@@ -101,9 +96,9 @@ static void ReportOriginSingleHash(OriginMetricID aId,
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  LOG("ReportOriginSingleHash metric=%s",
-      Telemetry::MetricIDToString[static_cast<uint32_t>(aId)]);
-  LOG("ReportOriginSingleHash origin=%s", PromiseFlatCString(aOrigin).get());
+  LOG(("ReportOriginSingleHash metric=%s",
+       Telemetry::MetricIDToString[static_cast<uint32_t>(aId)]));
+  LOG(("ReportOriginSingleHash origin=%s", PromiseFlatCString(aOrigin).get()));
 
   Telemetry::RecordOrigin(aId, aOrigin);
 }
@@ -223,7 +218,7 @@ void ContentBlockingLog::ReportOrigins() {
   if (!IsReportingEnabled()) {
     return;
   }
-  LOG("ContentBlockingLog::ReportOrigins [this=%p]", this);
+  LOG(("ContentBlockingLog::ReportOrigins [this=%p]", this));
   const bool testMode =
       StaticPrefs::telemetry_origin_telemetry_test_mode_enabled();
   OriginMetricID metricId =
@@ -293,5 +288,4 @@ void ContentBlockingLog::ReportOrigins() {
   }
 }
 
-}  // namespace dom
 }  // namespace mozilla

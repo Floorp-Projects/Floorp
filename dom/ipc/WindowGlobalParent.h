@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WindowGlobalParent_h
 #define mozilla_dom_WindowGlobalParent_h
 
+#include "mozilla/ContentBlockingLog.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/DOMRect.h"
@@ -18,7 +19,6 @@
 #include "nsISupports.h"
 #include "mozilla/dom/WindowGlobalActor.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/ContentBlockingLog.h"
 
 class nsIPrincipal;
 class nsIURI;
