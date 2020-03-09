@@ -21,57 +21,48 @@ NS_IMPL_RELEASE_INHERITED(EditAggregateTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditAggregateTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-NS_IMETHODIMP
-EditAggregateTransaction::DoTransaction() {
+NS_IMETHODIMP EditAggregateTransaction::DoTransaction() {
   // FYI: It's legal (but not very useful) to have an empty child list.
-  for (uint32_t i = 0, length = mChildren.Length(); i < length; ++i) {
-    nsITransaction* txn = mChildren[i];
-    if (!txn) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    nsresult rv = txn->DoTransaction();
+  AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
+  for (auto& childTransaction : children) {
+    nsresult rv = childTransaction->DoTransaction();
     if (NS_FAILED(rv)) {
+      NS_WARNING("EditTransactionBase::DoTransaction() failed");
       return rv;
     }
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditAggregateTransaction::UndoTransaction() {
+NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
   // FYI: It's legal (but not very useful) to have an empty child list.
   // Undo goes through children backwards.
-  for (uint32_t i = mChildren.Length(); i--;) {
-    nsITransaction* txn = mChildren[i];
-    if (!txn) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    nsresult rv = txn->UndoTransaction();
+  AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
+  for (auto& childTransaction : Reversed(children)) {
+    nsresult rv = childTransaction->UndoTransaction();
     if (NS_FAILED(rv)) {
+      NS_WARNING("EditTransactionBase::UndoTransaction() failed");
       return rv;
     }
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditAggregateTransaction::RedoTransaction() {
+NS_IMETHODIMP EditAggregateTransaction::RedoTransaction() {
   // It's legal (but not very useful) to have an empty child list.
-  for (uint32_t i = 0, length = mChildren.Length(); i < length; ++i) {
-    nsITransaction* txn = mChildren[i];
-    if (!txn) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    nsresult rv = txn->RedoTransaction();
+  AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
+  for (auto& childTransaction : children) {
+    nsresult rv = childTransaction->RedoTransaction();
     if (NS_FAILED(rv)) {
+      NS_WARNING("EditTransactionBase::RedoTransaction() failed");
       return rv;
     }
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditAggregateTransaction::Merge(nsITransaction* aTransaction, bool* aDidMerge) {
+NS_IMETHODIMP EditAggregateTransaction::Merge(nsITransaction* aTransaction,
+                                              bool* aDidMerge) {
   if (aDidMerge) {
     *aDidMerge = false;
   }
@@ -80,36 +71,28 @@ EditAggregateTransaction::Merge(nsITransaction* aTransaction, bool* aDidMerge) {
   }
   // FIXME: Is this really intended not to loop?  It looks like the code
   // that used to be here sort of intended to loop, but didn't.
-  nsITransaction* txn = mChildren[0];
-  if (!txn) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  return txn->Merge(aTransaction, aDidMerge);
+  return mChildren[0]->Merge(aTransaction, aDidMerge);
 }
 
-NS_IMETHODIMP
-EditAggregateTransaction::AppendChild(EditTransactionBase* aTransaction) {
-  if (!aTransaction) {
-    return NS_ERROR_NULL_POINTER;
+NS_IMETHODIMP EditAggregateTransaction::AppendChild(
+    EditTransactionBase* aTransaction) {
+  if (NS_WARN_IF(!aTransaction)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<EditTransactionBase>* slot = mChildren.AppendElement();
-  if (!slot) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *slot = aTransaction;
+  mChildren.AppendElement(*aTransaction);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditAggregateTransaction::GetName(nsAtom** aName) {
-  if (aName && mName) {
-    *aName = mName;
-    NS_ADDREF(*aName);
-    return NS_OK;
+NS_IMETHODIMP EditAggregateTransaction::GetName(nsAtom** aName) {
+  if (NS_WARN_IF(!aName)) {
+    return NS_ERROR_INVALID_ARG;
   }
-  return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!mName)) {
+    return NS_ERROR_FAILURE;
+  }
+  *aName = do_AddRef(mName).take();
+  return NS_OK;
 }
 
 }  // namespace mozilla
