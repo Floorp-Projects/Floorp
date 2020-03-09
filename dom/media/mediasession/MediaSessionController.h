@@ -66,6 +66,7 @@ class MediaSessionController {
 
  private:
   nsString GetDefaultFaviconURL() const;
+  nsString GetDefaultTitle() const;
   MediaMetadataBase CreateDefaultMetadata() const;
   void UpdateActiveMediaSessionContextId();
 
