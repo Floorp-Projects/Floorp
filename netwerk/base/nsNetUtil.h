@@ -821,12 +821,10 @@ uint32_t NS_GetContentDispositionFromHeader(const nsACString& aHeader,
 /** Extracts the filename out of a content-disposition header
  * @param aFilename [out] The filename. Can be empty on error.
  * @param aDisposition Value of a Content-Disposition header
- * @param aURI Optional. Will be used to get a fallback charset for the
- *        filename, if it is QI'able to nsIURL
+
  */
 nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
-                                       const nsACString& aDisposition,
-                                       nsIURI* aURI = nullptr);
+                                       const nsACString& aDisposition);
 
 /**
  * Make sure Personal Security Manager is initialized
