@@ -53,6 +53,7 @@ UNIFIED_SOURCES += [
     'SettingsChangeObserver.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
+    'TemporaryAccessGrantObserver.cpp',
     'URLDecorationStripper.cpp',
 ]
 
