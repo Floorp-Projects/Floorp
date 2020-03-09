@@ -10,7 +10,6 @@
 
 #include "nsHttp.h"
 #include "nsICacheEntry.h"
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"

@@ -6,7 +6,7 @@
 
 #include "AntiTrackingLog.h"
 #include "AntiTrackingRedirectHeuristic.h"
-#include "AntiTrackingCommon.h"
+#include "ContentBlocking.h"
 #include "ContentBlockingAllowList.h"
 #include "ContentBlockingUserInteraction.h"
 
@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
+#include "nsICookieService.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"
@@ -210,13 +211,11 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
   }
 
   // We don't care about this promise because the operation is actually sync.
-  RefPtr<AntiTrackingCommon::FirstPartyStorageAccessGrantPromise> promise =
-      AntiTrackingCommon::
-          SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
-              redirectedPrincipal, trackingPrincipal, trackingOrigin,
-              AntiTrackingCommon::StorageAccessPromptChoices::eAllow,
-              StaticPrefs::
-                  privacy_restrict3rdpartystorage_expiration_redirect());
+  RefPtr<ContentBlocking::ParentAccessGrantPromise> promise =
+      ContentBlocking::SaveAccessForOriginOnParentProcess(
+          redirectedPrincipal, trackingPrincipal, trackingOrigin,
+          ContentBlocking::StorageAccessPromptChoices::eAllow,
+          StaticPrefs::privacy_restrict3rdpartystorage_expiration_redirect());
   Unused << promise;
 }
 
