@@ -48,7 +48,6 @@ struct CompositableTransaction;
 class Image;
 class TextureClient;
 class SynchronousTask;
-struct AllocShmemParams;
 
 /**
  * Returns true if the current thread is the ImageBrdigeChild's thread.
@@ -246,8 +245,11 @@ class ImageBridgeChild final : public PImageBridgeChild,
   void FlushAllImagesSync(SynchronousTask* aTask, ImageClient* aClient,
                           ImageContainer* aContainer);
 
-  void ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams);
-  void ProxyDeallocShmemNow(SynchronousTask* aTask, Shmem* aShmem,
+  void ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
+                          SharedMemory::SharedMemoryType aType,
+                          mozilla::ipc::Shmem* aShmem, bool aUnsafe,
+                          bool* aSuccess);
+  void ProxyDeallocShmemNow(SynchronousTask* aTask, mozilla::ipc::Shmem* aShmem,
                             bool* aResult);
 
   void UpdateTextureFactoryIdentifier(

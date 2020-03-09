@@ -779,18 +779,10 @@ bool ImageBridgeChild::AllocShmem(size_t aSize,
   return PImageBridgeChild::AllocShmem(aSize, aType, aShmem);
 }
 
-// NewRunnableFunction accepts a limited number of parameters so we need a
-// struct here
-struct AllocShmemParams {
-  size_t mSize;
-  ipc::SharedMemory::SharedMemoryType mType;
-  ipc::Shmem* mShmem;
-  bool mUnsafe;
-  bool mSuccess;
-};
-
-void ImageBridgeChild::ProxyAllocShmemNow(SynchronousTask* aTask,
-                                          AllocShmemParams* aParams) {
+void ImageBridgeChild::ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
+                                          SharedMemory::SharedMemoryType aType,
+                                          ipc::Shmem* aShmem, bool aUnsafe,
+                                          bool* aSuccess) {
   AutoCompleteTask complete(aTask);
 
   if (!CanSend()) {
@@ -798,12 +790,12 @@ void ImageBridgeChild::ProxyAllocShmemNow(SynchronousTask* aTask,
   }
 
   bool ok = false;
-  if (aParams->mUnsafe) {
-    ok = AllocUnsafeShmem(aParams->mSize, aParams->mType, aParams->mShmem);
+  if (aUnsafe) {
+    ok = AllocUnsafeShmem(aSize, aType, aShmem);
   } else {
-    ok = AllocShmem(aParams->mSize, aParams->mType, aParams->mShmem);
+    ok = AllocShmem(aSize, aType, aShmem);
   }
-  aParams->mSuccess = ok;
+  *aSuccess = ok;
 }
 
 bool ImageBridgeChild::DispatchAllocShmemInternal(
@@ -811,16 +803,15 @@ bool ImageBridgeChild::DispatchAllocShmemInternal(
     bool aUnsafe) {
   SynchronousTask task("AllocatorProxy alloc");
 
-  AllocShmemParams params = {aSize, aType, aShmem, aUnsafe, false};
-
-  RefPtr<Runnable> runnable =
-      WrapRunnable(RefPtr<ImageBridgeChild>(this),
-                   &ImageBridgeChild::ProxyAllocShmemNow, &task, &params);
+  bool success = false;
+  RefPtr<Runnable> runnable = WrapRunnable(
+      RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::ProxyAllocShmemNow,
+      &task, aSize, aType, aShmem, aUnsafe, &success);
   GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
 
-  return params.mSuccess;
+  return success;
 }
 
 void ImageBridgeChild::ProxyDeallocShmemNow(SynchronousTask* aTask,
