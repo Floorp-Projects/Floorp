@@ -67,8 +67,8 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fixed-height-body-child.html fixed-height-body-child-ref.html # Bug 1392106
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == form-button-fixed-height.html form-button-fixed-height-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fails == form-button-fixed-width.html form-button-fixed-width-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fails == form-button.html form-button-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == form-button-fixed-width.html form-button-fixed-width-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == form-button.html form-button-ref.html
 
 # Ordinarily, reftests use a browser.viewport.desktopWidth of 800px, same as the
 # size of the reftest document.  The failure condition of the test below however
