@@ -1114,6 +1114,53 @@ bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
   return false;
 }
 
+void nsFrameSelection::MaintainedRange::AdjustContentOffsets(
+    nsIFrame::ContentOffsets& aOffsets, const bool aScrollViewStop) const {
+  // Adjust offsets according to maintained amount
+  if (mRange && mAmount != eSelectNoAmount) {
+    nsINode* rangenode = mRange->GetStartContainer();
+    int32_t rangeOffset = mRange->StartOffset();
+    const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
+        rangenode, rangeOffset, aOffsets.content, aOffsets.offset);
+    if (NS_WARN_IF(!relativePosition)) {
+      // Potentially handle this properly when Selection across Shadow DOM
+      // boundary is implemented
+      // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+      return;
+    }
+
+    nsDirection direction = *relativePosition > 0 ? eDirPrevious : eDirNext;
+    nsSelectionAmount amount = mAmount;
+    if (amount == eSelectBeginLine && direction == eDirNext) {
+      amount = eSelectEndLine;
+    }
+
+    int32_t offset;
+    nsIFrame* frame = GetFrameForNodeOffset(aOffsets.content, aOffsets.offset,
+                                            CARET_ASSOCIATE_AFTER, &offset);
+
+    if (frame && amount == eSelectWord && direction == eDirPrevious) {
+      // To avoid selecting the previous word when at start of word,
+      // first move one character forward.
+      nsPeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
+                                 nsPoint(0, 0), false, aScrollViewStop, false,
+                                 false, false);
+      if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
+        frame = charPos.mResultFrame;
+        offset = charPos.mContentOffset;
+      }
+    }
+
+    nsPeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0), false,
+                           aScrollViewStop, false, false, false);
+
+    if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
+      aOffsets.content = pos.mResultContent;
+      aOffsets.offset = pos.mContentOffset;
+    }
+  }
+}
+
 void nsFrameSelection::MaintainedRange::MaintainAnchorFocusRange(
     const Selection& aNormalSelection, const nsSelectionAmount aAmount) {
   MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
@@ -1196,48 +1243,8 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
     return;
   }
 
-  // Adjust offsets according to maintained amount
-  if (mMaintainedRange.mRange && mMaintainedRange.mAmount != eSelectNoAmount) {
-    nsINode* rangenode = mMaintainedRange.mRange->GetStartContainer();
-    int32_t rangeOffset = mMaintainedRange.mRange->StartOffset();
-    const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
-        rangenode, rangeOffset, offsets.content, offsets.offset);
-    if (NS_WARN_IF(!relativePosition)) {
-      // Potentially handle this properly when Selection across Shadow DOM
-      // boundary is implemented
-      // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
-      return;
-    }
-
-    nsDirection direction = *relativePosition > 0 ? eDirPrevious : eDirNext;
-    nsSelectionAmount amount = mMaintainedRange.mAmount;
-    if (amount == eSelectBeginLine && direction == eDirNext)
-      amount = eSelectEndLine;
-
-    int32_t offset;
-    nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset,
-                                            CARET_ASSOCIATE_AFTER, &offset);
-
-    if (frame && amount == eSelectWord && direction == eDirPrevious) {
-      // To avoid selecting the previous word when at start of word,
-      // first move one character forward.
-      nsPeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
-                                 nsPoint(0, 0), false, mLimiter != nullptr,
-                                 false, false, false);
-      if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
-        frame = charPos.mResultFrame;
-        offset = charPos.mContentOffset;
-      }
-    }
-
-    nsPeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0), false,
-                           mLimiter != nullptr, false, false, false);
-
-    if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
-      offsets.content = pos.mResultContent;
-      offsets.offset = pos.mContentOffset;
-    }
-  }
+  const bool scrollViewStop = mLimiter != nullptr;
+  mMaintainedRange.AdjustContentOffsets(offsets, scrollViewStop);
 
   HandleClick(offsets.content, offsets.offset, offsets.offset,
               FocusMode::kExtendSelection, offsets.associate);
