@@ -244,6 +244,9 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoSession.settings.userAgentMode =
                     if (shouldRequestDesktop) GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
                     else GeckoSessionSettings.USER_AGENT_MODE_MOBILE
+            geckoSession.settings.viewportMode =
+                    if (shouldRequestDesktop) GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
+                    else GeckoSessionSettings.VIEWPORT_MODE_MOBILE
             callback?.onRequestDesktopStateChanged(shouldRequestDesktop)
         }
 
@@ -471,7 +474,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     callback?.onSecurityChanged(
                         isSecure,
                         securityInfo.host,
-                        securityInfo.issuerOrganization
+                        securityInfo.certificate?.issuerDN?.name
                     )
                 }
             }
