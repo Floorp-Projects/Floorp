@@ -36,6 +36,10 @@
         app:destination="@id/settingsFragment" />
 
     <action
+        android:id="@+id/action_global_settings_addonsManagementFragment"
+        app:destination="@id/addonsManagementFragment" />
+
+    <action
         android:id="@+id/action_global_searchEngineFragment"
         app:destination="@id/searchEngineFragment" />
 

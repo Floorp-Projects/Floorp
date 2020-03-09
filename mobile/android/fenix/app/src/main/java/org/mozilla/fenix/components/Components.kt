@@ -5,13 +5,18 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import android.content.Intent
+import androidx.core.net.toUri
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
+import mozilla.components.feature.addons.migration.SupportedAddonsChecker
+import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.ClipboardHandler
 import java.util.concurrent.TimeUnit
@@ -66,6 +71,17 @@ class Components(private val context: Context) {
     @Suppress("MagicNumber")
     val addonUpdater by lazy {
         DefaultAddonUpdater(context, AddonUpdater.Frequency(12, TimeUnit.HOURS))
+    }
+
+    @Suppress("MagicNumber")
+    val supportedAddChecker by lazy {
+        DefaultSupportedAddonsChecker(context, SupportedAddonsChecker.Frequency(16, TimeUnit.MINUTES),
+            onNotificationClickIntent = Intent(context, HomeActivity::class.java).apply {
+                action = Intent.ACTION_VIEW
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                data = "fenix://settings_addon_manager".toUri()
+            }
+        )
     }
 
     val addonManager by lazy {

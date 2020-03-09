@@ -32,6 +32,7 @@ class DeepLinkIntentProcessor(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun handleDeepLink(deepLink: Uri, navController: NavController) {
         handleDeepLinkSideEffects(deepLink)
 
@@ -42,6 +43,7 @@ class DeepLinkIntentProcessor(
             "settings_search_engine" -> GlobalDirections.SearchEngine
             "settings_accessibility" -> GlobalDirections.Accessibility
             "settings_delete_browsing_data" -> GlobalDirections.DeleteData
+            "settings_addon_manager" -> GlobalDirections.SettingsAddonManager
             else -> return
         }
 

@@ -150,5 +150,13 @@ class DeepLinkIntentProcessorTest {
         verify { out wasNot Called }
     }
 
+    @Test
+    fun `process settings_addon_manager deep link`() {
+        assertTrue(processor.process(testIntent("fenix://settings_addon_manager"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalSettingsAddonsManagementFragment()) }
+        verify { out wasNot Called }
+    }
+
     private fun testIntent(uri: String) = Intent("", uri.toUri())
 }

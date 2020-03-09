@@ -336,6 +336,7 @@ open class FenixApplication : LocaleAwareApplication() {
                 },
                 onExtensionsLoaded = { extensions ->
                     components.addonUpdater.registerForFutureUpdates(extensions)
+                    components.supportedAddChecker.registerForChecks()
                 },
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest
             )
