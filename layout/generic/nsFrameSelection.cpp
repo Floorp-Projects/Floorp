@@ -1066,9 +1066,12 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent* aNode,
   SetCaretBidiLevel(clickInFrame->GetEmbeddingLevel());
 }
 
-bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
-                                                    int32_t aOffset) {
-  if (!mMaintainedRange.mRange) {
+bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
+    const nsIContent* aContent, const int32_t aOffset,
+    Selection& aNormalSelection) const {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
+  if (!mRange) {
     return false;
   }
 
@@ -1076,13 +1079,10 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
     return false;
   }
 
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return false;
-
-  nsINode* rangeStartNode = mMaintainedRange.mRange->GetStartContainer();
-  nsINode* rangeEndNode = mMaintainedRange.mRange->GetEndContainer();
-  int32_t rangeStartOffset = mMaintainedRange.mRange->StartOffset();
-  int32_t rangeEndOffset = mMaintainedRange.mRange->EndOffset();
+  nsINode* rangeStartNode = mRange->GetStartContainer();
+  nsINode* rangeEndNode = mRange->GetEndContainer();
+  int32_t rangeStartOffset = mRange->StartOffset();
+  int32_t rangeEndOffset = mRange->EndOffset();
 
   const Maybe<int32_t> relToStart = nsContentUtils::ComparePoints(
       rangeStartNode, rangeStartOffset, aContent, aOffset);
@@ -1105,19 +1105,17 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
   // If aContent/aOffset is inside the maintained selection, or if it is on the
   // "anchor" side of the maintained selection, we need to do something.
   if ((*relToStart < 0 && *relToEnd > 0) ||
-      (*relToStart > 0 && mDomSelections[index]->GetDirection() == eDirNext) ||
-      (*relToEnd < 0 &&
-       mDomSelections[index]->GetDirection() == eDirPrevious)) {
+      (*relToStart > 0 && aNormalSelection.GetDirection() == eDirNext) ||
+      (*relToEnd < 0 && aNormalSelection.GetDirection() == eDirPrevious)) {
     // Set the current range to the maintained range.
-    mDomSelections[index]->ReplaceAnchorFocusRange(mMaintainedRange.mRange);
+    aNormalSelection.ReplaceAnchorFocusRange(mRange);
     if (*relToStart < 0 && *relToEnd > 0) {
       // We're inside the maintained selection, just keep it selected.
       return true;
     }
     // Reverse the direction of the selection so that the anchor will be on the
     // far side of the maintained selection, relative to aContent/aOffset.
-    mDomSelections[index]->SetDirection(*relToStart > 0 ? eDirPrevious
-                                                        : eDirNext);
+    aNormalSelection.SetDirection(*relToStart > 0 ? eDirPrevious : eDirNext);
   }
   return false;
 }
@@ -1149,7 +1147,8 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
     MOZ_ASSERT(selection);
 
     if ((aFocusMode == FocusMode::kExtendSelection) &&
-        AdjustForMaintainedSelection(aNewFocus, aContentOffset)) {
+        mMaintainedRange.AdjustNormalSelection(aNewFocus, aContentOffset,
+                                               *selection)) {
       return NS_OK;  // shift clicked to maintained selection. rejected.
     }
 
@@ -1180,9 +1179,13 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
       newFrame->GetContentOffsetsFromPoint(newPoint);
   if (!offsets.content) return;
 
-  if (newFrame->IsSelected() &&
-      AdjustForMaintainedSelection(offsets.content, offsets.offset))
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  RefPtr<Selection> selection = mDomSelections[index];
+  if (newFrame->IsSelected() && selection &&
+      mMaintainedRange.AdjustNormalSelection(offsets.content, offsets.offset,
+                                             *selection)) {
     return;
+  }
 
   // Adjust offsets according to maintained amount
   if (mMaintainedRange.mRange && mMaintainedRange.mAmount != eSelectNoAmount) {
