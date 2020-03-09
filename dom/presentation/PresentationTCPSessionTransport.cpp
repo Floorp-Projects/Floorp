@@ -32,7 +32,7 @@ class CopierCallbacks final : public nsIRequestObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
  private:
-  ~CopierCallbacks() {}
+  ~CopierCallbacks() = default;
 
   RefPtr<PresentationTCPSessionTransport> mOwner;
 };
@@ -72,7 +72,7 @@ PresentationTCPSessionTransport::PresentationTCPSessionTransport()
       mCloseStatus(NS_OK),
       mDataNotificationEnabled(false) {}
 
-PresentationTCPSessionTransport::~PresentationTCPSessionTransport() {}
+PresentationTCPSessionTransport::~PresentationTCPSessionTransport() = default;
 
 NS_IMETHODIMP
 PresentationTCPSessionTransport::BuildTCPSenderTransport(

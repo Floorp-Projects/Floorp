@@ -44,7 +44,7 @@ already_AddRefed<Presentation> Presentation::Create(
 
 Presentation::Presentation(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
-Presentation::~Presentation() {}
+Presentation::~Presentation() = default;
 
 /* virtual */
 JSObject* Presentation::WrapObject(JSContext* aCx,

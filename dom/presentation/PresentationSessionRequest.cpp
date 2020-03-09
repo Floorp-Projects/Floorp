@@ -21,7 +21,7 @@ PresentationSessionRequest::PresentationSessionRequest(
       mDevice(aDevice),
       mControlChannel(aControlChannel) {}
 
-PresentationSessionRequest::~PresentationSessionRequest() {}
+PresentationSessionRequest::~PresentationSessionRequest() = default;
 
 // nsIPresentationSessionRequest
 

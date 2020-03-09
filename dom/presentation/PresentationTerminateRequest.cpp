@@ -20,7 +20,7 @@ PresentationTerminateRequest::PresentationTerminateRequest(
       mControlChannel(aControlChannel),
       mIsFromReceiver(aIsFromReceiver) {}
 
-PresentationTerminateRequest::~PresentationTerminateRequest() {}
+PresentationTerminateRequest::~PresentationTerminateRequest() = default;
 
 // nsIPresentationTerminateRequest
 NS_IMETHODIMP
