@@ -8,6 +8,7 @@
 #define mozilla_antitrackingservice_h
 
 #include "nsString.h"
+#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -73,11 +74,6 @@ class AntiTrackingCommon final {
   static bool IsFirstPartyStorageAccessGrantedFor(
       nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings);
 
-  enum StorageAccessGrantedReason {
-    eStorageAccessAPI,
-    eOpenerAfterUserInteraction,
-    eOpener
-  };
   enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
   // Grant the permission for aOrigin to have access to the first party storage.
@@ -102,7 +98,7 @@ class AntiTrackingCommon final {
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
   AddFirstPartyStorageAccessGrantedFor(
       nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
-      StorageAccessGrantedReason aReason,
+      ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
   // Given a principal, returns the storage permission key that will be used for
@@ -128,44 +124,9 @@ class AntiTrackingCommon final {
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
-  enum class BlockingDecision {
-    eBlock,
-    eAllow,
-  };
-
-  // This method can be called on the parent process or on the content process.
-  // The notification is propagated to the child channel if aChannel is a parent
-  // channel proxy.
-  //
-  // aDecision can be eBlock if we have decided to block some content, or eAllow
-  // if we have decided to allow the content through.
-  //
-  // aRejectedReason must be one of these values:
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
-  static void NotifyBlockingDecision(nsIChannel* aChannel,
-                                     BlockingDecision aDecision,
-                                     uint32_t aRejectedReason);
-
-  static void NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
-                                     BlockingDecision aDecision,
-                                     uint32_t aRejectedReason);
-
   // Get the current document URI from a document channel as it is being loaded.
   static already_AddRefed<nsIURI> MaybeGetDocumentURIBeingLoaded(
       nsIChannel* aChannel);
-
-  static void NotifyContentBlockingEvent(nsIChannel* aChannel,
-                                         uint32_t aRejectedReason);
-
-  static void NotifyContentBlockingEvent(
-      nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
-      nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
-      const nsACString& aTrackingOrigin,
-      const Maybe<StorageAccessGrantedReason>& aReason = Nothing());
 
   static void RedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
                                 nsIChannel* aNewChannel, nsIURI* aNewURI);
