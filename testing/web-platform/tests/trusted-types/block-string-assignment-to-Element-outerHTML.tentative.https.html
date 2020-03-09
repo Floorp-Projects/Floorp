@@ -68,7 +68,7 @@
     var d = document.createElement('div');
     container.appendChild(d);
     d.outerHTML = null;
-    assert_equals(container.innerText, "null");
+    assert_equals(container.innerText, "");
 
     while (container.firstChild)
       container.firstChild.remove();
