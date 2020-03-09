@@ -123,6 +123,12 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
+  if (fi.funcType().temporarilyUnsupportedResultCountForExit()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_MULTIPLE_RESULT_EXIT_UNIMPLEMENTED);
+    return false;
+  }
+
   MOZ_ASSERT(fi.funcType().args().length() == argc);
   for (size_t i = 0; i < argc; i++) {
     switch (fi.funcType().args()[i].kind()) {
@@ -1695,6 +1701,12 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   if (funcType->hasI64ArgOrRet() && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
+    return false;
+  }
+
+  if (funcType->temporarilyUnsupportedResultCountForEntry()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_MULTIPLE_RESULT_ENTRY_UNIMPLEMENTED);
     return false;
   }
 

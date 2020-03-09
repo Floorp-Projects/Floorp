@@ -641,6 +641,12 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 #  endif
 #endif
 
+  if (fe.funcType().temporarilyUnsupportedResultCountForEntry()) {
+    // Unreachable as the Instance::callExport doesn't let us get here.
+    masm.breakpoint();
+    return FinishOffsets(masm, offsets);
+  }
+
   // Save all caller non-volatile registers before we clobber them here and in
   // the wasm callee (which does not preserve non-volatile registers).
   masm.setFramePushed(0);
@@ -1606,13 +1612,11 @@ static void FillArgumentArrayForExit(
 
   ArgTypeVector args(funcType);
   for (ABIArgIter i(args); !i.done(); i++) {
-    if (args.isSyntheticStackResultPointerArg(i.index())) {
-      MOZ_CRASH("Exit to function returning multiple values unimplemented");
-    }
-
     Address dst(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
 
     MIRType type = i.mirType();
+    MOZ_ASSERT(args.isSyntheticStackResultPointerArg(i.index()) ==
+               (type == MIRType::StackResults));
     switch (i->kind()) {
       case ABIArg::GPR:
         if (type == MIRType::Int32) {
@@ -1648,6 +1652,10 @@ static void FillArgumentArrayForExit(
             GenPrintPtr(DebugChannel::Import, masm, i->gpr());
             masm.storePtr(i->gpr(), dst);
           }
+        } else if (type == MIRType::StackResults) {
+          MOZ_ASSERT(!toValue, "Multi-result exit to JIT unimplemented");
+          GenPrintPtr(DebugChannel::Import, masm, i->gpr());
+          masm.storePtr(i->gpr(), dst);
         } else {
           MOZ_CRASH("FillArgumentArrayForExit, ABIArg::GPR: unexpected type");
         }
@@ -1878,8 +1886,9 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   // padding between argv and retaddr ensures that sp is aligned.
   unsigned argOffset =
       AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
-  unsigned argBytes =
-      std::max<size_t>(1, fi.funcType().args().length()) * sizeof(Value);
+  // The abiArgCount includes a stack result pointer argument if needed.
+  unsigned abiArgCount = ArgTypeVector(fi.funcType()).length();
+  unsigned argBytes = std::max<size_t>(1, abiArgCount * sizeof(Value));
   unsigned framePushed =
       StackDecrementForCall(ABIStackAlignment,
                             sizeof(Frame),  // pushed by prologue
@@ -1946,16 +1955,22 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
 
   // Make the call, test whether it succeeded, and extract the return value.
   AssertStackAlignment(masm, ABIStackAlignment);
-  const ValTypeVector& results = fi.funcType().results();
-  if (results.length() == 0) {
+  ResultType resultType = ResultType::Vector(fi.funcType().results());
+  ValType registerResultType;
+  for (ABIResultIter iter(resultType); !iter.done(); iter.next()) {
+    if (iter.cur().inRegister()) {
+      MOZ_ASSERT(!registerResultType.isValid());
+      registerResultType = iter.cur().type();
+    }
+  }
+  if (!registerResultType.isValid()) {
     masm.call(SymbolicAddress::CallImport_Void);
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
     GenPrintf(DebugChannel::Import, masm, "wasm-import[%u]; returns ",
               funcImportIndex);
     GenPrintf(DebugChannel::Import, masm, "void");
   } else {
-    MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-    switch (results[0].kind()) {
+    switch (registerResultType.kind()) {
       case ValType::I32:
         masm.call(SymbolicAddress::CallImport_I32);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -1990,7 +2005,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
         GenPrintF64(DebugChannel::Import, masm, ReturnDoubleReg);
         break;
       case ValType::Ref:
-        switch (results[0].refTypeKind()) {
+        switch (registerResultType.refTypeKind()) {
           case RefType::Func:
             masm.call(SymbolicAddress::CallImport_FuncRef);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg,
@@ -2693,6 +2708,11 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
     return true;
   }
 
+  // Returning multiple values to JS not yet implemented (see bug 1595031).
+  if (fe.funcType().temporarilyUnsupportedResultCountForEntry()) {
+    return true;
+  }
+
   if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, bigIntEnabled,
                         &offsets)) {
     return false;
@@ -2734,6 +2754,12 @@ bool wasm::GenerateStubs(const ModuleEnvironment& env,
     }
 
     if (fi.funcType().temporarilyUnsupportedReftypeForExit()) {
+      continue;
+    }
+
+    // Exit to JS returning multiple values not yet implemented (see bug
+    // 1595031).
+    if (fi.funcType().temporarilyUnsupportedResultCountForExit()) {
       continue;
     }
 
