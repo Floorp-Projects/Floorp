@@ -736,23 +736,7 @@ pref("dom.serviceWorkers.disable_open_click_delay", 5000);
 pref("dom.push.debug", false);
 pref("dom.push.maxRecentMessageIDsPerSubscription", 0);
 
-// The remote content URL where FxAccountsWebChannel messages originate.  Must use HTTPS.
-pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com");
-
-// The remote URL of the Firefox Account profile server.
-pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
-
-// The remote URL of the Firefox Account oauth server.
-pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
-
-// Token server used by Firefox Account-authenticated Sync.
-pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
-
 pref("dom.audiochannel.mediaControl", true);
-
-// Space separated list of URLS that are allowed to send objects (instead of
-// only strings) through webchannels. This list is duplicated in browser/app/profile/firefox.js
-pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://support.mozilla.org https://install.mozilla.org");
 
 pref("media.openUnsupportedTypeWithExternalApp", true);
 
