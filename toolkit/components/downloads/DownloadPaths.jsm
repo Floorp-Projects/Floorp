@@ -79,6 +79,7 @@ var DownloadPaths = {
       .replace(/[\\/]+/g, "_")
       .replace(/[\u200e\u200f\u202a-\u202e]/g, "")
       .replace(gConvertToSpaceRegExp, " ")
+      .replace(/\s{2,}/g, " ")
       .replace(/^[\s\u180e.]+|[\s\u180e.]+$/g, "");
   },
 
