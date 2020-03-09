@@ -11,6 +11,7 @@ import mozilla.appservices.push.AlreadyRegisteredError
 import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.CryptoError
+import mozilla.appservices.push.GeneralError
 import mozilla.appservices.push.InternalPanic
 import mozilla.appservices.push.MissingRegistrationTokenError
 import mozilla.appservices.push.RecordNotFoundError
@@ -94,6 +95,11 @@ class AutoPushFeatureKtTest {
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw UrlParseError("should not fail test") },
+            { assert(true) }
+        )
+
+        CoroutineScope(coroutineContext).launchAndTry(
+            { throw GeneralError("should not fail test") },
             { assert(true) }
         )
     }

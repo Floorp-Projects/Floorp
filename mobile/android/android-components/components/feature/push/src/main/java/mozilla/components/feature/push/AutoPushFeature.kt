@@ -17,6 +17,7 @@ import mozilla.appservices.push.AlreadyRegisteredError
 import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.CryptoError
+import mozilla.appservices.push.GeneralError
 import mozilla.appservices.push.MissingRegistrationTokenError
 import mozilla.appservices.push.RecordNotFoundError
 import mozilla.appservices.push.StorageError
@@ -356,6 +357,7 @@ internal fun CoroutineScope.launchAndTry(
             block()
         } catch (e: RustPushError) {
             val result = when (e) {
+                is GeneralError,
                 is CryptoError,
                 is CommunicationError,
                 is CommunicationServerError,
