@@ -4400,8 +4400,8 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
     // it may be okay to provide SessionStorage even when we receive a value of
     // eDeny.
     //
-    // ContentBlocking::ShouldAllowAccessFor will return false for 3 main
-    // reasons.
+    // AntiTrackingCommon::IsFirstPartyStorageAccessGranted will return false
+    // for 3 main reasons.
     //
     // 1. Cookies are entirely blocked due to a per-origin permission
     // (nsICookiePermission::ACCESS_DENY for the top-level principal or this

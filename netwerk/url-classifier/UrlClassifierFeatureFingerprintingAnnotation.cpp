@@ -6,6 +6,7 @@
 
 #include "UrlClassifierFeatureFingerprintingAnnotation.h"
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsIClassifiedChannel.h"
 #include "nsContentUtils.h"

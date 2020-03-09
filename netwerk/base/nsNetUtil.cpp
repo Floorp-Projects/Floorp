@@ -9,6 +9,7 @@
 
 #include "nsNetUtil.h"
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/LoadContext.h"
