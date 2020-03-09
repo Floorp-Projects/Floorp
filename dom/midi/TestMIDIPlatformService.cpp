@@ -24,7 +24,7 @@ class ProcessMessagesRunnable : public mozilla::Runnable {
  public:
   explicit ProcessMessagesRunnable(const nsAString& aPortID)
       : Runnable("ProcessMessagesRunnable"), mPortID(aPortID) {}
-  ~ProcessMessagesRunnable() {}
+  ~ProcessMessagesRunnable() = default;
   NS_IMETHOD Run() {
     // If service is no longer running, just exist without processing.
     if (!MIDIPlatformService::IsRunning()) {
@@ -52,7 +52,7 @@ class QueueMessagesRunnable : public MIDIBackgroundRunnable {
       : MIDIBackgroundRunnable("QueueMessagesRunnable"),
         mPortID(aPortID),
         mMsgs(aMsgs) {}
-  ~QueueMessagesRunnable() {}
+  ~QueueMessagesRunnable() = default;
   virtual void RunInternal() {
     AssertIsOnBackgroundThread();
     MIDIPlatformService::Get()->QueueMessages(mPortID, mMsgs);

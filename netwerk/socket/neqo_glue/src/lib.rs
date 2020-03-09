@@ -69,7 +69,7 @@ impl NeqoHttp3Conn {
             local,
             remote,
             max_table_size,
-            max_blocked_streams
+            max_blocked_streams,
         ) {
             Ok(c) => c,
             Err(_) => return Err(NS_ERROR_INVALID_ARG),
@@ -210,9 +210,15 @@ pub extern "C" fn neqo_http3conn_close(conn: &mut NeqoHttp3Conn, error: u64) {
 }
 
 fn is_excluded_header(name: &str) -> bool {
-    if (name == "connection") || (name == "host") || (name == "keep-alive") ||
-        (name == "proxy-connection") || (name == "te") || (name == "transfer-encoding") ||
-        (name == "upgrade") || (name == "sec-websocket-key") {
+    if (name == "connection")
+        || (name == "host")
+        || (name == "keep-alive")
+        || (name == "proxy-connection")
+        || (name == "te")
+        || (name == "transfer-encoding")
+        || (name == "upgrade")
+        || (name == "sec-websocket-key")
+    {
         true
     } else {
         false
@@ -234,7 +240,9 @@ pub extern "C" fn neqo_http3conn_fetch(
     // Firefox supplies all headers already prepared for sending over http1.
     // They need to be split into (String, String) pairs.
     match str::from_utf8(headers) {
-        Err(_) => { return NS_ERROR_INVALID_ARG; },
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
         Ok(h) => {
             for elem in h.split("\r\n").skip(1) {
                 if elem.starts_with(':') {
@@ -264,21 +272,32 @@ pub extern "C" fn neqo_http3conn_fetch(
 
     let method_tmp = match str::from_utf8(method) {
         Ok(m) => m,
-        Err(_) => { return NS_ERROR_INVALID_ARG; }
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
     };
     let scheme_tmp = match str::from_utf8(scheme) {
         Ok(s) => s,
-        Err(_) => { return NS_ERROR_INVALID_ARG; }
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
     };
     let host_tmp = match str::from_utf8(host) {
         Ok(h) => h,
-        Err(_) => { return NS_ERROR_INVALID_ARG; }
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
     };
     let path_tmp = match str::from_utf8(path) {
         Ok(p) => p,
-        Err(_) => { return NS_ERROR_INVALID_ARG; }
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
     };
-    match conn.conn.fetch(method_tmp, scheme_tmp, host_tmp, path_tmp, &hdrs) {
+    match conn
+        .conn
+        .fetch(method_tmp, scheme_tmp, host_tmp, path_tmp, &hdrs)
+    {
         Ok(id) => {
             *stream_id = id;
             NS_OK
@@ -414,22 +433,13 @@ pub extern "C" fn neqo_http3conn_event(conn: &mut NeqoHttp3Conn) -> Http3Event {
 impl From<Http3ClientEvent> for Http3Event {
     fn from(event: Http3ClientEvent) -> Self {
         match event {
-            Http3ClientEvent::DataWritable { stream_id } => {
-                Http3Event::DataWritable { stream_id }
-            }
+            Http3ClientEvent::DataWritable { stream_id } => Http3Event::DataWritable { stream_id },
             Http3ClientEvent::StopSending { stream_id, .. } => {
                 Http3Event::StopSending { stream_id }
             }
-            Http3ClientEvent::HeaderReady { stream_id } => {
-                Http3Event::HeaderReady { stream_id }
-            }
-            Http3ClientEvent::DataReadable { stream_id } => {
-                Http3Event::DataReadable { stream_id }
-            }
-            Http3ClientEvent::Reset { stream_id, error } => Http3Event::Reset {
-                stream_id,
-                error,
-            },
+            Http3ClientEvent::HeaderReady { stream_id } => Http3Event::HeaderReady { stream_id },
+            Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable { stream_id },
+            Http3ClientEvent::Reset { stream_id, error } => Http3Event::Reset { stream_id, error },
             Http3ClientEvent::NewPushStream { stream_id } => {
                 Http3Event::NewPushStream { stream_id }
             }

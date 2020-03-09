@@ -314,7 +314,7 @@ add_task(async function() {
 
   async function selectIndexAndWaitForJSONView(index) {
     const onResponseContent = monitor.panelWin.api.once(
-      EVENTS.RECEIVED_RESPONSE_CONTENT
+      TEST_EVENTS.RECEIVED_RESPONSE_CONTENT
     );
     const tabpanel = document.querySelector("#response-panel");
     const waitDOM = waitForDOM(tabpanel, ".treeTable");
@@ -329,7 +329,7 @@ add_task(async function() {
 
   async function selectIndexAndWaitForImageView(index) {
     const onResponseContent = monitor.panelWin.api.once(
-      EVENTS.RECEIVED_RESPONSE_CONTENT
+      TEST_EVENTS.RECEIVED_RESPONSE_CONTENT
     );
     const tabpanel = document.querySelector("#response-panel");
     const waitDOM = waitForDOM(tabpanel, ".response-image");

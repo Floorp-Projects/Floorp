@@ -27,7 +27,6 @@ class RawAccessFrameRef;
 enum class Opacity : uint8_t { FULLY_OPAQUE, SOME_TRANSPARENCY };
 
 class imgFrame {
-  typedef gfx::Color Color;
   typedef gfx::DataSourceSurface DataSourceSurface;
   typedef gfx::DrawTarget DrawTarget;
   typedef gfx::SamplingFilter SamplingFilter;

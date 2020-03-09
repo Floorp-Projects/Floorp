@@ -48,7 +48,7 @@ void TestBugs::CairoClip918671() {
   RefPtr<Path> path2 = pb2->Finish();
   dt->PushClip(path2);
 
-  dt->FillRect(Rect(0, 0, 100, 100), ColorPattern(Color(1, 0, 0)));
+  dt->FillRect(Rect(0, 0, 100, 100), ColorPattern(DeviceColor(1, 0, 0)));
 
   RefPtr<SourceSurface> surf1 = dt->Snapshot();
   RefPtr<SourceSurface> surf2 = ref->Snapshot();
@@ -75,5 +75,6 @@ void TestBugs::PushPopClip950550() {
 
   // We fail the test if we assert in this call because our draw target's
   // transforms are out of sync.
-  dt->FillRect(Rect(50, 50, 50, 50), ColorPattern(Color(0.5f, 0, 0, 1.0f)));
+  dt->FillRect(Rect(50, 50, 50, 50),
+               ColorPattern(DeviceColor(0.5f, 0, 0, 1.0f)));
 }

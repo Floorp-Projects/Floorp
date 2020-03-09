@@ -50,7 +50,7 @@ TCPServerSocket::TCPServerSocket(nsIGlobalObject* aGlobal, uint16_t aPort,
       mBacklog(aBacklog),
       mUseArrayBuffers(aUseArrayBuffers) {}
 
-TCPServerSocket::~TCPServerSocket() {}
+TCPServerSocket::~TCPServerSocket() = default;
 
 nsresult TCPServerSocket::Init() {
   if (mServerSocket || mServerBridgeChild) {

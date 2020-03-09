@@ -66,7 +66,7 @@ class GeneralPattern final {
     return mPattern;
   }
 
-  ColorPattern* InitColorPattern(const Color& aColor) {
+  ColorPattern* InitColorPattern(const DeviceColor& aColor) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mColorPattern.addr()) ColorPattern(aColor);
     return mColorPattern.addr();

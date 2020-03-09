@@ -24,7 +24,7 @@ NS_IMPL_ISUPPORTS(UDPSocketChildBase, nsISupports)
 
 UDPSocketChildBase::UDPSocketChildBase() : mIPCOpen(false) {}
 
-UDPSocketChildBase::~UDPSocketChildBase() {}
+UDPSocketChildBase::~UDPSocketChildBase() = default;
 
 void UDPSocketChildBase::ReleaseIPDLReference() {
   MOZ_ASSERT(mIPCOpen);
@@ -50,7 +50,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) UDPSocketChild::Release(void) {
 
 UDPSocketChild::UDPSocketChild() : mBackgroundManager(nullptr), mLocalPort(0) {}
 
-UDPSocketChild::~UDPSocketChild() {}
+UDPSocketChild::~UDPSocketChild() = default;
 
 nsresult UDPSocketChild::SetBackgroundSpinsEvents() {
   using mozilla::ipc::BackgroundChild;

@@ -15,45 +15,45 @@ function setupBackgroundJsm() {
 
 add_task(function test() {
   info("Test that we get the default preference values from the browser.");
-  const { getRecordingPreferencesFromBrowser } = setupBackgroundJsm();
+  const { getRecordingPreferences } = setupBackgroundJsm();
 
   Assert.notEqual(
-    getRecordingPreferencesFromBrowser().entries,
+    getRecordingPreferences("aboutprofiling").entries,
     undefined,
     "The initial state has the default entries."
   );
   Assert.notEqual(
-    getRecordingPreferencesFromBrowser().interval,
+    getRecordingPreferences("aboutprofiling").interval,
     undefined,
     "The initial state has the default interval."
   );
   Assert.notEqual(
-    getRecordingPreferencesFromBrowser().features,
+    getRecordingPreferences("aboutprofiling").features,
     undefined,
     "The initial state has the default features."
   );
   Assert.equal(
-    getRecordingPreferencesFromBrowser().features.includes("js"),
+    getRecordingPreferences("aboutprofiling").features.includes("js"),
     true,
     "The js feature is initialized to the default."
   );
   Assert.notEqual(
-    getRecordingPreferencesFromBrowser().threads,
+    getRecordingPreferences("aboutprofiling").threads,
     undefined,
     "The initial state has the default threads."
   );
   Assert.equal(
-    getRecordingPreferencesFromBrowser().threads.includes("GeckoMain"),
+    getRecordingPreferences("aboutprofiling").threads.includes("GeckoMain"),
     true,
     "The GeckoMain thread is initialized to the default."
   );
   Assert.notEqual(
-    getRecordingPreferencesFromBrowser().objdirs,
+    getRecordingPreferences("aboutprofiling").objdirs,
     undefined,
     "The initial state has the default objdirs."
   );
   Assert.notEqual(
-    getRecordingPreferencesFromBrowser().duration,
+    getRecordingPreferences("aboutprofiling").duration,
     undefined,
     "The duration is initialized to the duration."
   );
@@ -66,33 +66,31 @@ add_task(function test() {
       "Profiler interface to crash with invalid values."
   );
   const {
-    getRecordingPreferencesFromBrowser,
-    setRecordingPreferencesOnBrowser,
-    revertRecordingPreferences,
+    getRecordingPreferences,
+    setRecordingPreferences,
     changePreset,
   } = setupBackgroundJsm();
 
-  changePreset("custom");
+  changePreset("aboutprofiling", "custom");
 
   Assert.ok(
-    getRecordingPreferencesFromBrowser().features.includes("js"),
+    getRecordingPreferences("aboutprofiling").features.includes("js"),
     "The js preference is present initially."
   );
 
-  const settings = getRecordingPreferencesFromBrowser();
+  const settings = getRecordingPreferences("aboutprofiling");
   settings.features = settings.features.filter(feature => feature !== "js");
   settings.features.push("UNKNOWN_FEATURE_FOR_TESTS");
-  setRecordingPreferencesOnBrowser(settings);
+  setRecordingPreferences("aboutprofiling", settings);
 
   Assert.ok(
-    !getRecordingPreferencesFromBrowser().features.includes(
+    !getRecordingPreferences("aboutprofiling").features.includes(
       "UNKNOWN_FEATURE_FOR_TESTS"
     ),
     "The unknown feature is removed."
   );
   Assert.ok(
-    !getRecordingPreferencesFromBrowser().features.includes("js"),
+    !getRecordingPreferences("aboutprofiling").features.includes("js"),
     "The js preference is still flipped from the default."
   );
-  revertRecordingPreferences();
 });

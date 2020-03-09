@@ -92,7 +92,7 @@ class MathMLElement final : public MathMLElementBase,
   bool IsEventAttributeNameInternal(nsAtom* aName) final;
 
  protected:
-  virtual ~MathMLElement() {}
+  virtual ~MathMLElement() = default;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;

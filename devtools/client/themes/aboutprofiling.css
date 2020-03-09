@@ -196,3 +196,13 @@ h2 {
   display: flex;
   align-items: start;
 }
+
+.perf-back {
+  margin-block-end: 13px;
+}
+
+.perf-back-button {
+  /* Remove the inherited margins */
+  margin-left: 0;
+  margin-right: 0;
+}

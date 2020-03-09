@@ -52,7 +52,7 @@ class DrawTargetCaptureImpl final : public DrawTargetCapture {
                   const Point& aDestPoint,
                   const DrawOptions& aOptions = DrawOptions()) override;
   void DrawSurfaceWithShadow(SourceSurface* aSurface, const Point& aDest,
-                             const Color& aColor, const Point& aOffset,
+                             const DeviceColor& aColor, const Point& aOffset,
                              Float aSigma, CompositionOp aOperator) override;
 
   void ClearRect(const Rect& aRect) override;

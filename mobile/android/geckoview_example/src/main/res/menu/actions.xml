@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:title="@string/tracking_protection" android:id="@+id/action_tp" app:showAsAction="never"
-          android:checkable="true"/>
-    <item android:title="Allow Autoplay" android:id="@+id/allow_autoplay" app:showAsAction="never"
-        android:checkable="true" />
     <item android:title="@string/tracking_protection_ex" android:id="@+id/action_tpe" app:showAsAction="never" />
     <item android:title="@string/desktop_mode" android:id="@+id/desktop_mode" android:checkable="true"
           app:showAsAction="never" />
     <item android:title="@string/private_browsing" android:checkable="true" android:id="@+id/action_pb"/>
-    <item android:title="@string/remote_debugging" android:checkable="true" android:id="@+id/action_remote_debugging"/>
     <item android:title="@string/new_tab" android:id="@+id/action_new_tab"/>
     <item android:title="@string/install_addon" android:id="@+id/install_addon"/>
     <item android:title="@string/close_tab" android:id="@+id/action_close_tab"/>
     <item android:title="@string/forward" android:id="@+id/action_forward"/>
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
+    <item android:title="@string/settings" android:id="@+id/settings" app:showAsAction="never" />
 </menu>

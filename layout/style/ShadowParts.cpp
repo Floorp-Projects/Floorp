@@ -106,7 +106,9 @@ ShadowParts ShadowParts::Parse(const nsAString& aString) {
       continue;
     }
     nsAtom* second = mapping.second.get();
-    parts.mMappings.GetOrInsert(mapping.first) = std::move(mapping.second);
+    parts.mMappings.LookupForAdd(mapping.first)
+        .OrInsert([] { return new PartList(); })
+        ->AppendElement(std::move(mapping.second));
     parts.mReverseMappings.GetOrInsert(second) = std::move(mapping.first);
   }
 
@@ -122,9 +124,19 @@ void ShadowParts::Dump() const {
   for (auto& entry : mMappings) {
     nsAutoCString key;
     entry.GetKey()->ToUTF8String(key);
-    nsAutoCString value;
-    entry.GetData()->ToUTF8String(value);
-    printf("  %s: %s\n", key.get(), value.get());
+    printf("  %s: ", key.get());
+
+    bool first = true;
+    for (nsAtom* part : *entry.GetData()) {
+      if (!first) {
+        printf(", ");
+      }
+      first = false;
+      nsAutoCString value;
+      part->ToUTF8String(value);
+      printf("%s", value.get());
+    }
+    printf("\n");
   }
 }
 #endif

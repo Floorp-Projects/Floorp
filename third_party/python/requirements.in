@@ -1,3 +1,21 @@
+# ONLY ADD PACKAGES USED BY PYTHON 3 TO THIS LIST!
+#
+# Python 2-only packages should be vendored manually by running:
+#
+#    $ pip download <package>==<version>
+#
+# Then for the package and each dependency:
+#
+#    $ pip hash <package>.whl  # verify the hash against the one on PyPi (e.g https://pypi.org/project/<package>/<version>/#files)
+#    $ unzip <package>.whl -d <package>
+#    $ echo <version> > <package>/VERSION
+#    $ hg add <package>/VERSION
+#
+# Note `pip download` may return `tar.gz` files if there is no `.whl` (wheel)
+# available. When downloading wheels, make sure that they are cross-platform.
+# If not you may need to specify `--no-binary :<package1>,<package2>:` to get
+# the source distribution instead for those particular packages.
+
 attrs==18.1.0
 biplist==1.0.3
 blessings==1.7
@@ -7,7 +25,7 @@ jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.0
 pathlib2==2.3.2
-pip-tools==3.9.0
+pip-tools==4.5.1
 pipenv==2018.5.18
 psutil==5.7.0
 pytest==3.6.2
@@ -16,7 +34,5 @@ redo==2.0.3
 requests==2.9.1
 responses==0.10.6
 six==1.13.0
-taskcluster==6.0.0
-taskcluster-urls==11.0.0
 virtualenv==16.7.8
 voluptuous==0.11.5

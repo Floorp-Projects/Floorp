@@ -109,7 +109,7 @@ void ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer) {
       RefPtr<DrawTarget> dt = aLayer->mSink->BeginUpdate(
           aLayer->GetRect(), aLayer->AllocateSequenceNumber());
       if (dt) {
-        ColorPattern color(ToDeviceColor(aLayer->mBackgroundColor));
+        ColorPattern color(aLayer->mBackgroundColor);
         IntSize size = aLayer->GetSize();
         dt->FillRect(Rect(0, 0, size.width, size.height), color);
         aLayer->mSink->EndUpdate(aLayer->GetRect());
@@ -124,7 +124,7 @@ void ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer) {
         offset != aLayer->mBackgroundLayerOffset) {
       aLayer->mBackgroundLayer = paintedLayer;
       aLayer->mBackgroundLayerOffset = offset;
-      aLayer->mBackgroundColor = Color();
+      aLayer->mBackgroundColor = DeviceColor();
       paintedLayer->SetUsedForReadback(true);
     } else {
       nsIntRegion invalid;

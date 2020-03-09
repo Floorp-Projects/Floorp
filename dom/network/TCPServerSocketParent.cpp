@@ -44,7 +44,7 @@ TCPServerSocketParent::TCPServerSocketParent(PNeckoParent* neckoParent,
   mServerSocket->SetServerBridgeParent(this);
 }
 
-TCPServerSocketParent::~TCPServerSocketParent() {}
+TCPServerSocketParent::~TCPServerSocketParent() = default;
 
 void TCPServerSocketParent::Init() {
   NS_ENSURE_SUCCESS_VOID(mServerSocket->Init());

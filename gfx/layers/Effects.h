@@ -181,12 +181,12 @@ struct EffectComponentAlpha : public TexturedEffect {
 };
 
 struct EffectSolidColor : public Effect {
-  explicit EffectSolidColor(const gfx::Color& aColor)
+  explicit EffectSolidColor(const gfx::DeviceColor& aColor)
       : Effect(EffectTypes::SOLID_COLOR), mColor(aColor) {}
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  gfx::Color mColor;
+  gfx::DeviceColor mColor;
 };
 
 struct EffectChain {

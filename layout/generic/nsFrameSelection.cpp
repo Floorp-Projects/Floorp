@@ -344,7 +344,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mEndSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mAppendStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mUnselectCellOnMouseUp)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaintainRange)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaintainedRange.mRange)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLimiter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -363,7 +363,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mEndSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mAppendStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mUnselectCellOnMouseUp)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaintainRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaintainedRange.mRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLimiter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -976,18 +976,12 @@ nsresult nsFrameSelection::GetFrameFromLevel(nsIFrame* aFrameIn,
 
 nsresult nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount) {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
-
-  mMaintainedAmount = aAmount;
-
-  const nsRange* anchorFocusRange =
-      mDomSelections[index]->GetAnchorFocusRange();
-  if (anchorFocusRange && aAmount != eSelectNoAmount) {
-    mMaintainRange = anchorFocusRange->CloneRange();
-    return NS_OK;
+  if (!mDomSelections[index]) {
+    return NS_ERROR_NULL_POINTER;
   }
 
-  mMaintainRange = nullptr;
+  mMaintainedRange.MaintainAnchorFocusRange(*mDomSelections[index], aAmount);
+
   return NS_OK;
 }
 
@@ -1066,21 +1060,23 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent* aNode,
   SetCaretBidiLevel(clickInFrame->GetEmbeddingLevel());
 }
 
-bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
-                                                    int32_t aOffset) {
-  if (!mMaintainRange) return false;
+bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
+    const nsIContent* aContent, const int32_t aOffset,
+    Selection& aNormalSelection) const {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
+  if (!mRange) {
+    return false;
+  }
 
   if (!aContent) {
     return false;
   }
 
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return false;
-
-  nsINode* rangeStartNode = mMaintainRange->GetStartContainer();
-  nsINode* rangeEndNode = mMaintainRange->GetEndContainer();
-  int32_t rangeStartOffset = mMaintainRange->StartOffset();
-  int32_t rangeEndOffset = mMaintainRange->EndOffset();
+  nsINode* rangeStartNode = mRange->GetStartContainer();
+  nsINode* rangeEndNode = mRange->GetEndContainer();
+  int32_t rangeStartOffset = mRange->StartOffset();
+  int32_t rangeEndOffset = mRange->EndOffset();
 
   const Maybe<int32_t> relToStart = nsContentUtils::ComparePoints(
       rangeStartNode, rangeStartOffset, aContent, aOffset);
@@ -1103,21 +1099,81 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
   // If aContent/aOffset is inside the maintained selection, or if it is on the
   // "anchor" side of the maintained selection, we need to do something.
   if ((*relToStart < 0 && *relToEnd > 0) ||
-      (*relToStart > 0 && mDomSelections[index]->GetDirection() == eDirNext) ||
-      (*relToEnd < 0 &&
-       mDomSelections[index]->GetDirection() == eDirPrevious)) {
+      (*relToStart > 0 && aNormalSelection.GetDirection() == eDirNext) ||
+      (*relToEnd < 0 && aNormalSelection.GetDirection() == eDirPrevious)) {
     // Set the current range to the maintained range.
-    mDomSelections[index]->ReplaceAnchorFocusRange(mMaintainRange);
+    aNormalSelection.ReplaceAnchorFocusRange(mRange);
     if (*relToStart < 0 && *relToEnd > 0) {
       // We're inside the maintained selection, just keep it selected.
       return true;
     }
     // Reverse the direction of the selection so that the anchor will be on the
     // far side of the maintained selection, relative to aContent/aOffset.
-    mDomSelections[index]->SetDirection(*relToStart > 0 ? eDirPrevious
-                                                        : eDirNext);
+    aNormalSelection.SetDirection(*relToStart > 0 ? eDirPrevious : eDirNext);
   }
   return false;
+}
+
+void nsFrameSelection::MaintainedRange::AdjustContentOffsets(
+    nsIFrame::ContentOffsets& aOffsets, const bool aScrollViewStop) const {
+  // Adjust offsets according to maintained amount
+  if (mRange && mAmount != eSelectNoAmount) {
+    nsINode* rangenode = mRange->GetStartContainer();
+    int32_t rangeOffset = mRange->StartOffset();
+    const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
+        rangenode, rangeOffset, aOffsets.content, aOffsets.offset);
+    if (NS_WARN_IF(!relativePosition)) {
+      // Potentially handle this properly when Selection across Shadow DOM
+      // boundary is implemented
+      // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+      return;
+    }
+
+    nsDirection direction = *relativePosition > 0 ? eDirPrevious : eDirNext;
+    nsSelectionAmount amount = mAmount;
+    if (amount == eSelectBeginLine && direction == eDirNext) {
+      amount = eSelectEndLine;
+    }
+
+    int32_t offset;
+    nsIFrame* frame = GetFrameForNodeOffset(aOffsets.content, aOffsets.offset,
+                                            CARET_ASSOCIATE_AFTER, &offset);
+
+    if (frame && amount == eSelectWord && direction == eDirPrevious) {
+      // To avoid selecting the previous word when at start of word,
+      // first move one character forward.
+      nsPeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
+                                 nsPoint(0, 0), false, aScrollViewStop, false,
+                                 false, false);
+      if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
+        frame = charPos.mResultFrame;
+        offset = charPos.mContentOffset;
+      }
+    }
+
+    nsPeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0), false,
+                           aScrollViewStop, false, false, false);
+
+    if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
+      aOffsets.content = pos.mResultContent;
+      aOffsets.offset = pos.mContentOffset;
+    }
+  }
+}
+
+void nsFrameSelection::MaintainedRange::MaintainAnchorFocusRange(
+    const Selection& aNormalSelection, const nsSelectionAmount aAmount) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
+  mAmount = aAmount;
+
+  const nsRange* anchorFocusRange = aNormalSelection.GetAnchorFocusRange();
+  if (anchorFocusRange && aAmount != eSelectNoAmount) {
+    mRange = anchorFocusRange->CloneRange();
+    return;
+  }
+
+  mRange = nullptr;
 }
 
 nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
@@ -1130,7 +1186,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
   InvalidateDesiredPos();
 
   if (aFocusMode != FocusMode::kExtendSelection) {
-    mMaintainRange = nullptr;
+    mMaintainedRange.mRange = nullptr;
     if (!IsValidSelectionPoint(aNewFocus)) {
       mAncestorLimiter = nullptr;
     }
@@ -1141,12 +1197,18 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
     BidiLevelFromClick(aNewFocus, aContentOffset);
     SetChangeReasons(nsISelectionListener::MOUSEDOWN_REASON +
                      nsISelectionListener::DRAG_REASON);
-    if ((aFocusMode == FocusMode::kExtendSelection) &&
-        AdjustForMaintainedSelection(aNewFocus, aContentOffset))
-      return NS_OK;  // shift clicked to maintained selection. rejected.
 
-    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    AutoPrepareFocusRange prep(mDomSelections[index],
+    const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    RefPtr<Selection> selection = mDomSelections[index];
+    MOZ_ASSERT(selection);
+
+    if ((aFocusMode == FocusMode::kExtendSelection) &&
+        mMaintainedRange.AdjustNormalSelection(aNewFocus, aContentOffset,
+                                               *selection)) {
+      return NS_OK;  // shift clicked to maintained selection. rejected.
+    }
+
+    AutoPrepareFocusRange prep(selection,
                                aFocusMode == FocusMode::kMultiRangeSelection);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aHint,
                      aFocusMode);
@@ -1173,52 +1235,16 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
       newFrame->GetContentOffsetsFromPoint(newPoint);
   if (!offsets.content) return;
 
-  if (newFrame->IsSelected() &&
-      AdjustForMaintainedSelection(offsets.content, offsets.offset))
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  RefPtr<Selection> selection = mDomSelections[index];
+  if (newFrame->IsSelected() && selection &&
+      mMaintainedRange.AdjustNormalSelection(offsets.content, offsets.offset,
+                                             *selection)) {
     return;
-
-  // Adjust offsets according to maintained amount
-  if (mMaintainRange && mMaintainedAmount != eSelectNoAmount) {
-    nsINode* rangenode = mMaintainRange->GetStartContainer();
-    int32_t rangeOffset = mMaintainRange->StartOffset();
-    const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
-        rangenode, rangeOffset, offsets.content, offsets.offset);
-    if (NS_WARN_IF(!relativePosition)) {
-      // Potentially handle this properly when Selection across Shadow DOM
-      // boundary is implemented
-      // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
-      return;
-    }
-
-    nsDirection direction = *relativePosition > 0 ? eDirPrevious : eDirNext;
-    nsSelectionAmount amount = mMaintainedAmount;
-    if (amount == eSelectBeginLine && direction == eDirNext)
-      amount = eSelectEndLine;
-
-    int32_t offset;
-    nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset,
-                                            CARET_ASSOCIATE_AFTER, &offset);
-
-    if (frame && amount == eSelectWord && direction == eDirPrevious) {
-      // To avoid selecting the previous word when at start of word,
-      // first move one character forward.
-      nsPeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
-                                 nsPoint(0, 0), false, mLimiter != nullptr,
-                                 false, false, false);
-      if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
-        frame = charPos.mResultFrame;
-        offset = charPos.mContentOffset;
-      }
-    }
-
-    nsPeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0), false,
-                           mLimiter != nullptr, false, false, false);
-
-    if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
-      offsets.content = pos.mResultContent;
-      offsets.offset = pos.mContentOffset;
-    }
   }
+
+  const bool scrollViewStop = mLimiter != nullptr;
+  mMaintainedRange.AdjustContentOffsets(offsets, scrollViewStop);
 
   HandleClick(offsets.content, offsets.offset, offsets.offset,
               FocusMode::kExtendSelection, offsets.associate);

@@ -41,7 +41,10 @@ void AppendToString(std::stringstream& aStream, const void* p,
 void AppendToString(std::stringstream& aStream, ScrollableLayerGuid::ViewID n,
                     const char* pfx = "", const char* sfx = "");
 
-void AppendToString(std::stringstream& aStream, const gfx::Color& c,
+void AppendToString(std::stringstream& aStream, const gfx::sRGBColor& c,
+                    const char* pfx = "", const char* sfx = "");
+
+void AppendToString(std::stringstream& aStream, const gfx::DeviceColor& c,
                     const char* pfx = "", const char* sfx = "");
 
 void AppendToString(std::stringstream& aStream, const nsPoint& p,

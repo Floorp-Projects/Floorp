@@ -2760,7 +2760,12 @@ toolbar#nav-bar {
                 options.browserArgs.extend(['--jsconsole'])
 
             if options.jsdebugger:
-                options.browserArgs.extend(['-jsdebugger', '-wait-for-jsdebugger'])
+                options.browserArgs.extend(['-wait-for-jsdebugger', '-jsdebugger'])
+
+            # -jsdebugger takes a binary path as an optional argument.
+            # Append jsdebuggerPath right after `-jsdebugger`.
+            if options.jsdebuggerPath:
+                options.browserArgs.extend([options.jsdebuggerPath])
 
             # Remove the leak detection file so it can't "leak" to the tests run.
             # The file is not there if leak logging was not enabled in the

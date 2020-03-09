@@ -21,6 +21,7 @@ const {
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
  * @typedef {import("../@types/perf").Presets} Presets
+ * @typedef {import("../@types/perf").PanelWindow} PanelWindow
  */
 
 /**
@@ -230,6 +231,22 @@ exports.stopProfilerAndDiscardProfile = () => {
   return async (dispatch, getState) => {
     const perfFront = selectors.getPerfFront(getState());
     dispatch(changeRecordingState("request-to-stop-profiler"));
-    perfFront.stopProfilerAndDiscardProfile();
+
+    try {
+      await perfFront.stopProfilerAndDiscardProfile();
+    } catch (error) {
+      /** @type {any} */
+      const anyWindow = window;
+      /** @type {PanelWindow} - Coerce the window into the PanelWindow. */
+      const { gIsPanelDestroyed } = anyWindow;
+
+      if (gIsPanelDestroyed) {
+        // This error is most likely "Connection closed, pending request" as the
+        // command can race with closing the panel. Do not report an error. It's
+        // most likely fine.
+      } else {
+        throw error;
+      }
+    }
   };
 };

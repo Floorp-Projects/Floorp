@@ -105,6 +105,8 @@ class MacOSFontEntry : public gfxFontEntry {
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {
+  using FontFamilyListEntry = mozilla::dom::SystemFontListEntry;
+
  public:
   static gfxMacPlatformFontList* PlatformFontList() {
     return static_cast<gfxMacPlatformFontList*>(sPlatformFontList);
@@ -146,7 +148,7 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
     kTextSizeSystemFontFamily = 2,    // name of 'system' font at text sizes
     kDisplaySizeSystemFontFamily = 3  // 'system' font at display sizes
   };
-  void ReadSystemFontList(nsTArray<mozilla::dom::SystemFontListEntry>* aList);
+  void ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList);
 
  protected:
   FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;

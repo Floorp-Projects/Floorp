@@ -1,11 +1,16 @@
 import json
+import os
 from contextlib import contextmanager
 from functools import partial
+from textwrap import dedent
 
+import pytest
 from click.testing import CliRunner
 from pip._vendor.packaging.version import Version
 from pip._vendor.pkg_resources import Requirement
 from pytest import fixture
+
+from .constants import MINIMAL_WHEELS_PATH
 
 from piptools._compat import (
     InstallationCandidate,
@@ -14,9 +19,16 @@ from piptools._compat import (
 )
 from piptools.cache import DependencyCache
 from piptools.exceptions import NoCandidateFound
+from piptools.repositories import PyPIRepository
 from piptools.repositories.base import BaseRepository
 from piptools.resolver import Resolver
-from piptools.utils import as_tuple, key_from_req, make_install_requirement
+from piptools.utils import (
+    as_tuple,
+    is_url_requirement,
+    key_from_ireq,
+    key_from_req,
+    make_install_requirement,
+)
 
 
 class FakeRepository(BaseRepository):
@@ -40,25 +52,22 @@ class FakeRepository(BaseRepository):
 
         versions = list(
             ireq.specifier.filter(
-                self.index[key_from_req(ireq.req)], prereleases=prereleases
+                self.index[key_from_ireq(ireq)], prereleases=prereleases
             )
         )
         if not versions:
             tried_versions = [
                 InstallationCandidate(ireq.name, version, "https://fake.url.foo")
-                for version in self.index[key_from_req(ireq.req)]
+                for version in self.index[key_from_ireq(ireq)]
             ]
             raise NoCandidateFound(ireq, tried_versions, ["https://fake.url.foo"])
         best_version = max(versions, key=Version)
         return make_install_requirement(
-            key_from_req(ireq.req),
-            best_version,
-            ireq.extras,
-            constraint=ireq.constraint,
+            key_from_ireq(ireq), best_version, ireq.extras, constraint=ireq.constraint
         )
 
     def get_dependencies(self, ireq):
-        if ireq.editable:
+        if ireq.editable or is_url_requirement(ireq):
             return self.editables[str(ireq.link)]
 
         name, version, extras = as_tuple(ireq)
@@ -94,8 +103,12 @@ class FakeInstalledDistribution(object):
     def requires(self):
         return self.deps
 
-    def as_requirement(self):
-        return self.req
+
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        # Mark network tests as flaky
+        if item.get_closest_marker("network") and "CI" in os.environ:
+            item.add_marker(pytest.mark.flaky(reruns=3, reruns_delay=2))
 
 
 @fixture
@@ -106,6 +119,14 @@ def fake_dist():
 @fixture
 def repository():
     return FakeRepository()
+
+
+@fixture
+def pypi_repository(tmpdir):
+    return PyPIRepository(
+        ["--index-url", PyPIRepository.DEFAULT_INDEX_URL],
+        cache_dir=str(tmpdir / "pypi-repo"),
+    )
 
 
 @fixture
@@ -147,3 +168,56 @@ def runner():
 def tmpdir_cwd(tmpdir):
     with tmpdir.as_cwd():
         yield tmpdir
+
+
+@pytest.fixture
+def make_pip_conf(tmpdir, monkeypatch):
+    created_paths = []
+
+    def _make_pip_conf(content):
+        pip_conf_file = "pip.conf" if os.name != "nt" else "pip.ini"
+        path = (tmpdir / pip_conf_file).strpath
+
+        with open(path, "w") as f:
+            f.write(content)
+
+        monkeypatch.setenv("PIP_CONFIG_FILE", path)
+
+        created_paths.append(path)
+        return path
+
+    try:
+        yield _make_pip_conf
+    finally:
+        for path in created_paths:
+            os.remove(path)
+
+
+@pytest.fixture
+def pip_conf(make_pip_conf):
+    return make_pip_conf(
+        dedent(
+            """\
+            [global]
+            no-index = true
+            find-links = {wheels_path}
+            """.format(
+                wheels_path=MINIMAL_WHEELS_PATH
+            )
+        )
+    )
+
+
+@pytest.fixture
+def pip_with_index_conf(make_pip_conf):
+    return make_pip_conf(
+        dedent(
+            """\
+            [global]
+            index-url = http://example.com
+            find-links = {wheels_path}
+            """.format(
+                wheels_path=MINIMAL_WHEELS_PATH
+            )
+        )
+    )

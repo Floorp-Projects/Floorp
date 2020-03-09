@@ -111,7 +111,7 @@ class Translator {
 };
 
 struct ColorPatternStorage {
-  Color mColor;
+  DeviceColor mColor;
 };
 
 struct LinearGradientPatternStorage {

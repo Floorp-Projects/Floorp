@@ -83,12 +83,12 @@ static const Float BOX_BORDER_OPACITY = 0.5;
 static RefPtr<DrawTarget> gGlyphDrawTarget;
 static RefPtr<SourceSurface> gGlyphMask;
 static RefPtr<SourceSurface> gGlyphAtlas;
-static Color gGlyphColor;
+static DeviceColor gGlyphColor;
 
 /**
  * Generates a new colored mini-font atlas from the mini-font mask.
  */
-static bool MakeGlyphAtlas(const Color& aColor) {
+static bool MakeGlyphAtlas(const DeviceColor& aColor) {
   gGlyphAtlas = nullptr;
   if (!gGlyphDrawTarget) {
     gGlyphDrawTarget =
@@ -123,10 +123,10 @@ static bool MakeGlyphAtlas(const Color& aColor) {
  * it.
  */
 static inline already_AddRefed<SourceSurface> GetGlyphAtlas(
-    const Color& aColor) {
+    const DeviceColor& aColor) {
   // Get the opaque color, ignoring any transparency which will be handled
   // later.
-  Color color(aColor.r, aColor.g, aColor.b);
+  DeviceColor color(aColor.r, aColor.g, aColor.b);
   if ((gGlyphAtlas && gGlyphColor == color) || MakeGlyphAtlas(color)) {
     return do_AddRef(gGlyphAtlas);
   }
@@ -210,7 +210,8 @@ static already_AddRefed<SourceSurface> MakeWRGlyphAtlas(const Matrix* aMat) {
   if (!mask) {
     return nullptr;
   }
-  dt->MaskSurface(ColorPattern(Color(1.0f, 1.0f, 1.0f)), mask, Point(0, 0));
+  dt->MaskSurface(ColorPattern(DeviceColor::MaskOpaqueWhite()), mask,
+                  Point(0, 0));
   return dt->Snapshot();
 }
 
@@ -321,7 +322,8 @@ static already_AddRefed<SourceSurface> GetWRGlyphAtlas(DrawTarget& aDrawTarget,
 
 static void DrawHexChar(uint32_t aDigit, Float aLeft, Float aTop,
                         DrawTarget& aDrawTarget, SourceSurface* aAtlas,
-                        const Color& aColor, const Matrix* aMat = nullptr) {
+                        const DeviceColor& aColor,
+                        const Matrix* aMat = nullptr) {
   Rect dest(aLeft, aTop, MINIFONT_WIDTH, MINIFONT_HEIGHT);
   if (aDrawTarget.GetBackendType() == BackendType::WEBRENDER_TEXT) {
     // For WR, we need to get the image key assigned to the given WR layer
@@ -393,9 +395,9 @@ void gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar, const Rect& aRect,
 
   // If we're currently drawing with some kind of pattern, we just draw the
   // missing-glyph data in black.
-  Color color = aPattern.GetType() == PatternType::COLOR
-                    ? static_cast<const ColorPattern&>(aPattern).mColor
-                    : ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f));
+  DeviceColor color = aPattern.GetType() == PatternType::COLOR
+                          ? static_cast<const ColorPattern&>(aPattern).mColor
+                          : ToDeviceColor(sRGBColor::OpaqueBlack());
 
   // Stroke a rectangle so that the stroke's left edge is inset one pixel
   // from the left edge of the glyph box and the stroke's right edge

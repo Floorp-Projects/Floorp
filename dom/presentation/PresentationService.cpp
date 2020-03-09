@@ -244,7 +244,7 @@ PresentationDeviceRequest::Cancel(nsresult aReason) {
 
 NS_IMPL_ISUPPORTS(PresentationService, nsIPresentationService, nsIObserver)
 
-PresentationService::PresentationService() {}
+PresentationService::PresentationService() = default;
 
 PresentationService::~PresentationService() { HandleShutdown(); }
 

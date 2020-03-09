@@ -3,15 +3,51 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag, PrimitiveFlags};
-use api::PipelineId;
+use api::{PipelineId, ApiHitTester};
 use api::units::*;
 use crate::clip::{ClipChainId, ClipDataStore, ClipNode, ClipItemKind, ClipStore};
 use crate::clip::{rounded_rectangle_contains_point};
 use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo};
 use std::{ops, u32};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use crate::util::LayoutToWorldFastTransform;
+
+pub struct SharedHitTester {
+    // We don't really need a mutex here. We could do with some sort of
+    // atomic-atomic-ref-counted pointer (an Arc which would let the pointer
+    // be swapped atomically like an AtomicPtr).
+    // In practive this shouldn't cause performance issues, though.
+    hit_tester: Mutex<Arc<HitTester>>,
+}
+
+impl SharedHitTester {
+    pub fn new() -> Self {
+        SharedHitTester {
+            hit_tester: Mutex::new(Arc::new(HitTester::empty())),
+        }
+    }
+
+    pub fn get_ref(&self) -> Arc<HitTester> {
+        let guard = self.hit_tester.lock().unwrap();
+        Arc::clone(&*guard)
+    }
+
+    pub(crate) fn update(&self, new_hit_tester: Arc<HitTester>) {
+        let mut guard = self.hit_tester.lock().unwrap();
+        *guard = new_hit_tester;
+    }
+}
+
+impl ApiHitTester for SharedHitTester {
+    fn hit_test(&self,
+        pipeline_id: Option<PipelineId>,
+        point: WorldPoint,
+        flags: HitTestFlags
+    ) -> HitTestResult {
+        self.get_ref().hit_test(HitTest::new(pipeline_id, point, flags))
+    }
+}
 
 /// A copy of important spatial node data to use during hit testing. This a copy of
 /// data from the SpatialTree that will persist as a new frame is under construction,
@@ -216,6 +252,15 @@ pub struct HitTester {
 }
 
 impl HitTester {
+    pub fn empty() -> Self {
+        HitTester {
+            scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
+            spatial_nodes: Vec::new(),
+            clip_chains: Vec::new(),
+            pipeline_root_nodes: FastHashMap::default(),
+        }
+    }
+
     pub fn new(
         scene: Arc<HitTestingScene>,
         spatial_tree: &SpatialTree,

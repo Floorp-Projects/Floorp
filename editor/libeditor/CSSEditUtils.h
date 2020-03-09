@@ -322,16 +322,6 @@ class CSSEditUtils final {
 
  public:
   /**
-   * Returns aNode itself if it is an element node, or the first ancestors
-   * being an element node if aNode is not one itself.
-   *
-   * @param aNode           [IN] A node
-   * @param aElement        [OUT] The deepest element node containing aNode
-   *                              (possibly aNode itself)
-   */
-  static dom::Element* GetElementContainerOrSelf(nsINode* aNode);
-
-  /**
    * Gets the computed style for a given element.  Can return null.
    */
   static already_AddRefed<nsComputedDOMStyle> GetComputedStyle(

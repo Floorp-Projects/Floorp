@@ -333,6 +333,7 @@ static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
 static bool gUseWaylandVsync = false;
+static bool gUseWaylandUseOpaqueRegion = true;
 static GList* gVisibleWaylandPopupWindows = nullptr;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
@@ -4955,6 +4956,10 @@ wl_region* CreateOpaqueRegionWayland(int aX, int aY, int aWidth, int aHeight,
 }
 
 void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
+  if (!gUseWaylandUseOpaqueRegion) {
+    return;
+  }
+
   wl_surface* surface = moz_gtk_widget_get_wl_surface(GTK_WIDGET(mShell));
   if (!surface) {
     return;
@@ -6690,6 +6695,9 @@ static nsresult initialize_prefs(void) {
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
   gUseWaylandVsync =
       Preferences::GetBool("widget.wayland_vsync.enabled", false);
+  gUseWaylandUseOpaqueRegion =
+      Preferences::GetBool("widget.wayland.use-opaque-region", true);
+
   return NS_OK;
 }
 

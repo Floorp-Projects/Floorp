@@ -327,7 +327,7 @@ class ClearViewPass final : public RenderPassMLGPU {
  private:
   // Note: Not a RefPtr since this would create a cycle.
   RenderViewMLGPU* mView;
-  gfx::Color mColor;
+  gfx::DeviceColor mColor;
   nsTArray<gfx::IntRect> mRects;
 };
 

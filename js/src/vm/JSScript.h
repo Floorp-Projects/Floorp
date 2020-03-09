@@ -2240,7 +2240,7 @@ setterLevel:                                                                  \
   // Access the flag for whether this script has a DebugScript in its realm's
   // map. This should only be used by the DebugScript class.
   MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
-  MUTABLE_FLAG_GETTER_SETTER(doNotRelazify, DoNotRelazify)
+  MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
   MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
   MUTABLE_FLAG_GETTER_SETTER(failedShapeGuard, FailedShapeGuard)
   MUTABLE_FLAG_GETTER_SETTER(hadFrequentBailouts, HadFrequentBailouts)
@@ -2702,25 +2702,11 @@ class JSScript : public js::BaseScript {
     //    inner-functions) should not be relazified as their Scopes may be part
     //    of another scope-chain.
     //  - Generators and async functions may be re-entered in complex ways so
-    //    don't discard bytecode.
+    //    don't discard bytecode. The JIT resume code assumes this.
     //  - Functions with template literals must always return the same object
     //    instance so must not discard it by relazifying.
     return !hasInnerFunctions() && !hasDirectEval() && !isGenerator() &&
            !isAsync() && !hasCallSiteObj();
-  }
-  bool canRelazify() const {
-    // In order to actually relazify we must satisfy additional runtime
-    // conditions:
-    //  - The lazy form must still exist. This is either the original LazyScript
-    //    or the self-hosted script that we cloned from.
-    //  - There must not be any JIT code attached since the relazification
-    //    process does not know how to discard it. In general, the GC should
-    //    discard most JIT code before attempting relazification.
-    //  - Specific subsystems (such as the Debugger) may disable scripts for
-    //    their own reasons.
-    bool lazyAvailable = selfHosted() || u.lazyScript;
-    return isRelazifiable() && lazyAvailable && !hasJitScript() &&
-           !doNotRelazify();
   }
 
   void setLazyScript(js::LazyScript* lazy) { u.lazyScript = lazy; }
@@ -2978,12 +2964,12 @@ class JSScript : public js::BaseScript {
     return getAtom(pc)->asPropertyName();
   }
 
-  JSObject* getObject(size_t index) {
+  JSObject* getObject(size_t index) const {
     MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<JSObject>();
   }
 
-  JSObject* getObject(jsbytecode* pc) {
+  JSObject* getObject(jsbytecode* pc) const {
     MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
     return getObject(GET_UINT32_INDEX(pc));
   }
@@ -3002,18 +2988,18 @@ class JSScript : public js::BaseScript {
     return getScope(GET_UINT32_INDEX(pc));
   }
 
-  inline JSFunction* getFunction(size_t index);
-  inline JSFunction* getFunction(jsbytecode* pc);
+  inline JSFunction* getFunction(size_t index) const;
+  inline JSFunction* getFunction(jsbytecode* pc) const;
 
-  inline js::RegExpObject* getRegExp(size_t index);
-  inline js::RegExpObject* getRegExp(jsbytecode* pc);
+  inline js::RegExpObject* getRegExp(size_t index) const;
+  inline js::RegExpObject* getRegExp(jsbytecode* pc) const;
 
-  js::BigInt* getBigInt(size_t index) {
+  js::BigInt* getBigInt(size_t index) const {
     MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<js::BigInt>();
   }
 
-  js::BigInt* getBigInt(jsbytecode* pc) {
+  js::BigInt* getBigInt(jsbytecode* pc) const {
     MOZ_ASSERT(containsPC(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_BIGINT);
     return getBigInt(GET_UINT32_INDEX(pc));
@@ -3059,11 +3045,11 @@ class JSScript : public js::BaseScript {
   class AutoDelazify {
     JS::RootedScript script_;
     JSContext* cx_;
-    bool oldDoNotRelazify_;
+    bool oldAllowRelazify_ = false;
 
    public:
     explicit AutoDelazify(JSContext* cx, JS::HandleFunction fun = nullptr)
-        : script_(cx), cx_(cx), oldDoNotRelazify_(false) {
+        : script_(cx), cx_(cx) {
       holdScript(fun);
     }
 

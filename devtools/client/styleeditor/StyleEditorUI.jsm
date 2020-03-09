@@ -376,6 +376,36 @@ StyleEditorUI.prototype = {
     return this._seenSheets.get(styleSheet);
   },
 
+  _getInlineStyleSheetsCount() {
+    return this.editors.filter(editor => !editor.styleSheet.href).length;
+  },
+
+  _getNewStyleSheetsCount() {
+    return this.editors.filter(editor => editor.isNew).length;
+  },
+
+  /**
+   * Finds the index to be shown in the Style Editor for inline or
+   * user-created style sheets, returns undefined if not of either type.
+   *
+   * @param {StyleSheet}  styleSheet
+   *        Object representing stylesheet
+   * @param {Boolean} isNew
+   *         Optional if stylesheet is a new sheet created by user
+   * @return {(Number|undefined)}
+   *         Optional Integer representing the index of the current stylesheet
+   *         among all stylesheets of its type (inline or user-created)
+   */
+  _getNextFriendlyIndex: function(styleSheet, isNew) {
+    if (styleSheet.href) {
+      return undefined;
+    }
+
+    return isNew
+      ? this._getNewStyleSheetsCount()
+      : this._getInlineStyleSheetsCount();
+  },
+
   /**
    * Add a new editor to the UI for a source.
    *
@@ -401,7 +431,8 @@ StyleEditorUI.prototype = {
       file,
       isNew,
       this._walker,
-      this._highlighter
+      this._highlighter,
+      this._getNextFriendlyIndex(styleSheet, isNew)
     );
 
     editor.on("property-change", this._summaryChange.bind(this, editor));

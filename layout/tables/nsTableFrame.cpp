@@ -6785,7 +6785,7 @@ static void AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
     return;
   }
 
-  const auto kTransparent = wr::ToColorF(gfx::Color(0., 0., 0., 0.));
+  const auto kTransparent = wr::ToColorF(gfx::DeviceColor(0., 0., 0., 0.));
   const bool horizontal =
       aBevel.mSide == eSideTop || aBevel.mSide == eSideBottom;
 

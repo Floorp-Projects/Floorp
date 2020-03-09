@@ -1522,10 +1522,10 @@ void GCRuntime::setGCCallback(JSGCCallback callback, void* data) {
   gcCallback.ref() = {callback, data};
 }
 
-void GCRuntime::callGCCallback(JSGCStatus status) const {
+void GCRuntime::callGCCallback(JSGCStatus status, JS::GCReason reason) const {
   const auto& callback = gcCallback.ref();
   MOZ_ASSERT(callback.op);
-  callback.op(rt->mainContextFromOwnThread(), status, callback.data);
+  callback.op(rt->mainContextFromOwnThread(), status, reason, callback.data);
 }
 
 void GCRuntime::setObjectsTenuredCallback(JSObjectsTenuredCallback callback,
@@ -6877,15 +6877,17 @@ static void UnscheduleZones(GCRuntime* gc) {
 
 class js::gc::AutoCallGCCallbacks {
   GCRuntime& gc_;
+  JS::GCReason reason_;
 
  public:
-  explicit AutoCallGCCallbacks(GCRuntime& gc) : gc_(gc) {
-    gc_.maybeCallGCCallback(JSGC_BEGIN);
+  explicit AutoCallGCCallbacks(GCRuntime& gc, JS::GCReason reason)
+      : gc_(gc), reason_(reason) {
+    gc_.maybeCallGCCallback(JSGC_BEGIN, reason);
   }
-  ~AutoCallGCCallbacks() { gc_.maybeCallGCCallback(JSGC_END); }
+  ~AutoCallGCCallbacks() { gc_.maybeCallGCCallback(JSGC_END, reason_); }
 };
 
-void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
+void GCRuntime::maybeCallGCCallback(JSGCStatus status, JS::GCReason reason) {
   if (!gcCallback.ref().op) {
     return;
   }
@@ -6903,7 +6905,7 @@ void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
 
   gcCallbackDepth++;
 
-  callGCCallback(status);
+  callGCCallback(status, reason);
 
   MOZ_ASSERT(gcCallbackDepth != 0);
   gcCallbackDepth--;
@@ -6932,7 +6934,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
   // Note that GC callbacks are allowed to re-enter GC.
-  AutoCallGCCallbacks callCallbacks(*this);
+  AutoCallGCCallbacks callCallbacks(*this, reason);
 
   // Increase slice budget for long running collections before it is recorded by
   // AutoGCSlice.

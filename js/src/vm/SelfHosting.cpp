@@ -3111,10 +3111,21 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
                                sourceObject)) {
     return false;
   }
+
   MOZ_ASSERT(targetFun->hasBytecode());
+  RootedScript targetScript(cx, targetFun->nonLazyScript());
+
+  // Relazifiable self-hosted function may be relazified later into a
+  // SelfHostedLazyScript. It is important to note that this only applies to
+  // named self-hosted entry points (that use this clone method). Inner
+  // functions clones used by self-hosted are never relazified, even if they
+  // would be able to in normal script.
+  if (targetScript->isRelazifiable()) {
+    targetScript->setAllowRelazify();
+  }
 
   MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
-  MOZ_ASSERT(sourceScript->hasRest() == targetFun->baseScript()->hasRest());
+  MOZ_ASSERT(sourceScript->hasRest() == targetScript->hasRest());
   MOZ_ASSERT(targetFun->strict(), "Self-hosted builtins must be strict");
 
   // The target function might have been relazified after its flags changed.

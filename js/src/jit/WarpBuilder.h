@@ -38,6 +38,10 @@ namespace jit {
   _(Int32)                  \
   _(Double)                 \
   _(ResumeIndex)            \
+  _(BigInt)                 \
+  _(String)                 \
+  _(Symbol)                 \
+  _(RegExp)                 \
   _(Pop)                    \
   _(PopN)                   \
   _(Dup)                    \
@@ -61,6 +65,7 @@ namespace jit {
   _(Mul)                    \
   _(Div)                    \
   _(Mod)                    \
+  _(Pow)                    \
   _(BitAnd)                 \
   _(BitOr)                  \
   _(BitXor)                 \
@@ -85,6 +90,24 @@ namespace jit {
   _(Default)                \
   _(Coalesce)               \
   _(Goto)                   \
+  _(DebugCheckSelfHosted)   \
+  _(DynamicImport)          \
+  _(Not)                    \
+  _(ToString)               \
+  _(DefVar)                 \
+  _(DefLet)                 \
+  _(DefConst)               \
+  _(DefFun)                 \
+  _(BindVar)                \
+  _(MutateProto)            \
+  _(Callee)                 \
+  _(ClassConstructor)       \
+  _(DerivedConstructor)     \
+  _(ToAsyncIter)            \
+  _(ToId)                   \
+  _(Typeof)                 \
+  _(TypeofExpr)             \
+  _(SetRval)                \
   _(Return)                 \
   _(RetRval)
 
@@ -147,6 +170,9 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBinaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildTestOp(BytecodeLocation loc);
+  MOZ_MUST_USE bool buildDefLexicalOp(BytecodeLocation loc);
+
+  bool usesEnvironmentChain() const;
 
 #define BUILD_OP(OP) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
   WARP_OPCODE_LIST(BUILD_OP)

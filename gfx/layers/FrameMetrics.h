@@ -924,10 +924,10 @@ struct ScrollMetadata {
   ViewID GetScrollParentId() const { return mScrollParentId; }
 
   void SetScrollParentId(ViewID aParentId) { mScrollParentId = aParentId; }
-  const gfx::Color& GetBackgroundColor() const { return mBackgroundColor; }
-  void SetBackgroundColor(const gfx::Color& aBackgroundColor) {
-    mBackgroundColor = aBackgroundColor;
+  const gfx::DeviceColor& GetBackgroundColor() const {
+    return mBackgroundColor;
   }
+  void SetBackgroundColor(const gfx::sRGBColor& aBackgroundColor);
   const nsCString& GetContentDescription() const { return mContentDescription; }
   void SetContentDescription(const nsCString& aContentDescription) {
     mContentDescription = aContentDescription;
@@ -1005,7 +1005,7 @@ struct ScrollMetadata {
   ViewID mScrollParentId;
 
   // The background color to use when overscrolling.
-  gfx::Color mBackgroundColor;
+  gfx::DeviceColor mBackgroundColor;
 
   // A description of the content element corresponding to this frame.
   // This is empty unless this is a scrollable layer and the

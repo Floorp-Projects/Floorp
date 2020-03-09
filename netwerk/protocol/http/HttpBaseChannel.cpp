@@ -689,8 +689,7 @@ HttpBaseChannel::GetContentDispositionFilename(
     return NS_OK;
   }
 
-  return NS_GetFilenameFromDisposition(aContentDispositionFilename, header,
-                                       mURI);
+  return NS_GetFilenameFromDisposition(aContentDispositionFilename, header);
 }
 
 NS_IMETHODIMP

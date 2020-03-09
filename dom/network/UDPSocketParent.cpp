@@ -32,7 +32,7 @@ UDPSocketParent::UDPSocketParent(PBackgroundParent* aManager)
 UDPSocketParent::UDPSocketParent(PNeckoParent* aManager)
     : mBackgroundManager(nullptr), mIPCOpen(true) {}
 
-UDPSocketParent::~UDPSocketParent() {}
+UDPSocketParent::~UDPSocketParent() = default;
 
 bool UDPSocketParent::Init(nsIPrincipal* aPrincipal,
                            const nsACString& aFilter) {

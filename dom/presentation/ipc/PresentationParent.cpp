@@ -87,9 +87,9 @@ NS_IMPL_ISUPPORTS(PresentationParent, nsIPresentationAvailabilityListener,
                   nsIPresentationSessionListener,
                   nsIPresentationRespondingListener)
 
-PresentationParent::PresentationParent() {}
+PresentationParent::PresentationParent() = default;
 
-/* virtual */ PresentationParent::~PresentationParent() {}
+/* virtual */ PresentationParent::~PresentationParent() = default;
 
 bool PresentationParent::Init(ContentParentId aContentParentId) {
   MOZ_ASSERT(!mService);
@@ -343,7 +343,7 @@ PresentationRequestParent::PresentationRequestParent(
     nsIPresentationService* aService, ContentParentId aContentParentId)
     : mService(aService), mChildId(aContentParentId) {}
 
-PresentationRequestParent::~PresentationRequestParent() {}
+PresentationRequestParent::~PresentationRequestParent() = default;
 
 void PresentationRequestParent::ActorDestroy(ActorDestroyReason aWhy) {
   mActorDestroyed = true;

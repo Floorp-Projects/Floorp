@@ -38,7 +38,7 @@ ScriptLoadHandler::ScriptLoadHandler(ScriptLoader* aScriptLoader,
   MOZ_ASSERT(mRequest->IsLoading());
 }
 
-ScriptLoadHandler::~ScriptLoadHandler() {}
+ScriptLoadHandler::~ScriptLoadHandler() = default;
 
 NS_IMPL_ISUPPORTS(ScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
 

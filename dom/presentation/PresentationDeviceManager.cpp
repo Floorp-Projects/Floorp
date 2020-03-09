@@ -25,7 +25,7 @@ NS_IMPL_ISUPPORTS(PresentationDeviceManager, nsIPresentationDeviceManager,
                   nsIPresentationDeviceListener, nsIObserver,
                   nsISupportsWeakReference)
 
-PresentationDeviceManager::PresentationDeviceManager() {}
+PresentationDeviceManager::PresentationDeviceManager() = default;
 
 PresentationDeviceManager::~PresentationDeviceManager() {
   UnloadDeviceProviders();

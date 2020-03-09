@@ -595,9 +595,9 @@ void FilterNodeSoftware::Draw(DrawTarget* aDrawTarget, const Rect& aSourceRect,
   if (result->GetFormat() == SurfaceFormat::A8) {
     // Interpret the result as having implicitly black color channels.
     aDrawTarget->PushClipRect(renderedDestRect);
-    aDrawTarget->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), result,
-                             Point(outputRect.TopLeft()) + sourceToDestOffset,
-                             aOptions);
+    aDrawTarget->MaskSurface(
+        ColorPattern(DeviceColor::MaskOpaqueBlack()), result,
+        Point(outputRect.TopLeft()) + sourceToDestOffset, aOptions);
     aDrawTarget->PopClip();
   } else {
     aDrawTarget->DrawSurface(result, renderedDestRect,
@@ -1530,13 +1530,13 @@ IntRect FilterNodeColorMatrixSoftware::GetOutputRectInRect(
 }
 
 void FilterNodeFloodSoftware::SetAttribute(uint32_t aIndex,
-                                           const Color& aColor) {
+                                           const DeviceColor& aColor) {
   MOZ_ASSERT(aIndex == ATT_FLOOD_COLOR);
   mColor = aColor;
   Invalidate();
 }
 
-static uint32_t ColorToBGRA(const Color& aColor) {
+static uint32_t ColorToBGRA(const DeviceColor& aColor) {
   union {
     uint32_t color;
     uint8_t components[4];
@@ -1551,7 +1551,7 @@ static uint32_t ColorToBGRA(const Color& aColor) {
   return color;
 }
 
-static SurfaceFormat FormatForColor(Color aColor) {
+static SurfaceFormat FormatForColor(DeviceColor aColor) {
   if (aColor.r == 0 && aColor.g == 0 && aColor.b == 0) {
     return SurfaceFormat::A8;
   }
@@ -3411,7 +3411,7 @@ void FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(
 
 template <typename LightType, typename LightingType>
 void FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(
-    uint32_t aIndex, const Color& aColor) {
+    uint32_t aIndex, const DeviceColor& aColor) {
   MOZ_ASSERT(aIndex == ATT_LIGHTING_COLOR);
   mColor = aColor;
   Invalidate();

@@ -1964,7 +1964,7 @@
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether window.onappinstalled from "W3C Web Manifest" is enabled
@@ -4410,16 +4410,6 @@
 #else
   value: 300000
 #endif
-  mirror: always
-
-- name: javascript.options.experimental.fields
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-- name: javascript.options.experimental.await_fix
-  type: RelaxedAtomicBool
-  value: true
   mirror: always
 
 # Use better error message when accessing property of null or undefined.
@@ -7950,6 +7940,12 @@
 # default to different values on a per-OS basis, and has documentation
 # on what the defaults are and what the numbers mean.
 - name: security.sandbox.content.level
+  type: int32_t
+  value: 0
+  mirror: always
+  do_not_use_directly: true # Consumers should use SandboxSettings to ask.
+
+- name: security.sandbox.socket.process.level
   type: int32_t
   value: 0
   mirror: always

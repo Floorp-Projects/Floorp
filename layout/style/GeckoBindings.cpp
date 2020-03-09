@@ -1766,10 +1766,17 @@ nsAtom* Gecko_Element_ImportedPart(const nsAttrValue* aValue,
   return aValue->GetShadowPartsValue().GetReverse(aPartName);
 }
 
-nsAtom* Gecko_Element_ExportedPart(const nsAttrValue* aValue,
-                                   nsAtom* aPartName) {
+nsAtom** Gecko_Element_ExportedParts(const nsAttrValue* aValue,
+                                     nsAtom* aPartName, size_t* aOutLength) {
   if (aValue->Type() != nsAttrValue::eShadowParts) {
     return nullptr;
   }
-  return aValue->GetShadowPartsValue().Get(aPartName);
+  auto* parts = aValue->GetShadowPartsValue().Get(aPartName);
+  if (!parts) {
+    return nullptr;
+  }
+  *aOutLength = parts->Length();
+  static_assert(sizeof(RefPtr<nsAtom>) == sizeof(nsAtom*));
+  static_assert(alignof(RefPtr<nsAtom>) == alignof(nsAtom*));
+  return reinterpret_cast<nsAtom**>(parts->Elements());
 }

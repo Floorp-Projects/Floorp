@@ -865,7 +865,7 @@ nsresult txMozillaXMLOutput::createHTMLElement(nsAtom* aName,
 txTransformNotifier::txTransformNotifier()
     : mPendingStylesheetCount(0), mInTransform(false) {}
 
-txTransformNotifier::~txTransformNotifier() {}
+txTransformNotifier::~txTransformNotifier() = default;
 
 NS_IMPL_ISUPPORTS(txTransformNotifier, nsIScriptLoaderObserver,
                   nsICSSLoaderObserver)

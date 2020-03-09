@@ -1046,9 +1046,9 @@ void gfxFontEntry::GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo) {
 }
 
 bool gfxFontEntry::GetColorLayersInfo(
-    uint32_t aGlyphId, const mozilla::gfx::Color& aDefaultColor,
+    uint32_t aGlyphId, const mozilla::gfx::DeviceColor& aDefaultColor,
     nsTArray<uint16_t>& aLayerGlyphs,
-    nsTArray<mozilla::gfx::Color>& aLayerColors) {
+    nsTArray<mozilla::gfx::DeviceColor>& aLayerColors) {
   return gfxFontUtils::GetColorGlyphLayers(
       mCOLR, mCPAL, aGlyphId, aDefaultColor, aLayerGlyphs, aLayerColors);
 }

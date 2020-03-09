@@ -147,3 +147,30 @@ def test_pip_install_flags(check_call, cli_flags, expected_install_flags, runner
     assert [args[6:] for args in call_args if args[3] == "install"] == [
         expected_install_flags
     ]
+
+
+@mock.patch("piptools.sync.check_call")
+def test_sync_ask_declined(check_call, runner):
+    """
+    Make sure nothing is installed if the confirmation is declined
+    """
+    with open("requirements.txt", "w") as req_in:
+        req_in.write("small-fake-a==1.10.0")
+
+    runner.invoke(cli, ["--ask"], input="n\n")
+
+    check_call.assert_not_called()
+
+
+@mock.patch("piptools.sync.check_call")
+def test_sync_ask_accepted(check_call, runner):
+    """
+    Make sure pip is called when the confirmation is accepted (even if
+    --dry-run is given)
+    """
+    with open("requirements.txt", "w") as req_in:
+        req_in.write("small-fake-a==1.10.0")
+
+    runner.invoke(cli, ["--ask", "--dry-run"], input="y\n")
+
+    assert check_call.call_count == 2

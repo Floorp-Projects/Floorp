@@ -51,6 +51,11 @@
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar"
                 android:windowSoftInputMode="stateUnspecified|adjustResize">
         </activity>
+        <activity
+                android:name=".SettingsActivity"
+                android:label="Settings"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        </activity>
 
         <service
                 android:name=".ExampleCrashHandler"

@@ -842,7 +842,8 @@ PresShell::PresShell(Document* aDocument)
       mForceUseLegacyKeyCodeAndCharCodeValues(false),
       mInitializedWithKeyPressEventDispatchingBlacklist(false),
       mForceUseLegacyNonPrimaryDispatch(false),
-      mInitializedWithClickEventDispatchingBlacklist(false) {
+      mInitializedWithClickEventDispatchingBlacklist(false),
+      mMouseLocationWasSetBySynthesizedMouseEventForTests(false) {
   MOZ_LOG(gLog, LogLevel::Debug, ("PresShell::PresShell this=%p", this));
   MOZ_ASSERT(aDocument);
 
@@ -4407,7 +4408,7 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) {
     // Nothing to paint, just fill the rect
-    aThebesContext->SetColor(Color::FromABGR(aBackgroundColor));
+    aThebesContext->SetColor(sRGBColor::FromABGR(aBackgroundColor));
     aThebesContext->Fill();
     return NS_OK;
   }
@@ -5072,8 +5073,7 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() {
   // content JS.
   Document* doc = GetDocument();
   BrowsingContext* bc = doc->GetBrowsingContext();
-  if (bc && bc->IsTop() && !bc->HasOpener() &&
-      doc->GetDocumentURI() &&
+  if (bc && bc->IsTop() && !bc->HasOpener() && doc->GetDocumentURI() &&
       NS_IsAboutBlank(doc->GetDocumentURI()) &&
       doc->PrefersColorScheme() == StylePrefersColorScheme::Dark) {
     // Use --in-content-page-background for prefers-color-scheme: dark.
@@ -6091,7 +6091,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     nsIntRect bounds =
         pc->GetVisibleArea().ToOutsidePixels(pc->AppUnitsPerDevPixel());
     bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
-    root->SetColor(Color::FromABGR(bgcolor));
+    root->SetColor(ToDeviceColor(bgcolor));
     root->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(bounds));
     layerManager->SetRoot(root);
   }
@@ -6289,6 +6289,18 @@ void PresShell::DisableNonTestMouseEvents(bool aDisable) {
   sDisableNonTestMouseEvents = aDisable;
 }
 
+bool PresShell::MouseLocationWasSetBySynthesizedMouseEventForTests() const {
+  if (!mPresContext) {
+    return false;
+  }
+  if (mPresContext->IsRoot()) {
+    return mMouseLocationWasSetBySynthesizedMouseEventForTests;
+  }
+  PresShell* rootPresShell = GetRootPresShell();
+  return rootPresShell &&
+         rootPresShell->mMouseLocationWasSetBySynthesizedMouseEventForTests;
+}
+
 void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
   if (!mPresContext) return;
 
@@ -6315,6 +6327,8 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
           nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
+    mMouseLocationWasSetBySynthesizedMouseEventForTests =
+        aEvent->mFlags.mIsSynthesizedForTests;
 #ifdef DEBUG_MOUSE_LOCATION
     if (aEvent->mMessage == eMouseEnterIntoWidget) {
       printf("[ps=%p]got mouse enter for %p\n", this, aEvent->mWidget);
@@ -6333,6 +6347,8 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
     // the mouse exit when the mouse moves from one of our widgets into another.
     mMouseLocation = nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
     mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
+    mMouseLocationWasSetBySynthesizedMouseEventForTests =
+        aEvent->mFlags.mIsSynthesizedForTests;
 #ifdef DEBUG_MOUSE_LOCATION
     printf("[ps=%p]got mouse exit for %p\n", this, aEvent->mWidget);
     printf("[ps=%p]clearing mouse location\n", this);
@@ -6439,6 +6455,17 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
                                 bool aDontRetargetEvents,
                                 nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
+  // If it's synthesized in the parent process and our mouse location was set
+  // by a mouse event which was synthesized for tests because the test does not
+  // want to change `:hover` state with the synthesized mouse event for native
+  // mouse cursor position.
+  if (aGUIEvent->mMessage == eMouseMove &&
+      aGUIEvent->CameFromAnotherProcess() && XRE_IsContentProcess() &&
+      !aGUIEvent->mFlags.mIsSynthesizedForTests &&
+      MouseLocationWasSetBySynthesizedMouseEventForTests() &&
+      aGUIEvent->AsMouseEvent()->mReason == WidgetMouseEvent::eSynthesized) {
+    return NS_OK;
+  }
   EventHandler eventHandler(*this);
   return eventHandler.HandleEvent(aFrameForPresShell, aGUIEvent,
                                   aDontRetargetEvents, aEventStatus);
@@ -10204,11 +10231,11 @@ void ReflowCountMgr::PaintCount(const char* aName,
       fm->SetTextRunRTL(false);
       width = fm->GetWidth(buf, len, drawTarget);
 
-      Color color;
-      Color color2;
+      sRGBColor color;
+      sRGBColor color2;
       if (aColor != 0) {
-        color = Color::FromABGR(aColor);
-        color2 = Color(0.f, 0.f, 0.f);
+        color = sRGBColor::FromABGR(aColor);
+        color2 = sRGBColor(0.f, 0.f, 0.f);
       } else {
         gfx::Float rc = 0.f, gc = 0.f, bc = 0.f;
         if (counter->mCount < 5) {
@@ -10219,14 +10246,14 @@ void ReflowCountMgr::PaintCount(const char* aName,
         } else {
           rc = 1.f;
         }
-        color = Color(rc, gc, bc);
-        color2 = Color(rc / 2, gc / 2, bc / 2);
+        color = sRGBColor(rc, gc, bc);
+        color2 = sRGBColor(rc / 2, gc / 2, bc / 2);
       }
 
       nsRect rect(0, 0, width + 15, height + 15);
       Rect devPxRect =
           NSRectToSnappedRect(rect, appUnitsPerDevPixel, *drawTarget);
-      ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
+      ColorPattern black(ToDeviceColor(sRGBColor::OpaqueBlack()));
       drawTarget->FillRect(devPxRect, black);
 
       aRenderingContext->SetColor(color2);
@@ -10633,7 +10660,7 @@ nsresult PresShell::UpdateImageLockingState() {
   return rv;
 }
 
-PresShell* PresShell::GetRootPresShell() {
+PresShell* PresShell::GetRootPresShell() const {
   if (mPresContext) {
     nsPresContext* rootPresContext = mPresContext->GetRootPresContext();
     if (rootPresContext) {

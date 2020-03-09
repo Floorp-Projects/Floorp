@@ -11,7 +11,7 @@ const TESTCASE_CSS_SOURCE = "body{background-color:red;";
 add_task(async function() {
   const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
-  const editor = await createNew(ui, panel.panelWindow);
+  const editor = await createNewStyleSheet(ui, panel.panelWindow);
   await testInitialState(editor);
 
   const originalHref = editor.styleSheet.href;
@@ -23,26 +23,6 @@ add_task(async function() {
 
   testUpdated(editor, originalHref);
 });
-
-function createNew(ui, panelWindow) {
-  info("Creating a new stylesheet now");
-
-  return new Promise(resolve => {
-    ui.once("editor-added", editor => {
-      editor.getSourceEditor().then(resolve);
-    });
-
-    waitForFocus(function() {
-      // create a new style sheet
-      const newButton = panelWindow.document.querySelector(
-        ".style-editor-newButton"
-      );
-      ok(newButton, "'new' button exists");
-
-      EventUtils.synthesizeMouseAtCenter(newButton, {}, panelWindow);
-    }, panelWindow);
-  });
-}
 
 function onPropertyChange(editor) {
   return new Promise(resolve => {

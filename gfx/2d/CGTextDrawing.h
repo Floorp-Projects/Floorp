@@ -34,13 +34,13 @@ GetCGContextSetFontSmoothingBackgroundColorFunc() {
   return func;
 }
 
-static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor) {
+static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const DeviceColor& aColor) {
   CGFloat components[4] = {aColor.r, aColor.g, aColor.b, aColor.a};
   return CGColorCreate(aColorSpace, components);
 }
 
 static bool SetFontSmoothingBackgroundColor(CGContextRef aCGContext, CGColorSpaceRef aColorSpace,
-                                            const Color& aFontSmoothingBackgroundColor) {
+                                            const DeviceColor& aFontSmoothingBackgroundColor) {
   if (aFontSmoothingBackgroundColor.a > 0) {
     CGContextSetFontSmoothingBackgroundColorFunc setFontSmoothingBGColorFunc =
         GetCGContextSetFontSmoothingBackgroundColorFunc();

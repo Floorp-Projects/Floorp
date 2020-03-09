@@ -61,7 +61,7 @@ class DrawTargetTiled : public DrawTarget {
                   const Point& aDestPoint,
                   const DrawOptions& aOptions = DrawOptions()) override;
   void DrawSurfaceWithShadow(
-      SourceSurface* aSurface, const Point& aDest, const Color& aColor,
+      SourceSurface* aSurface, const Point& aDest, const DeviceColor& aColor,
       const Point& aOffset, Float aSigma,
       CompositionOp aOperator) override { /* Not implemented */
     MOZ_CRASH("GFX: DrawSurfaceWithShadow");

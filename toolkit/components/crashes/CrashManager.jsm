@@ -965,7 +965,7 @@ function CrashStore(storeDir, telemetrySizeKey) {
 CrashStore.prototype = Object.freeze({
   // Maximum number of events to store per day. This establishes a
   // ceiling on the per-type/per-day records that will be stored.
-  HIGH_WATER_DAILY_THRESHOLD: 100,
+  HIGH_WATER_DAILY_THRESHOLD: 500,
 
   /**
    * Reset all data.

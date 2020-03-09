@@ -1,0 +1,28 @@
+name: cron
+
+on:
+  schedule:
+  # Run every day at 00:00 UTC
+  - cron: 0 0 * * *
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        env:
+        - TOXENV: pipmaster
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install tox
+        run: pip install tox
+      - name: Test with tox ${{ matrix.env.TOXENV }}
+        run: tox
+        env: ${{ matrix.env }}

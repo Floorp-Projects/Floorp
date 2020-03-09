@@ -1,3 +1,119 @@
+# 4.5.1 (2020-02-26)
+
+Bug Fixes:
+- Strip line number annotations such as "(line XX)" from file requirements, to prevent diff noise when modifying input requirement files
+([#1075](https://github.com/jazzband/pip-tools/pull/1075)). Thanks @adamchainz
+
+Improved Documentation:
+- Updated `README` example outputs for primary requirement annotations
+([#1072](https://github.com/jazzband/pip-tools/pull/1072)). Thanks @richafrank
+
+# 4.5.0 (2020-02-20)
+
+Features:
+- Primary requirements and VCS dependencies are now get annotated with any source `.in` files and reverse dependencies
+([#1058](https://github.com/jazzband/pip-tools/pull/1058)). Thanks @AndydeCleyre
+
+Bug Fixes:
+- Always use normalized path for cache directory as it is required in newer versions of `pip`
+([#1062](https://github.com/jazzband/pip-tools/pull/1062)). Thanks @kammala
+
+Improved Documentation:
+- Replace outdated link in the `README` with rationale for pinning
+([#1053](https://github.com/jazzband/pip-tools/pull/1053)). Thanks @m-aciek
+
+# 4.4.1 (2020-01-31)
+
+Bug Fixes:
+- Fix a bug where `pip-compile` would keep outdated options from `requirements.txt`
+([#1029](https://github.com/jazzband/pip-tools/pull/1029)). Thanks @atugushev
+- Fix the `No handlers could be found for logger "pip.*"` error by configuring the builtin logging module
+([#1035](https://github.com/jazzband/pip-tools/pull/1035)). Thanks @vphilippon
+- Fix a bug where dependencies of relevant constraints may be missing from output file
+([#1037](https://github.com/jazzband/pip-tools/pull/1037)). Thanks @jeevb
+- Upgrade the minimal version of `click` from `6.0` to `7.0` version in `setup.py`
+([#1039](https://github.com/jazzband/pip-tools/pull/1039)). Thanks @hramezani
+- Ensure that depcache considers the python implementation such that (for example) `cpython3.6` does not poison the results of `pypy3.6`
+([#1050](https://github.com/jazzband/pip-tools/pull/1050)). Thanks @asottile
+
+Improved Documentation:
+- Make the `README` more imperative about installing into a project's virtual environment to avoid confusion
+([#1023](https://github.com/jazzband/pip-tools/pull/1023)). Thanks @tekumara
+- Add a note to the `README` about how to install requirements on different stages to [Workflow for layered requirements](https://github.com/jazzband/pip-tools#workflow-for-layered-requirements) section
+([#1044](https://github.com/jazzband/pip-tools/pull/1044)). Thanks @hramezani
+
+# 4.4.0 (2020-01-21)
+
+Features:
+- Add `--cache-dir` option to `pip-compile`
+([#1022](https://github.com/jazzband/pip-tools/pull/1022)).  Thanks @richafrank
+- Add `pip>=20.0` support
+([#1024](https://github.com/jazzband/pip-tools/pull/1024)). Thanks @atugushev
+
+Bug Fixes:
+- Fix a bug where `pip-compile --upgrade-package` would upgrade those passed packages not already required according to the `*.in` and `*.txt` files
+([#1031](https://github.com/jazzband/pip-tools/pull/1031)). Thanks @AndydeCleyre
+
+# 4.3.0 (2019-11-25)
+
+Features:
+- Add Python 3.8 support
+([#956](https://github.com/jazzband/pip-tools/pull/956)). Thanks @hramezani
+- Unpin commented out unsafe packages in `requirements.txt`
+([#975](https://github.com/jazzband/pip-tools/pull/975)).  Thanks @atugushev
+
+Bug Fixes:
+- Fix `pip-compile` doesn't copy `--trusted-host` from `requirements.in` to `requirements.txt`
+([#964](https://github.com/jazzband/pip-tools/pull/964)). Thanks @atugushev
+- Add compatibility with `pip>=20.0`
+([#953](https://github.com/jazzband/pip-tools/pull/953) and [#978](https://github.com/jazzband/pip-tools/pull/978)). Thanks @atugushev
+- Fix a bug where the resolver wouldn't clean up the ephemeral wheel cache
+([#968](https://github.com/jazzband/pip-tools/pull/968)). Thanks @atugushev
+
+Improved Documentation:
+- Add a note to `README` about `requirements.txt` file, which would possibly interfere if you're compiling from scratch
+([#959](https://github.com/jazzband/pip-tools/pull/959)). Thanks @hramezani
+
+# 4.2.0 (2019-10-12)
+
+Features:
+- Add `--ask` option to `pip-sync`
+([#913](https://github.com/jazzband/pip-tools/pull/913)). Thanks @georgek
+
+Bug Fixes:
+- Add compatibility with `pip>=19.3`
+([#864](https://github.com/jazzband/pip-tools/pull/864), [#904](https://github.com/jazzband/pip-tools/pull/904), [#910](https://github.com/jazzband/pip-tools/pull/910), [#912](https://github.com/jazzband/pip-tools/pull/912) and [#915](https://github.com/jazzband/pip-tools/pull/915)). Thanks @atugushev
+- Ensure `pip-compile --no-header <blank requirements.in>` creates/overwrites `requirements.txt`
+([#909](https://github.com/jazzband/pip-tools/pull/909)). Thanks @AndydeCleyre
+- Fix `pip-compile --upgrade-package` removes «via» annotation
+([#931](https://github.com/jazzband/pip-tools/pull/931)). Thanks @hramezani
+
+Improved Documentation:
+- Add info to `README` about layered requirements files and `-c` flag
+([#905](https://github.com/jazzband/pip-tools/pull/905)). Thanks @jamescooke
+
+# 4.1.0 (2019-08-26)
+
+Features:
+- Add `--no-emit-find-links` option to `pip-compile`
+([#873](https://github.com/jazzband/pip-tools/pull/873)). Thanks @jacobtolar
+
+Bug Fixes:
+- Prevent `--dry-run` log message from being printed with `--quiet` option in `pip-compile`
+([#861](https://github.com/jazzband/pip-tools/pull/861)). Thanks @ddormer
+- Fix resolution of requirements from Git URLs without `-e`
+([#879](https://github.com/jazzband/pip-tools/pull/879)). Thanks @andersk
+
+# 4.0.0 (2019-07-25)
+
+Backwards Incompatible Changes:
+- Drop support for EOL Python 3.4
+([#803](https://github.com/jazzband/pip-tools/pull/803)). Thanks @auvipy
+
+Bug Fixes:
+- Fix `pip>=19.2` compatibility
+([#857](https://github.com/jazzband/pip-tools/pull/857)). Thanks @atugushev
+
 # 3.9.0 (2019-07-17)
 
 Features:

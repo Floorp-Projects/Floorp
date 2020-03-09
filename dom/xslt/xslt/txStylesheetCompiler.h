@@ -204,7 +204,7 @@ class txStylesheetCompiler final : private txStylesheetCompilerState,
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~txStylesheetCompiler() {}
+  ~txStylesheetCompiler() = default;
 
   nsresult startElementInternal(int32_t aNamespaceID, nsAtom* aLocalName,
                                 nsAtom* aPrefix, txStylesheetAttr* aAttributes,

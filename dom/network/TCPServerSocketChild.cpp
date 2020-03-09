@@ -28,7 +28,7 @@ NS_INTERFACE_MAP_END
 
 TCPServerSocketChildBase::TCPServerSocketChildBase() : mIPCOpen(false) {}
 
-TCPServerSocketChildBase::~TCPServerSocketChildBase() {}
+TCPServerSocketChildBase::~TCPServerSocketChildBase() = default;
 
 NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void) {
   nsrefcnt refcnt = TCPServerSocketChildBase::Release();
@@ -65,7 +65,7 @@ void TCPServerSocketChildBase::AddIPDLReference() {
   this->AddRef();
 }
 
-TCPServerSocketChild::~TCPServerSocketChild() {}
+TCPServerSocketChild::~TCPServerSocketChild() = default;
 
 mozilla::ipc::IPCResult TCPServerSocketChild::RecvCallbackAccept(
     PTCPSocketChild* psocket) {

@@ -64,7 +64,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDeviceSensorData)
 NS_IMPL_RELEASE(nsDeviceSensorData)
 
-nsDeviceSensorData::~nsDeviceSensorData() {}
+nsDeviceSensorData::~nsDeviceSensorData() = default;
 
 NS_IMETHODIMP nsDeviceSensorData::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);

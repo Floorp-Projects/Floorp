@@ -1,0 +1,14 @@
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        app:key="@string/key_tracking_protection"
+        app:title="Enable Tracking Protection"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_autoplay"
+        app:title="Allow Autoplay"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_remote_debugging"
+        app:title="Remote Debugging"/>
+
+</PreferenceScreen>

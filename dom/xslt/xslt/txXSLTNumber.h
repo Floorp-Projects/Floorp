@@ -53,7 +53,7 @@ class txXSLTNumber {
 
 class txFormattedCounter {
  public:
-  virtual ~txFormattedCounter() {}
+  virtual ~txFormattedCounter() = default;
 
   virtual void appendNumber(int32_t aNumber, nsAString& aDest) = 0;
 

@@ -368,7 +368,7 @@ static RefPtr<gfx::Path> BuildPathFromPolygon(const RefPtr<DrawTarget>& aDT,
 
 static void DrawSurface(gfx::DrawTarget* aDest, const gfx::Rect& aDestRect,
                         const gfx::Rect& /* aClipRect */,
-                        const gfx::Color& aColor,
+                        const gfx::DeviceColor& aColor,
                         const gfx::DrawOptions& aOptions,
                         gfx::SourceSurface* aMask,
                         const gfx::Matrix* aMaskTransform) {
@@ -376,7 +376,8 @@ static void DrawSurface(gfx::DrawTarget* aDest, const gfx::Rect& aDestRect,
 }
 
 static void DrawSurface(gfx::DrawTarget* aDest, const gfx::Polygon& aPolygon,
-                        const gfx::Rect& aClipRect, const gfx::Color& aColor,
+                        const gfx::Rect& aClipRect,
+                        const gfx::DeviceColor& aColor,
                         const gfx::DrawOptions& aOptions,
                         gfx::SourceSurface* aMask,
                         const gfx::Matrix* aMaskTransform) {
@@ -1081,8 +1082,9 @@ void BasicCompositor::EndFrame() {
       float g = float(rand()) / float(RAND_MAX);
       float b = float(rand()) / float(RAND_MAX);
       // We're still clipped to mInvalidRegion, so just fill the bounds.
-      mRenderTarget->mDrawTarget->FillRect(Rect(mInvalidRegion.GetBounds()),
-                                           ColorPattern(Color(r, g, b, 0.2f)));
+      mRenderTarget->mDrawTarget->FillRect(
+          Rect(mInvalidRegion.GetBounds()),
+          ColorPattern(DeviceColor(r, g, b, 0.2f)));
     }
 
     // Pop aInvalidRegion

@@ -13,7 +13,7 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(WebBrowserPersistResourcesChild,
                   nsIWebBrowserPersistResourceVisitor)
 
-WebBrowserPersistResourcesChild::WebBrowserPersistResourcesChild() {}
+WebBrowserPersistResourcesChild::WebBrowserPersistResourcesChild() = default;
 
 WebBrowserPersistResourcesChild::~WebBrowserPersistResourcesChild() = default;
 

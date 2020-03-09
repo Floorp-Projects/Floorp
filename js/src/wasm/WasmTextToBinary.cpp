@@ -2464,24 +2464,16 @@ static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType,
   return true;
 }
 
-// For ParseAnonFuncType: allow more than one results.
-enum class MultiResult { False, True };
-
 // This guarantees that the ref has an index when we return and won't need to be
 // resolved later.  If `withLookahead` then whatever comes after the type does
 // not cause an error and is not consumed, and any number of results are
 // allowed.
 static bool ParseAnonFuncType(WasmParseContext& c, AstRef* ref,
-                              MultiResult multiResult,
                               WithLookahead withLookahead) {
   MOZ_ASSERT(ref->isInvalid());
 
   AstFuncType funcType(c.lifo);
   if (!ParseFuncSig(c, &funcType, withLookahead)) {
-    return false;
-  }
-  if (multiResult == MultiResult::False && funcType.results().length() > 1) {
-    c.ts.generateError(c.ts.peek(), "too many results", c.error);
     return false;
   }
   uint32_t funcTypeIndex;
@@ -2525,7 +2517,7 @@ static bool ParseBlockType(WasmParseContext& c, AstBlockType* type) {
   }
 
   AstRef t;
-  if (!ParseAnonFuncType(c, &t, MultiResult::True, WithLookahead::True)) {
+  if (!ParseAnonFuncType(c, &t, WithLookahead::True)) {
     return false;
   }
   const AstFuncType& ft = c.module->types()[t.index()]->asFuncType();
@@ -4202,7 +4194,7 @@ static bool ParseFuncType(WasmParseContext& c, AstRef* ref) {
     return false;
   }
   if (ref->isInvalid()) {
-    if (!ParseAnonFuncType(c, ref, MultiResult::False, WithLookahead::False)) {
+    if (!ParseAnonFuncType(c, ref, WithLookahead::False)) {
       return false;
     }
   }
@@ -4287,10 +4279,6 @@ static bool ParseFunc(WasmParseContext& c) {
         break;
       case WasmToken::Result:
         if (!ParseValueTypeList(c, &results)) {
-          return false;
-        }
-        if (results.length() > 1) {
-          c.ts.generateError(token, "too many results", c.error);
           return false;
         }
         break;
@@ -4380,10 +4368,6 @@ static AstTypeDef* ParseTypeDef(WasmParseContext& c) {
   if (c.ts.getIf(WasmToken::Func)) {
     AstFuncType funcType(c.lifo);
     if (!ParseFuncSig(c, &funcType, WithLookahead::False)) {
-      return nullptr;
-    }
-    if (funcType.results().length() > 1) {
-      c.ts.generateError(c.ts.peek(), "too many results", c.error);
       return nullptr;
     }
     type = new (c.lifo) AstFuncType(name, std::move(funcType));
@@ -4801,8 +4785,7 @@ static AstImport* ParseImport(WasmParseContext& c) {
   }
 
   if (funcTypeRef.isInvalid()) {
-    if (!ParseAnonFuncType(c, &funcTypeRef, MultiResult::False,
-                           WithLookahead::False)) {
+    if (!ParseAnonFuncType(c, &funcTypeRef, WithLookahead::False)) {
       return nullptr;
     }
   }

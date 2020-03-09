@@ -13,9 +13,11 @@ import {
 
 export interface PanelWindow {
   gToolbox?: any;
-  gInit(perfFront: any, preferenceFront: any): void;
+  gStore?: Store;
+  gInit(perfFront: PerfFront, pageContext: PageContext): void;
   gDestroy(): void;
-  gReportReady?(): void
+  gReportReady?(): void;
+  gIsPanelDestroyed?: boolean;
 }
 
 /**
@@ -57,6 +59,7 @@ export interface PerfFront {
   isLockedForPrivateBrowsing: () => MaybePromise<boolean>;
   on: (type: string, listener: () => void) => void;
   off: (type: string, listener: () => void) => void;
+  destroy: () => void,
   /**
    * This method was was added in Firefox 72.
    */
@@ -96,7 +99,11 @@ export type RecordingState =
 // We are currently migrating to a new UX workflow with about:profiling.
 // This type provides an easy way to change the implementation based
 // on context.
-export type PageContext = "devtools" | "aboutprofiling";
+export type PageContext =
+  | "devtools"
+  | "devtools-remote"
+  | "aboutprofiling"
+  | "aboutprofiling-remote";
 
 export interface State {
   recordingState: RecordingState;
@@ -157,7 +164,7 @@ export type ReceiveProfile = (
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
-export type SetRecordingPreferences = (settings: RecordingStateFromPreferences) => MaybePromise<void>;
+export type SetRecordingPreferences = (settings: RecordingStateFromPreferences) => void;
 
 /**
  * This is the type signature for a function to restart the browser with a given
@@ -220,6 +227,11 @@ export interface InitializedValues {
   // by the actor system. This compatibility can be required when the ESR version
   // is running at least Firefox 72.
   supportedFeatures: string[] | null
+  // Allow different devtools contexts to open about:profiling with different methods.
+  // e.g. via a new tab, or page navigation.
+  openAboutProfiling?: () => void,
+  // Allow about:profiling to switch back to the remote devtools panel.
+  openRemoteDevTools?: () => void,
 }
 
 /**
@@ -267,6 +279,8 @@ export type Action =
       setRecordingPreferences: SetRecordingPreferences;
       presets: Presets;
       pageContext: PageContext;
+      openAboutProfiling?: () => void,
+      openRemoteDevTools?: () => void,
       recordingSettingsFromPreferences: RecordingStateFromPreferences;
       getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
       supportedFeatures: string[] | null;
@@ -286,6 +300,8 @@ export interface InitializeStoreValues {
   recordingPreferences: RecordingStateFromPreferences;
   supportedFeatures: string[] | null;
   getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+  openAboutProfiling?: () => void;
+  openRemoteDevTools?: () => void;
 }
 
 export type PopupBackgroundFeatures = { [feature: string]: boolean };
@@ -452,4 +468,22 @@ export class ProfilerWebChannel {
   listen: (
     handler: (idle: string, message: MessageFromFrontend, target: MockedExports.WebChannelTarget) => void
   ) => void;
+}
+
+/**
+ * Describes all of the profiling features that can be turned on and
+ * off in about:profiling.
+ */
+export interface FeatureDescription {
+  // The name of the feature as shown in the UI.
+  name: string,
+  // The key value of the feature, this will be stored in prefs, and used in the
+  // nsiProfiler interface.
+  value: string,
+  // The full description of the preset, this will need to be localized.
+  title: string,
+  // This will give the user a hint that it's recommended on.
+  recommended?: boolean,
+  // This will give a reason if the feature is disabled.
+  disabledReason?: string,
 }

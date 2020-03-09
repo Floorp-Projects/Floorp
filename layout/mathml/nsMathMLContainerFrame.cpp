@@ -91,10 +91,10 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
   Rect rect = NSRectToSnappedRect(nsRect(pt, mFrame->GetSize()),
                                   appUnitsPerDevPixel, *drawTarget);
-  ColorPattern red(ToDeviceColor(Color(1.f, 0.f, 0.f, 1.f)));
+  ColorPattern red(ToDeviceColor(sRGBColor(1.f, 0.f, 0.f, 1.f)));
   drawTarget->FillRect(rect, red);
 
-  aCtx->SetColor(Color(1.f, 1.f, 1.f));
+  aCtx->SetColor(sRGBColor::OpaqueWhite());
   nscoord ascent = fm->MaxAscent();
   NS_NAMED_LITERAL_STRING(errorMsg, "invalid-markup");
   nsLayoutUtils::DrawUniDirString(errorMsg.get(), uint32_t(errorMsg.Length()),
