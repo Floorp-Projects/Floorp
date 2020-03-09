@@ -3887,27 +3887,10 @@ static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
   return false;
 }
 
-/* Resolves the content-box main-size of a flex container frame,
- * primarily based on:
- * - the "tentative" main size, taken from the reflow input ("tentative"
- *    because it may be unconstrained or may run off the page).
- * - the available BSize (needed if the main axis is the block axis).
- * - the sizes of our lines of flex items.
- *
- * Guaranteed to return a definite length, i.e. not NS_UNCONSTRAINEDSIZE,
- * aside from cases with huge lengths which happen to compute to that value.
- *
- * This corresponds to "Determine the main size of the flex container" step in
- * the spec. https://drafts.csswg.org/css-flexbox-1/#algo-main-container
- *
- * (Note: This function should be structurally similar to 'ComputeCrossSize()',
- * except that here, the caller has already grabbed the tentative size from the
- * reflow input.)
- */
-static nscoord ResolveFlexContainerMainSize(
+nscoord nsFlexContainerFrame::ComputeMainSize(
     const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
     nscoord aTentativeMainSize, nscoord aAvailableBSizeForContent,
-    const FlexLine* aFirstLine, nsReflowStatus& aStatus) {
+    const FlexLine* aFirstLine, nsReflowStatus& aStatus) const {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
   if (aAxisTracker.IsRowOriented()) {
@@ -3961,7 +3944,7 @@ static nscoord ResolveFlexContainerMainSize(
 nscoord nsFlexContainerFrame::ComputeCrossSize(
     const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
     nscoord aSumLineCrossSizes, nscoord aAvailableBSizeForContent,
-    bool* aIsDefinite, nsReflowStatus& aStatus) {
+    bool* aIsDefinite, nsReflowStatus& aStatus) const {
   MOZ_ASSERT(aIsDefinite, "outparam pointer must be non-null");
 
   if (aAxisTracker.IsColumnOriented()) {
@@ -4593,9 +4576,9 @@ void nsFlexContainerFrame::DoFlexLayout(
     ComputeFlexDirections(*containerInfo, aAxisTracker);
   }
 
-  aContentBoxMainSize = ResolveFlexContainerMainSize(
-      aReflowInput, aAxisTracker, aContentBoxMainSize,
-      aAvailableBSizeForContent, lines.getFirst(), aStatus);
+  aContentBoxMainSize =
+      ComputeMainSize(aReflowInput, aAxisTracker, aContentBoxMainSize,
+                      aAvailableBSizeForContent, lines.getFirst(), aStatus);
 
   uint32_t lineIndex = 0;
   for (FlexLine* line = lines.getFirst(); line;
