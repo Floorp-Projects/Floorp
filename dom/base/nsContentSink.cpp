@@ -12,6 +12,8 @@
 #include "nsContentSink.h"
 #include "mozilla/Components.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_content.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/css/Loader.h"
