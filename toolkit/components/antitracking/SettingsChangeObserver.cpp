@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SettingsChangeObserver.h"
-#include "AntiTrackingCommon.h"
+#include "ContentBlockingUserInteraction.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
