@@ -208,7 +208,11 @@ async function toggleOpenProfilerPopup() {
  * @returns {Promise}
  */
 function setProfilerFrontendUrl(url) {
-  info("Setting the profiler URL to the fake frontend.");
+  info(
+    "Setting the profiler URL to the fake frontend. Note that this doesn't currently " +
+      "support the WebChannels, so expect a few error messages about the WebChannel " +
+      "URLs not being correct."
+  );
   return SpecialPowers.pushPrefEnv({
     set: [
       // Make sure observer and testing function run in the same process
@@ -332,6 +336,41 @@ function withAboutProfiling(callback) {
 }
 
 /**
+ * Open DevTools and view the performance-new tab. After running the callback, clean
+ * up the test.
+ *
+ * @template T
+ * @param {(Document) => T} callback
+ * @returns {Promise<T>}
+ */
+async function withDevToolsPanel(callback) {
+  SpecialPowers.pushPrefEnv({
+    set: [["devtools.performance.new-panel-enabled", "true"]],
+  });
+
+  const { gDevTools } = require("devtools/client/framework/devtools");
+  const { TargetFactory } = require("devtools/client/framework/target");
+
+  info("Create a new about:blank tab.");
+  const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+
+  info("Begin to open the DevTools and the performance-new panel.");
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "performance");
+
+  const { document } = toolbox.getCurrentPanel().panelWin;
+
+  info("The performance-new panel is now open and ready to use.");
+  await callback(document);
+
+  info("About to remove the about:blank tab");
+  await toolbox.destroy();
+  BrowserTestUtils.removeTab(tab);
+  info("The about:blank tab is now removed.");
+  await new Promise(resolve => setTimeout(resolve, 500));
+}
+
+/**
  * Start and stop the profiler to get the current active configuration. This is
  * done programmtically through the nsIProfiler interface, rather than through click
  * interactions, since the about:profiling page does not include buttons to control
@@ -389,8 +428,43 @@ function activeConfigurationHasThread(thread) {
 }
 
 /**
- * Grabs the associated input from the element, or it walks up the DOM from a text
- * element and tries to query select an input.
+ * Use user driven events to start the profiler, and then get the active configuration
+ * of the profiler. This is similar to functions in the head.js file, but is specific
+ * for the DevTools situation. The UI complains if the profiler stops unexpectedly.
+ *
+ * @param {Document} document
+ * @param {string} feature
+ * @returns {boolean}
+ */
+async function devToolsActiveConfigurationHasFeature(document, feature) {
+  info("Get the active configuration of the profiler via user driven events.");
+  const start = await getActiveButtonFromText(document, "Start recording");
+  info("Click the button to start recording.");
+  start.click();
+
+  // Get the cancel button first, so that way we know the profile has actually
+  // been recorded.
+  const cancel = await getActiveButtonFromText(document, "Cancel recording");
+
+  const { activeConfiguration } = Services.profiler;
+  if (!activeConfiguration) {
+    throw new Error(
+      "Expected to find an active configuration for the profile."
+    );
+  }
+
+  info("Click the cancel button to discard the profile..");
+  cancel.click();
+
+  // Wait until the start button is back.
+  await getActiveButtonFromText(document, "Start recording");
+
+  return activeConfiguration.features.includes(feature);
+}
+
+/**
+ * Selects an element with some given text, then it walks up the DOM until it finds
+ * an input or select element via a call to querySelector.
  *
  * @param {Document} document
  * @param {string} text
@@ -405,12 +479,40 @@ async function getNearestInputFromText(document, text) {
   // A non-label node
   let next = textElement;
   while ((next = next.parentElement)) {
-    const input = next.querySelector("input");
+    const input = next.querySelector("input, select");
     if (input) {
       return input;
     }
   }
-  throw new Error("Could not find an input near text element.");
+  throw new Error("Could not find an input or select near the text element.");
+}
+
+/**
+ * Grabs the closest button element from a given snippet of text, and make sure
+ * the button is not disabled.
+ *
+ * @param {Document} document
+ * @param {string} text
+ * @param {HTMLButtonElement}
+ */
+async function getActiveButtonFromText(document, text) {
+  // This could select a span inside the button, or the button itself.
+  let button = await getElementFromDocumentByText(document, text);
+
+  while (button.tagName !== "button") {
+    // Walk up until a button element is found.
+    button = button.parentElement;
+    if (!button) {
+      throw new Error(`Unable to find a button from the text "${text}"`);
+    }
+  }
+
+  await waitUntil(
+    () => !button.disabled,
+    "Waiting until the button is not disabled."
+  );
+
+  return button;
 }
 
 /**
@@ -473,20 +575,21 @@ function withWebChannelTestDocument(callback) {
 /**
  * Set a React-friendly input value. Doing this the normal way doesn't work.
  *
- * See: https://github.com/facebook/react/issues/10135#issuecomment-314441175
+ * See https://github.com/facebook/react/issues/10135#issuecomment-500929024
+ *
+ * @param {HTMLInputElement} input
+ * @param {string} value
  */
-function setReactFriendlyInputValue(element, value) {
-  const valueSetter = Object.getOwnPropertyDescriptor(element, "value").set;
-  const prototype = Object.getPrototypeOf(element);
-  const prototypeValueSetter = Object.getOwnPropertyDescriptor(
-    prototype,
-    "value"
-  ).set;
+function setReactFriendlyInputValue(input, value) {
+  const previousValue = input.value;
 
-  if (valueSetter && valueSetter !== prototypeValueSetter) {
-    prototypeValueSetter.call(element, value);
-  } else {
-    valueSetter.call(element, value);
+  input.value = value;
+
+  const tracker = input._valueTracker;
+  if (tracker) {
+    tracker.setValue(previousValue);
   }
-  element.dispatchEvent(new Event("input", { bubbles: true }));
+
+  // 'change' instead of 'input', see https://github.com/facebook/react/issues/11488#issuecomment-381590324
+  input.dispatchEvent(new Event("change", { bubbles: true }));
 }
