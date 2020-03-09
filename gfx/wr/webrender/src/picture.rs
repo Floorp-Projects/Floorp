@@ -4847,6 +4847,7 @@ impl PicturePrimitive {
                                 tile.root.draw_debug_rects(
                                     &map_pic_to_world,
                                     tile.is_opaque,
+                                    tile.current_descriptor.local_valid_rect,
                                     scratch,
                                     frame_context.global_device_pixel_scale,
                                 );
@@ -6240,6 +6241,7 @@ impl TileNode {
         &self,
         pic_to_world_mapper: &SpaceMapper<PicturePixel, WorldPixel>,
         is_opaque: bool,
+        local_valid_rect: PictureRect,
         scratch: &mut PrimitiveScratchBuffer,
         global_device_pixel_scale: DevicePixelScale,
     ) {
@@ -6253,22 +6255,27 @@ impl TileNode {
                     debug_colors::YELLOW
                 };
 
-                let world_rect = pic_to_world_mapper.map(&self.rect).unwrap();
-                let device_rect = world_rect * global_device_pixel_scale;
+                if let Some(local_rect) = local_valid_rect.intersection(&self.rect) {
+                    let world_rect = pic_to_world_mapper
+                        .map(&local_rect)
+                        .unwrap();
+                    let device_rect = world_rect * global_device_pixel_scale;
 
-                let outer_color = color.scale_alpha(0.3);
-                let inner_color = outer_color.scale_alpha(0.5);
-                scratch.push_debug_rect(
-                    device_rect.inflate(-3.0, -3.0),
-                    outer_color,
-                    inner_color
-                );
+                    let outer_color = color.scale_alpha(0.3);
+                    let inner_color = outer_color.scale_alpha(0.5);
+                    scratch.push_debug_rect(
+                        device_rect.inflate(-3.0, -3.0),
+                        outer_color,
+                        inner_color
+                    );
+                }
             }
             TileNodeKind::Node { ref children, .. } => {
                 for child in children.iter() {
                     child.draw_debug_rects(
                         pic_to_world_mapper,
                         is_opaque,
+                        local_valid_rect,
                         scratch,
                         global_device_pixel_scale,
                     );
