@@ -45,7 +45,7 @@ class UnsubscribeResultCallback final : public nsIUnsubscribeResultCallback {
   }
 
  private:
-  ~UnsubscribeResultCallback() {}
+  ~UnsubscribeResultCallback() = default;
 
   RefPtr<Promise> mPromise;
 };
@@ -81,7 +81,7 @@ class UnsubscribeResultRunnable final : public WorkerRunnable {
   }
 
  private:
-  ~UnsubscribeResultRunnable() {}
+  ~UnsubscribeResultRunnable() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
@@ -117,7 +117,7 @@ class WorkerUnsubscribeResultCallback final
   }
 
  private:
-  ~WorkerUnsubscribeResultCallback() {}
+  ~WorkerUnsubscribeResultCallback() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
 };
@@ -168,7 +168,7 @@ class UnsubscribeRunnable final : public Runnable {
   }
 
  private:
-  ~UnsubscribeRunnable() {}
+  ~UnsubscribeRunnable() = default;
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
@@ -200,7 +200,7 @@ PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
   mOptions = new PushSubscriptionOptions(mGlobal, std::move(aAppServerKey));
 }
 
-PushSubscription::~PushSubscription() {}
+PushSubscription::~PushSubscription() = default;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushSubscription, mGlobal, mOptions)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushSubscription)
