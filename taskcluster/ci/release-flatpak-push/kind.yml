@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_flatpak_push:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-flatpak-repackage
+
+job-defaults:
+    description: Pushes Flatpaks onto Flathub
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-phase: push
+    treeherder:
+        platform: linux64/opt
+        kind: build
+        tier: 2
+    worker-type:
+        by-release-level:
+            production: scriptworker-k8s/gecko-3-pushflatpak
+            staging: scriptworker-k8s/gecko-1-pushflatpak
+    worker:
+        implementation: push-flatpak
+        channel:
+            by-release-type:
+                beta: beta
+                release: mock  # TODO: once we are ready to ship to stable, update this
+                default: mock
+
+jobs:
+    firefox:
+        shipping-product: firefox
+        treeherder:
+            symbol: Flatpak(push)
