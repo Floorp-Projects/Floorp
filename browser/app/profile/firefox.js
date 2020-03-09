@@ -1833,6 +1833,9 @@ pref("app.normandy.onsync_skew_sec", 600);
   pref("app.shield.optoutstudies.enabled", false);
 #endif
 
+// Web apps support
+pref("browser.ssb.enabled", false);
+
 // Multi-lingual preferences
 #if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
   pref("intl.multilingual.enabled", true);
