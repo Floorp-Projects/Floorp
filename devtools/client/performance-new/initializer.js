@@ -9,6 +9,8 @@
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  * @typedef {import("./@types/perf").PageContext} PageContext
+ * @typedef {import("./@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("./@types/perf").Store} Store
  */
 "use strict";
 
@@ -92,6 +94,16 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       const { openTrustedLink } = require("devtools/client/shared/link");
       openTrustedLink("about:profiling", {});
     };
+  }
+
+  {
+    // Expose the store as a global, for testing.
+    const anyWindow = /** @type {any} */ (window);
+    const panelWindow = /** @type {PanelWindow} */ (anyWindow);
+    // The store variable is a `ReduxStore`, not our `Store` type, as defined
+    // in perf.d.ts. Coerce it into the `Store` type.
+    const anyStore = /** @type {any} */ (store);
+    panelWindow.gStore = anyStore;
   }
 
   // Do some initialization, especially with privileged things that are part of the

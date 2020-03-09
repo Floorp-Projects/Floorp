@@ -5,27 +5,71 @@
 "use strict";
 
 add_task(async function test() {
-  info("Test that DevTools can capture profiles.");
+  info(
+    "Test that DevTools can capture profiles. This function also unit tests the " +
+      "internal RecordingState of the client."
+  );
 
   await setProfilerFrontendUrl(
     "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
   );
 
   await withDevToolsPanel(async document => {
-    {
-      const button = await getActiveButtonFromText(document, "Start recording");
-      info("Click the button to start recording");
-      button.click();
-    }
+    const getRecordingState = setupGetRecordingState(document);
 
-    {
-      const button = await getActiveButtonFromText(
-        document,
-        "Capture recording"
-      );
-      info("Click the button to capture the recording.");
-      button.click();
-    }
+    is(
+      getRecordingState(),
+      "not-yet-known",
+      "The component starts out in an unknown state."
+    );
+
+    const startRecording = await getActiveButtonFromText(
+      document,
+      "Start recording"
+    );
+
+    is(
+      getRecordingState(),
+      "available-to-record",
+      "After talking to the actor, we're ready to record."
+    );
+
+    info("Click the button to start recording");
+    startRecording.click();
+
+    is(
+      getRecordingState(),
+      "request-to-start-recording",
+      "Clicking the start recording button sends in a request to start recording."
+    );
+
+    const captureRecording = await getActiveButtonFromText(
+      document,
+      "Capture recording"
+    );
+
+    is(
+      getRecordingState(),
+      "recording",
+      "Once the Capture recording button is available, the actor has started " +
+        "its recording"
+    );
+
+    info("Click the button to capture the recording.");
+    captureRecording.click();
+
+    is(
+      getRecordingState(),
+      "request-to-get-profile-and-stop-profiler",
+      "We have requested to stop the profiler."
+    );
+
+    await getActiveButtonFromText(document, "Start recording");
+    is(
+      getRecordingState(),
+      "available-to-record",
+      "The profiler is available to record again."
+    );
 
     info(
       "If the DevTools successfully injects a profile into the page, then the " +
