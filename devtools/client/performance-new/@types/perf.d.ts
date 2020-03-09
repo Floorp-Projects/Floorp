@@ -453,3 +453,21 @@ export class ProfilerWebChannel {
     handler: (idle: string, message: MessageFromFrontend, target: MockedExports.WebChannelTarget) => void
   ) => void;
 }
+
+/**
+ * Describes all of the profiling features that can be turned on and
+ * off in about:profiling.
+ */
+export interface FeatureDescription {
+  // The name of the feature as shown in the UI.
+  name: string,
+  // The key value of the feature, this will be stored in prefs, and used in the
+  // nsiProfiler interface.
+  value: string,
+  // The full description of the preset, this will need to be localized.
+  title: string,
+  // This will give the user a hint that it's recommended on.
+  recommended?: boolean,
+  // This will give a reason if the feature is disabled.
+  disabledReason?: string,
+}
