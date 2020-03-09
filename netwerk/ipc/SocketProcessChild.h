@@ -42,6 +42,8 @@ class SocketProcessChild final
       const bool& minimizeMemoryUsage,
       const Maybe<mozilla::ipc::FileDescriptor>& DMDFile);
   mozilla::ipc::IPCResult RecvSetOffline(const bool& aOffline);
+  mozilla::ipc::IPCResult RecvInitLinuxSandbox(
+      const Maybe<ipc::FileDescriptor>& aBrokerFd);
   mozilla::ipc::IPCResult RecvInitSocketProcessBridgeParent(
       const ProcessId& aContentProcessId,
       Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint);

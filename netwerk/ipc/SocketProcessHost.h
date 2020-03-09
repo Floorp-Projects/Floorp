@@ -12,6 +12,11 @@
 #include "mozilla/ipc/TaskFactory.h"
 
 namespace mozilla {
+
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+class SandboxBroker;
+#endif
+
 namespace net {
 
 class OfflineObserver;
@@ -103,6 +108,9 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   bool mChannelClosed;
 
   RefPtr<OfflineObserver> mOfflineObserver;
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  UniquePtr<SandboxBroker> mSandboxBroker;
+#endif
 };
 
 class SocketProcessMemoryReporter : public MemoryReportingProcess {
