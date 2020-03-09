@@ -209,8 +209,9 @@ class nsContainerFrame : public nsSplittableFrame {
    * If the reflow status after reflowing the child is FullyComplete then any
    * next-in-flows are deleted using DeleteNextInFlowChild().
    *
-   * @param aWM Containing frame's writing-mode.
-   * @param aPos Position of the aKidFrame to be moved.
+   * @param aReflowInput the reflow input for aKidFrame.
+   * @param aWM aPos's writing-mode (any writing mode will do).
+   * @param aPos Position of the aKidFrame to be moved, in terms of aWM.
    * @param aContainerSize Size of the border-box of the containing frame.
    *
    * Note: If ReflowChildFlags::NoMoveFrame is requested, both aPos and
@@ -234,8 +235,9 @@ class nsContainerFrame : public nsSplittableFrame {
    * - sets the view's visibility, opacity, content transparency, and clip
    * - invoked the DidReflow() function
    *
-   * @param aWM Containing frame's writing-mode.
-   * @param aPos Position of the aKidFrame to be positioned.
+   * @param aReflowInput the reflow input for aKidFrame.
+   * @param aWM aPos's writing-mode (any writing mode will do).
+   * @param aPos Position of the aKidFrame to be moved, in terms of aWM.
    * @param aContainerSize Size of the border-box of the containing frame.
    *
    * Note: If ReflowChildFlags::NoMoveFrame is requested, both aPos and

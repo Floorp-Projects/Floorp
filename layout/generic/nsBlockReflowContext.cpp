@@ -429,16 +429,11 @@ bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
                    mMetrics.ISize(mWritingMode), mMetrics.BSize(mWritingMode),
                    mContainerSize);
 
-  WritingMode frameWM = mFrame->GetWritingMode();
-  LogicalPoint logPos =
-      LogicalPoint(mWritingMode, mICoord, mBCoord)
-          .ConvertTo(frameWM, mWritingMode,
-                     mContainerSize - mMetrics.PhysicalSize());
-
   // Now place the frame and complete the reflow process
   nsContainerFrame::FinishReflowChild(
-      mFrame, mPresContext, mMetrics, &aReflowInput, frameWM, logPos,
-      mContainerSize, nsIFrame::ReflowChildFlags::ApplyRelativePositioning);
+      mFrame, mPresContext, mMetrics, &aReflowInput, mWritingMode,
+      LogicalPoint(mWritingMode, mICoord, mBCoord), mContainerSize,
+      nsIFrame::ReflowChildFlags::ApplyRelativePositioning);
 
   aOverflowAreas = mMetrics.mOverflowAreas + mFrame->GetPosition();
 
