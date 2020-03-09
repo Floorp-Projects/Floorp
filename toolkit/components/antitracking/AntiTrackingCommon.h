@@ -124,10 +124,6 @@ class AntiTrackingCommon final {
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
-  // Get the current document URI from a document channel as it is being loaded.
-  static already_AddRefed<nsIURI> MaybeGetDocumentURIBeingLoaded(
-      nsIChannel* aChannel);
-
   static void RedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
                                 nsIChannel* aNewChannel, nsIURI* aNewURI);
 };
