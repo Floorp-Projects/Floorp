@@ -20,7 +20,7 @@ jobs:
     - name: Get Count
       # Record the count in a tmp file so it survives changing branches
       run: |
-        find rust -iname '*.rs' -type f -exec cat {} + | grep -c -E "(Emit|Parse)Error::NotImplemented" > /tmp/count
+        find crates -iname '*.rs' -type f -exec cat {} + | grep -c -E "(Emit|Parse)Error::NotImplemented" > /tmp/count
         git rev-parse HEAD > /tmp/commit
         cp .metrics/not_implemented_badge.py /tmp
         cp .metrics/not_implemented_count.py /tmp

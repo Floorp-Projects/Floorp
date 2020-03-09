@@ -1,351 +1,623 @@
 from jsparagus import runtime
-from jsparagus.runtime import Nt, ErrorToken
+from jsparagus.runtime import Nt, InitNt, End, ErrorToken, StateTermValue, ShiftError, ShiftAccept
+
+def state_33_actions(parser, lexer):
+
+    value = None
+    value = parser.stack[-1].value
+    replay = [StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_34_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.nt_defs_single(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('nt_defs'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_35_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.single(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('token_defs'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_36_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.nt_defs_append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('nt_defs'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_37_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('token_defs'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_38_actions(parser, lexer):
+
+    value = None
+    raise ShiftAccept()
+    replay = [StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_39_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.nt_def(None, parser.stack[-3].value, None)
+    replay = [StateTermValue(0, Nt('nt_def'), value)]
+    del parser.stack[-4:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_40_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.single(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('prods'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_41_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.single(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('terms'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_42_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.ident(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('symbol'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_43_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.str(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('symbol'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_44_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.var_token(parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('token_def'), value)]
+    del parser.stack[-4:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_45_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.nt_def(None, parser.stack[-4].value, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('nt_def'), value)]
+    del parser.stack[-5:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_46_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('prods'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_47_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.prod(parser.stack[-2].value, None)
+    replay = [StateTermValue(0, Nt('prod'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_48_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('terms'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_49_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.optional(parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('term'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_50_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.nt_def(parser.stack[-5].value, parser.stack[-3].value, None)
+    replay = [StateTermValue(0, Nt('nt_def'), value)]
+    del parser.stack[-5:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_51_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.const_token(parser.stack[-4].value, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('token_def'), value)]
+    del parser.stack[-5:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_52_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.prod(parser.stack[-3].value, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('prod'), value)]
+    del parser.stack[-3:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_53_actions(parser, lexer):
+
+    value = None
+    value = parser.stack[-1].value
+    replay = [StateTermValue(0, Nt('reducer'), value)]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_54_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.expr_match(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('expr'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_55_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.expr_none()
+    replay = [StateTermValue(0, Nt('expr'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_56_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.nt_def(parser.stack[-6].value, parser.stack[-4].value, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('nt_def'), value)]
+    del parser.stack[-6:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_57_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.expr_call(parser.stack[-3].value, None)
+    replay = [StateTermValue(0, Nt('expr'), value)]
+    del parser.stack[-3:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_58_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.args_single(parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('expr_args'), value)]
+    del parser.stack[-1:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_59_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.expr_call(parser.stack[-4].value, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('expr'), value)]
+    del parser.stack[-4:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_60_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.expr_some(parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('expr'), value)]
+    del parser.stack[-4:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_61_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.args_append(parser.stack[-3].value, parser.stack[-1].value)
+    replay = [StateTermValue(0, Nt('expr_args'), value)]
+    del parser.stack[-3:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_62_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.grammar(None, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('grammar'), value)]
+    replay = replay + parser.stack[-1:]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_63_actions(parser, lexer):
+
+    value = None
+    value = parser.methods.grammar(parser.stack[-3].value, parser.stack[-2].value)
+    replay = [StateTermValue(0, Nt('grammar'), value)]
+    replay = replay + parser.stack[-1:]
+    del parser.stack[-3:]
+    parser.shift_list(replay, lexer)
+    return
+
+def state_64_actions(parser, lexer):
+
+    value = None
+    value = parser.stack[-2].value
+    replay = [StateTermValue(0, Nt('term'), value)]
+    replay = replay + parser.stack[-1:]
+    del parser.stack[-2:]
+    parser.shift_list(replay, lexer)
+    return
 
 actions = [
-    # 0. <empty>
-    {'nt': 1, 'goal': 2, 'token': 3, 'var': 4},
+    # 0.
 
-    # 1. "nt"
-    {'IDENT': 10},
+    {'nt': 2, 'goal': 3, 'token': 5, 'var': 6, Nt('grammar'): 33, Nt('nt_defs'): 1, Nt('nt_def'): 34, Nt('token_defs'): 4, Nt('token_def'): 35, Nt(InitNt(goal=Nt('grammar'))): 7},
 
-    # 2. "goal"
-    {'nt': 11},
+    # 1.
 
-    # 3. "token"
+    {End(): 62, 'goal': 3, 'nt': 2, Nt('nt_def'): 36},
+
+    # 2.
+
+    {'IDENT': 9},
+
+    # 3.
+
+    {'nt': 10},
+
+    # 4.
+
+    {'nt': 2, 'goal': 3, 'token': 5, 'var': 6, Nt('nt_defs'): 11, Nt('nt_def'): 34, Nt('token_def'): 37},
+
+    # 5.
+
     {'IDENT': 12},
 
-    # 4. "var"
+    # 6.
+
     {'token': 13},
 
-    # 5. grammar
-    {None: -4611686018427387905},
+    # 7.
 
-    # 6. nt_defs
-    {'nt': 1, 'goal': 2, None: -1},
+    {End(): 38},
 
-    # 7. token_defs
-    {'token': 3, 'var': 4, 'nt': 1, 'goal': 2},
+    # 8.
 
-    # 8. nt_def
-    {None: -5, 'nt': -5, 'goal': -5},
-
-    # 9. token_def
-    {'nt': -3, 'goal': -3, 'token': -3, 'var': -3},
-
-    # 10. "nt" IDENT
-    {'{': 17},
-
-    # 11. "goal" "nt"
-    {'IDENT': 18},
-
-    # 12. "token" IDENT
-    {'=': 19},
-
-    # 13. "var" "token"
-    {'IDENT': 20},
-
-    # 14. nt_defs nt_def
-    {None: -6, 'nt': -6, 'goal': -6},
-
-    # 15. token_defs nt_defs
-    {'nt': 1, 'goal': 2, None: -2},
-
-    # 16. token_defs token_def
-    {'nt': -4, 'goal': -4, 'token': -4, 'var': -4},
-
-    # 17. "nt" IDENT "{"
-    {'}': 21, 'IDENT': 22, 'STR': 23},
-
-    # 18. "goal" "nt" IDENT
-    {'{': 29},
-
-    # 19. "token" IDENT "="
-    {'STR': 30},
-
-    # 20. "var" "token" IDENT
-    {';': 31},
-
-    # 21. "nt" IDENT "{" "}"
-    {None: -9, 'nt': -9, 'goal': -9},
-
-    # 22. "nt" IDENT "{" IDENT
-    {';': -27, '?': -27, '=>': -27, 'IDENT': -27, 'STR': -27},
-
-    # 23. "nt" IDENT "{" STR
-    {';': -28, '?': -28, '=>': -28, 'IDENT': -28, 'STR': -28},
-
-    # 24. "nt" IDENT "{" prods
-    {'}': 32, 'IDENT': 22, 'STR': 23},
-
-    # 25. "nt" IDENT "{" prod
-    {'}': -13, 'IDENT': -13, 'STR': -13},
-
-    # 26. "nt" IDENT "{" terms
-    {';': 34, '=>': 35, 'IDENT': 22, 'STR': 23},
-
-    # 27. "nt" IDENT "{" term
-    {';': -17, '=>': -17, 'IDENT': -17, 'STR': -17},
-
-    # 28. "nt" IDENT "{" symbol
-    {'?': 38, ';': -20, '=>': -20, 'IDENT': -20, 'STR': -20},
-
-    # 29. "goal" "nt" IDENT "{"
-    {'}': 39, 'IDENT': 22, 'STR': 23},
-
-    # 30. "token" IDENT "=" STR
-    {';': 41},
-
-    # 31. "var" "token" IDENT ";"
-    {'nt': -8, 'goal': -8, 'token': -8, 'var': -8},
-
-    # 32. "nt" IDENT "{" prods "}"
-    {None: -11, 'nt': -11, 'goal': -11},
-
-    # 33. "nt" IDENT "{" prods prod
-    {'}': -14, 'IDENT': -14, 'STR': -14},
-
-    # 34. "nt" IDENT "{" terms ";"
-    {'}': -15, 'IDENT': -15, 'STR': -15},
-
-    # 35. "nt" IDENT "{" terms "=>"
-    {'MATCH': 42, 'IDENT': 43, 'Some': 44, 'None': 45},
-
-    # 36. "nt" IDENT "{" terms reducer
-    {';': 47},
-
-    # 37. "nt" IDENT "{" terms term
-    {';': -18, '=>': -18, 'IDENT': -18, 'STR': -18},
-
-    # 38. "nt" IDENT "{" symbol "?"
-    {';': -21, '=>': -21, 'IDENT': -21, 'STR': -21},
-
-    # 39. "goal" "nt" IDENT "{" "}"
-    {None: -10, 'nt': -10, 'goal': -10},
-
-    # 40. "goal" "nt" IDENT "{" prods
-    {'}': 48, 'IDENT': 22, 'STR': 23},
-
-    # 41. "token" IDENT "=" STR ";"
-    {'nt': -7, 'goal': -7, 'token': -7, 'var': -7},
-
-    # 42. "nt" IDENT "{" terms "=>" MATCH
-    {';': -22, ')': -22, ',': -22},
-
-    # 43. "nt" IDENT "{" terms "=>" IDENT
-    {'(': 49},
-
-    # 44. "nt" IDENT "{" terms "=>" "Some"
-    {'(': 50},
-
-    # 45. "nt" IDENT "{" terms "=>" "None"
-    {';': -26, ')': -26, ',': -26},
-
-    # 46. "nt" IDENT "{" terms "=>" expr
-    {';': -19},
-
-    # 47. "nt" IDENT "{" terms reducer ";"
-    {'}': -16, 'IDENT': -16, 'STR': -16},
-
-    # 48. "goal" "nt" IDENT "{" prods "}"
-    {None: -12, 'nt': -12, 'goal': -12},
-
-    # 49. "nt" IDENT "{" terms "=>" IDENT "("
-    {')': 51, 'MATCH': 42, 'IDENT': 43, 'Some': 44, 'None': 45},
-
-    # 50. "nt" IDENT "{" terms "=>" "Some" "("
-    {'MATCH': 42, 'IDENT': 43, 'Some': 44, 'None': 45},
-
-    # 51. "nt" IDENT "{" terms "=>" IDENT "(" ")"
-    {';': -23, ')': -23, ',': -23},
-
-    # 52. "nt" IDENT "{" terms "=>" IDENT "(" expr_args
-    {')': 55, ',': 56},
-
-    # 53. "nt" IDENT "{" terms "=>" IDENT "(" expr
-    {')': -29, ',': -29},
-
-    # 54. "nt" IDENT "{" terms "=>" "Some" "(" expr
-    {')': 57},
-
-    # 55. "nt" IDENT "{" terms "=>" IDENT "(" expr_args ")"
-    {';': -24, ')': -24, ',': -24},
-
-    # 56. "nt" IDENT "{" terms "=>" IDENT "(" expr_args ","
-    {'MATCH': 42, 'IDENT': 43, 'Some': 44, 'None': 45},
-
-    # 57. "nt" IDENT "{" terms "=>" "Some" "(" expr ")"
-    {';': -25, ')': -25, ',': -25},
-
-    # 58. "nt" IDENT "{" terms "=>" IDENT "(" expr_args "," expr
-    {')': -30, ',': -30},
-
-]
-
-ctns = [
-    {'grammar': 5, 'nt_defs': 6, 'token_defs': 7, 'nt_def': 8, 'token_def': 9},
     {},
-    {},
-    {},
-    {},
-    {},
-    {'nt_def': 14},
-    {'nt_defs': 15, 'token_def': 16, 'nt_def': 8},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {'nt_def': 14},
-    {},
-    {'prods': 24, 'prod': 25, 'terms': 26, 'term': 27, 'symbol': 28},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {'prod': 33, 'terms': 26, 'term': 27, 'symbol': 28},
-    {},
-    {'reducer': 36, 'term': 37, 'symbol': 28},
-    {},
-    {},
-    {'prods': 40, 'prod': 25, 'terms': 26, 'term': 27, 'symbol': 28},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {'expr': 46},
-    {},
-    {},
-    {},
-    {},
-    {'prod': 33, 'terms': 26, 'term': 27, 'symbol': 28},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {'expr_args': 52, 'expr': 53},
-    {'expr': 54},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {'expr': 58},
-    {},
-    {},
-]
 
-special_cases = [
+    # 9.
+
+    {'{': 14},
+
+    # 10.
+
+    {'IDENT': 15},
+
+    # 11.
+
+    {End(): 63, 'goal': 3, 'nt': 2, Nt('nt_def'): 36},
+
+    # 12.
+
+    {'=': 16},
+
+    # 13.
+
+    {'IDENT': 17},
+
+    # 14.
+
+    {'}': 39, 'IDENT': 42, 'STR': 43, Nt('prods'): 18, Nt('prod'): 40, Nt('terms'): 19, Nt('term'): 41, Nt('symbol'): 20},
+
+    # 15.
+
+    {'{': 21},
+
+    # 16.
+
+    {'STR': 22},
+
+    # 17.
+
+    {';': 44},
+
+    # 18.
+
+    {'}': 45, 'IDENT': 42, 'STR': 43, Nt('prod'): 46, Nt('terms'): 19, Nt('term'): 41, Nt('symbol'): 20},
+
+    # 19.
+
+    {';': 47, 'IDENT': 42, 'STR': 43, '=>': 24, Nt('term'): 48, Nt('symbol'): 20, Nt('reducer'): 23},
+
+    # 20.
+
+    {'=>': 64, 'STR': 64, 'IDENT': 64, ';': 64, '?': 49, Nt('reducer'): 64, Nt('symbol'): 64, Nt('term'): 64},
+
+    # 21.
+
+    {'}': 50, 'IDENT': 42, 'STR': 43, Nt('prods'): 25, Nt('prod'): 40, Nt('terms'): 19, Nt('term'): 41, Nt('symbol'): 20},
+
+    # 22.
+
+    {';': 51},
+
+    # 23.
+
+    {';': 52},
+
+    # 24.
+
+    {'MATCH': 54, 'IDENT': 26, 'Some': 27, 'None': 55, Nt('expr'): 53},
+
+    # 25.
+
+    {'}': 56, 'IDENT': 42, 'STR': 43, Nt('prod'): 46, Nt('terms'): 19, Nt('term'): 41, Nt('symbol'): 20},
+
+    # 26.
+
+    {'(': 28},
+
+    # 27.
+
+    {'(': 29},
+
+    # 28.
+
+    {')': 57, 'MATCH': 54, 'IDENT': 26, 'Some': 27, 'None': 55, Nt('expr_args'): 30, Nt('expr'): 58},
+
+    # 29.
+
+    {'MATCH': 54, 'IDENT': 26, 'Some': 27, 'None': 55, Nt('expr'): 31},
+
+    # 30.
+
+    {')': 59, ',': 32},
+
+    # 31.
+
+    {')': 60},
+
+    # 32.
+
+    {'MATCH': 54, 'IDENT': 26, 'Some': 27, 'None': 55, Nt('expr'): 61},
+
+    # 33.
+
+    state_33_actions,
+
+    # 34.
+
+    state_34_actions,
+
+    # 35.
+
+    state_35_actions,
+
+    # 36.
+
+    state_36_actions,
+
+    # 37.
+
+    state_37_actions,
+
+    # 38.
+
+    state_38_actions,
+
+    # 39.
+
+    state_39_actions,
+
+    # 40.
+
+    state_40_actions,
+
+    # 41.
+
+    state_41_actions,
+
+    # 42.
+
+    state_42_actions,
+
+    # 43.
+
+    state_43_actions,
+
+    # 44.
+
+    state_44_actions,
+
+    # 45.
+
+    state_45_actions,
+
+    # 46.
+
+    state_46_actions,
+
+    # 47.
+
+    state_47_actions,
+
+    # 48.
+
+    state_48_actions,
+
+    # 49.
+
+    state_49_actions,
+
+    # 50.
+
+    state_50_actions,
+
+    # 51.
+
+    state_51_actions,
+
+    # 52.
+
+    state_52_actions,
+
+    # 53.
+
+    state_53_actions,
+
+    # 54.
+
+    state_54_actions,
+
+    # 55.
+
+    state_55_actions,
+
+    # 56.
+
+    state_56_actions,
+
+    # 57.
+
+    state_57_actions,
+
+    # 58.
+
+    state_58_actions,
+
+    # 59.
+
+    state_59_actions,
+
+    # 60.
+
+    state_60_actions,
+
+    # 61.
+
+    state_61_actions,
+
+    # 62.
+
+    state_62_actions,
+
+    # 63.
+
+    state_63_actions,
+
+    # 64.
+
+    state_64_actions,
+
 ]
 
 error_codes = [
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-    None, None, None, None, None, None, None, None, None, None, None,
+    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+    None,
 ]
 
-reductions = [
-    # 0. grammar ::= nt_defs => grammar(None, $0)
-    ('grammar', 1, lambda builder, x0: builder.grammar(None, x0)),
-    # 1. grammar ::= token_defs nt_defs => grammar(Some($0), $1)
-    ('grammar', 2, lambda builder, x0, x1: builder.grammar(x0, x1)),
-    # 2. token_defs ::= token_def => single($0)
-    ('token_defs', 1, lambda builder, x0: builder.single(x0)),
-    # 3. token_defs ::= token_defs token_def => append($0, $1)
-    ('token_defs', 2, lambda builder, x0, x1: builder.append(x0, x1)),
-    # 4. nt_defs ::= nt_def => nt_defs_single($0)
-    ('nt_defs', 1, lambda builder, x0: builder.nt_defs_single(x0)),
-    # 5. nt_defs ::= nt_defs nt_def => nt_defs_append($0, $1)
-    ('nt_defs', 2, lambda builder, x0, x1: builder.nt_defs_append(x0, x1)),
-    # 6. token_def ::= "token" IDENT "=" STR ";" => const_token($1, $3)
-    ('token_def', 5, lambda builder, x0, x1, x2, x3, x4: builder.const_token(x1, x3)),
-    # 7. token_def ::= "var" "token" IDENT ";" => var_token($2)
-    ('token_def', 4, lambda builder, x0, x1, x2, x3: builder.var_token(x2)),
-    # 8. nt_def ::= "nt" IDENT "{" "}" => nt_def(None, $1, None)
-    ('nt_def', 4, lambda builder, x0, x1, x2, x3: builder.nt_def(None, x1, None)),
-    # 9. nt_def ::= "goal" "nt" IDENT "{" "}" => nt_def(Some($0), $2, None)
-    ('nt_def', 5, lambda builder, x0, x1, x2, x3, x4: builder.nt_def(x0, x2, None)),
-    # 10. nt_def ::= "nt" IDENT "{" prods "}" => nt_def(None, $1, Some($3))
-    ('nt_def', 5, lambda builder, x0, x1, x2, x3, x4: builder.nt_def(None, x1, x3)),
-    # 11. nt_def ::= "goal" "nt" IDENT "{" prods "}" => nt_def(Some($0), $2, Some($4))
-    ('nt_def', 6, lambda builder, x0, x1, x2, x3, x4, x5: builder.nt_def(x0, x2, x4)),
-    # 12. prods ::= prod => single($0)
-    ('prods', 1, lambda builder, x0: builder.single(x0)),
-    # 13. prods ::= prods prod => append($0, $1)
-    ('prods', 2, lambda builder, x0, x1: builder.append(x0, x1)),
-    # 14. prod ::= terms ";" => prod($0, None)
-    ('prod', 2, lambda builder, x0, x1: builder.prod(x0, None)),
-    # 15. prod ::= terms reducer ";" => prod($0, Some($1))
-    ('prod', 3, lambda builder, x0, x1, x2: builder.prod(x0, x1)),
-    # 16. terms ::= term => single($0)
-    ('terms', 1, lambda builder, x0: builder.single(x0)),
-    # 17. terms ::= terms term => append($0, $1)
-    ('terms', 2, lambda builder, x0, x1: builder.append(x0, x1)),
-    # 18. reducer ::= "=>" expr => $1
-    ('reducer', 2, lambda builder, x0, x1: x1),
-    # 19. term ::= symbol => $0
-    ('term', 1, lambda builder, x0: x0),
-    # 20. term ::= symbol "?" => optional($0)
-    ('term', 2, lambda builder, x0, x1: builder.optional(x0)),
-    # 21. expr ::= MATCH => expr_match($0)
-    ('expr', 1, lambda builder, x0: builder.expr_match(x0)),
-    # 22. expr ::= IDENT "(" ")" => expr_call($0, None)
-    ('expr', 3, lambda builder, x0, x1, x2: builder.expr_call(x0, None)),
-    # 23. expr ::= IDENT "(" expr_args ")" => expr_call($0, Some($2))
-    ('expr', 4, lambda builder, x0, x1, x2, x3: builder.expr_call(x0, x2)),
-    # 24. expr ::= "Some" "(" expr ")" => expr_some($2)
-    ('expr', 4, lambda builder, x0, x1, x2, x3: builder.expr_some(x2)),
-    # 25. expr ::= "None" => expr_none()
-    ('expr', 1, lambda builder, x0: builder.expr_none()),
-    # 26. symbol ::= IDENT => ident($0)
-    ('symbol', 1, lambda builder, x0: builder.ident(x0)),
-    # 27. symbol ::= STR => str($0)
-    ('symbol', 1, lambda builder, x0: builder.str(x0)),
-    # 28. expr_args ::= expr => args_single($0)
-    ('expr_args', 1, lambda builder, x0: builder.args_single(x0)),
-    # 29. expr_args ::= expr_args "," expr => args_append($0, $2)
-    ('expr_args', 3, lambda builder, x0, x1, x2: builder.args_append(x0, x2)),
-]
+goal_nt_to_init_state = {'grammar': 0}
 
-
-class DefaultBuilder:
-    def grammar(self, x0, x1): return ('grammar', x0, x1)
-    def single(self, x0): return ('single', x0)
-    def append(self, x0, x1): return ('append', x0, x1)
-    def const_token(self, x0, x1): return ('const_token', x0, x1)
-    def var_token(self, x0): return ('var_token', x0)
-    def nt_defs_single(self, x0): return ('nt_defs_single', x0)
-    def nt_defs_append(self, x0, x1): return ('nt_defs_append', x0, x1)
-    def nt_def(self, x0, x1, x2): return ('nt_def', x0, x1, x2)
-    def prod(self, x0, x1): return ('prod', x0, x1)
-    def optional(self, x0): return ('optional', x0)
-    def ident(self, x0): return ('ident', x0)
-    def str(self, x0): return ('str', x0)
-    def expr_match(self, x0): return ('expr_match', x0)
-    def expr_call(self, x0, x1): return ('expr_call', x0, x1)
-    def expr_some(self, x0): return ('expr_some', x0)
-    def expr_none(self, ): return ('expr_none', )
-    def args_single(self, x0): return ('args_single', x0)
-    def args_append(self, x0, x1): return ('args_append', x0, x1)
-
-
-goal_nt_to_init_state = {
-    'grammar': 0,
-}
+class DefaultMethods:
+    def nt_defs_single(self, x0):
+        return ('nt_defs_single', x0)
+    def single(self, x0):
+        return ('single', x0)
+    def nt_defs_append(self, x0, x1):
+        return ('nt_defs_append', x0, x1)
+    def append(self, x0, x1):
+        return ('append', x0, x1)
+    def nt_def(self, x0, x1, x2):
+        return ('nt_def', x0, x1, x2)
+    def ident(self, x0):
+        return ('ident', x0)
+    def str(self, x0):
+        return ('str', x0)
+    def var_token(self, x0):
+        return ('var_token', x0)
+    def nt_def(self, x0, x1, x2):
+        return ('nt_def', x0, x1, x2)
+    def prod(self, x0, x1):
+        return ('prod', x0, x1)
+    def optional(self, x0):
+        return ('optional', x0)
+    def nt_def(self, x0, x1, x2):
+        return ('nt_def', x0, x1, x2)
+    def const_token(self, x0, x1):
+        return ('const_token', x0, x1)
+    def prod(self, x0, x1):
+        return ('prod', x0, x1)
+    def expr_match(self, x0):
+        return ('expr_match', x0)
+    def expr_none(self, ):
+        return ('expr_none', )
+    def nt_def(self, x0, x1, x2):
+        return ('nt_def', x0, x1, x2)
+    def expr_call(self, x0, x1):
+        return ('expr_call', x0, x1)
+    def args_single(self, x0):
+        return ('args_single', x0)
+    def expr_call(self, x0, x1):
+        return ('expr_call', x0, x1)
+    def expr_some(self, x0):
+        return ('expr_some', x0)
+    def args_append(self, x0, x1):
+        return ('args_append', x0, x1)
+    def grammar(self, x0, x1):
+        return ('grammar', x0, x1)
+    def grammar(self, x0, x1):
+        return ('grammar', x0, x1)
 
 class Parser(runtime.Parser):
     def __init__(self, goal='grammar', builder=None):
         if builder is None:
-            builder = DefaultBuilder()
-        super().__init__(actions, ctns, reductions, special_cases, error_codes,
-                         goal_nt_to_init_state[goal], builder)
+            builder = DefaultMethods()
+        super().__init__(actions, error_codes, goal_nt_to_init_state[goal], builder)
 

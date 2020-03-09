@@ -70,6 +70,9 @@ def main():
     parser.add_argument(
         '--progress', action='store_true',
         help="print a dot each time a state is analyzed (thousands of them)")
+    parser.add_argument(
+        '--debug', action='store_true',
+        help="annotate the generated code with grammar productions")
     args = parser.parse_args()
 
     # Check filenames.
@@ -101,7 +104,7 @@ def main():
         states = jsparagus.gen.generate_parser_states(
             grammar, verbose=args.verbose, progress=args.progress)
     else:
-        states = jsparagus.gen.ParserStates.load(in_filename)
+        states = jsparagus.gen.ParseTable.load(in_filename)
 
     # Generate output.
     try:
@@ -110,6 +113,7 @@ def main():
                 jsparagus.gen.generate_parser(f, states,
                                               target=target,
                                               verbose=args.verbose,
+                                              debug=args.debug,
                                               handler_info=args.handler_info)
         else:
             assert target == 'dump'

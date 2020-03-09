@@ -120,25 +120,25 @@ impl<'alloc> NodeTypeIdAccessor for Arguments<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for Identifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for Identifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::Identifier
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for IdentifierName<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for IdentifierName {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::IdentifierName
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for PrivateIdentifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for PrivateIdentifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::PrivateIdentifier
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for Label<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for Label {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::Label
     }
@@ -264,7 +264,7 @@ impl<'alloc> NodeTypeIdAccessor for ExportDeclaration<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for VariableReference<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for VariableReference {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::VariableReference
     }
@@ -312,13 +312,13 @@ impl<'alloc> NodeTypeIdAccessor for BindingWithDefault<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for BindingIdentifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for BindingIdentifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::BindingIdentifier
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for AssignmentTargetIdentifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for AssignmentTargetIdentifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::AssignmentTargetIdentifier
     }
@@ -456,19 +456,19 @@ impl<'alloc> NodeTypeIdAccessor for Import<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for ImportNamespace<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for ImportNamespace {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::ImportNamespace
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for ImportSpecifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for ImportSpecifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::ImportSpecifier
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for ExportAllFrom<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for ExportAllFrom {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::ExportAllFrom
     }
@@ -498,13 +498,13 @@ impl<'alloc> NodeTypeIdAccessor for ExportDefault<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for ExportFromSpecifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for ExportFromSpecifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::ExportFromSpecifier
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for ExportLocalSpecifier<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for ExportLocalSpecifier {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::ExportLocalSpecifier
     }
@@ -534,7 +534,7 @@ impl<'alloc> NodeTypeIdAccessor for DataProperty<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for ShorthandProperty<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for ShorthandProperty {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::ShorthandProperty
     }
@@ -546,7 +546,7 @@ impl<'alloc> NodeTypeIdAccessor for ComputedPropertyName<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for StaticPropertyName<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for StaticPropertyName {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::StaticPropertyName
     }
@@ -576,7 +576,7 @@ impl<'alloc> NodeTypeIdAccessor for ComputedMemberExpression<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for IdentifierExpression<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for IdentifierExpression {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::IdentifierExpression
     }
@@ -636,7 +636,7 @@ impl<'alloc> NodeTypeIdAccessor for CatchClause<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for Directive<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for Directive {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::Directive
     }
@@ -672,7 +672,7 @@ impl<'alloc> NodeTypeIdAccessor for SwitchDefault<'alloc> {
     }
 }
 
-impl<'alloc> NodeTypeIdAccessor for TemplateElement<'alloc> {
+impl<'alloc> NodeTypeIdAccessor for TemplateElement {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::TemplateElement
     }
