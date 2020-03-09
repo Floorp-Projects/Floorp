@@ -45,7 +45,7 @@ class MessagePortService final {
                   const uint32_t& aSequenceID);
 
  private:
-  ~MessagePortService() {}
+  ~MessagePortService() = default;
 
   void CloseAll(const nsID& aUUID, bool aForced = false);
   void MaybeShutdown();
