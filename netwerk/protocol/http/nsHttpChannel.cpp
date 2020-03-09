@@ -1612,20 +1612,18 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
       break;
   }
 
-  nsCOMPtr<nsIURI> requestURI;
-  aLoadInfo->LoadingPrincipal()->GetURI(getter_AddRefs(requestURI));
-
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  nsresult rv = ssm->CheckSameOriginURI(requestURI, aURI, false, isPrivateWin);
-  if (NS_SUCCEEDED(rv)) {
+  bool isSameOrigin = false;
+  aLoadInfo->LoadingPrincipal()->IsSameOrigin(aURI, isPrivateWin,
+                                              &isSameOrigin);
+  if (isSameOrigin) {
     // same origin
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::same_origin);
   } else {
     bool cors = false;
     nsAutoCString corsOrigin;
-    rv = aResponseHead->GetHeader(
+    nsresult rv = aResponseHead->GetHeader(
         nsHttp::ResolveAtom("Access-Control-Allow-Origin"), corsOrigin);
     if (NS_SUCCEEDED(rv)) {
       if (corsOrigin.Equals("*")) {
@@ -1636,9 +1634,10 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
         if (NS_SUCCEEDED(rv)) {
           bool isPrivateWin =
               aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-          rv = ssm->CheckSameOriginURI(requestURI, corsOriginURI, false,
-                                       isPrivateWin);
-          if (NS_SUCCEEDED(rv)) {
+          bool isSameOrigin = false;
+          aLoadInfo->LoadingPrincipal()->IsSameOrigin(
+              corsOriginURI, isPrivateWin, &isSameOrigin);
+          if (isSameOrigin) {
             cors = true;
           }
         }
@@ -7732,9 +7731,9 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
       return NS_ERROR_DOM_CORP_FAILED;
     }
 
-    nsCOMPtr<nsIURI> documentURI = mLoadInfo->LoadingPrincipal()->GetURI();
     nsCOMPtr<nsIURI> resourceURI = channelOrigin->GetURI();
-    if (!documentURI->SchemeIs("https") && resourceURI->SchemeIs("https")) {
+    if (!mLoadInfo->LoadingPrincipal()->SchemeIs("https") &&
+        resourceURI->SchemeIs("https")) {
       return NS_ERROR_DOM_CORP_FAILED;
     }
 
