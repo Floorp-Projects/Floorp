@@ -33,6 +33,7 @@ XPCOM_MANIFESTS += [
 EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
     'AntiTrackingIPCUtils.h',
+    'AntiTrackingRedirectHeuristic.h',
     'AntiTrackingUtils.h',
     'ContentBlockingAllowList.h',
     'ContentBlockingNotifier.h',
@@ -43,6 +44,7 @@ EXPORTS.mozilla = [
 
 UNIFIED_SOURCES += [
     'AntiTrackingCommon.cpp',
+    'AntiTrackingRedirectHeuristic.cpp',
     'AntiTrackingUtils.cpp',
     'ContentBlockingAllowList.cpp',
     'ContentBlockingNotifier.cpp',
