@@ -4207,20 +4207,26 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   AutoCleanLinkedList<FlexLine> lines;
   AutoTArray<StrutInfo, 1> struts;
+  AutoTArray<nsIFrame*, 1> placeholders;
   DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
                flexContainerAscent, availableBSizeForContent, lines, struts,
-               axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
-               containerInfo);
+               placeholders, axisTracker, mainGapSize, crossGapSize,
+               hasLineClampEllipsis, containerInfo);
 
   if (!struts.IsEmpty()) {
     // We're restarting flex layout, with new knowledge of collapsed items.
     aStatus.Reset();
     lines.clear();
+    placeholders.Clear();
     DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
                  flexContainerAscent, availableBSizeForContent, lines, struts,
-                 axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
-                 containerInfo);
+                 placeholders, axisTracker, mainGapSize, crossGapSize,
+                 hasLineClampEllipsis, containerInfo);
   }
+
+  ReflowChildren(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
+                 flexContainerAscent, lines, placeholders, axisTracker,
+                 hasLineClampEllipsis);
 
   ComputeFinalSize(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
                    contentBoxCrossSize, flexContainerAscent, lines,
@@ -4554,18 +4560,17 @@ void nsFlexContainerFrame::DoFlexLayout(
     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
     nscoord& aFlexContainerAscent, nscoord aAvailableBSizeForContent,
     LinkedList<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
-    const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
-    nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
+    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
     ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aLines.isEmpty(), "Caller should pass an empty line-list!");
-
-  nsTArray<nsIFrame*> placeholderKids;
+  MOZ_ASSERT(aPlaceholders.IsEmpty(),
+             "Caller should pass an empty array for placeholders!");
 
   GenerateFlexLines(aReflowInput, aContentBoxMainSize,
                     aAvailableBSizeForContent, aStruts, aAxisTracker,
-                    aMainGapSize, aHasLineClampEllipsis, placeholderKids,
-                    aLines);
+                    aMainGapSize, aHasLineClampEllipsis, aPlaceholders, aLines);
 
   if ((aLines.getFirst()->IsEmpty() && !aLines.getFirst()->getNext()) ||
       aReflowInput.mStyleDisplay->IsContainLayout()) {
@@ -4772,7 +4777,13 @@ void nsFlexContainerFrame::DoFlexLayout(
           aContentBoxCrossSize, aReflowInput, aAxisTracker);
     }
   }
+}
 
+void nsFlexContainerFrame::ReflowChildren(
+    const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
+    const nscoord aContentBoxCrossSize, nscoord& aFlexContainerAscent,
+    mozilla::LinkedList<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
+    const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis) {
   // Before giving each child a final reflow, calculate the origin of the
   // flex container's content box (with respect to its border-box), so that
   // we can compute our flex item's final positions.
@@ -4889,8 +4900,8 @@ void nsFlexContainerFrame::DoFlexLayout(
     }
   }
 
-  if (!placeholderKids.IsEmpty()) {
-    ReflowPlaceholders(aReflowInput, placeholderKids, containerContentBoxOrigin,
+  if (!aPlaceholders.IsEmpty()) {
+    ReflowPlaceholders(aReflowInput, aPlaceholders, containerContentBoxOrigin,
                        containerSize);
   }
 }

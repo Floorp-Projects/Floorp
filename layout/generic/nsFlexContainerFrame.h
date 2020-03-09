@@ -279,6 +279,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                     nscoord aAvailableBSizeForContent,
                     mozilla::LinkedList<FlexLine>& aLines,
                     nsTArray<StrutInfo>& aStruts,
+                    nsTArray<nsIFrame*>& aPlaceholders,
                     const FlexboxAxisTracker& aAxisTracker,
                     nscoord aMainGapSize, nscoord aCrossGapSize,
                     bool aHasLineClampEllipsis,
@@ -449,6 +450,26 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                         nscoord aFlexContainerAscent,
                         mozilla::LinkedList<FlexLine>& aLines,
                         const FlexboxAxisTracker& aAxisTracker);
+
+  /**
+   * Perform a final Reflow for our child frames.
+   *
+   * @param aContentBoxMainSize the final content-box main-size of the flex
+   *                            container.
+   * @param aContentBoxCrossSize the final content-box cross-size of the flex
+   *                             container.
+   * @param aFlexContainerAscent [in/out] initially, the "tentative" flex
+   *                             container ascent computed in DoFlexLayout; or,
+   *                             nscoord_MIN if the ascent hasn't been
+   *                             established yet. If the latter, this will be
+   *                             updated with an ascent derived from the first
+   *                             flex item (if there are any flex items).
+   */
+  void ReflowChildren(
+      const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
+      const nscoord aContentBoxCrossSize, nscoord& aFlexContainerAscent,
+      mozilla::LinkedList<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
+      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any
