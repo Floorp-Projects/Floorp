@@ -90,6 +90,48 @@ add_task(async function testDefaultMetadataForPageUsingNullMetadata() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testMetadataWithEmptyTitleAndArtwork() {
+  info(`open media page`);
+  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+
+  info(`start media`);
+  await playMedia(tab);
+
+  info(`create media metadata with empty title and artwork`);
+  await setMediaMetadata(tab, {
+    title: "",
+    artist: "foo",
+    album: "bar",
+    artwork: [],
+  });
+
+  info(`should use default metadata because of empty title and artwork`);
+  await isUsingDefaultMetadata(tab);
+
+  info(`remove tab`);
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testMetadataWithoutTitleAndArtwork() {
+  info(`open media page`);
+  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+
+  info(`start media`);
+  await playMedia(tab);
+
+  info(`create media metadata with empty title and artwork`);
+  await setMediaMetadata(tab, {
+    artist: "foo",
+    album: "bar",
+  });
+
+  info(`should use default metadata because of lacking of title and artwork`);
+  await isUsingDefaultMetadata(tab);
+
+  info(`remove tab`);
+  await BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function testSetMetadataFromMediaSessionAPI() {
   info(`open media page`);
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
