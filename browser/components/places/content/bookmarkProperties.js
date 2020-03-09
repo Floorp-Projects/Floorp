@@ -248,7 +248,7 @@ var BookmarkPropertiesPanel = {
 
     // Disable the buttons until we have all the information required.
     let acceptButton = document
-      .getElementById("bookmarkproperties")
+      .getElementById("bookmarkpropertiesdialog")
       .getButton("accept");
     acceptButton.disabled = true;
 
@@ -265,7 +265,7 @@ var BookmarkPropertiesPanel = {
    */
   async _initDialog() {
     let acceptButton = document
-      .getElementById("bookmarkproperties")
+      .getElementById("bookmarkpropertiesdialog")
       .getButton("accept");
     acceptButton.label = this._getAcceptLabel();
     let acceptButtonDisabled = false;
@@ -369,7 +369,7 @@ var BookmarkPropertiesPanel = {
         ) {
           // Check uri fields to enable accept button if input is valid
           document
-            .getElementById("bookmarkproperties")
+            .getElementById("bookmarkpropertiesdialog")
             .getButton("accept").disabled = !this._inputIsValid();
         }
         break;
