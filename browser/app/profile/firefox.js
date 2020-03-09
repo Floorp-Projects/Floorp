@@ -1101,6 +1101,12 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // exotic configurations we can't reasonably support out of the box.
   //
   pref("security.sandbox.content.level", 4);
+  // Introduced as part of bug 1608558.  Linux is currently the only platform
+  // that uses a sandbox level for the socket process.  There are currently
+  // only 2 levels:
+  // 0 -> "no sandbox"
+  // 1 -> "sandboxed, allows socket operations and reading necessary certs"
+  pref("security.sandbox.socket.process.level", 1);
   pref("security.sandbox.content.write_path_whitelist", "");
   pref("security.sandbox.content.read_path_whitelist", "");
   pref("security.sandbox.content.syscall_whitelist", "");
