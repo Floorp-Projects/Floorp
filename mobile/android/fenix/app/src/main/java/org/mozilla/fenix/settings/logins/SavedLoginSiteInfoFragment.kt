@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.logins
 
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
 import android.text.InputType
 import android.view.Menu
@@ -13,6 +14,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -84,7 +86,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.delete_login_button -> {
-            deleteLogin()
+            displayDeleteLoginDialog()
             true
         }
         else -> false
@@ -143,6 +145,22 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
             WindowManager.LayoutParams.FLAG_SECURE
         )
         showToolbar(args.savedLoginItem.url)
+    }
+
+    private fun displayDeleteLoginDialog() {
+        activity?.let { activity ->
+            AlertDialog.Builder(activity).apply {
+                setMessage(R.string.login_deletion_confirmation)
+                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
+                setPositiveButton(R.string.dialog_delete_positive) { dialog: DialogInterface, _ ->
+                    deleteLogin()
+                    dialog.dismiss()
+                }
+                create()
+            }.show()
+        }
     }
 
     /**

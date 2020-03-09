@@ -1257,4 +1257,8 @@
     <string name="certificate_info_verified_by">Verified By: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Delete</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Are you sure you want to delete this login?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Delete</string>
 </resources>
