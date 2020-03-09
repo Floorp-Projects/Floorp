@@ -500,8 +500,8 @@ ThirdPartyUtil::AnalyzeChannel(nsIChannel* aChannel, bool aNotify, nsIURI* aURI,
 
     if (aNotify && !result.contains(
                        ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted)) {
-      AntiTrackingCommon::NotifyBlockingDecision(
-          aChannel, AntiTrackingCommon::BlockingDecision::eBlock,
+      ContentBlockingNotifier::OnDecision(
+          aChannel, ContentBlockingNotifier::BlockingDecision::eBlock,
           *aRejectedReason);
     }
   }
