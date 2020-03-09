@@ -5,8 +5,8 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.flexbox.FlexboxLayoutManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_top_sites.view.*
 import mozilla.components.feature.top.sites.TopSite
@@ -24,7 +24,7 @@ class TopSiteViewHolder(
     init {
         view.top_sites_list.apply {
             adapter = topSitesAdapter
-            layoutManager = GridLayoutManager(view.context, NUM_COLUMNS)
+            layoutManager = FlexboxLayoutManager(view.context)
             isNestedScrollingEnabled = false
         }
     }
@@ -35,6 +35,5 @@ class TopSiteViewHolder(
 
     companion object {
         const val LAYOUT_ID = R.layout.component_top_sites
-        const val NUM_COLUMNS = 5
     }
 }
