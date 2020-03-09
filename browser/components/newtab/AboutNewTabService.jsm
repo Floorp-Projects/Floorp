@@ -186,15 +186,15 @@ AboutNewTabService.prototype = {
             Services.scriptloader.loadSubScript(script, win); // Synchronous call
           }
         };
-        subject.addEventListener("DOMContentLoaded", onLoaded, { once: true });
+        win.addEventListener("DOMContentLoaded", onLoaded, { once: true });
 
         // There is a possibility that DOMContentLoaded won't be fired. This
         // unload event (which cannot be cancelled) will attempt to remove
         // the listener for the DOMContentLoaded event.
         const onUnloaded = () => {
-          subject.removeEventListener("DOMContentLoaded", onLoaded);
+          win.removeEventListener("DOMContentLoaded", onLoaded);
         };
-        subject.addEventListener("unload", onUnloaded, { once: true });
+        win.addEventListener("unload", onUnloaded, { once: true });
         break;
       }
       case TOPIC_APP_QUIT:
