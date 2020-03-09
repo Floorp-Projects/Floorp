@@ -67,6 +67,161 @@ Features to add:
   ]]></style>
   <script type="text/javascript"><![CDATA[
 
+let heatmapCanvas = null;
+let heatmapUMouse;
+let gl = null;
+
+function heatmap_render_setup(canvas) {
+  gl = canvas.getContext('webgl', {antialias: false, depth: false, preserveDrawingBuffer:false});
+
+  const vertices = [
+    0, 0,
+    1, 0,
+    0, 1,
+    1, 1,
+  ];
+
+  const vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+  const vsCode =
+    `
+    attribute vec2 a_vertCoord;
+    varying   vec2 v_texCoord;
+    void main(void) {
+      gl_Position = vec4(2.0 * a_vertCoord - 1.0, 0.0, 1.0);
+      v_texCoord = a_vertCoord;
+    }`;
+
+  const VS = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(VS, vsCode);
+  gl.compileShader(VS);
+
+  const psCode =
+    `
+    precision mediump float;
+    uniform vec2 heatmapUMouse;
+    varying vec2 v_texCoord;
+    uniform sampler2D u_image1, u_image2;
+    void main(void) {
+      vec2 dxy = abs(heatmapUMouse - gl_FragCoord.xy);
+      if(dxy.x < 1.0 || dxy.y < 1.0) {  // crosshair
+        gl_FragColor = vec4( 1.0, 1.0, 0.5, 1.0 );
+        return;
+      }
+
+      vec3 img1 = texture2D(u_image1, v_texCoord).rgb;
+      vec3 img2 = texture2D(u_image2, v_texCoord).rgb;
+
+      bool is_top  = gl_FragCoord.y > float(heatmapUMouse.y);
+      bool is_left = gl_FragCoord.x < float(heatmapUMouse.x);
+
+      vec3 rgb;
+      if(is_top) {
+        if(is_left) {
+          rgb = img1;
+        } else {
+          rgb = img2;
+        }
+      } else {
+        vec3 diff = abs(img1 - img2);
+        if(is_left) {
+          rgb = diff;
+        } else {
+          float max_diff = max(diff.r, max(diff.g, diff.b));
+          if(max_diff == 0.0) {
+            rgb = vec3(0.0, 0.0, 0.2);
+          } else {
+            // some arbitrary colorization -- transition from green to red
+            // with some contrast tweaks to make red stand out a bit more
+            // at about 0.5'ish
+            rgb = vec3( pow(max_diff, 0.5), pow(1.0 - max_diff, 3.0), 0.0 );
+          }
+        }
+      }
+
+      gl_FragColor = vec4( rgb, 1.0 );
+    }`;
+
+  const FS = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(FS, psCode);
+  gl.compileShader(FS);
+
+  const program = gl.createProgram();
+  gl.attachShader(program, VS);
+  gl.attachShader(program, FS);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error('Link failed: ' + gl.getProgramInfoLog(program));
+    console.error('vs info-log: ' + gl.getShaderInfoLog(VS));
+    console.error('fs info-log: ' + gl.getShaderInfoLog(FS));
+    return;  // don't assign heatmapCanvas
+  }
+  gl.useProgram(program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+  const coord = gl.getAttribLocation(program, "a_vertCoord");
+  gl.vertexAttribPointer(coord, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(coord);
+
+  heatmapUMouse = gl.getUniformLocation(program, "heatmapUMouse");
+
+  gl.uniform1i(gl.getUniformLocation(program, 'u_image1'), 0);
+  gl.uniform1i(gl.getUniformLocation(program, 'u_image2'), 1);
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  heatmapCanvas = canvas;
+}
+
+function heatmap_change_image(index, image) {
+  if (heatmapCanvas === null) {
+    return;
+  }
+  const texture = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE0 + index);
+  gl.bindTexture  (gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texImage2D   (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+}
+
+function heatmap_render(mouse_x, mouse_y) {
+  if (heatmapCanvas === null) {
+    return;
+  }
+
+  gl.uniform2f(heatmapUMouse, mouse_x, mouse_y);
+
+  // the canvas resizes as user selects different reftests
+  gl.viewport(0, 0, heatmapCanvas.width, heatmapCanvas.height);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function heatmap_on_mousemove(mousemove_event) {
+  if (heatmapCanvas === null) {
+    return;
+  }
+  const rect = heatmapCanvas.getBoundingClientRect();
+  let x = mousemove_event.clientX - rect.left;
+  let y = mousemove_event.clientY - rect.top;
+  x = x * heatmapCanvas.width  / heatmapCanvas.clientWidth;
+  y = y * heatmapCanvas.height / heatmapCanvas.clientHeight;
+
+  // mouse has Y == 0 at the top, GL has it at the bottom:
+  const flip_y = heatmapCanvas.height-1 - y;
+  heatmap_render(x, flip_y);
+
+  return { x:x, y:y };
+}
+
+  ]]></script>
+
+  <script type="text/javascript"><![CDATA[
+
 var XLINK_NS = "http://www.w3.org/1999/xlink";
 var SVG_NS = "http://www.w3.org/2000/svg";
 var IMAGE_NOT_AVAILABLE = "data:image/png;base64,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";
@@ -342,6 +497,11 @@ function sync_svg_size(imageData) {
   ID("svg").setAttribute("height", imageData.height);
 }
 
+function sync_heatmap_size(imageData) {
+  ID("heat_canvas").setAttribute("width" , imageData.width);
+  ID("heat_canvas").setAttribute("height", imageData.height);
+}
+
 function show_images(i) {
   var item = gTestItems[i];
   var cell = ID("images");
@@ -355,8 +515,9 @@ function show_images(i) {
   ID("item" + i).classList.add("activeitem");
   ID("image1").style.display = "";
   ID("image2").style.display = "none";
-  ID("diffrect").style.display = "none";
+  show_diff_none();
   ID("imgcontrols").reset();
+  ID("diffcontrols").reset();
 
   ID("image1").setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
   // Making the href be #image1 doesn't seem to work
@@ -376,8 +537,8 @@ function show_images(i) {
 
   cell.style.display = "";
 
-  get_image_data(item.images[0], function(data) { gImage1Data = data; sync_svg_size(gImage1Data); });
-  get_image_data(item.images[1], function(data) { gImage2Data = data });
+  get_image_data(item.images[0], function(data) { gImage1Data = data; sync_svg_size(gImage1Data); sync_heatmap_size(gImage1Data); heatmap_change_image(0, gImage1Data); });
+  get_image_data(item.images[1], function(data) { gImage2Data = data; heatmap_change_image(1, gImage2Data); });
 }
 
 function show_image(i) {
@@ -401,7 +562,10 @@ function handle_keyboard_shortcut(event) {
     show_image(2);
     break;
   case 100: // "d" key
-    document.getElementById("differences").click();
+    document.getElementById("radio_diff_circle").click();
+    break;
+  case 104: // "h" key
+    document.getElementById("radio_diff_heatmap").click();
     break;
   case 112: // "p" key
     shift_images(-1);
@@ -429,8 +593,35 @@ function shift_images(dir) {
   }
 }
 
-function show_differences(cb) {
-  ID("diffrect").style.display = cb.checked ? "" : "none";
+function show_diff_none() {
+  ID("svg")        .style.display = "";
+  ID("diffrect")   .style.display = "none";
+  ID("heat_canvas").style.display = "none";
+}
+
+function show_diff_circle() {
+  ID("svg")        .style.display = "";
+  ID("diffrect")   .style.display = "";
+  ID("heat_canvas").style.display = "none";
+}
+
+function show_diff_heatmap() {
+  ID("svg")        .style.display = "none";
+  ID("diffrect")   .style.display = "none";
+  ID("heat_canvas").style.display = "";
+
+  if (heatmapCanvas === null) {
+    canvas = document.getElementById('heat_canvas');
+    heatmap_render_setup(canvas);
+    heatmap_change_image(0, gImage1Data);
+    heatmap_change_image(1, gImage2Data);
+    heatmap_render(0, 0);
+
+    window.addEventListener('mousemove', e => {
+      var { x: x, y: y } = heatmap_on_mousemove(e);
+      magnify_around(Math.floor(x), Math.floor(y));
+    });
+  }
 }
 
 function flash_pixels(on) {
@@ -469,6 +660,13 @@ function hex_as_rgb(hex) {
 
 function magnify(evt) {
   var { x: x, y: y } = cursor_point(evt);
+  magnify_around(x, y);
+}
+
+function magnify_around(x, y) {
+  if (x < 0 || y < 0 || x >= gImage1Data.width || y >= gImage1Data.height) {
+    return;
+  }
   var centerPixelColor1, centerPixelColor2;
 
   var dx_lo = -Math.floor(gMagWidth / 2);
@@ -572,8 +770,20 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
     <form id="imgcontrols">
     <input id="radio1" type="radio" name="which" value="0" onchange="show_image(1)" checked="checked" /><label id="label1" title="1" for="radio1">Image 1</label>
     <input id="radio2" type="radio" name="which" value="1" onchange="show_image(2)"                   /><label id="label2" title="2" for="radio2">Image 2</label>
-    <label><input id="differences" type="checkbox" onchange="show_differences(this)" />Circle differences</label>
     </form>
+
+    <form id="diffcontrols">
+      Differences:
+      <input id="radio_diff_none"    name="diff" value="0" type="radio" onchange="show_diff_none()" checked="checked"/>
+        <label for="radio_diff_none">None</label>
+      <input id="radio_diff_circle"  name="diff" value="1" type="radio" onchange="show_diff_circle()" />
+        <label for="radio_diff_circle">Circle</label>
+      <input id="radio_diff_heatmap" name="diff" value="2" type="radio" onchange="show_diff_heatmap()" />
+        <label for="radio_diff_heatmap">Heatmap</label>
+    </form>
+
+    <canvas width="800" height="1000" id="heat_canvas" style="display:none;"></canvas>
+
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="1000" id="svg">
       <defs>
         <!-- use sRGB to avoid loss of data -->
