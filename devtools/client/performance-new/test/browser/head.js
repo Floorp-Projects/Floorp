@@ -593,3 +593,20 @@ function setReactFriendlyInputValue(input, value) {
   // 'change' instead of 'input', see https://github.com/facebook/react/issues/11488#issuecomment-381590324
   input.dispatchEvent(new Event("change", { bubbles: true }));
 }
+
+/**
+ * The recording state is the internal state machine that represents the async
+ * operations that are going on in the profiler. This function sets up a helper
+ * that will obtain the Redux store and query this internal state. This is useful
+ * for unit testing purposes.
+ *
+ * @param {Document} document
+ */
+function setupGetRecordingState(document) {
+  const selectors = require("devtools/client/performance-new/store/selectors");
+  const store = document.defaultView.gStore;
+  if (!store) {
+    throw new Error("Could not find the redux store on the window object.");
+  }
+  return () => selectors.getRecordingState(store.getState());
+}
