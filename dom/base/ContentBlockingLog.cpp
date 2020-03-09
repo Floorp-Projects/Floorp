@@ -110,7 +110,7 @@ static void ReportOriginSingleHash(OriginMetricID aId,
 
 Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-    const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+    const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
     const nsTArray<nsCString>& aTrackingFullHashes) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
