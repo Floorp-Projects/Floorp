@@ -77,3 +77,7 @@
 .worker__link-debug {
   margin: 0 calc(var(--base-unit) * 2);
 }
+
+.worker__status {
+  text-transform: capitalize;
+}
