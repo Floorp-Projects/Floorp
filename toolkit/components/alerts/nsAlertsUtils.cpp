@@ -22,15 +22,8 @@ void nsAlertsUtils::GetSourceHostPort(nsIPrincipal* aPrincipal,
   if (!IsActionablePrincipal(aPrincipal)) {
     return;
   }
-  nsCOMPtr<nsIURI> principalURI;
-  if (NS_WARN_IF(NS_FAILED(aPrincipal->GetURI(getter_AddRefs(principalURI))))) {
-    return;
-  }
-  if (!principalURI) {
-    return;
-  }
   nsAutoCString hostPort;
-  if (NS_WARN_IF(NS_FAILED(principalURI->GetHostPort(hostPort)))) {
+  if (NS_WARN_IF(NS_FAILED(aPrincipal->GetHostPort(hostPort)))) {
     return;
   }
   CopyUTF8toUTF16(hostPort, aHostPort);
