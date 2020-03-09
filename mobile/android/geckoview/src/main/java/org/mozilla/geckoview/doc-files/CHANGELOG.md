@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change
 
+## v76
+- Added [`GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS`][76.1] to control EME media key access.
+
+[76.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
+
 ## v75
 - ⚠️ Remove `GeckoRuntimeSettings.Builder#useContentProcessHint`. The content
   process is now preloaded by default if
@@ -653,4 +658,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6b0849430f800a3e2226c1a87d26830d1cbe73ee
+[api-version]: 3ccce953759d39a8b9b0b1b01dcc75c8ad6654aa

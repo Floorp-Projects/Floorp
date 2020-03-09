@@ -75,3 +75,6 @@ pref("security.webauth.webauthn_enable_android_fido2", false);
 
 // Enable autoplay permission prompts
 pref("media.geckoview.autoplay.request", true);
+
+// Enable EME permission prompts
+pref("media.eme.require-app-approval", true);

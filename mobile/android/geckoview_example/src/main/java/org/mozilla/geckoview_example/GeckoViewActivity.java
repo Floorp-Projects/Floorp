@@ -1425,6 +1425,8 @@ public class GeckoViewActivity
                     callback.grant();
                 }
                 return;
+            } else if (PERMISSION_MEDIA_KEY_SYSTEM_ACCESS == type) {
+                resId = R.string.request_media_key_system_access;
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);
                 callback.reject();
