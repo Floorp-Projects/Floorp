@@ -190,7 +190,7 @@ void DrawTargetD2D1::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
                                  const Rect& aSource,
                                  const DrawSurfaceOptions& aSurfOptions,
                                  const DrawOptions& aOptions) {
-  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(DeviceColor()));
 
   D2D1_RECT_F samplingBounds;
 
@@ -251,7 +251,7 @@ void DrawTargetD2D1::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
     mDC->FillRectangle(D2DRect(aDest), brush);
   }
 
-  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(DeviceColor()));
 }
 
 void DrawTargetD2D1::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
@@ -262,7 +262,7 @@ void DrawTargetD2D1::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
     return;
   }
 
-  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(DeviceColor()));
 
   mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
@@ -289,12 +289,12 @@ void DrawTargetD2D1::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
                        imageBrush);
   }
 
-  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(DeviceColor()));
 }
 
 void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                            const Point& aDest,
-                                           const Color& aColor,
+                                           const DeviceColor& aColor,
                                            const Point& aOffset, Float aSigma,
                                            CompositionOp aOperator) {
   if (!EnsureInitialized()) {
@@ -1954,7 +1954,7 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
   }
 
   if (aPattern.GetType() == PatternType::COLOR) {
-    Color color = static_cast<const ColorPattern*>(&aPattern)->mColor;
+    DeviceColor color = static_cast<const ColorPattern*>(&aPattern)->mColor;
     return GetSolidColorBrush(
         D2D1::ColorF(color.r, color.g, color.b, color.a * aAlpha));
   }

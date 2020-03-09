@@ -487,9 +487,9 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
 
   CalculateUnderline(refDrawTarget, *fontMet);
 
-  nscolor c = aOverrideColor ? *aOverrideColor : StyleText()->mColor.ToColor();
-  ColorPattern color(ToDeviceColor(c));
-  aRenderingContext.SetColor(Color::FromABGR(c));
+  DeviceColor color = ToDeviceColor(aOverrideColor ? *aOverrideColor : StyleText()->mColor.ToColor());
+  ColorPattern colorPattern(color);
+  aRenderingContext.SetDeviceColor(color);
 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -540,7 +540,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
              mAccessKeyInfo->mAccessWidth,
              mAccessKeyInfo->mAccessUnderlineSize);
     Rect devPxRect = NSRectToSnappedRect(r, appUnitsPerDevPixel, *drawTarget);
-    drawTarget->FillRect(devPxRect, color);
+    drawTarget->FillRect(devPxRect, colorPattern);
   }
 
   // Strikeout is drawn on top of the text, per

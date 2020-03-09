@@ -151,7 +151,7 @@ void DrawTargetCaptureImpl::DrawSurface(SourceSurface* aSurface,
 }
 
 void DrawTargetCaptureImpl::DrawSurfaceWithShadow(
-    SourceSurface* aSurface, const Point& aDest, const Color& aColor,
+    SourceSurface* aSurface, const Point& aDest, const DeviceColor& aColor,
     const Point& aOffset, Float aSigma, CompositionOp aOperator) {
   aSurface->GuaranteePersistance();
   AppendCommand(DrawSurfaceWithShadowCommand)(aSurface, aDest, aColor, aOffset,

@@ -215,7 +215,7 @@ static inline U8CPU ColorFloatToByte(Float color) {
   return U8CPU(color * 255.f + .5f);
 };
 
-static inline SkColor ColorToSkColor(const Color& color, Float aAlpha) {
+static inline SkColor ColorToSkColor(const DeviceColor& color, Float aAlpha) {
   return SkColorSetARGB(ColorFloatToByte(color.a * aAlpha),
                         ColorFloatToByte(color.r), ColorFloatToByte(color.g),
                         ColorFloatToByte(color.b));

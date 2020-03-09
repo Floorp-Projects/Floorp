@@ -156,7 +156,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   typedef mozilla::StretchRange StretchRange;
   typedef mozilla::SlantStyleRange SlantStyleRange;
   typedef mozilla::WeightRange WeightRange;
-  typedef mozilla::gfx::Color Color;
+  typedef mozilla::gfx::sRGBColor sRGBColor;
+  typedef mozilla::gfx::DeviceColor DeviceColor;
   typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntSize IntSize;
@@ -516,11 +517,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   /**
    * Convert a pixel using a cms transform in an endian-aware manner.
-   *
-   * Sets 'out' to 'in' if transform is nullptr.
    */
-  static void TransformPixel(const Color& in, Color& out,
-                             qcms_transform* transform);
+  static DeviceColor TransformPixel(const sRGBColor& in,
+                                    qcms_transform* transform);
 
   /**
    * Return the output device ICC profile.

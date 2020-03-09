@@ -360,7 +360,7 @@ void nsPageFrame::DrawHeaderFooter(gfxContext& aRenderingContext,
     aRenderingContext.Save();
     aRenderingContext.Clip(NSRectToSnappedRect(
         aRect, PresContext()->AppUnitsPerDevPixel(), *drawTarget));
-    aRenderingContext.SetColor(Color(0.f, 0.f, 0.f));
+    aRenderingContext.SetColor(sRGBColor::OpaqueBlack());
     nsLayoutUtils::DrawString(this, aFontMetrics, &aRenderingContext, str.get(),
                               str.Length(), nsPoint(x, y + aAscent), nullptr,
                               DrawStringFlags::ForceHorizontal);
@@ -588,7 +588,7 @@ void nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
   }
 
   nsRect rect(aPt, mRect.Size());
-  aRenderingContext.SetColor(Color(0.f, 0.f, 0.f));
+  aRenderingContext.SetColor(sRGBColor::OpaqueBlack());
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(
       aRenderingContext.GetDrawTarget(), aDisableSubpixelAA);

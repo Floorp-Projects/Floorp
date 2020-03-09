@@ -513,7 +513,7 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   if (Factory::GetBGRSubpixelOrder()) {
     options.flags |= wr::FontInstanceFlags::SUBPIXEL_BGR;
   }
-  options.bg_color = wr::ToColorU(Color());
+  options.bg_color = wr::ToColorU(DeviceColor());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 

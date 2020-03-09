@@ -44,6 +44,7 @@
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzNativeDrawing.h"
+#include "gfxUtils.h"  // for ToDeviceColor
 #include <algorithm>
 
 using namespace mozilla;
@@ -1162,18 +1163,19 @@ nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
   return params;
 }
 
-static void SetCGContextFillColor(CGContextRef cgContext, const Color& aColor) {
-  CGContextSetRGBFillColor(cgContext, aColor.r, aColor.g, aColor.b, aColor.a);
+static void SetCGContextFillColor(CGContextRef cgContext, const sRGBColor& aColor) {
+  DeviceColor color = ToDeviceColor(aColor);
+  CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
 }
 
 static void SetCGContextFillColor(CGContextRef cgContext, nscolor aColor) {
-  CGContextSetRGBFillColor(cgContext, NS_GET_R(aColor) / 255.0f, NS_GET_G(aColor) / 255.0f,
-                           NS_GET_B(aColor) / 255.0f, NS_GET_A(aColor) / 255.0f);
+  DeviceColor color = ToDeviceColor(aColor);
+  CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
 }
 
 static void SetCGContextStrokeColor(CGContextRef cgContext, nscolor aColor) {
-  CGContextSetRGBStrokeColor(cgContext, NS_GET_R(aColor) / 255.0f, NS_GET_G(aColor) / 255.0f,
-                             NS_GET_B(aColor) / 255.0f, NS_GET_A(aColor) / 255.0f);
+  DeviceColor color = ToDeviceColor(aColor);
+  CGContextSetRGBStrokeColor(cgContext, color.r, color.g, color.b, color.a);
 }
 
 void nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
@@ -1746,7 +1748,7 @@ void nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBox
                                      TextBoxParams aParams) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
+  SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
   CGContextFillRect(cgContext, inBoxRect);
 
 #if DRAW_IN_FRAME_DEBUG
@@ -2601,15 +2603,15 @@ void nsNativeThemeCocoa::DrawScrollCorner(CGContextRef cgContext, const CGRect& 
   CGContextStrokeLineSegments(cgContext, outerPoints, 4);
 }
 
-static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
-static const Color kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
-static const Color kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
-static const Color kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
-static const Color kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
+static const sRGBColor kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
+static const sRGBColor kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
+static const sRGBColor kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
+static const sRGBColor kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
+static const sRGBColor kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
 
 void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                                                 bool aIsFocused) {
-  CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
+  SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
 
   CGContextFillRect(cgContext, inBoxRect);
 
@@ -2971,7 +2973,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::Treeitem:
     case StyleAppearance::Treeview:
-      return Some(WidgetInfo::ColorFill(Color(1.0, 1.0, 1.0, 1.0)));
+      return Some(WidgetInfo::ColorFill(sRGBColor(1.0, 1.0, 1.0, 1.0)));
 
     case StyleAppearance::Treeheader:
       // do nothing, taken care of by individual header cells
@@ -3129,7 +3131,7 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
 
   switch (aWidgetInfo.Widget()) {
     case Widget::eColorFill: {
-      Color params = aWidgetInfo.Params<Color>();
+      sRGBColor params = aWidgetInfo.Params<sRGBColor>();
       SetCGContextFillColor(cgContext, params);
       CGContextFillRect(cgContext, macRect);
       break;
@@ -3296,7 +3298,7 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
     case Widget::eListBox: {
       // We have to draw this by hand because kHIThemeFrameListBox drawing
       // is buggy on 10.5, see bug 579259.
-      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
+      SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
       CGContextFillRect(cgContext, macRect);
 
       float x = macRect.origin.x, y = macRect.origin.y;
@@ -3392,7 +3394,8 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
 
     case StyleAppearance::Tooltip:
       if (!VibrancyManager::SystemSupportsVibrancy()) {
-        aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(kTooltipBackgroundColor));
+        aBuilder.PushRect(bounds, bounds, true,
+                          wr::ToColorF(ToDeviceColor(kTooltipBackgroundColor)));
       }
       return true;
 
@@ -3455,13 +3458,18 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
       }
 
       // White background
-      aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(Color(1.0, 1.0, 1.0, 1.0)));
+      aBuilder.PushRect(bounds, bounds, true,
+                        wr::ToColorF(ToDeviceColor(sRGBColor::OpaqueWhite())));
 
       wr::BorderSide side[4] = {
-          wr::ToBorderSide(kMultilineTextFieldTopBorderColor, StyleBorderStyle::Solid),
-          wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, StyleBorderStyle::Solid),
-          wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, StyleBorderStyle::Solid),
-          wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldTopBorderColor),
+                           StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldSidesAndBottomBorderColor),
+                           StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldSidesAndBottomBorderColor),
+                           StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldSidesAndBottomBorderColor),
+                           StyleBorderStyle::Solid),
       };
 
       wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
@@ -3477,13 +3485,17 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
 
     case StyleAppearance::Listbox: {
       // White background
-      aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(Color(1.0, 1.0, 1.0, 1.0)));
+      aBuilder.PushRect(bounds, bounds, true,
+                        wr::ToColorF(ToDeviceColor(sRGBColor::OpaqueWhite())));
 
       wr::BorderSide side[4] = {
-          wr::ToBorderSide(kListboxTopBorderColor, StyleBorderStyle::Solid),
-          wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, StyleBorderStyle::Solid),
-          wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, StyleBorderStyle::Solid),
-          wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kListboxTopBorderColor), StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kListBoxSidesAndBottomBorderColor),
+                           StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kListBoxSidesAndBottomBorderColor),
+                           StyleBorderStyle::Solid),
+          wr::ToBorderSide(ToDeviceColor(kListBoxSidesAndBottomBorderColor),
+                           StyleBorderStyle::Solid),
       };
 
       wr::BorderRadius borderRadius = wr::EmptyBorderRadius();

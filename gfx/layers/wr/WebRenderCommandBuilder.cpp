@@ -2086,7 +2086,7 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
                                   nsDisplayListBuilder* aDisplayListBuilder,
                                   const RefPtr<BasicLayerManager>& aManager,
                                   const gfx::Size& aScale,
-                                  Maybe<gfx::Color>& aHighlight) {
+                                  Maybe<gfx::DeviceColor>& aHighlight) {
   MOZ_ASSERT(aDT);
 
   bool isInvalidated = false;
@@ -2144,7 +2144,7 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
       float g = float(rand()) / float(RAND_MAX);
       float b = float(rand()) / float(RAND_MAX);
       aDT->FillRect(Rect(visibleRect),
-                    gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
+                    gfx::ColorPattern(gfx::DeviceColor(r, g, b, 0.5)));
     }
   }
 
@@ -2167,10 +2167,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
   const bool paintOnContentSide = aItem->MustPaintOnContentSide();
   bool useBlobImage =
       StaticPrefs::gfx_webrender_blob_images() && !paintOnContentSide;
-  Maybe<gfx::Color> highlight = Nothing();
+  Maybe<gfx::DeviceColor> highlight = Nothing();
   if (StaticPrefs::gfx_webrender_highlight_painted_layers()) {
-    highlight = Some(useBlobImage ? gfx::Color(1.0, 0.0, 0.0, 0.5)
-                                  : gfx::Color(1.0, 1.0, 0.0, 0.5));
+    highlight = Some(useBlobImage ? gfx::DeviceColor(1.0, 0.0, 0.0, 0.5)
+                                  : gfx::DeviceColor(1.0, 1.0, 0.0, 0.5));
   }
 
   RefPtr<WebRenderFallbackData> fallbackData =

@@ -275,8 +275,27 @@ struct ParamTraits<mozilla::PixelFormat>
 */
 
 template <>
-struct ParamTraits<mozilla::gfx::Color> {
-  typedef mozilla::gfx::Color paramType;
+struct ParamTraits<mozilla::gfx::sRGBColor> {
+  typedef mozilla::gfx::sRGBColor paramType;
+
+  static void Write(Message* msg, const paramType& param) {
+    WriteParam(msg, param.r);
+    WriteParam(msg, param.g);
+    WriteParam(msg, param.b);
+    WriteParam(msg, param.a);
+  }
+
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
+    return (
+        ReadParam(msg, iter, &result->r) && ReadParam(msg, iter, &result->g) &&
+        ReadParam(msg, iter, &result->b) && ReadParam(msg, iter, &result->a));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::DeviceColor> {
+  typedef mozilla::gfx::DeviceColor paramType;
 
   static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.r);

@@ -498,7 +498,8 @@ class DebugGLTextureData final : public DebugGLData {
 
 class DebugGLColorData final : public DebugGLData {
  public:
-  DebugGLColorData(void* layerRef, const Color& color, int width, int height)
+  DebugGLColorData(void* layerRef, const DeviceColor& color, int width,
+                   int height)
       : DebugGLData(Packet::COLOR),
         mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
         mColor(color.ToABGR()),
@@ -755,7 +756,7 @@ class SenderHelper {
 
   // Sender private functions
  private:
-  static void SendColor(void* aLayerRef, const Color& aColor, int aWidth,
+  static void SendColor(void* aLayerRef, const DeviceColor& aColor, int aWidth,
                         int aHeight);
   static void SendTextureSource(GLContext* aGLContext, void* aLayerRef,
                                 TextureSourceOGL* aSource, bool aFlipY,
@@ -833,8 +834,8 @@ void SenderHelper::SendLayer(LayerComposite* aLayer, int aWidth, int aHeight) {
   }
 }
 
-void SenderHelper::SendColor(void* aLayerRef, const Color& aColor, int aWidth,
-                             int aHeight) {
+void SenderHelper::SendColor(void* aLayerRef, const DeviceColor& aColor,
+                             int aWidth, int aHeight) {
   gLayerScopeManager.GetSocketManager()->AppendDebugData(
       new DebugGLColorData(aLayerRef, aColor, aWidth, aHeight));
 }

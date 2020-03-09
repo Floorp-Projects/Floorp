@@ -235,7 +235,7 @@ class TiledContentHost : public ContentHost {
  private:
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                          Compositor* aCompositor,
-                         const gfx::Color* aBackgroundColor,
+                         const gfx::DeviceColor* aBackgroundColor,
                          EffectChain& aEffectChain, float aOpacity,
                          const gfx::SamplingFilter aSamplingFilter,
                          const gfx::IntRect& aClipRect, nsIntRegion aMaskRegion,

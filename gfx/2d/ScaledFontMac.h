@@ -27,7 +27,8 @@ class ScaledFontMac : public ScaledFontBase {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac, override)
   ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                bool aOwnsFont = false, const Color& aFontSmoothingBackgroundColor = Color(),
+                bool aOwnsFont = false,
+                const DeviceColor& aFontSmoothingBackgroundColor = DeviceColor(),
                 bool aUseFontSmoothing = true, bool aApplySyntheticBold = false);
   ~ScaledFontMac();
 
@@ -47,7 +48,7 @@ class ScaledFontMac : public ScaledFontBase {
 
   bool CanSerialize() override { return true; }
 
-  Color FontSmoothingBackgroundColor() { return mFontSmoothingBackgroundColor; }
+  DeviceColor FontSmoothingBackgroundColor() { return mFontSmoothingBackgroundColor; }
 
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(cairo_font_options_t* aFontOptions) override;
@@ -60,7 +61,7 @@ class ScaledFontMac : public ScaledFontBase {
   CGFontRef mFont;
   CTFontRef mCTFont;  // only created if CTFontDrawGlyphs is available, otherwise null
 
-  Color mFontSmoothingBackgroundColor;
+  DeviceColor mFontSmoothingBackgroundColor;
   bool mUseFontSmoothing;
   bool mApplySyntheticBold;
 
@@ -73,7 +74,7 @@ class ScaledFontMac : public ScaledFontBase {
     InstanceData(const wr::FontInstanceOptions* aOptions,
                  const wr::FontInstancePlatformOptions* aPlatformOptions);
 
-    Color mFontSmoothingBackgroundColor;
+    DeviceColor mFontSmoothingBackgroundColor;
     bool mUseFontSmoothing;
     bool mApplySyntheticBold;
   };
