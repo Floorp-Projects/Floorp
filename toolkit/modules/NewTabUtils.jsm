@@ -927,9 +927,7 @@ var ActivityStreamProvider = {
         let encodedData = btoa(
           String.fromCharCode.apply(null, link.smallFavicon)
         );
-        link.smallFavicon = `data:${
-          link.smallFaviconMimeType
-        };base64,${encodedData}`;
+        link.smallFavicon = `data:${link.smallFaviconMimeType};base64,${encodedData}`;
       }
       delete link.mimeType;
       delete link.smallFaviconMimeType;
