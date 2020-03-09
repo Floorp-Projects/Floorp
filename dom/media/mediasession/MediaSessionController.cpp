@@ -152,14 +152,8 @@ nsString MediaSessionController::GetDefaultTitle() const {
   // and lockscreen. Therefore, what information we provide via metadata is
   // quite important, because if we're in private browsing, we don't want to
   // expose details about what website the user is browsing on the lockscreen.
-  bool inPrivateBrowsing = false;
-  if (RefPtr<Element> element = bc->GetEmbedderElement()) {
-    inPrivateBrowsing =
-        nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
-  }
-
   nsString defaultTitle;
-  if (inPrivateBrowsing) {
+  if (IsInPrivateBrowsing()) {
     // TODO : maybe need l10n?
     if (nsCOMPtr<nsIXULAppInfo> appInfo =
             do_GetService("@mozilla.org/xre/app-info;1")) {
@@ -203,10 +197,11 @@ nsString MediaSessionController::GetDefaultFaviconURL() const {
 }
 
 MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
-  // If we don't have active media session, or active media session doesn't have
-  // media metadata, then we should create a default metadata which is using
-  // website's title and favicon as artist name and album cover.
-  if (mActiveMediaSessionContextId) {
+  // If we don't have active media session, active media session doesn't have
+  // media metadata, or we're in private browsing mode, then we should create a
+  // default metadata which is using website's title and favicon as title and
+  // artwork.
+  if (mActiveMediaSessionContextId && !IsInPrivateBrowsing()) {
     Maybe<MediaMetadataBase> metadata =
         mMetadataMap.Get(*mActiveMediaSessionContextId);
     if (!metadata) {
@@ -229,6 +224,19 @@ void MediaSessionController::FillMissingTitleAndArtworkIfNeeded(
   if (aMetadata.mArtwork.IsEmpty()) {
     aMetadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
   }
+}
+
+bool MediaSessionController::IsInPrivateBrowsing() const {
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(mTopLevelBCId);
+  if (!bc) {
+    return false;
+  }
+  RefPtr<Element> element = bc->GetEmbedderElement();
+  if (!element) {
+    return false;
+  }
+  return nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
 }
 
 }  // namespace dom
