@@ -30,10 +30,4 @@ add_task(async function test() {
       "The configuration's interval was able to be increased."
     );
   });
-
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-
-  revertRecordingPreferences();
 });

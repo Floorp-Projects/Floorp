@@ -68,7 +68,6 @@ add_task(function test() {
   const {
     getRecordingPreferences,
     setRecordingPreferences,
-    revertRecordingPreferences,
     changePreset,
   } = setupBackgroundJsm();
 
@@ -94,5 +93,4 @@ add_task(function test() {
     !getRecordingPreferences("aboutprofiling").features.includes("js"),
     "The js preference is still flipped from the default."
   );
-  revertRecordingPreferences();
 });

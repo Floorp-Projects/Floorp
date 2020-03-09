@@ -104,12 +104,6 @@ add_task(async function test() {
 
     ok(!allThreadsCheckbox.checked, "The all threads checkbox is not checked.");
   });
-
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-
-  revertRecordingPreferences();
 });
 
 /**

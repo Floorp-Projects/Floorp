@@ -3,6 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+registerCleanupFunction(() => {
+  // Always clean up the prefs after every test.
+  const { revertRecordingPreferences } = ChromeUtils.import(
+    "resource://devtools/client/performance-new/popup/background.jsm.js"
+  );
+  revertRecordingPreferences();
+});
+
 /**
  * Allow tests to use "require".
  */
