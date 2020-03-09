@@ -149,7 +149,7 @@ void PaymentRequestUpdateEvent::SetRequest(PaymentRequest* aRequest) {
   mRequest = aRequest;
 }
 
-PaymentRequestUpdateEvent::~PaymentRequestUpdateEvent() {}
+PaymentRequestUpdateEvent::~PaymentRequestUpdateEvent() = default;
 
 JSObject* PaymentRequestUpdateEvent::WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

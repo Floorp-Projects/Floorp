@@ -78,7 +78,7 @@ void PaymentAddress::GetRecipient(nsAString& aRetVal) const {
 
 void PaymentAddress::GetPhone(nsAString& aRetVal) const { aRetVal = mPhone; }
 
-PaymentAddress::~PaymentAddress() {}
+PaymentAddress::~PaymentAddress() = default;
 
 JSObject* PaymentAddress::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
