@@ -37,6 +37,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -54,6 +55,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 import android.util.LruCache;
@@ -338,7 +340,10 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
 
 public class GeckoViewActivity
         extends AppCompatActivity
-        implements ToolbarLayout.TabListener, WebExtensionDelegate {
+        implements
+            ToolbarLayout.TabListener,
+            WebExtensionDelegate,
+            SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOGTAG = "GeckoViewActivity";
     private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
     private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
@@ -404,6 +409,39 @@ public class GeckoViewActivity
         return newSession;
     }
 
+    private void onPreferencesChange(SharedPreferences preferences) {
+        boolean remoteDebugging = preferences.getBoolean(
+                getString(R.string.key_remote_debugging), false);
+        boolean trackingProtection = preferences.getBoolean(
+                getString(R.string.key_tracking_protection), true);
+        boolean autoplay = preferences.getBoolean(
+                getString(R.string.key_autoplay), false);
+
+        if (mEnableRemoteDebugging != remoteDebugging) {
+            if (sGeckoRuntime != null) {
+                sGeckoRuntime.getSettings().setRemoteDebuggingEnabled(remoteDebugging);
+            }
+            mEnableRemoteDebugging = remoteDebugging;
+        }
+
+        final GeckoSession currentSession = mTabSessionManager.getCurrentSession();
+
+        if (mUseTrackingProtection != trackingProtection) {
+            updateTrackingProtection(currentSession);
+            if (currentSession != null) {
+                currentSession.reload();
+            }
+            mUseTrackingProtection = trackingProtection;
+        }
+
+        if (mAllowAutoplay != autoplay) {
+            if (currentSession != null) {
+                currentSession.reload();
+            }
+            mAllowAutoplay = autoplay;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -417,6 +455,11 @@ public class GeckoViewActivity
 
         setSupportActionBar(findViewById(R.id.toolbar));
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.registerOnSharedPreferenceChangeListener(this);
+        // Read initial preference state
+        onPreferencesChange(preferences);
+
         mToolbarView = new ToolbarLayout(this, mTabSessionManager);
         mToolbarView.setId(R.id.toolbar_layout);
         mToolbarView.setTabListener(this);
@@ -428,7 +471,6 @@ public class GeckoViewActivity
 
         final boolean useMultiprocess =
                 getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
-        mEnableRemoteDebugging = true;
         mFullAccessibilityTree = getIntent().getBooleanExtra(FULL_ACCESSIBILITY_TREE_EXTRA, false);
         mProgressView = findViewById(R.id.page_progress);
 
@@ -556,6 +598,11 @@ public class GeckoViewActivity
         mToolbarView.updateTabCount();
     }
 
+    private void openSettingsActivity() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     public TabSession getSession(GeckoSession session) {
         return mTabSessionManager.getSession(session);
@@ -600,6 +647,11 @@ public class GeckoViewActivity
         }
 
         mPopupView.setLayoutParams(params);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        onPreferencesChange(sharedPreferences);
     }
 
     private class PopupSessionContentDelegate implements GeckoSession.ContentDelegate {
@@ -745,9 +797,13 @@ public class GeckoViewActivity
     }
 
     private void updateTrackingProtection(GeckoSession session) {
-        session.getSettings().setUseTrackingProtection(mUseTrackingProtection);
-        sGeckoRuntime.getSettings().getContentBlocking()
-                .setStrictSocialTrackingProtection(mUseTrackingProtection);
+        if (sGeckoRuntime != null) {
+            sGeckoRuntime.getSettings().getContentBlocking()
+                    .setStrictSocialTrackingProtection(mUseTrackingProtection);
+        }
+        if (session != null) {
+            session.getSettings().setUseTrackingProtection(mUseTrackingProtection);
+        }
     }
 
     @Override
@@ -775,12 +831,9 @@ public class GeckoViewActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_tp).setChecked(mUseTrackingProtection);
         menu.findItem(R.id.action_pb).setChecked(mUsePrivateBrowsing);
         menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
-        menu.findItem(R.id.action_remote_debugging).setChecked(mEnableRemoteDebugging);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
-        menu.findItem(R.id.allow_autoplay).setChecked(mAllowAutoplay);
         return true;
     }
 
@@ -793,15 +846,6 @@ public class GeckoViewActivity
                 break;
             case R.id.action_forward:
                 session.goForward();
-                break;
-            case R.id.action_tp:
-                mUseTrackingProtection = !mUseTrackingProtection;
-                updateTrackingProtection(session);
-                session.reload();
-                break;
-            case R.id.allow_autoplay:
-                mAllowAutoplay = !mAllowAutoplay;
-                session.reload();
                 break;
             case R.id.action_tpe:
                 sGeckoRuntime.getContentBlockingController().checkException(session).accept(value -> {
@@ -827,15 +871,14 @@ public class GeckoViewActivity
             case R.id.install_addon:
                 installAddon();
                 break;
+            case R.id.settings:
+                openSettingsActivity();
+                break;
             case R.id.action_new_tab:
                 createNewTab();
                 break;
             case R.id.action_close_tab:
                 closeTab((TabSession)session);
-                break;
-            case R.id.action_remote_debugging:
-                mEnableRemoteDebugging = !mEnableRemoteDebugging;
-                sGeckoRuntime.getSettings().setRemoteDebuggingEnabled(mEnableRemoteDebugging);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
