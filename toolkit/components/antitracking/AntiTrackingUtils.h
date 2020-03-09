@@ -18,6 +18,10 @@ class AntiTrackingUtils final {
  public:
   static already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(
       nsPIDOMWindowInner* aWindow);
+
+  // Get the current document URI from a document channel as it is being loaded.
+  static already_AddRefed<nsIURI> MaybeGetDocumentURIBeingLoaded(
+      nsIChannel* aChannel);
 };
 
 }  // namespace mozilla
