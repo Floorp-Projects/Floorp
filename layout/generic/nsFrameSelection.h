@@ -674,7 +674,7 @@ class nsFrameSelection final {
                              nsIFrame** aFrameOut) const;
 
   /**
-   * MaintainSelection will track the current selection as being "sticky".
+   * MaintainSelection will track the normal selection as being "sticky".
    * Dragging or extending selection will never allow for a subset
    * (or the whole) of the maintained selection to become unselected.
    * Primary use: double click selecting then dragging on second click
@@ -863,6 +863,10 @@ class nsFrameSelection final {
      */
     bool AdjustNormalSelection(const nsIContent* aContent, int32_t aOffset,
                                mozilla::dom::Selection& aNormalSelection) const;
+
+    void MaintainAnchorFocusRange(
+        const mozilla::dom::Selection& aNormalSelection,
+        nsSelectionAmount aAmount);
 
     RefPtr<nsRange> mRange;
     nsSelectionAmount mAmount = eSelectNoAmount;
