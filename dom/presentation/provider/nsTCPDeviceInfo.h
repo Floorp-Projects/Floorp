@@ -25,7 +25,7 @@ class TCPDeviceInfo final : public nsITCPDeviceInfo {
         mCertFingerprint(aCertFingerprint) {}
 
  private:
-  virtual ~TCPDeviceInfo() {}
+  virtual ~TCPDeviceInfo() = default;
 
   nsCString mId;
   nsCString mAddress;

@@ -34,7 +34,7 @@ PresentationRequesterCallback::PresentationRequesterCallback(
   MOZ_ASSERT(!mSessionId.IsEmpty());
 }
 
-PresentationRequesterCallback::~PresentationRequesterCallback() {}
+PresentationRequesterCallback::~PresentationRequesterCallback() = default;
 
 // nsIPresentationServiceCallback
 NS_IMETHODIMP
@@ -77,7 +77,7 @@ PresentationReconnectCallback::PresentationReconnectCallback(
     : PresentationRequesterCallback(aRequest, aSessionId, aPromise),
       mConnection(aConnection) {}
 
-PresentationReconnectCallback::~PresentationReconnectCallback() {}
+PresentationReconnectCallback::~PresentationReconnectCallback() = default;
 
 NS_IMETHODIMP
 PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl) {

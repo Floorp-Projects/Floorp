@@ -108,7 +108,7 @@ NS_IMPL_ISUPPORTS(MulticastDNSDeviceProvider, nsIPresentationDeviceProvider,
                   nsIDNSServiceResolveListener,
                   nsIPresentationControlServerListener, nsIObserver)
 
-MulticastDNSDeviceProvider::MulticastDNSDeviceProvider() {}
+MulticastDNSDeviceProvider::MulticastDNSDeviceProvider() = default;
 MulticastDNSDeviceProvider::~MulticastDNSDeviceProvider() { Uninit(); }
 
 nsresult MulticastDNSDeviceProvider::Init() {

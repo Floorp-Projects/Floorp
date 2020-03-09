@@ -45,7 +45,7 @@ class PresentationContentSessionInfo final
   nsresult Close(nsresult aReason);
 
  private:
-  virtual ~PresentationContentSessionInfo() {}
+  virtual ~PresentationContentSessionInfo() = default;
 
   nsString mSessionId;
   uint8_t mRole;
