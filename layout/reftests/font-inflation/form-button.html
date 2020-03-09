@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<style>
+  div.outer {
+    width: 450px;
+    font-size: 12px;
+  }
+
+  button {
+    font-size: 12px;
+  }
+
+  .invisible {
+    color: white;
+  }
+</style>
+<!--
+In a 450px container, the minimum font size at 15em per line is 30px.
+This means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px.
+-->
+<div class="outer">
+  <form><button>Add Comment</button></form>
+  <p class="invisible">Some text to ensure the button gets inflated - if it
+  isn't size-restricted, that is - but which shouldn't influence the visual
+  result otherwise.</p>
+</div>
