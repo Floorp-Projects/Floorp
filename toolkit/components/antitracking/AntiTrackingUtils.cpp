@@ -9,6 +9,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIChannel.h"
+#include "nsIURI.h"
 #include "nsPIDOMWindow.h"
 
 using namespace mozilla;
@@ -36,3 +37,24 @@ AntiTrackingUtils::GetTopWindow(nsPIDOMWindowInner* aWindow) {
   return pwin.forget();
 }
 
+/* static */
+already_AddRefed<nsIURI> AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(
+    nsIChannel* aChannel) {
+  nsCOMPtr<nsIURI> uriBeingLoaded;
+  nsLoadFlags loadFlags = 0;
+  nsresult rv = aChannel->GetLoadFlags(&loadFlags);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
+    // If the channel being loaded is a document channel, this call may be
+    // coming from an OnStopRequest notification, which might mean that our
+    // document may still be in the loading process, so we may need to pass in
+    // the uriBeingLoaded argument explicitly.
+    rv = aChannel->GetURI(getter_AddRefs(uriBeingLoaded));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+  }
+  return uriBeingLoaded.forget();
+}
