@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate rsdparsa;
 extern crate libc;
 extern crate nserror;
+extern crate rsdparsa;
 
 use std::ffi::CString;
-use std::ptr;
 use std::os::raw::c_char;
+use std::ptr;
 
 use libc::size_t;
 
@@ -16,29 +16,32 @@ use std::rc::Rc;
 
 use std::convert::{TryFrom, TryInto};
 
-use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
-use rsdparsa::{SdpTiming, SdpBandwidth, SdpSession};
+use nserror::{nsresult, NS_ERROR_INVALID_ARG, NS_OK};
+use rsdparsa::address::ExplicitlyTypedAddress;
+use rsdparsa::anonymizer::{AnonymizingClone, StatefulSdpAnonymizer};
+use rsdparsa::attribute_type::SdpAttribute;
 use rsdparsa::error::SdpParserError;
 use rsdparsa::media_type::{SdpMediaValue, SdpProtocolValue};
-use rsdparsa::attribute_type::{SdpAttribute};
-use rsdparsa::anonymizer::{StatefulSdpAnonymizer, AnonymizingClone};
-use rsdparsa::address::ExplicitlyTypedAddress;
+use rsdparsa::{SdpBandwidth, SdpSession, SdpTiming};
 
-pub mod types;
-pub mod network;
 pub mod attribute;
 pub mod media_section;
+pub mod network;
+pub mod types;
 
+use network::{
+    get_bandwidth, origin_view_helper, RustAddressType, RustSdpConnection, RustSdpOrigin,
+};
 pub use types::{StringView, NULL_STRING};
-use network::{RustSdpOrigin, origin_view_helper, RustSdpConnection,
-              get_bandwidth, RustAddressType};
 
 #[no_mangle]
-pub unsafe extern "C" fn parse_sdp(sdp: StringView,
-                                   fail_on_warning: bool,
-                                   session: *mut *const SdpSession,
-                                   error: *mut *const SdpParserError) -> nsresult {
-    let sdp_str:String = match sdp.try_into() {
+pub unsafe extern "C" fn parse_sdp(
+    sdp: StringView,
+    fail_on_warning: bool,
+    session: *mut *const SdpSession,
+    error: *mut *const SdpParserError,
+) -> nsresult {
+    let sdp_str: String = match sdp.try_into() {
         Ok(string) => string,
         Err(boxed_error) => {
             *session = ptr::null();
@@ -53,13 +56,13 @@ pub unsafe extern "C" fn parse_sdp(sdp: StringView,
     let parser_result = rsdparsa::parse_sdp(&sdp_str, fail_on_warning);
     match parser_result {
         Ok(mut parsed) => {
-            *error = match parsed.warnings.len(){
+            *error = match parsed.warnings.len() {
                 0 => ptr::null(),
                 _ => Box::into_raw(Box::new(parsed.warnings.remove(0))),
             };
             *session = Rc::into_raw(Rc::new(parsed));
             NS_OK
-        },
+        }
         Err(e) => {
             *session = ptr::null();
             println!("Error parsing SDP in rust: {}", e);
@@ -70,8 +73,12 @@ pub unsafe extern "C" fn parse_sdp(sdp: StringView,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_anonymized_sdp_clone(session: *const SdpSession) -> *const SdpSession {
-    Rc::into_raw(Rc::new((*session).masked_clone(&mut StatefulSdpAnonymizer::new())))
+pub unsafe extern "C" fn create_anonymized_sdp_clone(
+    session: *const SdpSession,
+) -> *const SdpSession {
+    Rc::into_raw(Rc::new(
+        (*session).masked_clone(&mut StatefulSdpAnonymizer::new()),
+    ))
 }
 
 #[no_mangle]
@@ -91,20 +98,20 @@ pub unsafe extern "C" fn sdp_new_reference(session: *mut SdpSession) -> *const S
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_error_line_num(error: *mut SdpParserError) -> size_t {
     match *error {
-        SdpParserError::Line {line_number, ..} |
-        SdpParserError::Unsupported { line_number, ..} |
-        SdpParserError::Sequence {line_number, ..} => line_number
+        SdpParserError::Line { line_number, .. }
+        | SdpParserError::Unsupported { line_number, .. }
+        | SdpParserError::Sequence { line_number, .. } => line_number,
     }
 }
 
 #[no_mangle]
 // Callee must check that a nullptr is not returned
 pub unsafe extern "C" fn sdp_get_error_message(error: *mut SdpParserError) -> *mut c_char {
-   let message = format!("{}", *error);
-   return match CString::new(message.as_str()) {
+    let message = format!("{}", *error);
+    return match CString::new(message.as_str()) {
         Ok(c_char_ptr) => c_char_ptr.into_raw(),
         Err(_) => 0 as *mut c_char,
-    }
+    };
 }
 
 #[no_mangle]
@@ -121,12 +128,12 @@ pub unsafe extern "C" fn sdp_free_error(error: *mut SdpParserError) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_version(session: *const SdpSession) ->  u64 {
+pub unsafe extern "C" fn get_version(session: *const SdpSession) -> u64 {
     (*session).get_version()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_origin(session: *const SdpSession) ->  RustSdpOrigin {
+pub unsafe extern "C" fn sdp_get_origin(session: *const SdpSession) -> RustSdpOrigin {
     origin_view_helper((*session).get_origin())
 }
 
@@ -141,36 +148,47 @@ pub unsafe extern "C" fn sdp_session_has_connection(session: *const SdpSession) 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_session_connection(session: *const SdpSession,
-                                                    connection: *mut RustSdpConnection) -> nsresult {
+pub unsafe extern "C" fn sdp_get_session_connection(
+    session: *const SdpSession,
+    connection: *mut RustSdpConnection,
+) -> nsresult {
     match (*session).connection {
         Some(ref c) => {
             *connection = RustSdpConnection::from(c);
             NS_OK
-        },
-        None => NS_ERROR_INVALID_ARG
+        }
+        None => NS_ERROR_INVALID_ARG,
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
-                                               media_type: u32, direction: u32,
-                                               port: u16, protocol: u32,
-                                               addr_type: u32, address: StringView) -> nsresult {
+pub unsafe extern "C" fn sdp_add_media_section(
+    session: *mut SdpSession,
+    media_type: u32,
+    direction: u32,
+    port: u16,
+    protocol: u32,
+    addr_type: u32,
+    address: StringView,
+) -> nsresult {
     let addr_type = match RustAddressType::try_from(addr_type) {
         Ok(a) => a.into(),
-        Err(e) => { return e;},
+        Err(e) => {
+            return e;
+        }
     };
-    let address_string:String = match address.try_into(){
-       Ok(x) => x,
-       Err(boxed_error) => {
-           println!("Error while parsing string, description: {}", boxed_error);
-           return NS_ERROR_INVALID_ARG;
-       }
+    let address_string: String = match address.try_into() {
+        Ok(x) => x,
+        Err(boxed_error) => {
+            println!("Error while parsing string, description: {}", boxed_error);
+            return NS_ERROR_INVALID_ARG;
+        }
     };
     let address = match ExplicitlyTypedAddress::try_from((addr_type, address_string.as_str())) {
         Ok(a) => a,
-        Err(_) => {return NS_ERROR_INVALID_ARG;},
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
     };
 
     let media_type = match media_type {
@@ -178,8 +196,8 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
         1 => SdpMediaValue::Video,       // MediaType::kVideo
         3 => SdpMediaValue::Application, // MediaType::kApplication
         _ => {
-         return NS_ERROR_INVALID_ARG;
-     }
+            return NS_ERROR_INVALID_ARG;
+        }
     };
     let protocol = match protocol {
         20 => SdpProtocolValue::RtpSavpf,        // Protocol::kRtpSavpf
@@ -191,21 +209,21 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
         38 => SdpProtocolValue::UdpDtlsSctp,     // Protocol::kUdpDtlsSctp
         39 => SdpProtocolValue::TcpDtlsSctp,     // Protocol::kTcpDtlsSctp
         _ => {
-          return NS_ERROR_INVALID_ARG;
-      }
+            return NS_ERROR_INVALID_ARG;
+        }
     };
     let direction = match direction {
         1 => SdpAttribute::Sendonly,
         2 => SdpAttribute::Recvonly,
         3 => SdpAttribute::Sendrecv,
         _ => {
-          return NS_ERROR_INVALID_ARG;
-      }
+            return NS_ERROR_INVALID_ARG;
+        }
     };
 
     match (*session).add_media(media_type, direction, port as u32, protocol, address) {
         Ok(_) => NS_OK,
-        Err(_) => NS_ERROR_INVALID_ARG
+        Err(_) => NS_ERROR_INVALID_ARG,
     }
 }
 
@@ -218,7 +236,10 @@ pub struct RustSdpTiming {
 
 impl<'a> From<&'a SdpTiming> for RustSdpTiming {
     fn from(timing: &SdpTiming) -> Self {
-        RustSdpTiming {start: timing.start, stop: timing.stop}
+        RustSdpTiming {
+            start: timing.start,
+            stop: timing.stop,
+        }
     }
 }
 
@@ -228,14 +249,16 @@ pub unsafe extern "C" fn sdp_session_has_timing(session: *const SdpSession) -> b
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_session_timing(session: *const SdpSession,
-                                            timing: *mut RustSdpTiming) -> nsresult {
+pub unsafe extern "C" fn sdp_session_timing(
+    session: *const SdpSession,
+    timing: *mut RustSdpTiming,
+) -> nsresult {
     match (*session).timing {
         Some(ref t) => {
             *timing = RustSdpTiming::from(t);
             NS_OK
-        },
-        None => NS_ERROR_INVALID_ARG
+        }
+        None => NS_ERROR_INVALID_ARG,
     }
 }
 
@@ -244,19 +267,24 @@ pub unsafe extern "C" fn sdp_media_section_count(session: *const SdpSession) -> 
     (*session).media.len()
 }
 
-
 #[no_mangle]
-pub unsafe extern "C" fn get_sdp_bandwidth(session: *const SdpSession,
-                                           bandwidth_type: *const c_char) -> u32 {
+pub unsafe extern "C" fn get_sdp_bandwidth(
+    session: *const SdpSession,
+    bandwidth_type: *const c_char,
+) -> u32 {
     get_bandwidth(&(*session).bandwidth, bandwidth_type)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_session_bandwidth_vec(session: *const SdpSession) -> *const Vec<SdpBandwidth> {
+pub unsafe extern "C" fn sdp_get_session_bandwidth_vec(
+    session: *const SdpSession,
+) -> *const Vec<SdpBandwidth> {
     &(*session).bandwidth
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_sdp_session_attributes(session: *const SdpSession) -> *const Vec<SdpAttribute> {
+pub unsafe extern "C" fn get_sdp_session_attributes(
+    session: *const SdpSession,
+) -> *const Vec<SdpAttribute> {
     &(*session).attribute
 }
