@@ -3,8 +3,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 const {
   updateCanDebugWorkers,
   updateWorkers,
@@ -35,40 +33,13 @@ add_task(async function() {
 
 add_task(async function() {
   info("Test workers reducer: UPDATE_WORKERS action");
+
   const state = WorkersState();
-
-  const rawData = [
-    {
-      registration: {
-        scope: "lorem-ipsum",
-        lastUpdateTime: 42,
-      },
-      workers: [
-        {
-          id: 1,
-          state: Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
-          url: "https://example.com",
-          workerTargetFront: { foo: "bar" },
-          stateText: "activated",
-        },
-      ],
-    },
-  ];
-
-  const expectedData = [
-    {
-      id: 1,
-      isActive: true,
-      scope: "lorem-ipsum",
-      lastUpdateTime: 42,
-      url: "https://example.com",
-      registrationFront: rawData[0].registration,
-      workerTargetFront: rawData[0].workers[0].workerTargetFront,
-      stateText: "activated",
-    },
-  ];
-
-  const action = updateWorkers(rawData);
+  const action = updateWorkers([{ foo: "bar" }, { lorem: "ipsum" }]);
   const newState = workersReducer(state, action);
-  deepEqual(newState.list, expectedData, "workers contains the expected list");
+  deepEqual(
+    newState.list,
+    [{ foo: "bar" }, { lorem: "ipsum" }],
+    "workers contains the expected list"
+  );
 });
