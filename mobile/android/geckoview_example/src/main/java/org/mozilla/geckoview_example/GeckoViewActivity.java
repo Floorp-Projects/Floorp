@@ -427,7 +427,10 @@ public class GeckoViewActivity
         final GeckoSession currentSession = mTabSessionManager.getCurrentSession();
 
         if (mUseTrackingProtection != trackingProtection) {
-            updateTrackingProtection(currentSession);
+            if (sGeckoRuntime != null) {
+                sGeckoRuntime.getSettings().getContentBlocking()
+                        .setStrictSocialTrackingProtection(mUseTrackingProtection);
+            }
             if (currentSession != null) {
                 currentSession.reload();
             }
@@ -713,7 +716,6 @@ public class GeckoViewActivity
     private TabSession createSession() {
         TabSession session = mTabSessionManager.newSession(new GeckoSessionSettings.Builder()
                 .usePrivateMode(mUsePrivateBrowsing)
-                .useTrackingProtection(mUseTrackingProtection)
                 .fullAccessibilityTree(mFullAccessibilityTree)
                 .viewportMode(mDesktopMode
                         ? GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
@@ -753,7 +755,6 @@ public class GeckoViewActivity
             sessionController.setTabDelegate(sExtensionManager.extension, sExtensionManager);
         }
 
-        updateTrackingProtection(session);
         updateDesktopMode(session);
     }
 
@@ -794,16 +795,6 @@ public class GeckoViewActivity
         session.getSettings().setUserAgentMode(mDesktopMode
                 ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
                 : GeckoSessionSettings.USER_AGENT_MODE_MOBILE);
-    }
-
-    private void updateTrackingProtection(GeckoSession session) {
-        if (sGeckoRuntime != null) {
-            sGeckoRuntime.getSettings().getContentBlocking()
-                    .setStrictSocialTrackingProtection(mUseTrackingProtection);
-        }
-        if (session != null) {
-            session.getSettings().setUseTrackingProtection(mUseTrackingProtection);
-        }
     }
 
     @Override
