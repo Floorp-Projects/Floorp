@@ -131,6 +131,10 @@ function scaleRangeWithClamping(
 
 /**
  * Use some heuristics to guess at the overhead of the recording settings.
+ *
+ * TODO - Bug 1597383. The UI for this has been removed, but it needs to be reworked
+ * for new overhead calculations. Keep it for now in tree.
+ *
  * @param {number} interval
  * @param {number} bufferSize
  * @param {string[]} features - List of the selected features.
