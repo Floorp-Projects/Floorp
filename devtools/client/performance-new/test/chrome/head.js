@@ -187,7 +187,7 @@ function createPerfComponent() {
   const ReactDOM = require("devtools/client/shared/vendor/react-dom");
   const ReactRedux = require("devtools/client/shared/vendor/react-redux");
   const DevToolsAndPopup = React.createFactory(
-    require("devtools/client/performance-new/components/DevToolsAndPopup")
+    require("devtools/client/performance-new/components/DevToolsPanel")
   );
   const ProfilerEventHandling = React.createFactory(
     require("devtools/client/performance-new/components/ProfilerEventHandling")
