@@ -18,7 +18,7 @@
 
 namespace mozilla {
 
-WebBrowserPersistDocumentChild::WebBrowserPersistDocumentChild() {}
+WebBrowserPersistDocumentChild::WebBrowserPersistDocumentChild() = default;
 
 WebBrowserPersistDocumentChild::~WebBrowserPersistDocumentChild() = default;
 
