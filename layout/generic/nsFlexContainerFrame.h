@@ -278,14 +278,26 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * as follows: DoFlexLayout() begins at the step that we have to jump back
    * to, if we find any visibility:collapse children, and Reflow() does
    * everything before that point.)
+   *
+   * @param aContentBoxMainSize [in/out] initially, the "tentative" content-box
+   *                            main-size of the flex container; "tentative"
+   *                            because it may be unconstrained or may run off
+   *                            the page. In those cases, this method will
+   *                            resolve it to a final value before returning.
+   * @param aContentBoxCrossSize [out] the final content-box cross-size of the
+   *                             flex container.
+   * @param aFlexContainerAscent [out] the flex container's ascent, derived from
+   *                             any baseline-aligned flex items in the first
+   *                             flex line, if any such items exist. Otherwise,
+   *                             nscoord_MIN.
    */
-  void DoFlexLayout(ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
-                    nsReflowStatus& aStatus, nscoord aContentBoxMainSize,
-                    nscoord aAvailableBSizeForContent,
-                    nsTArray<StrutInfo>& aStruts,
-                    const FlexboxAxisTracker& aAxisTracker,
-                    nscoord aMainGapSize, nscoord aCrossGapSize,
-                    bool aHasLineClampEllipsis);
+  void DoFlexLayout(
+      ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
+      nsReflowStatus& aStatus, nscoord& aContentBoxMainSize,
+      nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
+      nscoord aAvailableBSizeForContent, mozilla::LinkedList<FlexLine>& aLines,
+      nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
+      nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis);
 
   // Protected flex-container-specific methods / member-vars
 #ifdef DEBUG
