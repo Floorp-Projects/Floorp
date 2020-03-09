@@ -20,7 +20,7 @@ add_task(async function() {
     },
     async dialog => {
       let acceptBtn = dialog.document
-        .getElementById("bookmarkproperties")
+        .getElementById("bookmarkpropertiesdialog")
         .getButton("accept");
       Assert.ok(!acceptBtn.disabled, "Accept button is enabled");
 

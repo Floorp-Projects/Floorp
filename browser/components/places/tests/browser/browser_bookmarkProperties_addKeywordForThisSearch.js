@@ -30,7 +30,7 @@ add_task(async function() {
         AddKeywordForSearchField,
         async function(dialogWin) {
           let acceptBtn = dialogWin.document
-            .getElementById("bookmarkproperties")
+            .getElementById("bookmarkpropertiesdialog")
             .getButton("accept");
           Assert.ok(acceptBtn.disabled, "Accept button is disabled");
 
@@ -113,7 +113,7 @@ add_task(async function reopen_same_field() {
         AddKeywordForSearchField,
         async function(dialogWin) {
           let acceptBtn = dialogWin.document
-            .getElementById("bookmarkproperties")
+            .getElementById("bookmarkpropertiesdialog")
             .getButton("accept");
           ok(acceptBtn.disabled, "Accept button is disabled");
 
@@ -159,7 +159,7 @@ add_task(async function open_other_field() {
         AddKeywordForSearchField,
         function(dialogWin) {
           let acceptBtn = dialogWin.document
-            .getElementById("bookmarkproperties")
+            .getElementById("bookmarkpropertiesdialog")
             .getButton("accept");
           ok(acceptBtn.disabled, "Accept button is disabled");
 

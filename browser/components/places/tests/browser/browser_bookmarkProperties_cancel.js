@@ -54,7 +54,7 @@ add_task(async function test_cancel_with_no_changes() {
       },
       async function test(dialogWin) {
         let acceptButton = dialogWin.document
-          .getElementById("bookmarkproperties")
+          .getElementById("bookmarkpropertiesdialog")
           .getButton("accept");
         await BrowserTestUtils.waitForCondition(
           () => !acceptButton.disabled,
@@ -93,7 +93,7 @@ add_task(async function test_cancel_with_changes() {
       },
       async function test(dialogWin) {
         let acceptButton = dialogWin.document
-          .getElementById("bookmarkproperties")
+          .getElementById("bookmarkpropertiesdialog")
           .getButton("accept");
         await BrowserTestUtils.waitForCondition(
           () => !acceptButton.disabled,
