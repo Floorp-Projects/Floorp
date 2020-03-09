@@ -37,26 +37,26 @@ add_task(async function test_sanitize() {
     testSanitize(kSpecialChars, "A B C");
     testSanitize(" :: Website :: ", "Website");
     testSanitize("* Website!", "Website!");
-    testSanitize("Website | Page!", "Website   Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+    testSanitize("Website | Page!", "Website Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   } else if (AppConstants.platform == "win") {
     testSanitize(kSpecialChars, "A ''(());,+=[]B][=+,;))(('' C");
     testSanitize(" :: Website :: ", "Website");
     testSanitize("* Website!", "Website!");
-    testSanitize("Website | Page!", "Website   Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+    testSanitize("Website | Page!", "Website Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   } else if (AppConstants.platform == "macosx") {
     testSanitize(kSpecialChars, 'A *?|""<<>>;,+=[]B][=+,;>><<""|?* C');
     testSanitize(" :: Website :: ", "Website");
     testSanitize("* Website!", "* Website!");
     testSanitize("Website | Page!", "Website | Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   } else {
     testSanitize(kSpecialChars, kSpecialChars.replace(/[:]/g, " "));
     testSanitize(" :: Website :: ", "Website");
     testSanitize("* Website!", "* Website!");
     testSanitize("Website | Page!", "Website | Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   }
 
   // Conversion of consecutive runs of slashes and backslashes to underscores.
