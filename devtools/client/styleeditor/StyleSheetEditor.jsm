@@ -73,8 +73,19 @@ const EMIT_MEDIA_RULES_THROTTLING = 500;
  * @param {CustomHighlighterFront} highlighter
  *        Optional highlighter front for the SelectorHighligher used to
  *        highlight selectors
+ * @param {Number} styleSheetFriendlyIndex
+ *        Optional Integer representing the index of the current stylesheet
+ *        among all stylesheets of its type (inline or user-created)
  */
-function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
+function StyleSheetEditor(
+  styleSheet,
+  win,
+  file,
+  isNew,
+  walker,
+  highlighter,
+  styleSheetFriendlyIndex
+) {
   EventEmitter.decorate(this);
 
   this.styleSheet = styleSheet;
@@ -84,6 +95,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this._isNew = isNew;
   this.walker = walker;
   this.highlighter = highlighter;
+  this.styleSheetFriendlyIndex = styleSheetFriendlyIndex;
 
   // True when we've called update() on the style sheet.
   this._isUpdating = false;
@@ -188,12 +200,12 @@ StyleSheetEditor.prototype = {
     }
 
     if (this._isNew) {
-      const index = this.styleSheet.styleSheetIndex + 1;
+      const index = this.styleSheetFriendlyIndex + 1 || 0;
       return getString("newStyleSheet", index);
     }
 
     if (!this.styleSheet.href) {
-      const index = this.styleSheet.styleSheetIndex + 1;
+      const index = this.styleSheetFriendlyIndex + 1 || 0;
       return getString("inlineStyleSheet", index);
     }
 
