@@ -18,7 +18,7 @@ MIDIPlatformService::MIDIPlatformService()
     : mHasSentPortList(false),
       mMessageQueueMutex("MIDIPlatformServce::mMessageQueueMutex") {}
 
-MIDIPlatformService::~MIDIPlatformService() {}
+MIDIPlatformService::~MIDIPlatformService() = default;
 
 void MIDIPlatformService::CheckAndReceive(const nsAString& aPortId,
                                           const nsTArray<MIDIMessage>& aMsgs) {
