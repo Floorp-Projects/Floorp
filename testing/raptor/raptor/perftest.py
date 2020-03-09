@@ -324,8 +324,11 @@ either Raptor or browsertime."""
                 try:
                     self.run_test(test, timeout=int(test.get("page_timeout")))
                 except RuntimeError as e:
-                    LOG.critical("Tests failed to finish! Application timed out.")
-                    LOG.error(e)
+                    # Check for crashes before showing the timeout error.
+                    self.check_for_crashes()
+                    if self.runner.crashed == 0:
+                        LOG.critical("Tests failed to finish! Application timed out.")
+                        LOG.error(e)
                     os.sys.exit(1)
                 finally:
                     self.run_test_teardown(test)
