@@ -58,10 +58,15 @@ std::string CommentsToSpaces(const std::string& src) {
       ret += "/*";
     }
 
-    const bool isTerminated = std::regex_search(itr, end, match, *endRegex);
-    if (!isTerminated) return ret;
+    auto commentEnd = end;
+    if (!isBlockComment && itr != end && *itr == '\n') {
+      commentEnd = itr + 1;  // '//\n'
+    } else if (std::regex_search(itr, end, match, *endRegex)) {
+      commentEnd = itr + match.position() + match.length();
+    } else {
+      return ret;
+    }
 
-    const auto commentEnd = itr + match.position() + match.length();
     for (; itr != commentEnd; ++itr) {
       const auto cur = *itr;
       if (cur == '\n') {
