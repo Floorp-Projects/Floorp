@@ -1,9 +1,8 @@
-#!/usr/bin/python -B
+#!/usr/bin/env python3 -B
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function
 import re
 
 quoted_pat = re.compile(r"([^A-Za-z0-9]|^)'([^']+)'")
@@ -96,23 +95,20 @@ class CommentInfo:
         self.stack_defs = ''
 
 # Holds the information stored in the macro with the following format:
-#   MACRO({name}, {op_camel}, {op_snake}, {display_name}, {image}, {length}, {nuses}, {ndefs},
-#         {flags})
+#   MACRO({op}, {op_snake}, {token}, {length}, {nuses}, {ndefs}, {format})
 # and the information from CommentInfo.
 
 
 class OpcodeInfo:
     def __init__(self, value, comment_info):
-        self.name = ''
-        self.op_camel = ''
+        self.op = ''
         self.op_snake = ''
         self.value = value
-        self.display_name = ''
-        self.image = ''
+        self.token = ''
         self.length = ''
         self.nuses = ''
         self.ndefs = ''
-        self.flags = ''
+        self.format_ = ''
 
         self.operands_array = []
         self.stack_uses_array = []
@@ -172,7 +168,6 @@ def get_tag_value(line):
     return re.sub(tag_pat, '', line)
 
 
-# Identifiers to avoid because they're reserved words in either Rust or C++.
 RUST_OR_CPP_KEYWORDS = {
     'and', 'case', 'default', 'double', 'false', 'goto', 'in', 'new', 'not', 'or', 'return',
     'throw', 'true', 'try', 'typeof', 'void',
@@ -183,15 +178,13 @@ def get_opcodes(dir):
     iter_pat = re.compile(r"/\*(.*?)\*/"  # either a documentation comment...
                           r"|"
                           r"MACRO\("      # or a MACRO(...) call
-                          r"(?P<name>[^,]+),\s*"
-                          r"(?P<op_camel>[^,]+),\s*"
+                          r"(?P<op>[^,]+),\s*"
                           r"(?P<op_snake>[^,]+),\s*"
-                          r"(?P<display_name>[^,]+,)\s*"
-                          r"(?P<image>[^,]+),\s*"
+                          r"(?P<token>[^,]+,)\s*"
                           r"(?P<length>[0-9\-]+),\s*"
                           r"(?P<nuses>[0-9\-]+),\s*"
                           r"(?P<ndefs>[0-9\-]+),\s*"
-                          r"(?P<flags>[^\)]+)"
+                          r"(?P<format>[^\)]+)"
                           r"\)", re.S)
     stack_pat = re.compile(r"^(?P<uses>.*?)"
                            r"\s*=>\s*"
@@ -212,7 +205,7 @@ def get_opcodes(dir):
 
     for m in re.finditer(iter_pat, data):
         comment = m.group(1)
-        name = m.group('name')
+        op = m.group('op')
 
         if comment:
             if '[Index]' in comment:
@@ -267,21 +260,19 @@ def get_opcodes(dir):
                 comment_info.stack_uses = m2.group('uses')
                 comment_info.stack_defs = m2.group('defs')
         else:
-            assert name is not None
+            assert op is not None
             opcode = OpcodeInfo(next_opcode_value, comment_info)
             next_opcode_value += 1
 
-            opcode.name = name
-            opcode.op_camel = m.group('op_camel')
+            opcode.op = op
             opcode.op_snake = m.group('op_snake')
-            opcode.display_name = parse_name(m.group('display_name'))
-            opcode.image = parse_name(m.group('image'))
+            opcode.token = parse_name(m.group('token'))
             opcode.length = m.group('length')
             opcode.nuses = m.group('nuses')
             opcode.ndefs = m.group('ndefs')
-            opcode.flags = m.group('flags').split('|')
+            opcode.format_ = m.group('format').split('|')
 
-            expected_snake = re.sub(r'(?<!^)(?=[A-Z])', '_', opcode.op_camel).lower()
+            expected_snake = re.sub(r'(?<!^)(?=[A-Z])', '_', opcode.op).lower()
             if expected_snake in RUST_OR_CPP_KEYWORDS:
                 expected_snake += '_'
             if opcode.op_snake != expected_snake:
@@ -292,46 +283,46 @@ def get_opcodes(dir):
             if not group_head:
                 group_head = opcode
 
-                opcode.sort_key = opcode.name
+                opcode.sort_key = opcode.op
                 if opcode.category_name == '':
                     raise Exception('Category is not specified for '
-                                    '{name}'.format(name=opcode.name))
+                                    '{op}'.format(op=opcode.op))
                 add_to_index(index, opcode)
             else:
                 if group_head.length != opcode.length:
                     raise Exception('length should be same for opcodes of the'
                                     ' same group: '
-                                    '{value1}({name1}) != '
-                                    '{value2}({name2})'.format(
-                                        name1=group_head.name,
+                                    '{value1}({op1}) != '
+                                    '{value2}({op2})'.format(
+                                        op1=group_head.op,
                                         value1=group_head.length,
-                                        name2=opcode.name,
+                                        op2=opcode.op,
                                         value2=opcode.length))
                 if group_head.nuses != opcode.nuses:
                     raise Exception('nuses should be same for opcodes of the'
                                     ' same group: '
-                                    '{value1}({name1}) != '
-                                    '{value2}({name2})'.format(
-                                        name1=group_head.name,
+                                    '{value1}({op1}) != '
+                                    '{value2}({op2})'.format(
+                                        op1=group_head.op,
                                         value1=group_head.nuses,
-                                        name2=opcode.name,
+                                        op2=opcode.op,
                                         value2=opcode.nuses))
                 if group_head.ndefs != opcode.ndefs:
                     raise Exception('ndefs should be same for opcodes of the'
                                     ' same group: '
-                                    '{value1}({name1}) != '
-                                    '{value2}({name2})'.format(
-                                        name1=group_head.name,
+                                    '{value1}({op1}) != '
+                                    '{value2}({op2})'.format(
+                                        op1=group_head.op,
                                         value1=group_head.ndefs,
-                                        name2=opcode.name,
+                                        op2=opcode.op,
                                         value2=opcode.ndefs))
 
                 group_head.group.append(opcode)
 
-                if opcode.name < group_head.name:
-                    group_head.sort_key = opcode.name
+                if opcode.op < group_head.op:
+                    group_head.sort_key = opcode.op
 
-            opcodes[name] = opcode
+            opcodes[op] = opcode
 
             # Verify stack notation.
             nuses = int(opcode.nuses)
@@ -341,18 +332,18 @@ def get_opcodes(dir):
             stack_ndefs = get_stack_count(opcode.stack_defs)
 
             if nuses != -1 and stack_nuses != -1 and nuses != stack_nuses:
-                raise Exception('nuses should match stack notation: {name}: '
+                raise Exception('nuses should match stack notation: {op}: '
                                 '{nuses} != {stack_nuses} '
                                 '(stack_nuses)'.format(
-                                    name=name,
+                                    op=op,
                                     nuses=nuses,
                                     stack_nuses=stack_nuses,
                                     stack_uses=opcode.stack_uses))
             if ndefs != -1 and stack_ndefs != -1 and ndefs != stack_ndefs:
-                raise Exception('ndefs should match stack notation: {name}: '
+                raise Exception('ndefs should match stack notation: {op}: '
                                 '{ndefs} != {stack_ndefs} '
                                 '(stack_ndefs)'.format(
-                                    name=name,
+                                    op=op,
                                     ndefs=ndefs,
                                     stack_ndefs=stack_ndefs,
                                     stack_defs=opcode.stack_defs))

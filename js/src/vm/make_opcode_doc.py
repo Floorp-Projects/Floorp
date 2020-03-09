@@ -14,7 +14,6 @@
     https://developer.mozilla.org/en-US/docs/SpiderMonkey/Internals/Bytecode
 """
 
-from __future__ import print_function
 import sys
 import os
 
@@ -41,9 +40,9 @@ except ModuleNotFoundError as exc:
                   file=sys.stderr)
             sys.exit(1)
         print("Try this:\n"
-              "    pip install markdown\n"
+              "    pip3 install markdown\n"
               "Or, if you want to avoid installing things globally:\n"
-              "    python3 -m venv venv && . venv/bin/activate && pip install markdown",
+              "    python3 -m venv venv && . venv/bin/activate && pip3 install markdown",
               file=sys.stderr)
         sys.exit(1)
     raise exc
@@ -60,9 +59,9 @@ except ImportError as exc:
     raise exc
 
 
-SOURCE_BASE = 'http://dxr.mozilla.org/mozilla-central/source'
+SOURCE_BASE = 'https://searchfox.org/mozilla-central/source'
 
-FLAGS_TO_IGNORE = {
+FORMAT_TO_IGNORE = {
     "JOF_BYTE",
     "JOF_UINT8",
     "JOF_UINT16",
@@ -78,11 +77,11 @@ FLAGS_TO_IGNORE = {
 }
 
 
-def format_flags(flags):
-    flags = [flag for flag in flags if flag not in FLAGS_TO_IGNORE]
-    if len(flags) == 0:
+def format_format(format):
+    format = [flag for flag in format if flag not in FORMAT_TO_IGNORE]
+    if len(format) == 0:
         return ''
-    return '<div>Flags: {flags}</div>\n'.format(flags=', '.join(flags))
+    return '<div>Format: {format}</div>\n'.format(format=', '.join(format))
 
 
 def maybe_escape(value, format_str, fallback=""):
@@ -95,13 +94,13 @@ OPCODE_FORMAT = """\
 <dt id="{id}">{names}</dt>
 <dd>
 {operands}{stack}{desc}
-{flags}</dd>
+{format}</dd>
 """
 
 
 def print_opcode(opcode):
     opcodes = [opcode] + opcode.group
-    names = ', '.join(maybe_escape(code.name, "<code>{}</code>") for code in opcodes)
+    names = ', '.join(maybe_escape(code.op, "<code>{}</code>") for code in opcodes)
     operands = maybe_escape(opcode.operands, "<div>Operands: <code>({})</code></div>\n")
     stack_uses = maybe_escape(opcode.stack_uses, "<code>{}</code> ")
     stack_defs = maybe_escape(opcode.stack_defs, " <code>{}</code>")
@@ -111,12 +110,12 @@ def print_opcode(opcode):
         stack = ""
 
     print(OPCODE_FORMAT.format(
-        id=opcodes[0].name,
+        id=opcodes[0].op,
         names=names,
         operands=operands,
         stack=stack,
         desc=markdown.markdown(opcode.desc),
-        flags=format_flags(opcode.flags),
+        format=format_format(opcode.format_),
     ))
 
 
