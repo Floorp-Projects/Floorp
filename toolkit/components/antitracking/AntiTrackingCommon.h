@@ -123,9 +123,6 @@ class AntiTrackingCommon final {
       const nsCString& aTrackingOrigin, int aAllowMode,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
-
-  static void RedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
-                                nsIChannel* aNewChannel, nsIURI* aNewURI);
 };
 
 }  // namespace mozilla

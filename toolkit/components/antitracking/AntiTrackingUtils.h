@@ -11,6 +11,8 @@
 
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
+class nsIChannel;
+class nsIURI;
 
 namespace mozilla {
 

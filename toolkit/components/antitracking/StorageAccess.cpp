@@ -11,9 +11,16 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
+#include "nsContentUtils.h"
+#include "nsICookiePermission.h"
 #include "nsICookieService.h"
 #include "nsICookieJarSettings.h"
+#include "nsIPermission.h"
 #include "nsIWebProgressListener.h"
+#include "nsSandboxFlags.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 /**
  * Gets the cookie lifetime policy for a given cookieJarSettings and a given
