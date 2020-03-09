@@ -254,20 +254,20 @@ class gfxContext final {
    * Set a solid color to use for drawing.  This color is in the device color
    * space and is not transformed.
    */
-  void SetDeviceColor(const mozilla::gfx::Color& aColor);
+  void SetDeviceColor(const mozilla::gfx::DeviceColor& aColor);
 
   /**
    * Gets the current color.  It's returned in the device color space.
    * returns false if there is something other than a color
    *         set as the current source (pattern, surface, etc)
    */
-  bool GetDeviceColor(mozilla::gfx::Color& aColorOut);
+  bool GetDeviceColor(mozilla::gfx::DeviceColor& aColorOut);
 
   /**
    * Returns true if color is neither opaque nor transparent (i.e. alpha is not
    * 0 or 1), and false otherwise. If true, aColorOut is set on output.
    */
-  bool HasNonOpaqueNonTransparentColor(mozilla::gfx::Color& aColorOut) {
+  bool HasNonOpaqueNonTransparentColor(mozilla::gfx::DeviceColor& aColorOut) {
     return GetDeviceColor(aColorOut) && 0.f < aColorOut.a && aColorOut.a < 1.f;
   }
 
@@ -276,7 +276,7 @@ class gfxContext final {
    * If CMS is not enabled, the color is treated as a device-space color
    * and this call is identical to SetDeviceColor().
    */
-  void SetColor(const mozilla::gfx::Color& aColor);
+  void SetColor(const mozilla::gfx::sRGBColor& aColor);
 
   /**
    * Uses a pattern for drawing.
@@ -475,7 +475,8 @@ class gfxContext final {
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::Color Color;
+  typedef mozilla::gfx::sRGBColor sRGBColor;
+  typedef mozilla::gfx::DeviceColor DeviceColor;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::gfx::PathBuilder PathBuilder;
   typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -494,7 +495,7 @@ class gfxContext final {
     }
 
     mozilla::gfx::CompositionOp op;
-    Color color;
+    DeviceColor color;
     RefPtr<gfxPattern> pattern;
     Matrix transform;
     struct PushedClip {
@@ -509,7 +510,7 @@ class gfxContext final {
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
-    Color fontSmoothingBackgroundColor;
+    DeviceColor fontSmoothingBackgroundColor;
     // This is used solely for using minimal intermediate surface size.
     mozilla::gfx::Point deviceOffset;
 #ifdef DEBUG

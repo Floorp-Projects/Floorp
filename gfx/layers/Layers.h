@@ -2447,7 +2447,7 @@ class ColorLayer : public Layer {
    * CONSTRUCTION PHASE ONLY
    * Set the color of the layer.
    */
-  virtual void SetColor(const gfx::Color& aColor) {
+  virtual void SetColor(const gfx::DeviceColor& aColor) {
     if (mColor != aColor) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Color", this));
       mColor = aColor;
@@ -2465,7 +2465,7 @@ class ColorLayer : public Layer {
   const gfx::IntRect& GetBounds() { return mBounds; }
 
   // This getter can be used anytime.
-  virtual const gfx::Color& GetColor() { return mColor; }
+  virtual const gfx::DeviceColor& GetColor() { return mColor; }
 
   MOZ_LAYER_DECL_NAME("ColorLayer", TYPE_COLOR)
 
@@ -2486,7 +2486,7 @@ class ColorLayer : public Layer {
                   const void* aParent) override;
 
   gfx::IntRect mBounds;
-  gfx::Color mColor;
+  gfx::DeviceColor mColor;
 };
 
 /**

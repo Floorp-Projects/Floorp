@@ -666,7 +666,7 @@ void BasicLayerManager::FlashWidgetUpdateArea(gfxContext* aContext) {
     float r = float(rand()) / float(RAND_MAX);
     float g = float(rand()) / float(RAND_MAX);
     float b = float(rand()) / float(RAND_MAX);
-    aContext->SetColor(Color(r, g, b, 0.2f));
+    aContext->SetDeviceColor(DeviceColor(r, g, b, 0.2f));
     aContext->Paint();
   }
 }
@@ -905,9 +905,9 @@ void BasicLayerManager::PaintLayer(gfxContext* aTarget, Layer* aLayer,
     // Revert these changes when 725886 is ready
 #ifdef DEBUG
     if (aLayer->GetDebugColorIndex() != 0) {
-      Color color((aLayer->GetDebugColorIndex() & 1) ? 1.f : 0.f,
-                  (aLayer->GetDebugColorIndex() & 2) ? 1.f : 0.f,
-                  (aLayer->GetDebugColorIndex() & 4) ? 1.f : 0.f);
+      DeviceColor color((aLayer->GetDebugColorIndex() & 1) ? 1.f : 0.f,
+                        (aLayer->GetDebugColorIndex() & 2) ? 1.f : 0.f,
+                        (aLayer->GetDebugColorIndex() & 4) ? 1.f : 0.f);
       untransformedDT->FillRect(Rect(bounds), ColorPattern(color));
     }
 #endif

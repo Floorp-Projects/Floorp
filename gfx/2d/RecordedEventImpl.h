@@ -739,7 +739,7 @@ class RecordedDrawSurfaceWithShadow
     : public RecordedDrawingEvent<RecordedDrawSurfaceWithShadow> {
  public:
   RecordedDrawSurfaceWithShadow(DrawTarget* aDT, ReferencePtr aRefSource,
-                                const Point& aDest, const Color& aColor,
+                                const Point& aDest, const DeviceColor& aColor,
                                 const Point& aOffset, Float aSigma,
                                 CompositionOp aOp)
       : RecordedDrawingEvent(DRAWSURFACEWITHSHADOW, aDT),
@@ -766,7 +766,7 @@ class RecordedDrawSurfaceWithShadow
 
   ReferencePtr mRefSource;
   Point mDest;
-  Color mColor;
+  DeviceColor mColor;
   Point mOffset;
   Float mSigma;
   CompositionOp mOp;
@@ -1804,11 +1804,11 @@ inline void RecordedEvent::OutputSimplePatternInfo(
     const PatternStorage& aStorage, std::stringstream& aOutput) const {
   switch (aStorage.mType) {
     case PatternType::COLOR: {
-      const Color color =
+      const DeviceColor color =
           reinterpret_cast<const ColorPatternStorage*>(&aStorage.mStorage)
               ->mColor;
-      aOutput << "Color: (" << color.r << ", " << color.g << ", " << color.b
-              << ", " << color.a << ")";
+      aOutput << "DeviceColor: (" << color.r << ", " << color.g << ", "
+              << color.b << ", " << color.a << ")";
       return;
     }
     case PatternType::LINEAR_GRADIENT: {
@@ -2194,7 +2194,7 @@ struct GenericPattern {
         return mPattern;
       }
       default:
-        return new (mColPat) ColorPattern(Color());
+        return new (mColPat) ColorPattern(DeviceColor());
     }
 
     return mPattern;
@@ -2929,7 +2929,7 @@ RecordedDrawSurfaceWithShadow::RecordedDrawSurfaceWithShadow(S& aStream)
 inline void RecordedDrawSurfaceWithShadow::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
   aStringStream << "[" << mDT << "] DrawSurfaceWithShadow (" << mRefSource
-                << ") Color: (" << mColor.r << ", " << mColor.g << ", "
+                << ") DeviceColor: (" << mColor.r << ", " << mColor.g << ", "
                 << mColor.b << ", " << mColor.a << ")";
 }
 
@@ -3723,7 +3723,7 @@ inline bool RecordedFilterNodeSetAttribute::PlayEvent(
     REPLAY_SET_ATTRIBUTE(Matrix, MATRIX);
     REPLAY_SET_ATTRIBUTE(Matrix5x4, MATRIX5X4);
     REPLAY_SET_ATTRIBUTE(Point3D, POINT3D);
-    REPLAY_SET_ATTRIBUTE(Color, COLOR);
+    REPLAY_SET_ATTRIBUTE(DeviceColor, COLOR);
     case ARGTYPE_FLOAT_ARRAY:
       node->SetAttribute(mIndex,
                          reinterpret_cast<const Float*>(&mPayload.front()),

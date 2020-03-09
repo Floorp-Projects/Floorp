@@ -45,9 +45,9 @@ class FilterNodeCapture final : public FilterNode {
     Replace(aIndex, RefPtr<FilterNode>(aFilter), mInputs);
   }
 
-  using AttributeValue =
-      Variant<uint32_t, Float, Point, Matrix5x4, Point3D, Size, IntSize, Color,
-              Rect, IntRect, bool, std::vector<Float>, IntPoint, Matrix>;
+  using AttributeValue = Variant<uint32_t, Float, Point, Matrix5x4, Point3D,
+                                 Size, IntSize, DeviceColor, Rect, IntRect,
+                                 bool, std::vector<Float>, IntPoint, Matrix>;
 
   void SetAttribute(uint32_t aIndex, uint32_t aValue) override {
     Replace(aIndex, aValue, mAttributes);
@@ -70,7 +70,7 @@ class FilterNodeCapture final : public FilterNode {
   void SetAttribute(uint32_t aIndex, const IntSize& aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  void SetAttribute(uint32_t aIndex, const Color& aValue) override {
+  void SetAttribute(uint32_t aIndex, const DeviceColor& aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
   void SetAttribute(uint32_t aIndex, const Rect& aValue) override {

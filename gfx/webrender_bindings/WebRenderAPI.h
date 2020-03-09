@@ -91,7 +91,7 @@ class TransactionBuilder final {
 
   void RemovePipeline(PipelineId aPipelineId);
 
-  void SetDisplayList(gfx::Color aBgColor, Epoch aEpoch,
+  void SetDisplayList(const gfx::DeviceColor& aBgColor, Epoch aEpoch,
                       const wr::LayoutSize& aViewportSize,
                       wr::WrPipelineId pipeline_id,
                       const wr::LayoutSize& content_size,

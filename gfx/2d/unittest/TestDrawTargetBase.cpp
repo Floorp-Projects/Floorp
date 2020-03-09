@@ -20,24 +20,25 @@ void TestDrawTargetBase::Initialized() { VERIFY(mDT); }
 
 void TestDrawTargetBase::FillCompletely() {
   mDT->FillRect(Rect(0, 0, DT_WIDTH, DT_HEIGHT),
-                ColorPattern(Color(0, 0.5f, 0, 1.0f)));
+                ColorPattern(DeviceColor(0, 0.5f, 0, 1.0f)));
 
   RefreshSnapshot();
 
-  VerifyAllPixels(Color(0, 0.5f, 0, 1.0f));
+  VerifyAllPixels(DeviceColor(0, 0.5f, 0, 1.0f));
 }
 
 void TestDrawTargetBase::FillRect() {
   mDT->FillRect(Rect(0, 0, DT_WIDTH, DT_HEIGHT),
-                ColorPattern(Color(0, 0.5f, 0, 1.0f)));
-  mDT->FillRect(Rect(50, 50, 50, 50), ColorPattern(Color(0.5f, 0, 0, 1.0f)));
+                ColorPattern(DeviceColor(0, 0.5f, 0, 1.0f)));
+  mDT->FillRect(Rect(50, 50, 50, 50),
+                ColorPattern(DeviceColor(0.5f, 0, 0, 1.0f)));
 
   RefreshSnapshot();
 
-  VerifyPixel(IntPoint(49, 49), Color(0, 0.5f, 0, 1.0f));
-  VerifyPixel(IntPoint(50, 50), Color(0.5f, 0, 0, 1.0f));
-  VerifyPixel(IntPoint(99, 99), Color(0.5f, 0, 0, 1.0f));
-  VerifyPixel(IntPoint(100, 100), Color(0, 0.5f, 0, 1.0f));
+  VerifyPixel(IntPoint(49, 49), DeviceColor(0, 0.5f, 0, 1.0f));
+  VerifyPixel(IntPoint(50, 50), DeviceColor(0.5f, 0, 0, 1.0f));
+  VerifyPixel(IntPoint(99, 99), DeviceColor(0.5f, 0, 0, 1.0f));
+  VerifyPixel(IntPoint(100, 100), DeviceColor(0, 0.5f, 0, 1.0f));
 }
 
 void TestDrawTargetBase::RefreshSnapshot() {
@@ -45,7 +46,7 @@ void TestDrawTargetBase::RefreshSnapshot() {
   mDataSnapshot = snapshot->GetDataSurface();
 }
 
-void TestDrawTargetBase::VerifyAllPixels(const Color& aColor) {
+void TestDrawTargetBase::VerifyAllPixels(const DeviceColor& aColor) {
   uint32_t* colVal = (uint32_t*)mDataSnapshot->GetData();
 
   uint32_t expected = RGBAPixelFromColor(aColor);
@@ -62,7 +63,7 @@ void TestDrawTargetBase::VerifyAllPixels(const Color& aColor) {
 }
 
 void TestDrawTargetBase::VerifyPixel(const IntPoint& aPoint,
-                                     mozilla::gfx::Color& aColor) {
+                                     mozilla::gfx::DeviceColor& aColor) {
   uint32_t* colVal = (uint32_t*)mDataSnapshot->GetData();
 
   uint32_t expected = RGBAPixelFromColor(aColor);
@@ -94,7 +95,7 @@ void TestDrawTargetBase::VerifyPixel(const IntPoint& aPoint,
   }
 }
 
-uint32_t TestDrawTargetBase::RGBAPixelFromColor(const Color& aColor) {
+uint32_t TestDrawTargetBase::RGBAPixelFromColor(const DeviceColor& aColor) {
   return uint8_t((aColor.b * 255) + 0.5f) |
          uint8_t((aColor.g * 255) + 0.5f) << 8 |
          uint8_t((aColor.r * 255) + 0.5f) << 16 |

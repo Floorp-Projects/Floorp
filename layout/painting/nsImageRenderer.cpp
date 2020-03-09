@@ -514,7 +514,7 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
     if (mMaskOp == StyleMaskMode::Luminance) {
       RefPtr<SourceSurface> surf = ctx->GetDrawTarget()->IntoLuminanceSource(
           LuminanceType::LUMINANCE, 1.0f);
-      dt->MaskSurface(ColorPattern(Color(0, 0, 0, 1.0f)), surf,
+      dt->MaskSurface(ColorPattern(DeviceColor(0, 0, 0, 1.0f)), surf,
                       tmpDTRect.TopLeft(),
                       DrawOptions(1.0f, aRenderingContext.CurrentOp()));
     } else {

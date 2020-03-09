@@ -153,7 +153,7 @@ class ReadbackLayer : public Layer {
         mSink->SetUnknown(AllocateSequenceNumber());
       }
       mBackgroundLayer = nullptr;
-      mBackgroundColor = gfx::Color();
+      mBackgroundColor = gfx::DeviceColor();
     }
   }
 
@@ -166,7 +166,7 @@ class ReadbackLayer : public Layer {
         mSize(0, 0),
         mBackgroundLayer(nullptr),
         mBackgroundLayerOffset(0, 0),
-        mBackgroundColor(gfx::Color()) {}
+        mBackgroundColor(gfx::DeviceColor()) {}
 
   virtual void PrintInfo(std::stringstream& aStream,
                          const char* aPrefix) override;
@@ -193,7 +193,7 @@ class ReadbackLayer : public Layer {
   // When mBackgroundColor is opaque, this is the color of the ColorLayer
   // that contained the contents we reported to mSink, which covered the
   // entire readback area.
-  gfx::Color mBackgroundColor;
+  gfx::DeviceColor mBackgroundColor;
 };
 
 }  // namespace layers

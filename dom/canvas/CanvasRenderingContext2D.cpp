@@ -234,7 +234,7 @@ bool CanvasRenderingContext2D::PatternIsOpaque(
       // TODO: for gradient patterns we could check that all stops are opaque
       // colors.
       // it's a color pattern.
-      opaque = Color::FromABGR(state.colorStyles[aStyle]).a >= 1.0;
+      opaque = sRGBColor::FromABGR(state.colorStyles[aStyle]).a >= 1.0;
       color = true;
     }
   }
@@ -524,7 +524,7 @@ class AdjustedTargetForShadow {
 
     mFinalTarget->DrawSurfaceWithShadow(
         snapshot, mTempRect.TopLeft(),
-        Color::FromABGR(mCtx->CurrentState().shadowColor),
+        ToDeviceColor(mCtx->CurrentState().shadowColor),
         mCtx->CurrentState().shadowOffset, mSigma, mCompositionOp);
   }
 
@@ -730,7 +730,7 @@ void CanvasGradient::AddColorStop(float aOffset, const nsACString& aColorstr,
   GradientStop newStop;
 
   newStop.offset = aOffset;
-  newStop.color = Color::FromABGR(color);
+  newStop.color = ToDeviceColor(color);
 
   mRawStops.AppendElement(newStop);
 }
@@ -3641,7 +3641,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
     if (state->StyleIsColor(style)) {  // Color
       nscolor fontColor = state->colorStyles[style];
       if (style == Style::FILL) {
-        params.context->SetColor(Color::FromABGR(fontColor));
+        params.context->SetColor(sRGBColor::FromABGR(fontColor));
       } else {
         params.textStrokeColor = fontColor;
       }

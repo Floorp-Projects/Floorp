@@ -1572,7 +1572,8 @@ RefPtr<MLGRenderTarget> MLGDeviceD3D11::CreateRenderTarget(
   return rt;
 }
 
-void MLGDeviceD3D11::Clear(MLGRenderTarget* aRT, const gfx::Color& aColor) {
+void MLGDeviceD3D11::Clear(MLGRenderTarget* aRT,
+                           const gfx::DeviceColor& aColor) {
   MLGRenderTargetD3D11* rt = aRT->AsD3D11();
   FLOAT rgba[4] = {aColor.r, aColor.g, aColor.b, aColor.a};
   mCtx->ClearRenderTargetView(rt->GetRenderTargetView(), rgba);
@@ -1588,7 +1589,7 @@ void MLGDeviceD3D11::ClearDepthBuffer(MLGRenderTarget* aRT) {
   }
 }
 
-void MLGDeviceD3D11::ClearView(MLGRenderTarget* aRT, const Color& aColor,
+void MLGDeviceD3D11::ClearView(MLGRenderTarget* aRT, const DeviceColor& aColor,
                                const IntRect* aRects, size_t aNumRects) {
   MOZ_ASSERT(mCanUseClearView);
   MOZ_ASSERT(mCtx1);
@@ -1952,16 +1953,18 @@ bool MLGDeviceD3D11::VerifyConstantBufferOffsetting() {
       return false;
     }
 
-    *reinterpret_cast<Color*>(map.mData) = Color(1.0f, 0.2f, 0.3f, 1.0f);
-    *reinterpret_cast<Color*>(map.mData + kConstantSize * kMinConstants) =
-        Color(0.4f, 0.0f, 0.5f, 1.0f);
-    *reinterpret_cast<Color*>(map.mData + (kConstantSize * kMinConstants) * 2) =
-        Color(0.6f, 0.7f, 1.0f, 1.0f);
+    *reinterpret_cast<DeviceColor*>(map.mData) =
+        DeviceColor(1.0f, 0.2f, 0.3f, 1.0f);
+    *reinterpret_cast<DeviceColor*>(map.mData + kConstantSize * kMinConstants) =
+        DeviceColor(0.4f, 0.0f, 0.5f, 1.0f);
+    *reinterpret_cast<DeviceColor*>(map.mData +
+                                    (kConstantSize * kMinConstants) * 2) =
+        DeviceColor(0.6f, 0.7f, 1.0f, 1.0f);
 
     Unmap(buffer);
   }
 
-  Clear(rt, Color(0.0f, 0.0f, 0.0f, 1.0f));
+  Clear(rt, DeviceColor(0.0f, 0.0f, 0.0f, 1.0f));
   SetRenderTarget(rt);
   SetViewport(IntRect(0, 0, 2, 2));
   SetScissorRect(Nothing());

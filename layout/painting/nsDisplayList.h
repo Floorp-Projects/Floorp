@@ -4460,14 +4460,14 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
  * the find bar highlighter dimmer.
  */
 class nsDisplaySolidColorRegion : public nsPaintedDisplayItem {
-  typedef mozilla::gfx::Color Color;
+  typedef mozilla::gfx::sRGBColor sRGBColor;
 
  public:
   nsDisplaySolidColorRegion(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             const nsRegion& aRegion, nscolor aColor)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRegion(aRegion),
-        mColor(Color::FromABGR(aColor)) {
+        mColor(sRGBColor::FromABGR(aColor)) {
     NS_ASSERTION(NS_GET_A(aColor) > 0,
                  "Don't create invisible nsDisplaySolidColorRegions!");
     MOZ_COUNT_CTOR(nsDisplaySolidColorRegion);
@@ -4509,7 +4509,7 @@ class nsDisplaySolidColorRegion : public nsPaintedDisplayItem {
 
  private:
   nsRegion mRegion;
-  Color mColor;
+  sRGBColor mColor;
 };
 
 /**
@@ -4895,7 +4895,7 @@ class nsDisplayTableThemedBackground : public nsDisplayThemedBackground {
 };
 
 class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
-  typedef mozilla::gfx::Color Color;
+  typedef mozilla::gfx::sRGBColor sRGBColor;
 
  public:
   nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -4906,7 +4906,7 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
         mBackgroundRect(aBackgroundRect),
         mHasStyle(aBackgroundStyle),
         mDependentFrame(nullptr),
-        mColor(Color::FromABGR(aColor)) {
+        mColor(sRGBColor::FromABGR(aColor)) {
     mState.mColor = mColor;
 
     if (mHasStyle) {
@@ -5028,10 +5028,10 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
   const bool mHasStyle;
   mozilla::StyleGeometryBox mBottomLayerClip;
   nsIFrame* mDependentFrame;
-  mozilla::gfx::Color mColor;
+  mozilla::gfx::sRGBColor mColor;
 
   struct {
-    mozilla::gfx::Color mColor;
+    mozilla::gfx::sRGBColor mColor;
   } mState;
 };
 

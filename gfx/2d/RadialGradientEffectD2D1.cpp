@@ -361,10 +361,10 @@ RadialGradientEffectD2D1::CreateGradientTexture() {
       interp = 0;
     }
 
-    Color newColor(prevColor.r + (nextColor.r - prevColor.r) * interp,
-                   prevColor.g + (nextColor.g - prevColor.g) * interp,
-                   prevColor.b + (nextColor.b - prevColor.b) * interp,
-                   prevColor.a + (nextColor.a - prevColor.a) * interp);
+    DeviceColor newColor(prevColor.r + (nextColor.r - prevColor.r) * interp,
+                         prevColor.g + (nextColor.g - prevColor.g) * interp,
+                         prevColor.b + (nextColor.b - prevColor.b) * interp,
+                         prevColor.a + (nextColor.a - prevColor.a) * interp);
 
     // Note D2D expects RGBA here!!
     texData[i * 4] = (char)(255.0f * newColor.r);

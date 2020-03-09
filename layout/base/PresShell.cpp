@@ -4408,7 +4408,7 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) {
     // Nothing to paint, just fill the rect
-    aThebesContext->SetColor(Color::FromABGR(aBackgroundColor));
+    aThebesContext->SetColor(sRGBColor::FromABGR(aBackgroundColor));
     aThebesContext->Fill();
     return NS_OK;
   }
@@ -6091,7 +6091,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     nsIntRect bounds =
         pc->GetVisibleArea().ToOutsidePixels(pc->AppUnitsPerDevPixel());
     bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
-    root->SetColor(Color::FromABGR(bgcolor));
+    root->SetColor(ToDeviceColor(bgcolor));
     root->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(bounds));
     layerManager->SetRoot(root);
   }
@@ -10231,11 +10231,11 @@ void ReflowCountMgr::PaintCount(const char* aName,
       fm->SetTextRunRTL(false);
       width = fm->GetWidth(buf, len, drawTarget);
 
-      Color color;
-      Color color2;
+      sRGBColor color;
+      sRGBColor color2;
       if (aColor != 0) {
-        color = Color::FromABGR(aColor);
-        color2 = Color(0.f, 0.f, 0.f);
+        color = sRGBColor::FromABGR(aColor);
+        color2 = sRGBColor(0.f, 0.f, 0.f);
       } else {
         gfx::Float rc = 0.f, gc = 0.f, bc = 0.f;
         if (counter->mCount < 5) {
@@ -10246,14 +10246,14 @@ void ReflowCountMgr::PaintCount(const char* aName,
         } else {
           rc = 1.f;
         }
-        color = Color(rc, gc, bc);
-        color2 = Color(rc / 2, gc / 2, bc / 2);
+        color = sRGBColor(rc, gc, bc);
+        color2 = sRGBColor(rc / 2, gc / 2, bc / 2);
       }
 
       nsRect rect(0, 0, width + 15, height + 15);
       Rect devPxRect =
           NSRectToSnappedRect(rect, appUnitsPerDevPixel, *drawTarget);
-      ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
+      ColorPattern black(ToDeviceColor(sRGBColor::OpaqueBlack()));
       drawTarget->FillRect(devPxRect, black);
 
       aRenderingContext->SetColor(color2);
