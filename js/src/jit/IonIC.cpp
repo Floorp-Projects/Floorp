@@ -596,6 +596,11 @@ bool IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript,
         return false;
       }
       break;
+    case JSOp::Pow:
+      if (!PowValues(cx, &lhsCopy, &rhsCopy, ret)) {
+        return false;
+      }
+      break;
     case JSOp::BitOr: {
       if (!BitOr(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
