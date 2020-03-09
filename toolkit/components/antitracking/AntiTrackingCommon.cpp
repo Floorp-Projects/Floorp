@@ -9,6 +9,7 @@
 #include "AntiTrackingUtils.h"
 
 #include "mozilla/ContentBlockingAllowList.h"
+#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
@@ -45,7 +46,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
 #include "nsScriptSecurityManager.h"
-#include "prtime.h"
 
 namespace mozilla {
 
@@ -573,7 +573,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       "privacy.restrict3rdpartystorage."
       "userInteractionRequiredForHosts",
       &isInPrefList);
-  if (isInPrefList && !HasUserInteraction(trackingPrincipal)) {
+  if (isInPrefList &&
+      !ContentBlockingUserInteraction::Exists(trackingPrincipal)) {
     LOG_PRIN(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
               _spec),
@@ -1295,68 +1296,4 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
   return CheckAntiTrackingPermission(
       parentPrincipal, type,
       nsContentUtils::IsInPrivateBrowsing(parentDocument), nullptr, 0);
-}
-
-/* static */
-void AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal) {
-  if (!aPrincipal) {
-    // The content process may have sent us garbage data.
-    return;
-  }
-
-  if (XRE_IsParentProcess()) {
-    LOG_PRIN(("Saving the userInteraction for %s", _spec), aPrincipal);
-
-    nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-    if (NS_WARN_IF(!permManager)) {
-      LOG(("Permission manager is null, bailing out early"));
-      return;
-    }
-
-    // Remember that this pref is stored in seconds!
-    uint32_t expirationType = nsIPermissionManager::EXPIRE_TIME;
-    uint32_t expirationTime =
-        StaticPrefs::privacy_userInteraction_expiration() * 1000;
-    int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + expirationTime;
-
-    uint32_t privateBrowsingId = 0;
-    nsresult rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
-    if (!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) {
-      // If we are coming from a private window, make sure to store a
-      // session-only permission which won't get persisted to disk.
-      expirationType = nsIPermissionManager::EXPIRE_SESSION;
-      when = 0;
-    }
-
-    rv = permManager->AddFromPrincipal(aPrincipal, USER_INTERACTION_PERM,
-                                       nsIPermissionManager::ALLOW_ACTION,
-                                       expirationType, when);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-    return;
-  }
-
-  ContentChild* cc = ContentChild::GetSingleton();
-  MOZ_ASSERT(cc);
-
-  LOG_PRIN(("Asking the parent process to save the user-interaction for us: %s",
-            _spec),
-           aPrincipal);
-  cc->SendStoreUserInteractionAsPermission(IPC::Principal(aPrincipal));
-}
-
-/* static */
-bool AntiTrackingCommon::HasUserInteraction(nsIPrincipal* aPrincipal) {
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
-    return false;
-  }
-
-  uint32_t result = 0;
-  nsresult rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(
-      aPrincipal, USER_INTERACTION_PERM, &result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return result == nsIPermissionManager::ALLOW_ACTION;
 }
