@@ -43,6 +43,7 @@
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
+#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/DataStorage.h"
@@ -5837,7 +5838,7 @@ ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
 
 mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
     const Principal& aPrincipal) {
-  AntiTrackingCommon::StoreUserInteractionFor(aPrincipal);
+  ContentBlockingUserInteraction::Observe(aPrincipal);
   return IPC_OK();
 }
 
