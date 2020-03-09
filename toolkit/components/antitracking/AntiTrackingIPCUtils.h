@@ -9,19 +9,20 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-#include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/ContentBlockingNotifier.h"
 
 namespace IPC {
 
-// For allowing passing the enum AntiTrackingCommon::StorageAccessGrantedReason
-// over IPC.
+// For allowing passing the enum
+// ContentBlockingNotifier::StorageAccessGrantedReason over IPC.
 template <>
-struct ParamTraits<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>
+struct ParamTraits<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::AntiTrackingCommon::StorageAccessGrantedReason,
-          mozilla::AntiTrackingCommon::StorageAccessGrantedReason::
+          mozilla::ContentBlockingNotifier::StorageAccessGrantedReason,
+          mozilla::ContentBlockingNotifier::StorageAccessGrantedReason::
               eStorageAccessAPI,
-          mozilla::AntiTrackingCommon::StorageAccessGrantedReason::eOpener> {};
+          mozilla::ContentBlockingNotifier::StorageAccessGrantedReason::
+              eOpener> {};
 
 }  // namespace IPC
 
