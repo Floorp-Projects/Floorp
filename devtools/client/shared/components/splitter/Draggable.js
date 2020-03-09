@@ -12,9 +12,11 @@ class Draggable extends Component {
   static get propTypes() {
     return {
       onMove: PropTypes.func.isRequired,
+      onDoubleClick: PropTypes.func,
       onStart: PropTypes.func,
       onStop: PropTypes.func,
       style: PropTypes.object,
+      title: PropTypes.string,
       className: PropTypes.string,
     };
   }
@@ -25,21 +27,32 @@ class Draggable extends Component {
     this.draggableEl = createRef();
 
     this.startDragging = this.startDragging.bind(this);
+    this.onDoubleClick = this.onDoubleClick.bind(this);
     this.onMove = this.onMove.bind(this);
     this.onUp = this.onUp.bind(this);
+    this.clickDelay = Date.now();
   }
-
   startDragging(ev) {
+    // This allows for double-click.
+    if (Date.now() - this.clickDelay < 300) {
+      return;
+    }
+    this.clickDelay = Date.now();
     if (this.isDragging) {
       return;
     }
     this.isDragging = true;
-
     ev.preventDefault();
     const doc = this.draggableEl.current.ownerDocument;
     doc.addEventListener("mousemove", this.onMove);
     doc.addEventListener("mouseup", this.onUp);
     this.props.onStart && this.props.onStart();
+  }
+
+  onDoubleClick() {
+    if (this.props.onDoubleClick) {
+      this.props.onDoubleClick();
+    }
   }
 
   onMove(ev) {
@@ -71,8 +84,10 @@ class Draggable extends Component {
       ref: this.draggableEl,
       role: "presentation",
       style: this.props.style,
+      title: this.props.title,
       className: this.props.className,
       onMouseDown: this.startDragging,
+      onDoubleClick: this.onDoubleClick,
     });
   }
 }
