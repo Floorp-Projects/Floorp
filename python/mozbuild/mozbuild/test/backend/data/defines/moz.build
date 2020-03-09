@@ -2,10 +2,7 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 value = 'xyz'
-DEFINES = {
-    'FOO': True,
-}
-
+DEFINES['FOO'] = True
 DEFINES['BAZ'] = '"ab\'cd"'
 DEFINES['QUX'] = False
 DEFINES['BAR'] = 7

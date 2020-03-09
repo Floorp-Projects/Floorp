@@ -4,10 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES.update({
-    'IMPL_LIBXUL': True,
-    'MOZILLA_INTERNAL_API': True,
-})
+DEFINES['IMPL_LIBXUL'] = True
+DEFINES['MOZILLA_INTERNAL_API'] = True
 
 # Do NOT export this library.  We don't actually want our test code
 # being added to libxul or anything.
