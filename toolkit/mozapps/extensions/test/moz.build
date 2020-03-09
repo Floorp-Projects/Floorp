@@ -12,13 +12,9 @@ MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
     'xpcshell/rs-blocklist/xpcshell.ini',
-    'xpcshell/xml-blocklist/xpcshell.ini',
     'xpcshell/xpcshell-unpack.ini',
     'xpcshell/xpcshell.ini',
 ]
 
 with Files('xpcshell/rs-blocklist/**'):
-    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
-
-with Files('xpcshell/xml-blocklist/**'):
     BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')

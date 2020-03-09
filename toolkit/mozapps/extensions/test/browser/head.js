@@ -116,12 +116,10 @@ function checkOpenWindows(aWindowID) {
 // Tools to disable and re-enable the background update and blocklist timers
 // so that tests can protect themselves from unwanted timer events.
 var gCatMan = Services.catMan;
-// Default values from toolkit/mozapps/extensions/extensions.manifest, but disable*UpdateTimer()
+// Default value from toolkit/mozapps/extensions/extensions.manifest, but disable*UpdateTimer()
 // records the actual value so we can put it back in enable*UpdateTimer()
 var backgroundUpdateConfig =
   "@mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400";
-var blocklistUpdateConfig =
-  "@mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400";
 
 var UTIMER = "update-timer";
 var AMANAGER = "addonManager";
@@ -139,23 +137,6 @@ function enableBackgroundUpdateTimer() {
     UTIMER,
     AMANAGER,
     backgroundUpdateConfig,
-    false,
-    true
-  );
-}
-
-function disableBlocklistUpdateTimer() {
-  info("Disabling " + UTIMER + " " + BLOCKLIST);
-  blocklistUpdateConfig = gCatMan.getCategoryEntry(UTIMER, BLOCKLIST);
-  gCatMan.deleteCategoryEntry(UTIMER, BLOCKLIST, true);
-}
-
-function enableBlocklistUpdateTimer() {
-  info("Enabling " + UTIMER + " " + BLOCKLIST);
-  gCatMan.addCategoryEntry(
-    UTIMER,
-    BLOCKLIST,
-    blocklistUpdateConfig,
     false,
     true
   );

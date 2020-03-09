@@ -4078,29 +4078,6 @@ networking:
     release_channel_collection: opt-out
 
 blocklist:
-  lastModified_xml:
-    bug_numbers:
-      - 1572711
-      - 1607744
-    description: >
-      Keep track of the lastupdate datetime from a successfully loaded xml blocklist,
-      set to "Invalid Date" or "Missing Date" when the timestamp is invalid or missing.
-      (based on the lastupdate attribute set on the XML document element,
-      converted from a milliseconds timestamp into a datetime string in UTC format).
-    expires: "77"
-    kind: string
-    release_channel_collection: opt-out
-    notification_emails:
-      - addons-dev-internal@mozilla.com
-      - lgreco@mozilla.com
-      - awagner@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'thunderbird'
-    record_in_processes:
-      - main
-
   lastModified_rs_addons:
     bug_numbers:
       - 1572711
@@ -4140,27 +4117,6 @@ blocklist:
       - awagner@mozilla.com
     products:
       - 'firefox'
-      - 'thunderbird'
-    record_in_processes:
-      - main
-
-  useXML:
-    bug_numbers:
-      - 1572711
-      - 1607744
-    description: >
-      Keep track of the currently enabled blocklist engine (set to false if the
-      remote settings blocklist is the one enabled).
-    expires: "77"
-    kind: boolean
-    release_channel_collection: opt-out
-    notification_emails:
-      - addons-dev-internal@mozilla.com
-      - lgreco@mozilla.com
-      - awagner@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
       - 'thunderbird'
     record_in_processes:
       - main

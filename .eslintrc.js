@@ -941,10 +941,6 @@ module.exports = {
         "toolkit/mozapps/extensions/test/xpcshell/test_webextension.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_webextension_events.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_XPIStates.js",
-        "toolkit/mozapps/extensions/test/xpcshell/xml-blocklist/test_blocklist_gfx.js",
-        "toolkit/mozapps/extensions/test/xpcshell/xml-blocklist/test_blocklist_telemetry.js",
-        "toolkit/mozapps/extensions/test/xpcshell/xml-blocklist/test_blocklistchange.js",
-        "toolkit/mozapps/extensions/test/xpcshell/xml-blocklist/test_overrideblocklist.js",
         "toolkit/mozapps/installer/precompile_cache.js",
       ],
       rules: {
