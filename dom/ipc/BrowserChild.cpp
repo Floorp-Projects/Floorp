@@ -4048,7 +4048,7 @@ void BrowserChild::NotifyContentBlockingEvent(
     uint32_t aEvent, nsIChannel* aChannel, bool aBlocked,
     const nsACString& aTrackingOrigin,
     const nsTArray<nsCString>& aTrackingFullHashes,
-    const Maybe<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>&
+    const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
         aReason) {
   if (!IPCOpen()) {
     return;

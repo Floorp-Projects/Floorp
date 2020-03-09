@@ -311,7 +311,7 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
     uint32_t aEvent, nsIRequest* aRequest, bool aBlocked,
     const nsACString& aTrackingOrigin,
     const nsTArray<nsCString>& aTrackingFullHashes,
-    const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason) {
+    const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(NS_IsMainThread());
   DebugOnly<bool> isCookiesBlockedTracker =
       aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||

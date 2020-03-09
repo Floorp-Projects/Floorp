@@ -11,8 +11,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
-#include "mozilla/ContentBlocking.h"
-#include "mozilla/ContentBlockingNotifier.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/FetchBinding.h"
@@ -528,13 +527,13 @@ bool Navigator::CookieEnabled() {
   }
 
   uint32_t rejectedReason = 0;
-  bool granted = ContentBlocking::ShouldAllowAccessFor(mWindow, contentURI,
-                                                       &rejectedReason);
+  bool granted = AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+      mWindow, contentURI, &rejectedReason);
 
-  ContentBlockingNotifier::OnDecision(
+  AntiTrackingCommon::NotifyBlockingDecision(
       mWindow,
-      granted ? ContentBlockingNotifier::BlockingDecision::eAllow
-              : ContentBlockingNotifier::BlockingDecision::eBlock,
+      granted ? AntiTrackingCommon::BlockingDecision::eAllow
+              : AntiTrackingCommon::BlockingDecision::eBlock,
       rejectedReason);
   return granted;
 }

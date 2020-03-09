@@ -7,7 +7,7 @@
 
 #include "ClassifierDummyChannel.h"
 
-#include "mozilla/ContentBlocking.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/ClassifierDummyChannelChild.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/dom/ContentChild.h"
@@ -60,7 +60,8 @@ ClassifierDummyChannel::StorageAllowed(
     return eAsyncNeeded;
   }
 
-  if (ContentBlocking::ShouldAllowAccessFor(httpChannel, uri, nullptr)) {
+  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel, uri,
+                                                              nullptr)) {
     return eStorageGranted;
   }
 

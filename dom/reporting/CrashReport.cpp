@@ -9,7 +9,6 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/ReportDeliver.h"
-#include "mozilla/JSONWriter.h"
 #include "nsIPrincipal.h"
 #include "nsIURIMutator.h"
 #include "nsString.h"
