@@ -6,7 +6,7 @@
 #include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "mozilla/dom/ContentBlockingLog.h"
+#include "mozilla/ContentBlockingLog.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -48,7 +48,7 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
   Unused << mTelemetry->ClearOrigins();
 
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                          mozilla::dom::ContentBlockingLog::kDummyOriginHash);
+                          mozilla::ContentBlockingLog::kDummyOriginHash);
 
   JS::RootedValue originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -65,7 +65,7 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
   ASSERT_TRUE(JS_GetProperty(
-      aCx, originsObj, mozilla::dom::ContentBlockingLog::kDummyOriginHash.get(),
+      aCx, originsObj, mozilla::ContentBlockingLog::kDummyOriginHash.get(),
       &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
   << "Must have recorded the origin exactly once.";
