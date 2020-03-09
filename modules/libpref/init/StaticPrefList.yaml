@@ -1964,7 +1964,7 @@
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether window.onappinstalled from "W3C Web Manifest" is enabled
