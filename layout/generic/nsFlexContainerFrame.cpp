@@ -4207,21 +4207,24 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   AutoCleanLinkedList<FlexLine> lines;
   AutoTArray<StrutInfo, 1> struts;
-  DoFlexLayout(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
-               contentBoxCrossSize, flexContainerAscent,
-               availableBSizeForContent, lines, struts, axisTracker,
-               mainGapSize, crossGapSize, hasLineClampEllipsis, containerInfo);
+  DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
+               flexContainerAscent, availableBSizeForContent, lines, struts,
+               axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
+               containerInfo);
 
   if (!struts.IsEmpty()) {
     // We're restarting flex layout, with new knowledge of collapsed items.
     aStatus.Reset();
     lines.clear();
-    DoFlexLayout(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
-                 contentBoxCrossSize, flexContainerAscent,
-                 availableBSizeForContent, lines, struts, axisTracker,
-                 mainGapSize, crossGapSize, hasLineClampEllipsis,
+    DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
+                 flexContainerAscent, availableBSizeForContent, lines, struts,
+                 axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
                  containerInfo);
   }
+
+  ComputeFinalSize(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
+                   contentBoxCrossSize, flexContainerAscent, lines,
+                   axisTracker);
 
   // Finally update our line and item measurements in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
@@ -4547,12 +4550,12 @@ bool nsFlexContainerFrame::IsUsedFlexBasisContent(
 }
 
 void nsFlexContainerFrame::DoFlexLayout(
-    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
-    nsReflowStatus& aStatus, nscoord& aContentBoxMainSize,
-    nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
-    nscoord aAvailableBSizeForContent, LinkedList<FlexLine>& aLines,
-    nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
+    nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
+    nscoord& aFlexContainerAscent, nscoord aAvailableBSizeForContent,
+    LinkedList<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
+    const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
+    nscoord aCrossGapSize, bool aHasLineClampEllipsis,
     ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aLines.isEmpty(), "Caller should pass an empty line-list!");
@@ -4780,7 +4783,6 @@ void nsFlexContainerFrame::DoFlexLayout(
   // writing-mode/GetLogicalSkipSides.  We add it lower down, after we've
   // established baseline and decided whether bottom border-padding fits (if
   // we're fragmented).
-  const nscoord blockEndContainerBP = containerBP.BEnd(flexWM);
   const LogicalSides skipSides =
       GetLogicalSkipSides(&aReflowInput) | LogicalSides(eLogicalSideBitsBEnd);
   containerBP.ApplySkipSides(skipSides);
@@ -4791,6 +4793,7 @@ void nsFlexContainerFrame::DoFlexLayout(
   // Determine flex container's border-box size (used in positioning children):
   LogicalSize logSize = aAxisTracker.LogicalSizeFromFlexRelativeSizes(
       aContentBoxMainSize, aContentBoxCrossSize);
+  // XXXTYLin: Should we add containerBP.Size(flexWM) to logSize instead?
   logSize += aReflowInput.ComputedLogicalBorderPadding().Size(flexWM);
   nsSize containerSize = logSize.GetPhysicalSize(flexWM);
 
@@ -4890,6 +4893,26 @@ void nsFlexContainerFrame::DoFlexLayout(
     ReflowPlaceholders(aReflowInput, placeholderKids, containerContentBoxOrigin,
                        containerSize);
   }
+}
+
+void nsFlexContainerFrame::ComputeFinalSize(
+    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
+    nsReflowStatus& aStatus, const nscoord aContentBoxMainSize,
+    const nscoord aContentBoxCrossSize, nscoord aFlexContainerAscent,
+    LinkedList<FlexLine>& aLines, const FlexboxAxisTracker& aAxisTracker) {
+  // XXXTYLin: Can we prepare side-skipped border and padding in Reflow() and
+  // pass it down here?
+  const WritingMode flexWM = aReflowInput.GetWritingMode();
+  LogicalMargin containerBP = aReflowInput.ComputedLogicalBorderPadding();
+
+  // Unconditionally skip block-end border & padding for now, regardless of
+  // writing-mode/GetLogicalSkipSides.  We add it lower down, after we've
+  // established baseline and decided whether bottom border-padding fits (if
+  // we're fragmented).
+  const nscoord blockEndContainerBP = containerBP.BEnd(flexWM);
+  const LogicalSides skipSides =
+      GetLogicalSkipSides(&aReflowInput) | LogicalSides(eLogicalSideBitsBEnd);
+  containerBP.ApplySkipSides(skipSides);
 
   // Compute flex container's desired size (in its own writing-mode),
   // starting w/ content-box size & growing from there:
