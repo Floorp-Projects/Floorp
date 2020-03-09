@@ -1145,14 +1145,15 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
                      nsISelectionListener::DRAG_REASON);
 
     const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    MOZ_ASSERT(mDomSelections[index]);
+    RefPtr<Selection> selection = mDomSelections[index];
+    MOZ_ASSERT(selection);
 
     if ((aFocusMode == FocusMode::kExtendSelection) &&
         AdjustForMaintainedSelection(aNewFocus, aContentOffset)) {
       return NS_OK;  // shift clicked to maintained selection. rejected.
     }
 
-    AutoPrepareFocusRange prep(mDomSelections[index],
+    AutoPrepareFocusRange prep(selection,
                                aFocusMode == FocusMode::kMultiRangeSelection);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aHint,
                      aFocusMode);
