@@ -6,7 +6,6 @@
 
 #include "UrlClassifierFeatureTrackingProtection.h"
 
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"

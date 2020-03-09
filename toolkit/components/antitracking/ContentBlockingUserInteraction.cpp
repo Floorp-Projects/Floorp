@@ -6,7 +6,6 @@
 
 #include "AntiTrackingLog.h"
 #include "ContentBlockingUserInteraction.h"
-#include "AntiTrackingCommon.h"
 #include "AntiTrackingUtils.h"
 
 #include "mozilla/dom/ContentChild.h"

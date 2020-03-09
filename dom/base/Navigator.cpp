@@ -11,7 +11,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
-#include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BodyExtractor.h"
@@ -528,8 +528,8 @@ bool Navigator::CookieEnabled() {
   }
 
   uint32_t rejectedReason = 0;
-  bool granted = AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-      mWindow, contentURI, &rejectedReason);
+  bool granted = ContentBlocking::ShouldAllowAccessFor(mWindow, contentURI,
+                                                       &rejectedReason);
 
   ContentBlockingNotifier::OnDecision(
       mWindow,

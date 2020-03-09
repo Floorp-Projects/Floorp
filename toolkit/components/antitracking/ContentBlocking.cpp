@@ -5,26 +5,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AntiTrackingLog.h"
-#include "AntiTrackingCommon.h"
+#include "ContentBlocking.h"
 #include "AntiTrackingUtils.h"
 #include "TemporaryAccessGrantObserver.h"
 
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/net/UrlClassifierCommon.h"
-#include "mozilla/ipc/MessageChannel.h"
-#include "mozilla/AbstractThread.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Logging.h"
-#include "mozilla/MruCache.h"
-#include "mozilla/Pair.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -32,20 +20,11 @@
 #include "nsIClassifiedChannel.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
-#include "nsIDocShell.h"
-#include "nsIHttpChannelInternal.h"
-#include "nsIParentChannel.h"
 #include "nsIPermission.h"
-#include "nsPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsIRedirectHistoryEntry.h"
-#include "nsIScriptError.h"
 #include "nsIURI.h"
-#include "nsIURIFixup.h"
 #include "nsIWebProgressListener.h"
-#include "nsNetUtil.h"
-#include "nsPIDOMWindow.h"
-#include "nsPrintfCString.h"
+#include "nsPermissionManager.h"
 #include "nsScriptSecurityManager.h"
 
 namespace mozilla {
@@ -268,11 +247,11 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
 
 }  // namespace
 
-/* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
-AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
+/* static */ RefPtr<ContentBlocking::StorageAccessGrantPromise>
+ContentBlocking::AllowAccessFor(
     nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
     ContentBlockingNotifier::StorageAccessGrantedReason aReason,
-    const AntiTrackingCommon::PerformFinalChecks& aPerformFinalChecks) {
+    const ContentBlocking::PerformFinalChecks& aPerformFinalChecks) {
   MOZ_ASSERT(aParentWindow);
 
   switch (aReason) {
@@ -488,12 +467,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
-      return SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
-                 topLevelStoragePrincipal, trackingPrincipal, trackingOrigin,
-                 aAllowMode)
+      return SaveAccessForOriginOnParentProcess(topLevelStoragePrincipal,
+                                                trackingPrincipal,
+                                                trackingOrigin, aAllowMode)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                 [](FirstPartyStorageAccessGrantPromise::ResolveOrRejectValue&&
-                        aValue) {
+                 [](ParentAccessGrantPromise::ResolveOrRejectValue&& aValue) {
                    if (aValue.IsResolve()) {
                      return StorageAccessGrantPromise::CreateAndResolve(
                          eAllow, __func__);
@@ -545,8 +523,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 }
 
 /* static */
-RefPtr<mozilla::AntiTrackingCommon::FirstPartyStorageAccessGrantPromise>
-AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
+RefPtr<mozilla::ContentBlocking::ParentAccessGrantPromise>
+ContentBlocking::SaveAccessForOriginOnParentProcess(
     nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
     const nsCString& aTrackingOrigin, int aAllowMode,
     uint64_t aExpirationTime) {
@@ -555,8 +533,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
 
   if (!aParentPrincipal || !aTrackingPrincipal) {
     LOG(("Invalid input arguments passed"));
-    return FirstPartyStorageAccessGrantPromise::CreateAndReject(false,
-                                                                __func__);
+    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
   };
 
   LOG_PRIN(("Saving a first-party storage permission on %s for "
@@ -567,15 +544,13 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
   if (NS_WARN_IF(!aParentPrincipal)) {
     // The child process is sending something wrong. Let's ignore it.
     LOG(("aParentPrincipal is null, bailing out early"));
-    return FirstPartyStorageAccessGrantPromise::CreateAndReject(false,
-                                                                __func__);
+    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     LOG(("Permission manager is null, bailing out early"));
-    return FirstPartyStorageAccessGrantPromise::CreateAndReject(false,
-                                                                __func__);
+    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
   // Remember that this pref is stored in seconds!
@@ -613,11 +588,12 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
   }
 
   LOG(("Result: %s", NS_SUCCEEDED(rv) ? "success" : "failure"));
-  return FirstPartyStorageAccessGrantPromise::CreateAndResolve(rv, __func__);
+  return ParentAccessGrantPromise::CreateAndResolve(rv, __func__);
 }
 
-bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-    nsPIDOMWindowInner* aWindow, nsIURI* aURI, uint32_t* aRejectedReason) {
+bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
+                                           nsIURI* aURI,
+                                           uint32_t* aRejectedReason) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aURI);
 
@@ -819,8 +795,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       aRejectedReason, blockedReason);
 }
 
-bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-    nsIChannel* aChannel, nsIURI* aURI, uint32_t* aRejectedReason) {
+bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
+                                           uint32_t* aRejectedReason) {
   MOZ_ASSERT(aURI);
   MOZ_ASSERT(aChannel);
 
@@ -1083,7 +1059,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
                                      aRejectedReason, blockedReason);
 }
 
-bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+bool ContentBlocking::ShouldAllowAccessFor(
     nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCookieJarSettings);
@@ -1106,7 +1082,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 }
 
 /* static */
-bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
+bool ContentBlocking::ApproximateAllowAccessForWithoutChannel(
     nsPIDOMWindowInner* aFirstPartyWindow, nsIURI* aURI) {
   MOZ_ASSERT(aFirstPartyWindow);
   MOZ_ASSERT(aURI);

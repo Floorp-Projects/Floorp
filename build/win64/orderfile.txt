@@ -19322,7 +19322,6 @@ Gecko_BeginWritingCString
 ?ShouldEnableClassifier@UrlClassifierCommon@net@mozilla@@SA_NPEAVnsIChannel@@@Z
 ?AddonMayLoad@UrlClassifierCommon@net@mozilla@@SA_NPEAVnsIChannel@@PEAVnsIURI@@@Z
 ?GetTopWindowURI@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEAPEAVnsIURI@@@Z
-?MaybeGetDocumentURIBeingLoaded@AntiTrackingCommon@mozilla@@SA?AU?$already_AddRefed@VnsIURI@@@@PEAVnsIChannel@@@Z
 ?GetTopWindowURI@HttpBaseChannel@net@mozilla@@IEAA?AW4nsresult@@PEAVnsIURI@@PEAPEAV5@@Z
 XPCOMService_GetThirdPartyUtil
 ?GetTopWindowForChannel@ThirdPartyUtil@@UEAA?AW4nsresult@@PEAVnsIChannel@@PEAVnsIURI@@PEAPEAVmozIDOMWindowProxy@@@Z
@@ -19443,7 +19442,6 @@ XPCOMService_GetThirdPartyUtil
 ?IsThirdPartyInternal@ThirdPartyUtil@@AEAA?AW4nsresult@@AEBV?$nsTString@D@@PEAVnsIURI@@PEA_N@Z
 ?IsTrackingResource@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
 ?IsTrackingClassificationFlag@UrlClassifierCommon@net@mozilla@@SA_NI@Z
-?IsFirstPartyStorageAccessGrantedFor@AntiTrackingCommon@mozilla@@SA_NPEAVnsIHttpChannel@@PEAVnsIURI@@PEAI@Z
 ?GetTopLevelPrincipal@LoadInfo@net@mozilla@@UEAAPEAVnsIPrincipal@@XZ
 ?GetIsMainDocumentChannel@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
 ?GetIsContentPrincipal@BasePrincipal@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
@@ -19464,12 +19462,10 @@ XPCOMService_GetThirdPartyUtil
 ?extensions_cookiesBehavior_overrideOnTopLevel@StaticPrefs@mozilla@@SA_NXZ
 ?GetChannelId@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEA_K@Z
 ??$?0PEAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@@?$PairHelper@PEAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@$00$0A@@detail@mozilla@@IEAA@$$QEAPEAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@$$QEAV?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@2@@Z
-?OnAntiTrackingSettingsChanged@AntiTrackingCommon@mozilla@@SAXAEBV?$function@$$A6AXXZ@std@@@Z
 ?first@?$PairHelper@PEAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@$00$0A@@detail@mozilla@@IEBAAEBQEAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@XZ
 ?reset@?$UniquePtr@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@V?$DefaultDelete@V?$nsTArray@V?$function@$$A6AXXZ@std@@@@@mozilla@@@mozilla@@QEAAXPEAV?$nsTArray@V?$function@$$A6AXXZ@std@@@@@Z
 ??$AppendElement@AEBV?$function@$$A6AXXZ@std@@UnsTArrayInfallibleAllocator@@@?$nsTArray_Impl@V?$function@$$A6AXXZ@std@@UnsTArrayInfallibleAllocator@@@@IEAAPEAV?$function@$$A6AXXZ@std@@AEBV12@@Z
 ??$EnsureCapacity@UnsTArrayInfallibleAllocator@@@?$nsTArray_base@UnsTArrayInfallibleAllocator@@U?$nsTArray_CopyWithConstructors@V?$function@$$A6AXXZ@std@@@@@@IEAA?AUnsTArrayInfallibleResult@@_K0@Z
-?IsOnContentBlockingAllowList@AntiTrackingCommon@mozilla@@SA?AW4nsresult@@PEAVnsIURI@@_NW4ContentBlockingAllowListPurpose@12@AEA_N@Z
 ?TestPermissionOriginNoSuffix@nsPermissionManager@@UEAA?AW4nsresult@@AEBV?$nsTSubstring@D@@0PEAI@Z
 ?NS_IsSafeTopLevelNav@@YA_NPEAVnsIChannel@@@Z
 ?IsSafeMethod@nsHttpRequestHead@net@mozilla@@QEAA_NXZ
@@ -26335,7 +26331,6 @@ UnregisterWeakMemoryReporter
 ?ExplicitSetUploadStreamLength@HttpBaseChannel@net@mozilla@@AEAA?AW4nsresult@@_K_N@Z
 ??$ReplaceChar@_SX@?$nsTString@_S@@QEAAXPEBD_S@Z
 ?Set@URLParams@dom@mozilla@@QEAAXAEBV?$nsTSubstring@_S@@0@Z
-?NotifyBlockingDecision@AntiTrackingCommon@mozilla@@SAXPEAVnsIChannel@@W4BlockingDecision@12@I@Z
 ?ConstructorEnabled@ChannelWrapper_Binding@dom@mozilla@@YA_NPEAUJSContext@@V?$Handle@PEAVJSObject@@@JS@@@Z
 ?CreateInterfaceObjects@ChannelWrapper_Binding@dom@mozilla@@YAXPEAUJSContext@@V?$Handle@PEAVJSObject@@@JS@@AEAVProtoAndIfaceCache@23@_N@Z
 ?Id@ChannelWrapper@extensions@mozilla@@QEBA_KXZ
@@ -26670,7 +26665,6 @@ Gecko_AppendPropertyValuePair
 ?IsImageInCache@nsContentUtils@@SA_NPEAVnsIURI@@PEAVDocument@dom@mozilla@@@Z
 ?FindEntryProperties@imgLoader@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAVDocument@dom@mozilla@@PEAPEAVnsIProperties@@@Z
 ?IsThirdPartyTrackingResourceWindow@nsContentUtils@@SA_NPEAVnsPIDOMWindowInner@@@Z
-?MaybeIsFirstPartyStorageAccessGrantedFor@AntiTrackingCommon@mozilla@@SA_NPEAVnsPIDOMWindowInner@@PEAVnsIURI@@@Z
 ??$CreateAndResolve@_N@?$MozPromise@H_N$00@mozilla@@SA?AV?$RefPtr@V?$MozPromise@H_N$00@mozilla@@@@$$QEA_NPEBD@Z
 ?AdjustPriority@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@H@Z
 ?SetTimingEnabled@imgRequestProxy@@UEAA?AW4nsresult@@_N@Z

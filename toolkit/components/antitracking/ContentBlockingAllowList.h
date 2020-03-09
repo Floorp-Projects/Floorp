@@ -43,11 +43,11 @@ class ContentBlockingAllowList final {
   // Check().
   static ContentBlockingAllowListCache& Cache();
 
-  // Utility APIs for AntiTrackingCommon.
+  // Utility APIs for ContentBlocking.
   static bool Check(nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing);
   static bool Check(nsPIDOMWindowInner* aWindow);
 
-  friend class AntiTrackingCommon;
+  friend class ContentBlocking;
 };
 
 }  // namespace mozilla
