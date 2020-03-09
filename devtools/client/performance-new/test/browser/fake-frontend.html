@@ -40,7 +40,14 @@
           if (
             profile &&
             typeof profile === 'object' &&
-            profile instanceof ArrayBuffer
+            (
+              // The popup injects the compressed profile as an ArrayBuffer.
+              (profile instanceof ArrayBuffer) ||
+              // DevTools injects the profile as just the plain object, although
+              // maybe in the future it could also do it as a compressed profile
+              // to make this faster.
+              Object.keys(profile).includes("threads")
+            )
           ) {
             // The profile looks good!
             document.title = successTitle;
