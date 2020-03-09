@@ -144,7 +144,14 @@ def diff(compiled_requirements, installed_dists):
     return (to_install, to_uninstall)
 
 
-def sync(to_install, to_uninstall, verbose=False, dry_run=False, install_flags=None):
+def sync(
+    to_install,
+    to_uninstall,
+    verbose=False,
+    dry_run=False,
+    install_flags=None,
+    ask=False,
+):
     """
     Install and uninstalls the given sets of modules.
     """
@@ -157,26 +164,34 @@ def sync(to_install, to_uninstall, verbose=False, dry_run=False, install_flags=N
     if not verbose:
         pip_flags += ["-q"]
 
-    if to_uninstall:
-        if dry_run:
+    if ask:
+        dry_run = True
+
+    if dry_run:
+        if to_uninstall:
             click.echo("Would uninstall:")
             for pkg in to_uninstall:
                 click.echo("  {}".format(pkg))
-        else:
+
+        if to_install:
+            click.echo("Would install:")
+            for ireq in to_install:
+                click.echo("  {}".format(format_requirement(ireq)))
+
+    if ask and click.confirm("Would you like to proceed with these changes?"):
+        dry_run = False
+
+    if not dry_run:
+        if to_uninstall:
             check_call(  # nosec
                 [sys.executable, "-m", "pip", "uninstall", "-y"]
                 + pip_flags
                 + sorted(to_uninstall)
             )
 
-    if to_install:
-        if install_flags is None:
-            install_flags = []
-        if dry_run:
-            click.echo("Would install:")
-            for ireq in to_install:
-                click.echo("  {}".format(format_requirement(ireq)))
-        else:
+        if to_install:
+            if install_flags is None:
+                install_flags = []
             # prepare requirement lines
             req_lines = []
             for ireq in sorted(to_install, key=key_from_ireq):

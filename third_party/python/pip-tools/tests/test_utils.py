@@ -1,15 +1,19 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import itertools
 import os
 
+import pytest
 import six
 from pytest import mark, raises
 from six.moves import shlex_quote
 
+from piptools.repositories import PyPIRepository
 from piptools.scripts.compile import cli as compile_cli
 from piptools.utils import (
     as_tuple,
+    create_install_command,
     dedup,
     flat_map,
     force_text,
@@ -18,6 +22,7 @@ from piptools.utils import (
     fs_str,
     get_compile_command,
     get_hashes_from_ireq,
+    get_trusted_hosts,
     is_pinned_requirement,
     is_url_requirement,
     name_from_req,
@@ -324,3 +329,29 @@ def test_get_compile_command_sort_args(tmpdir_cwd):
             "--no-annotate --no-emit-trusted-host --no-index "
             "requirements.in setup.py"
         )
+
+
+def test_create_install_command():
+    """
+    Test create_install_command returns an instance of InstallCommand.
+    """
+    install_command = create_install_command()
+    assert install_command.name == "install"
+
+
+@mark.parametrize(
+    "hosts",
+    [
+        pytest.param((), id="no hosts"),
+        pytest.param(("example.com",), id="single host"),
+        pytest.param(("example.com:8080",), id="host with port"),
+        pytest.param(("example1.com", "example2.com:8080"), id="multiple hosts"),
+    ],
+)
+def test_get_trusted_hosts(hosts, tmpdir):
+    """
+    Test get_trusted_hosts(finder) returns a list of hosts.
+    """
+    pip_args = list(itertools.chain(*zip(["--trusted-host"] * len(hosts), hosts)))
+    repository = PyPIRepository(pip_args, cache_dir=str(tmpdir / "pypi-repo"))
+    assert tuple(get_trusted_hosts(repository.finder)) == hosts

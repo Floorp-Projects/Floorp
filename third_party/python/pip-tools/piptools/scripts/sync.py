@@ -16,6 +16,12 @@ DEFAULT_REQUIREMENTS_FILE = "requirements.txt"
 @click.command()
 @click.version_option()
 @click.option(
+    "-a",
+    "--ask",
+    is_flag=True,
+    help="Show what would happen, then ask whether to continue",
+)
+@click.option(
     "-n",
     "--dry-run",
     is_flag=True,
@@ -63,6 +69,7 @@ DEFAULT_REQUIREMENTS_FILE = "requirements.txt"
 )
 @click.argument("src_files", required=False, type=click.Path(exists=True), nargs=-1)
 def cli(
+    ask,
     dry_run,
     force,
     find_links,
@@ -137,5 +144,6 @@ def cli(
             verbose=(not quiet),
             dry_run=dry_run,
             install_flags=install_flags,
+            ask=ask,
         )
     )
