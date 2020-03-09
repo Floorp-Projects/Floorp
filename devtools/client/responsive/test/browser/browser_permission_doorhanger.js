@@ -29,34 +29,39 @@ function waitForGeolocationPrompt(win, browser) {
   });
 }
 
-add_task(async function() {
-  const tab = await addTab(DUMMY_URL);
-  const browser = tab.linkedBrowser;
-  const win = browser.ownerGlobal;
+addRDMTask(
+  null,
+  async function() {
+    const tab = await addTab(DUMMY_URL);
+    const browser = tab.linkedBrowser;
+    const win = browser.ownerGlobal;
 
-  let waitPromptPromise = waitForGeolocationPrompt(win, browser);
+    let waitPromptPromise = waitForGeolocationPrompt(win, browser);
 
-  // Checks if a geolocation permission doorhanger appears when openning a page
-  // requesting geolocation
-  await load(browser, TEST_SURL);
-  await waitPromptPromise;
+    // Checks if a geolocation permission doorhanger appears when openning a page
+    // requesting geolocation
+    await load(browser, TEST_SURL);
+    await waitPromptPromise;
 
-  ok(true, "Permission doorhanger appeared without RDM enabled");
+    ok(true, "Permission doorhanger appeared without RDM enabled");
 
-  // Lets switch back to the dummy website and enable RDM
-  await load(browser, DUMMY_URL);
-  const { ui } = await openRDM(tab);
-  const newBrowser = ui.getViewportBrowser();
+    // Lets switch back to the dummy website and enable RDM
+    await load(browser, DUMMY_URL);
+    const { ui } = await openRDM(tab);
+    await waitForDeviceAndViewportState(ui);
 
-  waitPromptPromise = waitForGeolocationPrompt(win, newBrowser);
+    const newBrowser = ui.getViewportBrowser();
+    waitPromptPromise = waitForGeolocationPrompt(win, newBrowser);
 
-  // Checks if the doorhanger appeared again when reloading the geolocation
-  // page inside RDM
-  await load(browser, TEST_SURL);
-  await waitPromptPromise;
+    // Checks if the doorhanger appeared again when reloading the geolocation
+    // page inside RDM
+    await load(browser, TEST_SURL);
+    await waitPromptPromise;
 
-  ok(true, "Permission doorhanger appeared inside RDM");
+    ok(true, "Permission doorhanger appeared inside RDM");
 
-  await closeRDM(tab);
-  await removeTab(tab);
-});
+    await closeRDM(tab);
+    await removeTab(tab);
+  },
+  { usingBrowserUI: true, onlyPrefAndTask: true }
+);
