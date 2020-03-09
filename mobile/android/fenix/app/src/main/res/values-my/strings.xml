@@ -22,6 +22,11 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">သင် ကိုယ်ပိုင်အပိုင်းထဲတွင် ရှိနေသည်။</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">% 1 $ s သည်သင်အက်ပ်မှထွက်သောအခါသို့မဟုတ်သီးသန့် tabs အားလုံးပိတ်သောအခါသင်၏ရှာဖွေခြင်းနှင့်ရှာဖွေခြင်းရာဇဝင်ကိုရှင်းလင်းသည်။ ၎င်းသည်သင့်အားဝက်ဘ်ဆိုက်များသို့မဟုတ်သင်၏အင်တာနက် ၀ န်ဆောင်မှုပေးသူများအတွက်အမည်မသိစေသော်လည်း၎င်းကိုပြုလုပ်သည်
+        သင်အွန်လိုင်းလုပ်တာကိုဒီကိရိယာကိုအသုံးပြုတဲ့သူတိုင်းထံမှလျှို့ဝှက်ထားရန်ပိုလွယ်ကူသည်။</string>
+    <string name="private_browsing_common_myths">ပုဂ္ဂလိက browsing ဆိုင်ရာ အမြင်မှားများ</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">အပိုင်း ကိုဖျက်ပါ</string>
 
@@ -132,6 +137,8 @@
     <string name="search_suggestions_onboarding_allow_button">ခွင့်ပြုပါ</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">ခွင့်မပြုပါနှင့်</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">သီးသန့်အစည်းအဝေးများတွင်ရှာဖွေရေးအကြံပြုချက်များကိုခွင့်ပြုပါ။</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ပိုမိုလေ့လာရန်</string>
 

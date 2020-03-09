@@ -35,7 +35,7 @@
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Dodaj prečac</string>
     <!-- Text for the negative button -->
-    <string name="cfr_neg_button_text">Ne hvala</string>
+    <string name="cfr_neg_button_text">Ne, hvala</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -102,7 +102,7 @@
     <!-- Browser menu button to put the the current page in reader mode -->
     <string name="browser_menu_read">Prikaz za čitanje</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">Otvori u programu</string>
+    <string name="browser_menu_open_app_link">Otvori u aplikaciji</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Izgled</string>
 
@@ -178,7 +178,7 @@
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Kreditne kartice i adrese</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Postavi kao standardni preglednik</string>
+    <string name="preferences_set_as_default_browser">Postavi kao zadani preglednik</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Napredno</string>
     <!-- Preference category for privacy settings -->
@@ -217,7 +217,7 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Izbori za podatke</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">Zbirka podataka</string>
+    <string name="preferences_data_collection">Skupljanje podataka</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Obavijest o privatnosti</string>
     <!-- Preference category for developer tools -->
@@ -239,7 +239,7 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Postavke računa</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">Otvori poveznice u programima</string>
+    <string name="preferences_open_links_in_apps">Otvori poveznice u aplikacijama</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Dodaci</string>
@@ -689,7 +689,7 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Razumijem</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">Nije moguće dijeliti s ovim programom</string>
+    <string name="share_error_snackbar">Nije moguće dijeliti s ovom aplikacijom</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Pošalji na uređaj</string>
     <!-- Text for the warning message on the Add new device screen -->

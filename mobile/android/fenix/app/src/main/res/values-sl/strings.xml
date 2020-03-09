@@ -123,6 +123,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Več o tem</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Iskanje</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Iskanje po spletu</string>
 
@@ -144,6 +147,8 @@
     <string name="preferences_search_address_bar">Naslovna vrstica</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomoč</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Oceni v trgovini Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
     <string name="preferences_feedback">Sporočite nam svoje mnenje</string>
     <!-- Preference linking to about page for Fenix
@@ -175,20 +180,30 @@
     <string name="preferences_accessibility">Dostopnost</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Prijava</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Orodna vrstica</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Prilagodi</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sinhronizirajte zaznamke, gesla in ostalo s Firefox Računom</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Račun</string>
     <!-- Preference for language -->
     <string name="preferences_language">Jezik</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Podatkovne možnosti</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Zbiranje podatkov</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Obvestilo o zasebnosti</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Razvojna orodja</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Oddaljeno razhroščevanje preko USB</string>
     <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">Prikaži bližnjice za iskanje</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -198,6 +213,8 @@
     <string name="preferences_show_search_suggestions_in_private">Prikaži v zasebnih sejah</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Prikaži predloge odložišča</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Išči po zgodovini iskanja</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Iskanje po zaznamkih</string>
     <!-- Preference for account settings -->
@@ -217,6 +234,8 @@
     <string name="preferences_sync_bookmarks">Zaznamki</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Odjava</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Ime naprave</string>
     <!-- Text shown when user enters empty device name -->
@@ -254,17 +273,35 @@
     <string name="preference_usage_data">Uporaba in tehnični podatki</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Pošilja podatke o učinkovitosti, uporabi, strojni opremi in prilagoditvah organizaciji Mozilla, da lahko naredi %1$s boljši</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Podatki za trženje</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Poskusi</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Poročevalec o sesutju</string>
 
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Lokacijska storitev Mozilla</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Zdravniško spričevalo za %s</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Vklopi Sync</string>
 
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Prijava</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Odpri kamero</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Prekliči</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Na vrhu</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Na dnu</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -351,6 +388,9 @@
     <string name="history_clear_dialog">Počisti</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Izbriši</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Izbriši %1$d predmetov</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Zadnjih 24 ur</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -360,6 +400,12 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Starejše</string>
 
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Ni zgodovine</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Oprostite. %1$s ne more naložiti te strani.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Pošlji poročilo o sesutju Mozilli</string>
     <!-- Close tab button text on the tab crash page -->
@@ -420,6 +466,8 @@
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Neveljaven URL</string>
 
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Ni zaznamkov</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">RAZVELJAVI</string>
 
@@ -454,13 +502,40 @@
     <string name="no_collections_header">Ni zbirk</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">Tu bodo prikazane vaše zbirke.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Izberi zavihke</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Izberi zbirko</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Poimenuj zbirko</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Dodaj novo zbirko</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Izberi vse</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Počisti izbiro</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Zapri</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Shrani</string>
 
+    <!-- Share screen header -->
+    <string name="share_header_2">Deli</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Deli</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Deli povezavo</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Pošlji na napravo</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Vsa dejanja</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Nedavno uporabljene</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Prijava v Sync</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Pošlji na vse naprave</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Brez povezave</string>
     <!-- An option to connect additional devices -->
@@ -480,11 +555,15 @@
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Seja zasebnega brskanja</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Izbriši zasebne zavihke</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Zapri zasebne zavihke</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Odpri</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Izbriši in odpri</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Omogoča</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Zbirka izbrisana</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -497,13 +576,27 @@
     <string name="snackbar_tab_closed">Zavihek zaprt</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Zavihki zaprti</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Zasebni zavihek zaprt</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Zasebni zavihki zaprti</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Zasebni zavihki izbrisani</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">RAZVELJAVI</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Spletno mesto odstranjeno</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Razveljavi</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">Potrdi</string>
 
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">DOVOLI</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ZAVRNI</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Ali ste prepričani, da želite izbrisati %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Izbriši</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -516,6 +609,8 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Samodejna velikost pisave</string>
 
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Izbriši podatke brskanja</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">Odprti zavihki</string>
     <!-- Title for history items in Delete browsing data -->
@@ -526,10 +621,16 @@
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Zgodovina brskanja</string>
 
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Izhod</string>
+
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Prekliči</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Izbriši</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Brisanje podatkov brskanja …</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -540,6 +641,8 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Spoznajte %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Kaj je novega</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Kar najbolje izkoristite %s.</string>
@@ -547,6 +650,8 @@
     <string name="onboarding_tracking_protection_header">Zaščitite se</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Brskajte zasebno</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Odpri nastavitve</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaša zasebnost</string>
 
@@ -563,6 +668,10 @@
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Svetla tema</string>
 
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Zavihki poslani!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Zavihek poslan!</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">POSKUSI ZNOVA</string>
     <!-- Instructions on how to access pairing -->
@@ -616,8 +725,13 @@
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Kopiraj</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Prilepi in odpri</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Prilepi</string>
+
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Spletni naslov kopiran v odložišče</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Dodaj na domač zaslon</string>
@@ -706,4 +820,9 @@
     <string name="quick_settings_sheet_insecure_connection">Nevarna povezava</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Dodaj med glavne strani</string>
-    </resources>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Overil: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Izbriši</string>
+</resources>

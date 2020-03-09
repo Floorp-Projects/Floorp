@@ -1211,6 +1211,8 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">ลบ %s แล้ว</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">ยินดีต้อนรับสู่ %s โฉมใหม่</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">กำลังอัปเดต %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

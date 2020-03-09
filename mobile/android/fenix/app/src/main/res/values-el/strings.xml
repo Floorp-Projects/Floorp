@@ -11,8 +11,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Απενεργοποίηση ιδιωτικής περιήγησης</string>
 
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Αναζήτηση ή εισαγωγή διεύθυνσης</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_open_tabs_header_2">Καμία ανοικτή καρτέλα</string>
+
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Οι ανοικτές καρτέλες σας θα εμφανίζονται εδώ.</string>
 
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Διαγραφή συνεδρίας</string>
@@ -86,11 +91,16 @@
     <!-- Text for default locale item -->
     <string name="default_locale_text">Χρήση γλώσσας συσκευής</string>
 
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Αναζήτηση γλώσσας</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Σάρωση</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Συντομεύσεις</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Ρυθμίσεις μηχανής αναζήτησης</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Αναζήτηση με</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -101,6 +111,9 @@
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Αναζήτηση</string>
+
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Αναζήτηση στο διαδίκτυο</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -118,6 +131,10 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Σχετικά με το %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Τα δικαιώματά σας</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Κωδικοί πρόσβασης</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Πιστωτικές κάρτες και διευθύνσεις</string>
     <!-- Preference category for privacy settings -->
@@ -153,6 +170,14 @@
     <string name="preferences_privacy_link">Σημείωση απορρήτου</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Εργαλεία προγραμματιστή</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Εμφάνιση προτάσεων προχείρου</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Αναζήτηση ιστορικού περιήγησης</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Αναζήτηση σελιδοδεικτών</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Ρυθμίσεις λογαριασμού</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Πρόσθετα</string>
 
@@ -171,8 +196,18 @@
     <string name="preferences_sign_out">Αποσύνδεση</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Όνομα συσκευής</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Το όνομα συσκευής δεν μπορεί να είναι κενό.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Συγχρονισμός…</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s στο %s %s</string>
+
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Καρτέλα από %s</string>
 
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Εξαιρέσεις</string>
@@ -247,6 +282,8 @@
     <string name="add_tab">Προσθήκη καρτέλας</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Κλείσιμο καρτέλας</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Κλείσιμο όλων των καρτελών</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Μενού καρτελών</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
@@ -255,6 +292,10 @@
     <string name="current_session_save">Αποθήκευση</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Κοινή χρήση</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Διαγραφή συλλογής</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Μετονομασία συλλογής</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Αφαίρεση</string>
 
@@ -283,6 +324,10 @@
     <!-- Content Description for session item menu button -->
     <string name="content_description_session_menu">Επιλογές συνεδρίας</string>
 
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Επεξεργασία σελιδοδείκτη</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Προσθήκη φακέλου</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">ΕΠΕΞΕΡΓΑΣΙΑ</string>
     <!-- Bookmark overflow menu edit button -->
@@ -301,6 +346,10 @@
     <string name="bookmark_menu_delete_button">Διαγραφή</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">Αποθήκευση</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Επεξεργασία σελιδοδείκτη</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Επεξεργασία φακέλου</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->

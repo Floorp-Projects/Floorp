@@ -61,6 +61,8 @@
     <string name="browser_menu_edit_bookmark">Edita l’adreça d’interès</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_addon_manager">Gestor de complements</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">No hi ha cap complement</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ajuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -317,6 +319,10 @@
     <string name="preference_usage_data">Dades tècniques i d’ús</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Comparteix dades sobre el rendiment, ús, maquinari i personalització del navegador amb Mozilla per ajudar-nos a millorar el %1$s</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Dades de màrqueting</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Comparteix dades de funcions que utilitzeu al %1$s amb Leanplum, el nostre proveïdor de màrqueting mòbil.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experiments</string>
     <!-- Summary for experiments preferences -->
@@ -748,6 +754,8 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">S’ha copiat l’URL</string>
 
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Aquest és un exemple de text. Aquí es mostra com apareixerà el text quan augmenteu o reduïu la mida amb aquest paràmetre.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Augmenteu o disminuïu la mida del text dels llocs web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -822,6 +830,13 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Coneixeu el %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Descobriu les novetats</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Teniu preguntes sobre el redisseny del %s? Voleu saber què ha canviat?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Vegeu les respostes aquí</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Traieu tot el profit al %s.</string>
@@ -843,12 +858,30 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">No s’ha pogut iniciar la sessió</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Protegiu-vos</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">El %s impedeix que els llocs web us facin el seguiment mentre navegueu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Estàndard</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Es bloquen menys elements de seguiment, però les pàgines es carregaran amb normalitat</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomanat)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Es bloquen més elements de seguiment i, per tant, millora la protecció i el rendiment, però pot fer que alguns llocs no funcionin correctament</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Posicioneu-vos</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Proveu la navegació amb una sola mà amb la barra d’eines part inferior o moveu-la al capdamunt.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegueu amb privadesa</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Obriu una pestanya privada una sola vegada: toqueu la icona %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Obriu pestanyes privades cada vegada: actualitzeu els paràmetres de navegació privada.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Obre els paràmetres</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -866,6 +899,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Trieu el tema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Estalvieu bateria i descanseu la vista activant el mode fosc.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automàtic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1065,6 +1100,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">Inicia la sessió al Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Inicis de sessió desats</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Aquí es mostren els inicis de sessió que deseu o sincronitzeu en el %s.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Més informació sobre el Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepcions</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1154,6 +1193,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Més informació</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detalls del motor de cerca personalitzat</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Enllaç a més informació</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Escriviu el nom del motor de cerca</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1171,17 +1215,41 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">S’ha suprimit %s</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Us donem la benvinguda al nou %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Us espera un navegador redissenyat de cap a peus, amb millores de rendiment i funcionalitat que us ajudaran a ser més productius a Internet.\n\nEspereu mentre actualitzem el %s amb:</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">S’està actualitzant el %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Inicia el %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">La migració ha acabat</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Contrasenyes</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Per a permetre-ho:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Aneu a la configuració de l’Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Toqueu <b>Permisos</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Activeu <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Connexió segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Connexió insegura</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Segur que voleu esborrar tots els permisos de tots els llocs?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Segur que voleu esborrar tots els permisos per a aquest lloc?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Segur que voleu esborrar aquest permís per a aquest lloc?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">No hi ha cap excepció de lloc</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Articles principals</string>
     <!-- Bookmark deletion confirmation -->

@@ -315,7 +315,7 @@
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
     <!-- Preference switch for usage and technical data collection -->
-    <string name="preference_usage_data">Utilização e dados técnicos</string>
+    <string name="preference_usage_data">Dados técnicos e de utilização</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Partilha dados de desempenho, utilização, hardware e personalização sobre o seu navegador com a Mozilla para nos ajudar a tornar o %1$s melhor</string>
     <!-- Preference switch for marketing data collection -->
