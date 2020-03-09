@@ -197,9 +197,8 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
     Maybe<FileDescriptor> brokerFd;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-    // for now, use the UtilityPolicy like RDD does
-    auto policy =
-        SandboxBrokerPolicyFactory::GetUtilityPolicy(GetActor()->OtherPid());
+    auto policy = SandboxBrokerPolicyFactory::GetSocketProcessPolicy(
+        GetActor()->OtherPid());
     if (policy != nullptr) {
       brokerFd = Some(FileDescriptor());
       mSandboxBroker = SandboxBroker::Create(
