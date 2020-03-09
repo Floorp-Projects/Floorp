@@ -1492,10 +1492,10 @@ void gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
   }
 }
 
-void gfxFT2FontList::GetSystemFontList(nsTArray<FontListEntry>* retValue) {
+void gfxFT2FontList::ReadSystemFontList(nsTArray<FontListEntry>* aList) {
   for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
     auto family = static_cast<FT2FontFamily*>(iter.Data().get());
-    family->AddFacesToFontList(retValue);
+    family->AddFacesToFontList(aList);
   }
 }
 
@@ -1530,14 +1530,15 @@ nsresult gfxFT2FontList::InitFontListForPlatform() {
     return NS_OK;
   }
 
-  // Content process: ask the Chrome process to give us the list
-  nsTArray<FontListEntry> fonts;
-  mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(&fonts);  // sync
-  for (uint32_t i = 0, n = fonts.Length(); i < n; ++i) {
+  // Content process: use font list passed from the chrome process via
+  // the GetXPCOMProcessAttributes message.
+  auto& fontList = dom::ContentChild::GetSingleton()->SystemFontList();
+  for (FontListEntry& fle : fontList) {
     // We don't need to identify "standard" font files here,
     // as the faces are already sorted.
-    AppendFaceFromFontListEntry(fonts[i], kUnknown);
+    AppendFaceFromFontListEntry(fle, kUnknown);
   }
+
   // We don't need to sort faces (because they were already sorted by the
   // chrome process, so we just maintain the existing order)
   for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
@@ -1548,7 +1549,9 @@ nsresult gfxFT2FontList::InitFontListForPlatform() {
 
   LOG(("got font list from chrome process: %" PRIdPTR " faces in %" PRIu32
        " families",
-       fonts.Length(), mFontFamilies.Count()));
+       fontList.Length(), mFontFamilies.Count()));
+  fontList.Clear();
+
   return NS_OK;
 }
 

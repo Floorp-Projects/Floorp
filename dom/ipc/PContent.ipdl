@@ -134,9 +134,13 @@ union ChromeRegistryItem
 namespace mozilla {
 namespace dom {
 
+// SetXPCOMProcessAttributes passes an array of font data to the child,
+// but each platform needs different details so we have platform-specific
+// versions of the SystemFontListEntry type:
+#if defined(ANDROID)
 // Used on Android/B2G to pass the list of fonts on the device
 // to the child process
-struct FontListEntry {
+struct SystemFontListEntry {
     nsCString familyName;
     nsCString faceName;
     nsCString filepath;
@@ -145,28 +149,23 @@ struct FontListEntry {
     uint32_t  styleRange;
     uint8_t   index;
 };
-
+#elif defined(XP_MACOSX)
 // Used on Mac OS X to pass the list of font families (not faces)
 // from chrome to content processes.
 // The entryType field distinguishes several types of font family
 // record; see gfxMacPlatformFontList.h for values and meaning.
-struct FontFamilyListEntry {
+struct SystemFontListEntry {
     nsCString familyName;
     uint8_t   entryType;
 };
-
+#else
 // Used on Linux to pass list of font patterns from chrome to content.
-struct FontPatternListEntry {
+// (Unused on Windows, but there needs to be a definition of the type.)
+struct SystemFontListEntry {
     nsCString pattern;
     bool      appFontFamily;
 };
-
-// Wrap the Font*ListEntry records in a union so the SetXPCOMProcessAttributes
-// message can pass an array of either type.
-union SystemFontListEntry {
-    FontFamilyListEntry;
-    FontPatternListEntry;
-};
+#endif
 
 struct DataStorageItem {
   nsCString key;
@@ -629,7 +628,7 @@ child:
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
-                                    /* used on MacOSX and Linux only: */
+                                    /* used on MacOSX/Linux/Android only: */
                                     SystemFontListEntry[] systemFontList,
                                     SharedMemoryHandle? sharedUASheetHandle,
                                     uintptr_t sharedUASheetAddress);
@@ -965,8 +964,6 @@ parent:
 
     // PrefService message
     sync GetGfxVars() returns (GfxVarUpdate[] vars);
-
-    sync ReadFontList() returns (FontListEntry[] retValue);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)

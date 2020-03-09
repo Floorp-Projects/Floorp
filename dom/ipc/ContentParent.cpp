@@ -2783,14 +2783,6 @@ void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
   Unused << SendVarUpdate(aVar);
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvReadFontList(
-    nsTArray<FontListEntry>* retValue) {
-#ifdef ANDROID
-  gfxAndroidPlatform::GetPlatform()->GetSystemFontList(retValue);
-#endif
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     const IPC::Principal& aRequestingPrincipal,

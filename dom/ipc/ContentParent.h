@@ -982,8 +982,6 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvGetGfxVars(nsTArray<GfxVarUpdate>* aVars);
 
-  mozilla::ipc::IPCResult RecvReadFontList(nsTArray<FontListEntry>* retValue);
-
   mozilla::ipc::IPCResult RecvSetClipboard(
       const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
       const IPC::Principal& aRequestingPrincipal,
