@@ -107,7 +107,7 @@ use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTi
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
 use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
-use std::{cmp, ops, u32};
+use std::{iter, ops, u32};
 use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 
 // Type definitions for interning clip nodes.
@@ -1371,10 +1371,8 @@ impl ClipItemKind {
             }
         };
 
-        if let Some(inner_clip_rect) = inner_rect.and_then(|ref inner_rect| {
-            project_inner_rect(transform, inner_rect)
-        }) {
-            if inner_clip_rect.contains_rect(&visible_rect) {
+        if let Some(ref inner_clip_rect) = inner_rect {
+            if let Some(()) = projected_rect_contains(inner_clip_rect, transform, &visible_rect) {
                 return match mode {
                     ClipMode::Clip => ClipResult::Accept,
                     ClipMode::ClipOut => ClipResult::Reject,
@@ -1558,25 +1556,39 @@ pub fn rounded_rectangle_contains_point(
     true
 }
 
-pub fn project_inner_rect(
+pub fn projected_rect_contains(
+    source_rect: &LayoutRect,
     transform: &LayoutToWorldTransform,
-    rect: &LayoutRect,
-) -> Option<WorldRect> {
+    target_rect: &WorldRect,
+) -> Option<()> {
     let points = [
-        transform.transform_point2d(rect.origin)?,
-        transform.transform_point2d(rect.top_right())?,
-        transform.transform_point2d(rect.bottom_left())?,
-        transform.transform_point2d(rect.bottom_right())?,
+        transform.transform_point2d(source_rect.origin)?,
+        transform.transform_point2d(source_rect.top_right())?,
+        transform.transform_point2d(source_rect.bottom_right())?,
+        transform.transform_point2d(source_rect.bottom_left())?,
+    ];
+    let target_points = [
+        target_rect.origin,
+        target_rect.top_right(),
+        target_rect.bottom_right(),
+        target_rect.bottom_left(),
     ];
 
-    let mut xs = [points[0].x, points[1].x, points[2].x, points[3].x];
-    let mut ys = [points[0].y, points[1].y, points[2].y, points[3].y];
-    xs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(cmp::Ordering::Equal));
-    ys.sort_by(|a, b| a.partial_cmp(b).unwrap_or(cmp::Ordering::Equal));
-    Some(WorldRect::new(
-        WorldPoint::new(xs[1], ys[1]),
-        WorldSize::new(xs[2] - xs[1], ys[2] - ys[1]),
-    ))
+    // iterate the edges of the transformed polygon
+    for (a, b) in points
+        .iter()
+        .cloned()
+        .zip(points[1..].iter().cloned().chain(iter::once(points[0])))
+    {
+        // check if every destination point is on the right of the edge
+        for &c in target_points.iter() {
+            if (b - a).cross(c - a) < 0.0 {
+                return None
+            }
+        }
+    }
+
+    Some(())
 }
 
 // Add a clip node into the list of clips to be processed
