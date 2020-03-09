@@ -29,10 +29,4 @@ add_task(async function test() {
     );
     ok(!jsInput.checked, "The JS feature's input element is also toggled off.");
   });
-
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-
-  revertRecordingPreferences();
 });

@@ -9,7 +9,7 @@ add_task(async function test() {
     "Test what happens if the profiler was previously started by another tool."
   );
 
-  const { revertRecordingPreferences, startProfiler } = ChromeUtils.import(
+  const { startProfiler } = ChromeUtils.import(
     "resource://devtools/client/performance-new/popup/background.jsm.js"
   );
 
@@ -53,6 +53,4 @@ add_task(async function test() {
       "The profiler is now available to record."
     );
   });
-
-  revertRecordingPreferences();
 });

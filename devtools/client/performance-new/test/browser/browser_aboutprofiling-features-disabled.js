@@ -47,12 +47,6 @@ add_task(async function test() {
       is(checkbox.checked, false, "After clicking it, it's still not checked.");
     }
   });
-
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-
-  revertRecordingPreferences();
 });
 
 /**

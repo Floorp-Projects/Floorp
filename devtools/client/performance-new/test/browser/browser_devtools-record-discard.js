@@ -32,10 +32,4 @@ add_task(async function test() {
       ok(Boolean(button), "The start recording button is available again.");
     }
   });
-
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-
-  revertRecordingPreferences();
 });
