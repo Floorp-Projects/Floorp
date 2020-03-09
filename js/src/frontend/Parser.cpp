@@ -7004,11 +7004,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   }
 
   if (propType == PropertyType::Field) {
-    if (!options().fieldsEnabledOption) {
-      errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
-      return false;
-    }
-
     if (isStatic) {
       if (propAtom == cx_->names().prototype) {
         errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);

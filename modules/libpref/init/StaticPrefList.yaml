@@ -4412,11 +4412,6 @@
 #endif
   mirror: always
 
-- name: javascript.options.experimental.fields
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Use better error message when accessing property of null or undefined.
 - name: javascript.options.property_error_message_fix
   type: RelaxedAtomicBool

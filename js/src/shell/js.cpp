@@ -500,7 +500,6 @@ bool shell::enableReadableByteStreams = false;
 bool shell::enableBYOBStreamReaders = false;
 bool shell::enableWritableStreams = false;
 bool shell::enableReadableStreamPipeTo = false;
-bool shell::enableFields = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
@@ -3903,7 +3902,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setWritableStreamsEnabled(enableWritableStreams)
       .setReadableStreamPipeToEnabled(enableReadableStreamPipeTo)
-      .setFieldsEnabled(enableFields)
       .setWeakRefsEnabled(enableWeakRefs)
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix);
@@ -10371,7 +10369,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_BIGINT
   enableWasmBigInt = !op.getBoolOption("no-wasm-bigint");
 #endif
-  enableFields = !op.getBoolOption("disable-experimental-fields");
   enableWeakRefs = op.getBoolOption("enable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
   enablePropertyErrorMessageFix =
@@ -11184,8 +11181,6 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-readablestream-pipeto",
                         "Enable support for "
                         "WHATWG ReadableStream.prototype.pipeTo") ||
-      !op.addBoolOption('\0', "disable-experimental-fields",
-                        "Disable public fields in classes") ||
       !op.addBoolOption('\0', "enable-weak-refs", "Enable weak references") ||
       !op.addBoolOption('\0', "disable-tosource", "Disable toSource/uneval") ||
       !op.addBoolOption('\0', "disable-property-error-message-fix",
