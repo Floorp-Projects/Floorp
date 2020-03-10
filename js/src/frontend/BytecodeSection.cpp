@@ -11,7 +11,6 @@
 #include "mozilla/ReverseIterator.h"  // mozilla::Reversed
 
 #include "frontend/CompilationInfo.h"
-#include "frontend/ParseNode.h"      // ObjectBox
 #include "frontend/SharedContext.h"  // FunctionBox
 #include "frontend/Stencil.h"        // ScopeCreationData
 #include "vm/BytecodeUtil.h"         // INDEX_LIMIT, StackUses, StackDefs

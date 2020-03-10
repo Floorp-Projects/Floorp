@@ -33,19 +33,19 @@
 #include "frontend/JumpList.h"             // JumpList, JumpTarget
 #include "frontend/NameAnalysisTypes.h"    // NameLocation
 #include "frontend/NameCollections.h"      // AtomIndexMap
-#include "frontend/ParseNode.h"      // ParseNode and subclasses, ObjectBox
-#include "frontend/Parser.h"         // Parser, PropListType
-#include "frontend/SharedContext.h"  // SharedContext
-#include "frontend/SourceNotes.h"    // SrcNoteType
-#include "frontend/TokenStream.h"    // TokenPos
-#include "frontend/ValueUsage.h"     // ValueUsage
-#include "js/RootingAPI.h"           // JS::Rooted, JS::Handle
-#include "js/TypeDecls.h"            // jsbytecode
-#include "vm/BytecodeUtil.h"         // JSOp
-#include "vm/Instrumentation.h"      // InstrumentationKind
-#include "vm/Interpreter.h"          // CheckIsObjectKind, CheckIsCallableKind
-#include "vm/Iteration.h"            // IteratorKind
-#include "vm/JSFunction.h"           // JSFunction, FunctionPrefixKind
+#include "frontend/ParseNode.h"            // ParseNode and subclasses
+#include "frontend/Parser.h"               // Parser, PropListType
+#include "frontend/SharedContext.h"        // SharedContext
+#include "frontend/SourceNotes.h"          // SrcNoteType
+#include "frontend/TokenStream.h"          // TokenPos
+#include "frontend/ValueUsage.h"           // ValueUsage
+#include "js/RootingAPI.h"                 // JS::Rooted, JS::Handle
+#include "js/TypeDecls.h"                  // jsbytecode
+#include "vm/BytecodeUtil.h"               // JSOp
+#include "vm/Instrumentation.h"            // InstrumentationKind
+#include "vm/Interpreter.h"  // CheckIsObjectKind, CheckIsCallableKind
+#include "vm/Iteration.h"    // IteratorKind
+#include "vm/JSFunction.h"   // JSFunction, FunctionPrefixKind
 #include "vm/JSScript.h"  // JSScript, BaseScript, FieldInitializers, JSTryNoteKind
 #include "vm/Runtime.h"     // ReportOutOfMemory
 #include "vm/StringType.h"  // JSAtom

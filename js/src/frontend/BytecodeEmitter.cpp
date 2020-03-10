@@ -48,7 +48,7 @@
 #include "frontend/NameOpEmitter.h"        // NameOpEmitter
 #include "frontend/ObjectEmitter.h"  // PropertyEmitter, ObjectEmitter, ClassEmitter
 #include "frontend/OptionalEmitter.h"  // OptionalEmitter
-#include "frontend/ParseNode.h"  // ParseNodeKind, ParseNode and subclasses, ObjectBox
+#include "frontend/ParseNode.h"      // ParseNodeKind, ParseNode and subclasses
 #include "frontend/Parser.h"         // Parser
 #include "frontend/PropOpEmitter.h"  // PropOpEmitter
 #include "frontend/SwitchEmitter.h"  // SwitchEmitter
