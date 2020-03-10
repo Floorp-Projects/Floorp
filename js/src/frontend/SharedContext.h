@@ -245,9 +245,6 @@ class SharedContext {
     localStrict = strict;
     return retVal;
   }
-
-  // JSOPTION_EXTRA_WARNINGS warnings or strict mode errors.
-  bool needStrictChecks() const { return strict(); }
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
