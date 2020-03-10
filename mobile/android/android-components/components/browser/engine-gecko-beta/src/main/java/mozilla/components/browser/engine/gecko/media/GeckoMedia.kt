@@ -75,7 +75,7 @@ private class MediaDelegate(
     }
 
     override fun onMetadataChange(mediaElement: MediaElement, metaData: MediaElement.Metadata) {
-        media.metadata = Media.Metadata(metaData.duration)
+        media.metadata = Media.Metadata(metaData.duration, metaData.height, metaData.width)
     }
 
     override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) {

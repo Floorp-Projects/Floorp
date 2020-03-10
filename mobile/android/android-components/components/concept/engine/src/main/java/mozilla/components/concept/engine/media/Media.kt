@@ -197,7 +197,9 @@ abstract class Media(
      * @property duration Indicates the duration of the media in seconds.
      */
     data class Metadata(
-        val duration: Double = -1.0
+        val duration: Double = -1.0,
+        val height: Long = 0L,
+        val width: Long = 0L
     )
 
     /**
