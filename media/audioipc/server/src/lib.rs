@@ -62,16 +62,20 @@ struct ServerWrapper {
 fn run() -> Result<ServerWrapper> {
     trace!("Starting up cubeb audio server event loop thread...");
 
-    let callback_thread = core::spawn_thread("AudioIPC Callback RPC", || {
-        match promote_current_thread_to_real_time(0, 48000) {
-            Ok(_) => {}
-            Err(_) => {
-                debug!("Failed to promote audio callback thread to real-time.");
+    let callback_thread = core::spawn_thread(
+        "AudioIPC Callback RPC",
+        || {
+            match promote_current_thread_to_real_time(0, 48000) {
+                Ok(_) => {}
+                Err(_) => {
+                    debug!("Failed to promote audio callback thread to real-time.");
+                }
             }
-        }
-        trace!("Starting up cubeb audio callback event loop thread...");
-        Ok(())
-    }, || {})
+            trace!("Starting up cubeb audio callback event loop thread...");
+            Ok(())
+        },
+        || {},
+    )
     .or_else(|e| {
         debug!(
             "Failed to start cubeb audio callback event loop thread: {:?}",
@@ -80,13 +84,14 @@ fn run() -> Result<ServerWrapper> {
         Err(e)
     })?;
 
-    let core_thread = core::spawn_thread("AudioIPC Server RPC", move || Ok(()), || {}).or_else(|e| {
-        debug!(
-            "Failed to cubeb audio core event loop thread: {:?}",
-            e.description()
-        );
-        Err(e)
-    })?;
+    let core_thread =
+        core::spawn_thread("AudioIPC Server RPC", move || Ok(()), || {}).or_else(|e| {
+            debug!(
+                "Failed to cubeb audio core event loop thread: {:?}",
+                e.description()
+            );
+            Err(e)
+        })?;
 
     Ok(ServerWrapper {
         core_thread,

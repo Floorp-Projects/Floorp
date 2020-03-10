@@ -120,7 +120,11 @@ impl ControlMsgBuilder {
 
             unsafe {
                 let cmsghdr_ptr = cmsg.bytes_mut().as_mut_ptr();
-                std::ptr::copy_nonoverlapping(&cmsghdr as *const _ as *const _, cmsghdr_ptr, mem::size_of::<cmsghdr>());
+                std::ptr::copy_nonoverlapping(
+                    &cmsghdr as *const _ as *const _,
+                    cmsghdr_ptr,
+                    mem::size_of::<cmsghdr>(),
+                );
                 let cmsg_data_ptr = libc::CMSG_DATA(cmsghdr_ptr as _);
                 std::ptr::copy_nonoverlapping(msg.as_ptr(), cmsg_data_ptr, msg.len());
                 cmsg.advance_mut(cmsg_space);
@@ -166,13 +170,9 @@ fn aligned(buf: &BytesMut) -> BytesMut {
 }
 
 fn len(len: usize) -> usize {
-    unsafe {
-        libc::CMSG_LEN(len.try_into().unwrap()) as usize
-    }
+    unsafe { libc::CMSG_LEN(len.try_into().unwrap()) as usize }
 }
 
 pub fn space(len: usize) -> usize {
-    unsafe {
-        libc::CMSG_SPACE(len.try_into().unwrap()) as usize
-    }
+    unsafe { libc::CMSG_SPACE(len.try_into().unwrap()) as usize }
 }
