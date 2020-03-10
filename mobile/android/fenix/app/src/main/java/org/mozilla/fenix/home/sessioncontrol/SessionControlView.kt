@@ -18,6 +18,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
@@ -163,7 +164,8 @@ private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapI
 class SessionControlView(
     private val homeFragmentStore: HomeFragmentStore,
     override val containerView: View?,
-    interactor: SessionControlInteractor
+    interactor: SessionControlInteractor,
+    private var homeScreenViewModel: HomeScreenViewModel
 ) : LayoutContainer {
 
     val view: RecyclerView = containerView as RecyclerView
@@ -193,6 +195,22 @@ class SessionControlView(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             sessionControlAdapter.submitList(null)
         }
-        sessionControlAdapter.submitList(state.toAdapterList())
+
+        val stateAdapterList = state.toAdapterList()
+
+        if (homeScreenViewModel.shouldScrollToTopSites) {
+            sessionControlAdapter.submitList(stateAdapterList) {
+
+                val loadedTopSites = stateAdapterList.find { adapterItem ->
+                    adapterItem is AdapterItem.TopSiteList && adapterItem.topSites.isNotEmpty()
+                }
+                loadedTopSites?.run {
+                    homeScreenViewModel.shouldScrollToTopSites = false
+                    view.scrollToPosition(stateAdapterList.indexOf(this))
+                }
+            }
+        } else {
+            sessionControlAdapter.submitList(stateAdapterList)
+        }
     }
 }

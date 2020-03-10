@@ -10,4 +10,9 @@ import androidx.lifecycle.ViewModel
 class HomeScreenViewModel : ViewModel() {
     var layoutManagerState: Parcelable? = null
     var motionLayoutProgress = 0F
+
+    /**
+     * Used to remember if we need to scroll to top of the homeFragment's recycleView (top sites) see #8561
+     * */
+    var shouldScrollToTopSites: Boolean = true
 }
