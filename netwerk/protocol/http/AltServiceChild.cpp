@@ -12,6 +12,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsProxyInfo.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -52,6 +53,7 @@ bool AltServiceChild::EnsureAltServiceChild() {
   return true;
 }
 
+// static
 void AltServiceChild::ClearHostMapping(nsHttpConnectionInfo* aCi) {
   LOG(("AltServiceChild::ClearHostMapping ci=%s", aCi->HashKey().get()));
   MOZ_ASSERT(aCi);
@@ -76,6 +78,36 @@ void AltServiceChild::ClearHostMapping(nsHttpConnectionInfo* aCi) {
   }
 
   task();
+}
+
+// static
+void AltServiceChild::ProcessHeader(
+    const nsCString& aBuf, const nsCString& aOriginScheme,
+    const nsCString& aOriginHost, int32_t aOriginPort,
+    const nsCString& aUsername, const nsCString& aTopWindowOrigin,
+    bool aPrivateBrowsing, bool aIsolated, nsIInterfaceRequestor* aCallbacks,
+    nsProxyInfo* aProxyInfo, uint32_t aCaps,
+    const OriginAttributes& aOriginAttributes) {
+  LOG(("AltServiceChild::ProcessHeader"));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!EnsureAltServiceChild()) {
+    return;
+  }
+
+  if (!sAltServiceChild->CanSend()) {
+    return;
+  }
+
+  nsTArray<ProxyInfoCloneArgs> proxyInfoArray;
+  if (aProxyInfo) {
+    nsProxyInfo::SerializeProxyInfo(aProxyInfo, proxyInfoArray);
+  }
+
+  Unused << sAltServiceChild->SendProcessHeader(
+      aBuf, aOriginScheme, aOriginHost, aOriginPort, aUsername,
+      aTopWindowOrigin, aPrivateBrowsing, aIsolated, proxyInfoArray, aCaps,
+      aOriginAttributes);
 }
 
 }  // namespace net

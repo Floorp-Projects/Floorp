@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PSocketProcess;
+include NeckoChannelParams;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
@@ -19,6 +20,18 @@ parent:
   async ClearHostMapping(nsCString host, int32_t port,
                          OriginAttributes originAttributes,
                          nsCString topWindowOrigin);
+
+  async ProcessHeader(nsCString buf,
+                      nsCString originScheme,
+                      nsCString originHost,
+                      int32_t originPort,
+                      nsCString username,
+                      nsCString topWindowOrigin,
+                      bool privateBrowsing,
+                      bool isolated,
+                      ProxyInfoCloneArgs[] proxyInfo,
+                      uint32_t caps,
+                      OriginAttributes originAttributes);
 
 child:
   async __delete__();

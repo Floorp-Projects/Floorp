@@ -61,9 +61,6 @@ void AltSvcMapping::ProcessHeader(
     const OriginAttributes& originAttributes) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("AltSvcMapping::ProcessHeader: %s\n", buf.get()));
-  if (!callbacks) {
-    return;
-  }
 
   if (StaticPrefs::network_http_altsvc_proxy_checks() &&
       !AcceptableProxy(proxyInfo)) {
@@ -1209,7 +1206,12 @@ AltSvcOverride::GetInterface(const nsIID& iid, void** result) {
   if (NS_SUCCEEDED(QueryInterface(iid, result)) && *result) {
     return NS_OK;
   }
-  return mCallbacks->GetInterface(iid, result);
+
+  if (mCallbacks) {
+    return mCallbacks->GetInterface(iid, result);
+  }
+
+  return NS_ERROR_NO_INTERFACE;
 }
 
 NS_IMETHODIMP
