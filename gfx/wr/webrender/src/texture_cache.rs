@@ -1483,12 +1483,12 @@ impl SlabSize {
 
         let (width, height) = match (x_size, y_size) {
             // Special cased rectangular slab pages.
-            (512, 256) => (512, 256),
+            (512, 0..=64) => (512, 64),
             (512, 128) => (512, 128),
-            (512,  64) => (512,  64),
-            (256, 512) => (256, 512),
+            (512, 256) => (512, 256),
+            (0..=64, 512) => (64, 512),
             (128, 512) => (128, 512),
-            ( 64, 512) => ( 64, 512),
+            (256, 512) => (256, 512),
 
             // If none of those fit, use a square slab size.
             (x_size, y_size) => {
