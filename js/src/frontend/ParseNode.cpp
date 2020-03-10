@@ -383,18 +383,10 @@ TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink,
   MOZ_ASSERT_IF(gcThing, gcThing->isTenured());
 }
 
-BigIntBox* TraceListNode::asBigIntBox() {
-  MOZ_ASSERT(isBigIntBox());
-  return static_cast<BigIntBox*>(this);
-}
-
 ObjectBox* TraceListNode::asObjectBox() {
   MOZ_ASSERT(isObjectBox());
   return static_cast<ObjectBox*>(this);
 }
-
-BigIntBox::BigIntBox(JS::BigInt* bi, TraceListNode* traceLink)
-    : TraceListNode(bi, traceLink, TraceListNode::NodeType::BigInt) {}
 
 ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink,
                      TraceListNode::NodeType type)

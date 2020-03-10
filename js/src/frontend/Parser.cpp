@@ -284,10 +284,6 @@ ObjectBox* ParserSharedBase::newObjectBox(JSObject* obj) {
   return newTraceListNode<ObjectBox, JSObject>(obj);
 }
 
-BigIntBox* ParserSharedBase::newBigIntBox(BigInt* val) {
-  return newTraceListNode<BigIntBox, BigInt>(val);
-}
-
 template <class ParseHandler>
 FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionNodeType funNode, JSFunction* fun, uint32_t toStringStart,
