@@ -37,7 +37,7 @@ job-defaults:
     run-on-tasks-for: []
     treeherder:
         kind: test
-        tier: 2
+        tier: 1
         platform:
             by-abi:
                 arm64-v8a: android-hw-p2-8-0-android-aarch64/opt
