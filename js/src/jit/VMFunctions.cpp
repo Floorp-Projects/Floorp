@@ -561,7 +561,7 @@ bool SetArrayLength(JSContext* cx, HandleObject obj, HandleValue value,
     MOZ_ALWAYS_TRUE(result.fail(JSMSG_READ_ONLY));
   }
 
-  return result.checkStrictErrorOrWarning(cx, obj, id, strict);
+  return result.checkStrictModeError(cx, obj, id, strict);
 }
 
 bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
@@ -628,7 +628,7 @@ bool SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name,
       return false;
     }
   }
-  return result.checkStrictErrorOrWarning(cx, obj, id, strict);
+  return result.checkStrictModeError(cx, obj, id, strict);
 }
 
 bool InterruptCheck(JSContext* cx) {

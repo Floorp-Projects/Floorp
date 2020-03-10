@@ -397,7 +397,7 @@ bool js::ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id,
   if (!Proxy::setInternal(cx, proxy, id, val, receiver, result)) {
     return false;
   }
-  return result.checkStrictErrorOrWarning(cx, proxy, id, strict);
+  return result.checkStrictModeError(cx, proxy, id, strict);
 }
 
 bool js::ProxySetPropertyByValue(JSContext* cx, HandleObject proxy,
@@ -413,7 +413,7 @@ bool js::ProxySetPropertyByValue(JSContext* cx, HandleObject proxy,
   if (!Proxy::setInternal(cx, proxy, id, val, receiver, result)) {
     return false;
   }
-  return result.checkStrictErrorOrWarning(cx, proxy, id, strict);
+  return result.checkStrictModeError(cx, proxy, id, strict);
 }
 
 bool Proxy::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,

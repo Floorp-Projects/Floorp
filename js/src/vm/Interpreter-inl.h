@@ -308,7 +308,7 @@ inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
   } else {
     ok = SetProperty(cx, env, id, val, receiver, result);
   }
-  return ok && result.checkStrictErrorOrWarning(cx, env, id, strict);
+  return ok && result.checkStrictModeError(cx, env, id, strict);
 }
 
 inline void InitGlobalLexicalOperation(JSContext* cx,

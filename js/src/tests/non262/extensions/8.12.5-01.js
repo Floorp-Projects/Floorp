@@ -57,33 +57,6 @@ try
   {
     errors.push(e);
   }
-
-  options("strict");
-  options("werror");
-  try
-  {
-    test1();
-    errors.push("strict+werror didn't make test1 fail");
-  }
-  catch (e)
-  {
-    if (!(e instanceof TypeError))
-      errors.push("test1 with strict+werror failed without a TypeError: " + e);
-  }
-
-  try
-  {
-    test2();
-    errors.push("strict+werror didn't make test2 fail");
-  }
-  catch (e)
-  {
-    if (!(e instanceof TypeError))
-      errors.push("test2 with strict+werror failed without a TypeError: " + e);
-  }
-
-  options("strict");
-  options("werror");
 }
 catch (e)
 {
