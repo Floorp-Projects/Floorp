@@ -471,6 +471,13 @@ template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::canHandleParseFailure(
     CompilationInfo& compilationInfo, const Directives& newDirectives) {
   // Try to reparse if no parse errors were thrown and the directives changed.
+  //
+  // NOTE:
+  // Only the following two directive changes force us to reparse the script:
+  // - The "use asm" directive was encountered.
+  // - The "use strict" directive was encountered and duplicate parameter names
+  //   are present. We reparse in this case to display the error at the correct
+  //   source location. See |Parser::hasValidSimpleStrictParameterNames()|.
   return !parser->anyChars.hadError() &&
          compilationInfo.directives != newDirectives;
 }
