@@ -34,21 +34,8 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> origin_uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(origin_uri));
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(origin_uri, false);
-
-  nsCOMPtr<nsIURI> safe_origin_uri;
-  rv = NS_MutateURI(origin_uri)
-           .SetUserPass(EmptyCString())
-           .Finalize(safe_origin_uri);
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(safe_origin_uri, false);
-
-  nsAutoCString safe_origin_spec;
-  rv = safe_origin_uri->GetSpec(safe_origin_spec);
-  NS_ENSURE_SUCCESS(rv, false);
+  nsCString safe_origin_spec;
+  aPrincipal->GetExposableSpec(safe_origin_spec);
 
   ReportDeliver::ReportData data;
   data.mType = NS_LITERAL_STRING("crash");
