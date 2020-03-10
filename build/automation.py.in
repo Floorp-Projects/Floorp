@@ -6,13 +6,7 @@
 from __future__ import with_statement
 import logging
 import os
-import re
-import select
-import signal
-import subprocess
 import sys
-import tempfile
-from datetime import datetime, timedelta
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -29,16 +23,11 @@ if os.path.isdir(mozbase):
         if package_path not in sys.path:
             sys.path.append(package_path)
 
-import mozcrash
-from mozscreenshot import printstatus, dump_screen
-
 
 # ---------------------------------------------------------------
 
-_DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
-_DEFAULT_WEBSOCKET_PORT = 9988
 
 #expand _DIST_BIN = __XPC_BIN_PATH__
 #expand _IS_WIN32 = len("__WIN32__") != 0
@@ -51,17 +40,9 @@ _IS_CYGWIN = False
 #endif
 #expand _BIN_SUFFIX = __BIN_SUFFIX__
 
-#expand _CERTS_SRC_DIR = __CERTS_SRC_DIR__
-#expand _IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand _IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
 #expand _CRASHREPORTER = __CRASHREPORTER__ == 1
 #expand _IS_ASAN = __IS_ASAN__ == 1
-
-
-if _IS_WIN32:
-  import ctypes, ctypes.wintypes, time, msvcrt
-else:
-  import errno
 
 def resetGlobalLog(log):
   while _log.handlers:
@@ -76,10 +57,6 @@ def resetGlobalLog(log):
 _log = logging.getLogger()
 resetGlobalLog(sys.stdout)
 
-
-#################
-# PROFILE SETUP #
-#################
 
 class Automation(object):
   """
@@ -96,33 +73,18 @@ class Automation(object):
 
   UNIXISH = not IS_WIN32 and not IS_MAC
 
-  CERTS_SRC_DIR = _CERTS_SRC_DIR
-  IS_TEST_BUILD = _IS_TEST_BUILD
   IS_DEBUG_BUILD = _IS_DEBUG_BUILD
   CRASHREPORTER = _CRASHREPORTER
   IS_ASAN = _IS_ASAN
 
   # timeout, in seconds
   DEFAULT_TIMEOUT = 60.0
-  DEFAULT_WEB_SERVER = _DEFAULT_WEB_SERVER
   DEFAULT_HTTP_PORT = _DEFAULT_HTTP_PORT
   DEFAULT_SSL_PORT = _DEFAULT_SSL_PORT
-  DEFAULT_WEBSOCKET_PORT = _DEFAULT_WEBSOCKET_PORT
 
   def __init__(self):
     self.log = _log
     self.lastTestSeen = "automation.py"
-    self.haveDumpedScreen = False
-
-  def setServerInfo(self, 
-                    webServer = _DEFAULT_WEB_SERVER, 
-                    httpPort = _DEFAULT_HTTP_PORT, 
-                    sslPort = _DEFAULT_SSL_PORT,
-                    webSocketPort = _DEFAULT_WEBSOCKET_PORT):
-    self.webServer = webServer
-    self.httpPort = httpPort
-    self.sslPort = sslPort
-    self.webSocketPort = webSocketPort
 
   @property
   def __all__(self):
@@ -131,52 +93,11 @@ class Automation(object):
            "IS_WIN32",
            "IS_MAC",
            "log",
-           "runApp",
-           "Process",
            "DIST_BIN",
-           "CERTS_SRC_DIR",
            "environment",
-           "IS_TEST_BUILD",
            "IS_DEBUG_BUILD",
            "DEFAULT_TIMEOUT",
           ]
-
-  class Process(subprocess.Popen):
-    """
-    Represents our view of a subprocess.
-    It adds a kill() method which allows it to be stopped explicitly.
-    """
-
-    def __init__(self,
-                 args,
-                 bufsize=0,
-                 executable=None,
-                 stdin=None,
-                 stdout=None,
-                 stderr=None,
-                 preexec_fn=None,
-                 close_fds=False,
-                 shell=False,
-                 cwd=None,
-                 env=None,
-                 universal_newlines=False,
-                 startupinfo=None,
-                 creationflags=0):
-      _log.info("INFO | automation.py | Launching: %s", subprocess.list2cmdline(args))
-      subprocess.Popen.__init__(self, args, bufsize, executable,
-                                stdin, stdout, stderr,
-                                preexec_fn, close_fds,
-                                shell, cwd, env,
-                                universal_newlines, startupinfo, creationflags)
-      self.log = _log
-
-    def kill(self):
-      if Automation().IS_WIN32:
-        import platform
-        pid = "%i" % self.pid
-        subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
-      else:
-        os.kill(self.pid, signal.SIGKILL)
 
   def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, lsanPath=None, ubsanPath=None):
     if xrePath == None:
@@ -243,333 +164,3 @@ class Automation(object):
         self.log.info("Failed determine available memory, disabling ASan low-memory configuration")
 
     return env
-
-  def killPid(self, pid):
-    try:
-      os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-    except WindowsError:
-      self.log.info("Failed to kill process %d." % pid)
-
-  if IS_WIN32:
-    PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
-    GetLastError = ctypes.windll.kernel32.GetLastError
-
-    def readWithTimeout(self, f, timeout):
-      """
-      Try to read a line of output from the file object |f|. |f| must be a
-      pipe, like the |stdout| member of a subprocess.Popen object created
-      with stdout=PIPE. Returns a tuple (line, did_timeout), where |did_timeout|
-      is True if the read timed out, and False otherwise. If no output is
-      received within |timeout| seconds, returns a blank line.
-      """
-
-      if timeout is None:
-        timeout = 0
-
-      x = msvcrt.get_osfhandle(f.fileno())
-      l = ctypes.c_long()
-      done = time.time() + timeout
-
-      buffer = ""
-      while timeout == 0 or time.time() < done:
-        if self.PeekNamedPipe(x, None, 0, None, ctypes.byref(l), None) == 0:
-          err = self.GetLastError()
-          if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
-            return ('', False)
-          else:
-            self.log.error("readWithTimeout got error: %d", err)
-        # read a character at a time, checking for eol. Return once we get there.
-        index = 0
-        while index < l.value:
-          char = f.read(1)
-          buffer += char
-          if char == '\n':
-            return (buffer, False)
-          index = index + 1
-        time.sleep(0.01)
-      return (buffer, True)
-
-    def isPidAlive(self, pid):
-      STILL_ACTIVE = 259
-      PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-      pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
-      if not pHandle:
-        return False
-      pExitCode = ctypes.wintypes.DWORD()
-      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
-      ctypes.windll.kernel32.CloseHandle(pHandle)
-      return pExitCode.value == STILL_ACTIVE
-
-  else:
-
-    def readWithTimeout(self, f, timeout):
-      """Try to read a line of output from the file object |f|. If no output
-      is received within |timeout| seconds, return a blank line.
-      Returns a tuple (line, did_timeout), where |did_timeout| is True
-      if the read timed out, and False otherwise."""
-      (r, w, e) = select.select([f], [], [], timeout)
-      if len(r) == 0:
-        return ('', True)
-      return (f.readline(), False)
-
-    def isPidAlive(self, pid):
-      try:
-        # kill(pid, 0) checks for a valid PID without actually sending a signal
-        # The method throws OSError if the PID is invalid, which we catch below.
-        os.kill(pid, 0)
-
-        # Wait on it to see if it's a zombie. This can throw OSError.ECHILD if
-        # the process terminates before we get to this point.
-        wpid, wstatus = os.waitpid(pid, os.WNOHANG)
-        return wpid == 0
-      except OSError, err:
-        # Catch the errors we might expect from os.kill/os.waitpid, 
-        # and re-raise any others
-        if err.errno == errno.ESRCH or err.errno == errno.ECHILD:
-          return False
-        raise
-
-  def dumpScreen(self, utilityPath):
-    if self.haveDumpedScreen:
-      self.log.info("Not taking screenshot here: see the one that was previously logged")
-      return
-
-    self.haveDumpedScreen = True;
-    dump_screen(utilityPath, self.log)
-
-
-  def killAndGetStack(self, processPID, utilityPath, debuggerInfo):
-    """Kill the process, preferrably in a way that gets us a stack trace.
-       Also attempts to obtain a screenshot before killing the process."""
-    if not debuggerInfo:
-      self.dumpScreen(utilityPath)
-    self.killAndGetStackNoScreenshot(processPID, utilityPath, debuggerInfo)
-
-  def killAndGetStackNoScreenshot(self, processPID, utilityPath, debuggerInfo):
-    """Kill the process, preferrably in a way that gets us a stack trace."""
-    if self.CRASHREPORTER and not debuggerInfo:
-      if not self.IS_WIN32:
-        # ABRT will get picked up by Breakpad's signal handler
-        os.kill(processPID, signal.SIGABRT)
-        return
-      else:
-        # We should have a "crashinject" program in our utility path
-        crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
-        if os.path.exists(crashinject):
-          status = subprocess.Popen([crashinject, str(processPID)]).wait()
-          printstatus("crashinject", status)
-          if status == 0:
-            return
-    self.log.info("Can't trigger Breakpad, just killing process")
-    self.killPid(processPID)
-
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath, outputHandler=None):
-    """ Look for timeout or crashes and return the status after the process terminates """
-    stackFixerFunction = None
-    didTimeout = False
-    hitMaxTime = False
-    if proc.stdout is None:
-      self.log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
-    else:
-      logsource = proc.stdout
-
-      if self.IS_DEBUG_BUILD and symbolsPath and os.path.exists(symbolsPath):
-        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files)
-        # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
-        sys.path.insert(0, utilityPath)
-        import fix_stack_using_bpsyms as stackFixerModule
-        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, symbolsPath)
-        del sys.path[0]
-      elif self.IS_DEBUG_BUILD and self.IS_MAC:
-        # Run each line through a function in fix_macosx_stack.py (uses atos)
-        sys.path.insert(0, utilityPath)
-        import fix_macosx_stack as stackFixerModule
-        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
-        del sys.path[0]
-      elif self.IS_DEBUG_BUILD and self.IS_LINUX:
-        # Run each line through a function in fix_linux_stack.py (uses addr2line)
-        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
-        sys.path.insert(0, utilityPath)
-        import fix_linux_stack as stackFixerModule
-        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
-        del sys.path[0]
-
-      # With metro browser runs this script launches the metro test harness which launches the browser.
-      # The metro test harness hands back the real browser process id via log output which we need to
-      # pick up on and parse out. This variable tracks the real browser process id if we find it.
-      browserProcessId = -1
-
-      (line, didTimeout) = self.readWithTimeout(logsource, timeout)
-      while line != "" and not didTimeout:
-        if stackFixerFunction:
-          line = stackFixerFunction(line)
-
-        if outputHandler is None:
-            self.log.info(line.rstrip().decode("UTF-8", "ignore"))
-        else:
-            outputHandler(line)
-
-        if "TEST-START" in line and "|" in line:
-          self.lastTestSeen = line.split("|")[1].strip()
-        if not debuggerInfo and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
-          self.dumpScreen(utilityPath)
-
-        (line, didTimeout) = self.readWithTimeout(logsource, timeout)
-
-        if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
-          # Kill the application.
-          hitMaxTime = True
-          self.log.info("TEST-UNEXPECTED-FAIL | %s | application ran for longer than allowed maximum time of %d seconds", self.lastTestSeen, int(maxTime))
-          self.log.error("Force-terminating active process(es).");
-          self.killAndGetStack(proc.pid, utilityPath, debuggerInfo)
-      if didTimeout:
-        if line:
-          self.log.info(line.rstrip().decode("UTF-8", "ignore"))
-        self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))
-        self.log.error("Force-terminating active process(es).");
-        if browserProcessId == -1:
-          browserProcessId = proc.pid
-        self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo)
-
-    status = proc.wait()
-    printstatus("Main app process", status)
-    if status == 0:
-      self.lastTestSeen = "Main app process exited normally"
-    if status != 0 and not didTimeout and not hitMaxTime:
-      self.log.info("TEST-UNEXPECTED-FAIL | %s | Exited with code %d during test run", self.lastTestSeen, status)
-    return status
-
-  def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
-    """ build the application command line """
-
-    cmd = os.path.abspath(app)
-    if self.IS_MAC and os.path.exists(cmd + "-bin"):
-      # Prefer 'app-bin' in case 'app' is a shell script.
-      # We can remove this hack once bug 673899 etc are fixed.
-      cmd += "-bin"
-
-    args = []
-
-    if debuggerInfo:
-      args.extend(debuggerInfo.args)
-      args.append(cmd)
-      cmd = os.path.abspath(debuggerInfo.path)
-
-    if self.IS_MAC:
-      args.append("-foreground")
-
-    if self.IS_CYGWIN:
-      profileDirectory = commands.getoutput("cygpath -w \"" + profileDir + "/\"")
-    else:
-      profileDirectory = profileDir + "/"
-
-    args.extend(("-no-remote", "-profile", profileDirectory))
-    if testURL is not None:
-      args.append((testURL))
-    args.extend(extraArgs)
-    return cmd, args
-
-  def checkForZombies(self, processLog, utilityPath, debuggerInfo):
-    """ Look for hung processes """
-    if not os.path.exists(processLog):
-      self.log.info('Automation Error: PID log not found: %s', processLog)
-      # Whilst no hung process was found, the run should still display as a failure
-      return True
-
-    foundZombie = False
-    self.log.info('INFO | zombiecheck | Reading PID log: %s', processLog)
-    processList = []
-    pidRE = re.compile(r'launched child process (\d+)$')
-    processLogFD = open(processLog)
-    for line in processLogFD:
-      self.log.info(line.rstrip())
-      m = pidRE.search(line)
-      if m:
-        processList.append(int(m.group(1)))
-    processLogFD.close()
-
-    for processPID in processList:
-      self.log.info("INFO | zombiecheck | Checking for orphan process with PID: %d", processPID)
-      if self.isPidAlive(processPID):
-        foundZombie = True
-        self.log.info("TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown", processPID)
-        self.killAndGetStack(processPID, utilityPath, debuggerInfo)
-    return foundZombie
-
-  def checkForCrashes(self, minidumpDir, symbolsPath):
-    return mozcrash.check_for_crashes(minidumpDir, symbolsPath, test_name=self.lastTestSeen)
-
-  def runApp(self, testURL, env, app, profileDir, extraArgs, utilityPath = None,
-             xrePath = None, certPath = None,
-             debuggerInfo = None, symbolsPath = None,
-             timeout = -1, maxTime = None, onLaunch = None,
-             detectShutdownLeaks = False, screenshotOnFail=False, testPath=None, bisectChunk=None,
-             valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None, outputHandler=None, e10s=True):
-    """
-    Run the app, log the duration it took to execute, return the status code.
-    Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
-    """
-
-    if utilityPath == None:
-      utilityPath = self.DIST_BIN
-    if xrePath == None:
-      xrePath = self.DIST_BIN
-    if certPath == None:
-      certPath = self.CERTS_SRC_DIR
-    if timeout == -1:
-      timeout = self.DEFAULT_TIMEOUT
-
-    # copy env so we don't munge the caller's environment
-    env = dict(env);
-    tmpfd, processLog = tempfile.mkstemp(suffix='pidlog')
-    os.close(tmpfd)
-    env["MOZ_PROCESS_LOG"] = processLog
-
-
-    cmd, args = self.buildCommandLine(app, debuggerInfo, profileDir, testURL, extraArgs)
-    startTime = datetime.now()
-
-    if debuggerInfo and debuggerInfo.interactive:
-      # If an interactive debugger is attached, don't redirect output,
-      # don't use timeouts, and don't capture ctrl-c.
-      timeout = None
-      maxTime = None
-      outputPipe = None
-      signal.signal(signal.SIGINT, lambda sigid, frame: None)
-    else:
-      outputPipe = subprocess.PIPE
-
-    self.lastTestSeen = "automation.py"
-    proc = self.Process([cmd] + args,
-                 env = self.environment(env, xrePath = xrePath,
-                                   crashreporter = not debuggerInfo),
-                 stdout = outputPipe,
-                 stderr = subprocess.STDOUT)
-    self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
-
-    if onLaunch is not None:
-      # Allow callers to specify an onLaunch callback to be fired after the
-      # app is launched.
-      onLaunch()
-
-    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath,
-                                outputHandler=outputHandler)
-    self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
-
-    # Do a final check for zombie child processes.
-    zombieProcesses = self.checkForZombies(processLog, utilityPath, debuggerInfo)
-
-    crashed = self.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
-
-    if crashed or zombieProcesses:
-      status = 1
-
-    if os.path.exists(processLog):
-      os.unlink(processLog)
-
-    return status, self.lastTestSeen
-
-  def elf_arm(self, filename):
-    data = open(filename, 'rb').read(20)
-    return data[:4] == "\x7fELF" and ord(data[18]) == 40 # EM_ARM
-

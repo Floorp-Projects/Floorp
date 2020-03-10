@@ -8,6 +8,7 @@ import os
 import posixpath
 import psutil
 import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -92,12 +93,12 @@ class ReftestServer:
 
         if not os.access(xpcshell, os.F_OK):
             raise Exception('xpcshell not found at %s' % xpcshell)
-        if self.automation.elf_arm(xpcshell):
+        if RemoteAutomation.elf_arm(xpcshell):
             raise Exception('xpcshell at %s is an ARM binary; please use '
                             'the --utility-path argument to specify the path '
                             'to a desktop version.' % xpcshell)
 
-        self._process = self.automation.Process([xpcshell] + args, env=env)
+        self._process = subprocess.Popen([xpcshell] + args, env=env)
         pid = self._process.pid
         if pid < 0:
             print("TEST-UNEXPECTED-FAIL | remotereftests.py | Error starting server.")
