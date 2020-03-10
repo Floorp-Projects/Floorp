@@ -7851,11 +7851,7 @@
 # disable.
 - name: privacy.documentCookies.maxage
   type: uint32_t
-#ifdef NIGHTLY_BUILD
-  value: 7 * 24 * 60 * 60
-#else
   value: 0
-#endif
   mirror: always
 
 - name: privacy.storagePrincipal.enabledForTrackers
