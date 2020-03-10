@@ -5,11 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FluentBundle.h"
+#include "mozilla/dom/UnionTypes.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla {
 namespace intl {
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FluentPattern, mParent)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FluentPattern, AddRef)
@@ -31,6 +33,158 @@ JSObject* FluentPattern::WrapObject(JSContext* aCx,
 }
 
 FluentPattern::~FluentPattern() { MOZ_COUNT_DTOR(FluentPattern); };
+
+/* FluentBundle */
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FluentBundle, mParent)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FluentBundle, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FluentBundle, Release)
+
+FluentBundle::FluentBundle(nsISupports* aParent,
+                           UniquePtr<ffi::FluentBundleRc> aRaw)
+    : mParent(aParent), mRaw(std::move(aRaw)) {
+  MOZ_COUNT_CTOR(FluentBundle);
+}
+
+already_AddRefed<FluentBundle> FluentBundle::Constructor(
+    const dom::GlobalObject& aGlobal,
+    const UTF8StringOrUTF8StringSequence& aLocales,
+    const dom::FluentBundleOptions& aOptions, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  bool useIsolating = aOptions.mUseIsolating;
+
+  nsAutoCString pseudoStrategy;
+  if (aOptions.mPseudoStrategy.WasPassed()) {
+    pseudoStrategy = aOptions.mPseudoStrategy.Value();
+  }
+
+  UniquePtr<ffi::FluentBundleRc> raw;
+
+  if (aLocales.IsUTF8String()) {
+    nsTArray<nsCString> locales;
+    locales.AppendElement(aLocales.GetAsUTF8String());
+    raw.reset(ffi::fluent_bundle_new(&locales, useIsolating, &pseudoStrategy));
+  } else {
+    nsTArray<nsCString> locales(aLocales.GetAsUTF8StringSequence());
+    raw.reset(ffi::fluent_bundle_new(&locales, useIsolating, &pseudoStrategy));
+  }
+
+  if (!raw) {
+    aRv.ThrowInvalidStateError("Failed to create the FluentBundle. Check the "
+                               "locales and pseudo strategy arguments.");
+    return nullptr;
+  }
+
+  return do_AddRef(new FluentBundle(global, std::move(raw)));
+}
+
+JSObject* FluentBundle::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
+  return FluentBundle_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+FluentBundle::~FluentBundle() { MOZ_COUNT_DTOR(FluentBundle); };
+
+void FluentBundle::GetLocales(nsTArray<nsCString>& aLocales) {
+  fluent_bundle_get_locales(mRaw.get(), &aLocales);
+}
+
+void FluentBundle::AddResource(
+    FluentResource& aResource,
+    const dom::FluentBundleAddResourceOptions& aOptions) {
+  bool allowOverrides = aOptions.mAllowOverrides;
+  fluent_bundle_add_resource(mRaw.get(), aResource.Raw(), allowOverrides);
+}
+
+bool FluentBundle::HasMessage(const nsACString& aId) {
+  return fluent_bundle_has_message(mRaw.get(), &aId);
+}
+
+void FluentBundle::GetMessage(const nsACString& aId,
+                              Nullable<FluentMessage>& aRetVal) {
+  bool hasValue = false;
+  nsTArray<nsCString> attributes;
+  bool exists =
+      fluent_bundle_get_message(mRaw.get(), &aId, &hasValue, &attributes);
+  if (exists) {
+    FluentMessage& msg = aRetVal.SetValue();
+    if (hasValue) {
+      msg.mValue = new FluentPattern(mParent, aId);
+    }
+    for (auto& name : attributes) {
+      auto newEntry = msg.mAttributes.Entries().AppendElement(fallible);
+      newEntry->mKey = name;
+      newEntry->mValue = new FluentPattern(mParent, aId, name);
+    }
+  }
+}
+
+bool extendJSArrayWithErrors(JSContext* aCx, JS::Handle<JSObject*> aErrors,
+                             nsTArray<nsCString>& aInput) {
+  uint32_t length;
+  if (NS_WARN_IF(!JS::GetArrayLength(aCx, aErrors, &length))) {
+    return false;
+  }
+
+  for (auto& err : aInput) {
+    JS::Rooted<JS::Value> jsval(aCx);
+    if (!ToJSValue(aCx, NS_ConvertUTF8toUTF16(err), &jsval)) {
+      return false;
+    }
+    if (!JS_DefineElement(aCx, aErrors, length++, jsval, JSPROP_ENUMERATE)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void FluentBundle::FormatPattern(JSContext* aCx, const FluentPattern& aPattern,
+                                 const Nullable<L10nArgs>& aArgs,
+                                 const Optional<JS::Handle<JSObject*>>& aErrors,
+                                 nsACString& aRetVal, ErrorResult& aRv) {
+  nsTArray<nsCString> argIds;
+  nsTArray<ffi::FluentArgument> argValues;
+
+  if (!aArgs.IsNull()) {
+    const L10nArgs& args = aArgs.Value();
+    for (auto& entry : args.Entries()) {
+      if (!entry.mValue.IsNull()) {
+        argIds.AppendElement(entry.mKey);
+
+        auto& value = entry.mValue.Value();
+        if (value.IsUTF8String()) {
+          argValues.AppendElement(
+              ffi::FluentArgument::String(&value.GetAsUTF8String()));
+        } else {
+          argValues.AppendElement(
+              ffi::FluentArgument::Double_(value.GetAsDouble()));
+        }
+      }
+    }
+  }
+
+  nsTArray<nsCString> errors;
+  bool succeeded = fluent_bundle_format_pattern(mRaw.get(), &aPattern.mId,
+                                                &aPattern.mAttrName, &argIds,
+                                                &argValues, &aRetVal, &errors);
+
+  if (!succeeded) {
+    return aRv.ThrowInvalidStateError("Failed to format the FluentPattern. Likely the "
+                               "pattern could not be retrieved from the bundle.");
+  }
+
+  if (aErrors.WasPassed()) {
+    if (!extendJSArrayWithErrors(aCx, aErrors.Value(), errors)) {
+      aRv.ThrowUnknownError("Failed to add errors to an error array.");
+    }
+  }
+}
 
 }  // namespace intl
 }  // namespace mozilla
