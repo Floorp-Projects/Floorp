@@ -16,14 +16,17 @@ from mach.decorators import (
 
 here = os.path.abspath(os.path.dirname(__file__))
 parser = None
+log = None
 
 
-def run_mochitest(context, **kwargs):
+def run_test(context, is_junit, **kwargs):
     from mochitest_options import ALL_FLAVORS
     from mozlog.commandline import setup_logging
 
     if not kwargs.get('log'):
         kwargs['log'] = setup_logging('mochitest', kwargs, {'mach': sys.stdout})
+    global log
+    log = kwargs['log']
 
     flavor = kwargs.get('flavor') or 'mochitest'
     if flavor not in ALL_FLAVORS:
@@ -37,6 +40,9 @@ def run_mochitest(context, **kwargs):
     args = Namespace(**kwargs)
     args.e10s = context.mozharness_config.get('e10s', args.e10s)
     args.certPath = context.certs_dir
+
+    if is_junit:
+        return run_geckoview_junit(context, args)
 
     if args.test_paths:
         install_subdir = fobj.get('install_subdir', fobj['suite'])
@@ -56,15 +62,14 @@ def run_mochitest_desktop(context, args):
     args.extraProfileFiles.append(os.path.join(context.bin_dir, 'plugins'))
 
     from runtests import run_test_harness
+    log.info("mach calling runtests with args: " + str(args))
     return run_test_harness(parser, args)
 
 
-def run_mochitest_android(context, args):
+def set_android_args(context, args):
     args.app = args.app or 'org.mozilla.geckoview.test'
-    args.extraProfileFiles.append(os.path.join(context.package_root, 'mochitest', 'fonts'))
     args.utilityPath = context.hostutils
     args.xrePath = context.hostutils
-
     config = context.mozharness_config
     if config:
         host = os.environ.get("HOST_IP", "10.0.2.2")
@@ -72,12 +77,28 @@ def run_mochitest_android(context, args):
         args.httpPort = config.get('http_port', 8854)
         args.sslPort = config.get('ssl_port', 4454)
         args.adbPath = config['exes']['adb'] % {'abs_work_dir': context.mozharness_workdir}
+        args.deviceSerial = os.environ.get('DEVICE_SERIAL', 'emulator-5554')
+    return args
+
+
+def run_mochitest_android(context, args):
+    args = set_android_args(context, args)
+    args.extraProfileFiles.append(os.path.join(context.package_root, 'mochitest', 'fonts'))
 
     from runtestsremote import run_test_harness
+    log.info("mach calling runtestsremote with args: " + str(args))
     return run_test_harness(parser, args)
 
 
-def setup_argument_parser():
+def run_geckoview_junit(context, args):
+    args = set_android_args(context, args)
+
+    from runjunit import run_test_harness
+    log.info("mach calling runjunit with args: " + str(args))
+    return run_test_harness(parser, args)
+
+
+def setup_mochitest_argument_parser():
     import mozinfo
     mozinfo.find_and_update_from_json(here)
     app = 'generic'
@@ -90,6 +111,13 @@ def setup_argument_parser():
     return parser
 
 
+def setup_junit_argument_parser():
+    from runjunit import JunitArgumentParser
+    global parser
+    parser = JunitArgumentParser()
+    return parser
+
+
 @CommandProvider
 class MochitestCommands(object):
 
@@ -98,7 +126,14 @@ class MochitestCommands(object):
 
     @Command('mochitest', category='testing',
              description='Run the mochitest harness.',
-             parser=setup_argument_parser)
+             parser=setup_mochitest_argument_parser)
     def mochitest(self, **kwargs):
         self.context.activate_mozharness_venv()
-        return run_mochitest(self.context, **kwargs)
+        return run_test(self.context, False, **kwargs)
+
+    @Command('geckoview-junit', category='testing',
+             description='Run the geckoview-junit harness.',
+             parser=setup_junit_argument_parser)
+    def geckoview_junit(self, **kwargs):
+        self.context.activate_mozharness_venv()
+        return run_test(self.context, True, **kwargs)
