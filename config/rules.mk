@@ -702,7 +702,7 @@ define syms_template
 syms:: $(2)
 $(2): $(1)
 ifdef MOZ_CRASHREPORTER
-	$$(call py_action,dumpsymbols,$$(abspath $$<) $$(abspath $$@) $$(DUMP_SYMBOLS_FLAGS))
+	$$(call py3_action,dumpsymbols,$$(abspath $$<) $$(abspath $$@) $$(DUMP_SYMBOLS_FLAGS))
 endif
 endef
 
