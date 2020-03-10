@@ -43,9 +43,12 @@ import tempfile
 import threading
 import time
 import zipfile
+from contextlib import contextmanager, closing
+from functools import wraps
 
 from io import open
 from io import BytesIO
+from random import random
 from subprocess import PIPE
 from subprocess import Popen
 
@@ -77,6 +80,116 @@ else:
 
 
 log = logging.getLogger(__name__)
+
+
+# Vendored code from `redo` module
+def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=1):
+    """
+    This function originates from redo 2.0.3 https://github.com/mozilla-releng/redo
+    A generator function that sleeps between retries, handles exponential
+    backoff and jitter. The action you are retrying is meant to run after
+    retrier yields.
+    """
+    jitter = jitter or 0  # py35 barfs on the next line if jitter is None
+    if jitter > sleeptime:
+        # To prevent negative sleep times
+        raise Exception("jitter ({}) must be less than sleep time ({})".format(jitter, sleeptime))
+
+    sleeptime_real = sleeptime
+    for _ in range(attempts):
+        log.debug("attempt %i/%i", _ + 1, attempts)
+
+        yield sleeptime_real
+
+        if jitter:
+            sleeptime_real = sleeptime + random.uniform(-jitter, jitter)
+            # our jitter should scale along with the sleeptime
+            jitter = jitter * sleepscale
+        else:
+            sleeptime_real = sleeptime
+
+        sleeptime *= sleepscale
+
+        if sleeptime_real > max_sleeptime:
+            sleeptime_real = max_sleeptime
+
+        # Don't need to sleep the last time
+        if _ < attempts - 1:
+            log.debug("sleeping for %.2fs (attempt %i/%i)", sleeptime_real, _ + 1, attempts)
+            time.sleep(sleeptime_real)
+
+
+def retry(
+    action,
+    attempts=5,
+    sleeptime=60,
+    max_sleeptime=5 * 60,
+    sleepscale=1.5,
+    jitter=1,
+    retry_exceptions=(Exception,),
+    cleanup=None,
+    args=(),
+    kwargs={},
+    log_args=True,
+):
+    """
+    This function originates from redo 2.0.3 https://github.com/mozilla-releng/redo
+    Calls an action function until it succeeds, or we give up.
+    """
+    assert callable(action)
+    assert not cleanup or callable(cleanup)
+
+    action_name = getattr(action, "__name__", action)
+    if log_args and (args or kwargs):
+        log_attempt_args = ("retry: calling %s with args: %s," " kwargs: %s, attempt #%d",
+                            action_name, args, kwargs)
+    else:
+        log_attempt_args = ("retry: calling %s, attempt #%d", action_name)
+
+    if max_sleeptime < sleeptime:
+        log.debug("max_sleeptime %d less than sleeptime %d", max_sleeptime, sleeptime)
+
+    n = 1
+    for _ in retrier(
+            attempts=attempts,
+            sleeptime=sleeptime,
+            max_sleeptime=max_sleeptime,
+            sleepscale=sleepscale,
+            jitter=jitter):
+        try:
+            logfn = log.info if n != 1 else log.debug
+            logfn_args = log_attempt_args + (n,)
+            logfn(*logfn_args)
+            return action(*args, **kwargs)
+        except retry_exceptions:
+            log.debug("retry: Caught exception: ", exc_info=True)
+            if cleanup:
+                cleanup()
+            if n == attempts:
+                log.info("retry: Giving up on %s", action_name)
+                raise
+            continue
+        finally:
+            n += 1
+
+
+def retriable(*retry_args, **retry_kwargs):
+    """
+    This function originates from redo 2.0.3 https://github.com/mozilla-releng/redo
+    A decorator factory for retry(). Wrap your function in @retriable(...) to
+    give it retry powers!
+    """
+
+    def _retriable_factory(func):
+        @wraps(func)
+        def _retriable_wrapper(*args, **kwargs):
+            return retry(func, args=args, kwargs=kwargs, *retry_args, **retry_kwargs)
+
+        return _retriable_wrapper
+
+    return _retriable_factory
+
+# end of vendored code from redo module
 
 
 def request_has_data(req):
@@ -703,6 +816,16 @@ def touch(f):
         log.warn('impossible to update utime of file %s' % f)
 
 
+@contextmanager
+@retriable(sleeptime=2)
+def request(url, auth_file=None):
+    req = Request(url)
+    _authorize(req, auth_file)
+    with closing(urllib2.urlopen(req)) as f:
+        log.debug("opened %s for reading" % url)
+        yield f
+
+
 def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, region=None):
     # A file which is requested to be fetched that exists locally will be
     # overwritten by this function
@@ -720,11 +843,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
 
         # Well, the file doesn't exist locally.  Let's fetch it.
         try:
-            req = Request(url)
-            _authorize(req, auth_file)
-            f = urllib2.urlopen(req)
-            log.debug("opened %s for reading" % url)
-            with open(temp_path, mode="wb") as out:
+            with request(url, auth_file) as f, open(temp_path, mode='wb') as out:
                 k = True
                 size = 0
                 while k:
