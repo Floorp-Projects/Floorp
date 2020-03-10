@@ -100,6 +100,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.dns.native-is-localhost");
+  Services.prefs.clearUserPref(
+    "network.trr.send_empty_accept-encoding_headers"
+  );
 });
 
 // This is an IP that is local, so we don't crash when connecting to it,
@@ -1743,4 +1746,19 @@ add_task(async function test_resolve_not_confirmed() {
     Components.isSuccessCode(inStatus),
     `${inStatus} should be a success code`
   );
+});
+
+add_task(async function test_content_encoding_gzip() {
+  dns.clearCache(true);
+  Services.prefs.setBoolPref(
+    "network.trr.send_empty_accept-encoding_headers",
+    false
+  );
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`
+  );
+
+  await new DNSListener("bar.example.com", "2.2.2.2");
 });
