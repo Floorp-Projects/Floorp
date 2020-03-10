@@ -20,8 +20,14 @@
 //   report_signal_unsafe=0 - Required to avoid TSan deadlocks when
 //   receiving external signals (e.g. SIGINT manually on console).
 //
+//   allocator_may_return_null=1 - Tell TSan to return NULL when an allocation
+//   fails instead of aborting the program. This allows us to handle failing
+//   allocations the same way we would handle them with a regular allocator and
+//   also uncovers potential bugs that might occur in these situations.
+//
 extern "C" const char* __tsan_default_options() {
-  return "halt_on_error=1:abort_on_error=1:report_signal_unsafe=0";
+  return "halt_on_error=1:abort_on_error=1:report_signal_unsafe=0"
+         ":allocator_may_return_null=1";
 }
 
 //
