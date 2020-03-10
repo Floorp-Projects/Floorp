@@ -25,7 +25,8 @@ def buildid_header(output):
 def get_program_output(*command):
     try:
         with open(os.devnull) as stderr:
-            return subprocess.check_output(command, stderr=stderr)
+            return subprocess.check_output(command, stderr=stderr,
+                                           universal_newlines=True)
     except Exception:
         return ''
 
