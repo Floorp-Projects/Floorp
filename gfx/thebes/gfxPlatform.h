@@ -368,12 +368,13 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
                                    const nsACString& aGenericFamily);
 
   /**
-   * Create the appropriate platform font group
+   * Create a gfxFontGroup based on the given family list and style.
    */
-  virtual gfxFontGroup* CreateFontGroup(
-      const mozilla::FontFamilyList& aFontFamilyList,
-      const gfxFontStyle* aStyle, gfxTextPerfMetrics* aTextPerf,
-      gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize) = 0;
+  gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+                                const gfxFontStyle* aStyle,
+                                gfxTextPerfMetrics* aTextPerf,
+                                gfxUserFontSet* aUserFontSet,
+                                gfxFloat aDevToCssSize) const;
 
   /**
    * Look up a local platform font using the full font face name.
