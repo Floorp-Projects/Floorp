@@ -28,7 +28,8 @@ logger = logging.getLogger(__name__)
     generic=True,
     description="Retriggers the specified task with custom environment and parameters",
     context=[{'test-type': 'mochitest'},
-             {'test-type': 'reftest'}],
+             {'test-type': 'reftest'},
+             {'test-type': 'geckoview-junit'}],
     order=10,
     schema={
         'type': 'object',
