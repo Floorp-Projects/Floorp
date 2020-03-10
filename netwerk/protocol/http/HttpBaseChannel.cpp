@@ -1909,10 +1909,8 @@ HttpBaseChannel::RedirectTo(nsIURI* targetURI) {
   // and to bypass CORS for early redirects.
   // To avoid any bypasses after the channel was flagged by
   // the WebRequst API, we are dropping the flag here.
-  if (mLoadInfo) {
-    mLoadInfo->SetBypassCORSChecks(false);
-    mLoadInfo->SetAllowInsecureRedirectToDataURI(false);
-  }
+  mLoadInfo->SetBypassCORSChecks(false);
+  mLoadInfo->SetAllowInsecureRedirectToDataURI(false);
   return NS_OK;
 }
 
@@ -2862,10 +2860,6 @@ void HttpBaseChannel::RemoveAsNonTailRequest() {
 void HttpBaseChannel::AssertPrivateBrowsingId() {
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(this, loadContext);
-  // For addons it's possible that mLoadInfo is null.
-  if (!mLoadInfo) {
-    return;
-  }
 
   if (!loadContext) {
     return;
@@ -2894,10 +2888,6 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
     nsIURI* aNewURI, uint32_t aRedirectFlags) {
   // make a copy of the loadinfo, append to the redirectchain
   // this will be set on the newly created channel for the redirect target.
-  if (!mLoadInfo) {
-    return nullptr;
-  }
-
   nsCOMPtr<nsILoadInfo> newLoadInfo =
       static_cast<mozilla::net::LoadInfo*>(mLoadInfo.get())->Clone();
 
@@ -3051,7 +3041,7 @@ void HttpBaseChannel::DoNotifyListener() {
   if (!IsNavigation()) {
     if (mLoadGroup) {
       FlushConsoleReports(mLoadGroup);
-    } else if (mLoadInfo) {
+    } else {
       RefPtr<dom::Document> doc;
       mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
       FlushConsoleReports(doc);
@@ -4120,11 +4110,6 @@ mozilla::dom::PerformanceStorage* HttpBaseChannel::GetPerformanceStorage() {
   if (XRE_IsE10sParentProcess()) {
     return nullptr;
   }
-
-  if (!mLoadInfo) {
-    return nullptr;
-  }
-
   return mLoadInfo->GetPerformanceStorage();
 }
 
