@@ -84,7 +84,7 @@ function runTests() {
         (ex) => {
           is(
             ex.message,
-            "Protocol error (unknownError): preference is not of the right type: test.undefined",
+            "Protocol error (unknownError): preference is not of the right type: test.undefined from: " + p.actorID,
             "getCharPref should throw an exception with the preference name"
           );
         }
