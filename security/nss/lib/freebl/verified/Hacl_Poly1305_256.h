@@ -21,31 +21,46 @@
  * SOFTWARE.
  */
 
+#include "libintvector.h"
 #include "kremlin/internal/types.h"
 #include "kremlin/lowstar_endianness.h"
 #include <string.h>
 #include <stdbool.h>
 
-#ifndef __Hacl_Kremlib_H
-#define __Hacl_Kremlib_H
+#ifndef __Hacl_Poly1305_256_H
+#define __Hacl_Poly1305_256_H
 
-static inline uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
+#include "Hacl_Kremlib.h"
 
-static inline uint64_t FStar_UInt64_eq_mask(uint64_t a, uint64_t b);
+void
+Hacl_Impl_Poly1305_Field32xN_256_load_acc4(Lib_IntVector_Intrinsics_vec256 *acc, uint8_t *b);
 
-static inline uint64_t FStar_UInt64_gte_mask(uint64_t a, uint64_t b);
+void
+Hacl_Impl_Poly1305_Field32xN_256_fmul_r4_normalize(
+    Lib_IntVector_Intrinsics_vec256 *out,
+    Lib_IntVector_Intrinsics_vec256 *p);
 
-static inline FStar_UInt128_uint128
-FStar_UInt128_add(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);
+extern uint32_t Hacl_Poly1305_256_blocklen;
 
-static inline FStar_UInt128_uint128
-FStar_UInt128_shift_right(FStar_UInt128_uint128 a, uint32_t s);
+typedef Lib_IntVector_Intrinsics_vec256 *Hacl_Poly1305_256_poly1305_ctx;
 
-static inline FStar_UInt128_uint128 FStar_UInt128_uint64_to_uint128(uint64_t a);
+void Hacl_Poly1305_256_poly1305_init(Lib_IntVector_Intrinsics_vec256 *ctx, uint8_t *key);
 
-static inline uint64_t FStar_UInt128_uint128_to_uint64(FStar_UInt128_uint128 a);
+void Hacl_Poly1305_256_poly1305_update1(Lib_IntVector_Intrinsics_vec256 *ctx, uint8_t *text);
 
-static inline FStar_UInt128_uint128 FStar_UInt128_mul_wide(uint64_t x, uint64_t y);
+void
+Hacl_Poly1305_256_poly1305_update(
+    Lib_IntVector_Intrinsics_vec256 *ctx,
+    uint32_t len,
+    uint8_t *text);
 
-#define __Hacl_Kremlib_H_DEFINED
+void
+Hacl_Poly1305_256_poly1305_finish(
+    uint8_t *tag,
+    uint8_t *key,
+    Lib_IntVector_Intrinsics_vec256 *ctx);
+
+void Hacl_Poly1305_256_poly1305_mac(uint8_t *tag, uint32_t len, uint8_t *text, uint8_t *key);
+
+#define __Hacl_Poly1305_256_H_DEFINED
 #endif

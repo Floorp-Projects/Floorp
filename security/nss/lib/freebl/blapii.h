@@ -80,6 +80,7 @@ SECStatus generate_prime(mp_int *prime, int primeLen);
 PRBool aesni_support();
 PRBool clmul_support();
 PRBool avx_support();
+PRBool avx2_support();
 PRBool ssse3_support();
 PRBool sse4_1_support();
 PRBool sse4_2_support();

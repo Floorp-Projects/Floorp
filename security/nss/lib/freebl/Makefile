@@ -85,11 +85,11 @@ endif
 # FREEBL_PRELINK_COMMAND
 #
 # This is an optional environment variable which can override the default
-# prelink command. It could be used on systems that did something similiar to 
-# prelink but used a different command and syntax. The only requirement is the 
-# program must take the library as the last argument, the program must output 
-# the original library to standard out, and the program does not need to take 
-# any quoted or imbedded spaces in its arguments (except the path to the 
+# prelink command. It could be used on systems that did something similiar to
+# prelink but used a different command and syntax. The only requirement is the
+# program must take the library as the last argument, the program must output
+# the original library to standard out, and the program does not need to take
+# any quoted or imbedded spaces in its arguments (except the path to the
 # library itself, which can have imbedded spaces or special characters).
 #
 ifdef FREEBL_USE_PRELINK
@@ -148,7 +148,7 @@ endif
 
 ifeq (OS2,$(OS_TARGET))
     ASFILES  = mpi_x86_os2.s
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
     DEFINES += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
     DEFINES += -DMP_IS_LITTLE_ENDIAN
@@ -169,7 +169,7 @@ ifdef NS_USE_GCC
 else
 # MSVC
     MPI_SRCS += mpi_x86_asm.c
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
     ifdef BUILD_OPT
 	OPTIMIZER += -Ox  # maximum optimization for freebl
@@ -220,7 +220,7 @@ ifeq ($(USE_N32),1)
     ifeq ($(NS_USE_GCC),1)
 	ASFLAGS = -Wp,-P -Wp,-traditional -O -mips3
     else
-	ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 
+	ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3
     endif
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
     DEFINES += -DMP_USE_UINT_DIGIT
@@ -253,12 +253,12 @@ ifeq ($(CPU_ARCH),x86_64)
 endif
 ifeq ($(CPU_ARCH),x86)
     ASFILES  = mpi_x86.s
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT
     DEFINES += -DMP_IS_LITTLE_ENDIAN
 endif
 ifeq ($(CPU_ARCH),arm)
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
     DEFINES += -DMP_USE_UINT_DIGIT
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
     MPI_SRCS += mpi_arm.c
@@ -283,7 +283,7 @@ ifneq ($(OS_TEST), ia64)
 # PA-RISC
 ASFILES += ret_cr16.s
 ifndef USE_64
-    FREEBL_BUILD_SINGLE_SHLIB = 
+    FREEBL_BUILD_SINGLE_SHLIB =
     HAVE_ABI32_INT32 = 1
     HAVE_ABI32_FPU = 1
 endif
@@ -294,15 +294,15 @@ ifdef USE_ABI32_INT32
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 else
 ifdef USE_64
-# this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 64-bit digits 
-    MPI_SRCS += mpi_hp.c 
-    ASFILES  += hpma512.s hppa20.s 
+# this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 64-bit digits
+    MPI_SRCS += mpi_hp.c
+    ASFILES  += hpma512.s hppa20.s
     DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 else
-# this builds for DA2.0 (HP PA 2.0 Narrow) ABI32_FPU model 
+# this builds for DA2.0 (HP PA 2.0 Narrow) ABI32_FPU model
 # (the 32-bit ABI with 64-bit registers) using 64-bit digits
-    MPI_SRCS += mpi_hp.c 
-    ASFILES  += hpma512.s hppa20.s 
+    MPI_SRCS += mpi_hp.c
+    ASFILES  += hpma512.s hppa20.s
     DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 ifndef NS_USE_GCC
     ARCHFLAG = -Aa +e +DA2.0 +DS2.0
@@ -337,7 +337,7 @@ else
 endif # NS_USE_GCC
 
 # Sun's WorkShop defines v8, v8plus and v9 architectures.
-# gcc on Solaris defines v8 and v9 "cpus".  
+# gcc on Solaris defines v8 and v9 "cpus".
 # gcc's v9 is equivalent to Workshop's v8plus.
 # gcc's -m64 is equivalent to Workshop's v9
 # We always use Sun's assembler, which uses Sun's naming convention.
@@ -387,7 +387,7 @@ ifeq ($(CPU_ARCH),sparc)
 	    FPU_TARGET_OPTIMIZER = -xchip=ultra2
 	endif
 	ifdef USE_ABI32_INT64
-	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
+	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers,
 	    # 32-bit ABI, it uses 64-bit words, integer arithmetic,
 	    # no FPU (non-VIS cpus).
 	    # These flags were suggested by the compiler group for building
@@ -400,7 +400,7 @@ ifeq ($(CPU_ARCH),sparc)
 	    SOLARIS_AS_FLAGS = -xarch=v8plus -K PIC
 	endif
 	ifdef USE_ABI32_FPU
-	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
+	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers,
 	    # 32-bit ABI, it uses FPU code, and 32-bit word size.
 	    # these flags were determined by running cc -### -fast and copying
 	    # the generated flag settings
@@ -442,12 +442,12 @@ ifeq ($(CPU_ARCH),sparc)
 
     ### set flags for both GCC and Sun cc
     ifdef USE_ABI32_INT64
-	# this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
+	# this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers,
 	# 32-bit ABI, it uses 64-bit words, integer arithmetic, no FPU
 	# best times are with no MP_ flags specified
     endif
     ifdef USE_ABI32_FPU
-	# this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
+	# this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers,
 	# 32-bit ABI, it uses FPU code, and 32-bit word size
 	MPI_SRCS += mpi_sparc.c
 	ASFILES  = mpv_sparcv8.s montmulfv8.s
@@ -503,7 +503,7 @@ else
     else
 	# Solaris x86
 	DEFINES += -DMP_USE_UINT_DIGIT
-	DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+	DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 	DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
 	ASFILES  = mpi_i86pc.s
  	ifndef NS_USE_GCC
@@ -526,8 +526,12 @@ ifneq ($(shell $(CC) -? 2>&1 >/dev/null </dev/null | sed -e 's/:.*//;1q'),lcc)
             HAVE_INT128_SUPPORT = 1
             DEFINES += -DHAVE_INT128_SUPPORT
         endif
+        ifneq (,$(filter 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
+            NSS_DISABLE_AVX2 = 1
+        endif
         ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
             HAVE_INT128_SUPPORT = 1
+            NSS_DISABLE_AVX2 = 0
             DEFINES += -DHAVE_INT128_SUPPORT
         endif
     endif
@@ -540,7 +544,11 @@ endif
 
 ifndef NSS_DISABLE_CHACHAPOLY
     ifeq ($(CPU_ARCH),x86_64)
-        EXTRA_SRCS += Hacl_Poly1305_128.c Hacl_Chacha20_Vec128.c Hacl_Chacha20Poly1305_128.c
+        ifndef NSS_DISABLE_AVX2
+            EXTRA_SRCS += Hacl_Poly1305_256.c Hacl_Chacha20_Vec256.c Hacl_Chacha20Poly1305_256.c
+        else
+            EXTRA_SRCS += Hacl_Poly1305_128.c Hacl_Chacha20_Vec128.c Hacl_Chacha20Poly1305_128.c
+        endif # NSS_DISABLE_AVX2
     endif # x86_64
 
     VERIFIED_SRCS += Hacl_Poly1305_32.c Hacl_Chacha20.c Hacl_Chacha20Poly1305_32.c
@@ -630,7 +638,7 @@ ifdef FREEBL_BUILD_SINGLE_SHLIB
 
 ################### Single shared lib stuff #########################
 SINGLE_SHLIB_DIR = $(OBJDIR)/$(OS_TARGET)_SINGLE_SHLIB
-ALL_TRASH += $(SINGLE_SHLIB_DIR) 
+ALL_TRASH += $(SINGLE_SHLIB_DIR)
 
 $(SINGLE_SHLIB_DIR):
 	-mkdir -p $(SINGLE_SHLIB_DIR)
@@ -644,7 +652,7 @@ endif
 
 ifdef NEED_STUB_BUILD
 SINGLE_SHLIB_DIR = $(OBJDIR)/$(OS_TARGET)_SINGLE_SHLIB
-ALL_TRASH += $(SINGLE_SHLIB_DIR) 
+ALL_TRASH += $(SINGLE_SHLIB_DIR)
 $(SINGLE_SHLIB_DIR):
 	-mkdir $(SINGLE_SHLIB_DIR)
 
@@ -658,7 +666,7 @@ endif
 ######################## ABI32_FPU stuff #########################
 ifdef HAVE_ABI32_FPU
 ABI32_FPU_DIR = $(OBJDIR)/$(OS_TARGET)_ABI32_FPU
-ALL_TRASH += $(ABI32_FPU_DIR) 
+ALL_TRASH += $(ABI32_FPU_DIR)
 
 $(ABI32_FPU_DIR):
 	-mkdir $(ABI32_FPU_DIR)
@@ -671,7 +679,7 @@ endif
 ######################## ABI32_INT32 stuff #########################
 ifdef HAVE_ABI32_INT32
 ABI32_INT32_DIR = $(OBJDIR)/$(OS_TARGET)_ABI32_INT32
-ALL_TRASH += $(ABI32_INT32_DIR) 
+ALL_TRASH += $(ABI32_INT32_DIR)
 
 $(ABI32_INT32_DIR):
 	-mkdir $(ABI32_INT32_DIR)
@@ -684,7 +692,7 @@ endif
 ######################## ABI32_INT64 stuff #########################
 ifdef HAVE_ABI32_INT64
 ABI32_INT64_DIR = $(OBJDIR)/$(OS_TARGET)_ABI32_INT64
-ALL_TRASH += $(ABI32_INT64_DIR) 
+ALL_TRASH += $(ABI32_INT64_DIR)
 
 $(ABI32_INT64_DIR):
 	-mkdir $(ABI32_INT64_DIR)
@@ -701,7 +709,7 @@ endif
 ######################## ABI64_FPU stuff #########################
 ifdef HAVE_ABI64_FPU
 ABI64_FPU_DIR = $(OBJDIR)/$(OS_TARGET)_ABI64_FPU
-ALL_TRASH += $(ABI64_FPU_DIR) 
+ALL_TRASH += $(ABI64_FPU_DIR)
 
 $(ABI64_FPU_DIR):
 	-mkdir $(ABI64_FPU_DIR)
@@ -714,7 +722,7 @@ endif
 ######################## ABI64_INT stuff #########################
 ifdef HAVE_ABI64_INT
 ABI64_INT_DIR = $(OBJDIR)/$(OS_TARGET)_ABI64_INT
-ALL_TRASH += $(ABI64_INT_DIR) 
+ALL_TRASH += $(ABI64_INT_DIR)
 
 $(ABI64_INT_DIR):
 	-mkdir $(ABI64_INT_DIR)
@@ -785,6 +793,12 @@ $(OBJDIR)/$(PROG_PREFIX)rijndael$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvs
 endif
 endif
 
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes 
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes 
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes
 $(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes -mpclmul
+
+ifndef NSS_DISABLE_AVX2
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx2 -maes
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -mavx2 -maes
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -mavx2 -maes -mpclmul
+endif
