@@ -2287,8 +2287,6 @@ inline bool ParseNode::isConstant() {
 }
 
 class TraceListNode {
-  friend class ParserSharedBase;
-
  protected:
   js::gc::Cell* gcThing;
   TraceListNode* traceLink;
