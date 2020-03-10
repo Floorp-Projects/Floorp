@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozpower'
-PACKAGE_VERSION = '1.0.0'
+PACKAGE_VERSION = '1.1.0'
 
 deps = ['mozlog >= 6.0', 'mozdevice >= 3.0.2']
 
