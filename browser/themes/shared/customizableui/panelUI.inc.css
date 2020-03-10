@@ -1953,6 +1953,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
 
 #protections-popup-message .text-link {
   color: white;
+  font-weight: 600;
 }
 
 #protections-popup-message .text-link:hover {
