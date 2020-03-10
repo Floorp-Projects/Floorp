@@ -23,6 +23,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -37,13 +38,20 @@ import org.robolectric.Robolectric.buildActivity
 @RunWith(AndroidJUnit4::class)
 class TrackingProtectionExceptionFileStorageTest {
 
+    private lateinit var runtime: GeckoRuntime
+
     private val context: Context
         get() = buildActivity(Activity::class.java).get()
+
+    @Before
+    fun setup() {
+        runtime = mock()
+        whenever(runtime.settings).thenReturn(mock())
+    }
 
     @Test
     fun `restoreAsync exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = mock<GeckoEngineSession>()
         val geckoResult = GeckoResult<List<ContentBlockingException>>()
         val mockGeckoSession = mock<GeckoSession>()
@@ -71,7 +79,6 @@ class TrackingProtectionExceptionFileStorageTest {
     @Test
     fun `add exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = spy(GeckoEngineSession(runtime))
         val geckoResult = GeckoResult<List<ContentBlockingException>>()
         val mockGeckoSession = mock<GeckoSession>()
@@ -105,7 +112,6 @@ class TrackingProtectionExceptionFileStorageTest {
     @Test
     fun `remove all exceptions`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = mock<GeckoEngineSession>()
         val geckoResult = GeckoResult<List<ContentBlockingException>>()
         val mockGeckoSession = mock<GeckoSession>()
@@ -138,7 +144,6 @@ class TrackingProtectionExceptionFileStorageTest {
     @Test
     fun `remove exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = spy(GeckoEngineSession(runtime))
         var geckoResult = GeckoResult<List<ContentBlockingException>>()
         val mockGeckoSession = mock<GeckoSession>()
@@ -182,7 +187,6 @@ class TrackingProtectionExceptionFileStorageTest {
     @Test
     fun `remove a TrackingProtectionException`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = spy(GeckoEngineSession(runtime))
         var geckoResult = GeckoResult<List<ContentBlockingException>>()
         val mockGeckoSession = mock<GeckoSession>()
@@ -218,7 +222,6 @@ class TrackingProtectionExceptionFileStorageTest {
     @Test
     fun `contains exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = mock<GeckoEngineSession>()
         var geckoResult = GeckoResult<Boolean>()
         val mockGeckoSession = mock<GeckoSession>()
@@ -250,7 +253,6 @@ class TrackingProtectionExceptionFileStorageTest {
     @Test
     fun `getAll exceptions`() {
         val mockContentBlocking = mock<ContentBlockingController>()
-        val runtime: GeckoRuntime = mock()
         val session = mock<GeckoEngineSession>()
         var geckoResult = GeckoResult<List<ContentBlockingException>>()
         val mockGeckoSession = mock<GeckoSession>()

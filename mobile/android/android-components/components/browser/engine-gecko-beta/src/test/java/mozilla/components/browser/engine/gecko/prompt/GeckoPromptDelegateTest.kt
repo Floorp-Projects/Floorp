@@ -15,14 +15,17 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.gecko.util.GeckoBundle
+import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATETIME_LOCAL
@@ -49,9 +52,17 @@ typealias AC_AUTH_LEVEL = PromptRequest.Authentication.Level
 @RunWith(AndroidJUnit4::class)
 class GeckoPromptDelegateTest {
 
+    private lateinit var runtime: GeckoRuntime
+
+    @Before
+    fun setup() {
+        runtime = mock()
+        whenever(runtime.settings).thenReturn(mock())
+    }
+
     @Test
     fun `onChoicePrompt called with CHOICE_TYPE_SINGLE must provide a SingleChoice PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var promptRequestSingleChoice: PromptRequest = MultipleChoice(arrayOf()) {}
         var confirmWasCalled = false
         val gecko = GeckoPromptDelegate(mockSession)
@@ -84,7 +95,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onChoicePrompt called with CHOICE_TYPE_MULTIPLE must provide a MultipleChoice PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var promptRequestSingleChoice: PromptRequest = SingleChoice(arrayOf()) {}
         var confirmWasCalled = false
         val gecko = GeckoPromptDelegate(mockSession)
@@ -116,7 +127,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onChoicePrompt called with CHOICE_TYPE_MENU must provide a MenuChoice PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var promptRequestSingleChoice: PromptRequest = PromptRequest.MenuChoice(arrayOf()) {}
         var confirmWasCalled = false
         val gecko = GeckoPromptDelegate(mockSession)
@@ -161,7 +172,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onAlertPrompt must provide an alert PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var alertRequest: PromptRequest? = null
         var dismissWasCalled = false
 
@@ -197,7 +208,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt called with DATETIME_TYPE_DATE must provide a date PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var dateRequest: PromptRequest? = null
         var confirmCalled = false
         var onClearPicker = false
@@ -232,7 +243,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt DATETIME_TYPE_DATE with date parameters must format dates correctly`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var timeSelectionRequest: PromptRequest.TimeSelection? = null
         var geckoDate: String? = null
 
@@ -270,7 +281,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt called with DATETIME_TYPE_MONTH must provide a date PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var dateRequest: PromptRequest? = null
         var confirmCalled = false
 
@@ -294,7 +305,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt DATETIME_TYPE_MONTH with date parameters must format dates correctly`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var timeSelectionRequest: PromptRequest.TimeSelection? = null
         var geckoDate: String? = null
 
@@ -330,7 +341,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt called with DATETIME_TYPE_WEEK must provide a date PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var dateRequest: PromptRequest? = null
         var confirmCalled = false
         val promptDelegate = GeckoPromptDelegate(mockSession)
@@ -354,7 +365,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt DATETIME_TYPE_WEEK with date parameters must format dates correctly`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var timeSelectionRequest: PromptRequest.TimeSelection? = null
         var geckoDate: String? = null
         val promptDelegate = GeckoPromptDelegate(mockSession)
@@ -390,7 +401,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt called with DATETIME_TYPE_TIME must provide a TimeSelection PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var dateRequest: PromptRequest? = null
         var confirmCalled = false
 
@@ -415,7 +426,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt DATETIME_TYPE_TIME with time parameters must format time correctly`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var timeSelectionRequest: PromptRequest.TimeSelection? = null
         var geckoDate: String? = null
 
@@ -452,7 +463,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt called with DATETIME_TYPE_DATETIME_LOCAL must provide a TimeSelection PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var dateRequest: PromptRequest? = null
         var confirmCalled = false
 
@@ -475,7 +486,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onDateTimePrompt DATETIME_TYPE_DATETIME_LOCAL with date parameters must format time correctly`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var timeSelectionRequest: PromptRequest.TimeSelection? = null
         var geckoDate: String? = null
         val promptDelegate = GeckoPromptDelegate(mockSession)
@@ -540,7 +551,7 @@ class GeckoPromptDelegateTest {
     fun `Calling onFilePrompt must provide a FilePicker PromptRequest`() {
         val context = testContext
 
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var onSingleFileSelectedWasCalled = false
         var onMultipleFilesSelectedWasCalled = false
         var onDismissWasCalled = false
@@ -603,7 +614,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `Calling onAuthPrompt must provide an Authentication PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var authRequest: PromptRequest.Authentication = mock()
         var onConfirmWasCalled = false
         var onConfirmOnlyPasswordWasCalled = false
@@ -679,7 +690,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `Calling onColorPrompt must provide a Color PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var colorRequest: PromptRequest.Color = mock()
         var onConfirmWasCalled = false
         var onDismissWasCalled = false
@@ -720,7 +731,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onTextPrompt must provide an TextPrompt PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.TextPrompt = mock()
         var dismissWasCalled = false
         var confirmWasCalled = false
@@ -758,7 +769,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onPopupRequest must provide a Popup PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Popup? = null
         var onAllowWasCalled = false
         var onDenyWasCalled = false
@@ -796,7 +807,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onSharePrompt must provide a Share PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Share? = null
         var onSuccessWasCalled = false
         var onFailureWasCalled = false
@@ -846,7 +857,7 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `onButtonPrompt must provide a Confirm PromptRequest`() {
-        val mockSession = GeckoEngineSession(mock())
+        val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Confirm = mock()
         var onPositiveButtonWasCalled = false
         var onNegativeButtonWasCalled = false

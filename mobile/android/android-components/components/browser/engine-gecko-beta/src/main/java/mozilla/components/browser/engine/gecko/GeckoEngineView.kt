@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
-import java.lang.IllegalStateException
 
 /**
  * Gecko-based EngineView implementation.
@@ -108,6 +107,7 @@ class GeckoEngineView @JvmOverloads constructor(
 
             try {
                 currentGeckoView.setSession(internalSession.geckoSession)
+
                 currentSelection = GeckoSelectionActionDelegate.maybeCreate(context, selectionActionDelegate)
                     ?: internalSession.geckoSession.selectionActionDelegate as? BasicSelectionActionDelegate
                 internalSession.geckoSession.selectionActionDelegate = currentSelection

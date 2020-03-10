@@ -7,3 +7,5 @@ package org.mozilla.geckoview
 import org.mozilla.gecko.util.GeckoBundle
 
 class MockWebExtension(bundle: GeckoBundle) : WebExtension(bundle)
+class MockCreateTabDetails(bundle: GeckoBundle) : WebExtension.CreateTabDetails(bundle)
+class MockUpdateTabDetails(bundle: GeckoBundle) : WebExtension.UpdateTabDetails(bundle)
