@@ -345,8 +345,8 @@ CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
 
 bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
-    nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
-    bool aIsActive, bool aIsTopLevelDoc, const uint64_t& aChannelId,
+    nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aIsActive,
+    bool aIsTopLevelDoc, const uint64_t& aChannelId,
     const TimeStamp& aAsyncOpenTime, const Maybe<uint32_t>& aDocumentOpenFlags,
     bool aPluginsAllowed, nsDOMNavigationTiming* aTiming,
     Maybe<ClientInfo>&& aInfo, uint64_t aOuterWindowId, nsresult* aRv) {
@@ -374,7 +374,7 @@ bool DocumentLoadListener::Open(
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
           aLoadState, loadInfo, mParentChannelListener, nullptr, attrs,
-          aLoadFlags, aLoadType, aCacheKey, aIsActive, aIsTopLevelDoc, *aRv,
+          aLoadFlags, aCacheKey, aIsActive, aIsTopLevelDoc, *aRv,
           getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
     return false;
