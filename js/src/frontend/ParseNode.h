@@ -377,8 +377,6 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   kid: returned expression, or null if none
  * ExpressionStmt (UnaryNode)
  *   kid: expr
- *   prologue: true if Directive Prologue member in original source, not
- *             introduced via constant folding or other tree rewriting
  * EmptyStmt (NullaryNode)
  *   (no fields)
  * LabelStmt (LabeledStatement)
@@ -884,11 +882,10 @@ inline bool ParseNode::isName(PropertyName* name) const {
 
 class UnaryNode : public ParseNode {
   ParseNode* kid_;
-  bool prologue; /* directive prologue member */
 
  public:
   UnaryNode(ParseNodeKind kind, const TokenPos& pos, ParseNode* kid)
-      : ParseNode(kind, pos), kid_(kid), prologue(false) {
+      : ParseNode(kind, pos), kid_(kid) {
     MOZ_ASSERT(is<UnaryNode>());
   }
 
@@ -913,11 +910,6 @@ class UnaryNode : public ParseNode {
 #endif
 
   ParseNode* kid() const { return kid_; }
-
-  /* Return true if this node appears in a Directive Prologue. */
-  bool isDirectivePrologueMember() const { return prologue; }
-
-  void setIsDirectivePrologueMember() { prologue = true; }
 
   /*
    * Non-null if this is a statement node which could be a member of a
@@ -2292,7 +2284,6 @@ inline bool ParseNode::isConstant() {
 enum ParseReportKind {
   ParseError,
   ParseWarning,
-  ParseExtraWarning,
   ParseStrictError
 };
 

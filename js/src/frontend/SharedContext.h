@@ -115,7 +115,6 @@ class SharedContext {
  public:
   bool strictScript : 1;
   bool localStrict : 1;
-  bool extraWarnings : 1;
 
  protected:
   bool allowNewTarget_ : 1;
@@ -165,14 +164,13 @@ class SharedContext {
 
  public:
   SharedContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
-                Directives directives, bool extraWarnings)
+                Directives directives)
       : cx_(cx),
         kind_(kind),
         compilationInfo_(compilationInfo),
         thisBinding_(ThisBinding::Global),
         strictScript(directives.strict()),
         localStrict(false),
-        extraWarnings(extraWarnings),
         allowNewTarget_(false),
         allowSuperProperty_(false),
         allowSuperCall_(false),
@@ -249,7 +247,7 @@ class SharedContext {
   }
 
   // JSOPTION_EXTRA_WARNINGS warnings or strict mode errors.
-  bool needStrictChecks() const { return strict() || extraWarnings; }
+  bool needStrictChecks() const { return strict(); }
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -259,10 +257,8 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
   Rooted<GlobalScope::Data*> bindings;
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
-                      CompilationInfo& compilationInfo, Directives directives,
-                      bool extraWarnings)
-      : SharedContext(cx, Kind::Global, compilationInfo, directives,
-                      extraWarnings),
+                      CompilationInfo& compilationInfo, Directives directives)
+      : SharedContext(cx, Kind::Global, compilationInfo, directives),
         scopeKind_(scopeKind),
         bindings(cx) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
@@ -288,7 +284,7 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
 
   EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
                     CompilationInfo& compilationInfo, Scope* enclosingScope,
-                    Directives directives, bool extraWarnings);
+                    Directives directives);
 
   Scope* compilationEnclosingScope() const override { return enclosingScope_; }
 };
@@ -341,7 +337,7 @@ class FunctionBox : public SharedContext {
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
               CompilationInfo& compilationInfo, Directives directives,
-              bool extraWarnings, GeneratorKind generatorKind,
+              GeneratorKind generatorKind,
               FunctionAsyncKind asyncKind, JSAtom* explicitName,
               FunctionFlags flags);
 
@@ -445,12 +441,12 @@ class FunctionBox : public SharedContext {
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, JSFunction* fun,
               uint32_t toStringStart, CompilationInfo& compilationInfo,
-              Directives directives, bool extraWarnings,
+              Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
               CompilationInfo& compilationInfo, Directives directives,
-              bool extraWarnings, GeneratorKind generatorKind,
+              GeneratorKind generatorKind,
               FunctionAsyncKind asyncKind, size_t functionIndex);
 
 #ifdef DEBUG
