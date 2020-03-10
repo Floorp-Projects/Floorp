@@ -81,14 +81,6 @@ class RequestListHeaderContextMenu {
       click: () => this.props.resetSorting(),
     });
 
-    const columnName = event.target.getAttribute("data-name");
-
-    menu.push({
-      id: "request-list-header-resize-column-to-fit-content",
-      label: L10N.getStr("netmonitor.toolbar.resizeColumnToFitContent"),
-      click: () => this.props.resizeColumnToFitContent(columnName),
-    });
-
     showMenu(menu, {
       screenX: event.screenX,
       screenY: event.screenY,
