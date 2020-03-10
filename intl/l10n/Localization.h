@@ -22,7 +22,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace intl {
 
-typedef Record<nsString, Nullable<OwningStringOrDouble>> L10nArgs;
+typedef Record<nsCString, Nullable<OwningUTF8StringOrDouble>> L10nArgs;
 
 class Localization : public nsIObserver,
                      public nsSupportsWeakReference,
@@ -57,7 +57,7 @@ class Localization : public nsIObserver,
 
   uint32_t RemoveResourceIds(const nsTArray<nsString>& aResourceIds);
 
-  already_AddRefed<Promise> FormatValue(JSContext* aCx, const nsAString& aId,
+  already_AddRefed<Promise> FormatValue(JSContext* aCx, const nsACString& aId,
                                         const Optional<L10nArgs>& aArgs,
                                         ErrorResult& aRv);
 
