@@ -378,8 +378,7 @@ void GeckoViewOpenWindow(const ClientOpenWindowArgs& aArgs,
 
 }  // anonymous namespace
 
-RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
-    const ClientOpenWindowArgs& aArgs) {
+RefPtr<ClientOpPromise> ClientOpenWindow(const ClientOpenWindowArgs& aArgs) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   RefPtr<ClientOpPromise::Private> promise =
