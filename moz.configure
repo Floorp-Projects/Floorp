@@ -136,8 +136,8 @@ set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 
 wine = check_prog(
     'WINE', ['wine64', 'wine'], allow_missing=True,
-    when=depends(target, host, compile_environment)(
-        lambda t, h, c: c and t.kernel == 'WINNT' and h.kernel == 'Linux'))
+    when=depends(target, host)(
+        lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
 
 
 include('build/moz.configure/toolchain.configure',
@@ -617,6 +617,7 @@ def nsis_flags(host):
 set_config('MAKENSISU_FLAGS', nsis_flags)
 
 check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
+check_prog('UPX', ('upx',), allow_missing=True, when=target_is_windows)
 
 
 @depends(host_c_compiler, c_compiler, bindgen_config_paths)
