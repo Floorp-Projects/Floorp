@@ -160,7 +160,8 @@ uint32_t MacIOSurfaceTextureHostOGL::NumSubTextures() {
 
 void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(mSurface);
 
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -179,7 +180,8 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       auto format = GetFormat() == gfx::SurfaceFormat::R8G8B8A8
                         ? gfx::SurfaceFormat::B8G8R8A8
                         : gfx::SurfaceFormat::B8G8R8X8;
-      wr::ImageDescriptor descriptor(GetSize(), format);
+      wr::ImageDescriptor descriptor(GetSize(), format,
+                                     aPreferCompositorSurface);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -190,7 +192,8 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       // and YCbCr at OpenGL 3.1)
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
-      wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::B8G8R8X8);
+      wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::B8G8R8X8,
+                                     aPreferCompositorSurface);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -200,11 +203,11 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetDevicePixelWidth(0),
                        mSurface->GetDevicePixelHeight(0)),
-          gfx::SurfaceFormat::A8);
+          gfx::SurfaceFormat::A8, aPreferCompositorSurface);
       wr::ImageDescriptor descriptor1(
           gfx::IntSize(mSurface->GetDevicePixelWidth(1),
                        mSurface->GetDevicePixelHeight(1)),
-          gfx::SurfaceFormat::R8G8);
+          gfx::SurfaceFormat::R8G8, aPreferCompositorSurface);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;
@@ -218,8 +221,7 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
 void MacIOSurfaceTextureHostOGL::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys) {
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -228,9 +230,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
-                         !(mFlags & TextureFlags::NON_PREMULTIPLIED),
-                         wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-                         aPreferCompositorSurface);
+                         !(mFlags & TextureFlags::NON_PREMULTIPLIED));
       break;
     }
     case gfx::SurfaceFormat::YUV422: {
@@ -241,8 +241,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
       aBuilder.PushYCbCrInterleavedImage(
           aBounds, aClip, true, aImageKeys[0], wr::ColorDepth::Color8,
           wr::ToWrYuvColorSpace(GetYUVColorSpace()),
-          wr::ToWrColorRange(GetColorRange()), aFilter,
-          aPreferCompositorSurface);
+          wr::ToWrColorRange(GetColorRange()), aFilter);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -253,8 +252,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
       aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
                              wr::ColorDepth::Color8,
                              wr::ToWrYuvColorSpace(GetYUVColorSpace()),
-                             wr::ToWrColorRange(GetColorRange()), aFilter,
-                             aPreferCompositorSurface);
+                             wr::ToWrColorRange(GetColorRange()), aFilter);
       break;
     }
     default: {

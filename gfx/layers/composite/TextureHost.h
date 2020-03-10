@@ -661,7 +661,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
                                    ResourceUpdateOp aOp,
                                    const Range<wr::ImageKey>& aImageKeys,
-                                   const wr::ExternalImageId& aExtID) {
+                                   const wr::ExternalImageId& aExtID,
+                                   const bool aPreferCompositorSurface) {
     MOZ_ASSERT_UNREACHABLE("Unimplemented");
   }
 
@@ -671,8 +672,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
                                 const wr::LayoutRect& aBounds,
                                 const wr::LayoutRect& aClip,
                                 wr::ImageRendering aFilter,
-                                const Range<wr::ImageKey>& aKeys,
-                                const bool aPreferCompositorSurface) {
+                                const Range<wr::ImageKey>& aKeys) {
     MOZ_ASSERT_UNREACHABLE(
         "No PushDisplayItems() implementation for this TextureHost type.");
   }
@@ -793,13 +793,13 @@ class BufferTextureHost : public TextureHost {
   void PushResourceUpdates(wr::TransactionBuilder& aResources,
                            ResourceUpdateOp aOp,
                            const Range<wr::ImageKey>& aImageKeys,
-                           const wr::ExternalImageId& aExtID) override;
+                           const wr::ExternalImageId& aExtID,
+                           const bool aPreferCompositorSurface) override;
 
   void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                         const wr::LayoutRect& aBounds,
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-                        const Range<wr::ImageKey>& aImageKeys,
-                        const bool aPreferCompositorSurface) override;
+                        const Range<wr::ImageKey>& aImageKeys) override;
 
   void ReadUnlock() override;
   bool IsDirectMap() override {
