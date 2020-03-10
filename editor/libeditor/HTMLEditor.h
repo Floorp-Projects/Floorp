@@ -324,10 +324,8 @@ class HTMLEditor final : public TextEditor,
    * event callback when a mouse button is released
    * @param aX      [IN] horizontal position of the pointer
    * @param aY      [IN] vertical position of the pointer
-   * @param aTarget [IN] the element triggering the event
    */
-  MOZ_CAN_RUN_SCRIPT nsresult OnMouseUp(int32_t aX, int32_t aY,
-                                        Element* aTarget);
+  MOZ_CAN_RUN_SCRIPT nsresult OnMouseUp(int32_t aX, int32_t aY);
 
   /**
    * event callback when the mouse pointer is moved

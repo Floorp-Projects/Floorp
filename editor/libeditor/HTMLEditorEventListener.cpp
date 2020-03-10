@@ -33,7 +33,10 @@ nsresult HTMLEditorEventListener::Connect(EditorBase* aEditorBase) {
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
-  return EditorEventListener::Connect(htmlEditor);
+  nsresult rv = EditorEventListener::Connect(htmlEditor);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorEventListener::Connect() failed");
+  return rv;
 }
 
 void HTMLEditorEventListener::Disconnect() {
@@ -43,42 +46,46 @@ void HTMLEditorEventListener::Disconnect() {
 
   if (mListeningToMouseMoveEventForResizers) {
     DebugOnly<nsresult> rvIgnored = ListenToMouseMoveEventForResizers(false);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Failed to remove resize event listener of resizers");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "HTMLEditorEventListener::ListenToMouseMoveEventForResizers() failed, "
+        "but ignored");
   }
   if (mListeningToMouseMoveEventForGrabber) {
     DebugOnly<nsresult> rvIgnored = ListenToMouseMoveEventForGrabber(false);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Failed to remove resize event listener of grabber");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "HTMLEditorEventListener::ListenToMouseMoveEventForGrabber() failed, "
+        "but ignored");
   }
   if (mListeningToResizeEvent) {
     DebugOnly<nsresult> rvIgnored = ListenToWindowResizeEvent(false);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Failed to remove resize event listener");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "HTMLEditorEventListener::ListenToWindowResizeEvent() failed, "
+        "but ignored");
   }
 
   EditorEventListener::Disconnect();
 }
 
-NS_IMETHODIMP
-HTMLEditorEventListener::HandleEvent(Event* aEvent) {
-  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
-  switch (internalEvent->mMessage) {
+NS_IMETHODIMP HTMLEditorEventListener::HandleEvent(Event* aEvent) {
+  switch (aEvent->WidgetEventPtr()->mMessage) {
     case eMouseMove: {
       if (DetachedFromEditor()) {
         return NS_OK;
       }
 
-      RefPtr<MouseEvent> mouseEvent = aEvent->AsMouseEvent();
-      if (NS_WARN_IF(!mouseEvent)) {
+      RefPtr<MouseEvent> mouseMoveEvent = aEvent->AsMouseEvent();
+      if (NS_WARN_IF(!aEvent->WidgetEventPtr())) {
         return NS_ERROR_FAILURE;
       }
 
       RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
       MOZ_ASSERT(htmlEditor);
-      DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseMove(mouseEvent);
+      DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseMove(mouseMoveEvent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                           "Resizers failed to handle mousemove events");
+                           "HTMLEditor::OnMouseMove() failed, but ignored");
       return NS_OK;
     }
     case eResize: {
@@ -89,17 +96,16 @@ HTMLEditorEventListener::HandleEvent(Event* aEvent) {
       RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
       MOZ_ASSERT(htmlEditor);
       nsresult rv = htmlEditor->RefreshResizers();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::RefreshResizers() failed");
+      return rv;
     }
-    default:
+    default: {
       nsresult rv = EditorEventListener::HandleEvent(aEvent);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "EditorEventListener::HandleEvent() failed");
+      return rv;
+    }
   }
 }
 
@@ -136,15 +142,15 @@ nsresult HTMLEditorEventListener::ListenToMouseMoveEventForResizersOrGrabber(
     }
   }
 
-  EventTarget* target = mEditorBase->AsHTMLEditor()->GetDOMEventTarget();
-  if (NS_WARN_IF(!target)) {
+  EventTarget* eventTarget = mEditorBase->AsHTMLEditor()->GetDOMEventTarget();
+  if (NS_WARN_IF(!eventTarget)) {
     return NS_ERROR_FAILURE;
   }
 
   // Listen to mousemove events in the system group since web apps may stop
   // propagation before we receive the events.
   EventListenerManager* eventListenerManager =
-      target->GetOrCreateListenerManager();
+      eventTarget->GetOrCreateListenerManager();
   if (NS_WARN_IF(!eventListenerManager)) {
     return NS_ERROR_FAILURE;
   }
@@ -195,15 +201,15 @@ nsresult HTMLEditorEventListener::ListenToWindowResizeEvent(bool aListen) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(window);
-  if (NS_WARN_IF(!target)) {
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(window);
+  if (NS_WARN_IF(!eventTarget)) {
     return NS_ERROR_FAILURE;
   }
 
   // Listen to resize events in the system group since web apps may stop
   // propagation before we receive the events.
   EventListenerManager* eventListenerManager =
-      target->GetOrCreateListenerManager();
+      eventTarget->GetOrCreateListenerManager();
   if (NS_WARN_IF(!eventListenerManager)) {
     return NS_ERROR_FAILURE;
   }
@@ -231,15 +237,23 @@ nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
 
-  RefPtr<EventTarget> target = aMouseEvent->GetTarget();
-  NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<Element> element = do_QueryInterface(target);
+  if (NS_WARN_IF(!aMouseEvent->GetTarget())) {
+    return NS_ERROR_FAILURE;
+  }
+  // FYI: The event target must be an element node for conforming to the
+  //      UI Events, but it may not be not an element node if it occurs
+  //      on native anonymous node like a resizer.
 
   int32_t clientX = aMouseEvent->ClientX();
   int32_t clientY = aMouseEvent->ClientY();
-  htmlEditor->OnMouseUp(clientX, clientY, element);
+  DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseUp(clientX, clientY);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "HTMLEditor::OnMouseUp() failed, but ignored");
 
-  return EditorEventListener::MouseUp(aMouseEvent);
+  nsresult rv = EditorEventListener::MouseUp(aMouseEvent);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorEventListener::MouseUp() failed");
+  return rv;
 }
 
 nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
@@ -257,6 +271,7 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
 
   WidgetMouseEvent* mousedownEvent =
       aMouseEvent->WidgetEventPtr()->AsMouseEvent();
+  MOZ_ASSERT(mousedownEvent);
 
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
@@ -277,13 +292,18 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
 
   int32_t clickCount = aMouseEvent->Detail();
 
-  RefPtr<EventTarget> target = aMouseEvent->GetExplicitOriginalTarget();
-  NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<Element> element = do_QueryInterface(target);
-
+  RefPtr<EventTarget> originalEventTarget =
+      aMouseEvent->GetExplicitOriginalTarget();
+  if (NS_WARN_IF(!originalEventTarget)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<Element> originalEventTargetElement =
+      do_QueryInterface(originalEventTarget);
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
     RefPtr<Selection> selection = htmlEditor->GetSelection();
-    NS_ENSURE_TRUE(selection, NS_OK);
+    if (NS_WARN_IF(!selection)) {
+      return NS_OK;
+    }
 
     // Get location of mouse within target node
     int32_t offset = -1;
@@ -305,9 +325,12 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
           continue;
         }
 
-        IgnoredErrorResult err;
+        IgnoredErrorResult ignoredError;
         nodeIsInSelection =
-            range->IsPointInRange(*parentContent, offset, err) && !err.Failed();
+            range->IsPointInRange(*parentContent, offset, ignoredError) &&
+            !ignoredError.Failed();
+        NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                             "nsRange::IsPointInRange() failed");
 
         // Done when we find a range that we are in
         if (nodeIsInSelection) {
@@ -315,16 +338,24 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
         }
       }
     }
-    nsCOMPtr<nsINode> node = do_QueryInterface(target);
-    if (node && !nodeIsInSelection) {
-      if (!element) {
+    nsCOMPtr<nsIContent> originalEventTargetContent =
+        originalEventTargetElement;
+    if (!originalEventTargetContent) {
+      originalEventTargetContent = do_QueryInterface(originalEventTarget);
+    }
+    if (originalEventTargetContent && !nodeIsInSelection) {
+      RefPtr<Element> element = originalEventTargetElement.get();
+      if (!originalEventTargetContent->IsElement()) {
         if (isContextClick) {
           // Set the selection to the point under the mouse cursor:
-          selection->Collapse(parentContent, offset);
+          DebugOnly<nsresult> rvIgnored =
+              selection->Collapse(parentContent, offset);
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                               "Selection::Collapse() failed, but ignored");
         } else {
           // Get enclosing link if in text so we can select the link
-          Element* linkElement =
-              htmlEditor->GetElementOrParentByTagName(*nsGkAtoms::href, node);
+          Element* linkElement = htmlEditor->GetElementOrParentByTagName(
+              *nsGkAtoms::href, originalEventTargetContent);
           if (linkElement) {
             element = linkElement;
           }
@@ -333,23 +364,37 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
       // Select entire element clicked on if NOT within an existing selection
       //   and not the entire body, or table-related elements
       if (element) {
-        if (isContextClick && !HTMLEditUtils::IsImage(node)) {
-          selection->Collapse(parentContent, offset);
+        if (isContextClick &&
+            !HTMLEditUtils::IsImage(originalEventTargetContent)) {
+          DebugOnly<nsresult> rvIgnored =
+              selection->Collapse(parentContent, offset);
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                               "Selection::Collapse() failed, but ignored");
         } else {
-          htmlEditor->SelectElement(element);
+          DebugOnly<nsresult> rvIgnored = htmlEditor->SelectElement(element);
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rvIgnored),
+              "HTMLEditor::SelectElement() failed, but ignored");
         }
         if (DetachedFromEditor()) {
           return NS_OK;
         }
       }
+      // XXX The variable name may become a lie, but the name is useful for
+      //     warnings above.
+      originalEventTargetElement = element;
     }
     // HACK !!! Context click places the caret but the context menu consumes
     // the event; so we need to check resizing state ourselves
-    htmlEditor->CheckSelectionStateForAnonymousButtons();
+    DebugOnly<nsresult> rvIgnored =
+        htmlEditor->CheckSelectionStateForAnonymousButtons();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "HTMLEditor::CheckSelectionStateForAnonymousButtons() "
+                         "failed, but ignored");
 
     // Prevent bubbling if we changed selection or
     //   for all context clicks
-    if (element || isContextClick) {
+    if (originalEventTargetElement || isContextClick) {
       aMouseEvent->PreventDefault();
       return NS_OK;
     }
@@ -357,10 +402,16 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
     // if the target element is an image, we have to display resizers
     int32_t clientX = aMouseEvent->ClientX();
     int32_t clientY = aMouseEvent->ClientY();
-    htmlEditor->OnMouseDown(clientX, clientY, element, aMouseEvent);
+    DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseDown(
+        clientX, clientY, originalEventTargetElement, aMouseEvent);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "HTMLEditor::OnMouseDown() failed, but ignored");
   }
 
-  return EditorEventListener::MouseDown(aMouseEvent);
+  nsresult rv = EditorEventListener::MouseDown(aMouseEvent);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorEventListener::MouseDown() failed");
+  return rv;
 }
 
 nsresult HTMLEditorEventListener::MouseClick(
@@ -369,25 +420,32 @@ nsresult HTMLEditorEventListener::MouseClick(
     return NS_OK;
   }
 
-  RefPtr<EventTarget> target = aMouseClickEvent->GetDOMEventTarget();
-  if (NS_WARN_IF(!target)) {
+  EventTarget* eventTarget = aMouseClickEvent->GetDOMEventTarget();
+  if (NS_WARN_IF(!eventTarget)) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<Element> element = do_QueryInterface(target);
+  nsCOMPtr<Element> element = do_QueryInterface(eventTarget);
   if (NS_WARN_IF(!element)) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
-  htmlEditor->DoInlineTableEditingAction(*element);
+  DebugOnly<nsresult> rvIgnored =
+      htmlEditor->DoInlineTableEditingAction(*element);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "HTMLEditor::DoInlineTableEditingAction() failed, but ignored");
   // DoInlineTableEditingAction might cause reframe
   // Editor is destroyed.
-  if (htmlEditor->Destroyed()) {
+  if (NS_WARN_IF(htmlEditor->Destroyed())) {
     return NS_OK;
   }
 
-  return EditorEventListener::MouseClick(aMouseClickEvent);
+  nsresult rv = EditorEventListener::MouseClick(aMouseClickEvent);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorEventListener::MouseClick() failed");
+  return rv;
 }
 
 }  // namespace mozilla
