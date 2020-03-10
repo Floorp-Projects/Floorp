@@ -15,4 +15,11 @@ namespaces = ["mozilla", "intl", "ffi"]
 
 [parse]
 parse_deps = true
+include = ["fluent", "fluent-bundle"]
 exclude = ["fxhash"]
+
+[enum]
+derive_helper_methods = true
+
+[export.rename]
+"ThinVec" = "nsTArray"
