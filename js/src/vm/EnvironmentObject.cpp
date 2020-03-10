@@ -296,7 +296,6 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
   }
 
   MOZ_ASSERT(!env->inDictionaryMode());
-  MOZ_ASSERT(env->isDelegate());
 
   env->initEnclosingEnvironment(enclosing);
 
@@ -663,7 +662,7 @@ WithEnvironmentObject* WithEnvironmentObject::create(JSContext* cx,
                                                      HandleObject enclosing,
                                                      Handle<WithScope*> scope) {
   RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
-                                              BaseShape::DELEGATE));
+                                              /* baseShapeFlags = */ 0));
   if (!shape) {
     return nullptr;
   }
@@ -848,7 +847,7 @@ const JSClass WithEnvironmentObject::class_ = {
 NonSyntacticVariablesObject* NonSyntacticVariablesObject::create(
     JSContext* cx) {
   RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
-                                              BaseShape::DELEGATE));
+                                              /* baseShapeFlags = */ 0));
   if (!shape) {
     return nullptr;
   }
@@ -937,7 +936,6 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
   }
 
   MOZ_ASSERT(!env->inDictionaryMode());
-  MOZ_ASSERT(env->isDelegate());
 
   if (enclosing) {
     env->initEnclosingEnvironment(enclosing);
@@ -1173,7 +1171,7 @@ size_t NamedLambdaObject::lambdaSlot() {
 RuntimeLexicalErrorObject* RuntimeLexicalErrorObject::create(
     JSContext* cx, HandleObject enclosing, unsigned errorNumber) {
   RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
-                                              BaseShape::DELEGATE));
+                                              /* baseShapeFlags = */ 0));
   if (!shape) {
     return nullptr;
   }

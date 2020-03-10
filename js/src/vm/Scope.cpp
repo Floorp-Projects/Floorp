@@ -654,9 +654,9 @@ bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
   MOZ_ASSERT_IF(isNamedLambda, firstFrameSlot == LOCALNO_LIMIT);
 
   BindingIter bi(*data, firstFrameSlot, isNamedLambda);
-  if (!PrepareScopeData<LexicalScope>(
-          cx, bi, data, &LexicalEnvironmentObject::class_,
-          BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE, envShape)) {
+  if (!PrepareScopeData<LexicalScope>(cx, bi, data,
+                                      &LexicalEnvironmentObject::class_,
+                                      BaseShape::NOT_EXTENSIBLE, envShape)) {
     return false;
   }
   return true;
@@ -687,7 +687,8 @@ LexicalScope* LexicalScope::createWithData(JSContext* cx, ScopeKind kind,
 /* static */
 Shape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
   const JSClass* cls = &LexicalEnvironmentObject::class_;
-  return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), BaseShape::DELEGATE);
+  return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
+                               /* baseShapeFlags = */ 0);
 }
 
 template <XDRMode mode>
@@ -746,7 +747,7 @@ template
                       HandleScope enclosing, MutableHandleScope scope);
 
 static constexpr uint32_t FunctionScopeEnvShapeFlags =
-    BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
+    BaseShape::QUALIFIED_VAROBJ;
 
 template <typename ShapeType>
 bool FunctionScope::prepareForScopeCreation(
@@ -943,8 +944,7 @@ template
     FunctionScope::XDR(XDRState<XDR_DECODE>* xdr, HandleFunction fun,
                        HandleScope enclosing, MutableHandleScope scope);
 
-static const uint32_t VarScopeEnvShapeFlags =
-    BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
+static const uint32_t VarScopeEnvShapeFlags = BaseShape::QUALIFIED_VAROBJ;
 
 static UniquePtr<VarScope::Data> NewEmptyVarScopeData(JSContext* cx,
                                                       uint32_t firstFrameSlot) {
@@ -1212,8 +1212,7 @@ template
     WithScope::XDR(XDRState<XDR_DECODE>* xdr, HandleScope enclosing,
                    MutableHandleScope scope);
 
-static const uint32_t EvalScopeEnvShapeFlags =
-    BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
+static const uint32_t EvalScopeEnvShapeFlags = BaseShape::QUALIFIED_VAROBJ;
 
 template <typename ShapeType>
 bool EvalScope::prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
@@ -1338,9 +1337,8 @@ template
     EvalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
                    HandleScope enclosing, MutableHandleScope scope);
 
-static const uint32_t ModuleScopeEnvShapeFlags = BaseShape::NOT_EXTENSIBLE |
-                                                 BaseShape::QUALIFIED_VAROBJ |
-                                                 BaseShape::DELEGATE;
+static const uint32_t ModuleScopeEnvShapeFlags =
+    BaseShape::NOT_EXTENSIBLE | BaseShape::QUALIFIED_VAROBJ;
 
 Zone* ModuleScope::Data::zone() const {
   return module ? module->zone() : nullptr;
@@ -1417,8 +1415,7 @@ Shape* ModuleScope::getEmptyEnvironmentShape(JSContext* cx) {
                                ModuleScopeEnvShapeFlags);
 }
 
-static const uint32_t WasmInstanceEnvShapeFlags =
-    BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE;
+static const uint32_t WasmInstanceEnvShapeFlags = BaseShape::NOT_EXTENSIBLE;
 
 template <size_t ArrayLength>
 static JSAtom* GenerateWasmName(JSContext* cx,
@@ -1565,8 +1562,7 @@ Shape* WasmInstanceScope::getEmptyEnvironmentShape(JSContext* cx) {
 
 // TODO Check what Debugger behavior should be when it evaluates a
 // var declaration.
-static const uint32_t WasmFunctionEnvShapeFlags =
-    BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE;
+static const uint32_t WasmFunctionEnvShapeFlags = BaseShape::NOT_EXTENSIBLE;
 
 /* static */
 WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,

@@ -184,8 +184,8 @@ class JSObject : public js::gc::Cell {
                        GenerateShape generateShape = GENERATE_NONE);
   inline bool hasAllFlags(js::BaseShape::Flag flags) const;
 
-  // An object is a delegate if it is on another object's prototype or
-  // environment chain. Optimization heuristics will make use of this flag.
+  // An object is a delegate if it is (or was) another object's prototype.
+  // Optimization heuristics will make use of this flag.
   // See: ReshapeForProtoMutation, ReshapeForShadowedProp
   inline bool isDelegate() const;
   static bool setDelegate(JSContext* cx, JS::HandleObject obj) {
