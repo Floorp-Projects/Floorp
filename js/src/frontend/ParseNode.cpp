@@ -6,21 +6,21 @@
 
 #include "frontend/ParseNode.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jsnum.h"
 
-#include "frontend/Parser.h"
+#include "frontend/CompilationInfo.h"
+#include "frontend/FullParseHandler.h"
+#include "frontend/ParseContext.h"
+#include "frontend/SharedContext.h"
 #include "vm/BigIntType.h"
+#include "vm/Printer.h"
 #include "vm/RegExpObject.h"
-
-#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::ArrayLength;
 using mozilla::IsFinite;
 
 #ifdef DEBUG

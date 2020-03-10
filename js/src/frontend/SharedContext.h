@@ -7,14 +7,15 @@
 #ifndef frontend_SharedContext_h
 #define frontend_SharedContext_h
 
-#include "jspubtd.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+
 #include "jstypes.h"
 
-#include "ds/InlineTable.h"
 #include "frontend/AbstractScope.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Stencil.h"
-#include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Scope.h"
@@ -23,7 +24,6 @@ namespace js {
 namespace frontend {
 
 class ParseContext;
-class ParseNode;
 
 enum class StatementKind : uint8_t {
   Label,
