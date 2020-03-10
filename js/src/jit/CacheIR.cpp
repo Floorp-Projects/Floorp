@@ -2587,12 +2587,12 @@ static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
   }
 
   // We can skip a guard on the call object if the script's bindings are
-  // guaranteed to be immutable (and thus cannot introduce shadowing
-  // variables). The function might have been relazified under rare
-  // conditions. In that case, we pessimistically create the guard.
+  // guaranteed to be immutable (and thus cannot introduce shadowing variables).
+  // If the function is a relazified self-hosted function it has no BaseScript
+  // and we pessimistically create the guard.
   CallObject* callObj = &envObj->as<CallObject>();
   JSFunction* fun = &callObj->callee();
-  if (!fun->hasBytecode() || fun->baseScript()->funHasExtensibleScope()) {
+  if (!fun->hasBaseScript() || fun->baseScript()->funHasExtensibleScope()) {
     return true;
   }
 
