@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DebugCommand, DocumentId, ExternalImageData, ExternalImageId, PrimitiveFlags};
-use api::{ImageFormat, ItemTag, NotificationRequest, Shadow, FilterOp, MAX_BLUR_RADIUS};
+use api::{ImageFormat, ItemTag, NotificationRequest, Shadow, FilterOp};
 use api::units::*;
 use api;
 use crate::composite::NativeSurfaceOperation;
@@ -86,22 +86,6 @@ pub enum Filter {
 }
 
 impl Filter {
-    /// Ensure that the parameters for a filter operation
-    /// are sensible.
-    pub fn sanitize(&mut self) {
-        match self {
-            Filter::Blur(ref mut radius) => {
-                *radius = radius.min(MAX_BLUR_RADIUS);
-            }
-            Filter::DropShadows(ref mut stack) => {
-                for shadow in stack {
-                    shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
-                }
-            }
-            _ => {},
-        }
-    }
-
     pub fn is_visible(&self) -> bool {
         match *self {
             Filter::Identity |
