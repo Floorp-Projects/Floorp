@@ -15580,6 +15580,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     return promise.forget();
   }
 
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  if (!bc) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   // Only enforce third-party checks when there is a reason to enforce them.
   if (!CookieJarSettings()->GetRejectThirdPartyTrackers()) {
     // Step 3. If the document's frame is the main frame, resolve.
@@ -15589,14 +15595,29 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     }
 
     // Step 4. If the sub frame's origin is equal to the main frame's, resolve.
-    nsCOMPtr<Document> topLevelDoc = GetTopLevelContentDocument();
-    if (!topLevelDoc) {
-      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-      return nullptr;
-    }
-    if (topLevelDoc->NodePrincipal()->Equals(NodePrincipal())) {
-      promise->MaybeResolveWithUndefined();
-      return promise.forget();
+
+    // In fission, if the sub frame's origin differs from the main frame's
+    // origin, they will be in different processes. We use IsInProcess()
+    // check here to deterimine whether they have the same origin. In
+    // non-fission mode, it is always in-process so we need to compare their
+    // principals.
+    if (bc->Top()->IsInProcess()) {
+      nsCOMPtr<nsPIDOMWindowOuter> topOuter = bc->Top()->GetDOMWindow();
+      if (!topOuter) {
+        promise->MaybeRejectWithUndefined();
+        return promise.forget();
+      }
+
+      nsCOMPtr<Document> topLevelDoc = topOuter->GetExtantDoc();
+      if (!topLevelDoc) {
+        promise->MaybeRejectWithUndefined();
+        return promise.forget();
+      }
+
+      if (topLevelDoc->NodePrincipal()->Equals(NodePrincipal())) {
+        promise->MaybeResolveWithUndefined();
+        return promise.forget();
+      }
     }
   }
 
@@ -15609,8 +15630,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Step 7. If the sub frame's parent frame is not the top frame, reject.
-  Document* parent = GetInProcessParentDocument();
-  if (parent && !parent->IsTopLevelContentDocument()) {
+  RefPtr<BrowsingContext> parentBC = bc->GetParent();
+  if (parentBC && !parentBC->IsTopContent()) {
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -15632,9 +15653,11 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       // Note: If this has returned true, the top-level document is guaranteed
       // to not be on the Content Blocking allow list.
       DebugOnly<bool> isOnAllowList = false;
+      // TODO: Bug 1612378 to make this fission-compatible
       MOZ_ASSERT_IF(NS_SUCCEEDED(ContentBlockingAllowList::Check(
-                        parent->GetContentBlockingAllowListPrincipal(), false,
-                        isOnAllowList)),
+                        GetInProcessParentDocument()
+                            ->GetContentBlockingAllowListPrincipal(),
+                        false, isOnAllowList)),
                     !isOnAllowList);
 
       RefPtr<Document> self(this);
