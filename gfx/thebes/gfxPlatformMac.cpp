@@ -127,14 +127,6 @@ already_AddRefed<gfxASurface> gfxPlatformMac::CreateOffscreenSurface(
   return newSurface.forget();
 }
 
-gfxFontGroup* gfxPlatformMac::CreateFontGroup(
-    const FontFamilyList& aFontFamilyList, const gfxFontStyle* aStyle,
-    gfxTextPerfMetrics* aTextPerf, gfxUserFontSet* aUserFontSet,
-    gfxFloat aDevToCssSize) {
-  return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet,
-                          aDevToCssSize);
-}
-
 bool gfxPlatformMac::IsFontFormatSupported(uint32_t aFormatFlags) {
   if (gfxPlatform::IsFontFormatSupported(aFormatFlags)) {
     return true;

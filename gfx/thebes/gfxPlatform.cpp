@@ -1964,6 +1964,14 @@ bool gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags) {
   return true;
 }
 
+gfxFontGroup* gfxPlatform::CreateFontGroup(
+    const FontFamilyList& aFontFamilyList, const gfxFontStyle* aStyle,
+    gfxTextPerfMetrics* aTextPerf, gfxUserFontSet* aUserFontSet,
+    gfxFloat aDevToCssSize) const {
+  return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet,
+                          aDevToCssSize);
+}
+
 gfxFontEntry* gfxPlatform::LookupLocalFont(const nsACString& aFontName,
                                            WeightRange aWeightForEntry,
                                            StretchRange aStretchForEntry,

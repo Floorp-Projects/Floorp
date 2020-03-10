@@ -813,14 +813,6 @@ void gfxWindowsPlatform::GetCommonFallbackFonts(
   aFontList.AppendElement(kFontArialUnicodeMS);
 }
 
-gfxFontGroup* gfxWindowsPlatform::CreateFontGroup(
-    const FontFamilyList& aFontFamilyList, const gfxFontStyle* aStyle,
-    gfxTextPerfMetrics* aTextPerf, gfxUserFontSet* aUserFontSet,
-    gfxFloat aDevToCssSize) {
-  return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet,
-                          aDevToCssSize);
-}
-
 bool gfxWindowsPlatform::DidRenderingDeviceReset(
     DeviceResetReason* aResetReason) {
   DeviceManagerDx* dm = DeviceManagerDx::Get();

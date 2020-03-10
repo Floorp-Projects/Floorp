@@ -47,12 +47,6 @@ class gfxPlatformGtk : public gfxPlatform {
 
   gfxPlatformFontList* CreatePlatformFontList() override;
 
-  gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
-                                const gfxFontStyle* aStyle,
-                                gfxTextPerfMetrics* aTextPerf,
-                                gfxUserFontSet* aUserFontSet,
-                                gfxFloat aDevToCssSize) override;
-
   /**
    * Calls XFlush if xrender is enabled.
    */
