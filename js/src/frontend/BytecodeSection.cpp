@@ -30,7 +30,7 @@ bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
   lastbox = funbox;
 
   *index = vector.length();
-  return vector.append(mozilla::AsVariant(JS::GCCellPtr(funbox->object())));
+  return vector.append(mozilla::AsVariant(JS::GCCellPtr(funbox->function())));
 }
 
 void GCThingList::finishInnerFunctions() {

@@ -506,9 +506,7 @@ class FunctionBox : public SharedContext {
 
   bool hasObject() const { return object_ != nullptr; }
 
-  JSObject* object() const { return object_; }
-
-  JSFunction* function() const { return &object()->as<JSFunction>(); }
+  JSFunction* function() const { return &object_->as<JSFunction>(); }
 
   // Initialize FunctionBox with a deferred allocation Function
   void initializeFunction(JSFunction* fun) {
