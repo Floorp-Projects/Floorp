@@ -1612,34 +1612,6 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
   va_end(args);
 }
 
-bool BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber,
-                                         ...) {
-  uint32_t offset = pn ? pn->pn_pos.begin : *scriptStartOffset;
-
-  va_list args;
-  va_start(args, errorNumber);
-
-  bool result = parser->errorReporter().extraWarningWithNotesAtVA(
-      nullptr, AsVariant(offset), errorNumber, &args);
-
-  va_end(args);
-  return result;
-}
-
-bool BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
-                                         unsigned errorNumber, ...) {
-  uint32_t offset = maybeOffset ? *maybeOffset : *scriptStartOffset;
-
-  va_list args;
-  va_start(args, errorNumber);
-
-  bool result = parser->errorReporter().extraWarningWithNotesAtVA(
-      nullptr, AsVariant(offset), errorNumber, &args);
-
-  va_end(args);
-  return result;
-}
-
 bool BytecodeEmitter::iteratorResultShape(uint32_t* shape) {
   // Use |NoValues| to keep the flags consistent with their usage for normal
   // object literal creation, where |NoValues| is always used in conjunction
@@ -6583,39 +6555,6 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
     }
     if (!ese.emitEnd()) {
       return false;
-    }
-  } else if (exprStmt->isDirectivePrologueMember()) {
-    // Don't complain about directive prologue members; just don't emit
-    // their code.
-  } else {
-    if (JSAtom* atom = exprStmt->isStringExprStatement()) {
-      // Warn if encountering a non-directive prologue member string
-      // expression statement, that is inconsistent with the current
-      // directive prologue.  That is, a script *not* starting with
-      // "use strict" should warn for any "use strict" statements seen
-      // later in the script, because such statements are misleading.
-      const char* directive = nullptr;
-      if (atom == cx->names().useStrict) {
-        if (!sc->strictScript) {
-          directive = js_useStrict_str;
-        }
-      } else if (atom == cx->names().useAsm) {
-        if (sc->isFunctionBox()) {
-          if (IsAsmJSModule(sc->asFunctionBox()->function())) {
-            directive = js_useAsm_str;
-          }
-        }
-      }
-
-      if (directive) {
-        if (!reportExtraWarning(expr, JSMSG_CONTRARY_NONDIRECTIVE, directive)) {
-          return false;
-        }
-      }
-    } else {
-      if (!reportExtraWarning(expr, JSMSG_USELESS_EXPR)) {
-        return false;
-      }
     }
   }
 

@@ -1007,9 +1007,6 @@ class FullParseHandler {
   MOZ_MUST_USE NodeType setLikelyIIFE(NodeType node) {
     return parenthesize(node);
   }
-  void setInDirectivePrologue(UnaryNodeType exprStmt) {
-    exprStmt->setIsDirectivePrologueMember();
-  }
 
   bool isName(Node node) { return node->isKind(ParseNodeKind::Name); }
 

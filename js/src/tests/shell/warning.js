@@ -8,21 +8,20 @@ print(BUGNUMBER + ": " + summary);
 // Warning with JSEXN_SYNTAXERR.
 
 enableLastWarning();
-options("strict");
-eval(`var a; if (a=0) {}`);
+eval(`function f() { if (false) { "use asm"; } }`);
 
 warning = getLastWarning();
 assertEq(warning !== null, true);
 assertEq(warning.name, "SyntaxError");
-assertEq(warning.message.includes("equality"), true);
+assertEq(warning.message.includes("Directive Prologue"), true);
 assertEq(warning.lineNumber, 1);
-assertEq(warning.columnNumber, 14);
+assertEq(warning.columnNumber, 28);
 
 // Disabled.
 
 disableLastWarning();
 
-eval(`var a; if (a=0) {}`);
+eval(`function f() { if (false) { "use asm"; } }`);
 
 enableLastWarning();
 warning = getLastWarning();

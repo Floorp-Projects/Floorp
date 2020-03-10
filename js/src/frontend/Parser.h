@@ -369,12 +369,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   using Base::errorWithNotes;
   using Base::errorWithNotesAt;
   using Base::errorWithNotesNoOffset;
-  using Base::extraWarning;
-  using Base::extraWarningAt;
-  using Base::extraWarningNoOffset;
-  using Base::extraWarningWithNotes;
-  using Base::extraWarningWithNotesAt;
-  using Base::extraWarningWithNotesNoOffset;
   using Base::strictModeError;
   using Base::strictModeErrorAt;
   using Base::strictModeErrorNoOffset;
@@ -512,14 +506,9 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
                    BaseScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject)
-      : PerHandlerParser(
-            cx, options, foldConstants, compilationInfo, lazyOuterFunction,
-            sourceObject,
-            // JSOPTION_EXTRA_WARNINGS adds extra warnings not
-            // generated when functions are parsed lazily.
-            // ("use strict" doesn't inhibit lazy parsing.)
-            static_cast<void*>(options.extraWarningsOption ? nullptr
-                                                           : syntaxParser)) {}
+      : PerHandlerParser(cx, options, foldConstants, compilationInfo,
+                         lazyOuterFunction, sourceObject,
+                         static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
 
@@ -626,12 +615,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   using Base::errorWithNotes;
   using Base::errorWithNotesAt;
   using Base::errorWithNotesNoOffset;
-  using Base::extraWarning;
-  using Base::extraWarningAt;
-  using Base::extraWarningNoOffset;
-  using Base::extraWarningWithNotes;
-  using Base::extraWarningWithNotesAt;
-  using Base::extraWarningWithNotesNoOffset;
   using Base::strictModeError;
   using Base::strictModeErrorAt;
   using Base::strictModeErrorNoOffset;
@@ -783,12 +766,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::errorWithNotes;
   using Base::errorWithNotesAt;
   using Base::errorWithNotesNoOffset;
-  using Base::extraWarning;
-  using Base::extraWarningAt;
-  using Base::extraWarningNoOffset;
-  using Base::extraWarningWithNotes;
-  using Base::extraWarningWithNotesAt;
-  using Base::extraWarningWithNotesNoOffset;
   using Base::strictModeError;
   using Base::strictModeErrorAt;
   using Base::strictModeErrorNoOffset;
@@ -914,10 +891,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     // If there is a pending error, report it and return false, otherwise
     // return true.
     MOZ_MUST_USE bool checkForError(ErrorKind kind);
-
-    // If there is a pending warning, report it and return either false or
-    // true depending on the werror option, otherwise return true.
-    MOZ_MUST_USE bool checkForWarning(ErrorKind kind);
 
     // Transfer an existing error to another instance.
     void transferErrorTo(ErrorKind kind, PossibleError* other);
@@ -1528,12 +1501,6 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::errorWithNotes;
   using Base::errorWithNotesAt;
   using Base::errorWithNotesNoOffset;
-  using Base::extraWarning;
-  using Base::extraWarningAt;
-  using Base::extraWarningNoOffset;
-  using Base::extraWarningWithNotes;
-  using Base::extraWarningWithNotesAt;
-  using Base::extraWarningWithNotesNoOffset;
   using Base::strictModeError;
   using Base::strictModeErrorAt;
   using Base::strictModeErrorNoOffset;
@@ -1676,12 +1643,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::errorWithNotes;
   using Base::errorWithNotesAt;
   using Base::errorWithNotesNoOffset;
-  using Base::extraWarning;
-  using Base::extraWarningAt;
-  using Base::extraWarningNoOffset;
-  using Base::extraWarningWithNotes;
-  using Base::extraWarningWithNotesAt;
-  using Base::extraWarningWithNotesNoOffset;
   using Base::strictModeError;
   using Base::strictModeErrorAt;
   using Base::strictModeErrorNoOffset;

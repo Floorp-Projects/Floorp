@@ -752,8 +752,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               compilationInfo.directives,
-                               compilationInfo.options.extraWarningsOption);
+                               compilationInfo.directives);
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
                                          compilationInfo.sourceObject);

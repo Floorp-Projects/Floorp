@@ -118,15 +118,9 @@ class SyntaxParseHandler {
     // |("use strict");| as a useless statement.
     NodeUnparenthesizedString,
 
-    // Assignment expressions in condition contexts could be typos for
-    // equality checks.  (Think |if (x = y)| versus |if (x == y)|.)  Thus
-    // we need this to treat |if (x = y)| as a possible typo and
-    // |if ((x = y))| as a deliberate assignment within a condition.
-    //
-    // (Technically this isn't needed, as these are *only* extraWarnings
-    // warnings, and parsing with that option disables syntax parsing.  But
-    // it seems best to be consistent, and perhaps the syntax parser will
-    // eventually enforce extraWarnings and will require this then.)
+    // For destructuring patterns an assignment element with
+    // an initializer expression is not allowed be parenthesized.
+    // i.e. |{x = 1} = obj|
     NodeUnparenthesizedAssignment,
 
     // This node is necessary to determine if the base operand in an
@@ -669,7 +663,6 @@ class SyntaxParseHandler {
   MOZ_MUST_USE NodeType setLikelyIIFE(NodeType node) {
     return node;  // Remain in syntax-parse mode.
   }
-  void setInDirectivePrologue(UnaryNodeType exprStmt) {}
 
   bool isName(Node node) {
     return node == NodeName || node == NodeArgumentsName ||

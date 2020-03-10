@@ -76,8 +76,8 @@ void SharedContext::computeInWith(Scope* scope) {
 EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
                                      CompilationInfo& compilationInfo,
                                      Scope* enclosingScope,
-                                     Directives directives, bool extraWarnings)
-    : SharedContext(cx, Kind::Eval, compilationInfo, directives, extraWarnings),
+                                     Directives directives)
+    : SharedContext(cx, Kind::Eval, compilationInfo, directives),
       enclosingScope_(cx, enclosingScope),
       bindings(cx) {
   computeAllowSyntax(enclosingScope);
@@ -119,12 +119,11 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
-                         Directives directives, bool extraWarnings,
+                         Directives directives,
                          GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* explicitName,
                          FunctionFlags flags)
-    : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives,
-                    extraWarnings),
+    : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives),
       object_(nullptr),
       traceLink_(traceListHead),
       emitLink_(nullptr),
@@ -164,11 +163,11 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
 FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          JSFunction* fun, uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
-                         Directives directives, bool extraWarnings,
+                         Directives directives,
                          GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind)
     : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
-                  extraWarnings, generatorKind, asyncKind, fun->explicitName(),
+                  generatorKind, asyncKind, fun->explicitName(),
                   fun->flags()) {
   object_ = fun;
   // Functions created at parse time may be set singleton after parsing and
@@ -180,11 +179,11 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
 FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
-                         Directives directives, bool extraWarnings,
+                         Directives directives,
                          GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, size_t index)
     : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
-                  extraWarnings, generatorKind, asyncKind,
+                  generatorKind, asyncKind,
                   compilationInfo.funcData[index].get().atom,
                   compilationInfo.funcData[index].get().flags) {
   funcDataIndex_.emplace(index);
@@ -345,7 +344,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
                                          CompilationInfo& compilationInfo,
                                          Scope* enclosingScope,
                                          ModuleBuilder& builder)
-    : SharedContext(cx, Kind::Module, compilationInfo, Directives(true), false),
+    : SharedContext(cx, Kind::Module, compilationInfo, Directives(true)),
       module_(cx, module),
       enclosingScope_(cx, enclosingScope),
       bindings(cx),
