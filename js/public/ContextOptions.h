@@ -38,7 +38,6 @@ class JS_PUBLIC_API ContextOptions {
         dumpStackOnDebuggeeWouldRun_(false),
         werror_(false),
         strictMode_(false),
-        extraWarnings_(false),
 #ifdef JS_ENABLE_SMOOSH
         trySmoosh_(false),
 #endif
@@ -180,16 +179,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool extraWarnings() const { return extraWarnings_; }
-  ContextOptions& setExtraWarnings(bool flag) {
-    extraWarnings_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleExtraWarnings() {
-    extraWarnings_ = !extraWarnings_;
-    return *this;
-  }
-
 #ifdef JS_ENABLE_SMOOSH
   // Try compiling SmooshMonkey frontend first, and fallback to C++
   // implementation when it fails.
@@ -233,7 +222,6 @@ class JS_PUBLIC_API ContextOptions {
   bool dumpStackOnDebuggeeWouldRun_ : 1;
   bool werror_ : 1;
   bool strictMode_ : 1;
-  bool extraWarnings_ : 1;
 #ifdef JS_ENABLE_SMOOSH
   bool trySmoosh_ : 1;
 #endif

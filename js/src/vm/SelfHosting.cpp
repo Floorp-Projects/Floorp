@@ -2557,7 +2557,6 @@ void js::FillSelfHostingCompileOptions(CompileOptions& options) {
   options.setSelfHostingMode(true);
   options.setForceFullParse();
   options.werrorOption = true;
-  options.extraWarningsOption = true;
   options.setForceStrictMode();
 }
 

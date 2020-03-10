@@ -543,8 +543,6 @@ bool ShouldDiscardSystemSource();
 
 void SetPrefableRealmOptions(JS::RealmOptions& options);
 
-bool ExtraWarningsForSystemJS();
-
 class ErrorBase {
  public:
   nsString mErrorMsg;
