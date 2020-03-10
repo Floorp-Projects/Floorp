@@ -25,7 +25,9 @@ WarpBuilder::WarpBuilder(WarpSnapshot& input, MIRGenerator& mirGen)
       alloc_(mirGen.alloc()),
       info_(mirGen.outerInfo()),
       script_(input.script()->script()),
-      loopStack_(alloc_) {}
+      loopStack_(alloc_) {
+  opSnapshotIter_ = input.script()->opSnapshots().getFirst();
+}
 
 MConstant* WarpBuilder::constant(const Value& v) {
   MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
@@ -46,6 +48,22 @@ BytecodeSite* WarpBuilder::newBytecodeSite(BytecodeLocation loc) {
   jsbytecode* pc = loc.toRawBytecode();
   MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
   return new (alloc()) BytecodeSite(info().inlineScriptTree(), pc);
+}
+
+const WarpOpSnapshot* WarpBuilder::getOpSnapshotImpl(BytecodeLocation loc) {
+  uint32_t offset = loc.bytecodeToOffset(script_);
+
+  // Skip snapshots until we get to a snapshot with offset >= offset. This is
+  // a loop because WarpBuilder can skip unreachable bytecode ops.
+  while (opSnapshotIter_ && opSnapshotIter_->offset() < offset) {
+    opSnapshotIter_ = opSnapshotIter_->getNext();
+  }
+
+  if (!opSnapshotIter_ || opSnapshotIter_->offset() != offset) {
+    return nullptr;
+  }
+
+  return opSnapshotIter_;
 }
 
 void WarpBuilder::initBlock(MBasicBlock* block) {
@@ -173,9 +191,12 @@ bool WarpBuilder::buildPrologue() {
     current->initSlot(info().localSlot(i), undef);
   }
 
-  // Initialize the environment chain and return value slots.
+  // Initialize the environment chain, return value, and arguments object slots.
   current->initSlot(info().environmentChainSlot(), undef);
   current->initSlot(info().returnValueSlot(), undef);
+  if (info().hasArguments()) {
+    current->initSlot(info().argsObjSlot(), undef);
+  }
 
   current->add(MStart::New(alloc()));
 
@@ -409,13 +430,10 @@ bool WarpBuilder::build_Symbol(BytecodeLocation loc) {
 bool WarpBuilder::build_RegExp(BytecodeLocation loc) {
   RegExpObject* reObj = loc.getRegExp(script_);
 
-  // TODO: once we can easily pass per-op state from WarpOracle to WarpBuilder,
-  // use that for hasShared (reading that off-thread is racy). For now always
-  // take the slow path.
-  bool hasShared = false;
+  auto* snapshot = getOpSnapshot<WarpRegExp>(loc);
 
-  MRegExp* regexp =
-      MRegExp::New(alloc(), /* constraints = */ nullptr, reObj, hasShared);
+  MRegExp* regexp = MRegExp::New(alloc(), /* constraints = */ nullptr, reObj,
+                                 snapshot->hasShared());
   current->add(regexp);
   current->push(regexp);
 
@@ -1114,4 +1132,22 @@ bool WarpBuilder::build_Typeof(BytecodeLocation) {
 
 bool WarpBuilder::build_TypeofExpr(BytecodeLocation loc) {
   return build_Typeof(loc);
+}
+
+bool WarpBuilder::build_Arguments(BytecodeLocation loc) {
+  auto* snapshot = getOpSnapshot<WarpArguments>(loc);
+  MOZ_ASSERT(info().needsArgsObj() == !!snapshot);
+
+  if (!snapshot) {
+    pushConstant(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+    return true;
+  }
+
+  ArgumentsObject* templateObj = snapshot->templateObj();
+  MDefinition* env = current->environmentChain();
+  auto* argsObj = MCreateArgumentsObject::New(alloc(), env, templateObj);
+  current->add(argsObj);
+  current->setArgumentsObject(argsObj);
+  current->push(argsObj);
+  return true;
 }

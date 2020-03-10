@@ -10,6 +10,7 @@
 #include "jit/JitContext.h"
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
+#include "jit/WarpOracle.h"
 
 namespace js {
 namespace jit {
@@ -107,6 +108,7 @@ namespace jit {
   _(ToId)                   \
   _(Typeof)                 \
   _(TypeofExpr)             \
+  _(Arguments)              \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -126,6 +128,11 @@ class MOZ_STACK_CLASS WarpBuilder {
   JSScript* script_;
   MBasicBlock* current = nullptr;
 
+  // Pointer to a WarpOpSnapshot or nullptr if we reached the end of the list.
+  // Because bytecode is compiled from first to last instruction (and
+  // WarpOpSnapshot is sorted the same way), the iterator always moves forward.
+  const WarpOpSnapshot* opSnapshotIter_ = nullptr;
+
   // Note: we need both loopDepth_ and loopStack_.length(): once we support
   // inlining, loopDepth_ will be moved to a per-compilation data structure
   // (OuterWarpBuilder?) whereas loopStack_ and pendingEdges_ will be
@@ -140,6 +147,14 @@ class MOZ_STACK_CLASS WarpBuilder {
   WarpSnapshot& input() const { return input_; }
 
   BytecodeSite* newBytecodeSite(BytecodeLocation loc);
+
+  const WarpOpSnapshot* getOpSnapshotImpl(BytecodeLocation loc);
+
+  template <typename T>
+  const T* getOpSnapshot(BytecodeLocation loc) {
+    const WarpOpSnapshot* snapshot = getOpSnapshotImpl(loc);
+    return snapshot ? snapshot->as<T>() : nullptr;
+  }
 
   void initBlock(MBasicBlock* block);
   MOZ_MUST_USE bool startNewEntryBlock(size_t stackDepth, BytecodeLocation loc);
