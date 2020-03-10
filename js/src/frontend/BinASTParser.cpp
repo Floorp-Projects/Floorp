@@ -26,6 +26,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
+#include "irregexp/RegExpParser.h"
 #include "js/RegExpFlags.h"  //  JS::RegExpFlag, JS::RegExpFlags
 #include "vm/RegExpObject.h"
 
@@ -3559,13 +3560,22 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
     }
   }
 
-  Rooted<RegExpObject*> reobj(cx_);
-  BINJS_TRY_VAR(reobj,
-                RegExpObject::create(cx_, pattern, reflags, TenuredObject));
+  // Validate the RegExp pattern is valid.
+  {
+    JS::CompileOptions dummyOptions(cx_);
+    TokenStream dummyTokenStream(cx_, dummyOptions, nullptr, 0, nullptr);
 
-  BINJS_TRY_DECL(result,
-                 handler_.newRegExp(reobj, tokenizer_->pos(start), *this));
-  return result;
+    LifoAllocScope allocScope(&cx_->tempLifoAlloc());
+    BINJS_TRY(irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
+                                           pattern, reflags.unicode()));
+  }
+
+  RegExpIndex index(this->getCompilationInfo().regExpData.length());
+  BINJS_TRY(this->getCompilationInfo().regExpData.emplaceBack());
+  BINJS_TRY(
+      this->getCompilationInfo().regExpData[index].init(cx_, pattern, reflags));
+
+  return handler_.newRegExp(index, tokenizer_->pos(start));
 }
 
 template <typename Tok>

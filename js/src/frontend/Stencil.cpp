@@ -9,10 +9,24 @@
 #include "frontend/SharedContext.h"
 #include "js/TracingAPI.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSContext.h"
 #include "vm/Scope.h"
+#include "vm/StringType.h"
 
 using namespace js;
 using namespace js::frontend;
+
+bool frontend::RegExpCreationData::init(JSContext* cx, JSAtom* pattern,
+                                        JS::RegExpFlags flags) {
+  length_ = pattern->length();
+  buf_ = cx->make_pod_array<char16_t>(length_);
+  if (!buf_) {
+    return false;
+  }
+  js::CopyChars(buf_.get(), *pattern);
+  flags_ = flags;
+  return true;
+}
 
 bool frontend::EnvironmentShapeCreationData::createShape(
     JSContext* cx, MutableHandleShape shape) {
