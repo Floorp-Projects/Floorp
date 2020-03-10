@@ -9,6 +9,7 @@
 
 #include "prsystem.h"
 
+#include "AltServiceChild.h"
 #include "nsError.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
@@ -2825,6 +2826,15 @@ nsresult nsHttpHandler::CompleteUpgrade(
 nsresult nsHttpHandler::DoShiftReloadConnectionCleanup(
     nsHttpConnectionInfo* aCi) {
   return mConnMgr->DoShiftReloadConnectionCleanup(aCi);
+}
+
+void nsHttpHandler::ClearHostMapping(nsHttpConnectionInfo* aConnInfo) {
+  if (XRE_IsSocketProcess()) {
+    AltServiceChild::ClearHostMapping(aConnInfo);
+    return;
+  }
+
+  AltServiceCache()->ClearHostMapping(aConnInfo);
 }
 
 }  // namespace mozilla::net

@@ -9,6 +9,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "nsSocketTransportService2.h"
 
 namespace mozilla {
 namespace net {

@@ -263,6 +263,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     return mAltSvcCache.get();
   }
 
+  void ClearHostMapping(nsHttpConnectionInfo* aConnInfo);
+
   // cache support
   uint32_t GenerateUniqueID() { return ++mLastUniqueID; }
   uint32_t SessionStartTime() { return mSessionStartTime; }

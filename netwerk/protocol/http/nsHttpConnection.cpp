@@ -35,6 +35,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsISSLSocketControl.h"
 #include "nsISupportsPriority.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsPreloadedStream.h"
 #include "nsProxyRelease.h"
 #include "nsSocketTransport2.h"
@@ -1029,7 +1030,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
     if (((reason == NS_ERROR_NET_RESET) ||
          (NS_ERROR_GET_MODULE(reason) == NS_ERROR_MODULE_SECURITY)) &&
         mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
-      gHttpHandler->AltServiceCache()->ClearHostMapping(mConnInfo);
+      gHttpHandler->ClearHostMapping(mConnInfo);
     }
 
     if (mSocketTransport) {

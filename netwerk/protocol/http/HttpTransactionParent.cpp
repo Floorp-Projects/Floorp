@@ -13,7 +13,10 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsHttpHandler.h"
+#include "nsQueryObject.h"
+#include "nsSerializationHelper.h"
 #include "nsStreamUtils.h"
+#include "nsStringStream.h"
 
 namespace mozilla {
 namespace net {

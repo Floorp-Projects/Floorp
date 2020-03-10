@@ -1148,6 +1148,8 @@ class ProxyClearHostMapping : public Runnable {
 void AltSvcCache::ClearHostMapping(const nsACString& host, int32_t port,
                                    const OriginAttributes& originAttributes,
                                    const nsACString& topWindowOrigin) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> event = new ProxyClearHostMapping(
         host, port, originAttributes, topWindowOrigin);

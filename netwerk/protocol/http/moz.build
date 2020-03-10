@@ -37,6 +37,8 @@ EXPORTS += [
 EXPORTS.mozilla.net += [
     'AltDataOutputStreamChild.h',
     'AltDataOutputStreamParent.h',
+    'AltServiceChild.h',
+    'AltServiceParent.h',
     'BackgroundChannelRegistrar.h',
     'ClassifierDummyChannel.h',
     'ClassifierDummyChannelChild.h',
@@ -70,6 +72,8 @@ UNIFIED_SOURCES += [
     'AltDataOutputStreamChild.cpp',
     'AltDataOutputStreamParent.cpp',
     'AlternateServices.cpp',
+    'AltServiceChild.cpp',
+    'AltServiceParent.cpp',
     'ASpdySession.cpp',
     'BackgroundChannelRegistrar.cpp',
     'CacheControlParser.cpp',
@@ -133,6 +137,7 @@ SOURCES += [
 
 IPDL_SOURCES += [
     'PAltDataOutputStream.ipdl',
+    'PAltService.ipdl',
     'PClassifierDummyChannel.ipdl',
     'PHttpBackgroundChannel.ipdl',
     'PHttpChannel.ipdl',
