@@ -612,18 +612,13 @@ bool DedicatedWorkerGlobalScope::WrapGlobalObject(
 
   const bool usesSystemPrincipal = mWorkerPrivate->UsesSystemPrincipal();
 
-  // Note that xpc::ShouldDiscardSystemSource() and
-  // xpc::ExtraWarningsForSystemJS() read prefs that are cached on the main
-  // thread. This is benignly racey.
+  // Note that xpc::ShouldDiscardSystemSource() reads a prefs that is cached
+  // on the main thread. This is benignly racey.
   const bool discardSource =
       usesSystemPrincipal && xpc::ShouldDiscardSystemSource();
-  const bool extraWarnings =
-      usesSystemPrincipal && xpc::ExtraWarningsForSystemJS();
 
   JS::RealmBehaviors& behaviors = options.behaviors();
-  behaviors.setDiscardSource(discardSource)
-      .extraWarningsOverride()
-      .set(extraWarnings);
+  behaviors.setDiscardSource(discardSource);
 
   xpc::SetPrefableRealmOptions(options);
 

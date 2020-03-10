@@ -2074,7 +2074,6 @@ nsUnescapeCount
 ?InitClassesWithNewWrappedGlobal@xpc@@YA?AW4nsresult@@PEAUJSContext@@PEAVnsISupports@@PEAVnsIPrincipal@@IAEAVRealmOptions@JS@@V?$MutableHandle@PEAVJSObject@@@7@@Z
 ?InitGlobalObjectOptions@xpc@@YAXAEAVRealmOptions@JS@@PEAVnsIPrincipal@@@Z
 ?ShouldDiscardSystemSource@xpc@@YA_NXZ
-?ExtraWarningsForSystemJS@xpc@@YA_NXZ
 ?IsSystemPrincipal@nsContentUtils@@SA_NPEAVnsIPrincipal@@@Z
 ?QueryInterface@BackstagePass@@UEAA?AW4nsresult@@AEBUnsID@@PEAPEAX@Z
 ?WrapNewGlobal@XPCWrappedNative@@SA?AW4nsresult@@PEAUJSContext@@AEAVxpcObjectHelper@@PEAVnsIPrincipal@@_NAEAVRealmOptions@JS@@PEAPEAV1@@Z

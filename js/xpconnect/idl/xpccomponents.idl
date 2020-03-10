@@ -512,9 +512,6 @@ interface nsIXPCComponents_Utils : nsISupports
      * cheap, but setting any of them is relatively expensive.
      */
     [implicit_jscontext]
-    attribute boolean strict;
-
-    [implicit_jscontext]
     attribute boolean werror;
 
     [implicit_jscontext]

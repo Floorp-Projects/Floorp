@@ -114,7 +114,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  public:
   // POD options.
   bool selfHostingMode = false;
-  bool extraWarningsOption = false;
   bool werrorOption = false;
   AsmJSOption asmJSOption = AsmJSOption::Disabled;
   bool throwOnAsmJSValidationFailureOption = false;
