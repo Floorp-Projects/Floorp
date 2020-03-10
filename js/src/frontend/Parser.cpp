@@ -8016,9 +8016,6 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     case TokenKind::String:
       if (!canHaveDirectives &&
           anyChars.currentToken().atom() == cx_->names().useAsm) {
-        if (!abortIfSyntaxParser()) {
-          return null();
-        }
         if (!warning(JSMSG_USE_ASM_DIRECTIVE_FAIL)) {
           return null();
         }
