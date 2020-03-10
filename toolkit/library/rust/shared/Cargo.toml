@@ -55,6 +55,7 @@ fluent-langneg = { version = "0.12.1", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 
 fluent = { version = "0.11" , features = ["fluent-pseudo"] }
+fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 
 [build-dependencies]
 rustc_version = "0.2"

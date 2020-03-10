@@ -1304,6 +1304,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fluent-ffi"
+version = "0.1.0"
+dependencies = [
+ "fluent",
+ "nsstring",
+ "unic-langid",
+]
+
+[[package]]
 name = "fluent-langneg"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1659,6 +1668,7 @@ dependencies = [
  "encoding_glue",
  "env_logger",
  "fluent",
+ "fluent-ffi",
  "fluent-langneg",
  "fluent-langneg-ffi",
  "fog",
