@@ -178,7 +178,7 @@ class ContentDelegateTest : BaseSessionTest() {
         val context = GeckoAppShell.getApplicationContext()
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         for (info in manager.runningAppProcesses) {
-            if (info.processName.endsWith(":tab0")) {
+            if (info.processName.endsWith(":tab")) {
                 Process.killProcess(info.pid)
             }
         }

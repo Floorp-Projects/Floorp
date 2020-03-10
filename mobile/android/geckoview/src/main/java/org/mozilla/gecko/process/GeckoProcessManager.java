@@ -9,23 +9,22 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.process.ServiceAllocator.PriorityLevel;
 import org.mozilla.gecko.util.XPCOMEventTarget;
 
 import org.mozilla.geckoview.GeckoResult;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
-import android.support.v4.util.ArraySet;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
-
-import java.util.EnumMap;
-
 
 public final class GeckoProcessManager extends IProcessManager.Stub {
     private static final String LOGTAG = "GeckoProcessManager";
@@ -56,9 +55,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         nativeGetEditableParent(child, contentId, tabId);
     }
 
-    /**
-     * Gecko uses this class to uniquely identify a process managed by GeckoProcessManager.
-     */
     public static final class Selector {
         private final GeckoProcessType mType;
         private final int mPid;
@@ -101,25 +97,17 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
     }
 
-    /**
-     * Maintains state pertaining to an individual child process. Inheriting from
-     * ServiceAllocator.InstanceInfo enables this class to work with ServiceAllocator.
-     */
-    private static final class ChildConnection extends ServiceAllocator.InstanceInfo {
+    private static final class ChildConnection implements ServiceConnection,
+                                                          IBinder.DeathRecipient {
+        private final GeckoProcessType mType;
         private IChildProcess mChild;
         private GeckoResult<IChildProcess> mPendingBind;
+        private GeckoResult<Void> mPendingUnbind;
         private int mPid;
 
-        public ChildConnection(@NonNull final ServiceAllocator allocator,
-                               @NonNull final GeckoProcessType type,
-                               @NonNull final PriorityLevel priority) {
-            super(allocator, type, priority);
+        public ChildConnection(@NonNull final GeckoProcessType type) {
+            mType = type;
             mPid = INVALID_PID;
-        }
-
-        public ChildConnection(@NonNull final ServiceAllocator allocator,
-                               @NonNull final GeckoProcessType type) {
-            this(allocator, type, PriorityLevel.FOREGROUND);
         }
 
         public int getPid() throws RemoteException {
@@ -143,7 +131,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             try {
                 return getPid();
             } catch (final Exception e) {
-                Log.w(LOGTAG, "Cannot get pid for " + getType().toString(), e);
+                Log.w(LOGTAG, "Cannot get pid for " + mType.toString(), e);
                 return INVALID_PID;
             }
         }
@@ -151,7 +139,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         private String buildLogMsg(@NonNull final String msgStart) {
             final StringBuilder builder = new StringBuilder(msgStart);
             builder.append(" ");
-            builder.append(getType().toString());
+            builder.append(mType.toString());
 
             int pid = getPidFallible();
             if (pid != INVALID_PID) {
@@ -179,19 +167,29 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         public GeckoResult<IChildProcess> bind() {
             XPCOMEventTarget.assertOnLauncherThread();
 
+            if (mPendingUnbind != null) {
+                // Unbind is in progress; we cannot proceed until that has completed
+                return mPendingUnbind.then(v -> {
+                    return bind();
+                });
+            }
             if (mChild != null) {
                 // Already bound
                 return GeckoResult.fromValue(mChild);
             }
-
             if (mPendingBind != null) {
                 // Bind in progress
                 return mPendingBind;
             }
 
+            final Context context = GeckoAppShell.getApplicationContext();
+            final Intent intent = new Intent();
+            intent.setClassName(context,
+                                GeckoChildProcessServices.class.getName() + '$' + mType.toString());
+
             mPendingBind = new GeckoResult<>();
             try {
-                if (!bindService()) {
+                if (!context.bindService(intent, this, Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT)) {
                     return completeFailedBind(new RuntimeException(buildLogMsg("Cannot connect to process")));
                 }
             } catch (RuntimeException e) {
@@ -204,49 +202,60 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         public GeckoResult<Void> unbind() {
             XPCOMEventTarget.assertOnLauncherThread();
 
-            if (mPendingBind != null) {
-                // We called unbind() while bind() was still pending completion
-                return mPendingBind.then(child -> unbind());
-            }
-
-            if (mChild == null) {
-                // Not bound in the first place
-                return GeckoResult.fromValue(null);
+            if (mPendingUnbind != null) {
+                // unbind already in progress
+                return mPendingUnbind;
             }
 
             // This could end up using IPC, so do it before we unbind.
             final int pid = getPidFallible();
 
-            doUnbind();
-
-            if (pid != INVALID_PID) {
-                Process.killProcess(pid);
+            if (mPendingBind != null) {
+                // We called unbind() while bind() was still pending completion
+                return mPendingBind.then(child -> unbind());
             }
 
-            return GeckoResult.fromValue(null);
-        }
-
-        private void clearConnectionInfo() {
-            // NB: This must happen *before* resetting mPid!
-            GeckoProcessManager.INSTANCE.mConnections.removeConnection(this);
-
-            mChild = null;
-            mPid = INVALID_PID;
-        }
-
-        private void doUnbind() {
-            try {
-                unbindService();
-            } catch (IllegalArgumentException e) {
-                // The binding was already dead. That's okay.
-            } finally {
-                clearConnectionInfo();
+            if (mChild != null) {
+                mPendingUnbind = new GeckoResult<>();
+                final Context context = GeckoAppShell.getApplicationContext();
+                try {
+                    context.unbindService(this);
+                } catch (IllegalArgumentException e) {
+                    mChild = null;
+                    mPid = INVALID_PID;
+                    final GeckoResult<Void> unbindResult = mPendingUnbind;
+                    mPendingUnbind = null;
+                    // The caller can't do anything about this, just complete
+                    unbindResult.complete(null);
+                    return unbindResult;
+                }
             }
+
+            if (pid == INVALID_PID) {
+                final GeckoResult<Void> unbindResult = mPendingUnbind;
+                mPendingUnbind = null;
+
+                if (unbindResult == null) {
+                    return GeckoResult.fromValue(null);
+                }
+
+                unbindResult.complete(null);
+                return unbindResult;
+            }
+
+            Process.killProcess(pid);
+
+            return mPendingUnbind;
         }
 
-        @Override
-        protected void onBinderConnected(final IBinder service) {
+        private void completeServiceConnect(final IBinder service) {
             XPCOMEventTarget.assertOnLauncherThread();
+
+            try {
+                service.linkToDeath(this, 0);
+            } catch (final RemoteException e) {
+                Log.e(LOGTAG, buildLogMsg("Cannot link to death for"), e);
+            }
 
             mChild = IChildProcess.Stub.asInterface(service);
 
@@ -257,200 +266,99 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
         }
 
+        private void completeServiceDisconnect() {
+            XPCOMEventTarget.assertOnLauncherThread();
+            mChild = null;
+            mPid = INVALID_PID;
+            if (mPendingUnbind != null) {
+                mPendingUnbind.complete(null);
+                mPendingUnbind = null;
+            }
+        }
+
+        private void onBinderDeath() {
+            XPCOMEventTarget.assertOnLauncherThread();
+            Log.i(LOGTAG, buildLogMsg("Binder died for"));
+
+            if (mChild != null) {
+                mChild = null;
+                mPid = INVALID_PID;
+
+                try {
+                    GeckoAppShell.getApplicationContext().unbindService(this);
+                } catch (IllegalArgumentException e) {
+                    if (mPendingUnbind != null) {
+                        // completeServiceConnect will never be called because we were
+                        // never considered to be bound. This may be indicative of multiple
+                        // GeckoRuntimes in a single logical application binding to the same
+                        // service. We complete mPendingUnbind since this condition might be
+                        // recoverable.
+                        Log.w(LOGTAG, "Attempt to unbind a service that is not currently bound");
+                        mPendingUnbind.complete(null);
+                        mPendingUnbind = null;
+                    }
+                }
+            }
+        }
+
         @Override
-        protected void onBinderConnectionLost() {
-            XPCOMEventTarget.assertOnLauncherThread();
+        public void onServiceConnected(final ComponentName name,
+                                       final IBinder service) {
+            XPCOMEventTarget.launcherThread().execute(() -> {
+                completeServiceConnect(service);
+            });
+        }
 
-            // The binding has lost its connection, but the binding itself might still be active.
-            // Gecko itself will request a process restart, so here we attempt to unbind so that
-            // Android does not try to automatically restart and reconnect the service.
-            doUnbind();
+        @Override
+        public void onServiceDisconnected(final ComponentName name) {
+            XPCOMEventTarget.launcherThread().execute(() -> {
+                completeServiceDisconnect();
+            });
+        }
+
+        @Override
+        public void binderDied() {
+            XPCOMEventTarget.launcherThread().execute(() -> {
+                onBinderDeath();
+            });
         }
     }
 
-    /**
-     * This class manages the state surrounding existing connections and their priorities.
-     */
-    private static final class ConnectionManager {
-        // Connections to non-content processes
-        private final SimpleArrayMap<GeckoProcessType, ChildConnection> mNonContentConnections;
-        // Mapping of pid to content process
-        private final SimpleArrayMap<Integer, ChildConnection> mContentPids;
-        // Set of initialized content process connections
-        private final ArraySet<ChildConnection> mContentConnections;
-        // Set of bound but uninitialized content connections
-        private final ArraySet<ChildConnection> mNonStartedContentConnections;
-        // Allocator for service IDs
-        private final ServiceAllocator mServiceAllocator;
-
-        public ConnectionManager() {
-            mNonContentConnections = new SimpleArrayMap<GeckoProcessType, ChildConnection>();
-            mContentPids = new SimpleArrayMap<Integer, ChildConnection>();
-            mContentConnections = new ArraySet<ChildConnection>();
-            mNonStartedContentConnections = new ArraySet<ChildConnection>();
-            mServiceAllocator = new ServiceAllocator();
-        }
-
-        private void removeContentConnection(@NonNull final ChildConnection conn) {
-            if (!mContentConnections.remove(conn) && !mNonStartedContentConnections.remove(conn)) {
-                throw new RuntimeException("Attempt to remove non-registered connection");
-            }
-
-            final int pid = conn.getPidFallible();
-            if (pid == INVALID_PID) {
-                return;
-            }
-
-            final ChildConnection removed = mContentPids.remove(Integer.valueOf(pid));
-            if (removed != conn) {
-                throw new RuntimeException("Integrity error - connection mismatch for pid " + Integer.toString(pid));
-            }
-        }
-
-        public void removeConnection(@NonNull final ChildConnection conn) {
-            XPCOMEventTarget.assertOnLauncherThread();
-
-            if (conn.getType() == GeckoProcessType.CONTENT) {
-                removeContentConnection(conn);
-                return;
-            }
-
-            final ChildConnection removed = mNonContentConnections.remove(conn.getType());
-            if (removed != conn) {
-                throw new RuntimeException("Integrity error - connection mismatch for process type " + conn.getType().toString());
-            }
-        }
-
-        /**
-         * Saves any state information that was acquired upon start completion.
-         */
-        public void onStartComplete(@NonNull final ChildConnection conn) throws RemoteException {
-            if (conn.getType() == GeckoProcessType.CONTENT) {
-                int pid = conn.getPid();
-                mContentPids.put(Integer.valueOf(pid), conn);
-            }
-        }
-
-        /**
-         * Retrieve the ChildConnection for an already running content process.
-         */
-        private ChildConnection getExistingContentConnection(@NonNull final Selector selector) {
-            XPCOMEventTarget.assertOnLauncherThread();
-            if (selector.getType() != GeckoProcessType.CONTENT) {
-                throw new RuntimeException("Selector is not for content!");
-            }
-
-            return mContentPids.get(Integer.valueOf(selector.getPid()));
-        }
-
-        /**
-         * Unconditionally create a new content connection for the specified priority.
-         */
-        private ChildConnection getNewContentConnection(@NonNull final PriorityLevel newPriority) {
-            final ChildConnection result = new ChildConnection(mServiceAllocator, GeckoProcessType.CONTENT, newPriority);
-            mContentConnections.add(result);
-
-            return result;
-        }
-
-        /**
-         * Retrieve the ChildConnection for an already running child process of any type.
-         */
-        public ChildConnection getExistingConnection(@NonNull final Selector selector) {
-            XPCOMEventTarget.assertOnLauncherThread();
-
-            final GeckoProcessType type = selector.getType();
-
-            if (type == GeckoProcessType.CONTENT) {
-                return getExistingContentConnection(selector);
-            }
-
-            return mNonContentConnections.get(type);
-        }
-
-        /**
-         * Retrieve a ChildConnection for a content process for the purposes of starting. If there
-         * are any preloaded content processes already running, we will use one of those.
-         * Otherwise we will allocate a new ChildConnection.
-         */
-        private ChildConnection getContentConnectionForStart() {
-            XPCOMEventTarget.assertOnLauncherThread();
-
-            if (mNonStartedContentConnections.isEmpty()) {
-                // Only FOREGROUND supported right now
-                return getNewContentConnection(PriorityLevel.FOREGROUND);
-            }
-
-            return mNonStartedContentConnections.removeAt(mNonStartedContentConnections.size() - 1);
-        }
-
-        /**
-         * Retrieve or create a new child process for the specified non-content process.
-         */
-        private ChildConnection getNonContentConnection(@NonNull final GeckoProcessType type) {
-            XPCOMEventTarget.assertOnLauncherThread();
-            if (type == GeckoProcessType.CONTENT) {
-                throw new IllegalArgumentException("Content processes not supported by this method");
-            }
-
-            ChildConnection connection = mNonContentConnections.get(type);
-            if (connection == null) {
-                connection = new ChildConnection(mServiceAllocator, type);
-                mNonContentConnections.put(type, connection);
-            }
-            return connection;
-        }
-
-        /**
-         * Retrieve a ChildConnection for the purposes of starting a new child process.
-         */
-        public ChildConnection getConnectionForStart(@NonNull final GeckoProcessType type) {
-            if (type == GeckoProcessType.CONTENT) {
-                return getContentConnectionForStart();
-            }
-
-            return getNonContentConnection(type);
-        }
-
-        /**
-         * Retrieve a ChildConnection for the purposes of preloading a new child process.
-         */
-        public ChildConnection getConnectionForPreload(@NonNull final GeckoProcessType type) {
-            if (type == GeckoProcessType.CONTENT) {
-                final ChildConnection conn = getNewContentConnection(PriorityLevel.FOREGROUND);
-                mNonStartedContentConnections.add(conn);
-                return conn;
-            }
-
-            return getNonContentConnection(type);
-        }
-    }
-
-    private final ConnectionManager mConnections;
+    private final SimpleArrayMap<GeckoProcessType, ChildConnection> mConnections;
 
     private GeckoProcessManager() {
-        mConnections = new ConnectionManager();
+        mConnections = new SimpleArrayMap<GeckoProcessType, ChildConnection>();
+    }
+
+    private ChildConnection getConnection(final GeckoProcessType type) {
+        XPCOMEventTarget.assertOnLauncherThread();
+
+        ChildConnection connection = mConnections.get(type);
+        if (connection == null) {
+            connection = new ChildConnection(type);
+            mConnections.put(type, connection);
+        }
+        return connection;
     }
 
     public void preload(final GeckoProcessType... types) {
         XPCOMEventTarget.launcherThread().execute(() -> {
             for (final GeckoProcessType type : types) {
-                final ChildConnection connection = mConnections.getConnectionForPreload(type);
+                final ChildConnection connection = getConnection(type);
                 connection.bind().accept(child -> {
                     try {
                         child.getPid();
                     } catch (final RemoteException e) {
                         Log.e(LOGTAG, "Cannot get pid for " + type.toString(), e);
-                        return;
                     }
                 });
             }
         });
     }
 
-    public void crashChild(@NonNull final Selector selector) {
+    public void crashChild() {
         XPCOMEventTarget.launcherThread().execute(() -> {
-            final ChildConnection conn = mConnections.getExistingConnection(selector);
+            final ChildConnection conn = mConnections.get(GeckoProcessType.CONTENT);
             if (conn == null) {
                 return;
             }
@@ -467,7 +375,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     @WrapForJNI
     private static void markAsDead(final Selector selector) {
         XPCOMEventTarget.assertOnLauncherThread();
-        final ChildConnection conn = INSTANCE.mConnections.getExistingConnection(selector);
+        final ChildConnection conn = INSTANCE.mConnections.get(selector.getType());
         if (conn == null) {
             return;
         }
@@ -517,7 +425,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                        final RemoteException prevException) {
         XPCOMEventTarget.assertOnLauncherThread();
 
-        final ChildConnection connection = mConnections.getConnectionForStart(type);
+        final ChildConnection connection = getConnection(type);
         final GeckoResult<IChildProcess> childResult = connection.bind();
 
         childResult.accept(childProcess -> {
@@ -587,7 +495,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         if (started) {
             try {
-                mConnections.onStartComplete(connection);
                 result.complete(connection.getPid());
                 return;
             } catch (final RemoteException e) {
