@@ -59,7 +59,6 @@ import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
-import org.mozilla.fenix.perf.HotStartPerformanceMonitor
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
@@ -85,8 +84,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     private var visualCompletenessTaskManager: StartupTaskManager? = null
 
     private var sessionObserver: SessionManager.Observer? = null
-
-    private val hotStartMonitor = HotStartPerformanceMonitor()
 
     private var isToolbarInflated = false
 
@@ -159,16 +156,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 }
             }
         }
-    }
-
-    final override fun onRestart() {
-        hotStartMonitor.onRestartFirstMethodCall()
-        super.onRestart()
-    }
-
-    final override fun onPostResume() {
-        super.onPostResume()
-        hotStartMonitor.onPostResumeFinalMethodCall()
     }
 
     final override fun onPause() {
