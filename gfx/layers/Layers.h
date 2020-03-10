@@ -1461,8 +1461,8 @@ class Layer {
   nsTArray<PropertyAnimationGroup>& GetPropertyAnimationGroups() {
     return mAnimationInfo.GetPropertyAnimationGroups();
   }
-  const CompositorAnimationData* GetTransformLikeMetaData() const {
-    return mAnimationInfo.GetTransformLikeMetaData();
+  const Maybe<TransformData>& GetTransformData() const {
+    return mAnimationInfo.GetTransformData();
   }
 
   Maybe<uint64_t> GetAnimationGeneration() const {

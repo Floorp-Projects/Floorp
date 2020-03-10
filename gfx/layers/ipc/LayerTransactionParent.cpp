@@ -718,10 +718,8 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   float scale = 1;
   Point3D scaledOrigin;
   Point3D transformOrigin;
-  const auto* meta = layer->GetTransformLikeMetaData();
-  MOZ_ASSERT(!meta || meta->mTransform);
-  if (meta && meta->mTransform) {
-    const TransformData& data = *meta->mTransform;
+  if (layer->GetTransformData()) {
+    const TransformData& data = *layer->GetTransformData();
     scale = data.appUnitsPerDevPixel();
     scaledOrigin = Point3D(
         NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),

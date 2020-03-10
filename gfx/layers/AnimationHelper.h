@@ -115,20 +115,9 @@ struct AnimatedValue final {
   AnimatedValueType mValue;
 };
 
-struct CompositorAnimationData {
-  Maybe<TransformData> mTransform;
-  Maybe<MotionPathData> mMotionPath;
-
-  bool HasData() const { return mTransform || mMotionPath; }
-  void Clear() {
-    mTransform.reset();
-    mMotionPath.reset();
-  }
-};
-
 struct AnimationStorageData {
   nsTArray<PropertyAnimationGroup> mAnimation;
-  CompositorAnimationData mTransformLikeMetaData;
+  Maybe<TransformData> mTransformData;
   RefPtr<gfx::Path> mCachedMotionPath;
 
   AnimationStorageData() = default;
@@ -359,8 +348,7 @@ class AnimationHelper {
    */
   static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
       const nsTArray<RefPtr<RawServoAnimationValue>>& aValue,
-      const CompositorAnimationData& aAnimationData,
-      gfx::Path* aCachedMotionPath);
+      const TransformData& aTransformData, gfx::Path* aCachedMotionPath);
 };
 
 }  // namespace layers

@@ -145,6 +145,14 @@ struct AnimationSegment {
   TimingFunction sampleFn;
 };
 
+struct MotionPathData {
+  // the transform-origin property for motion in css pixels
+  CSSPoint origin;
+  // the adjustment for the anchor point of motion path.
+  CSSPoint anchorAdjustment;
+  RayReferenceData rayReferenceData;
+};
+
 // Transforms need extra information to correctly convert the list of transform
 // functions to a Matrix4x4 that can be applied directly to the layer.
 struct TransformData {
@@ -159,14 +167,7 @@ struct TransformData {
   float inheritedYScale;
   // True if the parent has perspective transform
   bool hasPerspectiveParent;
-};
-
-struct MotionPathData {
-  // the transform-origin property for motion in css pixels
-  CSSPoint origin;
-  // the adjustment for the anchor point of motion path.
-  CSSPoint anchorAdjustment;
-  RayReferenceData rayReferenceData;
+  MotionPathData? motionPathData;
 };
 
 struct Animation {
@@ -203,8 +204,6 @@ struct Animation {
   // This uses dom::FillMode.
   uint8_t fillMode;
   nsCSSPropertyID property;
-  TransformData? transformData;
-  MotionPathData? motionPathData;
   float playbackRate;
   // When performing an asynchronous update to the playbackRate, |playbackRate|
   // above is the updated playbackRate while |previousPlaybackRate| is the
@@ -231,6 +230,8 @@ struct Animation {
   // the first animation in the set (i.e. the animation that is lowest in the
   // stack). In all other cases the value is null_t.
   Animatable baseStyle;
+  // An optional data specific for transform like properies.
+  TransformData? transformData;
 };
 
 struct CompositorAnimations {

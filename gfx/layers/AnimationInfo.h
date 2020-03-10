@@ -11,6 +11,7 @@
 #include "nsDisplayItemTypes.h"
 #include "mozilla/Array.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/layers/LayersMessages.h"  // for TransformData
 
 struct RawServoAnimationValue;
 class nsIContent;
@@ -74,8 +75,8 @@ class AnimationInfo final {
   nsTArray<PropertyAnimationGroup>& GetPropertyAnimationGroups() {
     return mPropertyAnimationGroups;
   }
-  const CompositorAnimationData* GetTransformLikeMetaData() const {
-    return mTransformLikeMetaData.get();
+  const Maybe<TransformData>& GetTransformData() const {
+    return mTransformData;
   }
   bool ApplyPendingUpdatesForThisTransaction();
   bool HasTransformAnimation() const;
@@ -122,7 +123,7 @@ class AnimationInfo final {
   // AnimationHelper.h causes build errors (because other modules may include
   // this file but cannot see LayersMessages.h).
   nsTArray<PropertyAnimationGroup> mPropertyAnimationGroups;
-  UniquePtr<CompositorAnimationData> mTransformLikeMetaData;
+  Maybe<TransformData> mTransformData;
   // For motion path. We cached the gfx path for optimization.
   RefPtr<gfx::Path> mCachedMotionPath;
   // If this layer is used for OMTA, then this counter is used to ensure we
