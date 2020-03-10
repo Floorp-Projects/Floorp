@@ -595,33 +595,45 @@ class OpenWindowRunnable final : public Runnable {
       return NS_OK;
     }
 
-    RefPtr<ContentParent> targetProcess;
-
     // Possibly try to open the window in the same process that called
     // openWindow().  This is a temporary compat setting until the
     // multi-e10s service worker refactor is complete.
     if (Preferences::GetBool("dom.clients.openwindow_favors_same_process",
                              false)) {
-      targetProcess = mSourceProcess;
+      OnProcessLaunched(mSourceProcess);
+      return NS_OK;
     }
+
+    RefPtr<OpenWindowRunnable> self = this;
 
     // Otherwise, use our normal remote process selection mechanism for
-    // opening the window.  This will start a process if one is not
-    // present.
-    if (!targetProcess) {
-      targetProcess = ContentParent::GetNewOrUsedBrowserProcess(
-          nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
-          ContentParent::GetInitialProcessPriority(nullptr), nullptr);
-    }
+    // opening the window asynchronously. This will start a process if one is
+    // not present.
+    ContentParent::GetNewOrUsedBrowserProcessAsync(
+        /* aFrameElement = */ nullptr,
+        /* aRemoteType = */ NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
+        /* aPriority = */ ContentParent::GetInitialProcessPriority(nullptr),
+        /* aOpener = */ nullptr)
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            // on resolve
+            [self](const RefPtr<ContentParent>& aTargetProcess) {
+              self->OnProcessLaunched(aTargetProcess);
+            },
+            // on reject
+            [self]() { self->OnProcessLaunched(nullptr); });
+    return NS_OK;
+  }
 
-    // But starting a process can failure for any number of reasons. Reject the
+  void OnProcessLaunched(ContentParent* aTargetProcess) {
+    // Starting a process can fail for any number of reasons. Reject the
     // promise if we could not.
-    if (!targetProcess) {
+    if (!aTargetProcess) {
       CopyableErrorResult rv;
       rv.ThrowAbortError("Opening window aborted");
       mPromise->Reject(rv, __func__);
       mPromise = nullptr;
-      return NS_OK;
+      return;
     }
 
     ClientOpenWindowOpParent* actor =
@@ -634,14 +646,12 @@ class OpenWindowRunnable final : public Runnable {
     // principal.
     nsCOMPtr<nsIPrincipal> principal =
         PrincipalInfoToPrincipal(mArgs.principalInfo());
-    nsresult rv = targetProcess->TransmitPermissionsForPrincipal(principal);
+    nsresult rv = aTargetProcess->TransmitPermissionsForPrincipal(principal);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     // If this fails the actor will be automatically destroyed which will
     // reject the promise.
-    Unused << targetProcess->SendPClientOpenWindowOpConstructor(actor, mArgs);
-
-    return NS_OK;
+    Unused << aTargetProcess->SendPClientOpenWindowOpConstructor(actor, mArgs);
   }
 };
 
