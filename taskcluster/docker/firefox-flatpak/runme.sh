@@ -97,7 +97,7 @@ flatpak build-finish build                                      \
         --socket=pulseaudio                                     \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \
-        --device=dri                                            \
+        --device=all                                            \
         --filesystem=xdg-run/dconf                              \
         --filesystem=xdg-config/dconf:ro                        \
         --talk-name=ca.desrt.dconf                              \
