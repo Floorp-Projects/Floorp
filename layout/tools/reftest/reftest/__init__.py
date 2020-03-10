@@ -4,8 +4,10 @@
 
 from __future__ import unicode_literals, absolute_import, print_function
 
+import io
 import os
 import re
+import six
 
 RE_COMMENT = re.compile(r'\s+#')
 RE_HTTP = re.compile(r'HTTP\((\.\.(\/\.\.)*)\)')
@@ -96,14 +98,14 @@ class ReftestManifest(object):
         if self.finder:
             lines = self.finder.get(path).read().splitlines()
         else:
-            with open(path, 'r') as fh:
+            with io.open(path, 'r', encoding='utf-8') as fh:
                 lines = fh.read().splitlines()
 
         urlprefix = ''
         defaults = []
         for i, line in enumerate(lines):
             lineno = i + 1
-            line = line.decode('utf-8')
+            line = six.ensure_text(line)
 
             # Entire line is a comment.
             if line.startswith('#'):

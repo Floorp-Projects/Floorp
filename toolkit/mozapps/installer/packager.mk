@@ -42,7 +42,7 @@ endif # RUN_FIND_DUPES
 ifndef MOZ_IS_COMM_TOPDIR
 ifdef RUN_MOZHARNESS_ZIP
 	# Package mozharness
-	$(call py_action,test_archive, \
+	$(call py3_action,test_archive, \
 		mozharness \
 		$(ABS_DIST)/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
 endif # RUN_MOZHARNESS_ZIP
