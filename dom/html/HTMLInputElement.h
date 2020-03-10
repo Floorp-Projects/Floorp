@@ -667,10 +667,6 @@ class HTMLInputElement final : public TextControlElement,
    */
   Decimal GetStep() const;
 
-  // Returns whether the given keyboard event steps up or down the value of an
-  // <input> element.
-  bool StepsInputValue(const WidgetKeyboardEvent&) const;
-
   already_AddRefed<nsINodeList> GetLabels();
 
   void Select();

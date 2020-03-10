@@ -3576,35 +3576,10 @@ nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {
  * Control is treated specially, since sometimes we ignore it, and sometimes
  * we don't (for webcompat reasons).
  */
-static bool IgnoreInputEventWithModifier(const WidgetInputEvent& aEvent,
+static bool IgnoreInputEventWithModifier(WidgetInputEvent* aEvent,
                                          bool ignoreControl) {
-  return (ignoreControl && aEvent.IsControl()) || aEvent.IsAltGraph() ||
-         aEvent.IsFn() || aEvent.IsOS();
-}
-
-bool HTMLInputElement::StepsInputValue(const WidgetKeyboardEvent& aEvent) const {
-  if (mType != NS_FORM_INPUT_NUMBER) {
-    return false;
-  }
-  if (aEvent.mMessage != eKeyPress) {
-    return false;
-  }
-  if (!aEvent.IsTrusted()) {
-    return false;
-  }
-  if (aEvent.mKeyCode != NS_VK_UP && aEvent.mKeyCode != NS_VK_DOWN) {
-    return false;
-  }
-  if (IgnoreInputEventWithModifier(aEvent, false)) {
-    return false;
-  }
-  if (aEvent.DefaultPrevented()) {
-    return false;
-  }
-  if (!IsMutable()) {
-    return false;
-  }
-  return true;
+  return (ignoreControl && aEvent->IsControl()) || aEvent->IsAltGraph() ||
+         aEvent->IsFn() || aEvent->IsOS();
 }
 
 nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
@@ -3731,10 +3706,26 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 
   if (NS_SUCCEEDED(rv)) {
     WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-    if (keyEvent && StepsInputValue(*keyEvent)) {
-      StepNumberControlForUserEvent(keyEvent->mKeyCode == NS_VK_UP ? 1 : -1);
-      FireChangeEventIfNeeded();
-      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    if (mType == NS_FORM_INPUT_NUMBER && keyEvent &&
+        keyEvent->mMessage == eKeyPress && aVisitor.mEvent->IsTrusted() &&
+        (keyEvent->mKeyCode == NS_VK_UP || keyEvent->mKeyCode == NS_VK_DOWN) &&
+        !IgnoreInputEventWithModifier(keyEvent, false)) {
+      // We handle the up/down arrow keys specially for <input type=number>.
+      // On some platforms the editor for the nested text control will
+      // process these keys to send the cursor to the start/end of the text
+      // control and as a result aVisitor.mEventStatus will already have been
+      // set to nsEventStatus_eConsumeNoDefault. However, we know that
+      // whenever the up/down arrow keys cause the value of the number
+      // control to change the string in the text control will change, and
+      // the cursor will be moved to the end of the text control, overwriting
+      // the editor's handling of up/down keypress events. For that reason we
+      // just ignore aVisitor.mEventStatus here and go ahead and handle the
+      // event to increase/decrease the value of the number control.
+      if (!aVisitor.mEvent->DefaultPreventedByContent() && IsMutable()) {
+        StepNumberControlForUserEvent(keyEvent->mKeyCode == NS_VK_UP ? 1 : -1);
+        FireChangeEventIfNeeded();
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
     } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->mMessage) {
         case eFocus: {
@@ -3947,7 +3938,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           }
           if (mType == NS_FORM_INPUT_NUMBER && aVisitor.mEvent->IsTrusted()) {
             if (mouseEvent->mButton == MouseButton::eLeft &&
-                !IgnoreInputEventWithModifier(*mouseEvent, false)) {
+                !IgnoreInputEventWithModifier(mouseEvent, false)) {
               nsNumberControlFrame* numberControlFrame =
                   do_QueryFrame(GetPrimaryFrame());
               if (numberControlFrame) {
@@ -4094,7 +4085,7 @@ void HTMLInputElement::PostHandleEventForRangeThumb(
         break;  // don't start drag if someone else is already capturing
       }
       WidgetInputEvent* inputEvent = aVisitor.mEvent->AsInputEvent();
-      if (IgnoreInputEventWithModifier(*inputEvent, true)) {
+      if (IgnoreInputEventWithModifier(inputEvent, true)) {
         break;  // ignore
       }
       if (aVisitor.mEvent->mMessage == eMouseDown) {
