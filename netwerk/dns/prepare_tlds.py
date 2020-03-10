@@ -126,8 +126,6 @@ def main(output, effective_tld_filename, output_format="cxx"):
 
   """ words_to_bin() returns a bytes while words_to_cxx() returns string """
   if output_format == "bin":
-    if sys.version_info[0] >= 3:
-      output = output.buffer
     output.write(words_to_bin(dafsa_words()))
   else:
     output.write(words_to_cxx(dafsa_words()))
