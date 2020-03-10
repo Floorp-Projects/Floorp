@@ -341,6 +341,7 @@ class AboutLoginsParent extends JSWindowActorParent {
           ]);
           let loggedIn = await OSKeyStore.ensureLoggedIn(
             messageText.value,
+            ownerGlobal,
             false
           );
           this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", loggedIn);

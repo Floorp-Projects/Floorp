@@ -14,7 +14,8 @@ add_task(async function test_asyncReauthenticateUser() {
   ok(reauthenticator, "nsIOSReauthenticator should be available");
   ok(
     !(await reauthenticator.asyncReauthenticateUser(
-      "this is the prompt string"
+      "this is the prompt string",
+      null
     )),
     "nsIOSReauthenticator.asyncReauthenticateUser always resolves to false for now"
   );

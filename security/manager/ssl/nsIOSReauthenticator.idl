@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface mozIDOMWindow;
+
 [scriptable, uuid(4fe082ae-6ff0-4b41-b24f-eaa664f6e46a)]
 interface nsIOSReauthenticator: nsISupports {
   /**
@@ -33,9 +35,10 @@ interface nsIOSReauthenticator: nsISupports {
    * OS.
    *
    * @param prompt A short string that may be incorporated in the dialog
+   * @param parentWindow Used to associate the OS dialog with the calling window.
    * @return Promise resolving to true if the user successfully authenticated
    *         and false otherwise.
    */
   [implicit_jscontext, must_use]
-  Promise asyncReauthenticateUser(in ACString prompt);
+  Promise asyncReauthenticateUser(in ACString prompt, in mozIDOMWindow parentWindow);
 };
