@@ -7,6 +7,7 @@
 #include "FluentBundle.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "unicode/numberformatter.h"
+#include "unicode/datefmt.h"
 
 using namespace mozilla::dom;
 
@@ -245,6 +246,70 @@ uint8_t* FluentBuiltInNumberFormatterFormat(const ffi::RawNumberFormatter* aForm
 
 void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
   delete reinterpret_cast<icu::number::LocalizedNumberFormatter*>(aFormatter);
+}
+
+/* DateTime */
+
+static icu::DateFormat::EStyle GetICUStyle(ffi::FluentDateTimeStyle aStyle) {
+  switch (aStyle) {
+    case ffi::FluentDateTimeStyle::Full:
+      return icu::DateFormat::FULL;
+    case ffi::FluentDateTimeStyle::Long:
+      return icu::DateFormat::LONG;
+    case ffi::FluentDateTimeStyle::Medium:
+      return icu::DateFormat::MEDIUM;
+    case ffi::FluentDateTimeStyle::Short:
+      return icu::DateFormat::SHORT;
+    case ffi::FluentDateTimeStyle::None:
+      return icu::DateFormat::NONE;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported date time style.");
+      return icu::DateFormat::NONE;
+  }
+}
+
+ffi::RawDateTimeFormatter* FluentBuiltInDateTimeFormatterCreate(
+    const nsCString* aLocale, const ffi::FluentDateTimeOptionsRaw* aOptions) {
+  icu::DateFormat* dtmf = nullptr;
+  if (aOptions->date_style != ffi::FluentDateTimeStyle::None &&
+      aOptions->time_style != ffi::FluentDateTimeStyle::None) {
+    dtmf = icu::DateFormat::createDateTimeInstance(
+        GetICUStyle(aOptions->date_style), GetICUStyle(aOptions->time_style),
+        aLocale->get());
+  } else if (aOptions->date_style != ffi::FluentDateTimeStyle::None) {
+    dtmf = icu::DateFormat::createDateInstance(
+        GetICUStyle(aOptions->date_style), aLocale->get());
+  } else if (aOptions->time_style != ffi::FluentDateTimeStyle::None) {
+    dtmf = icu::DateFormat::createTimeInstance(
+        GetICUStyle(aOptions->time_style), aLocale->get());
+  } else {
+    if (aOptions->skeleton.IsEmpty()) {
+      dtmf = icu::DateFormat::createDateTimeInstance(
+          icu::DateFormat::DEFAULT, icu::DateFormat::DEFAULT, aLocale->get());
+    } else {
+      UErrorCode status = U_ZERO_ERROR;
+      dtmf = icu::DateFormat::createInstanceForSkeleton(
+          aOptions->skeleton.get(), aLocale->get(), status);
+    }
+  }
+  MOZ_RELEASE_ASSERT(dtmf, "Failed to create a format for the skeleton.");
+
+  return reinterpret_cast<ffi::RawDateTimeFormatter*>(dtmf);
+}
+
+uint8_t* FluentBuiltInDateTimeFormatterFormat(const ffi::RawDateTimeFormatter* aFormatter,
+                                          uintptr_t input, uint32_t* aOutCount) {
+  auto formatter = reinterpret_cast<const icu::DateFormat*>(aFormatter);
+  UDate myDate = input;
+
+  icu::UnicodeString str;
+  formatter->format(myDate, str);
+  return reinterpret_cast<uint8_t*>(ToNewUTF8String(nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
+}
+
+void FluentBuiltInDateTimeFormatterDestroy(
+    ffi::RawDateTimeFormatter* aFormatter) {
+  delete reinterpret_cast<icu::DateFormat*>(aFormatter);
 }
 }
 
