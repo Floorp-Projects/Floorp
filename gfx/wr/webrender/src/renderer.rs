@@ -2214,8 +2214,17 @@ impl Renderer {
         };
 
         let compositor_kind = match options.compositor_config {
-            CompositorConfig::Draw { max_partial_present_rects } => CompositorKind::Draw { max_partial_present_rects },
-            CompositorConfig::Native { max_update_rects, .. } => CompositorKind::Native { max_update_rects },
+            CompositorConfig::Draw { max_partial_present_rects } => {
+                CompositorKind::Draw { max_partial_present_rects }
+            }
+            CompositorConfig::Native { ref compositor, max_update_rects, .. } => {
+                let capabilities = compositor.get_capabilities();
+
+                CompositorKind::Native {
+                    max_update_rects,
+                    virtual_surface_size: capabilities.virtual_surface_size,
+                }
+            }
         };
 
         let config = FrameBuilderConfig {
@@ -3052,6 +3061,7 @@ impl Renderer {
             if self.debug_overlay_state.is_enabled && self.debug_overlay_state.current_size.is_none() {
                 compositor.create_surface(
                     NativeSurfaceId::DEBUG_OVERLAY,
+                    DeviceIntPoint::zero(),
                     framebuffer_size,
                     false,
                 );
@@ -5460,10 +5470,15 @@ impl Renderer {
             CompositorConfig::Native { ref mut compositor, .. } => {
                 for op in self.pending_native_surface_updates.drain(..) {
                     match op.details {
-                        NativeSurfaceOperationDetails::CreateSurface { id, tile_size, is_opaque } => {
+                        NativeSurfaceOperationDetails::CreateSurface { id, virtual_offset, tile_size, is_opaque } => {
                             let _inserted = self.allocated_native_surfaces.insert(id);
                             debug_assert!(_inserted, "bug: creating existing surface");
-                            compositor.create_surface(id, tile_size, is_opaque);
+                            compositor.create_surface(
+                                id,
+                                virtual_offset,
+                                tile_size,
+                                is_opaque,
+                            );
                         }
                         NativeSurfaceOperationDetails::DestroySurface { id } => {
                             let _existed = self.allocated_native_surfaces.remove(&id);

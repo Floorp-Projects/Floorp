@@ -812,9 +812,10 @@ void RenderCompositorANGLE::Bind(wr::NativeTileId aId,
 void RenderCompositorANGLE::Unbind() { mDCLayerTree->Unbind(); }
 
 void RenderCompositorANGLE::CreateSurface(wr::NativeSurfaceId aId,
+                                          wr::DeviceIntPoint aVirtualOffset,
                                           wr::DeviceIntSize aTileSize,
                                           bool aIsOpaque) {
-  mDCLayerTree->CreateSurface(aId, aTileSize, aIsOpaque);
+  mDCLayerTree->CreateSurface(aId, aVirtualOffset, aTileSize, aIsOpaque);
 }
 
 void RenderCompositorANGLE::DestroySurface(NativeSurfaceId aId) {
@@ -835,6 +836,18 @@ void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
                                        wr::DeviceIntPoint aPosition,
                                        wr::DeviceIntRect aClipRect) {
   mDCLayerTree->AddSurface(aId, aPosition, aClipRect);
+}
+
+CompositorCapabilities RenderCompositorANGLE::GetCompositorCapabilities() {
+  CompositorCapabilities caps;
+
+#ifdef USE_VIRTUAL_SURFACES
+  caps.virtual_surface_size = VIRTUAL_SURFACE_SIZE;
+#else
+  caps.virtual_surface_size = 0;
+#endif
+
+  return caps;
 }
 
 void RenderCompositorANGLE::EnableNativeCompositor(bool aEnable) {
