@@ -15020,35 +15020,8 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
   // This will probably change for project fission, but currently this document
   // and the opener are on the same process. In the future, we should make this
   // part async.
-
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (NS_WARN_IF(!inner)) {
-    return;
-  }
-
-  auto* outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
-  if (NS_WARN_IF(!outer)) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> outerOpener = outer->GetSameProcessOpener();
-  if (!outerOpener) {
-    return;
-  }
-
-  nsPIDOMWindowInner* openerInner = outerOpener->GetCurrentInnerWindow();
-  if (NS_WARN_IF(!openerInner)) {
-    return;
-  }
-
-  // Let's take the principal from the opener.
-  Document* openerDocument = openerInner->GetExtantDoc();
-  if (NS_WARN_IF(!openerDocument)) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> openerURI = openerDocument->GetDocumentURI();
-  if (NS_WARN_IF(!openerURI)) {
     return;
   }
 
@@ -15057,18 +15030,67 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
     return;
   }
 
-  // If the opener is not a 3rd party and if this window is not a 3rd party, we
-  // should not continue.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(inner, nullptr, openerURI) &&
-      !nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
-                                                   nullptr)) {
+  auto* outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+  if (NS_WARN_IF(!outer)) {
     return;
   }
 
-  // We don't care when the asynchronous work finishes here.
-  Unused << ContentBlocking::AllowAccessFor(
-      NodePrincipal(), openerInner,
-      ContentBlockingNotifier::eOpenerAfterUserInteraction);
+  RefPtr<BrowsingContext> openerBC = outer->GetOpenerBrowsingContext();
+  if (!openerBC) {
+    // No opener.
+    return;
+  }
+
+  // We want to ensure the following check works for both fission mode
+  // and non-fission mode:
+  // "If the opener is not a 3rd party and if this window is not a 3rd
+  // party with respect to the opener, we should not continue."
+  //
+  // In non-fission mode, the opener and the opened window are in the same
+  // process, we can use nsContentUtils::IsThirdPartyWindowOrChannel to
+  // do the check.
+  // In fission mode, if this window is not a 3rd party with respect to
+  // the opener, they must be in the same process, so we can still use
+  // IsThirdPartyWindowOrChannel(openerInner) to continue to check if
+  // the opener is a 3rd party.
+  if (openerBC->IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> outerOpener = openerBC->GetDOMWindow();
+    if (NS_WARN_IF(!outerOpener)) {
+      return;
+    }
+
+    nsCOMPtr<nsPIDOMWindowInner> openerInner =
+        outerOpener->GetCurrentInnerWindow();
+    if (NS_WARN_IF(!openerInner)) {
+      return;
+    }
+
+    RefPtr<Document> openerDocument = openerInner->GetExtantDoc();
+    if (NS_WARN_IF(!openerDocument)) {
+      return;
+    }
+
+    nsCOMPtr<nsIURI> openerURI = openerDocument->GetDocumentURI();
+    if (NS_WARN_IF(!openerURI)) {
+      return;
+    }
+
+    // If the opener is not a 3rd party and if this window is not
+    // a 3rd party with respect to the opener, we should not continue.
+    if (!nsContentUtils::IsThirdPartyWindowOrChannel(inner, nullptr,
+                                                     openerURI) &&
+        !nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
+                                                     nullptr)) {
+      return;
+    }
+    // We don't care when the asynchronous work finishes here.
+    Unused << ContentBlocking::AllowAccessFor(
+        NodePrincipal(), openerInner,
+        ContentBlockingNotifier::eOpenerAfterUserInteraction);
+  }
+
+  // TODO: We don't call ContentBlocking::AllowAccessFor() here because
+  //       openerInner is null. This will be fixed in the next patch.
 }
 
 namespace {
