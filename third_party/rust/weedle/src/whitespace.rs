@@ -1,25 +1,18 @@
-use {CompleteStr, IResult};
+use crate::IResult;
 
-pub fn sp(input: CompleteStr) -> IResult<CompleteStr, CompleteStr> {
+pub(crate) fn sp(input: &str) -> IResult<&str, &str> {
     recognize!(
         input,
-        many0!(
-            alt!(
-                do_parse!(tag!("//") >> take_until!("\n") >> char!('\n') >> (()))
-                |
-                map!(
-                    take_while1!(|c| c == '\t' || c == '\n' || c == '\r' || c == ' '),
-                    |_| ()
-                )
-                |
-                do_parse!(
-                    tag!("/*") >>
-                    take_until!("*/") >>
-                    tag!("*/") >>
-                    (())
-                )
-            )
-        )
+        many0!(alt!(
+            // ignores line comments
+            do_parse!(tag!("//") >> take_until!("\n") >> char!('\n') >> (()))
+            |
+            // ignores whitespace
+            map!(take_while1!(|c| c == '\t' || c == '\n' || c == '\r' || c == ' '), |_| ())
+            |
+            // ignores block comments
+            do_parse!(tag!("/*") >> take_until!("*/") >> tag!("*/") >> (()))
+        ))
     )
 }
 
@@ -27,18 +20,12 @@ pub fn sp(input: CompleteStr) -> IResult<CompleteStr, CompleteStr> {
 macro_rules! ws (
     ($i:expr, $($args:tt)*) => ({
         use $crate::whitespace::sp;
-        use $crate::nom::Convert;
-        use $crate::nom::Err;
-        use $crate::nom::lib::std::result::Result::*;
 
-        match sep!($i, sp, $($args)*) {
-            Err(e) => Err(e),
-            Ok((i1, o)) => {
-                match (sp)(i1) {
-                    Err(e) => Err(Err::convert(e)),
-                    Ok((i2, _)) => Ok((i2, o))
-                }
-            }
-        }
+        do_parse!($i,
+            sp >>
+            s: $($args)* >>
+            sp >>
+            (s)
+        )
     });
 );

@@ -6,9 +6,9 @@ use super::context::{BindgenContext, FunctionId, ItemId, TypeId, VarId};
 use super::dot::DotAttributes;
 use super::item::{IsOpaque, Item};
 use super::layout::Layout;
-// use super::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use super::template::TemplateParameters;
 use super::traversal::{EdgeKind, Trace, Tracer};
+use super::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use clang;
 use codegen::struct_layout::{align_to, bytes_from_bits_pow2};
 use ir::derive::CanDeriveCopy;
@@ -356,7 +356,7 @@ impl Bitfield {
             if self.width() as u64 == mem::size_of::<u64>() as u64 * 8 {
                 u64::MAX
             } else {
-                ((1u64 << self.width()) - 1u64)
+                (1u64 << self.width()) - 1u64
             };
 
         unoffseted_mask << self.offset_into_unit()
@@ -496,7 +496,8 @@ impl FieldMethods for RawField {
 fn raw_fields_to_fields_and_bitfield_units<I>(
     ctx: &BindgenContext,
     raw_fields: I,
-) -> Result<Vec<Field>, ()>
+    packed: bool,
+) -> Result<(Vec<Field>, bool), ()>
 where
     I: IntoIterator<Item = RawField>,
 {
@@ -533,6 +534,7 @@ where
             &mut bitfield_unit_count,
             &mut fields,
             bitfields,
+            packed,
         )?;
     }
 
@@ -541,7 +543,7 @@ where
         "The above loop should consume all items in `raw_fields`"
     );
 
-    Ok(fields)
+    Ok((fields, bitfield_unit_count != 0))
 }
 
 /// Given a set of contiguous raw bitfields, group and allocate them into
@@ -551,6 +553,7 @@ fn bitfields_to_allocation_units<E, I>(
     bitfield_unit_count: &mut usize,
     fields: &mut E,
     raw_bitfields: I,
+    packed: bool,
 ) -> Result<(), ()>
 where
     E: Extend<Field>,
@@ -575,17 +578,22 @@ where
         unit_size_in_bits: usize,
         unit_align_in_bits: usize,
         bitfields: Vec<Bitfield>,
+        packed: bool,
     ) where
         E: Extend<Field>,
     {
         *bitfield_unit_count += 1;
-        let align = bytes_from_bits_pow2(unit_align_in_bits);
+        let align = if packed {
+            1
+        } else {
+            bytes_from_bits_pow2(unit_align_in_bits)
+        };
         let size = align_to(unit_size_in_bits, align * 8) / 8;
         let layout = Layout::new(size, align);
         fields.extend(Some(Field::Bitfields(BitfieldUnit {
             nth: *bitfield_unit_count,
-            layout: layout,
-            bitfields: bitfields,
+            layout,
+            bitfields,
         })));
     }
 
@@ -607,34 +615,39 @@ where
         let bitfield_align = bitfield_layout.align;
 
         let mut offset = unit_size_in_bits;
-        if is_ms_struct {
-            if unit_size_in_bits != 0 &&
-                (bitfield_width == 0 ||
-                    bitfield_width > unfilled_bits_in_unit)
-            {
-                // We've reached the end of this allocation unit, so flush it
-                // and its bitfields.
-                unit_size_in_bits = align_to(unit_size_in_bits, unit_align * 8);
-                flush_allocation_unit(
-                    fields,
-                    bitfield_unit_count,
-                    unit_size_in_bits,
-                    unit_align,
-                    mem::replace(&mut bitfields_in_unit, vec![]),
-                );
+        if !packed {
+            if is_ms_struct {
+                if unit_size_in_bits != 0 &&
+                    (bitfield_width == 0 ||
+                        bitfield_width > unfilled_bits_in_unit)
+                {
+                    // We've reached the end of this allocation unit, so flush it
+                    // and its bitfields.
+                    unit_size_in_bits =
+                        align_to(unit_size_in_bits, unit_align * 8);
+                    flush_allocation_unit(
+                        fields,
+                        bitfield_unit_count,
+                        unit_size_in_bits,
+                        unit_align,
+                        mem::replace(&mut bitfields_in_unit, vec![]),
+                        packed,
+                    );
 
-                // Now we're working on a fresh bitfield allocation unit, so reset
-                // the current unit size and alignment.
-                offset = 0;
-                unit_align = 0;
-            }
-        } else {
-            if offset != 0 &&
-                (bitfield_width == 0 ||
-                    (offset & (bitfield_align * 8 - 1)) + bitfield_width >
-                        bitfield_size * 8)
-            {
-                offset = align_to(offset, bitfield_align * 8);
+                    // Now we're working on a fresh bitfield allocation unit, so reset
+                    // the current unit size and alignment.
+                    offset = 0;
+                    unit_align = 0;
+                }
+            } else {
+                if offset != 0 &&
+                    (bitfield_width == 0 ||
+                        (offset & (bitfield_align * 8 - 1)) +
+                            bitfield_width >
+                            bitfield_size * 8)
+                {
+                    offset = align_to(offset, bitfield_align * 8);
+                }
             }
         }
 
@@ -677,6 +690,7 @@ where
             unit_size_in_bits,
             unit_align,
             bitfields_in_unit,
+            packed,
         );
     }
 
@@ -693,7 +707,10 @@ where
 #[derive(Debug)]
 enum CompFields {
     BeforeComputingBitfieldUnits(Vec<RawField>),
-    AfterComputingBitfieldUnits(Vec<Field>),
+    AfterComputingBitfieldUnits {
+        fields: Vec<Field>,
+        has_bitfield_units: bool,
+    },
     ErrorComputingBitfieldUnits,
 }
 
@@ -717,7 +734,7 @@ impl CompFields {
         }
     }
 
-    fn compute_bitfield_units(&mut self, ctx: &BindgenContext) {
+    fn compute_bitfield_units(&mut self, ctx: &BindgenContext, packed: bool) {
         let raws = match *self {
             CompFields::BeforeComputingBitfieldUnits(ref mut raws) => {
                 mem::replace(raws, vec![])
@@ -727,13 +744,16 @@ impl CompFields {
             }
         };
 
-        let result = raw_fields_to_fields_and_bitfield_units(ctx, raws);
+        let result = raw_fields_to_fields_and_bitfield_units(ctx, raws, packed);
 
         match result {
-            Ok(fields_and_units) => {
+            Ok((fields, has_bitfield_units)) => {
                 mem::replace(
                     self,
-                    CompFields::AfterComputingBitfieldUnits(fields_and_units),
+                    CompFields::AfterComputingBitfieldUnits {
+                        fields,
+                        has_bitfield_units,
+                    },
                 );
             }
             Err(()) => {
@@ -744,11 +764,11 @@ impl CompFields {
 
     fn deanonymize_fields(&mut self, ctx: &BindgenContext, methods: &[Method]) {
         let fields = match *self {
-            CompFields::AfterComputingBitfieldUnits(ref mut fields) => fields,
-            CompFields::ErrorComputingBitfieldUnits => {
-                // Nothing to do here.
-                return;
-            }
+            CompFields::AfterComputingBitfieldUnits {
+                ref mut fields, ..
+            } => fields,
+            // Nothing to do here.
+            CompFields::ErrorComputingBitfieldUnits => return,
             CompFields::BeforeComputingBitfieldUnits(_) => {
                 panic!("Not yet computed bitfield units.");
             }
@@ -845,7 +865,7 @@ impl Trace for CompFields {
                     tracer.visit_kind(f.ty().into(), EdgeKind::Field);
                 }
             }
-            CompFields::AfterComputingBitfieldUnits(ref fields) => {
+            CompFields::AfterComputingBitfieldUnits { ref fields, .. } => {
                 for f in fields {
                     f.trace(context, tracer, &());
                 }
@@ -1047,7 +1067,7 @@ impl CompInfo {
     /// Construct a new compound type.
     pub fn new(kind: CompKind) -> Self {
         CompInfo {
-            kind: kind,
+            kind,
             fields: CompFields::default(),
             template_params: vec![],
             methods: vec![],
@@ -1110,11 +1130,41 @@ impl CompInfo {
     pub fn fields(&self) -> &[Field] {
         match self.fields {
             CompFields::ErrorComputingBitfieldUnits => &[],
-            CompFields::AfterComputingBitfieldUnits(ref fields) => fields,
+            CompFields::AfterComputingBitfieldUnits { ref fields, .. } => {
+                fields
+            }
             CompFields::BeforeComputingBitfieldUnits(_) => {
                 panic!("Should always have computed bitfield units first");
             }
         }
+    }
+
+    fn has_bitfields(&self) -> bool {
+        match self.fields {
+            CompFields::ErrorComputingBitfieldUnits => false,
+            CompFields::AfterComputingBitfieldUnits {
+                has_bitfield_units,
+                ..
+            } => has_bitfield_units,
+            CompFields::BeforeComputingBitfieldUnits(_) => {
+                panic!("Should always have computed bitfield units first");
+            }
+        }
+    }
+
+    /// Returns whether we have a too large bitfield unit, in which case we may
+    /// not be able to derive some of the things we should be able to normally
+    /// derive.
+    pub fn has_too_large_bitfield_unit(&self) -> bool {
+        if !self.has_bitfields() {
+            return false;
+        }
+        self.fields().iter().any(|field| match *field {
+            Field::DataMember(..) => false,
+            Field::Bitfields(ref unit) => {
+                unit.layout.size > RUST_DERIVE_IN_ARRAY_LIMIT
+            }
+        })
     }
 
     /// Does this type have any template parameters that aren't types
@@ -1126,7 +1176,7 @@ impl CompInfo {
     /// Do we see a virtual function during parsing?
     /// Get the has_own_virtual_method boolean.
     pub fn has_own_virtual_method(&self) -> bool {
-        return self.has_own_virtual_method;
+        self.has_own_virtual_method
     }
 
     /// Did we see a destructor when parsing this type?
@@ -1566,7 +1616,9 @@ impl CompInfo {
 
     /// Compute this compound structure's bitfield allocation units.
     pub fn compute_bitfield_units(&mut self, ctx: &BindgenContext) {
-        self.fields.compute_bitfield_units(ctx);
+        // TODO(emilio): If we could detect #pragma packed here we'd fix layout
+        // tests in divide-by-zero-in-struct-layout.rs
+        self.fields.compute_bitfield_units(ctx, self.packed_attr)
     }
 
     /// Assign for each anonymous field a generated name.

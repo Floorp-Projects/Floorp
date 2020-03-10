@@ -28,7 +28,11 @@ impl Into<StoreError> for ErrorImpl {
     fn into(self) -> StoreError {
         match self.0 {
             lmdb::Error::NotFound => StoreError::KeyValuePairNotFound,
-            lmdb::Error::Invalid => StoreError::DatabaseInvalid,
+            lmdb::Error::BadValSize => StoreError::KeyValuePairBadSize,
+            lmdb::Error::Invalid => StoreError::FileInvalid,
+            lmdb::Error::MapFull => StoreError::MapFull,
+            lmdb::Error::DbsFull => StoreError::DbsFull,
+            lmdb::Error::ReadersFull => StoreError::ReadersFull,
             _ => StoreError::LmdbError(self.0),
         }
     }

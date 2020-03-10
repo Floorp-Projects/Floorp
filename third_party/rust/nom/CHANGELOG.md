@@ -8,6 +8,176 @@
 
 ### Fixed
 
+## 5.1.1 - 2020-02-24
+
+### Thanks
+
+- @Alexhuszagh for float fixes
+- @AlexanderEkdahl, @JoshOrndorff, @akitsu-sanae for docs fixes
+- @ignatenkobrain: dependency update
+- @derekdreery: `map` implementation for errors
+- @Lucretiel for docs fixes and compilation fixes
+- adytzu2007: warning fixes
+- @lo48576: error management fixes
+
+### Fixed
+
+- C symbols compilation errors due to old lexical-core version
+
+### Added
+
+- `Err` now has a `map` function
+
+### Changed
+
+- Make `error::context()` available without `alloc` feature
+
+## 5.1.0 - 2020-01-07
+
+### Thanks
+
+- @Hywan, @nickmooney, @jplatte, @ngortheone, @ejmg, @SirWindfield, @demurgos, @spazm, @nyarly, @guedou, @adamnemecek, for docs fixes
+- @Alxandr for error management bugfixes
+- @Lucretiel for example fixes and optimizations
+- @adytzu2007 for optimizations
+- @audunhalland for utf8 fixes
+
+### Fixed
+
+- panic in `convert_error`
+- `compile_error` macro usage
+
+### Added
+
+- `std::error::Error`, `std::fmt::Display`, `Eq`, `ToOwned` implementations for errors
+- inline attribute for  `ToUsize`
+
+### Changed
+
+- `convert_error` optimization
+- `alt` optimization
+
+## 5.0.1 - 2020-08-22
+
+### Thanks
+
+- @waywardmonkeys, @phaazon, @dalance for docs fixes
+- @kali for `many0_m_n` fixes
+- @ia0 for macros fixes
+
+### Fixed
+
+- `many0_m_n` now supports the n=1 case
+- relaxed trait requirements in `cut`
+- `peek!` macro reimplementation
+- type inference in `value!`
+
+## 5.0.0 - 2019-06-24
+
+This version comes with a complete rewrite of nom internals to use functions as a base
+for parsers, instead of macros. Macros have been updated to use functions under
+the hood, so that most existing parsers will work directly or require minimal changes.
+
+The `CompleteByteSlice` and `CompleteStr` input types were removed. To get different
+behaviour related to streaming or complete input, there are different versions of some
+parsers in different submodules, like `nom::character::streaming::alpha0` and
+`nom::character::complete::alpha0`.
+
+The `verbose-errors` feature is gone, now the error type is decided through a generic
+bound. To get equivalent behaviour to `verbose-errors`, check out `nom::error::VerboseError`
+
+### Thanks
+
+- @lowenheim helped in refactoring and error management
+- @Keruspe helped in refactoring and fixing tests
+- @pingiun, @Songbird0, @jeremystucki, @BeatButton, @NamsooCho, @Waelwindows, @rbtcollins, @MarkMcCaskey for a lot of help in rewriting the documentation and adding code examples
+- @GuillaumeGomez for documentation rewriting and checking
+- @iosmanthus for bug fixes
+- @lo48576 for error management fixes
+- @vaffeine for macros visibility fixes
+- @webholik and @Havvy for `escaped` and `escaped_transform` fixes
+- @proman21 for help on porting bits parsers
+
+### Added
+
+- the `VerboseError` type accumulates position info and error codes, and can generate a trace with span information
+- the `lexical-core` crate is now used by default (through the `lexical` compilation feature) to parse floats from text
+- documentation and code examples for all functions and macros
+
+### Changed
+
+- nom now uses functions instead of macros to generate parsers
+- macros now use the functions under the hood
+- the minimal Rust version is now 1.31
+- the verify combinator's condition function now takes its argument by reference
+- `cond` will now return the error of the parser instead of None
+- `alpha*`, `digit*`, `hex_digit*`, `alphanumeric*` now recognize only ASCII characters
+
+### Removed
+
+- deprecated string parsers (with the `_s` suffix), the normal version can be used instead
+- `verbose-errors` is not needed anymore, now the error type can be decided when writing the parsers, and parsers provided by nom are generic over the error type
+- `AtEof`, `CompleteByteSlice` and `CompleteStr` are gone, instead some parsers are specialized to work on streaming or complete input, and provided in different modules
+- character parsers that were aliases to their `*1` version: eol, alpha, digit, hex_digit, oct_digit, alphanumeric, space, multispace
+- `count_fixed` macro
+- `whitespace::sp` can be replaced by `character::complete::multispace0`
+- method combinators are now in the nom-methods crate
+- `take_until_either`, `take_until_either1`, `take_until_either_and_consume` and `take_until_either_and_consume1`: they can be replaced with `is_not` (possibly combined with something else)
+- `take_until_and_consume`, `take_until_and_consume1`: they can be replaced with `take_until` combined with `take`
+- `sized_buffer` and `length_bytes!`: they can be replaced with the `length_data` function
+- `non_empty`, `begin` and `rest_s` function
+- `cond_reduce!`, `cond_with_error!`, `closure!`, `apply`, `map_res_err!`, `expr_opt!`, `expr_res!`
+- `alt_complete`, `separated_list_complete`, `separated_nonempty_list_complete`
+
+## 4.2.3 - 2019-03-23
+
+### Fixed
+
+- add missing `build.rs` file to the package
+- fix code comparison links in changelog
+
+## 4.2.2 - 2019-03-04
+
+### Fixed
+
+- regression in do_parse macro import for edition 2018
+
+## 4.2.1 - 2019-02-27
+
+### Fixed
+
+- macro expansion error in `do_parse` due to `compile_error` macro usage
+
+## 4.2.0 - 2019-01-29
+
+### Thanks
+
+- @JoshMcguigan for unit test fixes
+- @oza for documentation fixes
+- @wackywendell for better error conversion
+- @Zebradil for documentation fixes
+- @tsraom for new combinators
+- @hcpl for minimum Rust version tests
+- @KellerFuchs for removing some unsafe uses in float parsing
+
+### Changed
+
+- macro import in edition 2018 code should work without importing internal macros now
+- the regex parsers do not require the calling code to have imported the regex crate anymore
+- error conversions are more ergonomic
+- method combinators are now deprecated. They might be moved to a separate crate
+- nom now specifies Rust 1.24.1 as minimum version. This was already the case before, now it is made explicit
+
+### Added
+
+- `many0_count` and `many1_count` to count applications of a parser instead of
+accumulating its results in a `Vec`
+
+### Fixed
+
+- overflow in the byte wrapper for bit level parsers
+- `f64` parsing does not use `transmute` anymore
+
 ## 4.1.1 - 2018-10-14
 
 ### Fixed
@@ -20,7 +190,7 @@
 
 - @xfix for fixing warnings, simplifying examples and performance fixes
 - @dvberkel for documentation fixes
-- @chifflier for fixinf warnings
+- @chifflier for fixing warnings
 - @myrrlyn for dead code elimination
 - @petrochenkov for removing redundant test macros
 - @tbelaire for documentation fixes
@@ -96,8 +266,8 @@
 - @passy for typo fixes
 - @ayrat555 for typo fixes
 - @GuillaumeGomez for documentation fixes
-- @jrakow for documentation fixes and fiwes for `switch!`
-- @phlosioneer for dicumentation fixes
+- @jrakow for documentation fixes and fixes for `switch!`
+- @phlosioneer for documentation fixes
 - @creativcoder for typo fixes
 - @derekdreery for typo fixes
 - @lucasem for implementing `Deref` on `CompleteStr` and `CompleteByteSlice`
@@ -946,47 +1116,55 @@ Considering the number of changes since the last release, this version can conta
 
 ## Compare code
 
-* [unreleased]: https://github.com/Geal/nom/compare/4.1.1...HEAD
-* [4.1.1]: https://github.com/Geal/nom/compare/4.1.0...4.1.1
-* [4.1.0]: https://github.com/Geal/nom/compare/4.0.0...4.1.0
-* [4.0.0]: https://github.com/Geal/nom/compare/3.2.1...4.0.0
-* [3.2.1]: https://github.com/Geal/nom/compare/3.2.0...3.2.1
-* [3.2.0]: https://github.com/Geal/nom/compare/3.1.0...3.2.0
-* [3.1.0]: https://github.com/Geal/nom/compare/3.0.0...3.1.0
-* [3.0.0]: https://github.com/Geal/nom/compare/2.2.1...3.0.0
-* [2.2.1]: https://github.com/Geal/nom/compare/2.2.0...2.2.1
-* [2.2.0]: https://github.com/Geal/nom/compare/2.1.0...2.2.0
-* [2.1.0]: https://github.com/Geal/nom/compare/2.0.1...2.1.0
-* [2.0.1]: https://github.com/Geal/nom/compare/2.0.0...2.0.1
-* [2.0.0]: https://github.com/Geal/nom/compare/1.2.4...2.0.0
-* [1.2.4]: https://github.com/Geal/nom/compare/1.2.3...1.2.4
-* [1.2.3]: https://github.com/Geal/nom/compare/1.2.2...1.2.3
-* [1.2.2]: https://github.com/Geal/nom/compare/1.2.1...1.2.2
-* [1.2.1]: https://github.com/Geal/nom/compare/1.2.0...1.2.1
-* [1.2.0]: https://github.com/Geal/nom/compare/1.1.0...1.2.0
-* [1.1.0]: https://github.com/Geal/nom/compare/1.0.1...1.1.0
-* [1.0.1]: https://github.com/Geal/nom/compare/1.0.0...1.0.1
-* [1.0.0]: https://github.com/Geal/nom/compare/0.5.0...1.0.0
-* [0.5.0]: https://github.com/geal/nom/compare/0.4.0...0.5.0
-* [0.4.0]: https://github.com/geal/nom/compare/0.3.11...0.4.0
-* [0.3.11]: https://github.com/geal/nom/compare/0.3.10...0.3.11
-* [0.3.10]: https://github.com/geal/nom/compare/0.3.9...0.3.10
-* [0.3.9]: https://github.com/geal/nom/compare/0.3.8...0.3.9
-* [0.3.8]: https://github.com/Geal/nom/compare/0.3.7...0.3.8
-* [0.3.7]: https://github.com/Geal/nom/compare/0.3.6...0.3.7
-* [0.3.6]: https://github.com/Geal/nom/compare/0.3.5...0.3.6
-* [0.3.5]: https://github.com/Geal/nom/compare/0.3.4...0.3.5
-* [0.3.4]: https://github.com/Geal/nom/compare/0.3.3...0.3.4
-* [0.3.3]: https://github.com/Geal/nom/compare/0.3.2...0.3.3
-* [0.3.2]: https://github.com/Geal/nom/compare/0.3.1...0.3.2
-* [0.3.1]: https://github.com/Geal/nom/compare/0.3.0...0.3.1
-* [0.3.0]: https://github.com/Geal/nom/compare/0.2.2...0.3.0
-* [0.2.2]: https://github.com/Geal/nom/compare/0.2.1...0.2.2
-* [0.2.1]: https://github.com/Geal/nom/compare/0.2.0...0.2.1
-* [0.2.0]: https://github.com/Geal/nom/compare/0.1.6...0.2.0
-* [0.1.6]: https://github.com/Geal/nom/compare/0.1.5...0.1.6
-* [0.1.5]: https://github.com/Geal/nom/compare/0.1.4...0.1.5
-* [0.1.4]: https://github.com/Geal/nom/compare/0.1.3...0.1.4
-* [0.1.3]: https://github.com/Geal/nom/compare/0.1.2...0.1.3
-* [0.1.2]: https://github.com/Geal/nom/compare/0.1.1...0.1.2
-* [0.1.1]: https://github.com/Geal/nom/compare/0.1.0...0.1.1
+* [unreleased](https://github.com/Geal/nom/compare/5.1.1...HEAD)
+* [5.1.1](https://github.com/Geal/nom/compare/5.1.0...5.1.1)
+* [5.1.0](https://github.com/Geal/nom/compare/5.0.1...5.1.0)
+* [5.0.1](https://github.com/Geal/nom/compare/5.0.0...5.0.1)
+* [5.0.0](https://github.com/Geal/nom/compare/4.2.3...5.0.0)
+* [4.2.3](https://github.com/Geal/nom/compare/4.2.2...4.2.3)
+* [4.2.2](https://github.com/Geal/nom/compare/4.2.1...4.2.2)
+* [4.2.1](https://github.com/Geal/nom/compare/4.2.0...4.2.1)
+* [4.2.0](https://github.com/Geal/nom/compare/4.1.1...4.2.0)
+* [4.1.1](https://github.com/Geal/nom/compare/4.1.0...4.1.1)
+* [4.1.0](https://github.com/Geal/nom/compare/4.0.0...4.1.0)
+* [4.0.0](https://github.com/Geal/nom/compare/3.2.1...4.0.0)
+* [3.2.1](https://github.com/Geal/nom/compare/3.2.0...3.2.1)
+* [3.2.0](https://github.com/Geal/nom/compare/3.1.0...3.2.0)
+* [3.1.0](https://github.com/Geal/nom/compare/3.0.0...3.1.0)
+* [3.0.0](https://github.com/Geal/nom/compare/2.2.1...3.0.0)
+* [2.2.1](https://github.com/Geal/nom/compare/2.2.0...2.2.1)
+* [2.2.0](https://github.com/Geal/nom/compare/2.1.0...2.2.0)
+* [2.1.0](https://github.com/Geal/nom/compare/2.0.1...2.1.0)
+* [2.0.1](https://github.com/Geal/nom/compare/2.0.0...2.0.1)
+* [2.0.0](https://github.com/Geal/nom/compare/1.2.4...2.0.0)
+* [1.2.4](https://github.com/Geal/nom/compare/1.2.3...1.2.4)
+* [1.2.3](https://github.com/Geal/nom/compare/1.2.2...1.2.3)
+* [1.2.2](https://github.com/Geal/nom/compare/1.2.1...1.2.2)
+* [1.2.1](https://github.com/Geal/nom/compare/1.2.0...1.2.1)
+* [1.2.0](https://github.com/Geal/nom/compare/1.1.0...1.2.0)
+* [1.1.0](https://github.com/Geal/nom/compare/1.0.1...1.1.0)
+* [1.0.1](https://github.com/Geal/nom/compare/1.0.0...1.0.1)
+* [1.0.0](https://github.com/Geal/nom/compare/0.5.0...1.0.0)
+* [0.5.0](https://github.com/geal/nom/compare/0.4.0...0.5.0)
+* [0.4.0](https://github.com/geal/nom/compare/0.3.11...0.4.0)
+* [0.3.11](https://github.com/geal/nom/compare/0.3.10...0.3.11)
+* [0.3.10](https://github.com/geal/nom/compare/0.3.9...0.3.10)
+* [0.3.9](https://github.com/geal/nom/compare/0.3.8...0.3.9)
+* [0.3.8](https://github.com/Geal/nom/compare/0.3.7...0.3.8)
+* [0.3.7](https://github.com/Geal/nom/compare/0.3.6...0.3.7)
+* [0.3.6](https://github.com/Geal/nom/compare/0.3.5...0.3.6)
+* [0.3.5](https://github.com/Geal/nom/compare/0.3.4...0.3.5)
+* [0.3.4](https://github.com/Geal/nom/compare/0.3.3...0.3.4)
+* [0.3.3](https://github.com/Geal/nom/compare/0.3.2...0.3.3)
+* [0.3.2](https://github.com/Geal/nom/compare/0.3.1...0.3.2)
+* [0.3.1](https://github.com/Geal/nom/compare/0.3.0...0.3.1)
+* [0.3.0](https://github.com/Geal/nom/compare/0.2.2...0.3.0)
+* [0.2.2](https://github.com/Geal/nom/compare/0.2.1...0.2.2)
+* [0.2.1](https://github.com/Geal/nom/compare/0.2.0...0.2.1)
+* [0.2.0](https://github.com/Geal/nom/compare/0.1.6...0.2.0)
+* [0.1.6](https://github.com/Geal/nom/compare/0.1.5...0.1.6)
+* [0.1.5](https://github.com/Geal/nom/compare/0.1.4...0.1.5)
+* [0.1.4](https://github.com/Geal/nom/compare/0.1.3...0.1.4)
+* [0.1.3](https://github.com/Geal/nom/compare/0.1.2...0.1.3)
+* [0.1.2](https://github.com/Geal/nom/compare/0.1.1...0.1.2)
+* [0.1.1](https://github.com/Geal/nom/compare/0.1.0...0.1.1)

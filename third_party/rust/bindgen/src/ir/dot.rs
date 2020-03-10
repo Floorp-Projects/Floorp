@@ -38,11 +38,7 @@ where
             &mut dot_file,
             r#"{} [fontname="courier", color={}, label=< <table border="0" align="left">"#,
             id.as_usize(),
-            if is_whitelisted {
-                "black"
-            } else {
-                "gray"
-            }
+            if is_whitelisted { "black" } else { "gray" }
         )?;
         item.dot_attributes(ctx, &mut dot_file)?;
         writeln!(&mut dot_file, r#"</table> >];"#)?;

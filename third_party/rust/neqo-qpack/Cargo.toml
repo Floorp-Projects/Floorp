@@ -1,6 +1,6 @@
 [package]
 name = "neqo-qpack"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
@@ -9,7 +9,7 @@ license = "MIT/Apache-2.0"
 neqo-common = { path = "./../neqo-common" }
 neqo-transport = { path = "./../neqo-transport" }
 neqo-crypto = { path = "./../neqo-crypto" }
-log = "0.4.0"
+log = {version = "0.4.0", default-features = false}
 
 [dev-dependencies]
 test-fixture = { path = "../test-fixture" }

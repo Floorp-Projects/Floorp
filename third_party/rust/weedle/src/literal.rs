@@ -5,42 +5,33 @@ ast_types! {
         /// Parses `-?[1-9][0-9]*`
         #[derive(Copy)]
         Dec(struct DecLit<'a>(
-            &'a str = map!(
-                ws!(recognize!(do_parse!(
-                    opt!(char!('-')) >>
-                    one_of!("123456789") >>
-                    take_while!(|c: char| c.is_ascii_digit()) >>
-                    (())
-                ))),
-                |inner| inner.0
-            ),
+            &'a str = ws!(recognize!(do_parse!(
+                opt!(char!('-')) >>
+                one_of!("123456789") >>
+                take_while!(|c: char| c.is_ascii_digit()) >>
+                (())
+            ))),
         )),
         /// Parses `-?0[Xx][0-9A-Fa-f]+)`
         #[derive(Copy)]
         Hex(struct HexLit<'a>(
-            &'a str = map!(
-                ws!(recognize!(do_parse!(
-                    opt!(char!('-')) >>
-                    char!('0') >>
-                    alt!(char!('x') | char!('X')) >>
-                    take_while!(|c: char| c.is_ascii_hexdigit()) >>
-                    (())
-                ))),
-                |inner| inner.0
-            ),
+            &'a str = ws!(recognize!(do_parse!(
+                opt!(char!('-')) >>
+                char!('0') >>
+                alt!(char!('x') | char!('X')) >>
+                take_while!(|c: char| c.is_ascii_hexdigit()) >>
+                (())
+            ))),
         )),
         /// Parses `-?0[0-7]*`
         #[derive(Copy)]
         Oct(struct OctLit<'a>(
-            &'a str = map!(
-                ws!(recognize!(do_parse!(
-                    opt!(char!('-')) >>
-                    char!('0') >>
-                    take_while!(|c| '0' <= c && c <= '7') >>
-                    (())
-                ))),
-                |inner| inner.0
-            ),
+            &'a str = ws!(recognize!(do_parse!(
+                opt!(char!('-')) >>
+                char!('0') >>
+                take_while!(|c| '0' <= c && c <= '7') >>
+                (())
+            ))),
         )),
     }
 
@@ -53,7 +44,7 @@ ast_types! {
             char!('"') >>
             s: take_while!(|c| c != '"') >>
             char!('"') >>
-            (s.0)
+            (s)
         )),
     )
 
@@ -66,6 +57,12 @@ ast_types! {
         EmptyArray(struct EmptyArrayLit {
             open_bracket: term!(OpenBracket),
             close_bracket: term!(CloseBracket),
+        }),
+        /// Represents `{ }`
+        #[derive(Copy, Default)]
+        EmptyDictionary(struct EmptyDictionaryLit {
+            open_brace: term!(OpenBrace),
+            close_brace: term!(CloseBrace),
         }),
         Float(FloatLit<'a>),
         Integer(IntegerLit<'a>),
@@ -97,50 +94,47 @@ ast_types! {
         /// Parses `/-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)/`
         #[derive(Copy)]
         Value(struct FloatValueLit<'a>(
-            &'a str = map!(
-                ws!(recognize!(do_parse!(
-                    opt!(char!('-')) >>
-                    alt!(
-                        do_parse!(
-                            // (?:[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)
-                            alt!(
-                                do_parse!(
-                                    take_while1!(|c: char| c.is_ascii_digit()) >>
-                                    char!('.') >>
-                                    take_while!(|c: char| c.is_ascii_digit()) >>
-                                    (())
-                                )
-                                |
-                                do_parse!(
-                                    take_while!(|c: char| c.is_ascii_digit()) >>
-                                    char!('.') >>
-                                    take_while1!(|c: char| c.is_ascii_digit()) >>
-                                    (())
-                                )
-                            ) >>
-                            // (?:[Ee][+-]?[0-9]+)?
-                            opt!(do_parse!(
-                                alt!(char!('e') | char!('E')) >>
-                                opt!(alt!(char!('+') | char!('-'))) >>
+            &'a str = ws!(recognize!(do_parse!(
+                opt!(char!('-')) >>
+                alt!(
+                    do_parse!(
+                        // (?:[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)
+                        alt!(
+                            do_parse!(
+                                take_while1!(|c: char| c.is_ascii_digit()) >>
+                                char!('.') >>
+                                take_while!(|c: char| c.is_ascii_digit()) >>
+                                (())
+                            )
+                            |
+                            do_parse!(
+                                take_while!(|c: char| c.is_ascii_digit()) >>
+                                char!('.') >>
                                 take_while1!(|c: char| c.is_ascii_digit()) >>
                                 (())
-                            )) >>
-                            (())
-                        )
-                        |
-                        // [0-9]+[Ee][+-]?[0-9]+
-                        do_parse!(
-                            take_while1!(|c: char| c.is_ascii_digit()) >>
+                            )
+                        ) >>
+                        // (?:[Ee][+-]?[0-9]+)?
+                        opt!(do_parse!(
                             alt!(char!('e') | char!('E')) >>
                             opt!(alt!(char!('+') | char!('-'))) >>
                             take_while1!(|c: char| c.is_ascii_digit()) >>
                             (())
-                        )
-                    ) >>
-                    (())
-                ))),
-                |inner| inner.0
-            ),
+                        )) >>
+                        (())
+                    )
+                    |
+                    // [0-9]+[Ee][+-]?[0-9]+
+                    do_parse!(
+                        take_while1!(|c: char| c.is_ascii_digit()) >>
+                        alt!(char!('e') | char!('E')) >>
+                        opt!(alt!(char!('+') | char!('-'))) >>
+                        take_while1!(|c: char| c.is_ascii_digit()) >>
+                        (())
+                    )
+                ) >>
+                (())
+            ))),
         )),
         NegInfinity(term!(-Infinity)),
         Infinity(term!(Infinity)),
@@ -151,8 +145,8 @@ ast_types! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use term::*;
-    use Parse;
+    use crate::term::*;
+    use crate::Parse;
 
     test!(should_parse_integer { "45" =>
         "";
@@ -247,6 +241,22 @@ mod test {
     test!(should_parse_string_followed_by_string { r#" "this is first"  "this is second" "# =>
         r#""this is second" "#;
         StringLit => StringLit("this is first")
+    });
+
+    test!(should_parse_string_with_spaces { r#"  "  this is a string  "  "# =>
+        "";
+        StringLit => StringLit("  this is a string  ")
+    });
+
+    test!(should_parse_string_with_comment { r#"  "// this is still a string"
+     "# =>
+        "";
+        StringLit => StringLit("// this is still a string")
+    });
+
+    test!(should_parse_string_with_multiline_comment { r#"  "/*"  "*/"  "# =>
+        r#""*/"  "#;
+        StringLit => StringLit("/*")
     });
 
     test!(should_parse_null { "null" =>

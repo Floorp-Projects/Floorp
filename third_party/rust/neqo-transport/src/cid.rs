@@ -12,6 +12,8 @@ use neqo_crypto::random;
 use std::borrow::Borrow;
 use std::cmp::max;
 
+pub const MAX_CONNECTION_ID_LEN: usize = 20;
+
 #[derive(Clone, Default, Eq, Hash, PartialEq)]
 pub struct ConnectionId {
     pub(crate) cid: Vec<u8>,
@@ -19,7 +21,7 @@ pub struct ConnectionId {
 
 impl ConnectionId {
     pub fn generate(len: usize) -> Self {
-        assert!(matches!(len, 0..=20));
+        assert!(matches!(len, 0..=MAX_CONNECTION_ID_LEN));
         Self { cid: random(len) }
     }
 
@@ -141,7 +143,7 @@ mod tests {
         fixture_init();
         for _ in 0..100 {
             let cid = ConnectionId::generate_initial();
-            if !matches!(cid.len(), 8..=20) {
+            if !matches!(cid.len(), 8..=MAX_CONNECTION_ID_LEN) {
                 panic!("connection ID {:?}", cid);
             }
         }

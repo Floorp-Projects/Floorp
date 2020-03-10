@@ -8,7 +8,6 @@
 //! See the [Users Guide](https://rust-lang.github.io/rust-bindgen/) for
 //! additional documentation.
 #![deny(missing_docs)]
-#![deny(warnings)]
 #![deny(unused_extern_crates)]
 // To avoid rather annoying warnings when matching with CXCursor_xxx as a
 // constant.
@@ -23,6 +22,7 @@ extern crate cexpr;
 #[allow(unused_extern_crates)]
 extern crate cfg_if;
 extern crate clang_sys;
+extern crate lazycell;
 extern crate rustc_hash;
 #[macro_use]
 extern crate lazy_static;
@@ -82,7 +82,7 @@ doc_mod!(ir, ir_docs);
 doc_mod!(parse, parse_docs);
 doc_mod!(regex_set, regex_set_docs);
 
-pub use codegen::EnumVariation;
+pub use codegen::{AliasVariation, EnumVariation};
 use features::RustFeatures;
 pub use features::{RustTarget, LATEST_STABLE_RUST, RUST_TARGET_STRINGS};
 use ir::context::{BindgenContext, ItemId};
@@ -95,7 +95,6 @@ use std::fs::{File, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::sync::Arc;
 use std::{env, iter};
 
 // Some convenient typedefs for a fast hash map and hash set.
@@ -174,8 +173,8 @@ impl Default for CodegenConfig {
 ///
 /// // Configure and generate bindings.
 /// let bindings = builder().header("path/to/input/header")
-///     .whitelisted_type("SomeCoolClass")
-///     .whitelisted_function("do_some_cool_thing")
+///     .whitelist_type("SomeCoolClass")
+///     .whitelist_function("do_some_cool_thing")
 ///     .generate()?;
 ///
 /// // Write the generated bindings to an output file.
@@ -189,13 +188,15 @@ impl Default for CodegenConfig {
 ///
 /// 1. [`constified_enum_module()`](#method.constified_enum_module)
 /// 2. [`bitfield_enum()`](#method.bitfield_enum)
-/// 3. [`rustified_enum()`](#method.rustified_enum)
+/// 3. [`newtype_enum()`](#method.newtype_enum)
+/// 4. [`rustified_enum()`](#method.rustified_enum)
 ///
 /// For each C enum, bindgen tries to match the pattern in the following order:
 ///
 /// 1. Constified enum module
 /// 2. Bitfield enum
-/// 3. Rustified enum
+/// 3. Newtype enum
+/// 4. Rustified enum
 ///
 /// If none of the above patterns match, then bindgen will generate a set of Rust constants.
 #[derive(Debug, Default)]
@@ -234,7 +235,12 @@ impl Builder {
                     codegen::EnumVariation::Rust {
                         non_exhaustive: true,
                     } => "rust_non_exhaustive",
-                    codegen::EnumVariation::Bitfield => "bitfield",
+                    codegen::EnumVariation::NewType { is_bitfield: true } => {
+                        "bitfield"
+                    }
+                    codegen::EnumVariation::NewType { is_bitfield: false } => {
+                        "newtype"
+                    }
                     codegen::EnumVariation::Consts => "consts",
                     codegen::EnumVariation::ModuleConsts => "moduleconsts",
                 }
@@ -248,6 +254,16 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--bitfield-enum".into());
+                output_vector.push(item.to_owned());
+            })
+            .count();
+
+        self.options
+            .newtype_enums
+            .get_items()
+            .iter()
+            .map(|item| {
+                output_vector.push("--newtype-enum".into());
                 output_vector.push(item.to_owned());
             })
             .count();
@@ -288,6 +304,42 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--constified-enum".into());
+                output_vector.push(item.to_owned());
+            })
+            .count();
+
+        if self.options.default_alias_style != Default::default() {
+            output_vector.push("--default-alias-style=".into());
+            output_vector
+                .push(self.options.default_alias_style.as_str().into());
+        }
+
+        self.options
+            .type_alias
+            .get_items()
+            .iter()
+            .map(|item| {
+                output_vector.push("--type-alias".into());
+                output_vector.push(item.to_owned());
+            })
+            .count();
+
+        self.options
+            .new_type_alias
+            .get_items()
+            .iter()
+            .map(|item| {
+                output_vector.push("--new-type-alias".into());
+                output_vector.push(item.to_owned());
+            })
+            .count();
+
+        self.options
+            .new_type_alias_deref
+            .get_items()
+            .iter()
+            .map(|item| {
+                output_vector.push("--new-type-alias-deref".into());
                 output_vector.push(item.to_owned());
             })
             .count();
@@ -421,6 +473,9 @@ impl Builder {
         if self.options.disable_name_namespacing {
             output_vector.push("--disable-name-namespacing".into());
         }
+        if self.options.disable_nested_struct_naming {
+            output_vector.push("--disable-nested-struct-naming".into());
+        }
 
         if !self.options.codegen_config.functions() {
             output_vector.push("--ignore-functions".into());
@@ -465,6 +520,13 @@ impl Builder {
 
         if self.options.array_pointers_in_arguments {
             output_vector.push("--use-array-pointers-in-arguments".into());
+        }
+
+        if let Some(ref wasm_import_module_name) =
+            self.options.wasm_import_module_name
+        {
+            output_vector.push("--wasm-import-module-name".into());
+            output_vector.push(wasm_import_module_name.clone());
         }
 
         self.options
@@ -540,6 +602,10 @@ impl Builder {
 
         if !self.options.record_matches {
             output_vector.push("--no-record-matches".into());
+        }
+
+        if self.options.size_t_is_usize {
+            output_vector.push("--size_t-is-usize".into());
         }
 
         if !self.options.rustfmt_bindings {
@@ -732,6 +798,10 @@ impl Builder {
 
     /// Hide the given type from the generated bindings. Regular expressions are
     /// supported.
+    ///
+    /// To blacklist types prefixed with "mylib" use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn blacklist_type<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.blacklisted_types.insert(arg);
         self
@@ -739,6 +809,10 @@ impl Builder {
 
     /// Hide the given function from the generated bindings. Regular expressions
     /// are supported.
+    ///
+    /// To blacklist functions prefixed with "mylib" use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn blacklist_function<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.blacklisted_functions.insert(arg);
         self
@@ -747,6 +821,10 @@ impl Builder {
     /// Hide the given item from the generated bindings, regardless of
     /// whether it's a type, function, module, etc. Regular
     /// expressions are supported.
+    ///
+    /// To blacklist items prefixed with "mylib" use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn blacklist_item<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.blacklisted_items.insert(arg);
         self
@@ -754,6 +832,10 @@ impl Builder {
 
     /// Treat the given type as opaque in the generated bindings. Regular
     /// expressions are supported.
+    ///
+    /// To change types prefixed with "mylib" into opaque, use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn opaque_type<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.opaque_types.insert(arg);
         self
@@ -770,6 +852,10 @@ impl Builder {
     /// Whitelist the given type so that it (and all types that it transitively
     /// refers to) appears in the generated bindings. Regular expressions are
     /// supported.
+    ///
+    /// To whitelist types prefixed with "mylib" use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn whitelist_type<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.whitelisted_types.insert(arg);
         self
@@ -778,6 +864,10 @@ impl Builder {
     /// Whitelist the given function so that it (and all types that it
     /// transitively refers to) appears in the generated bindings. Regular
     /// expressions are supported.
+    ///
+    /// To whitelist functions prefixed with "mylib" use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn whitelist_function<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.whitelisted_functions.insert(arg);
         self
@@ -794,6 +884,10 @@ impl Builder {
     /// Whitelist the given variable so that it (and all types that it
     /// transitively refers to) appears in the generated bindings. Regular
     /// expressions are supported.
+    ///
+    /// To whitelist variables prefixed with "mylib" use `"mylib_.*"`.
+    /// For more complicated expressions check
+    /// [regex](https://docs.rs/regex/*/regex/) docs
     pub fn whitelist_var<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.whitelisted_vars.insert(arg);
         self
@@ -821,8 +915,21 @@ impl Builder {
     ///
     /// This makes bindgen generate a type that isn't a rust `enum`. Regular
     /// expressions are supported.
+    ///
+    /// This is similar to the newtype enum style, but with the bitwise
+    /// operators implemented.
     pub fn bitfield_enum<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.bitfield_enums.insert(arg);
+        self
+    }
+
+    /// Mark the given enum (or set of enums, if using a pattern) as a newtype.
+    /// Regular expressions are supported.
+    ///
+    /// This makes bindgen generate a type that isn't a Rust `enum`. Regular
+    /// expressions are supported.
+    pub fn newtype_enum<T: AsRef<str>>(mut self, arg: T) -> Builder {
+        self.options.newtype_enums.insert(arg);
         self
     }
 
@@ -841,7 +948,7 @@ impl Builder {
     }
 
     /// Mark the given enum (or set of enums, if using a pattern) as a Rust
-    /// enum with the #[non_exhaustive] attribute.
+    /// enum with the `#[non_exhaustive]` attribute.
     ///
     /// This makes bindgen generate enums instead of constants. Regular
     /// expressions are supported.
@@ -867,6 +974,45 @@ impl Builder {
     /// just constants. Regular expressions are supported.
     pub fn constified_enum_module<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.constified_enum_modules.insert(arg);
+        self
+    }
+
+    /// Set the default style of code to generate for typedefs
+    pub fn default_alias_style(
+        mut self,
+        arg: codegen::AliasVariation,
+    ) -> Builder {
+        self.options.default_alias_style = arg;
+        self
+    }
+
+    /// Mark the given typedef alias (or set of aliases, if using a pattern) to
+    /// use regular Rust type aliasing.
+    ///
+    /// This is the default behavior and should be used if `default_alias_style`
+    /// was set to NewType or NewTypeDeref and you want to override it for a
+    /// set of typedefs.
+    pub fn type_alias<T: AsRef<str>>(mut self, arg: T) -> Builder {
+        self.options.type_alias.insert(arg);
+        self
+    }
+
+    /// Mark the given typedef alias (or set of aliases, if using a pattern) to
+    /// be generated as a new type by having the aliased type be wrapped in a
+    /// #[repr(transparent)] struct.
+    ///
+    /// Used to enforce stricter type checking.
+    pub fn new_type_alias<T: AsRef<str>>(mut self, arg: T) -> Builder {
+        self.options.new_type_alias.insert(arg);
+        self
+    }
+
+    /// Mark the given typedef alias (or set of aliases, if using a pattern) to
+    /// be generated as a new type by having the aliased type be wrapped in a
+    /// #[repr(transparent)] struct and also have an automatically generated
+    /// impl's of `Deref` and `DerefMut` to their aliased type.
+    pub fn new_type_alias_deref<T: AsRef<str>>(mut self, arg: T) -> Builder {
+        self.options.new_type_alias_deref.insert(arg);
         self
     }
 
@@ -1078,6 +1224,29 @@ impl Builder {
         self
     }
 
+    /// Disable nested struct naming.
+    ///
+    /// The following structs have different names for C and C++. In case of C
+    /// they are visible as `foo` and `bar`. In case of C++ they are visible as
+    /// `foo` and `foo::bar`.
+    ///
+    /// ```c
+    /// struct foo {
+    ///     struct bar {
+    ///     } b;
+    /// };
+    /// ```
+    ///
+    /// Bindgen wants to avoid duplicate names by default so it follows C++ naming
+    /// and it generates `foo`/`foo_bar` instead of just `foo`/`bar`.
+    ///
+    /// This method disables this behavior and it is indented to be used only
+    /// for headers that were written for C.
+    pub fn disable_nested_struct_naming(mut self) -> Builder {
+        self.options.disable_nested_struct_naming = true;
+        self
+    }
+
     /// Treat inline namespaces conservatively.
     ///
     /// This is tricky, because in C++ is technically legal to override an item
@@ -1179,9 +1348,15 @@ impl Builder {
         self
     }
 
-    /// Prepend the enum name to constant or bitfield variants.
+    /// Prepend the enum name to constant or newtype variants.
     pub fn prepend_enum_name(mut self, doit: bool) -> Self {
         self.options.prepend_enum_name = doit;
+        self
+    }
+
+    /// Set whether `size_t` should be translated to `usize` automatically.
+    pub fn size_t_is_usize(mut self, is: bool) -> Self {
+        self.options.size_t_is_usize = is;
         self
     }
 
@@ -1361,6 +1536,15 @@ impl Builder {
         self.options.array_pointers_in_arguments = doit;
         self
     }
+
+    /// Set the wasm import module name
+    pub fn wasm_import_module_name<T: Into<String>>(
+        mut self,
+        import_name: T,
+    ) -> Self {
+        self.options.wasm_import_module_name = Some(import_name.into());
+        self
+    }
 }
 
 /// Configuration options for generated bindings.
@@ -1402,12 +1586,17 @@ struct BindgenOptions {
     /// The default style of code to generate for enums
     default_enum_style: codegen::EnumVariation,
 
-    /// The enum patterns to mark an enum as bitfield.
+    /// The enum patterns to mark an enum as a bitfield
+    /// (newtype with bitwise operations).
     bitfield_enums: RegexSet,
+
+    /// The enum patterns to mark an enum as a newtype.
+    newtype_enums: RegexSet,
 
     /// The enum patterns to mark an enum as a Rust enum.
     rustified_enums: RegexSet,
 
+    /// The enum patterns to mark an enum as a non-exhaustive Rust enum.
     rustified_non_exhaustive_enums: RegexSet,
 
     /// The enum patterns to mark an enum as a module of constants.
@@ -1415,6 +1604,19 @@ struct BindgenOptions {
 
     /// The enum patterns to mark an enum as a set of constants.
     constified_enums: RegexSet,
+
+    /// The default style of code to generate for typedefs.
+    default_alias_style: codegen::AliasVariation,
+
+    /// Typedef patterns that will use regular type aliasing.
+    type_alias: RegexSet,
+
+    /// Typedef patterns that will be aliased by creating a new struct.
+    new_type_alias: RegexSet,
+
+    /// Typedef patterns that will be wrapped in a new struct and have
+    /// Deref and Deref to their aliased type.
+    new_type_alias_deref: RegexSet,
 
     /// Whether we should generate builtins or not.
     builtins: bool,
@@ -1438,6 +1640,9 @@ struct BindgenOptions {
 
     /// True if we should avoid mangling names with namespaces.
     disable_name_namespacing: bool,
+
+    /// True if we should avoid generating nested struct names.
+    disable_nested_struct_naming: bool,
 
     /// True if we should generate layout tests for generated structures.
     layout_tests: bool,
@@ -1566,7 +1771,7 @@ struct BindgenOptions {
     /// Whether to detect include paths using clang_sys.
     detect_include_paths: bool,
 
-    /// Whether to prepend the enum name to bitfield or constant variants.
+    /// Whether to prepend the enum name to constant or newtype variants.
     prepend_enum_name: bool,
 
     /// Version of the Rust compiler to target
@@ -1580,6 +1785,9 @@ struct BindgenOptions {
     /// This may be a bit slower, but will enable reporting of unused whitelist
     /// items via the `error!` log.
     record_matches: bool,
+
+    /// Whether `size_t` should be translated to `usize` automatically.
+    size_t_is_usize: bool,
 
     /// Whether rustfmt should format the generated bindings.
     rustfmt_bindings: bool,
@@ -1599,6 +1807,9 @@ struct BindgenOptions {
 
     /// Decide if C arrays should be regular pointers in rust or array pointers
     array_pointers_in_arguments: bool,
+
+    /// Wasm import module name.
+    wasm_import_module_name: Option<String>,
 }
 
 /// TODO(emilio): This is sort of a lie (see the error message that results from
@@ -1619,7 +1830,12 @@ impl BindgenOptions {
             &mut self.bitfield_enums,
             &mut self.constified_enums,
             &mut self.constified_enum_modules,
+            &mut self.newtype_enums,
             &mut self.rustified_enums,
+            &mut self.rustified_non_exhaustive_enums,
+            &mut self.type_alias,
+            &mut self.new_type_alias,
+            &mut self.new_type_alias_deref,
             &mut self.no_partialeq_types,
             &mut self.no_copy_types,
             &mut self.no_hash_types,
@@ -1661,10 +1877,15 @@ impl Default for BindgenOptions {
             whitelisted_vars: Default::default(),
             default_enum_style: Default::default(),
             bitfield_enums: Default::default(),
+            newtype_enums: Default::default(),
             rustified_enums: Default::default(),
             rustified_non_exhaustive_enums: Default::default(),
             constified_enums: Default::default(),
             constified_enum_modules: Default::default(),
+            default_alias_style: Default::default(),
+            type_alias: Default::default(),
+            new_type_alias: Default::default(),
+            new_type_alias_deref: Default::default(),
             builtins: false,
             emit_ast: false,
             emit_ir: false,
@@ -1683,6 +1904,7 @@ impl Default for BindgenOptions {
             enable_cxx_namespaces: false,
             enable_function_attribute_detection: false,
             disable_name_namespacing: false,
+            disable_nested_struct_naming: false,
             use_core: false,
             ctypes_prefix: None,
             namespaced_constants: true,
@@ -1708,15 +1930,18 @@ impl Default for BindgenOptions {
             time_phases: false,
             record_matches: true,
             rustfmt_bindings: true,
+            size_t_is_usize: false,
             rustfmt_configuration_file: None,
             no_partialeq_types: Default::default(),
             no_copy_types: Default::default(),
             no_hash_types: Default::default(),
             array_pointers_in_arguments: false,
+            wasm_import_module_name: None,
         }
     }
 }
 
+#[cfg(feature = "runtime")]
 fn ensure_libclang_is_loaded() {
     if clang_sys::is_loaded() {
         return;
@@ -1727,7 +1952,7 @@ fn ensure_libclang_is_loaded() {
     // across different threads.
 
     lazy_static! {
-        static ref LIBCLANG: Arc<clang_sys::SharedLibrary> = {
+        static ref LIBCLANG: std::sync::Arc<clang_sys::SharedLibrary> = {
             clang_sys::load().expect("Unable to find libclang");
             clang_sys::get_library().expect(
                 "We just loaded libclang and it had better still be \
@@ -1738,6 +1963,9 @@ fn ensure_libclang_is_loaded() {
 
     clang_sys::set_library(Some(LIBCLANG.clone()));
 }
+
+#[cfg(not(feature = "runtime"))]
+fn ensure_libclang_is_loaded() {}
 
 /// Generated Rust bindings.
 #[derive(Debug)]
@@ -1753,10 +1981,13 @@ impl Bindings {
     ) -> Result<Bindings, ()> {
         ensure_libclang_is_loaded();
 
+        #[cfg(feature = "runtime")]
         debug!(
             "Generating bindings, libclang at {}",
             clang_sys::get_library().unwrap().path().display()
         );
+        #[cfg(not(feature = "runtime"))]
+        debug!("Generating bindings, libclang linked");
 
         options.build();
 
@@ -1958,10 +2189,9 @@ impl Bindings {
             }
         }
         #[cfg(not(feature = "which-rustfmt"))]
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "which wasn't enabled, and no rustfmt binary specified",
-        ))
+        // No rustfmt binary was specified, so assume that the binary is called
+        // "rustfmt" and that it is in the user's PATH.
+        Ok(Cow::Owned("rustfmt".into()))
     }
 
     /// Checks if rustfmt_bindings is set and runs rustfmt on the string
@@ -2113,10 +2343,7 @@ pub struct ClangVersion {
 
 /// Get the major and the minor semver numbers of Clang's version
 pub fn clang_version() -> ClangVersion {
-    if !clang_sys::is_loaded() {
-        // TODO(emilio): Return meaningful error (breaking).
-        clang_sys::load().expect("Unable to find libclang");
-    }
+    ensure_libclang_is_loaded();
 
     let raw_v: String = clang::extract_clang_version();
     let split_v: Option<Vec<&str>> = raw_v
@@ -2144,6 +2371,27 @@ pub fn clang_version() -> ClangVersion {
     ClangVersion {
         parsed: None,
         full: raw_v.clone(),
+    }
+}
+
+/// A ParseCallbacks implementation that will act on file includes by echoing a rerun-if-changed
+/// line
+///
+/// When running in side a `build.rs` script, this can be used to make cargo invalidate the
+/// generated bindings whenever any of the files included from the header change:
+/// ```
+/// use bindgen::builder;
+/// let bindings = builder()
+///     .header("path/to/input/header")
+///     .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+///     .generate();
+/// ```
+#[derive(Debug)]
+pub struct CargoCallbacks;
+
+impl callbacks::ParseCallbacks for CargoCallbacks {
+    fn include_file(&self, filename: &str) {
+        println!("cargo:rerun-if-changed={}", filename);
     }
 }
 

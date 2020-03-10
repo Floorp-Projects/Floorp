@@ -1,8 +1,8 @@
-use argument::ArgumentList;
-use attribute::ExtendedAttributeList;
-use common::{Braced, Generics, Identifier};
-use literal::ConstValue;
-use types::{AttributedType, ConstType, ReturnType};
+use crate::argument::ArgumentList;
+use crate::attribute::ExtendedAttributeList;
+use crate::common::{Generics, Identifier, Parenthesized};
+use crate::literal::ConstValue;
+use crate::types::{AttributedType, ConstType, ReturnType};
 
 /// Parses interface members
 pub type InterfaceMembers<'a> = Vec<InterfaceMember<'a>>;
@@ -37,6 +37,15 @@ ast_types! {
             identifier: Identifier<'a>,
             semi_colon: term!(;),
         }),
+        /// Parses `[attributes]? constructor(( args ));`
+        ///
+        /// (( )) means ( ) chars
+        Constructor(struct ConstructorInterfaceMember<'a> {
+            attributes: Option<ExtendedAttributeList<'a>>,
+            constructor: term!(constructor),
+            args: Parenthesized<ArgumentList<'a>>,
+            semi_colon: term!(;),
+        }),
         /// Parses `[attributes]? (stringifier|static)? special? returntype identifier? (( args ));`
         ///
         /// (( )) means ( ) chars
@@ -46,7 +55,7 @@ ast_types! {
             special: Option<Special>,
             return_type: ReturnType<'a>,
             identifier: Option<Identifier<'a>>,
-            args: Braced<ArgumentList<'a>>,
+            args: Parenthesized<ArgumentList<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses an iterable declaration `[attributes]? (iterable<attributedtype> | iterable<attributedtype, attributedtype>) ;`
@@ -118,7 +127,7 @@ ast_types! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use Parse;
+    use crate::Parse;
 
     test!(should_parse_stringifier_member { "stringifier;" =>
         "";
@@ -166,6 +175,12 @@ mod test {
     test!(should_parse_single_typed_iterable { "iterable<long>;" =>
         "";
         SingleTypedIterable;
+        attributes.is_none();
+    });
+
+    test!(should_parse_constructor_interface_member { "constructor(long a);" =>
+        "";
+        ConstructorInterfaceMember;
         attributes.is_none();
     });
 

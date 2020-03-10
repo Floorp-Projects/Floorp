@@ -256,15 +256,16 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.51.1"
+version = "0.53.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebd71393f1ec0509b553aa012b9b58e81dadbdff7130bd3b8cba576e69b32f75"
+checksum = "6bb26d6a69a335b8cb0e7c7e9775cd5666611dc50a37177c3f2cedcfc040e8c8"
 dependencies = [
  "bitflags",
  "cexpr",
  "cfg-if",
  "clang-sys",
  "lazy_static",
+ "lazycell",
  "peeking_take_while",
  "proc-macro2",
  "quote",
@@ -275,9 +276,9 @@ dependencies = [
 
 [[package]]
 name = "binjs_meta"
-version = "0.5.2"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c9a0da2208ceb785c1626fa8b7d250d2e5546ae230294b4a998e4f818c1768e"
+checksum = "d535cc5246fd9035268770420afd76c05f87e68b83ebed0ac94e8258e88fc353"
 dependencies = [
  "Inflector",
  "itertools",
@@ -478,7 +479,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "rental",
- "rkv 0.11.0",
+ "rkv 0.11.1",
  "rust_cascade",
  "sha2",
  "storage_variant",
@@ -490,9 +491,9 @@ dependencies = [
 
 [[package]]
 name = "cexpr"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fc0086be9ca82f7fc89fc873435531cb898b86e850005850de1f820e2db6e9b"
+checksum = "f4aedb84272dbe89af497cf81375129abda4fc0a9e7c5d317498c15cc30c0d27"
 dependencies = [
  "nom",
 ]
@@ -537,9 +538,9 @@ dependencies = [
 
 [[package]]
 name = "clang-sys"
-version = "0.28.1"
+version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81de550971c976f176130da4b2978d3b524eaa0fd9ac31f3ceb5ae1231fb4853"
+checksum = "f92986241798376849e1a007827041fed9bb36195822c2049d18e174420e0534"
 dependencies = [
  "glob",
  "libc",
@@ -675,9 +676,9 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-sys"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e8f5954c1c7ccb55340443e8b29fca24013545a5e7d72c1ca7db4fc02b982ce"
+checksum = "e81f1c165c33ffab90a03077ac3b03462b34d5947145dfa48102e063d581502c"
 dependencies = [
  "bindgen",
 ]
@@ -1046,9 +1047,9 @@ dependencies = [
 
 [[package]]
 name = "devd-rs"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d009f166c0d9e9f9909dc751630b3a6411ab7f85a153d32d01deb364ffe52a7"
+checksum = "1945ccb7caedabdfb9347766ead740fb1e0582b7425598325f546adbd832cce1"
 dependencies = [
  "libc",
  "nom",
@@ -1387,7 +1388,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "lmdb-rkv",
- "rkv 0.10.2",
+ "rkv 0.10.4",
  "tempfile",
 ]
 
@@ -1411,7 +1412,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serde_yaml",
- "uuid 0.8.1",
+ "uuid",
  "webdriver",
  "zip",
 ]
@@ -1656,7 +1657,7 @@ name = "gkrust_utils"
 version = "0.1.0"
 dependencies = [
  "nsstring",
- "uuid 0.8.1",
+ "uuid",
 ]
 
 [[package]]
@@ -1692,10 +1693,10 @@ dependencies = [
  "log",
  "once_cell",
  "regex",
- "rkv 0.10.2",
+ "rkv 0.10.4",
  "serde",
  "serde_json",
- "uuid 0.8.1",
+ "uuid",
 ]
 
 [[package]]
@@ -2067,7 +2068,7 @@ dependencies = [
  "moz_task",
  "nserror",
  "nsstring",
- "rkv 0.10.2",
+ "rkv 0.10.4",
  "storage_variant",
  "tempfile",
  "thin-vec",
@@ -2158,9 +2159,9 @@ checksum = "70fb39025bc7cdd76305867c4eccf2f2dcf6e9a57f5b21a93e1c2d86cd03ec9e"
 
 [[package]]
 name = "lmdb-rkv"
-version = "0.12.3"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "605061e5465304475be2041f19967a900175ea1b6d8f47fbab84a84fb8c48452"
+checksum = "447a296f7aca299cfbb50f4e4f3d49451549af655fb7215d7f8c0c3d64bad42b"
 dependencies = [
  "bitflags",
  "byteorder",
@@ -2170,11 +2171,10 @@ dependencies = [
 
 [[package]]
 name = "lmdb-rkv-sys"
-version = "0.9.5"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1e4b19a1fdf5b74bc802cc9aa7c0c86a775e8b872ba9d5a4e606ffc5d076953"
+checksum = "b27470ac25167b3afdfb6af8fcd3bc1be67de50ffbdaf4073378cfded6ae24a5"
 dependencies = [
- "bindgen",
  "cc",
  "libc",
  "pkg-config",
@@ -2343,7 +2343,7 @@ dependencies = [
  "dns-parser",
  "log",
  "socket2",
- "uuid 0.8.1",
+ "uuid",
 ]
 
 [[package]]
@@ -2388,18 +2388,15 @@ dependencies = [
 
 [[package]]
 name = "mime"
-version = "0.3.13"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e27ca21f40a310bd06d9031785f4801710d566c184a6e15bad4f1d9b65f9425"
-dependencies = [
- "unicase",
-]
+checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
 
 [[package]]
 name = "mime_guess"
-version = "2.0.1"
+version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a0ed03949aef72dbdf3116a383d7b38b4768e6f960528cd6a6044aa9ed68599"
+checksum = "2684d4c2e97d99848d30b324b00c8fcc7e5c897b7cbb5819b09e7c90e8baf212"
 dependencies = [
  "mime",
  "unicase",
@@ -2536,6 +2533,7 @@ dependencies = [
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
+ "bindgen",
  "libc",
  "quote",
  "serde",
@@ -2580,7 +2578,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "url",
- "uuid 0.8.1",
+ "uuid",
  "xpcom",
 ]
 
@@ -2643,8 +2641,8 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "neqo-common"
-version = "0.2.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.2.0#b2ae769121dc406561d6bf1d4425f5038162160a"
+version = "0.2.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.2.1#5617134612c610e511f6a320b57e63dccf796f94"
 dependencies = [
  "env_logger",
  "lazy_static",
@@ -2654,8 +2652,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.2.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.2.0#b2ae769121dc406561d6bf1d4425f5038162160a"
+version = "0.2.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.2.1#5617134612c610e511f6a320b57e63dccf796f94"
 dependencies = [
  "bindgen",
  "log",
@@ -2667,8 +2665,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.2.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.2.0#b2ae769121dc406561d6bf1d4425f5038162160a"
+version = "0.2.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.2.1#5617134612c610e511f6a320b57e63dccf796f94"
 dependencies = [
  "log",
  "neqo-common",
@@ -2681,8 +2679,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.2.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.2.0#b2ae769121dc406561d6bf1d4425f5038162160a"
+version = "0.2.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.2.1#5617134612c610e511f6a320b57e63dccf796f94"
 dependencies = [
  "log",
  "neqo-common",
@@ -2692,8 +2690,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.2.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.2.0#b2ae769121dc406561d6bf1d4425f5038162160a"
+version = "0.2.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.2.1#5617134612c610e511f6a320b57e63dccf796f94"
 dependencies = [
  "lazy_static",
  "log",
@@ -2764,11 +2762,12 @@ checksum = "9a2228dca57108069a5262f2ed8bd2e82496d2e074a06d1ccc7ce1687b6ae0a2"
 
 [[package]]
 name = "nom"
-version = "4.1.1"
+version = "5.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c349f68f25f596b9f44cf0e7c69752a5c633b0550c3ff849518bfba0233774a"
+checksum = "0b471253da97532da4b61552249c521e01e736071f71c1a4f7ebbfbf0a06aad6"
 dependencies = [
  "memchr",
+ "version_check",
 ]
 
 [[package]]
@@ -2892,7 +2891,7 @@ dependencies = [
  "parity-wasm",
  "scroll",
  "target-lexicon 0.9.0",
- "uuid 0.8.1",
+ "uuid",
 ]
 
 [[package]]
@@ -3202,7 +3201,7 @@ dependencies = [
  "object",
  "rustc-demangle",
  "thin-vec",
- "uuid 0.8.1",
+ "uuid",
 ]
 
 [[package]]
@@ -3473,9 +3472,9 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.10.2"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9aab7c645d32e977e186448b0a5c2c3139a91a7f630cfd8a8c314d1d145e78bf"
+checksum = "30a3dbc1f4971372545ed4175f23ef206c81e5874cd574d153646e7ee78f6793"
 dependencies = [
  "arrayref",
  "bincode",
@@ -3488,13 +3487,13 @@ dependencies = [
  "serde",
  "serde_derive",
  "url",
- "uuid 0.7.4",
+ "uuid",
 ]
 
 [[package]]
 name = "rkv"
-version = "0.11.0"
-source = "git+https://github.com/mozilla/rkv?rev=6a866fdad2ca880df9b87fcbc9921abac1e91914#6a866fdad2ca880df9b87fcbc9921abac1e91914"
+version = "0.11.1"
+source = "git+https://github.com/mozilla/rkv?rev=e3c3388e6632cf55e08d773b32e58b1cab9b2731#e3c3388e6632cf55e08d773b32e58b1cab9b2731"
 dependencies = [
  "arrayref",
  "bincode",
@@ -3509,7 +3508,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "url",
- "uuid 0.7.4",
+ "uuid",
 ]
 
 [[package]]
@@ -4529,9 +4528,9 @@ dependencies = [
 
 [[package]]
 name = "unicase"
-version = "2.4.0"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a84e5511b2a947f3ae965dcb29b13b7b1691b6e7332cf5dbc1744138d5acb7f6"
+checksum = "50f37be617794602aabbeee0be4f259dc1778fabe05e2d67ee8f79326d5cb4f6"
 dependencies = [
  "version_check",
 ]
@@ -4597,12 +4596,6 @@ checksum = "3df3561629a8bb4c57e5a2e4c43348d9e29c7c29d9b1c4c1f47166deca8f37ed"
 
 [[package]]
 name = "uuid"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90dbc611eb48397705a6b0f6e917da23ae517e4d127123d2cf7674206627d32a"
-
-[[package]]
-name = "uuid"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fde2f6a4bea1d6e007c4ad38c6839fa71cbb63b6dbf5b595aa38dc9b1093c11"
@@ -4624,9 +4617,9 @@ checksum = "887b5b631c2ad01628bbbaa7dd4c869f80d3186688f8d0b6f58774fbe324988c"
 
 [[package]]
 name = "version_check"
-version = "0.1.5"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "914b1a6776c4c929a602fafd8bc742e06365d4bcbe48c30f9cca5824f70dc9dd"
+checksum = "078775d0255232fb988e6fccf26ddc9d1ac274299aaedcedce21c6f72cc533ce"
 
 [[package]]
 name = "void"
@@ -4783,7 +4776,7 @@ dependencies = [
  "rayon",
  "thin-vec",
  "thread_profiler",
- "uuid 0.8.1",
+ "uuid",
  "webrender",
  "winapi 0.3.7",
 ]
@@ -4808,9 +4801,9 @@ dependencies = [
 
 [[package]]
 name = "weedle"
-version = "0.8.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26a4c67f132386d965390b8a734d5d10adbcd30eb5cc74bd9229af8b83f10044"
+checksum = "8a7d4f9feb723a800d8f7b74edc9fa44ff35cb0b2ec64886714362f423427f37"
 dependencies = [
  "nom",
 ]
@@ -5021,7 +5014,7 @@ dependencies = [
  "moz_task",
  "nserror",
  "nsstring",
- "rkv 0.10.2",
+ "rkv 0.10.4",
  "serde_json",
  "tempfile",
  "xpcom",

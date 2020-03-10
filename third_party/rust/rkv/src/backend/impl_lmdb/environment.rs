@@ -28,7 +28,7 @@ use crate::backend::traits::{
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct EnvironmentBuilderImpl(lmdb::EnvironmentBuilder);
 
-impl<'env> BackendEnvironmentBuilder<'env> for EnvironmentBuilderImpl {
+impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
     type Error = ErrorImpl;
     type Environment = EnvironmentImpl;
     type Flags = EnvironmentFlagsImpl;
@@ -68,14 +68,14 @@ impl<'env> BackendEnvironmentBuilder<'env> for EnvironmentBuilderImpl {
 #[derive(Debug)]
 pub struct EnvironmentImpl(lmdb::Environment);
 
-impl<'env> BackendEnvironment<'env> for EnvironmentImpl {
+impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
     type Error = ErrorImpl;
     type Database = DatabaseImpl;
     type Flags = DatabaseFlagsImpl;
     type Stat = StatImpl;
     type Info = InfoImpl;
-    type RoTransaction = RoTransactionImpl<'env>;
-    type RwTransaction = RwTransactionImpl<'env>;
+    type RoTransaction = RoTransactionImpl<'e>;
+    type RwTransaction = RwTransactionImpl<'e>;
 
     fn open_db(&self, name: Option<&str>) -> Result<Self::Database, Self::Error> {
         self.0.open_db(name).map(DatabaseImpl).map_err(ErrorImpl)
@@ -85,11 +85,11 @@ impl<'env> BackendEnvironment<'env> for EnvironmentImpl {
         self.0.create_db(name, flags.0).map(DatabaseImpl).map_err(ErrorImpl)
     }
 
-    fn begin_ro_txn(&'env self) -> Result<Self::RoTransaction, Self::Error> {
+    fn begin_ro_txn(&'e self) -> Result<Self::RoTransaction, Self::Error> {
         self.0.begin_ro_txn().map(RoTransactionImpl).map_err(ErrorImpl)
     }
 
-    fn begin_rw_txn(&'env self) -> Result<Self::RwTransaction, Self::Error> {
+    fn begin_rw_txn(&'e self) -> Result<Self::RwTransaction, Self::Error> {
         self.0.begin_rw_txn().map(RwTransactionImpl).map_err(ErrorImpl)
     }
 

@@ -18,8 +18,8 @@ pub enum ParseError {
     },
 }
 
-impl Error for ParseError {
-    fn description(&self) -> &str {
+impl ParseError {
+    fn s(&self) -> &str {
         use self::ParseError::*;
 
         match *self {
@@ -34,10 +34,18 @@ impl Error for ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let ParseError::InvalidToken { pos, byte } = *self {
-            write!(f, "{}, {:X} at position {}", self.description(), byte, pos)
+            write!(f, "{}, {:X} at position {}", self.s(), byte, pos)
         } else {
-            f.write_str(self.description())
+            f.write_str(self.s())
         }
+    }
+}
+
+impl Error for ParseError {
+    // Minimum Rust is 1.15, Error::description was still required then
+    #[allow(deprecated)]
+    fn description(&self) -> &str {
+        self.s()
     }
 }
 
@@ -95,7 +103,7 @@ pub fn parse(s: &str) -> Result<Mime, ParseError> {
     }
 
     // params
-    let params = try!(params_from_str(s, &mut iter, start));
+    let params = params_from_str(s, &mut iter, start)?;
 
     let src = match params {
         ParamSource::Utf8(_)  => s.to_ascii_lowercase(),
@@ -325,6 +333,7 @@ fn is_restricted_quoted_char(c: u8) -> bool {
 }
 
 #[test]
+#[allow(warnings)] // ... ranges deprecated
 fn test_lookup_tables() {
     for (i, &valid) in TOKEN_MAP.iter().enumerate() {
         let i = i as u8;

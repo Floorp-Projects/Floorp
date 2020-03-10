@@ -24,24 +24,35 @@
 // need a higher recusion limit for macros
 #![recursion_limit = "128"]
 
-#[macro_use]
+#[macro_use(
+    alt,
+    cond,
+    do_parse,
+    map,
+    many0,
+    opt,
+    recognize,
+    separated_list,
+    separated_nonempty_list,
+    terminated
+)]
 extern crate nom;
 
-use argument::ArgumentList;
-use attribute::ExtendedAttributeList;
-use common::{Braced, Identifier, Parenthesized, PunctuatedNonEmpty};
-use dictionary::DictionaryMembers;
-use interface::{Inheritance, InterfaceMembers};
-use literal::StringLit;
-use mixin::MixinMembers;
-use namespace::NamespaceMembers;
-pub use nom::{types::CompleteStr, Err, Context, IResult};
-use types::{AttributedType, ReturnType};
+use self::argument::ArgumentList;
+use self::attribute::ExtendedAttributeList;
+use self::common::{Braced, Identifier, Parenthesized, PunctuatedNonEmpty};
+use self::dictionary::DictionaryMembers;
+use self::interface::{Inheritance, InterfaceMembers};
+use self::literal::StringLit;
+use self::mixin::MixinMembers;
+use self::namespace::NamespaceMembers;
+use self::types::{AttributedType, ReturnType};
+pub use nom::{error::ErrorKind, Err, IResult};
 
 #[macro_use]
-mod whitespace;
-#[macro_use]
 mod macros;
+#[macro_use]
+mod whitespace;
 #[macro_use]
 pub mod term;
 pub mod argument;
@@ -69,30 +80,30 @@ pub mod types;
 ///
 /// println!("{:?}", parsed);
 /// ```
-pub fn parse<'a>(raw: &'a str) -> Result<Definitions<'a>, Err<CompleteStr<'a>, u32>> {
-    let (remaining, parsed) = Definitions::parse(CompleteStr(raw))?;
-    if remaining.len() > 0 {
-        Result::Err(Err::Failure(nom::Context::Code(remaining, nom::ErrorKind::Custom(0))))
-    } else {
-        Ok(parsed)
-    }
+pub fn parse(raw: &str) -> Result<Definitions<'_>, Err<(&str, ErrorKind)>> {
+    let (remaining, parsed) = Definitions::parse(raw)?;
+    assert!(
+        remaining.is_empty(),
+        "There is redundant raw data after parsing"
+    );
+    Ok(parsed)
 }
 
 pub trait Parse<'a>: Sized {
-    fn parse(input: CompleteStr<'a>) -> IResult<CompleteStr<'a>, Self>;
+    fn parse(input: &'a str) -> IResult<&'a str, Self>;
 }
 
 /// Parses WebIDL definitions. It is the root struct for a complete WebIDL definition.
 ///
 /// ### Example
 /// ```
-/// use weedle::{Definitions, CompleteStr, Parse};
+/// use weedle::{Definitions, Parse};
 ///
-/// let (_, parsed) = Definitions::parse(CompleteStr("
+/// let (_, parsed) = Definitions::parse("
 ///     interface Window {
 ///         readonly attribute Storage sessionStorage;
 ///     };
-/// ")).unwrap();
+/// ").unwrap();
 ///
 /// println!("{:?}", parsed);
 /// ```
@@ -110,7 +121,7 @@ ast_types! {
             identifier: Identifier<'a>,
             assign: term!(=),
             return_type: ReturnType<'a>,
-            arguments: Braced<ArgumentList<'a>>,
+            arguments: Parenthesized<ArgumentList<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? callback interface identifier ( : inheritance )? { members };`
@@ -120,7 +131,7 @@ ast_types! {
             interface: term!(interface),
             identifier: Identifier<'a>,
             inheritance: Option<Inheritance<'a>>,
-            members: Parenthesized<InterfaceMembers<'a>>,
+            members: Braced<InterfaceMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? interface identifier ( : inheritance )? { members };`
@@ -129,7 +140,7 @@ ast_types! {
             interface: term!(interface),
             identifier: Identifier<'a>,
             inheritance: Option<Inheritance<'a>>,
-            members: Parenthesized<InterfaceMembers<'a>>,
+            members: Braced<InterfaceMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? interface mixin identifier { members };`
@@ -138,7 +149,7 @@ ast_types! {
             interface: term!(interface),
             mixin: term!(mixin),
             identifier: Identifier<'a>,
-            members: Parenthesized<MixinMembers<'a>>,
+            members: Braced<MixinMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? namespace identifier { members };`
@@ -146,7 +157,7 @@ ast_types! {
             attributes: Option<ExtendedAttributeList<'a>>,
             namespace: term!(namespace),
             identifier: Identifier<'a>,
-            members: Parenthesized<NamespaceMembers<'a>>,
+            members: Braced<NamespaceMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? dictionary identifier ( : inheritance )? { members };`
@@ -155,7 +166,7 @@ ast_types! {
             dictionary: term!(dictionary),
             identifier: Identifier<'a>,
             inheritance: Option<Inheritance<'a>>,
-            members: Parenthesized<DictionaryMembers<'a>>,
+            members: Braced<DictionaryMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? partial interface identifier { members };`
@@ -164,7 +175,7 @@ ast_types! {
             partial: term!(partial),
             interface: term!(interface),
             identifier: Identifier<'a>,
-            members: Parenthesized<InterfaceMembers<'a>>,
+            members: Braced<InterfaceMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? partial interface mixin identifier { members };`
@@ -174,7 +185,7 @@ ast_types! {
             interface: term!(interface),
             mixin: term!(mixin),
             identifier: Identifier<'a>,
-            members: Parenthesized<MixinMembers<'a>>,
+            members: Braced<MixinMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? partial dictionary identifier { members };`
@@ -183,7 +194,7 @@ ast_types! {
             partial: term!(partial),
             dictionary: term!(dictionary),
             identifier: Identifier<'a>,
-            members: Parenthesized<DictionaryMembers<'a>>,
+            members: Braced<DictionaryMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? partial namespace identifier { members };`
@@ -192,7 +203,7 @@ ast_types! {
             partial: term!(partial),
             namespace: term!(namespace),
             identifier: Identifier<'a>,
-            members: Parenthesized<NamespaceMembers<'a>>,
+            members: Braced<NamespaceMembers<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? enum identifier { values };`
@@ -200,7 +211,7 @@ ast_types! {
             attributes: Option<ExtendedAttributeList<'a>>,
             enum_: term!(enum),
             identifier: Identifier<'a>,
-            values: Parenthesized<EnumValueList<'a>>,
+            values: Braced<EnumValueList<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? typedef attributedtype identifier;`

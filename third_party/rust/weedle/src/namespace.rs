@@ -1,7 +1,7 @@
-use argument::ArgumentList;
-use attribute::ExtendedAttributeList;
-use common::{Braced, Identifier};
-use types::{AttributedType, ReturnType};
+use crate::argument::ArgumentList;
+use crate::attribute::ExtendedAttributeList;
+use crate::common::{Identifier, Parenthesized};
+use crate::types::{AttributedType, ReturnType};
 
 /// Parses namespace members declaration
 pub type NamespaceMembers<'a> = Vec<NamespaceMember<'a>>;
@@ -16,7 +16,7 @@ ast_types! {
             attributes: Option<ExtendedAttributeList<'a>>,
             return_type: ReturnType<'a>,
             identifier: Option<Identifier<'a>>,
-            args: Braced<ArgumentList<'a>>,
+            args: Parenthesized<ArgumentList<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attribute]? readonly attributetype type identifier;`
@@ -34,7 +34,7 @@ ast_types! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use Parse;
+    use crate::Parse;
 
     test!(should_parse_attribute_namespace_member { "readonly attribute short name;" =>
         "";

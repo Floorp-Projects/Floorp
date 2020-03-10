@@ -20,9 +20,10 @@ use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::{Type, TypeKind};
 use clang;
 use clang_sys;
+use lazycell::LazyCell;
 use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
 use regex;
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 use std::io;
@@ -387,7 +388,7 @@ pub struct Item {
     ///
     /// Note that only structs, unions, and enums get a local type id. In any
     /// case this is an implementation detail.
-    local_id: Cell<Option<usize>>,
+    local_id: LazyCell<usize>,
 
     /// The next local id to use for a child or template instantiation.
     next_child_local_id: Cell<usize>,
@@ -396,7 +397,11 @@ pub struct Item {
     ///
     /// This is a fairly used operation during codegen so this makes bindgen
     /// considerably faster in those cases.
-    canonical_name_cache: RefCell<Option<String>>,
+    canonical_name: LazyCell<String>,
+
+    /// The path to use for whitelisting and other name-based checks, as
+    /// returned by `path_for_whitelisting`, lazily constructed.
+    path_for_whitelisting: LazyCell<Vec<String>>,
 
     /// A doc comment over the item, if any.
     comment: Option<String>,
@@ -431,9 +436,10 @@ impl Item {
         debug_assert!(id != parent_id || kind.is_module());
         Item {
             id: id,
-            local_id: Cell::new(None),
+            local_id: LazyCell::new(),
             next_child_local_id: Cell::new(1),
-            canonical_name_cache: RefCell::new(None),
+            canonical_name: LazyCell::new(),
+            path_for_whitelisting: LazyCell::new(),
             parent_id: parent_id,
             comment: comment,
             annotations: annotations.unwrap_or_default(),
@@ -520,11 +526,10 @@ impl Item {
     /// below this item's lexical scope, meaning that this can be useful for
     /// generating relatively stable identifiers within a scope.
     pub fn local_id(&self, ctx: &BindgenContext) -> usize {
-        if self.local_id.get().is_none() {
+        *self.local_id.borrow_with(|| {
             let parent = ctx.resolve_item(self.parent_id);
-            self.local_id.set(Some(parent.next_child_local_id()));
-        }
-        self.local_id.get().unwrap()
+            parent.next_child_local_id()
+        })
     }
 
     /// Get an identifier that differentiates a child of this item of other
@@ -793,6 +798,15 @@ impl Item {
         }
     }
 
+    fn is_anon(&self) -> bool {
+        match self.kind() {
+            ItemKind::Module(module) => module.name().is_none(),
+            ItemKind::Type(ty) => ty.name().is_none(),
+            ItemKind::Function(_) => false,
+            ItemKind::Var(_) => false,
+        }
+    }
+
     /// Get the canonical name without taking into account the replaces
     /// annotation.
     ///
@@ -804,6 +818,10 @@ impl Item {
     ///
     /// This name should be derived from the immutable state contained in the
     /// type and the parent chain, since it should be consistent.
+    ///
+    /// If `BindgenOptions::disable_nested_struct_naming` is true then returned
+    /// name is the inner most non-anonymous name plus all the anonymous base names
+    /// that follows.
     pub fn real_canonical_name(
         &self,
         ctx: &BindgenContext,
@@ -827,8 +845,8 @@ impl Item {
             return base_name;
         }
 
-        // Concatenate this item's ancestors' names together.
-        let mut names: Vec<_> = target
+        // Ancestors' id iter
+        let mut ids_iter = target
             .parent_id()
             .ancestors(ctx)
             .filter(|id| *id != ctx.root_module())
@@ -847,7 +865,30 @@ impl Item {
                 }
 
                 true
-            })
+            });
+
+        let ids: Vec<_> = if ctx.options().disable_nested_struct_naming {
+            let mut ids = Vec::new();
+
+            // If target is anonymous we need find its first named ancestor.
+            if target.is_anon() {
+                while let Some(id) = ids_iter.next() {
+                    ids.push(id);
+
+                    if !ctx.resolve_item(id).is_anon() {
+                        break;
+                    }
+                }
+            }
+
+            ids
+        } else {
+            ids_iter.collect()
+        };
+
+        // Concatenate this item's ancestors' names together.
+        let mut names: Vec<_> = ids
+            .into_iter()
             .map(|id| {
                 let item = ctx.resolve_item(id);
                 let target = ctx.resolve_item(item.name_target(ctx));
@@ -972,8 +1013,9 @@ impl Item {
 
     /// Returns the path we should use for whitelisting / blacklisting, which
     /// doesn't include user-mangling.
-    pub fn path_for_whitelisting(&self, ctx: &BindgenContext) -> Vec<String> {
-        self.compute_path(ctx, UserMangled::No)
+    pub fn path_for_whitelisting(&self, ctx: &BindgenContext) -> &Vec<String> {
+        self.path_for_whitelisting
+            .borrow_with(|| self.compute_path(ctx, UserMangled::No))
     }
 
     fn compute_path(
@@ -1357,13 +1399,28 @@ impl ClangItemParser for Item {
                 CXCursor_UsingDeclaration |
                 CXCursor_UsingDirective |
                 CXCursor_StaticAssert |
-                CXCursor_InclusionDirective |
                 CXCursor_FunctionTemplate => {
                     debug!(
                         "Unhandled cursor kind {:?}: {:?}",
                         cursor.kind(),
                         cursor
                     );
+                }
+                CXCursor_InclusionDirective => {
+                    let file = cursor.get_included_file_name();
+                    match file {
+                        None => {
+                            warn!(
+                                "Inclusion of a nameless file in {:?}",
+                                cursor
+                            );
+                        }
+                        Some(filename) => {
+                            if let Some(cb) = ctx.parse_callbacks() {
+                                cb.include_file(&filename)
+                            }
+                        }
+                    }
                 }
                 _ => {
                     // ignore toplevel operator overloads
@@ -1812,17 +1869,18 @@ impl ItemCanonicalName for Item {
             ctx.in_codegen_phase(),
             "You're not supposed to call this yet"
         );
-        if self.canonical_name_cache.borrow().is_none() {
-            let in_namespace = ctx.options().enable_cxx_namespaces ||
-                ctx.options().disable_name_namespacing;
+        self.canonical_name
+            .borrow_with(|| {
+                let in_namespace = ctx.options().enable_cxx_namespaces ||
+                    ctx.options().disable_name_namespacing;
 
-            *self.canonical_name_cache.borrow_mut() = if in_namespace {
-                Some(self.name(ctx).within_namespaces().get())
-            } else {
-                Some(self.name(ctx).get())
-            };
-        }
-        return self.canonical_name_cache.borrow().as_ref().unwrap().clone();
+                if in_namespace {
+                    self.name(ctx).within_namespaces().get()
+                } else {
+                    self.name(ctx).get()
+                }
+            })
+            .clone()
     }
 }
 

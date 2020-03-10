@@ -294,7 +294,7 @@ where
                 let text = &line[indent_len..];
                 let mut gobbled = 0;
                 while text.len() > gobbled {
-                    let mut rest = &text[gobbled..];
+                    let rest = &text[gobbled..];
                     eprintln!("Line still contains {} ({})", rest, gobbled);
                     if rest.len() + prefix.len() > columns {
                         // Try and find the largest prefix of `text` that fits within `columns`.

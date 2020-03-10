@@ -90,9 +90,9 @@ fn read_many() {
     }
 }
 
-fn get_ids_by_field<'env, T>(txn: &'env T, store: MultiStore, field: &str) -> Vec<u64>
+fn get_ids_by_field<'t, T>(txn: &'t T, store: MultiStore, field: &'t str) -> Vec<u64>
 where
-    T: Readable<'env, Database = LmdbDatabase, RoCursor = LmdbRoCursor<'env>>,
+    T: Readable<'t, Database = LmdbDatabase, RoCursor = LmdbRoCursor<'t>>,
 {
     store
         .get(txn, field)
@@ -104,9 +104,9 @@ where
         .collect::<Vec<u64>>()
 }
 
-fn get_samples<'env, T>(txn: &'env T, samplestore: SingleStore, ids: &[u64]) -> Vec<String>
+fn get_samples<'t, T>(txn: &'t T, samplestore: SingleStore, ids: &[u64]) -> Vec<String>
 where
-    T: Readable<'env, Database = LmdbDatabase, RoCursor = LmdbRoCursor<'env>>,
+    T: Readable<'t, Database = LmdbDatabase, RoCursor = LmdbRoCursor<'t>>,
 {
     ids.iter()
         .map(|id| {

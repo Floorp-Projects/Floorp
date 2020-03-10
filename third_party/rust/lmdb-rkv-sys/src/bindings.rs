@@ -52,8 +52,6 @@ pub const MDB_BAD_TXN: ::libc::c_int = -30782;
 pub const MDB_BAD_VALSIZE: ::libc::c_int = -30781;
 pub const MDB_BAD_DBI: ::libc::c_int = -30780;
 pub const MDB_LAST_ERRCODE: ::libc::c_int = -30780;
-pub type mdb_mode_t = mode_t;
-pub type mdb_filehandle_t = ::libc::c_int;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MDB_env {
@@ -82,6 +80,7 @@ pub struct MDB_cursor {
 #[doc = " The same applies to data sizes in databases with the #MDB_DUPSORT flag."]
 #[doc = " Other data items can in theory be from 0 to 0xffffffff bytes long."]
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct MDB_val {
     #[doc = "< size of the data item"]
     pub mv_size: usize,
@@ -167,6 +166,7 @@ pub const MDB_PREV_MULTIPLE: MDB_cursor_op = 18;
 pub type MDB_cursor_op = u32;
 #[doc = " @brief Statistics for a database in the environment"]
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct MDB_stat {
     #[doc = "< Size of a database page."]
     #[doc = "This is currently the same for all databases."]
@@ -184,6 +184,7 @@ pub struct MDB_stat {
 }
 #[doc = " @brief Information about the environment"]
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct MDB_envinfo {
     #[doc = "< Address of map, if fixed"]
     pub me_mapaddr: *mut ::libc::c_void,
