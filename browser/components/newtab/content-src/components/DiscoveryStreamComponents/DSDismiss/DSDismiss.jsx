@@ -48,6 +48,7 @@ export class DSDismiss extends React.PureComponent {
           onMouseEnter={this.onHover}
           onMouseLeave={this.offHover}
           aria-label="dismiss"
+          title="Remove"
         >
           <span className="icon icon-dismiss" />
         </button>
