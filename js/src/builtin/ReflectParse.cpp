@@ -3220,16 +3220,13 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
       break;
 
     case ParseNodeKind::RegExpExpr: {
-      RootedObject re1(
-          cx, pn->as<RegExpLiteral>().create(cx, parser->getCompilationInfo()));
-      LOCAL_ASSERT(re1 && re1->is<RegExpObject>());
-
-      RootedObject re2(cx, CloneRegExpObject(cx, re1.as<RegExpObject>()));
-      if (!re2) {
+      RegExpObject* re =
+          pn->as<RegExpLiteral>().create(cx, parser->getCompilationInfo());
+      if (!re) {
         return false;
       }
 
-      val.setObject(*re2);
+      val.setObject(*re);
       break;
     }
 
@@ -3239,6 +3236,9 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
 
     case ParseNodeKind::BigIntExpr: {
       BigInt* x = pn->as<BigIntLiteral>().create(cx);
+      if (!x) {
+        return false;
+      }
       cx->check(x);
       val.setBigInt(x);
       break;
