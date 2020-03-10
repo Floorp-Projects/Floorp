@@ -9,11 +9,11 @@ use std::fmt;
 use std::io::{Read, Write};
 use std::os::windows::io::*;
 
+use bytes::{Buf, BufMut};
 use futures::{Async, Poll};
-use bytes::{BufMut, Buf};
 use mio::Ready;
-use tokio::reactor::{Handle, PollEvented2};
 use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::reactor::{Handle, PollEvented2};
 
 pub struct NamedPipe {
     io: PollEvented2<mio_named_pipes::NamedPipe>,
@@ -29,8 +29,10 @@ impl NamedPipe {
         NamedPipe::from_pipe(inner, handle)
     }
 
-    pub fn from_pipe(pipe: mio_named_pipes::NamedPipe, handle: &Handle)
-            -> std::io::Result<NamedPipe> {
+    pub fn from_pipe(
+        pipe: mio_named_pipes::NamedPipe,
+        handle: &Handle,
+    ) -> std::io::Result<NamedPipe> {
         Ok(NamedPipe {
             io: PollEvented2::new_with_handle(pipe, handle)?,
         })
@@ -95,7 +97,7 @@ impl AsyncRead for NamedPipe {
 
     fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, std::io::Error> {
         if let Async::NotReady = self.io.poll_read_ready(Ready::readable())? {
-            return Ok(Async::NotReady)
+            return Ok(Async::NotReady);
         }
 
         let mut stack_buf = [0u8; 1024];
@@ -104,7 +106,7 @@ impl AsyncRead for NamedPipe {
             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 self.io_mut().clear_read_ready(Ready::readable())?;
                 return Ok(Async::NotReady);
-            },
+            }
             Err(e) => Err(e),
             Ok(bytes_read) => {
                 buf.put_slice(&stack_buf[0..bytes_read]);
@@ -122,7 +124,7 @@ impl AsyncWrite for NamedPipe {
 
     fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, std::io::Error> {
         if let Async::NotReady = self.io.poll_write_ready()? {
-            return Ok(Async::NotReady)
+            return Ok(Async::NotReady);
         }
 
         let bytes_wrt = self.io_mut().write(buf.bytes());
@@ -130,7 +132,7 @@ impl AsyncWrite for NamedPipe {
             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 self.io_mut().clear_write_ready()?;
                 return Ok(Async::NotReady);
-            },
+            }
             Err(e) => Err(e),
             Ok(bytes_wrt) => {
                 buf.advance(bytes_wrt);

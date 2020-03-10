@@ -209,16 +209,19 @@ impl ContextOps for ClientContext {
         let server_stream =
             unsafe { audioipc::MessageStream::from_raw_fd(params.server_connection) };
 
-        let core = core::spawn_thread("AudioIPC Client RPC", move || {
-            let handle = reactor::Handle::default();
+        let core = core::spawn_thread(
+            "AudioIPC Client RPC",
+            move || {
+                let handle = reactor::Handle::default();
 
-            register_thread(thread_create_callback);
+                register_thread(thread_create_callback);
 
-            server_stream
-                .into_tokio_ipc(&handle)
-                .and_then(|stream| bind_and_send_client(stream, &tx_rpc))
-        },
-        move || unregister_thread(thread_destroy_callback))
+                server_stream
+                    .into_tokio_ipc(&handle)
+                    .and_then(|stream| bind_and_send_client(stream, &tx_rpc))
+            },
+            move || unregister_thread(thread_destroy_callback),
+        )
         .map_err(|_| Error::default())?;
 
         let rpc = rx_rpc.recv().map_err(|_| Error::default())?;
