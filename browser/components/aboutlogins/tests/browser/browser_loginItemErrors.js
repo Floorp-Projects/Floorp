@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+
 add_task(async function setup() {
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
@@ -26,8 +28,13 @@ add_task(async function test_showLoginItemErrors() {
 
   await SpecialPowers.spawn(
     browser,
-    [LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE)],
-    async loginToUpdate => {
+    [
+      [
+        LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE),
+        OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      ],
+    ],
+    async ([loginToUpdate, canTestOSKeyStoreLogin]) => {
       const loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -101,6 +108,11 @@ add_task(async function test_showLoginItemErrors() {
         loginItemErrorMessage.hidden,
         "The error message should no longer be visible."
       );
+
+      if (!canTestOSKeyStoreLogin) {
+        // The rest of the test uses Edit mode which causes an OS prompt in opt builds.
+        return;
+      }
 
       const editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
