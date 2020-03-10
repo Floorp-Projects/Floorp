@@ -49,7 +49,7 @@ class ZipEntry(object):
     def write(self, content):
         '''Append the given content to this zip entry'''
 
-        self._inner.write(ensure_bytes(content))
+        self._inner.write(content)
         return
 
     def close(self):
