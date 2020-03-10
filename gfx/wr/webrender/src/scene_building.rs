@@ -686,6 +686,7 @@ impl<'a> SceneBuilder<'a> {
                 &mut self.prim_store,
                 &mut self.clip_store,
                 &mut self.picture_cache_spatial_nodes,
+                &self.config,
             );
 
             main_prim_list.add_prim(
@@ -4112,6 +4113,7 @@ fn create_tile_cache(
     prim_store: &mut PrimitiveStore,
     clip_store: &mut ClipStore,
     picture_cache_spatial_nodes: &mut FastHashSet<SpatialNodeIndex>,
+    frame_builder_config: &FrameBuilderConfig,
 ) -> PrimitiveInstance {
     // Add this spatial node to the list to check for complex transforms
     // at the start of a frame build.
@@ -4163,6 +4165,7 @@ fn create_tile_cache(
         background_color,
         shared_clips,
         parent_clip_chain_id,
+        frame_builder_config,
     ));
 
     let pic_index = prim_store.pictures.alloc().init(PicturePrimitive::new_image(

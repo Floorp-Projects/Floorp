@@ -109,7 +109,7 @@ use crate::debug_colors;
 use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
-use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
+use crate::frame_builder::{FrameBuilderConfig, FrameVisibilityContext, FrameVisibilityState};
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
@@ -275,6 +275,8 @@ pub struct PictureCacheState {
     pub native_surface: Option<NativeSurface>,
     /// A cache of compositor surfaces that are retained between display lists
     pub external_native_surface_cache: FastHashMap<ExternalNativeSurfaceKey, ExternalNativeSurface>,
+    /// The retained virtual offset for this slice between display lists.
+    virtual_offset: DeviceIntPoint,
 }
 
 pub struct PictureCacheRecycledAllocations {
@@ -2234,6 +2236,13 @@ pub struct TileCacheInstance {
     frames_until_size_eval: usize,
     /// The current fractional offset of the cached picture
     fract_offset: PictureVector2D,
+    /// For DirectComposition, virtual surfaces don't support negative coordinates. However,
+    /// picture cache tile coordinates can be negative. To handle this, we apply an offset
+    /// to each tile in DirectComposition. We want to change this as little as possible,
+    /// to avoid invalidating tiles. However, if we have a picture cache tile coordinate
+    /// which is outside the virtual surface bounds, we must change this to allow
+    /// correct remapping of the coordinates passed to BeginDraw in DC.
+    virtual_offset: DeviceIntPoint,
     /// keep around the hash map used as compare_cache to avoid reallocating it each
     /// frame.
     compare_cache: FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
@@ -2264,7 +2273,10 @@ impl TileCacheInstance {
         background_color: Option<ColorF>,
         shared_clips: Vec<ClipDataHandle>,
         shared_clip_chain: ClipChainId,
+        fb_config: &FrameBuilderConfig,
     ) -> Self {
+        let virtual_surface_size = fb_config.compositor_kind.get_virtual_surface_size();
+
         TileCacheInstance {
             slice,
             slice_flags,
@@ -2302,6 +2314,11 @@ impl TileCacheInstance {
             current_tile_size: DeviceIntSize::zero(),
             frames_until_size_eval: 0,
             fract_offset: PictureVector2D::zero(),
+            // Default to centering the virtual offset in the middle of the DC virtual surface
+            virtual_offset: DeviceIntPoint::new(
+                virtual_surface_size / 2,
+                virtual_surface_size / 2,
+            ),
             compare_cache: FastHashMap::default(),
             native_surface: None,
             device_position: DevicePoint::zero(),
@@ -2438,6 +2455,7 @@ impl TileCacheInstance {
             self.current_tile_size = prev_state.current_tile_size;
             self.native_surface = prev_state.native_surface;
             self.external_native_surface_cache = prev_state.external_native_surface_cache;
+            self.virtual_offset = prev_state.virtual_offset;
 
             fn recycle_map<K: std::cmp::Eq + std::hash::Hash, V>(
                 ideal_len: usize,
@@ -2633,6 +2651,59 @@ impl TileCacheInstance {
             TileOffset::new(x0, y0),
             TileSize::new(x_tiles, y_tiles),
         );
+
+        // Determine whether the current bounds of the tile grid will exceed the
+        // bounds of the DC virtual surface, taking into account the current
+        // virtual offset. If so, we need to invalidate all tiles, and set up
+        // a new virtual offset, centered around the current tile grid.
+
+        if let CompositorKind::Native { virtual_surface_size, .. } = frame_context.config.compositor_kind {
+            // We only need to invalidate in this case if the underlying platform
+            // uses virtual surfaces.
+            if virtual_surface_size > 0 {
+                // Get the extremities of the tile grid after virtual offset is applied
+                let tx0 = self.virtual_offset.x + x0 * self.current_tile_size.width;
+                let ty0 = self.virtual_offset.y + y0 * self.current_tile_size.height;
+                let tx1 = self.virtual_offset.x + (x1+1) * self.current_tile_size.width;
+                let ty1 = self.virtual_offset.y + (y1+1) * self.current_tile_size.height;
+
+                let need_new_virtual_offset = tx0 < 0 ||
+                                              ty0 < 0 ||
+                                              tx1 >= virtual_surface_size ||
+                                              ty1 >= virtual_surface_size;
+
+                if need_new_virtual_offset {
+                    // Calculate a new virtual offset, centered around the middle of the
+                    // current tile grid. This means we won't need to invalidate and get
+                    // a new offset for a long time!
+                    self.virtual_offset = DeviceIntPoint::new(
+                        (virtual_surface_size/2) - ((x0 + x1) / 2) * self.current_tile_size.width,
+                        (virtual_surface_size/2) - ((y0 + y1) / 2) * self.current_tile_size.height,
+                    );
+
+                    // Invalidate all native tile surfaces. They will be re-allocated next time
+                    // they are scheduled to be rasterized.
+                    for tile in self.tiles.values_mut() {
+                        if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
+                            if let Some(id) = id.take() {
+                                frame_state.resource_cache.destroy_compositor_tile(id);
+                                tile.surface = None;
+                                // Invalidate the entire tile to force a redraw.
+                                // TODO(gw): Add a new invalidation reason for virtual offset changing
+                                tile.invalidate(None, InvalidationReason::CompositorKindChanged);
+                            }
+                        }
+                    }
+
+                    // Destroy the native virtual surfaces. They will be re-allocated next time a tile
+                    // that references them is scheduled to draw.
+                    if let Some(native_surface) = self.native_surface.take() {
+                        frame_state.resource_cache.destroy_compositor_surface(native_surface.opaque);
+                        frame_state.resource_cache.destroy_compositor_surface(native_surface.alpha);
+                    }
+                }
+            }
+        }
 
         // Rebuild the tile grid if the picture cache rect has changed.
         if new_tile_rect != self.tile_rect {
@@ -3064,6 +3135,7 @@ impl TileCacheInstance {
                                         // a single compositor tile that covers the entire compositor surface.
 
                                         let native_surface_id = resource_cache.create_compositor_surface(
+                                            DeviceIntPoint::zero(),
                                             native_surface_size,
                                             true,
                                         );
@@ -4285,6 +4357,7 @@ impl PicturePrimitive {
                         current_tile_size: tile_cache.current_tile_size,
                         native_surface: tile_cache.native_surface,
                         external_native_surface_cache: tile_cache.external_native_surface_cache,
+                        virtual_offset: tile_cache.virtual_offset,
                         allocations: PictureCacheRecycledAllocations {
                             old_opacity_bindings: tile_cache.old_opacity_bindings,
                             old_color_bindings: tile_cache.old_color_bindings,
@@ -4937,6 +5010,7 @@ impl PicturePrimitive {
                                                 let opaque = frame_state
                                                     .resource_cache
                                                     .create_compositor_surface(
+                                                        tile_cache.virtual_offset,
                                                         tile_cache.current_tile_size,
                                                         true,
                                                     );
@@ -4944,6 +5018,7 @@ impl PicturePrimitive {
                                                 let alpha = frame_state
                                                     .resource_cache
                                                     .create_compositor_surface(
+                                                        tile_cache.virtual_offset,
                                                         tile_cache.current_tile_size,
                                                         false,
                                                     );

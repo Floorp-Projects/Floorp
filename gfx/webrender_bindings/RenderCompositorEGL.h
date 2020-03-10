@@ -35,6 +35,8 @@ class RenderCompositorEGL : public RenderCompositor {
 
   LayoutDeviceIntSize GetBufferSize() override;
 
+  CompositorCapabilities GetCompositorCapabilities() override;
+
  protected:
   EGLSurface CreateEGLSurface();
 
