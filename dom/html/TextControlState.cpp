@@ -313,8 +313,7 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TextInputSelectionController,
                                            nsISelectionController)
 
-  TextInputSelectionController(nsFrameSelection* aSel, PresShell* aPresShell,
-                               nsIContent* aLimiter);
+  TextInputSelectionController(PresShell* aPresShell, nsIContent* aLimiter);
 
   void SetScrollableFrame(nsIScrollableFrame* aScrollableFrame);
   nsFrameSelection* GetConstFrameSelection() { return mFrameSelection; }
@@ -382,10 +381,10 @@ NS_IMPL_CYCLE_COLLECTION_WEAK(TextInputSelectionController, mFrameSelection,
                               mLimiter)
 
 TextInputSelectionController::TextInputSelectionController(
-    nsFrameSelection* aSel, PresShell* aPresShell, nsIContent* aLimiter)
+    PresShell* aPresShell, nsIContent* aLimiter)
     : mScrollFrame(nullptr) {
-  if (aSel && aPresShell) {
-    mFrameSelection = aSel;  // we are the owner now!
+  if (aPresShell) {
+    mFrameSelection = new nsFrameSelection();
     mLimiter = aLimiter;
     bool accessibleCaretEnabled =
         PresShell::AccessibleCaretEnabled(aLimiter->OwnerDoc()->GetDocShell());
@@ -1627,11 +1626,8 @@ nsresult TextControlState::BindToFrame(nsTextControlFrame* aFrame) {
   PresShell* presShell = aFrame->PresContext()->GetPresShell();
   MOZ_ASSERT(presShell);
 
-  // Create selection
-  RefPtr<nsFrameSelection> frameSel = new nsFrameSelection();
-
   // Create a SelectionController
-  mSelCon = new TextInputSelectionController(frameSel, presShell, rootNode);
+  mSelCon = new TextInputSelectionController(presShell, rootNode);
   MOZ_ASSERT(!mTextListener, "Should not overwrite the object");
   mTextListener = new TextInputListener(mTextCtrlElement);
 
