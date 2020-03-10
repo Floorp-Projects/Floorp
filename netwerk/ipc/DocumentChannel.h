@@ -46,8 +46,8 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_IID)
 
   DocumentChannel(nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
-                  nsLoadFlags aLoadFlags, uint32_t aLoadType,
-                  uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc);
+                  nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aIsActive,
+                  bool aIsTopLevelDoc);
 
   const nsTArray<DocumentChannelRedirect>& GetRedirectChain() const {
     return mRedirects;
@@ -81,7 +81,6 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
 
   const TimeStamp mAsyncOpenTime;
   const RefPtr<nsDocShellLoadState> mLoadState;
-  const uint32_t mLoadType;
   const uint32_t mCacheKey;
   const bool mIsActive;
   const bool mIsTopLevelDoc;
