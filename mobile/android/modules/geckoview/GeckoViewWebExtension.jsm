@@ -535,7 +535,11 @@ var GeckoViewWebExtension = {
   },
 
   async installWebExtension(aUri) {
-    const install = await AddonManager.getInstallForURL(aUri.spec);
+    const install = await AddonManager.getInstallForURL(aUri.spec, {
+      telemetryInfo: {
+        source: "geckoview-app",
+      },
+    });
     const promise = new Promise(resolve => {
       install.addListener(new ExtensionInstallListener(resolve));
     });
