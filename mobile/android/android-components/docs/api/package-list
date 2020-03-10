@@ -165,6 +165,7 @@ mozilla.components.feature.accounts
 mozilla.components.feature.accounts.push
 mozilla.components.feature.addons
 mozilla.components.feature.addons.amo
+mozilla.components.feature.addons.migration
 mozilla.components.feature.addons.ui
 mozilla.components.feature.addons.update
 mozilla.components.feature.app.links
