@@ -20,6 +20,16 @@ job-defaults:
     worker:
         docker-image: {in-tree: desktop1604-test}
         max-run-time: 1800
+        artifacts:
+            - type: file
+              name: public/remote/results.json
+              path: /builds/worker/results.json
+            - type: file
+              name: public/remote/pup_errorsummary.json
+              path: /builds/worker/pup_errorsummary.json
+            - type: file
+              name: public/remote/pup_raw.log
+              path: /builds/worker/pup_raw.log
 
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
@@ -30,7 +40,7 @@ puppeteer:
         using: run-task
         command: >
             cd $GECKO_PATH/ &&
-            ./mach puppeteer-test --setpref "remote.log.level=Trace" --binary $MOZ_FETCHES_DIR/firefox/firefox --headless
+            ./mach puppeteer-test -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
 
 puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
@@ -41,4 +51,4 @@ puppeteer-fis:
         using: run-task
         command: >
             cd $GECKO_PATH/ &&
-            ./mach puppeteer-test --setpref "remote.log.level=Trace" --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --enable-fission
+            ./mach puppeteer-test -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --enable-fission --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
