@@ -622,7 +622,8 @@ class ContentChild final
       PSessionStorageObserverChild* aActor);
 
   PSHEntryChild* AllocPSHEntryChild(PSHistoryChild* aSHistory,
-                                    const PSHEntryOrSharedID& aEntryOrSharedID);
+                                    uint64_t aSharedID);
+
   void DeallocPSHEntryChild(PSHEntryChild*);
 
   PSHistoryChild* AllocPSHistoryChild(
@@ -695,6 +696,10 @@ class ContentChild final
       uint64_t aTopContextId, const nsACString& aOriginAttrs,
       const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
       const nsTArray<KeyValuePair>& aSessionData);
+
+  mozilla::ipc::IPCResult RecvUpdateSHEntriesInDocShell(
+      CrossProcessSHEntry* aOldEntry, CrossProcessSHEntry* aNewEntry,
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.

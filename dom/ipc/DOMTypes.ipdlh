@@ -41,6 +41,7 @@ using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using refcounted class nsIVariant from "mozilla/dom/PropertyBagUtils.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsISHEntry from "nsISHEntry.h";
+using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 
 namespace mozilla {
@@ -378,6 +379,12 @@ struct OwnerShowInfo {
   // parent process too instead.
   bool parentWindowIsActive;
   nsSizeMode sizeMode;
+};
+
+struct SwapEntriesDocshellData {
+  CrossProcessSHEntry oldEntry;
+  CrossProcessSHEntry newEntry;
+  MaybeDiscardedBrowsingContext context;
 };
 
 } // namespace dom

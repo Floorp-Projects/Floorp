@@ -586,8 +586,8 @@ class ContentParent final
   bool DeallocPSessionStorageObserverParent(
       PSessionStorageObserverParent* aActor);
 
-  PSHEntryParent* AllocPSHEntryParent(
-      PSHistoryParent* aSHistory, const PSHEntryOrSharedID& aEntryOrSharedID);
+  PSHEntryParent* AllocPSHEntryParent(PSHistoryParent* aSHistory,
+                                      uint64_t aSharedID);
 
   void DeallocPSHEntryParent(PSHEntryParent*);
 
@@ -1270,6 +1270,10 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvReportServiceWorkerShutdownProgress(
       uint32_t aShutdownStateId,
       ServiceWorkerShutdownState::Progress aProgress);
+
+  mozilla::ipc::IPCResult RecvUpdateSHEntriesInBC(
+      PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
+      const MaybeDiscarded<BrowsingContext>& aMaybeContext);
 
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.

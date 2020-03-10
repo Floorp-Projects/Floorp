@@ -37,10 +37,12 @@ class SHEntrySharedParentState;
 }
 class nsSHEntryShared;
 class nsDocShellLoadState;
+struct EntriesAndBrowsingContextData;
 %}
 [ref] native nsIntRect(nsIntRect);
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsDocShellLoadStatePtr(nsDocShellLoadState);
+webidl BrowsingContext;
 
 [builtinclass, scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
 interface nsISHEntry : nsISupports
@@ -429,5 +431,17 @@ interface nsISHEntry : nsISupports
      * lives there. With in-process session history this method is no-op.
      */
     void synchronizeLayoutHistoryState();
+
+    /**
+     * Sync up the docshell and session history trees for subframe navigation.
+     *
+     * @param aEntry                    new entry
+     * @param aTopBC                    top BC corresponding to the root ancestor
+                                        of the docshell that called this method
+     * @param aIgnoreBC                 current BC
+     */
+    [notxpcom] void SyncTreesForSubframeNavigation(in nsISHEntry aEntry,
+                                                   in BrowsingContext aTopBC,
+                                                   in BrowsingContext aIgnoreBC);
 };
 
