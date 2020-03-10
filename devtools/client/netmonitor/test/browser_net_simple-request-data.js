@@ -58,7 +58,7 @@ function test() {
         "The requests menu should not be empty after the first request."
       );
       is(
-        !!document.querySelector(".network-details-panel"),
+        !!document.querySelector(".network-details-bar"),
         false,
         "The network details panel should still be hidden after first request."
       );

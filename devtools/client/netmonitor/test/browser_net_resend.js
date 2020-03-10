@@ -90,7 +90,7 @@ add_task(async function() {
     "The sent request is selected"
   );
   is(
-    document.querySelector(".network-details-panel"),
+    document.querySelector(".network-details-bar"),
     null,
     "The detail panel is hidden"
   );

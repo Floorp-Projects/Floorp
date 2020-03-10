@@ -173,7 +173,7 @@ add_task(async function() {
       "The first item should be still selected after sorting."
     );
     is(
-      !!document.querySelector(".network-details-panel"),
+      !!document.querySelector(".network-details-bar"),
       true,
       "The network details panel should still be visible after sorting."
     );

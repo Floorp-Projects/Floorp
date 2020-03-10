@@ -245,7 +245,7 @@ add_task(async function() {
     newMonitor.tab.linkedBrowser.reload();
     await networkEvent;
 
-    const wait = waitForDOM(getDoc(), ".network-details-panel");
+    const wait = waitForDOM(getDoc(), ".network-details-bar");
     getStore().dispatch(Actions.toggleNetworkDetails());
     await wait;
   }

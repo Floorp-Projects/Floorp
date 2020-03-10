@@ -36,9 +36,9 @@ const Toolbar = createFactory(
   require("devtools/client/netmonitor/src/components/Toolbar")
 );
 
-loader.lazyGetter(this, "NetworkDetailsPanel", function() {
+loader.lazyGetter(this, "NetworkDetailsBar", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/NetworkDetailsPanel")
+    require("devtools/client/netmonitor/src/components/request-details/NetworkDetailsBar")
   );
 });
 
@@ -233,7 +233,7 @@ class MonitorPanel extends Component {
         startPanel: this.renderActionBar(),
         endPanel:
           networkDetailsOpen &&
-          NetworkDetailsPanel({
+          NetworkDetailsBar({
             ref: "endPanel",
             connector,
             openLink,

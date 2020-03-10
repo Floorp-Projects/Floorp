@@ -116,7 +116,7 @@
   padding: 4px 16px;
 }
 
-:root.theme-dark .network-details-panel .custom-request-panel {
+:root.theme-dark .network-details-bar .custom-request-panel {
   background-color: var(--grey-85);
 }
 
@@ -138,8 +138,8 @@
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-:root.theme-dark .network-details-panel .custom-request-panel input,
-:root.theme-dark .network-details-panel .custom-request-panel textarea {
+:root.theme-dark .network-details-bar .custom-request-panel input,
+:root.theme-dark .network-details-bar .custom-request-panel textarea {
   background-color: var(--grey-70);
   border: 1px solid var(--grey-85);
   color: white;
@@ -149,7 +149,7 @@
   color: var(--grey-40);
 }
 
-:root.theme-light .network-details-panel .custom-request-label.custom-header {
+:root.theme-light .network-details-bar .custom-request-label.custom-header {
   background-color: var(--grey-10);
   border-bottom: 1px solid var(--grey-25);
 }
@@ -171,8 +171,8 @@
   -moz-outline-radius: 2px;
 }
 
-:root.theme-light .network-details-panel .custom-request-panel input,
-:root.theme-light .network-details-panel .custom-request-panel textarea {
+:root.theme-light .network-details-bar .custom-request-panel input,
+:root.theme-light .network-details-bar .custom-request-panel textarea {
   background-color: white;
   border: 1px solid var(--grey-25);
   color: var(--grey-90);
