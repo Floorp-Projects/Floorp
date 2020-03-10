@@ -66,7 +66,8 @@ async function checkGetTabFailures(client) {
   } catch (error) {
     is(
       error.message,
-      "Protocol error (noTab): Unable to find tab with tabId '-999'"
+      "Protocol error (noTab): Unable to find tab with tabId '-999' from: " +
+        client.mainRoot.actorID
     );
   }
 
@@ -76,7 +77,8 @@ async function checkGetTabFailures(client) {
   } catch (error) {
     is(
       error.message,
-      "Protocol error (noTab): Unable to find tab with outerWindowID '-999'"
+      "Protocol error (noTab): Unable to find tab with outerWindowID '-999' from: " +
+        client.mainRoot.actorID
     );
   }
 }
