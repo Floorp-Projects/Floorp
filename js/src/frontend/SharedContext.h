@@ -301,7 +301,7 @@ inline EvalSharedContext* SharedContext::asEvalContext() {
 enum class HasHeritage : bool { No, Yes };
 
 class FunctionBox : public ObjectBox, public SharedContext {
-  // The parser handles tracing the fields below via the TraceListNode linked
+  // The parser handles tracing the fields below via the FunctionBox linked
   // list.
 
   // This field is used for two purposes:
@@ -717,7 +717,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
     return functionCreationData().get().hasInferredName();
   }
 
-  void trace(JSTracer* trc) override;
+  void trace(JSTracer* trc);
+
+  static void TraceList(JSTracer* trc, FunctionBox* listHead);
 };
 
 inline FunctionBox* SharedContext::asFunctionBox() {

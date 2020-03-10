@@ -2292,11 +2292,6 @@ class TraceListNode {
   FunctionBox* traceLink;
 
   TraceListNode(js::gc::Cell* gcThing, FunctionBox* traceLink);
-
-  virtual void trace(JSTracer* trc);
-
- public:
-  static void TraceList(JSTracer* trc, FunctionBox* listHead);
 };
 
 class ObjectBox : public TraceListNode {

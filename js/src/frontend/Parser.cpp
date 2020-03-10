@@ -324,7 +324,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 }
 
 void ParserBase::trace(JSTracer* trc) {
-  TraceListNode::TraceList(trc, traceListHead_);
+  FunctionBox::TraceList(trc, traceListHead_);
 }
 
 void TraceParser(JSTracer* trc, AutoGCRooter* parser) {
