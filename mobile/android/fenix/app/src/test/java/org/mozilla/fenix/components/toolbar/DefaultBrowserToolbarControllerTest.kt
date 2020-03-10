@@ -41,7 +41,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
@@ -353,23 +352,6 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleToolbarNewPrivateTabPress() {
-        val item = ToolbarMenu.Item.NewPrivateTab
-
-        every { browsingModeManager.mode } returns BrowsingMode.Normal
-
-        controller.handleToolbarItemInteraction(item)
-
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.NEW_PRIVATE_TAB)) }
-        verify {
-            val directions = BrowserFragmentDirections
-                .actionBrowserFragmentToSearchFragment(sessionId = null)
-            navController.nav(R.id.browserFragment, directions)
-        }
-        verify { browsingModeManager.mode = BrowsingMode.Private }
-    }
-
-    @Test
     fun handleToolbarFindInPagePress() {
         val item = ToolbarMenu.Item.FindInPage
 
@@ -403,41 +385,6 @@ class DefaultBrowserToolbarControllerTest {
                 )
             )
         }
-    }
-
-    @Test
-    fun handleToolbarHelpPress() {
-        val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-        val addTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
-
-        val item = ToolbarMenu.Item.Help
-
-        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
-        every { tabsUseCases.addTab } returns addTabUseCase
-
-        controller.handleToolbarItemInteraction(item)
-
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.HELP)) }
-        verify {
-            addTabUseCase.invoke(getSupportUrl())
-        }
-    }
-
-    @Test
-    fun handleToolbarNewTabPress() {
-        val item = ToolbarMenu.Item.NewTab
-
-        every { browsingModeManager.mode } returns BrowsingMode.Private
-
-        controller.handleToolbarItemInteraction(item)
-
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.NEW_TAB)) }
-        verify {
-            val directions = BrowserFragmentDirections
-                .actionBrowserFragmentToSearchFragment(sessionId = null)
-            navController.nav(R.id.browserFragment, directions)
-        }
-        verify { browsingModeManager.mode = BrowsingMode.Normal }
     }
 
     @Test
