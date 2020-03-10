@@ -413,12 +413,6 @@ RegExpObject* RegExpLiteral::getOrCreate(
   return compilationInfo.regExpData[index_].createRegExp(cx);
 }
 
-FunctionBox* ObjectBox::asFunctionBox() {
-  MOZ_ASSERT(isFunctionBox());
-
-  return static_cast<FunctionBox*>(this);
-}
-
 /* static */
 void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
   for (FunctionBox* node = listHead; node; node = node->traceLink) {

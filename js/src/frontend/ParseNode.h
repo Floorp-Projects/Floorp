@@ -2293,9 +2293,6 @@ class ObjectBox {
   bool hasObject() const { return object_ != nullptr; }
 
   JSObject* object() const { return object_; }
-
-  bool isFunctionBox() const { return true; }
-  FunctionBox* asFunctionBox();
 };
 
 enum ParseReportKind {
