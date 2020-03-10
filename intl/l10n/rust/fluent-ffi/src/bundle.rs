@@ -1,6 +1,8 @@
+use crate::builtins::NumberFormat;
 use fluent::resolve::ResolverError;
 use fluent::{FluentArgs, FluentBundle, FluentError, FluentResource, FluentValue};
 use fluent_pseudo::transform_dom;
+use intl_memoizer::IntlLangMemoizer;
 use nsstring::{nsACString, nsCString};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -49,6 +51,18 @@ fn transform_bidi(s: &str) -> Cow<str> {
     transform_dom(s, true, false)
 }
 
+fn format_numbers(num: &FluentValue, intls: &IntlLangMemoizer) -> Option<String> {
+    match num {
+        FluentValue::Number(n) => {
+            let result = intls
+                .with_try_get::<NumberFormat, _, _>((n.options.clone(),), |nf| nf.format(n.value))
+                .expect("Failed to retrieve a NumberFormat instance.");
+            Some(result)
+        }
+        _ => None,
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn fluent_bundle_new(
     locales: &ThinVec<nsCString>,
@@ -66,6 +80,36 @@ pub unsafe extern "C" fn fluent_bundle_new(
     }
     let mut bundle = FluentBundle::new(&langids);
     bundle.set_use_isolating(use_isolating);
+
+    bundle.set_formatter(Some(format_numbers));
+
+    bundle
+        .add_function("PLATFORM", |_args, _named_args| {
+            if cfg!(target_os = "linux") {
+                "linux".into()
+            } else if cfg!(target_os = "windows") {
+                "windows".into()
+            } else if cfg!(target_os = "macos") {
+                "macos".into()
+            } else if cfg!(target_os = "android") {
+                "android".into()
+            } else {
+                "other".into()
+            }
+        })
+        .expect("Failed to add a function to the bundle.");
+    bundle
+        .add_function("NUMBER", |args, named| {
+            if let Some(FluentValue::Number(n)) = args.get(0) {
+                let mut num = n.clone();
+                num.options.merge(named);
+                FluentValue::Number(num)
+            } else {
+                FluentValue::None
+            }
+        })
+        .expect("Failed to add a function to the bundle.");
+
     if !pseudo_strategy.is_empty() {
         match &pseudo_strategy[..] {
             b"accented" => bundle.set_transform(Some(transform_accented)),
