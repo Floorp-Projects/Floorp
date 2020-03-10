@@ -7,6 +7,9 @@ package org.mozilla.gecko.process;
 
 public class GeckoChildProcessServices {
     public static final class gmplugin extends GeckoServiceChildProcess {}
-    public static final class tab extends GeckoServiceChildProcess {}
     public static final class socket extends GeckoServiceChildProcess {}
+
+    public static final class tab0 extends GeckoServiceChildProcess {}
+    public static final class tab1 extends GeckoServiceChildProcess {}
+    public static final class tab2 extends GeckoServiceChildProcess {}
 }
