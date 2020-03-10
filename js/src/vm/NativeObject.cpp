@@ -2531,7 +2531,6 @@ bool js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg,
 /*** [[Set]] ****************************************************************/
 
 static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
-  unsigned flags;
   {
     jsbytecode* pc;
     JSScript* script =
@@ -2540,13 +2539,7 @@ static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
       return true;
     }
 
-    // If the code is not strict and extra warnings aren't enabled, then no
-    // check is needed.
-    if (IsStrictSetPC(pc)) {
-      flags = JSREPORT_ERROR;
-    } else if (cx->realm()->behaviors().extraWarnings(cx)) {
-      flags = JSREPORT_WARNING | JSREPORT_STRICT;
-    } else {
+    if (!IsStrictSetPC(pc)) {
       return true;
     }
   }
@@ -2556,8 +2549,9 @@ static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
   if (!bytes) {
     return false;
   }
-  return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
-                                          JSMSG_UNDECLARED_VAR, bytes.get());
+  return JS_ReportErrorFlagsAndNumberUTF8(cx, JSREPORT_ERROR, GetErrorMessage,
+                                          nullptr, JSMSG_UNDECLARED_VAR,
+                                          bytes.get());
 }
 
 /*
