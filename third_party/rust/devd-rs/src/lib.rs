@@ -2,28 +2,23 @@ extern crate libc;
 #[macro_use]
 extern crate nom;
 
-pub mod result;
 pub mod data;
 pub mod parser;
+pub mod result;
 
-use libc::{
-    c_int, nfds_t,
-    poll, pollfd, POLLIN,
-    socket, connect, sockaddr_un, AF_UNIX, SOCK_SEQPACKET
-};
+use io::{BufRead, BufReader};
+use libc::{c_int, connect, nfds_t, poll, pollfd, sockaddr_un, socket, AF_UNIX, POLLIN, SOCK_SEQPACKET};
 use std::os::unix::io::{FromRawFd, RawFd};
 use std::os::unix::net::UnixStream;
 use std::{io, mem, ptr};
-use io::{BufRead, BufReader};
 
-pub use result::*;
 pub use data::*;
-use nom::types::CompleteStr;
+pub use result::*;
 
 const SOCKET_PATH: &'static str = "/var/run/devd.seqpacket.pipe";
 
 pub fn parse_devd_event(e: String) -> Result<Event> {
-    match parser::event(CompleteStr(e.as_str())) {
+    match parser::event(e.as_str()) {
         Ok((_, x)) => Ok(x),
         _ => Err(Error::Parse),
     }
@@ -42,18 +37,9 @@ impl Context {
             if sockfd < 0 {
                 return Err(io::Error::last_os_error().into());
             }
-            let mut sockaddr = sockaddr_un {
-                sun_family: AF_UNIX as _,
-                .. mem::zeroed()
-            };
-            ptr::copy_nonoverlapping(
-                SOCKET_PATH.as_ptr(),
-                sockaddr.sun_path.as_mut_ptr() as *mut u8,
-                SOCKET_PATH.len());
-            if connect(
-                sockfd,
-                &sockaddr as *const sockaddr_un as *const _,
-                (mem::size_of_val(&AF_UNIX) + SOCKET_PATH.len()) as _) < 0 {
+            let mut sockaddr = sockaddr_un { sun_family: AF_UNIX as _, ..mem::zeroed() };
+            ptr::copy_nonoverlapping(SOCKET_PATH.as_ptr(), sockaddr.sun_path.as_mut_ptr() as *mut u8, SOCKET_PATH.len());
+            if connect(sockfd, &sockaddr as *const sockaddr_un as *const _, (mem::size_of_val(&AF_UNIX) + SOCKET_PATH.len()) as _) < 0 {
                 return Err(io::Error::last_os_error().into());
             }
             Ok(Context {
@@ -80,8 +66,7 @@ impl Context {
 
     /// Waits for an event using poll(), reads and parses it
     pub fn wait_for_event<'a>(&mut self, timeout_ms: usize) -> Result<Event> {
-        self.wait_for_event_raw(timeout_ms)
-            .and_then(parse_devd_event)
+        self.wait_for_event_raw(timeout_ms).and_then(parse_devd_event)
     }
 
     /// Returns the devd socket file descriptor in case you want to select/poll on it together with

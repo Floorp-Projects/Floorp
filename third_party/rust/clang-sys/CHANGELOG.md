@@ -1,3 +1,26 @@
+## [0.29.2] - 2020-03-09
+
+### Added
+- Revert unnecessary increase of minimum version of `libc` and `libloading`
+
+## [0.29.1] - 2020-03-06
+
+### Added
+- Added support for finding instances of `libclang` matching `libclang-*.so.*`
+
+## [0.29.0] - 2020-02-17
+
+### Changed
+- Wrapped function pointer fields in `Option` in the `CXCursorAndRangeVisitor`
+and `IndexerCallbacks` structs (to permit nullability and to avoid undefined
+behavior caused by `Default` implementations for these structs which returns a
+zeroed value)
+
+### Added
+- Added support for `clang` 9.0.x
+- Added missing `CXCallingConv_AArch64VectorCall` variant to `CXCallingConv` enum
+- Added missing `clang_CompileCommand_getNumMappedSources` function
+
 ## [0.28.1] - 2019-07-28
 
 ### Changed

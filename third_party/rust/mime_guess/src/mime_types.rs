@@ -1,14 +1,15 @@
-// Probably not exhaustive; keep updated.
 /// A mapping of known file extensions and their MIME types.
 ///
 /// Required to be sorted lexicographically by extension for ease of maintenance.
 ///
-/// Multiple MIME types per extension are allowed but MUST be adjacent to each other; the
-/// order is arbitrary but the first should be the most prevalent by most recent RFC declaration
-/// or explicit succession of other media types.
+/// Multiple MIME types per extension are supported; the order is arbitrary but the first should be
+/// the most prevalent by most recent RFC declaration or explicit succession of other media types.
 ///
-/// As of release 2.0.0, new and modified mappings should have citations provided inline
-/// in order to provide an audit trail that's easier to follow than Git commit history.
+/// NOTE: when adding or modifying entries, please include a citation in the commit message.
+/// If a media type for an extension changed, please keep the old entry but add the new one before
+/// it in the slice literal, e.g.:
+///
+///
 ///
 /// Sourced from:
 /// https://github.com/samuelneff/MimeTypeMap/blob/master/src/MimeTypes/MimeTypeMap.cs
@@ -649,7 +650,7 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("mc1", &["application/vnd.medcalcdata"]),
     ("mcd", &["application/vnd.mcd"]),
     ("mcurl", &["text/vnd.curl.mcurl"]),
-    ("md", &["text/x-markdown"]),
+    ("md", &["text/markdown", "text/x-markdown"]),
     ("mda", &["application/msaccess"]),
     ("mdb", &["application/x-msaccess"]),
     ("mde", &["application/msaccess"]),

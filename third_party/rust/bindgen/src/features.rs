@@ -1,7 +1,6 @@
 //! Contains code for selecting features
 
 #![deny(missing_docs)]
-#![deny(warnings)]
 #![deny(unused_extern_crates)]
 
 use std::io;
@@ -88,25 +87,44 @@ macro_rules! rust_target_base {
         $x_macro!(
             /// Rust stable 1.0
             => Stable_1_0 => 1.0;
+            /// Rust stable 1.1
+            => Stable_1_1 => 1.1;
             /// Rust stable 1.19
+            ///  * Untagged unions ([RFC 1444](https://github.com/rust-lang/rfcs/blob/master/text/1444-union.md))
             => Stable_1_19 => 1.19;
             /// Rust stable 1.20
+            ///  * Associated constants ([PR](https://github.com/rust-lang/rust/pull/42809))
             => Stable_1_20 => 1.20;
             /// Rust stable 1.21
+            ///  * Builtin impls for `Clone` ([PR](https://github.com/rust-lang/rust/pull/43690))
             => Stable_1_21 => 1.21;
             /// Rust stable 1.25
+            ///  * `repr(align)` ([PR](https://github.com/rust-lang/rust/pull/47006))
             => Stable_1_25 => 1.25;
             /// Rust stable 1.26
+            ///  * [i128 / u128 support](https://doc.rust-lang.org/std/primitive.i128.html)
             => Stable_1_26 => 1.26;
             /// Rust stable 1.27
+            ///  * `must_use` attribute on functions ([PR](https://github.com/rust-lang/rust/pull/48925))
             => Stable_1_27 => 1.27;
             /// Rust stable 1.28
+            ///  * `repr(transparent)` ([PR](https://github.com/rust-lang/rust/pull/51562))
             => Stable_1_28 => 1.28;
             /// Rust stable 1.30
+            ///  * `const fn` support for limited cases ([PR](https://github.com/rust-lang/rust/pull/54835/)
+            /// *  [c_void available in core](https://doc.rust-lang.org/core/ffi/enum.c_void.html)
             => Stable_1_30 => 1.30;
             /// Rust stable 1.33
+            ///  * repr(packed(N)) ([PR](https://github.com/rust-lang/rust/pull/57049))
             => Stable_1_33 => 1.33;
+            /// Rust stable 1.36
+            ///  * `MaybeUninit` instead of `mem::uninitialized()` ([PR](https://github.com/rust-lang/rust/pull/60445))
+            => Stable_1_36 => 1.36;
+            /// Rust stable 1.40
+            /// * `non_exhaustive` enums/structs ([Tracking issue](https://github.com/rust-lang/rust/issues/44109))
+            => Stable_1_40 => 1.40;
             /// Nightly rust
+            ///  * `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))
             => Nightly => nightly;
         );
     }
@@ -116,7 +134,7 @@ rust_target_base!(rust_target_def);
 rust_target_base!(rust_target_values_def);
 
 /// Latest stable release of Rust
-pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_33;
+pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_40;
 
 /// Create RustFeatures struct definition, new(), and a getter for each field
 macro_rules! rust_feature_def {
@@ -127,7 +145,8 @@ macro_rules! rust_feature_def {
     ) => {
         /// Features supported by a rust target
         #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-        pub struct RustFeatures {
+        #[allow(missing_docs)] // Documentation should go into the relevant variants.
+        pub(crate) struct RustFeatures {
             $( $(
                 $(
                     #[$attr]
@@ -165,49 +184,46 @@ macro_rules! rust_feature_def {
     }
 }
 
+// NOTE(emilio): When adding or removing features here, make sure to update the
+// documentation for the relevant variant in the rust_target_base macro
+// definition.
 rust_feature_def!(
     Stable_1_19 {
-        /// Untagged unions ([RFC 1444](https://github.com/rust-lang/rfcs/blob/master/text/1444-union.md))
         => untagged_union;
     }
     Stable_1_20 {
-        /// associated constants ([PR](https://github.com/rust-lang/rust/pull/42809))
         => associated_const;
     }
     Stable_1_21 {
-        /// builtin impls for `Clone` ([PR](https://github.com/rust-lang/rust/pull/43690))
         => builtin_clone_impls;
     }
     Stable_1_25 {
-        /// repr(align) ([PR](https://github.com/rust-lang/rust/pull/47006))
         => repr_align;
     }
     Stable_1_26 {
-        /// [i128 / u128 support](https://doc.rust-lang.org/std/primitive.i128.html)
         => i128_and_u128;
     }
     Stable_1_27 {
-        /// `must_use` attribute on functions ([PR](https://github.com/rust-lang/rust/pull/48925))
         => must_use_function;
     }
     Stable_1_28 {
-        /// repr(transparent) ([PR](https://github.com/rust-lang/rust/pull/51562))
         => repr_transparent;
     }
     Stable_1_30 {
-        /// `const fn` support for limited cases
-        /// ([PR](https://github.com/rust-lang/rust/pull/54835/)
         => min_const_fn;
+        => core_ffi_c_void;
     }
     Stable_1_33 {
-        /// repr(packed(N)) ([PR](https://github.com/rust-lang/rust/pull/57049))
         => repr_packed_n;
     }
-    Nightly {
-        /// `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))
-        => thiscall_abi;
-        /// `non_exhaustive` enums/structs ([Tracking issue](https://github.com/rust-lang/rust/issues/44109))
+    Stable_1_36 {
+        => maybe_uninit;
+    }
+    Stable_1_40 {
         => non_exhaustive;
+    }
+    Nightly {
+        => thiscall_abi;
     }
 );
 
@@ -227,7 +243,8 @@ mod test {
     fn target_features() {
         let f_1_0 = RustFeatures::from(RustTarget::Stable_1_0);
         assert!(
-            !f_1_0.untagged_union &&
+            !f_1_0.core_ffi_c_void &&
+                !f_1_0.untagged_union &&
                 !f_1_0.associated_const &&
                 !f_1_0.builtin_clone_impls &&
                 !f_1_0.repr_align &&
@@ -235,7 +252,8 @@ mod test {
         );
         let f_1_21 = RustFeatures::from(RustTarget::Stable_1_21);
         assert!(
-            f_1_21.untagged_union &&
+            !f_1_21.core_ffi_c_void &&
+                f_1_21.untagged_union &&
                 f_1_21.associated_const &&
                 f_1_21.builtin_clone_impls &&
                 !f_1_21.repr_align &&
@@ -243,9 +261,11 @@ mod test {
         );
         let f_nightly = RustFeatures::from(RustTarget::Nightly);
         assert!(
-            f_nightly.untagged_union &&
+            f_nightly.core_ffi_c_void &&
+                f_nightly.untagged_union &&
                 f_nightly.associated_const &&
                 f_nightly.builtin_clone_impls &&
+                f_nightly.maybe_uninit &&
                 f_nightly.repr_align &&
                 f_nightly.thiscall_abi
         );

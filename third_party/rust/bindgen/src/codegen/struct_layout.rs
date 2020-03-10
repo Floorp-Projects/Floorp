@@ -9,6 +9,8 @@ use ir::ty::{Type, TypeKind};
 use proc_macro2::{self, Ident, Span};
 use std::cmp;
 
+const MAX_GUARANTEED_ALIGN: usize = 8;
+
 /// Trace the layout of struct.
 #[derive(Debug)]
 pub struct StructLayoutTracker<'a> {
@@ -168,10 +170,10 @@ impl<'a> StructLayoutTracker<'a> {
             // much we can do about it.
             if let Some(layout) = self.ctx.resolve_type(inner).layout(self.ctx)
             {
-                if layout.align > self.ctx.target_pointer_size() {
+                if layout.align > MAX_GUARANTEED_ALIGN {
                     field_layout.size =
                         align_to(layout.size, layout.align) * len;
-                    field_layout.align = self.ctx.target_pointer_size();
+                    field_layout.align = MAX_GUARANTEED_ALIGN;
                 }
             }
         }
@@ -191,7 +193,7 @@ impl<'a> StructLayoutTracker<'a> {
 
             // Otherwise the padding is useless.
             let need_padding = padding_bytes >= field_layout.align ||
-                field_layout.align > self.ctx.target_pointer_size();
+                field_layout.align > MAX_GUARANTEED_ALIGN;
 
             self.latest_offset += padding_bytes;
 
@@ -213,10 +215,7 @@ impl<'a> StructLayoutTracker<'a> {
             if need_padding && padding_bytes != 0 {
                 Some(Layout::new(
                     padding_bytes,
-                    cmp::min(
-                        field_layout.align,
-                        self.ctx.target_pointer_size(),
-                    ),
+                    cmp::min(field_layout.align, MAX_GUARANTEED_ALIGN),
                 ))
             } else {
                 None
@@ -258,6 +257,11 @@ impl<'a> StructLayoutTracker<'a> {
         }
 
         let padding_bytes = layout.size - self.latest_offset;
+        if padding_bytes == 0 {
+            return None;
+        }
+
+        let repr_align = self.ctx.options().rust_features().repr_align;
 
         // We always pad to get to the correct size if the struct is one of
         // those we can't align properly.
@@ -265,17 +269,15 @@ impl<'a> StructLayoutTracker<'a> {
         // Note that if the last field we saw was a bitfield, we may need to pad
         // regardless, because bitfields don't respect alignment as strictly as
         // other fields.
-        if padding_bytes > 0 &&
-            (padding_bytes >= layout.align ||
-                (self.last_field_was_bitfield &&
-                    padding_bytes >=
-                        self.latest_field_layout.unwrap().align) ||
-                layout.align > self.ctx.target_pointer_size())
+        if padding_bytes >= layout.align ||
+            (self.last_field_was_bitfield &&
+                padding_bytes >= self.latest_field_layout.unwrap().align) ||
+            (!repr_align && layout.align > MAX_GUARANTEED_ALIGN)
         {
             let layout = if self.is_packed {
                 Layout::new(padding_bytes, 1)
             } else if self.last_field_was_bitfield ||
-                layout.align > self.ctx.target_pointer_size()
+                layout.align > MAX_GUARANTEED_ALIGN
             {
                 // We've already given up on alignment here.
                 Layout::for_size(self.ctx, padding_bytes)
@@ -306,9 +308,9 @@ impl<'a> StructLayoutTracker<'a> {
             return false;
         }
 
-        // We can only generate up-to a word of alignment unless we support
+        // We can only generate up-to a 8-bytes of alignment unless we support
         // repr(align).
-        repr_align || layout.align <= self.ctx.target_pointer_size()
+        repr_align || layout.align <= MAX_GUARANTEED_ALIGN
     }
 
     fn padding_bytes(&self, layout: Layout) -> usize {

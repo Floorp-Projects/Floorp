@@ -226,7 +226,7 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
 
     let mut builder = Builder::default().header(header);
     builder = builder.generate_comments(false);
-    builder = builder.derive_debug(false); // https://github.com/rust-lang/rust-bindgen/issues/372
+    builder = builder.size_t_is_usize(true);
 
     builder = builder.clang_arg("-v");
 

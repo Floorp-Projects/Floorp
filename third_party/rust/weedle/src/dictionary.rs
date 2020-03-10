@@ -1,6 +1,6 @@
-use attribute::ExtendedAttributeList;
-use common::{Default, Identifier};
-use types::Type;
+use crate::attribute::ExtendedAttributeList;
+use crate::common::{Default, Identifier};
+use crate::types::Type;
 
 /// Parses dictionary members
 pub type DictionaryMembers<'a> = Vec<DictionaryMember<'a>>;
@@ -20,7 +20,7 @@ ast_types! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use Parse;
+    use crate::Parse;
 
     test!(should_parse_dictionary_member { "required long num = 5;" =>
         "";

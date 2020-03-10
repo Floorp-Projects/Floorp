@@ -348,7 +348,7 @@ impl TypeDeanonymizer {
                 let mut names = vec![];
                 let mut subsums = vec![];
                 for sub_type in sum.types() {
-                    let (mut sub_sum, name) = self.import_typespec(spec, sub_type, None);
+                    let (sub_sum, name) = self.import_typespec(spec, sub_type, None);
                     let mut sub_sum = sub_sum.unwrap_or_else(
                         || panic!("While treating {:?}, attempting to create a sum containing {}, which isn't an interface or a sum of interfaces", type_spec, name)
                     );
@@ -370,7 +370,7 @@ impl TypeDeanonymizer {
                 };
                 for subsum_name in subsums {
                     // So, `my_name` is a superset of `subsum_name`.
-                    let mut supersum_entry = self
+                    let supersum_entry = self
                         .supersums_of
                         .entry(subsum_name.clone())
                         .or_insert_with(|| HashSet::new());

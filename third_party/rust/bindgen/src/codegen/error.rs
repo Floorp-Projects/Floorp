@@ -15,17 +15,7 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", error::Error::description(self))
-    }
-}
-
-impl error::Error for Error {
-    fn cause(&self) -> Option<&dyn error::Error> {
-        None
-    }
-
-    fn description(&self) -> &'static str {
-        match *self {
+        f.write_str(match *self {
             Error::NoLayoutForOpaqueBlob => {
                 "Tried to generate an opaque blob, but had no layout"
             }
@@ -33,9 +23,11 @@ impl error::Error for Error {
                 "Instantiation of opaque template type or partial template \
                  specialization"
             }
-        }
+        })
     }
 }
+
+impl error::Error for Error {}
 
 /// A `Result` of `T` or an error of `bindgen::codegen::error::Error`.
 pub type Result<T> = ::std::result::Result<T, Error>;

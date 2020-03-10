@@ -32,9 +32,9 @@ pub struct SingleStore<D> {
     db: D,
 }
 
-pub struct Iter<'env, I> {
+pub struct Iter<'i, I> {
     iter: I,
-    phantom: PhantomData<&'env ()>,
+    phantom: PhantomData<&'i ()>,
 }
 
 impl<D> SingleStore<D>
@@ -47,9 +47,9 @@ where
         }
     }
 
-    pub fn get<'env, R, K>(&self, reader: &'env R, k: K) -> Result<Option<Value<'env>>, StoreError>
+    pub fn get<'r, R, K>(&self, reader: &'r R, k: K) -> Result<Option<Value<'r>>, StoreError>
     where
-        R: Readable<'env, Database = D>,
+        R: Readable<'r, Database = D>,
         K: AsRef<[u8]>,
     {
         reader.get(&self.db, &k)
@@ -82,11 +82,11 @@ where
         writer.delete(&self.db, &k, None)
     }
 
-    pub fn iter_start<'env, R, I, C>(&self, reader: &'env R) -> Result<Iter<'env, I>, StoreError>
+    pub fn iter_start<'r, R, I, C>(&self, reader: &'r R) -> Result<Iter<'r, I>, StoreError>
     where
-        R: Readable<'env, Database = D, RoCursor = C>,
-        I: BackendIter<'env>,
-        C: BackendRoCursor<'env, Iter = I>,
+        R: Readable<'r, Database = D, RoCursor = C>,
+        I: BackendIter<'r>,
+        C: BackendRoCursor<'r, Iter = I>,
     {
         let cursor = reader.open_ro_cursor(&self.db)?;
         let iter = cursor.into_iter();
@@ -97,12 +97,12 @@ where
         })
     }
 
-    pub fn iter_from<'env, R, I, C, K>(&self, reader: &'env R, k: K) -> Result<Iter<'env, I>, StoreError>
+    pub fn iter_from<'r, R, I, C, K>(&self, reader: &'r R, k: K) -> Result<Iter<'r, I>, StoreError>
     where
-        R: Readable<'env, Database = D, RoCursor = C>,
-        I: BackendIter<'env>,
-        C: BackendRoCursor<'env, Iter = I>,
-        K: AsRef<[u8]>,
+        R: Readable<'r, Database = D, RoCursor = C>,
+        I: BackendIter<'r>,
+        C: BackendRoCursor<'r, Iter = I>,
+        K: AsRef<[u8]> + 'r,
     {
         let cursor = reader.open_ro_cursor(&self.db)?;
         let iter = cursor.into_iter_from(k);
@@ -122,11 +122,11 @@ where
     }
 }
 
-impl<'env, I> Iterator for Iter<'env, I>
+impl<'i, I> Iterator for Iter<'i, I>
 where
-    I: BackendIter<'env>,
+    I: BackendIter<'i>,
 {
-    type Item = Result<(&'env [u8], Option<Value<'env>>), StoreError>;
+    type Item = Result<(&'i [u8], Option<Value<'i>>), StoreError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {

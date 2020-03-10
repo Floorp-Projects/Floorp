@@ -83,7 +83,11 @@ pub fn run_llvm_config(arguments: &[&str]) -> Option<String> {
 
     let output = run_command(&path, arguments);
     if output.is_none() {
-        println!("cargo:warning=set the LLVM_CONFIG_PATH environment variable to a valid `llvm-config` executable");
+        println!(
+            "cargo:warning=set the LLVM_CONFIG_PATH environment variable to \
+            the full path to a valid `llvm-config` executable (including the \
+            executable itself)"
+        );
     }
 
     output

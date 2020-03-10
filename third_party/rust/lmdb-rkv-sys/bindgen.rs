@@ -1,5 +1,3 @@
-extern crate bindgen;
-
 use bindgen::callbacks::IntKind;
 use bindgen::callbacks::ParseCallbacks;
 use std::env;
@@ -38,7 +36,7 @@ impl ParseCallbacks for Callbacks {
     }
 }
 
-fn main() {
+pub fn generate() {
     let mut lmdb = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
     lmdb.push("lmdb");
     lmdb.push("libraries");
@@ -52,8 +50,11 @@ fn main() {
         .whitelist_var("^(MDB|mdb)_.*")
         .whitelist_type("^(MDB|mdb)_.*")
         .whitelist_function("^(MDB|mdb)_.*")
+        .size_t_is_usize(true)
         .ctypes_prefix("::libc")
         .blacklist_item("mode_t")
+        .blacklist_item("mdb_mode_t")
+        .blacklist_item("mdb_filehandle_t")
         .blacklist_item("^__.*")
         .parse_callbacks(Box::new(Callbacks {}))
         .layout_tests(false)

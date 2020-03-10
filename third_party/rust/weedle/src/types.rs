@@ -1,10 +1,10 @@
-use attribute::ExtendedAttributeList;
-use common::{Braced, Generics, Identifier, Punctuated};
-use term;
-use Parse;
+use crate::attribute::ExtendedAttributeList;
+use crate::common::{Generics, Identifier, Parenthesized, Punctuated};
+use crate::term;
+use crate::Parse;
 
 /// Parses a union of types
-pub type UnionType<'a> = Braced<Punctuated<UnionMemberType<'a>, term!(or)>>;
+pub type UnionType<'a> = Parenthesized<Punctuated<UnionMemberType<'a>, term!(or)>>;
 
 ast_types! {
     /// Parses either single type or a union type
@@ -133,7 +133,7 @@ ast_types! {
 
     /// Parses one of the member of a union type
     enum UnionMemberType<'a> {
-        Single(NonAnyType<'a>),
+        Single(AttributedNonAnyType<'a>),
         Union(MayBeNull<UnionType<'a>>),
     }
 
@@ -158,6 +158,12 @@ ast_types! {
         attributes: Option<ExtendedAttributeList<'a>>,
         type_: Type<'a>,
     }
+
+    /// Parses `[attributes]? type` where the type is a single non-any type
+    struct AttributedNonAnyType<'a> {
+        attributes: Option<ExtendedAttributeList<'a>>,
+        type_: NonAnyType<'a>,
+    }
 }
 
 #[cfg(test)]
@@ -166,13 +172,13 @@ mod test {
 
     test!(should_parse_may_be_null { "short" =>
         "";
-        MayBeNull<::types::IntegerType>;
+        MayBeNull<crate::types::IntegerType>;
         q_mark.is_none();
     });
 
     test!(should_parse_nullable { "short?" =>
         "";
-        MayBeNull<::types::IntegerType>;
+        MayBeNull<crate::types::IntegerType>;
         q_mark.is_some();
     });
 
@@ -231,7 +237,7 @@ mod test {
     test_variants!(
         UnionMemberType {
             Single == "byte",
-            Union == "(byte or byte)"
+            Union == "([Clamp] unsigned long or byte)"
         }
     );
 
@@ -326,6 +332,49 @@ mod test {
     test!(should_parse_type_as_identifier { "DOMStringMap" =>
         // if type is not parsed as identifier, it is parsed as `DOMString` and 'Map' is left
         "";
-        ::types::Type;
+        crate::types::Type;
     });
+
+    #[test]
+    fn should_parse_union_member_type_attributed_union() {
+        use crate::types::UnionMemberType;
+        let (rem, parsed) = UnionMemberType::parse("([Clamp] byte or [Named] byte)").unwrap();
+        assert_eq!(rem, "");
+        match parsed {
+            UnionMemberType::Union(MayBeNull {
+                type_:
+                    Parenthesized {
+                        body: Punctuated { list, .. },
+                        ..
+                    },
+                ..
+            }) => {
+                assert_eq!(list.len(), 2);
+
+                match list[0] {
+                    UnionMemberType::Single(AttributedNonAnyType { ref attributes, .. }) => {
+                        assert!(attributes.is_some());
+                    }
+
+                    _ => {
+                        panic!("Failed to parse list[0] attributes");
+                    }
+                };
+
+                match list[1] {
+                    UnionMemberType::Single(AttributedNonAnyType { ref attributes, .. }) => {
+                        assert!(attributes.is_some());
+                    }
+
+                    _ => {
+                        panic!("Failed to parse list[1] attributes");
+                    }
+                };
+            }
+
+            _ => {
+                panic!("Failed to parse");
+            }
+        }
+    }
 }

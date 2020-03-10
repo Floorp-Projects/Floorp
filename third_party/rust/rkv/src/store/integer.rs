@@ -46,9 +46,9 @@ where
         }
     }
 
-    pub fn get<'env, R>(&self, reader: &'env R, k: K) -> Result<Option<Value<'env>>, StoreError>
+    pub fn get<'r, R>(&self, reader: &'r R, k: K) -> Result<Option<Value<'r>>, StoreError>
     where
-        R: Readable<'env, Database = D>,
+        R: Readable<'r, Database = D>,
     {
         self.inner.get(reader, Key::new(&k)?)
     }

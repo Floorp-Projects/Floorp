@@ -8,6 +8,7 @@
 
 use neqo_common::{matches, qdebug, qtrace, Decoder, Encoder};
 
+use crate::cid::MAX_CONNECTION_ID_LEN;
 use crate::packet::PacketType;
 use crate::stream_id::{StreamId, StreamIndex};
 use crate::{AppError, TransportError};
@@ -655,6 +656,9 @@ impl Frame {
                 let s = dv!(dec);
                 let retire_prior = dv!(dec);
                 let cid = d!(dec.decode_vec(1)).to_vec(); // TODO(mt) unnecessary copy
+                if cid.len() > MAX_CONNECTION_ID_LEN {
+                    return Err(Error::DecodingFrame);
+                }
                 let srt = d!(dec.decode(16));
                 let mut srtv: [u8; 16] = [0; 16];
                 srtv.copy_from_slice(&srt);
@@ -905,6 +909,17 @@ mod tests {
         };
 
         enc_dec(&f, "1852340002010209090909090909090909090909090909");
+    }
+
+    #[test]
+    fn too_large_new_connection_id() {
+        let mut enc = Encoder::from_hex("18523400"); // up to the CID
+        enc.encode_vvec(&[0x0c; MAX_CONNECTION_ID_LEN + 10]);
+        enc.encode(&[0x11; 16][..]);
+        assert_eq!(
+            Frame::decode(&mut enc.as_decoder()).unwrap_err(),
+            Error::DecodingFrame
+        );
     }
 
     #[test]

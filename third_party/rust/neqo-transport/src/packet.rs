@@ -5,7 +5,7 @@
 // except according to those terms.
 
 // Encoding and decoding packets off the wire.
-use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdRef};
+use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdRef, MAX_CONNECTION_ID_LEN};
 use crate::crypto::{CryptoDxState, CryptoStates};
 use crate::tracking::PNSpace;
 use crate::{Error, Res, Version, QUIC_VERSION};
@@ -428,6 +428,9 @@ impl<'a> PublicPacket<'a> {
         if (first & PACKET_BIT_FIXED_QUIC) != PACKET_BIT_FIXED_QUIC {
             return Err(Error::InvalidPacket);
         }
+        if dcid.len() > MAX_CONNECTION_ID_LEN || scid.len() > MAX_CONNECTION_ID_LEN {
+            return Err(Error::InvalidPacket);
+        }
         let packet_type = match (first >> 4) & 3 {
             PACKET_TYPE_INITIAL => PacketType::Initial,
             PACKET_TYPE_0RTT => PacketType::ZeroRtt,
@@ -729,6 +732,30 @@ mod tests {
         assert_eq!(decrypted.pn(), 1);
     }
 
+    #[test]
+    fn disallow_long_dcid() {
+        let mut enc = Encoder::new();
+        enc.encode_byte(PACKET_BIT_LONG | PACKET_BIT_FIXED_QUIC);
+        enc.encode_uint(4, QUIC_VERSION);
+        enc.encode_vec(1, &[0x00; MAX_CONNECTION_ID_LEN + 1]);
+        enc.encode_vec(1, &[]);
+        enc.encode(&[0xff; 40]); // junk
+
+        assert!(PublicPacket::decode(&enc, &cid_mgr()).is_err());
+    }
+
+    #[test]
+    fn disallow_long_scid() {
+        let mut enc = Encoder::new();
+        enc.encode_byte(PACKET_BIT_LONG | PACKET_BIT_FIXED_QUIC);
+        enc.encode_uint(4, QUIC_VERSION);
+        enc.encode_vec(1, &[]);
+        enc.encode_vec(1, &[0x00; MAX_CONNECTION_ID_LEN + 2]);
+        enc.encode(&[0xff; 40]); // junk
+
+        assert!(PublicPacket::decode(&enc, &cid_mgr()).is_err());
+    }
+
     const SAMPLE_SHORT: &[u8] = &[
         0x4c, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x55, 0x80, 0x33, 0xda, 0x1a, 0x01,
         0x19, 0x47, 0x57, 0xe2, 0x23, 0xcf, 0xe8, 0xde, 0x58, 0xce, 0x8b, 0xab, 0xc5, 0x19,
@@ -936,6 +963,27 @@ mod tests {
         assert_eq!(&packet.dcid[..], SERVER_CID);
         assert!(packet.scid.is_some());
         assert_eq!(&packet.scid.unwrap()[..], CLIENT_CID);
+    }
+
+    /// A Version Negotiation packet can have a long connection ID.
+    #[test]
+    fn parse_vn_big_cid() {
+        const BIG_DCID: &[u8] = &[0x44; MAX_CONNECTION_ID_LEN + 1];
+        const BIG_SCID: &[u8] = &[0xee; 255];
+
+        let mut enc = Encoder::from(&[0xff, 0x00, 0x00, 0x00, 0x00][..]);
+        enc.encode_vec(1, BIG_DCID);
+        enc.encode_vec(1, BIG_SCID);
+        enc.encode_uint(4, 0x1a2a_3a4a_u64);
+        enc.encode_uint(4, QUIC_VERSION);
+        enc.encode_uint(4, 0x5a6a_7a8a_u64);
+
+        let (packet, remainder) =
+            PublicPacket::decode(&enc, &FixedConnectionIdManager::new(5)).unwrap();
+        assert!(remainder.is_empty());
+        assert_eq!(&packet.dcid[..], BIG_DCID);
+        assert!(packet.scid.is_some());
+        assert_eq!(&packet.scid.unwrap()[..], BIG_SCID);
     }
 
     #[test]

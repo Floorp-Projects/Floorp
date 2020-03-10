@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use super::{
     snapshot::Snapshot,
-    DatabaseId,
+    DatabaseImpl,
     EnvironmentImpl,
     ErrorImpl,
     RoCursorImpl,
@@ -27,15 +27,15 @@ use crate::backend::traits::{
 };
 
 #[derive(Debug)]
-pub struct RoTransactionImpl<'env> {
-    env: &'env EnvironmentImpl,
-    snapshots: HashMap<DatabaseId, Snapshot>,
+pub struct RoTransactionImpl<'t> {
+    env: &'t EnvironmentImpl,
+    snapshots: HashMap<DatabaseImpl, Snapshot>,
     idx: Arc<()>,
 }
 
-impl<'env> RoTransactionImpl<'env> {
-    pub(crate) fn new(env: &'env EnvironmentImpl, idx: Arc<()>) -> Result<RoTransactionImpl<'env>, ErrorImpl> {
-        let snapshots = env.dbs()?.iter().map(|(id, db)| (id, db.snapshot())).collect();
+impl<'t> RoTransactionImpl<'t> {
+    pub(crate) fn new(env: &'t EnvironmentImpl, idx: Arc<()>) -> Result<RoTransactionImpl<'t>, ErrorImpl> {
+        let snapshots = env.dbs()?.iter().map(|(id, db)| (DatabaseImpl(id), db.snapshot())).collect();
         Ok(RoTransactionImpl {
             env,
             snapshots,
@@ -44,9 +44,9 @@ impl<'env> RoTransactionImpl<'env> {
     }
 }
 
-impl<'env> BackendRoTransaction for RoTransactionImpl<'env> {
+impl<'t> BackendRoTransaction for RoTransactionImpl<'t> {
     type Error = ErrorImpl;
-    type Database = DatabaseId;
+    type Database = DatabaseImpl;
 
     fn get(&self, db: &Self::Database, key: &[u8]) -> Result<&[u8], Self::Error> {
         let snapshot = self.snapshots.get(db).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
@@ -58,25 +58,25 @@ impl<'env> BackendRoTransaction for RoTransactionImpl<'env> {
     }
 }
 
-impl<'env> BackendRoCursorTransaction<'env> for RoTransactionImpl<'env> {
-    type RoCursor = RoCursorImpl<'env>;
+impl<'t> BackendRoCursorTransaction<'t> for RoTransactionImpl<'t> {
+    type RoCursor = RoCursorImpl<'t>;
 
-    fn open_ro_cursor(&'env self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
+    fn open_ro_cursor(&'t self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
         let snapshot = self.snapshots.get(db).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
         Ok(RoCursorImpl(snapshot))
     }
 }
 
 #[derive(Debug)]
-pub struct RwTransactionImpl<'env> {
-    env: &'env EnvironmentImpl,
-    snapshots: HashMap<DatabaseId, Snapshot>,
+pub struct RwTransactionImpl<'t> {
+    env: &'t EnvironmentImpl,
+    snapshots: HashMap<DatabaseImpl, Snapshot>,
     idx: Arc<()>,
 }
 
-impl<'env> RwTransactionImpl<'env> {
-    pub(crate) fn new(env: &'env EnvironmentImpl, idx: Arc<()>) -> Result<RwTransactionImpl<'env>, ErrorImpl> {
-        let snapshots = env.dbs()?.iter().map(|(id, db)| (id, db.snapshot())).collect();
+impl<'t> RwTransactionImpl<'t> {
+    pub(crate) fn new(env: &'t EnvironmentImpl, idx: Arc<()>) -> Result<RwTransactionImpl<'t>, ErrorImpl> {
+        let snapshots = env.dbs()?.iter().map(|(id, db)| (DatabaseImpl(id), db.snapshot())).collect();
         Ok(RwTransactionImpl {
             env,
             snapshots,
@@ -85,9 +85,9 @@ impl<'env> RwTransactionImpl<'env> {
     }
 }
 
-impl<'env> BackendRwTransaction for RwTransactionImpl<'env> {
+impl<'t> BackendRwTransaction for RwTransactionImpl<'t> {
     type Error = ErrorImpl;
-    type Database = DatabaseId;
+    type Database = DatabaseImpl;
     type Flags = WriteFlagsImpl;
 
     fn get(&self, db: &Self::Database, key: &[u8]) -> Result<&[u8], Self::Error> {
@@ -142,7 +142,7 @@ impl<'env> BackendRwTransaction for RwTransactionImpl<'env> {
         let mut dbs = self.env.dbs_mut()?;
 
         for (id, snapshot) in self.snapshots {
-            let db = dbs.get_mut(id).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
+            let db = dbs.get_mut(id.0).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
             db.replace(snapshot);
         }
 
@@ -155,10 +155,10 @@ impl<'env> BackendRwTransaction for RwTransactionImpl<'env> {
     }
 }
 
-impl<'env> BackendRwCursorTransaction<'env> for RwTransactionImpl<'env> {
-    type RoCursor = RoCursorImpl<'env>;
+impl<'t> BackendRwCursorTransaction<'t> for RwTransactionImpl<'t> {
+    type RoCursor = RoCursorImpl<'t>;
 
-    fn open_ro_cursor(&'env self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
+    fn open_ro_cursor(&'t self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
         let snapshot = self.snapshots.get(db).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
         Ok(RoCursorImpl(snapshot))
     }

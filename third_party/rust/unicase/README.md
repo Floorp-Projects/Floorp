@@ -4,7 +4,7 @@
 
 [Documentation](https://docs.rs/unicase)
 
-Compare strings when case is not important.
+Compare strings when case is not important (using Unicode Case-folding).
 
 ```rust
 // ignore ASCII case

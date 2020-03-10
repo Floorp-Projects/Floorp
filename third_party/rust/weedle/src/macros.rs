@@ -1,6 +1,48 @@
+macro_rules! tag {
+    ($i:expr, $tag: expr) => {
+        nom::bytes::complete::tag($tag)($i)
+    };
+}
+
+macro_rules! take_while {
+    ($input:expr, $submac:ident!( $($args:tt)* )) => {
+        $crate::macros::take_while!($input, (|c| $submac!(c, $($args)*)))
+    };
+    ($input:expr, $f:expr) => {
+        nom::bytes::complete::take_while($f)($input)
+    };
+}
+
+macro_rules! take_while1 {
+    ($input:expr, $submac:ident!( $($args:tt)* )) => {
+        $crate::macros::take_while1!($input, (|c| $submac!(c, $($args)*)))
+    };
+    ($input:expr, $f:expr) => {
+        nom::bytes::complete::take_while1($f)($input)
+    };
+}
+
+macro_rules! take_until {
+    ($i:expr, $substr:expr) => {
+        nom::bytes::complete::take_until($substr)($i)
+    };
+}
+
+macro_rules! one_of {
+    ($i:expr, $inp: expr) => {
+        nom::character::complete::one_of($inp)($i)
+    };
+}
+
+macro_rules! char {
+    ($i:expr, $c: expr) => {
+        nom::character::complete::char($c)($i)
+    };
+}
+
 macro_rules! parser {
     ($submac:ident!( $($args:tt)* )) => {
-        fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+        fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
             $submac!(input, $($args)*)
         }
     };
@@ -150,7 +192,7 @@ macro_rules! __ast_tuple_struct {
         pub struct $name<$($maybe_a)*>(pub $inner);
 
         impl<'a> $crate::Parse<'a> for $name<$($maybe_a)*> {
-            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
                 use $crate::nom::lib::std::result::Result::*;
 
                 match $submac!(input, $($args)*) {
@@ -251,8 +293,7 @@ macro_rules! __ast_struct {
         { $($prev:tt)* }
         { $field:ident : $type:ty = marker, $($rest:tt)* }
     ) => ({
-        let $field = $crate::std::default::Default::default();
-
+        let $field = ::std::default::Default::default();
         __ast_struct! {
             @build_parser
             { $($prev)* $field }
@@ -289,7 +330,7 @@ macro_rules! __ast_struct {
         }
 
         impl<'a> $crate::Parse<'a> for $name {
-            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
                 __ast_struct! {
                     @build_parser
                     { input, }
@@ -317,7 +358,7 @@ macro_rules! __ast_struct {
         }
 
         impl<'a> $crate::Parse<'a> for $name<'a> {
-            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
                 __ast_struct! {
                     @build_parser
                     { input, }
@@ -345,7 +386,7 @@ macro_rules! __ast_struct {
         }
 
         impl<'a, $($generics),+> $crate::Parse<'a> for $name<$($generics),+> where $($bounds)+ {
-            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
                 __ast_struct! {
                     @build_parser
                     { input, }
@@ -528,22 +569,22 @@ macro_rules! test {
     (err $name:ident { $raw:expr => $typ:ty }) => {
         #[test]
         fn $name() {
-            <$typ>::parse($crate::nom::types::CompleteStr($raw)).unwrap_err();
+            <$typ>::parse($raw).unwrap_err();
         }
     };
     ($name:ident { $raw:expr => $rem:expr; $typ:ty => $val:expr }) => {
         #[test]
         fn $name() {
-            let (rem, parsed) = <$typ>::parse($crate::nom::types::CompleteStr($raw)).unwrap();
-            assert_eq!(rem, $crate::nom::types::CompleteStr($rem));
+            let (rem, parsed) = <$typ>::parse($raw).unwrap();
+            assert_eq!(rem, $rem);
             assert_eq!(parsed, $val);
         }
     };
     ($name:ident { $raw:expr => $rem:expr; $typ:ty; $($body:tt)* }) => {
         #[test]
         fn $name() {
-            let (_rem, _parsed) = <$typ>::parse($crate::nom::types::CompleteStr($raw)).unwrap();
-            assert_eq!(_rem, $crate::nom::types::CompleteStr($rem));
+            let (_rem, _parsed) = <$typ>::parse($raw).unwrap();
+            assert_eq!(_rem, $rem);
             test!(@arg _parsed $($body)*);
         }
     };
@@ -557,11 +598,10 @@ macro_rules! test_variants {
             $(
                 mod $variant {
                     use $crate::types::*;
-                    use $crate::nom::types::CompleteStr;
                     #[test]
                     fn should_parse() {
-                        let (rem, parsed) = $struct_::parse(CompleteStr($value)).unwrap();
-                        assert_eq!(rem, CompleteStr(""));
+                        let (rem, parsed) = $struct_::parse($value).unwrap();
+                        assert_eq!(rem, "");
                         match parsed {
                             $struct_::$variant(_) => {},
                             _ => { panic!("Failed to parse"); }

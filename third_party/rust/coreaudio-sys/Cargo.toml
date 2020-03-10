@@ -12,7 +12,7 @@
 
 [package]
 name = "coreaudio-sys"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Mitchell Nordine <mitchell.nordine@gmail.com>"]
 build = "build.rs"
 description = "Bindings for Apple's CoreAudio frameworks generated via rust-bindgen"
@@ -22,7 +22,8 @@ keywords = ["core", "audio", "unit", "osx", "ios"]
 license = "MIT"
 repository = "https://github.com/RustAudio/coreaudio-sys.git"
 [build-dependencies.bindgen]
-version = "0.51"
+version = "0.53"
+features = ["runtime"]
 default-features = false
 
 [features]

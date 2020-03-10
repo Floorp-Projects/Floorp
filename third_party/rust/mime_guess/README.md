@@ -12,7 +12,7 @@ Uses a static map of known file extension -> MIME type mappings.
 ### Versioning
 
 Due to a mistaken premature release, `mime_guess` currently publicly depends on a pre-1.0 `mime`,
-which means `mime` upgrades are breaking changes and necessitates a major version bump. 
+which means `mime` upgrades are breaking changes and necessitate a major version bump. 
 Refer to the following table to find a version of `mime_guess` which matches your version of `mime`:
 
 | `mime` version | `mime_guess` version |
@@ -49,30 +49,26 @@ The latter is only for consistency's sake; the search is case-insensitive.
 Simply add or update the appropriate string pair(s) to make the correction(s) needed. 
 Run `cargo test` to make sure the library continues to work correctly.
 
-#### (Important! Updated as of 2.0.0) Citing the corrected MIME type 
+#### Important! Citing the corrected MIME type 
 
 When opening a pull request, please include a link to an official document or RFC noting 
-the correct MIME type for the file type in question **as a comment next to the addition**.
-The latter is a new requirement as of 2.0.0 which is intended to make auditing easier in the future.
-Bulk additions may request to omit this, although please provide a good reason.
+the correct MIME type for the file type in question **in the commit message** so
+that the commit history can be used as an audit trail.
 
 Though we're only guessing here, we like to be as correct as we can. 
 It makes it much easier to vet your contribution if we don't have to search for corroborating material.
 
-#### Providing citations for existing types
-Historically, citations were only required in pull requests for additions
-or corrections to media types; they are now required to be provided in-line
-next to the mapping for easier auditing.
-
-If anyone is looking for busy work, finding and adding citations for existing mappings would be an easy
-way to get a few pull requests in. See the issue tracker for more information.
-
 #### Multiple MIME types per extension
-As of `2.0.0`, multiple MIME types per extension are supported. The first MIME type in the list for a given
-extension should be the most "correct" so users who only care about getting a single MIME type can use the `first*()` methods.
+As of `2.0.0`, multiple MIME types per extension are supported. The first MIME type in the list for 
+a given extension should be the most "correct" so users who only care about getting a single MIME 
+type can use the `first*()` methods.
 
-The defintion of "correct" is open to debate, however. In the author's opinion this should be whatever is defined by the latest IETF RFC
-for the given file format, or otherwise explicitly supercedes all others.
+The definition of "correct" is open to debate, however. In the author's opinion this should be 
+whatever is defined by the latest IETF RFC for the given file format, or otherwise explicitly 
+supercedes all others.
+
+If an official IANA registration replaces an older "experimental" style media type, please
+place the new type before the old type in the list, but keep the old type for reference.
 
 #### Changes to the API or operation of the crate
 

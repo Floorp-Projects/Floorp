@@ -1,8 +1,8 @@
-use argument::ArgumentList;
-use attribute::ExtendedAttributeList;
-use common::{Braced, Identifier};
-use interface::{ConstMember, StringifierMember};
-use types::{AttributedType, ReturnType};
+use crate::argument::ArgumentList;
+use crate::attribute::ExtendedAttributeList;
+use crate::common::{Identifier, Parenthesized};
+use crate::interface::{ConstMember, StringifierMember};
+use crate::types::{AttributedType, ReturnType};
 
 /// Parses the members declarations of a mixin
 pub type MixinMembers<'a> = Vec<MixinMember<'a>>;
@@ -19,7 +19,7 @@ ast_types! {
             stringifier: Option<term!(stringifier)>,
             return_type: ReturnType<'a>,
             identifier: Option<Identifier<'a>>,
-            args: Braced<ArgumentList<'a>>,
+            args: Parenthesized<ArgumentList<'a>>,
             semi_colon: term!(;),
         }),
         /// Parses `[attributes]? stringifier? readonly? attribute attributedtype identifier;`
@@ -39,7 +39,7 @@ ast_types! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use Parse;
+    use crate::Parse;
 
     test!(should_parse_attribute_mixin_member { "stringifier readonly attribute short name;" =>
         "";

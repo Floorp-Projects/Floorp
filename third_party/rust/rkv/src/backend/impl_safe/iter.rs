@@ -12,13 +12,13 @@ use super::ErrorImpl;
 use crate::backend::traits::BackendIter;
 
 // FIXME: Use generics instead.
-pub struct IterImpl<'env>(pub(crate) Box<dyn Iterator<Item = (&'env [u8], &'env [u8])> + 'env>);
+pub struct IterImpl<'i>(pub(crate) Box<dyn Iterator<Item = (&'i [u8], &'i [u8])> + 'i>);
 
-impl<'env> BackendIter<'env> for IterImpl<'env> {
+impl<'i> BackendIter<'i> for IterImpl<'i> {
     type Error = ErrorImpl;
 
     #[allow(clippy::type_complexity)]
-    fn next(&mut self) -> Option<Result<(&'env [u8], &'env [u8]), Self::Error>> {
+    fn next(&mut self) -> Option<Result<(&'i [u8], &'i [u8]), Self::Error>> {
         self.0.next().map(Ok)
     }
 }

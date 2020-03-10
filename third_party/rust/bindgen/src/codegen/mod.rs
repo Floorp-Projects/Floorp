@@ -703,7 +703,8 @@ impl CodeGenerator for Type {
 
                 let mut outer_params = item.used_template_params(ctx);
 
-                let inner_rust_type = if item.is_opaque(ctx, &()) {
+                let is_opaque = item.is_opaque(ctx, &());
+                let inner_rust_type = if is_opaque {
                     outer_params = vec![];
                     self.to_opaque(ctx, item)
                 } else {
@@ -748,6 +749,16 @@ impl CodeGenerator for Type {
                     quote! {}
                 };
 
+                let alias_style = if ctx.options().type_alias.matches(&name) {
+                    AliasVariation::TypeAlias
+                } else if ctx.options().new_type_alias.matches(&name) {
+                    AliasVariation::NewType
+                } else if ctx.options().new_type_alias_deref.matches(&name) {
+                    AliasVariation::NewTypeDeref
+                } else {
+                    ctx.options().default_alias_style
+                };
+
                 // We prefer using `pub use` over `pub type` because of:
                 // https://github.com/rust-lang/rust/issues/26264
                 if inner_rust_type.to_string().chars().all(|c| match c {
@@ -756,6 +767,8 @@ impl CodeGenerator for Type {
                     'A'..='Z' | 'a'..='z' | '0'..='9' | ':' | '_' | ' ' => true,
                     _ => false,
                 }) && outer_params.is_empty() &&
+                    !is_opaque &&
+                    alias_style == AliasVariation::TypeAlias &&
                     inner_item.expect_type().canonical_type(ctx).is_enum()
                 {
                     tokens.append_all(quote! {
@@ -770,8 +783,21 @@ impl CodeGenerator for Type {
                     return;
                 }
 
-                tokens.append_all(quote! {
-                    pub type #rust_name
+                tokens.append_all(match alias_style {
+                    AliasVariation::TypeAlias => quote! {
+                        pub type #rust_name
+                    },
+                    AliasVariation::NewType | AliasVariation::NewTypeDeref => {
+                        assert!(
+                            ctx.options().rust_features().repr_transparent,
+                            "repr_transparent feature is required to use {:?}",
+                            alias_style
+                        );
+                        quote! {
+                            #[repr(transparent)]
+                            pub struct #rust_name
+                        }
+                    }
                 });
 
                 let params: Vec<_> = outer_params
@@ -804,9 +830,35 @@ impl CodeGenerator for Type {
                     });
                 }
 
-                tokens.append_all(quote! {
-                    = #inner_rust_type ;
+                tokens.append_all(match alias_style {
+                    AliasVariation::TypeAlias => quote! {
+                        = #inner_rust_type ;
+                    },
+                    AliasVariation::NewType | AliasVariation::NewTypeDeref => {
+                        quote! {
+                            (pub #inner_rust_type) ;
+                        }
+                    }
                 });
+
+                if alias_style == AliasVariation::NewTypeDeref {
+                    let prefix = ctx.trait_prefix();
+                    tokens.append_all(quote! {
+                        impl ::#prefix::ops::Deref for #rust_name {
+                            type Target = #inner_rust_type;
+                            #[inline]
+                            fn deref(&self) -> &Self::Target {
+                                &self.0
+                            }
+                        }
+                        impl ::#prefix::ops::DerefMut for #rust_name {
+                            #[inline]
+                            fn deref_mut(&mut self) -> &mut Self::Target {
+                                &mut self.0
+                            }
+                        }
+                    });
+                }
 
                 result.push(tokens);
             }
@@ -861,7 +913,7 @@ impl<'a> CodeGenerator for Vtable<'a> {
         // For now, generate an empty struct, later we should generate function
         // pointers and whatnot.
         let name = ctx.rust_ident(&self.canonical_name(ctx));
-        let void = helpers::ast_ty::raw_type(ctx, "c_void");
+        let void = helpers::ast_ty::c_void(ctx);
         result.push(quote! {
             #[repr(C)]
             pub struct #name ( #void );
@@ -1200,12 +1252,8 @@ impl BitfieldUnit {
 
 impl Bitfield {
     /// Extend an under construction bitfield unit constructor with this
-    /// bitfield. This involves two things:
-    ///
-    /// 1. Adding a parameter with this bitfield's name and its type.
-    ///
-    /// 2. Setting the relevant bits on the `__bindgen_bitfield_unit` variable
-    ///    that's being constructed.
+    /// bitfield. This sets the relevant bits on the `__bindgen_bitfield_unit`
+    /// variable that's being constructed.
     fn extend_ctor_impl(
         &self,
         ctx: &BindgenContext,
@@ -1216,7 +1264,11 @@ impl Bitfield {
         let bitfield_ty_layout = bitfield_ty
             .layout(ctx)
             .expect("Bitfield without layout? Gah!");
-        let bitfield_int_ty = helpers::blob(ctx, bitfield_ty_layout);
+        let bitfield_int_ty = helpers::integer_type(ctx, bitfield_ty_layout)
+            .expect(
+                "Should already have verified that the bitfield is \
+                 representable as an int",
+            );
 
         let offset = self.offset_into_unit();
         let width = self.width() as u8;
@@ -1258,23 +1310,26 @@ impl<'a> FieldCodegen<'a> for BitfieldUnit {
         F: Extend<proc_macro2::TokenStream>,
         M: Extend<proc_macro2::TokenStream>,
     {
+        use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
+
         result.saw_bitfield_unit();
 
+        let layout = self.layout();
+        let unit_field_ty = helpers::bitfield_unit(ctx, layout);
         let field_ty = {
-            let ty = helpers::bitfield_unit(ctx, self.layout());
             if parent.is_union() && !parent.can_be_rust_union(ctx) {
                 result.saw_bindgen_union();
                 if ctx.options().enable_cxx_namespaces {
                     quote! {
-                        root::__BindgenUnionField<#ty>
+                        root::__BindgenUnionField<#unit_field_ty>
                     }
                 } else {
                     quote! {
-                        __BindgenUnionField<#ty>
+                        __BindgenUnionField<#unit_field_ty>
                     }
                 }
             } else {
-                ty
+                unit_field_ty.clone()
             }
         };
 
@@ -1286,16 +1341,21 @@ impl<'a> FieldCodegen<'a> for BitfieldUnit {
         };
         fields.extend(Some(field));
 
-        let unit_field_ty = helpers::bitfield_unit(ctx, self.layout());
-
         let ctor_name = self.ctor_name();
         let mut ctor_params = vec![];
         let mut ctor_impl = quote! {};
-        let mut generate_ctor = true;
+
+        // We cannot generate any constructor if the underlying storage can't
+        // implement AsRef<[u8]> / AsMut<[u8]> / etc.
+        let mut generate_ctor = layout.size <= RUST_DERIVE_IN_ARRAY_LIMIT;
 
         for bf in self.bitfields() {
             // Codegen not allowed for anonymous bitfields
             if bf.name().is_none() {
+                continue;
+            }
+
+            if layout.size > RUST_DERIVE_IN_ARRAY_LIMIT {
                 continue;
             }
 
@@ -1343,7 +1403,7 @@ impl<'a> FieldCodegen<'a> for BitfieldUnit {
             }));
         }
 
-        struct_layout.saw_bitfield_unit(self.layout());
+        struct_layout.saw_bitfield_unit(layout);
     }
 }
 
@@ -2154,13 +2214,26 @@ impl MethodCodegen for Method {
         // variable called `__bindgen_tmp` we're going to create.
         if self.is_constructor() {
             let prefix = ctx.trait_prefix();
-            let tmp_variable_decl = quote! {
-                let mut __bindgen_tmp = ::#prefix::mem::uninitialized()
+            let tmp_variable_decl = if ctx
+                .options()
+                .rust_features()
+                .maybe_uninit
+            {
+                exprs[0] = quote! {
+                    __bindgen_tmp.as_mut_ptr()
+                };
+                quote! {
+                    let mut __bindgen_tmp = ::#prefix::mem::MaybeUninit::uninit()
+                }
+            } else {
+                exprs[0] = quote! {
+                    &mut __bindgen_tmp
+                };
+                quote! {
+                    let mut __bindgen_tmp = ::#prefix::mem::uninitialized()
+                }
             };
             stmts.push(tmp_variable_decl);
-            exprs[0] = quote! {
-                &mut __bindgen_tmp
-            };
         } else if !self.is_static() {
             assert!(!exprs.is_empty());
             exprs[0] = quote! {
@@ -2175,9 +2248,15 @@ impl MethodCodegen for Method {
         stmts.push(call);
 
         if self.is_constructor() {
-            stmts.push(quote! {
-                __bindgen_tmp
-            });
+            stmts.push(if ctx.options().rust_features().maybe_uninit {
+                quote! {
+                    __bindgen_tmp.assume_init()
+                }
+            } else {
+                quote! {
+                    __bindgen_tmp
+                }
+            })
         }
 
         let block = quote! {
@@ -2208,11 +2287,14 @@ impl MethodCodegen for Method {
 pub enum EnumVariation {
     /// The code for this enum will use a Rust enum
     Rust {
-        /// Indicates whether the generated struct should be #[non_exhaustive]
+        /// Indicates whether the generated struct should be `#[non_exhaustive]`
         non_exhaustive: bool,
     },
-    /// The code for this enum will use a bitfield
-    Bitfield,
+    /// The code for this enum will use a newtype
+    NewType {
+        /// Indicates whether the newtype will have bitwise operators
+        is_bitfield: bool,
+    },
     /// The code for this enum will use consts
     Consts,
     /// The code for this enum will use a module containing consts
@@ -2249,15 +2331,24 @@ impl std::str::FromStr for EnumVariation {
     /// Create a `EnumVariation` from a string.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "rust" => Ok(EnumVariation::Rust{ non_exhaustive: false }),
-            "rust_non_exhaustive" => Ok(EnumVariation::Rust{ non_exhaustive: true }),
-            "bitfield" => Ok(EnumVariation::Bitfield),
+            "rust" => Ok(EnumVariation::Rust {
+                non_exhaustive: false,
+            }),
+            "rust_non_exhaustive" => Ok(EnumVariation::Rust {
+                non_exhaustive: true,
+            }),
+            "bitfield" => Ok(EnumVariation::NewType { is_bitfield: true }),
             "consts" => Ok(EnumVariation::Consts),
             "moduleconsts" => Ok(EnumVariation::ModuleConsts),
-            _ => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput,
-                                         concat!("Got an invalid EnumVariation. Accepted values ",
-                                                 "are 'rust', 'rust_non_exhaustive', 'bitfield', 'consts', and ",
-                                                 "'moduleconsts'."))),
+            "newtype" => Ok(EnumVariation::NewType { is_bitfield: false }),
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                concat!(
+                    "Got an invalid EnumVariation. Accepted values ",
+                    "are 'rust', 'rust_non_exhaustive', 'bitfield', 'consts',",
+                    "'moduleconsts', and 'newtype'."
+                ),
+            )),
         }
     }
 }
@@ -2271,10 +2362,11 @@ enum EnumBuilder<'a> {
         tokens: proc_macro2::TokenStream,
         emitted_any_variants: bool,
     },
-    Bitfield {
+    NewType {
         codegen_depth: usize,
         canonical_name: &'a str,
         tokens: proc_macro2::TokenStream,
+        is_bitfield: bool,
     },
     Consts {
         variants: Vec<proc_macro2::TokenStream>,
@@ -2292,7 +2384,7 @@ impl<'a> EnumBuilder<'a> {
     fn codegen_depth(&self) -> usize {
         match *self {
             EnumBuilder::Rust { codegen_depth, .. } |
-            EnumBuilder::Bitfield { codegen_depth, .. } |
+            EnumBuilder::NewType { codegen_depth, .. } |
             EnumBuilder::ModuleConsts { codegen_depth, .. } |
             EnumBuilder::Consts { codegen_depth, .. } => codegen_depth,
         }
@@ -2310,13 +2402,14 @@ impl<'a> EnumBuilder<'a> {
         let ident = Ident::new(name, Span::call_site());
 
         match enum_variation {
-            EnumVariation::Bitfield => EnumBuilder::Bitfield {
+            EnumVariation::NewType { is_bitfield } => EnumBuilder::NewType {
                 codegen_depth: enum_codegen_depth,
                 canonical_name: name,
                 tokens: quote! {
                     #( #attrs )*
                     pub struct #ident (pub #repr);
                 },
+                is_bitfield,
             },
 
             EnumVariation::Rust { .. } => {
@@ -2404,7 +2497,7 @@ impl<'a> EnumBuilder<'a> {
                 }
             }
 
-            EnumBuilder::Bitfield { canonical_name, .. } => {
+            EnumBuilder::NewType { canonical_name, .. } => {
                 if ctx.options().rust_features().associated_const && is_ty_named
                 {
                     let enum_ident = ctx.rust_ident(canonical_name);
@@ -2495,11 +2588,16 @@ impl<'a> EnumBuilder<'a> {
                     }
                 }
             }
-            EnumBuilder::Bitfield {
+            EnumBuilder::NewType {
                 canonical_name,
                 tokens,
+                is_bitfield,
                 ..
             } => {
+                if !is_bitfield {
+                    return tokens;
+                }
+
                 let rust_ty_name = ctx.rust_ident_raw(canonical_name);
                 let prefix = ctx.trait_prefix();
 
@@ -2633,7 +2731,7 @@ impl CodeGenerator for Enum {
                     panic!("The rust target you're using doesn't seem to support non_exhaustive enums");
                 }
             }
-            EnumVariation::Bitfield => {
+            EnumVariation::NewType { .. } => {
                 if ctx.options().rust_features.repr_transparent {
                     attrs.push(attributes::repr("transparent"));
                 } else {
@@ -2846,6 +2944,54 @@ impl CodeGenerator for Enum {
 
         let item = builder.build(ctx, enum_rust_ty, result);
         result.push(item);
+    }
+}
+
+/// Enum for how aliases should be translated.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum AliasVariation {
+    /// Convert to regular Rust alias
+    TypeAlias,
+    /// Create a new type by wrapping the old type in a struct and using #[repr(transparent)]
+    NewType,
+    /// Same as NewStruct but also impl Deref to be able to use the methods of the wrapped type
+    NewTypeDeref,
+}
+
+impl AliasVariation {
+    /// Convert an `AliasVariation` to its str representation.
+    pub fn as_str(&self) -> &str {
+        match self {
+            AliasVariation::TypeAlias => "type_alias",
+            AliasVariation::NewType => "new_type",
+            AliasVariation::NewTypeDeref => "new_type_deref",
+        }
+    }
+}
+
+impl Default for AliasVariation {
+    fn default() -> AliasVariation {
+        AliasVariation::TypeAlias
+    }
+}
+
+impl std::str::FromStr for AliasVariation {
+    type Err = std::io::Error;
+
+    /// Create an `AliasVariation` from a string.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "type_alias" => Ok(AliasVariation::TypeAlias),
+            "new_type" => Ok(AliasVariation::NewType),
+            "new_type_deref" => Ok(AliasVariation::NewTypeDeref),
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                concat!(
+                    "Got an invalid AliasVariation. Accepted values ",
+                    "are 'type_alias', 'new_type', and 'new_type_deref'"
+                ),
+            )),
+        }
     }
 }
 
@@ -3076,10 +3222,10 @@ impl TryToRustTy for Type {
         use self::helpers::ast_ty::*;
 
         match *self.kind() {
-            TypeKind::Void => Ok(raw_type(ctx, "c_void")),
+            TypeKind::Void => Ok(c_void(ctx)),
             // TODO: we should do something smart with nullptr, or maybe *const
             // c_void is enough?
-            TypeKind::NullPtr => Ok(raw_type(ctx, "c_void").to_ptr(true)),
+            TypeKind::NullPtr => Ok(c_void(ctx).to_ptr(true)),
             TypeKind::Int(ik) => {
                 match ik {
                     IntKind::Bool => Ok(quote! { bool }),
@@ -3186,7 +3332,7 @@ impl TryToRustTy for Type {
             TypeKind::Alias(..) |
             TypeKind::BlockPointer(..) => {
                 if self.is_block_pointer() && !ctx.options().generate_block {
-                    let void = raw_type(ctx, "c_void");
+                    let void = c_void(ctx);
                     return Ok(void.to_ptr(/* is_const = */ false));
                 }
                 let template_params = item
@@ -3473,11 +3619,22 @@ impl CodeGenerator for Function {
             attributes.push(attributes::link_name(link_name));
         }
 
+        // Unfortunately this can't piggyback on the `attributes` list because
+        // the #[link(wasm_import_module)] needs to happen before the `extern
+        // "C"` block. It doesn't get picked up properly otherwise
+        let wasm_link_attribute =
+            ctx.options().wasm_import_module_name.as_ref().map(|name| {
+                quote! { #[link(wasm_import_module = #name)] }
+            });
+
         let ident = ctx.rust_ident(canonical_name);
-        let tokens = quote!( extern #abi {
-            #(#attributes)*
-            pub fn #ident ( #( #args ),* ) #ret;
-        });
+        let tokens = quote! {
+            #wasm_link_attribute
+            extern #abi {
+                #(#attributes)*
+                pub fn #ident ( #( #args ),* ) #ret;
+            }
+        };
         result.push(tokens);
     }
 }
@@ -3579,18 +3736,44 @@ impl CodeGenerator for ObjCInterface {
 
         let trait_name = ctx.rust_ident(self.rust_name());
 
-        let trait_block = quote! {
-            pub trait #trait_name {
-                #( #trait_items )*
+        let trait_block = if self.is_template() {
+            let template_names: Vec<Ident> = self
+                .template_names
+                .iter()
+                .map(|g| ctx.rust_ident(g))
+                .collect();
+            quote! {
+                pub trait #trait_name <#(#template_names),*>{
+                    #( #trait_items )*
+                }
+            }
+        } else {
+            quote! {
+                pub trait #trait_name {
+                    #( #trait_items )*
+                }
             }
         };
 
         let ty_for_impl = quote! {
             id
         };
-        let impl_block = quote! {
-            impl #trait_name for #ty_for_impl {
-                #( #impl_items )*
+        let impl_block = if self.is_template() {
+            let template_names: Vec<Ident> = self
+                .template_names
+                .iter()
+                .map(|g| ctx.rust_ident(g))
+                .collect();
+            quote! {
+                impl <#(#template_names :'static),*> #trait_name <#(#template_names),*> for #ty_for_impl {
+                    #( #impl_items )*
+                }
+            }
+        } else {
+            quote! {
+                impl #trait_name for #ty_for_impl {
+                    #( #impl_items )*
+                }
             }
         };
 
@@ -3851,13 +4034,13 @@ mod utils {
                 }
 
                 #[inline]
-                pub unsafe fn as_ptr(&self) -> *const T {
-                    ::#prefix::mem::transmute(self)
+                pub fn as_ptr(&self) -> *const T {
+                    self as *const _ as *const T
                 }
 
                 #[inline]
-                pub unsafe fn as_mut_ptr(&mut self) -> *mut T {
-                    ::#prefix::mem::transmute(self)
+                pub fn as_mut_ptr(&mut self) -> *mut T {
+                    self as *mut _ as *mut T
                 }
 
                 #[inline]
@@ -3881,20 +4064,10 @@ mod utils {
             }
         };
 
-        let incomplete_array_clone_impl = quote! {
-            impl<T> ::#prefix::clone::Clone for __IncompleteArrayField<T> {
-                #[inline]
-                fn clone(&self) -> Self {
-                    Self::new()
-                }
-            }
-        };
-
         let items = vec![
             incomplete_array_decl,
             incomplete_array_impl,
             incomplete_array_debug_impl,
-            incomplete_array_clone_impl,
         ];
 
         let old_items = mem::replace(result, items);
@@ -3953,9 +4126,15 @@ mod utils {
             "int64_t" => primitive_ty(ctx, "i64"),
             "uint64_t" => primitive_ty(ctx, "u64"),
 
-            "uintptr_t" | "size_t" => primitive_ty(ctx, "usize"),
+            "size_t" if ctx.options().size_t_is_usize => {
+                primitive_ty(ctx, "usize")
+            }
+            "uintptr_t" => primitive_ty(ctx, "usize"),
 
-            "intptr_t" | "ptrdiff_t" | "ssize_t" => primitive_ty(ctx, "isize"),
+            "ssize_t" if ctx.options().size_t_is_usize => {
+                primitive_ty(ctx, "isize")
+            }
+            "intptr_t" | "ptrdiff_t" => primitive_ty(ctx, "isize"),
             _ => return None,
         })
     }

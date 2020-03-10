@@ -119,38 +119,6 @@ mod tests {
 
     use backend::Lmdb;
 
-    /// Test that a manager can be created with simple type inference.
-    #[test]
-    fn test_simple() {
-        let _ = Manager::<LmdbEnvironment>::singleton().write().unwrap();
-    }
-
-    /// Test that a shared Rkv instance can be created with simple type inference.
-    #[test]
-    fn test_simple_2() {
-        let root = Builder::new().prefix("test_simple").tempdir().expect("tempdir");
-        fs::create_dir_all(root.path()).expect("dir created");
-
-        let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
-        let _ = manager.get_or_create(root.path(), Rkv::new::<Lmdb>).unwrap();
-    }
-
-    /// Test that the manager will return the same Rkv instance each time for each path.
-    #[test]
-    fn test_same() {
-        let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
-        fs::create_dir_all(root.path()).expect("dir created");
-
-        let mut manager = Manager::<LmdbEnvironment>::new();
-
-        let p = root.path();
-        assert!(manager.get(p).expect("success").is_none());
-
-        let created_arc = manager.get_or_create(p, Rkv::new::<Lmdb>).expect("created");
-        let fetched_arc = manager.get(p).expect("success").expect("existed");
-        assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
-    }
-
     /// Test that one can mutate managed Rkv instances in surprising ways.
     #[test]
     fn test_mutate_managed_rkv() {
@@ -182,80 +150,5 @@ mod tests {
         // its Rkv's path is the same as arc's current path.
         let path2_arc = manager.get_or_create(path2, Rkv::new::<Lmdb>).expect("success");
         assert!(!Arc::ptr_eq(&path2_arc, &arc));
-    }
-
-    /// Test that the manager will return the same Rkv instance each time for each path.
-    #[test]
-    fn test_same_with_capacity() {
-        let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
-        fs::create_dir_all(root.path()).expect("dir created");
-
-        let mut manager = Manager::<LmdbEnvironment>::new();
-
-        let p = root.path();
-        assert!(manager.get(p).expect("success").is_none());
-
-        let created_arc = manager.get_or_create_with_capacity(p, 10, Rkv::with_capacity::<Lmdb>).expect("created");
-        let fetched_arc = manager.get(p).expect("success").expect("existed");
-        assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
-    }
-}
-
-#[cfg(test)]
-mod tests_safe {
-    use std::fs;
-    use tempfile::Builder;
-
-    use super::*;
-    use crate::*;
-
-    use backend::SafeMode;
-
-    /// Test that a manager can be created with simple type inference.
-    #[test]
-    fn test_simple() {
-        let _ = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
-    }
-
-    /// Test that a shared Rkv instance can be created with simple type inference.
-    #[test]
-    fn test_simple_2() {
-        let root = Builder::new().prefix("test_simple").tempdir().expect("tempdir");
-        fs::create_dir_all(root.path()).expect("dir created");
-
-        let mut manager = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
-        let _ = manager.get_or_create(root.path(), Rkv::new::<SafeMode>).unwrap();
-    }
-
-    /// Test that the manager will return the same Rkv instance each time for each path.
-    #[test]
-    fn test_same() {
-        let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
-        fs::create_dir_all(root.path()).expect("dir created");
-
-        let mut manager = Manager::<SafeModeEnvironment>::new();
-
-        let p = root.path();
-        assert!(manager.get(p).expect("success").is_none());
-
-        let created_arc = manager.get_or_create(p, Rkv::new::<SafeMode>).expect("created");
-        let fetched_arc = manager.get(p).expect("success").expect("existed");
-        assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
-    }
-
-    /// Test that the manager will return the same Rkv instance each time for each path.
-    #[test]
-    fn test_same_with_capacity() {
-        let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
-        fs::create_dir_all(root.path()).expect("dir created");
-
-        let mut manager = Manager::<SafeModeEnvironment>::new();
-
-        let p = root.path();
-        assert!(manager.get(p).expect("success").is_none());
-
-        let created_arc = manager.get_or_create_with_capacity(p, 10, Rkv::with_capacity::<SafeMode>).expect("created");
-        let fetched_arc = manager.get(p).expect("success").expect("existed");
-        assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
     }
 }

@@ -1,6 +1,6 @@
-use argument::ArgumentList;
-use common::{Braced, Bracketed, Identifier, Punctuated};
-use literal::StringLit;
+use crate::argument::ArgumentList;
+use crate::common::{Bracketed, Identifier, Parenthesized, Punctuated};
+use crate::literal::StringLit;
 
 /// Parses a list of attributes. Ex: `[ attribute1, attribute2 ]`
 pub type ExtendedAttributeList<'a> = Bracketed<Punctuated<ExtendedAttribute<'a>, term!(,)>>;
@@ -16,7 +16,7 @@ ast_types! {
         /// (( )) means ( ) chars
         ArgList(struct ExtendedAttributeArgList<'a> {
             identifier: Identifier<'a>,
-            args: Braced<ArgumentList<'a>>,
+            args: Parenthesized<ArgumentList<'a>>,
         }),
         /// Parses a named argument list. Ex: `NamedConstructor=Image((DOMString src))`
         ///
@@ -25,7 +25,7 @@ ast_types! {
             lhs_identifier: Identifier<'a>,
             assign: term!(=),
             rhs_identifier: Identifier<'a>,
-            args: Braced<ArgumentList<'a>>,
+            args: Parenthesized<ArgumentList<'a>>,
 
         }),
         /// Parses an identifier list. Ex: `Exposed=((Window,Worker))`
@@ -34,7 +34,7 @@ ast_types! {
         IdentList(struct ExtendedAttributeIdentList<'a> {
             identifier: Identifier<'a>,
             assign: term!(=),
-            list: Braced<IdentifierList<'a>>,
+            list: Parenthesized<IdentifierList<'a>>,
         }),
         /// Parses an attribute with an identifier. Ex: `PutForwards=name`
         #[derive(Copy)]
@@ -61,7 +61,7 @@ ast_types! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use Parse;
+    use crate::Parse;
 
     test!(should_parse_attribute_no_args { "Replaceable" =>
         "";

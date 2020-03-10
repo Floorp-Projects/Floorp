@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "devd-rs"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Greg V <greg@unrelenting.technology>"]
 description = "An interface to devd, the device hotplug daemon on FreeBSD and DragonFlyBSD"
 homepage = "https://github.com/myfreeweb/devd-rs"
@@ -25,4 +25,6 @@ repository = "https://github.com/myfreeweb/devd-rs"
 version = "0"
 
 [dependencies.nom]
-version = "4"
+version = "5"
+features = ["std"]
+default-features = false

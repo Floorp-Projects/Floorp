@@ -24,9 +24,9 @@ use crate::backend::traits::{
 };
 
 #[derive(Debug)]
-pub struct RoTransactionImpl<'env>(pub(crate) lmdb::RoTransaction<'env>);
+pub struct RoTransactionImpl<'t>(pub(crate) lmdb::RoTransaction<'t>);
 
-impl<'env> BackendRoTransaction for RoTransactionImpl<'env> {
+impl<'t> BackendRoTransaction for RoTransactionImpl<'t> {
     type Error = ErrorImpl;
     type Database = DatabaseImpl;
 
@@ -39,18 +39,18 @@ impl<'env> BackendRoTransaction for RoTransactionImpl<'env> {
     }
 }
 
-impl<'env> BackendRoCursorTransaction<'env> for RoTransactionImpl<'env> {
-    type RoCursor = RoCursorImpl<'env>;
+impl<'t> BackendRoCursorTransaction<'t> for RoTransactionImpl<'t> {
+    type RoCursor = RoCursorImpl<'t>;
 
-    fn open_ro_cursor(&'env self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
+    fn open_ro_cursor(&'t self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
         self.0.open_ro_cursor(db.0).map(RoCursorImpl).map_err(ErrorImpl)
     }
 }
 
 #[derive(Debug)]
-pub struct RwTransactionImpl<'env>(pub(crate) lmdb::RwTransaction<'env>);
+pub struct RwTransactionImpl<'t>(pub(crate) lmdb::RwTransaction<'t>);
 
-impl<'env> BackendRwTransaction for RwTransactionImpl<'env> {
+impl<'t> BackendRwTransaction for RwTransactionImpl<'t> {
     type Error = ErrorImpl;
     type Database = DatabaseImpl;
     type Flags = WriteFlagsImpl;
@@ -86,10 +86,10 @@ impl<'env> BackendRwTransaction for RwTransactionImpl<'env> {
     }
 }
 
-impl<'env> BackendRwCursorTransaction<'env> for RwTransactionImpl<'env> {
-    type RoCursor = RoCursorImpl<'env>;
+impl<'t> BackendRwCursorTransaction<'t> for RwTransactionImpl<'t> {
+    type RoCursor = RoCursorImpl<'t>;
 
-    fn open_ro_cursor(&'env self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
+    fn open_ro_cursor(&'t self, db: &Self::Database) -> Result<Self::RoCursor, Self::Error> {
         self.0.open_ro_cursor(db.0).map(RoCursorImpl).map_err(ErrorImpl)
     }
 }

@@ -232,8 +232,12 @@ impl ClangSubItemParser for Var {
 
                 let ty = cursor.cur_type();
 
-                // XXX this is redundant, remove!
-                let is_const = ty.is_const();
+                // TODO(emilio): do we have to special-case constant arrays in
+                // some other places?
+                let is_const = ty.is_const() ||
+                    (ty.kind() == CXType_ConstantArray &&
+                        ty.elem_type()
+                            .map_or(false, |element| element.is_const()));
 
                 let ty = match Item::from_ty(&ty, cursor, None, ctx) {
                     Ok(ty) => ty,
