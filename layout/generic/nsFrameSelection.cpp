@@ -2901,11 +2901,11 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
 
 void nsFrameSelection::SetDelayedCaretData(WidgetMouseEvent* aMouseEvent) {
   if (aMouseEvent) {
-    mDelayedMouseEventValid = true;
-    mDelayedMouseEventIsShift = aMouseEvent->IsShift();
-    mDelayedMouseEventClickCount = aMouseEvent->mClickCount;
+    mDelayedMouseEvent.mIsValid = true;
+    mDelayedMouseEvent.mIsShift = aMouseEvent->IsShift();
+    mDelayedMouseEvent.mClickCount = aMouseEvent->mClickCount;
   } else {
-    mDelayedMouseEventValid = false;
+    mDelayedMouseEvent.mIsValid = false;
   }
 }
 
