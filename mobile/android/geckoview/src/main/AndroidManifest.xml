@@ -56,11 +56,25 @@
                 android:process=":gmplugin">
         </service>
         <service
-                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab"
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab0"
                 android:enabled="true"
                 android:exported="false"
                 android:isolatedProcess="false"
-                android:process=":tab">
+                android:process=":tab0">
+        </service>
+        <service
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab1"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":tab1">
+        </service>
+        <service
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab2"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":tab2">
         </service>
         <service
                 android:name="org.mozilla.gecko.process.GeckoChildProcessServices$socket"
