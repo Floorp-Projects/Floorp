@@ -1591,9 +1591,8 @@ class BigIntLiteral : public ParseNode {
 
   BigIntIndex index() { return index_; }
 
-  // Get the contained BigIntValue, or parse it from the creation data
-  // Can be used when deferred allocation mode is enabled.
-  BigInt* getOrCreate(JSContext* cx);
+  // Create a BigInt value of this BigInt literal.
+  BigInt* create(JSContext* cx);
 
   // Return the decimal string representation of this BigInt literal.
   JSAtom* toAtom(JSContext* cx);
@@ -1880,8 +1879,8 @@ class RegExpLiteral : public ParseNode {
   RegExpLiteral(RegExpIndex dataIndex, const TokenPos& pos)
       : ParseNode(ParseNodeKind::RegExpExpr, pos), index_(dataIndex) {}
 
-  RegExpObject* getOrCreate(JSContext* cx,
-                            CompilationInfo& compilationInfo) const;
+  // Create a RegExp object of this RegExp literal.
+  RegExpObject* create(JSContext* cx, CompilationInfo& compilationInfo) const;
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);

@@ -377,7 +377,7 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 #endif
 
-BigInt* BigIntLiteral::getOrCreate(JSContext* cx) {
+BigInt* BigIntLiteral::create(JSContext* cx) {
   return compilationInfo_.bigIntData[index_].createBigInt(cx);
 }
 
@@ -386,7 +386,7 @@ bool BigIntLiteral::isZero() {
 }
 
 JSAtom* BigIntLiteral::toAtom(JSContext* cx) {
-  RootedBigInt bi(cx, getOrCreate(cx));
+  RootedBigInt bi(cx, create(cx));
   if (!bi) {
     return nullptr;
   }
@@ -403,8 +403,8 @@ RegExpObject* RegExpCreationData::createRegExp(JSContext* cx) const {
                                            TenuredObject);
 }
 
-RegExpObject* RegExpLiteral::getOrCreate(
-    JSContext* cx, CompilationInfo& compilationInfo) const {
+RegExpObject* RegExpLiteral::create(JSContext* cx,
+                                    CompilationInfo& compilationInfo) const {
   return compilationInfo.regExpData[index_].createRegExp(cx);
 }
 
