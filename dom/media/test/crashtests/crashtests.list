@@ -17,6 +17,7 @@ skip-if(Android&&AndroidVersion=='22') HTTP load 795892-1.html # bug 1358718
 load 844563.html
 load 846612.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 852838.html
+load 865004.html
 load 865537-1.html
 load 865550.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 868504.html
