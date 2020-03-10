@@ -32,7 +32,10 @@ def format(config, tasks):
         for k in env.keys():
             resolve_keyed_by(
                 env, k, 'flatpak envs',
-                **{'release-level': config.params.release_level()}
+                **{
+                    'release-level': config.params.release_level(),
+                    'project': config.params['project']
+                }
             )
             task['worker']['env'][k] = env[k].format(**format_params)
 

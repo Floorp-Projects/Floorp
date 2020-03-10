@@ -8,6 +8,7 @@ test "$VERSION"
 test "$BUILD_NUMBER"
 test "$CANDIDATES_DIR"
 test "$L10N_CHANGESETS"
+test "$FLATPAK_BRANCH"
 
 # Optional env variables
 : WORKSPACE                     "${WORKSPACE:=/home/worker/workspace}"
@@ -119,7 +120,7 @@ flatpak build-finish build                                      \
         --talk-name="org.gtk.vfs.*"                             \
         --command=firefox
 
-flatpak build-export --disable-sandbox repo build
+flatpak build-export --disable-sandbox repo build "$FLATPAK_BRANCH"
 flatpak build-update-repo repo
 tar cvfz flatpak.tar.gz repo
 
