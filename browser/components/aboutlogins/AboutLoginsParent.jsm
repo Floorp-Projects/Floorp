@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 XPCOMUtils.defineLazyGetter(this, "AboutLoginsL10n", () => {
-  return new Localization(["browser/aboutLogins.ftl"]);
+  return new Localization(["branding/brand.ftl", "browser/aboutLogins.ftl"]);
 });
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
@@ -334,13 +334,19 @@ class AboutLoginsParent extends JSWindowActorParent {
             // is being displayed.
             messageId += "-macosx";
           }
-          let [messageText] = await AboutLoginsL10n.formatMessages([
-            {
-              id: messageId,
-            },
-          ]);
+          let [messageText, captionText] = await AboutLoginsL10n.formatMessages(
+            [
+              {
+                id: messageId,
+              },
+              {
+                id: "about-logins-os-auth-dialog-caption",
+              },
+            ]
+          );
           let loggedIn = await OSKeyStore.ensureLoggedIn(
             messageText.value,
+            captionText.value,
             ownerGlobal,
             false
           );
