@@ -643,48 +643,7 @@ add_task(async function test10() {
     "confirm.example.com"
   );
 
-  try {
-    let [, , inStatus] = await new DNSListener(
-      "wrong.example.com",
-      undefined,
-      false
-    );
-    Assert.ok(
-      !Components.isSuccessCode(inStatus),
-      `${inStatus} should be an error code`
-    );
-  } catch (e) {
-    await new Promise(resolve => do_timeout(200, resolve));
-  }
-
-  // confirmationNS, retry until the confirmed NS works
-  let test_loops = 100;
-  print("test confirmationNS, retry until the confirmed NS works");
-
-  // this test needs to resolve new names in every attempt since the DNS
-  // will keep the negative resolved info
-  while (test_loops > 0) {
-    print(`loops remaining: ${test_loops}\n`);
-    try {
-      let [, inRecord, inStatus] = await new DNSListener(
-        `10b-${test_loops}.example.com`,
-        undefined,
-        false
-      );
-      if (inRecord) {
-        Assert.equal(inStatus, Cr.NS_OK);
-        let answer = inRecord.getNextAddrAsString();
-        Assert.equal(answer, "1::ffff");
-        break;
-      }
-    } catch (e) {
-      dump(e);
-    }
-
-    test_loops--;
-    await new Promise(resolve => do_timeout(0, resolve));
-  }
-  Assert.notEqual(test_loops, 0);
+  await new DNSListener("skipConfirmationForMode3.example.com", "1::ffff");
 });
 
 // use a slow server and short timeout!
@@ -1635,7 +1594,7 @@ add_task(async function test_async_resolve_with_trr_server_no_push_part_2() {
 // Verify that AsyncResoleWithTrrServer is not block on confirmationNS of the defaut serveer.
 add_task(async function test_async_resolve_with_trr_server_confirmation_ns() {
   dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-only
   Services.prefs.clearUserPref("network.trr.useGET");
   Services.prefs.clearUserPref("network.trr.disable-ECS");
   Services.prefs.setCharPref(
@@ -1656,20 +1615,7 @@ add_task(async function test_async_resolve_with_trr_server_confirmation_ns() {
     `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3`
   );
 
-  // Verify that normal dns fetch will fail
-  try {
-    let [, , inStatus] = await new DNSListener(
-      "wrong.example.com",
-      undefined,
-      false
-    );
-    Assert.ok(
-      !Components.isSuccessCode(inStatus),
-      `${inStatus} should be an error code`
-    );
-  } catch (e) {
-    await new Promise(resolve => do_timeout(200, resolve));
-  }
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
 });
 
 // verify TRR timings
@@ -1734,18 +1680,16 @@ add_task(async function test_resolve_not_confirmed() {
   Services.prefs.clearUserPref("network.trr.disable-ECS");
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${h2Port}/doh?responseIP=1::ffff`
+    `https://foo.example.com:${h2Port}/doh?responseIP=2::ffff`
   );
   Services.prefs.setCharPref(
     "network.trr.confirmationNS",
     "confirm.example.com"
   );
 
-  let [, , inStatus] = await new DNSListener("example.org", undefined, false);
-  Assert.ok(
-    Components.isSuccessCode(inStatus),
-    `${inStatus} should be a success code`
-  );
+  await new DNSListener("example.org", "127.0.0.1");
+
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
 });
 
 add_task(async function test_content_encoding_gzip() {
