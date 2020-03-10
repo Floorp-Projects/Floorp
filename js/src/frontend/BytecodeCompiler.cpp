@@ -470,13 +470,7 @@ static bool EmplaceEmitter(CompilationInfo& compilationInfo,
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::canHandleParseFailure(
     CompilationInfo& compilationInfo, const Directives& newDirectives) {
-  // Always retry the parse after a failed syntax parse attempt.
-  if (parser->hadAbortedSyntaxParse()) {
-    return true;
-  }
-
-  // Otherwise only try to reparse if no parse errors were thrown and the
-  // directives changed.
+  // Try to reparse if no parse errors were thrown and the directives changed.
   return !parser->anyChars.hadError() &&
          compilationInfo.directives != newDirectives;
 }
@@ -486,13 +480,6 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
     CompilationInfo& compilationInfo, const Directives& newDirectives,
     TokenStreamPosition& startPosition) {
   MOZ_ASSERT(canHandleParseFailure(compilationInfo, newDirectives));
-
-  if (parser->hadAbortedSyntaxParse()) {
-    // Hit some unrecoverable ambiguity during an inner syntax parse.
-    // Syntax parsing has now been disabled in the parser, so retry
-    // the parse.
-    parser->clearAbortedSyntaxParse();
-  }
 
   // Rewind to starting position to retry.
   parser->tokenStream.rewind(startPosition);
@@ -549,8 +536,6 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       break;
     }
 
-    // Global and eval scripts are never syntax parsed, ergo we can't encounter
-    // a failed syntax parse here.
     // Global and eval scripts don't get reparsed after a new directive was
     // encountered.
     MOZ_ASSERT(
@@ -662,7 +647,6 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
       break;
     }
 
-    // Maybe we aborted a syntax parse. See if we can try again.
     // Maybe we encountered a new directive. See if we can try again.
     if (!canHandleParseFailure(compilationInfo, newDirectives)) {
       return nullptr;
