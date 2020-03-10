@@ -128,7 +128,7 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.Bookmark)
         }
 
-        BrowserMenuItemToolbar(listOf(forward, bookmark, share, refresh))
+        BrowserMenuItemToolbar(listOf(bookmark, share, forward, refresh))
     }
 
     private val menuItems by lazy {
@@ -153,22 +153,20 @@ class DefaultToolbarMenu(
         fun shouldShowReaderAppearance(): Boolean = session?.readerMode ?: false
 
         val menuItems = listOfNotNull(
-            help,
-            settings,
             library,
-            desktopMode,
+            addons,
+            settings,
+            if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
+            BrowserMenuDivider(),
+            if (shouldShowWebcompatReporter) reportIssue else null,
+            findInPage,
             addToTopSites,
             addToHomescreen.apply { visible = ::shouldShowAddToHomescreen },
-            addons,
-            findInPage,
-            privateTab,
-            newTab,
-            if (shouldShowWebcompatReporter) reportIssue else null,
             if (shouldShowSaveToCollection) saveToCollection else null,
-            if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
+            desktopMode,
+            openInApp.apply { visible = ::shouldShowOpenInApp },
             readerMode.apply { visible = ::shouldShowReaderMode },
             readerAppearance.apply { visible = ::shouldShowReaderAppearance },
-            openInApp.apply { visible = ::shouldShowOpenInApp },
             BrowserMenuDivider(),
             menuToolbar
         )
@@ -182,14 +180,6 @@ class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
-    }
-
-    private val help = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_help),
-        imageResource = R.drawable.ic_help,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.Help)
     }
 
     private val settings = BrowserMenuHighlightableItem(
@@ -258,22 +248,6 @@ class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
-    }
-
-    private val privateTab = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_private_tab),
-        imageResource = R.drawable.ic_private_browsing,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.NewPrivateTab)
-    }
-
-    private val newTab = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_new_tab),
-        imageResource = R.drawable.ic_new,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.NewTab)
     }
 
     private val reportIssue = BrowserMenuImageText(

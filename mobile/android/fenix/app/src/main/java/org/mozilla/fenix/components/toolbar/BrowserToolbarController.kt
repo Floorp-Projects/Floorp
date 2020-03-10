@@ -26,7 +26,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
@@ -183,24 +182,7 @@ class DefaultBrowserToolbarController(
                 )
                 navController.navigate(directions)
             }
-            ToolbarMenu.Item.NewTab -> {
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                    sessionId = null
-                )
 
-                // Do not adjustBackground here or an exception gets thrown as we switch themes
-                navController.nav(R.id.browserFragment, directions)
-                browsingModeManager.mode = BrowsingMode.Normal
-            }
-            ToolbarMenu.Item.NewPrivateTab -> {
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                    sessionId = null
-                )
-
-                // Do not adjustBackground here or an exception gets thrown as we switch themes
-                navController.nav(R.id.browserFragment, directions)
-                browsingModeManager.mode = BrowsingMode.Private
-            }
             ToolbarMenu.Item.FindInPage -> {
                 findInPageLauncher()
                 activity.components.analytics.metrics.track(Event.FindInPageOpened)
@@ -212,9 +194,7 @@ class DefaultBrowserToolbarController(
                     activity.components.useCases.tabsUseCases.addTab.invoke(reportUrl)
                 }
             }
-            ToolbarMenu.Item.Help -> {
-                activity.components.useCases.tabsUseCases.addTab.invoke(getSupportUrl())
-            }
+
             ToolbarMenu.Item.AddonsManager -> {
                 navController.nav(
                     R.id.browserFragment,
@@ -331,11 +311,8 @@ class DefaultBrowserToolbarController(
                     Event.BrowserMenuItemTapped.Item.DESKTOP_VIEW_OFF
                 }
 
-            ToolbarMenu.Item.NewPrivateTab -> Event.BrowserMenuItemTapped.Item.NEW_PRIVATE_TAB
             ToolbarMenu.Item.FindInPage -> Event.BrowserMenuItemTapped.Item.FIND_IN_PAGE
             ToolbarMenu.Item.ReportIssue -> Event.BrowserMenuItemTapped.Item.REPORT_SITE_ISSUE
-            ToolbarMenu.Item.Help -> Event.BrowserMenuItemTapped.Item.HELP
-            ToolbarMenu.Item.NewTab -> Event.BrowserMenuItemTapped.Item.NEW_TAB
             ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
             ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
