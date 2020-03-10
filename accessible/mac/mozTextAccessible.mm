@@ -108,7 +108,24 @@ inline NSString* ToNSString(id aValue) {
     }
 
     if ([attribute isEqualToString:@"AXInvalid"]) {
-      return [NSNumber numberWithBool:!!(accWrap->State() & states::INVALID)];
+      if (accWrap->State() & states::INVALID) {
+        // If the attribute exists, it has one of four values: true, false,
+        // grammar, or spelling. We query the attribute value here in order
+        // to find the correct string to return.
+        nsAutoString invalidStr;
+        nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
+        nsAccUtils::GetAccAttr(attributes, nsGkAtoms::invalid, invalidStr);
+        if (invalidStr.IsEmpty()) {
+          // if the attribute had no value, we should still respect the
+          // invalid state flag.
+          return @"true";
+        }
+        return nsCocoaUtils::ToNSString(invalidStr);
+      }
+      // If the flag is not set, we return false.
+      return @"false";
+    } else {
+      // if the attribute does not exist, we assume
     }
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
     if ([attribute isEqualToString:@"AXRequired"]) {
@@ -116,7 +133,26 @@ inline NSString* ToNSString(id aValue) {
     }
 
     if ([attribute isEqualToString:@"AXInvalid"]) {
-      return [NSNumber numberWithBool:!!(proxy->State() & states::INVALID)];
+      if (proxy->State() & states::INVALID) {
+        // Similar to the accWrap case above, we iterate through our attributes
+        // to find the value for `invalid`.
+        AutoTArray<Attribute, 10> attrs;
+        proxy->DefaultTextAttributes(&attrs);
+        for (size_t i = 0; i < attrs.Length(); i++) {
+          if (attrs.ElementAt(i).Name() == "invalid") {
+            nsString invalidStr = attrs.ElementAt(i).Value();
+            if (invalidStr.IsEmpty()) {
+              break;
+            }
+            return nsCocoaUtils::ToNSString(invalidStr);
+          }
+        }
+        // if we iterated through our attributes and didn't find `invalid`,
+        // or if the invalid attribute had no value, we should still respect
+        // the invalid flag and return true.
+        return @"true";
+      }
+      return @"false";
     }
   }
 
