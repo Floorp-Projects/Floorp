@@ -11,14 +11,22 @@ from __future__ import absolute_import
 from subprocess import Popen, PIPE
 import os
 import platform
+import re
 import sys
 
+# Matches lines produced by MozFormatCodeAddress(), e.g.
+# `#01: ???[tests/example +0x43a0]`.
+line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
 
 fix_stacks = None
 
 
 def fixSymbols(line, jsonMode=False):
     global fix_stacks
+
+    result = line_re.search(line)
+    if result is None:
+        return line
 
     if not fix_stacks:
         # Look in MOZ_FETCHES_DIR (for automation), then in MOZBUILD_STATE_PATH
@@ -44,9 +52,19 @@ def fixSymbols(line, jsonMode=False):
 
         fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=None)
 
+    # Sometimes `line` is lacking a trailing newline. If we pass such a `line`
+    # to `fix-stacks` it will wait until it receives a newline, causing this
+    # script to hang. So we add a newline if one is missing and then remove it
+    # from the output.
+    is_missing_newline = not line.endswith('\n')
+    if is_missing_newline:
+        line = line + "\n"
     fix_stacks.stdin.write(line)
     fix_stacks.stdin.flush()
-    return fix_stacks.stdout.readline()
+    out = fix_stacks.stdout.readline()
+    if is_missing_newline:
+        out = out[:-1]
+    return out
 
 
 if __name__ == "__main__":
