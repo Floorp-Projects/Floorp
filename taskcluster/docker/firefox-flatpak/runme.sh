@@ -82,11 +82,21 @@ appdir=build/files
 install -d "${appdir}/lib/"
 (cd "${appdir}/lib/" && tar jxf "${WORKSPACE}/firefox.tar.bz2")
 install -D -m644 -t "${appdir}/share/appdata" org.mozilla.firefox.appdata.xml
+appstream-compose --prefix="${appdir}" --origin=flatpak --basename=org.mozilla.firefox org.mozilla.firefox
 install -D -m644 -t "${appdir}/share/applications" org.mozilla.firefox.desktop
 for size in 16 32 48 64 128; do
     install -D -m644 "${appdir}/lib/firefox/browser/chrome/icons/default/default${size}.png" "${appdir}/share/icons/hicolor/${size}x${size}/apps/org.mozilla.firefox.png"
 done
-install -D -m644 -t "${appdir}/lib/firefox/distribution/extensions" "${DISTRIBUTION_DIR}"/extensions/*
+# XXX: we used to `install -D` before which automatically created the components
+# of target, now we need to manually do this since we're symlinking
+mkdir -p "${appdir}/lib/firefox/distribution/extensions"
+# XXX: we put the langpacks in /app/share/locale/$LANG_CODE and symlink that
+# directory to where Firefox looks them up; this way only subset configured
+# on user system is downloaded vs all locales
+for locale in $locales; do
+    install -D -m644 -t "${appdir}/share/locales/${locale}/" "${DISTRIBUTION_DIR}/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+    ln -sf "${appdir}/share/locales/${locale}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+done
 install -D -m644 -t "${appdir}/lib/firefox/distribution" distribution.ini
 install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
 install -D -m755 launch-script.sh "${appdir}/bin/firefox"
