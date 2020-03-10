@@ -333,11 +333,11 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // this index will be mozilla::Nothing.
   mozilla::Maybe<size_t> funcDataIndex_;
 
-  FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-              uint32_t toStringStart, CompilationInfo& compilationInfo,
-              Directives directives, bool extraWarnings,
-              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              JSAtom* explicitName, FunctionFlags flags);
+  FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
+              CompilationInfo& compilationInfo, Directives directives,
+              bool extraWarnings, GeneratorKind generatorKind,
+              FunctionAsyncKind asyncKind, JSAtom* explicitName,
+              FunctionFlags flags);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionSyntaxKind kind, bool isArrow,
@@ -437,16 +437,15 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   bool hasFunctionCreationIndex() const { return funcDataIndex_.isSome(); }
 
-  FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
+  FunctionBox(JSContext* cx, FunctionBox* traceListHead, JSFunction* fun,
               uint32_t toStringStart, CompilationInfo& compilationInfo,
               Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
-  FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-              uint32_t toStringStart, CompilationInfo& compilationInfo,
-              Directives directives, bool extraWarnings,
-              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              size_t functionIndex);
+  FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
+              CompilationInfo& compilationInfo, Directives directives,
+              bool extraWarnings, GeneratorKind generatorKind,
+              FunctionAsyncKind asyncKind, size_t functionIndex);
 
 #ifdef DEBUG
   bool atomsAreKept();

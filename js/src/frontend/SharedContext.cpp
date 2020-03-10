@@ -116,7 +116,7 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
 bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 #endif
 
-FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
                          Directives directives, bool extraWarnings,
@@ -159,7 +159,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       explicitName_(explicitName),
       flags_(flags) {}
 
-FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          JSFunction* fun, uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
                          Directives directives, bool extraWarnings,
@@ -175,7 +175,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
   MOZ_ASSERT(fun->isTenured());
 }
 
-FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
                          Directives directives, bool extraWarnings,
