@@ -226,7 +226,9 @@ class SingleTestMixin(object):
         revision = os.environ.get("GECKO_HEAD_REV")
         if not repository or not revision:
             self.warning("unable to run tests in per-test mode: no repo or revision!")
-            return []
+            self.suites = {}
+            self.tests_downloaded = True
+            return
 
         def get_automationrelevance():
             response = self.load_json_url(url)
@@ -279,7 +281,10 @@ class SingleTestMixin(object):
         total_tests = sum([len(self.suites[x]) for x in self.suites])
 
         if total_tests == 0:
-            self.fatal("No tests to verify: exiting.", 0)
+            self.warning("No tests to verify.")
+            self.suites = {}
+            self.tests_downloaded = True
+            return
 
         files_per_chunk = total_tests / float(self.config.get('total_chunks', 1))
         files_per_chunk = int(math.ceil(files_per_chunk))
