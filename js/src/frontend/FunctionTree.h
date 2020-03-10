@@ -39,11 +39,6 @@ class FunctionTree {
     return &children_.back();
   }
 
-  void reset() {
-    funbox_ = nullptr;
-    children_.clear();
-  }
-
   FunctionBox* funbox() { return funbox_; }
   void setFunctionBox(FunctionBox* node) { funbox_ = node; }
 
@@ -86,13 +81,6 @@ class FunctionTreeHolder {
   FunctionTree* getFunctionTree() { return &treeRoot_; }
   FunctionTree* getCurrentParent() { return currentParent_; }
   void setCurrentParent(FunctionTree* parent) { currentParent_ = parent; }
-
-  // When a parse has failed, we need to reset the root of the
-  // function tree as we don't want a reparse to have old entries.
-  void resetFunctionTree() {
-    treeRoot_.reset();
-    currentParent_ = &treeRoot_;
-  }
 };
 
 // A class used to maintain our function tree as ParseContexts are
