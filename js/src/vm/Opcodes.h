@@ -404,8 +404,8 @@
      *   Operands:
      *   Stack: val => (typeof val)
      */ \
-    MACRO(Typeof, typeof_, NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    MACRO(TypeofExpr, typeof_expr, NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Typeof, typeof_, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(TypeofExpr, typeof_expr, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The unary `+` operator][1].
      *
@@ -469,7 +469,7 @@
      *   Operands:
      *   Stack: val => (!val)
      */ \
-    MACRO(Not, not_, "!", 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Not, not_, "!", 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * [Binary bitwise operations][1] (`|`, `^`, `&`).
      *
@@ -503,8 +503,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(Eq, eq, "==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    MACRO(Ne, ne, "!=", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Eq, eq, "==", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Ne, ne, "!=", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Strict equality operators (`===` and `!==`).
      *
@@ -521,8 +521,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(StrictEq, strict_eq, "===", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    MACRO(StrictNe, strict_ne, "!==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(StrictEq, strict_eq, "===", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(StrictNe, strict_ne, "!==", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Relative operators (`<`, `>`, `<=`, `>=`).
      *
@@ -879,7 +879,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    MACRO(InitProp, init_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitProp, init_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_IC) \
     /*
      * Like `JSOp::InitProp`, but define a non-enumerable property.
      *
@@ -895,7 +895,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    MACRO(InitHiddenProp, init_hidden_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitHiddenProp, init_hidden_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_IC) \
     /*
      * Like `JSOp::InitProp`, but define a non-enumerable, non-writable,
      * non-configurable property.
@@ -912,7 +912,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    MACRO(InitLockedProp, init_locked_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitLockedProp, init_locked_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_IC) \
     /*
      * Define a data property on `obj` with property key `id` and value `val`.
      *
@@ -930,8 +930,8 @@
      *   Operands:
      *   Stack: obj, id, val => obj
      */ \
-    MACRO(InitElem, init_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
-    MACRO(InitHiddenElem, init_hidden_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitElem, init_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
+    MACRO(InitHiddenElem, init_hidden_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     /*
      * Define an accessor property on `obj` with the given `getter`.
      * `nameIndex` gives the property name.
@@ -944,8 +944,8 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, getter => obj
      */ \
-    MACRO(InitPropGetter, init_prop_getter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(InitHiddenPropGetter, init_hidden_prop_getter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitPropGetter, init_prop_getter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT) \
+    MACRO(InitHiddenPropGetter, init_hidden_prop_getter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT) \
     /*
      * Define an accessor property on `obj` with property key `id` and the given `getter`.
      *
@@ -959,8 +959,8 @@
      *   Operands:
      *   Stack: obj, id, getter => obj
      */ \
-    MACRO(InitElemGetter, init_elem_getter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(InitHiddenElemGetter, init_hidden_elem_getter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitElemGetter, init_elem_getter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT) \
+    MACRO(InitHiddenElemGetter, init_hidden_elem_getter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT) \
     /*
      * Define an accessor property on `obj` with the given `setter`.
      *
@@ -974,8 +974,8 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, setter => obj
      */ \
-    MACRO(InitPropSetter, init_prop_setter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(InitHiddenPropSetter, init_hidden_prop_setter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitPropSetter, init_prop_setter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT) \
+    MACRO(InitHiddenPropSetter, init_hidden_prop_setter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT) \
     /*
      * Define an accesssor property on `obj` with property key `id` and the
      * given `setter`.
@@ -991,8 +991,8 @@
      *   Operands:
      *   Stack: obj, id, setter => obj
      */ \
-    MACRO(InitElemSetter, init_elem_setter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(InitHiddenElemSetter, init_hidden_elem_setter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitElemSetter, init_elem_setter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT) \
+    MACRO(InitHiddenElemSetter, init_hidden_elem_setter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT) \
     /*
      * Get the value of the property `obj.name`. This can call getters and
      * proxy traps.
@@ -1058,7 +1058,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
-    MACRO(SetProp, set_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetProp, set_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::SetProp`, but for strict mode code. Throw a TypeError if
      * `obj[key]` exists but is non-writable, if it's an accessor property with
@@ -1069,7 +1069,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
-    MACRO(StrictSetProp, strict_set_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetProp, strict_set_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Non-strict assignment to a property, `obj[key] = val`.
      *
@@ -1082,7 +1082,7 @@
      *   Operands:
      *   Stack: obj, key, val => val
      */ \
-    MACRO(SetElem, set_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetElem, set_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::SetElem`, but for strict mode code. Throw a TypeError if
      * `obj[key]` exists but is non-writable, if it's an accessor property with
@@ -1093,7 +1093,7 @@
      *   Operands:
      *   Stack: obj, key, val => val
      */ \
-    MACRO(StrictSetElem, strict_set_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetElem, strict_set_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Delete a property from `obj`. Push true on success, false if the
      * property existed but could not be deleted. This implements `delete
@@ -1233,7 +1233,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj, val => val
      */ \
-    MACRO(SetPropSuper, set_prop_super, NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    MACRO(SetPropSuper, set_prop_super, NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_CHECKSLOPPY) \
     /*
      * Like `JSOp::SetPropSuper`, but for strict mode code.
      *
@@ -1242,7 +1242,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj, val => val
      */ \
-    MACRO(StrictSetPropSuper, strict_set_prop_super, NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    MACRO(StrictSetPropSuper, strict_set_prop_super, NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_CHECKSTRICT) \
     /*
      * Assign `val` to `receiver[key]`, strating the search for an existing
      * property at `obj`. In spec terms, `obj.[[Set]](key, val, receiver)`.
@@ -1259,7 +1259,7 @@
      *   Operands:
      *   Stack: receiver, key, obj, val => val
      */ \
-    MACRO(SetElemSuper, set_elem_super, NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    MACRO(SetElemSuper, set_elem_super, NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_CHECKSLOPPY) \
     /*
      * Like `JSOp::SetElemSuper`, but for strict mode code.
      *
@@ -1268,7 +1268,7 @@
      *   Operands:
      *   Stack: receiver, key, obj, val => val
      */ \
-    MACRO(StrictSetElemSuper, strict_set_elem_super, NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    MACRO(StrictSetElemSuper, strict_set_elem_super, NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_CHECKSTRICT) \
     /*
      * Set up a for-in loop by pushing a `PropertyIteratorObject` over the
      * enumerable properties of `val`.
@@ -1465,7 +1465,7 @@
      *   Operands: uint32_t index
      *   Stack: array, val => array
      */ \
-    MACRO(InitElemArray, init_elem_array, NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitElemArray, init_elem_array, NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     /*
      * Initialize an array element `array[index++]` with value `val`.
      *
@@ -2160,7 +2160,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond =>
      */ \
-    MACRO(IfEq, if_eq, NULL, 5, 1, 0, JOF_JUMP|JOF_DETECTING|JOF_IC) \
+    MACRO(IfEq, if_eq, NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
     /*
      * If ToBoolean(`cond`) is true, jump to a 32-bit offset from the current
      * instruction.
@@ -2185,7 +2185,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
      */ \
-    MACRO(And, and_, NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
+    MACRO(And, and_, NULL, 5, 1, 1, JOF_JUMP|JOF_IC) \
     /*
      * Short-circuit for logical OR.
      *
@@ -2197,7 +2197,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
      */ \
-    MACRO(Or, or_, NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
+    MACRO(Or, or_, NULL, 5, 1, 1, JOF_JUMP|JOF_IC) \
     /*
      * Short-circuiting for nullish coalescing.
      *
@@ -2209,7 +2209,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: val => val
      */ \
-    MACRO(Coalesce, coalesce, NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING) \
+    MACRO(Coalesce, coalesce, NULL, 5, 1, 1, JOF_JUMP) \
      /*
      * Like `JSOp::IfNe` ("jump if true"), but if the branch is taken,
      * pop and discard an additional stack value.
@@ -2281,7 +2281,7 @@
      *             uint24_t firstResumeIndex
      *   Stack: i =>
      */ \
-    MACRO(TableSwitch, table_switch, NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
+    MACRO(TableSwitch, table_switch, NULL, 16, 1, 0, JOF_TABLESWITCH) \
     /*
      * Return `rval`.
      *
@@ -2406,7 +2406,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack:
      */ \
-    MACRO(ThrowSetConst, throw_set_const, NULL, 5, 0, 0, JOF_ATOM|JOF_NAME|JOF_DETECTING) \
+    MACRO(ThrowSetConst, throw_set_const, NULL, 5, 0, 0, JOF_ATOM|JOF_NAME) \
     /*
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
@@ -2576,7 +2576,7 @@
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
-    MACRO(InitLexical, init_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
+    MACRO(InitLexical, init_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME) \
     /*
      * Initialize a global lexical binding; or mark it as uninitialized.
      *
@@ -2605,7 +2605,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    MACRO(InitAliasedLexical, init_aliased_lexical, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitAliasedLexical, init_aliased_lexical, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT) \
     /*
      * Throw a ReferenceError if the value on top of the stack is uninitialized.
      *
@@ -2862,7 +2862,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(SetName, set_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetName, set_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::SetName`, but throw a TypeError if there is no binding for
      * the specified name in `env`, or if the binding is immutable (a `const`
@@ -2877,7 +2877,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(StrictSetName, strict_set_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetName, strict_set_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Like `JSOp::SetName`, but for assigning to globals. `env` must be an
      * environment pushed by `JSOp::BindGName`.
@@ -2887,7 +2887,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(SetGName, set_g_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetGName, set_g_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::StrictSetGName`, but for assigning to globals. `env` must be
      * an environment pushed by `JSOp::BindGName`.
@@ -2897,7 +2897,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(StrictSetGName, strict_set_g_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetGName, strict_set_g_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_GNAME|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Assign `val` to an argument binding that's stored in the stack frame or
      * in an `ArgumentsObject`.
@@ -2916,7 +2916,7 @@
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
-    MACRO(SetLocal, set_local, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
+    MACRO(SetLocal, set_local, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME) \
     /*
      * Assign to an aliased binding.
      *
@@ -2931,7 +2931,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: val => val
      */ \
-    MACRO(SetAliasedVar, set_aliased_var, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING) \
+    MACRO(SetAliasedVar, set_aliased_var, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET) \
     /*
      * Assign to an intrinsic.
      *
@@ -2945,7 +2945,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: val => val
      */ \
-    MACRO(SetIntrinsic, set_intrinsic, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_DETECTING) \
+    MACRO(SetIntrinsic, set_intrinsic, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME) \
     /*
      * Push a lexical environment onto the environment chain.
      *

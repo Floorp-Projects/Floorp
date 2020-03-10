@@ -2311,72 +2311,6 @@ bool js::NativeGetExistingProperty(JSContext* cx, HandleObject receiver,
   return GetExistingProperty<CanGC>(cx, receiverValue, obj, shape, vp);
 }
 
-/*
- * Given pc pointing after a property accessing bytecode, return true if the
- * access is "property-detecting". Caller will use this value to determine
- * whether or not to warn that an undefined object property *may* be used in
- * a way that the programmer does not expect. In other words, we do not want
- * to warn the programmer if he/she/they are doing something like
- *
- * if (obj.property) { }
- * or
- * if (obj.property == undefined) {}
- * or
- * if (obj.property == null) {}
- */
-static bool Detecting(JSContext* cx, JSScript* script, jsbytecode* pc) {
-  MOZ_ASSERT(script->containsPC(pc));
-
-  BytecodeIterator scriptIterator =
-      BytecodeIterator(BytecodeLocation(script, pc));
-  BytecodeIterator endIter = BytecodeIterator(script->endLocation());
-
-  // Skip over jump targets and duplication operations.
-  while (scriptIterator->isJumpTarget() || scriptIterator->is(JSOp::Dup)) {
-    if (++scriptIterator == endIter) {
-      // If we are at the end of the script, we cannot be detecting
-      // the property.
-      return false;
-    }
-  }
-
-  // General case: Do not warn if the operation branches on or tests
-  // the equality of the property.
-  if (scriptIterator->isDetectingOp()) {
-    return true;
-  }
-
-  // Special case: Do not warn if we are checking whether the property is null.
-  if (scriptIterator->is(JSOp::Null)) {
-    if (++scriptIterator == endIter) {
-      return false;
-    }
-    return scriptIterator->isEqualityOp() &&
-           !scriptIterator->isStrictEqualityOp();
-  }
-
-  // Special case #2: Do not warn if we are checking whether the property is
-  // undefined.
-  if (scriptIterator->is(JSOp::GetGName) || scriptIterator->is(JSOp::GetName) ||
-      scriptIterator->is(JSOp::Undefined)) {
-    // If we using the result of a variable lookup to use in the comparison
-    // against the property and that lookup does not result in 'undefined',
-    // the type of subsequent operations do not matter -- we always warn.
-    if (scriptIterator->isNameOp() &&
-        scriptIterator->getPropertyName(script) != cx->names().undefined) {
-      return false;
-    }
-    // Because we know that the top of the stack is 'undefined', if the next
-    // operation exists and it is a comparison operation (of any kind) we
-    // supress a warning.
-    if (++scriptIterator == endIter) {
-      return false;
-    }
-    return scriptIterator->isEqualityOp();
-  }
-  return false;
-}
-
 enum IsNameLookup { NotNameLookup = false, NameLookup = true };
 
 /*
@@ -2384,15 +2318,10 @@ enum IsNameLookup { NotNameLookup = false, NameLookup = true };
  * the prototype chain and not finding any such property.
  *
  * Per the spec, this should just set the result to `undefined` and call it a
- * day. However:
- *
- * 1.  This function also runs when we're evaluating an expression that's an
- *     Identifier (that is, an unqualified name lookup), so we need to figure
- *     out if that's what's happening and throw a ReferenceError if so.
- *
- * 2.  We also emit an optional warning for this. (It's not super useful on the
- *     web, as there are too many false positives, but anecdotally useful in
- *     Gecko code.)
+ * day. However this function also runs when we're evaluating an
+ * expression that's an Identifier (that is, an unqualified name lookup),
+ * so we need to figure out if that's what's happening and throw
+ * a ReferenceError if so.
  */
 static bool GetNonexistentProperty(JSContext* cx, HandleId id,
                                    IsNameLookup nameLookup,
@@ -2405,55 +2334,8 @@ static bool GetNonexistentProperty(JSContext* cx, HandleId id,
     return false;
   }
 
-  // Give a strict warning if foo.bar is evaluated by a script for an object
-  // foo with no property named 'bar'.
-  //
-  // Don't warn if extra warnings not enabled or for random getprop
-  // operations.
-  if (MOZ_LIKELY(!cx->realm()->behaviors().extraWarnings(cx))) {
-    return true;
-  }
-
-  jsbytecode* pc;
-  RootedScript script(cx, cx->currentScript(&pc));
-  if (!script) {
-    return true;
-  }
-
-  if (JSOp(*pc) != JSOp::GetProp && JSOp(*pc) != JSOp::GetElem) {
-    return true;
-  }
-
-  // Don't warn repeatedly for the same script.
-  if (script->warnedAboutUndefinedProp()) {
-    return true;
-  }
-
-  // Don't warn in self-hosted code (where the further presence of
-  // JS::RuntimeOptions::werror() would result in impossible-to-avoid
-  // errors to entirely-innocent client code).
-  if (script->selfHosted()) {
-    return true;
-  }
-
-  // Do not warn about tests like (obj[prop] == undefined).
-  pc += GetBytecodeLength(pc);
-  if (Detecting(cx, script, pc)) {
-    return true;
-  }
-
-  unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
-  script->setWarnedAboutUndefinedProp();
-
-  // Ok, bad undefined property reference: whine about it.
-  UniqueChars bytes =
-      IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-  if (!bytes) {
-    return false;
-  }
-
-  return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
-                                          JSMSG_UNDEFINED_PROP, bytes.get());
+  // Otherwise, just return |undefined|.
+  return true;
 }
 
 // The NoGC version of GetNonexistentProperty, present only to make types line
