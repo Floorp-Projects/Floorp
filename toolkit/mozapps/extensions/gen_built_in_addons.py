@@ -87,7 +87,7 @@ def main(output, *args):
 
         listing["system"] = sorted(features)
 
-    json.dump(listing, output)
+    json.dump(listing, output, sort_keys=True)
 
     return inputs
 
