@@ -432,7 +432,7 @@
   function jsTestDriverBrowserInit() {
     // Unset all options before running any test code, cf. the call to
     // |shellOptionsClear| in shell.js' set-up code.
-    for (var optionName of ["strict", "werror", "strict_mode"]) {
+    for (var optionName of ["werror", "strict_mode"]) {
       if (!HasOwnProperty(SpecialPowersCu, optionName))
         throw "options is out of sync with Components.utils";
 

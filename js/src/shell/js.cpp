@@ -1736,9 +1736,7 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsLiteral(opt, "strict")) {
-      JS::ContextOptionsRef(cx).toggleExtraWarnings();
-    } else if (StringEqualsLiteral(opt, "werror")) {
+    if (StringEqualsLiteral(opt, "werror")) {
       // Disallow toggling werror when there are off-thread jobs, to avoid
       // confusing CompileError::throwError.
       ShellContext* sc = GetShellContext(cx);
@@ -1760,8 +1758,7 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
       JS_ReportErrorASCII(cx,
                           "unknown option name %s."
-                          " The valid names are strict,"
-                          " werror, and strict_mode.",
+                          " The valid names are werror and strict_mode.",
                           optChars.get());
       return false;
     }
@@ -1769,11 +1766,6 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars names = DuplicateString("");
   bool found = false;
-  if (names && oldContextOptions.extraWarnings()) {
-    names =
-        JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "strict");
-    found = true;
-  }
   if (names && oldContextOptions.werror()) {
     names =
         JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "werror");
@@ -10159,10 +10151,6 @@ static bool OptionFailure(const char* option, const char* str) {
 static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   ShellContext* sc = GetShellContext(cx);
 
-  if (op->getBoolOption('s')) {
-    JS::ContextOptionsRef(cx).toggleExtraWarnings();
-  }
-
 #ifdef JS_ENABLE_SMOOSH
   if (op->getBoolOption("smoosh")) {
     JS::ContextOptionsRef(cx).setTrySmoosh(true);
@@ -11103,7 +11091,6 @@ int main(int argc, char** argv, char** envp) {
                         "Only compile, don't run (syntax checking mode)") ||
       !op.addBoolOption('w', "warnings", "Emit warnings") ||
       !op.addBoolOption('W', "nowarnings", "Don't emit warnings") ||
-      !op.addBoolOption('s', "strict", "Check strictness") ||
       !op.addBoolOption('D', "dump-bytecode",
                         "Dump bytecode with exec count for all scripts") ||
       !op.addBoolOption('b', "print-timing",

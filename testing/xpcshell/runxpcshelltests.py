@@ -465,7 +465,6 @@ class XPCShellTestThread(Thread):
             '-a', self.appPath,
             '-r', self.httpdManifest,
             '-m',
-            '-s',
             '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
             '-e', 'const _MOZINFO_JS_PATH = "%s";' % self.mozInfoJSPath,
             '-e', 'const _PREFS_FILE = "%s";' % self.prefsFile.replace('\\', '\\\\'),
