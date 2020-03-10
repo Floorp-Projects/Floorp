@@ -1,0 +1,174 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "face-with-tears-of-joy"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "😂"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "tetragram-for-centre"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "𝌆"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "surrogates-in-text"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "\\uD83D\\uDE02"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "surrogates-in-string"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\uD83D\\uDE02",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "surrogates-in-adjacent-strings"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\uD83D",
+                            "type": "StringLiteral"
+                        }
+                    },
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\uDE02",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "emoji-in-text"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "A face 😂 with tears of joy."
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "emoji-in-string"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "A face 😂 with tears of joy.",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Invalid identifier"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err-😂 = Value\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Invalid expression"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err-invalid-expression = { 😂 }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Invalid variant key"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err-invalid-variant-key = { $sel ->\n    *[😂] Value\n}\n"
+        }
+    ]
+}

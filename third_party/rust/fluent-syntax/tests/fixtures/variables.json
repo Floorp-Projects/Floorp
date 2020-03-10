@@ -1,0 +1,132 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key01"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "VariableReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "var"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key02"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "VariableReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "var"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key03"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "VariableReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "var"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key04"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "VariableReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "var"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "GroupComment",
+            "content": "Errors"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Missing variable identifier"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err01 = {$}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Double $$"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err02 = {$$var}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Invalid first char of the identifier"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err03 = {$-var}\n"
+        }
+    ]
+}

@@ -1,0 +1,195 @@
+suites:
+  -
+    name: Bundle
+    suites:
+      -
+        name: addResource
+        resources:
+          -
+            source: |-
+              foo = Foo
+              -bar = Bar
+        tests:
+          -
+            name: adds messages
+            asserts:
+              -
+                id: foo
+                value: Foo
+              -
+                id: bar
+                missing: true
+      -
+        name: allowOverrides
+        resources:
+          -
+            source: key = Foo
+        tests:
+          -
+            name: addResource allowOverrides is false
+            resources:
+              -
+                source: key = Bar
+            bundles:
+              -
+                errors:
+                  -
+                    type: Overriding
+            asserts:
+              -
+                id: key
+                value: Foo
+          -
+            name: addResource allowOverrides is true
+            skip: true
+            resources:
+              -
+                source: key = Bar
+            asserts:
+              -
+                id: key
+                value: Bar
+      -
+        name: hasMessage
+        resources:
+          -
+            source: |-
+              foo = Foo
+              bar =
+                  .attr = Bar Attr
+              -term = Term
+              # ERROR No value.
+              err1 =
+              # ERROR Broken value.
+              err2 = {}
+              # ERROR No attribute value.
+              err3 =
+                  .attr =
+              # ERROR Broken attribute value.
+              err4 =
+                  .attr1 = Attr
+                  .attr2 = {}
+            errors:
+              -
+                type: Parser
+              -
+                type: Parser
+              -
+                type: Parser
+              -
+                type: Parser
+        tests:
+          -
+            name: returns true only for public messages
+            asserts:
+              -
+                id: foo
+                missing: false
+          -
+            name: returns false for terms and missing messages
+            asserts:
+              -
+                id: -term
+                missing: true
+              -
+                id: missing
+                missing: true
+              -
+                id: -missing
+                missing: true
+          -
+            name: returns false for broken messages
+            asserts:
+              -
+                id: err1
+                missing: true
+              -
+                id: err2
+                missing: true
+              -
+                id: err3
+                missing: true
+              -
+                id: err4
+                # XXX: Difference from JS. We handle partial messages
+                missing: false
+      -
+        name: getMessage
+        resources:
+          -
+            source: |-
+              foo = Foo
+              -bar = Bar
+        tests:
+          -
+            name: returns public messages
+            asserts:
+              -
+                id: foo
+                missing: false
+          -
+            name: returns undefined for terms and missing messages
+            asserts:
+              -
+                id: -bar
+                missing: true
+              -
+                id: baz
+                missing: true
+              -
+                id: -baz
+                missing: true
+      -
+        name: (Rust) Entries
+        resources:
+          -
+            source: |-
+              -foo = Bar
+              baz = { foo }
+              qux = { -bar }
+              fn = { FN() }
+        tests:
+          -
+            name: Entry mismatch doesn't leak
+            asserts:
+              -
+                id: baz
+                value: "{foo}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown message: foo"
+          -
+            name: Missing term
+            asserts:
+              -
+                id: qux
+                value: "{-bar}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown term: -bar"
+          -
+            name: Missing function
+            asserts:
+              -
+                id: fn
+                value: "{FN()}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown function: FN()"
+      -
+        name: (Rust) FluentBundle construction
+        resources:
+          -
+            source: |-
+              foo = Foo
+        bundles:
+          -
+            functions:
+              - SUM
+              - SUM
+            errors:
+              -
+                type: Overriding

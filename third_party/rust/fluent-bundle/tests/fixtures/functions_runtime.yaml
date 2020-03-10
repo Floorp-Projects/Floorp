@@ -1,0 +1,29 @@
+suites:
+  -
+    name: Runtime-specific functions
+    suites:
+      -
+        name: passing into the constructor
+        resources:
+          -
+            source: |-
+              foo = { CONCAT("Foo", "Bar") }
+              bar = { SUM(1, 2) }
+        bundles:
+          -
+            functions:
+              - CONCAT
+              - SUM
+        tests:
+          -
+            name: works for strings
+            asserts:
+              -
+                id: foo
+                value: FooBar
+          -
+            name: works for numbers
+            asserts:
+              -
+                id: bar
+                value: 3
