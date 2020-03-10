@@ -454,7 +454,7 @@ class GeckoEngineSession(
 
             notifyObservers {
                 // TODO provide full certificate info: https://github.com/mozilla-mobile/android-components/issues/5557
-                onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.certificate?.issuerDN?.name)
+                onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.getIssuerName())
             }
         }
 
@@ -741,6 +741,10 @@ class GeckoEngineSession(
         }
 
         return cookiesPolicies
+    }
+
+    internal fun GeckoSession.ProgressDelegate.SecurityInformation.getIssuerName(): String? {
+        return certificate?.issuerDN?.name?.substringAfterLast("O=")?.substringBeforeLast(",C=")
     }
 
     private operator fun Int.contains(mask: Int): Boolean {

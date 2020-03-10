@@ -10,13 +10,16 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
+import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.MockRecordingDevice
@@ -24,9 +27,17 @@ import org.mozilla.geckoview.MockRecordingDevice
 @RunWith(AndroidJUnit4::class)
 class GeckoMediaDelegateTest {
 
+    private lateinit var runtime: GeckoRuntime
+
+    @Before
+    fun setup() {
+        runtime = mock()
+        whenever(runtime.settings).thenReturn(mock())
+    }
+
     @Test
     fun `Added MediaElement is wrapped in GeckoMedia and forwarded to observer`() {
-        val engineSession = GeckoEngineSession(mock())
+        val engineSession = GeckoEngineSession(runtime)
 
         var observedMedia: Media? = null
 
@@ -47,7 +58,7 @@ class GeckoMediaDelegateTest {
 
     @Test
     fun `WHEN MediaElement is removed THEN previously added GeckoMedia is used to notify observer`() {
-        val engineSession = GeckoEngineSession(mock())
+        val engineSession = GeckoEngineSession(runtime)
 
         var addedMedia: Media? = null
         var removedMedia: Media? = null
@@ -73,7 +84,7 @@ class GeckoMediaDelegateTest {
 
     @Test
     fun `WHEN unknown media is removed THEN observer is not notified`() {
-        val engineSession = GeckoEngineSession(mock())
+        val engineSession = GeckoEngineSession(runtime)
 
         var onMediaRemovedExecuted = false
 
@@ -91,7 +102,7 @@ class GeckoMediaDelegateTest {
 
     @Test
     fun `WHEN recording state changes THEN observers are notified`() {
-        val engineSession = GeckoEngineSession(mock())
+        val engineSession = GeckoEngineSession(runtime)
 
         var observedDevices: List<RecordingDevice> = listOf()
 

@@ -9,9 +9,9 @@ import android.app.Application
 import android.app.Service
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
+import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GeckoSelectionActionDelegateTest {
@@ -49,7 +49,7 @@ class GeckoSelectionActionDelegateTest {
         val actualActions = geckoDelegate.allActions
 
         customActions.forEach {
-            assertTrue(actualActions.contains(it))
+            Assert.assertTrue(actualActions.contains(it))
         }
     }
 }
