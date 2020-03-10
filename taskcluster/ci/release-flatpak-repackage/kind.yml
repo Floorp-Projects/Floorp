@@ -48,6 +48,10 @@ job-defaults:
             LC_ALL: C.UTF-8
             LANG: C.UTF-8
             L10N_CHANGESETS: "{config_params[head_repository]}/raw-file/{config_params[head_rev]}/browser/locales/l10n-changesets.json"
+            FLATPAK_BRANCH:
+                by-project:
+                    mozilla-release: stable
+                    default: beta
         chain-of-trust: true
 
 jobs:
