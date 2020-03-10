@@ -13,9 +13,7 @@ add_task(async function setup() {
     "resource://formautofill/FormAutofillStorage.jsm",
     null
   ));
-  ({ OSKeyStore } = ChromeUtils.import(
-    "resource://formautofill/OSKeyStore.jsm"
-  ));
+  ({ OSKeyStore } = ChromeUtils.import("resource:///modules/OSKeyStore.jsm"));
 });
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
