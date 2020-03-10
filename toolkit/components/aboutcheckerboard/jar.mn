@@ -4,5 +4,5 @@
 
 toolkit.jar:
   content/global/aboutCheckerboard.js           (content/aboutCheckerboard.js)
-  content/global/aboutCheckerboard.xhtml        (content/aboutCheckerboard.xhtml)
+  content/global/aboutCheckerboard.html        (content/aboutCheckerboard.html)
   content/global/aboutCheckerboard.css          (content/aboutCheckerboard.css)

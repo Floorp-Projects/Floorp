@@ -64,7 +64,7 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::ALLOW_SCRIPT},
     {"buildconfig", "chrome://global/content/buildconfig.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
-    {"checkerboard", "chrome://global/content/aboutCheckerboard.xhtml",
+    {"checkerboard", "chrome://global/content/aboutCheckerboard.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT},
 #ifndef MOZ_BUILD_APP_IS_BROWSER
