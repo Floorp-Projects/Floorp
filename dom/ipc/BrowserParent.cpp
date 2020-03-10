@@ -3502,6 +3502,16 @@ void BrowserParent::NavigateByKey(bool aForward, bool aForDocumentNavigation) {
 
 void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
                                     bool aActive) {
+  // Ignore updates if we're an out-of-process iframe. For oop iframes, our
+  // |mFrameElement| is that of the top-level document, and so AsyncTabSwitcher
+  // will treat MozLayerTreeReady / MozLayerTreeCleared events as if they came
+  // from the top-level tab, which is wrong.
+  //
+  // XXX: Should we still be updating |mHasLayers|?
+  if (GetBrowserBridgeParent()) {
+    return;
+  }
+
   // Ignore updates from old epochs. They might tell us that layers are
   // available when we've already sent a message to clear them. We can't trust
   // the update in that case since layers could disappear anytime after that.
