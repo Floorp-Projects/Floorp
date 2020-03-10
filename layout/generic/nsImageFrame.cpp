@@ -451,7 +451,7 @@ static void ScaleIntrinsicSizeForDensity(nsIContent& aContent,
 }
 
 static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
-                                          bool aHasRequest,
+                                          bool aUseMappedRatio,
                                           nsImageFrame::Kind aKind,
                                           const nsImageFrame& aFrame) {
   const ComputedStyle& style = *aFrame.Style();
@@ -476,21 +476,41 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
     return IntrinsicSize(edgeLengthToUse, edgeLengthToUse);
   }
 
-  if (aHasRequest && style.StylePosition()->mAspectRatio != 0.0f) {
+  if (aUseMappedRatio && style.StylePosition()->mAspectRatio != 0.0f) {
     return IntrinsicSize();
   }
 
   return IntrinsicSize(0, 0);
 }
 
+// For compat reasons, see bug 1602047, we don't use the intrinsic ratio from
+// width="" and height="" for images with no src attribute (no request).
+//
+// But we shouldn't get fooled by <img loading=lazy>. We do want to apply the
+// ratio then...
+bool nsImageFrame::ShouldUseMappedAspectRatio() const {
+  if (mKind != Kind::ImageElement) {
+    return true;
+  }
+  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
+  if (currentRequest) {
+    return true;
+  }
+  // TODO(emilio): Investigate the compat situation of the above check, maybe we
+  // can just check for empty src attribute or something...
+  auto* image = HTMLImageElement::FromNode(mContent);
+  return image && image->IsAwaitingLoadOrLazyLoading();
+}
+
 bool nsImageFrame::UpdateIntrinsicSize() {
   IntrinsicSize oldIntrinsicSize = mIntrinsicSize;
-  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
-  mIntrinsicSize = ComputeIntrinsicSize(mImage, !!currentRequest, mKind, *this);
+  mIntrinsicSize =
+      ComputeIntrinsicSize(mImage, ShouldUseMappedAspectRatio(), mKind, *this);
   return mIntrinsicSize != oldIntrinsicSize;
 }
 
-static AspectRatio ComputeAspectRatio(imgIContainer* aImage, bool aHasRequest,
+static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
+                                      bool aUseMappedRatio,
                                       const nsImageFrame& aFrame) {
   const ComputedStyle& style = *aFrame.Style();
   if (style.StyleDisplay()->IsContainSize()) {
@@ -501,7 +521,7 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage, bool aHasRequest,
       return *fromImage;
     }
   }
-  if (aHasRequest && style.StylePosition()->mAspectRatio != 0.0f) {
+  if (aUseMappedRatio && style.StylePosition()->mAspectRatio != 0.0f) {
     return AspectRatio(style.StylePosition()->mAspectRatio);
   }
   if (aFrame.ShouldShowBrokenImageIcon()) {
@@ -512,8 +532,8 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage, bool aHasRequest,
 
 bool nsImageFrame::UpdateIntrinsicRatio() {
   AspectRatio oldIntrinsicRatio = mIntrinsicRatio;
-  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
-  mIntrinsicRatio = ComputeAspectRatio(mImage, !!currentRequest, *this);
+  mIntrinsicRatio =
+      ComputeAspectRatio(mImage, ShouldUseMappedAspectRatio(), *this);
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
