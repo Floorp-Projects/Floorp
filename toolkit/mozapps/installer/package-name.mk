@@ -26,7 +26,11 @@ ifeq ($(OS_ARCH),WINNT)
 ifeq ($(CPU_ARCH),x86)
 MOZ_PKG_PLATFORM := win32
 else
+ifeq ($(CPU_ARCH),aarch64)
+MOZ_PKG_PLATFORM := win64-aarch64
+else
 MOZ_PKG_PLATFORM := win64
+endif
 endif
 endif
 ifeq ($(OS_ARCH),Darwin)
