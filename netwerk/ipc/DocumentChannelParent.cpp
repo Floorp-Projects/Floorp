@@ -53,12 +53,11 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   rv = NS_ERROR_UNEXPECTED;
-  if (!mParent->Open(loadState, loadInfo, aArgs.loadFlags(), aArgs.loadType(),
-                     aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
-                     aArgs.channelId(), aArgs.asyncOpenTime(),
-                     aArgs.documentOpenFlags(), aArgs.pluginsAllowed(),
-                     aArgs.timing().refOr(nullptr), std::move(clientInfo),
-                     aArgs.outerWindowId(), &rv)) {
+  if (!mParent->Open(loadState, loadInfo, aArgs.loadFlags(), aArgs.cacheKey(),
+                     aArgs.isActive(), aArgs.isTopLevelDoc(), aArgs.channelId(),
+                     aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
+                     aArgs.pluginsAllowed(), aArgs.timing().refOr(nullptr),
+                     std::move(clientInfo), aArgs.outerWindowId(), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 

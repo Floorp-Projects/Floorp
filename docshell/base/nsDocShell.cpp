@@ -9383,8 +9383,8 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const OriginAttributes& aOriginAttributes, nsLoadFlags aLoadFlags,
-    uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
-    nsresult& aRv, nsIChannel** aChannel) {
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc, nsresult& aRv,
+    nsIChannel** aChannel) {
   MOZ_ASSERT(aLoadInfo);
 
   nsString srcdoc = VoidString();
@@ -9564,6 +9564,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
   }
 
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
+  auto loadType = aLoadState->LoadType();
 
   // figure out if we need to set the post data stream on the channel...
   if (aLoadState->PostDataStream()) {
@@ -9590,15 +9591,14 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
      * cache is free to go to the server for updated postdata.
      */
     if (cacheChannel && aCacheKey != 0) {
-      if (aLoadType == LOAD_HISTORY ||
-          aLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
+      if (loadType == LOAD_HISTORY || loadType == LOAD_RELOAD_CHARSET_CHANGE) {
         cacheChannel->SetCacheKey(aCacheKey);
         uint32_t loadFlags;
         if (NS_SUCCEEDED(channel->GetLoadFlags(&loadFlags))) {
           channel->SetLoadFlags(loadFlags |
                                 nsICachingChannel::LOAD_ONLY_FROM_CACHE);
         }
-      } else if (aLoadType == LOAD_RELOAD_NORMAL) {
+      } else if (loadType == LOAD_RELOAD_NORMAL) {
         cacheChannel->SetCacheKey(aCacheKey);
       }
     }
@@ -9609,10 +9609,10 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
      * New cache may use it creatively on CGI pages with GET
      * method and even on those that say "no-cache"
      */
-    if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL ||
-        aLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
-        aLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
-        aLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
+    if (loadType == LOAD_HISTORY || loadType == LOAD_RELOAD_NORMAL ||
+        loadType == LOAD_RELOAD_CHARSET_CHANGE ||
+        loadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
+        loadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
       if (cacheChannel && aCacheKey != 0) {
         cacheChannel->SetCacheKey(aCacheKey);
       }
@@ -9949,13 +9949,12 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
-    channel =
-        new DocumentChannelChild(aLoadState, loadInfo, loadFlags, mLoadType,
-                                 cacheKey, isActive, isTopLevelDoc);
+    channel = new DocumentChannelChild(aLoadState, loadInfo, loadFlags,
+                                       cacheKey, isActive, isTopLevelDoc);
     channel->SetNotificationCallbacks(this);
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  aLoadState, loadInfo, this, this, GetOriginAttributes(),
-                 loadFlags, mLoadType, cacheKey, isActive, isTopLevelDoc, rv,
+                 loadFlags, cacheKey, isActive, isTopLevelDoc, rv,
                  getter_AddRefs(channel))) {
     return rv;
   }
