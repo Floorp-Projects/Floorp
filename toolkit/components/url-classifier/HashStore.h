@@ -45,7 +45,7 @@ class TableUpdate {
   }
 
  protected:
-  virtual ~TableUpdate() {}
+  virtual ~TableUpdate() = default;
 
  private:
   virtual int Tag() const = 0;

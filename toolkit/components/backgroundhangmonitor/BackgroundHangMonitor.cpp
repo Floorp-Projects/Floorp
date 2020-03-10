@@ -742,7 +742,7 @@ BackgroundHangMonitor::BackgroundHangMonitor()
 #endif
 }
 
-BackgroundHangMonitor::~BackgroundHangMonitor() {}
+BackgroundHangMonitor::~BackgroundHangMonitor() = default;
 
 void BackgroundHangMonitor::NotifyActivity() {
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR

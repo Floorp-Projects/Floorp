@@ -13,7 +13,7 @@ class nsIURI;
 
 class DownloadPlatform : public mozIDownloadPlatform {
  protected:
-  virtual ~DownloadPlatform() {}
+  virtual ~DownloadPlatform() = default;
 
  public:
   NS_DECL_ISUPPORTS

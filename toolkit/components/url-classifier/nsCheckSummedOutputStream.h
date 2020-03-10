@@ -23,7 +23,7 @@ class nsCheckSummedOutputStream : public nsBufferedOutputStream {
   static const uint32_t CHECKSUM_SIZE = 16;
   static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
 
-  nsCheckSummedOutputStream() {}
+  nsCheckSummedOutputStream() = default;
 
   NS_IMETHOD Finish() override;
   NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t* result) override;

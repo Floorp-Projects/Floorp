@@ -112,7 +112,7 @@ class KeyboardHashKey : public PLDHashEntryHdr {
         mKeyIdx(std::move(aOther.mKeyIdx)),
         mKey(std::move(aOther.mKey)) {}
 
-  ~KeyboardHashKey() {}
+  ~KeyboardHashKey() = default;
 
   bool KeyEquals(KeyTypePointer aOther) const {
     return mLang == aOther->mLang && mRegion == aOther->mRegion &&
@@ -234,9 +234,9 @@ class nsRFPService final : public nsIObserver {
  private:
   nsresult Init();
 
-  nsRFPService() {}
+  nsRFPService() = default;
 
-  ~nsRFPService() {}
+  ~nsRFPService() = default;
 
   void UpdateTimers();
   void UpdateRFPPref();

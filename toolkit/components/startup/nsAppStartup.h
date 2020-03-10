@@ -41,7 +41,7 @@ class nsAppStartup final : public nsIAppStartup,
   nsresult Init();
 
  private:
-  ~nsAppStartup() {}
+  ~nsAppStartup() = default;
 
   void CloseAllWindows();
 

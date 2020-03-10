@@ -37,9 +37,9 @@ using namespace mozilla;
   u"not supported in WebExtension code. For alternatives, please see: "    \
   u"https://developer.mozilla.org/Add-ons/WebExtensions/Tips"
 
-AddonContentPolicy::AddonContentPolicy() {}
+AddonContentPolicy::AddonContentPolicy() = default;
 
-AddonContentPolicy::~AddonContentPolicy() {}
+AddonContentPolicy::~AddonContentPolicy() = default;
 
 NS_IMPL_ISUPPORTS(AddonContentPolicy, nsIContentPolicy, nsIAddonContentPolicy)
 

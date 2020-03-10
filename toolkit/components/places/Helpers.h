@@ -27,19 +27,19 @@ namespace places {
 class WeakAsyncStatementCallback : public mozIStorageStatementCallback {
  public:
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
-  WeakAsyncStatementCallback() {}
+  WeakAsyncStatementCallback() = default;
 
  protected:
-  virtual ~WeakAsyncStatementCallback() {}
+  virtual ~WeakAsyncStatementCallback() = default;
 };
 
 class AsyncStatementCallback : public WeakAsyncStatementCallback {
  public:
   NS_DECL_ISUPPORTS
-  AsyncStatementCallback() {}
+  AsyncStatementCallback() = default;
 
  protected:
-  virtual ~AsyncStatementCallback() {}
+  virtual ~AsyncStatementCallback() = default;
 };
 
 /**

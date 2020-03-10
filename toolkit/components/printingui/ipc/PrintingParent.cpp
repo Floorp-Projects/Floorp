@@ -311,7 +311,7 @@ PrintingParent::PrintingParent() {
   MOZ_ASSERT(mPrintSettingsSvc);
 }
 
-PrintingParent::~PrintingParent() {}
+PrintingParent::~PrintingParent() = default;
 
 }  // namespace embedding
 }  // namespace mozilla

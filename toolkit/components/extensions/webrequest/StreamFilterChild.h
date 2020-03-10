@@ -106,7 +106,7 @@ class StreamFilterChild final : public PStreamFilterChild,
   }
 
  private:
-  ~StreamFilterChild() {}
+  ~StreamFilterChild() = default;
 
   void SetNextState();
 

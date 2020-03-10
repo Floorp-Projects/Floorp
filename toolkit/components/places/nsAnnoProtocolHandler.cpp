@@ -161,7 +161,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
   }
 
  protected:
-  virtual ~faviconAsyncLoader() {}
+  virtual ~faviconAsyncLoader() = default;
 
  private:
   nsCOMPtr<nsIChannel> mChannel;
