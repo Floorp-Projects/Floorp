@@ -136,7 +136,7 @@ struct nsCStringHasher {
 // We don't want to refcount StartupCache, and ObserverService wants to
 // refcount its listeners, so we'll let it refcount this instead.
 class StartupCacheListener final : public nsIObserver {
-  ~StartupCacheListener() {}
+  ~StartupCacheListener() = default;
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 };
@@ -250,7 +250,7 @@ class StartupCache : public nsIMemoryReporter {
 // is a singleton.
 #ifdef DEBUG
 class StartupCacheDebugOutputStream final : public nsIObjectOutputStream {
-  ~StartupCacheDebugOutputStream() {}
+  ~StartupCacheDebugOutputStream() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBJECTOUTPUTSTREAM
