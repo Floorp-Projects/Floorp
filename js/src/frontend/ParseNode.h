@@ -2286,17 +2286,12 @@ inline bool ParseNode::isConstant() {
   }
 }
 
-class TraceListNode {
- protected:
-  js::gc::Cell* gcThing;
-  FunctionBox* traceLink;
-
-  TraceListNode(js::gc::Cell* gcThing, FunctionBox* traceLink);
-};
-
-class ObjectBox : public TraceListNode {
+class ObjectBox {
  protected:
   friend struct GCThingList;
+
+  js::gc::Cell* gcThing;
+  FunctionBox* traceLink;
   ObjectBox* emitLink;
 
   ObjectBox(JSObject* obj, FunctionBox* link);
