@@ -218,21 +218,6 @@ class nsFrameSelection final {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsFrameSelection)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsFrameSelection)
 
-  /**
-   * Init will initialize the frame selector with the necessary pres shell to
-   * be used by most of the methods
-   *
-   * @param aPresShell is the parameter to be used for most of the other calls
-   * for callbacks etc
-   *
-   * @param aLimiter limits the selection to nodes with aLimiter parents
-   *
-   * @param aAccessibleCaretEnabled true if we should enable the accessible
-   * caret.
-   */
-  void Init(mozilla::PresShell* aPresShell, nsIContent* aLimiter,
-            bool aAccessibleCaretEnabled);
-
   enum class FocusMode {
     kExtendSelection,     /** Keep old anchor point. */
     kCollapseToNewPoint,  /** Collapses the Selection to the new point. */
@@ -689,7 +674,17 @@ class nsFrameSelection final {
                                                  nsIFrame** aRetFrame,
                                                  nsPoint& aRetPoint);
 
-  nsFrameSelection();
+  /**
+   * @param aPresShell is the parameter to be used for most of the other calls
+   * for callbacks etc
+   *
+   * @param aLimiter limits the selection to nodes with aLimiter parents
+   *
+   * @param aAccessibleCaretEnabled true if we should enable the accessible
+   * caret.
+   */
+  nsFrameSelection(mozilla::PresShell* aPresShell, nsIContent* aLimiter,
+                   bool aAccessibleCaretEnabled);
 
   void StartBatchChanges();
 

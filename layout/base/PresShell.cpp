@@ -967,10 +967,7 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
     mAccessibleCaretEventHub = new AccessibleCaretEventHub(this);
   }
 
-  mSelection = new nsFrameSelection();
-
-  RefPtr<nsFrameSelection> frameSelection = mSelection;
-  frameSelection->Init(this, nullptr, accessibleCaretEnabled);
+  mSelection = new nsFrameSelection(this, nullptr, accessibleCaretEnabled);
 
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
