@@ -1,0 +1,76 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key01"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value 01"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key02"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value 02\nContinued"
+                    }
+                ]
+            },
+            "attributes": [
+                {
+                    "type": "Attribute",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "title"
+                    },
+                    "value": {
+                        "type": "Pattern",
+                        "elements": [
+                            {
+                                "type": "TextElement",
+                                "value": "Title"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Unclosed StringLiteral"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err03 = { \"str\r\n\r\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Missing newline after ->."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err04 = { $sel -> }\r\n"
+        }
+    ]
+}

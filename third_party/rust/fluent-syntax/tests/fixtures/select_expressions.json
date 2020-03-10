@@ -1,0 +1,362 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "new-messages"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "FunctionReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "BUILTIN"
+                                },
+                                "arguments": {
+                                    "type": "CallArguments",
+                                    "positional": [],
+                                    "named": []
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "value": "0",
+                                        "type": "NumberLiteral"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Zero"
+                                            }
+                                        ]
+                                    },
+                                    "default": false
+                                },
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "other"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "Placeable",
+                                                "expression": {
+                                                    "value": "",
+                                                    "type": "StringLiteral"
+                                                }
+                                            },
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Other"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "valid-selector-term-attribute"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "TermReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "term"
+                                },
+                                "attribute": {
+                                    "type": "Identifier",
+                                    "name": "case"
+                                },
+                                "arguments": null
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "value"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Term values are not valid selectors"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-selector-term-value =\n    { -term ->\n       *[key] value\n    }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR CallExpressions on Terms are similar to TermReferences"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-selector-term-variant =\n    { -term(case: \"nominative\") ->\n       *[key] value\n    }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Nested expressions are not valid selectors"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-selector-nested-expression =\n    { { 3 } ->\n        *[key] default\n    }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Select expressions are not valid selectors"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-selector-select-expression =\n    { { $sel ->\n        *[key] value\n        } ->\n        *[key] default\n    }\n\n"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "empty-variant"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "VariableReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "sel"
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "Placeable",
+                                                "expression": {
+                                                    "value": "",
+                                                    "type": "StringLiteral"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "reduced-whitespace"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "FunctionReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "FOO"
+                                },
+                                "arguments": {
+                                    "type": "CallArguments",
+                                    "positional": [],
+                                    "named": []
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "Placeable",
+                                                "expression": {
+                                                    "value": "",
+                                                    "type": "StringLiteral"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "nested-select"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "VariableReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "sel"
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "one"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "Placeable",
+                                                "expression": {
+                                                    "type": "SelectExpression",
+                                                    "selector": {
+                                                        "type": "VariableReference",
+                                                        "id": {
+                                                            "type": "Identifier",
+                                                            "name": "sel"
+                                                        }
+                                                    },
+                                                    "variants": [
+                                                        {
+                                                            "type": "Variant",
+                                                            "key": {
+                                                                "type": "Identifier",
+                                                                "name": "two"
+                                                            },
+                                                            "value": {
+                                                                "type": "Pattern",
+                                                                "elements": [
+                                                                    {
+                                                                        "type": "TextElement",
+                                                                        "value": "Value"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "default": true
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Missing selector"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "missing-selector =\n    {\n       *[key] Value\n    }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Missing line end after variant list"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "missing-line-end =\n    { $sel ->\n        *[key] Value}\n"
+        }
+    ]
+}

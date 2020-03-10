@@ -1,0 +1,47 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "ResourceComment",
+            "content": "The syntax in this file has been discontinued. It is no longer part of the\nFluent specification and should not be implemented nor used. We're keeping\nthese fixtures around to protect against accidental syntax reuse."
+        },
+        {
+            "type": "GroupComment",
+            "content": "Variant lists."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-variant-list =\n    {\n       *[key] Value\n    }\n\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "-term-variant-list =\n    {\n       *[key] Value\n    }\n\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Variant expressions."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-variant-expression-placeable = {msg[case]}\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-variant-expression-selector = {msg[case] ->\n   *[key] Value\n}\n\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "term-variant-expression-placeable = {-term[case]}\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "term-variant-expression-selector = {-term[case] ->\n   *[key] Value\n}\n"
+        }
+    ]
+}

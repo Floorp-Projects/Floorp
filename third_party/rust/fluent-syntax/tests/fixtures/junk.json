@@ -1,0 +1,68 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "GroupComment",
+            "content": "Two adjacent Junks."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err01 = {1x}\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err02 = {2x}\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "A single Junk."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err03 = {1x\n2\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "A single Junk."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "ą=Invalid identifier\nć=Another one\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "The COMMENT ends this junk."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err04 = {\n"
+        },
+        {
+            "type": "Comment",
+            "content": "COMMENT"
+        },
+        {
+            "type": "Comment",
+            "content": "The COMMENT ends this junk.\nThe closing brace is a separate Junk."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "err04 = {\n"
+        },
+        {
+            "type": "Comment",
+            "content": "COMMENT"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "}\n"
+        }
+    ]
+}

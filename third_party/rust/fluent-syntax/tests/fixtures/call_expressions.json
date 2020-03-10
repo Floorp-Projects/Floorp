@@ -1,0 +1,1266 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "GroupComment",
+            "content": "Function names"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "valid-func-name-01"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN1"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "valid-func-name-02"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN_FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "valid-func-name-03"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN-FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK 0 is not a valid Identifier start"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-func-name-01 = {0FUN()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Function names may not be lowercase"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-func-name-02 = {fun()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Function names may not contain lowercase character"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-func-name-03 = {Fun()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK ? is not a valid Identifier character"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-func-name-04 = {FUN?()}\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Arguments"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "positional-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "a",
+                                        "type": "StringLiteral"
+                                    },
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "named-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    },
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "y"
+                                        },
+                                        "value": {
+                                            "value": "Y",
+                                            "type": "StringLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "dense-named-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    },
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "y"
+                                        },
+                                        "value": {
+                                            "value": "Y",
+                                            "type": "StringLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "mixed-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "a",
+                                        "type": "StringLiteral"
+                                    },
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    },
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "y"
+                                        },
+                                        "value": {
+                                            "value": "Y",
+                                            "type": "StringLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Positional arg must not follow keyword args"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "shuffled-args = {FUN(1, x: 1, \"a\", y: \"Y\", msg)}\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Named arguments must be unique"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "duplicate-named-args = {FUN(x: 1, x: \"X\")}\n\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Whitespace around arguments"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "sparse-inline-call"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "a",
+                                        "type": "StringLiteral"
+                                    },
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "empty-inline-call"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "multiline-call"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "a",
+                                        "type": "StringLiteral"
+                                    },
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "sparse-multiline-call"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "a",
+                                        "type": "StringLiteral"
+                                    },
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "empty-multiline-call"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-arg-number"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-arg-string"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "a",
+                                        "type": "StringLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-arg-msg-ref"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-arg-term-ref"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "type": "TermReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "msg"
+                                        },
+                                        "attribute": null,
+                                        "arguments": null
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-arg-var-ref"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "type": "VariableReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "var"
+                                        }
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-arg-call"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "type": "FunctionReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "OTHER"
+                                        },
+                                        "arguments": {
+                                            "type": "CallArguments",
+                                            "positional": [],
+                                            "named": []
+                                        }
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-named-arg"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-closing-paren"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "type": "MessageReference",
+                                        "id": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "attribute": null
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "GroupComment",
+            "content": "Optional trailing comma"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "one-argument"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "many-arguments"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "2",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "3",
+                                        "type": "NumberLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "inline-sparse-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "2",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "3",
+                                        "type": "NumberLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "mulitline-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "2",
+                                        "type": "NumberLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "mulitline-sparse-args"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "1",
+                                        "type": "NumberLiteral"
+                                    },
+                                    {
+                                        "value": "2",
+                                        "type": "NumberLiteral"
+                                    }
+                                ],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "GroupComment",
+            "content": "Syntax errors for trailing comma"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "one-argument = {FUN(1,,)}\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "missing-arg = {FUN(,)}\n"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "missing-sparse-arg = {FUN(   ,   )}\n\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Whitespace in named arguments"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "sparse-named-arg"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    },
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "y"
+                                        },
+                                        "value": {
+                                            "value": "2",
+                                            "type": "NumberLiteral"
+                                        }
+                                    },
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "z"
+                                        },
+                                        "value": {
+                                            "value": "3",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-colon"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "unindented-value"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "x"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        }
+    ]
+}
