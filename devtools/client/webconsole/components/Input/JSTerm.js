@@ -64,8 +64,8 @@ const {
 } = require("devtools/client/webconsole/selectors/autocomplete");
 const actions = require("devtools/client/webconsole/actions/index");
 
-const EvaluationSelector = createFactory(
-  require("devtools/client/webconsole/components/Input/EvaluationSelector")
+const EvaluationContextSelector = createFactory(
+  require("devtools/client/webconsole/components/Input/EvaluationContextSelector")
 );
 
 // Constants used for defining the direction of JSTerm input history navigation.
@@ -115,7 +115,7 @@ class JSTerm extends Component {
       editorWidth: PropTypes.number,
       showEditorOnboarding: PropTypes.bool,
       autocomplete: PropTypes.bool,
-      showEvaluationSelector: PropTypes.bool,
+      showEvaluationContextSelector: PropTypes.bool,
       autocompletePopupPosition: PropTypes.string,
     };
   }
@@ -1308,16 +1308,16 @@ class JSTerm extends Component {
     });
   }
 
-  renderEvaluationSelector() {
+  renderEvaluationContextSelector() {
     if (
       !this.props.webConsoleUI.wrapper.toolbox ||
       this.props.editorMode ||
-      !this.props.showEvaluationSelector
+      !this.props.showEvaluationContextSelector
     ) {
       return null;
     }
 
-    return EvaluationSelector(this.props);
+    return EvaluationContextSelector(this.props);
   }
 
   renderEditorOnboarding() {
@@ -1380,7 +1380,7 @@ class JSTerm extends Component {
       },
       dom.div(
         { className: "webconsole-input-buttons" },
-        this.renderEvaluationSelector(),
+        this.renderEvaluationContextSelector(),
         this.renderOpenEditorButton()
       ),
       this.renderEditorOnboarding()
@@ -1396,7 +1396,7 @@ function mapStateToProps(state) {
     getValueFromHistory: direction => getHistoryValue(state, direction),
     autocompleteData: getAutocompleteState(state),
     showEditorOnboarding: state.ui.showEditorOnboarding,
-    showEvaluationSelector: state.ui.showEvaluationSelector,
+    showEvaluationContextSelector: state.ui.showEvaluationContextSelector,
     autocompletePopupPosition: state.prefs.eagerEvaluation ? "top" : "bottom",
   };
 }
