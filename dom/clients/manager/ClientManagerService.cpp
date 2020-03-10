@@ -564,9 +564,8 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
 
 RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
     const ClientOpenWindowArgs& aArgs) {
-  return InvokeAsync(
-      SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-      [aArgs]() { return ClientOpenWindowInCurrentProcess(aArgs); });
+  return InvokeAsync(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+                     [aArgs]() { return ClientOpenWindow(aArgs); });
 }
 
 bool ClientManagerService::HasWindow(
