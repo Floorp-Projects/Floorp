@@ -90,7 +90,7 @@ class PrintfTarget {
 
  protected:
   MFBT_API PrintfTarget();
-  virtual ~PrintfTarget() {}
+  virtual ~PrintfTarget() = default;
 
   /* Subclasses override this.  It is called when more output is
      available.  It may be called with len==0.  This should return

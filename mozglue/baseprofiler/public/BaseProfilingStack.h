@@ -359,7 +359,7 @@ class ProfilingStackFrame {
 //
 class ProfilingStack final {
  public:
-  ProfilingStack() : stackPointer(0) {}
+  ProfilingStack() = default;
 
   MFBT_API ~ProfilingStack();
 
@@ -465,7 +465,7 @@ class ProfilingStack final {
   // This is an atomic variable that uses ReleaseAcquire memory ordering.
   // See the "Concurrency considerations" paragraph at the top of this file
   // for more details.
-  Atomic<uint32_t, ReleaseAcquire> stackPointer;
+  Atomic<uint32_t, ReleaseAcquire> stackPointer{0};
 };
 
 class AutoGeckoProfilerEntry;
