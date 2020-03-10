@@ -289,9 +289,6 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
 
   // Create a new JSObject and store it into the trace list.
   ObjectBox* newObjectBox(JSObject* obj);
-
-  // Create a new BigInt and store it into the trace list.
-  BigIntBox* newBigIntBox(BigInt* val);
 };
 
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
