@@ -3,7 +3,12 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 "use strict";
 
-exports.registerThread = registerThread;
+const THREAD_TYPES = {
+  MAIN_THREAD: "mainThread",
+  CONTENT_PROCESS: "contentProcess",
+  WORKER: "worker",
+};
+
 function registerThread(targetFront) {
   return async function(dispatch) {
     const threadFront = await targetFront.getFront("thread");
@@ -37,12 +42,19 @@ function selectThread(thread) {
 
 function getTargetType(target) {
   if (target.isWorkerTarget) {
-    return "worker";
+    return THREAD_TYPES.WORKER;
   }
 
   if (target.isContentProcess) {
-    return "contentProcess";
+    return THREAD_TYPES.CONTENT_PROCESS;
   }
 
-  return "mainThread";
+  return THREAD_TYPES.MAIN_THREAD;
 }
+
+module.exports = {
+  registerThread,
+  clearThread,
+  selectThread,
+  THREAD_TYPES,
+};
