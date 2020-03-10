@@ -65,6 +65,7 @@ let Player = {
   WINDOW_EVENTS: [
     "click",
     "contextmenu",
+    "dblclick",
     "keydown",
     "mouseout",
     "resize",
@@ -171,6 +172,11 @@ let Player = {
         break;
       }
 
+      case "dblclick": {
+        this.onDblClick(event);
+        break;
+      }
+
       case "keydown": {
         if (event.keyCode == KeyEvent.DOM_VK_TAB) {
           this.controls.setAttribute("keying", true);
@@ -179,6 +185,10 @@ let Player = {
           this.controls.hasAttribute("keying")
         ) {
           this.controls.removeAttribute("keying");
+
+          // We preventDefault to avoid exiting fullscreen if we happen
+          // to be in it.
+          event.preventDefault();
         } else if (
           Services.prefs.getBoolPref(KEYBOARD_CONTROLS_ENABLED_PREF, false) &&
           !this.controls.hasAttribute("keying") &&
@@ -212,6 +222,17 @@ let Player = {
         this.uninit();
         break;
       }
+    }
+  },
+
+  onDblClick(event) {
+    if (event.target.id == "controls") {
+      if (document.fullscreenElement == document.body) {
+        document.exitFullscreen();
+      } else {
+        document.body.requestFullscreen();
+      }
+      event.preventDefault();
     }
   },
 
