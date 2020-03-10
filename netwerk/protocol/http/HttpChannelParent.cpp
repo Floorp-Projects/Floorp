@@ -1395,9 +1395,10 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  MOZ_ASSERT(mChannel == chan,
+  // Todo: re-enable when bug 1589749 is fixed.
+  /*MOZ_ASSERT(mChannel == chan,
              "HttpChannelParent getting OnStartRequest from a different "
-             "HttpBaseChannel instance");
+             "HttpBaseChannel instance");*/
 
   // Send down any permissions which are relevant to this URL if we are
   // performing a document load. We can't do that if mIPCClosed is set.
