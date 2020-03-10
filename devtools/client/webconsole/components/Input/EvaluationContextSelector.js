@@ -18,6 +18,7 @@ const webconsoleActions = require("devtools/client/webconsole/actions/index");
 
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const threadSelectors = require("devtools/client/framework/reducers/threads");
+const { THREAD_TYPES } = frameworkActions;
 
 // Additional Components
 const MenuButton = createFactory(
@@ -54,21 +55,21 @@ class EvaluationContextSelector extends Component {
     }
   }
 
-  renderMenuItem(thread, i) {
+  renderMenuItem(thread) {
     const { selectThread, selectedThread } = this.props;
 
     const label =
-      thread.type == "mainThread"
+      thread.type == THREAD_TYPES.MAIN_THREAD
         ? l10n.getStr("webconsole.input.selector.top")
         : thread.name;
 
     return MenuItem({
-      key: `webconsole-evaluation-selector-item-${i}`,
+      key: `webconsole-evaluation-selector-item-${thread.actor}`,
       className: "menu-item webconsole-evaluation-selector-item",
       type: "checkbox",
       checked: selectedThread
         ? selectedThread == thread
-        : thread.type == "mainThread",
+        : thread.type == THREAD_TYPES.MAIN_THREAD,
       label,
       tooltip: thread.url,
       onClick: () => selectThread(thread),
@@ -78,30 +79,36 @@ class EvaluationContextSelector extends Component {
   renderMenuItems() {
     const { threads } = this.props;
 
-    let items = [];
+    let mainThread;
+    const processes = [];
+    const workers = [];
 
-    const mainThread = threads.find(thread => thread.type == "mainThread");
-    const processes = threads.filter(thread => thread.type == "contentProcess");
-    const workers = threads.filter(thread => thread.type == "worker");
+    for (const thread of threads) {
+      const menuItem = this.renderMenuItem(thread);
 
-    items.push(this.renderMenuItem(mainThread, 0));
+      if (thread.type == THREAD_TYPES.MAIN_THREAD) {
+        mainThread = menuItem;
+      } else if (thread.type == THREAD_TYPES.CONTENT_PROCESS) {
+        processes.push(menuItem);
+      } else if (thread.type == THREAD_TYPES.WORKER) {
+        workers.push(menuItem);
+      }
+    }
+
+    const items = [mainThread];
 
     if (processes.length > 0) {
-      items = [
-        ...items,
-        MenuItem({ role: "menuseparator" }),
-        ...processes.map((thread, i) => this.renderMenuItem(thread, i + 1)),
-      ];
+      items.push(
+        MenuItem({ role: "menuseparator", key: "process-separator" }),
+        ...processes
+      );
     }
 
     if (workers.length > 0) {
-      items = [
-        ...items,
-        MenuItem({ role: "menuseparator" }),
-        ...workers.map((thread, i) =>
-          this.renderMenuItem(thread, i + items.length)
-        ),
-      ];
+      items.push(
+        MenuItem({ role: "menuseparator", key: "worker-separator" }),
+        ...workers
+      );
     }
 
     return MenuList({ id: "webconsole-console-settings-menu-list" }, items);
@@ -110,7 +117,7 @@ class EvaluationContextSelector extends Component {
   getLabel() {
     const { selectedThread } = this.props;
 
-    if (!selectedThread || selectedThread.type == "mainThread") {
+    if (!selectedThread || selectedThread.type == THREAD_TYPES.MAIN_THREAD) {
       return l10n.getStr("webconsole.input.selector.top");
     }
 
@@ -133,7 +140,7 @@ class EvaluationContextSelector extends Component {
         label: this.getLabel(),
         className:
           "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button" +
-          (selectedThread && selectedThread.type !== "mainThread"
+          (selectedThread && selectedThread.type !== THREAD_TYPES.MAIN_THREAD
             ? " webconsole-evaluation-selector-button-non-top"
             : ""),
         title: l10n.getStr("webconsole.input.selector.tooltip"),
