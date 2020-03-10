@@ -63,7 +63,7 @@ def process_define_file(output, input):
                             return define
                         defines = '\n'.join(sorted(
                             define_for_name(name, val)
-                            for name, val in config.defines['ALLDEFINES'].iteritems()))
+                            for name, val in config.defines['ALLDEFINES'].items()))
                         l = l[:m.start('cmd') - 1] \
                             + defines + l[m.end('name'):]
                     elif cmd == 'define':
