@@ -1309,7 +1309,9 @@ name = "fluent-ffi"
 version = "0.1.0"
 dependencies = [
  "fluent",
+ "fluent-pseudo",
  "nsstring",
+ "thin-vec",
  "unic-langid",
 ]
 

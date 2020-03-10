@@ -21,6 +21,14 @@ struct RefPtrTraits<intl::ffi::FluentResource> {
   }
 };
 
+template <>
+class DefaultDelete<intl::ffi::FluentBundleRc> {
+ public:
+  void operator()(intl::ffi::FluentBundleRc* aPtr) const {
+    fluent_bundle_destroy(aPtr);
+  }
+};
+
 }  // namespace mozilla
 
 #endif
