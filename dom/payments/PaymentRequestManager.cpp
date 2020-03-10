@@ -683,13 +683,16 @@ nsresult PaymentRequestManager::RespondPayment(
           break;
         }
       }
+      // If PaymentActionResponse is not PAYMENT_ACCEPTED, no need to keep the
+      // PaymentRequestChild instance. Otherwise, keep PaymentRequestChild for
+      // merchants call PaymentResponse.complete()
+      if (rejectedReason.Failed()) {
+        NotifyRequestDone(aRequest);
+      }
       aRequest->RespondShowPayment(response.methodName(), responseData,
                                    response.payerName(), response.payerEmail(),
                                    response.payerPhone(),
                                    std::move(rejectedReason));
-      if (rejectedReason.Failed()) {
-        NotifyRequestDone(aRequest);
-      }
       break;
     }
     case IPCPaymentActionResponse::TIPCPaymentAbortActionResponse: {
