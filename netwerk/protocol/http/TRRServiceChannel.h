@@ -123,6 +123,8 @@ class TRRServiceChannel : public HttpBaseChannel,
   void DoNotifyListener();
   nsresult MaybeResolveProxyAndBeginConnect();
   nsresult ResolveProxy();
+  void AfterApplyContentConversions(nsresult aResult,
+                                    nsIStreamListener* aListener);
 
   // True only when we have computed the value of the top window origin.
   bool mTopWindowOriginComputed;

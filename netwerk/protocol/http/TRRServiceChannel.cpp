@@ -780,7 +780,69 @@ nsresult TRRServiceChannel::CallOnStartRequest() {
     mOnStartRequestCalled = true;
   }
 
+  if (!mResponseHead) {
+    return NS_OK;
+  }
+
+  nsAutoCString contentEncoding;
+  rv = mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+  if (NS_FAILED(rv) || contentEncoding.IsEmpty()) {
+    return NS_OK;
+  }
+
+  Suspend();
+
+  RefPtr<TRRServiceChannel> self = this;
+  rv = NS_DispatchToMainThread(
+      NS_NewRunnableFunction("TRRServiceChannel::DoApplyContentConversions",
+                             [self]() {
+                               nsCOMPtr<nsIStreamListener> listener;
+                               nsresult rv = self->DoApplyContentConversions(
+                                   self->mListener, getter_AddRefs(listener),
+                                   nullptr);
+                               self->AfterApplyContentConversions(rv, listener);
+                             }),
+      NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    Resume();
+    return rv;
+  }
+
   return NS_OK;
+}
+
+void TRRServiceChannel::AfterApplyContentConversions(
+    nsresult aResult, nsIStreamListener* aListener) {
+  LOG(("TRRServiceChannel::AfterApplyContentConversions [this=%p]", this));
+  if (!mCurrentEventTarget->IsOnCurrentThread()) {
+    RefPtr<TRRServiceChannel> self = this;
+    nsCOMPtr<nsIStreamListener> listener = aListener;
+    self->mCurrentEventTarget->Dispatch(
+        NS_NewRunnableFunction(
+            "TRRServiceChannel::AfterApplyContentConversions",
+            [self, aResult, listener]() {
+              self->AfterApplyContentConversions(aResult, listener);
+            }),
+        NS_DISPATCH_NORMAL);
+    return;
+  }
+
+  Resume();
+
+  if (mCanceled) {
+    return;
+  }
+
+  if (NS_FAILED(aResult)) {
+    Unused << AsyncAbort(aResult);
+    return;
+  }
+
+  if (aListener) {
+    mListener = aListener;
+    mCompressListener = aListener;
+    mHasAppliedConversion = true;
+  }
 }
 
 void TRRServiceChannel::ProcessAltService() {
