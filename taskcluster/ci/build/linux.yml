@@ -1033,6 +1033,10 @@ linux64-asan/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux64-shippable/opt:
     description: "Linux64 Shippable"
