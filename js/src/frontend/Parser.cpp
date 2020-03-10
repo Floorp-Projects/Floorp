@@ -548,7 +548,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     // in strict mode or not (since the function body hasn't been parsed).
     // In such cases, report will queue up the potential error and return
     // 'true'.
-    if (pc_->sc()->needStrictChecks()) {
+    if (pc_->sc()->strict()) {
       UniqueChars bytes = AtomToPrintableString(cx_, name);
       if (!bytes) {
         return false;
@@ -9585,7 +9585,7 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
         errorAt(offset, JSMSG_RESERVED_ID, "yield");
         return false;
       }
-      if (pc_->sc()->needStrictChecks()) {
+      if (pc_->sc()->strict()) {
         if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "yield")) {
           return false;
         }
@@ -9599,7 +9599,7 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
       }
       return true;
     }
-    if (pc_->sc()->needStrictChecks()) {
+    if (pc_->sc()->strict()) {
       if (tt == TokenKind::Let) {
         if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "let")) {
           return false;
@@ -9616,7 +9616,7 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
     return true;
   }
   if (TokenKindIsStrictReservedWord(tt)) {
-    if (pc_->sc()->needStrictChecks()) {
+    if (pc_->sc()->strict()) {
       if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID,
                              ReservedWordToCharZ(tt))) {
         return false;
@@ -9640,7 +9640,7 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::checkBindingIdentifier(
     PropertyName* ident, uint32_t offset, YieldHandling yieldHandling,
     TokenKind hint /* = TokenKind::Limit */) {
-  if (pc_->sc()->needStrictChecks()) {
+  if (pc_->sc()->strict()) {
     if (ident == cx_->names().arguments) {
       if (!strictModeErrorAt(offset, JSMSG_BAD_STRICT_ASSIGN, "arguments")) {
         return false;
@@ -9916,7 +9916,7 @@ void GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentName(
     return;
   }
 
-  if (pc_->sc()->needStrictChecks()) {
+  if (pc_->sc()->strict()) {
     if (handler_.isArgumentsName(name, cx_)) {
       if (pc_->sc()->strict()) {
         possibleError->setPendingDestructuringErrorAt(
