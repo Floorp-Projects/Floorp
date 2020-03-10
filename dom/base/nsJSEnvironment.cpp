@@ -611,15 +611,13 @@ void PrintWinCodebase(T* win) {
     printf("Window doesn't have principals.\n");
     return;
   }
-
-  nsCOMPtr<nsIURI> uri;
-  prin->GetURI(getter_AddRefs(uri));
-  if (!uri) {
-    printf("No URI, maybe the system principal.\n");
+  if (prin->IsSystemPrincipal()) {
+    printf("No URI, it's the system principal.\n");
     return;
   }
-
-  printf("%s\n", uri->GetSpecOrDefault().get());
+  nsCString spec;
+  prin->GetAsciiSpec(spec);
+  printf("%s\n", spec.get());
 }
 
 void PrintWinCodebaseInner(nsGlobalWindowInner* aWin) {
