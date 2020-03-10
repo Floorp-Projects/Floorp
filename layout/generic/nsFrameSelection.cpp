@@ -332,7 +332,7 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
   mDragState = false;
   mDesiredPosSet = false;
   mLimiter = aLimiter;
-  mCaretMovementStyle =
+  mCaret.mMovementStyle =
       Preferences::GetInt("bidi.edit.caret_movement_style", 2);
 
   // This should only ever be initialized on the main thread, so we are OK here.
@@ -564,7 +564,7 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
 void nsFrameSelection::SetCaretBidiLevel(nsBidiLevel aLevel) {
   // If the current level is undefined, we have just inserted new text.
   // In this case, we don't want to reset the keyboard language
-  mCaretBidiLevel = aLevel;
+  mCaret.mBidiLevel = aLevel;
 
   RefPtr<nsCaret> caret;
   if (mPresShell && (caret = mPresShell->GetCaret())) {
@@ -573,11 +573,11 @@ void nsFrameSelection::SetCaretBidiLevel(nsBidiLevel aLevel) {
 }
 
 nsBidiLevel nsFrameSelection::GetCaretBidiLevel() const {
-  return mCaretBidiLevel;
+  return mCaret.mBidiLevel;
 }
 
 void nsFrameSelection::UndefineCaretBidiLevel() {
-  mCaretBidiLevel |= BIDI_LEVEL_UNDEFINED;
+  mCaret.mBidiLevel |= BIDI_LEVEL_UNDEFINED;
 }
 
 #ifdef PRINT_RANGE
@@ -640,8 +640,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
                                      CaretMovementStyle aMovementStyle) {
   bool visualMovement = aMovementStyle == eVisual ||
                         (aMovementStyle == eUsePrefStyle &&
-                         (mCaretMovementStyle == 1 ||
-                          (mCaretMovementStyle == 2 && !aContinueSelection)));
+                         (mCaret.mMovementStyle == 1 ||
+                          (mCaret.mMovementStyle == 2 && !aContinueSelection)));
 
   NS_ENSURE_STATE(mPresShell);
   // Flush out layout, since we need it to be up to date to do caret
@@ -686,10 +686,10 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
       SetChangeReasons(nsISelectionListener::COLLAPSETOSTART_REASON);
-      mHint = CARET_ASSOCIATE_AFTER;
+      mCaret.mHint = CARET_ASSOCIATE_AFTER;
     } else {
       SetChangeReasons(nsISelectionListener::COLLAPSETOEND_REASON);
-      mHint = CARET_ASSOCIATE_BEFORE;
+      mCaret.mHint = CARET_ASSOCIATE_BEFORE;
     }
   } else {
     SetChangeReasons(nsISelectionListener::KEYPRESS_REASON);
@@ -744,8 +744,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
 
   nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
-  CaretAssociateHint tHint(
-      mHint);  // temporary variable so we dont set mHint until it is necessary
+  CaretAssociateHint tHint(mCaret.mHint);  // temporary variable so we dont set
+                                           // mCaret.mHint until it is necessary
   switch (aAmount) {
     case eSelectCharacter:
     case eSelectCluster:
@@ -845,8 +845,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     sel->Collapse(sel->GetFocusNode(), sel->FocusOffset());
     // Note: 'frame' might be dead here.
     if (!isBRFrame) {
-      mHint = CARET_ASSOCIATE_BEFORE;  // We're now at the end of the frame to
-                                       // the left.
+      mCaret.mHint = CARET_ASSOCIATE_BEFORE;  // We're now at the end of the
+                                              // frame to the left.
     }
     result = NS_OK;
   }
@@ -861,7 +861,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
 
 nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
     nsIContent* aNode, uint32_t aContentOffset, bool aJumpLines) const {
-  return GetPrevNextBidiLevels(aNode, aContentOffset, mHint, aJumpLines);
+  return GetPrevNextBidiLevels(aNode, aContentOffset, mCaret.mHint, aJumpLines);
 }
 
 // static
@@ -1051,8 +1051,8 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent* aNode,
   nsIFrame* clickInFrame = nullptr;
   int32_t OffsetNotUsed;
 
-  clickInFrame =
-      GetFrameForNodeOffset(aNode, aContentOffset, mHint, &OffsetNotUsed);
+  clickInFrame = GetFrameForNodeOffset(aNode, aContentOffset, mCaret.mHint,
+                                       &OffsetNotUsed);
   if (!clickInFrame) return;
 
   SetCaretBidiLevel(clickInFrame->GetEmbeddingLevel());
@@ -1291,7 +1291,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
   mTableSelection.mStartSelectedCell = nullptr;
   mTableSelection.mEndSelectedCell = nullptr;
   mTableSelection.mAppendStartSelectedCell = nullptr;
-  mHint = aHint;
+  mCaret.mHint = aHint;
 
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;

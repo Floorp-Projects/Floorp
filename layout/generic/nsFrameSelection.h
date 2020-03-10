@@ -472,8 +472,8 @@ class nsFrameSelection final {
                                        nsIFrame* aFrame,
                                        SelectionIntoView aSelectionIntoView);
 
-  void SetHint(CaretAssociateHint aHintRight) { mHint = aHintRight; }
-  CaretAssociateHint GetHint() const { return mHint; }
+  void SetHint(CaretAssociateHint aHintRight) { mCaret.mHint = aHintRight; }
+  CaretAssociateHint GetHint() const { return mCaret.mHint; }
 
   /**
    * SetCaretBidiLevel sets the caret bidi level.
@@ -890,10 +890,16 @@ class nsFrameSelection final {
   // For visual display purposes.
   int16_t mDisplaySelection = nsISelectionController::SELECTION_OFF;
 
-  // Hint to tell if the selection is at the end of this line or beginning of
-  // next.
-  CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
-  nsBidiLevel mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
+  struct Caret {
+    // Hint to tell if the selection is at the end of this line or beginning of
+    // next.
+    CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
+    nsBidiLevel mBidiLevel = BIDI_LEVEL_UNDEFINED;
+    int8_t mMovementStyle = 0;
+  };
+
+  Caret mCaret;
+
   nsBidiLevel mKbdBidiLevel = NSBIDI_LTR;
 
   nsPoint mDesiredPos;
@@ -912,8 +918,6 @@ class nsFrameSelection final {
   bool mDragState = false;  // for drag purposes
   bool mDesiredPosSet = false;
   bool mAccessibleCaretEnabled = false;
-
-  int8_t mCaretMovementStyle = 0;
 
   static bool sSelectionEventsOnTextControlsEnabled;
 };
