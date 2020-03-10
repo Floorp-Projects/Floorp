@@ -174,6 +174,17 @@ var TelemetryController = Object.freeze({
   },
 
   /**
+   * Register 'dynamic builtin' probes from the JSON definition files.
+   * This is needed to support adding new probes in developer builds
+   * without rebuilding the whole codebase.
+   *
+   * This is not meant to be used outside of local developer builds.
+   */
+  testRegisterJsProbes() {
+    return Impl.registerJsProbes();
+  },
+
+  /**
    * Used only for testing purposes.
    */
   testPromiseDeletionRequestPingSubmitted() {
