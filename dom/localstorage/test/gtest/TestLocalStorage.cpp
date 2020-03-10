@@ -45,7 +45,8 @@ already_AddRefed<nsIPrincipal> GetContentPrincipal(const char* aSpec) {
 void CheckGeneratedOriginKey(nsIPrincipal* aPrincipal, const char* aOriginKey) {
   nsCString originAttrSuffix;
   nsCString originKey;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  nsresult rv = aPrincipal->GetStorageOriginKey(originKey);
+  aPrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
   if (aOriginKey) {
     ASSERT_EQ(rv, NS_OK) << "GenerateOriginKey should not fail";
     EXPECT_TRUE(originKey == nsDependentCString(aOriginKey));

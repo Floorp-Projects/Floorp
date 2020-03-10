@@ -330,6 +330,12 @@ interface nsIPrincipal : nsISerializable
      */
     uint32_t getAboutModuleFlags();
 
+    /*
+    * Returns the Key to access the Principals 
+    * Origin Local/Session Storage
+    */
+    readonly attribute ACString storageOriginKey;
+
     /**
      * Creates and Returns a new ReferrerInfo with the 
      * Principals URI

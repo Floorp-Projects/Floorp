@@ -147,8 +147,8 @@ nsresult LocalStorageManager::GetStorageInternal(
   nsAutoCString originAttrSuffix;
   nsAutoCString originKey;
 
-  nsresult rv =
-      GenerateOriginKey(aStoragePrincipal, originAttrSuffix, originKey);
+  nsresult rv = aStoragePrincipal->GetStorageOriginKey(originKey);
+  aStoragePrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
