@@ -1513,6 +1513,11 @@ static MIRType GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub) {
     ValueType type = reader.valueType();
     return MIRTypeFromValueType(JSValueType(type));
   }
+  if (reader.matchOp(CacheOp::GuardMagicValue)) {
+    // This can happen if we attached a lazy-args Baseline IC stub but then
+    // called JSScript::argumentsOptimizationFailed.
+    return MIRType::Value;
+  }
 
   MOZ_ASSERT_UNREACHABLE("Unexpected instruction");
   return MIRType::Value;
