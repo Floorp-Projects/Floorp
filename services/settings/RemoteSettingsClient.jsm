@@ -426,6 +426,14 @@ class RemoteSettingsClient extends EventEmitter {
       console.warn(`${this.identifier} sync already running`);
       return;
     }
+
+    // Prevent network requests and IndexedDB calls to be initiated
+    // during shutdown.
+    if (Services.startup.shuttingDown) {
+      console.warn(`${this.identifier} sync interrputed by shutdown`);
+      return;
+    }
+
     this._syncRunning = true;
 
     let importedFromDump = [];
