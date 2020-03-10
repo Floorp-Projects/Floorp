@@ -5,7 +5,7 @@
 
 var EXPORTED_SYMBOLS = ["OSKeyStoreTestUtils"];
 
-ChromeUtils.import("resource:///modules/OSKeyStore.jsm", this);
+ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", this);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -15,7 +15,8 @@ const { TestUtils } = ChromeUtils.import(
 );
 
 var OSKeyStoreTestUtils = {
-  TEST_ONLY_REAUTH: "browser.osKeyStore.unofficialBuildOnlyLogin",
+  TEST_ONLY_REAUTH:
+    "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin",
 
   setup() {
     this.ORIGINAL_STORE_LABEL = OSKeyStore.STORE_LABEL;
@@ -38,15 +39,13 @@ var OSKeyStoreTestUtils = {
    * @returns {boolean} True if the test can be preformed.
    */
   canTestOSKeyStoreLogin() {
-    // Skip on Linux due to bug 1527745.
-    return AppConstants.DEBUG && AppConstants.platform != "linux";
+    return !AppConstants.MOZILLA_OFFICIAL;
   },
 
   // Wait for the observer message that simulates login success of failure.
   async waitForOSKeyStoreLogin(login = false) {
     const str = login ? "pass" : "cancel";
 
-    let prevValue = Services.prefs.getStringPref(this.TEST_ONLY_REAUTH, "");
     Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, str);
 
     await TestUtils.topicObserved(
@@ -54,6 +53,6 @@ var OSKeyStoreTestUtils = {
       (subject, data) => data == str
     );
 
-    Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, prevValue);
+    Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, "");
   },
 };

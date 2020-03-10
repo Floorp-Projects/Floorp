@@ -291,10 +291,7 @@ export default class LoginItem extends HTMLElement {
           // We prompt for the master password when entering edit mode already.
           if (this._revealCheckbox.checked && !this.dataset.editing) {
             let masterPasswordAuth = await new Promise(resolve => {
-              window.AboutLoginsUtils.promptForMasterPassword(
-                resolve,
-                "about-logins-reveal-password-os-auth-dialog-message"
-              );
+              window.AboutLoginsUtils.promptForMasterPassword(resolve);
             });
             if (!masterPasswordAuth) {
               this._revealCheckbox.checked = false;
@@ -344,10 +341,7 @@ export default class LoginItem extends HTMLElement {
               : this._copyPasswordButton;
           if (copyButton.dataset.copyLoginProperty == "password") {
             let masterPasswordAuth = await new Promise(resolve => {
-              window.AboutLoginsUtils.promptForMasterPassword(
-                resolve,
-                "about-logins-copy-password-os-auth-dialog-message"
-              );
+              window.AboutLoginsUtils.promptForMasterPassword(resolve);
             });
             if (!masterPasswordAuth) {
               return;
@@ -402,10 +396,7 @@ export default class LoginItem extends HTMLElement {
         }
         if (classList.contains("edit-button")) {
           let masterPasswordAuth = await new Promise(resolve => {
-            window.AboutLoginsUtils.promptForMasterPassword(
-              resolve,
-              "about-logins-edit-login-os-auth-dialog-message"
-            );
+            window.AboutLoginsUtils.promptForMasterPassword(resolve);
           });
           if (!masterPasswordAuth) {
             return;

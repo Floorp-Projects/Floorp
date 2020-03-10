@@ -5,7 +5,6 @@ requestLongerTimeout(2);
 
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
 
 EXPECTED_BREACH = {
   AddedDate: "2018-12-20T23:56:26Z",
@@ -62,21 +61,14 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(3);
 
-  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-      let loginItem = content.document.querySelector("login-item");
-      let copyButton = loginItem.shadowRoot.querySelector(
-        ".copy-password-button"
-      );
-      copyButton.click();
-    });
-    await reauthObserved;
-    await LoginTestUtils.telemetry.waitForEventCount(4);
-  }
-  let nextTelemetryEventCount = OSKeyStoreTestUtils.canTestOSKeyStoreLogin()
-    ? 5
-    : 4;
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let copyButton = loginItem.shadowRoot.querySelector(
+      ".copy-password-button"
+    );
+    copyButton.click();
+  });
+  await LoginTestUtils.telemetry.waitForEventCount(4);
 
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
@@ -90,54 +82,46 @@ add_task(async function test_telemetry_events() {
   let newTab = await promiseNewTab;
   ok(true, "New tab opened to " + TEST_LOGIN3.origin);
   BrowserTestUtils.removeTab(newTab);
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(5);
 
   // Show the password
-  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-      let loginItem = content.document.querySelector("login-item");
-      let revealCheckbox = loginItem.shadowRoot.querySelector(
-        ".reveal-password-checkbox"
-      );
-      revealCheckbox.click();
-    });
-    await reauthObserved;
-    await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let revealCheckbox = loginItem.shadowRoot.querySelector(
+      ".reveal-password-checkbox"
+    );
+    revealCheckbox.click();
+  });
+  await LoginTestUtils.telemetry.waitForEventCount(6);
 
-    // Hide the password
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-      let loginItem = content.document.querySelector("login-item");
-      let revealCheckbox = loginItem.shadowRoot.querySelector(
-        ".reveal-password-checkbox"
-      );
-      revealCheckbox.click();
-    });
-    await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  // Hide the password
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let revealCheckbox = loginItem.shadowRoot.querySelector(
+      ".reveal-password-checkbox"
+    );
+    revealCheckbox.click();
+  });
+  await LoginTestUtils.telemetry.waitForEventCount(7);
 
-    reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-      let loginItem = content.document.querySelector("login-item");
-      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
-      editButton.click();
-    });
-    await reauthObserved;
-    await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+  });
+  await LoginTestUtils.telemetry.waitForEventCount(8);
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-      let loginItem = content.document.querySelector("login-item");
-      let usernameField = loginItem.shadowRoot.querySelector(
-        'input[name="username"]'
-      );
-      usernameField.value = "user1-modified";
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let usernameField = loginItem.shadowRoot.querySelector(
+      'input[name="username"]'
+    );
+    usernameField.value = "user1-modified";
 
-      let saveButton = loginItem.shadowRoot.querySelector(
-        ".save-changes-button"
-      );
-      saveButton.click();
-    });
-    await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
-  }
+    let saveButton = loginItem.shadowRoot.querySelector(".save-changes-button");
+    saveButton.click();
+  });
+  await LoginTestUtils.telemetry.waitForEventCount(9);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let newLoginButton = content.document
@@ -145,14 +129,14 @@ add_task(async function test_telemetry_events() {
       .shadowRoot.querySelector(".create-login-button");
     newLoginButton.click();
   });
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(10);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
   });
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(11);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginList = content.document.querySelector("login-list");
@@ -161,7 +145,7 @@ add_task(async function test_telemetry_events() {
     );
     loginListItem.click();
   });
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(12);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -175,7 +159,7 @@ add_task(async function test_telemetry_events() {
     );
     confirmDeleteButton.click();
   });
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(13);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginSort = content.document
@@ -184,7 +168,7 @@ add_task(async function test_telemetry_events() {
     loginSort.value = "last-used";
     loginSort.dispatchEvent(new content.Event("change", { bubbles: true }));
   });
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(14);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.management.page.sort");
   });
@@ -194,32 +178,28 @@ add_task(async function test_telemetry_events() {
     let input = loginFilter.shadowRoot.querySelector("input");
     input.setUserInput("test");
   });
-  await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
+  await LoginTestUtils.telemetry.waitForEventCount(15);
 
-  const canTestOSKeyStoreLogin = OSKeyStoreTestUtils.canTestOSKeyStoreLogin();
   let expectedEvents = [
-    [true, "pwmgr", "open_management", "direct"],
-    [true, "pwmgr", "select", "existing_login"],
-    [true, "pwmgr", "copy", "username"],
-    [canTestOSKeyStoreLogin, "pwmgr", "copy", "password"],
-    [true, "pwmgr", "open_site", "existing_login"],
-    [canTestOSKeyStoreLogin, "pwmgr", "show", "password"],
-    [canTestOSKeyStoreLogin, "pwmgr", "hide", "password"],
-    [canTestOSKeyStoreLogin, "pwmgr", "edit", "existing_login"],
-    [canTestOSKeyStoreLogin, "pwmgr", "save", "existing_login"],
-    [true, "pwmgr", "new", "new_login"],
-    [true, "pwmgr", "cancel", "new_login"],
-    [true, "pwmgr", "select", "existing_login"],
-    [true, "pwmgr", "delete", "existing_login"],
-    [true, "pwmgr", "sort", "list"],
-    [true, "pwmgr", "filter", "list"],
+    ["pwmgr", "open_management", "direct"],
+    ["pwmgr", "select", "existing_login"],
+    ["pwmgr", "copy", "username"],
+    ["pwmgr", "copy", "password"],
+    ["pwmgr", "open_site", "existing_login"],
+    ["pwmgr", "show", "password"],
+    ["pwmgr", "hide", "password"],
+    ["pwmgr", "edit", "existing_login"],
+    ["pwmgr", "save", "existing_login"],
+    ["pwmgr", "new", "new_login"],
+    ["pwmgr", "cancel", "new_login"],
+    ["pwmgr", "select", "existing_login"],
+    ["pwmgr", "delete", "existing_login"],
+    ["pwmgr", "sort", "list"],
+    ["pwmgr", "filter", "list"],
   ];
-  let actualExpectedEvents = expectedEvents
-    .filter(event => event[0])
-    .map(event => event.slice(1));
 
   TelemetryTestUtils.assertEvents(
-    actualExpectedEvents,
+    expectedEvents,
     { category: "pwmgr" },
     { clear: true, process: "content" }
   );

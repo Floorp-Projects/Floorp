@@ -55,24 +55,12 @@ class AboutLoginsChild extends JSWindowActorChild {
           getLoginOrigin(uriString) {
             return LoginHelper.getLoginOrigin(uriString);
           },
-          /**
-           * Shows the Master Password prompt if enabled, or the
-           * OS auth dialog otherwise.
-           * @param resolve Callback that is called with result of authentication.
-           * @param messageId The string ID that corresponds to a string stored in aboutLogins.ftl.
-           *                  This string will be displayed only when the OS auth dialog is used.
-           */
-          async promptForMasterPassword(resolve, messageId) {
+          promptForMasterPassword(resolve) {
             masterPasswordPromise = {
               resolve,
             };
 
-            that.sendAsyncMessage(
-              "AboutLogins:MasterPasswordRequest",
-              messageId
-            );
-
-            return masterPasswordPromise;
+            that.sendAsyncMessage("AboutLogins:MasterPasswordRequest");
           },
           // Default to enabled just in case a search is attempted before we get a response.
           masterPasswordEnabled: true,

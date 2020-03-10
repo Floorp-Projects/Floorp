@@ -59,7 +59,7 @@ Object.defineProperty(window, "AboutLoginsUtils", {
     getLoginOrigin(uriString) {
       return uriString;
     },
-    async promptForMasterPassword(resolve, messageId) {
+    promptForMasterPassword(resolve) {
       resolve(true);
     },
     doLoginsMatch(login1, login2) {
