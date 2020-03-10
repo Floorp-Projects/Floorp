@@ -23,8 +23,6 @@
       testStates("div_transformed", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
       testStates("div_abschild", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("ul", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
-      testStates("transparent", STATE_INVISIBLE, 0, STATE_OFFSCREEN);
-      testStates("transparent_child", STATE_INVISIBLE, 0, STATE_OFFSCREEN);
 
       SimpleTest.finish();
     }
@@ -72,10 +70,6 @@
       <li>Supermarket 1</li>
       <li>Supermarket 2</li>
     </ul>
-
-    <div id="transparent" style="opacity: 0">
-      <p id="transparent_child">hello</p>
-    </div>
   </div>
 </body>
 </html>
