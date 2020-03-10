@@ -1478,7 +1478,7 @@ class TreeMetadataEmitter(LoggingMixin):
                                   'action', 'process_define_files.py')
             yield GeneratedFile(context, script, 'process_define_file',
                                 six.text_type(path),
-                                [Path(context, path + '.in')], py2=True)
+                                [Path(context, path + '.in')])
 
         generated_files = context.get('GENERATED_FILES') or []
         localized_generated_files = context.get('LOCALIZED_GENERATED_FILES') or []
