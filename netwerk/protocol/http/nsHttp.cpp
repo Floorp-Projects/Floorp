@@ -423,7 +423,8 @@ bool ValidationRequired(bool isForcedValid,
     LOG(("  not validating, expire time not in the past"));
   } else if (cachedResponseHead->MustValidateIfExpired()) {
     doValidation = true;
-  } else if (cachedResponseHead->StaleWhileRevalidate(now, expiration)) {
+  } else if (cachedResponseHead->StaleWhileRevalidate(now, expiration) &&
+             StaticPrefs::network_http_stale_while_revalidate_enabled()) {
     LOG(("  not validating, in the stall-while-revalidate window"));
     doValidation = false;
     if (performBackgroundRevalidation) {
