@@ -10575,6 +10575,11 @@ void nsHttpChannel::PerformBackgroundCacheRevalidation() {
     return;
   }
 
+  // This is a channel doing a revalidation. It shouldn't do it again.
+  if (mStaleRevalidation) {
+    return;
+  }
+
   LOG(("nsHttpChannel::PerformBackgroundCacheRevalidation %p", this));
 
   Unused << NS_DispatchToMainThreadQueue(
@@ -10612,6 +10617,11 @@ void nsHttpChannel::PerformBackgroundCacheRevalidationNow() {
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(validatingChannel));
   if (cos) {
     cos->AddClassFlags(nsIClassOfService::Tail);
+  }
+
+  RefPtr<nsHttpChannel> httpChan = do_QueryObject(validatingChannel);
+  if (httpChan) {
+    httpChan->mStaleRevalidation = true;
   }
 
   RefPtr<BackgroundRevalidatingListener> listener =
