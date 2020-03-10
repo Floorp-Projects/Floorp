@@ -8,6 +8,19 @@
 
 using namespace mozilla;
 
+class NoCheckTestType
+    : public SupportsCheckedUnsafePtr<DoNotCheckCheckedUnsafePtrs> {};
+
+static_assert(std::is_literal_type_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_copy_constructible_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_copy_assignable_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_move_constructible_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_move_assignable_v<CheckedUnsafePtr<NoCheckTestType>>);
+
 class TestCheckingPolicy : public CheckCheckedUnsafePtrs<TestCheckingPolicy> {
  protected:
   explicit TestCheckingPolicy(bool& aPassedCheck)
