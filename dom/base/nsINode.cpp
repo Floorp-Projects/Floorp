@@ -1974,7 +1974,6 @@ void nsINode::Prepend(const Sequence<OwningNodeOrString>& aNodes,
   }
 
   nsCOMPtr<nsIContent> refNode = mFirstChild;
-  ;
   InsertBefore(*node, refNode, aRv);
 }
 
