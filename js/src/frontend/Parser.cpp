@@ -9833,7 +9833,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
     }
   }
 
-  return handler_.newRegExp(SyntaxParseHandler::NodeGeneric, pos(), *this);
+  return handler_.newRegExp(SyntaxParseHandler::NodeGeneric, pos());
 }
 
 template <class ParseHandler, typename Unit>

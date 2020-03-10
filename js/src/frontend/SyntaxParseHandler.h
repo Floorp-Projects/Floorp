@@ -244,8 +244,7 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  template <class Boxer>
-  RegExpLiteralType newRegExp(Node reobj, const TokenPos& pos, Boxer& boxer) {
+  RegExpLiteralType newRegExp(Node reobj, const TokenPos& pos) {
     return NodeGeneric;
   }
 
