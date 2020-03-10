@@ -2670,11 +2670,10 @@ AutoPushTree::AutoPushTree(FunctionTreeHolder& holder)
 
 bool AutoPushTree::init(JSContext* cx, FunctionBox* funbox) {
   // Add a new child, and set it as the current parent.
-  FunctionTree* child = holder_.getCurrentParent()->add(cx);
+  FunctionTree* child = holder_.getCurrentParent()->add(cx, funbox);
   if (!child) {
     return false;
   }
-  child->setFunctionBox(funbox);
   holder_.setCurrentParent(child);
   return true;
 }

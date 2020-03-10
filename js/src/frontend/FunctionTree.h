@@ -26,21 +26,21 @@ class FunctionTree {
   Vector<FunctionTree> children_;
 
  public:
-  explicit FunctionTree(JSContext* cx) : funbox_(nullptr), children_(cx) {}
+  FunctionTree(JSContext* cx, FunctionBox* funbox)
+      : funbox_(funbox), children_(cx) {}
 
   // Note: If we're using vector type, the pointer returned here
   // is only valid if the tree is only added to in DFS order
   //
   // Open to suggestions about how to do that better.
-  FunctionTree* add(JSContext* cx) {
-    if (!children_.emplaceBack(cx)) {
+  FunctionTree* add(JSContext* cx, FunctionBox* funbox) {
+    if (!children_.emplaceBack(cx, funbox)) {
       return nullptr;
     }
     return &children_.back();
   }
 
   FunctionBox* funbox() { return funbox_; }
-  void setFunctionBox(FunctionBox* node) { funbox_ = node; }
 
   using FunctionTreeVisitorFunction = bool (*)(ParserBase*, FunctionTree*);
   bool visitRecursively(JSContext* cx, ParserBase* parser,
@@ -76,7 +76,7 @@ class FunctionTreeHolder {
 
  public:
   explicit FunctionTreeHolder(JSContext* cx)
-      : treeRoot_(cx), currentParent_(&treeRoot_) {}
+      : treeRoot_(cx, nullptr), currentParent_(&treeRoot_) {}
 
   FunctionTree* getFunctionTree() { return &treeRoot_; }
   FunctionTree* getCurrentParent() { return currentParent_; }
