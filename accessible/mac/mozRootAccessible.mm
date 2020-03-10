@@ -5,7 +5,7 @@
 
 #include "RootAccessibleWrap.h"
 
-#import "mozDocAccessible.h"
+#import "mozRootAccessible.h"
 
 #import "mozView.h"
 
