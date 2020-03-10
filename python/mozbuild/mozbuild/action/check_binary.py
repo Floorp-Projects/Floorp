@@ -56,7 +56,7 @@ get_type = memoize(get_type)
 def get_output(*cmd):
     env = dict(os.environ)
     env[b'LC_ALL'] = b'C'
-    return subprocess.check_output(cmd, env=env).splitlines()
+    return subprocess.check_output(cmd, env=env, universal_newlines=True).splitlines()
 
 
 class Skip(RuntimeError):
@@ -86,7 +86,7 @@ def iter_symbols(binary):
     # platforms for static libraries, but its format is different for
     # Windows .obj files, so the following won't work for them, but
     # it currently doesn't matter.
-    if ty == UNKNOWN and open(binary).read(8) == '!<arch>\n':
+    if ty == UNKNOWN and open(binary, 'rb').read(8) == b'!<arch>\n':
         ty = ELF
     if ty in (ELF, MACHO):
         for line in get_output(buildconfig.substs['LLVM_OBJDUMP'], '-t',
