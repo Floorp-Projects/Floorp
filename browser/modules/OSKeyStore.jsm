@@ -108,7 +108,7 @@ var OSKeyStore = {
   },
 
   /**
-   * Ensure the store in use is logged in. It will display the OS login
+   * Ensure the store in use is logged in. It will display the OS
    * login prompt or do nothing if it's logged in already. If an existing login
    * prompt is already prompted, the result from it will be used instead.
    *
@@ -117,15 +117,40 @@ var OSKeyStore = {
    * This is why there aren't an |await| in the method. The method is marked as
    * |async| to communicate that it's async.
    *
-   * @param   {boolean|string} reauth If it's set to true or a string, prompt
-   *                                  the reauth login dialog.
-   *                                  The string will be shown on the native OS
-   *                                  login dialog.
+   * @param   {boolean|string} reauth If set to a string, prompt the reauth login dialog,
+   *                                  showing the string on the native OS login dialog.
+   *                                  Otherwise `false` will prevent showing the prompt.
+   * @param   {boolean} generateKeyIfNotAvailable Makes key generation optional
+   *                                  because it will currently cause more
+   *                                  problems for us down the road on macOS since the application
+   *                                  that creates the Keychain item is the only one that gets
+   *                                  access to the key in the future and right now that key isn't
+   *                                  specific to the channel or profile. This means if a user uses
+   *                                  both DevEdition and Release on the same OS account (not
+   *                                  unreasonable for a webdev.) then when you want to simply
+   *                                  re-auth the user for viewing passwords you may also get a
+   *                                  KeyChain prompt to allow the app to access the stored key even
+   *                                  though that's not at all relevant for the re-auth. We skip the
+   *                                  code here so that we can postpone deciding on how we want to
+   *                                  handle this problem (multiple channels) until we actually use
+   *                                  the key storage. If we start creating keys on macOS by running
+   *                                  this code we'll potentially have to do extra work to cleanup
+   *                                  the mess later.
    * @returns {Promise<boolean>}      True if it's logged in or no password is set
    *                                  and false if it's still not logged in (prompt
    *                                  canceled or other error).
    */
-  async ensureLoggedIn(reauth = false) {
+  async ensureLoggedIn(reauth = false, generateKeyIfNotAvailable = true) {
+    if (
+      (typeof reauth != "boolean" && typeof reauth != "string") ||
+      reauth === true ||
+      reauth === ""
+    ) {
+      throw new Error(
+        "reauth is required to either be `false` or a non-empty string"
+      );
+    }
+
     if (this._pendingUnlockPromise) {
       log.debug("ensureLoggedIn: Has a pending unlock operation");
       return this._pendingUnlockPromise;
@@ -136,51 +161,52 @@ var OSKeyStore = {
     );
 
     let unlockPromise;
-
-    // Decides who should handle reauth
-    if (typeof reauth == "boolean" && !reauth) {
-      unlockPromise = Promise.resolve();
-    } else if (!AppConstants.MOZILLA_OFFICIAL && this._testReauth) {
-      unlockPromise = this._reauthInTests();
-    } else if (
-      AppConstants.platform == "win" ||
-      AppConstants.platform == "macosx"
-    ) {
-      let reauthLabel = typeof reauth == "string" ? reauth : "";
-      // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
-      // On macOS this resolves to false, so we would need to check it.
-      unlockPromise = osReauthenticator
-        .asyncReauthenticateUser(reauthLabel)
-        .then(reauthResult => {
-          if (typeof reauthResult == "boolean" && !reauthResult) {
-            throw new Components.Exception(
-              "User canceled OS reauth entry",
-              Cr.NS_ERROR_FAILURE
-            );
-          }
-        });
+    if (typeof reauth == "string") {
+      if (AppConstants.DEBUG && this._testReauth) {
+        unlockPromise = this._reauthInTests();
+      } else if (
+        AppConstants.platform == "win" ||
+        AppConstants.platform == "macosx"
+      ) {
+        // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
+        // On macOS this resolves to false, so we would need to check it.
+        unlockPromise = osReauthenticator
+          .asyncReauthenticateUser(reauth)
+          .then(reauthResult => {
+            if (typeof reauthResult == "boolean" && !reauthResult) {
+              throw new Components.Exception(
+                "User canceled OS reauth entry",
+                Cr.NS_ERROR_FAILURE
+              );
+            }
+          });
+      } else {
+        log.debug("ensureLoggedIn: Skipping reauth on unsupported platforms");
+        unlockPromise = Promise.resolve();
+      }
     } else {
-      log.debug("ensureLoggedIn: Skipping reauth on unsupported platforms");
       unlockPromise = Promise.resolve();
     }
 
-    unlockPromise = unlockPromise.then(async () => {
-      if (!(await nativeOSKeyStore.asyncSecretAvailable(this.STORE_LABEL))) {
-        log.debug(
-          "ensureLoggedIn: Secret unavailable, attempt to generate new secret."
-        );
-        let recoveryPhrase = await nativeOSKeyStore.asyncGenerateSecret(
-          this.STORE_LABEL
-        );
-        // TODO We should somehow have a dialog to ask the user to write this down,
-        // and another dialog somewhere for the user to restore the secret with it.
-        // (Intentionally not printing it out in the console)
-        log.debug(
-          "ensureLoggedIn: Secret generated. Recovery phrase length: " +
-            recoveryPhrase.length
-        );
-      }
-    });
+    if (generateKeyIfNotAvailable) {
+      unlockPromise = unlockPromise.then(async () => {
+        if (!(await nativeOSKeyStore.asyncSecretAvailable(this.STORE_LABEL))) {
+          log.debug(
+            "ensureLoggedIn: Secret unavailable, attempt to generate new secret."
+          );
+          let recoveryPhrase = await nativeOSKeyStore.asyncGenerateSecret(
+            this.STORE_LABEL
+          );
+          // TODO We should somehow have a dialog to ask the user to write this down,
+          // and another dialog somewhere for the user to restore the secret with it.
+          // (Intentionally not printing it out in the console)
+          log.debug(
+            "ensureLoggedIn: Secret generated. Recovery phrase length: " +
+              recoveryPhrase.length
+          );
+        }
+      });
+    }
 
     unlockPromise = unlockPromise.then(
       () => {
@@ -213,10 +239,9 @@ var OSKeyStore = {
    *       recover from that and still shows the dialog.)
    *
    * @param   {string}         cipherText Encrypted string including the algorithm details.
-   * @param   {boolean|string} reauth     If it's set to true or a string, prompt
-   *                                      the reauth login dialog.
+   * @param   {boolean|string} reauth     If set to a string, prompt the reauth login dialog.
    *                                      The string may be shown on the native OS
-   *                                      login dialog.
+   *                                      login dialog. Empty strings and `true` are disallowed.
    * @returns {Promise<string>}           resolves to the decrypted string, or rejects otherwise.
    */
   async decrypt(cipherText, reauth = false) {

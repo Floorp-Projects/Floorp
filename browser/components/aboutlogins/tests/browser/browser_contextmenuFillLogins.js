@@ -29,6 +29,11 @@ const gTests = [
   {
     name: "test contextmenu on password field in edit login view",
     async setup(browser) {
+      let { OSKeyStoreTestUtils } = ChromeUtils.import(
+        "resource://testing-common/OSKeyStoreTestUtils.jsm"
+      );
+      let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+
       // load up the edit login view
       await SpecialPowers.spawn(
         browser,
@@ -55,6 +60,7 @@ const gTests = [
           await Promise.resolve();
         }
       );
+      await osAuthDialogShown;
     },
   },
 ];
