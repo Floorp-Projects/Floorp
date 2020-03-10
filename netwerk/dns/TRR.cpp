@@ -395,6 +395,12 @@ nsresult TRR::SendHTTPRequest() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (StaticPrefs::network_trr_send_empty_accept_encoding_headers()) {
+    rv = httpChannel->SetEmptyRequestHeader(
+        NS_LITERAL_CSTRING("Accept-Encoding"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // set the *default* response content type
   if (NS_FAILED(httpChannel->SetContentType(
           NS_LITERAL_CSTRING("application/dns-message")))) {

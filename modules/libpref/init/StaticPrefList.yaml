@@ -7394,6 +7394,12 @@
   value: false
   mirror: always
 
+# Whether to send an empty Accept-Encoding header for TRR requests
+- name: network.trr.send_empty_accept-encoding_headers
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether to send the User-Agent header for TRR requests
 - name: network.trr.send_user-agent_headers
   type: RelaxedAtomicBool
