@@ -1,0 +1,26 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "first line\n\n\n\n\n\n\nlast line"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "Caution, lines 6 and 7 contain white-space-only lines"
+            }
+        }
+    ]
+}

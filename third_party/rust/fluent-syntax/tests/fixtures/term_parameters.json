@@ -1,0 +1,207 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Term",
+            "id": {
+                "type": "Identifier",
+                "name": "term"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "VariableReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "arg"
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Value"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key01"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "TermReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "term"
+                            },
+                            "attribute": null,
+                            "arguments": null
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key02"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "TermReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "term"
+                            },
+                            "attribute": null,
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key03"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "TermReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "term"
+                            },
+                            "attribute": null,
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "arg"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "key04"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "TermReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "term"
+                            },
+                            "attribute": null,
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [
+                                    {
+                                        "value": "positional",
+                                        "type": "StringLiteral"
+                                    }
+                                ],
+                                "named": [
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "narg1"
+                                        },
+                                        "value": {
+                                            "value": "1",
+                                            "type": "NumberLiteral"
+                                        }
+                                    },
+                                    {
+                                        "type": "NamedArgument",
+                                        "name": {
+                                            "type": "Identifier",
+                                            "name": "narg2"
+                                        },
+                                        "value": {
+                                            "value": "2",
+                                            "type": "NumberLiteral"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        }
+    ]
+}
