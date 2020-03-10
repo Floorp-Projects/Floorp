@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    var ac = new AudioContext();
+    for (var j = 0; j < 200; ++j) {
+        ac.createScriptProcessor(undefined);
+    }
+    document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
