@@ -241,11 +241,12 @@ class WebRenderAPI final {
   /// Do a non-blocking hit-testing query on a shared version of the hit testing
   /// information.
   ///
-  /// This does not guarantee ordering between the query and in-flight transactions,
-  /// but only blocks on a synchronous message to the render backend thread the first
-  /// time the function is called.
-  /// This generally returns much faster than `HitTest`.
-  bool FastHitTest(const wr::WorldPoint& aPoint, wr::WrPipelineId& aOutPipelineId,
+  /// This does not guarantee ordering between the query and in-flight
+  /// transactions, but only blocks on a synchronous message to the render
+  /// backend thread the first time the function is called. This generally
+  /// returns much faster than `HitTest`.
+  bool FastHitTest(const wr::WorldPoint& aPoint,
+                   wr::WrPipelineId& aOutPipelineId,
                    layers::ScrollableLayerGuid::ViewID& aOutScrollId,
                    gfx::CompositorHitTestInfo& aOutHitInfo,
                    SideBits& aOutSideBits);
@@ -526,7 +527,8 @@ class DisplayListBuilder final {
   void PushImage(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                  bool aIsBackfaceVisible, wr::ImageRendering aFilter,
                  wr::ImageKey aImage, bool aPremultipliedAlpha = true,
-                 const wr::ColorF& aColor = wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f});
+                 const wr::ColorF& aColor = wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                 bool aPreferCompositorSurface = false);
 
   void PushRepeatingImage(
       const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
@@ -540,19 +542,22 @@ class DisplayListBuilder final {
       bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
       wr::ImageKey aImageChannel1, wr::ImageKey aImageChannel2,
       wr::WrColorDepth aColorDepth, wr::WrYuvColorSpace aColorSpace,
-      wr::WrColorRange aColorRange, wr::ImageRendering aFilter);
+      wr::WrColorRange aColorRange, wr::ImageRendering aFilter,
+      bool aPreferCompositorSurface = false);
 
   void PushNV12Image(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                      bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1, wr::WrColorDepth aColorDepth,
                      wr::WrYuvColorSpace aColorSpace,
-                     wr::WrColorRange aColorRange, wr::ImageRendering aFilter);
+                     wr::WrColorRange aColorRange, wr::ImageRendering aFilter,
+                     bool aPreferCompositorSurface = false);
 
   void PushYCbCrInterleavedImage(
       const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
       bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
       wr::WrColorDepth aColorDepth, wr::WrYuvColorSpace aColorSpace,
-      wr::WrColorRange aColorRange, wr::ImageRendering aFilter);
+      wr::WrColorRange aColorRange, wr::ImageRendering aFilter,
+      bool aPreferCompositorSurface = false);
 
   void PushIFrame(const wr::LayoutRect& aBounds, bool aIsBackfaceVisible,
                   wr::PipelineId aPipeline, bool aIgnoreMissingPipeline);

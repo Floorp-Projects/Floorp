@@ -128,8 +128,7 @@ void WaylandDMABUFTextureHostOGL::CreateRenderTexture(
 
 void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   MOZ_ASSERT(mSurface);
 
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -146,8 +145,7 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
       MOZ_ASSERT(aImageKeys.length() == 1);
       // XXX Add RGBA handling. Temporary hack to avoid crash
       // With BGRA format setting, rendering works without problem.
-      wr::ImageDescriptor descriptor(GetSize(), mSurface->GetFormat(),
-                                     aPreferCompositorSurface);
+      wr::ImageDescriptor descriptor(GetSize(), mSurface->GetFormat());
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -156,10 +154,10 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
       MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetWidth(0), mSurface->GetHeight(0)),
-          gfx::SurfaceFormat::A8, aPreferCompositorSurface);
+          gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(
           gfx::IntSize(mSurface->GetWidth(1), mSurface->GetHeight(1)),
-          gfx::SurfaceFormat::R8G8, aPreferCompositorSurface);
+          gfx::SurfaceFormat::R8G8);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;
@@ -173,7 +171,8 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
 void WaylandDMABUFTextureHostOGL::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys) {
+    const Range<wr::ImageKey>& aImageKeys,
+    const bool aPreferCompositorSurface) {
   switch (mSurface->GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -181,7 +180,9 @@ void WaylandDMABUFTextureHostOGL::PushDisplayItems(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
-                         !(mFlags & TextureFlags::NON_PREMULTIPLIED));
+                         !(mFlags & TextureFlags::NON_PREMULTIPLIED),
+                         wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                         aPreferCompositorSurface);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -192,7 +193,8 @@ void WaylandDMABUFTextureHostOGL::PushDisplayItems(
       aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
                              wr::ColorDepth::Color8,
                              wr::ToWrYuvColorSpace(GetYUVColorSpace()),
-                             wr::ToWrColorRange(GetColorRange()), aFilter);
+                             wr::ToWrColorRange(GetColorRange()), aFilter,
+                             aPreferCompositorSurface);
       break;
     }
     default: {

@@ -196,24 +196,23 @@ uint32_t WebRenderTextureHost::NumSubTextures() {
 
 void WebRenderTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(mExternalImageId == aExtID);
 
-  mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID,
-                                           aPreferCompositorSurface);
+  mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
 
 void WebRenderTextureHost::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys) {
+    const Range<wr::ImageKey>& aImageKeys,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(aImageKeys.length() > 0);
 
   mWrappedTextureHost->PushDisplayItems(aBuilder, aBounds, aClip, aFilter,
-                                        aImageKeys);
+                                        aImageKeys, aPreferCompositorSurface);
 }
 
 bool WebRenderTextureHost::NeedsYFlip() const {
