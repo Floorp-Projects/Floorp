@@ -2290,13 +2290,10 @@ class TraceListNode {
   friend class ParserSharedBase;
 
  protected:
-  enum NodeType { Object, Function, LastNodeType };
-
   js::gc::Cell* gcThing;
   TraceListNode* traceLink;
-  NodeType type_;
 
-  TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink, NodeType type);
+  TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink);
 
   virtual void trace(JSTracer* trc);
 
@@ -2309,17 +2306,14 @@ class ObjectBox : public TraceListNode {
   friend struct GCThingList;
   ObjectBox* emitLink;
 
-  ObjectBox(JSObject* obj, TraceListNode* link, TraceListNode::NodeType type);
+  ObjectBox(JSObject* obj, TraceListNode* link);
 
  public:
-  ObjectBox(JSObject* obj, TraceListNode* link)
-      : ObjectBox(obj, link, TraceListNode::NodeType::Object) {}
-
   bool hasObject() const { return gcThing != nullptr; }
 
   JSObject* object() const { return gcThing->as<JSObject>(); }
 
-  bool isFunctionBox() const { return type_ == NodeType::Function; }
+  bool isFunctionBox() const { return true; }
   FunctionBox* asFunctionBox();
 };
 

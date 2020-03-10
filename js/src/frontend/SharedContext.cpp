@@ -123,7 +123,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* explicitName,
                          FunctionFlags flags)
-    : ObjectBox(nullptr, traceListHead, TraceListNode::NodeType::Function),
+    : ObjectBox(nullptr, traceListHead),
       SharedContext(cx, Kind::FunctionBox, compilationInfo, directives,
                     extraWarnings),
       enclosingScope_(),
