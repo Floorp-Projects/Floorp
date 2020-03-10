@@ -30,7 +30,9 @@ export const DEFAULT_WELCOME_CONTENT = {
     string_id: "onboarding-welcome-header",
   },
   startButton: {
-    string_id: "onboarding-start-browsing-button-label",
+    label: {
+      string_id: "onboarding-start-browsing-button-label",
+    },
     message_id: "START_BROWSING_BUTTON",
     action: {
       type: "OPEN_AWESOME_BAR",
