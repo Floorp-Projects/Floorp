@@ -25,7 +25,6 @@ bool GCThingList::append(ObjectBox* objbox, uint32_t* index) {
   // Append the object to the vector and return the index in *index. Also add
   // the ObjectBox to the |lastbox| linked list for finishInnerFunctions below.
 
-  MOZ_ASSERT(objbox->isObjectBox());
   MOZ_ASSERT(!objbox->emitLink);
   objbox->emitLink = lastbox;
   lastbox = objbox;
