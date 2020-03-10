@@ -581,7 +581,7 @@ void TRRService::MaybeConfirm_locked() {
     return;
   }
 
-  if (mConfirmationNS.Equals("skip") || mMode == MODE_TRRONLY) {
+  if (mConfirmationNS.Equals("skip")) {
     LOG(("TRRService starting confirmation test %s SKIPPED\n",
          mPrivateURI.get()));
     mConfirmationState = CONFIRM_OK;
