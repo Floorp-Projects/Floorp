@@ -49,6 +49,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
@@ -844,10 +845,27 @@ FutexThread::WaitResult js::FutexThread::wait(
 
     state_ = Waiting;
 
+    MOZ_ASSERT((cx->runtime()->beforeWaitCallback == nullptr) ==
+               (cx->runtime()->afterWaitCallback == nullptr));
+    mozilla::DebugOnly<bool> callbacksPresent =
+        cx->runtime()->beforeWaitCallback != nullptr;
+
+    void* cookie = nullptr;
+    uint8_t clientMemory[JS::WAIT_CALLBACK_CLIENT_MAXMEM];
+    if (cx->runtime()->beforeWaitCallback) {
+      cookie = (*cx->runtime()->beforeWaitCallback)(clientMemory);
+    }
+
     if (isTimed) {
       mozilla::Unused << cond_->wait_until(locked, *sliceEnd);
     } else {
       cond_->wait(locked);
+    }
+
+    MOZ_ASSERT((cx->runtime()->afterWaitCallback != nullptr) ==
+               callbacksPresent);
+    if (cx->runtime()->afterWaitCallback) {
+      (*cx->runtime()->afterWaitCallback)(cookie);
     }
 
     switch (state_) {

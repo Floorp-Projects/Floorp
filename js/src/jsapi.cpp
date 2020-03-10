@@ -3704,6 +3704,16 @@ JS_PUBLIC_API void JS::SetScriptPrivateReferenceHooks(
   rt->scriptPrivateReleaseHook = releaseHook;
 }
 
+JS_PUBLIC_API void JS::SetWaitCallback(JSRuntime* rt,
+                                       BeforeWaitCallback beforeWait,
+                                       AfterWaitCallback afterWait,
+                                       size_t requiredMemory) {
+  MOZ_RELEASE_ASSERT(requiredMemory <= WAIT_CALLBACK_CLIENT_MAXMEM);
+  MOZ_RELEASE_ASSERT((beforeWait == nullptr) == (afterWait == nullptr));
+  rt->beforeWaitCallback = beforeWait;
+  rt->afterWaitCallback = afterWait;
+}
+
 JS_PUBLIC_API JSObject* JS_New(JSContext* cx, HandleObject ctor,
                                const JS::HandleValueArray& inputArgs) {
   AssertHeapIsIdle();

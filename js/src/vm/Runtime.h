@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <setjmp.h>
 
+#include "jsapi.h"
+
 #include "builtin/AtomicsObject.h"
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/SharedIntlData.h"
@@ -860,6 +862,10 @@ struct JSRuntime {
   }
 
   bool hasLiveSABs() const { return liveSABs > 0; }
+
+ public:
+  js::MainThreadData<JS::BeforeWaitCallback> beforeWaitCallback;
+  js::MainThreadData<JS::AfterWaitCallback> afterWaitCallback;
 
  public:
   void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
