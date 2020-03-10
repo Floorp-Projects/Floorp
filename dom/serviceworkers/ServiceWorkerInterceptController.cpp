@@ -25,6 +25,8 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
   // For subresource requests we base our decision solely on the client's
   // controller value.  Any settings that would have blocked service worker
   // access should have been set before the initial navigation created the
@@ -32,7 +34,30 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
   if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
     const Maybe<ServiceWorkerDescriptor>& controller =
         loadInfo->GetController();
-    *aShouldIntercept = controller.isSome();
+    // For child intercept, only checking the loadInfo controller existence.
+    if (!ServiceWorkerParentInterceptEnabled()) {
+      *aShouldIntercept = controller.isSome();
+      return NS_OK;
+    }
+
+    // If the controller doesn't handle fetch events, return false
+    if (controller.isSome()) {
+      *aShouldIntercept = controller.ref().HandlesFetch();
+
+      // The service worker has no fetch event handler, try to schedule a
+      // soft-update through ServiceWorkerRegistrationInfo.
+      // Get ServiceWorkerRegistrationInfo by the ServiceWorkerInfo's principal
+      // and scope
+      if (!*aShouldIntercept && swm) {
+        RefPtr<ServiceWorkerRegistrationInfo> registration =
+            swm->GetRegistration(controller.ref().GetPrincipal().get(),
+                                 controller.ref().Scope());
+        MOZ_ASSERT(registration);
+        registration->MaybeScheduleTimeCheckAndUpdate();
+      }
+    } else {
+      *aShouldIntercept = false;
+    }
     return NS_OK;
   }
 
@@ -40,8 +65,7 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
       aURI, loadInfo->GetOriginAttributes());
 
   // First check with the ServiceWorkerManager for a matching service worker.
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm || !swm->IsAvailable(principal, aURI)) {
+  if (!swm || !swm->IsAvailable(principal, aURI, aChannel)) {
     return NS_OK;
   }
 
