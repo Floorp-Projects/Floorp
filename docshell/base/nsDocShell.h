@@ -907,6 +907,7 @@ class nsDocShell final : public nsDocLoader,
         mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
         mozilla::dom::BFCacheStatus::REQUEST |
         mozilla::dom::BFCacheStatus::ACTIVE_PEER_CONNECTION,
+    REMOTE_SUBFRAMES = mozilla::dom::BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES
   };
 
   void ReportBFCacheComboTelemetry(uint16_t aCombo);
