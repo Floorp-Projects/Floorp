@@ -584,6 +584,13 @@ class BaseRustProgram(ContextDerived):
         ContextDerived.__init__(self, context)
         self.name = name
         self.cargo_file = cargo_file
+        # Skip setting properties below which depend on cargo
+        # when we don't have a compile environment. The required
+        # config keys won't be available, but the instance variables
+        # that we don't set should never be accessed by the actual
+        # build in that case.
+        if not context.config.substs.get('COMPILE_ENVIRONMENT'):
+            return
         cargo_dir = cargo_output_directory(context, self.TARGET_SUBST_VAR)
         exe_file = '%s%s' % (name, context.config.substs.get(self.SUFFIX_VAR, ''))
         self.location = mozpath.join(cargo_dir, exe_file)
