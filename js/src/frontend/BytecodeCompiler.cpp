@@ -508,47 +508,45 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   JSContext* cx = compilationInfo.cx;
 
-  for (;;) {
-    ParseNode* pn;
-    {
-      AutoGeckoProfilerEntry pseudoFrame(cx, "script parsing",
-                                         JS::ProfilingCategoryPair::JS_Parsing);
-      if (sc->isEvalContext()) {
-        pn = parser->evalBody(sc->asEvalContext());
-      } else {
-        pn = parser->globalBody(sc->asGlobalContext());
-      }
+  ParseNode* pn;
+  {
+    AutoGeckoProfilerEntry pseudoFrame(cx, "script parsing",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
+    if (sc->isEvalContext()) {
+      pn = parser->evalBody(sc->asEvalContext());
+    } else {
+      pn = parser->globalBody(sc->asGlobalContext());
     }
+  }
 
-    if (pn) {
-      // Successfully parsed. Emit the script.
-      AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
-                                         JS::ProfilingCategoryPair::JS_Parsing);
-
-      // Publish deferred items
-      if (!parser->publishDeferredFunctions()) {
-        return nullptr;
-      }
-
-      Maybe<BytecodeEmitter> emitter;
-      if (!emplaceEmitter(compilationInfo, emitter, sc)) {
-        return nullptr;
-      }
-
-      if (!emitter->emitScript(pn)) {
-        return nullptr;
-      }
-
-      // Success!
-      break;
-    }
-
+  if (!pn) {
     // Global and eval scripts don't get reparsed after a new directive was
-    // encountered.
+    // encountered:
+    // - "use strict" doesn't require any special error reporting for scripts.
+    // - "use asm" directives don't have an effect in global/eval contexts.
     MOZ_ASSERT(
         !canHandleParseFailure(compilationInfo, compilationInfo.directives));
-
     return nullptr;
+  }
+
+  {
+    // Successfully parsed. Emit the script.
+    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
+
+    // Publish deferred items
+    if (!parser->publishDeferredFunctions()) {
+      return nullptr;
+    }
+
+    Maybe<BytecodeEmitter> emitter;
+    if (!emplaceEmitter(compilationInfo, emitter, sc)) {
+      return nullptr;
+    }
+
+    if (!emitter->emitScript(pn)) {
+      return nullptr;
+    }
   }
 
   // We have just finished parsing the source. Inform the source so that we
