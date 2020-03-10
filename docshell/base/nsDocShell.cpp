@@ -6770,6 +6770,10 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_BFCACHE_COMBO::SPD_Unload_Req_Peer);
       break;
+    case REMOTE_SUBFRAMES:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Remote_Subframes);
+      break;
     default:
       Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Other);
       break;
