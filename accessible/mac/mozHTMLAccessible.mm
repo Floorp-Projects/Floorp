@@ -29,14 +29,14 @@
 }
 
 - (id)value {
-  uint32_t level = 0;
+  GroupPos groupPos;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    level = accWrap->GetLevelInternal();
+    groupPos = accWrap->GroupPosition();
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    level = proxy->GetLevelInternal();
+    groupPos = proxy->GroupPosition();
   }
 
-  return [NSNumber numberWithInt:level];
+  return [NSNumber numberWithInt:groupPos.level];
 }
 
 @end

@@ -448,9 +448,12 @@ xpcAccessible::GroupPosition(int32_t* aGroupLevel,
   NS_ENSURE_ARG_POINTER(aPositionInGroup);
   *aPositionInGroup = 0;
 
-  if (!Intl()) return NS_ERROR_FAILURE;
-
-  GroupPos groupPos = Intl()->GroupPosition();
+  GroupPos groupPos;
+  if (Accessible* acc = IntlGeneric().AsAccessible()) {
+    groupPos = acc->GroupPosition();
+  } else {
+    groupPos = IntlGeneric().AsProxy()->GroupPosition();
+  }
 
   *aGroupLevel = groupPos.level;
   *aSimilarItemsInGroup = groupPos.setSize;

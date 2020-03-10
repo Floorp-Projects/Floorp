@@ -234,12 +234,17 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvARIARoleAtom(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvGetLevelInternal(
-    const uint64_t& aID, int32_t* aLevel) {
+mozilla::ipc::IPCResult DocAccessibleChild::RecvGroupPosition(
+    const uint64_t& aID, int32_t* aLevel, int32_t* aSimilarItemsInGroup,
+    int32_t* aPositionInGroup) {
   Accessible* acc = IdToAccessible(aID);
   if (acc) {
-    *aLevel = acc->GetLevelInternal();
+    GroupPos groupPos = acc->GroupPosition();
+    *aLevel = groupPos.level;
+    *aSimilarItemsInGroup = groupPos.setSize;
+    *aPositionInGroup = groupPos.posInSet;
   }
+
   return IPC_OK();
 }
 
