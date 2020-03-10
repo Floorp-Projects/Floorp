@@ -363,11 +363,6 @@ class ResponsiveUI {
     }
     this.destroying = true;
 
-    this.targetList.unwatchTargets(
-      [this.targetList.TYPES.FRAME],
-      this.onTargetAvailable
-    );
-
     // If our tab is about to be closed, there's not enough time to exit
     // gracefully, but that shouldn't be a problem since the tab will go away.
     // So, skip any waiting when we're about to close the tab.
@@ -391,6 +386,11 @@ class ResponsiveUI {
         await this.responsiveFront.setDocumentInRDMPane(false);
         await this.responsiveFront.setFloatingScrollbars(false);
       }
+
+      this.targetList.unwatchTargets(
+        [this.targetList.TYPES.FRAME],
+        this.onTargetAvailable
+      );
     }
 
     this.tab.removeEventListener("TabClose", this);
