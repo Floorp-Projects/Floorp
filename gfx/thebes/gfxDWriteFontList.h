@@ -44,7 +44,7 @@ class gfxDWriteFontEntry;
 /**
  * \brief Class representing directwrite font family.
  */
-class gfxDWriteFontFamily : public gfxFontFamily {
+class gfxDWriteFontFamily final : public gfxFontFamily {
  public:
   typedef mozilla::FontStretch FontStretch;
   typedef mozilla::FontSlantStyle FontSlantStyle;
@@ -98,7 +98,7 @@ class gfxDWriteFontFamily : public gfxFontFamily {
 /**
  * \brief Class representing DirectWrite FontEntry (a unique font style/family)
  */
-class gfxDWriteFontEntry : public gfxFontEntry {
+class gfxDWriteFontEntry final : public gfxFontEntry {
  public:
   /**
    * Constructs a font entry.
@@ -357,7 +357,7 @@ class DWriteFontFallbackRenderer final : public IDWriteTextRenderer {
   nsCString mFamilyName;
 };
 
-class gfxDWriteFontList : public gfxPlatformFontList {
+class gfxDWriteFontList final : public gfxPlatformFontList {
  public:
   gfxDWriteFontList();
 
