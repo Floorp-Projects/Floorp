@@ -126,8 +126,8 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives,
                     extraWarnings),
       object_(nullptr),
-      traceLink(traceListHead),
-      emitLink(nullptr),
+      traceLink_(traceListHead),
+      emitLink_(nullptr),
       enclosingScope_(),
       namedLambdaBindings_(nullptr),
       functionScopeBindings_(nullptr),
@@ -324,7 +324,7 @@ void FunctionBox::finish() {
 
 /* static */
 void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
-  for (FunctionBox* node = listHead; node; node = node->traceLink) {
+  for (FunctionBox* node = listHead; node; node = node->traceLink_) {
     node->trace(trc);
   }
 }
