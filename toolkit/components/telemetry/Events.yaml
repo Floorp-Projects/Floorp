@@ -124,8 +124,8 @@ addonsManager:
       source: >
         The source that originally triggered the add-on installation, one of "about:addons",
         "about:debugging", "about:preferences", "amo", "app:profile", "disco", "distribution",
-        "extension", "enterprise-policy", "file-url", "gmp-plugin", "internal", "plugin",
-        "rtamo", "sync", "system-addon", "temporary-addon", "unknown".
+        "extension", "enterprise-policy", "file-url", "geckoview-app", "gmp-plugin",
+        "internal", "plugin", "rtamo", "sync", "system-addon", "temporary-addon", "unknown".
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method),
