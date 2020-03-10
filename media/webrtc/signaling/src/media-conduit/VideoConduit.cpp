@@ -1919,6 +1919,12 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
     }
   }
 
+  // If we have zero width or height, drop the frame here. Attempting to send
+  // it will cause all sorts of problems in the webrtc.org code.
+  if (cropWidth == 0 || cropHeight == 0) {
+    return kMediaConduitNoError;
+  }
+
   int cropX = (frame.width() - cropWidth) / 2;
   int cropY = (frame.height() - cropHeight) / 2;
 
