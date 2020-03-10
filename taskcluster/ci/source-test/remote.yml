@@ -15,7 +15,7 @@ job-defaults:
             - linux64-node
     treeherder:
         kind: test
-        tier: 3
+        tier: 2
     worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: desktop1604-test}
