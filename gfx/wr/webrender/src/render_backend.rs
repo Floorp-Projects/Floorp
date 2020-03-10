@@ -581,15 +581,10 @@ impl Document {
                 tile_cache_logger,
             );
 
-            let hit_tester = Arc::new(self.scene.create_hit_tester(&self.data_stores.clip));
-            self.hit_tester = Some(Arc::clone(&hit_tester));
-            self.shared_hit_tester.update(hit_tester);
-
             frame
         };
 
         self.frame_is_valid = true;
-        self.hit_tester_is_valid = true;
 
         let is_new_scene = self.has_built_scene;
         self.has_built_scene = false;
