@@ -47,7 +47,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://formautofill/FormAutofillPreferences.jsm",
   FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
   FormAutofillUtils: "resource://formautofill/FormAutofillUtils.jsm",
-  OSKeyStore: "resource:///modules/OSKeyStore.jsm",
+  OSKeyStore: "resource://formautofill/OSKeyStore.jsm",
 });
 
 this.log = null;
@@ -341,7 +341,7 @@ class FormAutofillParent extends JSWindowActorParent {
         break;
       }
       case "FormAutofill:SaveCreditCard": {
-        if (!(await FormAutofillUtils.ensureLoggedIn())) {
+        if (!(await OSKeyStore.ensureLoggedIn())) {
           log.warn("User canceled encryption login");
           return undefined;
         }
@@ -690,7 +690,7 @@ class FormAutofillParent extends JSWindowActorParent {
         return;
       }
 
-      if (!(await FormAutofillUtils.ensureLoggedIn())) {
+      if (!(await OSKeyStore.ensureLoggedIn())) {
         log.warn("User canceled encryption login");
         return;
       }

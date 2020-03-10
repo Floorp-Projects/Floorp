@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  OSKeyStore: "resource:///modules/OSKeyStore.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -37,9 +36,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "identity.fxaccounts.enabled",
   false
 );
-XPCOMUtils.defineLazyGetter(this, "AboutLoginsL10n", () => {
-  return new Localization(["branding/brand.ftl", "browser/aboutLogins.ftl"]);
-});
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
@@ -314,43 +310,15 @@ class AboutLoginsParent extends JSWindowActorParent {
         break;
       }
       case "AboutLogins:MasterPasswordRequest": {
-        let messageId = message.data;
-        if (!messageId) {
-          throw new Error(
-            "AboutLogins:MasterPasswordRequest: Message ID required for MasterPasswordRequest."
-          );
-        }
-
         // This does no harm if master password isn't set.
         let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
           Ci.nsIPK11TokenDB
         );
         let token = tokendb.getInternalKeyToken();
 
-        // Use the OS auth dialog if there is no master password
+        // If there is no master password, return as-if authentication succeeded.
         if (token.checkPassword("")) {
-          if (AppConstants.platform == "macosx") {
-            // OS Auth dialogs on macOS must only provide the "reason" that the prompt
-            // is being displayed.
-            messageId += "-macosx";
-          }
-          let [messageText, captionText] = await AboutLoginsL10n.formatMessages(
-            [
-              {
-                id: messageId,
-              },
-              {
-                id: "about-logins-os-auth-dialog-caption",
-              },
-            ]
-          );
-          let loggedIn = await OSKeyStore.ensureLoggedIn(
-            messageText.value,
-            captionText.value,
-            ownerGlobal,
-            false
-          );
-          this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", loggedIn);
+          this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", true);
           return;
         }
 

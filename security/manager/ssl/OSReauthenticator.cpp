@@ -10,13 +10,9 @@
 #include "nsNetCID.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Logging.h"
-#include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
 #include "nsISupportsUtils.h"
-#include "nsIWidget.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "ipc/IPCMessageUtils.h"
 
 NS_IMPL_ISUPPORTS(OSReauthenticator, nsIOSReauthenticator)
 
@@ -82,9 +78,7 @@ std::unique_ptr<char[]> GetUserTokenInfo() {
 
 // Use the Windows credential prompt to ask the user to authenticate the
 // currently used account.
-static nsresult ReauthenticateUserWindows(const nsACString& aMessageText,
-                                          const nsACString& aCaptionText,
-                                          const WindowsHandle& hwndParent,
+static nsresult ReauthenticateUserWindows(const nsACString& aPrompt,
                                           /* out */ bool& reauthenticated) {
   reauthenticated = false;
 
@@ -96,11 +90,11 @@ static nsresult ReauthenticateUserWindows(const nsACString& aMessageText,
   // CredUI prompt.
   CREDUI_INFOW credui = {};
   credui.cbSize = sizeof(credui);
-  credui.hwndParent = reinterpret_cast<HWND>(hwndParent);
-  const nsString& messageText = NS_ConvertUTF8toUTF16(aMessageText);
-  credui.pszMessageText = messageText.get();
-  const nsString& captionText = NS_ConvertUTF8toUTF16(aCaptionText);
-  credui.pszCaptionText = captionText.get();
+  // TODO: maybe set parent (Firefox) here.
+  credui.hwndParent = nullptr;
+  const nsString& prompt = NS_ConvertUTF8toUTF16(aPrompt);
+  credui.pszMessageText = prompt.get();
+  credui.pszCaptionText = nullptr;
   credui.hbmBanner = nullptr;  // ignored
 
   while (!reauthenticated && numAttempts > 0) {
@@ -209,13 +203,10 @@ static nsresult ReauthenticateUserWindows(const nsACString& aMessageText,
 #endif  // XP_WIN
 
 static nsresult ReauthenticateUser(const nsACString& prompt,
-                                   const nsACString& caption,
-                                   const WindowsHandle& hwndParent,
                                    /* out */ bool& reauthenticated) {
   reauthenticated = false;
 #if defined(XP_WIN)
-  return ReauthenticateUserWindows(prompt, caption, hwndParent,
-                                   reauthenticated);
+  return ReauthenticateUserWindows(prompt, reauthenticated);
 #elif defined(XP_MACOSX)
   return ReauthenticateUserMacOS(prompt, reauthenticated);
 #endif  // Reauthentication is not implemented for this platform.
@@ -223,13 +214,10 @@ static nsresult ReauthenticateUser(const nsACString& prompt,
 }
 
 static void BackgroundReauthenticateUser(RefPtr<Promise>& aPromise,
-                                         const nsACString& aMessageText,
-                                         const nsACString& aCaptionText,
-                                         const WindowsHandle& hwndParent) {
+                                         const nsACString& aPrompt) {
   nsAutoCString recovery;
   bool reauthenticated;
-  nsresult rv = ReauthenticateUser(aMessageText, aCaptionText, hwndParent,
-                                   reauthenticated);
+  nsresult rv = ReauthenticateUser(aPrompt, reauthenticated);
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
       "BackgroundReauthenticateUserResolve",
       [rv, reauthenticated, aPromise = std::move(aPromise)]() {
@@ -243,9 +231,7 @@ static void BackgroundReauthenticateUser(RefPtr<Promise>& aPromise,
 }
 
 NS_IMETHODIMP
-OSReauthenticator::AsyncReauthenticateUser(const nsACString& aMessageText,
-                                           const nsACString& aCaptionText,
-                                           mozIDOMWindow* aParentWindow,
+OSReauthenticator::AsyncReauthenticateUser(const nsACString& aPrompt,
                                            JSContext* aCx,
                                            Promise** promiseOut) {
   NS_ENSURE_ARG_POINTER(aCx);
@@ -256,29 +242,10 @@ OSReauthenticator::AsyncReauthenticateUser(const nsACString& aMessageText,
     return rv;
   }
 
-  WindowsHandle hwndParent = 0;
-  if (aParentWindow) {
-    nsPIDOMWindowInner* win = nsPIDOMWindowInner::From(aParentWindow);
-    nsIDocShell* docShell = win->GetDocShell();
-    if (docShell) {
-      nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(docShell);
-      if (baseWindow) {
-        nsCOMPtr<nsIWidget> widget;
-        baseWindow->GetMainWidget(getter_AddRefs(widget));
-        if (widget) {
-          hwndParent = reinterpret_cast<WindowsHandle>(
-              widget->GetNativeData(NS_NATIVE_WINDOW));
-        }
-      }
-    }
-  }
-
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
       "BackgroundReauthenticateUser",
-      [promiseHandle, aMessageText = nsAutoCString(aMessageText),
-       aCaptionText = nsAutoCString(aCaptionText), hwndParent]() mutable {
-        BackgroundReauthenticateUser(promiseHandle, aMessageText, aCaptionText,
-                                     hwndParent);
+      [promiseHandle, aPrompt = nsAutoCString(aPrompt)]() mutable {
+        BackgroundReauthenticateUser(promiseHandle, aPrompt);
       }));
 
   nsCOMPtr<nsIEventTarget> target(

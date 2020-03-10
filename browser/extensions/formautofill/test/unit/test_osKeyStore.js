@@ -4,25 +4,13 @@
 
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
-
-let OSKeyStoreTestUtils;
-add_task(async function os_key_store_setup() {
-  ({ OSKeyStoreTestUtils } = ChromeUtils.import(
-    "resource://testing-common/OSKeyStoreTestUtils.jsm"
-  ));
-  OSKeyStoreTestUtils.setup();
-  registerCleanupFunction(async function cleanup() {
-    await OSKeyStoreTestUtils.cleanup();
-  });
-});
-
 let OSKeyStore;
 add_task(async function setup() {
-  ({ OSKeyStore } = ChromeUtils.import("resource:///modules/OSKeyStore.jsm"));
+  Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
+
+  ({ OSKeyStore } = ChromeUtils.import(
+    "resource://formautofill/OSKeyStore.jsm"
+  ));
 });
 
 // Ensure that the appropriate initialization has happened.
@@ -46,7 +34,7 @@ add_task(async function test_reauth() {
   if (!canTest) {
     todo_check_true(
       canTest,
-      "test_reauth: Cannot test OS key store login on this build. See OSKeyStoreTestUtils.canTestOSKeyStoreLogin for details"
+      "test_reauth: Cannot test OS key store login on official builds."
     );
     return;
   }
@@ -54,7 +42,7 @@ add_task(async function test_reauth() {
   let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   try {
-    await OSKeyStore.decrypt(cipherText, "prompt message text");
+    await OSKeyStore.decrypt(cipherText, true);
     throw new Error("Not receiving canceled OS unlock error");
   } catch (ex) {
     Assert.equal(ex.message, "User canceled OS unlock entry");
@@ -65,7 +53,7 @@ add_task(async function test_reauth() {
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   Assert.equal(
-    await OSKeyStore.ensureLoggedIn("test message"),
+    await OSKeyStore.ensureLoggedIn(true),
     false,
     "Reauth cancelled."
   );
@@ -73,18 +61,26 @@ add_task(async function test_reauth() {
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
-  let plainText2 = await OSKeyStore.decrypt(cipherText, "prompt message text");
+  let plainText2 = await OSKeyStore.decrypt(cipherText, true);
   await reauthObserved;
   Assert.equal(testText, plainText2);
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   Assert.equal(
-    await OSKeyStore.ensureLoggedIn("test message"),
+    await OSKeyStore.ensureLoggedIn(true),
     true,
     "Reauth logged in."
   );
   await reauthObserved;
+
+  Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", false);
+  Assert.equal(
+    await OSKeyStore.ensureLoggedIn(true),
+    true,
+    "Reauth disabled so logged in without prompt"
+  );
+  Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
 });
 
 add_task(async function test_decryption_failure() {

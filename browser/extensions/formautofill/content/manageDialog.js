@@ -39,7 +39,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "OSKeyStore",
-  "resource:///modules/OSKeyStore.jsm"
+  "resource://formautofill/OSKeyStore.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
@@ -371,7 +371,7 @@ class ManageCreditCards extends ManageRecords {
     // Ask for reauth if user is trying to edit an existing credit card.
     if (
       !creditCard ||
-      (await FormAutofillUtils.ensureLoggedIn(reauthPasswordPromptMessage))
+      (await OSKeyStore.ensureLoggedIn(reauthPasswordPromptMessage))
     ) {
       let decryptedCCNumObj = {};
       if (creditCard && creditCard["cc-number-encrypted"]) {
