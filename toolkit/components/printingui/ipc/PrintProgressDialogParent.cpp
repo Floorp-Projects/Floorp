@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS(PrintProgressDialogParent, nsIObserver)
 
 PrintProgressDialogParent::PrintProgressDialogParent() : mActive(true) {}
 
-PrintProgressDialogParent::~PrintProgressDialogParent() {}
+PrintProgressDialogParent::~PrintProgressDialogParent() = default;
 
 void PrintProgressDialogParent::SetWebProgressListener(
     nsIWebProgressListener* aListener) {

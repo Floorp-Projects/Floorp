@@ -46,7 +46,7 @@ class nsAutoCompleteSimpleResult final : public nsIAutoCompleteSimpleResult {
   nsresult AppendResult(nsIAutoCompleteResult* aResult);
 
  private:
-  ~nsAutoCompleteSimpleResult() {}
+  ~nsAutoCompleteSimpleResult() = default;
 
  protected:
   typedef nsTArray<AutoCompleteSimpleResultMatch> MatchesArray;

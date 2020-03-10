@@ -39,7 +39,7 @@ class nsMediaSniffer final : public nsIContentSniffer {
   NS_DECL_NSICONTENTSNIFFER
 
  private:
-  ~nsMediaSniffer() {}
+  ~nsMediaSniffer() = default;
 
   static nsMediaSnifferEntry sSnifferEntries[];
 };

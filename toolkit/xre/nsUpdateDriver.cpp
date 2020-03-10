@@ -706,7 +706,7 @@ NS_IMPL_ISUPPORTS(nsUpdateProcessor, nsIUpdateProcessor)
 
 nsUpdateProcessor::nsUpdateProcessor() : mUpdaterPID(0) {}
 
-nsUpdateProcessor::~nsUpdateProcessor() {}
+nsUpdateProcessor::~nsUpdateProcessor() = default;
 
 NS_IMETHODIMP
 nsUpdateProcessor::ProcessUpdate() {

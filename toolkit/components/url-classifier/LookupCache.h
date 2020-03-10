@@ -90,7 +90,7 @@ class LookupResult {
   bool mProtocolV2;
 
  private:
-  ~LookupResult() {}
+  ~LookupResult() = default;
 };
 
 typedef nsTArray<RefPtr<LookupResult>> LookupResultArray;
@@ -115,7 +115,7 @@ class CacheResult {
   Prefix prefix;
 
  protected:
-  virtual ~CacheResult() {}
+  virtual ~CacheResult() = default;
 };
 
 class CacheResultV2 final : public CacheResult {
@@ -270,7 +270,7 @@ class LookupCache {
   virtual nsresult ClearLegacyFile() = 0;
 
  protected:
-  virtual ~LookupCache() {}
+  virtual ~LookupCache() = default;
 
   // Buffer size for file read/write
   static const uint32_t MAX_BUFFER_SIZE;
@@ -329,7 +329,7 @@ class LookupCacheV2 final : public LookupCache {
   virtual nsCString GetPrefixSetSuffix() const override;
 
  private:
-  ~LookupCacheV2() {}
+  ~LookupCacheV2() = default;
 
   virtual int Ver() const override { return VER; }
 

@@ -97,7 +97,7 @@ struct nsWatcherWindowEntry {
     }
     ReferenceSelf();
   }
-  ~nsWatcherWindowEntry() {}
+  ~nsWatcherWindowEntry() = default;
 
   void InsertAfter(nsWatcherWindowEntry* aOlder);
   void Unlink();

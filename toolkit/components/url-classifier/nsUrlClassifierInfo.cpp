@@ -69,7 +69,7 @@ nsUrlClassifierCacheEntry::GetMatches(nsIArray** aMatches) {
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierCacheInfo, nsIUrlClassifierCacheInfo)
 
-nsUrlClassifierCacheInfo::nsUrlClassifierCacheInfo() {}
+nsUrlClassifierCacheInfo::nsUrlClassifierCacheInfo() = default;
 
 NS_IMETHODIMP
 nsUrlClassifierCacheInfo::GetTable(nsACString& aTable) {

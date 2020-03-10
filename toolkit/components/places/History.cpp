@@ -458,7 +458,7 @@ class VisitedQuery final : public AsyncStatementCallback {
       const nsMainThreadPtrHandle<mozIVisitedStatusCallback>& aCallback)
       : mURI(aURI), mCallback(aCallback), mIsVisited(false) {}
 
-  ~VisitedQuery() {}
+  ~VisitedQuery() = default;
 
   nsCOMPtr<nsIURI> mURI;
   nsMainThreadPtrHandle<mozIVisitedStatusCallback> mCallback;
@@ -1509,7 +1509,7 @@ class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
   }
 
  private:
-  ~ConcurrentStatementsHolder() {}
+  ~ConcurrentStatementsHolder() = default;
 
   nsCOMPtr<mozIStorageAsyncConnection> mReadOnlyDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mIsVisitedStatement;

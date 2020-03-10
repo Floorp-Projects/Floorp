@@ -24,13 +24,13 @@
 class nsAnnoProtocolHandler final : public nsIProtocolHandler,
                                     public nsSupportsWeakReference {
  public:
-  nsAnnoProtocolHandler() {}
+  nsAnnoProtocolHandler() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROTOCOLHANDLER
 
  private:
-  ~nsAnnoProtocolHandler() {}
+  ~nsAnnoProtocolHandler() = default;
 
  protected:
   nsresult ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI, nsCString& aName);

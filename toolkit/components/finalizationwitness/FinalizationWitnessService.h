@@ -23,7 +23,7 @@ class FinalizationWitnessService final : public nsIFinalizationWitnessService,
   nsresult Init();
 
  private:
-  ~FinalizationWitnessService() {}
+  ~FinalizationWitnessService() = default;
   void operator=(const FinalizationWitnessService* other) = delete;
 };
 

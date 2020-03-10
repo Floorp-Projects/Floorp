@@ -19,7 +19,7 @@ VisitInfo::VisitInfo(int64_t aVisitId, PRTime aVisitDate,
       mTransitionType(aTransitionType),
       mReferrer(aReferrer) {}
 
-VisitInfo::~VisitInfo() {}
+VisitInfo::~VisitInfo() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIVisitInfo

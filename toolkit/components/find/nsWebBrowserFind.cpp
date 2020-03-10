@@ -54,7 +54,7 @@ nsWebBrowserFind::nsWebBrowserFind()
       mSearchSubFrames(true),
       mSearchParentFrames(true) {}
 
-nsWebBrowserFind::~nsWebBrowserFind() {}
+nsWebBrowserFind::~nsWebBrowserFind() = default;
 
 NS_IMPL_ISUPPORTS(nsWebBrowserFind, nsIWebBrowserFind,
                   nsIWebBrowserFindInFrames)

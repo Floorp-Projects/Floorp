@@ -74,7 +74,7 @@ class OriginMetricIDHashKey : public PLDHashEntryHdr {
   explicit OriginMetricIDHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
   OriginMetricIDHashKey(OriginMetricIDHashKey&& aOther)
       : PLDHashEntryHdr(std::move(aOther)), mValue(std::move(aOther.mValue)) {}
-  ~OriginMetricIDHashKey() {}
+  ~OriginMetricIDHashKey() = default;
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }

@@ -67,7 +67,7 @@ public:
   }
 
   // Boilerplate
-  SecureAllocator() {}
+  SecureAllocator() = default;
   template <typename U> SecureAllocator(const SecureAllocator<U>&) {}
   template <typename U> struct rebind { using other = SecureAllocator<U>; };
 };

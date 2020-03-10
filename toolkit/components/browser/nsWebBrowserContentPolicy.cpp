@@ -10,9 +10,9 @@
 #include "nsContentPolicyUtils.h"
 #include "nsNetUtil.h"
 
-nsWebBrowserContentPolicy::nsWebBrowserContentPolicy() {}
+nsWebBrowserContentPolicy::nsWebBrowserContentPolicy() = default;
 
-nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy() {}
+nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy() = default;
 
 NS_IMPL_ISUPPORTS(nsWebBrowserContentPolicy, nsIContentPolicy)
 

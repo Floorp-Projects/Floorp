@@ -16,7 +16,7 @@
   }
 
 class nsGIOService final : public nsIGIOService {
-  ~nsGIOService() {}
+  ~nsGIOService() = default;
 
  public:
   NS_DECL_ISUPPORTS

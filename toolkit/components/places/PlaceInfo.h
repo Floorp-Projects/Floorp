@@ -30,7 +30,7 @@ class PlaceInfo final : public mozIPlaceInfo {
             const VisitsArray& aVisits);
 
  private:
-  ~PlaceInfo() {}
+  ~PlaceInfo() = default;
 
   const int64_t mId;
   const nsCString mGUID;
