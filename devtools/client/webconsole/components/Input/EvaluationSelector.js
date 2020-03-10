@@ -118,7 +118,7 @@ class EvaluationSelector extends Component {
   }
 
   render() {
-    const { webConsoleUI, threads } = this.props;
+    const { webConsoleUI, threads, selectedThread } = this.props;
     const doc = webConsoleUI.document;
     const toolbox = webConsoleUI.wrapper.toolbox;
 
@@ -132,7 +132,10 @@ class EvaluationSelector extends Component {
         toolboxDoc: toolbox ? toolbox.doc : doc,
         label: this.getLabel(),
         className:
-          "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button",
+          "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button" +
+          (selectedThread && selectedThread.type !== "mainThread"
+            ? " webconsole-evaluation-selector-button-non-top"
+            : ""),
         title: l10n.getStr("webconsole.input.selector.tooltip"),
       },
       // We pass the children in a function so we don't require the MenuItem and MenuList

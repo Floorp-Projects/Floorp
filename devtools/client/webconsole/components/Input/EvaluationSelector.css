@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.webconsole-evaluation-selector-button {
+  padding-inline: 8px 16px !important;
+  background-position-x: calc(100% - 4px) !important;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-evaluation-selector-button {
+  height: 20px;
+  margin-inline-start: 5px;
+}
+
+.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button {
+  background-color: var(--blue-60);
+  color: white;
+  fill: currentColor;
+}
+
+.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button:hover,
+.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button[aria-expanded="true"] {
+  background-color: var(--blue-70) !important;
+  color: white !important;
+}
