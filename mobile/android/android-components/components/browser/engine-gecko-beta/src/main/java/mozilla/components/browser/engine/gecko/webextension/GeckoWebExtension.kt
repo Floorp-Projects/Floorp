@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
+import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
@@ -27,6 +28,7 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
  * Gecko-based implementation of [WebExtension], wrapping the native web
  * extension object provided by GeckoView.
  */
+@Suppress("TooManyFunctions")
 class GeckoWebExtension(
     id: String,
     url: String,
@@ -278,6 +280,10 @@ class GeckoWebExtension(
     override fun isEnabled(): Boolean {
         return nativeExtension.metaData?.enabled == true
     }
+
+    // Not yet supported
+    override fun registerTabHandler(tabHandler: TabHandler) = Unit
+    override fun registerTabHandler(session: EngineSession, tabHandler: TabHandler) = Unit
 }
 
 /**
