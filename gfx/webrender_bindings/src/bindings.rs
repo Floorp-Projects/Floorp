@@ -27,7 +27,7 @@ use thin_vec::ThinVec;
 
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
-    BinaryRecorder, Compositor, DebugFlags, Device,
+    BinaryRecorder, Compositor, CompositorCapabilities, DebugFlags, Device,
     NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
     WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId
@@ -1200,6 +1200,7 @@ extern "C" {
     fn wr_compositor_create_surface(
         compositor: *mut c_void,
         id: NativeSurfaceId,
+        virtual_offset: DeviceIntPoint,
         tile_size: DeviceIntSize,
         is_opaque: bool,
     );
@@ -1240,6 +1241,9 @@ extern "C" {
         compositor: *mut c_void,
         enable: bool,
     );
+    fn wr_compositor_get_capabilities(
+        compositor: *mut c_void,
+    ) -> CompositorCapabilities;
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1248,6 +1252,7 @@ impl Compositor for WrCompositor {
     fn create_surface(
         &mut self,
         id: NativeSurfaceId,
+        virtual_offset: DeviceIntPoint,
         tile_size: DeviceIntSize,
         is_opaque: bool,
     ) {
@@ -1255,6 +1260,7 @@ impl Compositor for WrCompositor {
             wr_compositor_create_surface(
                 self.0,
                 id,
+                virtual_offset,
                 tile_size,
                 is_opaque,
             );
@@ -1374,6 +1380,12 @@ impl Compositor for WrCompositor {
                 self.0,
                 enable,
             );
+        }
+    }
+
+    fn get_capabilities(&self) -> CompositorCapabilities {
+        unsafe {
+            wr_compositor_get_capabilities(self.0)
         }
     }
 }

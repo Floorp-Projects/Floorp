@@ -27,6 +27,7 @@ use std::{ops, u64};
 pub enum NativeSurfaceOperationDetails {
     CreateSurface {
         id: NativeSurfaceId,
+        virtual_offset: DeviceIntPoint,
         tile_size: DeviceIntSize,
         is_opaque: bool,
     },
@@ -213,6 +214,8 @@ pub enum CompositorKind {
     Native {
         /// Maximum dirty rects per compositor surface.
         max_update_rects: usize,
+        /// The virtual surface size used by underlying platform.
+        virtual_surface_size: i32,
     },
 }
 
@@ -221,6 +224,15 @@ impl Default for CompositorKind {
     fn default() -> Self {
         CompositorKind::Draw {
             max_partial_present_rects: 0,
+        }
+    }
+}
+
+impl CompositorKind {
+    pub fn get_virtual_surface_size(&self) -> i32 {
+        match self {
+            CompositorKind::Draw { .. } => 0,
+            CompositorKind::Native { virtual_surface_size, .. } => *virtual_surface_size,
         }
     }
 }
@@ -651,6 +663,11 @@ pub struct NativeSurfaceInfo {
     pub fbo_id: u32,
 }
 
+#[repr(C)]
+pub struct CompositorCapabilities {
+    pub virtual_surface_size: i32,
+}
+
 /// Defines an interface to a native (OS level) compositor. If supplied
 /// by the client application, then picture cache slices will be
 /// composited by the OS compositor, rather than drawn via WR batches.
@@ -659,6 +676,7 @@ pub trait Compositor {
     fn create_surface(
         &mut self,
         id: NativeSurfaceId,
+        virtual_offset: DeviceIntPoint,
         tile_size: DeviceIntSize,
         is_opaque: bool,
     );
@@ -737,6 +755,11 @@ pub trait Compositor {
 
     /// Enable/disable native compositor usage
     fn enable_native_compositor(&mut self, enable: bool);
+
+    /// Get the capabilities struct for this compositor. This is used to
+    /// specify what features a compositor supports, depending on the
+    /// underlying platform
+    fn get_capabilities(&self) -> CompositorCapabilities;
 }
 
 /// Return the total area covered by a set of occluders, accounting for
