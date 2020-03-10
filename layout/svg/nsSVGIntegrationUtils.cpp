@@ -1107,11 +1107,6 @@ void nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
                                        aParams.imgParams, opacity);
 }
 
-static float ClampStdDeviation(float aStdDeviation) {
-  // Cap software blur radius for performance reasons.
-  return std::min(std::max(0.0f, aStdDeviation), 100.0f);
-}
-
 bool nsSVGIntegrationUtils::CreateWebRenderCSSFilters(
     Span<const StyleFilter> aFilters, nsIFrame* aFrame,
     WrFiltersHolder& aWrFilters) {
@@ -1162,9 +1157,9 @@ bool nsSVGIntegrationUtils::CreateWebRenderCSSFilters(
         // TODO(emilio): we should go directly from css pixels -> device pixels.
         float appUnitsPerDevPixel =
             aFrame->PresContext()->AppUnitsPerDevPixel();
-        wrFilters.AppendElement(mozilla::wr::FilterOp::Blur(
-            ClampStdDeviation(NSAppUnitsToFloatPixels(
-                filter.AsBlur().ToAppUnits(), appUnitsPerDevPixel))));
+        wrFilters.AppendElement(
+            mozilla::wr::FilterOp::Blur(NSAppUnitsToFloatPixels(
+                filter.AsBlur().ToAppUnits(), appUnitsPerDevPixel)));
         break;
       }
       case StyleFilter::Tag::DropShadow: {
