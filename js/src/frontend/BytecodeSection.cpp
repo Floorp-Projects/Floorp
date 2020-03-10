@@ -41,52 +41,54 @@ void GCThingList::finishInnerFunctions() {
   }
 }
 
-bool GCThingList::finish(JSContext* cx, CompilationInfo& compilationInfo,
-                         mozilla::Span<JS::GCCellPtr> array) {
-  MOZ_ASSERT(length() <= INDEX_LIMIT);
-  MOZ_ASSERT(length() == array.size());
+bool js::frontend::EmitScriptThingsVector(JSContext* cx,
+                                          CompilationInfo& compilationInfo,
+                                          const ScriptThingsVector& objects,
+                                          mozilla::Span<JS::GCCellPtr> output) {
+  MOZ_ASSERT(objects.length() <= INDEX_LIMIT);
+  MOZ_ASSERT(objects.length() == output.size());
 
   struct Matcher {
     JSContext* cx;
     CompilationInfo& compilationInfo;
     uint32_t i;
-    mozilla::Span<JS::GCCellPtr>& array;
+    mozilla::Span<JS::GCCellPtr>& output;
 
     bool operator()(const JS::GCCellPtr& value) {
-      array[i] = value;
+      output[i] = value;
       return true;
     }
 
-    bool operator()(BigIntIndex& index) {
+    bool operator()(const BigIntIndex& index) {
       BigIntCreationData& data = compilationInfo.bigIntData[index];
       BigInt* bi = data.createBigInt(cx);
       if (!bi) {
         return false;
       }
-      array[i] = JS::GCCellPtr(bi);
+      output[i] = JS::GCCellPtr(bi);
       return true;
     }
 
-    bool operator()(RegExpIndex& rindex) {
+    bool operator()(const RegExpIndex& rindex) {
       RegExpCreationData& data = compilationInfo.regExpData[rindex];
       RegExpObject* regexp = data.createRegExp(cx);
       if (!regexp) {
         return false;
       }
-      array[i] = JS::GCCellPtr(regexp);
+      output[i] = JS::GCCellPtr(regexp);
       return true;
     }
 
-    bool operator()(ObjLiteralCreationData& data) {
+    bool operator()(const ObjLiteralCreationData& data) {
       JSObject* obj = data.create(cx);
       if (!obj) {
         return false;
       }
-      array[i] = JS::GCCellPtr(obj);
+      output[i] = JS::GCCellPtr(obj);
       return true;
     }
 
-    bool operator()(ScopeIndex& index) {
+    bool operator()(const ScopeIndex& index) {
       MutableHandle<ScopeCreationData> data =
           compilationInfo.scopeCreationData[index];
       Scope* scope = data.get().createScope(cx);
@@ -94,14 +96,14 @@ bool GCThingList::finish(JSContext* cx, CompilationInfo& compilationInfo,
         return false;
       }
 
-      array[i] = JS::GCCellPtr(scope);
+      output[i] = JS::GCCellPtr(scope);
       return true;
     }
   };
 
-  for (uint32_t i = 0; i < length(); i++) {
-    Matcher m{cx, compilationInfo, i, array};
-    if (!vector[i].get().match(m)) {
+  for (uint32_t i = 0; i < objects.length(); i++) {
+    Matcher m{cx, compilationInfo, i, output};
+    if (!objects[i].match(m)) {
       return false;
     }
   }
