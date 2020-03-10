@@ -14,9 +14,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -31,6 +31,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  - Close tab
  *  - Swipe to close tab
  *  - Undo close tab
+ *  - Close private tabs persistent notification
  *
  */
 
@@ -213,6 +214,54 @@ class TabbedBrowsingTest {
                 verifyExistingOpenTabs("Test_Page_${index + 1}")
                 verifyCloseTabsButton("Test_Page_${index + 1}")
             }
+        }
+    }
+
+    @Test
+    fun closePrivateTabTest() {
+        var genericURLS = TestAssetHelper.getGenericAssets(mockWebServer)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+        genericURLS.forEachIndexed { index, element ->
+            navigationToolbar {
+            }.openNewTabAndEnterToBrowser(element.url) {
+                verifyPageContent(element.content)
+            }.openHomeScreen {
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                verifyCloseTabsButton("Test_Page_${index + 1}")
+                closeTabViaXButton("Test_Page_${index + 1}")
+                verifySnackBarText("Private tab closed")
+                snackBarButtonClick("UNDO")
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                verifyCloseTabsButton("Test_Page_${index + 1}")
+                swipeTabRight("Test_Page_${index + 1}")
+                verifySnackBarText("Private tab closed")
+                snackBarButtonClick("UNDO")
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                verifyCloseTabsButton("Test_Page_${index + 1}")
+                swipeTabLeft("Test_Page_${index + 1}")
+                verifySnackBarText("Private tab closed")
+                snackBarButtonClick("UNDO")
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                verifyCloseTabsButton("Test_Page_${index + 1}")
+            }
+        }
+    }
+
+    @Test
+    fun closePrivateTabsNotificationTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.openNotification()
+            verifyPrivateTabsNotification()
+        }.clickClosePrivateTabsNotification {
+            verifyPrivateSessionMessage()
         }
     }
 }
