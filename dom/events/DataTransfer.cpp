@@ -302,20 +302,8 @@ void DataTransfer::GetMozTriggeringPrincipalURISpec(
     return;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  principal->GetURI(getter_AddRefs(uri));
-  if (!uri) {
-    aPrincipalURISpec.Truncate(0);
-    return;
-  }
-
   nsAutoCString spec;
-  nsresult rv = uri->GetSpec(spec);
-  if (NS_FAILED(rv)) {
-    aPrincipalURISpec.Truncate(0);
-    return;
-  }
-
+  principal->GetAsciiSpec(spec);
   CopyUTF8toUTF16(spec, aPrincipalURISpec);
 }
 
