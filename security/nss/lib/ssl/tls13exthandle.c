@@ -795,6 +795,21 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
         if (rv != SECSuccess) {
             return SECFailure;
         }
+
+        if (ss->opt.enableDtls13VersionCompat &&
+            ss->protocolVariant == ssl_variant_datagram) {
+            switch (version) {
+                case SSL_LIBRARY_VERSION_TLS_1_2:
+                case SSL_LIBRARY_VERSION_TLS_1_1:
+                    rv = sslBuffer_AppendNumber(buf, (PRUint16)version, 2);
+                    break;
+                default:
+                    continue;
+            }
+            if (rv != SECSuccess) {
+                return SECFailure;
+            }
+        }
     }
 
     rv = sslBuffer_InsertLength(buf, lengthOffset, 1);

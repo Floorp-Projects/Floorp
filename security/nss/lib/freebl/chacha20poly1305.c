@@ -15,9 +15,17 @@
 #include "blapii.h"
 #include "chacha20poly1305.h"
 
-// There are two implementations of ChaCha20Poly1305:
-// 1) 128-bit with hardware acceleration used on x64
-// 2) 32-bit used on all other platforms
+// There are three implementations of ChaCha20Poly1305:
+// 1) 128-bit with AVX hardware acceleration used on x64
+// 2) 256-bit with AVX2 hardware acceleration used on x64
+// 3) 32-bit used on all other platforms
+
+// On x64 when AVX2 and other necessary registers are available,
+// the 256bit-verctorized version will be used. When AVX2 features
+// are unavailable or disabled but AVX registers are available, the
+// 128bit-vectorized version will be used. In all other cases the
+// scalar version of the HACL* code will be used.
+
 // Instead of including the headers (they bring other things we don't want),
 // we declare the functions here.
 // Usage is guarded by runtime checks of required hardware features.
@@ -32,6 +40,19 @@ Hacl_Chacha20Poly1305_128_aead_encrypt(uint8_t *k, uint8_t *n1, uint32_t aadlen,
                                        uint8_t *cipher, uint8_t *mac);
 extern uint32_t
 Hacl_Chacha20Poly1305_128_aead_decrypt(uint8_t *k, uint8_t *n1, uint32_t aadlen,
+                                       uint8_t *aad, uint32_t mlen, uint8_t *m,
+                                       uint8_t *cipher, uint8_t *mac);
+
+// Forward declaration from Hacl_Chacha20_Vec256.h and Hacl_Chacha20Poly1305_256.h.
+extern void Hacl_Chacha20_Vec256_chacha20_encrypt_256(uint32_t len, uint8_t *out,
+                                                      uint8_t *text, uint8_t *key,
+                                                      uint8_t *n1, uint32_t ctr);
+extern void
+Hacl_Chacha20Poly1305_256_aead_encrypt(uint8_t *k, uint8_t *n1, uint32_t aadlen,
+                                       uint8_t *aad, uint32_t mlen, uint8_t *m,
+                                       uint8_t *cipher, uint8_t *mac);
+extern uint32_t
+Hacl_Chacha20Poly1305_256_aead_decrypt(uint8_t *k, uint8_t *n1, uint32_t aadlen,
                                        uint8_t *aad, uint32_t mlen, uint8_t *m,
                                        uint8_t *cipher, uint8_t *mac);
 
@@ -113,7 +134,15 @@ ChaCha20Xor(uint8_t *output, uint8_t *block, uint32_t len, uint8_t *k,
 {
 #ifdef NSS_X64
     if (ssse3_support() && sse4_1_support() && avx_support()) {
+#ifdef NSS_DISABLE_AVX2
         Hacl_Chacha20_Vec128_chacha20_encrypt_128(len, output, block, k, nonce, ctr);
+#else
+        if (avx2_support()) {
+            Hacl_Chacha20_Vec256_chacha20_encrypt_256(len, output, block, k, nonce, ctr);
+        } else {
+            Hacl_Chacha20_Vec128_chacha20_encrypt_128(len, output, block, k, nonce, ctr);
+        }
+#endif
     } else
 #endif
     {
@@ -167,9 +196,21 @@ ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx, unsigned char *output,
 
 #ifdef NSS_X64
     if (ssse3_support() && sse4_1_support() && avx_support()) {
+#ifdef NSS_DISABLE_AVX2
         Hacl_Chacha20Poly1305_128_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, output + inputLen);
+#else
+        if (avx2_support()) {
+            Hacl_Chacha20Poly1305_256_aead_encrypt(
+                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
+                (uint8_t *)input, output, output + inputLen);
+        } else {
+            Hacl_Chacha20Poly1305_128_aead_encrypt(
+                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
+                (uint8_t *)input, output, output + inputLen);
+        }
+#endif
     } else
 #endif
     {
@@ -217,9 +258,21 @@ ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx, unsigned char *output,
     uint32_t res = 1;
 #ifdef NSS_X64
     if (ssse3_support() && sse4_1_support() && avx_support()) {
+#ifdef NSS_DISABLE_AVX2
         res = Hacl_Chacha20Poly1305_128_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
+#else
+        if (avx2_support()) {
+            res = Hacl_Chacha20Poly1305_256_aead_decrypt(
+                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
+                (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
+        } else {
+            res = Hacl_Chacha20Poly1305_128_aead_decrypt(
+                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
+                (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
+        }
+#endif
     } else
 #endif
     {

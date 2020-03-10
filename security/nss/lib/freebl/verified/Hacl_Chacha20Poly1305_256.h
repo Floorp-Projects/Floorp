@@ -21,31 +21,40 @@
  * SOFTWARE.
  */
 
+#include "libintvector.h"
 #include "kremlin/internal/types.h"
 #include "kremlin/lowstar_endianness.h"
 #include <string.h>
 #include <stdbool.h>
 
-#ifndef __Hacl_Kremlib_H
-#define __Hacl_Kremlib_H
+#ifndef __Hacl_Chacha20Poly1305_256_H
+#define __Hacl_Chacha20Poly1305_256_H
 
-static inline uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
+#include "Hacl_Kremlib.h"
+#include "Hacl_Chacha20_Vec256.h"
+#include "Hacl_Poly1305_256.h"
 
-static inline uint64_t FStar_UInt64_eq_mask(uint64_t a, uint64_t b);
+void
+Hacl_Chacha20Poly1305_256_aead_encrypt(
+    uint8_t *k,
+    uint8_t *n1,
+    uint32_t aadlen,
+    uint8_t *aad,
+    uint32_t mlen,
+    uint8_t *m,
+    uint8_t *cipher,
+    uint8_t *mac);
 
-static inline uint64_t FStar_UInt64_gte_mask(uint64_t a, uint64_t b);
+uint32_t
+Hacl_Chacha20Poly1305_256_aead_decrypt(
+    uint8_t *k,
+    uint8_t *n1,
+    uint32_t aadlen,
+    uint8_t *aad,
+    uint32_t mlen,
+    uint8_t *m,
+    uint8_t *cipher,
+    uint8_t *mac);
 
-static inline FStar_UInt128_uint128
-FStar_UInt128_add(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);
-
-static inline FStar_UInt128_uint128
-FStar_UInt128_shift_right(FStar_UInt128_uint128 a, uint32_t s);
-
-static inline FStar_UInt128_uint128 FStar_UInt128_uint64_to_uint128(uint64_t a);
-
-static inline uint64_t FStar_UInt128_uint128_to_uint64(FStar_UInt128_uint128 a);
-
-static inline FStar_UInt128_uint128 FStar_UInt128_mul_wide(uint64_t x, uint64_t y);
-
-#define __Hacl_Kremlib_H_DEFINED
+#define __Hacl_Chacha20Poly1305_256_H_DEFINED
 #endif

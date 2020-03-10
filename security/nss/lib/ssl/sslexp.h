@@ -943,6 +943,10 @@ typedef struct SSLMaskingContextStr {
                           unsigned int _maskLen),                           \
                          (ctx, sample, sampleLen, mask, maskLen))
 
+#define SSL_SetDtls13VersionWorkaround(fd, enabled)        \
+    SSL_EXPERIMENTAL_API("SSL_SetDtls13VersionWorkaround", \
+                         (PRFileDesc * _fd, PRBool _enabled), (fd, enabled))
+
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
 #define SSL_SetupAntiReplay(a, b, c) SSL_DEPRECATED_EXPERIMENTAL_API

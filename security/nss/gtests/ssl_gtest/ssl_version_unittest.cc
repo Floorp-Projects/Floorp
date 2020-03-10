@@ -355,6 +355,36 @@ TEST_F(DtlsConnectTest, DtlsSupportedVersionsEncoding) {
   EXPECT_EQ(SSL_LIBRARY_VERSION_DTLS_1_0_WIRE, static_cast<int>(version));
 }
 
+// Verify the DTLS 1.3 supported_versions interop workaround.
+TEST_F(DtlsConnectTest, Dtls13VersionWorkaround) {
+  static const uint16_t kExpectVersionsWorkaround[] = {
+      0x7f00 | DTLS_1_3_DRAFT_VERSION, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE,
+      SSL_LIBRARY_VERSION_TLS_1_2, SSL_LIBRARY_VERSION_DTLS_1_0_WIRE,
+      SSL_LIBRARY_VERSION_TLS_1_1};
+  const int min_ver = SSL_LIBRARY_VERSION_TLS_1_1,
+            max_ver = SSL_LIBRARY_VERSION_TLS_1_3;
+
+  // Toggle the workaround, then verify both encodings are present.
+  EnsureTlsSetup();
+  SSL_SetDtls13VersionWorkaround(client_->ssl_fd(), PR_TRUE);
+  SSL_SetDtls13VersionWorkaround(client_->ssl_fd(), PR_FALSE);
+  SSL_SetDtls13VersionWorkaround(client_->ssl_fd(), PR_TRUE);
+  client_->SetVersionRange(min_ver, max_ver);
+  server_->SetVersionRange(min_ver, max_ver);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_supported_versions_xtn);
+  Connect();
+
+  uint32_t version = 0;
+  size_t off = 1;
+  ASSERT_EQ(1 + sizeof(kExpectVersionsWorkaround), capture->extension().len());
+  for (unsigned int i = 0; i < PR_ARRAY_SIZE(kExpectVersionsWorkaround); i++) {
+    ASSERT_TRUE(capture->extension().Read(off, 2, &version));
+    EXPECT_EQ(kExpectVersionsWorkaround[i], static_cast<uint16_t>(version));
+    off += 2;
+  }
+}
+
 // Verify the client sends only TLS versions in supported_versions
 TEST_F(TlsConnectTest, TlsSupportedVersionsEncoding) {
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
