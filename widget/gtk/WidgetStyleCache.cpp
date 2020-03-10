@@ -760,7 +760,6 @@ GtkWidget* GetWidget(WidgetNodeType aAppearance) {
     // Some widgets (MOZ_GTK_COMBOBOX_SEPARATOR for instance) may not be
     // available or implemented.
     if (!widget) {
-      NS_WARNING(nsPrintfCString("Missing GtkWidget %d\n", aAppearance).get());
       return nullptr;
     }
     // In GTK versions prior to 3.18, automatic invalidation of style contexts
