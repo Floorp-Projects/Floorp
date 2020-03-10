@@ -377,12 +377,12 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 #endif
 
-TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink)
+TraceListNode::TraceListNode(js::gc::Cell* gcThing, FunctionBox* traceLink)
     : gcThing(gcThing), traceLink(traceLink) {
   MOZ_ASSERT_IF(gcThing, gcThing->isTenured());
 }
 
-ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink)
+ObjectBox::ObjectBox(JSObject* obj, FunctionBox* traceLink)
     : TraceListNode(obj, traceLink), emitLink(nullptr) {}
 
 BigInt* BigIntLiteral::getOrCreate(JSContext* cx) {
@@ -426,8 +426,8 @@ FunctionBox* ObjectBox::asFunctionBox() {
 }
 
 /* static */
-void TraceListNode::TraceList(JSTracer* trc, TraceListNode* listHead) {
-  for (TraceListNode* node = listHead; node; node = node->traceLink) {
+void TraceListNode::TraceList(JSTracer* trc, FunctionBox* listHead) {
+  for (FunctionBox* node = listHead; node; node = node->traceLink) {
     node->trace(trc);
   }
 }
