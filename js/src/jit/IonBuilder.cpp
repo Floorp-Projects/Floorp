@@ -8800,8 +8800,6 @@ AbortReasonOr<Ok> IonBuilder::getElemTryArguments(bool* emitted,
 
   MOZ_ASSERT(!info().argsObjAliasesFormals());
 
-  MOZ_ASSERT(!script()->jitScript()->modifiesArguments());
-
   // Type Inference has guaranteed this is an optimized arguments object.
   obj->setImplicitlyUsedUnchecked();
 
