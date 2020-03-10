@@ -21,6 +21,7 @@ struct IPCServiceWorkerDescriptor
   nsCString scope;
   nsCString scriptURL;
   ServiceWorkerState state;
+  bool handlesFetch;
 };
 
 } // namespace dom
