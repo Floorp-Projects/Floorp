@@ -64,6 +64,25 @@
   margin-left: 16px;
 }
 
+.network-monitor .accordion {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.network-monitor .accordion-item:last-child {
+  position: relative;
+  height: 100%;
+}
+
+.network-monitor .accordion-item:last-child .accordion-content {
+  position: absolute;
+  top: calc(var(--theme-toolbar-height) + 1px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
 /* Text inputs in tab panels */
 
 .network-monitor .textbox-input {
