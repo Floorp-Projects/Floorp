@@ -11,6 +11,7 @@ include protocol PInProcess;
 include protocol PBrowserBridge;
 
 include DOMTypes;
+include ClientIPCTypes;
 
 using JSWindowActorMessageKind from "mozilla/dom/JSWindowActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
@@ -95,6 +96,9 @@ parent:
 
   // Get content blocking events from the parent process.
   async GetContentBlockingEvents() returns (uint32_t events);
+
+  // Send the ClientInfo associated with a top-level document load.
+  async SetClientInfo(IPCClientInfo aClientInfo);
 
   async Destroy();
 };
