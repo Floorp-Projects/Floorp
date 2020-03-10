@@ -17,6 +17,7 @@
 
 #include "frontend/AbstractScope.h"      // AbstractScope, ScopeIndex
 #include "frontend/NameAnalysisTypes.h"  // {AtomVector, FunctionBoxVector}
+#include "frontend/ObjLiteral.h"         // ObjLiteralCreationData
 #include "frontend/TypedIndex.h"         // TypedIndex
 #include "gc/AllocKind.h"                // gc::AllocKind
 #include "gc/Barrier.h"                  // HeapPtr, GCPtrAtom
@@ -418,6 +419,16 @@ class ScopeCreationData {
   }
 };
 
+// These types all end up being baked into GC things as part of stencil
+// instantiation. Currently, GCCellPtr is part of this list while we complete
+// Stencil, but eventually will be removed.
+using ScriptThingVariant =
+    mozilla::Variant<JS::GCCellPtr, BigIntIndex, ObjLiteralCreationData,
+                     RegExpIndex, ScopeIndex>;
+
+// A vector of things destined to be converted to GC things.
+using ScriptThingsVector = GCVector<ScriptThingVariant>;
+
 // Data used to instantiate the non-lazy script.
 class ScriptStencil {
  public:
@@ -506,5 +517,8 @@ struct GCPolicy<js::frontend::ScopeCreationData*> {
   }
 };
 
+template <typename T>
+struct GCPolicy<js::frontend::TypedIndex<T>>
+    : JS::IgnoreGCPolicy<js::frontend::TypedIndex<T>> {};
 }  // namespace JS
 #endif /* frontend_Stencil_h */
