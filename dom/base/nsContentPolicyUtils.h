@@ -169,7 +169,6 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
  * Note: requestOrigin is scoped outside the PR_BEGIN_MACRO/PR_END_MACRO on
  * purpose */
 #define CHECK_PRINCIPAL_CSP_AND_DATA(action)                                  \
-  nsCOMPtr<nsIURI> requestOrigin;                                             \
   PR_BEGIN_MACRO                                                              \
   if (loadingPrincipal) {                                                     \
     /* We exempt most loads into any document with the system principal       \
@@ -205,8 +204,6 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
       }                                                                       \
       return NS_OK;                                                           \
     }                                                                         \
-    nsresult rv = loadingPrincipal->GetURI(getter_AddRefs(requestOrigin));    \
-    NS_ENSURE_SUCCESS(rv, rv);                                                \
   }                                                                           \
   PR_END_MACRO
 
