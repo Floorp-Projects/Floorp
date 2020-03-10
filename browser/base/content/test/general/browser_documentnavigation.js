@@ -20,40 +20,19 @@ async function expectFocusOnF6(
   onContent,
   desc
 ) {
-  let focusChangedInChildResolver = null;
-  let focusPromise = onContent
-    ? new Promise(resolve => (focusChangedInChildResolver = resolve))
-    : BrowserTestUtils.waitForEvent(window, "focus", true);
-
-  function focusChangedListener(msg) {
-    let expected = expectedDocument;
-    if (!expectedElement.startsWith("html")) {
-      expected += "," + expectedElement;
-    }
-
-    is(msg.data.details, expected, desc + " child focus matches");
-    focusChangedInChildResolver();
-  }
-
   if (onContent) {
-    window.messageManager.addMessageListener(
-      "BrowserTest:FocusChanged",
-      focusChangedListener
-    );
-
-    await ContentTask.spawn(
+    let success = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      { expectedElementId: expectedElement },
-      async function(arg) {
+      [expectedElement],
+      async function(expectedElementId) {
+        content.lastResult = "";
         let contentExpectedElement = content.document.getElementById(
-          arg.expectedElementId
+          expectedElementId
         );
         if (!contentExpectedElement) {
           // Element not found, so look in the child frames.
           for (let f = 0; f < content.frames.length; f++) {
-            if (
-              content.frames[f].document.getElementById(arg.expectedElementId)
-            ) {
+            if (content.frames[f].document.getElementById(expectedElementId)) {
               contentExpectedElement = content.frames[f].document;
               break;
             }
@@ -63,10 +42,7 @@ async function expectFocusOnF6(
         }
 
         if (!contentExpectedElement) {
-          sendSyncMessage("BrowserTest:FocusChanged", {
-            details: "expected element " + arg.expectedElementId + " not found",
-          });
-          return;
+          return null;
         }
 
         contentExpectedElement.addEventListener(
@@ -78,16 +54,40 @@ async function expectFocusOnF6(
               details += "," + Services.focus.focusedElement.id;
             }
 
-            sendSyncMessage("BrowserTest:FocusChanged", { details });
+            // Assign the result to a temporary place, to be used
+            // by the next spawn call.
+            content.lastResult = details;
           },
           { capture: true, once: true }
         );
+
+        return !!contentExpectedElement;
       }
     );
-  }
 
-  EventUtils.synthesizeKey("VK_F6", { shiftKey: backward });
-  await focusPromise;
+    ok(success, "expected element " + expectedElement + " was found");
+
+    EventUtils.synthesizeKey("VK_F6", { shiftKey: backward });
+
+    let expected = expectedDocument;
+    if (!expectedElement.startsWith("html")) {
+      expected += "," + expectedElement;
+    }
+
+    let result = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [],
+      async () => {
+        await ContentTaskUtils.waitForCondition(() => content.lastResult);
+        return content.lastResult;
+      }
+    );
+    is(result, expected, desc + " child focus matches");
+  } else {
+    let focusPromise = BrowserTestUtils.waitForEvent(window, "focus", true);
+    EventUtils.synthesizeKey("VK_F6", { shiftKey: backward });
+    await focusPromise;
+  }
 
   if (typeof expectedElement == "string") {
     expectedElement = fm.focusedWindow.document.getElementById(expectedElement);
@@ -113,13 +113,6 @@ async function expectFocusOnF6(
       fm.focusedElement.id +
       ")"
   );
-
-  if (onContent) {
-    window.messageManager.removeMessageListener(
-      "BrowserTest:FocusChanged",
-      focusChangedListener
-    );
-  }
 }
 
 // Load a page and navigate between it and the chrome window.
