@@ -4,25 +4,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CheckableInputTypes_h__
-#define CheckableInputTypes_h__
+#ifndef mozilla_dom_CheckableInputTypes_h__
+#define mozilla_dom_CheckableInputTypes_h__
 
-#include "InputType.h"
+#include "mozilla/dom/InputType.h"
 
-class CheckableInputTypeBase : public ::InputType {
+namespace mozilla {
+namespace dom {
+
+class CheckableInputTypeBase : public InputType {
  public:
   ~CheckableInputTypeBase() override = default;
 
  protected:
-  explicit CheckableInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
+  explicit CheckableInputTypeBase(HTMLInputElement* aInputElement)
       : InputType(aInputElement) {}
 };
 
 // input type=checkbox
 class CheckboxInputType : public CheckableInputTypeBase {
  public:
-  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
-                           void* aMemory) {
+  static InputType* Create(HTMLInputElement* aInputElement, void* aMemory) {
     return new (aMemory) CheckboxInputType(aInputElement);
   }
 
@@ -31,23 +33,25 @@ class CheckboxInputType : public CheckableInputTypeBase {
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
  private:
-  explicit CheckboxInputType(mozilla::dom::HTMLInputElement* aInputElement)
+  explicit CheckboxInputType(HTMLInputElement* aInputElement)
       : CheckableInputTypeBase(aInputElement) {}
 };
 
 // input type=radio
 class RadioInputType : public CheckableInputTypeBase {
  public:
-  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
-                           void* aMemory) {
+  static InputType* Create(HTMLInputElement* aInputElement, void* aMemory) {
     return new (aMemory) RadioInputType(aInputElement);
   }
 
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
  private:
-  explicit RadioInputType(mozilla::dom::HTMLInputElement* aInputElement)
+  explicit RadioInputType(HTMLInputElement* aInputElement)
       : CheckableInputTypeBase(aInputElement) {}
 };
 
-#endif /* CheckableInputTypes_h__ */
+}  // namespace dom
+}  // namespace mozilla
+
+#endif /* mozilla_dom_CheckableInputTypes_h__ */
