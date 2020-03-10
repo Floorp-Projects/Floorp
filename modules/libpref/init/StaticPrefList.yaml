@@ -7374,6 +7374,11 @@
   value: true
   mirror: always
 
+- name: network.http.stale_while_revalidate.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
   type: RelaxedAtomicUint32
