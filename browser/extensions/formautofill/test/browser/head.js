@@ -6,14 +6,14 @@
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
             DEFAULT_REGION_PREF,
-            sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, expectPopupClose, closePopup, closePopupForSubframe, 
+            sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, expectPopupClose, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox,
             getNotification, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
 
 "use strict";
 
-ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", this);
+ChromeUtils.import("resource:///modules/OSKeyStore.jsm", this);
 ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
 
 const MANAGE_ADDRESSES_DIALOG_URL =

@@ -4,13 +4,27 @@
 
 "use strict";
 
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
+let OSKeyStoreTestUtils;
+add_task(async function os_key_store_setup() {
+  ({ OSKeyStoreTestUtils } = ChromeUtils.import(
+    "resource://testing-common/OSKeyStoreTestUtils.jsm"
+  ));
+  OSKeyStoreTestUtils.setup();
+  registerCleanupFunction(async function cleanup() {
+    await OSKeyStoreTestUtils.cleanup();
+  });
+});
+
 let OSKeyStore;
 add_task(async function setup() {
   Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
 
-  ({ OSKeyStore } = ChromeUtils.import(
-    "resource://formautofill/OSKeyStore.jsm"
-  ));
+  ({ OSKeyStore } = ChromeUtils.import("resource:///modules/OSKeyStore.jsm"));
 });
 
 // Ensure that the appropriate initialization has happened.
