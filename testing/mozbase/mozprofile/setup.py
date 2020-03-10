@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozprofile'
-PACKAGE_VERSION = '2.4.0'
+PACKAGE_VERSION = '2.5.0'
 
 deps = [
     'mozfile>=1.2',

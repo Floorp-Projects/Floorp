@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-PACKAGE_VERSION = '2.2.0'
+PACKAGE_VERSION = '2.3.0'
 
 
 setup(name='mozversion',
