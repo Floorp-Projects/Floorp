@@ -4,9 +4,6 @@
 
   - …
 
-## fluent-pseudo 0.2.2 (February 13, 2020)
-  - Static references to regexps.
-
 ## fluent-pseudo 0.2.0 (December 13, 2019)
   - Exclude access-keys and other single-char messages.
 
