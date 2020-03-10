@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L324)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L325)
 
 Observers that want to receive updates for new subscriptions and messages.
 
