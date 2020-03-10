@@ -70,11 +70,17 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   let conditions = sidebar.querySelectorAll(".media-rule-condition");
 
   const onMediaChange = once(ui, "media-list-changed");
+  const onRDMOpened = once(ui, "responsive-mode-opened");
 
   info("Launching responsive mode");
   conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
 
+  const size = await onRDMOpened;
+
   const rdmUI = ResponsiveUIManager.getResponsiveUIForTab(tab);
+
+  rdmUI.setViewportSize(size);
+
   const onContentResize = waitForResizeTo(rdmUI, type, value);
   rdmUI.transitionsEnabled = false;
 
