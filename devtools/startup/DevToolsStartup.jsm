@@ -858,7 +858,7 @@ DevToolsStartup.prototype = {
       // first to bail out of checking if DevTools is available.
       switch (key.id) {
         case "profilerStartStop": {
-          ProfilerPopupBackground.toggleProfiler();
+          ProfilerPopupBackground.toggleProfiler("aboutprofiling");
           return;
         }
         case "profilerCapture": {
