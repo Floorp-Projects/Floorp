@@ -25,8 +25,8 @@ bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
   // the FunctionBox to the |lastbox| linked list for finishInnerFunctions
   // below.
 
-  MOZ_ASSERT(!funbox->emitLink);
-  funbox->emitLink = lastbox;
+  MOZ_ASSERT(!funbox->emitLink_);
+  funbox->emitLink_ = lastbox;
   lastbox = funbox;
 
   *index = vector.length();
@@ -37,7 +37,7 @@ void GCThingList::finishInnerFunctions() {
   FunctionBox* funbox = lastbox;
   while (funbox) {
     funbox->finish();
-    funbox = funbox->emitLink;
+    funbox = funbox->emitLink_;
   }
 }
 

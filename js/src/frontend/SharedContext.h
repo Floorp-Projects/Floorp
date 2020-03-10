@@ -304,11 +304,11 @@ class FunctionBox : public SharedContext {
   friend struct GCThingList;
 
   // The parser handles tracing the fields below via the FunctionBox linked
-  // list represented by |traceLink|.
+  // list represented by |traceLink_|.
 
   JSFunction* object_;
-  FunctionBox* traceLink;
-  FunctionBox* emitLink;
+  FunctionBox* traceLink_;
+  FunctionBox* emitLink_;
 
   // This field is used for two purposes:
   //   * If this FunctionBox refers to the function being compiled, this field
