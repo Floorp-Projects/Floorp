@@ -21,16 +21,17 @@
 using namespace js;
 using namespace js::frontend;
 
-bool GCThingList::append(ObjectBox* objbox, uint32_t* index) {
-  // Append the object to the vector and return the index in *index. Also add
-  // the ObjectBox to the |lastbox| linked list for finishInnerFunctions below.
+bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
+  // Append the function to the vector and return the index in *index. Also add
+  // the FunctionBox to the |lastbox| linked list for finishInnerFunctions
+  // below.
 
-  MOZ_ASSERT(!objbox->emitLink);
-  objbox->emitLink = lastbox;
-  lastbox = objbox;
+  MOZ_ASSERT(!funbox->emitLink);
+  funbox->emitLink = lastbox;
+  lastbox = funbox;
 
   *index = vector.length();
-  return vector.append(mozilla::AsVariant(JS::GCCellPtr(objbox->object())));
+  return vector.append(mozilla::AsVariant(JS::GCCellPtr(funbox->object())));
 }
 
 void GCThingList::finishInnerFunctions() {
