@@ -602,58 +602,66 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     }
 
     private inner class TextChangeListener : TextWatcher {
-        private var textLengthBeforeChange: Int = 0
+        private var beforeChangedTextNonAutocomplete: String = ""
+
+        override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            beforeChangedTextNonAutocomplete = getNonAutocompleteText(text)
+        }
+
+        override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+            // do nothing
+        }
 
         override fun afterTextChanged(editable: Editable) {
             if (!isEnabled || settingAutoComplete) {
                 return
             }
 
-            val text = getNonAutocompleteText(editable)
-            val textLength = text.length
-            var doAutocomplete = !
-            (
-                // Don't autocomplete if search query
-                text.contains(" ") ||
+            val afterNonAutocompleteText = getNonAutocompleteText(editable)
 
-                // ... or if user is hitting a backspace (the string is getting smaller)
-                (textLength < textLengthBeforeChange || textLength == 0)
-            )
+            val hasTextBeenRemoved: Boolean =
+                    (beforeChangedTextNonAutocomplete.contains(afterNonAutocompleteText) &&
+                            beforeChangedTextNonAutocomplete.length > afterNonAutocompleteText.length)
 
-            autoCompletePrefixLength = textLength
+            val hasTextBeenAdded: Boolean =
+                    (afterNonAutocompleteText.contains(beforeChangedTextNonAutocomplete) &&
+                            afterNonAutocompleteText.length > beforeChangedTextNonAutocomplete.length)
+
+            // If true autocomplete text will be added, if false autocomplete text will be removed.
+            var shouldAddAutocomplete: Boolean =
+                    // Remove autocomplete if search query
+                    (!afterNonAutocompleteText.contains(" ") &&
+                            // ... or if user is hitting a backspace (the string is getting smaller)
+                            !hasTextBeenRemoved && afterNonAutocompleteText.isNotEmpty()) ||
+                            // Add autocomplete if valid text has been added
+                            (hasTextBeenAdded && !afterNonAutocompleteText.contains(" "))
+
+            autoCompletePrefixLength = afterNonAutocompleteText.length
 
             // If we are not autocompleting, we set discardAutoCompleteResult to true
             // to discard any autocomplete results that are in-flight, and vice versa.
-            discardAutoCompleteResult = !doAutocomplete
+            discardAutoCompleteResult = !shouldAddAutocomplete
 
-            if (!doAutocomplete) {
+            if (!shouldAddAutocomplete) {
                 // Remove the old autocomplete text until any new autocomplete text gets added.
                 removeAutocomplete(editable)
             } else {
                 // If this text already matches our autocomplete text, autocomplete likely
                 // won't change. Just reuse the old autocomplete value.
-                autocompleteResult?.takeIf { it.startsWith(text) }?.let {
+                autocompleteResult?.takeIf { it.startsWith(afterNonAutocompleteText) }?.let {
                     applyAutocompleteResult(it)
-                    doAutocomplete = false
+                    shouldAddAutocomplete = false
                 }
             }
 
             // Update search icon with an active state since user is typing
-            searchStateChangeListener?.invoke(textLength > 0)
+            searchStateChangeListener?.invoke(afterNonAutocompleteText.isNotEmpty())
 
-            if (doAutocomplete) {
-                filterListener?.invoke(text)
+            if (shouldAddAutocomplete) {
+                filterListener?.invoke(afterNonAutocompleteText)
             }
 
-            textChangeListener?.invoke(text, getText().toString())
-        }
-
-        override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-            textLengthBeforeChange = autoCompletePrefixLength
-        }
-
-        override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-            // do nothing
+            textChangeListener?.invoke(afterNonAutocompleteText, text.toString())
         }
     }
 
