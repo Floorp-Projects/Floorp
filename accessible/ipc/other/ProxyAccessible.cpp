@@ -112,10 +112,11 @@ nsStaticAtom* ProxyAccessible::ARIARoleAtom() const {
   return NS_GetStaticAtom(role);
 }
 
-int32_t ProxyAccessible::GetLevelInternal() {
-  int32_t level = 0;
-  Unused << mDoc->SendGetLevelInternal(mID, &level);
-  return level;
+GroupPos ProxyAccessible::GroupPosition() {
+  GroupPos groupPos;
+  Unused << mDoc->SendGroupPosition(mID, &groupPos.level, &groupPos.setSize,
+                                    &groupPos.posInSet);
+  return groupPos;
 }
 
 void ProxyAccessible::ScrollTo(uint32_t aScrollType) {
