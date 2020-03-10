@@ -2239,7 +2239,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
     mFocusedElement = aElement;
 
     nsIContent* focusedNode = aWindow->GetFocusedElement();
-    bool isRefocus = focusedNode && focusedNode->IsEqualNode(aElement);
+    bool isRefocus = focusedNode && focusedNode == aElement;
 
     aWindow->SetFocusedElement(aElement, focusMethod);
 
