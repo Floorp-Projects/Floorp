@@ -452,7 +452,11 @@ xpcAccessible::GroupPosition(int32_t* aGroupLevel,
   if (Accessible* acc = IntlGeneric().AsAccessible()) {
     groupPos = acc->GroupPosition();
   } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
     groupPos = IntlGeneric().AsProxy()->GroupPosition();
+#endif
   }
 
   *aGroupLevel = groupPos.level;
