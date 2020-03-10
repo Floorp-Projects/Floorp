@@ -1,0 +1,399 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "GroupComment",
+            "content": "Literal text"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "text-backslash-one"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value with \\ a backslash"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "text-backslash-two"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value with \\\\ two backslashes"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "text-backslash-brace"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value with \\"
+                    },
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "MessageReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "placeable"
+                            },
+                            "attribute": null
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "text-backslash-u"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "\\u0041"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "text-backslash-backslash-u"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "\\\\u0041"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "GroupComment",
+            "content": "String literals"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "quote-in-string"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\\"",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "backslash-in-string"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\\\",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Mismatched quote"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "mismatched-quote = {\"\\\\\"\"}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Unknown escape"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "unknown-escape = {\"\\x\"}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Multiline literal"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "invalid-multiline-literal = {\"\n \"}\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Unicode escapes"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "string-unicode-4digits"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\u0041",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "escape-unicode-4digits"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\\\u0041",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "string-unicode-6digits"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\U01F602",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "escape-unicode-6digits"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\\\U01F602",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "string-too-many-4digits"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\u004100",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "OK The trailing \"00\" is part of the literal value."
+            }
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "string-too-many-6digits"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "\\U01F60200",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "OK The trailing \"00\" is part of the literal value."
+            }
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Too few hex digits after \\u."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "string-too-few-4digits = {\"\\u41\"}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Too few hex digits after \\U."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "string-too-few-6digits = {\"\\U1F602\"}\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Literal braces"
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "brace-open"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "An opening "
+                    },
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "{",
+                            "type": "StringLiteral"
+                        }
+                    },
+                    {
+                        "type": "TextElement",
+                        "value": " brace."
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "brace-close"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "A closing "
+                    },
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "}",
+                            "type": "StringLiteral"
+                        }
+                    },
+                    {
+                        "type": "TextElement",
+                        "value": " brace."
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        }
+    ]
+}
