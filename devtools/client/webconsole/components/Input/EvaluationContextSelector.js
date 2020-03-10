@@ -36,7 +36,7 @@ loader.lazyGetter(this, "MenuList", function() {
   );
 });
 
-class EvaluationSelector extends Component {
+class EvaluationContextSelector extends Component {
   static get propTypes() {
     return {
       selectThread: PropTypes.func.isRequired,
@@ -155,7 +155,7 @@ const toolboxConnected = connect(
   }),
   undefined,
   { storeKey: "toolbox-store" }
-)(EvaluationSelector);
+)(EvaluationContextSelector);
 
 module.exports = connect(
   state => state,

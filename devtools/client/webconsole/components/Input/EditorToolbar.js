@@ -12,8 +12,8 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const EvaluationSelector = createFactory(
-  require("devtools/client/webconsole/components/Input/EvaluationSelector")
+const EvaluationContextSelector = createFactory(
+  require("devtools/client/webconsole/components/Input/EvaluationContextSelector")
 );
 
 const actions = require("devtools/client/webconsole/actions/index");
@@ -35,7 +35,7 @@ class EditorToolbar extends Component {
       reverseSearchInputVisible: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.object.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
-      showEvaluationSelector: PropTypes.bool,
+      showEvaluationContextSelector: PropTypes.bool,
     };
   }
 
@@ -58,15 +58,15 @@ class EditorToolbar extends Component {
     );
   }
 
-  renderEvaluationSelector() {
+  renderEvaluationContextSelector() {
     if (
       !this.props.webConsoleUI.wrapper.toolbox ||
-      !this.props.showEvaluationSelector
+      !this.props.showEvaluationContextSelector
     ) {
       return null;
     }
 
-    return EvaluationSelector({
+    return EvaluationContextSelector({
       webConsoleUI: this.props.webConsoleUI,
     });
   }
@@ -101,7 +101,7 @@ class EditorToolbar extends Component {
         },
         l10n.getStr("webconsole.editor.toolbar.executeButton.label")
       ),
-      this.renderEvaluationSelector(),
+      this.renderEvaluationContextSelector(),
       dom.button({
         className:
           "devtools-button webconsole-editor-toolbar-history-prevExpressionButton",

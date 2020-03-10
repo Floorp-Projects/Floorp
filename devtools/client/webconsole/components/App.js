@@ -115,7 +115,7 @@ class App extends Component {
       filterBarDisplayMode: PropTypes.oneOf([
         ...Object.values(FILTERBAR_DISPLAY_MODES),
       ]).isRequired,
-      showEvaluationSelector: PropTypes.bool,
+      showEvaluationContextSelector: PropTypes.bool,
     };
   }
 
@@ -293,7 +293,7 @@ class App extends Component {
       reverseSearchInputVisible,
       serviceContainer,
       webConsoleUI,
-      showEvaluationSelector,
+      showEvaluationContextSelector,
     } = this.props;
 
     return editorMode
@@ -303,7 +303,7 @@ class App extends Component {
           dispatch,
           reverseSearchInputVisible,
           serviceContainer,
-          showEvaluationSelector,
+          showEvaluationContextSelector,
           webConsoleUI,
         })
       : null;
@@ -473,7 +473,7 @@ const mapStateToProps = state => ({
   filterBarDisplayMode: state.ui.filterBarDisplayMode,
   eagerEvaluationEnabled: state.prefs.eagerEvaluation,
   autocomplete: state.prefs.autocomplete,
-  showEvaluationSelector: state.ui.showEvaluationSelector,
+  showEvaluationContextSelector: state.ui.showEvaluationContextSelector,
 });
 
 const mapDispatchToProps = dispatch => ({
