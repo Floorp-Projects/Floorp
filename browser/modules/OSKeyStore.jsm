@@ -120,6 +120,8 @@ var OSKeyStore = {
    * @param   {boolean|string} reauth If set to a string, prompt the reauth login dialog,
    *                                  showing the string on the native OS login dialog.
    *                                  Otherwise `false` will prevent showing the prompt.
+   * @param   {string} dialogCaption  The string will be shown on the native OS
+   *                                  login dialog as the dialog caption (usually Product Name).
    * @param   {Window?} parentWindow  The window of the caller, used to center the
    *                                  OS prompt in the middle of the application window.
    * @param   {boolean} generateKeyIfNotAvailable Makes key generation optional
@@ -144,6 +146,7 @@ var OSKeyStore = {
    */
   async ensureLoggedIn(
     reauth = false,
+    dialogCaption = "",
     parentWindow = null,
     generateKeyIfNotAvailable = true
   ) {
@@ -177,7 +180,7 @@ var OSKeyStore = {
         // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
         // On macOS this resolves to false, so we would need to check it.
         unlockPromise = osReauthenticator
-          .asyncReauthenticateUser(reauth, parentWindow)
+          .asyncReauthenticateUser(reauth, dialogCaption, parentWindow)
           .then(reauthResult => {
             if (typeof reauthResult == "boolean" && !reauthResult) {
               throw new Components.Exception(

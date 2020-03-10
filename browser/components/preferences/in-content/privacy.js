@@ -30,7 +30,10 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/SiteDataManager.jsm"
 );
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
-  return new Localization(["browser/preferences/preferences.ftl"]);
+  return new Localization([
+    "branding/brand.ftl",
+    "browser/preferences/preferences.ftl",
+  ]);
 });
 
 var { PrivateBrowsingUtils } = ChromeUtils.import(
@@ -1909,13 +1912,17 @@ var gPrivacyPane = {
         // See preferences.ftl for more information.
         messageId += "-macosx";
       }
-      let [messageText] = await L10n.formatMessages([
+      let [messageText, captionText] = await L10n.formatMessages([
         {
           id: messageId,
+        },
+        {
+          id: "master-password-os-auth-dialog-caption",
         },
       ]);
       let loggedIn = await OSKeyStore.ensureLoggedIn(
         messageText.value,
+        captionText.value,
         window,
         false
       );
