@@ -20,7 +20,7 @@ interface mozILocalization : nsISupports
 
   Promise formatMessages(in Array<jsval> aKeys);
   Promise formatValues(in Array<jsval> aKeys);
-  Promise formatValue(in AString aId, [optional] in jsval aArgs);
+  Promise formatValue(in AUTF8String aId, [optional] in jsval aArgs);
 
   Array<jsval> formatMessagesSync(in Array<jsval> aKeys);
   void setIsSync(in boolean isSync);

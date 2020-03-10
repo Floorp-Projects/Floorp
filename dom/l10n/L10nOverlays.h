@@ -113,7 +113,7 @@ class L10nOverlays {
   /**
    * A helper used to test if the string contains HTML markup.
    */
-  static bool ContainsMarkup(const nsAString& aStr);
+  static bool ContainsMarkup(const nsACString& aStr);
 };
 
 }  // namespace dom
