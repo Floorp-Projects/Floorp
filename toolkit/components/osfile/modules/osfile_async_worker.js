@@ -29,7 +29,23 @@ if (this.Components) {
 
   let worker = new PromiseWorker.AbstractWorker();
   worker.dispatch = function(method, args = []) {
-    return Agent[method](...args);
+    let prefix = "OS.File " + method;
+    performance.mark(prefix + "-start");
+    try {
+      return Agent[method](...args);
+    } finally {
+      let name = prefix;
+      if (args.length && args[0].string) {
+        // Including the path in the marker name here means it will be part of
+        // profiles. It's fine to include personally identifiable information
+        // in profiles, because when a profile is captured only the user will
+        // see it, and before uploading it a sanitization step will be offered.
+        // The 'OS.File ' prefix will help the profiler know that these marker
+        // names should be sanitized.
+        name += " — " + args[0].string;
+      }
+      performance.measure(name, prefix + "-start");
+    }
   };
   worker.log = LOG;
   worker.postMessage = function(message, ...transfers) {
