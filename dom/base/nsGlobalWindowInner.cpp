@@ -1770,6 +1770,10 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     DocGroup* docGroup = GetDocGroup();
     MOZ_DIAGNOSTIC_ASSERT(docGroup);
     mClientSource->SetAgentClusterId(docGroup->AgentClusterId());
+
+    if (mWindowGlobalChild) {
+      mWindowGlobalChild->SendSetClientInfo(mClientSource->Info().ToIPC());
+    }
   }
 
   // Its possible that we got a client just after being frozen in
