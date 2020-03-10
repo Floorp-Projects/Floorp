@@ -2285,7 +2285,7 @@ class ObjectBox {
 
   JSObject* object_;
   FunctionBox* traceLink;
-  ObjectBox* emitLink;
+  FunctionBox* emitLink;
 
   ObjectBox(JSObject* obj, FunctionBox* link);
 

@@ -35,12 +35,10 @@ bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
 }
 
 void GCThingList::finishInnerFunctions() {
-  ObjectBox* objbox = lastbox;
-  while (objbox) {
-    if (objbox->isFunctionBox()) {
-      objbox->asFunctionBox()->finish();
-    }
-    objbox = objbox->emitLink;
+  FunctionBox* funbox = lastbox;
+  while (funbox) {
+    funbox->finish();
+    funbox = funbox->emitLink;
   }
 }
 
