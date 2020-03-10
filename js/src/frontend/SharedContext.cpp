@@ -322,6 +322,25 @@ void FunctionBox::finish() {
   }
 }
 
+/* static */
+void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
+  for (FunctionBox* node = listHead; node; node = node->traceLink) {
+    node->trace(trc);
+  }
+}
+
+void FunctionBox::trace(JSTracer* trc) {
+  if (object_) {
+    TraceRoot(trc, &object_, "funbox-object");
+  }
+  if (enclosingScope_) {
+    enclosingScope_.trace(trc);
+  }
+  if (explicitName_) {
+    TraceRoot(trc, &explicitName_, "funbox-explicitName");
+  }
+}
+
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
                                          CompilationInfo& compilationInfo,
                                          Scope* enclosingScope,
