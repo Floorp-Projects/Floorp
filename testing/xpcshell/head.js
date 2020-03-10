@@ -1616,6 +1616,36 @@ try {
   do_throw(e);
 }
 
+/**
+ * Changing/Adding scalars or events to Telemetry is supported in build-faster/artifacts builds.
+ * These need to be loaded explicitly at start.
+ * It usually happens once all of Telemetry is initialized and set up.
+ * However in xpcshell tests Telemetry is not necessarily fully loaded,
+ * so we help out users by loading at least the dynamic-builtin probes.
+ */
+try {
+  let _AppConstants = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm",
+    null
+  ).AppConstants;
+
+  // We only need to run this in the parent process.
+  // We only want to run this for local developer builds (which should have a "default" update channel).
+  if (runningInParent && _AppConstants.MOZ_UPDATE_CHANNEL == "default") {
+    let _TelemetryController = ChromeUtils.import(
+      "resource://gre/modules/TelemetryController.jsm",
+      null
+    ).TelemetryController;
+
+    let complete = false;
+    let doComplete = () => (complete = true);
+    _TelemetryController.testRegisterJsProbes().then(doComplete, doComplete);
+    _Services.tm.spinEventLoopUntil(() => complete);
+  }
+} catch (e) {
+  do_throw(e);
+}
+
 function _load_mozinfo() {
   let mozinfoFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   mozinfoFile.initWithPath(_MOZINFO_JS_PATH);
