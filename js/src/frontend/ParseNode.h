@@ -2298,12 +2298,6 @@ class TraceListNode {
 
   TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink, NodeType type);
 
-  bool isObjectBox() const {
-    return type_ == NodeType::Object || type_ == NodeType::Function;
-  }
-
-  ObjectBox* asObjectBox();
-
   virtual void trace(JSTracer* trc);
 
  public:
