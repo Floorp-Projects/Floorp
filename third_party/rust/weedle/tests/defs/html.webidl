@@ -124,7 +124,7 @@ interface mixin HTMLOrSVGElement {
   attribute DOMString nonce;
 
   [CEReactions] attribute long tabIndex;
-  void focus(optional FocusOptions options);
+  void focus(optional FocusOptions options = {});
   void blur();
 };
 HTMLElement includes HTMLOrSVGElement;
@@ -613,7 +613,7 @@ interface TimeRanges {
 };
 
 [Exposed=Window,
- Constructor(DOMString type, optional TrackEventInit eventInitDict)]
+ Constructor(DOMString type, optional TrackEventInit eventInitDict = {})]
 interface TrackEvent : Event {
   readonly attribute (VideoTrack or AudioTrack or TextTrack)? track;
 };
@@ -1063,8 +1063,8 @@ interface HTMLTemplateElement : HTMLElement {
  HTMLConstructor]
 interface HTMLSlotElement : HTMLElement {
   [CEReactions] attribute DOMString name;
-  sequence<Node> assignedNodes(optional AssignedNodesOptions options);
-  sequence<Element> assignedElements(optional AssignedNodesOptions options);
+  sequence<Node> assignedNodes(optional AssignedNodesOptions options = {});
+  sequence<Element> assignedElements(optional AssignedNodesOptions options = {});
 };
 
 dictionary AssignedNodesOptions {
@@ -1142,7 +1142,7 @@ interface mixin CanvasTransform {
 
   [NewObject] DOMMatrix getTransform();
   void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
-  void setTransform(optional DOMMatrix2DInit transform);
+  void setTransform(optional DOMMatrix2DInit transform = {});
   void resetTransform();
 
 };
@@ -1272,8 +1272,8 @@ interface mixin CanvasPath {
   void bezierCurveTo(unrestricted double cp1x, unrestricted double cp1y, unrestricted double cp2x, unrestricted double cp2y, unrestricted double x, unrestricted double y);
   void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radius); 
   void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
-  void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false); 
-  void ellipse(unrestricted double x, unrestricted double y, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false); 
+  void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false);
+  void ellipse(unrestricted double x, unrestricted double y, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false);
 };
 
 [Exposed=(Window,Worker)]
@@ -1285,7 +1285,7 @@ interface CanvasGradient {
 [Exposed=(Window,Worker)]
 interface CanvasPattern {
   // opaque object
-  void setTransform(optional DOMMatrix2DInit transform);
+  void setTransform(optional DOMMatrix2DInit transform = {});
 };
 
 [Exposed=Window]
@@ -1320,7 +1320,7 @@ interface ImageData {
 [Constructor(optional (Path2D or DOMString) path),
  Exposed=(Window,Worker)]
 interface Path2D {
-  void addPath(Path2D path, optional DOMMatrix2DInit transform);
+  void addPath(Path2D path, optional DOMMatrix2DInit transform = {});
 };
 Path2D includes CanvasPath;
 
@@ -1351,7 +1351,7 @@ interface OffscreenCanvas : EventTarget {
 
   OffscreenRenderingContext? getContext(OffscreenRenderingContextId contextId, optional any options = null);
   ImageBitmap transferToImageBitmap();
-  Promise<Blob> convertToBlob(optional ImageEncodeOptions options);
+  Promise<Blob> convertToBlob(optional ImageEncodeOptions options = {});
 };
 
 [Exposed=(Window,Worker)]
@@ -1376,7 +1376,7 @@ OffscreenCanvasRenderingContext2D includes CanvasPath;
 
 [Exposed=Window]
 interface CustomElementRegistry {
-  [CEReactions] void define(DOMString name, Function constructor, optional ElementDefinitionOptions options);
+  [CEReactions] void define(DOMString name, Function constructor, optional ElementDefinitionOptions options = {});
   any get(DOMString name);
   Promise<void> whenDefined(DOMString name);
   [CEReactions] void upgrade(Node root);
@@ -1435,7 +1435,7 @@ interface DataTransferItem {
 callback FunctionStringCallback = void (DOMString data);
 
 [Exposed=Window,
- Constructor(DOMString type, optional DragEventInit eventInitDict)]
+ Constructor(DOMString type, optional DragEventInit eventInitDict = {})]
 interface DragEvent : MouseEvent {
   readonly attribute DataTransfer? dataTransfer;
 };
@@ -1542,7 +1542,7 @@ interface Location { // but see also additional creation steps and overridden in
 };
 
 [Exposed=Window,
- Constructor(DOMString type, optional PopStateEventInit eventInitDict)]
+ Constructor(DOMString type, optional PopStateEventInit eventInitDict = {})]
 interface PopStateEvent : Event {
   readonly attribute any state;
 };
@@ -1552,7 +1552,7 @@ dictionary PopStateEventInit : EventInit {
 };
 
 [Exposed=Window,
- Constructor(DOMString type, optional HashChangeEventInit eventInitDict)]
+ Constructor(DOMString type, optional HashChangeEventInit eventInitDict = {})]
 interface HashChangeEvent : Event {
   readonly attribute USVString oldURL;
   readonly attribute USVString newURL;
@@ -1564,7 +1564,7 @@ dictionary HashChangeEventInit : EventInit {
 };
 
 [Exposed=Window,
- Constructor(DOMString type, optional PageTransitionEventInit eventInitDict)]
+ Constructor(DOMString type, optional PageTransitionEventInit eventInitDict = {})]
 interface PageTransitionEvent : Event {
   readonly attribute boolean persisted;
 };
@@ -1610,7 +1610,7 @@ interface mixin NavigatorOnLine {
   readonly attribute boolean onLine;
 };
 
-[Constructor(DOMString type, optional ErrorEventInit eventInitDict), Exposed=(Window,Worker)]
+[Constructor(DOMString type, optional ErrorEventInit eventInitDict = {}), Exposed=(Window,Worker)]
 interface ErrorEvent : Event {
   readonly attribute DOMString message;
   readonly attribute USVString filename;
@@ -1756,8 +1756,8 @@ interface mixin WindowOrWorkerGlobalScope {
   void clearInterval(optional long handle = 0);
 
   // ImageBitmap
-  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
-  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options = {});
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options = {});
 };
 Window includes WindowOrWorkerGlobalScope;
 WorkerGlobalScope includes WindowOrWorkerGlobalScope;
@@ -1872,7 +1872,7 @@ dictionary ImageBitmapOptions {
   ResizeQuality resizeQuality = "low";
 };
 
-[Constructor(DOMString type, optional MessageEventInit eventInitDict), Exposed=(Window,Worker,AudioWorklet)]
+[Constructor(DOMString type, optional MessageEventInit eventInitDict = {}), Exposed=(Window,Worker,AudioWorklet)]
 interface MessageEvent : Event {
   readonly attribute any data;
   readonly attribute USVString origin;
@@ -1893,7 +1893,7 @@ dictionary MessageEventInit : EventInit {
 
 typedef (WindowProxy or MessagePort or ServiceWorker) MessageEventSource;
 
-[Constructor(USVString url, optional EventSourceInit eventSourceInitDict), Exposed=(Window,Worker)]
+[Constructor(USVString url, optional EventSourceInit eventSourceInitDict = {}), Exposed=(Window,Worker)]
 interface EventSource : EventTarget {
   readonly attribute USVString url;
   readonly attribute boolean withCredentials;
@@ -1945,7 +1945,7 @@ interface WebSocket : EventTarget {
   void send(ArrayBufferView data);
 };
 
-[Constructor(DOMString type, optional CloseEventInit eventInitDict), Exposed=(Window,Worker)]
+[Constructor(DOMString type, optional CloseEventInit eventInitDict = {}), Exposed=(Window,Worker)]
 interface CloseEvent : Event {
   readonly attribute boolean wasClean;
   readonly attribute unsigned short code;
@@ -2024,7 +2024,7 @@ interface mixin AbstractWorker {
   attribute EventHandler onerror;
 };
 
-[Constructor(USVString scriptURL, optional WorkerOptions options), Exposed=(Window,Worker)]
+[Constructor(USVString scriptURL, optional WorkerOptions options = {}), Exposed=(Window,Worker)]
 interface Worker : EventTarget {
   void terminate();
 
@@ -2043,7 +2043,7 @@ enum WorkerType { "classic", "module" };
 
 Worker includes AbstractWorker;
 
-[Constructor(USVString scriptURL, optional (DOMString or WorkerOptions) options),
+[Constructor(USVString scriptURL, optional (DOMString or WorkerOptions) options = {}),
  Exposed=(Window,Worker)]
 interface SharedWorker : EventTarget {
   readonly attribute MessagePort port;
@@ -2095,7 +2095,7 @@ interface mixin WindowLocalStorage {
 Window includes WindowLocalStorage;
 
 [Exposed=Window,
- Constructor(DOMString type, optional StorageEventInit eventInitDict)]
+ Constructor(DOMString type, optional StorageEventInit eventInitDict = {})]
 interface StorageEvent : Event {
   readonly attribute DOMString? key;
   readonly attribute DOMString? oldValue;

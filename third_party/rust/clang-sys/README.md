@@ -9,7 +9,8 @@ Rust bindings for `libclang`.
 If you are interested in a Rust wrapper for these bindings, see
 [clang-rs](https://github.com/KyleMayes/clang-rs).
 
-Supported on the stable, beta, and nightly Rust channels.
+Supported on the stable, beta, and nightly Rust channels.<br/>
+Minimum supported Rust version: **1.36.0**
 
 Released under the Apache License 2.0.
 
@@ -37,6 +38,8 @@ To target a version of `libclang`, enable one of the following Cargo features:
   ([Documentation](https://kylemayes.github.io/clang-sys/7_0/clang_sys))
 * `clang_8_0` - requires `libclang` 8.0 or later
   ([Documentation](https://kylemayes.github.io/clang-sys/8_0/clang_sys))
+* `clang_9_0` - requires `libclang` 9.0 or later
+  ([Documentation](https://kylemayes.github.io/clang-sys/9_0/clang_sys))
 
 If you do not enable one of these features, the API provided by `libclang` 3.5 will be available by
 default.
@@ -81,9 +84,10 @@ order of preference:
 The following environment variables, if set, are used by this crate to find the required libraries
 and executables:
 
-* `LLVM_CONFIG_PATH` **(compiletime)** - provides a path to an `llvm-config` executable
+* `LLVM_CONFIG_PATH` **(compiletime)** - provides a full path to an `llvm-config` executable
+  (including the executable itself [i.e., `/usr/local/bin/llvm-config-8.0`])
 * `LIBCLANG_PATH` **(compiletime)** - provides a path to a directory containing a `libclang` shared
-  library or a path to a specific `libclang` shared library
+  library or a full path to a specific `libclang` shared library
 * `LIBCLANG_STATIC_PATH` **(compiletime)** - provides a path to a directory containing LLVM and
   Clang static libraries
 * `CLANG_PATH` **(runtime)** - provides a path to a `clang` executable

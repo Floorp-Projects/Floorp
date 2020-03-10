@@ -240,25 +240,24 @@ impl<'ctx> CannotDerive<'ctx> {
                         self.derive_trait
                     );
                     return CanDerive::No;
-                } else {
-                    if self.derive_trait.can_derive_large_array() {
-                        trace!("    array can derive {}", self.derive_trait);
-                        return CanDerive::Yes;
-                    } else {
-                        if len <= RUST_DERIVE_IN_ARRAY_LIMIT {
-                            trace!(
-                                "    array is small enough to derive {}",
-                                self.derive_trait
-                            );
-                            return CanDerive::Yes;
-                        } else {
-                            trace!(
-                                "    array is too large to derive {}, but it may be implemented", self.derive_trait
-                            );
-                            return CanDerive::Manually;
-                        }
-                    }
                 }
+
+                if self.derive_trait.can_derive_large_array() {
+                    trace!("    array can derive {}", self.derive_trait);
+                    return CanDerive::Yes;
+                }
+
+                if len > RUST_DERIVE_IN_ARRAY_LIMIT {
+                    trace!(
+                        "    array is too large to derive {}, but it may be implemented", self.derive_trait
+                    );
+                    return CanDerive::Manually;
+                }
+                trace!(
+                    "    array is small enough to derive {}",
+                    self.derive_trait
+                );
+                return CanDerive::Yes;
             }
             TypeKind::Vector(t, len) => {
                 let inner_type =
@@ -357,6 +356,20 @@ impl<'ctx> CannotDerive<'ctx> {
                 {
                     trace!(
                         "    cannot derive {} for comp with vtable",
+                        self.derive_trait
+                    );
+                    return CanDerive::No;
+                }
+
+                // Bitfield units are always represented as arrays of u8, but
+                // they're not traced as arrays, so we need to check here
+                // instead.
+                if !self.derive_trait.can_derive_large_array() &&
+                    info.has_too_large_bitfield_unit() &&
+                    !item.is_opaque(self.ctx, &())
+                {
+                    trace!(
+                        "    cannot derive {} for comp with too large bitfield unit",
                         self.derive_trait
                     );
                     return CanDerive::No;

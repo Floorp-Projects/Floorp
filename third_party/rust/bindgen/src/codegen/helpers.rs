@@ -143,6 +143,27 @@ pub mod ast_ty {
     use proc_macro2::{self, TokenStream};
     use std::str::FromStr;
 
+    pub fn c_void(ctx: &BindgenContext) -> TokenStream {
+        // ctypes_prefix takes precedence
+        match ctx.options().ctypes_prefix {
+            Some(ref prefix) => {
+                let prefix = TokenStream::from_str(prefix.as_str()).unwrap();
+                quote! {
+                    #prefix::c_void
+                }
+            }
+            None => {
+                if ctx.options().use_core &&
+                    ctx.options().rust_features.core_ffi_c_void
+                {
+                    quote! { ::core::ffi::c_void }
+                } else {
+                    quote! { ::std::os::raw::c_void }
+                }
+            }
+        }
+    }
+
     pub fn raw_type(ctx: &BindgenContext, name: &str) -> TokenStream {
         let ident = ctx.rust_ident_raw(name);
         match ctx.options().ctypes_prefix {

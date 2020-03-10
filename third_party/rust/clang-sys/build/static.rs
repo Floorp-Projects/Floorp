@@ -77,7 +77,7 @@ fn get_clang_libraries<P: AsRef<Path>>(directory: P) -> Vec<String> {
             .filter_map(|l| l.ok().and_then(|l| get_library_name(&l)))
             .collect()
     } else {
-        CLANG_LIBRARIES.iter().map(|l| l.to_string()).collect()
+        CLANG_LIBRARIES.iter().map(|l| (*l).to_string()).collect()
     }
 }
 

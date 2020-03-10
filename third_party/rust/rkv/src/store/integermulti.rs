@@ -51,18 +51,19 @@ where
         }
     }
 
-    pub fn get<'env, R, I, C>(&self, reader: &'env R, k: K) -> Result<Iter<'env, I>, StoreError>
+    pub fn get<'r, R, I, C>(&self, reader: &'r R, k: K) -> Result<Iter<'r, I>, StoreError>
     where
-        R: Readable<'env, Database = D, RoCursor = C>,
-        I: BackendIter<'env>,
-        C: BackendRoCursor<'env, Iter = I>,
+        R: Readable<'r, Database = D, RoCursor = C>,
+        I: BackendIter<'r>,
+        C: BackendRoCursor<'r, Iter = I>,
+        K: 'r,
     {
         self.inner.get(reader, Key::new(&k)?)
     }
 
-    pub fn get_first<'env, R>(&self, reader: &'env R, k: K) -> Result<Option<Value<'env>>, StoreError>
+    pub fn get_first<'r, R>(&self, reader: &'r R, k: K) -> Result<Option<Value<'r>>, StoreError>
     where
-        R: Readable<'env, Database = D>,
+        R: Readable<'r, Database = D>,
     {
         self.inner.get_first(reader, Key::new(&k)?)
     }

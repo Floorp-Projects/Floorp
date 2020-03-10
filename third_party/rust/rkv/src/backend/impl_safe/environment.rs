@@ -26,9 +26,9 @@ use id_arena::Arena;
 use log::warn;
 
 use super::{
-    database::DatabaseImpl,
+    database::Database,
     DatabaseFlagsImpl,
-    DatabaseId,
+    DatabaseImpl,
     EnvironmentFlagsImpl,
     ErrorImpl,
     InfoImpl,
@@ -43,8 +43,8 @@ use crate::backend::traits::{
 
 const DEFAULT_DB_FILENAME: &str = "data.safe.bin";
 
-type DatabaseArena = Arena<DatabaseImpl>;
-type DatabaseNameMap = HashMap<Option<String>, DatabaseId>;
+type DatabaseArena = Arena<Database>;
+type DatabaseNameMap = HashMap<Option<String>, DatabaseImpl>;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct EnvironmentBuilderImpl {
@@ -54,7 +54,7 @@ pub struct EnvironmentBuilderImpl {
     map_size: Option<usize>,
 }
 
-impl<'env> BackendEnvironmentBuilder<'env> for EnvironmentBuilderImpl {
+impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
     type Error = ErrorImpl;
     type Environment = EnvironmentImpl;
     type Flags = EnvironmentFlagsImpl;
@@ -110,9 +110,9 @@ pub struct EnvironmentImpl {
 
 impl EnvironmentImpl {
     fn serialize(&self) -> Result<Vec<u8>, ErrorImpl> {
-        let arena = self.arena.read().map_err(|_| ErrorImpl::DbPoisonError)?;
-        let dbs = self.dbs.read().map_err(|_| ErrorImpl::DbPoisonError)?;
-        let data: HashMap<_, _> = dbs.iter().map(|(name, id)| (name, &arena[*id])).collect();
+        let arena = self.arena.read().map_err(|_| ErrorImpl::EnvPoisonError)?;
+        let dbs = self.dbs.read().map_err(|_| ErrorImpl::EnvPoisonError)?;
+        let data: HashMap<_, _> = dbs.iter().map(|(name, id)| (name, &arena[id.0])).collect();
         Ok(bincode::serialize(&data)?)
     }
 
@@ -121,7 +121,7 @@ impl EnvironmentImpl {
         let mut dbs = HashMap::new();
         let data: HashMap<_, _> = bincode::deserialize(&bytes)?;
         for (name, db) in data {
-            dbs.insert(name, arena.alloc(db));
+            dbs.insert(name, DatabaseImpl(arena.alloc(db)));
         }
         Ok((arena, dbs))
     }
@@ -179,22 +179,22 @@ impl EnvironmentImpl {
     }
 
     pub(crate) fn dbs(&self) -> Result<RwLockReadGuard<DatabaseArena>, ErrorImpl> {
-        self.arena.read().map_err(|_| ErrorImpl::DbPoisonError)
+        self.arena.read().map_err(|_| ErrorImpl::EnvPoisonError)
     }
 
     pub(crate) fn dbs_mut(&self) -> Result<RwLockWriteGuard<DatabaseArena>, ErrorImpl> {
-        self.arena.write().map_err(|_| ErrorImpl::DbPoisonError)
+        self.arena.write().map_err(|_| ErrorImpl::EnvPoisonError)
     }
 }
 
-impl<'env> BackendEnvironment<'env> for EnvironmentImpl {
+impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
     type Error = ErrorImpl;
-    type Database = DatabaseId;
+    type Database = DatabaseImpl;
     type Flags = DatabaseFlagsImpl;
     type Stat = StatImpl;
     type Info = InfoImpl;
-    type RoTransaction = RoTransactionImpl<'env>;
-    type RwTransaction = RwTransactionImpl<'env>;
+    type RoTransaction = RoTransactionImpl<'e>;
+    type RwTransaction = RwTransactionImpl<'e>;
 
     fn open_db(&self, name: Option<&str>) -> Result<Self::Database, Self::Error> {
         if Arc::strong_count(&self.ro_txns) > 1 {
@@ -202,28 +202,31 @@ impl<'env> BackendEnvironment<'env> for EnvironmentImpl {
         }
         // TOOD: don't reallocate `name`.
         let key = name.map(String::from);
-        let dbs = self.dbs.read().map_err(|_| ErrorImpl::DbPoisonError)?;
+        let dbs = self.dbs.read().map_err(|_| ErrorImpl::EnvPoisonError)?;
         let id = dbs.get(&key).ok_or(ErrorImpl::DbNotFoundError)?;
         Ok(*id)
     }
 
     fn create_db(&self, name: Option<&str>, flags: Self::Flags) -> Result<Self::Database, Self::Error> {
+        if Arc::strong_count(&self.ro_txns) > 1 {
+            return Err(ErrorImpl::DbsIllegalOpen);
+        }
         // TOOD: don't reallocate `name`.
         let key = name.map(String::from);
-        let mut dbs = self.dbs.write().map_err(|_| ErrorImpl::DbPoisonError)?;
-        let mut arena = self.arena.write().map_err(|_| ErrorImpl::DbPoisonError)?;
+        let mut dbs = self.dbs.write().map_err(|_| ErrorImpl::EnvPoisonError)?;
+        let mut arena = self.arena.write().map_err(|_| ErrorImpl::EnvPoisonError)?;
         if dbs.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs {
             return Err(ErrorImpl::DbsFull);
         }
-        let id = dbs.entry(key).or_insert_with(|| arena.alloc(DatabaseImpl::new(Some(flags), None)));
+        let id = dbs.entry(key).or_insert_with(|| DatabaseImpl(arena.alloc(Database::new(Some(flags), None))));
         Ok(*id)
     }
 
-    fn begin_ro_txn(&'env self) -> Result<Self::RoTransaction, Self::Error> {
+    fn begin_ro_txn(&'e self) -> Result<Self::RoTransaction, Self::Error> {
         RoTransactionImpl::new(self, self.ro_txns.clone())
     }
 
-    fn begin_rw_txn(&'env self) -> Result<Self::RwTransaction, Self::Error> {
+    fn begin_rw_txn(&'e self) -> Result<Self::RwTransaction, Self::Error> {
         RwTransactionImpl::new(self, self.rw_txns.clone())
     }
 

@@ -18,18 +18,19 @@ use super::snapshot::Snapshot;
 use super::DatabaseFlagsImpl;
 use crate::backend::traits::BackendDatabase;
 
-pub type DatabaseId = Id<DatabaseImpl>;
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
+pub struct DatabaseImpl(pub(crate) Id<Database>);
 
-impl BackendDatabase for DatabaseId {}
+impl BackendDatabase for DatabaseImpl {}
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DatabaseImpl {
+pub struct Database {
     snapshot: Snapshot,
 }
 
-impl DatabaseImpl {
-    pub(crate) fn new(flags: Option<DatabaseFlagsImpl>, snapshot: Option<Snapshot>) -> DatabaseImpl {
-        DatabaseImpl {
+impl Database {
+    pub(crate) fn new(flags: Option<DatabaseFlagsImpl>, snapshot: Option<Snapshot>) -> Database {
+        Database {
             snapshot: snapshot.unwrap_or_else(|| Snapshot::new(flags)),
         }
     }

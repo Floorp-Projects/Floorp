@@ -20,36 +20,47 @@
 //! Use the `IdentifierParser` to substitute identifiers found in expressions.
 
 use std::collections::HashMap;
-use std::ops::{AddAssign,BitAndAssign,BitOrAssign,BitXorAssign,DivAssign,MulAssign,RemAssign,ShlAssign,ShrAssign,SubAssign};
 use std::num::Wrapping;
+use std::ops::{
+    AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, DivAssign, MulAssign, RemAssign, ShlAssign,
+    ShrAssign, SubAssign,
+};
 
-use literal::{self,CChar};
-use token::{Token,Kind as TokenKind};
-use nom_crate::*;
+use crate::literal::{self, CChar};
+use crate::token::{Kind as TokenKind, Token};
+use crate::ToCexprResult;
+use nom::branch::alt;
+use nom::combinator::{complete, map, map_opt};
+use nom::multi::{fold_many0, many0, separated_list};
+use nom::sequence::{delimited, pair, preceded};
+use nom::*;
 
 /// Expression parser/evaluator that supports identifiers.
 #[derive(Debug)]
 pub struct IdentifierParser<'ident> {
-	identifiers: &'ident HashMap<Vec<u8>,EvalResult>,
+    identifiers: &'ident HashMap<Vec<u8>, EvalResult>,
 }
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 struct PRef<'a>(&'a IdentifierParser<'a>);
 
-pub type CResult<'a,R> = IResult<&'a [Token],R,::Error>;
+/// A shorthand for the type of cexpr expression evaluation results.
+pub type CResult<'a, R> = IResult<&'a [Token], R, crate::Error<&'a [Token]>>;
 
 /// The result of parsing a literal or evaluating an expression.
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[allow(missing_docs)]
 pub enum EvalResult {
-	Int(Wrapping<i64>),
-	Float(f64),
-	Char(CChar),
-	Str(Vec<u8>),
-	Invalid,
+    Int(Wrapping<i64>),
+    Float(f64),
+    Char(CChar),
+    Str(Vec<u8>),
+    Invalid,
 }
 
 macro_rules! result_opt (
 	(fn $n:ident: $e:ident -> $t:ty) => (
 		#[allow(dead_code)]
+        #[allow(clippy::wrong_self_convention)]
 		fn $n(self) -> Option<$t> {
 			if let EvalResult::$e(v) = self {
 				Some(v)
@@ -61,23 +72,24 @@ macro_rules! result_opt (
 );
 
 impl EvalResult {
-	result_opt!(fn as_int: Int -> Wrapping<i64>);
-	result_opt!(fn as_float: Float -> f64);
-	result_opt!(fn as_char: Char -> CChar);
-	result_opt!(fn as_str: Str -> Vec<u8>);
-	
-	fn as_numeric(self) -> Option<EvalResult> {
-		match self {
-			EvalResult::Int(_) | EvalResult::Float(_) => Some(self),
-			_ => None,
-		}
-	}
+    result_opt!(fn as_int: Int -> Wrapping<i64>);
+    result_opt!(fn as_float: Float -> f64);
+    result_opt!(fn as_char: Char -> CChar);
+    result_opt!(fn as_str: Str -> Vec<u8>);
+
+    #[allow(clippy::wrong_self_convention)]
+    fn as_numeric(self) -> Option<EvalResult> {
+        match self {
+            EvalResult::Int(_) | EvalResult::Float(_) => Some(self),
+            _ => None,
+        }
+    }
 }
 
 impl From<Vec<u8>> for EvalResult {
-	fn from(s: Vec<u8>) -> EvalResult {
-		EvalResult::Str(s)
-	}
+    fn from(s: Vec<u8>) -> EvalResult {
+        EvalResult::Str(s)
+    }
 }
 
 // ===========================================
@@ -85,89 +97,76 @@ impl From<Vec<u8>> for EvalResult {
 // ===========================================
 
 macro_rules! exact_token (
-	($i:expr, $k:ident, $c:expr) => ({
-		if $i.is_empty() {
-			let res: CResult<&[u8]> = Err(::nom_crate::Err::Incomplete(Needed::Size($c.len())));
+	($k:ident, $c:expr) => ({
+        move |input: &[Token]| {
+		if input.is_empty() {
+			let res: CResult<'_, &[u8]> = Err(crate::nom::Err::Incomplete(Needed::Size($c.len())));
 			res
 		} else {
-			if $i[0].kind==TokenKind::$k && &$i[0].raw[..]==$c {
-				Ok((&$i[1..], &$i[0].raw[..]))
+			if input[0].kind==TokenKind::$k && &input[0].raw[..]==$c {
+				Ok((&input[1..], &input[0].raw[..]))
 			} else {
-				Err(::nom_crate::Err::Error(error_position!($i, ErrorKind::Custom(::Error::ExactToken(TokenKind::$k,$c)))))
+				Err(crate::nom::Err::Error((input, crate::ErrorKind::ExactToken(TokenKind::$k,$c)).into()))
 			}
 		}
+        }
 	});
 );
 
 macro_rules! typed_token (
-	($i:expr, $k:ident) => ({
-		if $i.is_empty() {
-			let res: CResult<&[u8]> = Err(::nom_crate::Err::Incomplete(Needed::Size(1)));
+	($k:ident) => ({
+        move |input: &[Token]| {
+		if input.is_empty() {
+			let res: CResult<'_, &[u8]> = Err(nom::Err::Incomplete(Needed::Size(1)));
 			res
 		} else {
-			if $i[0].kind==TokenKind::$k {
-				Ok((&$i[1..], &$i[0].raw[..]))
+			if input[0].kind==TokenKind::$k {
+				Ok((&input[1..], &input[0].raw[..]))
 			} else {
-				Err(Err::Error(error_position!($i, ErrorKind::Custom(::Error::TypedToken(TokenKind::$k)))))
+				Err(crate::nom::Err::Error((input, crate::ErrorKind::TypedToken(TokenKind::$k)).into()))
 			}
 		}
+        }
 	});
 );
 
-#[allow(unused_macros)]
-macro_rules! any_token (
-	($i:expr,) => ({
-		if $i.is_empty() {
-			let res: CResult<&Token> = Err(::nom_crate::Err::Incomplete(Needed::Size(1)));
-			res
-		} else {
-			Ok((&$i[1..], &$i[0]))
-		}
-	});
-);
+#[allow(dead_code)]
+fn any_token(input: &[Token]) -> CResult<'_, &Token> {
+    if input.is_empty() {
+        Err(crate::nom::Err::Incomplete(Needed::Size(1)))
+    } else {
+        Ok((&input[1..], &input[0]))
+    }
+}
 
-macro_rules! p (
-	($i:expr, $c:expr) => (exact_token!($i,Punctuation,$c.as_bytes()))
-);
+fn p(c: &'static str) -> impl Fn(&[Token]) -> CResult<'_, &[u8]> {
+    exact_token!(Punctuation, c.as_bytes())
+}
 
-macro_rules! one_of_punctuation (
-	($i:expr, $c:expr) => ({
-		if $i.is_empty() {
-			let min = $c.iter().map(|opt|opt.len()).min().expect("at least one option");
-			let res: CResult<&[u8]> = Err(::nom_crate::Err::Incomplete(Needed::Size(min)));
-			res
-		} else {
-			if $i[0].kind==TokenKind::Punctuation && $c.iter().any(|opt|opt.as_bytes()==&$i[0].raw[..]) {
-				Ok((&$i[1..], &$i[0].raw[..]))
-			} else {
-				const VALID_VALUES: &'static [&'static str] = &$c;
-				Err(Err::Error(error_position!($i, ErrorKind::Custom(::Error::ExactTokens(TokenKind::Punctuation,VALID_VALUES)))))
-			}
-		}
-	});
-);
-
-/// equivalent to nom's complete! macro, but adds the custom error type
-#[macro_export]
-macro_rules! comp (
-	($i:expr, $submac:ident!( $($args:tt)* )) => (
-		{
-			use ::nom_crate::lib::std::result::Result::*;
-			use ::nom_crate::{Err,ErrorKind};
-
-			let i_ = $i.clone();
-			match $submac!(i_, $($args)*) {
-				Err(Err::Incomplete(_)) =>  {
-					Err(Err::Error(error_position!($i, ErrorKind::Complete::<::Error>)))
-				},
-				rest => rest
-			}
-		}
-	);
-	($i:expr, $f:expr) => (
-		comp!($i, call!($f));
-	);
-);
+fn one_of_punctuation(c: &'static [&'static str]) -> impl Fn(&[Token]) -> CResult<'_, &[u8]> {
+    move |input| {
+        if input.is_empty() {
+            let min = c
+                .iter()
+                .map(|opt| opt.len())
+                .min()
+                .expect("at least one option");
+            Err(crate::nom::Err::Incomplete(Needed::Size(min)))
+        } else if input[0].kind == TokenKind::Punctuation
+            && c.iter().any(|opt| opt.as_bytes() == &input[0].raw[..])
+        {
+            Ok((&input[1..], &input[0].raw[..]))
+        } else {
+            Err(crate::nom::Err::Error(
+                (
+                    input,
+                    crate::ErrorKind::ExactTokens(TokenKind::Punctuation, c),
+                )
+                    .into(),
+            ))
+        }
+    }
+}
 
 // ==================================================
 // ============= Numeric expressions ================
@@ -175,240 +174,242 @@ macro_rules! comp (
 
 impl<'a> AddAssign<&'a EvalResult> for EvalResult {
     fn add_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),  &Int(b))   => Int(a+b),
-			(&Float(a),&Int(b))   => Float(a+(b.0 as f64)),
-			(&Int(a),  &Float(b)) => Float(a.0 as f64+b),
-			(&Float(a),&Float(b)) => Float(a+b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a + b),
+            (&Float(a), &Int(b)) => Float(a + (b.0 as f64)),
+            (&Int(a), &Float(b)) => Float(a.0 as f64 + b),
+            (&Float(a), &Float(b)) => Float(a + b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> BitAndAssign<&'a EvalResult> for EvalResult {
     fn bitand_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),&Int(b)) => Int(a&b),
-			_ => Invalid
-		};	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a & b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> BitOrAssign<&'a EvalResult> for EvalResult {
     fn bitor_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),&Int(b)) => Int(a|b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a | b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> BitXorAssign<&'a EvalResult> for EvalResult {
     fn bitxor_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),&Int(b)) => Int(a^b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a ^ b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> DivAssign<&'a EvalResult> for EvalResult {
     fn div_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),  &Int(b))   => Int(a/b),
-			(&Float(a),&Int(b))   => Float(a/(b.0 as f64)),
-			(&Int(a),  &Float(b)) => Float(a.0 as f64/b),
-			(&Float(a),&Float(b)) => Float(a/b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a / b),
+            (&Float(a), &Int(b)) => Float(a / (b.0 as f64)),
+            (&Int(a), &Float(b)) => Float(a.0 as f64 / b),
+            (&Float(a), &Float(b)) => Float(a / b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> MulAssign<&'a EvalResult> for EvalResult {
     fn mul_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),  &Int(b))   => Int(a*b),
-			(&Float(a),&Int(b))   => Float(a*(b.0 as f64)),
-			(&Int(a),  &Float(b)) => Float(a.0 as f64*b),
-			(&Float(a),&Float(b)) => Float(a*b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a * b),
+            (&Float(a), &Int(b)) => Float(a * (b.0 as f64)),
+            (&Int(a), &Float(b)) => Float(a.0 as f64 * b),
+            (&Float(a), &Float(b)) => Float(a * b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> RemAssign<&'a EvalResult> for EvalResult {
     fn rem_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),  &Int(b))   => Int(a%b),
-			(&Float(a),&Int(b))   => Float(a%(b.0 as f64)),
-			(&Int(a),  &Float(b)) => Float(a.0 as f64%b),
-			(&Float(a),&Float(b)) => Float(a%b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a % b),
+            (&Float(a), &Int(b)) => Float(a % (b.0 as f64)),
+            (&Int(a), &Float(b)) => Float(a.0 as f64 % b),
+            (&Float(a), &Float(b)) => Float(a % b),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> ShlAssign<&'a EvalResult> for EvalResult {
     fn shl_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),&Int(b)) => Int(a<<(b.0 as usize)),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a << (b.0 as usize)),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> ShrAssign<&'a EvalResult> for EvalResult {
     fn shr_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),&Int(b)) => Int(a>>(b.0 as usize)),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a >> (b.0 as usize)),
+            _ => Invalid,
+        };
+    }
 }
 impl<'a> SubAssign<&'a EvalResult> for EvalResult {
     fn sub_assign(&mut self, rhs: &'a EvalResult) {
-		use self::EvalResult::*;
-		*self=match (&*self,rhs) {
-			(&Int(a),  &Int(b))   => Int(a-b),
-			(&Float(a),&Int(b))   => Float(a-(b.0 as f64)),
-			(&Int(a),  &Float(b)) => Float(a.0 as f64-b),
-			(&Float(a),&Float(b)) => Float(a-b),
-			_ => Invalid
-		};
-	}
+        use self::EvalResult::*;
+        *self = match (&*self, rhs) {
+            (&Int(a), &Int(b)) => Int(a - b),
+            (&Float(a), &Int(b)) => Float(a - (b.0 as f64)),
+            (&Int(a), &Float(b)) => Float(a.0 as f64 - b),
+            (&Float(a), &Float(b)) => Float(a - b),
+            _ => Invalid,
+        };
+    }
 }
 
-fn unary_op(input: (&[u8],EvalResult)) -> Option<EvalResult> {
-	use self::EvalResult::*;
-	assert_eq!(input.0.len(),1);
-	match (input.0[0],input.1) {
-		(b'+',i) => Some(i),
-		(b'-',Int(i)) => Some(Int(Wrapping(i.0.wrapping_neg()))), // impl Neg for Wrapping not until rust 1.10...
-		(b'-',Float(i)) => Some(Float(-i)),
-		(b'-',_) => unreachable!("non-numeric unary op"),
-		(b'~',Int(i)) => Some(Int(!i)),
-		(b'~',Float(_)) => None,
-		(b'~',_) => unreachable!("non-numeric unary op"),
-		_ => unreachable!("invalid unary op"),
-	}
+fn unary_op(input: (&[u8], EvalResult)) -> Option<EvalResult> {
+    use self::EvalResult::*;
+    assert_eq!(input.0.len(), 1);
+    match (input.0[0], input.1) {
+        (b'+', i) => Some(i),
+        (b'-', Int(i)) => Some(Int(Wrapping(i.0.wrapping_neg()))), // impl Neg for Wrapping not until rust 1.10...
+        (b'-', Float(i)) => Some(Float(-i)),
+        (b'-', _) => unreachable!("non-numeric unary op"),
+        (b'~', Int(i)) => Some(Int(!i)),
+        (b'~', Float(_)) => None,
+        (b'~', _) => unreachable!("non-numeric unary op"),
+        _ => unreachable!("invalid unary op"),
+    }
 }
 
-macro_rules! numeric (
-	($i:expr, $submac:ident!( $($args:tt)* )) => (map_opt!($i,$submac!($($args)*),EvalResult::as_numeric));
-	($i:expr, $f:expr ) => (map_opt!($i,call!($f),EvalResult::as_numeric));
-);
+fn numeric<I: Clone, E: nom::error::ParseError<I>, F>(
+    f: F,
+) -> impl Fn(I) -> nom::IResult<I, EvalResult, E>
+where
+    F: Fn(I) -> nom::IResult<I, EvalResult, E>,
+{
+    nom::combinator::map_opt(f, EvalResult::as_numeric)
+}
 
 impl<'a> PRef<'a> {
-	method!(unary<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		alt!(
-			delimited!(p!("("),call_m!(self.numeric_expr),p!(")")) |
-			numeric!(call_m!(self.literal)) |
-			numeric!(call_m!(self.identifier)) |
-			map_opt!(pair!(one_of_punctuation!(["+", "-", "~"]),call_m!(self.unary)),unary_op)
-		)
-	);
+    fn unary(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        alt((
+            delimited(p("("), |i| self.numeric_expr(i), p(")")),
+            numeric(|i| self.literal(i)),
+            numeric(|i| self.identifier(i)),
+            map_opt(
+                pair(one_of_punctuation(&["+", "-", "~"][..]), |i| self.unary(i)),
+                unary_op,
+            ),
+        ))(input)
+    }
 
-	method!(mul_div_rem<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		do_parse!(
-			acc: call_m!(self.unary) >>
-			res: fold_many0!(
-				pair!(comp!(one_of_punctuation!(["*", "/", "%"])), call_m!(self.unary)),
-				acc,
-				|mut acc, (op, val): (&[u8], EvalResult)| {
-					 match op[0] as char {
-						'*' => acc *= &val,
-						'/' => acc /= &val,
-						'%' => acc %= &val,
-						_   => unreachable!()
-					};
-					acc
-				}
-			) >> (res)
-		)
-	);
+    fn mul_div_rem(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        let (input, acc) = self.unary(input)?;
+        fold_many0(
+            pair(complete(one_of_punctuation(&["*", "/", "%"][..])), |i| {
+                self.unary(i)
+            }),
+            acc,
+            |mut acc, (op, val): (&[u8], EvalResult)| {
+                match op[0] as char {
+                    '*' => acc *= &val,
+                    '/' => acc /= &val,
+                    '%' => acc %= &val,
+                    _ => unreachable!(),
+                };
+                acc
+            },
+        )(input)
+    }
 
-	method!(add_sub<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		do_parse!(
-			acc: call_m!(self.mul_div_rem) >>
-			res: fold_many0!(
-				pair!(comp!(one_of_punctuation!(["+", "-"])), call_m!(self.mul_div_rem)),
-				acc,
-				|mut acc, (op, val): (&[u8], EvalResult)| {
-					match op[0] as char {
-						'+' => acc += &val,
-						'-' => acc -= &val,
-						_   => unreachable!()
-					};
-					acc
-				}
-			) >> (res)
-		)
-	);
+    fn add_sub(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        let (input, acc) = self.mul_div_rem(input)?;
+        fold_many0(
+            pair(complete(one_of_punctuation(&["+", "-"][..])), |i| {
+                self.mul_div_rem(i)
+            }),
+            acc,
+            |mut acc, (op, val): (&[u8], EvalResult)| {
+                match op[0] as char {
+                    '+' => acc += &val,
+                    '-' => acc -= &val,
+                    _ => unreachable!(),
+                };
+                acc
+            },
+        )(input)
+    }
 
-	method!(shl_shr<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		numeric!(do_parse!(
-			acc: call_m!(self.add_sub) >>
-			res: fold_many0!(
-				pair!(comp!(one_of_punctuation!(["<<", ">>"])), call_m!(self.add_sub)),
-				acc,
-				|mut acc, (op, val): (&[u8], EvalResult)| {
-					match op {
-						b"<<" => acc <<= &val,
-						b">>" => acc >>= &val,
-						_     => unreachable!()
-					};
-					acc
-				}
-			) >> (res)
-		))
-	);
+    fn shl_shr(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        let (input, acc) = self.add_sub(input)?;
+        numeric(fold_many0(
+            pair(complete(one_of_punctuation(&["<<", ">>"][..])), |i| {
+                self.add_sub(i)
+            }),
+            acc,
+            |mut acc, (op, val): (&[u8], EvalResult)| {
+                match op {
+                    b"<<" => acc <<= &val,
+                    b">>" => acc >>= &val,
+                    _ => unreachable!(),
+                };
+                acc
+            },
+        ))(input)
+    }
 
-	method!(and<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		numeric!(do_parse!(
-			acc: call_m!(self.shl_shr) >>
-			res: fold_many0!(
-				preceded!(comp!(p!("&")), call_m!(self.shl_shr)),
-				acc,
-				|mut acc, val: EvalResult| {
-					acc &= &val;
-					acc
-				}
-			) >> (res)
-		))
-	);
+    fn and(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        let (input, acc) = self.shl_shr(input)?;
+        numeric(fold_many0(
+            preceded(complete(p("&")), |i| self.shl_shr(i)),
+            acc,
+            |mut acc, val: EvalResult| {
+                acc &= &val;
+                acc
+            },
+        ))(input)
+    }
 
-	method!(xor<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		numeric!(do_parse!(
-			acc: call_m!(self.and) >>
-			res: fold_many0!(
-				preceded!(comp!(p!("^")), call_m!(self.and)),
-				acc,
-				|mut acc, val: EvalResult| {
-					acc ^= &val;
-					acc
-				}
-			) >> (res)
-		))
-	);
+    fn xor(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        let (input, acc) = self.and(input)?;
+        numeric(fold_many0(
+            preceded(complete(p("^")), |i| self.and(i)),
+            acc,
+            |mut acc, val: EvalResult| {
+                acc ^= &val;
+                acc
+            },
+        ))(input)
+    }
 
-	method!(or<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		numeric!(do_parse!(
-			acc: call_m!(self.xor) >>
-			res: fold_many0!(
-				preceded!(comp!(p!("|")), call_m!(self.xor)),
-				acc,
-				|mut acc, val: EvalResult| {
-					acc |= &val;
-					acc
-				}
-			) >> (res)
-		))
-	);
+    fn or(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        let (input, acc) = self.xor(input)?;
+        numeric(fold_many0(
+            preceded(complete(p("|")), |i| self.xor(i)),
+            acc,
+            |mut acc, val: EvalResult| {
+                acc |= &val;
+                acc
+            },
+        ))(input)
+    }
 
-	#[inline(always)]
-	fn numeric_expr(self, input: &[Token]) -> (Self,CResult<EvalResult>) {
-		self.or(input)
-	}
+    #[inline(always)]
+    fn numeric_expr(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        self.or(input)
+    }
 }
 
 // =======================================================
@@ -416,126 +417,147 @@ impl<'a> PRef<'a> {
 // =======================================================
 
 impl<'a> PRef<'a> {
-	fn identifier(self, input: &[Token]) -> (Self,CResult<EvalResult>) {
-		(self,match input.split_first() {
-			None =>
-				Err(Err::Incomplete(Needed::Size(1))),
-			Some((&Token{kind:TokenKind::Identifier,ref raw},rest)) => {
-				if let Some(r) = self.identifiers.get(&raw[..]) {
-					Ok((rest, r.clone()))
-				} else {
-					Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::UnknownIdentifier))))
-				}
-			},
-			Some(_) =>
-				Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::TypedToken(TokenKind::Identifier))))),
-		})
-	}
+    fn identifier(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        match input.split_first() {
+            None => Err(Err::Incomplete(Needed::Size(1))),
+            Some((
+                &Token {
+                    kind: TokenKind::Identifier,
+                    ref raw,
+                },
+                rest,
+            )) => {
+                if let Some(r) = self.identifiers.get(&raw[..]) {
+                    Ok((rest, r.clone()))
+                } else {
+                    Err(Err::Error(
+                        (input, crate::ErrorKind::UnknownIdentifier).into(),
+                    ))
+                }
+            }
+            Some(_) => Err(Err::Error(
+                (input, crate::ErrorKind::TypedToken(TokenKind::Identifier)).into(),
+            )),
+        }
+    }
 
-	fn literal(self, input: &[Token]) -> (Self,CResult<EvalResult>) {
-		(self,match input.split_first() {
-			None =>
-				Err(Err::Incomplete(Needed::Size(1))),
-			Some((&Token{kind:TokenKind::Literal,ref raw},rest)) =>
-				match literal::parse(raw) {
-					Ok((_,result)) => Ok((rest, result)),
-					_ => {
-            Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::InvalidLiteral))))
-          },
-				},
-			Some(_) =>
-				Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::TypedToken(TokenKind::Literal))))),
-		})
-	}
+    fn literal(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        match input.split_first() {
+            None => Err(Err::Incomplete(Needed::Size(1))),
+            Some((
+                &Token {
+                    kind: TokenKind::Literal,
+                    ref raw,
+                },
+                rest,
+            )) => match literal::parse(raw) {
+                Ok((_, result)) => Ok((rest, result)),
+                _ => Err(Err::Error((input, crate::ErrorKind::InvalidLiteral).into())),
+            },
+            Some(_) => Err(Err::Error(
+                (input, crate::ErrorKind::TypedToken(TokenKind::Literal)).into(),
+            )),
+        }
+    }
 
-	method!(string<PRef<'a>,&[Token],Vec<u8>,::Error>, mut self,
-		alt!(
-			map_opt!(call_m!(self.literal),EvalResult::as_str) |
-			map_opt!(call_m!(self.identifier),EvalResult::as_str)
-		)
-	);
+    fn string(self, input: &'_ [Token]) -> CResult<'_, Vec<u8>> {
+        alt((
+            map_opt(|i| self.literal(i), EvalResult::as_str),
+            map_opt(|i| self.identifier(i), EvalResult::as_str),
+        ))(input)
+        .to_cexpr_result()
+    }
 
-	// "string1" "string2" etc...
-	method!(concat_str<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		map!(
-			pair!(call_m!(self.string),many0!(comp!(call_m!(self.string)))),
-			|(first,v)| Vec::into_iter(v).fold(first,|mut s,elem|{Vec::extend_from_slice(&mut s,Vec::<u8>::as_slice(&elem));s}).into()
-		)
-	);
+    // "string1" "string2" etc...
+    fn concat_str(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        map(
+            pair(|i| self.string(i), many0(complete(|i| self.string(i)))),
+            |(first, v)| {
+                Vec::into_iter(v)
+                    .fold(first, |mut s, elem| {
+                        Vec::extend_from_slice(&mut s, Vec::<u8>::as_slice(&elem));
+                        s
+                    })
+                    .into()
+            },
+        )(input)
+        .to_cexpr_result()
+    }
 
-	method!(expr<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
-		alt!(
-			call_m!(self.numeric_expr) |
-			delimited!(p!("("),call_m!(self.expr),p!(")")) |
-			call_m!(self.concat_str) |
-			call_m!(self.literal) |
-			call_m!(self.identifier)
-		)
-	);
+    fn expr(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
+        alt((
+            |i| self.numeric_expr(i),
+            delimited(p("("), |i| self.expr(i), p(")")),
+            |i| self.concat_str(i),
+            |i| self.literal(i),
+            |i| self.identifier(i),
+        ))(input)
+        .to_cexpr_result()
+    }
 
-	method!(macro_definition<PRef<'a>,&[Token],(&[u8],EvalResult),::Error>, mut self,
-		pair!(typed_token!(Identifier),call_m!(self.expr))
-	);
+    fn macro_definition(self, input: &'_ [Token]) -> CResult<'_, (&'_ [u8], EvalResult)> {
+        pair(typed_token!(Identifier), |i| self.expr(i))(input)
+    }
 }
 
 impl<'a> ::std::ops::Deref for PRef<'a> {
-	type Target=IdentifierParser<'a>;
-	fn deref(&self) -> &IdentifierParser<'a> {
-		self.0
-	}
+    type Target = IdentifierParser<'a>;
+    fn deref(&self) -> &IdentifierParser<'a> {
+        self.0
+    }
 }
 
 impl<'ident> IdentifierParser<'ident> {
-	fn as_ref(&self) -> PRef {
-		PRef(self)
-	}
-	
-	/// Create a new `IdentifierParser` with a set of known identifiers. When
-	/// a known identifier is encountered during parsing, it is substituted
-	/// for the value specified.
-	pub fn new(identifiers: &HashMap<Vec<u8>,EvalResult>) -> IdentifierParser {
-		IdentifierParser{identifiers:identifiers}
-	}
+    fn as_ref(&self) -> PRef<'_> {
+        PRef(self)
+    }
 
-	/// Parse and evalute an expression of a list of tokens.
-	///
-	/// Returns an error if the input is not a valid expression or if the token
-	/// stream contains comments, keywords or unknown identifiers.
-	pub fn expr<'a>(&self,input: &'a [Token]) -> CResult<'a,EvalResult> {
-		self.as_ref().expr(input).1
-	}
+    /// Create a new `IdentifierParser` with a set of known identifiers. When
+    /// a known identifier is encountered during parsing, it is substituted
+    /// for the value specified.
+    pub fn new(identifiers: &HashMap<Vec<u8>, EvalResult>) -> IdentifierParser<'_> {
+        IdentifierParser { identifiers }
+    }
 
-	/// Parse and evaluate a macro definition from of a list of tokens.
-	///
-	/// Returns the identifier for the macro and its replacement evaluated as an
-	/// expression. The input should not include `#define`.
-	///
-	/// Returns an error if the replacement is not a valid expression, if called
-	/// on most function-like macros, or if the token stream contains comments,
-	/// keywords or unknown identifiers.
-	///
-	/// N.B. This is intended to fail on function-like macros, but if it the
-	/// macro takes a single argument, the argument name is defined as an
-	/// identifier, and the macro otherwise parses as an expression, it will
-	/// return a result even on function-like macros.
-	///
-	/// ```c
-	/// // will evaluate into IDENTIFIER
-	/// #define DELETE(IDENTIFIER)
-	/// // will evaluate into IDENTIFIER-3
-	/// #define NEGATIVE_THREE(IDENTIFIER)  -3
-	/// ```
-	pub fn macro_definition<'a>(&self,input: &'a [Token]) -> CResult<'a,(&'a [u8],EvalResult)> {
-		::assert_full_parse(self.as_ref().macro_definition(input).1)
-	}
+    /// Parse and evalute an expression of a list of tokens.
+    ///
+    /// Returns an error if the input is not a valid expression or if the token
+    /// stream contains comments, keywords or unknown identifiers.
+    pub fn expr<'a>(&self, input: &'a [Token]) -> CResult<'a, EvalResult> {
+        self.as_ref().expr(input)
+    }
+
+    /// Parse and evaluate a macro definition from of a list of tokens.
+    ///
+    /// Returns the identifier for the macro and its replacement evaluated as an
+    /// expression. The input should not include `#define`.
+    ///
+    /// Returns an error if the replacement is not a valid expression, if called
+    /// on most function-like macros, or if the token stream contains comments,
+    /// keywords or unknown identifiers.
+    ///
+    /// N.B. This is intended to fail on function-like macros, but if it the
+    /// macro takes a single argument, the argument name is defined as an
+    /// identifier, and the macro otherwise parses as an expression, it will
+    /// return a result even on function-like macros.
+    ///
+    /// ```c
+    /// // will evaluate into IDENTIFIER
+    /// #define DELETE(IDENTIFIER)
+    /// // will evaluate into IDENTIFIER-3
+    /// #define NEGATIVE_THREE(IDENTIFIER)  -3
+    /// ```
+    pub fn macro_definition<'a>(&self, input: &'a [Token]) -> CResult<'a, (&'a [u8], EvalResult)> {
+        crate::assert_full_parse(self.as_ref().macro_definition(input))
+    }
 }
 
 /// Parse and evalute an expression of a list of tokens.
 ///
 /// Returns an error if the input is not a valid expression or if the token
 /// stream contains comments, keywords or identifiers.
-pub fn expr<'a>(input: &'a [Token]) -> CResult<'a,EvalResult> {
-	IdentifierParser::new(&HashMap::new()).expr(input)
+pub fn expr(input: &[Token]) -> CResult<'_, EvalResult> {
+    IdentifierParser::new(&HashMap::new()).expr(input)
 }
 
 /// Parse and evaluate a macro definition from of a list of tokens.
@@ -546,11 +568,10 @@ pub fn expr<'a>(input: &'a [Token]) -> CResult<'a,EvalResult> {
 /// Returns an error if the replacement is not a valid expression, if called
 /// on a function-like macro, or if the token stream contains comments,
 /// keywords or identifiers.
-pub fn macro_definition<'a>(input: &'a [Token]) -> CResult<'a,(&'a [u8],EvalResult)> {
-	IdentifierParser::new(&HashMap::new()).macro_definition(input)
+pub fn macro_definition(input: &[Token]) -> CResult<'_, (&'_ [u8], EvalResult)> {
+    IdentifierParser::new(&HashMap::new()).macro_definition(input)
 }
 
-named_attr!(
 /// Parse a functional macro declaration from a list of tokens.
 ///
 /// Returns the identifier for the macro and the argument list (in order). The
@@ -590,13 +611,13 @@ named_attr!(
 /// let (_, evaluated) = assert_full_parse(IdentifierParser::new(&idents).expr(expr)).unwrap();
 /// assert_eq!(evaluated, EvalResult::Str(b"testsuffix".to_vec()));
 /// ```
-,pub fn_macro_declaration<&[Token],(&[u8],Vec<&[u8]>),::Error>,
-	pair!(
-		typed_token!(Identifier),
-		delimited!(
-			p!("("),
-			separated_list!(p!(","), typed_token!(Identifier)),
-			p!(")")
-		)
-	)
-);
+pub fn fn_macro_declaration(input: &[Token]) -> CResult<'_, (&[u8], Vec<&[u8]>)> {
+    pair(
+        typed_token!(Identifier),
+        delimited(
+            p("("),
+            separated_list(p(","), typed_token!(Identifier)),
+            p(")"),
+        ),
+    )(input)
+}

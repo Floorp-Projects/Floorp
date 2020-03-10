@@ -20,14 +20,44 @@ pub use impl_lmdb::DatabaseImpl as LmdbDatabase;
 pub use impl_lmdb::EnvironmentBuilderImpl as Lmdb;
 pub use impl_lmdb::EnvironmentImpl as LmdbEnvironment;
 pub use impl_lmdb::ErrorImpl as LmdbError;
-pub use impl_lmdb::RoCursorImpl as LmdbRoCursor;
-pub use impl_lmdb::RoTransactionImpl as LmdbRoTransaction;
-pub use impl_lmdb::RwTransactionImpl as LmdbRwTransaction;
+pub use impl_lmdb::IterImpl as LmdbIter;
+pub use impl_lmdb::{
+    DatabaseFlagsImpl as LmdbDatabaseFlags,
+    EnvironmentFlagsImpl as LmdbEnvironmentFlags,
+    WriteFlagsImpl as LmdbWriteFlags,
+};
+pub use impl_lmdb::{
+    InfoImpl as LmdbInfo,
+    StatImpl as LmdbStat,
+};
+pub use impl_lmdb::{
+    RoCursorImpl as LmdbRoCursor,
+    RwCursorImpl as LmdbRwCursor,
+};
+pub use impl_lmdb::{
+    RoTransactionImpl as LmdbRoTransaction,
+    RwTransactionImpl as LmdbRwTransaction,
+};
 
-pub use impl_safe::DatabaseId as SafeModeDatabase;
+pub use impl_safe::DatabaseImpl as SafeModeDatabase;
 pub use impl_safe::EnvironmentBuilderImpl as SafeMode;
 pub use impl_safe::EnvironmentImpl as SafeModeEnvironment;
 pub use impl_safe::ErrorImpl as SafeModeError;
-pub use impl_safe::RoCursorImpl as SafeModeRoCursor;
-pub use impl_safe::RoTransactionImpl as SafeModeRoTransaction;
-pub use impl_safe::RwTransactionImpl as SafeModeRwTransaction;
+pub use impl_safe::IterImpl as SafeModeIter;
+pub use impl_safe::{
+    DatabaseFlagsImpl as SafeModeDatabaseFlags,
+    EnvironmentFlagsImpl as SafeModeEnvironmentFlags,
+    WriteFlagsImpl as SafeModeWriteFlags,
+};
+pub use impl_safe::{
+    InfoImpl as SafeModeInfo,
+    StatImpl as SafeModeStat,
+};
+pub use impl_safe::{
+    RoCursorImpl as SafeModeRoCursor,
+    RwCursorImpl as SafeModeRwCursor,
+};
+pub use impl_safe::{
+    RoTransactionImpl as SafeModeRoTransaction,
+    RwTransactionImpl as SafeModeRwTransaction,
+};

@@ -1,6 +1,6 @@
-use literal::DefaultValue;
-use term;
-use Parse;
+use crate::literal::DefaultValue;
+use crate::term;
+use crate::Parse;
 
 impl<'a, T: Parse<'a>> Parse<'a> for Option<T> {
     parser!(opt!(weedle!(T)));
@@ -26,7 +26,7 @@ impl<'a, T: Parse<'a>, U: Parse<'a>, V: Parse<'a>> Parse<'a> for (T, U, V) {
 }
 
 ast_types! {
-    /// Parses `{ body }`
+    /// Parses `( body )`
     #[derive(Copy, Default)]
     struct Parenthesized<T> where [T: Parse<'a>] {
         open_paren: term::OpenParen,
@@ -42,7 +42,7 @@ ast_types! {
         close_bracket: term::CloseBracket,
     }
 
-    /// Parses `( body )`
+    /// Parses `{ body }`
     #[derive(Copy, Default)]
     struct Braced<T> where [T: Parse<'a>] {
         open_brace: term::OpenBrace,
@@ -87,7 +87,7 @@ ast_types! {
                 take_while!(|c: char| c.is_ascii_alphanumeric() || c == '_' || c == '-') >>
                 (())
             )) >>
-            (id.0)
+            (id)
         )),
     )
 
@@ -126,7 +126,7 @@ mod test {
         len() == 3;
     });
 
-    test!(should_parse_parenthesized { "{ one }" =>
+    test!(should_parse_parenthesized { "( one )" =>
         "";
         Parenthesized<Identifier>;
         body.0 == "one";
@@ -138,7 +138,7 @@ mod test {
         body.0 == "one";
     });
 
-    test!(should_parse_braced { "( one )" =>
+    test!(should_parse_braced { "{ one }" =>
         "";
         Braced<Identifier>;
         body.0 == "one";

@@ -26,9 +26,9 @@ use rkv::{
 };
 
 type MultiStore = rkv::MultiStore<LmdbDatabase>;
-type Writer<'env> = rkv::Writer<LmdbRwTransaction<'env>>;
+type Writer<'w> = rkv::Writer<LmdbRwTransaction<'w>>;
 
-fn getput<'env, 's>(store: MultiStore, writer: &'env mut Writer, ids: &'s mut Vec<String>) {
+fn getput<'w, 's>(store: MultiStore, writer: &'w mut Writer, ids: &'s mut Vec<String>) {
     let keys = vec!["str1", "str2", "str3"];
     // we convert the writer into a cursor so that we can safely read
     for k in keys.iter() {

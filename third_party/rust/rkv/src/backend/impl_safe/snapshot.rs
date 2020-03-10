@@ -104,8 +104,8 @@ impl Snapshot {
         }
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&[u8], &[u8])> {
-        self.map.iter().flat_map(|(key, values)| values.iter().map(move |value| (key.as_ref(), value.as_ref())))
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&[u8], impl Iterator<Item = &[u8]>)> {
+        self.map.iter().map(|(key, values)| (key.as_ref(), values.iter().map(|value| value.as_ref())))
     }
 }
 

@@ -1,4 +1,7 @@
-use bindgen::{builder, Builder, CodegenConfig, EnumVariation, RustTarget, RUST_TARGET_STRINGS};
+use bindgen::{
+    builder, AliasVariation, Builder, CodegenConfig, EnumVariation, RustTarget,
+    RUST_TARGET_STRINGS,
+};
 use clap::{App, Arg};
 use std::fs::File;
 use std::io::{self, stderr, Error, ErrorKind, Write};
@@ -6,7 +9,9 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 /// Construct a new [`Builder`](./struct.Builder.html) from command line flags.
-pub fn builder_from_flags<I>(args: I) -> Result<(Builder, Box<dyn io::Write>, bool), io::Error>
+pub fn builder_from_flags<I>(
+    args: I,
+) -> Result<(Builder, Box<dyn io::Write>, bool), io::Error>
 where
     I: Iterator<Item = String>,
 {
@@ -33,6 +38,7 @@ where
                     "consts",
                     "moduleconsts",
                     "bitfield",
+                    "newtype",
                     "rust",
                     "rust_non_exhaustive",
                 ])
@@ -43,6 +49,13 @@ where
                     "Mark any enum whose name matches <regex> as a set of \
                      bitfield flags.",
                 )
+                .value_name("regex")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
+            Arg::with_name("newtype-enum")
+                .long("newtype-enum")
+                .help("Mark any enum whose name matches <regex> as a newtype.")
                 .value_name("regex")
                 .takes_value(true)
                 .multiple(true)
@@ -69,6 +82,47 @@ where
                 .help(
                     "Mark any enum whose name matches <regex> as a module of \
                      constants.",
+                )
+                .value_name("regex")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
+            Arg::with_name("default-alias-style")
+                .long("default-alias-style")
+                .help("The default style of code used to generate typedefs.")
+                .value_name("variant")
+                .default_value("type_alias")
+                .possible_values(&[
+                    "type_alias",
+                    "new_type",
+                    "new_type_deref",
+                ])
+                .multiple(false),
+            Arg::with_name("normal-alias")
+                .long("normal-alias")
+                .help(
+                    "Mark any typedef alias whose name matches <regex> to use \
+                     normal type aliasing.",
+                )
+                .value_name("regex")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
+             Arg::with_name("new-type-alias")
+                .long("new-type-alias")
+                .help(
+                    "Mark any typedef alias whose name matches <regex> to have \
+                     a new type generated for it.",
+                )
+                .value_name("regex")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
+             Arg::with_name("new-type-alias-deref")
+                .long("new-type-alias-deref")
+                .help(
+                    "Mark any typedef alias whose name matches <regex> to have \
+                     a new type with Deref and DerefMut to the inner type.",
                 )
                 .value_name("regex")
                 .takes_value(true)
@@ -206,6 +260,13 @@ where
                      generate names like \"Baz\" instead of \"foo_bar_Baz\" \
                      for an input name \"foo::bar::Baz\".",
                 ),
+            Arg::with_name("disable-nested-struct-naming")
+                .long("disable-nested-struct-naming")
+                .help(
+                    "Disable nested struct naming, causing bindgen to generate \
+                     names like \"bar\" instead of \"foo_bar\" for a nested \
+                     definition \"struct foo { struct bar { } b; };\"."
+                ),
             Arg::with_name("ignore-functions")
                 .long("ignore-functions")
                 .help(
@@ -228,7 +289,7 @@ where
                 .help("Do not automatically convert floats to f32/f64."),
             Arg::with_name("no-prepend-enum-name")
                 .long("no-prepend-enum-name")
-                .help("Do not prepend the enum name to bitfield or constant variants."),
+                .help("Do not prepend the enum name to constant or newtype variants."),
             Arg::with_name("no-include-path-detection")
                 .long("no-include-path-detection")
                 .help("Do not try to detect default include paths"),
@@ -322,6 +383,9 @@ where
                     "Do not record matching items in the regex sets. \
                      This disables reporting of unused items.",
                 ),
+            Arg::with_name("size_t-is-usize")
+                .long("size_t-is-usize")
+                .help("Translate size_t to usize."),
             Arg::with_name("no-rustfmt-bindings")
                 .long("no-rustfmt-bindings")
                 .help("Do not format the generated bindings with rustfmt."),
@@ -373,6 +437,11 @@ where
             Arg::with_name("use-array-pointers-in-arguments")
                 .long("use-array-pointers-in-arguments")
                 .help("Use `*const [T; size]` instead of `*const T` for C arrays"),
+            Arg::with_name("wasm-import-module-name")
+                .long("wasm-import-module-name")
+                .value_name("name")
+                .takes_value(true)
+                .help("The name to be used in a #[link(wasm_import_module = ...)] statement")
         ]) // .args()
         .get_matches_from(args);
 
@@ -407,14 +476,20 @@ where
         }
     }
 
+    if let Some(newtypes) = matches.values_of("newtype-enum") {
+        for regex in newtypes {
+            builder = builder.newtype_enum(regex);
+        }
+    }
+
     if let Some(rustifieds) = matches.values_of("rustified-enum") {
         for regex in rustifieds {
             builder = builder.rustified_enum(regex);
         }
     }
 
-    if let Some(bitfields) = matches.values_of("constified-enum") {
-        for regex in bitfields {
+    if let Some(const_enums) = matches.values_of("constified-enum") {
+        for regex in const_enums {
             builder = builder.constified_enum(regex);
         }
     }
@@ -424,6 +499,30 @@ where
             builder = builder.constified_enum_module(regex);
         }
     }
+
+    if let Some(variant) = matches.value_of("default-alias-style") {
+        builder =
+            builder.default_alias_style(AliasVariation::from_str(variant)?);
+    }
+
+    if let Some(type_alias) = matches.values_of("normal-alias") {
+        for regex in type_alias {
+            builder = builder.type_alias(regex);
+        }
+    }
+
+    if let Some(new_type) = matches.values_of("new-type-alias") {
+        for regex in new_type {
+            builder = builder.new_type_alias(regex);
+        }
+    }
+
+    if let Some(new_type_deref) = matches.values_of("new-type-alias-deref") {
+        for regex in new_type_deref {
+            builder = builder.new_type_alias_deref(regex);
+        }
+    }
+
     if let Some(hidden_types) = matches.values_of("blacklist-type") {
         for ty in hidden_types {
             builder = builder.blacklist_type(ty);
@@ -510,6 +609,11 @@ where
         builder = builder.array_pointers_in_arguments(true);
     }
 
+    if let Some(wasm_import_name) = matches.value_of("wasm-import-module-name")
+    {
+        builder = builder.wasm_import_module_name(wasm_import_name);
+    }
+
     if let Some(prefix) = matches.value_of("ctypes-prefix") {
         builder = builder.ctypes_prefix(prefix);
     }
@@ -557,6 +661,10 @@ where
 
     if matches.is_present("disable-name-namespacing") {
         builder = builder.disable_name_namespacing();
+    }
+
+    if matches.is_present("disable-nested-struct-naming") {
+        builder = builder.disable_nested_struct_naming();
     }
 
     if matches.is_present("ignore-functions") {
@@ -656,6 +764,10 @@ where
 
     if matches.is_present("no-record-matches") {
         builder = builder.record_matches(false);
+    }
+
+    if matches.is_present("size_t-is-usize") {
+        builder = builder.size_t_is_usize(true);
     }
 
     let no_rustfmt_bindings = matches.is_present("no-rustfmt-bindings");
