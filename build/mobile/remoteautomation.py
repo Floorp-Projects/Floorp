@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import time
+import os
 import re
 import posixpath
-import tempfile
 import shutil
+import tempfile
+import time
 
 import six
 
@@ -172,8 +173,22 @@ class RemoteAutomation(Automation):
         if app == "am" and extraArgs[0] in ('instrument', 'start'):
             return app, extraArgs
 
-        cmd, args = Automation.buildCommandLine(
-            self, app, debuggerInfo, profileDir, testURL, extraArgs)
+        cmd = os.path.abspath(app)
+
+        args = []
+
+        if debuggerInfo:
+            args.extend(debuggerInfo.args)
+            args.append(cmd)
+            cmd = os.path.abspath(debuggerInfo.path)
+
+        profileDirectory = profileDir + "/"
+
+        args.extend(("-no-remote", "-profile", profileDirectory))
+        if testURL is not None:
+            args.append((testURL))
+        args.extend(extraArgs)
+
         try:
             args.remove('-foreground')
         except Exception:
@@ -423,3 +438,8 @@ class RemoteAutomation(Automation):
                 pass
         if self.device.process_exist(crashreporter):
             print("ERROR: %s still running!!" % crashreporter)
+
+    @staticmethod
+    def elf_arm(filename):
+        data = open(filename, 'rb').read(20)
+        return data[:4] == "\x7fELF" and ord(data[18]) == 40  # EM_ARM
