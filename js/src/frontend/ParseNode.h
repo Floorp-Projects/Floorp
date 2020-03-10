@@ -2289,14 +2289,14 @@ inline bool ParseNode::isConstant() {
 class TraceListNode {
  protected:
   js::gc::Cell* gcThing;
-  TraceListNode* traceLink;
+  FunctionBox* traceLink;
 
-  TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink);
+  TraceListNode(js::gc::Cell* gcThing, FunctionBox* traceLink);
 
   virtual void trace(JSTracer* trc);
 
  public:
-  static void TraceList(JSTracer* trc, TraceListNode* listHead);
+  static void TraceList(JSTracer* trc, FunctionBox* listHead);
 };
 
 class ObjectBox : public TraceListNode {
@@ -2304,7 +2304,7 @@ class ObjectBox : public TraceListNode {
   friend struct GCThingList;
   ObjectBox* emitLink;
 
-  ObjectBox(JSObject* obj, TraceListNode* link);
+  ObjectBox(JSObject* obj, FunctionBox* link);
 
  public:
   bool hasObject() const { return gcThing != nullptr; }
