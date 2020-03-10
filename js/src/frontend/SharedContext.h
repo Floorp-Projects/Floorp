@@ -306,7 +306,7 @@ class FunctionBox : public SharedContext {
   // The parser handles tracing the fields below via the FunctionBox linked
   // list represented by |traceLink|.
 
-  JSObject* object_;
+  JSFunction* object_;
   FunctionBox* traceLink;
   FunctionBox* emitLink;
 
@@ -506,7 +506,7 @@ class FunctionBox : public SharedContext {
 
   bool hasObject() const { return object_ != nullptr; }
 
-  JSFunction* function() const { return &object_->as<JSFunction>(); }
+  JSFunction* function() const { return object_; }
 
   // Initialize FunctionBox with a deferred allocation Function
   void initializeFunction(JSFunction* fun) {
