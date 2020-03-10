@@ -50,6 +50,17 @@ class GeckoWebExtension(
     constructor(native: GeckoNativeWebExtension, runtime: GeckoRuntime) :
         this(native.id, native.location, runtime, true, true, native)
 
+    init {
+        // By default, we currently allow extension scripts to run for private sessions.
+        // We'll later expose this API so apps can control this via an extension-specific setting:
+        // https://github.com/mozilla-mobile/android-components/issues/6228
+        if (nativeExtension.metaData?.allowedInPrivateBrowsing == false) {
+            // We have do this once because GV defaults to 'false', and only once because
+            // the state persists.
+            runtime.webExtensionController.setAllowedInPrivateBrowsing(nativeExtension, true)
+        }
+    }
+
     /**
      * Uniquely identifies a port using its name and the session it
      * was opened for. Ports connected from background scripts will
