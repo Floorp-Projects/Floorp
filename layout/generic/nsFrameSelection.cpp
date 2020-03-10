@@ -301,7 +301,8 @@ struct MOZ_RAII AutoPrepareFocusRange {
 
 ////////////BEGIN nsFrameSelection methods
 
-nsFrameSelection::nsFrameSelection() {
+nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
+                                   const bool aAccessibleCaretEnabled) {
   for (size_t i = 0; i < ArrayLength(mDomSelections); i++) {
     mDomSelections[i] = new Selection(this);
     mDomSelections[i]->SetType(kPresentSelectionTypes[i]);
@@ -324,6 +325,43 @@ nsFrameSelection::nsFrameSelection() {
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (mDomSelections[index]) {
       mDomSelections[index]->NotifyAutoCopy();
+    }
+  }
+
+  mPresShell = aPresShell;
+  mDragState = false;
+  mDesiredPosSet = false;
+  mLimiter = aLimiter;
+  mCaretMovementStyle =
+      Preferences::GetInt("bidi.edit.caret_movement_style", 2);
+
+  // This should only ever be initialized on the main thread, so we are OK here.
+  MOZ_ASSERT(NS_IsMainThread());
+  static bool prefCachesInitialized = false;
+  if (!prefCachesInitialized) {
+    prefCachesInitialized = true;
+
+    Preferences::AddBoolVarCache(&sSelectionEventsOnTextControlsEnabled,
+                                 "dom.select_events.textcontrols.enabled",
+                                 false);
+  }
+
+  mAccessibleCaretEnabled = aAccessibleCaretEnabled;
+  if (mAccessibleCaretEnabled) {
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    mDomSelections[index]->MaybeNotifyAccessibleCaretEventHub(aPresShell);
+  }
+
+  bool plaintextControl = (aLimiter != nullptr);
+  bool initSelectEvents = plaintextControl
+                              ? sSelectionEventsOnTextControlsEnabled
+                              : StaticPrefs::dom_select_events_enabled();
+
+  Document* doc = aPresShell->GetDocument();
+  if (initSelectEvents || (doc && doc->NodePrincipal()->IsSystemPrincipal())) {
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    if (mDomSelections[index]) {
+      mDomSelections[index]->EnableSelectionChangeEvent();
     }
   }
 }
@@ -592,46 +630,6 @@ static nsINode* GetCellParent(nsINode* aDomNode) {
     current = current->GetParent();
   }
   return nullptr;
-}
-
-void nsFrameSelection::Init(mozilla::PresShell* aPresShell,
-                            nsIContent* aLimiter,
-                            bool aAccessibleCaretEnabled) {
-  mPresShell = aPresShell;
-  mDragState = false;
-  mDesiredPosSet = false;
-  mLimiter = aLimiter;
-  mCaretMovementStyle =
-      Preferences::GetInt("bidi.edit.caret_movement_style", 2);
-
-  // This should only ever be initialized on the main thread, so we are OK here.
-  static bool prefCachesInitialized = false;
-  if (!prefCachesInitialized) {
-    prefCachesInitialized = true;
-
-    Preferences::AddBoolVarCache(&sSelectionEventsOnTextControlsEnabled,
-                                 "dom.select_events.textcontrols.enabled",
-                                 false);
-  }
-
-  mAccessibleCaretEnabled = aAccessibleCaretEnabled;
-  if (mAccessibleCaretEnabled) {
-    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    mDomSelections[index]->MaybeNotifyAccessibleCaretEventHub(aPresShell);
-  }
-
-  bool plaintextControl = (aLimiter != nullptr);
-  bool initSelectEvents = plaintextControl
-                              ? sSelectionEventsOnTextControlsEnabled
-                              : StaticPrefs::dom_select_events_enabled();
-
-  Document* doc = aPresShell->GetDocument();
-  if (initSelectEvents || (doc && doc->NodePrincipal()->IsSystemPrincipal())) {
-    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    if (mDomSelections[index]) {
-      mDomSelections[index]->EnableSelectionChangeEvent();
-    }
-  }
 }
 
 bool nsFrameSelection::sSelectionEventsOnTextControlsEnabled = false;
