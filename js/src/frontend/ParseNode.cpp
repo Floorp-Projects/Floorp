@@ -426,20 +426,16 @@ FunctionBox* ObjectBox::asFunctionBox() {
 }
 
 /* static */
-void TraceListNode::TraceList(JSTracer* trc, FunctionBox* listHead) {
+void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
   for (FunctionBox* node = listHead; node; node = node->traceLink) {
     node->trace(trc);
   }
 }
 
-void TraceListNode::trace(JSTracer* trc) {
+void FunctionBox::trace(JSTracer* trc) {
   if (gcThing) {
     TraceGenericPointerRoot(trc, &gcThing, "parser.traceListNode");
   }
-}
-
-void FunctionBox::trace(JSTracer* trc) {
-  ObjectBox::trace(trc);
   if (enclosingScope_) {
     enclosingScope_.trace(trc);
   }

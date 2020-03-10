@@ -34,7 +34,7 @@ class BinASTParserBase : public ParserSharedBase {
   virtual void doTrace(JSTracer* trc) {}
 
   void trace(JSTracer* trc) {
-    TraceListNode::TraceList(trc, traceListHead_);
+    FunctionBox::TraceList(trc, traceListHead_);
     doTrace(trc);
   }
 };

@@ -306,7 +306,7 @@ class ParseContext : public Nestable<ParseContext> {
  public:
   // All inner FunctionBoxes in this context. Only used when syntax parsing.
   // The FunctionBoxes are traced as part of the TraceList on the parser,
-  // (see TraceListNode::TraceList)
+  // (see FunctionBox::TraceList)
   FunctionBoxVector innerFunctionBoxesForLazy;
 
   // In a function context, points to a Directive struct that can be updated
