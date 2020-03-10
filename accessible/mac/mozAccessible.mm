@@ -1016,6 +1016,16 @@ struct RoleDescrComparator {
   NSAccessibilityPostNotification(realSelf, @"AXLayoutComplete");
 }
 
+- (void)menuOpened {
+  id realSelf = GetObjectOrRepresentedView(self);
+  NSAccessibilityPostNotification(realSelf, @"AXMenuOpened");
+}
+
+- (void)menuClosed {
+  id realSelf = GetObjectOrRepresentedView(self);
+  NSAccessibilityPostNotification(realSelf, @"AXMenuClosed");
+}
+
 - (NSString*)help {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 

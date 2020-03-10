@@ -102,7 +102,9 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       eventType != nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE &&
       eventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
       eventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED &&
-      eventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE)
+      eventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
+      eventType != nsIAccessibleEvent::EVENT_MENUPOPUP_START &&
+      eventType != nsIAccessibleEvent::EVENT_MENUPOPUP_END)
     return NS_OK;
 
   Accessible* accessible = aEvent->GetAccessible();
@@ -179,6 +181,12 @@ void a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType) {
       break;
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
       [aNativeAcc documentLoadComplete];
+      break;
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+      [aNativeAcc menuOpened];
+      break;
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
+      [aNativeAcc menuClosed];
       break;
   }
 
