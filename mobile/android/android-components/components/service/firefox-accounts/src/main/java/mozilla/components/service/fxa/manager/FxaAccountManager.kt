@@ -812,11 +812,8 @@ open class FxaAccountManager(
                         logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(accountEventsIntegration)
 
-                        logger.info("Initializing device")
-                        // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
-                        account.deviceConstellation().initDeviceAsync(
-                                deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
-                        ).await()
+                        // NB: we're running neither `initDevice` nor `ensureCapabilities` here, since
+                        // this is a recovery flow, and these calls already ran at some point before.
 
                         postAuthenticated(AuthType.Recovered)
 
@@ -968,8 +965,8 @@ open class FxaAccountManager(
             type = deviceConfig.type.intoSyncType()
         ))
 
-        // If device supports SEND_TAB...
-        if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB)) {
+        // If device supports SEND_TAB, and we're not recovering from an auth problem...
+        if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB) && authType != AuthType.Recovered) {
             // ... update constellation state
             account.deviceConstellation().refreshDevicesAsync().await()
         }
