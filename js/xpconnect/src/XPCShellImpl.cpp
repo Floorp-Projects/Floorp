@@ -485,29 +485,20 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (strcmp(opt.get(), "strict") == 0) {
-      ContextOptionsRef(cx).toggleExtraWarnings();
-    } else if (strcmp(opt.get(), "werror") == 0) {
+    if (strcmp(opt.get(), "werror") == 0) {
       ContextOptionsRef(cx).toggleWerror();
     } else if (strcmp(opt.get(), "strict_mode") == 0) {
       ContextOptionsRef(cx).toggleStrictMode();
     } else {
       JS_ReportErrorUTF8(cx,
                          "unknown option name '%s'. The valid names are "
-                         "strict, werror, and strict_mode.",
+                         "werror and strict_mode.",
                          opt.get());
       return false;
     }
   }
 
   UniqueChars names;
-  if (oldContextOptions.extraWarnings()) {
-    names = JS_sprintf_append(std::move(names), "%s", "strict");
-    if (!names) {
-      JS_ReportOutOfMemory(cx);
-      return false;
-    }
-  }
   if (oldContextOptions.werror()) {
     names =
         JS_sprintf_append(std::move(names), "%s%s", names ? "," : "", "werror");
@@ -847,7 +838,7 @@ static int usage() {
   fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
   fprintf(
       gErrFile,
-      "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCSsmIp] "
+      "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCSmIp] "
       "[-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
   return 2;
 }
@@ -873,9 +864,6 @@ static void ProcessArgsForCompartment(JSContext* cx, char** argv, int argc) {
         break;
       case 'S':
         ContextOptionsRef(cx).toggleWerror();
-        [[fallthrough]];  // because -S implies -s
-      case 's':
-        ContextOptionsRef(cx).toggleExtraWarnings();
         break;
     }
   }
@@ -1009,7 +997,6 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
         isInteractive = false;
         break;
       case 'S':
-      case 's':
         // These options are processed in ProcessArgsForCompartment.
         break;
       case 'p': {

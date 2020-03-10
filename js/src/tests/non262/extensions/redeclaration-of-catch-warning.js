@@ -14,10 +14,10 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-options("strict");
-
 function assertRedeclarationErrorThrown(expression)
 {
+  "use strict";
+
   try
   {
     evaluate(expression);

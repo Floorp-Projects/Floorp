@@ -141,7 +141,6 @@ assertEq(v.done, true);
 assertEq(v.value, undefined);
 
 // in "with" statement
-options("strict");
 eval(`
 function* g9() {
   with ({ ".genrval": { value: 44, done: false } }) {
