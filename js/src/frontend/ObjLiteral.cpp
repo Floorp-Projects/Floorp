@@ -18,7 +18,7 @@
 
 namespace js {
 
-static JS::Value InterpretObjLiteralValue(ObjLiteralAtomVector& atoms,
+static JS::Value InterpretObjLiteralValue(const ObjLiteralAtomVector& atoms,
                                           const ObjLiteralInsn& insn) {
   switch (insn.getOp()) {
     case ObjLiteralOpcode::ConstValue:
@@ -41,8 +41,8 @@ static JS::Value InterpretObjLiteralValue(ObjLiteralAtomVector& atoms,
 }
 
 static JSObject* InterpretObjLiteralObj(
-    JSContext* cx, ObjLiteralAtomVector& atoms,
-    mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
+    JSContext* cx, const ObjLiteralAtomVector& atoms,
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool specificGroup = flags.contains(ObjLiteralFlag::SpecificGroup);
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
@@ -84,8 +84,8 @@ static JSObject* InterpretObjLiteralObj(
 }
 
 static JSObject* InterpretObjLiteralArray(
-    JSContext* cx, ObjLiteralAtomVector& atoms,
-    mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
+    JSContext* cx, const ObjLiteralAtomVector& atoms,
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool isCow = flags.contains(ObjLiteralFlag::ArrayCOW);
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
@@ -114,8 +114,8 @@ static JSObject* InterpretObjLiteralArray(
   return result;
 }
 
-JSObject* InterpretObjLiteral(JSContext* cx, ObjLiteralAtomVector& atoms,
-                              mozilla::Span<const uint8_t> literalInsns,
+JSObject* InterpretObjLiteral(JSContext* cx, const ObjLiteralAtomVector& atoms,
+                              const mozilla::Span<const uint8_t> literalInsns,
                               ObjLiteralFlags flags) {
   return flags.contains(ObjLiteralFlag::Array)
              ? InterpretObjLiteralArray(cx, atoms, literalInsns, flags)

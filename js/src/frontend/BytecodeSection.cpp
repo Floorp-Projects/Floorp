@@ -179,7 +179,7 @@ void CGResumeOffsetList::finish(mozilla::Span<uint32_t> array) {
   }
 }
 
-JSObject* ObjLiteralCreationData::create(JSContext* cx) {
+JSObject* ObjLiteralCreationData::create(JSContext* cx) const {
   return InterpretObjLiteral(cx, atoms_, writer_);
 }
 
