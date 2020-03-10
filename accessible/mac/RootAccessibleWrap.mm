@@ -5,7 +5,7 @@
 
 #include "RootAccessibleWrap.h"
 
-#include "mozDocAccessible.h"
+#include "mozRootAccessible.h"
 
 #include "nsCOMPtr.h"
 #include "nsObjCExceptions.h"
