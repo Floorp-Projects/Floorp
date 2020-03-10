@@ -35,12 +35,9 @@ namespace wr {
 
 #define USE_VIRTUAL_SURFACES
 
-// DirectComposition virtual surfaces are zero based, but WR picture cache
-// bounds can potentially have a negative origin. Shift all the picture cache
-// coordinates by a large fixed amount, such that we don't need to re-create
-// the surface if the picture cache origin becomes negative due to adding more
-// tiles to the above / left.
-#define VIRTUAL_OFFSET 512 * 1024
+// The size of the virtual surface. This is large enough such that we
+// will never render a surface larger than this.
+#define VIRTUAL_SURFACE_SIZE (1024 * 1024)
 
 class DCLayer;
 class DCSurface;
@@ -70,8 +67,8 @@ class DCLayerTree {
   void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
             wr::DeviceIntRect aDirtyRect, wr::DeviceIntRect aValidRect);
   void Unbind();
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aTileSize,
-                     bool aIsOpaque);
+  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aVirtualOffset,
+                     wr::DeviceIntSize aTileSize, bool aIsOpaque);
   void DestroySurface(NativeSurfaceId aId);
   void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY);
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY);
@@ -163,7 +160,8 @@ class DCLayerTree {
  */
 class DCSurface {
  public:
-  explicit DCSurface(wr::DeviceIntSize aTileSize, bool aIsOpaque,
+  explicit DCSurface(wr::DeviceIntSize aTileSize,
+                     wr::DeviceIntPoint aVirtualOffset, bool aIsOpaque,
                      DCLayerTree* aDCLayerTree);
   ~DCSurface();
 
@@ -183,6 +181,7 @@ class DCSurface {
 
 #ifdef USE_VIRTUAL_SURFACES
   wr::DeviceIntSize GetTileSize() const { return mTileSize; }
+  wr::DeviceIntPoint GetVirtualOffset() const { return mVirtualOffset; }
 
   IDCompositionVirtualSurface* GetCompositionSurface() const {
     return mVirtualSurface;
@@ -211,6 +210,7 @@ class DCSurface {
   bool mIsOpaque;
   bool mAllocatedRectDirty;
   std::unordered_map<TileKey, UniquePtr<DCLayer>, TileKeyHashFn> mDCLayers;
+  wr::DeviceIntPoint mVirtualOffset;
 
 #ifdef USE_VIRTUAL_SURFACES
   RefPtr<IDCompositionVirtualSurface> mVirtualSurface;

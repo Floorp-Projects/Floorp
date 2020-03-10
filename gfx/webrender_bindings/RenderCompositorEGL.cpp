@@ -176,4 +176,12 @@ LayoutDeviceIntSize RenderCompositorEGL::GetBufferSize() {
 #endif
 }
 
+CompositorCapabilities RenderCompositorEGL::GetCompositorCapabilities() {
+  CompositorCapabilities caps;
+
+  caps.virtual_surface_size = 0;
+
+  return caps;
+}
+
 }  // namespace mozilla::wr
