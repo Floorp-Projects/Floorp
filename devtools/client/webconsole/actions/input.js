@@ -208,22 +208,32 @@ function setInputValue(value) {
   };
 }
 
-function terminalInputChanged(expression) {
+/**
+ * Request an eager evaluation from the server.
+ *
+ * @param {String} expression: The expression to evaluate.
+ * @param {Boolean} force: When true, will request an eager evaluation again, even if
+ *                         the expression is the same one than the one that was used in
+ *                         the previous evaluation.
+ */
+function terminalInputChanged(expression, force = false) {
   return async ({ dispatch, webConsoleUI, hud, toolbox, client, getState }) => {
     const prefs = getAllPrefs(getState());
     if (!prefs.eagerEvaluation) {
-      return;
+      return null;
     }
 
     const { terminalInput = "" } = getState().history;
+
     // Only re-evaluate if the expression did change.
     if (
       (!terminalInput && !expression) ||
       (typeof terminalInput === "string" &&
         typeof expression === "string" &&
-        expression.trim() === terminalInput.trim())
+        expression.trim() === terminalInput.trim() &&
+        !force)
     ) {
-      return;
+      return null;
     }
 
     const originalExpression = expression;
@@ -233,8 +243,12 @@ function terminalInputChanged(expression) {
     });
 
     // There's no need to evaluate an empty string.
-    if (!expression.trim()) {
-      return;
+    if (!expression || !expression.trim()) {
+      return dispatch({
+        type: SET_TERMINAL_EAGER_RESULT,
+        expression: originalExpression,
+        result: null,
+      });
     }
 
     let mapped;
@@ -251,13 +265,20 @@ function terminalInputChanged(expression) {
       eager: true,
     });
 
-    // eslint-disable-next-line consistent-return
     return dispatch({
       type: SET_TERMINAL_EAGER_RESULT,
       expression: originalExpression,
       result: getEagerEvaluationResult(response),
     });
   };
+}
+
+/**
+ * Refresh the current eager evaluation by requesting a new eager evaluation.
+ */
+function updateInstantEvaluationResultForCurrentExpression() {
+  return ({ getState, dispatch }) =>
+    dispatch(terminalInputChanged(getState().history.terminalInput, true));
 }
 
 function getEagerEvaluationResult(response) {
@@ -278,4 +299,5 @@ module.exports = {
   focusInput,
   setInputValue,
   terminalInputChanged,
+  updateInstantEvaluationResultForCurrentExpression,
 };
