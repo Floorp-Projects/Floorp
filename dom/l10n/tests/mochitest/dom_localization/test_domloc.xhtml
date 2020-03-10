@@ -10,9 +10,6 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
-  const { FluentBundle, FluentResource } =
-    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
-
   async function * generateMessages(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`
