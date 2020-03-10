@@ -487,7 +487,7 @@ max-width: ${width}px; max-height: ${height}px`;
   ensureFocus(win) {
     const focusManager = Services.focus;
     if (focusManager.activeWindow != win) {
-      focusManager.activeWindow = win;
+      win.focus();
     }
     this.driver.curBrowser.contentBrowser.focus();
   }
