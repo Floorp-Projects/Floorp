@@ -215,7 +215,7 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
 
     // leave vector temporal_layer_thresholds_bps empty for non-simulcast
     video_stream.temporal_layer_thresholds_bps.clear();
-    if (config.number_of_streams > 1) {
+    if (streamCount > 1) {
       // XXX Note: in simulcast.cc in upstream code, the array value is
       // 3(-1) for all streams, though it's in an array, except for screencasts,
       // which use 1 (i.e 2 layers).
