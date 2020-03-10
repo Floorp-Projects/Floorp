@@ -39,11 +39,8 @@ namespace js {
 
 class Scope;
 
-using BigIntVector = JS::GCVector<js::BigInt*>;
-
 namespace frontend {
 
-class BigIntLiteral;
 class FunctionBox;
 
 struct MOZ_STACK_CLASS GCThingList {
