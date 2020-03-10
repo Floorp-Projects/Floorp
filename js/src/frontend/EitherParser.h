@@ -73,11 +73,6 @@ struct ParserOptions {
   static constexpr auto get() { return &Parser::options; }
 };
 
-template <class Parser>
-struct ParserNewObjectBox {
-  static constexpr auto get() { return &Parser::newObjectBox; }
-};
-
 template <class TokenStream>
 struct TokenStreamComputeLineAndColumn {
   static constexpr auto get() { return &TokenStream::computeLineAndColumn; }
@@ -144,13 +139,6 @@ class EitherParser : public BCEParserHandle {
     InvokeMemberFunction<detail::GetParser, detail::ParserOptions>
         optionsMatcher;
     return parser.match(std::move(optionsMatcher));
-  }
-
-  ObjectBox* newObjectBox(JSObject* obj) final {
-    InvokeMemberFunction<detail::GetParser, detail::ParserNewObjectBox,
-                         JSObject*>
-        matcher{obj};
-    return parser.match(std::move(matcher));
   }
 
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
