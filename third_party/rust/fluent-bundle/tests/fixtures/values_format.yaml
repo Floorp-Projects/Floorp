@@ -1,0 +1,74 @@
+suites:
+  -
+    name: Formatting values
+    resources:
+      -
+        source: |-
+          key1 = Value 1
+          key2 = { $sel ->
+              [a] A2
+            *[b] B2
+          }
+          key3 = Value { 3 }
+          key4 = { $sel ->
+              [a] A{ 4 }
+            *[b] B{ 4 }
+          }
+          key5 =
+              .a = A5
+              .b = B5
+    tests:
+      -
+        name: returns the value
+        asserts:
+          -
+            id: key1
+            value: Value 1
+      -
+        name: returns the default variant
+        asserts:
+          -
+            id: key2
+            value: B2
+            errors:
+              -
+                type: Reference
+                desc: "Unknown variable: $sel"
+      -
+        name: returns the value if it is a pattern
+        asserts:
+          -
+            id: key3
+            value: Value 3
+      -
+        name: returns the default variant if it is a pattern
+        asserts:
+          -
+            id: key4
+            value: B4
+            errors:
+              -
+                type: Reference
+                desc: "Unknown variable: $sel"
+      -
+        name: returns {???} when trying to format a null value
+        skip: true
+        asserts:
+          -
+            id: key5
+            value: "{???}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown variable: $sel"
+      -
+        name: allows to pass traits directly to bundle.formatPattern
+        asserts:
+          -
+            id: key5
+            attribute: a
+            value: "A5"
+          -
+            id: key5
+            attribute: b
+            value: "B5"

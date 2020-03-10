@@ -1,0 +1,176 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Term",
+            "id": {
+                "type": "Identifier",
+                "name": "term01"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value"
+                    }
+                ]
+            },
+            "attributes": [
+                {
+                    "type": "Attribute",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "attr"
+                    },
+                    "value": {
+                        "type": "Pattern",
+                        "elements": [
+                            {
+                                "type": "TextElement",
+                                "value": "Attribute"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "comment": null
+        },
+        {
+            "type": "Term",
+            "id": {
+                "type": "Identifier",
+                "name": "term02"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "",
+                            "type": "StringLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Missing value"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "-term03 =\n    .attr = Attribute\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Missing value\n       <  whitespace  >"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "-term04 =                \n    .attr1 = Attribute 1\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Missing value"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "-term05 =\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Missing value\n       <  whitespace  >"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "-term06 =                \n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "JUNK Missing ="
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "-term07\n\n"
+        },
+        {
+            "type": "Term",
+            "id": {
+                "type": "Identifier",
+                "name": "term08"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value"
+                    }
+                ]
+            },
+            "attributes": [
+                {
+                    "type": "Attribute",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "attr"
+                    },
+                    "value": {
+                        "type": "Pattern",
+                        "elements": [
+                            {
+                                "type": "TextElement",
+                                "value": "Attribute"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "comment": null
+        },
+        {
+            "type": "Term",
+            "id": {
+                "type": "Identifier",
+                "name": "term09"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "Value"
+                    }
+                ]
+            },
+            "attributes": [
+                {
+                    "type": "Attribute",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "attr"
+                    },
+                    "value": {
+                        "type": "Pattern",
+                        "elements": [
+                            {
+                                "type": "TextElement",
+                                "value": "Attribute"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "comment": null
+        }
+    ]
+}

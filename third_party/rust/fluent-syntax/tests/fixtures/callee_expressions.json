@@ -1,0 +1,268 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "GroupComment",
+            "content": "Callees in placeables."
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "function-callee-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "FunctionReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUNCTION"
+                            },
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "term-callee-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "TermReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "term"
+                            },
+                            "attribute": null,
+                            "arguments": {
+                                "type": "CallArguments",
+                                "positional": [],
+                                "named": []
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Messages cannot be parameterized."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-callee-placeable = {message()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Equivalent to a MessageReference callee."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "mixed-case-callee-placeable = {Function()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Message attributes cannot be parameterized."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-attr-callee-placeable = {message.attr()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Term attributes may not be used in Placeables."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "term-attr-callee-placeable = {-term.attr()}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Variables cannot be parameterized."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "variable-callee-placeable = {$variable()}\n\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Callees in selectors."
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "function-callee-selector"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "FunctionReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "FUNCTION"
+                                },
+                                "arguments": {
+                                    "type": "CallArguments",
+                                    "positional": [],
+                                    "named": []
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Value"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "term-attr-callee-selector"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "TermReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "term"
+                                },
+                                "attribute": {
+                                    "type": "Identifier",
+                                    "name": "attr"
+                                },
+                                "arguments": {
+                                    "type": "CallArguments",
+                                    "positional": [],
+                                    "named": []
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Value"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Messages cannot be parameterized."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-callee-selector = {message() ->\n   *[key] Value\n}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Equivalent to a MessageReference callee."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "mixed-case-callee-selector = {Function() ->\n   *[key] Value\n}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Message attributes cannot be parameterized."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-attr-callee-selector = {message.attr() ->\n   *[key] Value\n}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Term values may not be used as selectors."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "term-callee-selector = {-term() ->\n   *[key] Value\n}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Variables cannot be parameterized."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "variable-callee-selector = {$variable() ->\n   *[key] Value\n}\n"
+        }
+    ]
+}
