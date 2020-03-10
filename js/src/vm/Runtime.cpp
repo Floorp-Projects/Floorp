@@ -148,6 +148,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       commonNames(nullptr),
       wellKnownSymbols(nullptr),
       liveSABs(0),
+      beforeWaitCallback(nullptr),
+      afterWaitCallback(nullptr),
       offthreadIonCompilationEnabled_(true),
       parallelParsingEnabled_(true),
 #ifdef DEBUG
