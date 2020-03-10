@@ -383,11 +383,6 @@ TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink,
   MOZ_ASSERT_IF(gcThing, gcThing->isTenured());
 }
 
-ObjectBox* TraceListNode::asObjectBox() {
-  MOZ_ASSERT(isObjectBox());
-  return static_cast<ObjectBox*>(this);
-}
-
 ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink,
                      TraceListNode::NodeType type)
     : TraceListNode(obj, traceLink, type), emitLink(nullptr) {}
