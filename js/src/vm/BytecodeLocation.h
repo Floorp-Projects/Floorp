@@ -181,8 +181,6 @@ class BytecodeLocation {
 
   bool isStrictEqualityOp() const { return IsStrictEqualityOp(getOp()); }
 
-  bool isDetectingOp() const { return IsDetecting(getOp()); }
-
   bool isNameOp() const { return IsNameOp(getOp()); }
 
   // Accessors:

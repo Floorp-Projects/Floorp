@@ -2232,7 +2232,6 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasDirectEval, HasDirectEval)
   IMMUTABLE_FLAG_GETTER(isLazyScript, IsLazyScript)
 
-  MUTABLE_FLAG_GETTER_SETTER(warnedAboutUndefinedProp, WarnedAboutUndefinedProp)
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
   // N.B.: no setter -- custom logic in JSScript.

@@ -186,8 +186,7 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // reset when a script is successfully jit-compiled.
   WarmupResets_MASK = 0xFF,
 
-  // Have warned about uses of undefined properties in this script.
-  WarnedAboutUndefinedProp = 1 << 8,
+  // (1 << 8) is unused
 
   // If treatAsRunOnce, whether script has executed.
   HasRunOnce = 1 << 9,

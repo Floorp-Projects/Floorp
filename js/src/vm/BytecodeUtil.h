@@ -69,9 +69,9 @@ enum {
   JOF_ELEM = 3 << 5,     /* obj[index] operation */
   JOF_MODEMASK = 3 << 5, /* mask for above addressing modes */
 
-  JOF_PROPSET = 1 << 7,      /* property/element/name set operation */
-  JOF_PROPINIT = 1 << 8,     /* property/element/name init operation */
-  JOF_DETECTING = 1 << 9,    /* object detection for warning-quelling */
+  JOF_PROPSET = 1 << 7,  /* property/element/name set operation */
+  JOF_PROPINIT = 1 << 8, /* property/element/name init operation */
+  // (1 << 9) is unused.
   JOF_CHECKSLOPPY = 1 << 10, /* op can only be generated in sloppy mode */
   JOF_CHECKSTRICT = 1 << 11, /* op can only be generated in strict mode */
   JOF_INVOKE = 1 << 12,      /* any call, construct, or eval instruction */
@@ -566,8 +566,6 @@ inline bool IsRelationalOp(JSOp op) {
 inline bool IsCheckStrictOp(JSOp op) {
   return CodeSpec(op).format & JOF_CHECKSTRICT;
 }
-
-inline bool IsDetecting(JSOp op) { return CodeSpec(op).format & JOF_DETECTING; }
 
 inline bool IsNameOp(JSOp op) { return CodeSpec(op).format & JOF_NAME; }
 
