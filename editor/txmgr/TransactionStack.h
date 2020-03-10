@@ -26,9 +26,9 @@ class TransactionStack : private nsDeque {
   already_AddRefed<TransactionItem> Pop();
   already_AddRefed<TransactionItem> PopBottom();
   already_AddRefed<TransactionItem> Peek();
-  already_AddRefed<TransactionItem> GetItem(int32_t aIndex);
+  already_AddRefed<TransactionItem> GetItemAt(size_t aIndex) const;
   void Clear();
-  int32_t GetSize() const { return static_cast<int32_t>(nsDeque::GetSize()); }
+  size_t GetSize() const { return nsDeque::GetSize(); }
   bool IsEmpty() const { return GetSize() == 0; }
 
   void DoUnlink() { Clear(); }

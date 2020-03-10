@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/TransactionStack.h"
+#include "TransactionStack.h"
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"
 #include "nsISupportsUtils.h"
 #include "nscore.h"
 #include "TransactionItem.h"
@@ -26,7 +27,7 @@ TransactionStack::TransactionStack(Type aType)
 TransactionStack::~TransactionStack() { Clear(); }
 
 void TransactionStack::Push(TransactionItem* aTransactionItem) {
-  if (!aTransactionItem) {
+  if (NS_WARN_IF(!aTransactionItem)) {
     return;
   }
 
@@ -36,12 +37,12 @@ void TransactionStack::Push(TransactionItem* aTransactionItem) {
 
 void TransactionStack::Push(
     already_AddRefed<TransactionItem> aTransactionItem) {
-  RefPtr<TransactionItem> item(aTransactionItem);
-  if (!item) {
+  RefPtr<TransactionItem> transactionItem(aTransactionItem);
+  if (NS_WARN_IF(!transactionItem)) {
     return;
   }
 
-  nsDeque::Push(item.forget().take());
+  nsDeque::Push(transactionItem.forget().take());
 }
 
 already_AddRefed<TransactionItem> TransactionStack::Pop() {
@@ -61,8 +62,9 @@ already_AddRefed<TransactionItem> TransactionStack::Peek() {
   return item.forget();
 }
 
-already_AddRefed<TransactionItem> TransactionStack::GetItem(int32_t aIndex) {
-  if (aIndex < 0 || aIndex >= static_cast<int32_t>(nsDeque::GetSize())) {
+already_AddRefed<TransactionItem> TransactionStack::GetItemAt(
+    size_t aIndex) const {
+  if (NS_WARN_IF(aIndex >= nsDeque::GetSize())) {
     return nullptr;
   }
   RefPtr<TransactionItem> item =
@@ -71,7 +73,7 @@ already_AddRefed<TransactionItem> TransactionStack::GetItem(int32_t aIndex) {
 }
 
 void TransactionStack::Clear() {
-  while (GetSize() != 0) {
+  while (GetSize()) {
     RefPtr<TransactionItem> item = mType == FOR_UNDO ? Pop() : PopBottom();
   }
 }
