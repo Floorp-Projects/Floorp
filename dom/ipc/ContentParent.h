@@ -624,11 +624,6 @@ class ContentParent final
 
   void OnCompositorDeviceReset() override;
 
-  PClientOpenWindowOpParent* AllocPClientOpenWindowOpParent(
-      const ClientOpenWindowArgs& aArgs);
-
-  bool DeallocPClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor);
-
   static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
 
   // Control the priority of the IPC messages for input events.

@@ -79,7 +79,6 @@
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
-#include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -2734,16 +2733,6 @@ void ContentParent::OnCompositorUnexpectedShutdown() {
 
 void ContentParent::OnCompositorDeviceReset() {
   Unused << SendReinitRenderingForDeviceReset();
-}
-
-PClientOpenWindowOpParent* ContentParent::AllocPClientOpenWindowOpParent(
-    const ClientOpenWindowArgs& aArgs) {
-  return AllocClientOpenWindowOpParent(aArgs);
-}
-
-bool ContentParent::DeallocPClientOpenWindowOpParent(
-    PClientOpenWindowOpParent* aActor) {
-  return DeallocClientOpenWindowOpParent(aActor);
 }
 
 void ContentParent::MaybeEnableRemoteInputEventQueue() {

@@ -77,9 +77,7 @@ class ClientManagerService final {
   RefPtr<ClientOpPromise> GetInfoAndState(
       const ClientGetInfoAndStateArgs& aArgs);
 
-  RefPtr<ClientOpPromise> OpenWindow(
-      const ClientOpenWindowArgs& aArgs,
-      already_AddRefed<ContentParent> aSourceProcess);
+  RefPtr<ClientOpPromise> OpenWindow(const ClientOpenWindowArgs& aArgs);
 
   bool HasWindow(const Maybe<ContentParentId>& aContentParentId,
                  const mozilla::ipc::PrincipalInfo& aPrincipalInfo,

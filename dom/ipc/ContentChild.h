@@ -653,15 +653,6 @@ class ContentChild final
       const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags,
       nsTArray<FakePluginTag>&& aFakePluginTags);
 
-  PClientOpenWindowOpChild* AllocPClientOpenWindowOpChild(
-      const ClientOpenWindowArgs& aArgs);
-
-  mozilla::ipc::IPCResult RecvPClientOpenWindowOpConstructor(
-      PClientOpenWindowOpChild* aActor,
-      const ClientOpenWindowArgs& aArgs) override;
-
-  bool DeallocPClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor);
-
   mozilla::ipc::IPCResult RecvSaveRecording(const FileDescriptor& aFile);
 
   mozilla::ipc::IPCResult RecvCrossProcessRedirect(
