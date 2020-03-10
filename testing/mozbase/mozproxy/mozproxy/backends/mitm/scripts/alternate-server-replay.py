@@ -85,7 +85,6 @@ Http2Layer._handle_remote_settings_changed = _remote_settings_changed
 
 class AlternateServerPlayback:
     def __init__(self):
-
         ctx.master.addons.remove(ctx.master.addons.get("serverplayback"))
         self.flowmap = {}
         self.configured = False
@@ -94,7 +93,7 @@ class AlternateServerPlayback:
         self._done = False
         self._replayed = 0
         self._not_replayed = 0
-        self.mitm_version = ctx.mitmproxy.version.MITMPROXY
+        self.mitm_version = ctx.mitmproxy.version.VERSION
 
         ctx.log.info("MitmProxy version: %s" % self.mitm_version)
 
