@@ -64,6 +64,13 @@ LegacySHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+LegacySHEntry::Clone(nsISHEntry** aResult) {
+  nsCOMPtr<nsISHEntry> entry = new LegacySHEntry(*this);
+  entry.forget(aResult);
+  return NS_OK;
+}
+
 void SHEntryParent::ActorDestroy(ActorDestroyReason aWhy) {
   mEntry->mActor = nullptr;
 }
@@ -579,6 +586,32 @@ bool SHEntryParent::RecvUpdateLayoutHistoryState(
     UniquePtr<PresState> newState = MakeUnique<PresState>(state);
     layoutHistoryState->AddState(aKeys[i], std::move(newState));
   }
+  return true;
+}
+
+bool SHEntryParent::RecvClone(RefPtr<CrossProcessSHEntry>* aResult) {
+  nsCOMPtr<nsISHEntry> result;
+  DebugOnly<nsresult> rv =
+      static_cast<LegacySHEntry*>(mEntry)->Clone(getter_AddRefs(result));
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
+  *aResult = result.forget().downcast<LegacySHEntry>();
+  return true;
+}
+
+bool SHEntryParent::RecvSyncTreesForSubframeNavigation(
+    PSHEntryParent* aSHEntry, const MaybeDiscarded<BrowsingContext>& aBC,
+    const MaybeDiscarded<BrowsingContext>& aIgnoreBC,
+    nsTArray<SwapEntriesDocshellData>* aEntriesToUpdate) {
+  nsTArray<EntriesAndBrowsingContextData> entriesToSendOverIPC;
+  // aBC or aIgnoreBC can be discarded but we can update them anyway if they are
+  // not null
+  mEntry->SyncTreesForSubframeNavigation(
+      static_cast<ContentParent*>(Manager())->ChildID(),
+      aSHEntry ? static_cast<SHEntryParent*>(aSHEntry)->mEntry.get() : nullptr,
+      aBC.GetMaybeDiscarded(), aIgnoreBC.GetMaybeDiscarded(),
+      &entriesToSendOverIPC);
+  SHistoryParent::CreateActorsForSwapEntries(entriesToSendOverIPC,
+                                             aEntriesToUpdate, Manager());
   return true;
 }
 

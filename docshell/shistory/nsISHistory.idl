@@ -9,13 +9,16 @@ interface nsIBFCacheEntry;
 interface nsISHEntry;
 interface nsISHistoryListener;
 interface nsIURI;
+webidl BrowsingContext;
 
 %{C++
 #include "nsTArrayForwardDeclare.h"
+#include "mozilla/Maybe.h"
+struct EntriesAndBrowsingContextData;
 %}
 
 [ref] native nsDocshellIDArray(nsTArray<nsID>);
-
+native MaybeInt32(Maybe<int32_t>);
 /**
  * An interface to the primary properties of the Session History
  * component. In an embedded browser environment, the nsIWebBrowser
@@ -266,4 +269,14 @@ interface nsISHistory: nsISupports
   [notxpcom] void EvictContentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
 
   nsISHEntry createEntry();
+
+  [noscript] void AddToRootSessionHistory(in bool aCloneChildren, in nsISHEntry aOSHE,
+                                          in BrowsingContext aBC, in nsISHEntry aEntry,
+                                          in unsigned long aLoadType,
+                                          in bool aShouldPersist,
+                                          out MaybeInt32 aPreviousEntryIndex,
+                                          out MaybeInt32 aLoadedEntryIndex);
+
+  [noscript] void AddChildSHEntryHelper(in nsISHEntry aCloneRef, in nsISHEntry aNewEntry,
+                                        in BrowsingContext aBC, in bool aCloneChildren);
 };

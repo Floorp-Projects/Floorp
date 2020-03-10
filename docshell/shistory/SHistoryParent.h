@@ -59,7 +59,14 @@ class SHistoryParent final : public PSHistoryParent {
 
   static SHEntryParent* CreateEntry(PContentParent* aContentParent,
                                     PSHistoryParent* aSHistoryParent,
-                                    const PSHEntryOrSharedID& aEntryOrSharedID);
+                                    uint64_t aSharedID);
+
+  // We have a list of entries we would like to return from
+  // the IPC call and we need to create actors for all of them
+  static void CreateActorsForSwapEntries(
+      const nsTArray<EntriesAndBrowsingContextData>& aEntriesToSendOverIPC,
+      nsTArray<SwapEntriesDocshellData>* aEntriesToUpdate,
+      PContentParent* aContentParent);
 
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -99,7 +106,21 @@ class SHistoryParent final : public PSHistoryParent {
   bool RecvEvictContentViewersOrReplaceEntry(PSHEntryParent* aNewSHEntry,
                                              bool aReplace);
   bool RecvNotifyListenersContentViewerEvicted(uint32_t aNumEvicted);
+  bool RecvAddToRootSessionHistory(
+      bool aCloneChildren, PSHEntryParent* aOSHE,
+      const MaybeDiscarded<BrowsingContext>& aBC, PSHEntryParent* aEntry,
+      uint32_t aLoadType, bool aShouldPersist,
+      Maybe<int32_t>* aPreviousEntryIndex, Maybe<int32_t>* aLoadedEntryIndex,
+      nsTArray<SwapEntriesDocshellData>* aEntriesToUpdate,
+      int32_t* aEntriesPurged, nsresult* aResult);
+  bool RecvAddChildSHEntryHelper(
+      PSHEntryParent* aCloneRef, PSHEntryParent* aNewEntry,
+      const MaybeDiscarded<BrowsingContext>& aBC, bool aCloneChildren,
+      nsTArray<SwapEntriesDocshellData>* aEntriesToUpdate,
+      int32_t* aEntriesPurged, RefPtr<CrossProcessSHEntry>* aChild,
+      nsresult* aResult);
 
+  RefPtr<CanonicalBrowsingContext> mContext;
   RefPtr<LegacySHistory> mHistory;
 };
 

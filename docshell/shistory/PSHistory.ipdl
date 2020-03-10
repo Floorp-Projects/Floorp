@@ -62,6 +62,22 @@ parent:
   async EnsureCorrectEntryAtCurrIndex(PSHEntry entry);
   async EvictContentViewersOrReplaceEntry(nullable PSHEntry newSHEntry, bool replace);
   async NotifyListenersContentViewerEvicted(uint32_t numEvicted);
+  // See below for some explanation
+  sync AddToRootSessionHistory(bool cloneChildren, nullable PSHEntry OSHE, MaybeDiscardedBrowsingContext BC, PSHEntry entry,
+                                uint32_t loadType, bool shouldPersist) returns (int32_t? previousEntryIndex, int32_t? loadedEntryIndex,
+                                SwapEntriesDocshellData[] entriesToUpdate, int32_t entriesPurged, nsresult result);
+  // In CloneAndReplaceChild and SetChildHistoryEntry methods (which get called within this
+  // and above function) there are calls to SwapHistoryEntries to update entries in the docshell.
+  // We don't have access to the docshell in the parent
+  // process so we have to either wait to update the docshell or update it via an IPC call.
+  // We pass in the ChildID of the process who invoked the IPC to make decisions
+  // about whether we should update entries in the docshell via an IPC call -
+  // if the caller is a process different from where the docshell lives.
+  // Else, we return entries that we need to update in entriesToUpdate array
+  // and update the docshell with such entries in the child process.
+  sync AddChildSHEntryHelper(PSHEntry cloneRef, PSHEntry newEntry, MaybeDiscardedBrowsingContext BC,
+                             bool cloneChildren) returns (SwapEntriesDocshellData[] entriesToUpdate,
+                             int32_t entriesPurged, CrossProcessSHEntry entry, nsresult result);
   async __delete__();
 
 child:

@@ -108,6 +108,10 @@ parent:
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
   async ClearEntry(uint64_t aNewSharedID);
   sync CreateLoadInfo() returns (nsDocShellLoadState loadState);
+  sync Clone() returns (CrossProcessSHEntry result);
+  sync SyncTreesForSubframeNavigation(nullable PSHEntry entry, MaybeDiscardedBrowsingContext BC,
+                                     MaybeDiscardedBrowsingContext ignoreBC)
+                        returns (SwapEntriesDocshellData[] entriesToUpdate);
 
   async UpdateLayoutHistoryState(bool scrollPositionOnly,
                                  nsCString[] keys, PresState[] states);

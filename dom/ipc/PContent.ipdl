@@ -123,6 +123,7 @@ using mozilla::dom::ControlledMediaState from "ipc/MediaControlIPC.h";
 using mozilla::dom::MaybeMediaMetadataBase from "mozilla/dom/MediaSessionIPCUtils.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
+using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 
 union ChromeRegistryItem
 {
@@ -342,12 +343,6 @@ struct PostMessageData
     bool isFromPrivateWindow;
     nsCString scriptLocation;
     uint64_t innerWindowId;
-};
-
-union PSHEntryOrSharedID
-{
-  PSHEntry;
-  uint64_t;
 };
 
 struct KeyValuePair
@@ -874,6 +869,11 @@ child:
 
     async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
+    // Tell aContext's docshell to update its mOSHE and mLSHE entries
+    async UpdateSHEntriesInDocShell(CrossProcessSHEntry aOldEntry,
+                                    CrossProcessSHEntry aNewEntry,
+                                    MaybeDiscardedBrowsingContext aContext);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -949,8 +949,8 @@ parent:
 
     async PSHistory(MaybeDiscardedBrowsingContext aContext);
 
-    // Clone from entry or use shared id.
-    sync PSHEntry(nullable PSHistory shistory, PSHEntryOrSharedID entryOrSharedID);
+    // Clone using shared id.
+    sync PSHEntry(nullable PSHistory shistory, uint64_t sharedID);
 
     async PBenchmarkStorage();
 
@@ -1537,6 +1537,13 @@ parent:
      */
     async ReportServiceWorkerShutdownProgress(uint32_t aShutdownStateId,
                                               Progress aProgress);
+
+    /**
+     * Whenever docshell updates its SH entries, we need to update them in
+     * the corresponding BrowsingContext
+     */
+    async UpdateSHEntriesInBC(nullable PSHEntry aNewLSHE, nullable
+                              PSHEntry aNewOSHE, MaybeDiscardedBrowsingContext aContext);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,

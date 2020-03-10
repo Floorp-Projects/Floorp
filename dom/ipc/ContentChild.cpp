@@ -3433,19 +3433,13 @@ bool ContentChild::DeallocPSessionStorageObserverChild(
   return true;
 }
 
-PSHEntryChild* ContentChild::AllocPSHEntryChild(
-    PSHistoryChild* aSHistory, const PSHEntryOrSharedID& aEntryOrSharedID) {
+PSHEntryChild* ContentChild::AllocPSHEntryChild(PSHistoryChild* aSHistory,
+                                                uint64_t aSharedID) {
   // We take a strong reference for the IPC layer. The Release implementation
   // for SHEntryChild will ask the IPC layer to release it (through
   // DeallocPSHEntryChild) if that is the only remaining reference.
   RefPtr<SHEntryChild> child;
-  if (aEntryOrSharedID.type() == PSHEntryOrSharedID::Tuint64_t) {
-    child = new SHEntryChild(static_cast<SHistoryChild*>(aSHistory),
-                             aEntryOrSharedID.get_uint64_t());
-  } else {
-    child = new SHEntryChild(
-        static_cast<const SHEntryChild*>(aEntryOrSharedID.get_PSHEntryChild()));
-  }
+  child = new SHEntryChild(static_cast<SHistoryChild*>(aSHistory), aSharedID);
   return child.forget().take();
 }
 
@@ -3760,6 +3754,19 @@ mozilla::ipc::IPCResult ContentChild::RecvSessionStorageData(
         nullptr, aOriginAttrs, aOriginKey, aDefaultData, aSessionData);
   } else {
     NS_WARNING("Got session storage data for a discarded session");
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvUpdateSHEntriesInDocShell(
+    CrossProcessSHEntry* aOldEntry, CrossProcessSHEntry* aNewEntry,
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
+  nsDocShell* docshell =
+      static_cast<nsDocShell*>(aContext.GetMaybeDiscarded()->GetDocShell());
+  if (docshell) {
+    docshell->SwapHistoryEntries(aOldEntry->ToSHEntryChild(),
+                                 aNewEntry->ToSHEntryChild());
   }
   return IPC_OK();
 }
