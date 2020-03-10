@@ -33,7 +33,6 @@ MainProcessSingleton.prototype = {
         );
         Services.ppmm.loadProcessScript(
           "chrome://global/content/process-content.js",
-          true,
           true
         );
         Services.ppmm.loadProcessScript(
