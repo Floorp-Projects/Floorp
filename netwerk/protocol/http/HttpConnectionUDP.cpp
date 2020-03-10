@@ -223,7 +223,7 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
     if (((reason == NS_ERROR_NET_RESET) ||
          (NS_ERROR_GET_MODULE(reason) == NS_ERROR_MODULE_SECURITY)) &&
         mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
-      gHttpHandler->AltServiceCache()->ClearHostMapping(mConnInfo);
+      gHttpHandler->ClearHostMapping(mConnInfo);
     }
 
     if (mSocketTransport) {

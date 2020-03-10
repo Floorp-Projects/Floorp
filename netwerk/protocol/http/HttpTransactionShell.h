@@ -18,11 +18,11 @@ class nsIInterfaceRequestor;
 class nsIRequest;
 class nsIRequestContext;
 class nsITransportEventSink;
-enum HttpTrafficCategory : uint8_t;
 
 namespace mozilla {
 namespace net {
 
+enum HttpTrafficCategory : uint8_t;
 class Http2PushedStreamWrapper;
 class HttpTransactionParent;
 class nsHttpConnectionInfo;

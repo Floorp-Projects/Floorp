@@ -6,6 +6,7 @@
 #include "SocketProcessParent.h"
 #include "SocketProcessLogging.h"
 
+#include "AltServiceParent.h"
 #include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
 #include "mozilla/dom/MemoryReportRequest.h"
@@ -234,6 +235,12 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvInitBackground(
   }
 
   return IPC_OK();
+}
+
+already_AddRefed<PAltServiceParent>
+SocketProcessParent::AllocPAltServiceParent() {
+  RefPtr<AltServiceParent> actor = new AltServiceParent();
+  return actor.forget();
 }
 
 // To ensure that IPDL is finished before SocketParent gets deleted.
