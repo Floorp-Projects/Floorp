@@ -4988,14 +4988,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 #  ifdef DEBUG
     nsAutoCString uriToLoadStr;
-    uriToLoad->GetAsciiSpec(uriToLoadStr);
-
-    nsCOMPtr<nsIURI> triggeringUri;
-    aTriggeringPrincipal->GetURI(getter_AddRefs(triggeringUri));
     nsAutoCString triggeringUriStr;
-    if (triggeringUri) {
-      triggeringUri->GetAsciiSpec(triggeringUriStr);
-    }
+    uriToLoad->GetAsciiSpec(uriToLoadStr);
+    aTriggeringPrincipal->GetAsciiSpec(triggeringUriStr);
 
     NS_WARNING(nsPrintfCString(
                    "RecvCreateWindowInDifferentProcess blocked loading file "
