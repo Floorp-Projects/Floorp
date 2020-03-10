@@ -2725,8 +2725,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
     ObjectOpResult result;
     if (!SetProperty(cx, obj, id, rhs, lhs, result) ||
-        !result.checkStrictErrorOrWarning(cx, obj, id,
-                                          op == JSOp::StrictSetProp)) {
+        !result.checkStrictModeError(cx, obj, id, op == JSOp::StrictSetProp)) {
       return false;
     }
   }

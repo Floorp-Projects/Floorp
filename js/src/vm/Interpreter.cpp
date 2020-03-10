@@ -270,8 +270,7 @@ static bool SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval,
 
   ObjectOpResult result;
   return SetProperty(cx, obj, id, rval, lval, result) &&
-         result.checkStrictErrorOrWarning(cx, obj, id,
-                                          op == JSOp::StrictSetProp);
+         result.checkStrictModeError(cx, obj, id, op == JSOp::StrictSetProp);
 }
 
 JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
@@ -1593,7 +1592,7 @@ static MOZ_ALWAYS_INLINE bool SetObjectElementOperation(
 
   ObjectOpResult result;
   return SetProperty(cx, obj, id, value, receiver, result) &&
-         result.checkStrictErrorOrWarning(cx, obj, id, strict);
+         result.checkStrictModeError(cx, obj, id, strict);
 }
 
 /*
@@ -5347,5 +5346,5 @@ bool js::SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
     return false;
   }
 
-  return result.checkStrictErrorOrWarning(cx, obj, id, strict);
+  return result.checkStrictModeError(cx, obj, id, strict);
 }
