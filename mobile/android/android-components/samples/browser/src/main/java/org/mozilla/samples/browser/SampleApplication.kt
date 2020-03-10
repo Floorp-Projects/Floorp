@@ -14,6 +14,7 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
+import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.webextensions.WebExtensionSupport
 
 class SampleApplication : Application() {
@@ -78,7 +79,9 @@ class SampleApplication : Application() {
 
         logger.debug("onTrimMemory: $level")
 
-        components.sessionManager.onTrimMemory(level)
-        components.icons.onTrimMemory(level)
+        runOnlyInMainProcess {
+            components.sessionManager.onTrimMemory(level)
+            components.icons.onTrimMemory(level)
+        }
     }
 }
