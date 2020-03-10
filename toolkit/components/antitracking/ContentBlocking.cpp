@@ -249,10 +249,10 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
 
 /* static */ RefPtr<ContentBlocking::StorageAccessGrantPromise>
 ContentBlocking::AllowAccessFor(
-    nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
+    nsIPrincipal* aPrincipal, dom::BrowsingContext* aParentContext,
     ContentBlockingNotifier::StorageAccessGrantedReason aReason,
     const ContentBlocking::PerformFinalChecks& aPerformFinalChecks) {
-  MOZ_ASSERT(aParentWindow);
+  MOZ_ASSERT(aParentContext);
 
   switch (aReason) {
     case ContentBlockingNotifier::eOpener:
@@ -286,9 +286,28 @@ ContentBlocking::AllowAccessFor(
          PromiseFlatCString(origin).get()));
   }
 
-  Document* parentDoc = aParentWindow->GetExtantDoc();
+  nsCOMPtr<nsPIDOMWindowOuter> parentOuter = aParentContext->GetDOMWindow();
+  if (!parentOuter) {
+    // TODO: Bug 1616775 should implement the parent version of AllowAccessFor
+    // here when parent window is NOT in-process.
+    LOG(
+        ("No outer window found for our parent window context, bailing out "
+         "early"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> parentInner =
+      parentOuter->GetCurrentInnerWindow();
+  if (!parentInner) {
+    LOG(
+        ("No inner window found for our parent outer window, bailing out "
+         "early"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  Document* parentDoc = parentInner->GetExtantDoc();
   if (!parentDoc) {
-    LOG(("Parent window has no doc"));
+    LOG(("No document found for our parent inner window, bailing out early"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
   int32_t behavior = parentDoc->CookieJarSettings()->GetCookieBehavior();
@@ -306,7 +325,7 @@ ContentBlocking::AllowAccessFor(
       behavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
-  if (ContentBlockingAllowList::Check(aParentWindow)) {
+  if (ContentBlockingAllowList::Check(parentInner)) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -315,7 +334,7 @@ ContentBlocking::AllowAccessFor(
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
 
   RefPtr<nsGlobalWindowInner> parentWindow =
-      nsGlobalWindowInner::Cast(aParentWindow);
+      nsGlobalWindowInner::Cast(parentInner);
   nsGlobalWindowOuter* outerParentWindow =
       nsGlobalWindowOuter::Cast(parentWindow->GetOuterWindow());
   if (NS_WARN_IF(!outerParentWindow)) {
@@ -389,8 +408,7 @@ ContentBlocking::AllowAccessFor(
     }
   }
 
-  nsPIDOMWindowOuter* topOuterWindow =
-      aParentWindow->GetBrowsingContext()->Top()->GetDOMWindow();
+  nsPIDOMWindowOuter* topOuterWindow = aParentContext->Top()->GetDOMWindow();
   nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
   if (NS_WARN_IF(!topWindow)) {
     LOG(("No top outer window."));
@@ -429,7 +447,7 @@ ContentBlocking::AllowAccessFor(
               _spec),
              trackingPrincipal);
     ContentBlockingNotifier::OnDecision(
-        aParentWindow, ContentBlockingNotifier::BlockingDecision::eBlock,
+        parentInner, ContentBlockingNotifier::BlockingDecision::eBlock,
         blockReason);
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
