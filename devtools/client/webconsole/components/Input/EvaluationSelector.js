@@ -13,7 +13,9 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const actions = require("devtools/client/framework/actions/index");
+const frameworkActions = require("devtools/client/framework/actions/index");
+const webconsoleActions = require("devtools/client/webconsole/actions/index");
+
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const threadSelectors = require("devtools/client/framework/reducers/threads");
 
@@ -38,10 +40,18 @@ class EvaluationSelector extends Component {
   static get propTypes() {
     return {
       selectThread: PropTypes.func.isRequired,
+      updateInstantEvaluationResultForCurrentExpression:
+        PropTypes.func.isRequired,
       selectedThread: PropTypes.object,
       threads: PropTypes.object,
       webConsoleUI: PropTypes.object.isRequired,
     };
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.selectedThread !== prevProps.selectedThread) {
+      this.props.updateInstantEvaluationResultForCurrentExpression();
+    }
   }
 
   renderMenuItem(thread, i) {
@@ -132,14 +142,24 @@ class EvaluationSelector extends Component {
   }
 }
 
-module.exports = connect(
+const toolboxConnected = connect(
   state => ({
     threads: threadSelectors.getToolboxThreads(state),
     selectedThread: threadSelectors.getSelectedThread(state),
   }),
   dispatch => ({
-    selectThread: thread => dispatch(actions.selectThread(thread)),
+    selectThread: thread => dispatch(frameworkActions.selectThread(thread)),
   }),
   undefined,
   { storeKey: "toolbox-store" }
 )(EvaluationSelector);
+
+module.exports = connect(
+  state => state,
+  dispatch => ({
+    updateInstantEvaluationResultForCurrentExpression: () =>
+      dispatch(
+        webconsoleActions.updateInstantEvaluationResultForCurrentExpression()
+      ),
+  })
+)(toolboxConnected);
