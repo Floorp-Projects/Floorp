@@ -45,8 +45,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTransaction)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(InsertTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 InsertTextTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -55,10 +54,11 @@ InsertTextTransaction::DoTransaction() {
   RefPtr<EditorBase> editorBase = mEditorBase;
   RefPtr<Text> textNode = mTextNode;
 
-  ErrorResult rv;
-  editorBase->DoInsertText(*textNode, mOffset, mStringToInsert, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
+  ErrorResult error;
+  editorBase->DoInsertText(*textNode, mOffset, mStringToInsert, error);
+  if (error.Failed()) {
+    NS_WARNING("EditorBase::DoInsertText() failed");
+    return error.StealNSResult();
   }
 
   // Only set selection to insertion point if editor gives permission
@@ -67,10 +67,10 @@ InsertTextTransaction::DoTransaction() {
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
-    DebugOnly<nsresult> rv =
+    DebugOnly<nsresult> rvIgnored =
         selection->Collapse(textNode, mOffset + mStringToInsert.Length());
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "Selection could not be collapsed after insert");
+    NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                 "Selection::Collapse() failed, but ignored");
   } else {
     // Do nothing - DOM Range gravity will adjust selection
   }
@@ -82,8 +82,7 @@ InsertTextTransaction::DoTransaction() {
   return NS_OK;
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 InsertTextTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -92,13 +91,14 @@ InsertTextTransaction::UndoTransaction() {
   RefPtr<Text> textNode = mTextNode;
   ErrorResult error;
   editorBase->DoDeleteText(*textNode, mOffset, mStringToInsert.Length(), error);
+  NS_WARNING_ASSERTION(!error.Failed(), "EditorBase::DoDeleteText() failed");
   return error.StealNSResult();
 }
 
-NS_IMETHODIMP
-InsertTextTransaction::Merge(nsITransaction* aTransaction, bool* aDidMerge) {
-  if (!aTransaction || !aDidMerge) {
-    return NS_OK;
+NS_IMETHODIMP InsertTextTransaction::Merge(nsITransaction* aTransaction,
+                                           bool* aDidMerge) {
+  if (NS_WARN_IF(!aTransaction) || NS_WARN_IF(!aDidMerge)) {
+    return NS_ERROR_INVALID_ARG;
   }
   // Set out param default value
   *aDidMerge = false;
