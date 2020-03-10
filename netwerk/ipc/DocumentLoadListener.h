@@ -70,7 +70,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   // Creates the channel, and then calls AsyncOpen on it.
   bool Open(nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
-            nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aIsActive,
+            nsLoadFlags aLoadFlags, uint32_t aCacheKey,
             const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
             const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
             nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,

@@ -313,6 +313,22 @@ static bool IsTopLevelDoc(nsILoadInfo* aLoadInfo) {
   return bc && bc->IsTopContent();
 }
 
+// True if loading for top level document loading in active tab.
+static bool IsUrgentStart(nsILoadInfo* aLoadInfo, uint32_t aLoadType) {
+  if (!IsTopLevelDoc(aLoadInfo)) {
+    return false;
+  }
+
+  if (aLoadType &
+      (nsIDocShell::LOAD_CMD_NORMAL | nsIDocShell::LOAD_CMD_HISTORY)) {
+    return true;
+  }
+
+  RefPtr<BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
+  return bc && bc->GetIsActive();
+}
+
 static bool HasNonEmptySandboxingFlags(nsILoadInfo* aLoadInfo) {
   // NOTE: HasNonEmptySandboxingFlag used to come from
   // nsDocShell::mBrowsingContext.  nsDocShell::OpenInitializedChannel sets the
@@ -9394,7 +9410,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const OriginAttributes& aOriginAttributes, nsLoadFlags aLoadFlags,
-    uint32_t aCacheKey, bool aIsActive, nsresult& aRv, nsIChannel** aChannel) {
+    uint32_t aCacheKey, nsresult& aRv, nsIChannel** aChannel) {
   MOZ_ASSERT(aLoadInfo);
 
   nsString srcdoc = VoidString();
@@ -9423,8 +9439,6 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
 
   OriginAttributes attrs;
 
-  const bool isTopLevelDoc = IsTopLevelDoc(aLoadInfo);
-
   // Inherit origin attributes from PrincipalToInherit if inheritAttrs is
   // true. Otherwise we just use the origin attributes from docshell.
   if (inheritAttrs) {
@@ -9437,7 +9451,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
                   attrs == aOriginAttributes);
   } else {
     attrs = aOriginAttributes;
-    attrs.SetFirstPartyDomain(isTopLevelDoc, aLoadState->URI());
+    attrs.SetFirstPartyDomain(IsTopLevelDoc(aLoadInfo), aLoadState->URI());
   }
 
   aRv = aLoadInfo->SetOriginAttributes(attrs);
@@ -9527,14 +9541,14 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
       aRv = httpChannel->SetReferrerInfo(referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(aRv));
     }
-  }
 
-  // Mark the http channel as UrgentStart for top level document loading
-  // in active tab.
-  if (aIsActive && httpChannel && isTopLevelDoc) {
-    nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
-    if (cos) {
-      cos->AddClassFlags(nsIClassOfService::UrgentStart);
+    // Mark the http channel as UrgentStart for top level document loading in
+    // active tab.
+    if (IsUrgentStart(aLoadInfo, aLoadState->LoadType())) {
+      nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+      if (cos) {
+        cos->AddClassFlags(nsIClassOfService::UrgentStart);
+      }
     }
   }
 
@@ -9938,9 +9952,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     cacheKey = mOSHE->GetCacheKey();
   }
 
-  bool isActive = mBrowsingContext->GetIsActive() ||
-                  (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
-
   // We want to use DocumentChannel if we're using a supported scheme, or if
   // we're a sandboxed srcdoc load. Non-sandboxed srcdoc loads need to share
   // the same principal object as their outer document (and must load in the
@@ -9952,12 +9963,12 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
-    channel = new DocumentChannelChild(aLoadState, loadInfo, loadFlags,
-                                       cacheKey, isActive);
+    channel =
+        new DocumentChannelChild(aLoadState, loadInfo, loadFlags, cacheKey);
     channel->SetNotificationCallbacks(this);
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  aLoadState, loadInfo, this, this, GetOriginAttributes(),
-                 loadFlags, cacheKey, isActive, rv, getter_AddRefs(channel))) {
+                 loadFlags, cacheKey, rv, getter_AddRefs(channel))) {
     return rv;
   }
 
