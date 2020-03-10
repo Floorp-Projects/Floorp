@@ -57,7 +57,7 @@ class ProfilerMarkerPayload {
       UniqueProfilerBacktrace aStack = nullptr)
       : mCommonProps{aStartTime, aEndTime, std::move(aStack), aInnerWindowID} {}
 
-  virtual ~ProfilerMarkerPayload() {}
+  virtual ~ProfilerMarkerPayload() = default;
 
   // Compute the number of bytes needed to serialize the `DeserializerTag` and
   // payload, including in the no-payload (nullptr) case.
