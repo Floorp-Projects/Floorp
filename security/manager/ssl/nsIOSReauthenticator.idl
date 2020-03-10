@@ -35,10 +35,11 @@ interface nsIOSReauthenticator: nsISupports {
    * OS.
    *
    * @param prompt A short string that may be incorporated in the dialog
+   * @param caption A short string that may be shown as the dialog caption (usually Product Name)
    * @param parentWindow Used to associate the OS dialog with the calling window.
    * @return Promise resolving to true if the user successfully authenticated
    *         and false otherwise.
    */
   [implicit_jscontext, must_use]
-  Promise asyncReauthenticateUser(in ACString prompt, in mozIDOMWindow parentWindow);
+  Promise asyncReauthenticateUser(in ACString prompt, in ACString caption, in mozIDOMWindow parentWindow);
 };
