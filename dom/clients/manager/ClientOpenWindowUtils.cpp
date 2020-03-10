@@ -27,6 +27,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowWatcher.h"
 #include "nsPrintfCString.h"
+#include "nsWindowWatcher.h"
 
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -354,79 +355,24 @@ void GeckoViewOpenWindow(const ClientOpenWindowArgs& aArgs,
           return rv;
         }
 
-        // Retrieve the window by using the GeckoSession ID. The window is named
-        // the same as the ID of the GeckoSession it is associated with.
-        nsCOMPtr<mozIDOMWindowProxy> domWindow;
-        wwatch->GetWindowByName(sessionId, nullptr, getter_AddRefs(domWindow));
-        if (!domWindow) {
+        // Retrieve the browsing context by using the GeckoSession ID. The
+        // window is named the same as the ID of the GeckoSession it is
+        // associated with.
+        RefPtr<BrowsingContext> browsingContext =
+            static_cast<nsWindowWatcher*>(wwatch.get())
+                ->GetBrowsingContextByName(sessionId, false, nullptr);
+        if (NS_WARN_IF(!browsingContext)) {
           promise->Reject(NS_ERROR_FAILURE, __func__);
           return NS_ERROR_FAILURE;
         }
 
-        nsCOMPtr<nsPIDOMWindowOuter> outerWindow = do_QueryInterface(domWindow);
-        if (NS_WARN_IF(!outerWindow)) {
-          promise->Reject(NS_ERROR_FAILURE, __func__);
-          return NS_ERROR_FAILURE;
-        }
-
-        WaitForLoad(aArgs, outerWindow->GetBrowsingContext(), promise);
+        WaitForLoad(aArgs, browsingContext, promise);
         return NS_OK;
       },
       [promise](nsString aResult) {
         promise->Reject(NS_ERROR_FAILURE, __func__);
       });
 }
-
-class LaunchObserver final : public nsIObserver {
-  RefPtr<GenericPromise::Private> mPromise;
-
-  LaunchObserver() : mPromise(new GenericPromise::Private(__func__)) {}
-
-  ~LaunchObserver() = default;
-
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic,
-          const char16_t* aData) override {
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(this, "BrowserChrome:Ready");
-    }
-    mPromise->Resolve(true, __func__);
-    return NS_OK;
-  }
-
- public:
-  static already_AddRefed<LaunchObserver> Create() {
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (NS_WARN_IF(!os)) {
-      return nullptr;
-    }
-
-    RefPtr<LaunchObserver> ref = new LaunchObserver();
-
-    nsresult rv =
-        os->AddObserver(ref, "BrowserChrome:Ready", /* weakRef */ false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-
-    return ref.forget();
-  }
-
-  void Cancel() {
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(this, "BrowserChrome:Ready");
-    }
-    mPromise->Reject(NS_ERROR_ABORT, __func__);
-  }
-
-  GenericPromise* Promise() { return mPromise; }
-
-  NS_DECL_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS(LaunchObserver, nsIObserver);
 
 #endif  // MOZ_WIDGET_ANDROID
 

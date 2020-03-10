@@ -56,6 +56,13 @@ class nsWindowWatcher : public nsIWindowWatcher,
                                        bool aPositionSpecified,
                                        bool aSizeSpecified);
 
+  // Will first look for a caller on the JS stack, and then fall back on
+  // aCurrentContext if it can't find one.
+  // It also knows to not look for things if aForceNoOpener is set.
+  already_AddRefed<mozilla::dom::BrowsingContext> GetBrowsingContextByName(
+      const nsAString& aName, bool aForceNoOpener,
+      mozilla::dom::BrowsingContext* aCurrentContext);
+
  protected:
   virtual ~nsWindowWatcher();
 
@@ -65,13 +72,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
 
   nsWatcherWindowEntry* FindWindowEntry(mozIDOMWindowProxy* aWindow);
   nsresult RemoveWindow(nsWatcherWindowEntry* aInfo);
-
-  // Will first look for a caller on the JS stack, and then fall back on
-  // aCurrentContext if it can't find one.
-  // It also knows to not look for things if aForceNoOpener is set.
-  already_AddRefed<mozilla::dom::BrowsingContext> GetBrowsingContextByName(
-      const nsAString& aName, bool aForceNoOpener,
-      mozilla::dom::BrowsingContext* aCurrentContext);
 
   // Just like OpenWindowJS, but knows whether it got called via OpenWindowJS
   // (which means called from script) or called via OpenWindow.
