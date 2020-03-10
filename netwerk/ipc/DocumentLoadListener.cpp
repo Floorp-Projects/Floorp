@@ -346,10 +346,10 @@ CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
 bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aIsActive,
-    bool aIsTopLevelDoc, const uint64_t& aChannelId,
-    const TimeStamp& aAsyncOpenTime, const Maybe<uint32_t>& aDocumentOpenFlags,
-    bool aPluginsAllowed, nsDOMNavigationTiming* aTiming,
-    Maybe<ClientInfo>&& aInfo, uint64_t aOuterWindowId, nsresult* aRv) {
+    const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
+    const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
+    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
+    uint64_t aOuterWindowId, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -374,8 +374,7 @@ bool DocumentLoadListener::Open(
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
           aLoadState, loadInfo, mParentChannelListener, nullptr, attrs,
-          aLoadFlags, aCacheKey, aIsActive, aIsTopLevelDoc, *aRv,
-          getter_AddRefs(mChannel))) {
+          aLoadFlags, aCacheKey, aIsActive, *aRv, getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
     return false;
   }

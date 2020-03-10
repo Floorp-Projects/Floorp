@@ -502,8 +502,8 @@ class nsDocShell final : public nsDocLoader,
       nsDocShellLoadState* aLoadState, mozilla::net::LoadInfo* aLoadInfo,
       nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
       const mozilla::OriginAttributes& aOriginAttributes,
-      nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aIsActive,
-      bool aIsTopLevelDoc, nsresult& rv, nsIChannel** aChannel);
+      nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aIsActive, nsresult& rv,
+      nsIChannel** aChannel);
 
   // Notify consumers of a search being loaded through the observer service:
   static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,

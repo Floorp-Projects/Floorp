@@ -56,12 +56,11 @@ NS_INTERFACE_MAP_END
 DocumentChannel::DocumentChannel(nsDocShellLoadState* aLoadState,
                                  net::LoadInfo* aLoadInfo,
                                  nsLoadFlags aLoadFlags, uint32_t aCacheKey,
-                                 bool aIsActive, bool aIsTopLevelDoc)
+                                 bool aIsActive)
     : mAsyncOpenTime(TimeStamp::Now()),
       mLoadState(aLoadState),
       mCacheKey(aCacheKey),
       mIsActive(aIsActive),
-      mIsTopLevelDoc(aIsTopLevelDoc),
       mLoadFlags(aLoadFlags),
       mURI(aLoadState->URI()),
       mLoadInfo(aLoadInfo) {
