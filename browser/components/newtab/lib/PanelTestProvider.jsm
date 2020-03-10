@@ -73,7 +73,7 @@ const MESSAGES = () => [
       title: { string_id: "cfr-whatsnew-searchbar-title" },
       icon_url: "chrome://browser/skin/search-glass.svg",
       icon_alt: { string_id: "cfr-whatsnew-searchbar-icon-alt-text" },
-      body: { string_id: "cfr-whatsnew-searchbar-body-topsites" },
+      body: { string_id: "cfr-whatsnew-searchbar-body-enginename" },
       cta_url:
         "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/address-bar-search",
       cta_type: "OPEN_URL",
