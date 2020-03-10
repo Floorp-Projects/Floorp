@@ -10,6 +10,8 @@
 #include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -254,6 +256,12 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
 
 IPCResult WindowGlobalParent::RecvSetHasBeforeUnload(bool aHasBeforeUnload) {
   mHasBeforeUnload = aHasBeforeUnload;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvSetClientInfo(
+    const IPCClientInfo& aIPCClientInfo) {
+  mClientInfo = Some(ClientInfo(aIPCClientInfo));
   return IPC_OK();
 }
 

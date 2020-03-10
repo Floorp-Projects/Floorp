@@ -10,6 +10,8 @@
 #include "mozilla/ContentBlockingLog.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -108,6 +110,8 @@ class WindowGlobalParent final : public WindowContext,
     return mDocContentBlockingAllowListPrincipal;
   }
 
+  Maybe<ClientInfo> GetClientInfo() { return mClientInfo; }
+
   uint64_t ContentParentId();
 
   int32_t OsPid();
@@ -169,6 +173,8 @@ class WindowGlobalParent final : public WindowContext,
     return IPC_OK();
   }
   mozilla::ipc::IPCResult RecvSetHasBeforeUnload(bool aHasBeforeUnload);
+  mozilla::ipc::IPCResult RecvSetClientInfo(
+      const IPCClientInfo& aIPCClientInfo);
   mozilla::ipc::IPCResult RecvDestroy();
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData,
@@ -208,6 +214,8 @@ class WindowGlobalParent final : public WindowContext,
   // this WindowGlobalParent. This is only stored on top-level documents and
   // includes the activity log for all of the nested subdocuments as well.
   ContentBlockingLog mContentBlockingLog;
+
+  Maybe<ClientInfo> mClientInfo;
 };
 
 }  // namespace dom
