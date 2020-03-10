@@ -18,10 +18,6 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   let principal = data.principal;
   let storagePrincipal = data.storagePrincipal;
 
-  if (spellInfo) {
-    spellInfo.target = browser.messageManager;
-  }
-
   let documentURIObject = makeURI(
     data.docLocation,
     data.charSet,
