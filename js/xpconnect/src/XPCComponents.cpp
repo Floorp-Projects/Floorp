@@ -2096,7 +2096,6 @@ nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
     return NS_OK;                                                       \
   }
 
-GENERATE_JSCONTEXTOPTION_GETTER_SETTER(Strict, extraWarnings, setExtraWarnings)
 GENERATE_JSCONTEXTOPTION_GETTER_SETTER(Werror, werror, setWerror)
 GENERATE_JSCONTEXTOPTION_GETTER_SETTER(Strict_mode, strictMode, setStrictMode)
 

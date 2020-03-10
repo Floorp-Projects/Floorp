@@ -484,7 +484,6 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                              nsIPrincipal* aPrincipal) {
   bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
-  bool extraWarningsForSystemJS = ExtraWarningsForSystemJS();
 
   bool isSystem = aPrincipal->IsSystemPrincipal();
 
@@ -500,12 +499,6 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
     bool discardSource = isSystem;
 
     aOptions.behaviors().setDiscardSource(discardSource);
-  }
-
-  if (extraWarningsForSystemJS) {
-    if (isSystem) {
-      aOptions.behaviors().extraWarningsOverride().set(true);
-    }
   }
 }
 

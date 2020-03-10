@@ -291,11 +291,10 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setThrowOnAsmJSValidationFailure(GetWorkerPref<bool>(
           NS_LITERAL_CSTRING("throw_on_asmjs_validation_failure")))
       .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")))
-      .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")))
 #ifdef FUZZING
       .setFuzzing(GetWorkerPref<bool>(NS_LITERAL_CSTRING("fuzzing.enabled")))
 #endif
-      .setExtraWarnings(GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict")));
+      .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

@@ -1091,10 +1091,6 @@ pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
 
 pref("javascript.enabled",                  true);
-pref("javascript.options.strict",           false);
-#ifdef DEBUG
-  pref("javascript.options.strict.debug",     false);
-#endif
 pref("javascript.options.blinterp",         true);
 // Duplicated in JitOptions - ensure both match.
 pref("javascript.options.blinterp.threshold", 10);
