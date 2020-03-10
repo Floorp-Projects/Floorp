@@ -297,7 +297,7 @@ ifndef MOZ_TSAN
 ifeq ($(OS_ARCH), Linux)
 ifeq (,$(rustflags_sancov))
 ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
-	$(call py_action,check_binary,--target --networking $@)
+	$(call py3_action,check_binary,--target --networking $@)
 endif
 endif
 endif
