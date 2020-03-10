@@ -469,4 +469,86 @@ class MozillaSocorroServiceTest {
         val expected4 = "\\\t\t\n\\"
         assert(service.unescape(test4) == expected4)
     }
+
+    @Test
+    fun `MozillaSocorroService reports specified parameter correctly`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(200)
+            .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"))
+        mockWebServer.start()
+        val serverUrl = mockWebServer.url("/")
+        val service = spy(MozillaSocorroService(
+            applicationContext = testContext,
+            appName = "Test App",
+            appId = "{1234-1234-1234}",
+            version = "0.1",
+            buildId = "1.0",
+            vendor = "Mozilla Test",
+            serverUrl = serverUrl.toString(),
+            versionName = "0.0.1",
+            releaseChannel = "test channel"
+        ))
+
+        val throwable = RuntimeException("Test")
+        throwable.stackTrace = emptyArray()
+        service.report(throwable)
+
+        val fileInputStream = ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
+        val inputStream = GZIPInputStream(fileInputStream)
+        val reader = InputStreamReader(inputStream)
+        val bufferedReader = BufferedReader(reader)
+        val request = bufferedReader.readText()
+
+        assert(request.contains("name=ProductName\r\n\r\nTest App"))
+        assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
+        assert(request.contains("name=GeckoViewVersion\r\n\r\n0.1"))
+        assert(request.contains("name=BuildID\r\n\r\n1.0"))
+        assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
+        assert(request.contains("name=Version\r\n\r\n0.0.1"))
+        assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
+
+        verify(service).report(throwable)
+        verify(service).sendReport(throwable, null, null, false, false)
+    }
+
+    @Test
+    fun `Confirm MozillaSocorroService parameter order is correct`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(200)
+            .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"))
+        mockWebServer.start()
+        val serverUrl = mockWebServer.url("/")
+        val service = spy(MozillaSocorroService(
+            testContext,
+            "Test App",
+            "{1234-1234-1234}",
+            "0.1",
+            "1.0",
+            "Mozilla Test",
+            serverUrl.toString(),
+            "0.0.1",
+            "test channel"
+        ))
+
+        val throwable = RuntimeException("Test")
+        throwable.stackTrace = emptyArray()
+        service.report(throwable)
+
+        val fileInputStream = ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
+        val inputStream = GZIPInputStream(fileInputStream)
+        val reader = InputStreamReader(inputStream)
+        val bufferedReader = BufferedReader(reader)
+        val request = bufferedReader.readText()
+
+        assert(request.contains("name=ProductName\r\n\r\nTest App"))
+        assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
+        assert(request.contains("name=GeckoViewVersion\r\n\r\n0.1"))
+        assert(request.contains("name=BuildID\r\n\r\n1.0"))
+        assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
+        assert(request.contains("name=Version\r\n\r\n0.0.1"))
+        assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
+
+        verify(service).report(throwable)
+        verify(service).sendReport(throwable, null, null, false, false)
+    }
 }

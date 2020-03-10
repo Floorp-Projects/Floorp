@@ -66,7 +66,8 @@ class MozillaSocorroService(
     private val buildId: String = BuildConfig.MOZ_APP_BUILDID,
     private val vendor: String = BuildConfig.MOZ_APP_VENDOR,
     private var serverUrl: String? = null,
-    private var versionName: String = "N/A"
+    private var versionName: String = "N/A",
+    private val releaseChannel: String = BuildConfig.MOZ_UPDATE_CHANNEL
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
@@ -193,7 +194,7 @@ class MozillaSocorroService(
 
         sendPackageInstallTime(gzipOs, boundary, nameSet)
         sendProcessName(gzipOs, boundary, nameSet)
-        sendPart(gzipOs, boundary, "ReleaseChannel", BuildConfig.MOZ_UPDATE_CHANNEL, nameSet)
+        sendPart(gzipOs, boundary, "ReleaseChannel", releaseChannel, nameSet)
         sendPart(gzipOs, boundary, "StartupTime",
                 TimeUnit.MILLISECONDS.toSeconds(startTime).toString(), nameSet)
         sendPart(gzipOs, boundary, "CrashTime",
