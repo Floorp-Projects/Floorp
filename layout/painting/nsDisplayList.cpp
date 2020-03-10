@@ -401,7 +401,7 @@ enum class Send {
 static void AddAnimationForProperty(nsIFrame* aFrame,
                                     const AnimationProperty& aProperty,
                                     dom::Animation* aAnimation,
-                                    const CompositorAnimationData& aData,
+                                    const Maybe<TransformData>& aTransformData,
                                     Send aSendFlag,
                                     AnimationInfo& aAnimationInfo) {
   MOZ_ASSERT(aAnimation->GetEffect(),
@@ -469,8 +469,7 @@ static void AddAnimationForProperty(nsIFrame* aFrame,
       aAnimation->HasPendingPlaybackRate()
           ? aAnimation->PlaybackRate()
           : std::numeric_limits<float>::quiet_NaN();
-  animation->transformData() = aData.mTransform;
-  animation->motionPathData() = aData.mMotionPath;
+  animation->transformData() = aTransformData;
   animation->easingFunction() = ToTimingFunction(timing.TimingFunction());
   animation->iterationComposite() = static_cast<uint8_t>(
       aAnimation->GetEffect()->AsKeyframeEffect()->IterationComposite());
@@ -569,7 +568,7 @@ GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
 static bool AddAnimationsForProperty(
     nsIFrame* aFrame, const EffectSet* aEffects,
     const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
-    const CompositorAnimationData& aData, nsCSSPropertyID aProperty,
+    const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
     Send aSendFlag, AnimationInfo& aAnimationInfo) {
   bool addedAny = false;
   // Add from first to last (since last overrides)
@@ -613,7 +612,7 @@ static bool AddAnimationsForProperty(
       continue;
     }
 
-    AddAnimationForProperty(aFrame, *property, anim, aData, aSendFlag,
+    AddAnimationForProperty(aFrame, *property, anim, aTransformData, aSendFlag,
                             aAnimationInfo);
     keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
     addedAny = true;
@@ -625,13 +624,11 @@ enum class AnimationDataType {
   WithMotionPath,
   WithoutMotionPath,
 };
-static CompositorAnimationData CreateAnimationData(
+static Maybe<TransformData> CreateAnimationData(
     nsIFrame* aFrame, nsDisplayItem* aItem, DisplayItemType aType,
     layers::LayersBackend aLayersBackend, AnimationDataType aDataType) {
-  CompositorAnimationData result;
-
   if (aType != DisplayItemType::TYPE_TRANSFORM) {
-    return result;
+    return Nothing();
   }
 
   // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
@@ -670,24 +667,22 @@ static CompositorAnimationData CreateAnimationData(
     origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
   }
 
-  result.mTransform = Some(TransformData(origin, offsetToTransformOrigin,
-                                         bounds, devPixelsToAppUnits, scaleX,
-                                         scaleY, hasPerspectiveParent));
+  Maybe<MotionPathData> motionPathData;
+  if (aDataType == AnimationDataType::WithMotionPath) {
+    const StyleTransformOrigin& styleOrigin =
+        aFrame->StyleDisplay()->mTransformOrigin;
+    CSSPoint motionPathOrigin = nsStyleTransformMatrix::Convert2DPosition(
+        styleOrigin.horizontal, styleOrigin.vertical, refBox);
+    CSSPoint anchorAdjustment =
+        MotionPathUtils::ComputeAnchorPointAdjustment(*aFrame);
 
-  if (aDataType == AnimationDataType::WithoutMotionPath) {
-    return result;
+    motionPathData = Some(layers::MotionPathData(
+        motionPathOrigin, anchorAdjustment, RayReferenceData(aFrame)));
   }
 
-  const StyleTransformOrigin& styleOrigin =
-      aFrame->StyleDisplay()->mTransformOrigin;
-  CSSPoint motionPathOrigin = nsStyleTransformMatrix::Convert2DPosition(
-      styleOrigin.horizontal, styleOrigin.vertical, refBox);
-  CSSPoint anchorAdjustment =
-      MotionPathUtils::ComputeAnchorPointAdjustment(*aFrame);
-
-  result.mMotionPath = Some(layers::MotionPathData(
-      motionPathOrigin, anchorAdjustment, RayReferenceData(aFrame)));
-  return result;
+  return Some(TransformData(origin, offsetToTransformOrigin, bounds,
+                            devPixelsToAppUnits, scaleX, scaleY,
+                            hasPerspectiveParent, motionPathData));
 }
 
 static void AddNonAnimatingTransformLikePropertiesStyles(
@@ -815,7 +810,7 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
   const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
       compositorAnimations =
           GroupAnimationsByProperty(matchedAnimations, propertySet);
-  CompositorAnimationData data =
+  Maybe<TransformData> transformData =
       CreateAnimationData(aFrame, aItem, aType, aLayersBackend,
                           compositorAnimations.has(eCSSProperty_offset_path) ||
                                   !aFrame->StyleDisplay()->mOffsetPath.IsNone()
@@ -836,12 +831,12 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
     // structure, 2) AddAnimationsForProperty() marks these animations as
     // running on the composiror, so CanThrottle() returns true for them, and
     // we avoid running these animations on the main thread.
-    bool added =
-        AddAnimationsForProperty(aFrame, effects, iter.get().value(), data,
-                                 iter.get().key(), aSendFlag, aAnimationInfo);
-    if (added && data.HasData()) {
+    bool added = AddAnimationsForProperty(aFrame, effects, iter.get().value(),
+                                          transformData, iter.get().key(),
+                                          aSendFlag, aAnimationInfo);
+    if (added && transformData) {
       // Only copy TransformLikeMetaData in the first animation property.
-      data.Clear();
+      transformData.reset();
     }
 
     if (hasMultipleTransformLikeProperties && added) {
