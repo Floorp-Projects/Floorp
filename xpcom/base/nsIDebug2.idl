@@ -86,4 +86,9 @@ interface nsIDebug2 : nsISupports
      * @param aMessage the string to pass to panic!().
      */
     void rustPanic(in string aMessage);
+
+    /**
+     * Cause an Out of Memory Crash.
+     */
+    void crashWithOOM();
 };
