@@ -26,7 +26,7 @@
 class gfxMacPlatformFontList;
 
 // a single member of a font family (i.e. a single face, such as Times Italic)
-class MacOSFontEntry : public gfxFontEntry {
+class MacOSFontEntry final : public gfxFontEntry {
  public:
   friend class gfxMacPlatformFontList;
   friend class gfxMacFont;
@@ -104,7 +104,7 @@ class MacOSFontEntry : public gfxFontEntry {
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontMac> mUnscaledFont;
 };
 
-class gfxMacPlatformFontList : public gfxPlatformFontList {
+class gfxMacPlatformFontList final : public gfxPlatformFontList {
   using FontFamilyListEntry = mozilla::dom::SystemFontListEntry;
 
  public:

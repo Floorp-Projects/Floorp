@@ -88,7 +88,7 @@ struct ClearTypeParameterInfo {
   int32_t enhancedContrast;
 };
 
-class gfxWindowsPlatform : public gfxPlatform {
+class gfxWindowsPlatform final : public gfxPlatform {
   friend class mozilla::gfx::DeviceManagerDx;
 
  public:

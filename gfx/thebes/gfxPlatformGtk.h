@@ -22,7 +22,7 @@ class SystemFontListEntry;
 };
 };  // namespace mozilla
 
-class gfxPlatformGtk : public gfxPlatform {
+class gfxPlatformGtk final : public gfxPlatform {
  public:
   gfxPlatformGtk();
   virtual ~gfxPlatformGtk();
