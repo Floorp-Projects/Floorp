@@ -81,7 +81,7 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          // Linkable for testing reasons.
          nsIAboutModule::MAKE_LINKABLE},
-    {"memory", "chrome://global/content/aboutMemory.xhtml",
+    {"memory", "chrome://global/content/aboutMemory.html",
      nsIAboutModule::ALLOW_SCRIPT},
     {"certificate", "chrome://global/content/certviewer/certviewer.html",
      nsIAboutModule::ALLOW_SCRIPT |
