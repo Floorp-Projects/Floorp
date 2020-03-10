@@ -26,7 +26,7 @@ class DocumentChannelChild final : public DocumentChannel,
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
                        class LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags,
-                       uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc);
+                       uint32_t aCacheKey, bool aIsActive);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK

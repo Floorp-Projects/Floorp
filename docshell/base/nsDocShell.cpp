@@ -302,6 +302,17 @@ static void DecreasePrivateDocShellCount() {
   }
 }
 
+static bool IsTopLevelDoc(nsILoadInfo* aLoadInfo) {
+  if (aLoadInfo->GetExternalContentPolicyType() !=
+      nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
+  RefPtr<dom::BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
+  return bc && bc->IsTopContent();
+}
+
 static bool HasNonEmptySandboxingFlags(nsILoadInfo* aLoadInfo) {
   // NOTE: HasNonEmptySandboxingFlag used to come from
   // nsDocShell::mBrowsingContext.  nsDocShell::OpenInitializedChannel sets the
@@ -9383,8 +9394,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const OriginAttributes& aOriginAttributes, nsLoadFlags aLoadFlags,
-    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc, nsresult& aRv,
-    nsIChannel** aChannel) {
+    uint32_t aCacheKey, bool aIsActive, nsresult& aRv, nsIChannel** aChannel) {
   MOZ_ASSERT(aLoadInfo);
 
   nsString srcdoc = VoidString();
@@ -9413,6 +9423,8 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
 
   OriginAttributes attrs;
 
+  const bool isTopLevelDoc = IsTopLevelDoc(aLoadInfo);
+
   // Inherit origin attributes from PrincipalToInherit if inheritAttrs is
   // true. Otherwise we just use the origin attributes from docshell.
   if (inheritAttrs) {
@@ -9425,7 +9437,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
                   attrs == aOriginAttributes);
   } else {
     attrs = aOriginAttributes;
-    attrs.SetFirstPartyDomain(aIsTopLevelDoc, aLoadState->URI());
+    attrs.SetFirstPartyDomain(isTopLevelDoc, aLoadState->URI());
   }
 
   aRv = aLoadInfo->SetOriginAttributes(attrs);
@@ -9519,12 +9531,10 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
 
   // Mark the http channel as UrgentStart for top level document loading
   // in active tab.
-  if (aIsActive) {
-    if (httpChannel && aIsTopLevelDoc) {
-      nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
-      if (cos) {
-        cos->AddClassFlags(nsIClassOfService::UrgentStart);
-      }
+  if (aIsActive && httpChannel && isTopLevelDoc) {
+    nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+    if (cos) {
+      cos->AddClassFlags(nsIClassOfService::UrgentStart);
     }
   }
 
@@ -9920,13 +9930,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                          Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
                          sandboxFlags);
 
-  // We have to do this in case our OriginAttributes are different from the
-  // OriginAttributes of the parent document. Or in case there isn't a
-  // parent document.
-  bool isTopLevelDoc = mItemType == typeContent &&
-                       (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
-                        GetIsMozBrowser());
-
   /* Get the cache Key from SH */
   uint32_t cacheKey = 0;
   if (mLSHE) {
@@ -9950,12 +9953,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
     channel = new DocumentChannelChild(aLoadState, loadInfo, loadFlags,
-                                       cacheKey, isActive, isTopLevelDoc);
+                                       cacheKey, isActive);
     channel->SetNotificationCallbacks(this);
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  aLoadState, loadInfo, this, this, GetOriginAttributes(),
-                 loadFlags, cacheKey, isActive, isTopLevelDoc, rv,
-                 getter_AddRefs(channel))) {
+                 loadFlags, cacheKey, isActive, rv, getter_AddRefs(channel))) {
     return rv;
   }
 
