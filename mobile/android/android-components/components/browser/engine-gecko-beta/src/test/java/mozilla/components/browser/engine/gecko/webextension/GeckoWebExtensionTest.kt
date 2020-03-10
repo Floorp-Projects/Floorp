@@ -26,6 +26,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -412,6 +413,7 @@ class GeckoWebExtensionTest {
     fun `all metadata fields are mapped correctly`() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
         val extensionWithoutMetadata = GeckoWebExtension(
             WebExtension("url", "id", WebExtension.Flags.NONE, webExtensionController),
             runtime
@@ -458,6 +460,7 @@ class GeckoWebExtensionTest {
     fun `nullable metadata fields `() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
         val extensionWithoutMetadata = GeckoWebExtension(
             WebExtension("url", "id", WebExtension.Flags.NONE, webExtensionController),
             runtime
@@ -509,6 +512,7 @@ class GeckoWebExtensionTest {
     @Test
     fun `isEnabled depends on native state and defaults to true if state unknown`() {
         val runtime: GeckoRuntime = mock()
+        whenever(runtime.webExtensionController).thenReturn(mock())
 
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
@@ -531,5 +535,44 @@ class GeckoWebExtensionTest {
         val nativeDisabledWebExtnesion = MockWebExtension(bundle)
         val disabledWebExtension = GeckoWebExtension(nativeDisabledWebExtnesion, runtime)
         assertFalse(disabledWebExtension.isEnabled())
+    }
+
+    @Test
+    fun `all extensions are allowed to run for private sessions by default`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        var bundle = GeckoBundle().apply {
+            putString("webExtensionId", "id")
+            putString("locationURI", "uri")
+        }
+        val nativeExtensionPrivateUnknown = MockWebExtension(bundle)
+        GeckoWebExtension(nativeExtensionPrivateUnknown, runtime)
+        verify(webExtensionController, never()).setAllowedInPrivateBrowsing(any(), ArgumentMatchers.anyBoolean())
+
+        bundle = GeckoBundle().apply {
+            putString("webExtensionId", "id")
+            putString("locationURI", "uri")
+            putBundle("metaData", GeckoBundle().apply {
+                putBoolean("privateBrowsingAllowed", true)
+                putStringArray("disabledFlags", emptyArray())
+            })
+        }
+        val nativeExtensionPrivateAllowed = MockWebExtension(bundle)
+        GeckoWebExtension(nativeExtensionPrivateAllowed, runtime)
+        verify(webExtensionController, never()).setAllowedInPrivateBrowsing(any(), ArgumentMatchers.anyBoolean())
+
+        bundle = GeckoBundle().apply {
+            putString("webExtensionId", "id")
+            putString("locationURI", "uri")
+            putBundle("metaData", GeckoBundle().apply {
+                putBoolean("privateBrowsingAllowed", false)
+                putStringArray("disabledFlags", emptyArray())
+            })
+        }
+        val nativeExtensionPrivateDisallowed = MockWebExtension(bundle)
+        GeckoWebExtension(nativeExtensionPrivateDisallowed, runtime)
+        verify(webExtensionController).setAllowedInPrivateBrowsing(nativeExtensionPrivateDisallowed, true)
     }
 }
