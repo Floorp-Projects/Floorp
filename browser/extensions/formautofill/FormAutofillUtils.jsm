@@ -63,11 +63,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { FormAutofill } = ChromeUtils.import(
   "resource://formautofill/FormAutofill.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "CreditCard",
-  "resource://gre/modules/CreditCard.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
+  OSKeyStore: "resource:///modules/OSKeyStore.jsm",
+});
 
 let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
@@ -273,6 +272,12 @@ this.FormAutofillUtils = {
 
   isCCNumber(ccNumber) {
     return CreditCard.isValidNumber(ccNumber);
+  },
+
+  ensureLoggedIn(promptMessage) {
+    return OSKeyStore.ensureLoggedIn(
+      this._reauthEnabledByUser && promptMessage ? promptMessage : false
+    );
   },
 
   /**
@@ -1111,3 +1116,10 @@ XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function() {
     "chrome://branding/locale/brand.properties"
   );
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "_reauthEnabledByUser",
+  "extensions.formautofill.reauth.enabled",
+  false
+);
