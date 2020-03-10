@@ -2290,16 +2290,16 @@ class ObjectBox {
  protected:
   friend struct GCThingList;
 
-  js::gc::Cell* gcThing;
+  JSObject* object_;
   FunctionBox* traceLink;
   ObjectBox* emitLink;
 
   ObjectBox(JSObject* obj, FunctionBox* link);
 
  public:
-  bool hasObject() const { return gcThing != nullptr; }
+  bool hasObject() const { return object_ != nullptr; }
 
-  JSObject* object() const { return gcThing->as<JSObject>(); }
+  JSObject* object() const { return object_; }
 
   bool isFunctionBox() const { return true; }
   FunctionBox* asFunctionBox();

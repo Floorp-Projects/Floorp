@@ -378,7 +378,7 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
 #endif
 
 ObjectBox::ObjectBox(JSObject* obj, FunctionBox* traceLink)
-    : gcThing(obj), traceLink(traceLink), emitLink(nullptr) {
+    : object_(obj), traceLink(traceLink), emitLink(nullptr) {
   MOZ_ASSERT_IF(obj, obj->isTenured());
 }
 
@@ -430,8 +430,8 @@ void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
 }
 
 void FunctionBox::trace(JSTracer* trc) {
-  if (gcThing) {
-    TraceGenericPointerRoot(trc, &gcThing, "parser.traceListNode");
+  if (object_) {
+    TraceRoot(trc, &object_, "funbox-object");
   }
   if (enclosingScope_) {
     enclosingScope_.trace(trc);

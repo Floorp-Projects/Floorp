@@ -507,7 +507,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   }
 
   void clobberFunction(JSFunction* function) {
-    gcThing = function;
+    object_ = function;
     // After clobbering, these flags need to be updated
     setIsInterpreted(function->isInterpreted());
   }
