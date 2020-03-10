@@ -593,14 +593,14 @@ class nsFrameSelection final {
    * by the selection during MouseDown processing. It can be nullptr
    * if the data is no longer valid.
    */
-  bool HasDelayedCaretData() { return mDelayedMouseEventValid; }
+  bool HasDelayedCaretData() { return mDelayedMouseEvent.mIsValid; }
   bool IsShiftDownInDelayedCaretData() {
-    NS_ASSERTION(mDelayedMouseEventValid, "No valid delayed caret data");
-    return mDelayedMouseEventIsShift;
+    NS_ASSERTION(mDelayedMouseEvent.mIsValid, "No valid delayed caret data");
+    return mDelayedMouseEvent.mIsShift;
   }
   uint32_t GetClickCountInDelayedCaretData() {
-    NS_ASSERTION(mDelayedMouseEventValid, "No valid delayed caret data");
-    return mDelayedMouseEventClickCount;
+    NS_ASSERTION(mDelayedMouseEvent.mIsValid, "No valid delayed caret data");
+    return mDelayedMouseEvent.mClickCount;
   }
 
   bool MouseDownRecorded() {
@@ -897,12 +897,16 @@ class nsFrameSelection final {
   nsBidiLevel mKbdBidiLevel = NSBIDI_LTR;
 
   nsPoint mDesiredPos;
-  bool mDelayedMouseEventValid = false;
-  // These values are not used since they are only valid when
-  // mDelayedMouseEventValid is true, and setting mDelayedMouseEventValid
-  // always overrides these values.
-  uint32_t mDelayedMouseEventClickCount = 0;
-  bool mDelayedMouseEventIsShift = false;
+
+  struct DelayedMouseEvent {
+    bool mIsValid = false;
+    // These values are not used since they are only valid when mIsValid is
+    // true, and setting mIsValid  always overrides these values.
+    bool mIsShift = false;
+    uint32_t mClickCount = 0;
+  };
+
+  DelayedMouseEvent mDelayedMouseEvent;
 
   bool mChangesDuringBatching = false;
   bool mDragState = false;  // for drag purposes
