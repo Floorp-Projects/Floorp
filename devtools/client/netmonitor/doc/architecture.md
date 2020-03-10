@@ -22,7 +22,7 @@ The Network Monitor UI is built using [React](http://searchfox.org/mozilla-centr
 * Three major container components are
   - **Toolbar** Panel related functions.
   - **RequestList** Show each request information.
-  - **NetworkDetailsPanel** Show detailed information per request.
+  - **NetworkDetailsBar** Show detailed information per request.
   - **StatusBar** Show statistics while loading.
 * `src/assets` Styles that affect the Network Monitor panel.
 

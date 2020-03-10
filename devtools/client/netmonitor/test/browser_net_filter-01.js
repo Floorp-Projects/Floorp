@@ -246,7 +246,7 @@ add_task(async function() {
     "The first item should be selected in the requests menu."
   );
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     true,
     "The network details panel should render correctly."
   );

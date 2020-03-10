@@ -94,7 +94,7 @@ add_task(async function() {
       "The pane toggle button should not be visible."
     );
     is(
-      !!document.querySelector(".network-details-panel"),
+      !!document.querySelector(".network-details-bar"),
       false,
       "The details pane should still be hidden."
     );
@@ -117,7 +117,7 @@ add_task(async function() {
           "not collapsed anymore after being pressed."
       );
       is(
-        !!document.querySelector(".network-details-panel"),
+        !!document.querySelector(".network-details-bar"),
         true,
         "The details pane should not be hidden after toggle button was pressed."
       );
@@ -136,7 +136,7 @@ add_task(async function() {
     } else {
       ok(!toggleButton, "The pane toggle button should be not visible.");
       is(
-        !!document.querySelector(".network-details-panel"),
+        !!document.querySelector(".network-details-bar"),
         false,
         "The details pane should still be hidden."
       );

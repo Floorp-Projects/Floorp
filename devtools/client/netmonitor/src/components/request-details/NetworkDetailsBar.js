@@ -32,7 +32,7 @@ const { div } = dom;
 /**
  * Network details panel component
  */
-function NetworkDetailsPanel({
+function NetworkDetailsBar({
   connector,
   activeTabId,
   cloneSelectedRequest,
@@ -49,7 +49,7 @@ function NetworkDetailsPanel({
   }
 
   return div(
-    { className: "network-details-panel" },
+    { className: "network-details-bar" },
     !request.isCustom
       ? TabboxPanel({
           activeTabId,
@@ -70,9 +70,9 @@ function NetworkDetailsPanel({
   );
 }
 
-NetworkDetailsPanel.displayName = "NetworkDetailsPanel";
+NetworkDetailsBar.displayName = "NetworkDetailsBar";
 
-NetworkDetailsPanel.propTypes = {
+NetworkDetailsBar.propTypes = {
   connector: PropTypes.object.isRequired,
   activeTabId: PropTypes.string,
   cloneSelectedRequest: PropTypes.func.isRequired,
@@ -97,4 +97,4 @@ module.exports = connect(
     toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
     openNetworkDetails: open => dispatch(Actions.openNetworkDetails(open)),
   })
-)(NetworkDetailsPanel);
+)(NetworkDetailsBar);

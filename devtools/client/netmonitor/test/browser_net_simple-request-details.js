@@ -37,7 +37,7 @@ add_task(async function() {
     "The requests menu should not be empty after the first request."
   );
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     false,
     "The network details panel should still be hidden after first request."
   );
@@ -57,7 +57,7 @@ add_task(async function() {
     "The first item should be selected in the requests menu."
   );
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     true,
     "The network details panel should not be hidden after toggle button was pressed."
   );
@@ -83,11 +83,9 @@ add_task(async function() {
 
   async function testHeadersTab() {
     const tabEl = document.querySelectorAll(
-      ".network-details-panel .tabs-menu a"
+      ".network-details-bar .tabs-menu a"
     )[0];
-    const tabpanel = document.querySelector(
-      ".network-details-panel .tab-panel"
-    );
+    const tabpanel = document.querySelector(".network-details-bar .tab-panel");
 
     is(
       tabEl.getAttribute("aria-selected"),
@@ -354,7 +352,7 @@ add_task(async function() {
 
   async function selectTab(tabName, pos) {
     const tabEl = document.querySelectorAll(
-      ".network-details-panel .tabs-menu a"
+      ".network-details-bar .tabs-menu a"
     )[pos];
 
     const onPanelOpen = waitForDOM(document, `#${tabName}-panel`);
@@ -367,7 +365,7 @@ add_task(async function() {
       `The ${tabName} tab in the network details pane should be selected.`
     );
 
-    return document.querySelector(".network-details-panel .tab-panel");
+    return document.querySelector(".network-details-bar .tab-panel");
   }
 
   // This test will timeout on failure
@@ -375,11 +373,11 @@ add_task(async function() {
     EventUtils.sendKey("ESCAPE", window);
 
     await waitUntil(() => {
-      return document.querySelector(".network-details-panel") == null;
+      return document.querySelector(".network-details-bar") == null;
     });
 
     is(
-      document.querySelectorAll(".network-details-panel").length,
+      document.querySelectorAll(".network-details-bar").length,
       0,
       "Network details panel should close on ESC key"
     );
