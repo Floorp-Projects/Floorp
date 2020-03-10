@@ -19,7 +19,7 @@ class LiveResizeListener {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
  protected:
-  virtual ~LiveResizeListener() {}
+  virtual ~LiveResizeListener() = default;
 };
 
 }  // namespace mozilla
