@@ -297,14 +297,14 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void GetDocumentCharacterSet(nsACString& aCharset) const;
   bool ShouldDisplaySelection();
 
-  /**
-   * Recalculate mIntrinsicSize from the image.
-   */
+  // Whether the image frame should use the mapped aspect ratio from width=""
+  // and height="".
+  bool ShouldUseMappedAspectRatio() const;
+
+  // Recalculate mIntrinsicSize from the image.
   bool UpdateIntrinsicSize();
 
-  /**
-   * Recalculate mIntrinsicRatio from the image.
-   */
+  // Recalculate mIntrinsicRatio from the image.
   bool UpdateIntrinsicRatio();
 
   /**
