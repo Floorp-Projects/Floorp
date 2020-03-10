@@ -36,29 +36,13 @@ function loadURI(tab, url) {
 // active for the browser and that the cached value matches that from the plugin
 // in the page which tells us the plugin hasn't been reinitialized.
 async function cacheObjectValue(browser) {
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], () => {
     let plugin = content.document.getElementById("p").wrappedJSObject;
     info(`plugin is ${plugin}`);
     let win = content.document.defaultView;
     info(`win is ${win}`);
     win.objectValue = plugin.getObjectValue();
     info(`got objectValue: ${win.objectValue}`);
-    win.checkObjectValueListener = () => {
-      let result;
-      let exception;
-      try {
-        result = plugin.checkObjectValue(win.objectValue);
-      } catch (e) {
-        exception = e.toString();
-      }
-      info(`sending plugin.checkObjectValue(objectValue): ${result}`);
-      sendAsyncMessage("Test:CheckObjectValueResult", {
-        result,
-        exception,
-      });
-    };
-
-    addMessageListener("Test:CheckObjectValue", win.checkObjectValueListener);
   });
 }
 
@@ -66,44 +50,38 @@ async function cacheObjectValue(browser) {
 // browser to still be alive and have a messageManager.
 async function cleanupObjectValue(browser) {
   info("entered cleanupObjectValue");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], () => {
     info("in cleanup function");
     let win = content.document.defaultView;
     info(`about to delete objectValue: ${win.objectValue}`);
     delete win.objectValue;
-    removeMessageListener(
-      "Test:CheckObjectValue",
-      win.checkObjectValueListener
-    );
-    info(
-      `about to delete checkObjectValueListener: ${win.checkObjectValueListener}`
-    );
-    delete win.checkObjectValueListener;
-    info(
-      `deleted objectValue (${win.objectValue}) and checkObjectValueListener (${win.checkObjectValueListener})`
-    );
   });
   info("exiting cleanupObjectValue");
 }
 
 // See the notes for cacheObjectValue above.
-function checkObjectValue(browser) {
-  let mm = browser.messageManager;
-
-  return new Promise((resolve, reject) => {
-    let listener = ({ data }) => {
-      mm.removeMessageListener("Test:CheckObjectValueResult", listener);
-      if (data.result === null) {
-        ok(false, "checkObjectValue threw an exception: " + data.exception);
-        reject(data.exception);
-      } else {
-        resolve(data.result);
-      }
+async function checkObjectValue(browser) {
+  let data = await SpecialPowers.spawn(browser, [], () => {
+    let plugin = content.document.getElementById("p").wrappedJSObject;
+    let win = content.document.defaultView;
+    let result, exception;
+    try {
+      result = plugin.checkObjectValue(win.objectValue);
+    } catch (e) {
+      exception = e.toString();
+    }
+    return {
+      result,
+      exception,
     };
-
-    mm.addMessageListener("Test:CheckObjectValueResult", listener);
-    mm.sendAsyncMessage("Test:CheckObjectValue");
   });
+
+  if (data.result === null) {
+    ok(false, "checkObjectValue threw an exception: " + data.exception);
+    throw new Error(data.exception);
+  } else {
+    return data.result;
+  }
 }
 
 add_task(async function() {
