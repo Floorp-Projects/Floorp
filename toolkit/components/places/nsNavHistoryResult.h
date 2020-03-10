@@ -45,7 +45,7 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
   explicit nsTrimInt64HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
   nsTrimInt64HashKey(const nsTrimInt64HashKey& toCopy)
       : mValue(toCopy.mValue) {}
-  ~nsTrimInt64HashKey() {}
+  ~nsTrimInt64HashKey() = default;
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
@@ -330,7 +330,7 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
   virtual nsresult OnMobilePrefChanged(bool newValue) { return NS_OK; };
 
  protected:
-  virtual ~nsNavHistoryResultNode() {}
+  virtual ~nsNavHistoryResultNode() = default;
 
  public:
   nsNavHistoryResult* GetResult();

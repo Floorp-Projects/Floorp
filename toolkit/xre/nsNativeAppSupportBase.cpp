@@ -5,9 +5,9 @@
 
 #include "nsNativeAppSupportBase.h"
 
-nsNativeAppSupportBase::nsNativeAppSupportBase() {}
+nsNativeAppSupportBase::nsNativeAppSupportBase() = default;
 
-nsNativeAppSupportBase::~nsNativeAppSupportBase() {}
+nsNativeAppSupportBase::~nsNativeAppSupportBase() = default;
 
 NS_IMPL_ISUPPORTS(nsNativeAppSupportBase, nsINativeAppSupport)
 

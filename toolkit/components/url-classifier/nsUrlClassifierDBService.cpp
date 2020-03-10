@@ -1495,7 +1495,7 @@ class nsUrlClassifierClassifyCallback final
     nsresult errorCode;
   };
 
-  ~nsUrlClassifierClassifyCallback(){};
+  ~nsUrlClassifierClassifyCallback() = default;
 
   nsCOMPtr<nsIURIClassifierCallback> mCallback;
   nsTArray<ClassifyMatchedInfo> mMatchedArray;

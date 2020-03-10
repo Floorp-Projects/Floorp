@@ -44,7 +44,7 @@ class nsUrlClassifierStreamUpdater final
 
  private:
   // No subclassing
-  ~nsUrlClassifierStreamUpdater() {}
+  ~nsUrlClassifierStreamUpdater() = default;
 
   // When the dbservice sends an UpdateComplete or UpdateFailure, we call this
   // to reset the stream updater.

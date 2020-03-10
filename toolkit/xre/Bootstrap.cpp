@@ -23,9 +23,9 @@ class BootstrapImpl final : public Bootstrap {
   virtual void Dispose() override { delete this; }
 
  public:
-  BootstrapImpl() {}
+  BootstrapImpl() = default;
 
-  ~BootstrapImpl() {}
+  ~BootstrapImpl() = default;
 
   virtual void NS_LogInit() override { ::NS_LogInit(); }
 

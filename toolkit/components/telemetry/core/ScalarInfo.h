@@ -42,7 +42,7 @@ struct BaseScalarInfo {
         key_offset(aKeyOffset),
         products(aProducts),
         builtin(aBuiltin) {}
-  virtual ~BaseScalarInfo() {}
+  virtual ~BaseScalarInfo() = default;
 
   virtual const char* name() const = 0;
   virtual const char* expiration() const = 0;

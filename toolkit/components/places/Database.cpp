@@ -409,7 +409,7 @@ Database::GetProfileBeforeChangePhase() {
   return shutdownPhase.forget();
 }
 
-Database::~Database() {}
+Database::~Database() = default;
 
 bool Database::IsShutdownStarted() const {
   if (!mConnectionShutdown) {

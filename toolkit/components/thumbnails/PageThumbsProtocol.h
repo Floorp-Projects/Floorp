@@ -23,7 +23,7 @@ class PageThumbsProtocol final : public nsIProtocolHandler {
   NS_DECL_NSIPROTOCOLHANDLER
 
  private:
-  ~PageThumbsProtocol() {}
+  ~PageThumbsProtocol() = default;
   nsresult GetFilePathForURL(nsIURI* aURI, nsIFile** _retval);
   nsresult ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL);
 };

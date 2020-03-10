@@ -29,9 +29,9 @@ static StaticRefPtr<nsPrintingProxy> sPrintingProxyInstance;
 
 NS_IMPL_ISUPPORTS(nsPrintingProxy, nsIPrintingPromptService)
 
-nsPrintingProxy::nsPrintingProxy() {}
+nsPrintingProxy::nsPrintingProxy() = default;
 
-nsPrintingProxy::~nsPrintingProxy() {}
+nsPrintingProxy::~nsPrintingProxy() = default;
 
 /* static */
 already_AddRefed<nsPrintingProxy> nsPrintingProxy::GetInstance() {

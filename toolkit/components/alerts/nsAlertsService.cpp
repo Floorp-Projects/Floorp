@@ -63,7 +63,7 @@ class IconCallback final : public nsIFaviconDataCallback {
   }
 
  private:
-  virtual ~IconCallback() {}
+  virtual ~IconCallback() = default;
 
   nsCOMPtr<nsIAlertsService> mBackend;
   nsCOMPtr<nsIAlertNotification> mAlert;
@@ -138,7 +138,7 @@ nsAlertsService::nsAlertsService() : mBackend(nullptr) {
   mBackend = do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID);
 }
 
-nsAlertsService::~nsAlertsService() {}
+nsAlertsService::~nsAlertsService() = default;
 
 bool nsAlertsService::ShouldShowAlert() {
   bool result = true;

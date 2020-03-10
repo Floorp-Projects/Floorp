@@ -37,9 +37,9 @@ typedef mozilla::Variant<nsString, bool,
 struct CollectedInputDataValue {
   nsString id;
   nsString type;
-  InputDataValue value;
+  InputDataValue value{false};
 
-  CollectedInputDataValue() : value(false){};
+  CollectedInputDataValue() = default;
 };
 
 /*

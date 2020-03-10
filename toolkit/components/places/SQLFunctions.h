@@ -72,7 +72,7 @@ class MatchAutoCompleteFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~MatchAutoCompleteFunction() {}
+  ~MatchAutoCompleteFunction() = default;
 
   /**
    * IntegerVariants for 0 and 1 are frequently used in awesomebar queries,
@@ -213,7 +213,7 @@ class CalculateFrecencyFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~CalculateFrecencyFunction() {}
+  ~CalculateFrecencyFunction() = default;
 };
 
 /**
@@ -236,7 +236,7 @@ class GenerateGUIDFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~GenerateGUIDFunction() {}
+  ~GenerateGUIDFunction() = default;
 };
 
 /**
@@ -259,7 +259,7 @@ class IsValidGUIDFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~IsValidGUIDFunction() {}
+  ~IsValidGUIDFunction() = default;
 };
 
 /**
@@ -284,7 +284,7 @@ class GetUnreversedHostFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~GetUnreversedHostFunction() {}
+  ~GetUnreversedHostFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +313,7 @@ class FixupURLFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~FixupURLFunction() {}
+  ~FixupURLFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +350,7 @@ class FrecencyNotificationFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~FrecencyNotificationFunction() {}
+  ~FrecencyNotificationFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -379,7 +379,7 @@ class StoreLastInsertedIdFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~StoreLastInsertedIdFunction() {}
+  ~StoreLastInsertedIdFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +407,7 @@ class HashFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~HashFunction() {}
+  ~HashFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -435,7 +435,7 @@ class GetQueryParamFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~GetQueryParamFunction() {}
+  ~GetQueryParamFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,7 +465,7 @@ class GetPrefixFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~GetPrefixFunction() {}
+  ~GetPrefixFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -495,7 +495,7 @@ class GetHostAndPortFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~GetHostAndPortFunction() {}
+  ~GetHostAndPortFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -526,7 +526,7 @@ class StripPrefixAndUserinfoFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~StripPrefixAndUserinfoFunction() {}
+  ~StripPrefixAndUserinfoFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -552,7 +552,7 @@ class IsFrecencyDecayingFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~IsFrecencyDecayingFunction() {}
+  ~IsFrecencyDecayingFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -575,7 +575,7 @@ class SqrtFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~SqrtFunction() {}
+  ~SqrtFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -600,7 +600,7 @@ class NoteSyncChangeFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~NoteSyncChangeFunction() {}
+  ~NoteSyncChangeFunction() = default;
 };
 
 }  // namespace places

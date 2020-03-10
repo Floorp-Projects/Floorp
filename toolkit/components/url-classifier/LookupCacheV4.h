@@ -51,7 +51,7 @@ class LookupCacheV4 final : public LookupCache {
   nsCString GetMetadataSuffix() const;
 
  private:
-  ~LookupCacheV4() {}
+  ~LookupCacheV4() = default;
 
   virtual int Ver() const override { return VER; }
 

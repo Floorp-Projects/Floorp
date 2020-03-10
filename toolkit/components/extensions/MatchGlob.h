@@ -76,7 +76,7 @@ class MatchGlobSet final : public nsTArray<RefPtr<MatchGlob>> {
  public:
   // Note: We can't use the nsTArray constructors directly, since the static
   // analyzer doesn't handle their MOZ_IMPLICIT annotations correctly.
-  MatchGlobSet() {}
+  MatchGlobSet() = default;
   explicit MatchGlobSet(size_type aCapacity) : nsTArray(aCapacity) {}
   explicit MatchGlobSet(const nsTArray& aOther) : nsTArray(aOther) {}
   MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther) : nsTArray(std::move(aOther)) {}

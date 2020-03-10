@@ -25,7 +25,7 @@ class INativePlacesEventCallback
   virtual void HandlePlacesEvent(const PlacesEventSequence& aEvents) = 0;
 
  protected:
-  virtual ~INativePlacesEventCallback() {}
+  virtual ~INativePlacesEventCallback() = default;
 };
 
 }  // namespace places

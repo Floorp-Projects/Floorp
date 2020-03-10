@@ -46,7 +46,7 @@ class nsHangDetails : public nsIHangDetails {
   void Submit();
 
  private:
-  virtual ~nsHangDetails() {}
+  virtual ~nsHangDetails() = default;
 
   HangDetails mDetails;
   PersistedToDisk mPersistedToDisk;

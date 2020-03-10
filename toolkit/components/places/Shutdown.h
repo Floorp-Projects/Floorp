@@ -114,7 +114,7 @@ class PlacesShutdownBlocker : public nsIAsyncShutdownBlocker,
 
   static Atomic<bool> sIsStarted;
 
-  virtual ~PlacesShutdownBlocker() {}
+  virtual ~PlacesShutdownBlocker() = default;
 };
 
 /**
@@ -130,7 +130,7 @@ class ClientsShutdownBlocker final : public PlacesShutdownBlocker {
   NS_IMETHOD Done() override;
 
  private:
-  ~ClientsShutdownBlocker() {}
+  ~ClientsShutdownBlocker() = default;
 };
 
 /**
@@ -147,7 +147,7 @@ class ConnectionShutdownBlocker final : public PlacesShutdownBlocker,
   NS_IMETHOD Done() override;
 
  private:
-  ~ConnectionShutdownBlocker() {}
+  ~ConnectionShutdownBlocker() = default;
 
   // The owning database.
   // The cycle is broken in method Complete(), once the connection

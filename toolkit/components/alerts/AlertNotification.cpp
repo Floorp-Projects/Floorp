@@ -25,7 +25,7 @@ NS_IMPL_ISUPPORTS(AlertNotification, nsIAlertNotification)
 AlertNotification::AlertNotification()
     : mTextClickable(false), mInPrivateBrowsing(false) {}
 
-AlertNotification::~AlertNotification() {}
+AlertNotification::~AlertNotification() = default;
 
 NS_IMETHODIMP
 AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,

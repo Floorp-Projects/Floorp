@@ -19,7 +19,7 @@ typedef char NS_tchar;
 // This class provides an API to extract files from an update archive.
 class ArchiveReader {
  public:
-  ArchiveReader() {}
+  ArchiveReader() = default;
   ~ArchiveReader() { Close(); }
 
   int Open(const NS_tchar* path);

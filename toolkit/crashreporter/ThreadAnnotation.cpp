@@ -116,9 +116,9 @@ class ThreadAnnotationSpan {
 // the crash annotation file.
 class ThreadAnnotationData {
  public:
-  ThreadAnnotationData() {}
+  ThreadAnnotationData() = default;
 
-  ~ThreadAnnotationData() {}
+  ~ThreadAnnotationData() = default;
 
   // Adds <pre> tid:"thread name",</pre> annotation to the current annotations.
   // Returns an instance of ThreadAnnotationSpan for cleanup on thread
