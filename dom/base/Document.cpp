@@ -15083,14 +15083,12 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
                                                      nullptr)) {
       return;
     }
-    // We don't care when the asynchronous work finishes here.
-    Unused << ContentBlocking::AllowAccessFor(
-        NodePrincipal(), openerInner,
-        ContentBlockingNotifier::eOpenerAfterUserInteraction);
   }
 
-  // TODO: We don't call ContentBlocking::AllowAccessFor() here because
-  //       openerInner is null. This will be fixed in the next patch.
+  // We don't care when the asynchronous work finishes here.
+  Unused << ContentBlocking::AllowAccessFor(
+      NodePrincipal(), openerBC,
+      ContentBlockingNotifier::eOpenerAfterUserInteraction);
 }
 
 namespace {
@@ -15769,7 +15767,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
         return std::move(p);
       };
       ContentBlocking::AllowAccessFor(
-          NodePrincipal(), inner, ContentBlockingNotifier::eStorageAccessAPI,
+          NodePrincipal(), bc, ContentBlockingNotifier::eStorageAccessAPI,
           performFinalChecks)
           ->Then(
               GetCurrentThreadSerialEventTarget(), __func__,

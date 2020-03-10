@@ -7184,7 +7184,7 @@ void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
       aURI, doc->NodePrincipal()->OriginAttributesRef());
 
   // We don't care when the asynchronous work finishes here.
-  Unused << ContentBlocking::AllowAccessFor(principal, inner,
+  Unused << ContentBlocking::AllowAccessFor(principal, GetBrowsingContext(),
                                             ContentBlockingNotifier::eOpener);
 }
 

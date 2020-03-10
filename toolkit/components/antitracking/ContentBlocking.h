@@ -25,6 +25,10 @@ namespace mozilla {
 
 class OriginAttributes;
 
+namespace dom {
+class BrowsingContext;
+}
+
 class ContentBlocking final {
  public:
   // This method returns true if the URI has first party storage access when
@@ -67,13 +71,14 @@ class ContentBlocking final {
 
   // Grant the permission for aOrigin to have access to the first party storage.
   // This method can handle 2 different scenarios:
-  // - aParentWindow is a 3rd party context, it opens an aOrigin window and the
+  // - aParentContext is a 3rd party context, it opens an aOrigin window and the
   //   user interacts with it. We want to grant the permission at the
   //   combination: top-level + aParentWindow + aOrigin.
   //   Ex: example.net loads an iframe tracker.com, which opens a popup
   //   tracker.prg and the user interacts with it. tracker.org is allowed if
   //   loaded by tracker.com when loaded by example.net.
-  // - aParentWindow is a first party context and a 3rd party resource (probably
+  // - aParentContext is a first party context and a 3rd party resource
+  // (probably
   //   becuase of a script) opens a popup and the user interacts with it. We
   //   want to grant the permission for the 3rd party context to have access to
   //   the first party stoage when loaded in aParentWindow.
@@ -85,7 +90,7 @@ class ContentBlocking final {
       PerformFinalChecks;
   typedef MozPromise<int, bool, true> StorageAccessGrantPromise;
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise> AllowAccessFor(
-      nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aParentWindow,
+      nsIPrincipal* aPrincipal, dom::BrowsingContext* aParentContext,
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
