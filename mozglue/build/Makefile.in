@@ -8,7 +8,7 @@ include $(topsrcdir)/config/config.mk
 
 ifeq (WINNT,$(OS_TARGET))
 mozglue.def: $(srcdir)/mozglue.def.in $(GLOBAL_DEPS)
-	$(call py3_action,preprocessor,$(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< -o $@)
+	$(call py_action,preprocessor,$(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< -o $@)
 
 GARBAGE += mozglue.def
 

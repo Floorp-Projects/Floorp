@@ -278,7 +278,9 @@ class BlocklistDescriptor(object):
 
         # Sort the list on entry name so that the blocklist code may use
         # binary search if it so chooses.
-        return sorted(filtered_list, key=lambda e: e.get_name())
+        filtered_list.sort(key=lambda e: e.get_name())
+
+        return filtered_list
 
     @staticmethod
     def get_fd(outspec_leaf_name):
@@ -369,7 +371,11 @@ GENERATED_BLOCKLIST_FILES = [
 
 class PETimeStamp(object):
     def __init__(self, ts):
-        max_timestamp = (2 ** 32) - 1
+        # Since we can't specify the long literal suffix in python 3, we'll
+        # compute max_timestamp this way to ensure that it is defined as a
+        # long in python 2
+        max_timestamp = (long(2) ** 32) - 1
+        assert isinstance(max_timestamp, long)
         if ts < 0 or ts > max_timestamp:
             raise ValueError('Invalid timestamp value')
         self._value = ts
@@ -407,7 +413,7 @@ class Version(object):
             elif isinstance(args[0], PETimeStamp):
                 self._ver = args[0]
             else:
-                self._ver = int(args[0])
+                self._ver = long(args[0])
         elif len(args) == 4:
             self.validate_iterable(args)
 
@@ -427,14 +433,14 @@ class Version(object):
 
     def build_long(self, args):
         self.validate_iterable(args)
-        return (int(args[0]) << 48) | (int(args[1]) << 32) | \
-            (int(args[2]) << 16) | int(args[3])
+        return (long(args[0]) << 48) | (long(args[1]) << 32) | \
+            (long(args[2]) << 16) | long(args[3])
 
     def is_timestamp(self):
         return isinstance(self._ver, PETimeStamp)
 
     def __str__(self):
-        if isinstance(self._ver, int):
+        if isinstance(self._ver, long):
             if self._ver == Version.ALL_VERSIONS:
                 return 'DllBlockInfo::ALL_VERSIONS'
 
