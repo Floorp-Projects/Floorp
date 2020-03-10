@@ -18,7 +18,6 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    'Fluent.jsm',
     'L10nRegistry.jsm',
     'Localization.jsm',
 ]

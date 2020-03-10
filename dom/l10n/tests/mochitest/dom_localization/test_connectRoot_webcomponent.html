@@ -44,9 +44,6 @@
   </script>
   <script type="application/javascript">
   "use strict";
-  const { FluentBundle, FluentResource } =
-    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
-
   async function* mockGenerateMessages(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`
