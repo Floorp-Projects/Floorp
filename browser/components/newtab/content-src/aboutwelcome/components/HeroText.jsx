@@ -3,17 +3,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import { Localized } from "./MSLocalized";
 
 export const HeroText = props => {
   return (
     <React.Fragment>
-      <h1 className="welcome-title" data-l10n-id={props.title.string_id} />
-      {props.subtitle && props.subtitle.string_id && (
-        <h2
-          className="welcome-subtitle"
-          data-l10n-id={props.subtitle.string_id}
-        />
-      )}
+      <Localized text={props.title}>
+        <h1 className="welcome-title" />
+      </Localized>
+      <Localized text={props.subtitle}>
+        <h2 className="welcome-subtitle" />
+      </Localized>
     </React.Fragment>
   );
 };

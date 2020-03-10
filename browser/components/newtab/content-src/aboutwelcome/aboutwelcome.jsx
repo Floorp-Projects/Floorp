@@ -6,6 +6,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { HeroText } from "./components/HeroText";
 import { FxCards } from "./components/FxCards";
+import { Localized } from "./components/MSLocalized";
+
 import {
   AboutWelcomeUtils,
   DEFAULT_WELCOME_CONTENT,
@@ -56,13 +58,12 @@ class AboutWelcome extends React.PureComponent {
               metricsFlowUri={this.state.metricsFlowUri}
               sendTelemetry={window.AWSendEventTelemetry}
             />
-            {props.startButton && props.startButton.string_id && (
+            <Localized text={props.startButton.label}>
               <button
                 className="start-button"
-                data-l10n-id={props.startButton.string_id}
                 onClick={this.handleStartBtnClick}
               />
-            )}
+            </Localized>
           </main>
         </div>
       </div>
@@ -72,11 +73,12 @@ class AboutWelcome extends React.PureComponent {
 
 AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
 
-function mount(settings) {
+async function mount() {
+  const settings = await window.AWGetStartupData();
   ReactDOM.render(
-    <AboutWelcome title={settings.title} subtitle={settings.subtitle} />,
+    <AboutWelcome {...settings} />,
     document.getElementById("root")
   );
 }
 
-mount(window.AWGetStartupData());
+mount();
