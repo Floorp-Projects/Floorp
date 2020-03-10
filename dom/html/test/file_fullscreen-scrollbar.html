@@ -76,7 +76,7 @@ function checkScrollbars(elem, shouldHaveScrollbars) {
 }
 
 function begin() {
-  if (window.matchMedia("(-moz-overlay-scrollbar").matches) {
+  if (window.matchMedia("(-moz-overlay-scrollbars)").matches) {
     // If overlay scrollbar is enabled, the scrollbar is not measurable,
     // so we skip this test in that case.
     info("Skip this test because of overlay scrollbar");
