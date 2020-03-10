@@ -6474,7 +6474,8 @@ class DSDismiss extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompone
       onClick: this.onDismissClick,
       onMouseEnter: this.onHover,
       onMouseLeave: this.offHover,
-      "aria-label": "dismiss"
+      "aria-label": "dismiss",
+      title: "Remove"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: "icon icon-dismiss"
     })));
