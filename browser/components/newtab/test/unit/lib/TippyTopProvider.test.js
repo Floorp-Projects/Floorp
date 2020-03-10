@@ -17,6 +17,7 @@ describe("TippyTopProvider", () => {
             title: "facebook",
             url: "https://www.facebook.com/",
             image_url: "images/facebook-com.png",
+            favicon_url: "images/facebook-com.png",
             background_color: "#3b5998",
             domain: "facebook.com",
           },
@@ -24,6 +25,7 @@ describe("TippyTopProvider", () => {
             title: "gmail",
             urls: ["https://www.gmail.com/", "https://mail.google.com"],
             image_url: "images/gmail-com.png",
+            favicon_url: "images/gmail-com.png",
             background_color: "#000000",
             domain: "gmail.com",
           },
@@ -38,12 +40,20 @@ describe("TippyTopProvider", () => {
       site.tippyTopIcon,
       "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
     );
+    assert.equal(
+      site.smallFavicon,
+      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+    );
     assert.equal(site.backgroundColor, "#3b5998");
   });
   it("should provide an icon for www.facebook.com", () => {
     const site = instance.processSite({ url: "https://www.facebook.com" });
     assert.equal(
       site.tippyTopIcon,
+      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+    );
+    assert.equal(
+      site.smallFavicon,
       "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(site.backgroundColor, "#3b5998");
@@ -54,6 +64,10 @@ describe("TippyTopProvider", () => {
       site.tippyTopIcon,
       "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
     );
+    assert.equal(
+      site.smallFavicon,
+      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+    );
     assert.equal(site.backgroundColor, "#3b5998");
   });
   it("should provide an icon for gmail.com", () => {
@@ -62,12 +76,20 @@ describe("TippyTopProvider", () => {
       site.tippyTopIcon,
       "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
     );
+    assert.equal(
+      site.smallFavicon,
+      "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
+    );
     assert.equal(site.backgroundColor, "#000000");
   });
   it("should provide an icon for mail.google.com", () => {
     const site = instance.processSite({ url: "https://mail.google.com" });
     assert.equal(
       site.tippyTopIcon,
+      "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
+    );
+    assert.equal(
+      site.smallFavicon,
       "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
     );
     assert.equal(site.backgroundColor, "#000000");
