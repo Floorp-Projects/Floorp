@@ -660,8 +660,7 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
   return NS_OK;
 }
 
-nsresult HTMLEditor::OnMouseUp(int32_t aClientX, int32_t aClientY,
-                               Element* aTarget) {
+nsresult HTMLEditor::OnMouseUp(int32_t aClientX, int32_t aClientY) {
   if (mIsResizing) {
     AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
