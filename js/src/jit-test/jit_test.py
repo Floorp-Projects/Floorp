@@ -19,6 +19,7 @@ read_input = input
 if sys.version_info.major == 2:
     read_input = raw_input
 
+
 def add_tests_dir_to_path():
     from os.path import dirname, exists, join, realpath
     js_src_dir = dirname(dirname(realpath(sys.argv[0])))
