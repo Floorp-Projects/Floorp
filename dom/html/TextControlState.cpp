@@ -384,11 +384,11 @@ TextInputSelectionController::TextInputSelectionController(
     PresShell* aPresShell, nsIContent* aLimiter)
     : mScrollFrame(nullptr) {
   if (aPresShell) {
-    mFrameSelection = new nsFrameSelection();
     mLimiter = aLimiter;
     bool accessibleCaretEnabled =
         PresShell::AccessibleCaretEnabled(aLimiter->OwnerDoc()->GetDocShell());
-    mFrameSelection->Init(aPresShell, mLimiter, accessibleCaretEnabled);
+    mFrameSelection =
+        new nsFrameSelection(aPresShell, mLimiter, accessibleCaretEnabled);
     mPresShellWeak = do_GetWeakReference(aPresShell);
   }
 }
