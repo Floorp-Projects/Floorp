@@ -192,7 +192,7 @@ public final class GeckoRuntime implements Parcelable {
 
 
     /**
-     * Called by mozilla::dom::ClientOpenWindowInCurrentProcess to retrieve the window id to use
+     * Called by mozilla::dom::ClientOpenWindow to retrieve the window id to use
      * for a ServiceWorkerClients.openWindow() request.
      * @param baseUrl The base Url for the request.
      * @param url Url being requested to be opened in a new window.
