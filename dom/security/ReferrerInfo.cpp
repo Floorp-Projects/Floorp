@@ -191,24 +191,21 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
                                                       nsIURI* aURI,
                                                       bool privateBrowsing) {
   bool thirdPartyTrackerIsolated = false;
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  if (aChannel) {
-    loadInfo = aChannel->LoadInfo();
-  }
-  nsCOMPtr<nsICookieJarSettings> cjs;
-  if (loadInfo) {
+  if (aChannel && aURI) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    nsCOMPtr<nsICookieJarSettings> cjs;
     Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
-  }
-  if (!cjs) {
-    cjs = net::CookieJarSettings::Create();
-  }
-  if (aChannel && aURI && cjs->GetRejectThirdPartyTrackers()) {
-    uint32_t rejectedReason = 0;
-    thirdPartyTrackerIsolated =
-        !ContentBlocking::ShouldAllowAccessFor(aChannel, aURI, &rejectedReason);
-    // Here we intentionally do not notify about the rejection reason, if any
-    // in order to avoid this check to have any visible side-effects (e.g. a
-    // web console report.)
+    if (!cjs) {
+      cjs = net::CookieJarSettings::Create();
+    }
+    if (cjs->GetRejectThirdPartyTrackers()) {
+      uint32_t rejectedReason = 0;
+      thirdPartyTrackerIsolated = !ContentBlocking::ShouldAllowAccessFor(
+          aChannel, aURI, &rejectedReason);
+      // Here we intentionally do not notify about the rejection reason, if any
+      // in order to avoid this check to have any visible side-effects (e.g. a
+      // web console report.)
+    }
   }
 
   uint32_t defaultToUse;
