@@ -826,14 +826,27 @@ void TrackBuffersManager::SegmentParserLoop() {
       return;
     }
 
-    int64_t start, end;
-    MediaResult newData =
-        mParser->ParseStartAndEndTimestamps(*mInputBuffer, start, end);
-    if (!NS_SUCCEEDED(newData) && newData.Code() != NS_ERROR_NOT_AVAILABLE) {
-      RejectAppend(newData, __func__);
-      return;
+    MOZ_ASSERT(mSourceBufferAttributes->GetAppendState() ==
+                   AppendState::PARSING_INIT_SEGMENT ||
+               mSourceBufferAttributes->GetAppendState() ==
+                   AppendState::PARSING_MEDIA_SEGMENT);
+
+    int64_t start = 0;
+    int64_t end = 0;
+    MediaResult newData = NS_ERROR_NOT_AVAILABLE;
+
+    if (mSourceBufferAttributes->GetAppendState() ==
+            AppendState::PARSING_INIT_SEGMENT ||
+        (mSourceBufferAttributes->GetAppendState() ==
+             AppendState::PARSING_MEDIA_SEGMENT &&
+         mFirstInitializationSegmentReceived && !mChangeTypeReceived)) {
+      newData = mParser->ParseStartAndEndTimestamps(*mInputBuffer, start, end);
+      if (NS_FAILED(newData) && newData.Code() != NS_ERROR_NOT_AVAILABLE) {
+        RejectAppend(newData, __func__);
+        return;
+      }
+      mProcessedInput += mInputBuffer->Length();
     }
-    mProcessedInput += mInputBuffer->Length();
 
     // 5. If the append state equals PARSING_INIT_SEGMENT, then run the
     // following steps:
