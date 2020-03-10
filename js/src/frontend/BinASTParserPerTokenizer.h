@@ -228,28 +228,6 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   void doTrace(JSTracer* trc) final;
 
  public:
-  virtual ObjectBox* newObjectBox(JSObject* obj) override {
-    MOZ_ASSERT(obj);
-
-    /*
-     * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-     * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-     * arenas containing the entries must be alive until we are done with
-     * scanning, parsing and code generation for the whole script or top-level
-     * function.
-     */
-
-    ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
-    if (MOZ_UNLIKELY(!objbox)) {
-      ReportOutOfMemory(cx_);
-      return nullptr;
-    }
-
-    traceListHead_ = objbox;
-
-    return objbox;
-  }
-
   virtual ErrorReporter& errorReporter() override { return *this; }
   virtual const ErrorReporter& errorReporter() const override { return *this; }
 

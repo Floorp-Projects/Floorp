@@ -257,33 +257,6 @@ inline void GeneralParser<ParseHandler, Unit>::setInParametersOfAsyncFunction(
   asFinalParser()->setInParametersOfAsyncFunction(inParameters);
 }
 
-template <typename BoxT, typename ArgT>
-BoxT* ParserSharedBase::newTraceListNode(ArgT* arg) {
-  MOZ_ASSERT(arg);
-
-  /*
-   * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-   * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-   * arenas containing the entries must be alive until we are done with
-   * scanning, parsing and code generation for the whole script or top-level
-   * function.
-   */
-
-  BoxT* box = alloc_.template new_<BoxT>(arg, traceListHead_);
-  if (!box) {
-    ReportOutOfMemory(cx_);
-    return nullptr;
-  }
-
-  traceListHead_ = box;
-
-  return box;
-}
-
-ObjectBox* ParserSharedBase::newObjectBox(JSObject* obj) {
-  return newTraceListNode<ObjectBox, JSObject>(obj);
-}
-
 template <class ParseHandler>
 FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionNodeType funNode, JSFunction* fun, uint32_t toStringStart,

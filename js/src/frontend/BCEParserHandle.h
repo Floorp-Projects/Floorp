@@ -21,7 +21,6 @@ struct BCEParserHandle {
   virtual const JS::ReadOnlyCompileOptions& options() const = 0;
 
   virtual FullParseHandler& astGenerator() = 0;
-  virtual ObjectBox* newObjectBox(JSObject* obj) = 0;
 };
 
 }  // namespace frontend

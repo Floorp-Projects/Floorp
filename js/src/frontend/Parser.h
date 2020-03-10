@@ -277,18 +277,8 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
                                               JS::AutoGCRooter* parser);
 #endif  // JS_BUILD_BINAST
 
- private:
-  // Create a new traceable node and store it into the trace list.
-  template <typename BoxT, typename ArgT>
-  BoxT* newTraceListNode(ArgT* arg);
-
-  void cleanupTraceList();
-
  public:
   CompilationInfo& getCompilationInfo() { return compilationInfo_; }
-
-  // Create a new JSObject and store it into the trace list.
-  ObjectBox* newObjectBox(JSObject* obj);
 };
 
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,

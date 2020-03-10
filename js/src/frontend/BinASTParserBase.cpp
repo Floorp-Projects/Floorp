@@ -16,4 +16,26 @@ BinASTParserBase::BinASTParserBase(JSContext* cx,
     : ParserSharedBase(cx, compilationInfo, sourceObject,
                        ParserSharedBase::Kind::BinASTParser) {}
 
+ObjectBox* BinASTParserBase::newObjectBox(JSObject* obj) {
+  MOZ_ASSERT(obj);
+
+  /*
+   * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
+   * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
+   * arenas containing the entries must be alive until we are done with
+   * scanning, parsing and code generation for the whole script or top-level
+   * function.
+   */
+
+  auto* box = alloc_.new_<ObjectBox>(obj, traceListHead_);
+  if (!box) {
+    ReportOutOfMemory(cx_);
+    return nullptr;
+  }
+
+  traceListHead_ = box;
+
+  return box;
+}
+
 }  // namespace js::frontend
