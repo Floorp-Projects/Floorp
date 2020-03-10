@@ -10,10 +10,7 @@ job-defaults:
         by-test-platform:
             android-hw-.*/opt: []
             android-hw-.*/pgo: ['trunk', 'mozilla-beta']
-    tier:
-        by-test-platform:
-            android-hw-g5.*: 2
-            default: 1
+    tier: 1
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
@@ -34,7 +31,6 @@ raptor-tp6m-1-fenix:
     try-name: raptor-tp6m-1-fenix
     treeherder-symbol: Rap-fenix(tp6m-1)
     run-on-projects: []
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-1
@@ -48,7 +44,6 @@ raptor-tp6m-2-fenix:
     treeherder-symbol: Rap-fenix(tp6m-2)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-2
@@ -62,7 +57,6 @@ raptor-tp6m-3-fenix:
     treeherder-symbol: Rap-fenix(tp6m-3)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-3
@@ -76,7 +70,6 @@ raptor-tp6m-4-fenix:
     treeherder-symbol: Rap-fenix(tp6m-4)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-4
@@ -90,7 +83,6 @@ raptor-tp6m-5-fenix:
     treeherder-symbol: Rap-fenix(tp6m-5)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-5
@@ -104,7 +96,6 @@ raptor-tp6m-6-fenix:
     treeherder-symbol: Rap-fenix(tp6m-6)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-6
@@ -118,7 +109,6 @@ raptor-tp6m-7-fenix:
     treeherder-symbol: Rap-fenix(tp6m-7)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-7
@@ -132,7 +122,6 @@ raptor-tp6m-8-fenix:
     treeherder-symbol: Rap-fenix(tp6m-8)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-8
@@ -146,7 +135,6 @@ raptor-tp6m-9-fenix:
     treeherder-symbol: Rap-fenix(tp6m-9)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-9
@@ -160,7 +148,6 @@ raptor-tp6m-10-fenix:
     treeherder-symbol: Rap-fenix(tp6m-10)
     run-on-projects: []
     e10s: true
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-10
@@ -174,7 +161,6 @@ raptor-tp6m-1-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-1)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -189,7 +175,6 @@ raptor-tp6m-2-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-2)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -204,7 +189,6 @@ raptor-tp6m-3-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-3)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -219,7 +203,6 @@ raptor-tp6m-4-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-4)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -234,7 +217,6 @@ raptor-tp6m-5-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-5)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -249,7 +231,6 @@ raptor-tp6m-6-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-6)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -264,7 +245,6 @@ raptor-tp6m-7-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-7)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -279,7 +259,6 @@ raptor-tp6m-8-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-8)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -294,7 +273,6 @@ raptor-tp6m-9-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-9)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -309,7 +287,6 @@ raptor-tp6m-10-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-10)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -324,7 +301,6 @@ raptor-tp6m-11-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-11)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -339,7 +315,6 @@ raptor-tp6m-12-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-12)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -354,7 +329,6 @@ raptor-tp6m-13-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-13)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -369,7 +343,6 @@ raptor-tp6m-14-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-14)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -384,7 +357,6 @@ raptor-tp6m-15-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-15)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -399,7 +371,6 @@ raptor-tp6m-16-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-16)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -414,7 +385,6 @@ raptor-tp6m-17-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-17)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -429,7 +399,6 @@ raptor-tp6m-18-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-18)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -444,7 +413,6 @@ raptor-tp6m-19-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-19)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -459,7 +427,6 @@ raptor-tp6m-20-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-20)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -474,7 +441,6 @@ raptor-tp6m-21-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-21)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -489,7 +455,6 @@ raptor-tp6m-22-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-22)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -504,7 +469,6 @@ raptor-tp6m-23-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-23)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -519,7 +483,6 @@ raptor-tp6m-24-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-24)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -534,7 +497,6 @@ raptor-tp6m-25-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-25)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -549,7 +511,6 @@ raptor-tp6m-26-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-26)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -564,7 +525,6 @@ raptor-tp6m-27-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-27)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -579,7 +539,6 @@ raptor-tp6m-28-fenix-cold:
     treeherder-symbol: Rap-fenix(tp6m-c-28)
     run-on-projects: []
     e10s: true
-    tier: 2
     max-run-time: 2400
     mozharness:
         extra-options:
@@ -594,7 +553,7 @@ raptor-scn-power-idle-fenix:
     treeherder-symbol: Rap-fenix(idl-p)
     run-on-projects: []
     e10s: true
-    tier: 3
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -610,7 +569,7 @@ raptor-scn-cpu-memory-idle-fenix:
     treeherder-symbol: Rap-fenix(idl-cm)
     run-on-projects: []
     e10s: true
-    tier: 3
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -627,7 +586,7 @@ raptor-scn-cpu-memory-power-idle-fenix:
     treeherder-symbol: Rap-fenix(idl-cmp)
     run-on-projects: []
     e10s: true
-    tier: 3
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -645,7 +604,7 @@ raptor-scn-power-idle-bg-fenix:
     treeherder-symbol: Rap-fenix(idlbg-p)
     run-on-projects: []
     e10s: true
-    tier: 3
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -661,7 +620,7 @@ raptor-scn-cpu-memory-idle-bg-fenix:
     treeherder-symbol: Rap-fenix(idlbg-cm)
     run-on-projects: []
     e10s: true
-    tier: 3
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -678,7 +637,7 @@ raptor-scn-cpu-memory-power-idle-bg-fenix:
     treeherder-symbol: Rap-fenix(idlbg-cmp)
     run-on-projects: []
     e10s: true
-    tier: 3
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -697,7 +656,6 @@ raptor-youtube-playback-fenix:
     run-on-projects: []
     e10s: true
     max-run-time: 3600
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
@@ -713,7 +671,6 @@ raptor-speedometer-fenix:
     try-name: raptor-speedometer-fenix
     treeherder-symbol: Rap-fenix(sp)
     run-on-projects: []
-    tier: 2
     e10s: true
     max-run-time: 2000
     mozharness:
@@ -728,7 +685,6 @@ raptor-speedometer-fenix-power:
     try-name: raptor-speedometer-fenix-power
     treeherder-symbol: Rap-fenix(sp-p)
     run-on-projects: []
-    tier: 2
     e10s: true
     max-run-time: 2000
     mozharness:
