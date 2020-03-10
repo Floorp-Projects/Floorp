@@ -1309,6 +1309,7 @@ version = "0.1.0"
 dependencies = [
  "fluent",
  "fluent-pseudo",
+ "intl-memoizer",
  "nsstring",
  "thin-vec",
  "unic-langid",
