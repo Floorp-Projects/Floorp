@@ -45,6 +45,7 @@ var OSKeyStoreTestUtils = {
   async waitForOSKeyStoreLogin(login = false) {
     const str = login ? "pass" : "cancel";
 
+    let prevValue = Services.prefs.getStringPref(this.TEST_ONLY_REAUTH, "");
     Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, str);
 
     await TestUtils.topicObserved(
@@ -52,6 +53,6 @@ var OSKeyStoreTestUtils = {
       (subject, data) => data == str
     );
 
-    Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, "");
+    Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, prevValue);
   },
 };
