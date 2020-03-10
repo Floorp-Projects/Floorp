@@ -556,6 +556,10 @@ win64-noopt/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - win32-fix-stacks
 
 win32-noopt/debug:
     description: "Win32 No-optimize Debug"
@@ -591,6 +595,10 @@ win32-noopt/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - win32-fix-stacks
 
 win32-rusttests/opt:
     description: "Win32 Rust Tests Opt"
@@ -820,6 +828,10 @@ win64-asan/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - win32-fix-stacks
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"
