@@ -16,6 +16,8 @@
 #include "nsHttpHandler.h"
 #include "nsProxyInfo.h"
 #include "nsProxyRelease.h"
+#include "nsQueryObject.h"
+#include "nsSerializationHelper.h"
 
 namespace mozilla {
 namespace net {

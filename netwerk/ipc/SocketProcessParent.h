@@ -97,6 +97,8 @@ class SocketProcessParent final
   mozilla::ipc::IPCResult RecvInitBackground(
       Endpoint<PBackgroundParent>&& aEndpoint);
 
+  already_AddRefed<PAltServiceParent> AllocPAltServiceParent();
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
