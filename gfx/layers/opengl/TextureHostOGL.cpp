@@ -648,8 +648,7 @@ void SurfaceTextureHost::CreateRenderTexture(
 
 void SurfaceTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
@@ -666,8 +665,7 @@ void SurfaceTextureHost::PushResourceUpdates(
       auto format = GetFormat() == gfx::SurfaceFormat::R8G8B8A8
                         ? gfx::SurfaceFormat::B8G8R8A8
                         : gfx::SurfaceFormat::B8G8R8X8;
-      wr::ImageDescriptor descriptor(GetSize(), format,
-                                     aPreferCompositorSurface);
+      wr::ImageDescriptor descriptor(GetSize(), format);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -677,10 +675,12 @@ void SurfaceTextureHost::PushResourceUpdates(
   }
 }
 
-void SurfaceTextureHost::PushDisplayItems(
-    wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
-    const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys) {
+void SurfaceTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                          const wr::LayoutRect& aBounds,
+                                          const wr::LayoutRect& aClip,
+                                          wr::ImageRendering aFilter,
+                                          const Range<wr::ImageKey>& aImageKeys,
+                                          const bool aPreferCompositorSurface) {
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -688,7 +688,9 @@ void SurfaceTextureHost::PushDisplayItems(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
-                         !(mFlags & TextureFlags::NON_PREMULTIPLIED));
+                         !(mFlags & TextureFlags::NON_PREMULTIPLIED),
+                         wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                         aPreferCompositorSurface);
       break;
     }
     default: {
@@ -856,8 +858,7 @@ void EGLImageTextureHost::CreateRenderTexture(
 
 void EGLImageTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
@@ -873,18 +874,20 @@ void EGLImageTextureHost::PushResourceUpdates(
   auto formatTmp = format == gfx::SurfaceFormat::R8G8B8A8
                        ? gfx::SurfaceFormat::B8G8R8A8
                        : gfx::SurfaceFormat::B8G8R8X8;
-  wr::ImageDescriptor descriptor(GetSize(), formatTmp,
-                                 aPreferCompositorSurface);
+  wr::ImageDescriptor descriptor(GetSize(), formatTmp);
   (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
 }
 
 void EGLImageTextureHost::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys) {
+    const Range<wr::ImageKey>& aImageKeys,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(aImageKeys.length() == 1);
   aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
-                     !(mFlags & TextureFlags::NON_PREMULTIPLIED));
+                     !(mFlags & TextureFlags::NON_PREMULTIPLIED),
+                     wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                     aPreferCompositorSurface);
 }
 
 //

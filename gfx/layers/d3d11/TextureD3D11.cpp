@@ -1010,8 +1010,7 @@ uint32_t DXGITextureHostD3D11::NumSubTextures() {
 
 void DXGITextureHostD3D11::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   if (!gfx::gfxVars::UseWebRenderANGLE()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
@@ -1028,8 +1027,7 @@ void DXGITextureHostD3D11::PushResourceUpdates(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
 
-      wr::ImageDescriptor descriptor(mSize, GetFormat(),
-                                     aPreferCompositorSurface);
+      wr::ImageDescriptor descriptor(mSize, GetFormat());
       auto imageType =
           wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
@@ -1042,16 +1040,13 @@ void DXGITextureHostD3D11::PushResourceUpdates(
       MOZ_ASSERT(mSize.width % 2 == 0);
       MOZ_ASSERT(mSize.height % 2 == 0);
 
-      wr::ImageDescriptor descriptor0(mSize,
-                                      mFormat == gfx::SurfaceFormat::NV12
-                                          ? gfx::SurfaceFormat::A8
-                                          : gfx::SurfaceFormat::A16,
-                                      aPreferCompositorSurface);
+      wr::ImageDescriptor descriptor0(mSize, mFormat == gfx::SurfaceFormat::NV12
+                                                 ? gfx::SurfaceFormat::A8
+                                                 : gfx::SurfaceFormat::A16);
       wr::ImageDescriptor descriptor1(mSize / 2,
                                       mFormat == gfx::SurfaceFormat::NV12
                                           ? gfx::SurfaceFormat::R8G8
-                                          : gfx::SurfaceFormat::R16G16,
-                                      aPreferCompositorSurface);
+                                          : gfx::SurfaceFormat::R16G16);
       auto imageType =
           wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
@@ -1067,7 +1062,8 @@ void DXGITextureHostD3D11::PushResourceUpdates(
 void DXGITextureHostD3D11::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys) {
+    const Range<wr::ImageKey>& aImageKeys,
+    const bool aPreferCompositorSurface) {
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1075,19 +1071,21 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
-                         !(mFlags & TextureFlags::NON_PREMULTIPLIED));
+                         !(mFlags & TextureFlags::NON_PREMULTIPLIED),
+                         wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                         aPreferCompositorSurface);
       break;
     }
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-                             GetFormat() == gfx::SurfaceFormat::NV12
-                                 ? wr::ColorDepth::Color8
-                                 : wr::ColorDepth::Color16,
-                             wr::ToWrYuvColorSpace(mYUVColorSpace),
-                             wr::ToWrColorRange(mColorRange), aFilter);
+      aBuilder.PushNV12Image(
+          aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
+          GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
+                                                  : wr::ColorDepth::Color16,
+          wr::ToWrYuvColorSpace(mYUVColorSpace),
+          wr::ToWrColorRange(mColorRange), aFilter, aPreferCompositorSurface);
       break;
     }
     default: {
@@ -1262,8 +1260,7 @@ uint32_t DXGIYCbCrTextureHostD3D11::NumSubTextures() {
 
 void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   if (!gfx::gfxVars::UseWebRenderANGLE()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
@@ -1284,11 +1281,9 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
       wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
 
   // y
-  wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8,
-                                  aPreferCompositorSurface);
+  wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8);
   // cb and cr
-  wr::ImageDescriptor descriptor1(mSizeCbCr, gfx::SurfaceFormat::A8,
-                                  aPreferCompositorSurface);
+  wr::ImageDescriptor descriptor1(mSizeCbCr, gfx::SurfaceFormat::A8);
   (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
   (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
   (aResources.*method)(aImageKeys[2], descriptor1, aExtID, imageType, 2);
@@ -1297,13 +1292,14 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
 void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys) {
+    const Range<wr::ImageKey>& aImageKeys,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(aImageKeys.length() == 3);
 
   aBuilder.PushYCbCrPlanarImage(
       aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
       wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
-      wr::ToWrColorRange(mColorRange), aFilter);
+      wr::ToWrColorRange(mColorRange), aFilter, aPreferCompositorSurface);
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(
