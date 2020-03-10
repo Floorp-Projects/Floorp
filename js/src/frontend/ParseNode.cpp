@@ -410,10 +410,7 @@ RegExpObject* RegExpCreationData::createRegExp(JSContext* cx) const {
 
 RegExpObject* RegExpLiteral::getOrCreate(
     JSContext* cx, CompilationInfo& compilationInfo) const {
-  if (data_.is<ObjectBox*>()) {
-    return &objbox()->object()->as<RegExpObject>();
-  }
-  return compilationInfo.regExpData[data_.as<RegExpIndex>()].createRegExp(cx);
+  return compilationInfo.regExpData[index_].createRegExp(cx);
 }
 
 FunctionBox* ObjectBox::asFunctionBox() {
