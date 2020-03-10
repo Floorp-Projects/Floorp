@@ -1863,18 +1863,11 @@ class BooleanLiteral : public NullaryNode {
 };
 
 class RegExpLiteral : public ParseNode {
-  mozilla::Variant<ObjectBox*, RegExpIndex> data_;
+  RegExpIndex index_;
 
  public:
-  RegExpLiteral(ObjectBox* reobj, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(reobj) {}
-
   RegExpLiteral(RegExpIndex dataIndex, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(dataIndex) {}
-
-  bool isDeferred() const { return data_.is<RegExpIndex>(); }
-
-  ObjectBox* objbox() const { return data_.as<ObjectBox*>(); }
+      : ParseNode(ParseNodeKind::RegExpExpr, pos), index_(dataIndex) {}
 
   RegExpObject* getOrCreate(JSContext* cx,
                             CompilationInfo& compilationInfo) const;
@@ -1894,7 +1887,7 @@ class RegExpLiteral : public ParseNode {
     return true;
   }
 
-  RegExpIndex index() { return data_.as<RegExpIndex>(); }
+  RegExpIndex index() { return index_; }
 };
 
 class PropertyAccessBase : public BinaryNode {
