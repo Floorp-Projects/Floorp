@@ -29,10 +29,8 @@ NS_IMPL_RELEASE_INHERITED(DocumentChannelChild, DocumentChannel)
 DocumentChannelChild::DocumentChannelChild(nsDocShellLoadState* aLoadState,
                                            net::LoadInfo* aLoadInfo,
                                            nsLoadFlags aLoadFlags,
-                                           uint32_t aCacheKey, bool aIsActive,
-                                           bool aIsTopLevelDoc)
-    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey, aIsActive,
-                      aIsTopLevelDoc) {
+                                           uint32_t aCacheKey, bool aIsActive)
+    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey, aIsActive) {
   LOG(("DocumentChannelChild ctor [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 }
@@ -87,7 +85,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.loadFlags() = mLoadFlags;
   args.cacheKey() = mCacheKey;
   args.isActive() = mIsActive;
-  args.isTopLevelDoc() = mIsTopLevelDoc;
   args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
   args.documentOpenFlags() = mDocumentOpenFlags;
