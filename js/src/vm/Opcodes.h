@@ -809,7 +809,7 @@
      *   Operands:
      *   Stack: => obj
      */ \
-    MACRO(NewInit, new_init, NULL, 1, 0, 1, JOF_UINT32|JOF_IC) \
+    MACRO(NewInit, new_init, NULL, 1, 0, 1, JOF_BYTE|JOF_IC) \
     /*
      * Create and push a new object of a predetermined shape.
      *
