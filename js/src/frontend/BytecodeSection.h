@@ -19,6 +19,7 @@
 
 #include "frontend/AbstractScope.h"    // AbstractScope
 #include "frontend/BytecodeOffset.h"   // BytecodeOffset
+#include "frontend/CompilationInfo.h"  // CompilationInfo
 #include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"       // ObjLiteralCreationData
@@ -44,11 +45,8 @@ namespace frontend {
 class FunctionBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  using ListType =
-      mozilla::Variant<JS::GCCellPtr, BigIntIndex, ObjLiteralCreationData,
-                       RegExpIndex, ScopeIndex>;
   CompilationInfo& compilationInfo;
-  JS::RootedVector<ListType> vector;
+  JS::Rooted<ScriptThingsVector> vector;
 
   // Last emitted function.
   FunctionBox* lastbox = nullptr;
@@ -94,8 +92,9 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(FunctionBox* funbox, uint32_t* index);
 
   uint32_t length() const { return vector.length(); }
-  MOZ_MUST_USE bool finish(JSContext* cx, CompilationInfo& compilationInfo,
-                           mozilla::Span<JS::GCCellPtr> array);
+
+  const ScriptThingsVector& objects() { return vector; }
+
   void finishInnerFunctions();
 
   AbstractScope getScope(size_t index) const {
@@ -111,6 +110,11 @@ struct MOZ_STACK_CLASS GCThingList {
     return getScope(*firstScopeIndex);
   }
 };
+
+MOZ_MUST_USE bool EmitScriptThingsVector(JSContext* cx,
+                                         CompilationInfo& compilationInfo,
+                                         const ScriptThingsVector& objects,
+                                         mozilla::Span<JS::GCCellPtr> output);
 
 struct CGTryNoteList {
   Vector<JSTryNote> list;
@@ -399,11 +403,5 @@ class PerScriptData {
 
 } /* namespace frontend */
 } /* namespace js */
-
-namespace JS {
-template <typename T>
-struct GCPolicy<js::frontend::TypedIndex<T>>
-    : JS::IgnoreGCPolicy<js::frontend::TypedIndex<T>> {};
-}  // namespace JS
 
 #endif /* frontend_BytecodeSection_h */

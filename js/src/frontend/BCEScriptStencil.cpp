@@ -82,8 +82,9 @@ bool BCEScriptStencil::getNeedsFunctionEnvironmentObjects() const {
 
 bool BCEScriptStencil::finishGCThings(
     JSContext* cx, mozilla::Span<JS::GCCellPtr> gcthings) const {
-  return bce_.perScriptData().gcThingList().finish(cx, bce_.compilationInfo,
-                                                   gcthings);
+  return EmitScriptThingsVector(cx, bce_.compilationInfo,
+                                bce_.perScriptData().gcThingList().objects(),
+                                gcthings);
 }
 
 void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
