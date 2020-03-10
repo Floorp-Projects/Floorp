@@ -509,10 +509,11 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       }
     }
 
-    // Successfully parsed. Emit the script.
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
     if (pn) {
+      // Successfully parsed. Emit the script.
+      AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
+                                         JS::ProfilingCategoryPair::JS_Parsing);
+
       // Publish deferred items
       if (!parser->publishDeferredFunctions()) {
         return nullptr;
