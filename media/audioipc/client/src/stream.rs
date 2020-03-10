@@ -178,7 +178,8 @@ impl<'ctx> ClientStream<'ctx> {
             data.token, data.platform_handles
         );
 
-        let stream = unsafe { audioipc::MessageStream::from_raw_fd(data.platform_handles[0].into_raw()) };
+        let stream =
+            unsafe { audioipc::MessageStream::from_raw_fd(data.platform_handles[0].into_raw()) };
 
         let input_file = unsafe { data.platform_handles[1].into_file() };
         let input_shm = if has_input {

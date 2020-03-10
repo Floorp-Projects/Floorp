@@ -3,12 +3,12 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
+use super::tokio_named_pipes;
 use mio_named_pipes;
 use std::os::windows::fs::*;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio_io::{AsyncRead, AsyncWrite};
-use super::tokio_named_pipes;
 use winapi::um::winbase::FILE_FLAG_OVERLAPPED;
 
 #[derive(Debug)]
@@ -32,7 +32,10 @@ impl MessageStream {
             let file = opts.open(&pipe_name)?;
             unsafe { miow::pipe::NamedPipe::from_raw_handle(file.into_raw_handle()) }
         };
-        Ok((MessageStream::new(pipe_server), MessageStream::new(pipe_client)))
+        Ok((
+            MessageStream::new(pipe_server),
+            MessageStream::new(pipe_client),
+        ))
     }
 
     pub unsafe fn from_raw_fd(raw: super::PlatformHandleType) -> MessageStream {
