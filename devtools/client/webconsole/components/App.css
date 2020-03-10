@@ -333,14 +333,6 @@ body {
   margin-inline-end: 2px;
 }
 
-.jsterm-editor .webconsole-editor-toolbar .webconsole-evaluation-selector-button {
-  height: 20px;
-  margin-inline-start: 5px;
-  padding-inline: 8px 16px !important;
-  background-position-x: calc(100% - 5px) !important;
-  background-position-y: calc(50% + 1px) !important;
-}
-
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
   grid-column: -5 / -6;
 }
