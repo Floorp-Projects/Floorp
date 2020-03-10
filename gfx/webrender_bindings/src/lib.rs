@@ -4,18 +4,18 @@
 
 #![deny(warnings)]
 
-extern crate webrender;
-extern crate euclid;
 extern crate app_units;
+extern crate bincode;
+extern crate euclid;
+extern crate fxhash;
 extern crate gleam;
 extern crate nsstring;
-extern crate rayon;
 extern crate num_cpus;
-extern crate thread_profiler;
+extern crate rayon;
 extern crate thin_vec;
-extern crate bincode;
+extern crate thread_profiler;
 extern crate uuid;
-extern crate fxhash;
+extern crate webrender;
 
 #[macro_use]
 extern crate log;
@@ -24,7 +24,6 @@ extern crate log;
 extern crate dwrote;
 #[cfg(target_os = "windows")]
 extern crate winapi;
-
 
 #[cfg(target_os = "macos")]
 extern crate core_foundation;
