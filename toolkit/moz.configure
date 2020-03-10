@@ -1316,6 +1316,23 @@ set_config('MOZ_MAINTENANCE_SERVICE',
            depends_if('--enable-maintenance-service',
                       when=target_is_windows)(lambda _: True))
 
+# Update agent (currently Windows only)
+# This is an independent task that runs on a schedule to
+# check for, download, and install updates.
+# ==============================================================
+
+option('--enable-update-agent',
+        when=target_is_windows, default=False,
+        help='{Enable|Disable} building update agent')
+
+set_define('MOZ_UPDATE_AGENT',
+           depends_if('--enable-update-agent',
+                      when=target_is_windows)(lambda _: True))
+
+set_config('MOZ_UPDATE_AGENT',
+           depends_if('--enable-update-agent',
+                      when=target_is_windows)(lambda _: True))
+
 # BITS download (Windows only)
 # ==============================================================
 
