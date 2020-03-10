@@ -281,6 +281,7 @@ typedef struct sslOptionsStr {
     unsigned int enableV2CompatibleHello : 1;
     unsigned int enablePostHandshakeAuth : 1;
     unsigned int enableDelegatedCredentials : 1;
+    unsigned int enableDtls13VersionCompat : 1;
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -1860,6 +1861,8 @@ SSLExp_HkdfVariantExpandLabelWithMech(PRUint16 version, PRUint16 cipherSuite, PK
                                       const char *label, unsigned int labelLen,
                                       CK_MECHANISM_TYPE mech, unsigned int keySize,
                                       SSLProtocolVariant variant, PK11SymKey **keyp);
+
+SECStatus SSLExp_SetDtls13VersionWorkaround(PRFileDesc *fd, PRBool enabled);
 
 SECStatus SSLExp_SetTimeFunc(PRFileDesc *fd, SSLTimeFunc f, void *arg);
 
