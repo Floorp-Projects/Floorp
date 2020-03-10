@@ -15,7 +15,9 @@ add_task(async function setup() {
   ({ FormAutofillHandler } = ChromeUtils.import(
     "resource://formautofill/FormAutofillHandler.jsm"
   ));
-  ({ OSKeyStore } = ChromeUtils.import("resource:///modules/OSKeyStore.jsm"));
+  ({ OSKeyStore } = ChromeUtils.import(
+    "resource://formautofill/OSKeyStore.jsm"
+  ));
 });
 
 const TESTCASES = [

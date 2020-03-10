@@ -47,18 +47,6 @@ function waitForLoginCountToReach(browser, loginCount) {
 }
 
 add_task(async function test() {
-  // Confirm that the mocking of the OS auth dialog isn't enabled so the
-  // test will timeout if a real OS auth dialog is shown. We don't show
-  // the OS auth dialog when Master Password is enabled.
-  is(
-    Services.prefs.getStringPref(
-      "browser.osKeyStore.unofficialBuildOnlyLogin",
-      ""
-    ),
-    "",
-    "Pref should be set to default value of empty string to start the test"
-  );
-
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   LoginTestUtils.masterPassword.enable();
 
@@ -69,7 +57,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(function() {
     Services.logins.removeAllLogins();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
