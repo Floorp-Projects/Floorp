@@ -7,18 +7,20 @@
 #ifndef frontend_ParseNode_h
 #define frontend_ParseNode_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Variant.h"
 
 #include <iterator>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "frontend/Stencil.h"
 #include "frontend/Token.h"
-#include "util/Text.h"
+#include "js/RootingAPI.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/JSContext.h"
-#include "vm/Printer.h"
 #include "vm/Scope.h"
+#include "vm/ScopeKind.h"
+#include "vm/StringType.h"
 
 // [SMDOC] ParseNode tree lifetime information
 //
@@ -43,7 +45,17 @@
 // - Once the parser is deallocated, the `JSAtom` instances MAY be
 //   garbage-collected.
 
+struct JSContext;
+
+namespace JS {
+class BigInt;
+}
+
 namespace js {
+
+class GenericPrinter;
+class LifoAlloc;
+class RegExpObject;
 
 namespace frontend {
 
