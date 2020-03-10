@@ -12,9 +12,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/GetFilesHelper.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
+#include "mozilla/dom/InputType.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/PresShell.h"
@@ -25,7 +26,6 @@
 #include "nsQueryObject.h"
 
 #include "nsIRadioVisitor.h"
-#include "InputType.h"
 
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/Telemetry.h"
