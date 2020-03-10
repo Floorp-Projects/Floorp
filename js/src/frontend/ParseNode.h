@@ -52,7 +52,6 @@ struct CompilationInfo;
 class ParserSharedBase;
 class FullParseHandler;
 class FunctionBox;
-class ObjectBox;
 
 #define FOR_EACH_PARSE_NODE_KIND(F)                              \
   F(EmptyStmt, NullaryNode)                                      \
@@ -2278,22 +2277,6 @@ inline bool ParseNode::isConstant() {
       return false;
   }
 }
-
-class ObjectBox {
- protected:
-  friend struct GCThingList;
-
-  JSObject* object_;
-  FunctionBox* traceLink;
-  FunctionBox* emitLink;
-
-  ObjectBox(JSObject* obj, FunctionBox* link);
-
- public:
-  bool hasObject() const { return object_ != nullptr; }
-
-  JSObject* object() const { return object_; }
-};
 
 enum ParseReportKind {
   ParseError,
