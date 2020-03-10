@@ -826,6 +826,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Is true if the network request has been triggered.
   bool mNetworkTriggered = false;
   bool mWaitingForProxy = false;
+  bool mStaleRevalidation = false;
   // Will be true if the onCacheEntryAvailable callback is not called by the
   // time we send the network request
   Atomic<bool> mRaceCacheWithNetwork;
