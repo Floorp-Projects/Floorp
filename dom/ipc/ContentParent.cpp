@@ -5732,9 +5732,9 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
   return mozilla::dom::DeallocPSessionStorageObserverParent(aActor);
 }
 
-PSHEntryParent* ContentParent::AllocPSHEntryParent(
-    PSHistoryParent* aSHistory, const PSHEntryOrSharedID& aEntryOrSharedID) {
-  return SHistoryParent::CreateEntry(this, aSHistory, aEntryOrSharedID);
+PSHEntryParent* ContentParent::AllocPSHEntryParent(PSHistoryParent* aSHistory,
+                                                   uint64_t aSharedID) {
+  return SHistoryParent::CreateEntry(this, aSHistory, aSharedID);
 }
 
 void ContentParent::DeallocPSHEntryParent(PSHEntryParent* aEntry) {
@@ -5743,12 +5743,8 @@ void ContentParent::DeallocPSHEntryParent(PSHEntryParent* aEntry) {
 
 PSHistoryParent* ContentParent::AllocPSHistoryParent(
     const MaybeDiscarded<BrowsingContext>& aContext) {
-  if (NS_WARN_IF(aContext.IsNullOrDiscarded())) {
-    // FIXME: What should we do here?
-    return nullptr;
-  }
-
-  return new SHistoryParent(aContext.get_canonical());
+  MOZ_ASSERT(!aContext.IsNull());
+  return new SHistoryParent(aContext.GetMaybeDiscarded()->Canonical());
 }
 
 void ContentParent::DeallocPSHistoryParent(PSHistoryParent* aActor) {
@@ -5864,6 +5860,35 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
           aContext.get_canonical()->GetMediaController()) {
     controller->NotifyMediaAudibleChanged(aAudible);
   }
+  return IPC_OK();
+}
+mozilla::ipc::IPCResult ContentParent::RecvUpdateSHEntriesInBC(
+    PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
+    const MaybeDiscarded<BrowsingContext>& aMaybeContext) {
+  if (aMaybeContext.IsNull()) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to update a browsing context that does not "
+             "exist or has been discarded"));
+    return IPC_OK();
+  }
+  // if aContext has been discarded we can still update the entries
+  auto aContext = aMaybeContext.GetMaybeDiscarded()->Canonical();
+  MOZ_ASSERT(aContext);
+  if (!aContext->IsOwnedByProcess(ChildID())) {
+    // We are trying to update a child BrowsingContext in another child
+    // process. This is illegal since the owner of the BrowsingContext
+    // is the proccess with the in-process docshell, which is tracked
+    // by OwnerProcessId.
+    MOZ_DIAGNOSTIC_ASSERT(
+        false,
+        "Trying to update a child BrowsingContext in another child process");
+    return IPC_OK();
+  }
+  SHEntryParent* newLSHEparent = static_cast<SHEntryParent*>(aNewLSHE);
+  SHEntryParent* newOSHEparent = static_cast<SHEntryParent*>(aNewOSHE);
+  nsISHEntry* lshe = newLSHEparent ? newLSHEparent->mEntry.get() : nullptr;
+  nsISHEntry* oshe = newOSHEparent ? newOSHEparent->mEntry.get() : nullptr;
+  aContext->UpdateSHEntries(lshe, oshe);
   return IPC_OK();
 }
 

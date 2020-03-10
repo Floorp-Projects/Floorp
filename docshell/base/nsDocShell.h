@@ -661,6 +661,11 @@ class nsDocShell final : public nsDocLoader,
   // in the case of a subframe navigation.
   void SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr, nsISHEntry* aEntry);
 
+  // This method calls SetHistoryEntry and updates mOSHE and mLSHE in BC to be
+  // the same as in docshell
+  void SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
+                                  const Maybe<nsISHEntry*>& aOSHE);
+
   //
   // URI Load
   //

@@ -77,6 +77,8 @@ class LegacySHEntry final : public nsSHEntry, public CrossProcessSHEntry {
     return mShared.get();
   }
 
+  NS_IMETHOD Clone(nsISHEntry** aResult) override;
+
  private:
   friend class SHEntryParent;
   friend class SHistoryParent;
@@ -203,6 +205,12 @@ class SHEntryParent final : public PSHEntryParent {
   bool RecvClearEntry(const uint64_t& aNewSharedID);
 
   bool RecvCreateLoadInfo(RefPtr<nsDocShellLoadState>* aLoadState);
+  bool RecvClone(RefPtr<CrossProcessSHEntry>* aResult);
+
+  bool RecvSyncTreesForSubframeNavigation(
+      PSHEntryParent* aSHEntry, const MaybeDiscarded<BrowsingContext>& aBC,
+      const MaybeDiscarded<BrowsingContext>& aIgnoreBC,
+      nsTArray<SwapEntriesDocshellData>* aEntriesToUpdate);
 
   bool RecvUpdateLayoutHistoryState(const bool& aScrollPositionOnly,
                                     nsTArray<nsCString>&& aKeys,

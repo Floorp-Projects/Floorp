@@ -604,9 +604,11 @@ SHEntryChild::Create(
 
 NS_IMETHODIMP
 SHEntryChild::Clone(nsISHEntry** aResult) {
-  NS_IF_ADDREF(*aResult = static_cast<SHEntryChild*>(
-                   ContentChild::GetSingleton()->SendPSHEntryConstructor(
-                       mShared->mSHistory, this)));
+  RefPtr<CrossProcessSHEntry> result;
+  if (!SendClone(&result)) {
+    return NS_ERROR_FAILURE;
+  }
+  *aResult = result ? do_AddRef(result->ToSHEntryChild()).take() : nullptr;
   return NS_OK;
 }
 
@@ -1007,6 +1009,31 @@ NS_IMETHODIMP
 SHEntryChild::GetBfcacheID(uint64_t* aBFCacheID) {
   *aBFCacheID = mShared->GetID();
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+SHEntryChild::SyncTreesForSubframeNavigation(nsISHEntry* aEntry,
+                                             BrowsingContext* aBC,
+                                             BrowsingContext* aIgnoreBC) {
+  nsTArray<SwapEntriesDocshellData> entriesToUpdate;
+  Unused << SendSyncTreesForSubframeNavigation(
+      static_cast<SHEntryChild*>(aEntry), aBC, aIgnoreBC, &entriesToUpdate);
+  for (auto& data : entriesToUpdate) {
+    // data.context() is a MaybeDiscardedBrowsingContext
+    // It can't be null, but if it has been discarded we will update
+    // the docshell anyway
+    MOZ_ASSERT(!data.context().IsNull(), "Browsing context cannot be null");
+    nsDocShell* docshell = static_cast<nsDocShell*>(
+        data.context().GetMaybeDiscarded()->GetDocShell());
+    if (docshell) {
+      RefPtr<SHEntryChild> oldEntry = data.oldEntry()->ToSHEntryChild();
+      RefPtr<SHEntryChild> newEntry;
+      if (data.newEntry()) {
+        newEntry = data.newEntry()->ToSHEntryChild();
+      }
+      docshell->SwapHistoryEntries(oldEntry, newEntry);
+    }
+  }
 }
 
 void SHEntryChild::EvictContentViewer() {
