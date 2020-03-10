@@ -273,8 +273,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, traceListHead_, fun, toStringStart, this->getCompilationInfo(),
-      inheritedDirectives, options().extraWarningsOption, generatorKind,
-      asyncKind);
+      inheritedDirectives, generatorKind, asyncKind);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -307,8 +306,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, traceListHead_, toStringStart, this->getCompilationInfo(),
-      inheritedDirectives, options().extraWarningsOption, generatorKind,
-      asyncKind, index);
+      inheritedDirectives, generatorKind, asyncKind, index);
 
   if (!funbox) {
     ReportOutOfMemory(cx_);
@@ -381,8 +379,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
 
   Directives directives(options().forceStrictMode());
   GlobalSharedContext globalsc(cx_, ScopeKind::Global,
-                               this->getCompilationInfo(), directives,
-                               options().extraWarningsOption);
+                               this->getCompilationInfo(), directives);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
     return null();
@@ -3529,18 +3526,6 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
   }
 
   if (IsEscapeFreeStringLiteral(directivePos, directive)) {
-    // Mark this statement as being a possibly legitimate part of a
-    // directive prologue, so the bytecode emitter won't warn about it being
-    // useless code. (We mustn't just omit the statement entirely yet, as it
-    // could be producing the value of an eval or JSScript execution.)
-    //
-    // Note that even if the string isn't one we recognize as a directive,
-    // the emitter still shouldn't flag it as useless, as it could become a
-    // directive in the future. We don't want to interfere with people
-    // taking advantage of directive-prologue-enabled features that appear
-    // in other browsers first.
-    handler_.setInDirectivePrologue(handler_.asUnary(possibleDirective));
-
     if (directive == cx_->names().useStrict) {
       // Functions with non-simple parameter lists (destructuring,
       // default or rest parameters) must not contain a "use strict"
@@ -3677,12 +3662,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::condition(
     return null();
   }
 
-  /* Check for (a = b) and warn about possible (a == b) mistype. */
-  if (handler_.isUnparenthesizedAssignment(pn)) {
-    if (!extraWarning(JSMSG_EQUAL_AS_ASSIGN)) {
-      return null();
-    }
-  }
   return pn;
 }
 
@@ -3791,33 +3770,21 @@ bool GeneralParser<ParseHandler, Unit>::PossibleError::checkForError(
 }
 
 template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::PossibleError::checkForWarning(
-    ErrorKind kind) {
-  if (!hasError(kind)) {
-    return true;
-  }
-
-  Error& err = error(kind);
-  return parser_.extraWarningAt(err.offset_, err.errorNumber_);
-}
-
-template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler,
                    Unit>::PossibleError::checkForDestructuringErrorOrWarning() {
   // Clear pending expression error, because we're definitely not in an
   // expression context.
   setResolved(ErrorKind::Expression);
 
-  // Report any pending destructuring error or warning.
-  return checkForError(ErrorKind::Destructuring) &&
-         checkForWarning(ErrorKind::DestructuringWarning);
+  // Report any pending destructuring error.
+  return checkForError(ErrorKind::Destructuring);
 }
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler,
                    Unit>::PossibleError::checkForExpressionError() {
-  // Clear pending destructuring error or warning, because we're definitely
-  // not in a destructuring context.
+  // Clear pending destructuring error, because we're definitely not
+  // in a destructuring context.
   setResolved(ErrorKind::Destructuring);
   setResolved(ErrorKind::DestructuringWarning);
 
@@ -5754,11 +5721,6 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
     if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
-    if (tt == TokenKind::Semi) {
-      if (!extraWarning(JSMSG_EMPTY_CONSEQUENT)) {
-        return null();
-      }
-    }
 
     Node thenBranch = consequentOrAlternative(yieldHandling);
     if (!thenBranch) {
@@ -6511,11 +6473,6 @@ GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::With));
   uint32_t begin = pos().begin;
 
-  // Usually we want the constructs forbidden in strict mode code to be a
-  // subset of those that ContextOptions::extraWarnings() warns about, and we
-  // use strictModeError directly.  But while 'with' is forbidden in strict
-  // mode code, it doesn't even merit a warning in non-strict code.  See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
   if (pc_->sc()->strict()) {
     if (!strictModeError(JSMSG_STRICT_CODE_WITH)) {
       return null();

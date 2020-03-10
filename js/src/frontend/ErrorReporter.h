@@ -242,105 +242,6 @@ class ErrorReportMixin : public StrictModeGetter {
                           JSREPORT_WARNING, errorNumber, args);
   }
 
-  // ==== extraWarning ====
-  //
-  // Reports a warning if extra warnings are enabled.
-  //
-  // Returns true if the warning is reported.
-  // Returns false if the warning is treated as an error, or an error occurs
-  // while reporting.
-  //
-  // See the comment on the error section for details on what the arguments
-  // and function names indicate for all these functions.
-
-  MOZ_MUST_USE bool extraWarning(unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = extraWarningWithNotesAtVA(
-        nullptr, mozilla::AsVariant(Current()), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool extraWarningWithNotes(UniquePtr<JSErrorNotes> notes,
-                                          unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = extraWarningWithNotesAtVA(
-        std::move(notes), mozilla::AsVariant(Current()), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool extraWarningAt(uint32_t offset, unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = extraWarningWithNotesAtVA(nullptr, mozilla::AsVariant(offset),
-                                            errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool extraWarningWithNotesAt(UniquePtr<JSErrorNotes> notes,
-                                            uint32_t offset,
-                                            unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = extraWarningWithNotesAtVA(
-        std::move(notes), mozilla::AsVariant(offset), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool extraWarningNoOffset(unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = extraWarningWithNotesAtVA(
-        nullptr, mozilla::AsVariant(NoOffset()), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool extraWarningWithNotesNoOffset(UniquePtr<JSErrorNotes> notes,
-                                                  unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = extraWarningWithNotesAtVA(
-        std::move(notes), mozilla::AsVariant(NoOffset()), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool extraWarningWithNotesAtVA(UniquePtr<JSErrorNotes> notes,
-                                              const ErrorOffset& offset,
-                                              unsigned errorNumber,
-                                              va_list* args) {
-    if (!options().extraWarningsOption) {
-      return true;
-    }
-
-    ErrorMetadata metadata;
-    if (!computeErrorMetadata(&metadata, offset)) {
-      return false;
-    }
-
-    return compileWarning(std::move(metadata), std::move(notes),
-                          JSREPORT_STRICT | JSREPORT_WARNING, errorNumber,
-                          args);
-  }
-
   // ==== strictModeError ====
   //
   // Reports an error if in strict mode code, or warn if not.
@@ -426,8 +327,7 @@ class ErrorReportMixin : public StrictModeGetter {
                                                  const ErrorOffset& offset,
                                                  unsigned errorNumber,
                                                  va_list* args) {
-    bool strict = strictMode();
-    if (!strict && !options().extraWarningsOption) {
+    if (!strictMode()) {
       return true;
     }
 
@@ -436,16 +336,10 @@ class ErrorReportMixin : public StrictModeGetter {
       return false;
     }
 
-    if (strict) {
-      ReportCompileErrorLatin1(getContext(), std::move(metadata),
-                               std::move(notes), JSREPORT_ERROR, errorNumber,
-                               args);
-      return false;
-    }
-
-    return compileWarning(std::move(metadata), std::move(notes),
-                          JSREPORT_WARNING | JSREPORT_STRICT, errorNumber,
-                          args);
+    ReportCompileErrorLatin1(getContext(), std::move(metadata),
+                             std::move(notes), JSREPORT_ERROR, errorNumber,
+                             args);
+    return false;
   }
 
   // Reports a warning, or an error if the warning is treated as an error.
