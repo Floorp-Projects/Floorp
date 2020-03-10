@@ -13,7 +13,22 @@ const { ASRouter } = ChromeUtils.import(
 
 const HOMEPAGE_OVERRIDE_PREF = "browser.startup.homepage_override.once";
 
+async function clearTestSetup() {
+  // Wait to reset the WNPanel messages from state
+  const previousMessageCount = ASRouter.state.messages.length;
+  await BrowserTestUtils.waitForCondition(async () => {
+    await ASRouter.loadMessagesFromAllProviders();
+    return ASRouter.state.messages.length < previousMessageCount;
+  }, "ASRouter messages should have been removed");
+  await SpecialPowers.popPrefEnv();
+  // Reload the provider
+  await ASRouter._updateMessageProviders();
+  // Pref set by the message
+  Services.prefs.clearUserPref(HOMEPAGE_OVERRIDE_PREF);
+}
+
 add_task(async function test_with_rs_messages() {
+  registerCleanupFunction(clearTestSetup);
   // Force the WNPanel provider cache to 0 by modifying updateCycleInMs
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -31,8 +46,9 @@ add_task(async function test_with_rs_messages() {
   const collection = await client.openCollection();
   await collection.clear();
   await collection.create(
-    // Modify targeting to ensure the messages always show up
-    { ...msg, targeting: "true" },
+    // Modify targeting and randomize message name to work around the message
+    // getting blocked (for --verify)
+    { ...msg, id: `MOMENTS_MOCHITEST_${Date.now()}`, targeting: "true" },
     { useRecordId: true }
   );
   await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
@@ -97,13 +113,4 @@ add_task(async function test_with_rs_messages() {
   );
 
   await collection.clear();
-  // Wait to reset the WNPanel messages from state
-  const previousMessageCount = ASRouter.state.messages.length;
-  await BrowserTestUtils.waitForCondition(async () => {
-    await ASRouter.loadMessagesFromAllProviders();
-    return ASRouter.state.messages.length < previousMessageCount;
-  }, "ASRouter messages should have been removed");
-  await SpecialPowers.popPrefEnv();
-  // Reload the provider
-  await ASRouter._updateMessageProviders();
 });
