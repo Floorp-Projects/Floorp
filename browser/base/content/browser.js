@@ -9275,7 +9275,9 @@ if (AppConstants.NIGHTLY_BUILD) {
         return;
       }
 
-      let isWebRenderEnabled = Services.prefs.getBoolPref("gfx.webrender.all");
+      let isWebRenderEnabled = Cc["@mozilla.org/gfx/info;1"].getService(
+        Ci.nsIGfxInfo
+      ).WebRenderEnabled;
 
       if (isWebRenderEnabled) {
         return;
