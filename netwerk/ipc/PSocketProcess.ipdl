@@ -46,7 +46,7 @@ protocol PSocketProcess
   manages PInputChannelThrottleQueue;
 
 parent:
-  async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+  async InitCrashReporter(NativeThreadId threadId);
   async AddMemoryReport(MemoryReport aReport);
   async FinishMemoryReport(uint32_t aGeneration);
   // Messages for sending telemetry to parent process.
