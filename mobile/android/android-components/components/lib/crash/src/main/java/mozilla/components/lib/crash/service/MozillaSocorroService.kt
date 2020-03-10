@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
+import mozilla.components.Build as AcBuild
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
@@ -36,7 +37,10 @@ import kotlin.random.Random
 private const val MOZILLA_PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}"
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal const val CAUGHT_EXCEPTION_NOTE = "This is a caught exception, not a real crash"
+internal const val CAUGHT_EXCEPTION_TYPE = "caught exception"
+internal const val UNCAUGHT_EXCEPTION_TYPE = "uncaught exception"
+internal const val FATAL_NATIVE_CRASH_TYPE = "fatal native crash"
+internal const val NON_FATAL_NATIVE_CRASH_TYPE = "non-fatal native crash"
 
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
@@ -46,6 +50,12 @@ internal const val CAUGHT_EXCEPTION_NOTE = "This is a caught exception, not a re
  *                The name needs to be whitelisted for the server to accept the crash.
  *                [File a bug](https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro) if you would like to get your
  *                app added to the whitelist.
+ * @param appId The application ID assigned by Socorro server.
+ * @param version The engine version.
+ * @param buildId The engine build ID.
+ * @param vendor The application vendor name.
+ * @param serverUrl The URL of the server.
+ * @param versionName The version of the application.
  */
 @Suppress("TooManyFunctions", "LargeClass")
 class MozillaSocorroService(
@@ -55,21 +65,38 @@ class MozillaSocorroService(
     private val version: String = BuildConfig.MOZILLA_VERSION,
     private val buildId: String = BuildConfig.MOZ_APP_BUILDID,
     private val vendor: String = BuildConfig.MOZ_APP_VENDOR,
-    private val serverUrl: String = "https://crash-reports.mozilla.com/submit?id=$appId&version=$version&$buildId"
+    private var serverUrl: String? = null,
+    private var versionName: String = "N/A"
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
 
+    init {
+        try {
+            versionName = applicationContext.packageManager
+                .getPackageInfo(applicationContext.packageName, 0).versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            Logger.error("package name not found, failed to get application version")
+        } catch (e: IllegalStateException) {
+            Logger.error("failed to get application version")
+        }
+
+        if (serverUrl == null) {
+            serverUrl = "https://crash-reports.mozilla.com/submit?id=$appId&version=$versionName" +
+                "&android_component_version=${AcBuild.version}"
+        }
+    }
+
     override fun report(crash: Crash.UncaughtExceptionCrash) {
-        sendReport(crash.throwable, null, null, false)
+        sendReport(crash.throwable, null, null, isNativeCodeCrash = false, isFatalCrash = true)
     }
 
     override fun report(crash: Crash.NativeCodeCrash) {
-        sendReport(null, crash.minidumpPath, crash.extrasPath, false)
+        sendReport(null, crash.minidumpPath, crash.extrasPath, isNativeCodeCrash = true, isFatalCrash = crash.isFatal)
     }
 
     override fun report(throwable: Throwable) {
-        sendReport(throwable, null, null, true)
+        sendReport(throwable, null, null, isNativeCodeCrash = false, isFatalCrash = false)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -77,7 +104,8 @@ class MozillaSocorroService(
         throwable: Throwable?,
         miniDumpFilePath: String?,
         extrasFilePath: String?,
-        isCaughtException: Boolean
+        isNativeCodeCrash: Boolean,
+        isFatalCrash: Boolean
     ) {
         val url = URL(serverUrl)
         val boundary = generateBoundary()
@@ -91,7 +119,7 @@ class MozillaSocorroService(
             conn.setRequestProperty("Content-Encoding", "gzip")
 
             sendCrashData(conn.outputStream, boundary, throwable, miniDumpFilePath, extrasFilePath,
-                    isCaughtException)
+                    isNativeCodeCrash, isFatalCrash)
 
             BufferedReader(InputStreamReader(conn.inputStream)).use {
                 val response = StringBuffer()
@@ -110,20 +138,25 @@ class MozillaSocorroService(
         }
     }
 
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     private fun sendCrashData(
         os: OutputStream,
         boundary: String,
         throwable: Throwable?,
         miniDumpFilePath: String?,
         extrasFilePath: String?,
-        isCaughtException: Boolean
+        isNativeCodeCrash: Boolean,
+        isFatalCrash: Boolean
     ) {
         val nameSet = mutableSetOf<String>()
         val gzipOs = GZIPOutputStream(os)
         sendPart(gzipOs, boundary, "ProductName", appName, nameSet)
         sendPart(gzipOs, boundary, "ProductID", appId, nameSet)
-        sendPart(gzipOs, boundary, "Version", version, nameSet)
+        sendPart(gzipOs, boundary, "Version", versionName, nameSet)
+        sendPart(gzipOs, boundary, "AndroidComponentVersion", AcBuild.version, nameSet)
+        sendPart(gzipOs, boundary, "GleanVersion", AcBuild.gleanSdkVersion, nameSet)
+        sendPart(gzipOs, boundary, "ApplicationServicesVersion", AcBuild.applicationServicesVersion, nameSet)
+        sendPart(gzipOs, boundary, "GeckoViewVersion", version, nameSet)
         sendPart(gzipOs, boundary, "BuildID", buildId, nameSet)
         sendPart(gzipOs, boundary, "Vendor", vendor, nameSet)
 
@@ -138,7 +171,7 @@ class MozillaSocorroService(
 
         if (throwable?.stackTrace?.isEmpty() == false) {
             sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(throwable,
-                isCaughtException), nameSet)
+                !isNativeCodeCrash && !isFatalCrash), nameSet)
         }
 
         miniDumpFilePath?.let {
@@ -147,8 +180,15 @@ class MozillaSocorroService(
             minidumpFile.delete()
         }
 
-        if (isCaughtException) {
-            sendPart(gzipOs, boundary, "Notes", CAUGHT_EXCEPTION_NOTE, nameSet)
+        when {
+            isNativeCodeCrash && isFatalCrash ->
+                sendPart(gzipOs, boundary, "CrashType", FATAL_NATIVE_CRASH_TYPE, nameSet)
+            isNativeCodeCrash && !isFatalCrash ->
+                sendPart(gzipOs, boundary, "CrashType", NON_FATAL_NATIVE_CRASH_TYPE, nameSet)
+            !isNativeCodeCrash && isFatalCrash ->
+                sendPart(gzipOs, boundary, "CrashType", UNCAUGHT_EXCEPTION_TYPE, nameSet)
+            !isNativeCodeCrash && !isFatalCrash ->
+                sendPart(gzipOs, boundary, "CrashType", CAUGHT_EXCEPTION_TYPE, nameSet)
         }
 
         sendPackageInstallTime(gzipOs, boundary, nameSet)
