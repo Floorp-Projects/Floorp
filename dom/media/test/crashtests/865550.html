@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+    <head>   
+        <script>
+        var i = 0;
+        var interval;
+        function crash() {
+            var o0 = new AudioContext();
+            o1 = o0.createBufferSource();
+            ++i;
+            if (i == 2000) {
+                document.documentElement.removeAttribute("class");
+                clearInterval(interval);
+            } 
+        }
+        function start() {
+            interval = setInterval("crash()", 0)
+        }
+        </script>
+    </head>
+    <body onload="start()">
+    </body>
+</html>
