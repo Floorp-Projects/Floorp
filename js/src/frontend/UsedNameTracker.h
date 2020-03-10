@@ -155,15 +155,6 @@ class UsedNameTracker {
   // Resets state so that scriptId and scopeId are the innermost script and
   // scope, respectively. Used for rewinding state on syntax parse failure.
   void rewind(RewindToken token);
-
-  // Resets state to beginning of compilation.
-  void reset() {
-    map_.clear();
-    RewindToken token;
-    token.scriptId = 0;
-    token.scopeId = 0;
-    rewind(token);
-  }
 };
 
 }  // namespace frontend
