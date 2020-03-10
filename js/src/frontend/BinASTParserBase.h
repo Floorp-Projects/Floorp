@@ -37,9 +37,6 @@ class BinASTParserBase : public ParserSharedBase {
     TraceListNode::TraceList(trc, traceListHead_);
     doTrace(trc);
   }
-
-  // Create a new JSObject and store it into the trace list.
-  ObjectBox* newObjectBox(JSObject* obj);
 };
 
 }  // namespace frontend
