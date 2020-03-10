@@ -4,6 +4,18 @@
 
 package mozilla.components.support.migration
 
+import mozilla.components.support.migration.GleanMetrics.MigrationAddons
+import mozilla.components.support.migration.GleanMetrics.MigrationBookmarks
+import mozilla.components.support.migration.GleanMetrics.MigrationFxa
+import mozilla.components.support.migration.GleanMetrics.MigrationGecko
+import mozilla.components.support.migration.GleanMetrics.MigrationHistory
+import mozilla.components.support.migration.GleanMetrics.MigrationLogins
+import mozilla.components.support.migration.GleanMetrics.MigrationOpenTabs
+import mozilla.components.support.migration.GleanMetrics.MigrationPinnedSites
+import mozilla.components.support.migration.GleanMetrics.MigrationSearch
+import mozilla.components.support.migration.GleanMetrics.MigrationSettings
+import mozilla.components.support.migration.GleanMetrics.MigrationTelemetryIdentifiers
+
 // Must match labels of the migration_versions metric.
 internal fun Migration.telemetryIdentifier(): String {
     return when (this) {
@@ -19,6 +31,34 @@ internal fun Migration.telemetryIdentifier(): String {
         Migration.SearchEngine -> "search"
         Migration.PinnedSites -> "pinned_sites"
     }
+}
+
+internal fun Migration.metricTotalDuration() = when (this) {
+    Migration.History -> MigrationHistory.totalDuration
+    Migration.Bookmarks -> MigrationBookmarks.totalDuration
+    Migration.OpenTabs -> MigrationOpenTabs.totalDuration
+    Migration.FxA -> MigrationFxa.totalDuration
+    Migration.Gecko -> MigrationGecko.totalDuration
+    Migration.Logins -> MigrationLogins.totalDuration
+    Migration.Settings -> MigrationSettings.totalDuration
+    Migration.Addons -> MigrationAddons.totalDuration
+    Migration.TelemetryIdentifiers -> MigrationTelemetryIdentifiers.totalDuration
+    Migration.SearchEngine -> MigrationSearch.totalDuration
+    Migration.PinnedSites -> MigrationPinnedSites.totalDuration
+}
+
+internal fun Migration.metricAnyFailures() = when (this) {
+    Migration.History -> MigrationHistory.anyFailures
+    Migration.Bookmarks -> MigrationBookmarks.anyFailures
+    Migration.OpenTabs -> MigrationOpenTabs.anyFailures
+    Migration.FxA -> MigrationFxa.anyFailures
+    Migration.Gecko -> MigrationGecko.anyFailures
+    Migration.Logins -> MigrationLogins.anyFailures
+    Migration.Settings -> MigrationSettings.anyFailures
+    Migration.Addons -> MigrationAddons.anyFailures
+    Migration.TelemetryIdentifiers -> MigrationTelemetryIdentifiers.anyFailures
+    Migration.SearchEngine -> MigrationSearch.anyFailures
+    Migration.PinnedSites -> MigrationPinnedSites.anyFailures
 }
 
 // Failure/success codes are used in the migration ping, to avoid sending strings.

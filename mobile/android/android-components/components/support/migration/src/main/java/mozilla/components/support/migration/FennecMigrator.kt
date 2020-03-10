@@ -585,6 +585,8 @@ class FennecMigrator private constructor(
             val migrationVersion = versionedMigration.version
             MigrationPing.migrationVersions[telemetryId].set("$migrationVersion")
 
+            versionedMigration.migration.metricTotalDuration().start()
+
             val migrationResult = when (versionedMigration.migration) {
                 Migration.History -> migrateHistory()
                 Migration.Bookmarks -> migrateBookmarks()
@@ -599,28 +601,16 @@ class FennecMigrator private constructor(
                 Migration.PinnedSites -> migratePinnedSites()
             }
 
+            versionedMigration.migration.metricTotalDuration().stop()
+
             val migrationRun = when (migrationResult) {
                 is Result.Failure<*> -> {
                     logger.error(
                         "Failed to migrate $versionedMigration",
                         migrationResult.throwables.first()
                     )
-                    // Local fun to make `when` exhaustive.
-                    fun setFailure(migration: Migration): Unit = when (migration) {
-                        Migration.History -> MigrationHistory.anyFailures.set(true)
-                        Migration.Bookmarks -> MigrationBookmarks.anyFailures.set(true)
-                        Migration.OpenTabs -> MigrationOpenTabs.anyFailures.set(true)
-                        Migration.FxA -> MigrationFxa.anyFailures.set(true)
-                        Migration.Gecko -> MigrationGecko.anyFailures.set(true)
-                        Migration.Logins -> MigrationLogins.anyFailures.set(true)
-                        Migration.Settings -> MigrationSettings.anyFailures.set(true)
-                        Migration.Addons -> MigrationAddons.anyFailures.set(true)
-                        Migration.TelemetryIdentifiers -> MigrationTelemetryIdentifiers.anyFailures.set(true)
-                        Migration.SearchEngine -> MigrationSearch.anyFailures.set(true)
-                        Migration.PinnedSites -> MigrationPinnedSites.anyFailures.set(true)
-                    }
-                    setFailure(versionedMigration.migration)
 
+                    versionedMigration.migration.metricAnyFailures().set(true)
                     MigrationRun(versionedMigration.version, false)
                 }
                 is Result.Success<*> -> {

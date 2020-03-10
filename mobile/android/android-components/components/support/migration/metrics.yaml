@@ -104,6 +104,21 @@ migration.telemetry_identifiers:
       - fenix-core@mozilla.com
     expires: 2020-10-01
     lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
 
 migration.history:
   migrated:
@@ -141,13 +156,28 @@ migration.history:
     type: timespan
     time_unit: millisecond
     description: >
-      Duration of the history migration.
+      Duration of the history migration (Rust operations).
     send_in_pings:
       - migration
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -231,13 +261,28 @@ migration.bookmarks:
     type: timespan
     time_unit: millisecond
     description: >
-      Duration of the bookmarks migration.
+      Duration of the bookmarks migration (Rust operations).
     send_in_pings:
       - migration
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -352,6 +397,21 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -484,6 +544,21 @@ migration.fxa:
       - fenix-core@mozilla.com
     expires: 2020-10-01
     lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
 
 migration.gecko:
   any_failures:
@@ -524,6 +599,21 @@ migration.gecko:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -617,6 +707,21 @@ migration.logins:
       - fenix-core@mozilla.com
     expires: 2020-10-01
     lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
 
 migration.settings:
   any_failures:
@@ -671,6 +776,21 @@ migration.settings:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -747,6 +867,21 @@ migration.addons:
       - fenix-core@mozilla.com
     expires: 2020-10-01
     lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
 
 migration.search:
   any_failures:
@@ -791,6 +926,21 @@ migration.search:
       - fenix-core@mozilla.com
     expires: 2020-10-01
     lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
 
 migration.pinned_sites:
   any_failures:
@@ -802,7 +952,7 @@ migration.pinned_sites:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/5126
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -816,7 +966,7 @@ migration.pinned_sites:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/5126
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -830,7 +980,7 @@ migration.pinned_sites:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/5126
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -844,7 +994,7 @@ migration.pinned_sites:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5126
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -858,7 +1008,22 @@ migration.pinned_sites:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5126
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  total_duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Total duration of this migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/6196
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
