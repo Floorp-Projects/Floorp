@@ -197,7 +197,7 @@ macro_rules! wrappers {
         $(
             paste::item! {
                 #[allow(non_upper_case_globals)]
-                static [< real $name >]: Lazy<fn($($t),*) $( -> $ret)?> =
+                static [< real $name >]: Lazy<extern "C" fn($($t),*) $( -> $ret)?> =
                     Lazy::new(|| unsafe {
                         transmute(libc::dlsym(
                             libc::RTLD_NEXT,
