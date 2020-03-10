@@ -418,7 +418,6 @@ struct DocumentChannelCreationArgs {
   uint32_t? documentOpenFlags;
   bool isActive;
   bool isTopLevelDoc;
-  bool hasNonEmptySandboxingFlags;
   bool pluginsAllowed;
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;

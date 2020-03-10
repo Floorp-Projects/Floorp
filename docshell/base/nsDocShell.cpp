@@ -302,6 +302,18 @@ static void DecreasePrivateDocShellCount() {
   }
 }
 
+static bool HasNonEmptySandboxingFlags(nsILoadInfo* aLoadInfo) {
+  // NOTE: HasNonEmptySandboxingFlag used to come from
+  // nsDocShell::mBrowsingContext.  nsDocShell::OpenInitializedChannel sets the
+  // mBrowsingContext->ID() to BrowsingContextID/FrameBrowsingContextID
+  // depending on the value of loadInfo->GetExternalContextPolicyType(). Use
+  // GetTargetBrowsingContext() to retrieve nsDocShell::mBrowsingContext.
+
+  RefPtr<BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
+  return bc && bc->GetSandboxFlags() != 0;
+}
+
 nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
                        uint64_t aContentWindowID)
     : nsDocLoader(),
@@ -9372,7 +9384,9 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const OriginAttributes& aOriginAttributes, nsLoadFlags aLoadFlags,
     uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
-    bool aHasNonEmptySandboxingFlags, nsresult& aRv, nsIChannel** aChannel) {
+    nsresult& aRv, nsIChannel** aChannel) {
+  MOZ_ASSERT(aLoadInfo);
+
   nsString srcdoc = VoidString();
   bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
   if (isSrcdoc) {
@@ -9620,10 +9634,8 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     }
   }
 
-  if (aHasNonEmptySandboxingFlags) {
-    if (httpChannelInternal) {
-      httpChannelInternal->SetHasNonEmptySandboxingFlag(true);
-    }
+  if (httpChannelInternal && HasNonEmptySandboxingFlags(aLoadInfo)) {
+    httpChannelInternal->SetHasNonEmptySandboxingFlag(true);
   }
 
   nsCOMPtr<nsIURI> rpURI;
@@ -9937,14 +9949,13 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
-    channel = new DocumentChannelChild(aLoadState, loadInfo, loadFlags,
-                                       mLoadType, cacheKey, isActive,
-                                       isTopLevelDoc, sandboxFlags);
+    channel =
+        new DocumentChannelChild(aLoadState, loadInfo, loadFlags, mLoadType,
+                                 cacheKey, isActive, isTopLevelDoc);
     channel->SetNotificationCallbacks(this);
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  aLoadState, loadInfo, this, this, GetOriginAttributes(),
-                 loadFlags, mLoadType, cacheKey, isActive, isTopLevelDoc,
-                 mBrowsingContext->GetSandboxFlags(), rv,
+                 loadFlags, mLoadType, cacheKey, isActive, isTopLevelDoc, rv,
                  getter_AddRefs(channel))) {
     return rv;
   }
