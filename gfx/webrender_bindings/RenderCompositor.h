@@ -92,6 +92,7 @@ class RenderCompositor {
                     wr::DeviceIntRect aValidRect) {}
   virtual void Unbind() {}
   virtual void CreateSurface(wr::NativeSurfaceId aId,
+                             wr::DeviceIntPoint aVirtualOffset,
                              wr::DeviceIntSize aTileSize, bool aIsOpaque) {}
   virtual void DestroySurface(NativeSurfaceId aId) {}
   virtual void CreateTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) {}
@@ -99,6 +100,7 @@ class RenderCompositor {
   virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                           wr::DeviceIntRect aClipRect) {}
   virtual void EnableNativeCompositor(bool aEnable) {}
+  virtual CompositorCapabilities GetCompositorCapabilities() = 0;
 
   // Interface for partial present
   virtual bool UsePartialPresent() { return false; }

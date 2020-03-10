@@ -254,8 +254,9 @@ void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
   wr::DeviceIntSize tileSize = surface->GetTileSize();
   RefPtr<IDCompositionSurface> compositionSurface =
       surface->GetCompositionSurface();
-  targetOffset.x = VIRTUAL_OFFSET + tileSize.width * aId.x;
-  targetOffset.y = VIRTUAL_OFFSET + tileSize.height * aId.y;
+  wr::DeviceIntPoint virtualOffset = surface->GetVirtualOffset();
+  targetOffset.x = virtualOffset.x + tileSize.width * aId.x;
+  targetOffset.y = virtualOffset.y + tileSize.height * aId.y;
 #else
   D2D_RECT_F clip_rect;
   clip_rect.left = aValidRect.origin.x;
@@ -285,6 +286,7 @@ void DCLayerTree::Unbind() {
 }
 
 void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
+                                wr::DeviceIntPoint aVirtualOffset,
                                 wr::DeviceIntSize aTileSize, bool aIsOpaque) {
   auto it = mDCSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(it == mDCSurfaces.end());
@@ -293,7 +295,8 @@ void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
     return;
   }
 
-  auto surface = MakeUnique<DCSurface>(aTileSize, aIsOpaque, this);
+  auto surface =
+      MakeUnique<DCSurface>(aTileSize, aVirtualOffset, aIsOpaque, this);
   if (!surface->Initialize()) {
     gfxCriticalNote << "Failed to initialize DCSurface: " << wr::AsUint64(aId);
     return;
@@ -332,8 +335,9 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
 #ifdef USE_VIRTUAL_SURFACES
   layer->UpdateAllocatedRect();
 
-  aPosition.x -= VIRTUAL_OFFSET;
-  aPosition.y -= VIRTUAL_OFFSET;
+  wr::DeviceIntPoint virtualOffset = layer->GetVirtualOffset();
+  aPosition.x -= virtualOffset.x;
+  aPosition.y -= virtualOffset.y;
 #endif
 
   // Place the visual - this changes frame to frame based on scroll position
@@ -396,12 +400,14 @@ GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
   return fboId;
 }
 
-DCSurface::DCSurface(wr::DeviceIntSize aTileSize, bool aIsOpaque,
+DCSurface::DCSurface(wr::DeviceIntSize aTileSize,
+                     wr::DeviceIntPoint aVirtualOffset, bool aIsOpaque,
                      DCLayerTree* aDCLayerTree)
     : mDCLayerTree(aDCLayerTree),
       mTileSize(aTileSize),
       mIsOpaque(aIsOpaque),
-      mAllocatedRectDirty(true) {}
+      mAllocatedRectDirty(true),
+      mVirtualOffset(aVirtualOffset) {}
 
 DCSurface::~DCSurface() {}
 
@@ -418,9 +424,9 @@ bool DCSurface::Initialize() {
   DXGI_ALPHA_MODE alpha_mode =
       mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
 
-  hr = dCompDevice->CreateVirtualSurface(VIRTUAL_OFFSET * 2, VIRTUAL_OFFSET * 2,
-                                         DXGI_FORMAT_B8G8R8A8_UNORM, alpha_mode,
-                                         getter_AddRefs(mVirtualSurface));
+  hr = dCompDevice->CreateVirtualSurface(
+      VIRTUAL_SURFACE_SIZE, VIRTUAL_SURFACE_SIZE, DXGI_FORMAT_B8G8R8A8_UNORM,
+      alpha_mode, getter_AddRefs(mVirtualSurface));
   MOZ_ASSERT(SUCCEEDED(hr));
 
   // Bind the surface memory to this visual
@@ -475,9 +481,9 @@ void DCSurface::UpdateAllocatedRect() {
       auto layer = GetLayer(it->first.mX, it->first.mY);
       RECT rect;
 
-      rect.left = (LONG)(VIRTUAL_OFFSET + it->first.mX * mTileSize.width +
+      rect.left = (LONG)(mVirtualOffset.x + it->first.mX * mTileSize.width +
                          layer->mValidRect.x);
-      rect.top = (LONG)(VIRTUAL_OFFSET + it->first.mY * mTileSize.height +
+      rect.top = (LONG)(mVirtualOffset.y + it->first.mY * mTileSize.height +
                         layer->mValidRect.y);
       rect.right = rect.left + layer->mValidRect.width;
       rect.bottom = rect.top + layer->mValidRect.height;
