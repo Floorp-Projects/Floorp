@@ -19,6 +19,7 @@ const dnsPacket = require(`${node_http2_root}/../dns-packet`);
 const ip = require(`${node_http2_root}/../node-ip`);
 const { fork } = require("child_process");
 const path = require("path");
+const zlib = require("zlib");
 
 // Hook into the decompression code to log the decompressed name-value pairs
 var compression_module = node_http2_root + "/lib/protocol/compressor";
@@ -709,12 +710,21 @@ function handleRequest(req, res) {
       });
 
       function writeResponse(resp, buffer) {
-        resp.setHeader("Content-Length", buffer.length);
         resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
         resp.setHeader("Content-Type", "application/dns-message");
-        resp.writeHead(200);
-        resp.write(buffer);
-        resp.end("");
+        if (req.headers["accept-encoding"].includes("gzip")) {
+          zlib.gzip(buffer, function(err, result) {
+            resp.setHeader("Content-Encoding", "gzip");
+            resp.setHeader("Content-Length", result.length);
+            resp.writeHead(200);
+            res.end(result);
+          });
+        } else {
+          resp.setHeader("Content-Length", buffer.length);
+          resp.writeHead(200);
+          resp.write(buffer);
+          resp.end("");
+        }
       }
 
       let delay = undefined;
