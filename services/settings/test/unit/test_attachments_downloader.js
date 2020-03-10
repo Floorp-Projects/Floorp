@@ -192,11 +192,7 @@ add_task(async function test_delete_removes_local_file() {
   downloader.delete(RECORD);
 
   Assert.ok(!(await OS.File.exists(localFilePath)));
-  Assert.ok(
-    !(await OS.File.exists(
-      OS.Path.join(OS.Constants.Path.localProfileDir, ...downloader.folders)
-    ))
-  );
+  Assert.ok(!(await OS.File.exists(downloader.baseFolder)));
 });
 add_task(clear_state);
 
