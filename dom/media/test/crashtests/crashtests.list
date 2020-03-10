@@ -18,6 +18,7 @@ load 844563.html
 load 846612.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 852838.html
 load 865537-1.html
+load 865550.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 868504.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 874869.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 874915.html
