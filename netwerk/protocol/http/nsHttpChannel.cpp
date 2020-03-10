@@ -10569,6 +10569,10 @@ NS_IMPL_ISUPPORTS(BackgroundRevalidatingListener, nsIStreamListener,
 }  // namespace
 
 void nsHttpChannel::PerformBackgroundCacheRevalidation() {
+  if (!StaticPrefs::network_http_stale_while_revalidate_enabled()) {
+    return;
+  }
+
   LOG(("nsHttpChannel::PerformBackgroundCacheRevalidation %p", this));
 
   Unused << NS_DispatchToMainThreadQueue(
