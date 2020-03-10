@@ -58,6 +58,7 @@ fn get_mozjs_include_dir() -> path::PathBuf {
 fn build_jsapi_bindings() {
     let mut builder = bindgen::builder()
         .rust_target(bindgen::RustTarget::Stable_1_19)
+        .size_t_is_usize(true)
         .header("./etc/wrapper.hpp")
         .raw_line("pub use self::root::*;")
         // Translate every enum with the "rustified enum" strategy. We should
