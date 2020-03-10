@@ -300,9 +300,15 @@ inline EvalSharedContext* SharedContext::asEvalContext() {
 
 enum class HasHeritage : bool { No, Yes };
 
-class FunctionBox : public ObjectBox, public SharedContext {
+class FunctionBox : public SharedContext {
+  friend struct GCThingList;
+
   // The parser handles tracing the fields below via the FunctionBox linked
-  // list.
+  // list represented by |traceLink|.
+
+  JSObject* object_;
+  FunctionBox* traceLink;
+  FunctionBox* emitLink;
 
   // This field is used for two purposes:
   //   * If this FunctionBox refers to the function being compiled, this field
@@ -497,6 +503,10 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   // Clear any function creation data which will no longer be used.
   void clearFunctionCreationData() { functionCreationDataIndex().reset(); }
+
+  bool hasObject() const { return object_ != nullptr; }
+
+  JSObject* object() const { return object_; }
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
 
