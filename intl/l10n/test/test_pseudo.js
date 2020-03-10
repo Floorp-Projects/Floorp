@@ -30,6 +30,10 @@ key = This is a single message
   };
 }
 
+function getAttributeByName(attributes, name) {
+  return attributes.find(attr => attr.name === name);
+}
+
 /**
  * This test verifies that as we switching between
  * different pseudo strategies the Localization object
@@ -55,8 +59,10 @@ add_task(async function test_accented_works() {
     let message = (await l10n.formatMessages([{id: "key"}]))[0];
 
     ok(message.value.includes("This is a single message"));
-    ok(message.attributes[0].value.includes("This is a tooltip"));
-    equal(message.attributes[1].value, "f");
+    let attr0 = getAttributeByName(message.attributes, "tooltip");
+    ok(attr0.value.includes("This is a tooltip"));
+    let attr1 = getAttributeByName(message.attributes, "accesskey");
+    equal(attr1.value, "f");
   }
 
   {
@@ -66,8 +72,10 @@ add_task(async function test_accented_works() {
     let message = (await l10n.formatMessages([{id: "key"}]))[0];
 
     ok(message.value.includes("Ŧħīş īş ȧȧ şīƞɠŀḗḗ ḿḗḗşşȧȧɠḗḗ"));
-    ok(message.attributes[0].value.includes("Ŧħīş īş ȧȧ ŧǿǿǿǿŀŧīƥ"));
-    equal(message.attributes[1].value, "f");
+    let attr0 = getAttributeByName(message.attributes, "tooltip");
+    ok(attr0.value.includes("Ŧħīş īş ȧȧ ŧǿǿǿǿŀŧīƥ"));
+    let attr1 = getAttributeByName(message.attributes, "accesskey");
+    equal(attr1.value, "f");
   }
 
   {
@@ -77,8 +85,10 @@ add_task(async function test_accented_works() {
     let message = (await l10n.formatMessages([{id: "key"}]))[0];
 
     ok(message.value.includes("ıs ɐ sıuƃʅǝ ɯǝssɐƃǝ"));
-    ok(message.attributes[0].value.includes("⊥ɥıs ıs ɐ ʇooʅʇıd"));
-    equal(message.attributes[1].value, "f");
+    let attr0 = getAttributeByName(message.attributes, "tooltip");
+    ok(attr0.value.includes("⊥ɥıs ıs ɐ ʇooʅʇıd"));
+    let attr1 = getAttributeByName(message.attributes, "accesskey");
+    equal(attr1.value, "f");
   }
 
   {
@@ -88,8 +98,10 @@ add_task(async function test_accented_works() {
     let message = (await l10n.formatMessages([{id: "key"}]))[0];
 
     ok(message.value.includes("This is a single message"));
-    ok(message.attributes[0].value.includes("This is a tooltip"));
-    equal(message.attributes[1].value, "f");
+    let attr0 = getAttributeByName(message.attributes, "tooltip");
+    ok(attr0.value.includes("This is a tooltip"));
+    let attr1 = getAttributeByName(message.attributes, "accesskey");
+    equal(attr1.value, "f");
   }
 
   L10nRegistry.sources.clear();
@@ -118,8 +130,10 @@ add_task(async function test_unavailable_strategy_works() {
     let message = (await l10n.formatMessages([{id: "key"}]))[0];
 
     ok(message.value.includes("This is a single message"));
-    ok(message.attributes[0].value.includes("This is a tooltip"));
-    equal(message.attributes[1].value, "f");
+    let attr0 = getAttributeByName(message.attributes, "tooltip");
+    ok(attr0.value.includes("This is a tooltip"));
+    let attr1 = getAttributeByName(message.attributes, "accesskey");
+    equal(attr1.value, "f");
   }
 
   Services.prefs.setStringPref("intl.l10n.pseudo", "");
