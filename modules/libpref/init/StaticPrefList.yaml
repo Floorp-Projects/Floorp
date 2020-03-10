@@ -8152,7 +8152,7 @@
 - name: toolkit.shutdown.fastShutdownStage
   type: int32_t
 #if defined(NIGHTLY_BUILD) && !defined(DEBUG) && !defined(MOZ_CODE_COVERAGE) && !defined(MOZ_VALGRIND) && !defined(MOZ_PROFILE_GENERATE)
-  value: 1
+  value: 2
 #else
   value: 0
 #endif
