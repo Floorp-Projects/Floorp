@@ -14,4 +14,4 @@
 
 /* Network panel components & styles */
 @import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsPanel.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsBar.css";

@@ -32,7 +32,7 @@ add_task(async function() {
       "The selected item in the requests menu was incorrect."
     );
     is(
-      !!document.querySelector(".network-details-panel"),
+      !!document.querySelector(".network-details-bar"),
       panelVisibility,
       "The network details panel should render correctly."
     );

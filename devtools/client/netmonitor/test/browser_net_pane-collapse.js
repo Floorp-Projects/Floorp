@@ -20,7 +20,7 @@ add_task(async function() {
   await wait;
 
   ok(
-    !document.querySelector(".network-details-panel") &&
+    !document.querySelector(".network-details-bar") &&
       !document.querySelector(".sidebar-toggle"),
     "The details panel should initially be hidden."
   );
@@ -28,12 +28,12 @@ add_task(async function() {
   store.dispatch(Actions.toggleNetworkDetails());
 
   is(
-    ~~document.querySelector(".network-details-panel").clientWidth,
+    ~~document.querySelector(".network-details-bar").clientWidth,
     Prefs.networkDetailsWidth,
     "The details panel has an incorrect width."
   );
   ok(
-    document.querySelector(".network-details-panel") &&
+    document.querySelector(".network-details-bar") &&
       document.querySelector(".sidebar-toggle"),
     "The details panel should at this point be visible."
   );
@@ -44,7 +44,7 @@ add_task(async function() {
   );
 
   ok(
-    !document.querySelector(".network-details-panel") &&
+    !document.querySelector(".network-details-bar") &&
       !document.querySelector(".sidebar-toggle"),
     "The details panel should not be visible after collapsing."
   );
@@ -52,12 +52,12 @@ add_task(async function() {
   store.dispatch(Actions.toggleNetworkDetails());
 
   is(
-    ~~document.querySelector(".network-details-panel").clientWidth,
+    ~~document.querySelector(".network-details-bar").clientWidth,
     Prefs.networkDetailsWidth,
     "The details panel has an incorrect width after uncollapsing."
   );
   ok(
-    document.querySelector(".network-details-panel") &&
+    document.querySelector(".network-details-bar") &&
       document.querySelector(".sidebar-toggle"),
     "The details panel should be visible again after uncollapsing."
   );

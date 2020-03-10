@@ -20,7 +20,6 @@ DevToolsModules(
     'JSONPreview.js',
     'MonitorPanel.js',
     'NetworkActionBar.js',
-    'NetworkDetailsPanel.js',
     'PropertiesView.js',
     'ResponsePanel.js',
     'SecurityState.js',

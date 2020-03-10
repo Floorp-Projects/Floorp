@@ -52,7 +52,7 @@ add_task(async function() {
 
   assertNoRequestState();
   ok(
-    !document.querySelector(".network-details-panel"),
+    !document.querySelector(".network-details-bar"),
     "The details pane should not be visible clicking 'clear'."
   );
 

@@ -27,7 +27,7 @@ add_task(async function() {
     "The pane toggle button should not be visible."
   );
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     false,
     "The details pane should be hidden when the frontend is opened."
   );
@@ -46,7 +46,7 @@ add_task(async function() {
     "The pane toggle button should not be visible after the first request."
   );
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     false,
     "The details pane should still be hidden after the first request."
   );
@@ -67,7 +67,7 @@ add_task(async function() {
       "not collapsed anymore."
   );
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     true,
     "The details pane should not be hidden after toggle button was pressed."
   );
@@ -85,7 +85,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
 
   is(
-    !!document.querySelector(".network-details-panel"),
+    !!document.querySelector(".network-details-bar"),
     false,
     "The details pane should now be hidden after the toggle button was pressed again."
   );
