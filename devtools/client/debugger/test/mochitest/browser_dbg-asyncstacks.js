@@ -6,6 +6,7 @@
 
 add_task(async function() {
   pushPref("devtools.debugger.features.async-captured-stacks", true);
+  pushPref("javascript.options.asyncstack", true);
   const dbg = await initDebugger("doc-frames-async.html");
 
   invokeInTab("main");
