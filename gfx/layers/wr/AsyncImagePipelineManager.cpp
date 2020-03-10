@@ -266,7 +266,8 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
 
   Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
   auto externalImageKey = wrTexture->GetExternalImageKey();
-  wrTexture->PushResourceUpdates(aMaybeFastTxn, op, keys, externalImageKey);
+  wrTexture->PushResourceUpdates(aMaybeFastTxn, op, keys, externalImageKey,
+                                 /* aPreferCompositorSurface */ true);
 
   return Some(op);
 }
@@ -398,7 +399,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
       Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
       aPipeline->mCurrentTexture->PushDisplayItems(
           builder, wr::ToLayoutRect(rect), wr::ToLayoutRect(rect),
-          aPipeline->mFilter, range_keys, /* aPreferCompositorSurface */ true);
+          aPipeline->mFilter, range_keys);
       HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture);
     } else {
       MOZ_ASSERT(keys.Length() == 1);

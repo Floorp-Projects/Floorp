@@ -150,28 +150,28 @@ uint32_t GPUVideoTextureHost::NumSubTextures() {
 
 void GPUVideoTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(EnsureWrappedTextureHost());
   if (!EnsureWrappedTextureHost()) {
     return;
   }
-  EnsureWrappedTextureHost()->PushResourceUpdates(aResources, aOp, aImageKeys,
-                                                  aExtID);
+  EnsureWrappedTextureHost()->PushResourceUpdates(
+      aResources, aOp, aImageKeys, aExtID, aPreferCompositorSurface);
 }
 
 void GPUVideoTextureHost::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys) {
   MOZ_ASSERT(EnsureWrappedTextureHost());
   MOZ_ASSERT(aImageKeys.length() > 0);
   if (!EnsureWrappedTextureHost()) {
     return;
   }
 
-  EnsureWrappedTextureHost()->PushDisplayItems(
-      aBuilder, aBounds, aClip, aFilter, aImageKeys, aPreferCompositorSurface);
+  EnsureWrappedTextureHost()->PushDisplayItems(aBuilder, aBounds, aClip,
+                                               aFilter, aImageKeys);
 }
 
 }  // namespace layers
