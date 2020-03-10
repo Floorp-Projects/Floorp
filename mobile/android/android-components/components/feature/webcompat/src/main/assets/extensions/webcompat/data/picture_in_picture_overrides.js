@@ -25,6 +25,9 @@ let AVAILABLE_PIP_OVERRIDES;
     // Instagram
     "https://www.instagram.com/*": TOGGLE_POLICIES.ONE_QUARTER,
 
+    // Laracasts
+    "https://*.laracasts.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+
     // Twitch
     "https://*.twitch.tv/*": TOGGLE_POLICIES.ONE_QUARTER,
     "https://*.twitch.tech/*": TOGGLE_POLICIES.ONE_QUARTER,
