@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef InputType_h__
-#define InputType_h__
+#ifndef mozilla_dom_InputType_h__
+#define mozilla_dom_InputType_h__
 
 #include <stdint.h>
 #include "mozilla/Decimal.h"
@@ -21,28 +21,31 @@ inline mozilla::Decimal NS_floorModulo(mozilla::Decimal x, mozilla::Decimal y) {
   return (x - y * (x / y).floor());
 }
 
+class nsIFrame;
+
 namespace mozilla {
 namespace dom {
 class HTMLInputElement;
-}  // namespace dom
-}  // namespace mozilla
-
-struct DoNotDelete;
-class nsIFrame;
 
 /**
  * A common superclass for different types of a HTMLInputElement.
  */
 class InputType {
  public:
-  static mozilla::UniquePtr<InputType, DoNotDelete> Create(
-      mozilla::dom::HTMLInputElement* aInputElement, uint8_t aType,
-      void* aMemory);
+  // Custom deleter for UniquePtr<InputType> to avoid freeing memory
+  // pre-allocated for InputType, but we still need to call the destructor
+  // explictly.
+  struct DoNotDelete {
+    void operator()(InputType* p) { p->~InputType(); }
+  };
+
+  static UniquePtr<InputType, DoNotDelete> Create(
+      HTMLInputElement* aInputElement, uint8_t aType, void* aMemory);
 
   virtual ~InputType() = default;
 
   // Float value returned by GetStep() when the step attribute is set to 'any'.
-  static const mozilla::Decimal kStepAny;
+  static const Decimal kStepAny;
 
   /**
    * Drop the reference to the input element.
@@ -55,7 +58,7 @@ class InputType {
   virtual bool IsValueMissing() const;
   virtual bool HasTypeMismatch() const;
   // May return Nothing() if the JS engine failed to evaluate the regex.
-  virtual mozilla::Maybe<bool> HasPatternMismatch() const;
+  virtual Maybe<bool> HasPatternMismatch() const;
   virtual bool IsRangeOverflow() const;
   virtual bool IsRangeUnderflow() const;
   virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;
@@ -82,7 +85,7 @@ class InputType {
    * @result whether the parsing was successful.
    */
   virtual bool ConvertStringToNumber(nsAString& aValue,
-                                     mozilla::Decimal& aResultValue) const;
+                                     Decimal& aResultValue) const;
 
   /**
    * Convert a Decimal to a string in a type specific way, ie convert a
@@ -95,11 +98,11 @@ class InputType {
    *         type is not supported or the number can't be converted to a string
    *         as expected by the type.
    */
-  virtual bool ConvertNumberToString(mozilla::Decimal aValue,
+  virtual bool ConvertNumberToString(Decimal aValue,
                                      nsAString& aResultString) const;
 
  protected:
-  explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
+  explicit InputType(HTMLInputElement* aInputElement)
       : mInputElement(aInputElement) {}
 
   /**
@@ -140,7 +143,7 @@ class InputType {
    *
    * @return The step base.
    */
-  mozilla::Decimal GetStepBase() const;
+  Decimal GetStepBase() const;
 
   /**
    * Get the primary frame for the input element.
@@ -229,13 +232,10 @@ class InputType {
    */
   uint32_t MaximumWeekInYear(uint32_t aYear) const;
 
-  mozilla::dom::HTMLInputElement* mInputElement;
+  HTMLInputElement* mInputElement;
 };
 
-// Custom deleter for UniquePtr<InputType> to avoid freeing memory pre-allocated
-// for InputType, but we still need to call the destructor explictly.
-struct DoNotDelete {
-  void operator()(::InputType* p) { p->~InputType(); }
-};
+}  // namespace dom
+}  // namespace mozilla
 
-#endif /* InputType_h__ */
+#endif /* mozilla_dom_InputType_h__ */

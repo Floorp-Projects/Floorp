@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DateTimeInputTypes.h"
+#include "mozilla/dom/DateTimeInputTypes.h"
 
 #include "js/Date.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -39,12 +39,12 @@ bool DateTimeInputTypeBase::IsValueMissing() const {
 }
 
 bool DateTimeInputTypeBase::IsRangeOverflow() const {
-  mozilla::Decimal maximum = mInputElement->GetMaximum();
+  Decimal maximum = mInputElement->GetMaximum();
   if (maximum.isNaN()) {
     return false;
   }
 
-  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  Decimal value = mInputElement->GetValueAsDecimal();
   if (value.isNaN()) {
     return false;
   }
@@ -53,12 +53,12 @@ bool DateTimeInputTypeBase::IsRangeOverflow() const {
 }
 
 bool DateTimeInputTypeBase::IsRangeUnderflow() const {
-  mozilla::Decimal minimum = mInputElement->GetMinimum();
+  Decimal minimum = mInputElement->GetMinimum();
   if (minimum.isNaN()) {
     return false;
   }
 
-  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  Decimal value = mInputElement->GetValueAsDecimal();
   if (value.isNaN()) {
     return false;
   }
@@ -67,10 +67,10 @@ bool DateTimeInputTypeBase::IsRangeUnderflow() const {
 }
 
 bool DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const {
-  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  Decimal value = mInputElement->GetValueAsDecimal();
   if (value.isNaN()) {
     if (aUseZeroIfValueNaN) {
-      value = mozilla::Decimal(0);
+      value = Decimal(0);
     } else {
       // The element can't suffer from step mismatch if it's value isn't a
       // number.
@@ -78,13 +78,13 @@ bool DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const {
     }
   }
 
-  mozilla::Decimal step = mInputElement->GetStep();
+  Decimal step = mInputElement->GetStep();
   if (step == kStepAny) {
     return false;
   }
 
   // Value has to be an integral multiple of step.
-  return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
+  return NS_floorModulo(value - GetStepBase(), step) != Decimal(0);
 }
 
 bool DateTimeInputTypeBase::HasBadInput() const {
@@ -185,8 +185,8 @@ nsresult DateInputType::GetBadInputMessage(nsAString& aMessage) {
       mInputElement->OwnerDoc(), aMessage);
 }
 
-bool DateInputType::ConvertStringToNumber(
-    nsAString& aValue, mozilla::Decimal& aResultValue) const {
+bool DateInputType::ConvertStringToNumber(nsAString& aValue,
+                                          Decimal& aResultValue) const {
   uint32_t year, month, day;
   if (!ParseDate(aValue, &year, &month, &day)) {
     return false;
@@ -197,11 +197,11 @@ bool DateInputType::ConvertStringToNumber(
     return false;
   }
 
-  aResultValue = mozilla::Decimal::fromDouble(time.toDouble());
+  aResultValue = Decimal::fromDouble(time.toDouble());
   return true;
 }
 
-bool DateInputType::ConvertNumberToString(mozilla::Decimal aValue,
+bool DateInputType::ConvertNumberToString(Decimal aValue,
                                           nsAString& aResultString) const {
   MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
 
@@ -214,7 +214,7 @@ bool DateInputType::ConvertNumberToString(mozilla::Decimal aValue,
   double month = JS::MonthFromTime(aValue.toDouble());
   double day = JS::DayFromTime(aValue.toDouble());
 
-  if (mozilla::IsNaN(year) || mozilla::IsNaN(month) || mozilla::IsNaN(day)) {
+  if (IsNaN(year) || IsNaN(month) || IsNaN(day)) {
     return false;
   }
 
@@ -224,18 +224,18 @@ bool DateInputType::ConvertNumberToString(mozilla::Decimal aValue,
 
 // input type=time
 
-bool TimeInputType::ConvertStringToNumber(
-    nsAString& aValue, mozilla::Decimal& aResultValue) const {
+bool TimeInputType::ConvertStringToNumber(nsAString& aValue,
+                                          Decimal& aResultValue) const {
   uint32_t milliseconds;
   if (!ParseTime(aValue, &milliseconds)) {
     return false;
   }
 
-  aResultValue = mozilla::Decimal(int32_t(milliseconds));
+  aResultValue = Decimal(int32_t(milliseconds));
   return true;
 }
 
-bool TimeInputType::ConvertNumberToString(mozilla::Decimal aValue,
+bool TimeInputType::ConvertNumberToString(Decimal aValue,
                                           nsAString& aResultString) const {
   MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
 
@@ -246,8 +246,7 @@ bool TimeInputType::ConvertNumberToString(mozilla::Decimal aValue,
   // times inside a day [00:00, 24:00[, which means that we should do a
   // modulo on |aValue| using the number of milliseconds in a day (86400000).
   uint32_t value =
-      NS_floorModulo(aValue, mozilla::Decimal::fromDouble(kMsPerDay))
-          .toDouble();
+      NS_floorModulo(aValue, Decimal::fromDouble(kMsPerDay)).toDouble();
 
   uint16_t milliseconds, seconds, minutes, hours;
   if (!GetTimeFromMs(value, &hours, &minutes, &seconds, &milliseconds)) {
@@ -335,8 +334,8 @@ nsresult TimeInputType::GetRangeUnderflowMessage(nsAString& aMessage) {
 
 // input type=week
 
-bool WeekInputType::ConvertStringToNumber(
-    nsAString& aValue, mozilla::Decimal& aResultValue) const {
+bool WeekInputType::ConvertStringToNumber(nsAString& aValue,
+                                          Decimal& aResultValue) const {
   uint32_t year, week;
   if (!ParseWeek(aValue, &year, &week)) {
     return false;
@@ -352,11 +351,11 @@ bool WeekInputType::ConvertStringToNumber(
   }
 
   double days = DaysSinceEpochFromWeek(year, week);
-  aResultValue = mozilla::Decimal::fromDouble(days * kMsPerDay);
+  aResultValue = Decimal::fromDouble(days * kMsPerDay);
   return true;
 }
 
-bool WeekInputType::ConvertNumberToString(mozilla::Decimal aValue,
+bool WeekInputType::ConvertNumberToString(Decimal aValue,
                                           nsAString& aResultString) const {
   MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
 
@@ -398,8 +397,8 @@ bool WeekInputType::ConvertNumberToString(mozilla::Decimal aValue,
 
 // input type=month
 
-bool MonthInputType::ConvertStringToNumber(
-    nsAString& aValue, mozilla::Decimal& aResultValue) const {
+bool MonthInputType::ConvertStringToNumber(nsAString& aValue,
+                                           Decimal& aResultValue) const {
   uint32_t year, month;
   if (!ParseMonth(aValue, &year, &month)) {
     return false;
@@ -415,11 +414,11 @@ bool MonthInputType::ConvertStringToNumber(
   }
 
   int32_t months = MonthsSinceJan1970(year, month);
-  aResultValue = mozilla::Decimal(int32_t(months));
+  aResultValue = Decimal(int32_t(months));
   return true;
 }
 
-bool MonthInputType::ConvertNumberToString(mozilla::Decimal aValue,
+bool MonthInputType::ConvertNumberToString(Decimal aValue,
                                            nsAString& aResultString) const {
   MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
 
@@ -427,7 +426,7 @@ bool MonthInputType::ConvertNumberToString(mozilla::Decimal aValue,
 
   aValue = aValue.floor();
 
-  double month = NS_floorModulo(aValue, mozilla::Decimal(12)).toDouble();
+  double month = NS_floorModulo(aValue, Decimal(12)).toDouble();
   month = (month < 0 ? month + 12 : month);
 
   double year = 1970 + (aValue.toDouble() - month) / 12;
@@ -448,7 +447,7 @@ bool MonthInputType::ConvertNumberToString(mozilla::Decimal aValue,
 // input type=datetime-local
 
 bool DateTimeLocalInputType::ConvertStringToNumber(
-    nsAString& aValue, mozilla::Decimal& aResultValue) const {
+    nsAString& aValue, Decimal& aResultValue) const {
   uint32_t year, month, day, timeInMs;
   if (!ParseDateTimeLocal(aValue, &year, &month, &day, &timeInMs)) {
     return false;
@@ -460,12 +459,12 @@ bool DateTimeLocalInputType::ConvertStringToNumber(
     return false;
   }
 
-  aResultValue = mozilla::Decimal::fromDouble(time.toDouble());
+  aResultValue = Decimal::fromDouble(time.toDouble());
   return true;
 }
 
 bool DateTimeLocalInputType::ConvertNumberToString(
-    mozilla::Decimal aValue, nsAString& aResultString) const {
+    Decimal aValue, nsAString& aResultString) const {
   MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
 
   aResultString.Truncate();
@@ -473,8 +472,7 @@ bool DateTimeLocalInputType::ConvertNumberToString(
   aValue = aValue.floor();
 
   uint32_t timeValue =
-      NS_floorModulo(aValue, mozilla::Decimal::fromDouble(kMsPerDay))
-          .toDouble();
+      NS_floorModulo(aValue, Decimal::fromDouble(kMsPerDay)).toDouble();
 
   uint16_t milliseconds, seconds, minutes, hours;
   if (!GetTimeFromMs(timeValue, &hours, &minutes, &seconds, &milliseconds)) {
@@ -485,7 +483,7 @@ bool DateTimeLocalInputType::ConvertNumberToString(
   double month = JS::MonthFromTime(aValue.toDouble());
   double day = JS::DayFromTime(aValue.toDouble());
 
-  if (mozilla::IsNaN(year) || mozilla::IsNaN(month) || mozilla::IsNaN(day)) {
+  if (IsNaN(year) || IsNaN(month) || IsNaN(day)) {
     return false;
   }
 

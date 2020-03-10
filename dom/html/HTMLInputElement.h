@@ -18,6 +18,14 @@
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/SingleLineTextInputTypes.h"
+#include "mozilla/dom/NumericInputTypes.h"
+#include "mozilla/dom/CheckableInputTypes.h"
+#include "mozilla/dom/ButtonInputTypes.h"
+#include "mozilla/dom/DateTimeInputTypes.h"
+#include "mozilla/dom/ColorInputType.h"
+#include "mozilla/dom/FileInputType.h"
+#include "mozilla/dom/HiddenInputType.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsCOMPtr.h"
@@ -25,26 +33,7 @@
 #include "nsIFilePicker.h"
 #include "nsIContentPrefService2.h"
 #include "nsContentUtils.h"
-#include "SingleLineTextInputTypes.h"
-#include "NumericInputTypes.h"
-#include "CheckableInputTypes.h"
-#include "ButtonInputTypes.h"
-#include "DateTimeInputTypes.h"
-#include "ColorInputType.h"
-#include "FileInputType.h"
-#include "HiddenInputType.h"
 
-static constexpr size_t INPUT_TYPE_SIZE = sizeof(
-    mozilla::Variant<TextInputType, SearchInputType, TelInputType, URLInputType,
-                     EmailInputType, PasswordInputType, NumberInputType,
-                     RangeInputType, RadioInputType, CheckboxInputType,
-                     ButtonInputType, ImageInputType, ResetInputType,
-                     SubmitInputType, DateInputType, TimeInputType,
-                     WeekInputType, MonthInputType, DateTimeLocalInputType,
-                     FileInputType, ColorInputType, HiddenInputType>);
-
-class InputType;
-struct DoNotDelete;
 class nsIRadioGroupContainer;
 class nsIRadioVisitor;
 
@@ -62,6 +51,7 @@ class File;
 class FileList;
 class FileSystemEntry;
 class GetFilesHelper;
+class InputType;
 
 /**
  * A class we use to create a singleton object that is used to keep track of
@@ -121,7 +111,7 @@ class HTMLInputElement final : public TextControlElement,
                                public nsIConstraintValidation {
   friend class AfterSetFilesOrDirectoriesCallback;
   friend class DispatchChangeEventCallback;
-  friend class ::InputType;
+  friend class InputType;
 
  public:
   using nsGenericHTMLFormElementWithState::GetForm;
@@ -1496,7 +1486,16 @@ class HTMLInputElement final : public TextControlElement,
   /*
    * InputType object created based on input type.
    */
-  UniquePtr<::InputType, DoNotDelete> mInputType;
+  UniquePtr<InputType, InputType::DoNotDelete> mInputType;
+
+  static constexpr size_t INPUT_TYPE_SIZE =
+      sizeof(mozilla::Variant<
+             TextInputType, SearchInputType, TelInputType, URLInputType,
+             EmailInputType, PasswordInputType, NumberInputType, RangeInputType,
+             RadioInputType, CheckboxInputType, ButtonInputType, ImageInputType,
+             ResetInputType, SubmitInputType, DateInputType, TimeInputType,
+             WeekInputType, MonthInputType, DateTimeLocalInputType,
+             FileInputType, ColorInputType, HiddenInputType>);
 
   // Memory allocated for mInputType, reused when type changes.
   char mInputTypeMem[INPUT_TYPE_SIZE];

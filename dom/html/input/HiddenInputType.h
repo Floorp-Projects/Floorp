@@ -4,22 +4,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef HiddenInputType_h__
-#define HiddenInputType_h__
+#ifndef mozilla_dom_HiddenInputType_h__
+#define mozilla_dom_HiddenInputType_h__
 
-#include "InputType.h"
+#include "mozilla/dom/InputType.h"
+
+namespace mozilla {
+namespace dom {
 
 // input type=hidden
-class HiddenInputType : public ::InputType {
+class HiddenInputType : public InputType {
  public:
-  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
-                           void* aMemory) {
+  static InputType* Create(HTMLInputElement* aInputElement, void* aMemory) {
     return new (aMemory) HiddenInputType(aInputElement);
   }
 
  private:
-  explicit HiddenInputType(mozilla::dom::HTMLInputElement* aInputElement)
+  explicit HiddenInputType(HTMLInputElement* aInputElement)
       : InputType(aInputElement) {}
 };
 
-#endif /* HiddenInputType_h__ */
+}  // namespace dom
+}  // namespace mozilla
+
+#endif /* mozilla_dom_HiddenInputType_h__ */
