@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "AltServiceParent.h"
+#include "AlternateServices.h"
 #include "nsHttpHandler.h"
 
 namespace mozilla {
@@ -22,6 +23,24 @@ mozilla::ipc::IPCResult AltServiceParent::RecvClearHostMapping(
     gHttpHandler->AltServiceCache()->ClearHostMapping(
         aHost, aPort, aOriginAttributes, aTopWindowOrigin);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult AltServiceParent::RecvProcessHeader(
+    const nsCString& aBuf, const nsCString& aOriginScheme,
+    const nsCString& aOriginHost, const int32_t& aOriginPort,
+    const nsACString& aUsername, const nsACString& aTopWindowOrigin,
+    const bool& aPrivateBrowsing, const bool& aIsolated,
+    nsTArray<ProxyInfoCloneArgs>&& aProxyInfo, const uint32_t& aCaps,
+    const OriginAttributes& aOriginAttributes) {
+  LOG(("AltServiceParent::RecvProcessHeader [this=%p]\n", this));
+  nsProxyInfo* pi = aProxyInfo.IsEmpty()
+                        ? nullptr
+                        : nsProxyInfo::DeserializeProxyInfo(aProxyInfo);
+  AltSvcMapping::ProcessHeader(aBuf, aOriginScheme, aOriginHost, aOriginPort,
+                               aUsername, aTopWindowOrigin, aPrivateBrowsing,
+                               aIsolated, nullptr, pi, aCaps,
+                               aOriginAttributes);
   return IPC_OK();
 }
 

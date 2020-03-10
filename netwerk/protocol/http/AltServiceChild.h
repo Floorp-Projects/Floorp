@@ -12,6 +12,7 @@ namespace mozilla {
 namespace net {
 
 class nsHttpConnectionInfo;
+class nsProxyInfo;
 
 class AltServiceChild final : public PAltServiceChild {
  public:
@@ -19,6 +20,15 @@ class AltServiceChild final : public PAltServiceChild {
 
   static bool EnsureAltServiceChild();
   static void ClearHostMapping(nsHttpConnectionInfo* aCi);
+  static void ProcessHeader(const nsCString& aBuf,
+                            const nsCString& aOriginScheme,
+                            const nsCString& aOriginHost, int32_t aOriginPort,
+                            const nsCString& aUsername,
+                            const nsCString& aTopWindowOrigin,
+                            bool aPrivateBrowsing, bool aIsolated,
+                            nsIInterfaceRequestor* aCallbacks,
+                            nsProxyInfo* aProxyInfo, uint32_t aCaps,
+                            const OriginAttributes& aOriginAttributes);
 
  private:
   AltServiceChild();
