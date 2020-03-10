@@ -12,23 +12,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import mozilla.components.lib.state.internal.ReducerChainBuilder
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
-
-/**
- * Reducers specify how the application's [State] changes in response to [Action]s sent to the [Store].
- *
- * Remember that actions only describe what happened, but don't describe how the application's state changes.
- * Reducers will commonly consist of a `when` statement returning different copies of the [State].
- */
-typealias Reducer<S, A> = (S, A) -> S
-
-/**
- * Listener called when the state changes in the [Store].
- */
-typealias Observer<S> = (S) -> Unit
 
 /**
  * A generic store holding an immutable [State].
@@ -38,11 +26,14 @@ typealias Observer<S> = (S) -> Unit
  *
  * @param initialState The initial state until a dispatched [Action] creates a new state.
  * @param reducer A function that gets the current [State] and [Action] passed in and will return a new [State].
+ * @param middleware Optional list of [Middleware] sitting between the [Store] and the [Reducer].
  */
 open class Store<S : State, A : Action>(
     initialState: S,
-    private val reducer: Reducer<S, A>
+    reducer: Reducer<S, A>,
+    middleware: List<Middleware<S, A>> = emptyList()
 ) {
+    private val reducerChainBuilder = ReducerChainBuilder(reducer, middleware)
     private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val scope = CoroutineScope(dispatcher)
     private val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
@@ -92,20 +83,22 @@ open class Store<S : State, A : Action>(
      * Dispatch an [Action] to the store in order to trigger a [State] change.
      */
     fun dispatch(action: A) = scope.launch(dispatcherWithExceptionHandler) {
-        dispatchInternal(action)
+        synchronized(this@Store) {
+            reducerChainBuilder.get(this@Store).invoke(action)
+        }
     }
 
-    @Synchronized
-    private fun dispatchInternal(action: A) {
-        val newState = reducer(currentState, action)
-
-        if (newState == currentState) {
+    /**
+     * Transitions from the current [State] to the passed in [state] and notifies all observers.
+     */
+    internal fun transitionTo(state: S) {
+        if (state == currentState) {
             // Nothing has changed.
             return
         }
 
-        currentState = newState
-        subscriptions.forEach { subscription -> subscription.dispatch(newState) }
+        currentState = state
+        subscriptions.forEach { subscription -> subscription.dispatch(state) }
     }
 
     private fun removeSubscription(subscription: Subscription<S, A>) {
@@ -182,4 +175,4 @@ open class Store<S : State, A : Action>(
  * Exception for otherwise unhandled errors caught while reducing state or
  * while managing/notifying observers.
  */
-class StoreException(val msg: String, val e: Throwable? = null) : Exception(msg, e)
+class StoreException(msg: String, val e: Throwable? = null) : Exception(msg, e)

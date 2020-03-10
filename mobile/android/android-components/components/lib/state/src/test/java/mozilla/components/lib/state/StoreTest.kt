@@ -7,8 +7,10 @@ package mozilla.components.lib.state
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 
 class StoreTest {
     @Test
@@ -114,12 +116,185 @@ class StoreTest {
         assertEquals(23, observedValue)
         assertEquals(22, store.state.counter)
     }
+
+    @Test
+    fun `Middleware chain gets executed in order`() {
+        val incrementMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+            if (action == TestAction.DoNothingAction) {
+                store.dispatch(TestAction.IncrementAction)
+            }
+
+            next(action)
+        }
+
+        val doubleMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+            if (action == TestAction.DoNothingAction) {
+                store.dispatch(TestAction.DoubleAction)
+            }
+
+            next(action)
+        }
+
+        val store = Store(
+            TestState(counter = 0),
+            ::reducer,
+            listOf(
+                incrementMiddleware,
+                doubleMiddleware
+            )
+        )
+
+        store.dispatch(TestAction.DoNothingAction).joinBlocking()
+
+        assertEquals(2, store.state.counter)
+
+        store.dispatch(TestAction.DoNothingAction).joinBlocking()
+
+        assertEquals(6, store.state.counter)
+
+        store.dispatch(TestAction.DoNothingAction).joinBlocking()
+
+        assertEquals(14, store.state.counter)
+
+        store.dispatch(TestAction.DecrementAction).joinBlocking()
+
+        assertEquals(13, store.state.counter)
+    }
+
+    @Test
+    fun `Middleware can intercept actions`() {
+        val interceptingMiddleware: Middleware<TestState, TestAction> = { _, _, _ ->
+            // Do nothing!
+        }
+
+        val store = Store(
+            TestState(counter = 0),
+            ::reducer,
+            listOf(interceptingMiddleware)
+        )
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(0, store.state.counter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(0, store.state.counter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(0, store.state.counter)
+    }
+
+    @Test
+    fun `Middleware can rewrite actions`() {
+        val rewritingMiddleware: Middleware<TestState, TestAction> = { _, next, _ ->
+            next(TestAction.DecrementAction)
+        }
+
+        val store = Store(
+            TestState(counter = 0),
+            ::reducer,
+            listOf(rewritingMiddleware)
+        )
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(-1, store.state.counter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(-2, store.state.counter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(-3, store.state.counter)
+    }
+
+    @Test
+    fun `Middleware can intercept and dispatch other action instead`() {
+        val rewritingMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+            if (action == TestAction.IncrementAction) {
+                store.dispatch(TestAction.DecrementAction)
+            } else {
+                next(action)
+            }
+        }
+
+        val store = Store(
+            TestState(counter = 0),
+            ::reducer,
+            listOf(rewritingMiddleware)
+        )
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(-1, store.state.counter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(-2, store.state.counter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(-3, store.state.counter)
+    }
+
+    @Test
+    fun `Middleware sees state before and after reducing`() {
+        var countBefore = -1
+        var countAfter = -1
+
+        val observingMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+            countBefore = store.state.counter
+            next(action)
+            countAfter = store.state.counter
+        }
+
+        val store = Store(
+            TestState(counter = 0),
+            ::reducer,
+            listOf(observingMiddleware)
+        )
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(0, countBefore)
+        assertEquals(1, countAfter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(1, countBefore)
+        assertEquals(2, countAfter)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertEquals(2, countBefore)
+        assertEquals(3, countAfter)
+
+        store.dispatch(TestAction.DecrementAction).joinBlocking()
+        assertEquals(3, countBefore)
+        assertEquals(2, countAfter)
+    }
+
+    @Test
+    fun `Middleware can catch exceptions in reducer`() {
+        var caughtException: Exception? = null
+
+        val catchingMiddleware: Middleware<TestState, TestAction> = { _, next, action ->
+            try {
+                next(action)
+            } catch (e: Exception) {
+                caughtException = e
+            }
+        }
+
+        val store = Store(
+            TestState(counter = 0),
+            { _: State, _: Action -> throw IOException() },
+            listOf(catchingMiddleware)
+        )
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+
+        assertNotNull(caughtException)
+        assertTrue(caughtException is IOException)
+    }
 }
 
 fun reducer(state: TestState, action: TestAction): TestState = when (action) {
     is TestAction.IncrementAction -> state.copy(counter = state.counter + 1)
     is TestAction.DecrementAction -> state.copy(counter = state.counter - 1)
     is TestAction.SetValueAction -> state.copy(counter = action.value)
+    is TestAction.DoubleAction -> state.copy(counter = state.counter * 2)
     is TestAction.DoNothingAction -> state
 }
 
@@ -131,5 +306,6 @@ sealed class TestAction : Action {
     object IncrementAction : TestAction()
     object DecrementAction : TestAction()
     object DoNothingAction : TestAction()
+    object DoubleAction : TestAction()
     data class SetValueAction(val value: Int) : TestAction()
 }
