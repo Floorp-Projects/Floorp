@@ -1,0 +1,392 @@
+suites:
+  -
+    name: Macros
+    suites:
+      -
+        name: References and calls
+        resources:
+          -
+            source: |-
+              -bar = Bar
+              term-ref = {-bar}
+              term-call = {-bar()}
+        tests:
+          -
+            name: terms can be referenced without parens
+            asserts:
+              -
+                id: term-ref
+                value: Bar
+          -
+            name: terms can be parameterized
+            asserts:
+              -
+                id: term-call
+                value: Bar
+      -
+        name: Passing arguments
+        resources:
+          -
+            source: |-
+              -foo = Foo {$arg}
+              ref-foo = {-foo}
+              call-foo-no-args = {-foo()}
+              call-foo-with-expected-arg = {-foo(arg: 1)}
+              call-foo-with-other-arg = {-foo(other: 3)}
+        tests:
+          -
+            name: Not parameterized, no externals
+            asserts:
+              -
+                id: ref-foo
+                value: Foo {$arg}
+          -
+            name: Not parameterized but with externals
+            asserts:
+              -
+                id: ref-foo
+                args:
+                  arg: 1
+                value: Foo {$arg}
+          -
+            name: No arguments, no externals
+            asserts:
+              -
+                id: call-foo-no-args
+                value: Foo {$arg}
+          -
+            name: No arguments, but with externals
+            asserts:
+              -
+                id: call-foo-no-args
+                args:
+                  arg: 1
+                value: Foo {$arg}
+          -
+            name: With expected args, no externals
+            asserts:
+              -
+                id: call-foo-with-expected-arg
+                value: Foo 1
+          -
+            name: With expected args, and with externals
+            asserts:
+              -
+                id: call-foo-with-expected-arg
+                args:
+                  arg: 5
+                value: Foo 1
+          -
+            name: With other args, no externals
+            asserts:
+              -
+                id: call-foo-with-other-arg
+                value: Foo {$arg}
+          -
+            name: With other args, and with externals
+            asserts:
+              -
+                id: call-foo-with-other-arg
+                args:
+                  arg: 5
+                value: Foo {$arg}
+      -
+        name: Nesting message references
+        resources:
+          -
+            source: |-
+              foo = Foo {$arg}
+              -bar = {foo}
+              ref-bar = {-bar}
+              call-bar = {-bar()}
+              call-bar-with-arg = {-bar(arg: 1)}
+        tests:
+          -
+            name: No parameterization, no externals
+            asserts:
+              -
+                id: ref-bar
+                value: Foo {$arg}
+          -
+            name: No parameterization, but with externals
+            asserts:
+              -
+                id: ref-bar
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: No arguments, no externals
+            asserts:
+              -
+                id: call-bar
+                value: Foo {$arg}
+          -
+            name: No arguments, but with externals
+            asserts:
+              -
+                id: call-bar
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: With arguments, no externals
+            asserts:
+              -
+                id: call-bar-with-arg
+                value: Foo 1
+          -
+            name: With arguments and with externals
+            asserts:
+              -
+                id: call-bar-with-arg
+                args:
+                  arg: 5
+                value: Foo 1
+      -
+        name: Nesting term references
+        resources:
+          -
+            source: |-
+              -foo = Foo {$arg}
+              -bar = {-foo}
+              -baz = {-foo()}
+              -qux = {-foo(arg: 1)}
+              ref-bar = {-bar}
+              ref-baz = {-baz}
+              ref-qux = {-qux}
+              call-bar-no-args = {-bar()}
+              call-baz-no-args = {-baz()}
+              call-qux-no-args = {-qux()}
+              call-bar-with-arg = {-bar(arg: 2)}
+              call-baz-with-arg = {-baz(arg: 2)}
+              call-qux-with-arg = {-qux(arg: 2)}
+              call-qux-with-other = {-qux(other: 3)}
+        tests:
+          -
+            name: No parameterization, no parameterization, no externals
+            asserts:
+              -
+                id: ref-bar
+                value: Foo {$arg}
+          -
+            name: No parameterization, no parameterization, with externals
+            asserts:
+              -
+                id: ref-bar
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: No parameterization, no arguments, no externals
+            asserts:
+              -
+                id: ref-baz
+                value: Foo {$arg}
+          -
+            name: No parameterization, no arguments, with externals
+            asserts:
+              -
+                id: ref-baz
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: No parameterization, with arguments, no externals
+            asserts:
+              -
+                id: ref-qux
+                value: Foo 1
+          -
+            name: No parameterization, with arguments, with externals
+            asserts:
+              -
+                id: ref-qux
+                args:
+                  arg: 5
+                value: Foo 1
+          -
+            name: No arguments, no parametrization, no externals
+            asserts:
+              -
+                id: call-bar-no-args
+                value: Foo {$arg}
+          -
+            name: No arguments, no parametrization, with externals
+            asserts:
+              -
+                id: call-bar-no-args
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: No arguments, no arguments, no externals
+            asserts:
+              -
+                id: call-baz-no-args
+                value: Foo {$arg}
+          -
+            name: No arguments, no arguments, with externals
+            asserts:
+              -
+                id: call-baz-no-args
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: No arguments, with arguments, no externals
+            asserts:
+              -
+                id: call-qux-no-args
+                value: Foo 1
+          -
+            name: No arguments, with arguments, with externals
+            asserts:
+              -
+                id: call-qux-no-args
+                args:
+                  arg: 5
+                value: Foo 1
+          -
+            name: With arguments, no parametrization, no externals
+            asserts:
+              -
+                id: call-bar-with-arg
+                value: Foo {$arg}
+          -
+            name: With arguments, no parametrization, with externals
+            asserts:
+              -
+                id: call-bar-with-arg
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: With arguments, no arguments, no externals
+            asserts:
+              -
+                id: call-baz-with-arg
+                value: Foo {$arg}
+          -
+            name: With arguments, no arguments, with externals
+            asserts:
+              -
+                id: call-baz-with-arg
+                args:
+                  arg: 5
+                value: Foo {$arg}
+          -
+            name: With arguments, with arguments, no externals
+            asserts:
+              -
+                id: call-qux-with-arg
+                value: Foo 1
+          -
+            name: With arguments, with arguments, with externals
+            asserts:
+              -
+                id: call-qux-with-arg
+                args:
+                  arg: 5
+                value: Foo 1
+          -
+            name: With unexpected arguments, with arguments, no externals
+            asserts:
+              -
+                id: call-qux-with-other
+                value: Foo 1
+          -
+            name: With unexpected arguments, with arguments, with externals
+            asserts:
+              -
+                id: call-qux-with-other
+                args:
+                  arg: 5
+                value: Foo 1
+      -
+        name: Parameterized term attributes
+        resources:
+          -
+            source: |-
+              -ship = Ship
+                  .gender = {$style ->
+                    *[traditional] neuter
+                      [chicago] feminine
+                  }
+              ref-attr = {-ship.gender ->
+                *[masculine] He
+                  [feminine] She
+                  [neuter] It
+              }
+              call-attr-no-args = {-ship.gender() ->
+                *[masculine] He
+                  [feminine] She
+                  [neuter] It
+              }
+              call-attr-with-expected-arg = {-ship.gender(style: "chicago") ->
+                *[masculine] He
+                  [feminine] She
+                  [neuter] It
+              }
+              call-attr-with-other-arg = {-ship.gender(other: 3) ->
+                *[masculine] He
+                  [feminine] She
+                  [neuter] It
+              }
+        tests:
+          -
+            name: Not parameterized, no externals
+            asserts:
+              -
+                id: ref-attr
+                value: It
+          -
+            name: Not parameterized but with externals
+            asserts:
+              -
+                id: ref-attr
+                args:
+                  attr: chicago
+                value: It
+          -
+            name: No arguments, no externals
+            asserts:
+              -
+                id: call-attr-no-args
+                value: It
+          -
+            name: No arguments, but with externals
+            asserts:
+              -
+                id: call-attr-no-args
+                args:
+                  style: chicago
+                value: It
+          -
+            name: With expected args, no externals
+            asserts:
+              -
+                id: call-attr-with-expected-arg
+                value: She
+          -
+            name: With expected args, and with externals
+            asserts:
+              -
+                id: call-attr-with-expected-arg
+                args:
+                  style: chicago
+                value: She
+          -
+            name: With other args, no externals
+            asserts:
+              -
+                id: call-attr-with-other-arg
+                value: It
+          -
+            name: With other args, and with externals
+            asserts:
+              -
+                id: call-attr-with-other-arg
+                args:
+                  style: chicago
+                value: It

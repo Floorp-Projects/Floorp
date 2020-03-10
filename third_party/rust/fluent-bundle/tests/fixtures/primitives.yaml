@@ -1,0 +1,154 @@
+suites:
+  -
+    name: Primitives
+    suites:
+      -
+        name: Numbers
+        resources:
+          -
+            source: |-
+              one     = { 1 }
+              select  = { 1 ->
+                 *[0] Zero
+                  [1] One
+              }
+        tests:
+          -
+            name: can be used in a placeable
+            asserts:
+              -
+                id: one
+                value: 1
+          -
+            name: can be used as a selector
+            asserts:
+              -
+                id: select
+                value: One
+      -
+        name: Simple string value
+        resources:
+          -
+            source: |-
+              foo               = Foo
+              placeable-literal = { "Foo" } Bar
+              placeable-message = { foo } Bar
+              selector-literal = { "Foo" ->
+                 *[Foo] Member 1
+              }
+              bar =
+                  .attr = Bar Attribute
+              placeable-attr   = { bar.attr }
+              -baz = Baz
+                  .attr = BazAttribute
+              selector-attr    = { -baz.attr ->
+                 *[BazAttribute] Member 3
+              }
+        tests:
+          -
+            name: can be used as a value
+            asserts:
+              -
+                id: foo
+                value: Foo
+          -
+            name: can be used in a placeable
+            asserts:
+              -
+                id: placeable-literal
+                value: Foo Bar
+          -
+            name: can be a value of a message referenced in a placeable
+            asserts:
+              -
+                id: placeable-message
+                value: Foo Bar
+          -
+            name: can be a selector
+            asserts:
+              -
+                id: selector-literal
+                value: Member 1
+          -
+            name: can be used as an attribute value
+            asserts:
+              -
+                id: bar
+                attribute: attr
+                value: Bar Attribute
+          -
+            name: can be a value of an attribute used in a placeable
+            asserts:
+              -
+                id: placeable-attr
+                value: Bar Attribute
+          -
+            name: can be a value of an attribute used as a selector
+            asserts:
+              -
+                id: selector-attr
+                value: Member 3
+      -
+        name: Complex string value
+        resources:
+          -
+            source: |-
+              foo               = Foo
+              bar               = { foo }Bar
+              placeable-message = { bar }Baz
+              baz =
+                  .attr = { bar }BazAttribute
+              -bazTerm = Value
+                  .attr = { bar }BazAttribute
+              placeable-attr = { baz.attr }
+              # XXX: This is different from JS fixture which
+              #      illegally uses message attribute as selector.
+              selector-attr = { -bazTerm.attr ->
+                  [FooBarBazAttribute] FooBarBaz
+                 *[other] Other
+              }
+        tests:
+          -
+            name: can be used as a value
+            asserts:
+              -
+                id: bar
+                value: FooBar
+          -
+            name: can be a value of a message referenced in a placeable
+            asserts:
+              -
+                id: placeable-message
+                value: FooBarBaz
+          -
+            name: can be used as an attribute value
+            asserts:
+              -
+                id: baz
+                attribute: attr
+                value: FooBarBazAttribute
+          -
+            name: can be a value of an attribute used in a placeable
+            asserts:
+              -
+                id: placeable-attr
+                value: FooBarBazAttribute
+          -
+            name: can be a value of an attribute used as a selector
+            asserts:
+              -
+                id: selector-attr
+                value: FooBarBaz
+      -
+        name: (Rust) Placeable
+        resources:
+          -
+            source: |-
+              foo = { { "Foo" } }
+        tests:
+          -
+            name: Placeable in placable work
+            asserts:
+              -
+                id: foo
+                value: Foo

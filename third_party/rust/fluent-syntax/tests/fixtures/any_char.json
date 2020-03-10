@@ -1,0 +1,68 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "control0"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "abc\u0007def"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "            ↓ BEL, U+0007"
+            }
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "delete"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "abcdef"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "          ↓ DEL, U+007F"
+            }
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "control1"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "TextElement",
+                        "value": "abcdef"
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "            ↓ BPM, U+0082"
+            }
+        }
+    ]
+}

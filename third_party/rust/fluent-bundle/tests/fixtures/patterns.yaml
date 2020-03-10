@@ -1,0 +1,218 @@
+suites:
+  -
+    name: Patterns
+    suites:
+      -
+        name: Simple string value
+        resources:
+          -
+            source: foo = Foo
+        tests:
+          -
+            name: returns the value
+            asserts:
+              -
+                id: foo
+                value: Foo
+      -
+        name: Complex string value
+        resources:
+          -
+            source: |-
+              foo = Foo
+              -bar = Bar
+              ref-message = { foo }
+              ref-term = { -bar }
+              ref-missing-message = { missing }
+              ref-missing-term = { -missing }
+              ref-malformed = { malformed
+            errors:
+              -
+                type: Parser
+        tests:
+          -
+            name: resolves the reference to a message
+            asserts:
+              -
+                id: ref-message
+                value: Foo
+          -
+            name: resolves the reference to a term
+            asserts:
+              -
+                id: ref-term
+                value: Bar
+          -
+            name: returns the id if a message reference is missing
+            asserts:
+              -
+                id: ref-missing-message
+                value: "{missing}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown message: missing"
+          -
+            name: returns the id if a term reference is missing
+            asserts:
+              -
+                id: ref-missing-term
+                value: "{-missing}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown term: -missing"
+      -
+        name: Complex string referencing a message with null value
+        resources:
+          -
+            source: |-
+              foo =
+                  .attr = Foo Attr
+              bar = { foo } Bar
+        tests:
+          -
+            name: returns the null value
+            skip: true
+            asserts:
+              -
+                id: foo
+                value: Foo
+          -
+            name: formats the attribute
+            asserts:
+              -
+                id: foo
+                attribute: attr
+                value: Foo Attr
+          -
+            name: formats ??? when the referenced message has no value and no default
+            asserts:
+              -
+                id: bar
+                # XXX: Difference from JS
+                value: "{foo} Bar"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown message: foo"
+      -
+        name: Cyclic reference
+        resources:
+          -
+            source: |-
+              foo = { bar }
+              bar = { foo }
+        tests:
+          -
+            name: returns ???
+            asserts:
+              -
+                id: foo
+                value: "{foo}"
+                errors:
+                  -
+                    type: Cyclic
+      -
+        name: Cyclic self-reference
+        resources:
+          -
+            source: foo = { foo }
+        tests:
+          -
+            name: returns the raw string
+            asserts:
+              -
+                id: foo
+                value: "{foo}"
+                errors:
+                  -
+                    type: Cyclic
+      -
+        name: Cyclic self-reference in a member
+        resources:
+          -
+            source: |-
+              foo =
+                  { $sel ->
+                    *[a] { foo }
+                      [b] Bar
+                  }
+              bar = { foo }
+        tests:
+          -
+            name: returns ???
+            asserts:
+              -
+                id: foo
+                args:
+                  sel: a
+                value: "{foo}"
+                errors:
+                  -
+                    type: Cyclic
+          -
+            name: returns the other member if requested
+            asserts:
+              -
+                id: foo
+                args:
+                  sel: b
+                value: Bar
+      -
+        name: Cyclic reference in a selector
+        skip: true
+        resources:
+          -
+            source: |-
+              -foo =
+                  { -bar.attr ->
+                    *[a] Foo
+                  }
+              -bar = Bar
+                  .attr = { -foo }
+              foo = { -foo }
+        tests:
+          -
+            name: returns the default variant
+            asserts:
+              -
+                id: foo
+                value: Foo
+                errors:
+                  -
+                    type: Cyclic
+      -
+        name: Cyclic self-reference in a selector
+        skip: true
+        resources:
+          -
+            source: |-
+              -foo =
+                  { -bar.attr ->
+                    *[a] Foo
+                  }
+                  .attr = a
+              -bar =
+                  { -foo.attr ->
+                    *[a] Bar
+                  }
+                  .attr = { -foo }
+              foo = { -foo }
+              bar = { -bar }
+        tests:
+          -
+            name: returns the default variant
+            asserts:
+              -
+                id: foo
+                value: Foo
+                errors:
+                  -
+                    type: Cyclic
+          -
+            name: can reference an attribute
+            asserts:
+              -
+                id: bar
+                value: Bar
