@@ -136,23 +136,6 @@ class MochiRemote(MochitestDesktop):
                 return path
         return None
 
-    def makeLocalAutomation(self):
-        localAutomation = Automation()
-        localAutomation.IS_WIN32 = False
-        localAutomation.IS_LINUX = False
-        localAutomation.IS_MAC = False
-        localAutomation.UNIXISH = False
-        hostos = sys.platform
-        if (hostos == 'mac' or hostos == 'darwin'):
-            localAutomation.IS_MAC = True
-        elif (hostos == 'linux' or hostos == 'linux2'):
-            localAutomation.IS_LINUX = True
-            localAutomation.UNIXISH = True
-        elif (hostos == 'win32' or hostos == 'win64'):
-            localAutomation.BIN_SUFFIX = ".exe"
-            localAutomation.IS_WIN32 = True
-        return localAutomation
-
     # This seems kludgy, but this class uses paths from the remote host in the
     # options, except when calling up to the base class, which doesn't
     # understand the distinction.  This switches out the remote values for local
@@ -164,7 +147,7 @@ class MochiRemote(MochitestDesktop):
         remoteProfilePath = options.profilePath
         remoteUtilityPath = options.utilityPath
 
-        localAutomation = self.makeLocalAutomation()
+        localAutomation = Automation()
         paths = [
             options.xrePath,
             localAutomation.DIST_BIN,
@@ -193,7 +176,7 @@ class MochiRemote(MochitestDesktop):
             sys.exit(1)
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
-        if localAutomation.elf_arm(xpcshell_path):
+        if RemoteAutomation.elf_arm(xpcshell_path):
             self.log.error('xpcshell at %s is an ARM binary; please use '
                            'the --utility-path argument to specify the path '
                            'to a desktop version.' % xpcshell_path)
