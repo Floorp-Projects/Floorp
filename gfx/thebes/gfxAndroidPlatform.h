@@ -18,7 +18,7 @@ class FontListEntry;
 };  // namespace mozilla
 using mozilla::dom::FontListEntry;
 
-class gfxAndroidPlatform : public gfxPlatform {
+class gfxAndroidPlatform final : public gfxPlatform {
  public:
   gfxAndroidPlatform();
   virtual ~gfxAndroidPlatform();

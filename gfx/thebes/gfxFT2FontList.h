@@ -22,7 +22,7 @@ class nsZipArchive;
 class WillShutdownObserver;
 class FTUserFontData;
 
-class FT2FontEntry : public gfxFT2FontEntryBase {
+class FT2FontEntry final : public gfxFT2FontEntryBase {
   using FontListEntry = mozilla::dom::SystemFontListEntry;
 
  public:
@@ -107,7 +107,7 @@ class FT2FontEntry : public gfxFT2FontEntryBase {
   bool mMMVarInitialized = false;
 };
 
-class FT2FontFamily : public gfxFontFamily {
+class FT2FontFamily final : public gfxFontFamily {
   using FontListEntry = mozilla::dom::SystemFontListEntry;
 
  public:
@@ -117,7 +117,7 @@ class FT2FontFamily : public gfxFontFamily {
   void AddFacesToFontList(nsTArray<FontListEntry>* aFontList);
 };
 
-class gfxFT2FontList : public gfxPlatformFontList {
+class gfxFT2FontList final : public gfxPlatformFontList {
   using FontListEntry = mozilla::dom::SystemFontListEntry;
 
  public:

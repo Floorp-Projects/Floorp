@@ -561,7 +561,7 @@ void MacOSFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 /* gfxMacFontFamily */
 #pragma mark -
 
-class gfxMacFontFamily : public gfxFontFamily {
+class gfxMacFontFamily final : public gfxFontFamily {
  public:
   explicit gfxMacFontFamily(const nsACString& aName, double aSizeHint)
       : gfxFontFamily(aName), mSizeHint(aSizeHint) {}
@@ -724,7 +724,7 @@ void gfxMacFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
 /* gfxSingleFaceMacFontFamily */
 #pragma mark -
 
-class gfxSingleFaceMacFontFamily : public gfxFontFamily {
+class gfxSingleFaceMacFontFamily final : public gfxFontFamily {
  public:
   explicit gfxSingleFaceMacFontFamily(const nsACString& aName) : gfxFontFamily(aName) {
     mFaceNamesInitialized = true;  // omit from face name lists
@@ -1478,7 +1478,7 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
 }
 
 // used to load system-wide font info on off-main thread
-class MacFontInfo : public FontInfoData {
+class MacFontInfo final : public FontInfoData {
  public:
   MacFontInfo(bool aLoadOtherNames, bool aLoadFaceNames, bool aLoadCmaps)
       : FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps) {}

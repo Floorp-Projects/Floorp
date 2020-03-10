@@ -47,7 +47,7 @@ class nsAutoRefTraits<FcConfig> : public nsPointerRefTraits<FcConfig> {
 // the common 'Fc' abbreviation but the gfxPangoFontGroup code already
 // defines versions of these, so use the verbose name for now.
 
-class gfxFontconfigFontEntry : public gfxFT2FontEntryBase {
+class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
  public:
   // used for system fonts with explicit patterns
   explicit gfxFontconfigFontEntry(const nsACString& aFaceName,
@@ -147,7 +147,7 @@ class gfxFontconfigFontEntry : public gfxFT2FontEntryBase {
   bool mMMVarInitialized = false;
 };
 
-class gfxFontconfigFontFamily : public gfxFontFamily {
+class gfxFontconfigFontFamily final : public gfxFontFamily {
  public:
   explicit gfxFontconfigFontFamily(const nsACString& aName)
       : gfxFontFamily(aName),
@@ -190,7 +190,7 @@ class gfxFontconfigFontFamily : public gfxFontFamily {
   bool mForceScalable;
 };
 
-class gfxFontconfigFont : public gfxFT2FontBase {
+class gfxFontconfigFont final : public gfxFT2FontBase {
  public:
   gfxFontconfigFont(
       const RefPtr<mozilla::gfx::UnscaledFontFontconfig>& aUnscaledFont,
@@ -212,7 +212,7 @@ class gfxFontconfigFont : public gfxFT2FontBase {
   nsCountedRef<FcPattern> mPattern;
 };
 
-class gfxFcPlatformFontList : public gfxPlatformFontList {
+class gfxFcPlatformFontList final : public gfxPlatformFontList {
   using FontPatternListEntry = mozilla::dom::SystemFontListEntry;
 
  public:
