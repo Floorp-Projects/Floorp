@@ -15,6 +15,10 @@ import sys
 import traceback
 
 
+read_input = input
+if sys.version_info.major == 2:
+    read_input = raw_input
+
 def add_tests_dir_to_path():
     from os.path import dirname, exists, join, realpath
     js_src_dir = dirname(dirname(realpath(sys.argv[0])))
@@ -56,7 +60,7 @@ def choose_item(jobs, max_items, display):
     for i, job in enumerate(jobs, 1):
         print("{}) {}".format(i, display(job)))
 
-    item = raw_input('Which one:\n')
+    item = read_input('Which one:\n')
     try:
         item = int(item)
         if item > job_count or item < 1:
