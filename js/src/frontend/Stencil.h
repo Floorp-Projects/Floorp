@@ -187,6 +187,8 @@ class RegExpCreationData {
     return true;
   }
 
+  MOZ_MUST_USE bool init(JSContext* cx, JSAtom* pattern, JS::RegExpFlags flags);
+
   RegExpObject* createRegExp(JSContext* cx) const;
 };
 
