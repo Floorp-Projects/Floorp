@@ -31,6 +31,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [Versioning and release process]({{ site.baseurl }}/contributing/versioning)
 * [Deprecating components and code]({{ site.baseurl }}/contributing/deprecating)
 * [Merge day process]({{ site.baseurl }}/contributing/merge-day)
+* [Updating the tracking protection lists process]({{ site.baseurl }}/contributing/update-tracking-protection-list)
 
 ### Presentations
 
