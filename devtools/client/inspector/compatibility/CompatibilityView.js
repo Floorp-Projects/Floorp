@@ -17,6 +17,7 @@ loader.lazyRequireGetter(
 );
 
 const {
+  updateNodes,
   updateSelectedNode,
   updateTargetBrowsers,
   updateTopLevelTarget,
@@ -28,6 +29,7 @@ const CompatibilityApp = createFactory(
 
 class CompatibilityView {
   constructor(inspector, window) {
+    this._onChangeAdded = this._onChangeAdded.bind(this);
     this._onPanelSelected = this._onPanelSelected.bind(this);
     this._onSelectedNodeChanged = this._onSelectedNodeChanged.bind(this);
     this._onTopLevelTargetChanged = this._onTopLevelTargetChanged.bind(this);
@@ -44,8 +46,11 @@ class CompatibilityView {
       this._onPanelSelected
     );
 
-    if (this._ruleView) {
-      this._ruleView.off("ruleview-changed", this._onNewNode);
+    const changesFront = this.inspector.toolbox.target.getCachedFront(
+      "changes"
+    );
+    if (changesFront) {
+      changesFront.off("add-change", this._onChangeAdded);
     }
 
     this.inspector = null;
@@ -82,18 +87,6 @@ class CompatibilityView {
       this._onPanelSelected
     );
 
-    if (this._ruleView) {
-      this._ruleView.on("ruleview-changed", this._onSelectedNodeChanged);
-    } else {
-      this.inspector.on(
-        "ruleview-added",
-        () => {
-          this._ruleView.on("ruleview-changed", this._onSelectedNodeChanged);
-        },
-        { once: true }
-      );
-    }
-
     this._initTargetBrowsers();
   }
 
@@ -113,6 +106,26 @@ class CompatibilityView {
     );
   }
 
+  _onChangeAdded({ selector }) {
+    if (!this._isAvailable()) {
+      return;
+    }
+
+    // We need to debounce updating nodes since "add-change" event on changes actor is
+    // fired for every typed character until fixing bug 1503036.
+    if (this._previousChangedSelector === selector) {
+      clearTimeout(this._updateNodesTimeoutId);
+    }
+    this._previousChangedSelector = selector;
+
+    this._updateNodesTimeoutId = setTimeout(() => {
+      // TODO: In case of keyframes changes, the selector given from changes actor is
+      // keyframe-selector such as "from" and "100%", not selector for node. Thus,
+      // we need to address this case.
+      this.inspector.store.dispatch(updateNodes(selector));
+    }, 500);
+  }
+
   _onPanelSelected() {
     this._onSelectedNodeChanged();
     this._onTopLevelTargetChanged();
@@ -128,7 +141,7 @@ class CompatibilityView {
     );
   }
 
-  _onTopLevelTargetChanged() {
+  async _onTopLevelTargetChanged() {
     if (!this._isAvailable()) {
       return;
     }
@@ -136,13 +149,20 @@ class CompatibilityView {
     this.inspector.store.dispatch(
       updateTopLevelTarget(this.inspector.toolbox.target)
     );
-  }
 
-  get _ruleView() {
-    return (
-      this.inspector.hasPanel("ruleview") &&
-      this.inspector.getPanel("ruleview").view
+    const changesFront = await this.inspector.toolbox.target.getFront(
+      "changes"
     );
+
+    try {
+      // Call allChanges() in order to get the add-change qevent.
+      await changesFront.allChanges();
+    } catch (e) {
+      // The connection to the server may have been cut, for example during test teardown.
+      // Here we just catch the error and silently ignore it.
+    }
+
+    changesFront.on("add-change", this._onChangeAdded);
   }
 }
 

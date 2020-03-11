@@ -14,6 +14,11 @@ loader.lazyGetter(this, "mdnCompatibility", () => {
 
 const {
   COMPATIBILITY_APPEND_NODE,
+  COMPATIBILITY_UPDATE_NODE,
+  COMPATIBILITY_UPDATE_NODES_START,
+  COMPATIBILITY_UPDATE_NODES_SUCCESS,
+  COMPATIBILITY_UPDATE_NODES_FAILURE,
+  COMPATIBILITY_UPDATE_NODES_COMPLETE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_START,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
@@ -28,6 +33,43 @@ const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
 } = require("devtools/client/inspector/compatibility/actions/index");
+
+function updateNodes(selector) {
+  return async ({ dispatch, getState }) => {
+    dispatch({ type: COMPATIBILITY_UPDATE_NODES_START });
+
+    try {
+      const {
+        selectedNode,
+        topLevelTarget,
+        targetBrowsers,
+      } = getState().compatibility;
+      const { walker } = await topLevelTarget.getFront("inspector");
+      const nodeList = await walker.querySelectorAll(walker.rootNode, selector);
+
+      for (const node of await nodeList.items()) {
+        if (selectedNode.actorID === node.actorID) {
+          await _updateSelectedNodeIssues(node, targetBrowsers, dispatch);
+        }
+
+        const issues = await _getNodeIssues(node, targetBrowsers);
+        dispatch({
+          type: COMPATIBILITY_UPDATE_NODE,
+          node,
+          issues,
+        });
+      }
+      dispatch({ type: COMPATIBILITY_UPDATE_NODES_SUCCESS });
+    } catch (error) {
+      dispatch({
+        type: COMPATIBILITY_UPDATE_NODES_FAILURE,
+        error,
+      });
+    }
+
+    dispatch({ type: COMPATIBILITY_UPDATE_NODES_COMPLETE });
+  };
+}
 
 function updateSelectedNode(node) {
   return async ({ dispatch, getState }) => {
@@ -165,6 +207,7 @@ async function _updateTopLevelTargetIssues(target, targetBrowsers, dispatch) {
 }
 
 module.exports = {
+  updateNodes,
   updateSelectedNode,
   updateTargetBrowsers,
   updateTopLevelTarget,
