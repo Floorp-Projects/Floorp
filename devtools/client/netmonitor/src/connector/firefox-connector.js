@@ -137,18 +137,7 @@ class FirefoxConnector {
     await this.addListeners();
 
     // Initialize Responsive Emulation front for network throttling.
-    try {
-      this.responsiveFront = await this.currentTarget.getFront("responsive");
-    } catch (e) {
-      console.error(e);
-    }
-
-    // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The Responsive
-    // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
-    // is on release.
-    if (!this.responsiveFront) {
-      this.responsiveFront = await this.currentTarget.getFront("emulation");
-    }
+    this.responsiveFront = await this.currentTarget.getFront("responsive");
 
     // Displaying cache events is only intended for the UI panel.
     if (this.actions) {
