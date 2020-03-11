@@ -13,7 +13,6 @@ import type { DevToolsClient, TargetList, Target } from "./types";
 const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
 
 type Args = {
-  currentTarget: Target,
   devToolsClient: DevToolsClient,
   targets: { [string]: Target },
   options: Object,
@@ -67,7 +66,8 @@ async function attachTargets(targetLists, args) {
 }
 
 async function listWorkerTargets(args: Args) {
-  const { currentTarget, devToolsClient } = args;
+  const { targetList, devToolsClient } = args;
+  const currentTarget = targetList.targetFront;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
     return [];
   }

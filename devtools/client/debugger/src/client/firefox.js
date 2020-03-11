@@ -4,11 +4,7 @@
 
 // @flow
 
-import {
-  setupCommands,
-  setupCommandsTopTarget,
-  clientCommands,
-} from "./firefox/commands";
+import { setupCommands, clientCommands } from "./firefox/commands";
 import {
   removeEventsTopTarget,
   setupEvents,
@@ -54,7 +50,6 @@ async function onTargetAvailable({
       return;
     }
 
-    setupCommandsTopTarget(targetFront);
     setupEventsTopTarget(targetFront);
     targetFront.on("will-navigate", actions.willNavigate);
     targetFront.on("navigate", actions.navigated);
