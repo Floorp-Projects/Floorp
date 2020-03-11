@@ -2,10 +2,10 @@
 
 # onUninstalled
 
-`open fun onUninstalled(webExtension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtensionDelegate.kt#L29)
+`open fun onUninstalled(extension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtensionDelegate.kt#L29)
 
 Invoked when a web extension was uninstalled successfully.
 
 ### Parameters
 
-`webExtension` - The uninstalled extension.
+`extension` - The uninstalled extension.

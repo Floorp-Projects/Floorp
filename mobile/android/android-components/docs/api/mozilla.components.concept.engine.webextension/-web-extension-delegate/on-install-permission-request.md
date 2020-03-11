@@ -2,13 +2,13 @@
 
 # onInstallPermissionRequest
 
-`open fun onInstallPermissionRequest(webExtension: `[`WebExtension`](../-web-extension/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtensionDelegate.kt#L109)
+`open fun onInstallPermissionRequest(extension: `[`WebExtension`](../-web-extension/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtensionDelegate.kt#L101)
 
 Invoked during installation of a [WebExtension](../-web-extension/index.md) to confirm the required permissions.
 
 ### Parameters
 
-`webExtension` - the extension being installed. The required permissions can be
+`extension` - the extension being installed. The required permissions can be
 accessed using [WebExtension.getMetadata](../-web-extension/get-metadata.md) and [Metadata.permissions](../-metadata/permissions.md).
 
 **Return**

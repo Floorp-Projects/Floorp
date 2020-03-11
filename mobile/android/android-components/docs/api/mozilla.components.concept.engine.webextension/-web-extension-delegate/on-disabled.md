@@ -2,10 +2,10 @@
 
 # onDisabled
 
-`open fun onDisabled(webExtension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtensionDelegate.kt#L43)
+`open fun onDisabled(extension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtensionDelegate.kt#L43)
 
 Invoked when a web extension was disabled successfully.
 
 ### Parameters
 
-`webExtension` - The disabled extension.
+`extension` - The disabled extension.
