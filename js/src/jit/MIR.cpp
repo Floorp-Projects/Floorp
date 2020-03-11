@@ -2347,6 +2347,42 @@ bool MPhi::addBackedgeType(TempAllocator& alloc, MIRType type,
   return true;
 }
 
+/* static */
+bool MPhi::markIteratorPhis(const PhiVector& iterators) {
+  // Find and mark phis that must transitively hold an iterator live.
+
+  Vector<MPhi*, 8, SystemAllocPolicy> worklist;
+
+  for (MPhi* iter : iterators) {
+    if (!iter->isInWorklist()) {
+      if (!worklist.append(iter)) {
+        return false;
+      }
+      iter->setInWorklist();
+    }
+  }
+
+  while (!worklist.empty()) {
+    MPhi* phi = worklist.popCopy();
+    phi->setNotInWorklist();
+
+    phi->setIterator();
+    phi->setImplicitlyUsedUnchecked();
+
+    for (MUseDefIterator iter(phi); iter; iter++) {
+      MDefinition* use = iter.def();
+      if (!use->isInWorklist() && use->isPhi() && !use->toPhi()->isIterator()) {
+        if (!worklist.append(use->toPhi())) {
+          return false;
+        }
+        use->setInWorklist();
+      }
+    }
+  }
+
+  return true;
+}
+
 bool MPhi::typeIncludes(MDefinition* def) {
   MOZ_ASSERT(!IsMagicType(def->type()));
 
