@@ -63,7 +63,7 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
 bool UsedNameTracker::noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId,
                               uint32_t scopeId) {
   if (UsedNameMap::AddPtr p = map_.lookupForAdd(name)) {
-    if (!p || !p->value().noteUsedInScope(scriptId, scopeId)) {
+    if (!p->value().noteUsedInScope(scriptId, scopeId)) {
       return false;
     }
   } else {
