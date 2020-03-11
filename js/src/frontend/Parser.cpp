@@ -8745,35 +8745,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 }
 
 template <class ParseHandler>
-bool PerHandlerParser<ParseHandler>::isValidSimpleAssignmentTarget(
-    Node node,
-    FunctionCallBehavior behavior /* = ForbidAssignmentToFunctionCalls */) {
-  // Note that this method implements *only* a boolean test.  Reporting an
-  // error for the various syntaxes that fail this, and warning for the
-  // various syntaxes that "pass" this but should not, occurs elsewhere.
-
-  if (handler_.isName(node)) {
-    if (!pc_->sc()->strict()) {
-      return true;
-    }
-
-    return !nameIsArgumentsOrEval(node);
-  }
-
-  if (handler_.isPropertyAccess(node)) {
-    return true;
-  }
-
-  if (behavior == PermitAssignmentToFunctionCalls) {
-    if (handler_.isFunctionCall(node)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-template <class ParseHandler>
 const char* PerHandlerParser<ParseHandler>::nameIsArgumentsOrEval(Node node) {
   MOZ_ASSERT(handler_.isName(node),
              "must only call this function on known names");
@@ -8809,10 +8780,6 @@ bool GeneralParser<ParseHandler, Unit>::checkIncDecOperand(
     errorAt(operandOffset, JSMSG_BAD_INCOP_OPERAND);
     return false;
   }
-
-  MOZ_ASSERT(
-      isValidSimpleAssignmentTarget(operand, PermitAssignmentToFunctionCalls),
-      "inconsistent increment/decrement operand validation");
   return true;
 }
 
