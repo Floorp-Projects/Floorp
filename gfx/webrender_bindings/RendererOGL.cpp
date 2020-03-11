@@ -48,12 +48,14 @@ void wr_renderer_unlock_external_image(void* aObj, wr::ExternalImageId aId,
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          UniquePtr<RenderCompositor> aCompositor,
                          wr::WindowId aWindowId, wr::Renderer* aRenderer,
-                         layers::CompositorBridgeParent* aBridge)
+                         layers::CompositorBridgeParent* aBridge,
+                         void* aSoftwareContext)
     : mThread(aThread),
       mCompositor(std::move(aCompositor)),
       mRenderer(aRenderer),
       mBridge(aBridge),
       mWindowId(aWindowId),
+      mSoftwareContext(aSoftwareContext),
       mDisableNativeCompositor(false) {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mCompositor);
@@ -64,13 +66,19 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
 
 RendererOGL::~RendererOGL() {
   MOZ_COUNT_DTOR(RendererOGL);
+  if (mSoftwareContext) {
+    wr_swgl_make_current(mSoftwareContext);
+  }
   if (!mCompositor->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
     // Leak resources!
-    return;
+  } else {
+    wr_renderer_delete(mRenderer);
   }
-  wr_renderer_delete(mRenderer);
+  if (mSoftwareContext) {
+    wr_swgl_destroy_context(mSoftwareContext);
+  }
 }
 
 wr::WrExternalImageHandler RendererOGL::GetExternalImageHandler() {
@@ -123,6 +131,13 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     return RenderedFrameId();
   }
 
+  auto size = mCompositor->GetBufferSize();
+
+  if (mSoftwareContext) {
+    wr_swgl_make_current(mSoftwareContext);
+    wr_swgl_init_default_framebuffer(mSoftwareContext, size.width, size.height);
+  }
+
   wr_renderer_update(mRenderer);
 
   bool fullRender = mCompositor->RequestFullRender();
@@ -134,8 +149,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   if (fullRender) {
     wr_renderer_force_redraw(mRenderer);
   }
-
-  auto size = mCompositor->GetBufferSize();
 
   nsTArray<DeviceIntRect> dirtyRects;
   if (!wr_renderer_render(mRenderer, size.width, size.height, aHadSlowFrame,
