@@ -1319,9 +1319,7 @@ void TextEditor::OnCompositionEnd(
     nsCOMPtr<nsITransaction> txn = mTransactionManager->PeekUndoStack();
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
     if (plcTxn) {
-      DebugOnly<nsresult> rvIgnored = plcTxn->Commit();
-      NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                   "nsIAbsorbingTransaction::Commit() failed");
+      plcTxn->Commit();
     }
   }
 
