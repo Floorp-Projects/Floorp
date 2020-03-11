@@ -967,22 +967,22 @@ already_AddRefed<RawServoAnimationValue> ServoStyleSet::ComputeAnimationValue(
 bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
   using SheetOwner = Variant<ServoStyleSet*, ShadowRoot*>;
 
-  AutoTArray<Pair<StyleSheet*, SheetOwner>, 32> queue;
+  AutoTArray<std::pair<StyleSheet*, SheetOwner>, 32> queue;
   EnumerateStyleSheets([&](StyleSheet& aSheet) {
-    queue.AppendElement(MakePair(&aSheet, SheetOwner{this}));
+    queue.AppendElement(std::make_pair(&aSheet, SheetOwner{this}));
   });
 
   EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
     for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
       queue.AppendElement(
-          MakePair(aShadowRoot.SheetAt(index), SheetOwner{&aShadowRoot}));
+          std::make_pair(aShadowRoot.SheetAt(index), SheetOwner{&aShadowRoot}));
     }
   });
 
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
-    auto* sheet = queue[idx].first();
-    SheetOwner owner = queue[idx].second();
+    auto* sheet = queue[idx].first;
+    SheetOwner owner = queue[idx].second;
     queue.RemoveElementAt(idx);
 
     // Only call EnsureUniqueInner for complete sheets. If we do call it on
@@ -997,7 +997,7 @@ bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
 
     // Enqueue all the sheet's children.
     for (StyleSheet* child : sheet->ChildSheets()) {
-      queue.AppendElement(MakePair(child, owner));
+      queue.AppendElement(std::make_pair(child, owner));
     }
   }
 

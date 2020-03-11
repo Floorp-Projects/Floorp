@@ -146,13 +146,14 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
     nsIFrame* subtreeRoot = subtrees.PopLastElement();
 
     // Check all descendants to see if they use the font
-    AutoTArray<Pair<nsIFrame*, ReflowAlreadyScheduled>, 32> stack;
-    stack.AppendElement(MakePair(subtreeRoot, ReflowAlreadyScheduled::No));
+    AutoTArray<std::pair<nsIFrame*, ReflowAlreadyScheduled>, 32> stack;
+    stack.AppendElement(
+        std::make_pair(subtreeRoot, ReflowAlreadyScheduled::No));
 
     do {
       auto pair = stack.PopLastElement();
-      nsIFrame* f = pair.first();
-      ReflowAlreadyScheduled alreadyScheduled = pair.second();
+      nsIFrame* f = pair.first;
+      ReflowAlreadyScheduled alreadyScheduled = pair.second;
 
       // if this frame uses the font, mark its descendants dirty
       // and skip checking its children
@@ -186,7 +187,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
           nsFrameList::Enumerator childFrames(lists.CurrentList());
           for (; !childFrames.AtEnd(); childFrames.Next()) {
             nsIFrame* kid = childFrames.get();
-            stack.AppendElement(MakePair(kid, alreadyScheduled));
+            stack.AppendElement(std::make_pair(kid, alreadyScheduled));
           }
         }
       }

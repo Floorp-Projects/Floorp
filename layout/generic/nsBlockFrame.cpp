@@ -1173,14 +1173,14 @@ class MOZ_RAII LineClampLineIterator {
           break;
         }
         auto entry = mStack.PopLastElement();
-        mCurrentFrame = entry.first();
-        mCur = entry.second();
+        mCurrentFrame = entry.first;
+        mCur = entry.second;
         mEnd = mCurrentFrame->LinesEnd();
       } else if (mCur->IsBlock()) {
         if (nsBlockFrame* child = GetAsLineClampDescendant(mCur->mFirstChild)) {
           nsBlockFrame::LineIterator next = mCur;
           ++next;
-          mStack.AppendElement(MakePair(mCurrentFrame, next));
+          mStack.AppendElement(std::make_pair(mCurrentFrame, next));
           mCur = child->LinesBegin();
           mEnd = child->LinesEnd();
           mCurrentFrame = child;
@@ -1209,7 +1209,7 @@ class MOZ_RAII LineClampLineIterator {
 
   // Stack of mCurrentFrame and mEnd values that we push and pop as we enter and
   // exist blocks.
-  AutoTArray<Pair<nsBlockFrame*, nsBlockFrame::LineIterator>, 8> mStack;
+  AutoTArray<std::pair<nsBlockFrame*, nsBlockFrame::LineIterator>, 8> mStack;
 };
 
 static bool ClearLineClampEllipsis(nsBlockFrame* aFrame) {

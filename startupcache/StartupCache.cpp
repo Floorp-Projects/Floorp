@@ -473,10 +473,11 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   MOZ_TRY(mFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                   0644, &fd.rwget()));
 
-  nsTArray<Pair<const nsCString*, StartupCacheEntry*>> entries;
+  nsTArray<std::pair<const nsCString*, StartupCacheEntry*>> entries;
   for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
     if (iter.get().value().mRequested) {
-      entries.AppendElement(MakePair(&iter.get().key(), &iter.get().value()));
+      entries.AppendElement(
+          std::make_pair(&iter.get().key(), &iter.get().value()));
     }
   }
 
@@ -487,8 +488,8 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   entries.Sort(StartupCacheEntry::Comparator());
   loader::OutputBuffer buf;
   for (auto& e : entries) {
-    auto key = e.first();
-    auto value = e.second();
+    auto key = e.first;
+    auto value = e.second;
     auto uncompressedSize = value->mUncompressedSize;
     // Set the mHeaderOffsetInFile so we can go back and edit the offset.
     value->mHeaderOffsetInFile = buf.cursor();
@@ -521,7 +522,7 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   auto writeSpan = MakeSpan(writeBuffer.get(), writeBufLen);
 
   for (auto& e : entries) {
-    auto value = e.second();
+    auto value = e.second;
     value->mOffset = offset;
     Span<const char> result;
     MOZ_TRY_VAR(result,
@@ -546,7 +547,7 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   }
 
   for (auto& e : entries) {
-    auto value = e.second();
+    auto value = e.second;
     uint8_t* headerEntry = buf.Get() + value->mHeaderOffsetInFile;
     LittleEndian::writeUint32(headerEntry, value->mOffset);
     LittleEndian::writeUint32(headerEntry + sizeof(value->mOffset),
