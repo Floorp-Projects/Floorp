@@ -346,13 +346,14 @@ public:
 
   ~monitor_device_notifications()
   {
-    SetEvent(shutdown);
-    WaitForSingleObject(thread, INFINITE);
+    SetEvent(begin_shutdown);
+    WaitForSingleObject(shutdown_complete, INFINITE);
     CloseHandle(thread);
 
     CloseHandle(input_changed);
     CloseHandle(output_changed);
-    CloseHandle(shutdown);
+    CloseHandle(begin_shutdown);
+    CloseHandle(shutdown_complete);
   }
 
   void notify(EDataFlow flow)
@@ -377,8 +378,9 @@ private:
   thread_proc(LPVOID args)
   {
     XASSERT(args);
-    static_cast<monitor_device_notifications*>(args)
-      ->notification_thread_loop();
+    auto mdn = static_cast<monitor_device_notifications*>(args);
+    mdn->notification_thread_loop();
+    SetEvent(mdn->shutdown_complete);
     return 0;
   }
 
@@ -397,7 +399,7 @@ private:
     HANDLE wait_array[3] = {
       input_changed,
       output_changed,
-      shutdown,
+      begin_shutdown,
     };
 
     while (true) {
@@ -435,9 +437,15 @@ private:
       return;
     }
 
-    shutdown = CreateEvent(nullptr, 0, 0, nullptr);
-    if (!shutdown) {
-      LOG("Failed to create shutdown event.");
+    begin_shutdown = CreateEvent(nullptr, 0, 0, nullptr);
+    if (!begin_shutdown) {
+      LOG("Failed to create begin_shutdown event.");
+      return;
+    }
+
+    shutdown_complete = CreateEvent(nullptr, 0, 0, nullptr);
+    if (!shutdown_complete) {
+      LOG("Failed to create shutdown_complete event.");
       return;
     }
 
@@ -456,7 +464,8 @@ private:
   HANDLE thread = INVALID_HANDLE_VALUE;
   HANDLE output_changed = INVALID_HANDLE_VALUE;
   HANDLE input_changed = INVALID_HANDLE_VALUE;
-  HANDLE shutdown = INVALID_HANDLE_VALUE;
+  HANDLE begin_shutdown = INVALID_HANDLE_VALUE;
+  HANDLE shutdown_complete = INVALID_HANDLE_VALUE;
 
   cubeb * cubeb_context = nullptr;
 };
@@ -1921,14 +1930,18 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 
     /* Get a client. We will get all other interfaces we need from
      * this pointer. */
-    // hr = device->Activate(__uuidof(IAudioClient3),
-    //                       CLSCTX_INPROC_SERVER,
-    //                       NULL, audio_client.receive_vpp());
-    // if (hr == E_NOINTERFACE) {
+#if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
+    hr = device->Activate(__uuidof(IAudioClient3),
+                          CLSCTX_INPROC_SERVER,
+                          NULL, audio_client.receive_vpp());
+    if (hr == E_NOINTERFACE) {
+#endif
       hr = device->Activate(__uuidof(IAudioClient),
                             CLSCTX_INPROC_SERVER,
                             NULL, audio_client.receive_vpp());
-    //}
+#if 0
+    }
+#endif
 
     if (FAILED(hr)) {
       LOG("Could not activate the device to get an audio"
@@ -1994,16 +2007,20 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     flags |= AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   }
 
-  // if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
-  //   LOG("Initialized with IAudioClient3");
-  // } else {
+#if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
+  if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
+    LOG("Initialized with IAudioClient3");
+  } else {
+#endif
     hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
                                   flags,
                                   frames_to_hns(stm, stm->latency),
                                   0,
                                   mix_format.get(),
                                   NULL);
-  // }
+#if 0
+  }
+#endif
   if (FAILED(hr)) {
     LOG("Unable to initialize audio client for %s: %lx.", DIRECTION_NAME, hr);
     return CUBEB_ERROR;

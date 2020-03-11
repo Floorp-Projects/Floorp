@@ -2871,6 +2871,15 @@ audiounit_stream_destroy_internal(cubeb_stream *stm)
 static void
 audiounit_stream_destroy(cubeb_stream * stm)
 {
+  int r = audiounit_uninstall_system_changed_callback(stm);
+  if (r != CUBEB_OK) {
+    LOG("(%p) Could not uninstall the device changed callback", stm);
+  }
+  r = audiounit_uninstall_device_changed_callback(stm);
+  if (r != CUBEB_OK) {
+    LOG("(%p) Could not uninstall all device change listeners", stm);
+  }
+
   if (!stm->shutdown.load()){
     auto_lock context_lock(stm->context->mutex);
     audiounit_stream_stop_internal(stm);
