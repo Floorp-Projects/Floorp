@@ -3054,8 +3054,14 @@ const cacheEntry = streamCacheEntry(bytecode);
 
 runBox2d(cacheEntry);
 
-while (!wasmHasTier2CompilationCompleted(cacheEntry.module)) sleep(1);
-assertEq(cacheEntry.cached, wasmCachingIsSupported());
+while (!wasmHasTier2CompilationCompleted(cacheEntry.module))
+    sleep(1);
+
+// Cranelift code cannot yet be cached, but cranelift tier2 compilation will
+// still populate the cacheEntry.
+if (!wasmCompileMode().match("cranelift")) {
+    assertEq(cacheEntry.cached, wasmCachingIsSupported());
+}
 
 runBox2d(cacheEntry);
 
