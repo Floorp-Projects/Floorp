@@ -1,22 +1,6 @@
 if (!wasmIsSupported())
     quit();
 
-// We need to find the absolute path that ends like this:
-//
-//  js/src/jit-test/tests/wasm/spec/harness/
-//
-// because that's where the test harness lives.  Fortunately we are provided
-// with |libdir|, which is a path that ends thusly
-//
-//  js/src/jit-test/lib/
-//
-// That is, it has a fixed offset relative to what we need.  So we can
-// simply do this:
-
-let harnessdir = libdir + "../tests/wasm/spec/harness/";
-
-load(harnessdir + 'sync_index.js');
-
 function test(func, description) {
     let maybeErr;
     try {
