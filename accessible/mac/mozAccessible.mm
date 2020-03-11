@@ -509,7 +509,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
       return nil;
     }
 
-    if (mRole != roles::GROUPING) {
+    if (mRole != roles::GROUPING && mRole != roles::RADIO_GROUP) {
       Relation rel = accWrap->RelationByType(RelationType::LABELLED_BY);
       if (rel.Next() && !rel.Next()) {
         return nil;
@@ -521,7 +521,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
       return nil;
     }
 
-  if (mRole != roles::GROUPING) {
+    if (mRole != roles::GROUPING && mRole != roles::RADIO_GROUP) {
       nsTArray<ProxyAccessible*> rels = proxy->RelationByType(RelationType::LABELLED_BY);
       if (rels.Length() == 1) {
         return nil;
@@ -975,7 +975,7 @@ struct RoleDescrComparator {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // If this is a grouping we provide the name in the label (AXDescription).
-  if (mRole == roles::GROUPING) {
+  if (mRole == roles::GROUPING || mRole == roles::RADIO_GROUP) {
     return nil;
   }
 
