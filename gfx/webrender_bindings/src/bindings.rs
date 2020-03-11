@@ -1216,6 +1216,7 @@ extern "C" {
         compositor: *mut c_void,
         enable: bool,
     );
+    fn wr_compositor_deinit(compositor: *mut c_void);
     fn wr_compositor_get_capabilities(
         compositor: *mut c_void,
     ) -> CompositorCapabilities;
@@ -1307,6 +1308,12 @@ impl Compositor for WrCompositor {
     fn enable_native_compositor(&mut self, enable: bool) {
         unsafe {
             wr_compositor_enable_native_compositor(self.0, enable);
+        }
+    }
+
+    fn deinit(&mut self) {
+        unsafe {
+            wr_compositor_deinit(self.0);
         }
     }
 

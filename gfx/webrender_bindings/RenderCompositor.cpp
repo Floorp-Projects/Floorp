@@ -87,6 +87,11 @@ void wr_compositor_unbind(void* aCompositor) {
   compositor->Unbind();
 }
 
+void wr_compositor_deinit(void* aCompositor) {
+  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
+  compositor->DeInit();
+}
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
