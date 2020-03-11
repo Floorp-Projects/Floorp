@@ -4,7 +4,11 @@
 
 // @flow
 
-import { setupCommands, clientCommands } from "./firefox/commands";
+import {
+  setupCommands,
+  setupCommandsTopTarget,
+  clientCommands,
+} from "./firefox/commands";
 import {
   removeEventsTopTarget,
   setupEvents,
@@ -19,7 +23,7 @@ export async function onConnect(connection: any, _actions: Object) {
   const { devToolsClient, targetList } = connection;
   actions = _actions;
 
-  setupCommands({ devToolsClient, targetList });
+  setupCommands({ devToolsClient });
   setupEvents({ actions, devToolsClient });
   await targetList.watchTargets(
     targetList.ALL_TYPES,
@@ -50,6 +54,7 @@ async function onTargetAvailable({
       return;
     }
 
+    setupCommandsTopTarget(targetFront);
     setupEventsTopTarget(targetFront);
     targetFront.on("will-navigate", actions.willNavigate);
     targetFront.on("navigate", actions.navigated);
@@ -93,9 +98,6 @@ async function onTargetAvailable({
 
     await clientCommands.checkIfAlreadyPaused();
   }
-  // TODO: optimize the thread updates to only update according to what changed
-  // i.e. just about this one target
-  await actions.updateThreads();
 }
 
 function onTargetDestroyed({ targetFront, isTopLevel }) {
@@ -104,9 +106,6 @@ function onTargetDestroyed({ targetFront, isTopLevel }) {
     targetFront.off("navigate", actions.navigated);
     removeEventsTopTarget(targetFront);
   }
-  // TODO: optimize the thread updates to only update according to what changed
-  // i.e. just about this one target
-  actions.updateThreads();
 }
 
 export { clientCommands, clientEvents };

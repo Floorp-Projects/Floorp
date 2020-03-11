@@ -348,20 +348,20 @@ function TargetMixin(parentClass) {
     /**
      * Attach to thread actor.
      *
-     * This depends on having the sub-class to set the thread actor ID in `targetForm`.
+     * This depends on having the sub-class to set the thread actor ID in `_threadActor`.
      *
      * @param object options
      *        Configuration options.
      */
     async attachThread(options = {}) {
-      if (!this.targetForm || !this.targetForm.threadActor) {
+      if (!this._threadActor) {
         throw new Error(
-          "TargetMixin sub class should set targetForm.threadActor before calling " +
+          "TargetMixin sub class should set _threadActor before calling " +
             "attachThread"
         );
       }
       this.threadFront = await this.getFront("thread");
-      await this.threadFront.attach(options);
+      const result = await this.threadFront.attach(options);
 
       this.threadFront.on("newSource", this._onNewSource);
 
@@ -369,7 +369,7 @@ function TargetMixin(parentClass) {
       // wait for the thread to be attached can resume.
       this._resolveOnThreadAttached();
 
-      return this.threadFront;
+      return [result, this.threadFront];
     }
 
     // Listener for "newSource" event fired by the thread actor

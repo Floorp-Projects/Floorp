@@ -27,6 +27,9 @@ class ContentProcessTargetFront extends TargetMixin(
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
     this.targetForm = json;
+    // This `_threadActor` will be used by TargetMixin.attachThread function.
+    this._threadActor = json.threadActor;
+    this.targetForm.contextActor = this._threadActor;
   }
 
   get name() {
