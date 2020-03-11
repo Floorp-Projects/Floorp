@@ -64,10 +64,10 @@ def pgo_profile_path(path, pgo_use, profdata, build_env):
 
 set_config('PGO_PROFILE_PATH', pgo_profile_path)
 
-@depends(c_compiler, target, pgo_profile_path)
+@depends(c_compiler, pgo_profile_path)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
-def pgo_flags(compiler, target, profdata):
+def pgo_flags(compiler, profdata):
     if compiler.type == 'gcc':
         return namespace(
             gen_cflags=['-fprofile-generate'],
@@ -81,12 +81,7 @@ def pgo_flags(compiler, target, profdata):
         prefix = ''
         if compiler.type == 'clang-cl':
             prefix = '/clang:'
-            if target.cpu == 'x86_64':
-                gen_ldflags = ['clang_rt.profile-x86_64.lib']
-            elif target.cpu == 'x86':
-                gen_ldflags = ['clang_rt.profile-i386.lib']
-            else:
-                gen_ldflags = None
+            gen_ldflags = None
         else:
             gen_ldflags = ['-fprofile-generate']
 
