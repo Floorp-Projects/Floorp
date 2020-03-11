@@ -39,13 +39,13 @@ flat varying int vFuncs[4];
 
 #ifdef WR_VERTEX_SHADER
 
-in int aFilterRenderTaskAddress;
-in int aFilterInput1TaskAddress;
-in int aFilterInput2TaskAddress;
-in int aFilterKind;
-in int aFilterInputCount;
-in int aFilterGenericInt;
-in ivec2 aFilterExtraDataAddress;
+PER_INSTANCE in int aFilterRenderTaskAddress;
+PER_INSTANCE in int aFilterInput1TaskAddress;
+PER_INSTANCE in int aFilterInput2TaskAddress;
+PER_INSTANCE in int aFilterKind;
+PER_INSTANCE in int aFilterInputCount;
+PER_INSTANCE in int aFilterGenericInt;
+PER_INSTANCE in ivec2 aFilterExtraDataAddress;
 
 struct FilterTask {
     RenderTaskCommonData common_data;

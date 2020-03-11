@@ -6,14 +6,14 @@
 
 #ifdef WR_VERTEX_SHADER
 
-in vec2 aFromPosition;
-in vec2 aCtrlPosition;
-in vec2 aToPosition;
-in vec2 aFromNormal;
-in vec2 aCtrlNormal;
-in vec2 aToNormal;
-in int aPathID;
-in int aPad;
+PER_INSTANCE in vec2 aFromPosition;
+PER_INSTANCE in vec2 aCtrlPosition;
+PER_INSTANCE in vec2 aToPosition;
+PER_INSTANCE in vec2 aFromNormal;
+PER_INSTANCE in vec2 aCtrlNormal;
+PER_INSTANCE in vec2 aToNormal;
+PER_INSTANCE in int aPathID;
+PER_INSTANCE in int aPad;
 
 out vec2 vFrom;
 out vec2 vCtrl;
