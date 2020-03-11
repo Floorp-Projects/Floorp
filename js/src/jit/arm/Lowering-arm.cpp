@@ -862,7 +862,7 @@ void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   }
 
   MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-  MOZ_ASSERT(HasLDSTREXBHD(), "by HasCompilerSupport() constraints");
+  MOZ_ASSERT(HasLDSTREXBHD(), "by HasPlatformSupport() constraints");
 
   LWasmCompareExchangeHeap* lir = new (alloc())
       LWasmCompareExchangeHeap(useRegister(base), useRegister(ins->oldValue()),
@@ -885,7 +885,7 @@ void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
   }
 
   MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-  MOZ_ASSERT(HasLDSTREXBHD(), "by HasCompilerSupport() constraints");
+  MOZ_ASSERT(HasLDSTREXBHD(), "by HasPlatformSupport() constraints");
 
   const LAllocation base = useRegister(ins->base());
   const LAllocation value = useRegister(ins->value());
@@ -905,7 +905,7 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   }
 
   MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-  MOZ_ASSERT(HasLDSTREXBHD(), "by HasCompilerSupport() constraints");
+  MOZ_ASSERT(HasLDSTREXBHD(), "by HasPlatformSupport() constraints");
 
   MDefinition* base = ins->base();
   MOZ_ASSERT(base->type() == MIRType::Int32);

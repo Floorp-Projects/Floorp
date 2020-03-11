@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebugSupport()
+// |jit-test| skip-if: !wasmDebuggingIsSupported()
 var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("Debugger(parent).onExceptionUnwind = function () {};");

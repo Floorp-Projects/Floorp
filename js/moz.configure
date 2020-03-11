@@ -474,6 +474,9 @@ set_define('MOZ_RUST_SIMD', rust_simd)
 
 
 # Experimental support for wasm code generation with Cranelift
+#
+# Note, you may have to disable features not supported by Cranelift
+# (multi-value, threads) to make Cranelift actually available
 # ==============================================================
 
 js_option('--enable-cranelift',
@@ -590,6 +593,7 @@ set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')
 
 
 # Support for the WebAssembly multi-value proposal.
+# Do not remove until Cranelift supports multi-value.
 # =====================================================
 
 @depends(milestone.is_nightly, building_js)
@@ -603,6 +607,27 @@ js_option('--enable-wasm-multi-value',
 
 set_config('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
 set_define('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
+
+
+# Support for WebAssembly shared memory and atomics.
+#
+# This affects the JS shell only and here to allow the use of
+# Cranelift in the shell.  Once Cranelift supports shared memory
+# and atomics it can go away.
+# =====================================================
+
+@depends(milestone.is_nightly)
+def default_wasm_threads(is_nightly):
+    return is_nightly
+
+js_option('--enable-wasm-threads',
+          default=default_wasm_threads,
+          help='{Enable|Disable} WebAssembly shared memory and atomics')
+
+set_config('ENABLE_WASM_THREADS', depends_if('--enable-wasm-threads')(lambda x: True))
+set_define('ENABLE_WASM_THREADS', depends_if('--enable-wasm-threads')(lambda x: True))
+
+
 
 # Initial support for new regexp engine
 # ==================================================

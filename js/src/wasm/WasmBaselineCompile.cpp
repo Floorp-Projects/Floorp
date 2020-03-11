@@ -12918,7 +12918,7 @@ FuncOffsets BaseCompiler::finish() {
 }  // namespace wasm
 }  // namespace js
 
-bool js::wasm::BaselineCanCompile() {
+bool js::wasm::BaselinePlatformSupport() {
 #if defined(JS_CODEGEN_ARM)
   // Simplifying assumption: require SDIV and UDIV.
   //
