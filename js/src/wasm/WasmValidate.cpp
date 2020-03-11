@@ -2986,11 +2986,11 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
                     UniqueChars* error) {
   Decoder d(bytecode.bytes, 0, error);
 
-  bool gcTypesConfigured = GcTypesAvailable(cx);
-  bool refTypesConfigured = ReftypesAvailable(cx);
-  bool multiValueConfigured = MultiValuesAvailable(cx);
+  bool gcTypesConfigured = HasGcSupport(cx);
+  bool refTypesConfigured = HasReftypesSupport(cx);
+  bool multiValueConfigured = HasMultiValueSupport(cx);
   bool hugeMemory = false;
-  bool bigIntConfigured = I64BigIntConversionAvailable(cx);
+  bool bigIntConfigured = HasI64BigIntSupport(cx);
 
   CompilerEnvironment compilerEnv(
       CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,

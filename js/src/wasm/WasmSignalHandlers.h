@@ -45,7 +45,7 @@ void EnsureEagerProcessSignalHandlers();
 // this function performs the full installation of signal handlers which must
 // be performed per-thread/JSContext. This operation may incur some overhead and
 // so should be done only when needed to use wasm. Currently, this is done in
-// wasm::HasPlatformSupport() which is called when deciding whether to expose
+// wasm::HasCompilerSupport() which is called when deciding whether to expose
 // the 'WebAssembly' object on the global object.
 bool EnsureFullSignalHandlers(JSContext* cx);
 

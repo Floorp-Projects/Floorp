@@ -139,20 +139,16 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
       // overwritten later on.
       uint8_t optByte = (uint8_t)buf[currentIndex];
 
-      // Note that IonPlatformSupport() and CraneliftPlatformSupport() do not
-      // take into account whether those compilers support particular features
-      // that may have been enabled.
       bool enableWasmBaseline = ((optByte & 0xF0) == (1 << 7));
-      bool enableWasmIon =
-          IonPlatformSupport() && ((optByte & 0xF0) == (1 << 6));
+      bool enableWasmIon = IonCanCompile() && ((optByte & 0xF0) == (1 << 6));
       bool enableWasmCranelift = false;
 #ifdef ENABLE_WASM_CRANELIFT
       enableWasmCranelift =
-          CraneliftPlatformSupport() && ((optByte & 0xF0) == (1 << 5));
+          CraneliftCanCompile() && ((optByte & 0xF0) == (1 << 5));
 #endif
-      bool enableWasmAwaitTier2 = (IonPlatformSupport()
+      bool enableWasmAwaitTier2 = (IonCanCompile()
 #ifdef ENABLE_WASM_CRANELIFT
-                                   || CraneliftPlatformSupport()
+                                   || CraneliftCanCompile()
 #endif
                                        ) &&
                                   ((optByte & 0xF) == (1 << 3));
@@ -162,7 +158,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
         // more platform specific JIT code. However, on some platforms,
         // e.g. ARM64, we do not have Ion available, so we need to switch
         // to baseline instead.
-        if (IonPlatformSupport()) {
+        if (IonCanCompile()) {
           enableWasmIon = true;
         } else {
           enableWasmBaseline = true;
