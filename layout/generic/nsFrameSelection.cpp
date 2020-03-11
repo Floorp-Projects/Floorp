@@ -330,7 +330,7 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
 
   mPresShell = aPresShell;
   mDragState = false;
-  mDesiredPosSet = false;
+  mDesiredPos.mIsSet = false;
   mLimiters.mLimiter = aLimiter;
   mCaret.mMovementStyle =
       Preferences::GetInt("bidi.edit.caret_movement_style", 2);
@@ -416,8 +416,8 @@ nsresult nsFrameSelection::FetchDesiredPos(nsPoint& aDesiredPos) {
     NS_ERROR("fetch desired position failed");
     return NS_ERROR_FAILURE;
   }
-  if (mDesiredPosSet) {
-    aDesiredPos = mDesiredPos;
+  if (mDesiredPos.mIsSet) {
+    aDesiredPos = mDesiredPos.mValue;
     return NS_OK;
   }
 
@@ -444,15 +444,16 @@ nsresult nsFrameSelection::FetchDesiredPos(nsPoint& aDesiredPos) {
   return NS_OK;
 }
 
-void nsFrameSelection::InvalidateDesiredPos()  // do not listen to mDesiredPos;
-                                               // you must get another.
+void nsFrameSelection::InvalidateDesiredPos()  // do not listen to
+                                               // mDesiredPos.mValue; you must
+                                               // get another.
 {
-  mDesiredPosSet = false;
+  mDesiredPos.mIsSet = false;
 }
 
 void nsFrameSelection::SetDesiredPos(nsPoint aPos) {
-  mDesiredPos = aPos;
-  mDesiredPosSet = true;
+  mDesiredPos.mValue = aPos;
+  mDesiredPos.mIsSet = true;
 }
 
 nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
@@ -1325,10 +1326,10 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
       mBatching = batching;
       mChangesDuringBatching = changes;
     } else {
-      bool oldDesiredPosSet = mDesiredPosSet;  // need to keep old desired
-                                               // position if it was set.
+      bool oldDesiredPosSet = mDesiredPos.mIsSet;  // need to keep old desired
+                                                   // position if it was set.
       mDomSelections[index]->Collapse(aNewFocus, aContentOffset);
-      mDesiredPosSet = oldDesiredPosSet;  // now reset desired pos back.
+      mDesiredPos.mIsSet = oldDesiredPosSet;  // now reset desired pos back.
       mBatching = batching;
       mChangesDuringBatching = changes;
     }
@@ -1735,8 +1736,8 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
   }
 
   // find out where the caret is.
-  // we should know mDesiredPos value of nsFrameSelection, but I havent seen
-  // that behavior in other windows applications yet.
+  // we should know mDesiredPos.mValue value of nsFrameSelection, but I havent
+  // seen that behavior in other windows applications yet.
   RefPtr<Selection> selection = GetSelection(SelectionType::eNormal);
   if (!selection) {
     return NS_OK;
