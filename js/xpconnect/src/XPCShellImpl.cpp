@@ -485,28 +485,18 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (strcmp(opt.get(), "werror") == 0) {
-      ContextOptionsRef(cx).toggleWerror();
-    } else if (strcmp(opt.get(), "strict_mode") == 0) {
+    if (strcmp(opt.get(), "strict_mode") == 0) {
       ContextOptionsRef(cx).toggleStrictMode();
     } else {
       JS_ReportErrorUTF8(cx,
-                         "unknown option name '%s'. The valid names are "
-                         "werror and strict_mode.",
+                         "unknown option name '%s'. The valid name is "
+                         "strict_mode.",
                          opt.get());
       return false;
     }
   }
 
   UniqueChars names;
-  if (oldContextOptions.werror()) {
-    names =
-        JS_sprintf_append(std::move(names), "%s%s", names ? "," : "", "werror");
-    if (!names) {
-      JS_ReportOutOfMemory(cx);
-      return false;
-    }
-  }
   if (names && oldContextOptions.strictMode()) {
     names = JS_sprintf_append(std::move(names), "%s%s", names ? "," : "",
                               "strict_mode");
@@ -838,7 +828,7 @@ static int usage() {
   fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
   fprintf(
       gErrFile,
-      "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCSmIp] "
+      "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCmIp] "
       "[-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
   return 2;
 }
@@ -846,27 +836,6 @@ static int usage() {
 static bool printUsageAndSetExitCode() {
   gExitCode = usage();
   return false;
-}
-
-static void ProcessArgsForCompartment(JSContext* cx, char** argv, int argc) {
-  for (int i = 0; i < argc; i++) {
-    if (argv[i][0] != '-' || argv[i][1] == '\0') {
-      break;
-    }
-
-    switch (argv[i][1]) {
-      case 'v':
-      case 'f':
-      case 'e':
-        if (++i == argc) {
-          return;
-        }
-        break;
-      case 'S':
-        ContextOptionsRef(cx).toggleWerror();
-        break;
-    }
-  }
 }
 
 static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
@@ -995,9 +964,6 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
       case 'C':
         compileOnly = true;
         isInteractive = false;
-        break;
-      case 'S':
-        // These options are processed in ProcessArgsForCompartment.
         break;
       case 'p': {
         // plugins path
@@ -1260,7 +1226,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     argc--;
     argv++;
-    ProcessArgsForCompartment(cx, argv, argc);
 
     nsCOMPtr<nsIPrincipal> systemprincipal;
     // Fetch the system principal and store it away in a global, to use for
