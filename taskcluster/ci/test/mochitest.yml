@@ -63,10 +63,6 @@ mochitest-plain:
             windows10-64-ccov/.*: 10
             macosx.*64-ccov/.*: 10
             default: 5
-    worker-type:
-        by-test-platform:
-            linux.*64-tsan/opt: t-linux-xlarge
-            default: default
     e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false
