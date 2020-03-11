@@ -33,8 +33,8 @@ else
         if [ -n "$TASKCLUSTER_PGO_PROFILE_USE" ]; then
             export MOZ_LTO=cross
             ac_add_options --enable-profile-use=cross
-            ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
-            ac_add_options --with-pgo-profile-path=/builds/worker/fetches/merged.profdata
+            ac_add_options --with-pgo-jarlog=${MOZ_FETCHES_DIR}/en-US.log
+            ac_add_options --with-pgo-profile-path=${MOZ_FETCHES_DIR}/merged.profdata
             export LLVM_PROFDATA="$MOZ_FETCHES_DIR/clang/bin/llvm-profdata"
             export AR="$MOZ_FETCHES_DIR/clang/bin/llvm-ar"
             export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
