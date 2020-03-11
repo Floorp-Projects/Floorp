@@ -2887,7 +2887,9 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
     return NS_OK;
   }
 
-  if (mFrameSelection->GetBatching()) return NS_OK;
+  if (mFrameSelection->IsBatching()) {
+    return NS_OK;
+  }
 
   if (!(aFlags & Selection::SCROLL_SYNCHRONOUS))
     return PostScrollSelectionIntoViewEvent(aRegion, aFlags, aVertical,
@@ -3036,7 +3038,7 @@ nsresult Selection::NotifySelectionListeners() {
   }
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  if (frameSelection->GetBatching()) {
+  if (frameSelection->IsBatching()) {
     frameSelection->SetChangesDuringBatchingFlag();
     return NS_OK;
   }
