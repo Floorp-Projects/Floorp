@@ -501,19 +501,11 @@ interface nsIXPCComponents_Utils : nsISupports
     void dispatch(in jsval runnable, [optional] in jsval scope);
 
     /*
-     * To be called from JS only.
+     * Bug 1621603 - Remove strict_mode.
      *
-     * These are the set of JSContext options that privileged script
-     * is allowed to control for the purposes of testing.  These
-     * options should be kept in sync with what's controllable in the
-     * jsshell and by setting prefs in nsJSEnvironment.
-     *
-     * NB: Assume that getting any of these attributes is relatively
-     * cheap, but setting any of them is relatively expensive.
+     * Do not use this API! Instead use "use strict"; at the top of your JS
+     * file.
      */
-    [implicit_jscontext]
-    attribute boolean werror;
-
     [implicit_jscontext]
     attribute boolean strict_mode;
 

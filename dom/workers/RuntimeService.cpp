@@ -274,6 +274,9 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   // Context options.
   JS::ContextOptions contextOptions;
   contextOptions.setAsmJS(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs")))
+#ifdef FUZZING
+      .setFuzzing(GetWorkerPref<bool>(NS_LITERAL_CSTRING("fuzzing.enabled")))
+#endif
       .setWasm(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm")))
       .setWasmForTrustedPrinciples(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_trustedprincipals")))
@@ -290,11 +293,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmVerbose(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_verbose")))
       .setThrowOnAsmJSValidationFailure(GetWorkerPref<bool>(
           NS_LITERAL_CSTRING("throw_on_asmjs_validation_failure")))
-      .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")))
-#ifdef FUZZING
-      .setFuzzing(GetWorkerPref<bool>(NS_LITERAL_CSTRING("fuzzing.enabled")))
-#endif
-      .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")));
+      .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

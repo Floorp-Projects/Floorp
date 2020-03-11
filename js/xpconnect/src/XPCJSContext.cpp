@@ -911,8 +911,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool dumpStackOnDebuggeeWouldRun = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "dump_stack_on_debuggee_would_run");
 
-  bool werror = Preferences::GetBool(JS_OPTIONS_DOT_STR "werror");
-
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
@@ -938,6 +936,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(useAsmJS)
+#ifdef FUZZING
+      .setFuzzing(fuzzingEnabled)
+#endif
       .setWasm(useWasm)
       .setWasmForTrustedPrinciples(useWasmTrustedPrincipals)
       .setWasmIon(useWasmIon)
@@ -952,11 +953,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)
       .setAsyncStack(useAsyncStack)
       .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
-      .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun)
-#ifdef FUZZING
-      .setFuzzing(fuzzingEnabled)
-#endif
-      .setWerror(werror);
+      .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
