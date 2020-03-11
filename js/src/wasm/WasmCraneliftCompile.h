@@ -27,16 +27,25 @@ namespace js {
 namespace wasm {
 
 #ifdef ENABLE_WASM_CRANELIFT
-MOZ_MUST_USE bool CraneliftCanCompile();
-#else
-MOZ_MUST_USE inline bool CraneliftCanCompile() { return false; }
-#endif
+// Return whether CraneliftCompileFunction() can generate code on the current
+// device.  Usually you do *not* want this, you want CraneliftAvailable().
+MOZ_MUST_USE bool CraneliftPlatformSupport();
 
 // Generates code with Cranelift.
 MOZ_MUST_USE bool CraneliftCompileFunctions(
     const ModuleEnvironment& env, LifoAlloc& lifo,
     const FuncCompileInputVector& inputs, CompiledCode* code,
     UniqueChars* error);
+#else
+MOZ_MUST_USE inline bool CraneliftPlatformSupport() { return false; }
+
+MOZ_MUST_USE inline bool CraneliftCompileFunctions(
+    const ModuleEnvironment& env, LifoAlloc& lifo,
+    const FuncCompileInputVector& inputs, CompiledCode* code,
+    UniqueChars* error) {
+  MOZ_CRASH("Should not happen");
+}
+#endif
 
 }  // namespace wasm
 }  // namespace js
