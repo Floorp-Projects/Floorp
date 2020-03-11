@@ -8,11 +8,10 @@
 #define MOZILLA_SOURCEBUFFERTASK_H_
 
 #include "mozilla/MozPromise.h"
+#include "mozilla/Pair.h"
 #include "SourceBufferAttributes.h"
 #include "TimeUnits.h"
 #include "MediaResult.h"
-
-#include <utility>
 
 namespace mozilla {
 
@@ -29,7 +28,7 @@ class SourceBufferTask {
     ChangeType
   };
 
-  typedef std::pair<bool, SourceBufferAttributes> AppendBufferResult;
+  typedef Pair<bool, SourceBufferAttributes> AppendBufferResult;
   typedef MozPromise<AppendBufferResult, MediaResult, /* IsExclusive = */ true>
       AppendPromise;
   typedef MozPromise<bool, nsresult, /* IsExclusive = */ true>

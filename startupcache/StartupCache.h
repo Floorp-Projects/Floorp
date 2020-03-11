@@ -6,8 +6,6 @@
 #ifndef StartupCache_h_
 #define StartupCache_h_
 
-#include <utility>
-
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
@@ -22,6 +20,7 @@
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Pair.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 
@@ -109,14 +108,14 @@ struct StartupCacheEntry {
         mRequested(true) {}
 
   struct Comparator {
-    using Value = std::pair<const nsCString*, StartupCacheEntry*>;
+    using Value = Pair<const nsCString*, StartupCacheEntry*>;
 
     bool Equals(const Value& a, const Value& b) const {
-      return a.second->mRequestedOrder == b.second->mRequestedOrder;
+      return a.second()->mRequestedOrder == b.second()->mRequestedOrder;
     }
 
     bool LessThan(const Value& a, const Value& b) const {
-      return a.second->mRequestedOrder < b.second->mRequestedOrder;
+      return a.second()->mRequestedOrder < b.second()->mRequestedOrder;
     }
   };
 };

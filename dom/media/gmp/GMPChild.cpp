@@ -380,7 +380,7 @@ static bool GetSigPath(const int aRelativeLayers,
 #endif
 
 static bool AppendHostPath(nsCOMPtr<nsIFile>& aFile,
-                           nsTArray<std::pair<nsCString, nsCString>>& aPaths) {
+                           nsTArray<Pair<nsCString, nsCString>>& aPaths) {
   nsString str;
   if (!FileExists(aFile) || !ResolveLinks(aFile) ||
       NS_FAILED(aFile->GetPath(str))) {
@@ -410,21 +410,19 @@ static bool AppendHostPath(nsCOMPtr<nsIFile>& aFile,
   sigFilePath =
       nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
 #endif
-  aPaths.AppendElement(
-      std::make_pair(std::move(filePath), std::move(sigFilePath)));
+  aPaths.AppendElement(MakePair(std::move(filePath), std::move(sigFilePath)));
   return true;
 }
 
-nsTArray<std::pair<nsCString, nsCString>>
-GMPChild::MakeCDMHostVerificationPaths() {
+nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
   // Record the file path and its sig file path.
-  nsTArray<std::pair<nsCString, nsCString>> paths;
+  nsTArray<Pair<nsCString, nsCString>> paths;
   // Plugin binary path.
   nsCOMPtr<nsIFile> path;
   nsString str;
   if (GetPluginFile(mPluginPath, path) && FileExists(path) &&
       ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
-    paths.AppendElement(std::make_pair(
+    paths.AppendElement(MakePair(
         nsCString(NS_ConvertUTF16toUTF8(str)),
         nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"))));
   }
@@ -476,14 +474,14 @@ GMPChild::MakeCDMHostVerificationPaths() {
   return paths;
 }
 
-static nsCString ToCString(
-    const nsTArray<std::pair<nsCString, nsCString>>& aPairs) {
+static nsCString ToCString(const nsTArray<Pair<nsCString, nsCString>>& aPairs) {
   nsCString result;
   for (const auto& p : aPairs) {
     if (!result.IsEmpty()) {
       result.AppendLiteral(",");
     }
-    result.Append(nsPrintfCString("(%s,%s)", p.first.get(), p.second.get()));
+    result.Append(
+        nsPrintfCString("(%s,%s)", p.first().get(), p.second().get()));
   }
   return result;
 }

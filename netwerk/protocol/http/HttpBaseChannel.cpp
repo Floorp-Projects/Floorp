@@ -2236,8 +2236,8 @@ HttpBaseChannel::TakeAllSecurityMessages(
         do_CreateInstance(NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    message->SetTag(pair.first);
-    message->SetCategory(pair.second);
+    message->SetTag(pair.first());
+    message->SetCategory(pair.second());
     aMessages.AppendElement(message);
   }
 
@@ -2265,7 +2265,7 @@ nsresult HttpBaseChannel::AddSecurityMessage(
   // nsSecurityConsoleMessage is not thread-safe refcounted.
   // Delay the object construction until requested.
   // See TakeAllSecurityMessages()
-  std::pair<nsString, nsString> pair(aMessageTag, aMessageCategory);
+  Pair<nsString, nsString> pair(aMessageTag, aMessageCategory);
   mSecurityConsoleMessages.AppendElement(std::move(pair));
 
   nsCOMPtr<nsIConsoleService> console(

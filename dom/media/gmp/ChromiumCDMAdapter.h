@@ -12,8 +12,7 @@
 #include "nsTArray.h"
 #include "content_decryption_module_ext.h"
 #include "nsString.h"
-
-#include <utility>
+#include "mozilla/Pair.h"
 
 struct GMPPlatformAPI;
 
@@ -55,7 +54,7 @@ struct HostFileData {
 class ChromiumCDMAdapter : public gmp::GMPAdapter {
  public:
   explicit ChromiumCDMAdapter(
-      nsTArray<std::pair<nsCString, nsCString>>&& aHostPathPairs);
+      nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs);
 
   void SetAdaptee(PRLibrary* aLib) override;
 
@@ -69,8 +68,7 @@ class ChromiumCDMAdapter : public gmp::GMPAdapter {
                        int32_t aHostVersion);
 
  private:
-  void PopulateHostFiles(
-      nsTArray<std::pair<nsCString, nsCString>>&& aHostFilePaths);
+  void PopulateHostFiles(nsTArray<Pair<nsCString, nsCString>>&& aHostFilePaths);
 
   PRLibrary* mLib = nullptr;
   nsTArray<HostFileData> mHostFiles;
