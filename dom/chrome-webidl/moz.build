@@ -44,7 +44,6 @@ WEBIDL_FILES = [
     'DominatorTree.webidl',
     'DOMLocalization.webidl',
     'Flex.webidl',
-    'Fluent.webidl',
     'HeapSnapshot.webidl',
     'InspectorUtils.webidl',
     'IteratorResult.webidl',
