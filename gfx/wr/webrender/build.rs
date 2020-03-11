@@ -9,6 +9,8 @@ use std::env;
 use std::fs::{canonicalize, read_dir, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hasher;
 use webrender_build::shader::*;
 
 fn write_shaders(glsl_files: Vec<PathBuf>, shader_file_path: &Path) {
@@ -33,13 +35,13 @@ fn write_shaders(glsl_files: Vec<PathBuf>, shader_file_path: &Path) {
         // Compute a digest of the #include-expanded shader source. We store
         // this as a literal alongside the source string so that we don't need
         // to hash large strings at runtime.
-        let mut hasher = Sha256::new();
+        let mut hasher = DefaultHasher::new();
         let base = glsl.parent().unwrap();
         assert!(base.is_dir());
         ShaderSourceParser::new().parse(
             Cow::Owned(shader_source_from_file(&glsl)),
             &|f| Cow::Owned(shader_source_from_file(&base.join(&format!("{}.glsl", f)))),
-            &mut |s| hasher.input(s.as_bytes()),
+            &mut |s| hasher.write(s.as_bytes()),
         );
         let digest: ProgramSourceDigest = hasher.into();
 
