@@ -63,6 +63,10 @@ mochitest-plain:
             windows10-64-ccov/.*: 10
             macosx.*64-ccov/.*: 10
             default: 5
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
     e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false
