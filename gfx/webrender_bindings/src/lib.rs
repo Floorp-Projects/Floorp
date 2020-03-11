@@ -12,6 +12,7 @@ extern crate gleam;
 extern crate nsstring;
 extern crate num_cpus;
 extern crate rayon;
+extern crate swgl;
 extern crate thin_vec;
 extern crate thread_profiler;
 extern crate uuid;
@@ -37,3 +38,5 @@ mod program_cache;
 #[allow(non_snake_case)]
 pub mod bindings;
 pub mod moz2d_renderer;
+mod swgl_bindings;
+
