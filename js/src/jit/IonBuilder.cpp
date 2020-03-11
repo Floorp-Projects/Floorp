@@ -974,10 +974,10 @@ AbortReasonOr<Ok> IonBuilder::build() {
 AbortReasonOr<Ok> IonBuilder::processIterators() {
   // Find and mark phis that must transitively hold an iterator live.
 
-  Vector<MDefinition*, 8, SystemAllocPolicy> worklist;
+  Vector<MPhi*, 8, SystemAllocPolicy> worklist;
 
   for (size_t i = 0; i < iterators_.length(); i++) {
-    MDefinition* iter = iterators_[i];
+    MPhi* iter = iterators_[i];
     if (!iter->isInWorklist()) {
       if (!worklist.append(iter)) {
         return abort(AbortReason::Alloc);
@@ -987,19 +987,16 @@ AbortReasonOr<Ok> IonBuilder::processIterators() {
   }
 
   while (!worklist.empty()) {
-    MDefinition* def = worklist.popCopy();
-    def->setNotInWorklist();
+    MPhi* phi = worklist.popCopy();
+    phi->setNotInWorklist();
 
-    if (def->isPhi()) {
-      MPhi* phi = def->toPhi();
-      phi->setIterator();
-      phi->setImplicitlyUsedUnchecked();
-    }
+    phi->setIterator();
+    phi->setImplicitlyUsedUnchecked();
 
-    for (MUseDefIterator iter(def); iter; iter++) {
+    for (MUseDefIterator iter(phi); iter; iter++) {
       MDefinition* use = iter.def();
       if (!use->isInWorklist() && use->isPhi() && !use->toPhi()->isIterator()) {
-        if (!worklist.append(use)) {
+        if (!worklist.append(use->toPhi())) {
           return abort(AbortReason::Alloc);
         }
         use->setInWorklist();
@@ -2117,11 +2114,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       MOZ_TRY(jsop_call(GET_ARGC(pc),
                         JSOp(*pc) == JSOp::New || JSOp(*pc) == JSOp::SuperCall,
                         JSOp(*pc) == JSOp::CallIgnoresRv));
-      if (op == JSOp::CallIter) {
-        if (!outermostBuilder()->iterators_.append(current->peek(-1))) {
-          return abort(AbortReason::Alloc);
-        }
-      }
       return Ok();
 
     case JSOp::Eval:
@@ -7603,22 +7595,45 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newPendingLoopHeader(
     }
   }
 
-  // The bytecode emitted for destructuring assignments uses a "done" stack
-  // value that can be read from the exception handler. Mark the loop phi for
-  // this slot as having implicit uses so it won't be optimized away (replaced
-  // by the JS_OPTIMIZED_OUT magic value).
+  // The exception handler has code to close iterators for certain loops. We
+  // need to mark the phis (and phis these iterators flow into) as having
+  // implicit uses so that Ion does not optimize them away (replace with the
+  // JS_OPTIMIZED_OUT MagicValue).
   // See ProcessTryNotes in vm/Interpreter.cpp.
   MOZ_ASSERT(block->stackDepth() >= info().firstStackSlot());
   bool emptyStack = block->stackDepth() == info().firstStackSlot();
   if (!emptyStack) {
     for (TryNoteIterAllNoGC tni(script(), pc); !tni.done(); ++tni) {
       const JSTryNote& tn = **tni;
-      if (tn.kind != JSTRY_DESTRUCTURING) {
-        continue;
+
+      // Stop if we reach an outer loop because outer loops were already
+      // processed when we visited their loop headers.
+      if (tn.isLoop()) {
+        BytecodeLocation tnStart = script()->offsetToLocation(tn.start);
+        if (tnStart.toRawBytecode() != pc) {
+          MOZ_ASSERT(tnStart.is(JSOp::LoopHead));
+          MOZ_ASSERT(tnStart.toRawBytecode() < pc);
+          break;
+        }
       }
-      MOZ_ASSERT(tn.stackDepth > 1);
-      uint32_t slot = info().stackSlot(tn.stackDepth - 1);
-      block->getSlot(slot)->setImplicitlyUsedUnchecked();
+
+      switch (tn.kind) {
+        case JSTRY_DESTRUCTURING:
+        case JSTRY_FOR_IN: {
+          // For for-in loops we add the iterator object to iterators_. For
+          // destructuring loops we add the "done" value that's on top of the
+          // stack and used in the exception handler.
+          MOZ_ASSERT(tn.stackDepth >= 1);
+          uint32_t slot = info().stackSlot(tn.stackDepth - 1);
+          MPhi* phi = block->getSlot(slot)->toPhi();
+          if (!outermostBuilder()->iterators_.append(phi)) {
+            return abort(AbortReason::Alloc);
+          }
+          break;
+        }
+        default:
+          break;
+      }
     }
   }
 
@@ -12201,10 +12216,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_toid() {
 AbortReasonOr<Ok> IonBuilder::jsop_iter() {
   MDefinition* obj = current->pop();
   MInstruction* ins = MGetIteratorCache::New(alloc(), obj);
-
-  if (!outermostBuilder()->iterators_.append(ins)) {
-    return abort(AbortReason::Alloc);
-  }
 
   current->add(ins);
   current->push(ins);
