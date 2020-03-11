@@ -809,6 +809,7 @@ DownloadsPlacesView.prototype = {
     if (!links.length) {
       return;
     }
+    aEvent.preventDefault();
     let browserWin = BrowserWindowTracker.getTopWindow();
     let initiatingDoc = browserWin ? browserWin.document : document;
     for (let link of links) {
@@ -841,31 +842,38 @@ function goUpdateDownloadCommands() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  let richtListBox = document.getElementById("downloadsRichListBox");
-  richtListBox.addEventListener("scroll", function(event) {
+  let richListBox = document.getElementById("downloadsRichListBox");
+  richListBox.addEventListener("scroll", function(event) {
     return this._placesView.onScroll();
   });
-  richtListBox.addEventListener("keypress", function(event) {
+  richListBox.addEventListener("keypress", function(event) {
     return this._placesView.onKeyPress(event);
   });
-  richtListBox.addEventListener("dblclick", function(event) {
+  richListBox.addEventListener("dblclick", function(event) {
     return this._placesView.onDoubleClick(event);
   });
-  richtListBox.addEventListener("contextmenu", function(event) {
+  richListBox.addEventListener("contextmenu", function(event) {
     return this._placesView.onContextMenu(event);
   });
-  richtListBox.addEventListener("dragstart", function(event) {
+  richListBox.addEventListener("dragstart", function(event) {
     this._placesView.onDragStart(event);
   });
-  richtListBox.addEventListener("dragover", function(event) {
-    this._placesView.onDragOver(event);
+  let dropNode = richListBox;
+  // In about:downloads, also allow drops if the list is empty, by
+  // adding the listener to the document, as the richlistbox is
+  // hidden when it is empty.
+  if (document.documentElement.id == "contentAreaDownloadsView") {
+    dropNode = richListBox.parentNode;
+  }
+  dropNode.addEventListener("dragover", function(event) {
+    richListBox._placesView.onDragOver(event);
   });
-  richtListBox.addEventListener("drop", function(event) {
-    this._placesView.onDrop(event);
+  dropNode.addEventListener("drop", function(event) {
+    richListBox._placesView.onDrop(event);
   });
-  richtListBox.addEventListener("select", function(event) {
+  richListBox.addEventListener("select", function(event) {
     this._placesView.onSelect();
   });
-  richtListBox.addEventListener("focus", goUpdateDownloadCommands);
-  richtListBox.addEventListener("blur", goUpdateDownloadCommands);
+  richListBox.addEventListener("focus", goUpdateDownloadCommands);
+  richListBox.addEventListener("blur", goUpdateDownloadCommands);
 });
