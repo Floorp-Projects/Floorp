@@ -32,6 +32,7 @@ from voluptuous import (
     Exclusive,
 )
 
+import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import match_run_on_projects, keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
@@ -1322,7 +1323,7 @@ def split_chunks(config, tests):
                 test['chunks'] = maximum_number_verify_chunks
 
         chunked_manifests = None
-        if test['suite'] not in CHUNK_SUITES_BLACKLIST:
+        if not taskgraph.fast and test['suite'] not in CHUNK_SUITES_BLACKLIST:
             suite_definition = TEST_SUITES[test['suite']]
             mozinfo = guess_mozinfo_from_task(test)
             chunked_manifests = get_chunked_manifests(
