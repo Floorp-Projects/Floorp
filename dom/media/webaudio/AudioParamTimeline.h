@@ -42,13 +42,13 @@ class AudioParamTimeline : public AudioEventTimeline {
   }
 
   template <typename TimeType>
-  void InsertEvent(AudioTimelineEvent& aEvent) {
+  void InsertEvent(const AudioTimelineEvent& aEvent) {
     if (aEvent.mType == AudioTimelineEvent::Cancel) {
       CancelScheduledValues(aEvent.Time<TimeType>());
       return;
     }
     if (aEvent.mType == AudioTimelineEvent::Track) {
-      mTrack = aEvent.mTrack.forget();
+      mTrack = aEvent.mTrack;
       return;
     }
     if (aEvent.mType == AudioTimelineEvent::SetValue) {
