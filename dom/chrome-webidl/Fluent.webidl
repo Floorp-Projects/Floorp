@@ -7,3 +7,19 @@
 interface FluentResource {
   constructor(UTF8String source);
 };
+
+[ChromeOnly, Exposed=Window]
+interface FluentPattern {};
+
+/**
+ * FluentMessage is a structure storing an unresolved L10nMessage,
+ * as returned by the Fluent Bundle.
+ *
+ * It stores a FluentPattern of the value and attributes, which
+ * can be then passed to bundle.formatPattern.
+ */
+
+dictionary FluentMessage {
+  FluentPattern? value = null;
+  required record<UTF8String, FluentPattern> attributes;
+};
