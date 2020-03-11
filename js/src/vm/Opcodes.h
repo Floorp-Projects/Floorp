@@ -2632,9 +2632,13 @@
      */ \
     MACRO(InitAliasedLexical, init_aliased_lexical, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
     /*
-     * Throw a ReferenceError if the value on top of the stack is uninitialized.
+     * Throw a ReferenceError if the optimized local `localno` is
+     * uninitialized.
      *
-     * Typically used after `JSOp::GetLocal` or `JSOp::GetAliasedVar`.
+     * `localno` must be the number of a fixed slot in the current stack frame
+     * previously initialized or marked uninitialized using `JSOp::InitLexical`.
+     *
+     * Typically used before `JSOp::GetLocal` or `JSOp::SetLocal`.
      *
      * Implements: [GetBindingValue][1] step 3 and [SetMutableBinding][2] step
      * 4 for declarative Environment Records.
@@ -2644,10 +2648,23 @@
      *
      *   Category: Variables and scopes
      *   Type: Initialization
-     *   Operands: uint32_t nameIndex
-     *   Stack: v => v
+     *   Operands: uint24_t localno
+     *   Stack: =>
      */ \
-    MACRO(CheckLexical, check_lexical, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME) \
+    MACRO(CheckLexical, check_lexical, NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME) \
+    /*
+     * Like `JSOp::CheckLexical` but for aliased bindings.
+     *
+     * Note: There are no `CheckName` or `CheckGName` instructions because
+     * they're unnecessary. `JSOp::{Get,Set}{Name,GName}` all check for
+     * uninitialized lexicals and throw if needed.
+     *
+     *   Category: Variables and scopes
+     *   Type: Initialization
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: =>
+     */ \
+    MACRO(CheckAliasedLexical, check_aliased_lexical, NULL, 5, 0, 0, JOF_ENVCOORD|JOF_NAME) \
     /*
      * Throw a ReferenceError if the value on top of the stack is
      * `MagicValue(JS_UNINITIALIZED_LEXICAL)`. Used in derived class
@@ -3485,7 +3502,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \

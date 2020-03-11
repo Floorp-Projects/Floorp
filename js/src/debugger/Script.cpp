@@ -1513,6 +1513,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::ThrowSetCallee:
     case JSOp::CheckLexical:
     case JSOp::InitLexical:
+    case JSOp::CheckAliasedLexical:
     case JSOp::Uninitialized:
     case JSOp::Pop:
     case JSOp::PopN:
