@@ -635,8 +635,9 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
   if (isInternal) {
     // Chrome privilege and internal origins always get persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
-  } else if (isAddon || StaticPrefs::dom_indexedDB_storageOption_enabled()) {
-    persistenceType = PersistenceTypeFromStorage(aStorageType);
+  } else if ((isAddon || StaticPrefs::dom_indexedDB_storageOption_enabled()) &&
+             aStorageType.WasPassed()) {
+    persistenceType = PersistenceTypeFromStorageType(aStorageType.Value());
   } else {
     persistenceType = PERSISTENCE_TYPE_DEFAULT;
   }
