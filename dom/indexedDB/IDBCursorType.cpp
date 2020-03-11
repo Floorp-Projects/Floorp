@@ -16,17 +16,18 @@ IndexCursorDataBase::IndexCursorDataBase(Key aKey, Key aLocaleAwareKey,
       mLocaleAwareKey{std::move(aLocaleAwareKey)},
       mObjectStoreKey{std::move(aObjectStoreKey)} {}
 
-ValueCursorDataBase::ValueCursorDataBase(StructuredCloneReadInfo&& aCloneInfo)
+ValueCursorDataBase::ValueCursorDataBase(
+    StructuredCloneReadInfoChild&& aCloneInfo)
     : mCloneInfo{std::move(aCloneInfo)} {}
 
 CursorData<IDBCursorType::ObjectStore>::CursorData(
-    Key aKey, StructuredCloneReadInfo&& aCloneInfo)
+    Key aKey, StructuredCloneReadInfoChild&& aCloneInfo)
     : ObjectStoreCursorDataBase{std::move(aKey)},
       ValueCursorDataBase{std::move(aCloneInfo)} {}
 
 CursorData<IDBCursorType::Index>::CursorData(
     Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey,
-    StructuredCloneReadInfo&& aCloneInfo)
+    StructuredCloneReadInfoChild&& aCloneInfo)
     : IndexCursorDataBase{std::move(aKey), std::move(aLocaleAwareKey),
                           std::move(aObjectStoreKey)},
       ValueCursorDataBase{std::move(aCloneInfo)} {}
