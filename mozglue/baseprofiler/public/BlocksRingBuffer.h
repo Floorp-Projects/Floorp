@@ -82,20 +82,6 @@ class BlocksRingBuffer {
   // Length type for total buffer (as PowerOfTwo<Length>) and each entry.
   using Length = uint32_t;
 
-  // Class to be specialized for types to be written in a BlocksRingBuffer.
-  // See common specializations at the bottom of this header.
-  // The following static functions must be provided:
-  //   static Length Bytes(const T& aT) {
-  //     /* Return number of bytes that will be written. */
-  //   }
-  //   static void Write(EntryWriter& aEW,
-  //                     const T& aT) {
-  //     /* Call `aEW.WriteX(...)` functions to serialize aT, be sure to write
-  //        exactly `Bytes(aT)` bytes! */
-  //   }
-  template <typename T>
-  struct Serializer;
-
   // Class to be specialized for types to be read from a BlocksRingBuffer.
   // See common specializations at the bottom of this header.
   // The following static functions must be provided:
@@ -110,6 +96,20 @@ class BlocksRingBuffer {
   //   }
   template <typename T>
   struct Deserializer;
+
+  // Class to be specialized for types to be written in a BlocksRingBuffer.
+  // See common specializations at the bottom of this header.
+  // The following static functions must be provided:
+  //   static Length Bytes(const T& aT) {
+  //     /* Return number of bytes that will be written. */
+  //   }
+  //   static void Write(EntryWriter& aEW,
+  //                     const T& aT) {
+  //     /* Call `aEW.WriteX(...)` functions to serialize aT, be sure to write
+  //        exactly `Bytes(aT)` bytes! */
+  //   }
+  template <typename T>
+  struct Serializer;
 
   enum class ThreadSafety { WithoutMutex, WithMutex };
 
