@@ -1169,10 +1169,6 @@ WebSocketChannel::~WebSocketChannel() {
   while ((mCurrentOut = (OutboundMessage*)mOutgoingMessages.PopFront()))
     delete mCurrentOut;
 
-  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mURI", mURI.forget());
-  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mOriginalURI",
-                                    mOriginalURI.forget());
-
   mListenerMT = nullptr;
 
   NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mLoadGroup",
