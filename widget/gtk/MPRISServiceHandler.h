@@ -18,11 +18,6 @@
 namespace mozilla {
 namespace widget {
 
-struct MPRISMetadata {
-  const char* mKey;
-  GVariant* mValue;
-};
-
 /**
  * This class implements the "MPRIS" D-Bus Service
  * (https://specifications.freedesktop.org/mpris-spec/2.2),
@@ -114,7 +109,6 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   void SetShuffle(bool aShuffle);
 #endif
 
-  std::vector<struct MPRISMetadata> GetDefaultMetadata();
   double GetVolume() const;
   bool SetVolume(double aVolume);
   int64_t GetPosition() const;
@@ -125,6 +119,9 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   bool CanPause() const;
   bool CanSeek() const;
   bool CanControl() const;
+
+  void SetMediaMetadata(const dom::MediaMetadataBase& aMetadata) override;
+  GVariant* GetMetadataAsGVariant() const;
 
  private:
   ~MPRISServiceHandler();
@@ -142,6 +139,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   GDBusConnection* mConnection = nullptr;
   bool mInitialized = false;
   nsAutoCString mIdentity;
+  Maybe<dom::MediaMetadataBase> mMetadata;
 
   // Queries nsAppInfo to get the branded browser name and vendor
   void InitIdentity();
@@ -158,7 +156,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   static void OnBusAcquiredStatic(GDBusConnection* aConnection,
                                   const gchar* aName, gpointer aUserData);
 
-  void EmitEvent(mozilla::dom::MediaControlKeysEvent event);
+  void EmitEvent(dom::MediaControlKeysEvent event);
 };
 
 }  // namespace widget
