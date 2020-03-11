@@ -268,7 +268,7 @@ async function ensureFocusedUrlbar() {
     // The switchingtabs attribute prevents the historydropmarker opacity
     // transition, so if we expect a transitionend event when this attribute
     // is set, we wait forever. (it's removed off a MozAfterPaint event listener)
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => !gURLBar.hasAttribute("switchingtabs")
     );
 
@@ -333,7 +333,7 @@ async function createTabs(howMany) {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return Array.from(gBrowser.tabs).every(tab => tab._fullyOpen);
   });
 }
@@ -348,7 +348,7 @@ async function removeAllButFirstTab() {
     set: [["browser.tabs.warnOnCloseOtherTabs", false]],
   });
   gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
-  await BrowserTestUtils.waitForCondition(() => gBrowser.tabs.length == 1);
+  await TestUtils.waitForCondition(() => gBrowser.tabs.length == 1);
   await SpecialPowers.popPrefEnv();
 }
 
