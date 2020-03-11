@@ -75,11 +75,16 @@ bool EnterDebuggeeNoExecute::reportIfFoundInStack(JSContext* cx,
       const char* filename = script->filename() ? script->filename() : "(none)";
       char linenoStr[15];
       SprintfLiteral(linenoStr, "%u", script->lineno());
-      unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
       // FIXME: filename should be UTF-8 (bug 987069).
-      return JS_ReportErrorFlagsAndNumberLatin1(
-          cx, flags, GetErrorMessage, nullptr, JSMSG_DEBUGGEE_WOULD_RUN,
-          filename, linenoStr);
+      if (warning) {
+        return JS_ReportErrorFlagsAndNumberLatin1(
+            cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+            JSMSG_DEBUGGEE_WOULD_RUN, filename, linenoStr);
+      }
+
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 JSMSG_DEBUGGEE_WOULD_RUN, filename, linenoStr);
+      return false;
     }
   }
   return true;

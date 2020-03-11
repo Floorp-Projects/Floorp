@@ -996,9 +996,9 @@ bool js::ReportValueError(JSContext* cx, const unsigned errorNumber,
     return false;
   }
 
-  return JS_ReportErrorFlagsAndNumberUTF8(cx, JSREPORT_ERROR, GetErrorMessage,
-                                          nullptr, errorNumber, bytes.get(),
-                                          arg1, arg2);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber,
+                           bytes.get(), arg1, arg2);
+  return false;
 }
 
 JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
