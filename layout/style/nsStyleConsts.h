@@ -761,8 +761,7 @@ enum class StyleColorInterpolation : uint8_t {
 enum class StyleVectorEffect : uint8_t { None = 0, NonScalingStroke = 1 };
 
 // 3d Transforms - Backface visibility
-#define NS_STYLE_BACKFACE_VISIBILITY_VISIBLE 1
-#define NS_STYLE_BACKFACE_VISIBILITY_HIDDEN 0
+enum class StyleBackfaceVisibility : uint8_t { Hidden = 0, Visible = 1 };
 
 // blending
 #define NS_STYLE_BLEND_NORMAL 0
