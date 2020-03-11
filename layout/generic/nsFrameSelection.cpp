@@ -331,7 +331,7 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
   mPresShell = aPresShell;
   mDragState = false;
   mDesiredPosSet = false;
-  mLimiter = aLimiter;
+  mLimiters.mLimiter = aLimiter;
   mCaret.mMovementStyle =
       Preferences::GetInt("bidi.edit.caret_movement_style", 2);
 
@@ -383,8 +383,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mAppendStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mUnselectCellOnMouseUp)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaintainedRange.mRange)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLimiter)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAncestorLimiter)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLimiters.mLimiter)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLimiters.mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
   if (tmp->mPresShell && tmp->mPresShell->GetDocument() &&
@@ -402,8 +402,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mAppendStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mUnselectCellOnMouseUp)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaintainedRange.mRange)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLimiter)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAncestorLimiter)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLimiters.mLimiter)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLimiters.mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsFrameSelection, AddRef)
@@ -735,11 +735,11 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   const auto forceEditableRegion =
       isEditorSelection ? nsPeekOffsetStruct::ForceEditableRegion::Yes
                         : nsPeekOffsetStruct::ForceEditableRegion::No;
-  // set data using mLimiter to stop on scroll views.  If we have a limiter then
-  // we stop peeking when we hit scrollable views.  If no limiter then just let
-  // it go ahead
+  // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
+  // limiter then we stop peeking when we hit scrollable views.  If no limiter
+  // then just let it go ahead
   nsPeekOffsetStruct pos(aAmount, eDirPrevious, offsetused, desiredPos, true,
-                         mLimiter != nullptr, true, visualMovement,
+                         mLimiters.mLimiter != nullptr, true, visualMovement,
                          aContinueSelection, forceEditableRegion);
 
   nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
@@ -1186,7 +1186,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
   if (aFocusMode != FocusMode::kExtendSelection) {
     mMaintainedRange.mRange = nullptr;
     if (!IsValidSelectionPoint(aNewFocus)) {
-      mAncestorLimiter = nullptr;
+      mLimiters.mAncestorLimiter = nullptr;
     }
   }
 
@@ -1241,7 +1241,7 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
     return;
   }
 
-  const bool scrollViewStop = mLimiter != nullptr;
+  const bool scrollViewStop = mLimiters.mLimiter != nullptr;
   mMaintainedRange.AdjustContentOffsets(offsets, scrollViewStop);
 
   HandleClick(offsets.content, offsets.offset, offsets.offset,
@@ -1671,13 +1671,13 @@ nsIFrame* nsFrameSelection::GetFrameToPageSelect() const {
   }
 
   nsIFrame* rootFrameToSelect;
-  if (mLimiter) {
-    rootFrameToSelect = mLimiter->GetPrimaryFrame();
+  if (mLimiters.mLimiter) {
+    rootFrameToSelect = mLimiters.mLimiter->GetPrimaryFrame();
     if (NS_WARN_IF(!rootFrameToSelect)) {
       return nullptr;
     }
-  } else if (mAncestorLimiter) {
-    rootFrameToSelect = mAncestorLimiter->GetPrimaryFrame();
+  } else if (mLimiters.mAncestorLimiter) {
+    rootFrameToSelect = mLimiters.mAncestorLimiter->GetPrimaryFrame();
     if (NS_WARN_IF(!rootFrameToSelect)) {
       return nullptr;
     }
@@ -1985,10 +1985,10 @@ nsresult nsFrameSelection::IntraLineMove(bool aForward, bool aExtend) {
 
 nsresult nsFrameSelection::SelectAll() {
   nsCOMPtr<nsIContent> rootContent;
-  if (mLimiter) {
-    rootContent = mLimiter;  // addrefit
-  } else if (mAncestorLimiter) {
-    rootContent = mAncestorLimiter;
+  if (mLimiters.mLimiter) {
+    rootContent = mLimiters.mLimiter;  // addrefit
+  } else if (mLimiters.mAncestorLimiter) {
+    rootContent = mLimiters.mAncestorLimiter;
   } else {
     NS_ENSURE_STATE(mPresShell);
     Document* doc = mPresShell->GetDocument();
@@ -2882,16 +2882,16 @@ nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset,
 // End of Table Selection
 
 void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
-  if (mAncestorLimiter != aLimiter) {
-    mAncestorLimiter = aLimiter;
+  if (mLimiters.mAncestorLimiter != aLimiter) {
+    mLimiters.mAncestorLimiter = aLimiter;
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (!mDomSelections[index]) return;
 
     if (!IsValidSelectionPoint(mDomSelections[index]->GetFocusNode())) {
       ClearNormalSelection();
-      if (mAncestorLimiter) {
+      if (mLimiters.mAncestorLimiter) {
         SetChangeReasons(nsISelectionListener::NO_REASON);
-        nsCOMPtr<nsIContent> limiter(mAncestorLimiter);
+        nsCOMPtr<nsIContent> limiter(mLimiters.mAncestorLimiter);
         TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
                   FocusMode::kCollapseToNewPoint);
       }
