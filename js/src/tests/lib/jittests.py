@@ -135,7 +135,8 @@ class JitTest:
         # True means force Pacific time for the test
         self.tz_pacific = False
         # Additional files to include, in addition to prologue.js
-        self.other_includes = []
+        self.other_lib_includes = []
+        self.other_script_includes = []
         # List of other configurations to test with.
         self.test_also = []
         # List of other configurations to test with all existing variants.
@@ -168,7 +169,8 @@ class JitTest:
         t.allow_overrecursed = self.allow_overrecursed
         t.valgrind = self.valgrind
         t.tz_pacific = self.tz_pacific
-        t.other_includes = self.other_includes[:]
+        t.other_lib_includes = self.other_lib_includes[:]
+        t.other_script_includes = self.other_script_includes[:]
         t.test_also = self.test_also
         t.test_join = self.test_join
         t.expect_error = self.expect_error
@@ -283,7 +285,9 @@ class JitTest:
                             print("warning: couldn't parse thread-count"
                                   " {}".format(value))
                     elif name == 'include':
-                        test.other_includes.append(value)
+                        test.other_lib_includes.append(value)
+                    elif name == 'local-include':
+                        test.other_script_includes.append(value)
                     elif name == 'skip-if':
                         test.skip_if_cond = extend_condition(test.skip_if_cond, value)
                     elif name == 'skip-variant-if':
@@ -364,8 +368,10 @@ class JitTest:
         cmd += list(set(self.jitflags))
         for expr in exprs:
             cmd += ['-e', expr]
-        for inc in self.other_includes:
+        for inc in self.other_lib_includes:
             cmd += ['-f', libdir + inc]
+        for inc in self.other_script_includes:
+            cmd += ['-f', scriptdir_var + inc]
         if self.skip_if_cond:
             cmd += ['-e', "if ({}) quit({})".format(self.skip_if_cond, self.SKIPPED_EXIT_STATUS)]
         cmd += ['--module-load-path', moduledir]
