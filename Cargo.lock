@@ -4809,7 +4809,6 @@ dependencies = [
  "ron",
  "serde",
  "serde_json",
- "sha2",
  "smallvec 0.6.10",
  "svg_fmt",
  "thread_profiler",
@@ -4870,7 +4869,6 @@ name = "webrender_build"
 version = "0.0.1"
 dependencies = [
  "serde",
- "sha2",
 ]
 
 [[package]]
