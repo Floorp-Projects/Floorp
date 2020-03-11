@@ -153,6 +153,16 @@ function doPageErrors() {
       warning: false,
       exception: true,
     },
+    "DOMTokenList.prototype.contains.call([])": {
+      errorMessage: /does not implement interface/,
+      errorMessageName: "MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
     [`let error2 = new TypeError("abc");
       error2.name = "MyPromiseError";
       error2.message = "here2";
@@ -168,7 +178,7 @@ function doPageErrors() {
       // Promise.reject doesn't produce an uncaught exception
       // even though |exception: true|.
       [NO_UNCAUGHT_EXCEPTION]: true
-    },
+    }
   };
 
   let container = document.createElement("script");
