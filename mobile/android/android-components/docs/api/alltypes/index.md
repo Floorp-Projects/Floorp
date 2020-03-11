@@ -690,6 +690,7 @@
 | [mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton](../mozilla.components.feature.tabs.toolbar/-tab-counter-toolbar-button/index.md) | A [Toolbar.Action](../mozilla.components.concept.toolbar/-toolbar/-action/index.md) implementation that shows a [TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md). |
 | [mozilla.components.concept.sync.TabData](../mozilla.components.concept.sync/-tab-data/index.md) | Information about a tab sent with tab related commands. |
 | [mozilla.components.browser.storage.sync.TabEntry](../mozilla.components.browser.storage.sync/-tab-entry/index.md) | A Tab history entry. |
+| [mozilla.components.concept.engine.webextension.TabHandler](../mozilla.components.concept.engine.webextension/-tab-handler/index.md) | A handler for all tab related events (triggered by browser.tabs.* methods). |
 | [mozilla.appservices.fxaclient.TabHistoryEntry](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-tab-history-entry/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.feature.intent.processing.TabIntentProcessor](../mozilla.components.feature.intent.processing/-tab-intent-processor/index.md) | Processor for intents which should trigger session-related actions. |
 | [mozilla.components.browser.state.action.TabListAction](../mozilla.components.browser.state.action/-tab-list-action/index.md) | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) implementations related to updating the list of [TabSessionState](../mozilla.components.browser.state.state/-tab-session-state/index.md) inside [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
@@ -815,3 +816,4 @@
 | [mozilla.components.service.fretboard.scheduler.workmanager.WorkManagerSyncScheduler](../mozilla.components.service.fretboard.scheduler.workmanager/-work-manager-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server using WorkManager |
 | [mozilla.components.service.fxa.sync.WorkManagerSyncWorker](../mozilla.components.service.fxa.sync/-work-manager-sync-worker/index.md) |  |
 | [mozilla.components.feature.downloads.manager.onDownloadStopped](../mozilla.components.feature.downloads.manager/on-download-stopped.md) |  |
+| [mozilla.components.support.webextensions.onUpdatePermissionRequest](../mozilla.components.support.webextensions/on-update-permission-request.md) | Function to relay the permission request to the app / user. |

@@ -6,6 +6,10 @@
 
 An adapter between the GV [BasicSelectionActionDelegate](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/BasicSelectionActionDelegate.html) and a generic [SelectionActionDelegate](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md).
 
+### Parameters
+
+`customDelegate` - handles as much of this logic as possible.
+
 ### Constructors
 
 | Name | Summary |
