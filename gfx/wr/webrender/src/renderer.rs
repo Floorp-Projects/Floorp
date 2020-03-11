@@ -69,7 +69,7 @@ use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData};
 use crate::gpu_types::{CompositeInstance, ResolveInstanceData, ZBufferId};
-use crate::internal_types::{TextureSource, ResourceCacheError};
+use crate::internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
@@ -1308,37 +1308,16 @@ struct CacheRow {
     /// Mirrored block data on CPU for this row. We store a copy of
     /// the data on the CPU side to improve upload batching.
     cpu_blocks: Box<[GpuBlockData; MAX_VERTEX_TEXTURE_WIDTH]>,
-    /// The first offset in this row that is dirty.
-    min_dirty: u16,
-    /// The last offset in this row that is dirty.
-    max_dirty: u16,
+    /// True if this row is dirty.
+    is_dirty: bool,
 }
 
 impl CacheRow {
     fn new() -> Self {
         CacheRow {
             cpu_blocks: Box::new([GpuBlockData::EMPTY; MAX_VERTEX_TEXTURE_WIDTH]),
-            min_dirty: MAX_VERTEX_TEXTURE_WIDTH as _,
-            max_dirty: 0,
+            is_dirty: false,
         }
-    }
-
-    fn is_dirty(&self) -> bool {
-        return self.min_dirty < self.max_dirty;
-    }
-
-    fn clear_dirty(&mut self) {
-        self.min_dirty = MAX_VERTEX_TEXTURE_WIDTH as _;
-        self.max_dirty = 0;
-    }
-
-    fn add_dirty(&mut self, block_offset: usize, block_count: usize) {
-        self.min_dirty = self.min_dirty.min(block_offset as _);
-        self.max_dirty = self.max_dirty.max((block_offset + block_count) as _);
-    }
-
-    fn dirty_blocks(&self) -> &[GpuBlockData] {
-        return &self.cpu_blocks[self.min_dirty as usize .. self.max_dirty as usize];
     }
 }
 
@@ -1527,15 +1506,15 @@ impl GpuCacheTexture {
                                 rows.push(CacheRow::new());
                             }
 
+                            // This row is dirty (needs to be updated in GPU texture).
+                            rows[row].is_dirty = true;
+
                             // Copy the blocks from the patch array in the shadow CPU copy.
                             let block_offset = address.u as usize;
                             let data = &mut rows[row].cpu_blocks;
                             for i in 0 .. block_count {
                                 data[block_offset + i] = updates.blocks[block_index + i];
                             }
-
-                            // This row is dirty (needs to be updated in GPU texture).
-                            rows[row].add_dirty(block_offset, block_count);
                         }
                     }
                 }
@@ -1582,7 +1561,7 @@ impl GpuCacheTexture {
             GpuCacheBus::PixelBuffer { ref buffer, ref mut rows } => {
                 let rows_dirty = rows
                     .iter()
-                    .filter(|row| row.is_dirty())
+                    .filter(|row| row.is_dirty)
                     .count();
                 if rows_dirty == 0 {
                     return 0
@@ -1600,19 +1579,18 @@ impl GpuCacheTexture {
                 );
 
                 for (row_index, row) in rows.iter_mut().enumerate() {
-                    if !row.is_dirty() {
+                    if !row.is_dirty {
                         continue;
                     }
 
-                    let blocks = row.dirty_blocks();
                     let rect = DeviceIntRect::new(
-                        DeviceIntPoint::new(row.min_dirty as i32, row_index as i32),
-                        DeviceIntSize::new(blocks.len() as i32, 1),
+                        DeviceIntPoint::new(0, row_index as i32),
+                        DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32, 1),
                     );
 
-                    uploader.upload(rect, 0, None, None, blocks.as_ptr(), blocks.len());
+                    uploader.upload(rect, 0, None, None, row.cpu_blocks.as_ptr(), row.cpu_blocks.len());
 
-                    row.clear_dirty();
+                    row.is_dirty = false;
                 }
 
                 rows_dirty
@@ -1729,15 +1707,12 @@ impl<T> VertexDataTexture<T> {
         // (like Intel iGPUs) that prefers power-of-two sizes of textures ([1]).
         //
         // [1] https://software.intel.com/en-us/articles/opengl-performance-tips-power-of-two-textures-have-better-performance
-        let logical_width = if needed_height == 1 {
-            data.len() * texels_per_item
-        } else {
-            MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)
-        }; 
+        let logical_width =
+            (MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)) as i32;
 
         let rect = DeviceIntRect::new(
             DeviceIntPoint::zero(),
-            DeviceIntSize::new(logical_width as i32, needed_height),
+            DeviceIntSize::new(logical_width, needed_height),
         );
 
         debug_assert!(len <= data.capacity(), "CPU copy will read out of bounds");
@@ -1745,11 +1720,9 @@ impl<T> VertexDataTexture<T> {
             rect.size,
             self.texture().get_format(),
         );
-        if upload_size > 0 {
-            device
-                .upload_texture(self.texture(), &self.pbo, upload_size)
-                .upload(rect, 0, None, None, data.as_ptr(), len);
-        }
+        device
+            .upload_texture(self.texture(), &self.pbo, upload_size)
+            .upload(rect, 0, None, None, data.as_ptr(), len);
     }
 
     fn deinit(mut self, device: &mut Device) {
@@ -2268,7 +2241,6 @@ impl Renderer {
             background_color: options.clear_color,
             compositor_kind,
             tile_size_override: None,
-            max_depth_ids: device.max_depth_ids(),
         };
         info!("WR {:?}", config);
 
@@ -2988,7 +2960,7 @@ impl Renderer {
                     GpuCacheBus::PixelBuffer { ref mut rows, .. } => {
                         info!("Invalidating GPU caches");
                         for row in rows {
-                            row.add_dirty(0, MAX_VERTEX_TEXTURE_WIDTH);
+                            row.is_dirty = true;
                         }
                     }
                     GpuCacheBus::Scatter { .. } => {
@@ -4342,8 +4314,8 @@ impl Renderer {
                 surface_size.width as f32,
                 0.0,
                 surface_size.height as f32,
-                self.device.ortho_near_plane(),
-                self.device.ortho_far_plane(),
+                ORTHO_NEAR_PLANE,
+                ORTHO_FAR_PLANE,
             );
 
             // Bind an appropriate YUV shader for the texture format kind
@@ -5125,8 +5097,8 @@ impl Renderer {
                 target_size.width as f32,
                 0.0,
                 target_size.height as f32,
-                self.device.ortho_near_plane(),
-                self.device.ortho_far_plane(),
+                ORTHO_NEAR_PLANE,
+                ORTHO_FAR_PLANE,
             )
         };
 
@@ -5587,8 +5559,8 @@ impl Renderer {
                             offset.x + size.width,
                             bottom,
                             top,
-                            self.device.ortho_near_plane(),
-                            self.device.ortho_far_plane(),
+                            ORTHO_NEAR_PLANE,
+                            ORTHO_FAR_PLANE,
                         );
 
                         let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
@@ -5725,8 +5697,8 @@ impl Renderer {
                                 draw_target.dimensions().width as f32,
                                 0.0,
                                 draw_target.dimensions().height as f32,
-                                self.device.ortho_near_plane(),
-                                self.device.ortho_far_plane(),
+                                ORTHO_NEAR_PLANE,
+                                ORTHO_FAR_PLANE,
                             );
 
                             self.draw_picture_cache_target(
@@ -5766,8 +5738,8 @@ impl Renderer {
                             draw_target.dimensions().width as f32,
                             0.0,
                             draw_target.dimensions().height as f32,
-                            self.device.ortho_near_plane(),
-                            self.device.ortho_far_plane(),
+                            ORTHO_NEAR_PLANE,
+                            ORTHO_FAR_PLANE,
                         );
 
                         self.draw_alpha_target(
@@ -5792,8 +5764,8 @@ impl Renderer {
                             draw_target.dimensions().width as f32,
                             0.0,
                             draw_target.dimensions().height as f32,
-                            self.device.ortho_near_plane(),
-                            self.device.ortho_far_plane(),
+                            ORTHO_NEAR_PLANE,
+                            ORTHO_FAR_PLANE,
                         );
 
                         let clear_depth = if target.needs_depth() {
@@ -6340,7 +6312,6 @@ impl Renderer {
             if self.debug_overlay_state.current_size.is_some() {
                 compositor.destroy_surface(NativeSurfaceId::DEBUG_OVERLAY);
             }
-            compositor.deinit();
         }
         self.gpu_cache_texture.deinit(&mut self.device);
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
