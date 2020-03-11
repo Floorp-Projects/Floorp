@@ -694,6 +694,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
 
   if (efs) {
     SetExnType(reportp, efs->exnType);
+    reportp->errorMessageName = efs->name;
 
     MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII,
                   JS::StringIsASCII(efs->format));

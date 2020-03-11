@@ -1889,19 +1889,12 @@ bool DebuggerObject::getErrorMessageName(JSContext* cx,
     return false;
   }
 
-  if (!report) {
+  if (!report || !report->errorMessageName) {
     result.set(nullptr);
     return true;
   }
 
-  const JSErrorFormatString* efs =
-      GetErrorMessage(nullptr, report->errorNumber);
-  if (!efs) {
-    result.set(nullptr);
-    return true;
-  }
-
-  RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
+  RootedString str(cx, JS_NewStringCopyZ(cx, report->errorMessageName));
   if (!str) {
     return false;
   }
