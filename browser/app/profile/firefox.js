@@ -2244,14 +2244,15 @@ pref("devtools.responsive.touchSimulation.enabled", false);
 pref("devtools.responsive.metaViewport.enabled", true);
 // The user agent of the viewport.
 pref("devtools.responsive.userAgent", "");
-// Whether or not the RDM UI is embedded in the browser.
-pref("devtools.responsive.browserUI.enabled", false);
 
-// Show the custom user agent input in Nightly builds.
+// Show the custom user agent input and browser embedded RDM UI in
+// Nightly builds.
 #if defined(NIGHTLY_BUILD)
   pref("devtools.responsive.showUserAgentInput", true);
+  pref("devtools.responsive.browserUI.enabled", true);
 #else
   pref("devtools.responsive.showUserAgentInput", false);
+  pref("devtools.responsive.browserUI.enabled", false);
 #endif
 
 // Show tab debug targets for This Firefox (on by default for local builds).

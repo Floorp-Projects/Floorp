@@ -348,6 +348,17 @@ class App extends PureComponent {
 
     this.onChangeViewportOrientation(id, type, angle, true);
     this.props.dispatch(rotateViewport(id));
+
+    if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+      window.postMessage(
+        {
+          type: "viewport-resize",
+          height: viewport.width,
+          width: viewport.height,
+        },
+        "*"
+      );
+    }
   }
 
   onScreenshot() {
