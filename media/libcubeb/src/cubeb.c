@@ -80,7 +80,7 @@ validate_stream_params(cubeb_stream_params * input_stream_params,
   }
   if (input_stream_params) {
     if (input_stream_params->rate < 1000 || input_stream_params->rate > 192000 ||
-        input_stream_params->channels < 1 || input_stream_params->channels > 8) {
+        input_stream_params->channels < 1 || input_stream_params->channels > UINT8_MAX) {
       return CUBEB_ERROR_INVALID_FORMAT;
     }
   }

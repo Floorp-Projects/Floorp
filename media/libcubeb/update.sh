@@ -84,5 +84,3 @@ else
   echo "Remember to update moz.yaml with the version details."
 fi
 
-echo "Applying disable-iaudioclient3.patch on top of $rev"
-patch -p3 < disable-iaudioclient3.patch
