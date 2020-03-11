@@ -1,0 +1,58 @@
+# Standard 'directives.txt' prologues for jit-tests
+harness_directive = "|jit-test| skip-if: true"
+directive = "|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemoryIsSupported(); include:wasm-testharness.js; local-include:harness/sync_index.js"
+
+# Failing tests across all testsuites
+excluded_tests = ["align.wast", "memory_trap.wast", "imports.wast", "exports.wast", "linking.wast", "data.wast", "names.wast", "utf8-custom-section-id.wast"]
+
+[[repos]]
+name = "spec"
+url = "https://github.com/WebAssembly/spec"
+
+[[repos]]
+name = "sign-extension-ops"
+url = "https://github.com/WebAssembly/sign-extension-ops"
+parent = "spec"
+
+[[repos]]
+name = "nontrapping-float-to-int-conversions"
+url = "https://github.com/WebAssembly/nontrapping-float-to-int-conversions"
+parent = "spec"
+
+[[repos]]
+name = "multi-value"
+url = "https://github.com/WebAssembly/multi-value"
+parent = "spec"
+excluded_tests = ["call_indirect.wast", "block.wast", "fac.wast", "if.wast"]
+# Skip in WPT where we can't guard on features being enabled
+skip_wpt = true
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmMultiValueEnabled()"
+
+[[repos]]
+name = "threads"
+url = "https://github.com/WebAssembly/threads"
+parent = "spec"
+# Skip in WPT where we can't guard on features being enabled
+skip_wpt = true
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmThreadsSupported()"
+
+[[repos]]
+name = "bulk-memory-operations"
+url = "https://github.com/WebAssembly/bulk-memory-operations"
+parent = "spec"
+# Skip in WPT where we can't guard on features being enabled
+skip_wpt = true
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmBulkMemSupported()"
+
+[[repos]]
+name = "reference-types"
+url = "https://github.com/WebAssembly/reference-types"
+parent = "spec"
+excluded_tests = ["table_fill.wast", "select.wast", "float_memory.wast", "call_indirect.wast"]
+# Skip in WPT where we can't guard on features being enabled
+skip_wpt = true
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmBulkMemSupported() || !wasmReftypesEnabled()"
