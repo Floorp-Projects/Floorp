@@ -616,7 +616,7 @@ class ValueDeserializationHelper {
   }
 
   static bool CreateAndWrapBlobOrFile(JSContext* aCx, IDBDatabase* aDatabase,
-                                      StructuredCloneFile& aFile,
+                                      const StructuredCloneFile& aFile,
                                       const BlobOrFileData& aData,
                                       JS::MutableHandle<JSObject*> aResult) {
     MOZ_ASSERT(aCx);
@@ -702,7 +702,7 @@ class ValueDeserializationHelper {
   }
 
   static bool CreateAndWrapWasmModule(JSContext* aCx,
-                                      StructuredCloneFile& aFile,
+                                      const StructuredCloneFile& aFile,
                                       const WasmModuleData& aData,
                                       JS::MutableHandle<JSObject*> aResult) {
     MOZ_ASSERT(aCx);
@@ -753,13 +753,14 @@ JSObject* CommonStructuredCloneReadCallback(
       MOZ_ASSERT(data.compiledIndex == data.bytecodeIndex + 1);
       MOZ_ASSERT(!data.flags);
 
-      if (data.bytecodeIndex >= cloneReadInfo->mFiles.Length() ||
-          data.compiledIndex >= cloneReadInfo->mFiles.Length()) {
+      const auto& files = cloneReadInfo->Files();
+      if (data.bytecodeIndex >= files.Length() ||
+          data.compiledIndex >= files.Length()) {
         MOZ_ASSERT(false, "Bad index value!");
         return nullptr;
       }
 
-      StructuredCloneFile& file = cloneReadInfo->mFiles[data.bytecodeIndex];
+      const StructuredCloneFile& file = files[data.bytecodeIndex];
 
       if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapWasmModule(
               aCx, file, data, &result))) {
@@ -769,12 +770,12 @@ JSObject* CommonStructuredCloneReadCallback(
       return result;
     }
 
-    if (aData >= cloneReadInfo->mFiles.Length()) {
+    if (aData >= cloneReadInfo->Files().Length()) {
       MOZ_ASSERT(false, "Bad index value!");
       return nullptr;
     }
 
-    StructuredCloneFile& file = cloneReadInfo->mFiles[aData];
+    StructuredCloneFile& file = cloneReadInfo->MutableFile(aData);
 
     if (aTag == SCTAG_DOM_MUTABLEFILE) {
       MutableFileData data;
@@ -796,7 +797,7 @@ JSObject* CommonStructuredCloneReadCallback(
     }
 
     if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapBlobOrFile(
-            aCx, cloneReadInfo->mDatabase, file, data, &result))) {
+            aCx, cloneReadInfo->Database(), file, data, &result))) {
       return nullptr;
     }
 
@@ -1012,11 +1013,11 @@ void IDBObjectStore::ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo) {
   // This is kind of tricky, we only want to release stuff on the main thread,
   // but we can end up being called on other threads if we have already been
   // cleared on the main thread.
-  if (!aReadInfo.mFiles.Length()) {
+  if (!aReadInfo.HasFiles()) {
     return;
   }
 
-  aReadInfo.mFiles.Clear();
+  aReadInfo.ReleaseFiles();
 }
 
 // static
@@ -1025,12 +1026,12 @@ bool IDBObjectStore::DeserializeValue(JSContext* aCx,
                                       JS::MutableHandle<JS::Value> aValue) {
   MOZ_ASSERT(aCx);
 
-  if (!aCloneReadInfo.mData.Size()) {
+  if (!aCloneReadInfo.Data().Size()) {
     aValue.setUndefined();
     return true;
   }
 
-  MOZ_ASSERT(!(aCloneReadInfo.mData.Size() % sizeof(uint64_t)));
+  MOZ_ASSERT(!(aCloneReadInfo.Data().Size() % sizeof(uint64_t)));
 
   static const JSStructuredCloneCallbacks callbacks = {
       CommonStructuredCloneReadCallback,
@@ -1045,7 +1046,7 @@ bool IDBObjectStore::DeserializeValue(JSContext* aCx,
   // FIXME: Consider to use StructuredCloneHolder here and in other
   //        deserializing methods.
   return JS_ReadStructuredClone(
-      aCx, aCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
+      aCx, aCloneReadInfo.Data(), JS_STRUCTURED_CLONE_VERSION,
       JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
       JS::CloneDataPolicy(), &callbacks, &aCloneReadInfo);
 }
@@ -1120,7 +1121,7 @@ class DeserializeIndexValueHelper final : public Runnable {
   void DispatchAndWait(ErrorResult& aRv) {
     // We don't need to go to the main-thread and use the sandbox. Let's create
     // the updateInfo data here.
-    if (!mCloneReadInfo.mData.Size()) {
+    if (!mCloneReadInfo.Data().Size()) {
       AutoJSAPI jsapi;
       jsapi.Init();
 
@@ -1135,7 +1136,7 @@ class DeserializeIndexValueHelper final : public Runnable {
 
     // The operation will continue on the main-thread.
 
-    MOZ_ASSERT(!(mCloneReadInfo.mData.Size() % sizeof(uint64_t)));
+    MOZ_ASSERT(!(mCloneReadInfo.Data().Size() % sizeof(uint64_t)));
 
     MonitorAutoLock lock(mMonitor);
 
@@ -1201,7 +1202,7 @@ class DeserializeIndexValueHelper final : public Runnable {
         nullptr};
 
     if (!JS_ReadStructuredClone(
-            aCx, mCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
+            aCx, mCloneReadInfo.Data(), JS_STRUCTURED_CLONE_VERSION,
             JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
             JS::CloneDataPolicy(), &callbacks, &mCloneReadInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -1239,14 +1240,14 @@ class DeserializeUpgradeValueHelper final : public Runnable {
 
   nsresult DispatchAndWait(nsAString& aFileIds) {
     // We don't need to go to the main-thread and use the sandbox.
-    if (!mCloneReadInfo.mData.Size()) {
+    if (!mCloneReadInfo.Data().Size()) {
       PopulateFileIds(aFileIds);
       return NS_OK;
     }
 
     // The operation will continue on the main-thread.
 
-    MOZ_ASSERT(!(mCloneReadInfo.mData.Size() % sizeof(uint64_t)));
+    MOZ_ASSERT(!(mCloneReadInfo.Data().Size() % sizeof(uint64_t)));
 
     MonitorAutoLock lock(mMonitor);
 
@@ -1308,7 +1309,7 @@ class DeserializeUpgradeValueHelper final : public Runnable {
         nullptr};
 
     if (!JS_ReadStructuredClone(
-            aCx, mCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
+            aCx, mCloneReadInfo.Data(), JS_STRUCTURED_CLONE_VERSION,
             JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
             JS::CloneDataPolicy(), &callbacks, &mCloneReadInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -1318,9 +1319,9 @@ class DeserializeUpgradeValueHelper final : public Runnable {
   }
 
   void PopulateFileIds(nsAString& aFileIds) {
-    for (uint32_t count = mCloneReadInfo.mFiles.Length(), index = 0;
+    for (uint32_t count = mCloneReadInfo.Files().Length(), index = 0;
          index < count; index++) {
-      const StructuredCloneFile& file = mCloneReadInfo.mFiles[index];
+      const StructuredCloneFile& file = mCloneReadInfo.Files()[index];
 
       const int64_t id = file.FileInfo().Id();
 

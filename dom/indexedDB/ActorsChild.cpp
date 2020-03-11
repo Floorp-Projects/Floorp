@@ -627,10 +627,21 @@ auto DeserializeStructuredCloneFiles(
   return files;
 }
 
+JSStructuredCloneData PreprocessingNotSupported() {
+  MOZ_CRASH("Preprocessing not (yet) supported!");
+}
+
+template <typename PreprocessInfoAccessor>
 StructuredCloneReadInfo DeserializeStructuredCloneReadInfo(
-    SerializedStructuredCloneReadInfo&& aSerialized, IDBDatabase* aDatabase) {
+    SerializedStructuredCloneReadInfo&& aSerialized,
+    IDBDatabase* const aDatabase,
+    PreprocessInfoAccessor preprocessInfoAccessor) {
+  // XXX Make this a class invariant of SerializedStructuredCloneReadInfo.
+  MOZ_ASSERT_IF(aSerialized.hasPreprocessInfo(),
+                0 == aSerialized.data().data.Size());
   return StructuredCloneReadInfo{
-      std::move(aSerialized.data().data),
+      aSerialized.hasPreprocessInfo() ? preprocessInfoAccessor()
+                                      : std::move(aSerialized.data().data),
       DeserializeStructuredCloneFiles(aDatabase, aSerialized.files(),
                                       /* aForPreprocess */ false),
       aDatabase, aSerialized.hasPreprocessInfo()};
@@ -2668,12 +2679,8 @@ void BackgroundRequestChild::HandleResponse(
   AssertIsOnOwningThread();
 
   auto cloneReadInfo = DeserializeStructuredCloneReadInfo(
-      std::move(aResponse), mTransaction->Database());
-
-  if (cloneReadInfo.mHasPreprocessInfo) {
-    UniquePtr<JSStructuredCloneData> cloneData = GetNextCloneData();
-    cloneReadInfo.mData = std::move(*cloneData);
-  }
+      std::move(aResponse), mTransaction->Database(),
+      [this] { return std::move(*GetNextCloneData()); });
 
   ResultHelper helper(mRequest, mTransaction, &cloneReadInfo);
 
@@ -2697,14 +2704,9 @@ void BackgroundRequestChild::HandleResponse(
         MakeBackInserter(cloneReadInfos),
         [database = mTransaction->Database(),
          this](SerializedStructuredCloneReadInfo&& serializedCloneInfo) {
-          auto cloneReadInfo = DeserializeStructuredCloneReadInfo(
-              std::move(serializedCloneInfo), database);
-
-          if (cloneReadInfo.mHasPreprocessInfo) {
-            cloneReadInfo.mData = std::move(*GetNextCloneData());
-          }
-
-          return cloneReadInfo;
+          return DeserializeStructuredCloneReadInfo(
+              std::move(serializedCloneInfo), database,
+              [this] { return std::move(*GetNextCloneData()); });
         });
   }
 
@@ -3615,7 +3617,8 @@ void BackgroundCursorChild<CursorType>::HandleResponse(
         return HandleIndividualCursorResponse(
             useAsCurrentResult, std::move(response.key()),
             DeserializeStructuredCloneReadInfo(std::move(response.cloneInfo()),
-                                               mTransaction->Database()));
+                                               mTransaction->Database(),
+                                               PreprocessingNotSupported));
       });
 }
 
@@ -3645,7 +3648,8 @@ void BackgroundCursorChild<CursorType>::HandleResponse(
             useAsCurrentResult, std::move(response.key()),
             std::move(response.sortKey()), std::move(response.objectKey()),
             DeserializeStructuredCloneReadInfo(std::move(response.cloneInfo()),
-                                               mTransaction->Database()));
+                                               mTransaction->Database(),
+                                               PreprocessingNotSupported));
       });
 }
 

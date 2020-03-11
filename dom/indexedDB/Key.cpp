@@ -8,6 +8,8 @@
 
 #include <algorithm>
 #include <stdint.h>  // for UINT32_MAX, uintptr_t
+#include "IndexedDatabase.h"
+#include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
