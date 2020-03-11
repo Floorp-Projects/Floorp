@@ -986,10 +986,9 @@ void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
                            NullOrUndefinedToCharZ(v));
 }
 
-bool js::ReportValueErrorFlags(JSContext* cx, unsigned flags,
-                               const unsigned errorNumber, int spindex,
-                               HandleValue v, HandleString fallback,
-                               const char* arg1, const char* arg2) {
+bool js::ReportValueError(JSContext* cx, const unsigned errorNumber,
+                          int spindex, HandleValue v, HandleString fallback,
+                          const char* arg1, const char* arg2) {
   MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);
   MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount <= 3);
   UniqueChars bytes = DecompileValueGenerator(cx, spindex, v, fallback);
@@ -997,8 +996,9 @@ bool js::ReportValueErrorFlags(JSContext* cx, unsigned flags,
     return false;
   }
 
-  return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
-                                          errorNumber, bytes.get(), arg1, arg2);
+  return JS_ReportErrorFlagsAndNumberUTF8(cx, JSREPORT_ERROR, GetErrorMessage,
+                                          nullptr, errorNumber, bytes.get(),
+                                          arg1, arg2);
 }
 
 JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {

@@ -172,8 +172,7 @@ bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj,
 
   if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE) {
     RootedValue val(cx, ObjectValue(*obj));
-    return ReportValueErrorFlags(cx, JSREPORT_ERROR, code_, JSDVG_IGNORE_STACK,
-                                 val, nullptr, nullptr, nullptr);
+    return ReportValueError(cx, code_, JSDVG_IGNORE_STACK, val, nullptr);
   }
 
   if (ErrorTakesArguments(code_)) {
@@ -191,9 +190,8 @@ bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj,
           return false;
         }
       }
-      return ReportValueErrorFlags(cx, JSREPORT_ERROR, code_,
-                                   JSDVG_IGNORE_STACK, val, nullptr,
-                                   propName.get(), nullptr);
+      return ReportValueError(cx, code_, JSDVG_IGNORE_STACK, val, nullptr,
+                              propName.get());
     }
 
     if (ErrorTakesObjectArgument(code_)) {
