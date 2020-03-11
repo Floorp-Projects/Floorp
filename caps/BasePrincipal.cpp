@@ -483,7 +483,6 @@ BasePrincipal::IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin, bool* aRes) {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
     return NS_ERROR_UNEXPECTED;
-    ;
   }
   *aRes = NS_SUCCEEDED(
       ssm->CheckSameOriginURI(prinURI, aURI, false, aIsPrivateWin));
