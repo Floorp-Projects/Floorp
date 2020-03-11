@@ -5292,25 +5292,13 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 }
 
 nsresult
-QuotaManager::MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory() {
+QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
+    nsIFile* aIndexedDBDir) {
   AssertIsOnIOThread();
-
-  nsCOMPtr<nsIFile> indexedDBDir;
-  nsresult rv =
-      NS_NewLocalFile(mIndexedDBPath, false, getter_AddRefs(indexedDBDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists;
-  rv = indexedDBDir->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!exists) {
-    // Nothing to upgrade.
-    return NS_OK;
-  }
+  MOZ_ASSERT(aIndexedDBDir);
 
   bool isDirectory;
-  rv = indexedDBDir->IsDirectory(&isDirectory);
+  nsresult rv = aIndexedDBDir->IsDirectory(&isDirectory);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isDirectory) {
@@ -5327,13 +5315,14 @@ QuotaManager::MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory() {
       NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool exists;
   rv = persistentStorageDir->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (exists) {
     QM_WARNING("Deleting old <profile>/indexedDB directory!");
 
-    rv = indexedDBDir->Remove(/* aRecursive */ true);
+    rv = aIndexedDBDir->Remove(/* aRecursive */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5351,43 +5340,21 @@ QuotaManager::MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory() {
   // However there's a theoretical possibility that the indexedDB directory
   // is on different volume, but it should be rare enough that we don't have
   // to worry about it.
-  rv = indexedDBDir->MoveTo(storageDir,
-                            NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+  rv = aIndexedDBDir->MoveTo(storageDir,
+                             NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-nsresult QuotaManager::
-    MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory() {
+nsresult
+QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
+    nsIFile* aPersistentStorageDir) {
   AssertIsOnIOThread();
-
-  nsCOMPtr<nsIFile> persistentStorageDir;
-  nsresult rv = NS_NewLocalFile(mStoragePath, false,
-                                getter_AddRefs(persistentStorageDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = persistentStorageDir->Append(
-      NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool exists;
-  rv = persistentStorageDir->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!exists) {
-    // Nothing to upgrade.
-    return NS_OK;
-  }
+  MOZ_ASSERT(aPersistentStorageDir);
 
   bool isDirectory;
-  rv = persistentStorageDir->IsDirectory(&isDirectory);
+  nsresult rv = aPersistentStorageDir->IsDirectory(&isDirectory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5404,6 +5371,7 @@ nsresult QuotaManager::
     return rv;
   }
 
+  bool exists;
   rv = defaultStorageDir->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5412,7 +5380,7 @@ nsresult QuotaManager::
   if (exists) {
     QM_WARNING("Deleting old <profile>/storage/persistent directory!");
 
-    rv = persistentStorageDir->Remove(/* aRecursive */ true);
+    rv = aPersistentStorageDir->Remove(/* aRecursive */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5422,7 +5390,7 @@ nsresult QuotaManager::
 
   // Create real metadata files for origin directories in persistent storage.
   RefPtr<CreateOrUpgradeDirectoryMetadataHelper> helper =
-      new CreateOrUpgradeDirectoryMetadataHelper(persistentStorageDir,
+      new CreateOrUpgradeDirectoryMetadataHelper(aPersistentStorageDir,
                                                  /* aPersistent */ true);
 
   rv = helper->ProcessRepository();
@@ -5465,7 +5433,7 @@ nsresult QuotaManager::
   }
 
   // And finally rename persistent to default.
-  rv = persistentStorageDir->RenameTo(
+  rv = aPersistentStorageDir->RenameTo(
       nullptr, NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -6331,14 +6299,51 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   }
 
   if (!exists) {
-    rv = MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory();
+    nsCOMPtr<nsIFile> indexedDBDir;
+    rv = NS_NewLocalFile(mIndexedDBPath, false, getter_AddRefs(indexedDBDir));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory();
+    bool indexedDBDirExists;
+    rv = indexedDBDir->Exists(&indexedDBDirExists);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (indexedDBDirExists) {
+      rv = UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
+          indexedDBDir);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    nsCOMPtr<nsIFile> persistentStorageDir;
+    rv = NS_NewLocalFile(mStoragePath, false,
+                         getter_AddRefs(persistentStorageDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = persistentStorageDir->Append(
+        NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool persistentStorageDirExists;
+    rv = persistentStorageDir->Exists(&persistentStorageDirExists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (persistentStorageDirExists) {
+      rv = UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
+          persistentStorageDir);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
 
