@@ -133,7 +133,8 @@ class AlternateServerPlayback:
                              "Recorded response %s has no content. Removing from recording list"
                              % i.request.url
                         )
-                if self.mitm_version == "4.0.4":
+                if self.mitm_version in ("4.0.2", "4.0.4"):
+                    # see: https://github.com/mitmproxy/mitmproxy/issues/3856
                     l = self.flowmap.setdefault(self._hash(i), [])
                     l.append(i)
             else:
@@ -250,6 +251,10 @@ class AlternateServerPlayback:
                 self.calls.append({'time': str(time.time()),
                                    'url': f.request.url,
                                    'response_status': f.response.status_code})
+        else:
+            ctx.log.error("Playback library is empty! Stopping playback process!")
+            ctx.master.shutdown()
+            return
 
 
 playback = AlternateServerPlayback()
