@@ -299,6 +299,11 @@ pub enum TextureSource {
     Dummy,
 }
 
+// See gpu_types.rs where we declare the number of possible documents and
+// number of items per document. This should match up with that.
+pub const ORTHO_NEAR_PLANE: f32 = -(1 << 22) as f32;
+pub const ORTHO_FAR_PLANE: f32 = ((1 << 22) - 1) as f32;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

@@ -12,7 +12,7 @@ bincode = "1.0"
 byteorder = "1.0"
 env_logger = { version = "0.5", optional = true }
 euclid = "0.20"
-gleam = "0.10.0"
+gleam = "0.9.2"
 glutin = "0.21"
 app_units = "0.7"
 clap = { version = "2", features = ["yaml"] }
@@ -29,7 +29,6 @@ webrender_api = {path = "../webrender_api", features=["serialize","deserialize"]
 winit = "0.19"
 serde = {version = "1.0", features = ["derive"] }
 semver = "0.9.0"
-swgl = { path = "../swgl" }
 
 [dependencies.image]
 version = "0.23"

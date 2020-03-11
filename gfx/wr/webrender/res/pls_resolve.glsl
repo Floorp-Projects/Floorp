@@ -11,7 +11,7 @@
 #include shared
 
 #ifdef WR_VERTEX_SHADER
-PER_INSTANCE in vec4 aRect;
+in vec4 aRect;
 
 void main(void) {
     vec2 pos = aRect.xy + aPosition.xy * aRect.zw;

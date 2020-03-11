@@ -18,9 +18,9 @@ flat varying int vSupport;
 #define DIR_HORIZONTAL  0
 #define DIR_VERTICAL    1
 
-PER_INSTANCE in int aBlurRenderTaskAddress;
-PER_INSTANCE in int aBlurSourceTaskAddress;
-PER_INSTANCE in int aBlurDirection;
+in int aBlurRenderTaskAddress;
+in int aBlurSourceTaskAddress;
+in int aBlurDirection;
 
 struct BlurTask {
     RenderTaskCommonData common_data;
