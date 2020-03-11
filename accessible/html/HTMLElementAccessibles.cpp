@@ -218,7 +218,7 @@ nsAtom* HTMLHeaderOrFooterAccessible::LandmarkRole() const {
     }
   }
 
-  return nullptr;
+  return HyperTextAccessibleWrap::LandmarkRole();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,5 +239,6 @@ nsAtom* HTMLSectionAccessible::LandmarkRole() const {
   // Only return xml-roles "region" if the section has an accessible name.
   nsAutoString name;
   const_cast<HTMLSectionAccessible*>(this)->Name(name);
-  return name.IsEmpty() ? nullptr : nsGkAtoms::region;
+  return name.IsEmpty() ? HyperTextAccessibleWrap::LandmarkRole()
+                        : nsGkAtoms::region;
 }

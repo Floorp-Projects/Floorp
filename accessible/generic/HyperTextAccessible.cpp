@@ -1098,7 +1098,7 @@ nsAtom* HyperTextAccessible::LandmarkRole() const {
     return nsGkAtoms::main;
   }
 
-  return nullptr;
+  return AccessibleWrap::LandmarkRole();
 }
 
 int32_t HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY,

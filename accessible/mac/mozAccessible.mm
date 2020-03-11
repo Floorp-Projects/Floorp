@@ -479,7 +479,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 - (NSArray*)accessibilityActionNames {
-  return @[NSAccessibilityScrollToVisibleAction];
+  return @[ NSAccessibilityScrollToVisibleAction ];
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action {
@@ -729,8 +729,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   else if (proxy)
     landmark = proxy->LandmarkRole();
 
-  // HTML Elements treated as landmarks
-  // XXX bug 1371712
+  // HTML Elements treated as landmarks, and ARIA landmarks.
   if (landmark) {
     if (landmark == nsGkAtoms::application) return @"AXLandmarkApplication";
     if (landmark == nsGkAtoms::banner) return @"AXLandmarkBanner";
@@ -1171,8 +1170,7 @@ struct RoleDescrComparator {
 - (void)expire {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSAccessibilityPostNotification(
-      self, NSAccessibilityUIElementDestroyedNotification);
+  NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
 
   [self invalidateChildren];
 
