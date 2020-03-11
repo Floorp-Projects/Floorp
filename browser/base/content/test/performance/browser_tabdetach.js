@@ -44,7 +44,7 @@ add_task(async function test_detach_not_overflowed() {
   await createTabs(1);
 
   // Make sure we didn't overflow, as expected
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return !gBrowser.tabContainer.hasAttribute("overflow");
   });
 
@@ -70,7 +70,7 @@ add_task(async function test_detach_overflowed() {
   await createTabs(TAB_COUNT_FOR_OVERFLOW + 1);
 
   // Make sure we overflowed, as expected
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return gBrowser.tabContainer.hasAttribute("overflow");
   });
 
