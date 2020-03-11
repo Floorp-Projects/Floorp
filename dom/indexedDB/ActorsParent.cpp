@@ -13693,7 +13693,7 @@ void Database::Stringify(nsACString& aResult) const {
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("PersistenceType:");
-  aResult.Append(PersistenceTypeToString(mPersistenceType));
+  aResult.Append(PersistenceTypeString(mPersistenceType));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("Closed:");
@@ -18086,7 +18086,7 @@ nsresult Maintenance::DirectoryWork() {
       // XXX This shouldn't be a special case...
       persistenceTypeString.AssignLiteral("permanent");
     } else {
-      persistenceTypeString.Assign(PersistenceTypeToString(persistenceType));
+      PersistenceTypeToText(persistenceType, persistenceTypeString);
     }
 
     nsCOMPtr<nsIFile> persistenceDir;
@@ -18511,7 +18511,7 @@ void DatabaseMaintenance::Stringify(nsACString& aResult) const {
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("PersistenceType:");
-  aResult.Append(PersistenceTypeToString(mPersistenceType));
+  aResult.Append(PersistenceTypeString(mPersistenceType));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("Duration:");
@@ -20314,7 +20314,7 @@ void FactoryOp::Stringify(nsACString& aResult) const {
 
   aResult.AppendLiteral("PersistenceType:");
   aResult.Append(
-      PersistenceTypeToString(mCommonParams.metadata().persistenceType()));
+      PersistenceTypeString(mCommonParams.metadata().persistenceType()));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("Origin:");

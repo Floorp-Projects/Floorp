@@ -68,7 +68,6 @@ UNIFIED_SOURCES += [
     'FileStreams.cpp',
     'MemoryOutputStream.cpp',
     'nsIndexedDBProtocolHandler.cpp',
-    'PersistenceType.cpp',
     'QuotaCommon.cpp',
     'QuotaManagerService.cpp',
     'QuotaRequests.cpp',

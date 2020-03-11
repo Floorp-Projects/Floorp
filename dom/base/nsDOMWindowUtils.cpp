@@ -2930,10 +2930,8 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
     return NS_ERROR_UNEXPECTED;
   }
 
-  const quota::PersistenceType persistenceType =
-      options.mStorage.WasPassed()
-          ? quota::PersistenceTypeFromStorageType(options.mStorage.Value())
-          : quota::PERSISTENCE_TYPE_DEFAULT;
+  quota::PersistenceType persistenceType =
+      quota::PersistenceTypeFromStorage(options.mStorage);
 
   RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
 
