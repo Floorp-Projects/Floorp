@@ -729,7 +729,7 @@ Toolbox.prototype = {
 
   _attachAndResumeThread: async function(target) {
     const options = defaultThreadOptions();
-    const [, threadFront] = await target.attachThread(options);
+    const threadFront = await target.attachThread(options);
 
     try {
       await threadFront.resume();
