@@ -41,7 +41,7 @@ class VideoOutput : public DirectMediaTrackListener {
     TimeStamp now = TimeStamp::Now();
     size_t nrChunksInPast = 0;
     for (const auto& idChunkPair : mFrames) {
-      const VideoChunk& chunk = idChunkPair.second;
+      const VideoChunk& chunk = idChunkPair.second();
       if (chunk.mTimeStamp > now) {
         break;
       }
@@ -72,8 +72,8 @@ class VideoOutput : public DirectMediaTrackListener {
     PrincipalHandle lastPrincipalHandle = PRINCIPAL_HANDLE_NONE;
 
     for (const auto& idChunkPair : mFrames) {
-      ImageContainer::FrameID frameId = idChunkPair.first;
-      const VideoChunk& chunk = idChunkPair.second;
+      ImageContainer::FrameID frameId = idChunkPair.first();
+      const VideoChunk& chunk = idChunkPair.second();
       const VideoFrame& frame = chunk.mFrame;
       Image* image = frame.GetImage();
       if (frame.GetForceBlack() || !mEnabled) {
@@ -119,7 +119,7 @@ class VideoOutput : public DirectMediaTrackListener {
     }
 
     mVideoFrameContainer->SetCurrentFrames(
-        mFrames[0].second.mFrame.GetIntrinsicSize(), images);
+        mFrames[0].second().mFrame.GetIntrinsicSize(), images);
     mMainThread->Dispatch(NewRunnableMethod("VideoFrameContainer::Invalidate",
                                             mVideoFrameContainer,
                                             &VideoFrameContainer::Invalidate));
@@ -142,8 +142,7 @@ class VideoOutput : public DirectMediaTrackListener {
         // future. If this happens, we clear the buffered frames and start over.
         mFrames.ClearAndRetainStorage();
       }
-      mFrames.AppendElement(
-          std::make_pair(mVideoFrameContainer->NewFrameID(), *i));
+      mFrames.AppendElement(MakePair(mVideoFrameContainer->NewFrameID(), *i));
       mLastFrameTime = i->mTimeStamp;
     }
 
@@ -188,7 +187,7 @@ class VideoOutput : public DirectMediaTrackListener {
     // Since mEnabled will affect whether frames are real, or black, we assign
     // new FrameIDs whenever this changes.
     for (auto& idChunkPair : mFrames) {
-      idChunkPair.first = mVideoFrameContainer->NewFrameID();
+      idChunkPair.first() = mVideoFrameContainer->NewFrameID();
     }
     SendFramesEnsureLocked();
   }
@@ -201,7 +200,7 @@ class VideoOutput : public DirectMediaTrackListener {
   bool mEnabled = true;
   // This array is accessed from both the direct video thread, and the graph
   // thread. Protected by mMutex.
-  nsTArray<std::pair<ImageContainer::FrameID, VideoChunk>> mFrames;
+  nsTArray<Pair<ImageContainer::FrameID, VideoChunk>> mFrames;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
   const RefPtr<AbstractThread> mMainThread;
   const layers::ImageContainer::ProducerID mProducerID =

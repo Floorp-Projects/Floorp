@@ -31,8 +31,6 @@
 #include "nsStubMutationObserver.h"
 #include "MediaSegment.h"  // for PrincipalHandle, GraphTime
 
-#include <utility>
-
 // X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
 #ifdef CurrentTime
 #  undef CurrentTime
@@ -737,7 +735,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // empty and the default device is being used.
   void GetSinkId(nsString& aSinkId) {
     MOZ_ASSERT(NS_IsMainThread());
-    aSinkId = mSink.first;
+    aSinkId = mSink.first();
   }
 
   // This is used to notify MediaElementAudioSourceNode that media element is
@@ -1904,7 +1902,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // unplugged. It can be set to ("", nullptr). It follows the spec attribute:
   // https://w3c.github.io/mediacapture-output/#htmlmediaelement-extensions
   // Read/Write from the main thread only.
-  std::pair<nsString, RefPtr<AudioDeviceInfo>> mSink;
+  Pair<nsString, RefPtr<AudioDeviceInfo>> mSink;
 
   // This flag is used to control when the user agent is to show a poster frame
   // for a video element instead of showing the video contents.

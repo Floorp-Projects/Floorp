@@ -39,7 +39,7 @@ static void InitializeHooks();
 #endif
 
 ChromiumCDMAdapter::ChromiumCDMAdapter(
-    nsTArray<std::pair<nsCString, nsCString>>&& aHostPathPairs) {
+    nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs) {
 #ifdef XP_WIN
   InitializeHooks();
 #endif
@@ -282,10 +282,10 @@ cdm::PlatformFile HostFile::TakePlatformFile() {
 }
 
 void ChromiumCDMAdapter::PopulateHostFiles(
-    nsTArray<std::pair<nsCString, nsCString>>&& aHostPathPairs) {
+    nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs) {
   for (const auto& pair : aHostPathPairs) {
-    mHostFiles.AppendElement(HostFileData(mozilla::HostFile(pair.first),
-                                          mozilla::HostFile(pair.second)));
+    mHostFiles.AppendElement(HostFileData(mozilla::HostFile(pair.first()),
+                                          mozilla::HostFile(pair.second())));
   }
 }
 
