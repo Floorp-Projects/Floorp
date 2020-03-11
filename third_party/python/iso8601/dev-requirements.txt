@@ -1,0 +1,6 @@
+devpi>=1.2.1
+pytest>=2.5.2
+Sphinx>=1.2.1
+tox-pyenv>=1.0.3
+tox>=1.7.0
+wheel>=0.22.0
