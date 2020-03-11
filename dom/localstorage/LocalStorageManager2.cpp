@@ -269,8 +269,7 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
 
   nsCString originAttrSuffix;
   nsCString originKey;
-  nsresult rv = aPrincipal->GetStorageOriginKey(originKey);
-  aPrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }

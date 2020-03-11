@@ -15,6 +15,10 @@ namespace mozilla {
 namespace dom {
 namespace StorageUtils {
 
+nsresult GenerateOriginKey(nsIPrincipal* aPrincipal,
+                           nsACString& aOriginAttrSuffix,
+                           nsACString& aOriginKey);
+
 bool PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
                      nsIPrincipal* aSubjectPrincipal);
 
