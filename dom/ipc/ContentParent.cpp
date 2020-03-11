@@ -2566,17 +2566,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     }
   }
 
-#if defined(XP_WIN)
-  // Send the info needed to join the browser process's audio session.
-  nsID id;
-  nsString sessionName;
-  nsString iconPath;
-  if (NS_SUCCEEDED(
-          mozilla::widget::GetAudioSessionData(id, sessionName, iconPath))) {
-    Unused << SendSetAudioSessionData(id, sessionName, iconPath);
-  }
-#endif
-
 #ifdef MOZ_SANDBOX
   bool shouldSandbox = true;
   Maybe<FileDescriptor> brokerFd;
