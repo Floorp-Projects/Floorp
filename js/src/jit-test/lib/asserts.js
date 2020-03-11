@@ -7,58 +7,45 @@ load(libdir + "../../tests/non262/shell.js");
 
 if (typeof assertWarning === 'undefined') {
     var assertWarning = function assertWarning(f, pattern) {
-        var hadWerror = options().split(",").indexOf("werror") !== -1;
+        enableLastWarning();
 
-        // Ensure the "werror" option is disabled.
-        if (hadWerror)
-            options("werror");
+        // Verify that a warning is issued.
+        clearLastWarning();
+        f();
+        var warning = getLastWarning();
+        clearLastWarning();
 
-        try {
-            f();
-        } catch (exc) {
-            if (hadWerror)
-                options("werror");
+        disableLastWarning();
 
-            print("assertWarning: Unexpected exception calling " + f +
-                  " with warnings-as-errors disabled");
-            throw exc;
-        }
-
-        // Enable the "werror" option.
-        options("werror");
-
-        try {
-            f();
-        } catch (exc) {
-            if (!String(exc).match(pattern))
-                throw new Error(`assertWarning failed: "${exc}" does not match "${pattern}"`);
+        if (warning) {
+            if (!warning.message.match(pattern)) {
+                throw new Error(`assertWarning failed: "${warning.message}" does not match "${pattern}"`);
+            }
             return;
-        } finally {
-            if (!hadWerror)
-                options("werror");
         }
+
         throw new Error("assertWarning failed: no warning");
     };
 }
 
 if (typeof assertNoWarning === 'undefined') {
     var assertNoWarning = function assertNoWarning(f, msg) {
-        // Ensure the "werror" option is enabled.
-        var hadWerror = options().split(",").indexOf("werror") !== -1;
-        if (!hadWerror)
-            options("werror");
+        enableLastWarning();
 
-        try {
-            f();
-        } catch (exc) {
-            if (msg)
+        // Verify that no warning is issued.
+        clearLastWarning();
+        f();
+        var warning = getLastWarning();
+        clearLastWarning();
+
+        disableLastWarning();
+
+        if (warning) {
+            if (msg) {
                 print("assertNoWarning: " + msg);
-            print("assertNoWarning: Unexpected exception calling " + f +
-                  "with warnings-as-errors enabled");
-            throw exc;
-        } finally {
-            if (!hadWerror)
-                options("werror");
+            }
+
+            throw Error("assertNoWarning: Unexpected warning when calling: " + f);
         }
     };
 }

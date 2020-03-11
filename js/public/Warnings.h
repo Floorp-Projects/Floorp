@@ -9,10 +9,7 @@
  *
  * Warnings are situations that aren't inherently full-blown errors (and perhaps
  * for spec compliance *can't* be), but that may represent dubious programming
- * practice that embeddings may wish to know about.  (That said, SpiderMonkey
- * exposes various options that, when active, automatically upgrade warnings to
- * errors.  See |JS::TransitiveCompileOptions::werrorOptions| and
- * |JS::ContextOptions::werror()|.)
+ * practice that embeddings may wish to know about.
  *
  * SpiderMonkey recognizes an unspecified set of syntactic patterns and runtime
  * behaviors as triggering a warning.  Embeddings may also recognize and report

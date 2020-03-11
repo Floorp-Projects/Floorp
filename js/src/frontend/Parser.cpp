@@ -8829,8 +8829,7 @@ bool GeneralParser<ParseHandler, Unit>::checkIncDecOperand(
   } else if (handler_.isFunctionCall(operand)) {
     // Assignment to function calls is forbidden in ES6.  We're still
     // somewhat concerned about sites using this in dead code, so forbid it
-    // only in strict mode code (or if the werror option has been set), and
-    // otherwise warn.
+    // only in strict mode code.
     if (!strictModeErrorAt(operandOffset, JSMSG_BAD_INCOP_OPERAND)) {
       return false;
     }
