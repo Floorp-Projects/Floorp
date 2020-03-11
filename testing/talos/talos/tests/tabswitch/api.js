@@ -7,12 +7,6 @@ const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
-
 let context = {};
 let TalosParentProfiler;
 
@@ -365,7 +359,10 @@ this.tabswitch = class extends ExtensionAPI {
     return {
       tabswitch: {
         setup({ processScriptPath }) {
-          AboutNewTab.newTabURL = "about:blank";
+          const AboutNewTabService = Cc[
+            "@mozilla.org/browser/aboutnewtab-service;1"
+          ].getService(Ci.nsIAboutNewTabService);
+          AboutNewTabService.newTabURL = "about:blank";
 
           const processScriptURL = context.extension.baseURI.resolve(
             processScriptPath
@@ -381,7 +378,7 @@ this.tabswitch = class extends ExtensionAPI {
           return () => {
             Services.ppmm.sendAsyncMessage("Tabswitch:Teardown");
             remotePage.destroy();
-            AboutNewTab.resetNewTabURL();
+            AboutNewTabService.resetNewTabURL();
           };
         },
       },
