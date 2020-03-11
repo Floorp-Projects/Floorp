@@ -66,7 +66,7 @@ IDBTypedCursor<CursorType>::~IDBTypedCursor() {
 // static
 RefPtr<IDBObjectStoreCursor> IDBCursor::Create(
     BackgroundCursorChild<Type::ObjectStore>* const aBackgroundActor, Key aKey,
-    StructuredCloneReadInfo&& aCloneInfo) {
+    StructuredCloneReadInfoChild&& aCloneInfo) {
   MOZ_ASSERT(aBackgroundActor);
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(!aKey.IsUnset());
@@ -89,7 +89,7 @@ RefPtr<IDBObjectStoreKeyCursor> IDBCursor::Create(
 // static
 RefPtr<IDBIndexCursor> IDBCursor::Create(
     BackgroundCursorChild<Type::Index>* const aBackgroundActor, Key aKey,
-    Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfo&& aCloneInfo) {
+    Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfoChild&& aCloneInfo) {
   MOZ_ASSERT(aBackgroundActor);
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(!aKey.IsUnset());

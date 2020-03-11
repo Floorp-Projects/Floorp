@@ -46,7 +46,7 @@ class BackgroundCursorChild;
 class IDBCursor : public nsISupports, public nsWrapperCache {
  public:
   using Key = indexedDB::Key;
-  using StructuredCloneReadInfo = indexedDB::StructuredCloneReadInfo;
+  using StructuredCloneReadInfoChild = indexedDB::StructuredCloneReadInfoChild;
 
   using Direction = IDBCursorDirection;
   using Type = IDBCursorType;
@@ -80,7 +80,7 @@ class IDBCursor : public nsISupports, public nsWrapperCache {
  public:
   static MOZ_MUST_USE RefPtr<IDBObjectStoreCursor> Create(
       indexedDB::BackgroundCursorChild<Type::ObjectStore>* aBackgroundActor,
-      Key aKey, StructuredCloneReadInfo&& aCloneInfo);
+      Key aKey, StructuredCloneReadInfoChild&& aCloneInfo);
 
   static MOZ_MUST_USE RefPtr<IDBObjectStoreKeyCursor> Create(
       indexedDB::BackgroundCursorChild<Type::ObjectStoreKey>* aBackgroundActor,
@@ -88,7 +88,7 @@ class IDBCursor : public nsISupports, public nsWrapperCache {
 
   static MOZ_MUST_USE RefPtr<IDBIndexCursor> Create(
       indexedDB::BackgroundCursorChild<Type::Index>* aBackgroundActor, Key aKey,
-      Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfo&& aCloneInfo);
+      Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfoChild&& aCloneInfo);
 
   static MOZ_MUST_USE RefPtr<IDBIndexKeyCursor> Create(
       indexedDB::BackgroundCursorChild<Type::IndexKey>* aBackgroundActor,
