@@ -62,15 +62,14 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
 
   NS_IMETHOD GetTxnName(nsAtom** aName) override;
 
-  NS_IMETHOD StartSelectionEquals(SelectionState* aSelState,
-                                  bool* aResult) override;
+  NS_IMETHOD_(bool) StartSelectionEquals(SelectionState& aSelState) override;
 
   NS_IMETHOD EndPlaceHolderBatch() override;
 
-  NS_IMETHOD ForwardEndBatchTo(
-      nsIAbsorbingTransaction* aForwardingAddress) override;
+  NS_IMETHOD_(void)
+  ForwardEndBatchTo(nsIAbsorbingTransaction* aForwardingAddress) override;
 
-  NS_IMETHOD Commit() override;
+  NS_IMETHOD_(void) Commit() override;
 
   NS_IMETHOD_(PlaceholderTransaction*) AsPlaceholderTransaction() override {
     return this;

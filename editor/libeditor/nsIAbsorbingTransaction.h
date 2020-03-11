@@ -39,12 +39,13 @@ class nsIAbsorbingTransaction : public nsISupports {
 
   NS_IMETHOD GetTxnName(nsAtom** aName) = 0;
 
-  NS_IMETHOD StartSelectionEquals(mozilla::SelectionState* aSelState,
-                                  bool* aResult) = 0;
+  NS_IMETHOD_(bool)
+  StartSelectionEquals(mozilla::SelectionState& aSelState) = 0;
 
-  NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction* aForwardingAddress) = 0;
+  NS_IMETHOD_(void)
+  ForwardEndBatchTo(nsIAbsorbingTransaction* aForwardingAddress) = 0;
 
-  NS_IMETHOD Commit() = 0;
+  NS_IMETHOD_(void) Commit() = 0;
 
   NS_IMETHOD_(mozilla::PlaceholderTransaction*)
   AsPlaceholderTransaction() = 0;
