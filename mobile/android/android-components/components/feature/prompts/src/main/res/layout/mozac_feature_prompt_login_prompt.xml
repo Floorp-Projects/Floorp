@@ -64,7 +64,7 @@
             android:imeOptions="actionDone"
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -73,6 +73,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
+        android:layout_marginTop="12dp"
         app:errorEnabled="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -91,7 +92,7 @@
             android:inputType="textPassword"
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -105,6 +106,8 @@
         android:text="@string/mozac_feature_prompt_dont_save"
         android:textAllCaps="false"
         android:textColor="?android:colorEdgeEffect"
+        android:textSize="14sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/save_confirm"
         app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"
@@ -120,6 +123,8 @@
         android:text="@string/mozac_feature_prompt_save_confirmation"
         android:textAllCaps="false"
         android:textColor="?android:windowBackground"
+        android:textSize="14sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"
