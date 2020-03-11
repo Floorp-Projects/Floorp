@@ -379,7 +379,7 @@ This object contains user preferences.
 
 Each key in the object is the name of a preference. A key's value depends on the policy with which the preference was collected. There are three such policies, "value", "state", and "default value". For preferences collected under the "value" policy, the value will be the preference's value. For preferences collected under the "state" policy, the value will be an opaque marker signifying only that the preference has a user value. The "state" policy is therefore used when user privacy is a concern. For preferences collected under the "default value" policy, the value will be the preference's default value, if the preference exists. If the preference does not exist, there is no key or value.
 
-The following is a partial list of collected preferences.
+The following is a partial list of `collected preferences <https://searchfox.org/mozilla-central/search?q=const+DEFAULT_ENVIRONMENT_PREFS&path=>`_.
 
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
