@@ -23,6 +23,7 @@
 #include "SandboxPolicyFlash.h"
 #include "SandboxPolicyGMP.h"
 #include "SandboxPolicyUtility.h"
+#include "SandboxPolicySocket.h"
 
 // XXX There are currently problems with the /usr/include/sandbox.h file on
 // some/all of the Macs in Mozilla's build system. Further,
@@ -148,6 +149,7 @@ void MacSandboxInfo::AppendAsParams(std::vector<std::string>& aParams) const {
 #endif
       break;
     case MacSandboxType_Utility:
+    case MacSandboxType_Socket:
       break;
     case MacSandboxType_GMP:
       this->AppendPluginPathParam(aParams);
@@ -302,6 +304,18 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+  } else if (aInfo.type == MacSandboxType_Socket) {
+    profile = const_cast<char*>(SandboxPolicySocket);
+    params.push_back("SHOULD_LOG");
+    params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
+    params.push_back("APP_PATH");
+    params.push_back(aInfo.appPath.c_str());
+    if (!aInfo.crashServerPort.empty()) {
+      params.push_back("CRASH_PORT");
+      params.push_back(aInfo.crashServerPort.c_str());
+    }
+    params.push_back("HOME_PATH");
+    params.push_back(getenv("HOME"));
   } else if (aInfo.type == MacSandboxType_GMP) {
     profile = const_cast<char*>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
@@ -410,7 +424,7 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
 // policy.
 #define MAC_SANDBOX_PRINT_POLICY 0
 #if MAC_SANDBOX_PRINT_POLICY
-  printf("Sandbox params:\n");
+  printf("Sandbox params for PID %d:\n", getpid());
   for (size_t i = 0; i < params.size() / 2; i++) {
     printf("  %s = %s\n", params[i * 2], params[(i * 2) + 1]);
   }
@@ -595,6 +609,10 @@ bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
   return true;
 }
 
+bool GetSocketSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
+  return GetUtilitySandboxParamsFromArgs(aArgc, aArgv, aInfo);
+}
+
 bool GetPluginSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
   // Ensure we find these paramaters in the command
   // line arguments. Return false if any are missing.
@@ -703,6 +721,11 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char
       break;
     case MacSandboxType_Utility:
       if (!GetUtilitySandboxParamsFromArgs(aArgc, aArgv, info)) {
+        return false;
+      }
+      break;
+    case MacSandboxType_Socket:
+      if (!GetSocketSandboxParamsFromArgs(aArgc, aArgv, info)) {
         return false;
       }
       break;
