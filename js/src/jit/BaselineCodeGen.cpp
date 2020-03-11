@@ -4505,6 +4505,11 @@ bool BaselineCodeGen<Handler>::emit_CheckLexical() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CheckAliasedLexical() {
+  return emit_CheckLexical();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_InitLexical() {
   return emit_SetLocal();
 }

@@ -1966,6 +1966,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_throwsetconst();
 
     case JSOp::CheckLexical:
+    case JSOp::CheckAliasedLexical:
       return jsop_checklexical();
 
     case JSOp::InitLexical:
@@ -12059,11 +12060,25 @@ AbortReasonOr<Ok> IonBuilder::jsop_throwsetconst() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_checklexical() {
+  JSOp op = JSOp(*pc);
+  MOZ_ASSERT(op == JSOp::CheckLexical || op == JSOp::CheckAliasedLexical);
+
   MDefinition* val = current->peek(-1);
   MDefinition* lexical;
   MOZ_TRY_VAR(lexical, addLexicalCheck(val));
   current->pop();
   current->push(lexical);
+
+  if (op == JSOp::CheckLexical) {
+    // Set the local slot so that a subsequent GetLocal without a CheckLexical
+    // (the frontend can elide lexical checks) doesn't let a definition with
+    // MIRType::MagicUninitializedLexical escape to arbitrary MIR instructions.
+    // Note that in this case the GetLocal would be unreachable because we throw
+    // an exception here, but we still generate MIR instructions for it.
+    uint32_t slot = info().localSlot(GET_LOCALNO(pc));
+    current->setSlot(slot, lexical);
+  }
+
   return Ok();
 }
 
@@ -13073,7 +13088,9 @@ void IonBuilder::addAbortedPreliminaryGroup(ObjectGroup* group) {
 }
 
 AbortReasonOr<MDefinition*> IonBuilder::addLexicalCheck(MDefinition* input) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckLexical || JSOp(*pc) == JSOp::GetImport);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckLexical ||
+             JSOp(*pc) == JSOp::CheckAliasedLexical ||
+             JSOp(*pc) == JSOp::GetImport);
 
   // If we're guaranteed to not be JS_UNINITIALIZED_LEXICAL, no need to check.
   if (input->type() == MIRType::MagicUninitializedLexical) {

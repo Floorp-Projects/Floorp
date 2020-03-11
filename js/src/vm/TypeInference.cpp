@@ -3472,7 +3472,7 @@ void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
   MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOp::CheckThis ||
              JSOp(*GetNextPc(pc)) == JSOp::CheckThisReinit ||
              JSOp(*GetNextPc(pc)) == JSOp::CheckReturn ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckLexical);
+             JSOp(*GetNextPc(pc)) == JSOp::CheckAliasedLexical);
 
   MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
 }

@@ -2609,7 +2609,7 @@
     /*
      * Throw a ReferenceError if the value on top of the stack is uninitialized.
      *
-     * Typically used after `JSOp::GetLocal` or `JSOp::GetAliasedVar`.
+     * Typically used after `JSOp::GetLocal` with the same `localno`.
      *
      * Implements: [GetBindingValue][1] step 3 and [SetMutableBinding][2] step
      * 4 for declarative Environment Records.
@@ -2619,10 +2619,25 @@
      *
      *   Category: Variables and scopes
      *   Type: Initialization
-     *   Operands: uint32_t nameIndex
+     *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
-    MACRO(CheckLexical, check_lexical, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME) \
+    MACRO(CheckLexical, check_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME) \
+    /*
+     * Like `JSOp::CheckLexical` but for aliased bindings.
+     *
+     * Typically used after `JSOp::GetAliasedVar` with the same hops/slot.
+     *
+     * Note: There are no `CheckName` or `CheckGName` instructions because
+     * they're unnecessary. `JSOp::{Get,Set}{Name,GName}` all check for
+     * uninitialized lexicals and throw if needed.
+     *
+     *   Category: Variables and scopes
+     *   Type: Initialization
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: v => v
+     */ \
+    MACRO(CheckAliasedLexical, check_aliased_lexical, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME) \
     /*
      * Throw a ReferenceError if the value on top of the stack is
      * `MagicValue(JS_UNINITIALIZED_LEXICAL)`. Used in derived class
@@ -3460,7 +3475,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(236)                                   \
   MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
