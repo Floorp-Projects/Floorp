@@ -72,15 +72,15 @@ varying vec2 vPos;
 
 #ifdef WR_VERTEX_SHADER
 
-in vec2 aTaskOrigin;
-in vec4 aRect;
-in vec4 aColor0;
-in vec4 aColor1;
-in int aFlags;
-in vec2 aWidths;
-in vec2 aRadii;
-in vec4 aClipParams1;
-in vec4 aClipParams2;
+PER_INSTANCE in vec2 aTaskOrigin;
+PER_INSTANCE in vec4 aRect;
+PER_INSTANCE in vec4 aColor0;
+PER_INSTANCE in vec4 aColor1;
+PER_INSTANCE in int aFlags;
+PER_INSTANCE in vec2 aWidths;
+PER_INSTANCE in vec2 aRadii;
+PER_INSTANCE in vec4 aClipParams1;
+PER_INSTANCE in vec4 aClipParams2;
 
 vec2 get_outer_corner_scale(int segment) {
     vec2 p;

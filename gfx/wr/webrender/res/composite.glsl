@@ -23,16 +23,16 @@ varying vec2 vUv;
 #endif
 
 #ifdef WR_VERTEX_SHADER
-in vec4 aDeviceRect;
-in vec4 aDeviceClipRect;
-in vec4 aColor;
-in vec4 aParams;
-in vec3 aTextureLayers;
+PER_INSTANCE in vec4 aDeviceRect;
+PER_INSTANCE in vec4 aDeviceClipRect;
+PER_INSTANCE in vec4 aColor;
+PER_INSTANCE in vec4 aParams;
+PER_INSTANCE in vec3 aTextureLayers;
 
 #ifdef WR_FEATURE_YUV
-in vec4 aUvRect0;
-in vec4 aUvRect1;
-in vec4 aUvRect2;
+PER_INSTANCE in vec4 aUvRect0;
+PER_INSTANCE in vec4 aUvRect1;
+PER_INSTANCE in vec4 aUvRect2;
 #endif
 
 void main(void) {
