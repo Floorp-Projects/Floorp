@@ -5603,19 +5603,8 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
 
 bool JSScript::hasLoops() {
   for (const JSTryNote& tn : trynotes()) {
-    switch (tn.kind) {
-      case JSTRY_FOR_IN:
-      case JSTRY_FOR_OF:
-      case JSTRY_LOOP:
-        return true;
-      case JSTRY_CATCH:
-      case JSTRY_FINALLY:
-      case JSTRY_FOR_OF_ITERCLOSE:
-      case JSTRY_DESTRUCTURING:
-        break;
-      default:
-        MOZ_ASSERT(false, "Add new try note type to JSScript::hasLoops");
-        break;
+    if (tn.isLoop()) {
+      return true;
     }
   }
   return false;
