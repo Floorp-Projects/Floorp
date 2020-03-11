@@ -245,6 +245,7 @@ class BaselineCodeGen {
 
   MOZ_MUST_USE bool emitFormalArgAccess(JSOp op);
 
+  MOZ_MUST_USE bool emitThrowConstAssignment();
   MOZ_MUST_USE bool emitUninitializedLexicalCheck(const ValueOperand& val);
 
   MOZ_MUST_USE bool emitIsMagicValue();

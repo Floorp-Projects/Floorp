@@ -2000,6 +2000,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return Ok();
 
     case JSOp::ThrowSetConst:
+    case JSOp::ThrowSetAliasedConst:
+    case JSOp::ThrowSetCallee:
       return jsop_throwsetconst();
 
     case JSOp::CheckLexical:

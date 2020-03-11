@@ -1509,6 +1509,8 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::GetLocal:
     case JSOp::SetLocal:
     case JSOp::ThrowSetConst:
+    case JSOp::ThrowSetAliasedConst:
+    case JSOp::ThrowSetCallee:
     case JSOp::CheckLexical:
     case JSOp::InitLexical:
     case JSOp::Uninitialized:

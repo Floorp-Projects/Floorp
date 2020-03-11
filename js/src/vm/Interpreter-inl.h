@@ -99,14 +99,36 @@ static inline bool IsUninitializedLexicalSlot(HandleObject obj,
   return IsUninitializedLexical(obj->as<NativeObject>().getSlot(shape->slot()));
 }
 
+static inline void ReportUninitializedLexical(JSContext* cx,
+                                              HandlePropertyName name) {
+  ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, name);
+}
+
+static inline void ReportUninitializedLexical(JSContext* cx,
+                                              HandleScript script,
+                                              jsbytecode* pc) {
+  ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, script, pc);
+}
+
 static inline bool CheckUninitializedLexical(JSContext* cx, PropertyName* name_,
                                              HandleValue val) {
   if (IsUninitializedLexical(val)) {
     RootedPropertyName name(cx, name_);
-    ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, name);
+    ReportUninitializedLexical(cx, name);
     return false;
   }
   return true;
+}
+
+static inline void ReportRuntimeConstAssignment(JSContext* cx,
+                                                HandlePropertyName name) {
+  ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, name);
+}
+
+static inline void ReportRuntimeConstAssignment(JSContext* cx,
+                                                HandleScript script,
+                                                jsbytecode* pc) {
+  ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, script, pc);
 }
 
 inline bool GetLengthProperty(const Value& lval, MutableHandleValue vp) {

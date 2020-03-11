@@ -257,7 +257,7 @@ bool NameOpEmitter::emitAssignment() {
       // Assigning to the named lambda is a no-op in sloppy mode but
       // throws in strict mode.
       if (bce_->sc->strict()) {
-        if (!bce_->emitAtomOp(JSOp::ThrowSetConst, name_)) {
+        if (!bce_->emit1(JSOp::ThrowSetCallee)) {
           return false;
         }
       }
@@ -281,14 +281,8 @@ bool NameOpEmitter::emitAssignment() {
           }
         }
       }
-      if (op == JSOp::ThrowSetConst) {
-        if (!bce_->emitAtomOp(op, name_)) {
-          return false;
-        }
-      } else {
-        if (!bce_->emitLocalOp(op, loc_.frameSlot())) {
-          return false;
-        }
+      if (!bce_->emitLocalOp(op, loc_.frameSlot())) {
+        return false;
       }
       if (op == JSOp::InitLexical) {
         if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_,
@@ -305,7 +299,7 @@ bool NameOpEmitter::emitAssignment() {
           op = JSOp::InitAliasedLexical;
         } else {
           if (loc_.isConst()) {
-            op = JSOp::ThrowSetConst;
+            op = JSOp::ThrowSetAliasedConst;
           }
           if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
             return false;
@@ -315,21 +309,15 @@ bool NameOpEmitter::emitAssignment() {
       if (loc_.bindingKind() == BindingKind::NamedLambdaCallee) {
         // Assigning to the named lambda is a no-op in sloppy mode and throws
         // in strict mode.
-        op = JSOp::ThrowSetConst;
+        op = JSOp::ThrowSetAliasedConst;
         if (bce_->sc->strict()) {
-          if (!bce_->emitAtomOp(op, name_)) {
+          if (!bce_->emitEnvCoordOp(op, loc_.environmentCoordinate())) {
             return false;
           }
         }
       } else {
-        if (op == JSOp::ThrowSetConst) {
-          if (!bce_->emitAtomOp(op, name_)) {
-            return false;
-          }
-        } else {
-          if (!bce_->emitEnvCoordOp(op, loc_.environmentCoordinate())) {
-            return false;
-          }
+        if (!bce_->emitEnvCoordOp(op, loc_.environmentCoordinate())) {
+          return false;
         }
       }
       if (op == JSOp::InitAliasedLexical) {
