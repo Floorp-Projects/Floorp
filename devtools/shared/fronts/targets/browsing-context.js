@@ -104,8 +104,7 @@ class BrowsingContextTargetFront extends TargetMixin(
 
       const response = await super.attach();
 
-      this._threadActor = response.threadActor;
-      this.targetForm.threadActor = this._threadActor;
+      this.targetForm.threadActor = response.threadActor;
       this.configureOptions.javascriptEnabled = response.javascriptEnabled;
       this.traits = response.traits || {};
 
