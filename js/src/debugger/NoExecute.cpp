@@ -19,6 +19,7 @@
 #include "vm/JSContext.h"       // for ProtectedDataContextArg, JSContext
 #include "vm/JSScript.h"        // for JSScript
 #include "vm/Realm.h"           // for AutoRealm, Realm
+#include "vm/Warnings.h"        // for WarnNumberLatin1
 
 #include "vm/Realm-inl.h"  // for AutoRealm::AutoRealm
 
@@ -77,9 +78,8 @@ bool EnterDebuggeeNoExecute::reportIfFoundInStack(JSContext* cx,
       SprintfLiteral(linenoStr, "%u", script->lineno());
       // FIXME: filename should be UTF-8 (bug 987069).
       if (warning) {
-        return JS_ReportErrorFlagsAndNumberLatin1(
-            cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-            JSMSG_DEBUGGEE_WOULD_RUN, filename, linenoStr);
+        return WarnNumberLatin1(cx, JSMSG_DEBUGGEE_WOULD_RUN, filename,
+                                linenoStr);
       }
 
       JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,

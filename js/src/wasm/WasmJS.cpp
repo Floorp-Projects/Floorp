@@ -38,6 +38,7 @@
 #include "vm/Interpreter.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/StringType.h"
+#include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
@@ -1338,17 +1339,16 @@ static bool ReportCompileWarnings(JSContext* cx,
   size_t numWarnings = std::min<size_t>(warnings.length(), 3);
 
   for (size_t i = 0; i < numWarnings; i++) {
-    if (!JS_ReportErrorFlagsAndNumberASCII(
-            cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-            JSMSG_WASM_COMPILE_WARNING, warnings[i].get()))
+    if (!WarnNumberASCII(cx, JSMSG_WASM_COMPILE_WARNING, warnings[i].get())) {
       return false;
+    }
   }
 
   if (warnings.length() > numWarnings) {
-    if (!JS_ReportErrorFlagsAndNumberASCII(
-            cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-            JSMSG_WASM_COMPILE_WARNING, "other warnings suppressed"))
+    if (!WarnNumberASCII(cx, JSMSG_WASM_COMPILE_WARNING,
+                         "other warnings suppressed")) {
       return false;
+    }
   }
 
   return true;

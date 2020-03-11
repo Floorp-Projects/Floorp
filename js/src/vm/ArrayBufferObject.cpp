@@ -47,6 +47,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
+#include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "vm/WrapperObject.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTypes.h"
@@ -679,8 +680,7 @@ static bool CreateSpecificWasmBuffer(
   RawbufT* buffer = RawbufT::Allocate(initialSize, clampedMaxSize, mappedSize);
   if (!buffer) {
     if (useHugeMemory) {
-      JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
-                                        nullptr, JSMSG_WASM_HUGE_MEMORY_FAILED);
+      WarnNumberASCII(cx, JSMSG_WASM_HUGE_MEMORY_FAILED);
       if (cx->isExceptionPending()) {
         cx->clearPendingException();
       }

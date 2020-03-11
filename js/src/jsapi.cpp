@@ -4811,64 +4811,6 @@ JS_PUBLIC_API void JS_ReportErrorNumberUCArray(JSContext* cx,
                            errorNumber, args);
 }
 
-JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberASCII(
-    JSContext* cx, unsigned flags, JSErrorCallback errorCallback, void* userRef,
-    const unsigned errorNumber, ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, errorNumber);
-  ok = ReportErrorNumberVA(cx, flags, errorCallback, userRef, errorNumber,
-                           ArgumentsAreASCII, ap);
-  va_end(ap);
-  return ok;
-}
-
-JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberLatin1(
-    JSContext* cx, unsigned flags, JSErrorCallback errorCallback, void* userRef,
-    const unsigned errorNumber, ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, errorNumber);
-  ok = ReportErrorNumberVA(cx, flags, errorCallback, userRef, errorNumber,
-                           ArgumentsAreLatin1, ap);
-  va_end(ap);
-  return ok;
-}
-
-JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberUTF8(
-    JSContext* cx, unsigned flags, JSErrorCallback errorCallback, void* userRef,
-    const unsigned errorNumber, ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, errorNumber);
-  ok = ReportErrorNumberVA(cx, flags, errorCallback, userRef, errorNumber,
-                           ArgumentsAreUTF8, ap);
-  va_end(ap);
-  return ok;
-}
-
-JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberUC(JSContext* cx, unsigned flags,
-                                                  JSErrorCallback errorCallback,
-                                                  void* userRef,
-                                                  const unsigned errorNumber,
-                                                  ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, errorNumber);
-  ok = ReportErrorNumberVA(cx, flags, errorCallback, userRef, errorNumber,
-                           ArgumentsAreUnicode, ap);
-  va_end(ap);
-  return ok;
-}
-
 JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx) {
   ReportOutOfMemory(cx);
 }
