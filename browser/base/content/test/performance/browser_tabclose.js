@@ -23,7 +23,7 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
+  await TestUtils.waitForCondition(() => tab._fullyOpen);
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let newTabButtonRect = gBrowser.tabContainer.newTabButton.getBoundingClientRect();
