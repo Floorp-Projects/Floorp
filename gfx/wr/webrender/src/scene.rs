@@ -296,7 +296,6 @@ impl BuiltScene {
                 background_color: None,
                 compositor_kind: CompositorKind::default(),
                 tile_size_override: None,
-                max_depth_ids: 0,
             },
         }
     }

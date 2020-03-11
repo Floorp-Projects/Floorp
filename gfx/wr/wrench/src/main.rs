@@ -29,7 +29,7 @@ mod yaml_helper;
 mod cgfont_to_data;
 
 use crate::binary_frame_reader::BinaryFrameReader;
-use gleam::{gl, gl::Gl};
+use gleam::gl;
 use crate::perf::PerfHarness;
 use crate::png::save_flipped;
 use crate::rawtest::RawtestHarness;
@@ -44,7 +44,6 @@ use std::path::{Path, PathBuf};
 use std::process;
 use std::ptr;
 use std::rc::Rc;
-use std::slice;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use webrender::DebugFlags;
 use webrender::api::*;
@@ -131,46 +130,21 @@ impl HeadlessContext {
 }
 
 pub enum WindowWrapper {
-    WindowedContext(glutin::WindowedContext<glutin::PossiblyCurrent>, Rc<dyn gl::Gl>, Option<swgl::Context>),
-    Angle(winit::Window, angle::Context, Rc<dyn gl::Gl>, Option<swgl::Context>),
-    Headless(HeadlessContext, Rc<dyn gl::Gl>, Option<swgl::Context>),
+    WindowedContext(glutin::WindowedContext<glutin::PossiblyCurrent>, Rc<dyn gl::Gl>),
+    Angle(winit::Window, angle::Context, Rc<dyn gl::Gl>),
+    Headless(HeadlessContext, Rc<dyn gl::Gl>),
 }
 
 pub struct HeadlessEventIterater;
 
 impl WindowWrapper {
-    fn upload_software_to_native(&self) {
-        match *self {
-            WindowWrapper::Headless(..) => return,
-            _ => {}
-        }
-        let swgl = match self.software_gl() {
-            Some(swgl) => swgl,
-            None => return,
-        };
-        swgl.finish();
-        let gl = self.native_gl();
-        let tex = gl.gen_textures(1)[0];
-        gl.bind_texture(gl::TEXTURE_2D, tex);
-        let (data_ptr, width, height) = swgl.get_color_buffer(0, true);
-        let buffer = unsafe { slice::from_raw_parts(data_ptr as *const u8, width as usize * height as usize * 4) };
-        gl.tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA8 as gl::GLint, width, height, 0, gl::BGRA, gl::UNSIGNED_BYTE, Some(buffer));
-        let fb = gl.gen_framebuffers(1)[0];
-        gl.bind_framebuffer(gl::READ_FRAMEBUFFER, fb);
-        gl.framebuffer_texture_2d(gl::READ_FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, tex, 0);
-        gl.blit_framebuffer(0, 0, width, height, 0, 0, width, height, gl::COLOR_BUFFER_BIT, gl::NEAREST);
-        gl.delete_framebuffers(&[fb]);
-        gl.delete_textures(&[tex]);
-        gl.finish();
-    }
-
     fn swap_buffers(&self) {
         match *self {
-            WindowWrapper::WindowedContext(ref windowed_context, _, _) => {
+            WindowWrapper::WindowedContext(ref windowed_context, _) => {
                 windowed_context.swap_buffers().unwrap()
             }
-            WindowWrapper::Angle(_, ref context, _, _) => context.swap_buffers().unwrap(),
-            WindowWrapper::Headless(_, _, _) => {}
+            WindowWrapper::Angle(_, ref context, _) => context.swap_buffers().unwrap(),
+            WindowWrapper::Headless(_, _) => {}
         }
     }
 
@@ -183,91 +157,61 @@ impl WindowWrapper {
             DeviceIntSize::new(size.width as i32, size.height as i32)
         }
         match *self {
-            WindowWrapper::WindowedContext(ref windowed_context, ..) => {
+            WindowWrapper::WindowedContext(ref windowed_context, _) => {
                 inner_size(windowed_context.window())
             }
             WindowWrapper::Angle(ref window, ..) => inner_size(window),
-            WindowWrapper::Headless(ref context, ..) => DeviceIntSize::new(context.width, context.height),
+            WindowWrapper::Headless(ref context, _) => DeviceIntSize::new(context.width, context.height),
         }
     }
 
     fn hidpi_factor(&self) -> f32 {
         match *self {
-            WindowWrapper::WindowedContext(ref windowed_context, ..) => {
+            WindowWrapper::WindowedContext(ref windowed_context, _) => {
                 windowed_context.window().get_hidpi_factor() as f32
             }
             WindowWrapper::Angle(ref window, ..) => window.get_hidpi_factor() as f32,
-            WindowWrapper::Headless(..) => 1.0,
+            WindowWrapper::Headless(_, _) => 1.0,
         }
     }
 
     fn resize(&mut self, size: DeviceIntSize) {
         match *self {
-            WindowWrapper::WindowedContext(ref mut windowed_context, ..) => {
+            WindowWrapper::WindowedContext(ref mut windowed_context, _) => {
                 windowed_context.window()
                     .set_inner_size(LogicalSize::new(size.width as f64, size.height as f64))
             },
             WindowWrapper::Angle(ref mut window, ..) => {
                 window.set_inner_size(LogicalSize::new(size.width as f64, size.height as f64))
             },
-            WindowWrapper::Headless(..) => unimplemented!(), // requites Glutin update
+            WindowWrapper::Headless(_, _) => unimplemented!(), // requites Glutin update
         }
     }
 
     fn set_title(&mut self, title: &str) {
         match *self {
-            WindowWrapper::WindowedContext(ref windowed_context, ..) => {
+            WindowWrapper::WindowedContext(ref windowed_context, _) => {
                 windowed_context.window().set_title(title)
             }
             WindowWrapper::Angle(ref window, ..) => window.set_title(title),
-            WindowWrapper::Headless(..) => (),
-        }
-    }
-
-    pub fn software_gl(&self) -> Option<&swgl::Context> {
-        match *self {
-            WindowWrapper::WindowedContext(_, _, ref swgl) |
-            WindowWrapper::Angle(_, _, _, ref swgl) |
-            WindowWrapper::Headless(_, _, ref swgl) => swgl.as_ref(),
-        }
-    }
-
-    pub fn native_gl(&self) -> &dyn gl::Gl {
-        match *self {
-            WindowWrapper::WindowedContext(_, ref gl, _) |
-            WindowWrapper::Angle(_, _, ref gl, _) |
-            WindowWrapper::Headless(_, ref gl, _) => &**gl,
+            WindowWrapper::Headless(_, _) => (),
         }
     }
 
     pub fn gl(&self) -> &dyn gl::Gl {
-        if let Some(swgl) = self.software_gl() {
-            swgl
-        } else {
-            self.native_gl()
+        match *self {
+            WindowWrapper::WindowedContext(_, ref gl) |
+            WindowWrapper::Angle(_, _, ref gl) |
+            WindowWrapper::Headless(_, ref gl) => &**gl,
         }
     }
 
     pub fn clone_gl(&self) -> Rc<dyn gl::Gl> {
         match *self {
-            WindowWrapper::WindowedContext(_, ref gl, ref swgl) |
-            WindowWrapper::Angle(_, _, ref gl, ref swgl) |
-            WindowWrapper::Headless(_, ref gl, ref swgl) => {
-                if let Some(ref swgl) = swgl {
-                    Rc::new(swgl.clone())
-                } else {
-                    gl.clone()
-                }
-            }
+            WindowWrapper::WindowedContext(_, ref gl) |
+            WindowWrapper::Angle(_, _, ref gl) |
+            WindowWrapper::Headless(_, ref gl) => gl.clone(),
         }
-    }
-
-    fn update(&self, wrench: &mut Wrench) {
-        let dim = self.get_inner_size();
-        if let Some(swgl) = self.software_gl() {
-            swgl.init_default_framebuffer(dim.width, dim.height);
-        }
-        wrench.update(dim);
     }
 }
 
@@ -278,16 +222,7 @@ fn make_window(
     events_loop: &Option<winit::EventsLoop>,
     angle: bool,
     gl_request: glutin::GlRequest,
-    software: bool,
 ) -> WindowWrapper {
-    let sw_ctx = if software {
-        let ctx = swgl::Context::create();
-        ctx.make_current();
-        Some(ctx)
-    } else {
-        None
-    };
-
     let wrapper = match *events_loop {
         Some(ref events_loop) => {
             let context_builder = glutin::ContextBuilder::new()
@@ -319,7 +254,7 @@ fn make_window(
                     glutin::Api::WebGl => unimplemented!(),
                 };
 
-                WindowWrapper::Angle(_window, _context, gl, sw_ctx)
+                WindowWrapper::Angle(_window, _context, gl)
             } else {
                 let windowed_context = context_builder
                     .build_windowed(window_builder, events_loop)
@@ -345,36 +280,30 @@ fn make_window(
                     glutin::Api::WebGl => unimplemented!(),
                 };
 
-                WindowWrapper::WindowedContext(windowed_context, gl, sw_ctx)
+                WindowWrapper::WindowedContext(windowed_context, gl)
             }
         }
         None => {
-            let gl = if let Some(ref sw_ctx) = sw_ctx {
-                Rc::new(sw_ctx.clone())
-            } else {
-                match gl::GlType::default() {
-                    gl::GlType::Gl => unsafe {
-                        gl::GlFns::load_with(|symbol| {
-                            HeadlessContext::get_proc_address(symbol) as *const _
-                        })
-                    },
-                    gl::GlType::Gles => unsafe {
-                        gl::GlesFns::load_with(|symbol| {
-                            HeadlessContext::get_proc_address(symbol) as *const _
-                        })
-                    },
-                }
+            let gl = match gl::GlType::default() {
+                gl::GlType::Gl => unsafe {
+                    gl::GlFns::load_with(|symbol| {
+                        HeadlessContext::get_proc_address(symbol) as *const _
+                    })
+                },
+                gl::GlType::Gles => unsafe {
+                    gl::GlesFns::load_with(|symbol| {
+                        HeadlessContext::get_proc_address(symbol) as *const _
+                    })
+                },
             };
-            WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl, sw_ctx)
+            WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl)
         }
     };
 
-    let gl = wrapper.gl();
+    wrapper.gl().clear_color(0.3, 0.0, 0.0, 1.0);
 
-    gl.clear_color(0.3, 0.0, 0.0, 1.0);
-
-    let gl_version = gl.get_string(gl::VERSION);
-    let gl_renderer = gl.get_string(gl::RENDERER);
+    let gl_version = wrapper.gl().get_string(gl::VERSION);
+    let gl_renderer = wrapper.gl().get_string(gl::RENDERER);
 
     let dp_ratio = dp_ratio.unwrap_or(wrapper.hidpi_factor());
     println!("OpenGL version {}, {}", gl_version, gl_renderer);
@@ -583,8 +512,6 @@ fn main() {
         }
     };
 
-    let software = args.is_present("software");
-
     let mut window = make_window(
         size,
         dp_ratio,
@@ -592,7 +519,6 @@ fn main() {
         &events_loop,
         args.is_present("angle"),
         gl_request,
-        software,
     );
     let dp_ratio = dp_ratio.unwrap_or(window.hidpi_factor());
     let dim = window.get_inner_size();
@@ -627,7 +553,6 @@ fn main() {
         dump_shader_source,
         notifier,
     );
-    window.update(&mut wrench);
 
     if let Some(window_title) = wrench.take_title() {
         if !cfg!(windows) {
@@ -723,7 +648,8 @@ fn render<'a>(
     let mut cpu_profile_index = 0;
     let mut cursor_position = WorldPoint::zero();
 
-    window.update(wrench);
+    let dim = window.get_inner_size();
+    wrench.update(dim);
     thing.do_frame(wrench);
 
     let mut debug_flags = DebugFlags::empty();
@@ -921,7 +847,8 @@ fn render<'a>(
             }
         }
 
-        window.update(wrench);
+        let dim = window.get_inner_size();
+        wrench.update(dim);
 
         if do_frame {
             let frame_num = thing.do_frame(wrench);
@@ -936,7 +863,6 @@ fn render<'a>(
             }
 
             wrench.render();
-            window.upload_software_to_native();
             window.swap_buffers();
 
             if do_loop {
