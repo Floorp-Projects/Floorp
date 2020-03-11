@@ -59,6 +59,7 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
     LOG("StartMonitoringControlKeys");
     if (mEventSource->Open()) {
       mEventSource->SetPlaybackState(mPlaybackState);
+      mEventSource->SetMediaMetadata(mMetadata);
       mEventSource->AddListener(this);
     }
   }
@@ -102,6 +103,17 @@ MediaSessionPlaybackState MediaControlKeysManager::GetPlaybackState() const {
   return (mEventSource && mEventSource->IsOpened())
              ? mEventSource->GetPlaybackState()
              : mPlaybackState;
+}
+
+void MediaControlKeysManager::SetMediaMetadata(
+    const MediaMetadataBase& aMetadata) {
+  if (mEventSource && mEventSource->IsOpened()) {
+    mEventSource->SetMediaMetadata(aMetadata);
+  } else {
+    // If the event source hasn't been created or been opened yet, we would
+    // cache the state, and set it again when creating the event source.
+    mMetadata = aMetadata;
+  }
 }
 
 }  // namespace dom
