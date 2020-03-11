@@ -756,6 +756,9 @@ pub trait Compositor {
     /// Enable/disable native compositor usage
     fn enable_native_compositor(&mut self, enable: bool);
 
+    /// Safely deinitialize any remaining resources owned by the compositor.
+    fn deinit(&mut self);
+
     /// Get the capabilities struct for this compositor. This is used to
     /// specify what features a compositor supports, depending on the
     /// underlying platform
