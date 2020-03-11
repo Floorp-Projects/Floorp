@@ -13,8 +13,6 @@
  *         The argument will be converted to/from JSON, and the API
  *         will only handle strings and numbers.
  */
-typedef record<UTF8String, (UTF8String or double)?> L10nArgs;
-
 dictionary L10nKey {
   UTF8String? id = null;
   L10nArgs? args = null;
@@ -22,7 +20,7 @@ dictionary L10nKey {
 
 /**
  * L10nMessage is a compound translation unit from Fluent which
- * encodes the value and (optionall) a list of attributes used
+ * encodes the value and (optionally) a list of attributes used
  * to translate a given widget.
  *
  * Most simple imperative translations will only use the `value`,

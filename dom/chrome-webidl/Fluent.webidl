@@ -23,3 +23,29 @@ dictionary FluentMessage {
   FluentPattern? value = null;
   required record<UTF8String, FluentPattern> attributes;
 };
+
+typedef record<UTF8String, (UTF8String or double)?> L10nArgs;
+
+dictionary FluentBundleOptions {
+  boolean useIsolating = false;
+  UTF8String pseudoStrategy;
+};
+
+dictionary FluentBundleAddResourceOptions {
+  boolean allowOverrides = false;
+};
+
+[ChromeOnly, Exposed=Window]
+interface FluentBundle {
+  [Throws]
+  constructor((UTF8String or sequence<UTF8String>) aLocales, optional FluentBundleOptions aOptions = {});
+
+  [Pure, Cached]
+  readonly attribute sequence<UTF8String> locales;
+
+  void addResource(FluentResource aResource, optional FluentBundleAddResourceOptions aOptions = {});
+  boolean hasMessage(UTF8String id);
+  FluentMessage? getMessage(UTF8String id);
+  [Throws]
+  UTF8String formatPattern(FluentPattern pattern, optional L10nArgs? aArgs = null, optional object aErrors);
+};
