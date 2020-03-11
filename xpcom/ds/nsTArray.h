@@ -72,7 +72,6 @@ class ClonedMessageData;
 class MessageData;
 class RefMessageData;
 namespace indexedDB {
-struct StructuredCloneReadInfo;
 class SerializedStructuredCloneReadInfo;
 class ObjectStoreCursorResponse;
 class IndexCursorResponse;
@@ -717,7 +716,6 @@ DECLARE_USE_COPY_CONSTRUCTORS(mozilla::layers::RenderRootUpdates)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SerializedStructuredCloneBuffer)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ipc::StructuredCloneData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ClonedMessageData)
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::StructuredCloneReadInfo);
 DECLARE_USE_COPY_CONSTRUCTORS(
     mozilla::dom::indexedDB::ObjectStoreCursorResponse)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::IndexCursorResponse)
