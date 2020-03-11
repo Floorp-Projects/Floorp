@@ -451,11 +451,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   void setFunctionEndFromCurrentToken(FunctionBox* funbox) const;
 };
 
-enum FunctionCallBehavior {
-  PermitAssignmentToFunctionCalls,
-  ForbidAssignmentToFunctionCalls
-};
-
 template <class ParseHandler>
 class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   using Base = ParserBase;
@@ -583,10 +578,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   inline void clearAbortedSyntaxParse();
 
  public:
-  bool isValidSimpleAssignmentTarget(
-      Node node,
-      FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
-
   NameNodeType newPropertyName(PropertyName* key, const TokenPos& pos) {
     return handler_.newPropertyName(key, pos);
   }
@@ -783,7 +774,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::anyChars;
   using Base::cx_;
   using Base::handler_;
-  using Base::isValidSimpleAssignmentTarget;
   using Base::pc_;
   using Base::usedNames_;
 
