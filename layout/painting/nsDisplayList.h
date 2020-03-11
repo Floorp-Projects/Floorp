@@ -2530,7 +2530,7 @@ class nsDisplayItem : public nsDisplayItemBase {
   }
 
   struct HitTestState {
-    explicit HitTestState() : mInPreserves3D(false) {}
+    explicit HitTestState() = default;
 
     ~HitTestState() {
       NS_ASSERTION(mItemBuffer.Length() == 0,
@@ -2538,7 +2538,11 @@ class nsDisplayItem : public nsDisplayItemBase {
     }
 
     // Handling transform items for preserve 3D frames.
-    bool mInPreserves3D;
+    bool mInPreserves3D = false;
+    // When hit-testing for visibility, we may hit a fully opaque item in a
+    // nested display list. We want to stop at that point, without looking
+    // further on other items.
+    bool mHitFullyOpaqueItem = false;
     AutoTArray<nsDisplayItem*, 100> mItemBuffer;
   };
 

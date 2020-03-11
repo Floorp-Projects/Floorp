@@ -3356,11 +3356,14 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
         }
       }
 
-      if (aBuilder->HitTestIsForVisibility() &&
-          item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
-        // We're exiting early, so pop the remaining items off the buffer.
-        aState->mItemBuffer.SetLength(itemBufferStart);
-        break;
+      if (aBuilder->HitTestIsForVisibility()) {
+        if (aState->mHitFullyOpaqueItem ||
+            item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
+          aState->mHitFullyOpaqueItem = true;
+          // We're exiting early, so pop the remaining items off the buffer.
+          aState->mItemBuffer.TruncateLength(itemBufferStart);
+          break;
+        }
       }
     }
   }
