@@ -43,8 +43,6 @@ import type {
 } from "../../actions/types";
 
 let targets: { [string]: Target };
-let currentThreadFront: ThreadFront;
-let currentTarget: Target;
 let devToolsClient: DevToolsClient;
 let targetList: TargetList;
 let sourceActors: { [ActorId]: SourceId };
@@ -66,9 +64,12 @@ function setupCommands(dependencies: Dependencies) {
   breakpoints = {};
 }
 
-function setupCommandsTopTarget(targetFront: Target) {
-  currentTarget = targetFront;
-  currentThreadFront = targetFront.threadFront;
+function currentTarget(): Target {
+  return targetList.targetFront;
+}
+
+function currentThreadFront(): ThreadFront {
+  return currentTarget().threadFront;
 }
 
 function createObjectFront(grip: Grip): ObjectFront {
@@ -76,7 +77,7 @@ function createObjectFront(grip: Grip): ObjectFront {
     throw new Error("Actor is missing");
   }
 
-  return devToolsClient.createObjectFront(grip, currentThreadFront);
+  return devToolsClient.createObjectFront(grip, currentThreadFront());
 }
 
 async function loadObjectProperties(root: Node) {
@@ -112,8 +113,8 @@ function getTargetsMap(): { string: Target } {
 }
 
 function lookupTarget(thread: string) {
-  if (thread == currentThreadFront.actor) {
-    return currentTarget;
+  if (thread == currentThreadFront().actor) {
+    return currentTarget();
   }
 
   const targetsMap = getTargetsMap();
@@ -141,7 +142,7 @@ function forEachThread(iteratee) {
   // resolve in FIFO order, and this could result in client and server state
   // going out of sync.
 
-  const promises = [currentThreadFront, ...listThreadFronts()].map(
+  const promises = [currentThreadFront(), ...listThreadFronts()].map(
     // If a thread shuts down while sending the message then it will
     // throw. Ignore these exceptions.
     t => iteratee(t).catch(e => console.log(e))
@@ -181,11 +182,11 @@ async function sourceContents({
 }
 
 function setXHRBreakpoint(path: string, method: string) {
-  return currentThreadFront.setXHRBreakpoint(path, method);
+  return currentThreadFront().setXHRBreakpoint(path, method);
 }
 
 function removeXHRBreakpoint(path: string, method: string) {
-  return currentThreadFront.removeXHRBreakpoint(path, method);
+  return currentThreadFront().removeXHRBreakpoint(path, method);
 }
 
 function addWatchpoint(
@@ -194,14 +195,14 @@ function addWatchpoint(
   label: string,
   watchpointType: string
 ) {
-  if (currentTarget.traits.watchpoints) {
+  if (currentTarget().traits.watchpoints) {
     const objectFront = createObjectFront(object);
     return objectFront.addWatchpoint(property, label, watchpointType);
   }
 }
 
 async function removeWatchpoint(object: Grip, property: string) {
-  if (currentTarget.traits.watchpoints) {
+  if (currentTarget().traits.watchpoints) {
     const objectFront = createObjectFront(object);
     await objectFront.removeWatchpoint(property);
   }
@@ -253,11 +254,11 @@ async function evaluate(
   { thread, frameId }: EvaluateParam = {}
 ): Promise<{ result: ExpressionResult }> {
   const params = { thread, frameActor: frameId };
-  if (!currentTarget || !script) {
+  if (!currentTarget() || !script) {
     return { result: null };
   }
 
-  const target = thread ? lookupTarget(thread) : currentTarget;
+  const target = thread ? lookupTarget(thread) : currentTarget();
   const consoleFront = await target.getFront("console");
   if (!consoleFront) {
     return { result: null };
@@ -271,10 +272,10 @@ async function autocomplete(
   cursor: number,
   frameId: ?string
 ): Promise<mixed> {
-  if (!currentTarget || !input) {
+  if (!currentTarget() || !input) {
     return {};
   }
-  const consoleFront = await currentTarget.getFront("console");
+  const consoleFront = await currentTarget().getFront("console");
   if (!consoleFront) {
     return {};
   }
@@ -290,11 +291,11 @@ async function autocomplete(
 }
 
 function navigate(url: string): Promise<*> {
-  return currentTarget.navigateTo({ url });
+  return currentTarget().navigateTo({ url });
 }
 
 function reload(): Promise<*> {
-  return currentTarget.reload();
+  return currentTarget().reload();
 }
 
 function getProperties(thread: string, grip: Grip): Promise<*> {
@@ -342,7 +343,7 @@ async function blackBox(
   isBlackBoxed: boolean,
   range?: Range
 ): Promise<*> {
-  const sourceFront = currentThreadFront.source({ actor: sourceActor.actor });
+  const sourceFront = currentThreadFront().source({ actor: sourceActor.actor });
   if (isBlackBoxed) {
     await sourceFront.unblackBox(range);
   } else {
@@ -368,7 +369,7 @@ function setEventListenerBreakpoints(ids: string[]) {
 async function getEventListenerBreakpointTypes(): Promise<EventListenerCategoryList> {
   let categories;
   try {
-    categories = await currentThreadFront.getAvailableEventBreakpoints();
+    categories = await currentThreadFront().getAvailableEventBreakpoints();
 
     if (!Array.isArray(categories)) {
       // When connecting to older browser that had our placeholder
@@ -408,7 +409,7 @@ async function toggleEventLogging(logEventBreakpoints: boolean) {
 }
 
 function getAllThreadFronts() {
-  const fronts = [currentThreadFront];
+  const fronts = [currentThreadFront()];
   for (const { threadFront } of (Object.values(targets): any)) {
     fronts.push(threadFront);
   }
@@ -457,7 +458,6 @@ async function fetchThreads() {
   };
 
   await updateTargets({
-    currentTarget,
     devToolsClient,
     targets,
     options,
@@ -471,7 +471,7 @@ async function fetchThreads() {
 }
 
 function getMainThread() {
-  return currentThreadFront.actor;
+  return currentThreadFront().actor;
 }
 
 async function getSourceActorBreakpointPositions(
@@ -515,11 +515,11 @@ function getFrontByID(actorID: String) {
 }
 
 function timeWarp(position: ExecutionPoint) {
-  currentThreadFront.timeWarp(position);
+  currentThreadFront().timeWarp(position);
 }
 
 function fetchAncestorFramePositions(index: number) {
-  currentThreadFront.fetchAncestorFramePositions(index);
+  currentThreadFront().fetchAncestorFramePositions(index);
 }
 
 const clientCommands = {
@@ -572,4 +572,4 @@ const clientCommands = {
   fetchAncestorFramePositions,
 };
 
-export { setupCommands, setupCommandsTopTarget, clientCommands };
+export { setupCommands, clientCommands };
