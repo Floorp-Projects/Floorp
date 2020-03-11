@@ -1474,10 +1474,10 @@ impl Device {
             ),
         };
 
-        let depth_format = if renderer_name.starts_with("Software WebRender") {
-            gl::DEPTH_COMPONENT16
+        let (depth_format, upload_method) = if renderer_name.starts_with("Software WebRender") {
+            (gl::DEPTH_COMPONENT16, UploadMethod::Immediate)
         } else {
-            gl::DEPTH_COMPONENT24
+            (gl::DEPTH_COMPONENT24, upload_method)
         };
 
         info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}, depth {:?}",
