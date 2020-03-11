@@ -12,6 +12,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 
+#include <utility>
+
 namespace mozilla {
 namespace image {
 
@@ -75,7 +77,7 @@ class ClippedImage : public ImageWrapper {
   virtual ~ClippedImage();
 
  private:
-  Pair<ImgDrawResult, RefPtr<SourceSurface>> GetFrameInternal(
+  std::pair<ImgDrawResult, RefPtr<SourceSurface>> GetFrameInternal(
       const nsIntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
       uint32_t aWhichFrame, uint32_t aFlags, float aOpacity);
   bool ShouldClip();

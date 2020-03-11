@@ -179,7 +179,7 @@ nsresult PluginFinder::DoFullSearch(const FoundPluginCallback& aCallback) {
     ReadFlashInfo();
     // Don't do a blocklist check until we're done scanning,
     // as the version might change anyway.
-    nsTArray<mozilla::Pair<bool, RefPtr<nsPluginTag>>> arr;
+    nsTArray<std::pair<bool, RefPtr<nsPluginTag>>> arr;
     mFoundPluginCallback(!!mPlugins, mPlugins, arr);
     // We've passed ownership of the flash plugin to the host, so make sure
     // we don't accidentally try to use it when we leave the mainthread.
@@ -602,7 +602,8 @@ nsresult PluginFinder::ScanPluginsDirectory(nsIFile* pluginsDir,
       pluginFile.FreePluginInfo(info);
 
       // We'll need to do a blocklist request later.
-      mPluginBlocklistRequests.AppendElement(MakePair(!seenBefore, pluginTag));
+      mPluginBlocklistRequests.AppendElement(
+          std::make_pair(!seenBefore, pluginTag));
 
       // Plugin unloading is tag-based. If we created a new tag and loaded
       // the library in the process then we want to attempt to unload it here.

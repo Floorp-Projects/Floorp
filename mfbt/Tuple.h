@@ -13,7 +13,7 @@
 
 #include <utility>
 
-#include "mozilla/Pair.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 
@@ -214,8 +214,8 @@ struct TupleImpl<Index, HeadT, TailT...>
 
 /**
  * Tuple is a class that stores zero or more objects, whose types are specified
- * as template parameters. It can be thought of as a generalization of Pair,
- * (which can be thought of as a 2-tuple).
+ * as template parameters. It can be thought of as a generalization of
+ * std::pair, (which can be thought of as a 2-tuple).
  *
  * Tuple allows index-based access to its elements (with the index having to be
  * known at compile time) via the non-member function 'Get<N>(tuple)'.
@@ -273,7 +273,7 @@ class Tuple : public detail::TupleImpl<0, Elements...> {
 
 /**
  * Specialization of Tuple for two elements.
- * This is created to support construction and assignment from a Pair or
+ * This is created to support construction and assignment from a CompactPair or
  * std::pair.
  */
 template <typename A, typename B>
@@ -293,9 +293,9 @@ class Tuple<A, B> : public detail::TupleImpl<0, A, B> {
       : Impl(std::forward<AArg>(aA), std::forward<BArg>(aB)) {}
   Tuple(const Tuple& aOther) : Impl(aOther) {}
   Tuple(Tuple&& aOther) : Impl(std::move(aOther)) {}
-  explicit Tuple(const Pair<A, B>& aOther)
+  explicit Tuple(const CompactPair<A, B>& aOther)
       : Impl(aOther.first(), aOther.second()) {}
-  explicit Tuple(Pair<A, B>&& aOther)
+  explicit Tuple(CompactPair<A, B>&& aOther)
       : Impl(std::forward<A>(aOther.first()),
              std::forward<B>(aOther.second())) {}
   explicit Tuple(const std::pair<A, B>& aOther)
@@ -322,13 +322,13 @@ class Tuple<A, B> : public detail::TupleImpl<0, A, B> {
     return *this;
   }
   template <typename AArg, typename BArg>
-  Tuple& operator=(const Pair<AArg, BArg>& aOther) {
+  Tuple& operator=(const CompactPair<AArg, BArg>& aOther) {
     Impl::Head(*this) = aOther.first();
     Impl::Tail(*this).Head(*this) = aOther.second();
     return *this;
   }
   template <typename AArg, typename BArg>
-  Tuple& operator=(Pair<AArg, BArg>&& aOther) {
+  Tuple& operator=(CompactPair<AArg, BArg>&& aOther) {
     Impl::Head(*this) = std::forward<AArg>(aOther.first());
     Impl::Tail(*this).Head(*this) = std::forward<BArg>(aOther.second());
     return *this;

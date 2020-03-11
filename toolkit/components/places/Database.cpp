@@ -2153,7 +2153,7 @@ nsresult Database::MigrateV50Up() {
       getter_AddRefs(stmt));
   if (NS_FAILED(rv)) return rv;
 
-  AutoTArray<Pair<int64_t, nsCString>, 32> placeURLs;
+  AutoTArray<std::pair<int64_t, nsCString>, 32> placeURLs;
 
   bool hasMore = false;
   nsCString url;
@@ -2164,7 +2164,7 @@ nsresult Database::MigrateV50Up() {
     rv = stmt->GetUTF8String(1, url);
     if (NS_FAILED(rv)) return rv;
 
-    if (!placeURLs.AppendElement(MakePair(placeId, url))) {
+    if (!placeURLs.AppendElement(std::make_pair(placeId, url))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -2175,8 +2175,8 @@ nsresult Database::MigrateV50Up() {
 
   int64_t placeId;
   for (uint32_t i = 0; i < placeURLs.Length(); ++i) {
-    placeId = placeURLs[i].first();
-    url = placeURLs[i].second();
+    placeId = placeURLs[i].first;
+    url = placeURLs[i].second;
 
     rv = ConvertOldStyleQuery(url);
     // Something bad happened, and we can't convert it, so just continue.

@@ -686,7 +686,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
 
-  nsTArray<Pair<nsString, nsString>> mSecurityConsoleMessages;
+  nsTArray<std::pair<nsString, nsString>> mSecurityConsoleMessages;
   nsTArray<nsCString> mUnsafeHeaders;
 
   // A time value equal to the starting time of the fetch that initiates the
