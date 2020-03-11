@@ -87,7 +87,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
       const IDispatchHolder& aCOMProxy);
 
   mozilla::ipc::IPCResult RecvMaybeFireEmbedderLoadEvents(
-      bool aIsTrusted, bool aFireLoadAtEmbeddingElement);
+      bool aFireLoadAtEmbeddingElement);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvScrollRectIntoView(
