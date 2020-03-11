@@ -2428,7 +2428,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   if (!getNslots(&nslots)) {
     return false;
   }
-  BCEScriptStencil stencil(*this, nslots);
+
+  JS::Rooted<BCEScriptStencil> stencil(cx, BCEScriptStencil(*this, nslots));
   if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
     return false;
   }

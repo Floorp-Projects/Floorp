@@ -34,7 +34,7 @@ class BCEScriptStencil : public ScriptStencil {
   explicit BCEScriptStencil(BytecodeEmitter& bce, uint32_t nslots);
 
   virtual bool finishGCThings(JSContext* cx,
-                              mozilla::Span<JS::GCCellPtr> gcthings) const;
+                              mozilla::Span<JS::GCCellPtr> output) const;
   virtual void initAtomMap(GCPtrAtom* atoms) const;
   virtual void finishResumeOffsets(mozilla::Span<uint32_t> resumeOffsets) const;
   virtual void finishScopeNotes(mozilla::Span<ScopeNote> scopeNotes) const;

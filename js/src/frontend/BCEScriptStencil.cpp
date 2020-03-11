@@ -14,7 +14,7 @@ using namespace js;
 using namespace js::frontend;
 
 BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce, uint32_t nslots)
-    : bce_(bce) {
+    : ScriptStencil(bce.cx), bce_(bce) {
   init(nslots);
 }
 
@@ -52,6 +52,7 @@ void BCEScriptStencil::init(uint32_t nslots) {
   code = bce_.bytecodeSection().code();
   notes = bce_.bytecodeSection().notes();
 
+  gcThings = bce_.perScriptData().gcThingList().stealGCThings();
   if (isFunction) {
     functionBox = bce_.sc->asFunctionBox();
   }
@@ -81,10 +82,8 @@ bool BCEScriptStencil::getNeedsFunctionEnvironmentObjects() const {
 }
 
 bool BCEScriptStencil::finishGCThings(
-    JSContext* cx, mozilla::Span<JS::GCCellPtr> gcthings) const {
-  return EmitScriptThingsVector(cx, bce_.compilationInfo,
-                                bce_.perScriptData().gcThingList().objects(),
-                                gcthings);
+    JSContext* cx, mozilla::Span<JS::GCCellPtr> output) const {
+  return EmitScriptThingsVector(cx, bce_.compilationInfo, gcThings, output);
 }
 
 void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {

@@ -477,12 +477,16 @@ class ScriptStencil {
   mozilla::Span<const jsbytecode> code;
   mozilla::Span<const jssrcnote> notes;
 
+  ScriptThingsVector gcThings;
+
   js::frontend::FunctionBox* functionBox = nullptr;
+
+  ScriptStencil(JSContext* cx) : gcThings(cx) {}
 
   // Store all GC things into `gcthings`.
   // `gcthings.Length()` is `this.ngcthings`.
   virtual bool finishGCThings(JSContext* cx,
-                              mozilla::Span<JS::GCCellPtr> gcthings) const = 0;
+                              mozilla::Span<JS::GCCellPtr> output) const = 0;
 
   // Store all atoms into `atoms`
   // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
@@ -503,6 +507,8 @@ class ScriptStencil {
 
   // Call `FunctionBox::finish` for all inner functions.
   virtual void finishInnerFunctions() const = 0;
+
+  void trace(JSTracer* trc) { gcThings.trace(trc); }
 };
 
 } /* namespace frontend */
