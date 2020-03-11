@@ -615,9 +615,9 @@ class nsFrameSelection final {
    * in an browser page, we must stop at this node else we reach into the
    * parent page, which is very bad!
    */
-  nsIContent* GetLimiter() const { return mLimiter; }
+  nsIContent* GetLimiter() const { return mLimiters.mLimiter; }
 
-  nsIContent* GetAncestorLimiter() const { return mAncestorLimiter; }
+  nsIContent* GetAncestorLimiter() const { return mLimiters.mAncestorLimiter; }
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetAncestorLimiter(nsIContent* aLimiter);
 
   /**
@@ -878,10 +878,14 @@ class nsFrameSelection final {
   // batching
   int32_t mBatching = 0;
 
-  // Limit selection navigation to a child of this node.
-  nsCOMPtr<nsIContent> mLimiter;
-  // Limit selection navigation to a descendant of this node.
-  nsCOMPtr<nsIContent> mAncestorLimiter;
+  struct Limiters {
+    // Limit selection navigation to a child of this node.
+    nsCOMPtr<nsIContent> mLimiter;
+    // Limit selection navigation to a descendant of this node.
+    nsCOMPtr<nsIContent> mAncestorLimiter;
+  };
+
+  Limiters mLimiters;
 
   mozilla::PresShell* mPresShell = nullptr;
   // Reasons for notifications of selection changing.
