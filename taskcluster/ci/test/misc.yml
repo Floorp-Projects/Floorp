@@ -45,11 +45,11 @@ test-verify:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            # do not run on ccov
+            # do not run on ccov or asan
             .*-ccov/.*: []
             .*-asan/.*: []
-            (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
+            # where shippable is available, do not run on plain opt, except on try
+            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             default: ['autoland', 'try']
     target:
@@ -108,11 +108,11 @@ test-verify-gpu:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            # do not run on ccov
+            # do not run on ccov or asan
             .*-ccov/.*: []
             .*-asan/.*: []
-            (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
+            # where shippable is available, do not run on plain opt, except on try
+            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             default: ['autoland', 'try']
     tier: 2
