@@ -1,0 +1,21 @@
+suites:
+  -
+    name: Errors
+    resources:
+      -
+        source: |-
+          foo = {$one} and {$two}
+    tests:
+      -
+        name: Reporting into an array
+        asserts:
+          -
+            id: foo
+            value: "{$one} and {$two}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown variable: $one"
+              -
+                type: Reference
+                desc: "Unknown variable: $two"
