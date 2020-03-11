@@ -344,4 +344,64 @@ class InlineAutocompleteEditTextTest {
         assertEquals(-1, BaseInputConnection.getComposingSpanStart(et.text))
         assertEquals(-1, BaseInputConnection.getComposingSpanEnd(et.text))
     }
+
+    @Test
+    fun `GIVEN empty edit field WHEN text 'g' added THEN autocomplete to google`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        et.setText("")
+        et.onAttachedToWindow()
+
+        et.autocompleteResult = AutocompleteResult(
+                text = "google.com",
+                source = "test-source",
+                totalItems = 100)
+
+        et.setText("g")
+        assertEquals("google.com", "${et.text}")
+    }
+
+    @Test
+    fun `GIVEN empty edit field WHEN text 'g ' added THEN don't autocomplete to google`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        et.setText("")
+        et.onAttachedToWindow()
+
+        et.autocompleteResult = AutocompleteResult(
+                text = "google.com",
+                source = "test-source",
+                totalItems = 100)
+
+        et.setText("g ")
+        assertEquals("g ", "${et.text}")
+    }
+
+    @Test
+    fun `GIVEN field with 'google' WHEN backspacing THEN doesn't autocomplete`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        et.setText("google")
+        et.onAttachedToWindow()
+
+        et.autocompleteResult = AutocompleteResult(
+                text = "google.com",
+                source = "test-source",
+                totalItems = 100)
+
+        et.setText("googl")
+        assertEquals("googl", "${et.text}")
+    }
+
+    @Test
+    fun `GIVEN field with selected text WHEN text 'g' added THEN autocomplete to google`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        et.setText("testestest")
+        et.selectAll()
+        et.onAttachedToWindow()
+        et.autocompleteResult = AutocompleteResult(
+                text = "google.com",
+                source = "test-source",
+                totalItems = 100)
+
+        et.setText("g")
+        assertEquals("google.com", "${et.text}")
+    }
 }
