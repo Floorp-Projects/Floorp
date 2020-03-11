@@ -74,13 +74,22 @@ pub struct DebugMessage {
     pub severity: GLenum,
 }
 
+mod private {
+    // Private marker trait extended by the Gl public trait so that no one
+    // else outside this crate can implement Gl. Why? So that adding new methods
+    // to it don't lead to a breaking change.
+    pub trait Sealed {}
+}
+use self::private::Sealed;
+
 macro_rules! declare_gl_apis {
     // garbo is a hack to handle unsafe methods.
     ($($(unsafe $([$garbo:expr])*)* fn $name:ident(&self $(, $arg:ident: $t:ty)* $(,)*) $(-> $retty:ty)* ;)+) => {
-        pub trait Gl {
+        pub trait Gl: Sealed {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* ;)+
         }
 
+        impl Sealed for ErrorCheckingGl {}
         impl Gl for ErrorCheckingGl {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
                 let rv = self.gl.$name($($arg,)*);
@@ -89,6 +98,7 @@ macro_rules! declare_gl_apis {
             })+
         }
 
+        impl<F> Sealed for ErrorReactingGl<F> {}
         impl<F: Fn(&dyn Gl, &str, GLenum)> Gl for ErrorReactingGl<F> {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
                 let rv = self.gl.$name($($arg,)*);
@@ -100,6 +110,7 @@ macro_rules! declare_gl_apis {
             })+
         }
 
+        impl<F> Sealed for ProfilingGl<F> {}
         impl<F: Fn(&str, Duration)> Gl for ProfilingGl<F> {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
                 let start = Instant::now();
