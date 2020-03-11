@@ -485,15 +485,15 @@ static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
   return pc;
 }
 
-static bool HasLiveStackValueAtDepth(JSContext* cx, HandleScript script,
-                                     jsbytecode* pc, uint32_t stackSlotIndex,
+static bool HasLiveStackValueAtDepth(HandleScript script, jsbytecode* pc,
+                                     uint32_t stackSlotIndex,
                                      uint32_t stackDepth) {
   // Return true iff stackSlotIndex is a stack value that's part of an active
   // iterator loop instead of a normal expression stack slot.
 
   MOZ_ASSERT(stackSlotIndex < stackDepth);
 
-  for (TryNoteIterAll tni(cx, script, pc); !tni.done(); ++tni) {
+  for (TryNoteIterAllNoGC tni(script, pc); !tni.done(); ++tni) {
     const JSTryNote& tn = **tni;
 
     switch (tn.kind) {
@@ -1009,7 +1009,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       // HandleExceptionBaseline.
       MOZ_ASSERT(cx->realm()->isDebuggee());
       if (iter.moreFrames() ||
-          HasLiveStackValueAtDepth(cx, script, pc, i, exprStackSlots)) {
+          HasLiveStackValueAtDepth(script, pc, i, exprStackSlots)) {
         v = iter.read();
       } else {
         iter.skip();
