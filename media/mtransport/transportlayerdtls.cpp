@@ -501,6 +501,15 @@ bool TransportLayerDtls::Setup() {
       MOZ_MTLOG(ML_ERROR, "Couldn't set identity");
       return false;
     }
+
+    if (maxVersion_ >= Version::DTLS_1_3) {
+      MOZ_MTLOG(ML_INFO, "Setting DTLS1.3 supported_versions workaround");
+      rv = SSL_SetDtls13VersionWorkaround(ssl_fd.get(), PR_TRUE);
+      if (rv != SECSuccess) {
+        MOZ_MTLOG(ML_ERROR, "Couldn't set DTLS1.3 workaround");
+        return false;
+      }
+    }
   } else {
     MOZ_MTLOG(ML_INFO, "Setting up DTLS as server");
     // Server side
