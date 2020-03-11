@@ -776,9 +776,9 @@ class nsFrameSelection final {
   nsresult FetchDesiredPos(
       nsPoint& aDesiredPos);  // the position requested by the Key Handling for
                               // up down
-  void
-  InvalidateDesiredPos();  // do not listen to mDesiredPos you must get another.
-  void SetDesiredPos(nsPoint aPos);  // set the mDesiredPos
+  void InvalidateDesiredPos();  // do not listen to mDesiredPos.mValue you must
+                                // get another.
+  void SetDesiredPos(nsPoint aPos);  // set the mDesiredPos.mValue
 
   uint32_t GetBatching() const { return mBatching; }
   void SetDirty(bool aDirty = true) {
@@ -906,7 +906,13 @@ class nsFrameSelection final {
 
   nsBidiLevel mKbdBidiLevel = NSBIDI_LTR;
 
-  nsPoint mDesiredPos;
+  // TODO: could presumably be transformed to a `mozilla::Maybe`.
+  struct DesiredPos {
+    nsPoint mValue;
+    bool mIsSet = false;
+  };
+
+  DesiredPos mDesiredPos;
 
   struct DelayedMouseEvent {
     bool mIsValid = false;
@@ -920,7 +926,6 @@ class nsFrameSelection final {
 
   bool mChangesDuringBatching = false;
   bool mDragState = false;  // for drag purposes
-  bool mDesiredPosSet = false;
   bool mAccessibleCaretEnabled = false;
 
   static bool sSelectionEventsOnTextControlsEnabled;
