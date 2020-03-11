@@ -1095,8 +1095,8 @@ StyleEditorUI.prototype = {
   },
 
   /**
-   * Launches the responsive mode with a specific width or height
-   *
+   * Launches the responsive mode and emits an event with data containing
+   * a specific width and height
    * @param  {object} options
    *         Object with width or/and height properties.
    */
@@ -1107,7 +1107,8 @@ StyleEditorUI.prototype = {
     await ResponsiveUIManager.openIfNeeded(win, tab, {
       trigger: "style_editor",
     });
-    ResponsiveUIManager.getResponsiveUIForTab(tab).setViewportSize(options);
+
+    this.emit("responsive-mode-opened", options);
   },
 
   /**
