@@ -24,11 +24,10 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Pair.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
-
-#include <utility>
 
 namespace IPC {
 struct Permission;
@@ -291,7 +290,7 @@ class nsPermissionManager final : public nsIPermissionManager,
    * @param aPrincipal  The Principal which the key is to be extracted from.
    * @return returns an array of (key, origin) pairs.
    */
-  static nsTArray<std::pair<nsCString, nsCString>> GetAllKeysForPrincipal(
+  static nsTArray<mozilla::Pair<nsCString, nsCString>> GetAllKeysForPrincipal(
       nsIPrincipal* aPrincipal);
 
   // From ContentChild.

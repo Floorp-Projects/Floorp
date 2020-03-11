@@ -11,7 +11,6 @@
 #include "OGLShaderConfig.h"
 
 #include <string>
-#include <utility>
 
 namespace mozilla {
 namespace layers {
@@ -49,7 +48,7 @@ struct ProgramProfileOGL {
   std::string mFragmentShaderString;
 
   // the vertex attributes
-  nsTArray<std::pair<nsCString, GLuint>> mAttributes;
+  nsTArray<Pair<nsCString, GLuint>> mAttributes;
 
   KnownUniform mUniforms[KnownUniform::KnownUniformCount];
   nsTArray<const char*> mDefines;

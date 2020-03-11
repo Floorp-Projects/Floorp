@@ -1190,12 +1190,12 @@ struct nsGridContainerFrame::TrackSizingFunctions {
       return getImplicitSize(index - mExpandedTracks.Length());
     }
     auto& indices = mExpandedTracks[index];
-    const TrackListValue& value = mTrackListValues[indices.first];
+    const TrackListValue& value = mTrackListValues[indices.first()];
     if (value.IsTrackSize()) {
-      MOZ_ASSERT(indices.second == 0);
+      MOZ_ASSERT(indices.second() == 0);
       return value.AsTrackSize();
     }
-    return value.AsTrackRepeat().track_sizes.AsSpan()[indices.second];
+    return value.AsTrackRepeat().track_sizes.AsSpan()[indices.second()];
   }
   const StyleTrackBreadth& MaxSizingFor(uint32_t aTrackIndex) const {
     return SizingFor(aTrackIndex).GetMax();
@@ -1222,7 +1222,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     for (size_t i = 0; i < mTrackListValues.Length(); ++i) {
       auto& value = mTrackListValues[i];
       if (value.IsTrackSize()) {
-        mExpandedTracks.AppendElement(std::make_pair(i, size_t(0)));
+        mExpandedTracks.AppendElement(MakePair(i, size_t(0)));
         continue;
       }
       auto& repeat = value.AsTrackRepeat();
@@ -1232,14 +1232,14 @@ struct nsGridContainerFrame::TrackSizingFunctions {
         // The + 1 indicates the number of values in the repeat.
         // TODO: This will need to be updated in bug 1341507
         mRepeatAutoEnd = mRepeatAutoStart + 1;
-        mExpandedTracks.AppendElement(std::make_pair(i, size_t(0)));
+        mExpandedTracks.AppendElement(MakePair(i, size_t(0)));
         continue;
       }
       for (auto j : IntegerRange(repeat.count.AsNumber())) {
         Unused << j;
         size_t trackSizesCount = repeat.track_sizes.Length();
         for (auto k : IntegerRange(trackSizesCount)) {
-          mExpandedTracks.AppendElement(std::make_pair(i, k));
+          mExpandedTracks.AppendElement(MakePair(i, k));
         }
       }
     }
@@ -1262,7 +1262,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
   // Each entry contains two indices, the first into mTrackListValues, and a
   // second one inside mTrackListValues' repeat value, if any, or zero
   // otherwise.
-  nsTArray<std::pair<size_t, size_t>> mExpandedTracks;
+  nsTArray<Pair<size_t, size_t>> mExpandedTracks;
   // Offset from the start of the implicit grid to the first explicit track.
   uint32_t mExplicitGridOffset;
   // The index of the repeat(auto-fill/fit) track, or zero if there is none.

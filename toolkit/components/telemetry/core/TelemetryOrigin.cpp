@@ -19,6 +19,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/dom/PrioEncoder.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Pair.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Tuple.h"
@@ -29,9 +30,11 @@
 
 using mozilla::ErrorResult;
 using mozilla::Get;
+using mozilla::MakePair;
 using mozilla::MakeTuple;
 using mozilla::MakeUnique;
 using mozilla::MallocSizeOf;
+using mozilla::Pair;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::Tuple;
@@ -127,7 +130,7 @@ UniquePtr<IdToOriginBag> gMetricToOriginBag;
 mozilla::Atomic<bool, mozilla::Relaxed> gInitDone(false);
 
 // Useful for app-encoded data
-typedef nsTArray<std::pair<OriginMetricID, nsTArray<nsTArray<bool>>>>
+typedef nsTArray<Pair<OriginMetricID, nsTArray<nsTArray<bool>>>>
     IdBoolsPairArray;
 
 // Prio has a maximum supported number of bools it can encode at a time.
@@ -231,7 +234,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
           metricData[shardIndex][index % PrioEncoder::gNumBooleans] = true;
         }
       }
-      aResult.AppendElement(std::make_pair(id, metricData));
+      aResult.AppendElement(MakePair(id, metricData));
     } while (generation++ < maxGeneration);
   }
   return NS_OK;
@@ -498,13 +501,13 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
   }
 
   // Step 2: Don't need the lock to prio-encode and base64-encode
-  nsTArray<std::pair<nsCString, std::pair<nsCString, nsCString>>> prioData;
+  nsTArray<Pair<nsCString, Pair<nsCString, nsCString>>> prioData;
   for (auto& metricData : appEncodedMetricData) {
-    auto& boolVectors = metricData.second;
+    auto& boolVectors = metricData.second();
     for (uint32_t i = 0; i < boolVectors.Length(); ++i) {
       // "encoding" is of the form `metricName-X` where X is the shard index.
       nsCString encodingName =
-          nsPrintfCString("%s-%u", GetNameForMetricID(metricData.first), i);
+          nsPrintfCString("%s-%u", GetNameForMetricID(metricData.first()), i);
       nsCString aResult;
       nsCString bResult;
       rv = PrioEncoder::EncodeNative(encodingName, boolVectors[i], aResult,
@@ -524,7 +527,7 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
       }
 
       prioData.AppendElement(
-          std::make_pair(encodingName, std::make_pair(aBase64, bBase64)));
+          MakePair(encodingName, MakePair(aBase64, bBase64)));
     }
   }
 
@@ -549,7 +552,7 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
     if (NS_WARN_IF(!prioDatumObj)) {
       return NS_ERROR_FAILURE;
     }
-    JSString* encoding = ToJSString(aCx, prioDatum.first);
+    JSString* encoding = ToJSString(aCx, prioDatum.first());
     JS::RootedString rootedEncoding(aCx, encoding);
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioDatumObj, "encoding",
                                       rootedEncoding, JSPROP_ENUMERATE))) {
@@ -565,12 +568,13 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
       return NS_ERROR_FAILURE;
     }
 
-    JS::RootedString aRootStr(aCx, ToJSString(aCx, prioDatum.second.first));
+    JS::RootedString aRootStr(aCx, ToJSString(aCx, prioDatum.second().first()));
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "a", aRootStr,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
-    JS::RootedString bRootStr(aCx, ToJSString(aCx, prioDatum.second.second));
+    JS::RootedString bRootStr(aCx,
+                              ToJSString(aCx, prioDatum.second().second()));
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "b", bRootStr,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;

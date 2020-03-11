@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ModuloBuffer.h"
+#include "mozilla/Pair.h"
 #include "mozilla/ProfileBufferIndex.h"
 #include "mozilla/Unused.h"
 
