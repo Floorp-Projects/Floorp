@@ -10,7 +10,11 @@ import android.view.ViewOutlineProvider
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.tab_in_collection.*
+import kotlinx.android.synthetic.main.list_element.divider_line
+import kotlinx.android.synthetic.main.list_element.list_element_title
+import kotlinx.android.synthetic.main.list_element.list_item_close_button
+import kotlinx.android.synthetic.main.list_element.list_item_icon
+import kotlinx.android.synthetic.main.list_element.list_item_url
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToFloat
@@ -35,8 +39,8 @@ class TabInCollectionViewHolder(
     var isLastTab = false
 
     init {
-        collection_tab_icon.clipToOutline = true
-        collection_tab_icon.outlineProvider = object : ViewOutlineProvider() {
+        list_item_icon.clipToOutline = true
+        list_item_icon.outlineProvider = object : ViewOutlineProvider() {
             override fun getOutline(view: View, outline: Outline?) {
                 outline?.setRoundRect(
                     0,
@@ -52,8 +56,8 @@ class TabInCollectionViewHolder(
             interactor.onCollectionOpenTabClicked(tab)
         }
 
-        collection_tab_close_button.increaseTapArea(buttonIncreaseDps)
-        collection_tab_close_button.setOnClickListener {
+        list_item_close_button.increaseTapArea(buttonIncreaseDps)
+        list_item_close_button.setOnClickListener {
             interactor.onCollectionRemoveTab(collection, tab)
         }
     }
@@ -66,10 +70,10 @@ class TabInCollectionViewHolder(
     }
 
     private fun updateTabUI() {
-        collection_tab_hostname.text = tab.url.toShortUrl(view.context.components.publicSuffixList)
+        list_item_url.text = tab.url.toShortUrl(view.context.components.publicSuffixList)
 
-        collection_tab_title.text = tab.title
-        collection_tab_icon.context.components.core.icons.loadIntoView(collection_tab_icon, tab.url)
+        list_element_title.text = tab.title
+        list_item_icon.context.components.core.icons.loadIntoView(list_item_icon, tab.url)
 
         // If I'm the last one...
         if (isLastTab) {
@@ -83,6 +87,6 @@ class TabInCollectionViewHolder(
 
     companion object {
         const val buttonIncreaseDps = 12
-        const val LAYOUT_ID = R.layout.tab_in_collection
+        const val LAYOUT_ID = R.layout.list_element
     }
 }

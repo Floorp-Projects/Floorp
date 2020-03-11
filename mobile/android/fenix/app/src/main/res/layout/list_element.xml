@@ -5,9 +5,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/tab_in_collection_item"
+    android:id="@+id/list_item"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="56dp"
     android:background="?above"
     android:clickable="true"
     android:clipToPadding="false"
@@ -16,49 +16,52 @@
     android:foreground="?android:attr/selectableItemBackground">
 
     <ImageView
-        android:id="@+id/collection_tab_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:id="@+id/list_item_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/rounded_grey_corners_transparent_center"
+        android:padding="8dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="23dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:importantForAccessibility="no"
         app:srcCompat="@drawable/ic_tab_collection"
         android:tint="@null"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="parent"/>
 
     <TextView
-        android:id="@+id/collection_tab_hostname"
+        android:id="@+id/list_element_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="9dp"
         android:layout_marginEnd="74dp"
         android:ellipsize="end"
-        android:maxLines="1"
-        android:minLines="1"
-        android:textAppearance="@style/Header12TextStyle"
-        app:layout_constraintEnd_toStartOf="@id/collection_tab_close_button"
-        app:layout_constraintStart_toEndOf="@id/collection_tab_icon"
+        android:singleLine="true"
+        android:textAppearance="@style/Body14TextStyle"
+        app:layout_constraintEnd_toStartOf="@id/list_item_close_button"
+        app:layout_constraintStart_toEndOf="@id/list_item_icon"
+        app:layout_constraintBottom_toTopOf="@id/list_item_url"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/collection_tab_title"
+        android:id="@+id/list_item_url"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
+        android:textColor="?secondaryText"
+        android:textSize="10sp"
         android:ellipsize="end"
         android:maxLines="2"
-        android:minLines="2"
-        android:textAppearance="@style/Body14TextStyle"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/collection_tab_hostname"
-        app:layout_constraintStart_toStartOf="@id/collection_tab_hostname"
-        app:layout_constraintTop_toBottomOf="@id/collection_tab_hostname" />
+        app:layout_constraintEnd_toEndOf="@id/list_element_title"
+        app:layout_constraintStart_toStartOf="@id/list_element_title"
+        app:layout_constraintTop_toBottomOf="@id/list_element_title" />
 
     <ImageButton
-        android:id="@+id/collection_tab_close_button"
+        android:id="@+id/list_item_close_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:alpha="0.8"
@@ -66,7 +69,8 @@
         android:contentDescription="@string/close_tab"
         app:srcCompat="@drawable/ic_close"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <View
         android:id="@+id/divider_line"
