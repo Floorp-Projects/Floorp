@@ -911,7 +911,7 @@ pub struct DisplayListBuilder {
     pub pipeline_id: PipelineId,
 
     extra_data: Vec<u8>,
-    extra_data_chunk_len: usize,
+    extra_data_chunk_start: usize,
     writing_extra_data_chunk: bool,
 
     next_clip_index: usize,
@@ -945,7 +945,7 @@ impl DisplayListBuilder {
             pipeline_id,
 
             extra_data: Vec::new(),
-            extra_data_chunk_len: 0,
+            extra_data_chunk_start: 0,
             writing_extra_data_chunk: false,
 
             next_clip_index: FIRST_CLIP_NODE_INDEX,
@@ -1744,29 +1744,38 @@ impl DisplayListBuilder {
         self.push_item(&di::DisplayItem::PopAllShadows);
     }
 
-    pub fn start_extra_data_chunk(&mut self) {
+    fn truncate_extra_data_chunk(&mut self) {
+        self.extra_data.truncate(self.extra_data_chunk_start)
+    }
+
+    pub fn start_item_group(&mut self, _key: di::ItemKey) {
         self.writing_extra_data_chunk = true;
-        self.extra_data_chunk_len = self.extra_data.len();
+        self.extra_data_chunk_start = self.extra_data.len();
     }
 
-    /// Returns true, if any bytes were written to extra data buffer.
-    pub fn end_extra_data_chunk(&mut self) -> bool {
+    pub fn finish_item_group(&mut self, key: di::ItemKey) -> bool {
         self.writing_extra_data_chunk = false;
-        (self.extra_data.len() - self.extra_data_chunk_len) > 0
+
+        let chunk_size = self.extra_data.len() - self.extra_data_chunk_start;
+        if chunk_size > 0 {
+            self.push_reuse_items(key);
+            return true
+        }
+
+        false
     }
 
-    pub fn push_reuse_item(
-        &mut self,
-        key: di::ItemKey,
-    ) {
-        let item = di::DisplayItem::ReuseItem(key);
-        self.push_item(&item);
+    pub fn cancel_item_group(&mut self) {
+        debug_assert!(self.writing_extra_data_chunk);
+        self.writing_extra_data_chunk = false;
+        self.truncate_extra_data_chunk();
     }
 
-    pub fn set_cache_size(
-        &mut self,
-        cache_size: usize,
-    ) {
+    pub fn push_reuse_items(&mut self, key: di::ItemKey) {
+        self.push_item(&di::DisplayItem::ReuseItem(key));
+    }
+
+    pub fn set_cache_size(&mut self, cache_size: usize) {
         self.cache_size = cache_size;
     }
 

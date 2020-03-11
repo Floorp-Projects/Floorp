@@ -68,8 +68,8 @@ impl DisplayItemCache {
     ) {
         if capacity > self.items.len() {
             self.items.resize_with(capacity, || None::<CachedDisplayItem>);
-            // println!("Current cache size: {:?}",
-            //     mem::size_of::<CachedDisplayItem>() * capacity);
+            // println!("Current cache size: {:?} elements, {:?} bytes",
+            //     capacity, std::mem::size_of::<CachedDisplayItem>() * capacity);
         }
     }
 
