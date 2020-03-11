@@ -317,11 +317,13 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   wr::DisplayListBuilder builder(
       WrBridge()->GetPipeline(), wrRects[wr::RenderRoot::Default].size,
-      mLastDisplayListSizes[wr::RenderRoot::Default]);
+      mLastDisplayListSizes[wr::RenderRoot::Default], &mDisplayItemCache);
+
   for (auto renderRoot : wr::kNonDefaultRenderRoots) {
     if (!rects[renderRoot].IsEmpty()) {
       builder.CreateSubBuilder(wrRects[renderRoot].size,
-                               mLastDisplayListSizes[renderRoot], renderRoot);
+                               mLastDisplayListSizes[renderRoot], nullptr,
+                               renderRoot);
     }
   }
 
@@ -345,9 +347,14 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     // generating the WR display list is the closest equivalent
     PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
 
+    builder.UpdateCacheState(aDisplayListBuilder->PartialBuildFailed());
+
     mWebRenderCommandBuilder.BuildWebRenderCommands(
         builder, resourceUpdates, aDisplayList, aDisplayListBuilder,
         mScrollDatas, std::move(aFilters));
+
+    builder.UpdateCacheSize();
+
     builderDumpIndex =
         mWebRenderCommandBuilder.GetBuilderDumpIndex(builder.GetRenderRoot());
     containsSVGGroup = mWebRenderCommandBuilder.GetContainsSVGGroup();
