@@ -1,14 +1,11 @@
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "aboutNewTabService",
-  "@mozilla.org/browser/aboutnewtab-service;1",
-  "nsIAboutNewTabService"
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
 );
 
 registerCleanupFunction(() => {
-  aboutNewTabService.resetNewTabURL();
+  AboutNewTab.resetNewTabURL();
 });
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {
@@ -34,10 +31,10 @@ add_task(async function redirector_ignores_override() {
       overrideURL,
       `newtab page now points to ${overrideURL}`
     );
-    aboutNewTabService.newTabURL = overrideURL;
+    AboutNewTab.newTabURL = overrideURL;
 
     await notificationPromise;
-    Assert.ok(aboutNewTabService.overridden, "url has been overridden");
+    Assert.ok(AboutNewTab.newTabURLOverridden, "url has been overridden");
 
     let tabOptions = {
       gBrowser,
@@ -84,10 +81,10 @@ add_task(async function override_loads_in_browser() {
       overrideURL.trim(),
       `newtab page now points to ${overrideURL}`
     );
-    aboutNewTabService.newTabURL = overrideURL;
+    AboutNewTab.newTabURL = overrideURL;
 
     await notificationPromise;
-    Assert.ok(aboutNewTabService.overridden, "url has been overridden");
+    Assert.ok(AboutNewTab.newTabURLOverridden, "url has been overridden");
 
     // simulate a newtab open as a user would
     BrowserOpenTab(); // jshint ignore:line
@@ -118,10 +115,10 @@ add_task(async function override_blank_loads_in_browser() {
       "about:blank",
       "newtab page now points to about:blank"
     );
-    aboutNewTabService.newTabURL = overrideURL;
+    AboutNewTab.newTabURL = overrideURL;
 
     await notificationPromise;
-    Assert.ok(aboutNewTabService.overridden, "url has been overridden");
+    Assert.ok(AboutNewTab.newTabURLOverridden, "url has been overridden");
 
     // simulate a newtab open as a user would
     BrowserOpenTab(); // jshint ignore:line
