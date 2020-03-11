@@ -8,7 +8,7 @@ use crate::debug_font_data;
 use crate::device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
 use crate::device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHint};
 use euclid::{Point2D, Rect, Size2D, Transform3D, default};
-use crate::internal_types::{ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, Swizzle};
+use crate::internal_types::Swizzle;
 use std::f32;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -333,8 +333,8 @@ impl DebugRenderer {
                 viewport_size.width as f32 * scale,
                 bottom,
                 top,
-                ORTHO_NEAR_PLANE,
-                ORTHO_FAR_PLANE,
+                device.ortho_near_plane(),
+                device.ortho_far_plane(),
             );
 
             // Triangles

@@ -69,7 +69,7 @@ use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData};
 use crate::gpu_types::{CompositeInstance, ResolveInstanceData, ZBufferId};
-use crate::internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
+use crate::internal_types::{TextureSource, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
@@ -2268,6 +2268,7 @@ impl Renderer {
             background_color: options.clear_color,
             compositor_kind,
             tile_size_override: None,
+            max_depth_ids: device.max_depth_ids(),
         };
         info!("WR {:?}", config);
 
@@ -4341,8 +4342,8 @@ impl Renderer {
                 surface_size.width as f32,
                 0.0,
                 surface_size.height as f32,
-                ORTHO_NEAR_PLANE,
-                ORTHO_FAR_PLANE,
+                self.device.ortho_near_plane(),
+                self.device.ortho_far_plane(),
             );
 
             // Bind an appropriate YUV shader for the texture format kind
@@ -5124,8 +5125,8 @@ impl Renderer {
                 target_size.width as f32,
                 0.0,
                 target_size.height as f32,
-                ORTHO_NEAR_PLANE,
-                ORTHO_FAR_PLANE,
+                self.device.ortho_near_plane(),
+                self.device.ortho_far_plane(),
             )
         };
 
@@ -5586,8 +5587,8 @@ impl Renderer {
                             offset.x + size.width,
                             bottom,
                             top,
-                            ORTHO_NEAR_PLANE,
-                            ORTHO_FAR_PLANE,
+                            self.device.ortho_near_plane(),
+                            self.device.ortho_far_plane(),
                         );
 
                         let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
@@ -5724,8 +5725,8 @@ impl Renderer {
                                 draw_target.dimensions().width as f32,
                                 0.0,
                                 draw_target.dimensions().height as f32,
-                                ORTHO_NEAR_PLANE,
-                                ORTHO_FAR_PLANE,
+                                self.device.ortho_near_plane(),
+                                self.device.ortho_far_plane(),
                             );
 
                             self.draw_picture_cache_target(
@@ -5765,8 +5766,8 @@ impl Renderer {
                             draw_target.dimensions().width as f32,
                             0.0,
                             draw_target.dimensions().height as f32,
-                            ORTHO_NEAR_PLANE,
-                            ORTHO_FAR_PLANE,
+                            self.device.ortho_near_plane(),
+                            self.device.ortho_far_plane(),
                         );
 
                         self.draw_alpha_target(
@@ -5791,8 +5792,8 @@ impl Renderer {
                             draw_target.dimensions().width as f32,
                             0.0,
                             draw_target.dimensions().height as f32,
-                            ORTHO_NEAR_PLANE,
-                            ORTHO_FAR_PLANE,
+                            self.device.ortho_near_plane(),
+                            self.device.ortho_far_plane(),
                         );
 
                         let clear_depth = if target.needs_depth() {
