@@ -58,6 +58,7 @@ private fun normalModeAdapterItems(
 
         tabs.isNotEmpty() && collections.isEmpty() -> {
             showTabs(items, tabs)
+            items.add(AdapterItem.CollectionHeader)
             items.add(noCollectionMessage)
         }
 
