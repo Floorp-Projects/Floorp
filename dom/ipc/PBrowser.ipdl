@@ -702,8 +702,7 @@ parent:
      * Called once this PBrowser's OOP subdoc no longer blocks its
      * embedding element's and embedding doc's 'load' events.
      */
-    async MaybeFireEmbedderLoadEvents(bool aIsTrusted,
-                                      bool aFireLoadAtEmbeddingElement);
+    async MaybeFireEmbedderLoadEvents(bool aFireLoadAtEmbeddingElement);
 
     async ScrollRectIntoView(nsRect aRect, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags,

@@ -3957,7 +3957,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvGetSystemFont(nsCString* aFontName) {
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvMaybeFireEmbedderLoadEvents(
-    bool aIsTrusted, bool aFireLoadAtEmbeddingElement) {
+    bool aFireLoadAtEmbeddingElement) {
   BrowserBridgeParent* bridge = GetBrowserBridgeParent();
   if (!bridge) {
     NS_WARNING("Received `load` event on unbridged BrowserParent!");
@@ -3965,7 +3965,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvMaybeFireEmbedderLoadEvents(
   }
 
   Unused << bridge->SendMaybeFireEmbedderLoadEvents(
-      aIsTrusted, aFireLoadAtEmbeddingElement);
+      aFireLoadAtEmbeddingElement);
   return IPC_OK();
 }
 
