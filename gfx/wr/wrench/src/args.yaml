@@ -46,6 +46,9 @@ args:
   - angle:
       long: angle
       help: Enable ANGLE rendering (on Windows only)
+  - software:
+      long: software
+      help: Enable software rendering
   - dp_ratio:
       short: p
       long: device-pixel-ratio
