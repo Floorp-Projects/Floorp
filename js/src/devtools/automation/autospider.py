@@ -502,13 +502,13 @@ if use_minidump:
 
 # Always run all enabled tests, even if earlier ones failed. But return the
 # first failed status.
-results = []
+results = [('(make-nonempty)', 0)]
 
 if 'checks' in test_suites:
-    results.append(run_test_command([MAKE, 'check']))
+    results.append(('make check', run_test_command([MAKE, 'check'])))
 
 if 'jittest' in test_suites:
-    results.append(run_test_command([MAKE, 'check-jit-test']))
+    results.append(('make check-jit-test', run_test_command([MAKE, 'check-jit-test'])))
 if 'jsapitests' in test_suites:
     jsapi_test_binary = os.path.join(OBJDIR, 'dist', 'bin', 'jsapi-tests')
     test_env = env.copy()
@@ -518,20 +518,23 @@ if 'jsapitests' in test_suites:
     if st < 0:
         print("PROCESS-CRASH | jsapi-tests | application crashed")
         print("Return code: {}".format(st))
-    results.append(st)
+    results.append(('jsapi-tests', st))
 if 'jstests' in test_suites:
-    results.append(run_test_command([MAKE, 'check-jstests']))
+    results.append(('jstests', run_test_command([MAKE, 'check-jstests'])))
 if 'gdb' in test_suites:
     test_script = os.path.join(DIR.js_src, "gdb", "run-tests.py")
     auto_args = ["-s", "-o", "--no-progress"] if AUTOMATION else []
     extra_args = env.get('GDBTEST_EXTRA_ARGS', '').split(' ')
-    results.append(run_test_command([PYTHON, test_script, *auto_args, *extra_args, OBJDIR]))
+    results.append((
+        'gdb',
+        run_test_command([PYTHON, test_script, *auto_args, *extra_args, OBJDIR])
+    ))
 
 # FIXME bug 1291449: This would be unnecessary if we could run msan with -mllvm
 # -msan-keep-going, but in clang 3.8 it causes a hang during compilation.
 if variant.get('ignore-test-failures'):
     logging.warning("Ignoring test results %s" % (results,))
-    results = [0]
+    results = [('ignored', 0)]
 
 if args.variant == 'msan':
     files = filter(lambda f: f.startswith("sanitize_log."), os.listdir(OUTDIR))
@@ -563,7 +566,7 @@ if args.variant == 'msan':
         max_allowed = variant['max-errors']
         print("Found %d errors out of %d allowed" % (len(sites), max_allowed))
         if len(sites) > max_allowed:
-            results.append(1)
+            results.append(('too many msan errors', 1))
 
     # Gather individual results into a tarball. Note that these are
     # distinguished only by pid of the JS process running within each test, so
@@ -584,6 +587,7 @@ if use_minidump:
         os.path.join(OBJDIR, "dist/crashreporter-symbols"),
     ])
 
-for st in results:
-    if st != 0:
-        sys.exit(st)
+for name, st in results:
+    print("exit status %d for '%s'" % (st, name))
+
+sys.exit(max(st for _, st in results))
