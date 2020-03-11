@@ -6314,6 +6314,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     if (indexedDBDirExists) {
       rv = UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
           indexedDBDir);
+      mInitializationInfo.RecordFirstInitializationAttempt(
+          Initialization::UpgradeFromIndexedDBDirectory, rv);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6341,6 +6343,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     if (persistentStorageDirExists) {
       rv = UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
           persistentStorageDir);
+      mInitializationInfo.RecordFirstInitializationAttempt(
+          Initialization::UpgradeFromPersistentStorageDirectory, rv);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
