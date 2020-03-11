@@ -315,7 +315,7 @@ def checks(target, binary):
             pass
         except RuntimeError as e:
             print('TEST-UNEXPECTED-FAIL | {} | {} | {}'
-                  .format(name, basename, e.message),
+                  .format(name, basename, str(e)),
                   file=sys.stderr)
             retcode = 1
     return retcode
