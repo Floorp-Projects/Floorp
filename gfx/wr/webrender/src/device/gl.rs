@@ -1409,13 +1409,19 @@ impl Device {
         let is_emulator = renderer_name.starts_with("Android Emulator");
         let avoid_tex_image = is_emulator;
 
+        let supports_texture_storage = allow_texture_storage_support &&
+            match gl.get_type() {
+                gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_texture_storage"),
+                // ES 3 technically always supports glTexStorage, but only check here for the extension
+                // necessary to interact with BGRA.
+                gl::GlType::Gles => supports_extension(&extensions, "GL_EXT_texture_storage"),
+            };
+        let supports_texture_swizzle = allow_texture_swizzling &&
+            (gl.get_type() == gl::GlType::Gles || supports_extension(&extensions, "GL_ARB_texture_swizzle"));
+
         let (color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage) = match gl.get_type() {
             // There is `glTexStorage`, use it and expect RGBA on the input.
-            gl::GlType::Gl if
-                allow_texture_storage_support &&
-                allow_texture_swizzling &&
-                supports_extension(&extensions, "GL_ARB_texture_storage")
-            => (
+            gl::GlType::Gl if supports_texture_storage && supports_texture_swizzle => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair { internal: gl::RGBA8, external: gl::RGBA },
                 Swizzle::Bgra, // pretend it's RGBA, rely on swizzling
@@ -1429,7 +1435,7 @@ impl Device {
                 TexStorageUsage::Never
             ),
             // We can use glTexStorage with BGRA8 as the internal format.
-            gl::GlType::Gles if supports_gles_bgra && allow_texture_storage_support && supports_extension(&extensions, "GL_EXT_texture_storage") => (
+            gl::GlType::Gles if supports_gles_bgra && supports_texture_storage => (
                 TextureFormatPair::from(ImageFormat::BGRA8),
                 TextureFormatPair { internal: gl::BGRA8_EXT, external: gl::BGRA_EXT },
                 Swizzle::Rgba, // no conversion needed
@@ -1437,7 +1443,7 @@ impl Device {
             ),
             // For BGRA8 textures we must use the unsized BGRA internal
             // format and glTexImage. If texture storage is supported we can
-            // use it for other formats.
+            // use it for other formats, which is always the case for ES 3.
             // We can't use glTexStorage with BGRA8 as the internal format.
             gl::GlType::Gles if supports_gles_bgra && !avoid_tex_image => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
@@ -1447,7 +1453,7 @@ impl Device {
             ),
             // BGRA is not supported as an internal format, therefore we will
             // use RGBA. The swizzling will happen at the texture unit.
-            gl::GlType::Gles if allow_texture_swizzling => (
+            gl::GlType::Gles if supports_texture_swizzle => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair { internal: gl::RGBA8, external: gl::RGBA },
                 Swizzle::Bgra, // pretend it's RGBA, rely on swizzling
@@ -1490,10 +1496,6 @@ impl Device {
         let supports_advanced_blend_equation =
             supports_extension(&extensions, "GL_KHR_blend_equation_advanced") &&
             !is_adreno;
-
-        let supports_texture_swizzle = allow_texture_swizzling &&
-            (gl.get_type() == gl::GlType::Gles || supports_extension(&extensions, "GL_ARB_texture_storage"));
-
 
         // On the android emulator, glShaderSource can crash if the source
         // strings are not null-terminated. See bug 1591945.
