@@ -960,7 +960,10 @@ AbortReasonOr<Ok> IonBuilder::build() {
   }
 
   MOZ_TRY(maybeAddOsrTypeBarriers());
-  MOZ_TRY(processIterators());
+
+  if (!MPhi::markIteratorPhis(iterators_)) {
+    return abort(AbortReason::Alloc);
+  }
 
   if (!info().isAnalysis() && !abortedPreliminaryGroups().empty()) {
     return abort(AbortReason::PreliminaryObjects);
@@ -968,42 +971,6 @@ AbortReasonOr<Ok> IonBuilder::build() {
 
   MOZ_ASSERT(loopDepth_ == 0);
   MOZ_ASSERT(loopStack_.empty());
-  return Ok();
-}
-
-AbortReasonOr<Ok> IonBuilder::processIterators() {
-  // Find and mark phis that must transitively hold an iterator live.
-
-  Vector<MPhi*, 8, SystemAllocPolicy> worklist;
-
-  for (size_t i = 0; i < iterators_.length(); i++) {
-    MPhi* iter = iterators_[i];
-    if (!iter->isInWorklist()) {
-      if (!worklist.append(iter)) {
-        return abort(AbortReason::Alloc);
-      }
-      iter->setInWorklist();
-    }
-  }
-
-  while (!worklist.empty()) {
-    MPhi* phi = worklist.popCopy();
-    phi->setNotInWorklist();
-
-    phi->setIterator();
-    phi->setImplicitlyUsedUnchecked();
-
-    for (MUseDefIterator iter(phi); iter; iter++) {
-      MDefinition* use = iter.def();
-      if (!use->isInWorklist() && use->isPhi() && !use->toPhi()->isIterator()) {
-        if (!worklist.append(use->toPhi())) {
-          return abort(AbortReason::Alloc);
-        }
-        use->setInWorklist();
-      }
-    }
-  }
-
   return Ok();
 }
 

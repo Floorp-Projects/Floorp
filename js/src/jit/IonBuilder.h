@@ -1067,7 +1067,7 @@ class MOZ_STACK_CLASS IonBuilder {
     LoopHeader(jsbytecode* pc, MBasicBlock* header) : pc(pc), header(header) {}
   };
 
-  Vector<MPhi*, 2, JitAllocPolicy> iterators_;
+  PhiVector iterators_;
   Vector<LoopHeader, 0, JitAllocPolicy> loopHeaders_;
 
   BaselineInspector* inspector;

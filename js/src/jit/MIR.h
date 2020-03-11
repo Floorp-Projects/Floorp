@@ -5992,6 +5992,8 @@ class MArrowNewTarget : public MUnaryInstruction,
 // then used to set UseRemoved flags on the inputs of such Phi instructions.
 enum class PhiUsage : uint8_t { Unknown, Unused, Used };
 
+using PhiVector = Vector<MPhi*, 4, JitAllocPolicy>;
+
 class MPhi final : public MDefinition,
                    public InlineListNode<MPhi>,
                    public NoTypePolicy::Data {
@@ -6106,6 +6108,10 @@ class MPhi final : public MDefinition,
   // via a loop backedge.
   MOZ_MUST_USE bool addBackedgeType(TempAllocator& alloc, MIRType type,
                                     TemporaryTypeSet* typeSet);
+
+  // Mark all phis in |iterators|, and the phis they flow into, as having
+  // implicit uses.
+  static MOZ_MUST_USE bool markIteratorPhis(const PhiVector& iterators);
 
   // Initializes the operands vector to the given capacity,
   // permitting use of addInput() instead of addInputSlow().
