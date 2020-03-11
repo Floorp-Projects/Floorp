@@ -137,12 +137,11 @@ class AppLinksUseCases(
 
         private fun createBrowsableIntents(url: String): RedirectData {
             val intent = Intent.parseUri(url, 0)
-
             if (intent.action == Intent.ACTION_VIEW) {
                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
                 intent.component = null
                 intent.selector = null
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
 
             val fallbackIntent = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {

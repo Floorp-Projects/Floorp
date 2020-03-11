@@ -39,6 +39,7 @@ class AppLinksUseCasesTest {
 
     private val appUrl = "https://example.com"
     private val appIntent = "intent://example.com"
+    private val appSchemeIntent = "example://example.com"
     private val appPackage = "com.example.app"
     private val browserPackage = "com.browser"
     private val testBrowserPackage = "com.current.browser"
@@ -299,12 +300,11 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `A intent scheme uri with package name will have marketplace intent reguardless user preference`() {
+    fun `A intent scheme uri with package name will have marketplace intent regardless user preference`() {
         val context = createContext(appUrl to browserPackage)
-        var subject = AppLinksUseCases(context, { false }, browserPackageNames = setOf(browserPackage))
-
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
 
+        var subject = AppLinksUseCases(context, { false }, browserPackageNames = setOf(browserPackage))
         var redirect = subject.interceptedAppLinkRedirect(uri)
         assertFalse(redirect.hasExternalApp())
         assertFalse(redirect.hasFallback())
@@ -317,5 +317,47 @@ class AppLinksUseCasesTest {
         assertFalse(redirect.hasFallback())
         assertNotNull(redirect.marketplaceIntent)
         assertNull(redirect.fallbackUrl)
+    }
+
+    @Test
+    fun `A app scheme uri will redirect regardless user preference`() {
+        val context = createContext(appSchemeIntent to appPackage)
+
+        var subject = AppLinksUseCases(context, { false }, browserPackageNames = setOf(browserPackage))
+        var redirect = subject.interceptedAppLinkRedirect(appSchemeIntent)
+        assertTrue(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
+
+        subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+        redirect = subject.interceptedAppLinkRedirect(appSchemeIntent)
+        assertTrue(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
+    }
+
+    @Test
+    fun `A app intent uri will redirect regardless user preference`() {
+        val context = createContext(appIntent to appPackage)
+
+        var subject = AppLinksUseCases(context, { false }, browserPackageNames = setOf(browserPackage))
+        var redirect = subject.interceptedAppLinkRedirect(appIntent)
+        assertTrue(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
+
+        subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+        redirect = subject.interceptedAppLinkRedirect(appIntent)
+        assertTrue(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
     }
 }
