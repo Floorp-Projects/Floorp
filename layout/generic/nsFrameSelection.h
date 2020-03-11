@@ -7,6 +7,7 @@
 #ifndef nsFrameSelection_h___
 #define nsFrameSelection_h___
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Selection.h"
@@ -781,8 +782,11 @@ class nsFrameSelection final {
   void SetDesiredPos(nsPoint aPos);  // set the mDesiredPos.mValue
 
   uint32_t GetBatching() const { return mBatching.mCounter; }
-  void SetDirty(bool aDirty = true) {
-    if (mBatching.mCounter) mBatching.mChangesDuringBatching = aDirty;
+
+  void SetChangesDuringBatchingFlag() {
+    MOZ_ASSERT(mBatching.mCounter > 0);
+
+    mBatching.mChangesDuringBatching = true;
   }
 
   // nsFrameSelection may get deleted when calling this,
