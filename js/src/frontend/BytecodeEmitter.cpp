@@ -26,7 +26,7 @@
 #include "jstypes.h"  // JS_BIT
 
 #include "ds/Nestable.h"  // Nestable
-#include "frontend/AbstractScope.h"
+#include "frontend/AbstractScopePtr.h"
 #include "frontend/BCEScriptStencil.h"           // BCEScriptStencil
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
@@ -854,7 +854,7 @@ bool BytecodeEmitter::emitGoto(NestableControl* target, JumpList* jumplist,
   return emitJump(JSOp::Goto, jumplist);
 }
 
-AbstractScope BytecodeEmitter::innermostScope() const {
+AbstractScopePtr BytecodeEmitter::innermostScope() const {
   return innermostEmitterScope()->scope(this);
 }
 
@@ -1542,14 +1542,14 @@ bool BytecodeEmitter::emitThisEnvironmentCallee() {
 
   // We have to load the callee from the environment chain.
   unsigned numHops = 0;
-  for (AbstractScopeIter si(innermostScope()); si; si++) {
+  for (AbstractScopePtrIter si(innermostScope()); si; si++) {
     if (si.hasSyntacticEnvironment() &&
-        si.abstractScope().is<FunctionScope>()) {
-      if (!si.abstractScope().isArrow()) {
+        si.abstractScopePtr().is<FunctionScope>()) {
+      if (!si.abstractScopePtr().isArrow()) {
         break;
       }
     }
-    if (si.abstractScope().hasEnvironment()) {
+    if (si.abstractScopePtr().hasEnvironment()) {
       numHops++;
     }
   }
@@ -8806,9 +8806,9 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
     }
   }
 
-  for (AbstractScopeIter si(innermostScope()); si; si++) {
-    if (si.abstractScope().is<FunctionScope>()) {
-      JSFunction* fun = si.abstractScope().canonicalFunction();
+  for (AbstractScopePtrIter si(innermostScope()); si; si++) {
+    if (si.abstractScopePtr().is<FunctionScope>()) {
+      JSFunction* fun = si.abstractScopePtr().canonicalFunction();
       if (fun->isClassConstructor()) {
         const FieldInitializers& fieldInitializers =
             fun->baseScript()->getFieldInitializers();

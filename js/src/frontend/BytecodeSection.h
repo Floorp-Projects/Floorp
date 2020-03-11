@@ -17,24 +17,24 @@
 #include "jstypes.h"           // JS_PUBLIC_API
 #include "NamespaceImports.h"  // ValueVector
 
-#include "frontend/AbstractScope.h"    // AbstractScope
-#include "frontend/BytecodeOffset.h"   // BytecodeOffset
-#include "frontend/CompilationInfo.h"  // CompilationInfo
-#include "frontend/JumpList.h"         // JumpTarget
-#include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
-#include "frontend/ObjLiteral.h"       // ObjLiteralCreationData
-#include "frontend/ParseNode.h"        // BigIntLiteral
-#include "frontend/SourceNotes.h"      // jssrcnote
-#include "frontend/Stencil.h"          // Stencils
-#include "gc/Barrier.h"                // GCPtrObject, GCPtrScope, GCPtrValue
-#include "gc/Rooting.h"                // JS::Rooted
-#include "js/GCVariant.h"              // GCPolicy<mozilla::Variant>
-#include "js/GCVector.h"               // GCVector
-#include "js/TypeDecls.h"              // jsbytecode, JSContext
-#include "js/Value.h"                  // JS::Vector
-#include "js/Vector.h"                 // Vector
-#include "vm/JSScript.h"               // JSTryNote, JSTryNoteKind, ScopeNote
-#include "vm/Opcodes.h"                // JSOpLength_JumpTarget
+#include "frontend/AbstractScopePtr.h"  // AbstractScopePtr
+#include "frontend/BytecodeOffset.h"    // BytecodeOffset
+#include "frontend/CompilationInfo.h"   // CompilationInfo
+#include "frontend/JumpList.h"          // JumpTarget
+#include "frontend/NameCollections.h"   // AtomIndexMap, PooledMapPtr
+#include "frontend/ObjLiteral.h"        // ObjLiteralCreationData
+#include "frontend/ParseNode.h"         // BigIntLiteral
+#include "frontend/SourceNotes.h"       // jssrcnote
+#include "frontend/Stencil.h"           // Stencils
+#include "gc/Barrier.h"                 // GCPtrObject, GCPtrScope, GCPtrValue
+#include "gc/Rooting.h"                 // JS::Rooted
+#include "js/GCVariant.h"               // GCPolicy<mozilla::Variant>
+#include "js/GCVector.h"                // GCVector
+#include "js/TypeDecls.h"               // jsbytecode, JSContext
+#include "js/Value.h"                   // JS::Vector
+#include "js/Vector.h"                  // Vector
+#include "vm/JSScript.h"                // JSTryNote, JSTryNoteKind, ScopeNote
+#include "vm/Opcodes.h"                 // JSOpLength_JumpTarget
 
 namespace js {
 
@@ -97,15 +97,15 @@ struct MOZ_STACK_CLASS GCThingList {
 
   void finishInnerFunctions();
 
-  AbstractScope getScope(size_t index) const {
+  AbstractScopePtr getScope(size_t index) const {
     auto& elem = vector[index].get();
     if (elem.is<JS::GCCellPtr>()) {
-      return AbstractScope(&elem.as<JS::GCCellPtr>().as<Scope>());
+      return AbstractScopePtr(&elem.as<JS::GCCellPtr>().as<Scope>());
     }
-    return AbstractScope(compilationInfo, elem.as<ScopeIndex>());
+    return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
   }
 
-  AbstractScope firstScope() const {
+  AbstractScopePtr firstScope() const {
     MOZ_ASSERT(firstScopeIndex.isSome());
     return getScope(*firstScopeIndex);
   }

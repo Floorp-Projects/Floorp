@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #include "ds/Nestable.h"
-#include "frontend/AbstractScope.h"
+#include "frontend/AbstractScopePtr.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/ParseContext.h"
@@ -79,7 +79,7 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   EmitterScope* enclosing(BytecodeEmitter** bce) const;
 
-  AbstractScope enclosingScope(BytecodeEmitter* bce) const;
+  AbstractScopePtr enclosingScope(BytecodeEmitter* bce) const;
 
   static bool nameCanBeFree(BytecodeEmitter* bce, JSAtom* name);
 
@@ -131,7 +131,7 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   uint32_t noteIndex() const { return noteIndex_; }
 
-  AbstractScope scope(const BytecodeEmitter* bce) const;
+  AbstractScopePtr scope(const BytecodeEmitter* bce) const;
 
   bool hasEnvironment() const { return hasEnvironment_; }
 

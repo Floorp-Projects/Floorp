@@ -601,7 +601,7 @@ uint32_t LexicalScope::firstFrameSlot() const {
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
       // For intra-frame scopes, find the enclosing scope's next frame slot.
-      return nextFrameSlot(AbstractScope(enclosing()));
+      return nextFrameSlot(AbstractScopePtr(enclosing()));
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
       // Named lambda scopes cannot have frame slots.
@@ -614,8 +614,8 @@ uint32_t LexicalScope::firstFrameSlot() const {
 }
 
 /* static */
-uint32_t LexicalScope::nextFrameSlot(const AbstractScope& scope) {
-  for (AbstractScopeIter si(scope); si; si++) {
+uint32_t LexicalScope::nextFrameSlot(const AbstractScopePtr& scope) {
+  for (AbstractScopePtrIter si(scope); si; si++) {
     switch (si.kind()) {
       case ScopeKind::With:
         continue;
@@ -634,7 +634,7 @@ uint32_t LexicalScope::nextFrameSlot(const AbstractScope& scope) {
       case ScopeKind::Module:
       case ScopeKind::WasmInstance:
       case ScopeKind::WasmFunction:
-        return si.abstractScope().nextFrameSlot();
+        return si.abstractScopePtr().nextFrameSlot();
     }
   }
   MOZ_CRASH("Not an enclosing intra-frame Scope");
@@ -643,7 +643,7 @@ uint32_t LexicalScope::nextFrameSlot(const AbstractScope& scope) {
 template <typename ShapeType>
 bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                            uint32_t firstFrameSlot,
-                                           Handle<AbstractScope> enclosing,
+                                           Handle<AbstractScopePtr> enclosing,
                                            MutableHandle<UniquePtr<Data>> data,
                                            ShapeType envShape) {
   bool isNamedLambda =
@@ -668,9 +668,9 @@ LexicalScope* LexicalScope::createWithData(JSContext* cx, ScopeKind kind,
                                            uint32_t firstFrameSlot,
                                            HandleScope enclosing) {
   RootedShape envShape(cx);
-  Rooted<AbstractScope> abstractScope(cx, enclosing);
+  Rooted<AbstractScopePtr> abstractScopePtr(cx, enclosing);
 
-  if (!prepareForScopeCreation(cx, kind, firstFrameSlot, abstractScope, data,
+  if (!prepareForScopeCreation(cx, kind, firstFrameSlot, abstractScopePtr, data,
                                &envShape)) {
     return nullptr;
   }
@@ -1911,7 +1911,7 @@ bool ScopeCreationData::create(JSContext* cx,
                                Handle<FunctionScope::Data*> dataArg,
                                bool hasParameterExprs, bool needsEnvironment,
                                frontend::FunctionBox* funbox,
-                               Handle<AbstractScope> enclosing,
+                               Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -1941,7 +1941,7 @@ bool ScopeCreationData::create(JSContext* cx,
 bool ScopeCreationData::create(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
     Handle<LexicalScope::Data*> dataArg, uint32_t firstFrameSlot,
-    Handle<AbstractScope> enclosing, ScopeIndex* index) {
+    Handle<AbstractScopePtr> enclosing, ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<LexicalScope::Data>> data(
@@ -1965,7 +1965,7 @@ bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind, Handle<VarScope::Data*> dataArg,
                                uint32_t firstFrameSlot, bool needsEnvironment,
-                               Handle<AbstractScope> enclosing,
+                               Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -2007,7 +2007,7 @@ bool ScopeCreationData::create(JSContext* cx,
   // created by embedding, all of which are not only extensible but may
   // have names on them deleted.
   Rooted<frontend::EnvironmentShapeCreationData> environmentShape(cx);
-  Rooted<AbstractScope> enclosing(cx);
+  Rooted<AbstractScopePtr> enclosing(cx);
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
@@ -2018,7 +2018,7 @@ bool ScopeCreationData::create(JSContext* cx,
 bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind, Handle<EvalScope::Data*> dataArg,
-                               Handle<AbstractScope> enclosing,
+                               Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -2044,7 +2044,7 @@ bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                Handle<ModuleScope::Data*> dataArg,
                                HandleModuleObject module,
-                               Handle<AbstractScope> enclosing,
+                               Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -2072,7 +2072,7 @@ bool ScopeCreationData::create(JSContext* cx,
 /* static */
 bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
-                               Handle<AbstractScope> enclosing,
+                               Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
   *index = compilationInfo.scopeCreationData.length();
   Rooted<frontend::EnvironmentShapeCreationData> environmentShape(cx);

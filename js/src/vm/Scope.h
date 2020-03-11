@@ -33,7 +33,7 @@ class EnvironmentShapeCreationData;
 
 class BaseScopeData;
 class ModuleObject;
-class AbstractScope;
+class AbstractScopePtr;
 
 enum class BindingKind : uint8_t {
   Import,
@@ -441,7 +441,7 @@ class LexicalScope : public Scope {
   template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                       uint32_t firstFrameSlot,
-                                      Handle<AbstractScope> enclosing,
+                                      Handle<AbstractScopePtr> enclosing,
                                       MutableHandle<UniquePtr<Data>> data,
                                       ShapeType envShape);
 
@@ -449,7 +449,7 @@ class LexicalScope : public Scope {
 
   const Data& data() const { return *static_cast<Data*>(data_); }
 
-  static uint32_t nextFrameSlot(const AbstractScope& scope);
+  static uint32_t nextFrameSlot(const AbstractScopePtr& scope);
 
  public:
   uint32_t firstFrameSlot() const;
@@ -492,7 +492,7 @@ class FunctionScope : public Scope {
   friend class BindingIter;
   friend class PositionalFormalParameterIter;
   friend class Scope;
-  friend class AbstractScope;
+  friend class AbstractScopePtr;
   static const ScopeKind classScopeKind_ = ScopeKind::Function;
 
  public:
@@ -775,7 +775,7 @@ inline bool Scope::is<GlobalScope>() const {
 // Corresponds to a WithEnvironmentObject on the environment chain.
 class WithScope : public Scope {
   friend class Scope;
-  friend class AbstractScope;
+  friend class AbstractScopePtr;
   static const ScopeKind classScopeKind_ = ScopeKind::With;
 
  public:
@@ -893,7 +893,7 @@ class ModuleScope : public Scope {
   friend class GCMarker;
   friend class BindingIter;
   friend class Scope;
-  friend class AbstractScope;
+  friend class AbstractScopePtr;
   friend class frontend::ScopeCreationData;
   static const ScopeKind classScopeKind_ = ScopeKind::Module;
 
@@ -966,7 +966,7 @@ class WasmInstanceScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class GCMarker;
-  friend class AbstractScope;
+  friend class AbstractScopePtr;
   static const ScopeKind classScopeKind_ = ScopeKind::WasmInstance;
 
  public:
@@ -1020,7 +1020,7 @@ class WasmFunctionScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class GCMarker;
-  friend class AbstractScope;
+  friend class AbstractScopePtr;
   static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
 
  public:
