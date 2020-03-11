@@ -1498,10 +1498,10 @@ nsresult nsFrameSelection::RepaintSelection(SelectionType aSelectionType) {
 // On macOS, update the selection cache to the new active selection
 // aka the current selection.
 #ifdef XP_MACOSX
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  // Check an active window exists otherwise there cannot be a current selection
-  // and that it's a normal selection.
-  if (fm->GetActiveWindow() && aSelectionType == SelectionType::eNormal) {
+  // Check that we're in the an active window and, if this is Web content,
+  // in the frontmost tab.
+  Document* doc = mPresShell->GetDocument();
+  if (doc && IsInActiveTab(doc) && aSelectionType == SelectionType::eNormal) {
     UpdateSelectionCacheOnRepaintSelection(mDomSelections[index]);
   }
 #endif
@@ -3002,10 +3002,9 @@ void AutoCopyListener::OnSelectionChange(Document* aDocument,
   MOZ_ASSERT(IsValidClipboardID(sClipboardID));
 
   if (sClipboardID == nsIClipboard::kSelectionCache) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    // If no active window, do nothing because a current selection changed
-    // cannot occur unless it is in the active window.
-    if (!fm->GetActiveWindow()) {
+    // Do nothing if this isn't in the active window and,
+    // in the case of Web content, in the frontmost tab.
+    if (!aDocument || !IsInActiveTab(aDocument)) {
       return;
     }
   }
