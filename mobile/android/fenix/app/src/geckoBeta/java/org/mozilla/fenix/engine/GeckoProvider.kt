@@ -45,7 +45,6 @@ object GeckoProvider {
 
         val runtimeSettings = builder
             .crashHandler(CrashHandlerService::class.java)
-            .useContentProcessHint(true)
             .telemetryDelegate(GeckoAdapter())
             .aboutConfigEnabled(Config.channel.isBeta)
             .debugLogging(Config.channel.isDebug)
