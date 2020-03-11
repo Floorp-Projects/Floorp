@@ -2588,14 +2588,30 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
   // don't raise windows that are already raised or are in the process of
   // being lowered
 
-  // TODO mActiveWindow in content process
-  if (!aWindow || aWindow == mActiveWindow || aWindow == mWindowBeingLowered)
+  if (!aWindow || aWindow == mWindowBeingLowered) {
     return;
+  }
+
+  if (XRE_IsParentProcess()) {
+    if (aWindow == mActiveWindow) {
+      return;
+    }
+  } else {
+    // We can only test for top-level Web content. We can't return
+    // early for out-of-process iframes, because when they need to
+    // to be "raised", their top-level Web content may already be
+    // "raised".
+    if (aWindow->GetBrowsingContext() == GetActiveBrowsingContext()) {
+      return;
+    }
+  }
 
   if (sTestMode) {
     // In test mode, emulate the existing window being lowered and the new
     // window being raised. This happens in a separate runnable to avoid
     // touching multiple windows in the current runnable.
+
+    // TODO mActiveWindow in content process
     nsCOMPtr<nsPIDOMWindowOuter> active(mActiveWindow);
     nsCOMPtr<nsPIDOMWindowOuter> window(aWindow);
     RefPtr<nsFocusManager> self(this);
