@@ -228,6 +228,9 @@ RefPtr<PlanarYCbCrImage> ImageContainer::CreatePlanarYCbCrImage() {
   if (mImageClient && mImageClient->AsImageClientSingle()) {
     return new SharedPlanarYCbCrImage(mImageClient);
   }
+  if (mRecycleAllocator) {
+    return new SharedPlanarYCbCrImage(mRecycleAllocator);
+  }
   return mImageFactory->CreatePlanarYCbCrImage(mScaleHint, mRecycleBin);
 }
 
@@ -408,6 +411,24 @@ void ImageContainer::NotifyComposite(
 
 void ImageContainer::NotifyDropped(uint32_t aDropped) {
   mDroppedImageCount += aDropped;
+}
+
+void ImageContainer::EnsureRecycleAllocatorForRDD(
+    KnowsCompositor* aKnowsCompositor) {
+  MOZ_ASSERT(!mIsAsync);
+  MOZ_ASSERT(!mImageClient);
+  MOZ_ASSERT(XRE_IsRDDProcess());
+
+  if (mRecycleAllocator &&
+      aKnowsCompositor == mRecycleAllocator->GetKnowsCompositor()) {
+    return;
+  }
+
+  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
+
+  mRecycleAllocator =
+      new layers::TextureClientRecycleAllocator(aKnowsCompositor);
+  mRecycleAllocator->SetMaxPoolSize(MAX_POOLED_VIDEO_COUNT);
 }
 
 #ifdef XP_WIN
