@@ -99,7 +99,7 @@ function starttest() {
         is(check, true, 'synthesizeMouse should dispatch mouse event');
 
         check = false;
-        synthesizeMouseExpectEvent($("textBoxA"), 0.5, 0.5, {}, $("textBoxA"), "click", "synthesizeMouseExpectEvent should fire click event");
+        synthesizeMouseExpectEvent($("textBoxA"), 1, 1, {}, $("textBoxA"), "click", "synthesizeMouseExpectEvent should fire click event");
         is(check, true, 'synthesizeMouse should dispatch mouse event');
       }, {once: true});
       $("textBoxA").focus();
