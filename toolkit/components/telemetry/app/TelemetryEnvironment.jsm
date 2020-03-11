@@ -312,6 +312,10 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["security.mixed_content.block_active_content", { what: RECORD_PREF_VALUE }],
   ["security.mixed_content.block_display_content", { what: RECORD_PREF_VALUE }],
   ["security.tls.version.enable-deprecated", { what: RECORD_PREF_VALUE }],
+  ["signon.management.page.breach-alerts.enabled", { what: RECORD_PREF_VALUE }],
+  ["signon.autofillForms", { what: RECORD_PREF_VALUE }],
+  ["signon.generation.enabled", { what: RECORD_PREF_VALUE }],
+  ["signon.rememberSignons", { what: RECORD_PREF_VALUE }],
   ["xpinstall.signatures.required", { what: RECORD_PREF_VALUE }],
 ]);
 
