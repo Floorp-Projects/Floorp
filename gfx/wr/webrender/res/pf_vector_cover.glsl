@@ -6,10 +6,10 @@
 
 #ifdef WR_VERTEX_SHADER
 
-PER_INSTANCE in ivec4 aTargetRect;
-PER_INSTANCE in ivec2 aStencilOrigin;
-PER_INSTANCE in int aSubpixel;
-PER_INSTANCE in int aPad;
+in ivec4 aTargetRect;
+in ivec2 aStencilOrigin;
+in int aSubpixel;
+in int aPad;
 
 out vec2 vStencilUV;
 flat out int vSubpixel;

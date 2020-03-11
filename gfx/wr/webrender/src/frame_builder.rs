@@ -66,7 +66,6 @@ pub struct FrameBuilderConfig {
     pub background_color: Option<ColorF>,
     pub compositor_kind: CompositorKind,
     pub tile_size_override: Option<DeviceIntSize>,
-    pub max_depth_ids: i32,
 }
 
 /// A set of common / global resources that are retained between
@@ -570,7 +569,6 @@ impl FrameBuilder {
             scene.config.compositor_kind,
             picture_caching_is_enabled,
             global_device_pixel_scale,
-            scene.config.max_depth_ids,
         );
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
@@ -607,7 +605,7 @@ impl FrameBuilder {
             );
 
             // Used to generated a unique z-buffer value per primitive.
-            let mut z_generator = ZBufferIdGenerator::new(layer, scene.config.max_depth_ids);
+            let mut z_generator = ZBufferIdGenerator::new(layer);
             let use_dual_source_blending = scene.config.dual_source_blending_is_enabled &&
                                            scene.config.dual_source_blending_is_supported;
 
