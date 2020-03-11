@@ -7,9 +7,6 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const { FluentBundle, FluentResource } =
-    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
-
   async function* mockGenerateMessages(resourceIds) {
     const bundle = new FluentBundle("en-US", {
       useIsolating: false,
