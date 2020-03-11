@@ -363,6 +363,19 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
       const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse);
 
+  mozilla::ipc::IPCResult RecvRealTouchMoveEvent2(
+      const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
+      const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse) {
+    return RecvRealTouchMoveEvent(aEvent, aGuid, aInputBlockId, aApzResponse);
+  }
+
+  mozilla::ipc::IPCResult RecvNormalPriorityRealTouchMoveEvent2(
+      const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
+      const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse) {
+    return RecvNormalPriorityRealTouchMoveEvent(aEvent, aGuid, aInputBlockId,
+                                                aApzResponse);
+  }
+
   mozilla::ipc::IPCResult RecvFlushTabState(const uint32_t& aFlushId,
                                             const bool& aIsFinal);
 
