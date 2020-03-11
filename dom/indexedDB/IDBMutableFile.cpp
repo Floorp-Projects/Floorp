@@ -112,42 +112,34 @@ void IDBMutableFile::UnregisterFileHandle(IDBFileHandle* aFileHandle) {
 void IDBMutableFile::AbortFileHandles() {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper final {
-   public:
-    static void AbortFileHandles(
-        const nsTHashtable<nsPtrHashKey<IDBFileHandle>>& aTable) {
-      if (!aTable.Count()) {
-        return;
-      }
+  if (!mFileHandles.Count()) {
+    return;
+  }
 
-      nsTArray<RefPtr<IDBFileHandle>> fileHandlesToAbort;
-      fileHandlesToAbort.SetCapacity(aTable.Count());
+  nsTArray<RefPtr<IDBFileHandle>> fileHandlesToAbort;
+  fileHandlesToAbort.SetCapacity(mFileHandles.Count());
 
-      for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
-        IDBFileHandle* const fileHandle = iter.Get()->GetKey();
-        MOZ_ASSERT(fileHandle);
+  for (auto iter = mFileHandles.ConstIter(); !iter.Done(); iter.Next()) {
+    IDBFileHandle* const fileHandle = iter.Get()->GetKey();
+    MOZ_ASSERT(fileHandle);
 
-        fileHandle->AssertIsOnOwningThread();
+    fileHandle->AssertIsOnOwningThread();
 
-        if (!fileHandle->IsDone()) {
-          fileHandlesToAbort.AppendElement(iter.Get()->GetKey());
-        }
-      }
-      MOZ_ASSERT(fileHandlesToAbort.Length() <= aTable.Count());
-
-      if (fileHandlesToAbort.IsEmpty()) {
-        return;
-      }
-
-      for (const auto& fileHandle : fileHandlesToAbort) {
-        MOZ_ASSERT(fileHandle);
-
-        fileHandle->Abort();
-      }
+    if (!fileHandle->IsDone()) {
+      fileHandlesToAbort.AppendElement(iter.Get()->GetKey());
     }
-  };
+  }
+  MOZ_ASSERT(fileHandlesToAbort.Length() <= mFileHandles.Count());
 
-  Helper::AbortFileHandles(mFileHandles);
+  if (fileHandlesToAbort.IsEmpty()) {
+    return;
+  }
+
+  for (const auto& fileHandle : fileHandlesToAbort) {
+    MOZ_ASSERT(fileHandle);
+
+    fileHandle->Abort();
+  }
 }
 
 IDBDatabase* IDBMutableFile::Database() const {
