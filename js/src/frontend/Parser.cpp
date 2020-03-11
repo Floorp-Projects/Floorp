@@ -595,28 +595,6 @@ bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
 }
 
 template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::
-    checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
-                                               DeclarationKind kind,
-                                               TokenPos pos) {
-  MOZ_ASSERT(DeclarationKindIsLexical(kind));
-
-  // It is an early error to declare a lexical binding not directly
-  // within a block.
-  if (!StatementKindIsBraced(stmt.kind()) &&
-      stmt.kind() != StatementKind::ForLoopLexicalHead) {
-    errorAt(pos.begin,
-            stmt.kind() == StatementKind::Label
-                ? JSMSG_LEXICAL_DECL_LABEL
-                : JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
-            DeclarationKindString(kind));
-    return false;
-  }
-
-  return true;
-}
-
-template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
     HandlePropertyName name, DeclarationKind kind, TokenPos pos) {
   // The asm.js validator does all its own symbol-table management so, as an
@@ -743,12 +721,6 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
 
     case DeclarationKind::SimpleCatchParameter:
     case DeclarationKind::CatchParameter: {
-      if (ParseContext::Statement* stmt = pc_->innermostStatement()) {
-        if (!checkLexicalDeclarationDirectlyWithinBlock(*stmt, kind, pos)) {
-          return false;
-        }
-      }
-
       ParseContext::Scope* scope = pc_->innermostScope();
 
       // For body-level lexically declared names in a function, it is an

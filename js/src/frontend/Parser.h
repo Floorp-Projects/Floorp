@@ -1339,10 +1339,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                      bool disallowDuplicateParams,
                                      bool* duplicatedParam);
 
-  bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
-                                                  DeclarationKind kind,
-                                                  TokenPos pos);
-
   enum PropertyNameContext {
     PropertyNameInLiteral,
     PropertyNameInPattern,
