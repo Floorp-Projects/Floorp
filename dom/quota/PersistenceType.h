@@ -29,22 +29,104 @@ static const PersistenceType kAllPersistenceTypes[] = {
     PERSISTENCE_TYPE_PERSISTENT, PERSISTENCE_TYPE_TEMPORARY,
     PERSISTENCE_TYPE_DEFAULT};
 
-nsLiteralCString PersistenceTypeToString(PersistenceType aPersistenceType);
+inline void PersistenceTypeToText(PersistenceType aPersistenceType,
+                                  nsACString& aText) {
+  switch (aPersistenceType) {
+    case PERSISTENCE_TYPE_PERSISTENT:
+      aText.AssignLiteral("persistent");
+      return;
+    case PERSISTENCE_TYPE_TEMPORARY:
+      aText.AssignLiteral("temporary");
+      return;
+    case PERSISTENCE_TYPE_DEFAULT:
+      aText.AssignLiteral("default");
+      return;
 
-Maybe<PersistenceType> PersistenceTypeFromString(const nsACString& aString,
-                                                 const fallible_t&);
+    case PERSISTENCE_TYPE_INVALID:
+    default:
+      MOZ_CRASH("Bad persistence type value!");
+  }
+}
 
-PersistenceType PersistenceTypeFromString(const nsACString& aString);
+class PersistenceTypeString : public nsCString {
+ public:
+  explicit PersistenceTypeString(PersistenceType aPersistenceType) {
+    PersistenceTypeToText(aPersistenceType, *this);
+  }
+};
 
-StorageType PersistenceTypeToStorageType(PersistenceType aPersistenceType);
+inline PersistenceType PersistenceTypeFromText(const nsACString& aText) {
+  if (aText.EqualsLiteral("persistent")) {
+    return PERSISTENCE_TYPE_PERSISTENT;
+  }
 
-PersistenceType PersistenceTypeFromStorageType(StorageType aStorageType);
+  if (aText.EqualsLiteral("temporary")) {
+    return PERSISTENCE_TYPE_TEMPORARY;
+  }
 
-Maybe<PersistenceType> PersistenceTypeFromInt32(int32_t aInt32,
-                                                const fallible_t&);
+  if (aText.EqualsLiteral("default")) {
+    return PERSISTENCE_TYPE_DEFAULT;
+  }
+
+  MOZ_CRASH("Should never get here!");
+}
+
+inline nsresult PersistenceTypeFromInt32(int32_t aInt,
+                                         PersistenceType& aPersistenceType) {
+  static_assert(
+      PERSISTENCE_TYPE_PERSISTENT == 0 && PERSISTENCE_TYPE_TEMPORARY == 1 &&
+          PERSISTENCE_TYPE_DEFAULT == 2 && PERSISTENCE_TYPE_INVALID == 3,
+      "Incorrect enum values!");
+
+  if (aInt < PERSISTENCE_TYPE_PERSISTENT || aInt > PERSISTENCE_TYPE_DEFAULT) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aPersistenceType = static_cast<PersistenceType>(aInt);
+  return NS_OK;
+}
+
+inline nsresult NullablePersistenceTypeFromText(
+    const nsACString& aText, Nullable<PersistenceType>* aPersistenceType) {
+  if (aText.IsVoid()) {
+    *aPersistenceType = Nullable<PersistenceType>();
+    return NS_OK;
+  }
+
+  if (aText.EqualsLiteral("persistent")) {
+    *aPersistenceType = Nullable<PersistenceType>(PERSISTENCE_TYPE_PERSISTENT);
+    return NS_OK;
+  }
+
+  if (aText.EqualsLiteral("temporary")) {
+    *aPersistenceType = Nullable<PersistenceType>(PERSISTENCE_TYPE_TEMPORARY);
+    return NS_OK;
+  }
+
+  if (aText.EqualsLiteral("default")) {
+    *aPersistenceType = Nullable<PersistenceType>(PERSISTENCE_TYPE_DEFAULT);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+inline mozilla::dom::StorageType PersistenceTypeToStorage(
+    PersistenceType aPersistenceType) {
+  return mozilla::dom::StorageType(static_cast<int>(aPersistenceType));
+}
+
+inline PersistenceType PersistenceTypeFromStorage(
+    const Optional<mozilla::dom::StorageType>& aStorage) {
+  if (aStorage.WasPassed()) {
+    return PersistenceType(static_cast<int>(aStorage.Value()));
+  }
+
+  return PERSISTENCE_TYPE_DEFAULT;
+}
 
 inline PersistenceType ComplementaryPersistenceType(
-    const PersistenceType aPersistenceType) {
+    PersistenceType aPersistenceType) {
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT ||
              aPersistenceType == PERSISTENCE_TYPE_TEMPORARY);
 
