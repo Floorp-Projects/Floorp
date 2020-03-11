@@ -238,6 +238,7 @@ class WebRenderLayerManager final : public LayerManager {
 
   wr::RenderRootArray<size_t> mLastDisplayListSizes;
   wr::RenderRootArray<RenderRootStateManager> mStateManagers;
+  DisplayItemCache mDisplayItemCache;
 };
 
 }  // namespace layers

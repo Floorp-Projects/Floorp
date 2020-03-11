@@ -924,13 +924,16 @@ void WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent) {
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        const wr::LayoutSize& aContentSize,
-                                       size_t aCapacity, RenderRoot aRenderRoot)
+                                       size_t aCapacity,
+                                       layers::DisplayItemCache* aCache,
+                                       RenderRoot aRenderRoot)
     : mCurrentSpaceAndClipChain(wr::RootScrollNodeWithChain()),
       mActiveFixedPosTracker(nullptr),
       mPipelineId(aId),
       mContentSize(aContentSize),
       mRenderRoot(aRenderRoot),
-      mSendSubBuilderDisplayList(aRenderRoot == wr::RenderRoot::Default) {
+      mSendSubBuilderDisplayList(aRenderRoot == wr::RenderRoot::Default),
+      mDisplayItemCache(aCache) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
 }
@@ -946,11 +949,11 @@ void DisplayListBuilder::ClearSave() { wr_dp_clear_save(mWrState); }
 
 DisplayListBuilder& DisplayListBuilder::CreateSubBuilder(
     const wr::LayoutSize& aContentSize, size_t aCapacity,
-    wr::RenderRoot aRenderRoot) {
+    layers::DisplayItemCache* aCache, wr::RenderRoot aRenderRoot) {
   MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
   MOZ_ASSERT(!mSubBuilders[aRenderRoot]);
   mSubBuilders[aRenderRoot] = MakeUnique<DisplayListBuilder>(
-      mPipelineId, aContentSize, aCapacity, aRenderRoot);
+      mPipelineId, aContentSize, aCapacity, aCache, aRenderRoot);
   return *mSubBuilders[aRenderRoot];
 }
 
@@ -1485,20 +1488,83 @@ void DisplayListBuilder::PushBoxShadow(
                         aBorderRadius, aClipMode);
 }
 
-void DisplayListBuilder::ReuseItem(wr::ItemKey aKey) {
-  wr_dp_push_reuse_item(mWrState, aKey);
+void DisplayListBuilder::StartGroup(nsPaintedDisplayItem* aItem) {
+  if (!mDisplayItemCache || mDisplayItemCache->IsFull()) {
+    return;
+  }
+
+  MOZ_ASSERT(!mCurrentCacheSlot);
+  mCurrentCacheSlot = mDisplayItemCache->AssignSlot(aItem);
+
+  if (mCurrentCacheSlot) {
+    wr_dp_start_item_group(mWrState, mCurrentCacheSlot.ref());
+  }
 }
 
-void DisplayListBuilder::StartCachedItem(wr::ItemKey aKey) {
-  wr_dp_start_cached_item(mWrState, aKey);
+void DisplayListBuilder::CancelGroup() {
+  if (!mDisplayItemCache || !mCurrentCacheSlot) {
+    return;
+  }
+
+  wr_dp_cancel_item_group(mWrState);
+  mCurrentCacheSlot = Nothing();
 }
 
-bool DisplayListBuilder::EndCachedItem(wr::ItemKey aKey) {
-  return wr_dp_end_cached_item(mWrState, aKey);
+void DisplayListBuilder::FinishGroup() {
+  if (!mDisplayItemCache || !mCurrentCacheSlot) {
+    return;
+  }
+
+  MOZ_ASSERT(mCurrentCacheSlot);
+
+  if (wr_dp_finish_item_group(mWrState, mCurrentCacheSlot.ref())) {
+    mDisplayItemCache->MarkSlotOccupied(mCurrentCacheSlot.ref(),
+                                        CurrentSpaceAndClipChain());
+    mDisplayItemCache->Stats().AddCached();
+  }
+
+  mCurrentCacheSlot = Nothing();
 }
 
-void DisplayListBuilder::SetDisplayListCacheSize(const size_t aCacheSize) {
-  wr_dp_set_cache_size(mWrState, aCacheSize);
+bool DisplayListBuilder::ReuseItem(nsPaintedDisplayItem* aItem) {
+  if (!mDisplayItemCache) {
+    return false;
+  }
+
+  mDisplayItemCache->Stats().AddTotal();
+
+  if (mDisplayItemCache->IsEmpty()) {
+    return false;
+  }
+
+  Maybe<uint16_t> slot =
+      mDisplayItemCache->CanReuseItem(aItem, CurrentSpaceAndClipChain());
+
+  if (slot) {
+    mDisplayItemCache->Stats().AddReused();
+    wr_dp_push_reuse_items(mWrState, slot.ref());
+    return true;
+  }
+
+  return false;
+}
+
+void DisplayListBuilder::UpdateCacheState(
+    const bool aPartialDisplayListBuildFailed) {
+  if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
+    mDisplayItemCache->UpdateState(aPartialDisplayListBuildFailed,
+                                   CurrentPipelineId());
+#if 0
+    mDisplayItemCache->Stats().Print();
+    mDisplayItemCache->Stats().Reset();
+#endif
+  }
+}
+
+void DisplayListBuilder::UpdateCacheSize() {
+  if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
+    wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
+  }
 }
 
 Maybe<layers::ScrollableLayerGuid::ViewID>
