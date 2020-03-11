@@ -3037,7 +3037,7 @@ nsresult Selection::NotifySelectionListeners() {
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   if (frameSelection->GetBatching()) {
-    frameSelection->SetDirty();
+    frameSelection->SetChangesDuringBatchingFlag();
     return NS_OK;
   }
   if (mSelectionListeners.IsEmpty()) {
