@@ -120,6 +120,15 @@ static inline bool CheckUninitializedLexical(JSContext* cx, PropertyName* name_,
   return true;
 }
 
+static inline bool CheckUninitializedLexical(JSContext* cx, HandleScript script,
+                                             jsbytecode* pc, HandleValue val) {
+  if (IsUninitializedLexical(val)) {
+    ReportUninitializedLexical(cx, script, pc);
+    return false;
+  }
+  return true;
+}
+
 static inline void ReportRuntimeConstAssignment(JSContext* cx,
                                                 HandlePropertyName name) {
   ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, name);

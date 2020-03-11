@@ -1051,6 +1051,18 @@ class MOZ_STACK_CLASS IonBuilder {
     return new (alloc()) BytecodeSite(info().inlineScriptTree(), pc);
   }
 
+  MDefinition* lexicalCheck_;
+
+  void setLexicalCheck(MDefinition* lexical) {
+    MOZ_ASSERT(!lexicalCheck_);
+    lexicalCheck_ = lexical;
+  }
+  MDefinition* takeLexicalCheck() {
+    MDefinition* lexical = lexicalCheck_;
+    lexicalCheck_ = nullptr;
+    return lexical;
+  }
+
   /* Information used for inline-call builders. */
   MResumePoint* callerResumePoint_;
   jsbytecode* callerPC() {

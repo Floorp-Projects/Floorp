@@ -4512,10 +4512,19 @@ bool BaselineCodeGen<Handler>::emitUninitializedLexicalCheck(
   return true;
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_CheckLexical() {
+template <>
+bool BaselineCompilerCodeGen::emit_CheckLexical() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(-1), R0);
+  masm.loadValue(frame.addressOfLocal(GET_LOCALNO(handler.pc())), R0);
+  return emitUninitializedLexicalCheck(R0);
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_CheckLexical() {
+  Register scratch = R0.scratchReg();
+  LoadUint24Operand(masm, 0, scratch);
+  BaseValueIndex addr = ComputeAddressOfLocal(masm, scratch);
+  masm.loadValue(addr, R0);
   return emitUninitializedLexicalCheck(R0);
 }
 
@@ -4530,6 +4539,13 @@ bool BaselineCodeGen<Handler>::emit_InitGLexical() {
   pushGlobalLexicalEnvironmentValue(R1);
   frame.push(R0);
   return emit_SetProp();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CheckAliasedLexical() {
+  frame.syncStack(0);
+  emitGetAliasedVar(R0);
+  return emitUninitializedLexicalCheck(R0);
 }
 
 template <typename Handler>
