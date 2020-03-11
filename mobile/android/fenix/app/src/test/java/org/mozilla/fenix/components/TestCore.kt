@@ -5,16 +5,20 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import io.mockk.every
 import io.mockk.mockk
-import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppShortcutManager
 
 class TestCore(context: Context) : Core(context) {
 
-    override val engine = mockk<GeckoEngine>(relaxed = true)
+    override val engine = mockk<Engine>(relaxed = true) {
+        every { this@mockk getProperty "settings" } returns mockk<Settings>()
+    }
     override val sessionManager = SessionManager(engine)
     override val store = mockk<BrowserStore>()
     override val client = mockk<Client>()
