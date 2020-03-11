@@ -529,11 +529,6 @@ class ContentChild final
   bool DeallocPContentPermissionRequestChild(
       PContentPermissionRequestChild* actor);
 
-  // Windows specific - set up audio session
-  mozilla::ipc::IPCResult RecvSetAudioSessionData(const nsID& aId,
-                                                  const nsString& aDisplayName,
-                                                  const nsString& aIconPath);
-
   // GetFiles for WebKit/Blink FileSystem API and Directory API must run on the
   // parent process.
   void CreateGetFilesRequest(const nsAString& aDirectoryPath,

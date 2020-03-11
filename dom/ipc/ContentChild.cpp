@@ -3157,22 +3157,6 @@ bool ContentChild::DeallocPWebBrowserPersistDocumentChild(
   return true;
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvSetAudioSessionData(
-    const nsID& aId, const nsString& aDisplayName, const nsString& aIconPath) {
-#if defined(XP_WIN)
-  if (NS_FAILED(mozilla::widget::RecvAudioSessionData(aId, aDisplayName,
-                                                      aIconPath))) {
-    return IPC_OK();
-  }
-
-  // Ignore failures here; we can't really do anything about them
-  mozilla::widget::StartAudioSession();
-  return IPC_OK();
-#else
-  MOZ_CRASH("Not Reached!");
-#endif
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
     nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction) {
   nsCOMPtr<nsIDragService> dragService =

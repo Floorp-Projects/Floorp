@@ -698,14 +698,6 @@ child:
      */
     async PushSubscriptionChange(nsCString scope, Principal principal);
 
-    /**
-     * Windows specific: associate this content process with the browsers
-     * audio session.
-     */
-    async SetAudioSessionData(nsID aID,
-                              nsString aDisplayName,
-                              nsString aIconPath);
-
     async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
 
     async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
