@@ -73,6 +73,7 @@ class GeckoEngineSession(
     internal var job: Job = Job()
     private var lastSessionState: GeckoSession.SessionState? = null
     private var stateBeforeCrash: GeckoSession.SessionState? = null
+    private var canGoBack: Boolean = false
 
     /**
      * See [EngineSession.settings]
@@ -133,6 +134,9 @@ class GeckoEngineSession(
      */
     override fun goBack() {
         geckoSession.goBack()
+        if (canGoBack) {
+            notifyObservers { onNavigateBack() }
+        }
     }
 
     /**
@@ -401,6 +405,7 @@ class GeckoEngineSession(
 
         override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
             notifyObservers { onNavigationStateChange(canGoBack = canGoBack) }
+            this@GeckoEngineSession.canGoBack = canGoBack
         }
 
         override fun onNewSession(

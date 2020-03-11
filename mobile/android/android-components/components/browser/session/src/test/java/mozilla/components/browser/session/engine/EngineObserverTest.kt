@@ -588,4 +588,17 @@ class EngineObserverTest {
         assertFalse(triggeredByRedirect)
         assertFalse(triggeredByWebContent)
     }
+
+    @Test
+    fun `onNavigateBack clears search terms when navigating back`() {
+        val url = "https://www.mozilla.org"
+        val session = Session(url)
+        session.searchTerms = "Mozilla Foundation"
+        session.canGoBack = true
+
+        val observer = EngineObserver(session)
+        observer.onNavigateBack()
+
+        assertEquals("", session.searchTerms)
+    }
 }

@@ -42,6 +42,7 @@ abstract class EngineSession(
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(tracker: Tracker) = Unit
         fun onTrackerLoaded(tracker: Tracker) = Unit
+        fun onNavigateBack() = Unit
 
         /**
          * Event to indicate whether or not this [EngineSession] should be [excluded] from tracking protection.

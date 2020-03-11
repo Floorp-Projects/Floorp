@@ -39,6 +39,10 @@ internal class EngineObserver(
     private val store: BrowserStore? = null
 ) : EngineSession.Observer {
 
+    override fun onNavigateBack() {
+        session.searchTerms = ""
+    }
+
     override fun onLocationChange(url: String) {
         if (!isUrlSame(session.url, url)) {
             session.title = ""
