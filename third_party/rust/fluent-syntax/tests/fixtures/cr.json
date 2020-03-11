@@ -1,0 +1,9 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "ResourceComment",
+            "content": "This entire file uses CR as EOL.\r\rerr01 = Value 01\rerr02 = Value 02\r\rerr03 =\r\r    Value 03\r    Continued\r\r    .title = Title\r\rerr04 = { \"str\r\rerr05 = { $sel -> }\r"
+        }
+    ]
+}

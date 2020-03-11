@@ -1,0 +1,48 @@
+suites:
+  -
+    name: Transformations
+    resources:
+      -
+        source: |-
+          foo = Faa
+              .bar = Bar {foo} Baz
+          bar = Bar {"Baz"}
+          qux = {"faa" ->
+              [faa] Faa
+            *[bar] Bar
+          }
+          arg = Faa {$arg}
+    bundles:
+      -
+        transform: example
+    tests:
+      -
+        name: transforms TextElements
+        asserts:
+          -
+            id: foo
+            value: FAA
+          -
+            id: foo
+            attribute: bar
+            value: BAr FAA BAz
+      -
+        name: does not transform StringLiterls
+        asserts:
+          -
+            id: bar
+            value: BAr Baz
+      -
+        name: does not transform VariantKeys
+        asserts:
+          -
+            id: qux
+            value: FAA
+      -
+        name: does not transform Variables
+        asserts:
+          -
+            id: arg
+            args:
+              arg: aaa
+            value: FAA aaa

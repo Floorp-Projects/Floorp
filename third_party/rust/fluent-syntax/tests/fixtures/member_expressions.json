@@ -1,0 +1,116 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "GroupComment",
+            "content": "Member expressions in placeables."
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "message-attribute-expression-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "MessageReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "msg"
+                            },
+                            "attribute": {
+                                "type": "Identifier",
+                                "name": "attr"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "OK Message attributes may be interpolated in values."
+            }
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Term attributes may not be used for interpolation."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "term-attribute-expression-placeable = {-term.attr}\n\n\n"
+        },
+        {
+            "type": "GroupComment",
+            "content": "Member expressions in selectors."
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "term-attribute-expression-selector"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "TermReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "term"
+                                },
+                                "attribute": {
+                                    "type": "Identifier",
+                                    "name": "attr"
+                                },
+                                "arguments": null
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Value"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "OK Term attributes may be used as selectors."
+            }
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Message attributes may not be used as selectors."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-attribute-expression-selector = {msg.attr ->\n   *[key] Value\n}\n"
+        }
+    ]
+}
