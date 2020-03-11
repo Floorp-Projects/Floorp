@@ -267,6 +267,13 @@ public final class CodecProxy {
                 mInputBuffers.put(bufferId, buffer);
             }
         }
+
+        if (buffer.capacity() < size) {
+            IOException e = new IOException("data larger than capacity: " + size + " > " + buffer.capacity());
+            Log.e(LOGTAG, "cannot fill input.", e);
+            throw e;
+        }
+
         buffer.readFromByteBuffer(bytes, offset, size);
     }
 
