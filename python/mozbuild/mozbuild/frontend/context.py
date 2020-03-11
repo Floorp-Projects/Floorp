@@ -566,6 +566,8 @@ class CompileFlags(TargetCompileFlags):
             ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
             ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
             ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'), ('CXXFLAGS', 'CFLAGS')),
+            ('NEWPM', context.config.substs.get('MOZ_NEW_PASS_MANAGER_FLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
         )
 
         TargetCompileFlags.__init__(self, context)
