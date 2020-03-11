@@ -25,27 +25,30 @@ namespace mozilla {
 //
 // Usage: `nsCString s = ...; aEW.WriteObject(s);`
 template <typename T>
-struct BlocksRingBuffer::Serializer<nsTString<T>> {
+struct ProfileBufferEntryWriter::Serializer<nsTString<T>> {
   static Length Bytes(const nsTString<T>& aS) {
     // Note that we store the size in *bytes*, not in number of characters.
     const auto bytes = aS.Length() * sizeof(T);
-    return EntryWriter::ULEB128Size(bytes) + static_cast<Length>(bytes);
+    return ProfileBufferEntryWriter::ULEB128Size(bytes) +
+           static_cast<Length>(bytes);
   }
 
-  static void Write(EntryWriter& aEW, const nsTString<T>& aS) {
+  static void Write(ProfileBufferEntryWriter& aEW, const nsTString<T>& aS) {
     // Note that we store the size in *bytes*, not in number of characters.
     const auto bytes = aS.Length() * sizeof(T);
     aEW.WriteULEB128(bytes);
     // Copy the bytes from the string's buffer.
-    aEW.Write(reinterpret_cast<const char*>(aS.BeginReading()), bytes);
+    aEW.WriteBytes(reinterpret_cast<const char*>(aS.BeginReading()), bytes);
   }
 };
 
 template <typename T>
-struct BlocksRingBuffer::Deserializer<nsTString<T>> {
-  static void ReadInto(EntryReader& aER, nsTString<T>& aS) { aS = Read(aER); }
+struct ProfileBufferEntryReader::Deserializer<nsTString<T>> {
+  static void ReadInto(ProfileBufferEntryReader& aER, nsTString<T>& aS) {
+    aS = Read(aER);
+  }
 
-  static nsTString<T> Read(EntryReader& aER) {
+  static nsTString<T> Read(ProfileBufferEntryReader& aER) {
     // Note that the stored size is in *bytes*, not in number of characters.
     const auto bytes = aER.ReadULEB128<Length>();
     nsTString<T> s;
@@ -53,7 +56,7 @@ struct BlocksRingBuffer::Deserializer<nsTString<T>> {
     // BulkWrite is the most efficient way to copy bytes into the target string.
     auto writer = s.BulkWrite(bytes / sizeof(T), 0, true, rv);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    aER.Read(reinterpret_cast<char*>(writer.Elements()), bytes);
+    aER.ReadBytes(reinterpret_cast<char*>(writer.Elements()), bytes);
     writer.Finish(bytes / sizeof(T), true);
     return s;
   }
@@ -68,29 +71,32 @@ struct BlocksRingBuffer::Deserializer<nsTString<T>> {
 //
 // Usage: `nsAutoCString s = ...; aEW.WriteObject(s);`
 template <typename T, size_t N>
-struct BlocksRingBuffer::Serializer<nsTAutoStringN<T, N>> {
+struct ProfileBufferEntryWriter::Serializer<nsTAutoStringN<T, N>> {
   static Length Bytes(const nsTAutoStringN<T, N>& aS) {
     // Note that we store the size in *bytes*, not in number of characters.
     const auto bytes = aS.Length() * sizeof(T);
-    return EntryWriter::ULEB128Size(bytes) + static_cast<Length>(bytes);
+    return ProfileBufferEntryWriter::ULEB128Size(bytes) +
+           static_cast<Length>(bytes);
   }
 
-  static void Write(EntryWriter& aEW, const nsTAutoStringN<T, N>& aS) {
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const nsTAutoStringN<T, N>& aS) {
     const auto bytes = aS.Length() * sizeof(T);
     // Note that we store the size in *bytes*, not in number of characters.
     aEW.WriteULEB128(bytes);
     // Copy the bytes from the string's buffer.
-    aEW.Write(reinterpret_cast<const char*>(aS.BeginReading()), bytes);
+    aEW.WriteBytes(reinterpret_cast<const char*>(aS.BeginReading()), bytes);
   }
 };
 
 template <typename T, size_t N>
-struct BlocksRingBuffer::Deserializer<nsTAutoStringN<T, N>> {
-  static void ReadInto(EntryReader& aER, nsTAutoStringN<T, N>& aS) {
+struct ProfileBufferEntryReader::Deserializer<nsTAutoStringN<T, N>> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       nsTAutoStringN<T, N>& aS) {
     aS = Read(aER);
   }
 
-  static nsTAutoStringN<T, N> Read(EntryReader& aER) {
+  static nsTAutoStringN<T, N> Read(ProfileBufferEntryReader& aER) {
     // Note that the stored size is in *bytes*, not in number of characters.
     const auto bytes = aER.ReadULEB128<Length>();
     nsTAutoStringN<T, N> s;
@@ -98,7 +104,7 @@ struct BlocksRingBuffer::Deserializer<nsTAutoStringN<T, N>> {
     // BulkWrite is the most efficient way to copy bytes into the target string.
     auto writer = s.BulkWrite(bytes / sizeof(T), 0, true, rv);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    aER.Read(reinterpret_cast<char*>(writer.Elements()), bytes);
+    aER.ReadBytes(reinterpret_cast<char*>(writer.Elements()), bytes);
     writer.Finish(bytes / sizeof(T), true);
     return s;
   }
@@ -115,38 +121,38 @@ struct BlocksRingBuffer::Deserializer<nsTAutoStringN<T, N>> {
 //
 // Usage: `JS::UniqueChars s = ...; aEW.WriteObject(s);`
 template <>
-struct BlocksRingBuffer::Serializer<JS::UniqueChars> {
+struct ProfileBufferEntryWriter::Serializer<JS::UniqueChars> {
   static Length Bytes(const JS::UniqueChars& aS) {
     if (!aS) {
-      return EntryWriter::ULEB128Size<Length>(0);
+      return ProfileBufferEntryWriter::ULEB128Size<Length>(0);
     }
     const auto len = static_cast<Length>(strlen(aS.get()));
-    return EntryWriter::ULEB128Size(len) + len;
+    return ProfileBufferEntryWriter::ULEB128Size(len) + len;
   }
 
-  static void Write(EntryWriter& aEW, const JS::UniqueChars& aS) {
+  static void Write(ProfileBufferEntryWriter& aEW, const JS::UniqueChars& aS) {
     if (!aS) {
       aEW.WriteULEB128<Length>(0);
       return;
     }
     const auto len = static_cast<Length>(strlen(aS.get()));
     aEW.WriteULEB128(len);
-    aEW.Write(aS.get(), len);
+    aEW.WriteBytes(aS.get(), len);
   }
 };
 
 template <>
-struct BlocksRingBuffer::Deserializer<JS::UniqueChars> {
-  static void ReadInto(EntryReader& aER, JS::UniqueChars& aS) {
+struct ProfileBufferEntryReader::Deserializer<JS::UniqueChars> {
+  static void ReadInto(ProfileBufferEntryReader& aER, JS::UniqueChars& aS) {
     aS = Read(aER);
   }
 
-  static JS::UniqueChars Read(EntryReader& aER) {
+  static JS::UniqueChars Read(ProfileBufferEntryReader& aER) {
     const auto len = aER.ReadULEB128<Length>();
     // Use the same allocation policy as JS_smprintf.
     char* buffer =
         static_cast<char*>(js::SystemAllocPolicy{}.pod_malloc<char>(len + 1));
-    aER.Read(buffer, len);
+    aER.ReadBytes(buffer, len);
     buffer[len] = '\0';
     return JS::UniqueChars(buffer);
   }

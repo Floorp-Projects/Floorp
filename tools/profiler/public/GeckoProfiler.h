@@ -104,6 +104,7 @@ static inline UniqueProfilerBacktrace profiler_get_backtrace() {
 #  include "nscore.h"
 #  include "nsString.h"
 
+#  include <functional>
 #  include <stdint.h>
 
 class ProfilerBacktrace;

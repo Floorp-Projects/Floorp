@@ -57,7 +57,7 @@ TEST(BaseProfiler, BlocksRingBuffer)
     rb.PutObjects(cs, s, acs, as, acs8, as8, jsuc);
   }
 
-  rb.ReadEach([](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([](ProfileBufferEntryReader& aER) {
     ASSERT_EQ(aER.ReadObject<nsCString>(), NS_LITERAL_CSTRING("nsCString"));
     ASSERT_EQ(aER.ReadObject<nsString>(), NS_LITERAL_STRING("nsString"));
     ASSERT_EQ(aER.ReadObject<nsAutoCString>(),
@@ -554,7 +554,7 @@ BlocksRingBuffer::Length GTestMarkerPayload::TagAndSerializationBytes() const {
 }
 
 void GTestMarkerPayload::SerializeTagAndPayload(
-    BlocksRingBuffer::EntryWriter& aEntryWriter) const {
+    ProfileBufferEntryWriter& aEntryWriter) const {
   static const DeserializerTag tag = TagForDeserializer(Deserialize);
   SerializeTagAndCommonProps(tag, aEntryWriter);
   aEntryWriter.WriteObject(mN);
@@ -563,7 +563,7 @@ void GTestMarkerPayload::SerializeTagAndPayload(
 
 // static
 UniquePtr<ProfilerMarkerPayload> GTestMarkerPayload::Deserialize(
-    BlocksRingBuffer::EntryReader& aEntryReader) {
+    ProfileBufferEntryReader& aEntryReader) {
   ProfilerMarkerPayload::CommonProps props =
       DeserializeCommonProps(aEntryReader);
   auto n = aEntryReader.ReadObject<int>();

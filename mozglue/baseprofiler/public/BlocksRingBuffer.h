@@ -7,18 +7,10 @@
 #ifndef BlocksRingBuffer_h
 #define BlocksRingBuffer_h
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ModuloBuffer.h"
-#include "mozilla/Pair.h"
 #include "mozilla/ProfileBufferIndex.h"
-#include "mozilla/Unused.h"
-
-#include "mozilla/Maybe.h"
-#include "mozilla/Span.h"
-#include "mozilla/Tuple.h"
-#include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/Variant.h"
+#include "mozilla/ScopeExit.h"
 
 #include <functional>
 #include <string>
@@ -42,7 +34,7 @@ namespace mozilla {
 // ```
 // BlockRingsBuffer brb(PowerOfTwo<BlockRingsBuffer::Length>(1024));
 // brb.ReserveAndPut([]() { return sizeof(123); },
-//                   [&](BlocksRingBuffer::EntryWriter& aEW) {
+//                   [&](ProfileBufferEntryWriter& aEW) {
 //                     aEW.WriteObject(123);
 //                   });
 // ```
@@ -58,8 +50,8 @@ namespace mozilla {
 // the entry inside of each block. E.g.:
 // ```
 // brb.Read([](BlocksRingBuffer::Reader aR) {}
-//   for (BlocksRingBuffer::EntryReader aER : aR) {
-//     /* Use EntryReader functions to read back serialized objects. */
+//   for (ProfileBufferEntryReader aER : aR) {
+//     /* Use ProfileBufferEntryReader functions to read serialized objects. */
 //     int n = aER.ReadObject<int>();
 //   }
 // });
@@ -76,40 +68,9 @@ class BlocksRingBuffer {
   // Using ModuloBuffer as underlying circular byte buffer.
   using Buffer = ModuloBuffer<uint32_t, ProfileBufferIndex>;
   using Byte = Buffer::Byte;
-  using BufferWriter = Buffer::Writer;
-  using BufferReader = Buffer::Reader;
 
   // Length type for total buffer (as PowerOfTwo<Length>) and each entry.
   using Length = uint32_t;
-
-  // Class to be specialized for types to be read from a BlocksRingBuffer.
-  // See common specializations at the bottom of this header.
-  // The following static functions must be provided:
-  //   static void ReadInto(EntryReader aER&, T& aT)
-  //   {
-  //     /* Call `aER.ReadX(...)` function to deserialize into aT, be sure to
-  //        read exactly `Bytes(aT)`! */
-  //   }
-  //   static T Read(EntryReader& aER) {
-  //     /* Call `aER.ReadX(...)` function to deserialize and return a `T`, be
-  //        sure to read exactly `Bytes(returned value)`! */
-  //   }
-  template <typename T>
-  struct Deserializer;
-
-  // Class to be specialized for types to be written in a BlocksRingBuffer.
-  // See common specializations at the bottom of this header.
-  // The following static functions must be provided:
-  //   static Length Bytes(const T& aT) {
-  //     /* Return number of bytes that will be written. */
-  //   }
-  //   static void Write(EntryWriter& aEW,
-  //                     const T& aT) {
-  //     /* Call `aEW.WriteX(...)` functions to serialize aT, be sure to write
-  //        exactly `Bytes(aT)` bytes! */
-  //   }
-  template <typename T>
-  struct Serializer;
 
   enum class ThreadSafety { WithoutMutex, WithMutex };
 
@@ -239,150 +200,14 @@ class BlocksRingBuffer {
   // Number of bytes needed to serialize objects.
   template <typename T0, typename... Ts>
   static Length SumBytes(const T0& aT0, const Ts&... aTs) {
-    return Serializer<T0>::Bytes(aT0) + SumBytes(aTs...);
+    return ProfileBufferEntryWriter::Serializer<T0>::Bytes(aT0) +
+           SumBytes(aTs...);
   }
-
-  // Iterator-like class used to read from an entry.
-  // Created through `BlockIterator`, or a `GetEntryAt()` function, lives
-  // within a lock guard lifetime.
-  class EntryReader : public BufferReader {
-   public:
-    // Allow move-construction.
-    EntryReader(EntryReader&& aOther) = default;
-    // Disallow copying and assignments.
-    EntryReader(const EntryReader& aOther) = delete;
-    EntryReader& operator=(const EntryReader& aOther) = delete;
-    EntryReader& operator=(EntryReader&& aOther) = delete;
-
-#ifdef DEBUG
-    ~EntryReader() {
-      // Expect reader to stay within the entry.
-      MOZ_ASSERT(CurrentIndex() >= mEntryStart);
-      MOZ_ASSERT(CurrentIndex() <= mEntryStart + mEntryBytes);
-      // No EntryReader should live outside of a mutexed call.
-      mRing.mMutex.AssertCurrentThreadOwns();
-    }
-#endif  // DEBUG
-
-    // All BufferReader (aka ModuloBuffer<uint32_t, ProfileBufferIndex>::Reader)
-    // APIs are available to read data from this entry.
-    // Note that there are no bound checks! So this should not be used with
-    // external untrusted data.
-
-    // Total number of bytes in this entry.
-    Length EntryBytes() const { return mEntryBytes; }
-
-    // Current position of this iterator in the entry.
-    Length IndexInEntry() const {
-      return static_cast<Length>(CurrentIndex() - mEntryStart);
-    }
-
-    // Number of bytes left in this entry after this iterator.
-    Length RemainingBytes() const {
-      return static_cast<Length>(mEntryStart + mEntryBytes - CurrentIndex());
-    }
-
-    template <typename T>
-    void ReadIntoObject(T& aObject) {
-      DebugOnly<Length> start = IndexInEntry();
-      Deserializer<T>::ReadInto(*this, aObject);
-      // Make sure the helper moved the iterator as expected.
-      MOZ_ASSERT(IndexInEntry() == start + SumBytes(aObject));
-    }
-
-    // Allow `EntryReader::ReadIntoObjects()` with nothing, this could be
-    // useful for generic programming.
-    void ReadIntoObjects() {}
-
-    // Read into one or more objects, sequentially.
-    template <typename T0, typename... Ts>
-    void ReadIntoObjects(T0& aT0, Ts&... aTs) {
-      ReadIntoObject(aT0);
-      ReadIntoObjects(aTs...);
-    }
-
-    // Read data as an object and move iterator ahead.
-    template <typename T>
-    T ReadObject() {
-      DebugOnly<Length> start = IndexInEntry();
-      T ob = Deserializer<T>::Read(*this);
-      // Make sure the helper moved the iterator as expected.
-      MOZ_ASSERT(IndexInEntry() == start + SumBytes(ob));
-      return ob;
-    }
-
-    // Can be used as reference to come back to this entry with GetEntryAt().
-    ProfileBufferBlockIndex CurrentBlockIndex() const {
-      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
-          mEntryStart - BufferReader::ULEB128Size(mEntryBytes));
-    }
-
-    // Index past the end of this block, which is the start of the next block.
-    ProfileBufferBlockIndex NextBlockIndex() const {
-      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(mEntryStart +
-                                                                   mEntryBytes);
-    }
-
-    // Index of the first block in the whole buffer.
-    ProfileBufferBlockIndex BufferRangeStart() const {
-      return mRing.mFirstReadIndex;
-    }
-
-    // Index past the last block in the whole buffer.
-    ProfileBufferBlockIndex BufferRangeEnd() const {
-      return mRing.mNextWriteIndex;
-    }
-
-    // Get another entry based on a {Current,Next}ProfileBufferBlockIndex().
-    // This may fail if the buffer has already looped around and cleared that
-    // block, or for the one-past-the-end index.
-    Maybe<EntryReader> GetEntryAt(ProfileBufferBlockIndex aBlockIndex) {
-      // Don't accept a not-yet-written index.
-      MOZ_ASSERT(aBlockIndex <= BufferRangeEnd());
-      if (aBlockIndex >= BufferRangeStart() && aBlockIndex < BufferRangeEnd()) {
-        // Block is still alive -> Return reader for it.
-        mRing.AssertBlockIndexIsValid(aBlockIndex);
-        return Some(EntryReader(mRing, aBlockIndex));
-      }
-      // Block has been overwritten/cleared.
-      return Nothing();
-    }
-
-    // Get the next entry. This may fail if this is already the last entry.
-    Maybe<EntryReader> GetNextEntry() {
-      const ProfileBufferBlockIndex nextBlockIndex = NextBlockIndex();
-      if (nextBlockIndex < BufferRangeEnd()) {
-        return Some(EntryReader(mRing, nextBlockIndex));
-      }
-      return Nothing();
-    }
-
-   private:
-    // Only a BlocksRingBuffer can instantiate an EntryReader.
-    friend class BlocksRingBuffer;
-
-    explicit EntryReader(const BlocksRingBuffer& aRing,
-                         ProfileBufferBlockIndex aBlockIndex)
-        : BufferReader(aRing.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(
-              aBlockIndex.ConvertToProfileBufferIndex())),
-          mRing(aRing),
-          mEntryBytes(BufferReader::ReadULEB128<Length>()),
-          mEntryStart(CurrentIndex()) {
-      // No EntryReader should live outside of a mutexed call.
-      mRing.mMutex.AssertCurrentThreadOwns();
-    }
-
-    // Using a non-null pointer instead of a reference, to allow copying.
-    // This EntryReader should only live inside one of the thread-safe
-    // BlocksRingBuffer functions, for this reference to stay valid.
-    const BlocksRingBuffer& mRing;
-    const Length mEntryBytes;
-    const ProfileBufferIndex mEntryStart;
-  };
 
   class Reader;
 
-  // Class that can iterate through blocks and provide `EntryReader`s.
+  // Class that can iterate through blocks and provide
+  // `ProfileBufferEntryReader`s.
   // Created through `Reader`, lives within a lock guard lifetime.
   class BlockIterator {
    public:
@@ -409,8 +234,9 @@ class BlocksRingBuffer {
       return *this;
     }
 
-    // Dereferencing creates an `EntryReader` for the entry inside this block.
-    EntryReader operator*() const {
+    // Dereferencing creates a `ProfileBufferEntryReader` for the entry inside
+    // this block.
+    ProfileBufferEntryReader operator*() const {
       return mRing->ReaderInBlockAt(mBlockIndex);
     }
 
@@ -420,17 +246,17 @@ class BlocksRingBuffer {
       return mBlockIndex == BufferRangeEnd();
     }
 
-    // Can be used as reference to come back to this entry with `GetEntryAt()`.
+    // Can be used as reference to come back to this entry with `ReadAt()`.
     ProfileBufferBlockIndex CurrentBlockIndex() const { return mBlockIndex; }
 
     // Index past the end of this block, which is the start of the next block.
     ProfileBufferBlockIndex NextBlockIndex() const {
       MOZ_ASSERT(!IsAtEnd());
-      BufferReader reader = mRing->mMaybeUnderlyingBuffer->mBuffer.ReaderAt(
-          mBlockIndex.ConvertToProfileBufferIndex());
-      Length entrySize = reader.ReadULEB128<Length>();
+      const Length entrySize =
+          mRing->ReaderInBlockAt(mBlockIndex).RemainingBytes();
       return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
-          reader.CurrentIndex() + entrySize);
+          mBlockIndex.ConvertToProfileBufferIndex() + ULEB128Size(entrySize) +
+          entrySize);
     }
 
     // Index of the first block in the whole buffer.
@@ -511,12 +337,12 @@ class BlocksRingBuffer {
       return BlockIterator(mRing, aBlockIndex);
     }
 
-    // Run `aCallback(EntryReader&)` on each entry from first to last.
-    // Callback should not store `EntryReader`, as it may become invalid after
-    // this thread-safe call.
+    // Run `aCallback(ProfileBufferEntryReader&)` on each entry from first to
+    // last. Callback should not store `ProfileBufferEntryReader`, as it may
+    // become invalid after this thread-safe call.
     template <typename Callback>
     void ForEach(Callback&& aCallback) const {
-      for (EntryReader reader : *this) {
+      for (ProfileBufferEntryReader reader : *this) {
         aCallback(reader);
       }
     }
@@ -549,9 +375,9 @@ class BlocksRingBuffer {
     return std::forward<Callback>(aCallback)(nullptr);
   }
 
-  // Call `aCallback(BlocksRingBuffer::EntryReader&)` on each item.
-  // Callback should not store `EntryReader`, because it may become invalid
-  // after this call.
+  // Call `aCallback(ProfileBufferEntryReader&)` on each item.
+  // Callback should not store `ProfileBufferEntryReader`, because it may become
+  // invalid after this call.
   template <typename Callback>
   void ReadEach(Callback&& aCallback) const {
     Read([&](Reader* aReader) {
@@ -561,17 +387,17 @@ class BlocksRingBuffer {
     });
   }
 
-  // Call `aCallback(Maybe<BlocksRingBuffer::EntryReader>&&)` on the entry at
+  // Call `aCallback(Maybe<ProfileBufferEntryReader>&&)` on the entry at
   // the given ProfileBufferBlockIndex; The `Maybe` will be `Nothing` if
   // out-of-session, or if that entry doesn't exist anymore, or if we've reached
   // just past the last entry. Return whatever `aCallback` returns. Callback
-  // should not store `EntryReader`, because it may become invalid after this
-  // call.
+  // should not store `ProfileBufferEntryReader`, because it may become invalid
+  // after this call.
   template <typename Callback>
   auto ReadAt(ProfileBufferBlockIndex aBlockIndex, Callback&& aCallback) const {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     MOZ_ASSERT(aBlockIndex <= mNextWriteIndex);
-    Maybe<EntryReader> maybeEntryReader;
+    Maybe<ProfileBufferEntryReader> maybeEntryReader;
     if (MOZ_LIKELY(mMaybeUnderlyingBuffer) && aBlockIndex >= mFirstReadIndex &&
         aBlockIndex < mNextWriteIndex) {
       AssertBlockIndexIsValid(aBlockIndex);
@@ -580,142 +406,15 @@ class BlocksRingBuffer {
     return std::forward<Callback>(aCallback)(std::move(maybeEntryReader));
   }
 
-  // Class used to write an entry contents.
-  // Created through `Put()`, lives within a lock guard lifetime.
-  class MOZ_RAII EntryWriter : public BufferWriter {
-   public:
-    // Disallow copying, moving, and assignments.
-    EntryWriter(const EntryWriter& aOther) = delete;
-    EntryWriter& operator=(const EntryWriter& aOther) = delete;
-    EntryWriter(EntryWriter&& aOther) = delete;
-    EntryWriter& operator=(EntryWriter&& aOther) = delete;
-
-#ifdef DEBUG
-    ~EntryWriter() {
-      // We expect the caller to completely fill the entry.
-      // (Or at least pretend to, by moving this iterator to the end.)
-      MOZ_ASSERT(RemainingBytes() == 0);
-      // No EntryWriter should live outside of a mutexed call.
-      mRing.mMutex.AssertCurrentThreadOwns();
-    }
-#endif  // DEBUG
-
-    // All BufferWriter (aka ModuloBuffer<uint32_t, ProfileBufferIndex>::Writer)
-    // APIs are available to read/write data from/to this entry.
-    // Note that there are no bound checks! So this should not be used with
-    // external data.
-
-    // Total number of bytes in this entry.
-    Length EntryBytes() const { return mEntryBytes; }
-
-    // Current position of this iterator in the entry.
-    Length IndexInEntry() const {
-      return static_cast<Length>(CurrentIndex() - mEntryStart);
-    }
-
-    // Number of bytes left in this entry after this iterator.
-    Length RemainingBytes() const {
-      return static_cast<Length>(mEntryStart + mEntryBytes - CurrentIndex());
-    }
-
-    template <typename T>
-    void WriteObject(const T& aObject) {
-      DebugOnly<Length> start = IndexInEntry();
-      Serializer<T>::Write(*this, aObject);
-      // Make sure the helper moved the iterator as expected.
-      MOZ_ASSERT(IndexInEntry() == start + SumBytes(aObject));
-    }
-
-    // Allow `EntryWrite::WriteObjects()` with nothing, this could be useful
-    // for generic programming.
-    void WriteObjects() {}
-
-    // Write one or more objects, sequentially.
-    template <typename T0, typename... Ts>
-    void WriteObjects(const T0& aT0, const Ts&... aTs) {
-      WriteObject(aT0);
-      WriteObjects(aTs...);
-    }
-
-    // Can be used as reference to come back to this entry with `GetEntryAt()`.
-    ProfileBufferBlockIndex CurrentBlockIndex() const {
-      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
-          mEntryStart - BufferWriter::ULEB128Size(mEntryBytes));
-    }
-
-    // Index past the end of this block, which will be the start of the next
-    // block to be written.
-    ProfileBufferBlockIndex BlockEndIndex() const {
-      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(mEntryStart +
-                                                                   mEntryBytes);
-    }
-
-    // Index of the first block in the whole buffer.
-    ProfileBufferBlockIndex BufferRangeStart() const {
-      return mRing.mFirstReadIndex;
-    }
-
-    // Index past the last block in the whole buffer.
-    ProfileBufferBlockIndex BufferRangeEnd() const {
-      return mRing.mNextWriteIndex;
-    }
-
-    // Get another entry based on a {Current,Next}BlockIndex(). This may fail if
-    // the buffer has already looped around and cleared that block.
-    Maybe<EntryReader> GetEntryAt(ProfileBufferBlockIndex aBlockIndex) {
-      // Don't accept a not-yet-written index.
-      MOZ_RELEASE_ASSERT(aBlockIndex < BufferRangeEnd());
-      if (aBlockIndex >= BufferRangeStart()) {
-        // Block is still alive -> Return reader for it.
-        mRing.AssertBlockIndexIsValid(aBlockIndex);
-        return Some(EntryReader(mRing, aBlockIndex));
-      }
-      // Block has been overwritten/cleared.
-      return Nothing();
-    }
-
-   private:
-    // Only a BlocksRingBuffer can instantiate an EntryWriter.
-    friend class BlocksRingBuffer;
-
-    // Compute space needed for a block that can contain an entry of size
-    // `aEntryBytes`.
-    static Length BlockSizeForEntrySize(Length aEntryBytes) {
-      return aEntryBytes +
-             static_cast<Length>(BufferWriter::ULEB128Size(aEntryBytes));
-    }
-
-    EntryWriter(BlocksRingBuffer& aRing, ProfileBufferBlockIndex aBlockIndex,
-                Length aEntryBytes)
-        : BufferWriter(aRing.mMaybeUnderlyingBuffer->mBuffer.WriterAt(
-              aBlockIndex.ConvertToProfileBufferIndex())),
-          mRing(aRing),
-          mEntryBytes(aEntryBytes),
-          mEntryStart([&]() {
-            // BufferWriter is at `aBlockIndex`. Write the entry size...
-            BufferWriter::WriteULEB128(aEntryBytes);
-            // ... BufferWriter now at start of entry section.
-            return CurrentIndex();
-          }()) {
-      // No EntryWriter should live outside of a mutexed call.
-      mRing.mMutex.AssertCurrentThreadOwns();
-    }
-
-    // This EntryWriter should only live inside one of the thread-safe
-    // BlocksRingBuffer functions, for this reference to stay valid.
-    BlocksRingBuffer& mRing;
-    const Length mEntryBytes;
-    const ProfileBufferIndex mEntryStart;
-  };
-
   // Main function to write entries.
   // Reserve `aCallbackBytes()` bytes, call `aCallback()` with a pointer to an
-  // on-stack temporary EntryWriter (nullptr when out-of-session), and return
-  // whatever `aCallback` returns. Callback should not store `EntryWriter`,
-  // because it may become invalid after this thread-safe call.
-  // Note: `aCallbackBytes` is a callback instead of a simple value, to delay
-  // this potentially-expensive computation until after we're checked that we're
-  // in-session; use `Put(Length, Callback)` below if you know the size already.
+  // on-stack temporary ProfileBufferEntryWriter (nullptr when out-of-session),
+  // and return whatever `aCallback` returns. Callback should not store
+  // `ProfileBufferEntryWriter`, because it may become invalid after this
+  // thread-safe call. Note: `aCallbackBytes` is a callback instead of a simple
+  // value, to delay this potentially-expensive computation until after we're
+  // checked that we're in-session; use `Put(Length, Callback)` below if you
+  // know the size already.
   template <typename CallbackBytes, typename Callback>
   auto ReserveAndPut(CallbackBytes aCallbackBytes, Callback&& aCallback) {
     {  // Locked block.
@@ -724,33 +423,41 @@ class BlocksRingBuffer {
         const Length entryBytes = std::forward<CallbackBytes>(aCallbackBytes)();
         const Length bufferBytes =
             mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value();
-        MOZ_RELEASE_ASSERT(
-            entryBytes <= bufferBytes - BufferWriter::ULEB128Size(entryBytes),
-            "Entry would wrap and overwrite itself");
-        // COmpute block size from the requested entry size.
-        const Length blockBytes =
-            EntryWriter::BlockSizeForEntrySize(entryBytes);
+        MOZ_RELEASE_ASSERT(entryBytes <= bufferBytes - ULEB128Size(entryBytes),
+                           "Entry would wrap and overwrite itself");
+        // Compute block size from the requested entry size.
+        const Length blockBytes = ULEB128Size(entryBytes) + entryBytes;
         // We will put this new block at the end of the current buffer.
-        const ProfileBufferBlockIndex blockIndex = mNextWriteIndex;
-        // Compute the end of this new block...
-        const ProfileBufferIndex blockEnd =
-            blockIndex.ConvertToProfileBufferIndex() + blockBytes;
-        // ... which is where the following block will go.
-        mNextWriteIndex =
-            ProfileBufferBlockIndex::CreateFromProfileBufferIndex(blockEnd);
+        const ProfileBufferIndex blockIndex =
+            mNextWriteIndex.ConvertToProfileBufferIndex();
+        // Compute the end of this new block.
+        const ProfileBufferIndex blockEnd = blockIndex + blockBytes;
         while (blockEnd >
                mFirstReadIndex.ConvertToProfileBufferIndex() + bufferBytes) {
           // About to trample on an old block.
-          EntryReader reader = ReaderInBlockAt(mFirstReadIndex);
+          ProfileBufferEntryReader reader = ReaderInBlockAt(mFirstReadIndex);
           mMaybeUnderlyingBuffer->mClearedBlockCount += 1;
-          MOZ_ASSERT(reader.CurrentIndex() <=
-                     reader.NextBlockIndex().ConvertToProfileBufferIndex());
           // Move the buffer reading start past this cleared block.
-          mFirstReadIndex = reader.NextBlockIndex();
+          mFirstReadIndex =
+              ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                  mFirstReadIndex.ConvertToProfileBufferIndex() +
+                  ULEB128Size(reader.RemainingBytes()) +
+                  reader.RemainingBytes());
         }
+        // Store the new end of buffer.
+        mNextWriteIndex =
+            ProfileBufferBlockIndex::CreateFromProfileBufferIndex(blockEnd);
         mMaybeUnderlyingBuffer->mPushedBlockCount += 1;
         // Finally, let aCallback write into the entry.
-        EntryWriter entryWriter(*this, blockIndex, entryBytes);
+        ProfileBufferEntryWriter entryWriter =
+            mMaybeUnderlyingBuffer->mBuffer.EntryWriterFromTo(blockIndex,
+                                                              blockEnd);
+        entryWriter.WriteULEB128(entryBytes);
+        MOZ_ASSERT(entryWriter.RemainingBytes() == entryBytes);
+#ifdef DEBUG
+        auto checkAllWritten = MakeScopeExit(
+            [&]() { MOZ_ASSERT(entryWriter.RemainingBytes() == 0); });
+#endif  // DEBUG
         return std::forward<Callback>(aCallback)(&entryWriter);
       }
     }  // End of locked block.
@@ -760,9 +467,10 @@ class BlocksRingBuffer {
   }
 
   // Add a new entry of known size, call `aCallback` with a pointer to a
-  // temporary EntryWriter (can be null when out-of-session), and return
-  // whatever `aCallback` returns. Callback should not store the `EntryWriter`,
-  // as it may become invalid after this thread-safe call.
+  // temporary ProfileBufferEntryWriter (can be null when out-of-session), and
+  // return whatever `aCallback` returns. Callback should not store the
+  // `ProfileBufferEntryWriter`, as it may become invalid after this thread-safe
+  // call.
   template <typename Callback>
   auto Put(Length aBytes, Callback&& aCallback) {
     return ReserveAndPut([aBytes]() { return aBytes; },
@@ -772,13 +480,13 @@ class BlocksRingBuffer {
   // Add a new entry copied from the given buffer, return block index.
   ProfileBufferBlockIndex PutFrom(const void* aSrc, Length aBytes) {
     return ReserveAndPut([aBytes]() { return aBytes; },
-                         [&](EntryWriter* aEntryWriter) {
-                           if (MOZ_LIKELY(aEntryWriter)) {
-                             aEntryWriter->Write(aSrc, aBytes);
-                             return aEntryWriter->CurrentBlockIndex();
+                         [&](ProfileBufferEntryWriter* aEntryWriter) {
+                           if (MOZ_UNLIKELY(!aEntryWriter)) {
+                             // Out-of-session, return "empty" index.
+                             return ProfileBufferBlockIndex{};
                            }
-                           // Out-of-session, return "empty" index.
-                           return ProfileBufferBlockIndex{};
+                           aEntryWriter->WriteBytes(aSrc, aBytes);
+                           return aEntryWriter->CurrentBlockIndex();
                          });
   }
 
@@ -789,13 +497,13 @@ class BlocksRingBuffer {
     static_assert(sizeof...(Ts) > 0,
                   "PutObjects must be given at least one object.");
     return ReserveAndPut([&]() { return SumBytes(aTs...); },
-                         [&](EntryWriter* aEntryWriter) {
-                           if (MOZ_LIKELY(aEntryWriter)) {
-                             aEntryWriter->WriteObjects(aTs...);
-                             return aEntryWriter->CurrentBlockIndex();
+                         [&](ProfileBufferEntryWriter* aEntryWriter) {
+                           if (MOZ_UNLIKELY(!aEntryWriter)) {
+                             // Out-of-session, return "empty" index.
+                             return ProfileBufferBlockIndex{};
                            }
-                           // Out-of-session, return "empty" index.
-                           return ProfileBufferBlockIndex{};
+                           aEntryWriter->WriteObjects(aTs...);
+                           return aEntryWriter->CurrentBlockIndex();
                          });
   }
 
@@ -843,37 +551,31 @@ class BlocksRingBuffer {
         mNextWriteIndex.ConvertToProfileBufferIndex();
     // Compute where the copy will end...
     const ProfileBufferIndex dstEndIndex = dstStartIndex + bytesToCopy;
-    // ... which is where the following block will go.
-    mNextWriteIndex =
-        ProfileBufferBlockIndex::CreateFromProfileBufferIndex(dstEndIndex);
 
     while (dstEndIndex >
            mFirstReadIndex.ConvertToProfileBufferIndex() + bufferBytes) {
       // About to trample on an old block.
-      EntryReader reader = ReaderInBlockAt(mFirstReadIndex);
+      ProfileBufferEntryReader reader = ReaderInBlockAt(mFirstReadIndex);
       mMaybeUnderlyingBuffer->mClearedBlockCount += 1;
-      MOZ_ASSERT(reader.CurrentIndex() <=
-                 reader.NextBlockIndex().ConvertToProfileBufferIndex());
       // Move the buffer reading start past this cleared block.
-      mFirstReadIndex = reader.NextBlockIndex();
+      mFirstReadIndex = ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mFirstReadIndex.ConvertToProfileBufferIndex() +
+          ULEB128Size(reader.RemainingBytes()) + reader.RemainingBytes());
     }
 
+    // Store the new end of buffer.
+    mNextWriteIndex =
+        ProfileBufferBlockIndex::CreateFromProfileBufferIndex(dstEndIndex);
     // Update our pushed count with the number of live blocks we are copying.
     mMaybeUnderlyingBuffer->mPushedBlockCount +=
         aSrc.mMaybeUnderlyingBuffer->mPushedBlockCount -
         aSrc.mMaybeUnderlyingBuffer->mClearedBlockCount;
 
-    const auto readerEnd =
-        aSrc.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(srcEndIndex);
-    auto writer = mMaybeUnderlyingBuffer->mBuffer.WriterAt(dstStartIndex);
-    // Copy all the bytes. TODO: Optimize with memcpy's?
-    for (auto reader =
-             aSrc.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(srcStartIndex);
-         reader != readerEnd; ++reader, ++writer) {
-      *writer = *reader;
-    }
-    MOZ_ASSERT(writer == mMaybeUnderlyingBuffer->mBuffer.WriterAt(
-                             mNextWriteIndex.ConvertToProfileBufferIndex()));
+    auto reader = aSrc.mMaybeUnderlyingBuffer->mBuffer.EntryReaderFromTo(
+        srcStartIndex, srcEndIndex, nullptr, nullptr);
+    auto writer = mMaybeUnderlyingBuffer->mBuffer.EntryWriterFromTo(
+        dstStartIndex, dstEndIndex);
+    writer.WriteFromReader(reader, bytesToCopy);
 
     return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(dstStartIndex);
   }
@@ -951,17 +653,15 @@ class BlocksRingBuffer {
 #  if 1
     // Quick check that this looks like a valid block start.
     // Read the entry size at the start of the block.
-    BufferReader br = mMaybeUnderlyingBuffer->mBuffer.ReaderAt(
-        aBlockIndex.ConvertToProfileBufferIndex());
-    Length entryBytes = br.ReadULEB128<Length>();
+    const Length entryBytes = ReaderInBlockAt(aBlockIndex).RemainingBytes();
     MOZ_ASSERT(entryBytes > 0, "Empty entries are not allowed");
     MOZ_ASSERT(
         entryBytes < mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value() -
-                         BufferReader::ULEB128Size(entryBytes),
+                         ULEB128Size(entryBytes),
         "Entry would wrap and overwrite itself");
     // The end of the block should be inside the live buffer range.
     MOZ_ASSERT(aBlockIndex.ConvertToProfileBufferIndex() +
-                   BufferReader::ULEB128Size(entryBytes) + entryBytes <=
+                   ULEB128Size(entryBytes) + entryBytes <=
                mNextWriteIndex.ConvertToProfileBufferIndex());
 #  else
     // Slow check that the index is really the start of the block.
@@ -992,11 +692,45 @@ class BlocksRingBuffer {
   }
 
   // Create a reader for the block starting at aBlockIndex.
-  EntryReader ReaderInBlockAt(ProfileBufferBlockIndex aBlockIndex) const {
+  ProfileBufferEntryReader ReaderInBlockAt(
+      ProfileBufferBlockIndex aBlockIndex) const {
     mMutex.AssertCurrentThreadOwns();
+    MOZ_ASSERT(mMaybeUnderlyingBuffer.isSome());
     MOZ_ASSERT(aBlockIndex >= mFirstReadIndex);
     MOZ_ASSERT(aBlockIndex < mNextWriteIndex);
-    return EntryReader(*this, aBlockIndex);
+    // Create a reader from the given index until the end of the buffer.
+    ProfileBufferEntryReader reader =
+        mMaybeUnderlyingBuffer->mBuffer.EntryReaderFromTo(
+            aBlockIndex.ConvertToProfileBufferIndex(),
+            mNextWriteIndex.ConvertToProfileBufferIndex(), nullptr, nullptr);
+    // Read the block size at the beginning.
+    const Length entryBytes = reader.ReadULEB128<Length>();
+    // Make sure we don't overshoot the buffer.
+    MOZ_RELEASE_ASSERT(entryBytes <= reader.RemainingBytes());
+    ProfileBufferIndex nextBlockIndex =
+        aBlockIndex.ConvertToProfileBufferIndex() + ULEB128Size(entryBytes) +
+        entryBytes;
+    // And reduce the reader to the entry area. Only provide a next-block-index
+    // if it's not at the end of the buffer (i.e., there's an actual block
+    // there).
+    reader = mMaybeUnderlyingBuffer->mBuffer.EntryReaderFromTo(
+        aBlockIndex.ConvertToProfileBufferIndex() + ULEB128Size(entryBytes),
+        nextBlockIndex, aBlockIndex,
+        (nextBlockIndex < mNextWriteIndex.ConvertToProfileBufferIndex())
+            ? ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                  nextBlockIndex)
+            : ProfileBufferBlockIndex{});
+    return reader;
+  }
+
+  ProfileBufferEntryReader FullBufferReader() const {
+    mMutex.AssertCurrentThreadOwns();
+    if (!mMaybeUnderlyingBuffer) {
+      return {};
+    }
+    return mMaybeUnderlyingBuffer->mBuffer.EntryReaderFromTo(
+        mFirstReadIndex.ConvertToProfileBufferIndex(),
+        mNextWriteIndex.ConvertToProfileBufferIndex(), nullptr, nullptr);
   }
 
   // Clear all entries: Move read index to the end so that these entries cannot
@@ -1028,10 +762,10 @@ class BlocksRingBuffer {
   }
 
   // Used to de/serialize a BlocksRingBuffer (e.g., containing a backtrace).
-  friend struct Serializer<BlocksRingBuffer>;
-  friend struct Deserializer<BlocksRingBuffer>;
-  friend struct Serializer<UniquePtr<BlocksRingBuffer>>;
-  friend struct Deserializer<UniquePtr<BlocksRingBuffer>>;
+  friend ProfileBufferEntryWriter::Serializer<BlocksRingBuffer>;
+  friend ProfileBufferEntryReader::Deserializer<BlocksRingBuffer>;
+  friend ProfileBufferEntryWriter::Serializer<UniquePtr<BlocksRingBuffer>>;
+  friend ProfileBufferEntryReader::Deserializer<UniquePtr<BlocksRingBuffer>>;
 
   // Mutex guarding the following members.
   mutable baseprofiler::detail::BaseProfilerMaybeMutex mMutex;
@@ -1083,717 +817,19 @@ class BlocksRingBuffer {
   // sessions, so that stored indices from one session will be gracefully denied
   // in future sessions.
   ProfileBufferBlockIndex mFirstReadIndex =
-      ProfileBufferBlockIndex::CreateFromProfileBufferIndex(1);
+      ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          ProfileBufferIndex(1));
   // Index where the next new block should be allocated. Initialized to 1
   // because 0 is reserved for the "empty" ProfileBufferBlockIndex value. Kept
   // between sessions, so that stored indices from one session will be
   // gracefully denied in future sessions.
   ProfileBufferBlockIndex mNextWriteIndex =
-      ProfileBufferBlockIndex::CreateFromProfileBufferIndex(1);
-};
-
-// ============================================================================
-// Serializer and Deserializer ready-to-use specializations.
-
-// ----------------------------------------------------------------------------
-// Trivially-copyable types (default)
-
-// The default implementation works for all trivially-copyable types (e.g.,
-// PODs).
-//
-// Usage: `aEW.WriteObject(123);`.
-//
-// Raw pointers, though trivially-copyable, are explictly forbidden when writing
-// (to avoid unexpected leaks/UAFs), instead use one of
-// `WrapBlocksRingBufferLiteralCStringPointer`,
-// `WrapBlocksRingBufferUnownedCString`, or `WrapBlocksRingBufferRawPointer` as
-// needed.
-template <typename T>
-struct BlocksRingBuffer::Serializer {
-  static_assert(std::is_trivially_copyable<T>::value,
-                "Serializer only works with trivially-copyable types by "
-                "default, use/add specialization for other types.");
-
-  static constexpr Length Bytes(const T&) { return sizeof(T); }
-
-  static void Write(EntryWriter& aEW, const T& aT) {
-    static_assert(!std::is_pointer<T>::value,
-                  "Serializer won't write raw pointers by default, use "
-                  "WrapBlocksRingBufferRawPointer or other.");
-    aEW.Write(&aT, sizeof(T));
-  }
-};
-
-// Usage: `aER.ReadObject<int>();` or `int x; aER.ReadIntoObject(x);`.
-template <typename T>
-struct BlocksRingBuffer::Deserializer {
-  static_assert(std::is_trivially_copyable<T>::value,
-                "Deserializer only works with trivially-copyable types by "
-                "default, use/add specialization for other types.");
-
-  static void ReadInto(EntryReader& aER, T& aT) { aER.Read(&aT, sizeof(T)); }
-
-  static T Read(EntryReader& aER) {
-    // Note that this creates a default `T` first, and then overwrites it with
-    // bytes from the buffer. Trivially-copyable types support this without UB.
-    T ob;
-    ReadInto(aER, ob);
-    return ob;
-  }
+      ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          ProfileBufferIndex(1));
 };
 
 // ----------------------------------------------------------------------------
-// Strip const/volatile/reference from types.
-
-// Automatically strip `const`.
-template <typename T>
-struct BlocksRingBuffer::Serializer<const T>
-    : public BlocksRingBuffer::Serializer<T> {};
-
-template <typename T>
-struct BlocksRingBuffer::Deserializer<const T>
-    : public BlocksRingBuffer::Deserializer<T> {};
-
-// Automatically strip `volatile`.
-template <typename T>
-struct BlocksRingBuffer::Serializer<volatile T>
-    : public BlocksRingBuffer::Serializer<T> {};
-
-template <typename T>
-struct BlocksRingBuffer::Deserializer<volatile T>
-    : public BlocksRingBuffer::Deserializer<T> {};
-
-// Automatically strip `lvalue-reference`.
-template <typename T>
-struct BlocksRingBuffer::Serializer<T&>
-    : public BlocksRingBuffer::Serializer<T> {};
-
-template <typename T>
-struct BlocksRingBuffer::Deserializer<T&>
-    : public BlocksRingBuffer::Deserializer<T> {};
-
-// Automatically strip `rvalue-reference`.
-template <typename T>
-struct BlocksRingBuffer::Serializer<T&&>
-    : public BlocksRingBuffer::Serializer<T> {};
-
-template <typename T>
-struct BlocksRingBuffer::Deserializer<T&&>
-    : public BlocksRingBuffer::Deserializer<T> {};
-
-// ----------------------------------------------------------------------------
-// ProfileBufferBlockIndex
-
-// ProfileBufferBlockIndex, serialized as the underlying value.
-template <>
-struct BlocksRingBuffer::Serializer<ProfileBufferBlockIndex> {
-  static constexpr Length Bytes(const ProfileBufferBlockIndex& aBlockIndex) {
-    return sizeof(ProfileBufferBlockIndex);
-  }
-
-  static void Write(EntryWriter& aEW,
-                    const ProfileBufferBlockIndex& aBlockIndex) {
-    aEW.Write(&aBlockIndex, sizeof(aBlockIndex));
-  }
-};
-
-template <>
-struct BlocksRingBuffer::Deserializer<ProfileBufferBlockIndex> {
-  static void ReadInto(EntryReader& aER, ProfileBufferBlockIndex& aBlockIndex) {
-    aER.Read(&aBlockIndex, sizeof(aBlockIndex));
-  }
-
-  static ProfileBufferBlockIndex Read(EntryReader& aER) {
-    ProfileBufferBlockIndex blockIndex;
-    ReadInto(aER, blockIndex);
-    return blockIndex;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// Literal C string pointer
-
-// Wrapper around a pointer to a literal C string.
-template <BlocksRingBuffer::Length NonTerminalCharacters>
-struct BlocksRingBufferLiteralCStringPointer {
-  const char* mCString;
-};
-
-// Wrap a pointer to a literal C string.
-template <BlocksRingBuffer::Length CharactersIncludingTerminal>
-BlocksRingBufferLiteralCStringPointer<CharactersIncludingTerminal - 1>
-WrapBlocksRingBufferLiteralCStringPointer(
-    const char (&aCString)[CharactersIncludingTerminal]) {
-  return {aCString};
-}
-
-// Literal C strings, serialized as the raw pointer because it is unique and
-// valid for the whole program lifetime.
-//
-// Usage: `aEW.WriteObject(WrapBlocksRingBufferLiteralCStringPointer("hi"));`.
-//
-// No deserializer is provided for this type, instead it must be deserialized as
-// a raw pointer: `aER.ReadObject<const char*>();`
-template <BlocksRingBuffer::Length CharactersIncludingTerminal>
-struct BlocksRingBuffer::Deserializer<
-    BlocksRingBufferLiteralCStringPointer<CharactersIncludingTerminal>> {
-  static constexpr Length Bytes(const BlocksRingBufferLiteralCStringPointer<
-                                CharactersIncludingTerminal>&) {
-    // We're only storing a pointer, its size is independent from the pointer
-    // value.
-    return sizeof(const char*);
-  }
-
-  static void Write(
-      EntryWriter& aEW,
-      const BlocksRingBufferLiteralCStringPointer<CharactersIncludingTerminal>&
-          aWrapper) {
-    // Write the pointer *value*, not the string contents.
-    aEW.Write(&aWrapper.mCString, sizeof(aWrapper.mCString));
-  }
-};
-
-// ----------------------------------------------------------------------------
-// C string contents
-
-// Wrapper around a pointer to a C string whose contents will be serialized.
-struct BlocksRingBufferUnownedCString {
-  const char* mCString;
-};
-
-// Wrap a pointer to a C string whose contents will be serialized.
-inline BlocksRingBufferUnownedCString WrapBlocksRingBufferUnownedCString(
-    const char* aCString) {
-  return {aCString};
-}
-
-// The contents of a (probably) unowned C string are serialized as the number of
-// characters (encoded as ULEB128) and all the characters in the string. The
-// terminal '\0' is omitted.
-//
-// Usage: `aEW.WriteObject(WrapBlocksRingBufferUnownedCString(str.c_str()))`.
-//
-// No deserializer is provided for this pointer type, instead it must be
-// deserialized as one of the other string types that manages its contents,
-// e.g.: `aER.ReadObject<std::string>();`
-template <>
-struct BlocksRingBuffer::Serializer<BlocksRingBufferUnownedCString> {
-  static Length Bytes(const BlocksRingBufferUnownedCString& aS) {
-    const auto len = static_cast<Length>(strlen(aS.mCString));
-    return EntryWriter::ULEB128Size(len) + len;
-  }
-
-  static void Write(EntryWriter& aEW,
-                    const BlocksRingBufferUnownedCString& aS) {
-    const auto len = static_cast<Length>(strlen(aS.mCString));
-    aEW.WriteULEB128(len);
-    aEW.Write(aS.mCString, len);
-  }
-};
-
-// ----------------------------------------------------------------------------
-// Raw pointers
-
-// Wrapper around a pointer to be serialized as the raw pointer value.
-template <typename T>
-struct BlocksRingBufferRawPointer {
-  T* mRawPointer;
-};
-
-// Wrap a pointer to be serialized as the raw pointer value.
-template <typename T>
-BlocksRingBufferRawPointer<T> WrapBlocksRingBufferRawPointer(T* aRawPointer) {
-  return {aRawPointer};
-}
-
-// Raw pointers are serialized as the raw pointer value.
-//
-// Usage: `aEW.WriteObject(WrapBlocksRingBufferRawPointer(ptr));`
-//
-// The wrapper is compulsory when writing pointers (to avoid unexpected
-// leaks/UAFs), but reading can be done straight into a raw pointer object,
-// e.g.: `aER.ReadObject<Foo*>;`.
-template <typename T>
-struct BlocksRingBuffer::Serializer<BlocksRingBufferRawPointer<T>> {
-  template <typename U>
-  static constexpr Length Bytes(const U&) {
-    return sizeof(T*);
-  }
-
-  static void Write(EntryWriter& aEW,
-                    const BlocksRingBufferRawPointer<T>& aWrapper) {
-    aEW.Write(&aWrapper.mRawPointer, sizeof(aWrapper.mRawPointer));
-  }
-};
-
-// Usage: `aER.ReadObject<Foo*>;` or `Foo* p; aER.ReadIntoObject(p);`, no
-// wrapper necessary.
-template <typename T>
-struct BlocksRingBuffer::Deserializer<BlocksRingBufferRawPointer<T>> {
-  static void ReadInto(EntryReader& aER, T*& aPtr) {
-    aER.Read(&aPtr, sizeof(aPtr));
-  }
-
-  static T* Read(EntryReader& aER) {
-    T* ptr;
-    ReadInto(aER, ptr);
-    return ptr;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// std::string contents
-
-// std::string contents are serialized as the number of characters (encoded as
-// ULEB128) and all the characters in the string. The terminal '\0' is omitted.
-//
-// Usage: `std::string s = ...; aEW.WriteObject(s);`
-template <>
-struct BlocksRingBuffer::Serializer<std::string> {
-  static Length Bytes(const std::string& aS) {
-    const auto len = aS.length();
-    return EntryWriter::ULEB128Size(len) + static_cast<Length>(len);
-  }
-
-  static void Write(EntryWriter& aEW, const std::string& aS) {
-    const auto len = aS.length();
-    aEW.WriteULEB128(len);
-    aEW.Write(aS.c_str(), len);
-  }
-};
-
-// Usage: `std::string s = aEW.ReadObject<std::string>(s);` or
-// `std::string s; aER.ReadIntoObject(s);`
-template <>
-struct BlocksRingBuffer::Deserializer<std::string> {
-  static void ReadInto(EntryReader& aER, std::string& aS) {
-    const auto len = aER.ReadULEB128<std::string::size_type>();
-    // Assign to `aS` by using iterators.
-    // (`aER+0` so we get the same iterator type as `aER+len`.)
-    aS.assign(aER + 0, aER + len);
-    aER += len;
-  }
-
-  static std::string Read(EntryReader& aER) {
-    const auto len = aER.ReadULEB128<std::string::size_type>();
-    // Construct a string by using iterators.
-    // (`aER+0` so we get the same iterator type as `aER+len`.)
-    std::string s(aER + 0, aER + len);
-    aER += len;
-    return s;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// mozilla::UniqueFreePtr<CHAR>
-
-// UniqueFreePtr<CHAR>, which points at a string allocated with `malloc`
-// (typically generated by `strdup()`), is serialized as the number of
-// *bytes* (encoded as ULEB128) and all the characters in the string. The
-// null terminator is omitted.
-// `CHAR` can be any type that has a specialization for
-// `std::char_traits<CHAR>::length(const CHAR*)`.
-//
-// Note: A nullptr pointer will be serialized like an empty string, so when
-// deserializing it will result in an allocated buffer only containing a
-// single null terminator.
-template <typename CHAR>
-struct BlocksRingBuffer::Serializer<UniqueFreePtr<CHAR>> {
-  static Length Bytes(const UniqueFreePtr<CHAR>& aS) {
-    if (!aS) {
-      // Null pointer, store it as if it was an empty string (so: 0 bytes).
-      return EntryWriter::ULEB128Size(0u);
-    }
-    // Note that we store the size in *bytes*, not in number of characters.
-    const auto bytes = static_cast<Length>(
-        std::char_traits<CHAR>::length(aS.get()) * sizeof(CHAR));
-    return EntryWriter::ULEB128Size(bytes) + bytes;
-  }
-
-  static void Write(EntryWriter& aEW, const UniqueFreePtr<CHAR>& aS) {
-    if (!aS) {
-      // Null pointer, store it as if it was an empty string (so we write a
-      // length of 0 bytes).
-      aEW.WriteULEB128(0u);
-      return;
-    }
-    // Note that we store the size in *bytes*, not in number of characters.
-    const auto bytes = static_cast<Length>(
-        std::char_traits<CHAR>::length(aS.get()) * sizeof(CHAR));
-    aEW.WriteULEB128(bytes);
-    aEW.Write(aS.get(), bytes);
-  }
-};
-
-template <typename CHAR>
-struct BlocksRingBuffer::Deserializer<UniqueFreePtr<CHAR>> {
-  static void ReadInto(EntryReader& aER, UniqueFreePtr<CHAR>& aS) {
-    aS = Read(aER);
-  }
-
-  static UniqueFreePtr<CHAR> Read(EntryReader& aER) {
-    // Read the number of *bytes* that follow.
-    const auto bytes = aER.ReadULEB128<Length>();
-    // We need a buffer of the non-const character type.
-    using NC_CHAR = std::remove_const_t<CHAR>;
-    // We allocate the required number of bytes, plus one extra character for
-    // the null terminator.
-    NC_CHAR* buffer = static_cast<NC_CHAR*>(malloc(bytes + sizeof(NC_CHAR)));
-    // Copy the characters into the buffer.
-    aER.Read(buffer, bytes);
-    // And append a null terminator.
-    buffer[bytes / sizeof(NC_CHAR)] = NC_CHAR(0);
-    return UniqueFreePtr<CHAR>(buffer);
-  }
-};
-
-// ----------------------------------------------------------------------------
-// std::tuple
-
-// std::tuple is serialized as a sequence of each recursively-serialized item.
-//
-// This is equivalent to manually serializing each item, so reading/writing
-// tuples is equivalent to reading/writing their elements in order, e.g.:
-// ```
-// std::tuple<int, std::string> is = ...;
-// aEW.WriteObject(is); // Write the tuple, equivalent to:
-// aEW.WriteObject(/* int */ std::get<0>(is), /* string */ std::get<1>(is));
-// ...
-// // Reading back can be done directly into a tuple:
-// auto is = aER.ReadObject<std::tuple<int, std::string>>();
-// // Or each item could be read separately:
-// auto i = aER.ReadObject<int>(); auto s = aER.ReadObject<std::string>();
-// ```
-template <typename... Ts>
-struct BlocksRingBuffer::Serializer<std::tuple<Ts...>> {
- private:
-  template <size_t... Is>
-  static Length TupleBytes(const std::tuple<Ts...>& aTuple,
-                           std::index_sequence<Is...>) {
-    Length bytes = 0;
-    // This is pre-C++17 fold trick, using `initializer_list` to unpack the `Is`
-    // variadic pack, and the comma operator to:
-    // (work on each tuple item, generate an int for the list). Note that the
-    // `initializer_list` is unused; the compiler will nicely optimize it away.
-    // `std::index_sequence` is just a way to have `Is` be a variadic pack
-    // containing numbers between 0 and (tuple size - 1).
-    // The compiled end result is like doing:
-    //   bytes += SumBytes(get<0>(aTuple));
-    //   bytes += SumBytes(get<1>(aTuple));
-    //   ...
-    //   bytes += SumBytes(get<sizeof...(aTuple) - 1>(aTuple));
-    // See https://articles.emptycrate.com/2016/05/14/folds_in_cpp11_ish.html
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (bytes += SumBytes(std::get<Is>(aTuple)), 0)...};
-    return bytes;
-  }
-
-  template <size_t... Is>
-  static void TupleWrite(EntryWriter& aEW, const std::tuple<Ts...>& aTuple,
-                         std::index_sequence<Is...>) {
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (aEW.WriteObject(std::get<Is>(aTuple)), 0)...};
-  }
-
- public:
-  static Length Bytes(const std::tuple<Ts...>& aTuple) {
-    // Generate a 0..N-1 index pack, we'll add the sizes of each item.
-    return TupleBytes(aTuple, std::index_sequence_for<Ts...>());
-  }
-
-  static void Write(EntryWriter& aEW, const std::tuple<Ts...>& aTuple) {
-    // Generate a 0..N-1 index pack, we'll write each item.
-    TupleWrite(aEW, aTuple, std::index_sequence_for<Ts...>());
-  }
-};
-
-template <typename... Ts>
-struct BlocksRingBuffer::Deserializer<std::tuple<Ts...>> {
-  static void ReadInto(EntryReader& aER, std::tuple<Ts...>& aTuple) {
-    aER.Read(&aTuple, Bytes(aTuple));
-  }
-
-  static std::tuple<Ts...> Read(EntryReader& aER) {
-    // Note that this creates default `Ts` first, and then overwrites them.
-    std::tuple<Ts...> ob;
-    ReadInto(aER, ob);
-    return ob;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// mozilla::Tuple
-
-// Tuple is serialized as a sequence of each recursively-serialized
-// item.
-//
-// This is equivalent to manually serializing each item, so reading/writing
-// tuples is equivalent to reading/writing their elements in order, e.g.:
-// ```
-// Tuple<int, std::string> is = ...;
-// aEW.WriteObject(is); // Write the Tuple, equivalent to:
-// aEW.WriteObject(/* int */ std::get<0>(is), /* string */ std::get<1>(is));
-// ...
-// // Reading back can be done directly into a Tuple:
-// auto is = aER.ReadObject<Tuple<int, std::string>>();
-// // Or each item could be read separately:
-// auto i = aER.ReadObject<int>(); auto s = aER.ReadObject<std::string>();
-// ```
-template <typename... Ts>
-struct BlocksRingBuffer::Serializer<Tuple<Ts...>> {
- private:
-  template <size_t... Is>
-  static Length TupleBytes(const Tuple<Ts...>& aTuple,
-                           std::index_sequence<Is...>) {
-    Length bytes = 0;
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (bytes += SumBytes(Get<Is>(aTuple)), 0)...};
-    return bytes;
-  }
-
-  template <size_t... Is>
-  static void TupleWrite(EntryWriter& aEW, const Tuple<Ts...>& aTuple,
-                         std::index_sequence<Is...>) {
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (aEW.WriteObject(Get<Is>(aTuple)), 0)...};
-  }
-
- public:
-  static Length Bytes(const Tuple<Ts...>& aTuple) {
-    // Generate a 0..N-1 index pack, we'll add the sizes of each item.
-    return TupleBytes(aTuple, std::index_sequence_for<Ts...>());
-  }
-
-  static void Write(EntryWriter& aEW, const Tuple<Ts...>& aTuple) {
-    // Generate a 0..N-1 index pack, we'll write each item.
-    TupleWrite(aEW, aTuple, std::index_sequence_for<Ts...>());
-  }
-};
-
-template <typename... Ts>
-struct BlocksRingBuffer::Deserializer<Tuple<Ts...>> {
-  static void ReadInto(EntryReader& aER, Tuple<Ts...>& aTuple) {
-    aER.Read(&aTuple, Bytes(aTuple));
-  }
-
-  static Tuple<Ts...> Read(EntryReader& aER) {
-    // Note that this creates default `Ts` first, and then overwrites them.
-    Tuple<Ts...> ob;
-    ReadInto(aER, ob);
-    return ob;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// mozilla::Span
-
-// Span. All elements are serialized in sequence.
-// The caller is assumed to know the number of elements (they may manually
-// write&read it before the span if needed).
-// Similar to tuples, reading/writing spans is equivalent to reading/writing
-// their elements in order.
-template <class T, size_t N>
-struct BlocksRingBuffer::Serializer<Span<T, N>> {
-  static Length Bytes(const Span<T, N>& aSpan) {
-    Length bytes = 0;
-    for (const T& element : aSpan) {
-      bytes += SumBytes(element);
-    }
-    return bytes;
-  }
-
-  static void Write(EntryWriter& aEW, const Span<T, N>& aSpan) {
-    for (const T& element : aSpan) {
-      aEW.WriteObject(element);
-    }
-  }
-};
-
-template <class T, size_t N>
-struct BlocksRingBuffer::Deserializer<Span<T, N>> {
-  // Read elements back into span pointing at a pre-allocated buffer.
-  static void ReadInto(EntryReader& aER, Span<T, N>& aSpan) {
-    for (T& element : aSpan) {
-      aER.ReadIntoObject(element);
-    }
-  }
-
-  // A Span does not own its data, this would probably leak so we forbid this.
-  static Span<T, N> Read(EntryReader& aER) = delete;
-};
-
-// ----------------------------------------------------------------------------
-// mozilla::Maybe
-
-// Maybe<T> is serialized as one byte containing either 'm' (Nothing),
-// or 'M' followed by the recursively-serialized `T` object.
-template <typename T>
-struct BlocksRingBuffer::Serializer<Maybe<T>> {
-  static Length Bytes(const Maybe<T>& aMaybe) {
-    // 1 byte to store nothing/something flag, then object size if present.
-    return aMaybe.isNothing() ? 1 : (1 + SumBytes(aMaybe.ref()));
-  }
-
-  static void Write(EntryWriter& aEW, const Maybe<T>& aMaybe) {
-    // 'm'/'M' is just an arbitrary 1-byte value to distinguish states.
-    if (aMaybe.isNothing()) {
-      aEW.WriteObject<char>('m');
-    } else {
-      aEW.WriteObject<char>('M');
-      // Use the Serializer for the contained type.
-      aEW.WriteObject(aMaybe.ref());
-    }
-  }
-};
-
-template <typename T>
-struct BlocksRingBuffer::Deserializer<Maybe<T>> {
-  static void ReadInto(EntryReader& aER, Maybe<T>& aMaybe) {
-    char c = aER.ReadObject<char>();
-    if (c == 'm') {
-      aMaybe.reset();
-    } else {
-      MOZ_ASSERT(c == 'M');
-      // If aMaybe is empty, create a default `T` first, to be overwritten.
-      // Otherwise we'll just overwrite whatever was already there.
-      if (aMaybe.isNothing()) {
-        aMaybe.emplace();
-      }
-      // Use the Deserializer for the contained type.
-      aER.ReadIntoObject(aMaybe.ref());
-    }
-  }
-
-  static Maybe<T> Read(EntryReader& aER) {
-    Maybe<T> maybe;
-    char c = aER.ReadObject<char>();
-    MOZ_ASSERT(c == 'M' || c == 'm');
-    if (c == 'M') {
-      // Note that this creates a default `T` inside the Maybe first, and then
-      // overwrites it.
-      maybe = Some(T{});
-      // Use the Deserializer for the contained type.
-      aER.ReadIntoObject(maybe.ref());
-    }
-    return maybe;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// mozilla::Variant
-
-// Variant is serialized as the tag (0-based index of the stored type, encoded
-// as ULEB128), and the recursively-serialized object.
-template <typename... Ts>
-struct BlocksRingBuffer::Serializer<Variant<Ts...>> {
- private:
-  // Called from the fold expression in `VariantBytes()`, only the selected
-  // variant will write into `aOutBytes`.
-  template <size_t I>
-  static void VariantIBytes(const Variant<Ts...>& aVariantTs,
-                            Length& aOutBytes) {
-    if (aVariantTs.template is<I>()) {
-      aOutBytes =
-          EntryReader::ULEB128Size(I) + SumBytes(aVariantTs.template as<I>());
-    }
-  }
-
-  // Go through all variant tags, and let the selected one write the correct
-  // number of bytes.
-  template <size_t... Is>
-  static Length VariantBytes(const Variant<Ts...>& aVariantTs,
-                             std::index_sequence<Is...>) {
-    Length bytes = 0;
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (VariantIBytes<Is>(aVariantTs, bytes), 0)...};
-    MOZ_ASSERT(bytes != 0);
-    return bytes;
-  }
-
-  // Called from the fold expression in `VariantWrite()`, only the selected
-  // variant will serialize the tag and object.
-  template <size_t I>
-  static void VariantIWrite(EntryWriter& aEW,
-                            const Variant<Ts...>& aVariantTs) {
-    if (aVariantTs.template is<I>()) {
-      aEW.WriteULEB128(I);
-      // Use the Serializer for the contained type.
-      aEW.WriteObject(aVariantTs.template as<I>());
-    }
-  }
-
-  // Go through all variant tags, and let the selected one serialize the correct
-  // tag and object.
-  template <size_t... Is>
-  static void VariantWrite(EntryWriter& aEW, const Variant<Ts...>& aVariantTs,
-                           std::index_sequence<Is...>) {
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (VariantIWrite<Is>(aEW, aVariantTs), 0)...};
-  }
-
- public:
-  static Length Bytes(const Variant<Ts...>& aVariantTs) {
-    // Generate a 0..N-1 index pack, the selected variant will return its size.
-    return VariantBytes(aVariantTs, std::index_sequence_for<Ts...>());
-  }
-
-  static void Write(EntryWriter& aEW, const Variant<Ts...>& aVariantTs) {
-    // Generate a 0..N-1 index pack, the selected variant will serialize itself.
-    VariantWrite(aEW, aVariantTs, std::index_sequence_for<Ts...>());
-  }
-};
-
-template <typename... Ts>
-struct BlocksRingBuffer::Deserializer<Variant<Ts...>> {
- private:
-  // Called from the fold expression in `VariantReadInto()`, only the selected
-  // variant will deserialize the object.
-  template <size_t I>
-  static void VariantIReadInto(EntryReader& aER, Variant<Ts...>& aVariantTs,
-                               unsigned aTag) {
-    if (I == aTag) {
-      // Ensure the variant contains the target type. Note that this may create
-      // a default object.
-      if (!aVariantTs.template is<I>()) {
-        aVariantTs = Variant<Ts...>(VariantIndex<I>{});
-      }
-      aER.ReadIntoObject(aVariantTs.template as<I>());
-    }
-  }
-
-  template <size_t... Is>
-  static void VariantReadInto(EntryReader& aER, Variant<Ts...>& aVariantTs,
-                              std::index_sequence<Is...>) {
-    unsigned tag = aER.ReadULEB128<unsigned>();
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (VariantIReadInto<Is>(aER, aVariantTs, tag), 0)...};
-  }
-
- public:
-  static void ReadInto(EntryReader& aER, Variant<Ts...>& aVariantTs) {
-    // Generate a 0..N-1 index pack, the selected variant will deserialize
-    // itself.
-    VariantReadInto(aER, aVariantTs, std::index_sequence_for<Ts...>());
-  }
-
-  static Variant<Ts...> Read(EntryReader& aER) {
-    // Note that this creates a default `Variant` of the first type, and then
-    // overwrites it. Consider using `ReadInto` for more control if needed.
-    Variant<Ts...> variant(VariantIndex<0>{});
-    ReadInto(aER, variant);
-    return variant;
-  }
-};
-
-// ----------------------------------------------------------------------------
-// BlocksRingBuffer
+// BlocksRingBuffer serialization
 
 // A BlocksRingBuffer can hide another one!
 // This will be used to store marker backtraces; They can be read back into a
@@ -1801,7 +837,7 @@ struct BlocksRingBuffer::Deserializer<Variant<Ts...>> {
 // Format: len (ULEB128) | start | end | buffer (len bytes) | pushed | cleared
 // len==0 marks an out-of-session buffer, or empty buffer.
 template <>
-struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
+struct ProfileBufferEntryWriter::Serializer<BlocksRingBuffer> {
   static Length Bytes(const BlocksRingBuffer& aBuffer) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(aBuffer.mMutex);
     if (aBuffer.mMaybeUnderlyingBuffer.isNothing()) {
@@ -1820,7 +856,8 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
            sizeof(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount);
   }
 
-  static void Write(EntryWriter& aEW, const BlocksRingBuffer& aBuffer) {
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const BlocksRingBuffer& aBuffer) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(aBuffer.mMutex);
     if (aBuffer.mMaybeUnderlyingBuffer.isNothing()) {
       // Out-of-session, only store a length of 0.
@@ -1842,7 +879,8 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
     aEW.WriteObject(start);
     aEW.WriteObject(end);
     // Write all the bytes.
-    aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(start).ReadInto(aEW, len);
+    auto reader = aBuffer.FullBufferReader();
+    aEW.WriteFromReader(reader, reader.RemainingBytes());
     // And write stats.
     aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount);
     aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount);
@@ -1852,8 +890,9 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
 // A serialized BlocksRingBuffer can be read into an empty buffer (either
 // out-of-session, or in-session with enough room).
 template <>
-struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
-  static void ReadInto(EntryReader& aER, BlocksRingBuffer& aBuffer) {
+struct ProfileBufferEntryReader::Deserializer<BlocksRingBuffer> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       BlocksRingBuffer& aBuffer) {
     // Expect an empty buffer, as we're going to overwrite it.
     MOZ_ASSERT(aBuffer.GetState().mRangeStart == aBuffer.GetState().mRangeEnd);
     // Read the stored buffer length.
@@ -1881,9 +920,10 @@ struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
         ProfileBufferBlockIndex::CreateFromProfileBufferIndex(end);
     MOZ_ASSERT(end - start == len);
     // Copy bytes into the buffer.
-    auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
-    aER.ReadInto(writer, len);
-    MOZ_ASSERT(writer.CurrentIndex() == end);
+    auto writer =
+        aBuffer.mMaybeUnderlyingBuffer->mBuffer.EntryWriterFromTo(start, end);
+    writer.WriteFromReader(aER, end - start);
+    MOZ_ASSERT(writer.RemainingBytes() == 0);
     // Finally copy stats.
     aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount = aER.ReadObject<decltype(
         aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount)>();
@@ -1894,7 +934,7 @@ struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
 
   // We cannot output a BlocksRingBuffer object (not copyable), use `ReadInto()`
   // or `aER.ReadObject<UniquePtr<BlocksRinbBuffer>>()` instead.
-  static BlocksRingBuffer Read(BlocksRingBuffer::EntryReader& aER) = delete;
+  static BlocksRingBuffer Read(ProfileBufferEntryReader& aER) = delete;
 };
 
 // A BlocksRingBuffer is usually refererenced through a UniquePtr, for
@@ -1903,7 +943,7 @@ struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
 // pointer being treated like an out-of-session or empty buffer; and any of
 // these would be deserialized into a null pointer.
 template <>
-struct BlocksRingBuffer::Serializer<UniquePtr<BlocksRingBuffer>> {
+struct ProfileBufferEntryWriter::Serializer<UniquePtr<BlocksRingBuffer>> {
   static Length Bytes(const UniquePtr<BlocksRingBuffer>& aBufferUPtr) {
     if (!aBufferUPtr) {
       // Null pointer, treat it like an empty buffer, i.e., write length of 0.
@@ -1914,7 +954,7 @@ struct BlocksRingBuffer::Serializer<UniquePtr<BlocksRingBuffer>> {
     return SumBytes(*aBufferUPtr);
   }
 
-  static void Write(EntryWriter& aEW,
+  static void Write(ProfileBufferEntryWriter& aEW,
                     const UniquePtr<BlocksRingBuffer>& aBufferUPtr) {
     if (!aBufferUPtr) {
       // Null pointer, treat it like an empty buffer, i.e., write length of 0.
@@ -1928,13 +968,17 @@ struct BlocksRingBuffer::Serializer<UniquePtr<BlocksRingBuffer>> {
 };
 
 template <>
-struct BlocksRingBuffer::Deserializer<UniquePtr<BlocksRingBuffer>> {
-  static void ReadInto(EntryReader& aER, UniquePtr<BlocksRingBuffer>& aBuffer) {
+struct ProfileBufferEntryReader::Deserializer<UniquePtr<BlocksRingBuffer>> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       UniquePtr<BlocksRingBuffer>& aBuffer) {
     aBuffer = Read(aER);
   }
 
-  static UniquePtr<BlocksRingBuffer> Read(BlocksRingBuffer::EntryReader& aER) {
+  static UniquePtr<BlocksRingBuffer> Read(ProfileBufferEntryReader& aER) {
     UniquePtr<BlocksRingBuffer> bufferUPtr;
+    // Keep a copy of the reader before reading the length, so we can restart
+    // from here below.
+    ProfileBufferEntryReader readerBeforeLen = aER;
     // Read the stored buffer length.
     const auto len = aER.ReadULEB128<BlocksRingBuffer::Length>();
     if (len == 0) {
@@ -1947,7 +991,7 @@ struct BlocksRingBuffer::Deserializer<UniquePtr<BlocksRingBuffer>> {
         BlocksRingBuffer::ThreadSafety::WithoutMutex);
     // Rewind the reader before the length and deserialize the contents, using
     // the non-UniquePtr Deserializer.
-    aER -= ULEB128Size(len);
+    aER = readerBeforeLen;
     aER.ReadIntoObject(*bufferUPtr);
     return bufferUPtr;
   }
