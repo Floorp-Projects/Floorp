@@ -1211,7 +1211,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void CancelDocumentFlushedResolvers();
 
   // Try to fire the "load" event on our content embedder if we're an iframe.
-  void FireFrameLoadEvent(bool aIsTrusted);
+  void FireFrameLoadEvent();
 
  public:
   // Dispatch a runnable related to the global.
