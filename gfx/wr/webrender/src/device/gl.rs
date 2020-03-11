@@ -1031,6 +1031,11 @@ enum TexStorageUsage {
     Always,
 }
 
+// We get 24 bits of Z value - use up 22 bits of it to give us
+// 4 bits to account for GPU issues. This seems to manifest on
+// some GPUs under certain perspectives due to z interpolation
+// precision problems.
+const RESERVE_DEPTH_BITS: i32 = 2;
 
 pub struct Device {
     gl: Rc<dyn gl::Gl>,
@@ -1061,6 +1066,7 @@ pub struct Device {
     color_formats: TextureFormatPair<ImageFormat>,
     bgra_formats: TextureFormatPair<gl::GLuint>,
     swizzle_settings: SwizzleSettings,
+    depth_format: gl::GLuint,
 
     /// Map from texture dimensions to shared depth buffers for render targets.
     ///
@@ -1468,8 +1474,14 @@ impl Device {
             ),
         };
 
-        info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}",
-            color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage);
+        let depth_format = if renderer_name.starts_with("Software WebRender") {
+            gl::DEPTH_COMPONENT16
+        } else {
+            gl::DEPTH_COMPONENT24
+        };
+
+        info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}, depth {:?}",
+            color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage, depth_format);
         let supports_copy_image_sub_data = supports_extension(&extensions, "GL_EXT_copy_image") ||
             supports_extension(&extensions, "GL_ARB_copy_image");
 
@@ -1541,6 +1553,7 @@ impl Device {
             swizzle_settings: SwizzleSettings {
                 bgra8_sampling_swizzle,
             },
+            depth_format,
 
             depth_targets: FastHashMap::default(),
 
@@ -1619,6 +1632,28 @@ impl Device {
         } else {
             None
         }
+    }
+
+    pub fn depth_bits(&self) -> i32 {
+        match self.depth_format {
+            gl::DEPTH_COMPONENT16 => 16,
+            gl::DEPTH_COMPONENT24 => 24,
+            _ => panic!("Unknown depth format {:?}", self.depth_format),
+        }
+    }
+
+    // See gpu_types.rs where we declare the number of possible documents and
+    // number of items per document. This should match up with that.
+    pub fn max_depth_ids(&self) -> i32 {
+        return 1 << (self.depth_bits() - RESERVE_DEPTH_BITS);
+    }
+
+    pub fn ortho_near_plane(&self) -> f32 {
+        return -self.max_depth_ids() as f32;
+    }
+
+    pub fn ortho_far_plane(&self) -> f32 {
+        return (self.max_depth_ids() - 1) as f32;
     }
 
     pub fn optimal_pbo_stride(&self) -> NonZeroUsize {
@@ -2417,13 +2452,14 @@ impl Device {
 
     fn acquire_depth_target(&mut self, dimensions: DeviceIntSize) -> RBOId {
         let gl = &self.gl;
+        let depth_format = self.depth_format;
         let target = self.depth_targets.entry(dimensions).or_insert_with(|| {
             let renderbuffer_ids = gl.gen_renderbuffers(1);
             let depth_rb = renderbuffer_ids[0];
             gl.bind_renderbuffer(gl::RENDERBUFFER, depth_rb);
             gl.renderbuffer_storage(
                 gl::RENDERBUFFER,
-                gl::DEPTH_COMPONENT24,
+                depth_format,
                 dimensions.width as _,
                 dimensions.height as _,
             );
