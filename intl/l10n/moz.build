@@ -5,10 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.intl += [
+    'FluentBindings.h',
+    'FluentResource.h',
     'Localization.h',
 ]
 
 UNIFIED_SOURCES += [
+    'FluentResource.cpp',
     'Localization.cpp',
 ]
 
@@ -31,6 +34,21 @@ XPIDL_MODULE = 'locale'
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    GENERATED_FILES += [
+        'fluent_ffi_generated.h',
+    ]
+
+    EXPORTS.mozilla.intl += [
+        '!fluent_ffi_generated.h',
+    ]
+
+    ffi_generated = GENERATED_FILES['fluent_ffi_generated.h']
+    ffi_generated.script = '/build/RunCbindgen.py:generate'
+    ffi_generated.inputs = [
+        '/intl/l10n/rust/fluent-ffi',
+    ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
