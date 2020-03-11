@@ -13,15 +13,17 @@
 
   let dwu = window.windowUtils;
 
-  function check(x, y, top, right, bottom, left, onlyVisible, list) {
+  function check(x, y, top, right, bottom, left, onlyVisible, list, aListIsComplete) {
     let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false, onlyVisible);
 
-    list.push(e.body);
-    list.push(e.html);
+    if (!aListIsComplete) {
+      list.push(e.body);
+      list.push(e.html);
+    }
 
     if (nodes.length != list.length) {
-      ok(false, "Different number of nodes for rect" +
-                "[" + x + "," + y + "], " +
+      ok(false, "Different number of nodes (" + nodes.length + " vs. " + list.length +
+                ") for rect [" + x + "," + y + "], " +
                 "[" + top + "," + right + "," + bottom + "," + left + "]");
       return;
     }
@@ -107,8 +109,19 @@
       check(x, y, 1, 1, 1, 1, true, []);
     }
 
-    done();
+    // Check elements behind opaque backgrounds of other elements don't show up
+    // in the list when aVisibleOnly = true.
+    {
+      let container = document.getElementById('obscured-test');
+      let fg = document.getElementById('obscured-test-foreground');
+      let bg = document.getElementById('obscured-test-background');
 
+      let [x, y] = getCenterFor(container);
+      check(x, y, 1, 1, 1, 1, false, [fg, bg, container]);
+      check(x, y, 1, 1, 1, 1, true, [fg], true);
+    }
+
+    done();
   }
 
   function getCenterFor(element) {
@@ -163,6 +176,28 @@ span {
   left: 0.5px;
   top: 50.5px;
 }
+
+#obscured-test {
+  position: relative;
+  width: 500px;
+  height: 500px;
+}
+
+#obscured-test-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: red;
+}
+
+#obscured-test-foreground {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: green;
+}
 </style>
 </head>
 <body id="body">
@@ -196,5 +231,10 @@ span {
   <div id="transf">text</div>
 
   <div id="opacity">text</div>
+
+  <div id="obscured-test">
+    <div id="obscured-test-background"></div>
+    <div id="obscured-test-foreground"></div>
+  </div>
 </body>
 </html>
