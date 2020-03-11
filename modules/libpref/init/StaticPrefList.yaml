@@ -1576,6 +1576,12 @@
   value: 5000
   mirror: always
 
+# Whether to try to compress touchmove events on IPC layer.
+- name: dom.events.compress.touchmove
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
