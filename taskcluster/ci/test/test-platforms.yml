@@ -31,7 +31,6 @@ linux1804-64/opt:
         - desktop-screenshot-capture
         - linux1804-tests
         - mochitest-headless
-        - mochitest-valgrind
         - web-platform-tests-1804
 
 linux1804-64/debug:
@@ -48,7 +47,6 @@ linux1804-64-shippable/opt:
         - linux1804-tests
         - marionette-headless
         - mochitest-headless
-        - mochitest-valgrind
         - web-platform-tests-1804
         - web-platform-tests-wdspec-headless
 
@@ -57,7 +55,6 @@ linux1804-64-devedition/opt:
     test-sets:
         - desktop-screenshot-capture
         - linux1804-tests
-        - mochitest-valgrind
         - web-platform-tests-1804
 
 linux1804-64-asan/opt:
@@ -102,13 +99,13 @@ linux1804-64-ccov/opt:
 linux64/debug:
     build-platform: linux64/debug
     test-sets:
-        - linux-common-tests
+        - linux1604-legacy-tests
         - web-platform-tests-1604
 
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
-        - linux-common-tests
+        - linux1604-legacy-tests
         - web-platform-tests-1604
         - talos
         - linux-talos-flex
@@ -119,7 +116,7 @@ linux64/opt:
 linux64-shippable/opt:
     build-platform: linux64-shippable/opt
     test-sets:
-        - linux-common-tests
+        - linux1604-legacy-tests
         - web-platform-tests-1604
         - talos
         - linux-talos-flex
@@ -136,14 +133,14 @@ linux64-shippable/opt:
 linux64-devedition/opt:
     build-platform: linux64-devedition/opt
     test-sets:
-        - linux-common-tests
+        - linux1604-legacy-tests
         - web-platform-tests-1604
 
 # TODO: use 'asan' label here, instead of -asan/opt
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
-        - linux-common-tests
+        - linux1604-legacy-tests
         - web-platform-tests-1604
 
 linux64-tsan/opt:
@@ -178,7 +175,7 @@ linux64-qr/debug:
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
-        - linux-common-tests
+        - linux1604-legacy-tests
         - web-platform-tests-1604
         - talos
 

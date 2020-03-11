@@ -335,7 +335,7 @@ desktop-screenshot-capture:
 linux32-tests:
     - web-platform-tests
 
-linux-common-tests:
+linux1604-legacy-tests:
     - marionette
 
 linux1804-tests:
