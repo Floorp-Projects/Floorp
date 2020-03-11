@@ -670,6 +670,8 @@ class ContentParent final
       bool aIsLeavingDocument, bool aAdjustWidget,
       bool aBrowsingContextToClearHandled,
       bool aAncestorBrowsingContextToFocusHandled);
+  mozilla::ipc::IPCResult RecvMaybeExitFullscreen(
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvWindowPostMessage(
       const MaybeDiscarded<BrowsingContext>& aContext,

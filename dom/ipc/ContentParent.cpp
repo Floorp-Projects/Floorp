@@ -6358,6 +6358,25 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvMaybeExitFullscreen(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    MOZ_LOG(
+        BrowsingContext::GetLog(), LogLevel::Debug,
+        ("ParentIPC: Trying to send a message to dead or detached context"));
+    return IPC_OK();
+  }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
+  Unused << cp->SendMaybeExitFullscreen(context);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const ClonedMessageData& aMessage, const PostMessageData& aData) {
