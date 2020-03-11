@@ -17,10 +17,34 @@ registerCleanupFunction(() => {
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 /**
- * Wait for a single requestAnimationFrame tick.
+ * Tick the event loop, and leave a gap of one requestAnimationFrame's (RAF) time.
+ * This is done by calling two requestAnimationFrames. This ensures that the test
+ * code will run after any RAF scheduled UI code for the tests.
+ *
+ * This gets around the following behavior:
+ *    -------RAF---------
+ *    ^                 |
+ *    |                 V
+ * [TEST][APP][RAF_1][TEST][APP]
+ *         |                 ^
+ *         V                 |
+ *         RAF----------------
+ *
+ * Two rafs ensure the test code runs after any scheduled app code.
+ *
+ * This gets around the following behavior:
+ *   --------DOUBLE-RAF-------------
+ *   ^                             |
+ *   |                             V
+ * [TEST][APP][RAF_1][APP][RAF_2][TEST]
+ *         |           ^
+ *         V           |
+ *         -----RAF-----
  */
 function tick() {
-  return new Promise(resolve => requestAnimationFrame(resolve));
+  return new Promise(resolve =>
+    requestAnimationFrame(() => requestAnimationFrame(resolve))
+  );
 }
 
 /**
@@ -617,4 +641,17 @@ function setupGetRecordingState(document) {
     throw new Error("Could not find the redux store on the window object.");
   }
   return () => selectors.getRecordingState(store.getState());
+}
+
+/**
+ * The profiler button adds a fill when it's active. This may need to be updated
+ * in the future if the visual indication changes.
+ */
+function profilerButtonIsVisiblyInactive() {
+  const button = document.getElementById("profiler-button");
+  return !button.style.fill;
+}
+
+function profilerButtonIsVisiblyActive() {
+  return !profilerButtonIsVisiblyInactive();
 }
