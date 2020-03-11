@@ -1,0 +1,33 @@
+build: false
+environment:
+  VENV: "%APPVEYOR_BUILD_FOLDER%\\venv"
+
+  matrix:
+    - TOXENV: py35-tests
+      PYTHON: "C:\\Python35"
+
+    - TOXENV: py35-tests
+      PYTHON: "C:\\Python35-x64"
+
+    - TOXENV: py36-tests
+      PYTHON: "C:\\Python36"
+
+    - TOXENV: py36-tests
+      PYTHON: "C:\\Python36-x64"
+
+    - TOXENV: py37-tests
+      PYTHON: "C:\\Python37"
+
+    - TOXENV: py37-tests
+      PYTHON: "C:\\Python37-x64"
+
+init:
+  - echo "TOXENV - %TOXENV%"
+
+install:
+  - ps: Update-AppveyorBuild -Version "v$(python setup.py --version) b$Env:APPVEYOR_BUILD_NUMBER"
+  - virtualenv -p "%PYTHON%\\python.exe" "%VENV%"
+  - "%VENV%\\Scripts\\pip install tox"
+
+test_script:
+  - "%VENV%\\Scripts\\tox"

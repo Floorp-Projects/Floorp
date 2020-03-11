@@ -1,0 +1,16 @@
+zipp>=0.5
+
+[:python_version < "3"]
+pathlib2
+contextlib2
+configparser>=3.5
+
+[docs]
+sphinx
+rst.linker
+
+[testing]
+packaging
+
+[testing:python_version < "3.7"]
+importlib_resources

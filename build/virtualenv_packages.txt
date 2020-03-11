@@ -27,7 +27,7 @@ python2:mozilla.pth:third_party/python/futures
 python3:mozilla.pth:third_party/python/glean_parser
 mozilla.pth:third_party/python/importlib_metadata
 mozilla.pth:third_party/python/iso8601
-mozilla.pth:third_party/python/Jinja2
+mozilla.pth:third_party/python/Jinja2/src
 mozilla.pth:third_party/python/jsonschema
 mozilla.pth:third_party/python/MarkupSafe/src
 mozilla.pth:third_party/python/mohawk
@@ -35,7 +35,7 @@ mozilla.pth:third_party/python/more-itertools
 mozilla.pth:third_party/python/mozilla-version
 mozilla.pth:third_party/python/pathlib2
 mozilla.pth:third_party/python/pathspec
-mozilla.pth:third_party/python/pep487
+mozilla.pth:third_party/python/pep487/lib
 mozilla.pth:third_party/python/gyp/pylib
 mozilla.pth:third_party/python/pyrsistent
 mozilla.pth:third_party/python/python-hglib
