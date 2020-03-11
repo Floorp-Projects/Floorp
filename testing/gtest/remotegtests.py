@@ -6,8 +6,7 @@
 
 from __future__ import with_statement
 
-from optparse import OptionParser
-
+import argparse
 import datetime
 import glob
 import os
@@ -314,55 +313,56 @@ class AppWaiter(object):
         return True
 
 
-class remoteGtestOptions(OptionParser):
+class remoteGtestOptions(argparse.ArgumentParser):
     def __init__(self):
-        OptionParser.__init__(self, usage="usage: %prog [options] test_filter")
-        self.add_option("--package",
-                        dest="package",
-                        default="org.mozilla.geckoview.test",
-                        help="Package name of test app.")
-        self.add_option("--adbpath",
-                        action="store",
-                        type=str,
-                        dest="adb_path",
-                        default="adb",
-                        help="Path to adb binary.")
-        self.add_option("--deviceSerial",
-                        action="store",
-                        type=str,
-                        dest="device_serial",
-                        help="adb serial number of remote device. This is required "
-                             "when more than one device is connected to the host. "
-                             "Use 'adb devices' to see connected devices. ")
-        self.add_option("--remoteTestRoot",
-                        action="store",
-                        type=str,
-                        dest="remote_test_root",
-                        help="Remote directory to use as test root "
-                             "(eg. /mnt/sdcard/tests or /data/local/tests).")
-        self.add_option("--libxul",
-                        action="store",
-                        type=str,
-                        dest="libxul_path",
-                        default=None,
-                        help="Path to gtest libxul.so.")
-        self.add_option("--symbols-path",
-                        dest="symbols_path",
-                        default=None,
-                        help="absolute path to directory containing breakpad "
-                             "symbols, or the URL of a zip file containing symbols")
-        self.add_option("--shuffle",
-                        action="store_true",
-                        default=False,
-                        help="Randomize the execution order of tests.")
-        self.add_option("--tests-path",
-                        default=None,
-                        help="Path to gtest directory containing test support files.")
-        self.add_option("--enable-webrender",
-                        action="store_true",
-                        dest="enable_webrender",
-                        default=False,
-                        help="Enable the WebRender compositor in Gecko.")
+        super(remoteGtestOptions, self).__init__(usage="usage: %prog [options] test_filter")
+        self.add_argument("--package",
+                          dest="package",
+                          default="org.mozilla.geckoview.test",
+                          help="Package name of test app.")
+        self.add_argument("--adbpath",
+                          action="store",
+                          type=str,
+                          dest="adb_path",
+                          default="adb",
+                          help="Path to adb binary.")
+        self.add_argument("--deviceSerial",
+                          action="store",
+                          type=str,
+                          dest="device_serial",
+                          help="adb serial number of remote device. This is required "
+                               "when more than one device is connected to the host. "
+                               "Use 'adb devices' to see connected devices. ")
+        self.add_argument("--remoteTestRoot",
+                          action="store",
+                          type=str,
+                          dest="remote_test_root",
+                          help="Remote directory to use as test root "
+                               "(eg. /mnt/sdcard/tests or /data/local/tests).")
+        self.add_argument("--libxul",
+                          action="store",
+                          type=str,
+                          dest="libxul_path",
+                          default=None,
+                          help="Path to gtest libxul.so.")
+        self.add_argument("--symbols-path",
+                          dest="symbols_path",
+                          default=None,
+                          help="absolute path to directory containing breakpad "
+                               "symbols, or the URL of a zip file containing symbols")
+        self.add_argument("--shuffle",
+                          action="store_true",
+                          default=False,
+                          help="Randomize the execution order of tests.")
+        self.add_argument("--tests-path",
+                          default=None,
+                          help="Path to gtest directory containing test support files.")
+        self.add_argument("--enable-webrender",
+                          action="store_true",
+                          dest="enable_webrender",
+                          default=False,
+                          help="Enable the WebRender compositor in Gecko.")
+        self.add_argument("args", nargs=argparse.REMAINDER)
 
 
 def update_mozinfo():
@@ -381,7 +381,8 @@ def update_mozinfo():
 
 def main():
     parser = remoteGtestOptions()
-    options, args = parser.parse_args()
+    options = parser.parse_args()
+    args = options.args
     if not options.libxul_path:
         parser.error("--libxul is required")
         sys.exit(1)
