@@ -7,6 +7,9 @@ const { GlobalManager } = ChromeUtils.import(
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 const NEWTAB_PRIVATE_ALLOWED = "browser.newtab.privateAllowed";
 const NEWTAB_EXTENSION_CONTROLLED = "browser.newtab.extensionControlled";
@@ -35,7 +38,7 @@ function verifyPrefSettings(controlled, allowed) {
 
   if (controlled) {
     ok(
-      aboutNewTabService.newTabURL.endsWith(NEWTAB_URI),
+      AboutNewTab.newTabURL.endsWith(NEWTAB_URI),
       "Newtab url is overridden by the extension."
     );
   }
