@@ -109,6 +109,8 @@ struct MOZ_STACK_CLASS GCThingList {
     MOZ_ASSERT(firstScopeIndex.isSome());
     return getScope(*firstScopeIndex);
   }
+
+  ScriptThingsVector stealGCThings() { return std::move(vector.get()); }
 };
 
 MOZ_MUST_USE bool EmitScriptThingsVector(JSContext* cx,
