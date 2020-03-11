@@ -25,6 +25,7 @@
 #include "Units.h"
 
 class nsDisplayItem;
+class nsPaintedDisplayItem;
 class nsDisplayTransform;
 
 #undef None
@@ -39,6 +40,7 @@ class CompositorWidget;
 
 namespace layers {
 class CompositorBridgeParent;
+class DisplayItemCache;
 class WebRenderBridgeParent;
 class RenderRootStateManager;
 struct RenderRootDisplayListData;
@@ -411,6 +413,7 @@ class DisplayListBuilder final {
  public:
   DisplayListBuilder(wr::PipelineId aId, const wr::LayoutSize& aContentSize,
                      size_t aCapacity = 0,
+                     layers::DisplayItemCache* aCache = nullptr,
                      RenderRoot aRenderRoot = RenderRoot::Default);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
@@ -432,6 +435,7 @@ class DisplayListBuilder final {
   bool HasSubBuilder(RenderRoot aRenderRoot);
   DisplayListBuilder& CreateSubBuilder(const wr::LayoutSize& aContentSize,
                                        size_t aCapacity,
+                                       layers::DisplayItemCache* aCache,
                                        RenderRoot aRenderRoot);
   DisplayListBuilder& SubBuilder(RenderRoot aRenderRoot);
 
@@ -622,10 +626,33 @@ class DisplayListBuilder final {
                      const wr::BorderRadius& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
-  void StartCachedItem(wr::ItemKey aKey);
-  bool EndCachedItem(wr::ItemKey aKey);
-  void ReuseItem(wr::ItemKey aKey);
-  void SetDisplayListCacheSize(const size_t aCacheSize);
+  /**
+   * Notifies the DisplayListBuilder that it can group together WR display items
+   * that are pushed until |CancelGroup()| or |FinishGroup()| call.
+   */
+  void StartGroup(nsPaintedDisplayItem* aItem);
+
+  /**
+   * Cancels grouping of the display items and discards all the display items
+   * pushed between the |StartGroup()| and |CancelGroup()| calls.
+   */
+  void CancelGroup();
+
+  /**
+   * Finishes the display item group. The group is stored in WebRender backend,
+   * and can be reused with |ReuseItem()|, if the Gecko display item is reused.
+   */
+  void FinishGroup();
+
+  /**
+   * Try to reuse the previously created WebRender display items for the given
+   * Gecko display item |aItem|.
+   * Returns true if the items were reused, otherwise returns false.
+   */
+  bool ReuseItem(nsPaintedDisplayItem* aItem);
+
+  void UpdateCacheState(const bool aPartialDisplayListBuildFailed);
+  void UpdateCacheSize();
 
   uint64_t CurrentClipChainId() const {
     return mCurrentSpaceAndClipChain.clip_chain;
@@ -731,6 +758,9 @@ class DisplayListBuilder final {
   nsTArray<wr::PipelineId> mRemotePipelineIds;
   RenderRoot mRenderRoot;
   bool mSendSubBuilderDisplayList;
+
+  layers::DisplayItemCache* mDisplayItemCache;
+  Maybe<uint16_t> mCurrentCacheSlot;
 
   friend class WebRenderAPI;
   friend class SpaceAndClipChainHelper;
