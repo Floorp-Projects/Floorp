@@ -36,6 +36,14 @@
 #endif
 
 #ifdef WR_VERTEX_SHADER
+    #ifdef SWGL
+        // Annotate a vertex attribute as being flat per each drawn primitive instance.
+        // SWGL can use this information to avoid redundantly loading the attribute in all SIMD lanes.
+        #define PER_INSTANCE flat
+    #else
+        #define PER_INSTANCE
+    #endif
+
     #define varying out
 #endif
 

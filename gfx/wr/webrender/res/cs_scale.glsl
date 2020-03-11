@@ -9,9 +9,9 @@ flat varying vec4 vUvRect;
 
 #ifdef WR_VERTEX_SHADER
 
-in vec4 aScaleTargetRect;
-in ivec4 aScaleSourceRect;
-in int aScaleSourceLayer;
+PER_INSTANCE in vec4 aScaleTargetRect;
+PER_INSTANCE in ivec4 aScaleSourceRect;
+PER_INSTANCE in int aScaleSourceLayer;
 
 void main(void) {
     RectWithSize src_rect = RectWithSize(vec2(aScaleSourceRect.xy), vec2(aScaleSourceRect.zw));
