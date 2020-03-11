@@ -59,8 +59,8 @@ class PluginFinder final : public nsIRunnable, public nsIAsyncShutdownBlocker {
 
   typedef std::function<void(
       bool /* aPluginsChanged */, RefPtr<nsPluginTag> /* aNewPlugins */,
-      nsTArray<mozilla::Pair<
-          bool, RefPtr<nsPluginTag>>>&) /* aBlocklistRequestPairs */>
+      nsTArray<
+          std::pair<bool, RefPtr<nsPluginTag>>>&) /* aBlocklistRequestPairs */>
       FoundPluginCallback;
   typedef std::function<void(bool /* aPluginsChanged */)> PluginChangeCallback;
 
@@ -109,7 +109,7 @@ class PluginFinder final : public nsIRunnable, public nsIAsyncShutdownBlocker {
   // if it's soft-blocked in the blocklist
   // The plugintag is a reference to the actual plugin whose blocklist state
   // needs checking.
-  nsTArray<mozilla::Pair<bool, RefPtr<nsPluginTag>>> mPluginBlocklistRequests;
+  nsTArray<std::pair<bool, RefPtr<nsPluginTag>>> mPluginBlocklistRequests;
 
   FoundPluginCallback mFoundPluginCallback;
   PluginChangeCallback mChangeCallback;

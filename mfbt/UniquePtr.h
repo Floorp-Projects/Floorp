@@ -13,8 +13,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/Pair.h"
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla {
@@ -194,7 +194,7 @@ class UniquePtr {
   typedef typename detail::PointerType<T, DeleterType>::Type Pointer;
 
  private:
-  Pair<Pointer, DeleterType> mTuple;
+  mozilla::CompactPair<Pointer, DeleterType> mTuple;
 
   Pointer& ptr() { return mTuple.first(); }
   const Pointer& ptr() const { return mTuple.first(); }
@@ -344,7 +344,7 @@ class UniquePtr<T[], D> {
   typedef D DeleterType;
 
  private:
-  Pair<Pointer, DeleterType> mTuple;
+  mozilla::CompactPair<Pointer, DeleterType> mTuple;
 
  public:
   /**

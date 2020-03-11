@@ -11,7 +11,6 @@
 
 #include "MediaEventSource.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Pair.h"
 #include "mozilla/camera/PCamerasChild.h"
 #include "mozilla/camera/PCamerasParent.h"
 #include "nsCOMPtr.h"

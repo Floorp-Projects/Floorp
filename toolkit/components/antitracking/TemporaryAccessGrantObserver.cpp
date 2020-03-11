@@ -36,8 +36,8 @@ void TemporaryAccessGrantObserver::Create(nsPermissionManager* aPM,
     sObservers = MakeUnique<ObserversTable>();
   }
   Unused << sObservers
-                ->LookupForAdd(MakePair(nsCOMPtr<nsIPrincipal>(aPrincipal),
-                                        nsCString(aType)))
+                ->LookupForAdd(std::make_pair(
+                    nsCOMPtr<nsIPrincipal>(aPrincipal), nsCString(aType)))
                 .OrInsert([&]() -> nsITimer* {
                   // Only create a new observer if we don't have a matching
                   // entry in our hashtable.
@@ -74,7 +74,7 @@ TemporaryAccessGrantObserver::Observe(nsISupports* aSubject, const char* aTopic,
     Unused << mPM->RemoveFromPrincipal(mPrincipal, mType);
 
     MOZ_ASSERT(sObservers);
-    sObservers->Remove(MakePair(mPrincipal, mType));
+    sObservers->Remove(std::make_pair(mPrincipal, mType));
   } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();

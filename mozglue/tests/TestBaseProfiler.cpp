@@ -32,6 +32,7 @@
 #include <atomic>
 #include <thread>
 #include <type_traits>
+#include <utility>
 
 using namespace mozilla;
 
@@ -899,10 +900,10 @@ void TestBlocksRingBufferAPI() {
           MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi4).isSome());
           MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi4)->CurrentBlockIndex() == bi4);
           MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi4)->ReadObject<uint32_t>() == 4);
-          return MakePair(aEW->CurrentBlockIndex(), aEW->BlockEndIndex());
+          return std::make_pair(aEW->CurrentBlockIndex(), aEW->BlockEndIndex());
         });
-    auto& bi5 = bi5_6.first();
-    auto& bi6 = bi5_6.second();
+    auto& bi5 = bi5_6.first;
+    auto& bi6 = bi5_6.second;
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15 (16)
     //  [4 |    int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ]
     VERIFY_START_END_PUSHED_CLEARED(11, 26, 5, 2);
