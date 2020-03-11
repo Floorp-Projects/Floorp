@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_AbstractScope_h
-#define frontend_AbstractScope_h
+#ifndef frontend_AbstractScopePtr_h
+#define frontend_AbstractScopePtr_h
 
 #include "mozilla/Variant.h"
 
@@ -37,9 +37,9 @@ using HeapPtrScope = HeapPtr<Scope*>;
 // This abstracts Scope* (and a future ScopeCreationData type used within the
 // frontend before the Scope is allocated)
 //
-// Because a AbstractScope may hold onto a Scope, it must be rooted if a GC may
-// occur to ensure that the scope is traced.
-class AbstractScope {
+// Because a AbstractScopePtr may hold onto a Scope, it must be rooted if a GC
+// may occur to ensure that the scope is traced.
+class AbstractScopePtr {
  public:
   // Used to hold index and the compilationInfo together to avoid having a
   // potentially nullable compilationInfo.
@@ -66,11 +66,11 @@ class AbstractScope {
   friend class js::Scope;
   friend class js::frontend::FunctionBox;
 
-  AbstractScope() = default;
+  AbstractScopePtr() = default;
 
-  explicit AbstractScope(Scope* scope) : scope_(HeapPtrScope(scope)) {}
+  explicit AbstractScopePtr(Scope* scope) : scope_(HeapPtrScope(scope)) {}
 
-  AbstractScope(frontend::CompilationInfo& compilationInfo, ScopeIndex scope)
+  AbstractScopePtr(frontend::CompilationInfo& compilationInfo, ScopeIndex scope)
       : scope_(Deferred{scope, compilationInfo}) {}
 
   bool isNullptr() const {
@@ -80,7 +80,7 @@ class AbstractScope {
     return scope_.as<HeapPtrScope>() == nullptr;
   }
 
-  // Return true if this AbstractScope represents a Scope, either existant
+  // Return true if this AbstractScopePtr represents a Scope, either existant
   // or to be reified. This indicates that queries can be executed on this
   // scope data. Returning false is the equivalent to a nullptr, and usually
   // indicates the end of the scope chain.
@@ -111,7 +111,7 @@ class AbstractScope {
   }
 
   ScopeKind kind() const;
-  AbstractScope enclosing() const;
+  AbstractScopePtr enclosing() const;
   bool hasEnvironment() const;
   uint32_t nextFrameSlot() const;
   // Valid iff is<FunctionScope>
@@ -119,7 +119,7 @@ class AbstractScope {
   JSFunction* canonicalFunction() const;
 
   bool hasOnChain(ScopeKind kind) const {
-    for (AbstractScope it = *this; it; it = it.enclosing()) {
+    for (AbstractScopePtr it = *this; it; it = it.enclosing()) {
       if (it.kind() == kind) {
         return true;
       }
@@ -130,25 +130,25 @@ class AbstractScope {
   void trace(JSTracer* trc);
 };
 
-// Specializations of AbstractScope::is
+// Specializations of AbstractScopePtr::is
 template <>
-inline bool AbstractScope::is<GlobalScope>() const {
+inline bool AbstractScopePtr::is<GlobalScope>() const {
   return !isNullptr() &&
          (kind() == ScopeKind::Global || kind() == ScopeKind::NonSyntactic);
 }
 
 template <>
-inline bool AbstractScope::is<EvalScope>() const {
+inline bool AbstractScopePtr::is<EvalScope>() const {
   return !isNullptr() &&
          (kind() == ScopeKind::Eval || kind() == ScopeKind::StrictEval);
 }
 
 // Iterate over abstract scopes rather than scopes.
-class AbstractScopeIter {
-  AbstractScope scope_;
+class AbstractScopePtrIter {
+  AbstractScopePtr scope_;
 
  public:
-  explicit AbstractScopeIter(const AbstractScope& f) : scope_(f) {}
+  explicit AbstractScopePtrIter(const AbstractScopePtr& f) : scope_(f) {}
   explicit operator bool() const { return !done(); }
 
   bool done() const { return !scope_; }
@@ -159,7 +159,7 @@ class AbstractScopeIter {
     return scope_.kind();
   }
 
-  AbstractScope abstractScope() const { return scope_; }
+  AbstractScopePtr abstractScopePtr() const { return scope_; }
 
   void operator++(int) {
     MOZ_ASSERT(!done());
@@ -182,8 +182,8 @@ class AbstractScopeIter {
 
 namespace JS {
 template <>
-struct GCPolicy<js::AbstractScope::Deferred>
-    : JS::IgnoreGCPolicy<js::AbstractScope::Deferred> {};
+struct GCPolicy<js::AbstractScopePtr::Deferred>
+    : JS::IgnoreGCPolicy<js::AbstractScopePtr::Deferred> {};
 }  // namespace JS
 
-#endif  // frontend_AbstractScope_h
+#endif  // frontend_AbstractScopePtr_h

@@ -63,7 +63,7 @@ struct MOZ_RAII CompilationInfo {
   // can be safely destroyed, rather than LifoAllocing them with the rest of
   // the parser data structures.
   //
-  // References to scopes are controlled via AbstractScope, which holds onto
+  // References to scopes are controlled via AbstractScopePtr, which holds onto
   // an index (and CompilationInfo reference).
   JS::RootedVector<ScopeCreationData> scopeCreationData;
 

@@ -29,7 +29,7 @@ if CONFIG['JS_ENABLE_SMOOSH']:
                   ])
 
 UNIFIED_SOURCES += [
-    'AbstractScope.cpp',
+    'AbstractScopePtr.cpp',
     'BCEScriptStencil.cpp',
     'BytecodeCompiler.cpp',
     'BytecodeControlStructures.cpp',
