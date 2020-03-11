@@ -75,14 +75,14 @@ class SmooshScriptStencil : public ScriptStencil {
   }
 
  public:
-  explicit SmooshScriptStencil(const SmooshResult& result,
+  explicit SmooshScriptStencil(JSContext* cx, const SmooshResult& result,
                                CompilationInfo& compilationInfo)
-      : result_(result), compilationInfo_(compilationInfo) {
+      : ScriptStencil(cx), result_(result), compilationInfo_(compilationInfo) {
     init();
   }
 
   virtual bool finishGCThings(JSContext* cx,
-                              mozilla::Span<JS::GCCellPtr> gcthings) const {
+                              mozilla::Span<JS::GCCellPtr> output) const {
     gcthings[0] = JS::GCCellPtr(&cx->global()->emptyGlobalScope());
     return true;
   }
@@ -227,7 +227,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   RootedScript script(cx,
                       JSScript::Create(cx, cx->global(), options, sso, extent));
 
-  SmooshScriptStencil stencil(smoosh, compilationInfo);
+  SmooshScriptStencil stencil(cx, smoosh, compilationInfo);
   if (!stencil.createAtoms(cx)) {
     return nullptr;
   }
