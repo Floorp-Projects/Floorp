@@ -4,6 +4,12 @@
 
 "use strict";
 
+/**
+ * This file tests both the AboutNewTab and nsIAboutNewTabService
+ * for its default URL values, as well as its behaviour when overriding
+ * the default URL values.
+ */
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -11,12 +17,18 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "aboutNewTabService",
   "@mozilla.org/browser/aboutnewtab-service;1",
   "nsIAboutNewTabService"
 );
+
+AboutNewTab.init();
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
@@ -29,7 +41,7 @@ const ACTIVITY_STREAM_DEBUG_PREF = "browser.newtabpage.activity-stream.debug";
 function cleanup() {
   Services.prefs.clearUserPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_DEBUG_PREF);
-  aboutNewTabService.resetNewTabURL();
+  AboutNewTab.resetNewTabURL();
 }
 
 registerCleanupFunction(cleanup);
@@ -65,13 +77,13 @@ function nextChangeNotificationPromise(aNewURL, testMessage) {
 
 function setPrivilegedContentProcessPref(usePrivilegedContentProcess) {
   if (
-    usePrivilegedContentProcess ===
-    Services.prefs.getBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF)
+    usePrivilegedContentProcess === AboutNewTab.privilegedAboutProcessEnabled
   ) {
     return Promise.resolve();
   }
 
   let notificationPromise = nextChangeNotificationPromise("about:newtab");
+
   Services.prefs.setBoolPref(
     SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF,
     usePrivilegedContentProcess
@@ -100,7 +112,7 @@ function setBoolPrefAndWaitForChange(pref, value, testMessage) {
     Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
       // jshint unused:false
       Services.obs.removeObserver(observer, aTopic);
-      Assert.equal(aData, aboutNewTabService.newTabURL, testMessage);
+      Assert.equal(aData, AboutNewTab.newTabURL, testMessage);
       resolve();
     }, "newtab-url-changed");
 
@@ -110,12 +122,12 @@ function setBoolPrefAndWaitForChange(pref, value, testMessage) {
 
 add_task(async function test_as_initial_values() {
   Assert.ok(
-    aboutNewTabService.activityStreamEnabled,
+    AboutNewTab.activityStreamEnabled,
     ".activityStreamEnabled should be set to the correct initial value"
   );
   // This pref isn't defined on release or beta, so we fall back to false
   Assert.equal(
-    aboutNewTabService.activityStreamDebug,
+    AboutNewTab.activityStreamDebug,
     Services.prefs.getBoolPref(ACTIVITY_STREAM_DEBUG_PREF, false),
     ".activityStreamDebug should be set to the correct initial value"
   );
@@ -127,43 +139,54 @@ add_task(async function test_as_initial_values() {
 add_task(async function test_override_activity_stream_disabled() {
   let notificationPromise;
 
+  Assert.ok(
+    !AboutNewTab.newTabURLOverridden,
+    "Newtab URL should not be overridden"
+  );
+  const ORIGINAL_URL = aboutNewTabService.defaultURL;
+
   // override with some remote URL
   let url = "http://example.com/";
   notificationPromise = nextChangeNotificationPromise(url);
-  aboutNewTabService.newTabURL = url;
+  AboutNewTab.newTabURL = url;
   await notificationPromise;
-  Assert.ok(aboutNewTabService.overridden, "Newtab URL should be overridden");
+  Assert.ok(AboutNewTab.newTabURLOverridden, "Newtab URL should be overridden");
   Assert.ok(
-    !aboutNewTabService.activityStreamEnabled,
+    !AboutNewTab.activityStreamEnabled,
     "Newtab activity stream should not be enabled"
   );
   Assert.equal(
-    aboutNewTabService.newTabURL,
+    AboutNewTab.newTabURL,
     url,
     "Newtab URL should be the custom URL"
+  );
+  Assert.equal(
+    aboutNewTabService.defaultURL,
+    ORIGINAL_URL,
+    "AboutNewTabService defaultURL is unchanged"
   );
 
   // test reset with activity stream disabled
   notificationPromise = nextChangeNotificationPromise("about:newtab");
-  aboutNewTabService.resetNewTabURL();
+  AboutNewTab.resetNewTabURL();
   await notificationPromise;
   Assert.ok(
-    !aboutNewTabService.overridden,
+    !AboutNewTab.newTabURLOverridden,
     "Newtab URL should not be overridden"
   );
   Assert.equal(
-    aboutNewTabService.newTabURL,
+    AboutNewTab.newTabURL,
     "about:newtab",
     "Newtab URL should be the default"
   );
 
   // test override to a chrome URL
   notificationPromise = nextChangeNotificationPromise(DOWNLOADS_URL);
-  aboutNewTabService.newTabURL = DOWNLOADS_URL;
+  AboutNewTab.newTabURL = DOWNLOADS_URL;
   await notificationPromise;
-  Assert.ok(aboutNewTabService.overridden, "Newtab URL should be overridden");
+  Assert.ok(AboutNewTab.newTabURLOverridden, "Newtab URL should be overridden");
   Assert.equal(
-    aboutNewTabService.newTabURL,
+    AboutNewTab.newTabURL,
     DOWNLOADS_URL,
     "Newtab URL should be the custom URL"
   );
@@ -179,20 +202,20 @@ addTestsWithPrivilegedContentProcessPref(
       "Newtab URL should be the default activity stream URL"
     );
     Assert.ok(
-      !aboutNewTabService.overridden,
+      !AboutNewTab.newTabURLOverridden,
       "Newtab URL should not be overridden"
     );
     Assert.ok(
-      aboutNewTabService.activityStreamEnabled,
+      AboutNewTab.activityStreamEnabled,
       "Activity Stream should be enabled"
     );
 
     // change to a chrome URL while activity stream is enabled
     let notificationPromise = nextChangeNotificationPromise(DOWNLOADS_URL);
-    aboutNewTabService.newTabURL = DOWNLOADS_URL;
+    AboutNewTab.newTabURL = DOWNLOADS_URL;
     await notificationPromise;
     Assert.equal(
-      aboutNewTabService.newTabURL,
+      AboutNewTab.newTabURL,
       DOWNLOADS_URL,
       "Newtab URL set to chrome url"
     );
@@ -201,9 +224,12 @@ addTestsWithPrivilegedContentProcessPref(
       ACTIVITY_STREAM_URL,
       "Newtab URL defaultURL still set to the default activity stream URL"
     );
-    Assert.ok(aboutNewTabService.overridden, "Newtab URL should be overridden");
     Assert.ok(
-      !aboutNewTabService.activityStreamEnabled,
+      AboutNewTab.newTabURLOverridden,
+      "Newtab URL should be overridden"
+    );
+    Assert.ok(
+      !AboutNewTab.activityStreamEnabled,
       "Activity Stream should not be enabled"
     );
 
@@ -226,7 +252,7 @@ addTestsWithPrivilegedContentProcessPref(async function test_default_url() {
       "A notification occurs after changing the debug pref to true"
     );
     Assert.equal(
-      aboutNewTabService.activityStreamDebug,
+      AboutNewTab.activityStreamDebug,
       true,
       "the .activityStreamDebug property is set to true"
     );
@@ -244,7 +270,7 @@ addTestsWithPrivilegedContentProcessPref(async function test_default_url() {
     Services.prefs.setBoolPref(ACTIVITY_STREAM_DEBUG_PREF, true);
 
     Assert.equal(
-      aboutNewTabService.activityStreamDebug,
+      AboutNewTab.activityStreamDebug,
       false,
       "the .activityStreamDebug property is remains false"
     );
@@ -294,7 +320,7 @@ addTestsWithPrivilegedContentProcessPref(async function test_welcome_url() {
 addTestsWithPrivilegedContentProcessPref(async function test_updates() {
   // Simulates a "cold-boot" situation, with some pref already set before testing a series
   // of changes.
-  aboutNewTabService.resetNewTabURL(); // need to set manually because pref notifs are off
+  AboutNewTab.resetNewTabURL(); // need to set manually because pref notifs are off
   let notificationPromise;
 
   // test update fires on override and reset
@@ -303,7 +329,7 @@ addTestsWithPrivilegedContentProcessPref(async function test_updates() {
     testURL,
     "a notification occurs on override"
   );
-  aboutNewTabService.newTabURL = testURL;
+  AboutNewTab.newTabURL = testURL;
   await notificationPromise;
 
   // from overridden to default
@@ -311,9 +337,9 @@ addTestsWithPrivilegedContentProcessPref(async function test_updates() {
     "about:newtab",
     "a notification occurs on reset"
   );
-  aboutNewTabService.resetNewTabURL();
+  AboutNewTab.resetNewTabURL();
   Assert.ok(
-    aboutNewTabService.activityStreamEnabled,
+    AboutNewTab.activityStreamEnabled,
     "Activity Stream should be enabled"
   );
   Assert.equal(
@@ -328,7 +354,7 @@ addTestsWithPrivilegedContentProcessPref(async function test_updates() {
     "about:newtab",
     "reset occurs"
   );
-  aboutNewTabService.resetNewTabURL();
+  AboutNewTab.resetNewTabURL();
   await notificationPromise;
 
   cleanup();

@@ -5,9 +5,10 @@
 // This test makes sure that the URL bar is focused when entering the private window.
 
 "use strict";
-let aboutNewTabService = Cc[
-  "@mozilla.org/browser/aboutnewtab-service;1"
-].getService(Ci.nsIAboutNewTabService);
+
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 function checkUrlbarFocus(win) {
   let urlbar = win.gURLBar;
@@ -34,14 +35,14 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  aboutNewTabService.newTabURL = "about:blank";
+  AboutNewTab.newTabURL = "about:blank";
   registerCleanupFunction(() => {
-    aboutNewTabService.resetNewTabURL();
+    AboutNewTab.resetNewTabURL();
   });
 
   let win = await openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 
-  aboutNewTabService.resetNewTabURL();
+  AboutNewTab.resetNewTabURL();
 });

@@ -15,7 +15,7 @@ ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNewTabStartupRecorder: "resource:///modules/AboutNewTabService.jsm",
+  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   NewTabPagePreloading: "resource:///modules/NewTabPagePreloading.jsm",
@@ -258,10 +258,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "nsIURIClassifier",
   ],
   Favicons: ["@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
-  gAboutNewTabService: [
-    "@mozilla.org/browser/aboutnewtab-service;1",
-    "nsIAboutNewTabService",
-  ],
   gDNSService: ["@mozilla.org/network/dns-service;1", "nsIDNSService"],
   gSerializationHelper: [
     "@mozilla.org/network/serialization-helper;1",
@@ -1920,11 +1916,6 @@ var gBrowserInit = {
       true
     );
 
-    // Get the service so that it initializes and registers listeners for new
-    // tab pages in order to be ready for any early-loading about:newtab pages,
-    // e.g., start/home page, command line / startup uris to load, sessionstore
-    gAboutNewTabService.QueryInterface(Ci.nsISupports);
-
     this._handleURIToLoad();
 
     Services.obs.addObserver(gIdentityHandler, "perm-changed");
@@ -2345,7 +2336,7 @@ var gBrowserInit = {
 
       // If the given URI is different from the homepage, we want to load it.
       if (uri != defaultArgs) {
-        AboutNewTabStartupRecorder.noteNonDefaultStartup();
+        AboutNewTab.noteNonDefaultStartup();
 
         if (uri instanceof Ci.nsIArray) {
           // Transform the nsIArray of nsISupportsString's into a JS Array of
