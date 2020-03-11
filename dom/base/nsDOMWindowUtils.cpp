@@ -1167,12 +1167,10 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
                                 float aLeftSize, bool aIgnoreRootScrollFrame,
                                 bool aFlushLayout, bool aOnlyVisible,
                                 nsINodeList** aReturn) {
-  nsCOMPtr<Document> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  nsSimpleContentList* list = new nsSimpleContentList(doc);
-  NS_ADDREF(list);
-  *aReturn = list;
+  auto list = MakeRefPtr<nsSimpleContentList>(doc);
 
   AutoTArray<RefPtr<nsINode>, 8> nodes;
   doc->NodesFromRect(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize,
@@ -1181,6 +1179,8 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
   for (auto& node : nodes) {
     list->AppendElement(node->AsContent());
   }
+
+  list.forget(aReturn);
   return NS_OK;
 }
 
