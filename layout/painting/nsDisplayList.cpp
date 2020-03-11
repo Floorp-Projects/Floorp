@@ -5188,8 +5188,10 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
     aBuilder.PushRectWithAnimation(r, r, !BackfaceIsHidden(),
                                    wr::ToColorF(ToDeviceColor(mColor)), &prop);
   } else {
+    aBuilder.StartGroup(this);
     aBuilder.PushRect(r, r, !BackfaceIsHidden(),
                       wr::ToColorF(ToDeviceColor(mColor)));
+    aBuilder.FinishGroup();
   }
 
   return true;
@@ -5543,7 +5545,9 @@ bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
 
   const wr::LayoutRect rect = wr::ToLayoutRect(devRect);
 
+  aBuilder.StartGroup(this);
   aBuilder.PushHitTest(rect, rect, !BackfaceIsHidden());
+  aBuilder.FinishGroup();
   aBuilder.ClearHitTestInfo();
 
   return true;

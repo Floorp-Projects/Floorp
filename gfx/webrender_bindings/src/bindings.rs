@@ -3554,29 +3554,26 @@ pub extern "C" fn wr_dp_push_box_shadow(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_start_cached_item(state: &mut WrState, key: ItemKey) {
-    debug_assert!(state.current_item_key.is_none(), "Nested item keys");
+pub extern "C" fn wr_dp_start_item_group(state: &mut WrState, key: ItemKey) {
     state.current_item_key = Some(key);
-
-    state.frame_builder.dl_builder.start_extra_data_chunk();
+    state.frame_builder.dl_builder.start_item_group(key);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_end_cached_item(state: &mut WrState, key: ItemKey) -> bool {
-    let _previous = state.current_item_key.take().expect("Nested item keys");
-    debug_assert!(_previous == key, "Item key changed during caching");
-
-    if !state.frame_builder.dl_builder.end_extra_data_chunk() {
-        return false;
-    }
-
-    state.frame_builder.dl_builder.push_reuse_item(key);
-    true
+pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState) {
+    state.current_item_key = None;
+    state.frame_builder.dl_builder.cancel_item_group();
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_reuse_item(state: &mut WrState, key: ItemKey) {
-    state.frame_builder.dl_builder.push_reuse_item(key);
+pub extern "C" fn wr_dp_finish_item_group(state: &mut WrState, key: ItemKey) -> bool {
+    state.current_item_key = None;
+    state.frame_builder.dl_builder.finish_item_group(key)
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_reuse_items(state: &mut WrState, key: ItemKey) {
+    state.frame_builder.dl_builder.push_reuse_items(key);
 }
 
 #[no_mangle]

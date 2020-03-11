@@ -28,7 +28,17 @@ class CacheStats {
   void Reset() { mCached = mReused = mTotal = 0; }
 
   void Print() {
-    printf("Cached: %zu, Reused: %zu, Total: %zu\n", mCached, mReused, mTotal);
+    static uint64_t avgC = 1;
+    static uint64_t avgR = 1;
+    static uint64_t avgT = 1;
+
+    avgC += mCached;
+    avgR += mReused;
+    avgT += mTotal;
+
+    printf("Cached: %zu (avg: %f), Reused: %zu (avg: %f), Total: %zu\n",
+           mCached, (double)avgC / (double)avgT, mReused,
+           (double)avgR / (double)avgT, mTotal);
   }
 
   void AddCached() { mCached++; }
@@ -52,9 +62,24 @@ class CacheStats {
  */
 class DisplayItemCache final {
  public:
-  DisplayItemCache() : mMaxCacheSize(0), mNextIndex(0) {}
+  DisplayItemCache();
 
-  bool IsEnabled() const { return mMaxCacheSize > 0; }
+  /**
+   * Returns true if display item caching is enabled, otherwise false.
+   */
+  bool IsEnabled() const { return mMaximumSize > 0; }
+
+  /**
+   * Returns true if there are no cached items, otherwise false.
+   */
+  bool IsEmpty() const { return mFreeSlots.Length() == CurrentSize(); }
+
+  /**
+   * Returns true if the cache has reached the maximum size, otherwise false.
+   */
+  bool IsFull() const {
+    return mFreeSlots.IsEmpty() && CurrentSize() == mMaximumSize;
+  }
 
   /**
    * Updates the cache state based on the given display list build information
@@ -69,69 +94,50 @@ class DisplayItemCache final {
   /**
    * Returns the current cache size.
    */
-  size_t CurrentCacheSize() const {
-    return IsEnabled() ? mCachedItemState.Length() : 0;
-  }
+  size_t CurrentSize() const { return mSlots.Length(); }
 
   /**
-   * Sets the initial and max cache size to given |aInitialSize| and |aMaxSize|.
-   *
-   * Currently the cache size is constant, but a good improvement would be to
-   * set the initial and maximum size based on the display list length.
+   * If there are free slots in the cache, assigns a cache slot to the given
+   * display item |aItem| and returns it. Otherwise returns Nothing().
    */
-  void SetCapacity(const size_t aInitialSize, const size_t aMaxSize) {
-    mMaxCacheSize = aMaxSize;
-    mCachedItemState.SetCapacity(aMaxSize);
-    mCachedItemState.SetLength(aInitialSize);
-    mFreeList.SetCapacity(aMaxSize);
-  }
+  Maybe<uint16_t> AssignSlot(nsPaintedDisplayItem* aItem);
 
   /**
-   * If the given display item |aItem| can be cached, update the cache state of
-   * the item and tell WR DisplayListBuilder |aBuilder| to cache WR display
-   * items until |EndCaching()| is called.
-   *
-   * If the display item cannot be cached, this function does nothing.
+   * Marks the slot with the given |slotIndex| occupied and used.
+   * Also stores the current space and clipchain |aSpaceAndClip|.
    */
-  void MaybeStartCaching(nsPaintedDisplayItem* aItem,
-                         wr::DisplayListBuilder& aBuilder);
+  void MarkSlotOccupied(uint16_t slotIndex,
+                        const wr::WrSpaceAndClipChain& aSpaceAndClip);
 
   /**
-   * Tell WR DisplayListBuilder |aBuilder| to stop caching WR display items.
-   *
-   * If the display item cannot be cached, this function does nothing.
+   * Returns the slot index of the the given display item |aItem|, if the item
+   * can be reused. The current space and clipchain |aSpaceAndClip| is used to
+   * check whether the cached item is still valid.
+   * If the item cannot be reused, returns Nothing().
    */
-  void MaybeEndCaching(wr::DisplayListBuilder& aBuilder);
-
-  /**
-   * If the given |aItem| has been cached, tell WR DisplayListBuilder |aBuilder|
-   * to reuse it.
-   * Returns true if the item was reused, otherwise returns false.
-   */
-  bool ReuseItem(nsPaintedDisplayItem* aItem, wr::DisplayListBuilder& aBuilder);
+  Maybe<uint16_t> CanReuseItem(nsPaintedDisplayItem* aItem,
+                               const wr::WrSpaceAndClipChain& aSpaceAndClip);
 
   CacheStats& Stats() { return mCacheStats; }
 
  private:
-  struct CacheEntry {
+  struct Slot {
+    Slot() : mSpaceAndClip{}, mOccupied(false), mUsed(false) {}
+
     wr::WrSpaceAndClipChain mSpaceAndClip;
-    bool mCached;
+    bool mOccupied;
     bool mUsed;
   };
 
-  Maybe<uint16_t> GetNextCacheIndex() {
-    if (mFreeList.IsEmpty()) {
-      return Nothing();
-    }
-
-    return Some(mFreeList.PopLastElement());
-  }
+  void ClearCache();
+  void FreeUnusedSlots();
+  bool GrowIfPossible();
+  Maybe<uint16_t> GetNextFreeSlot();
 
   /**
-   * Iterates through |mCachedItemState| and adds unused entries to free list.
-   * If |aAddAll| is true, adds every entry regardless of the state.
+   * Sets the initial and max cache size to given |aInitialSize| and |aMaxSize|.
    */
-  void PopulateFreeList(const bool aAddAll);
+  void SetCapacity(const size_t aInitialSize, const size_t aMaximumSize);
 
   /**
    * Returns true if the given |aPipelineId| is different from the previous one,
@@ -143,12 +149,11 @@ class DisplayItemCache final {
     return !isSame;
   }
 
-  nsTArray<CacheEntry> mCachedItemState;
-  nsTArray<uint16_t> mFreeList;
-  size_t mMaxCacheSize;
-  uint16_t mNextIndex;
-  Maybe<uint16_t> mCurrentIndex;
+  size_t mMaximumSize;
+  nsTArray<Slot> mSlots;
+  nsTArray<uint16_t> mFreeSlots;
   Maybe<wr::PipelineId> mPreviousPipelineId;
+  size_t mConsecutivePartialDisplayLists;
   CacheStats mCacheStats;
 };
 
