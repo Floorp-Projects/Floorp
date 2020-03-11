@@ -347,13 +347,6 @@ class ErrorReportMixin : public StrictModeGetter {
                                    UniquePtr<JSErrorNotes> notes,
                                    unsigned flags, unsigned errorNumber,
                                    va_list* args) {
-    if (options().werrorOption) {
-      flags &= ~JSREPORT_WARNING;
-      ReportCompileErrorLatin1(getContext(), std::move(metadata),
-                               std::move(notes), flags, errorNumber, args);
-      return false;
-    }
-
     return ReportCompileWarning(getContext(), std::move(metadata),
                                 std::move(notes), flags, errorNumber, args);
   }

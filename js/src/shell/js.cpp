@@ -967,7 +967,6 @@ static bool InitModuleLoader(JSContext* cx) {
   options.setFileAndLine("shell/ModuleLoader.js", 1);
   options.setSelfHostingMode(false);
   options.setForceFullParse();
-  options.werrorOption = true;
   options.setForceStrictMode();
 
   JS::SourceText<Utf8Unit> srcBuf;
@@ -1736,17 +1735,7 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsLiteral(opt, "werror")) {
-      // Disallow toggling werror when there are off-thread jobs, to avoid
-      // confusing CompileError::throwError.
-      ShellContext* sc = GetShellContext(cx);
-      if (!sc->offThreadJobs.empty()) {
-        JS_ReportErrorASCII(
-            cx, "can't toggle werror when there are off-thread jobs");
-        return false;
-      }
-      JS::ContextOptionsRef(cx).toggleWerror();
-    } else if (StringEqualsLiteral(opt, "throw_on_asmjs_validation_failure")) {
+    if (StringEqualsLiteral(opt, "throw_on_asmjs_validation_failure")) {
       JS::ContextOptionsRef(cx).toggleThrowOnAsmJSValidationFailure();
     } else if (StringEqualsLiteral(opt, "strict_mode")) {
       JS::ContextOptionsRef(cx).toggleStrictMode();
@@ -1758,7 +1747,8 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
       JS_ReportErrorASCII(cx,
                           "unknown option name %s."
-                          " The valid names are werror and strict_mode.",
+                          " The valid names are "
+                          "throw_on_asmjs_validation_failure and strict_mode.",
                           optChars.get());
       return false;
     }
@@ -1766,11 +1756,6 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars names = DuplicateString("");
   bool found = false;
-  if (names && oldContextOptions.werror()) {
-    names =
-        JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "werror");
-    found = true;
-  }
   if (names && oldContextOptions.throwOnAsmJSValidationFailure()) {
     names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "",
                               "throw_on_asmjs_validation_failure");

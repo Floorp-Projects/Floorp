@@ -36,7 +36,6 @@ class JS_PUBLIC_API ContextOptions {
         asyncStack_(true),
         throwOnDebuggeeWouldRun_(true),
         dumpStackOnDebuggeeWouldRun_(false),
-        werror_(false),
         strictMode_(false),
 #ifdef JS_ENABLE_SMOOSH
         trySmoosh_(false),
@@ -159,16 +158,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool werror() const { return werror_; }
-  ContextOptions& setWerror(bool flag) {
-    werror_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleWerror() {
-    werror_ = !werror_;
-    return *this;
-  }
-
   bool strictMode() const { return strictMode_; }
   ContextOptions& setStrictMode(bool flag) {
     strictMode_ = flag;
@@ -220,7 +209,6 @@ class JS_PUBLIC_API ContextOptions {
   bool asyncStack_ : 1;
   bool throwOnDebuggeeWouldRun_ : 1;
   bool dumpStackOnDebuggeeWouldRun_ : 1;
-  bool werror_ : 1;
   bool strictMode_ : 1;
 #ifdef JS_ENABLE_SMOOSH
   bool trySmoosh_ : 1;

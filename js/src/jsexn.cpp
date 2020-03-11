@@ -295,14 +295,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   const JSErrorFormatString* errorString = callback(userRef, errorNumber);
   JSExnType exnType =
       errorString ? static_cast<JSExnType>(errorString->exnType) : JSEXN_ERR;
-  MOZ_ASSERT(exnType < JSEXN_LIMIT);
-  MOZ_ASSERT(exnType != JSEXN_NOTE);
-
-  if (exnType == JSEXN_WARN) {
-    // werror must be enabled, so we use JSEXN_ERR.
-    MOZ_ASSERT(cx->options().werror());
-    exnType = JSEXN_ERR;
-  }
+  MOZ_ASSERT(exnType < JSEXN_ERROR_LIMIT);
 
   // Prevent infinite recursion.
   if (cx->generatingError) {
