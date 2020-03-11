@@ -264,10 +264,16 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
         KnowsCompositorVideo::TryCreateForIdentifier(*aIdentifier);
   }
 
+  RefPtr<layers::ImageContainer> container = new layers::ImageContainer();
+  if (mKnowsCompositor && XRE_IsRDDProcess()) {
+    // Ensure to allocate recycle allocator
+    container->EnsureRecycleAllocatorForRDD(mKnowsCompositor);
+  }
+
   CreateDecoderParams params(mVideoInfo);
   params.mTaskQueue = mDecodeTaskQueue;
   params.mKnowsCompositor = mKnowsCompositor;
-  params.mImageContainer = new layers::ImageContainer();
+  params.mImageContainer = container;
   params.mRate = CreateDecoderParams::VideoFrameRate(aFramerate);
   params.mOptions = aOptions;
   MediaResult error(NS_OK);

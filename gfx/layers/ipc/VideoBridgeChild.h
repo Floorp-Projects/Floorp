@@ -15,6 +15,8 @@
 namespace mozilla {
 namespace layers {
 
+class SynchronousTask;
+
 class VideoBridgeChild final : public PVideoBridgeChild,
                                public TextureForwarder {
  public:
@@ -69,6 +71,15 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
  protected:
   void HandleFatalError(const char* aMsg) const override;
+  bool DispatchAllocShmemInternal(size_t aSize,
+                                  SharedMemory::SharedMemoryType aType,
+                                  mozilla::ipc::Shmem* aShmem, bool aUnsafe);
+  void ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
+                          SharedMemory::SharedMemoryType aType,
+                          mozilla::ipc::Shmem* aShmem, bool aUnsafe,
+                          bool* aSuccess);
+  void ProxyDeallocShmemNow(SynchronousTask* aTask, mozilla::ipc::Shmem* aShmem,
+                            bool* aResult);
 
  private:
   VideoBridgeChild();

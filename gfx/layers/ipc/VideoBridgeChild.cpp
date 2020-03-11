@@ -8,6 +8,8 @@
 #include "VideoBridgeParent.h"
 #include "CompositorThread.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mtransport/runnable_utils.h"
+#include "SynchronousTask.h"
 
 namespace mozilla {
 namespace layers {
@@ -57,6 +59,15 @@ VideoBridgeChild* VideoBridgeChild::GetSingleton() { return sVideoBridge; }
 bool VideoBridgeChild::AllocUnsafeShmem(
     size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
     ipc::Shmem* aShmem) {
+  if (MessageLoop::current() != mMessageLoop) {
+    return DispatchAllocShmemInternal(aSize, aType, aShmem,
+                                      true);  // true: unsafe
+  }
+
+  if (!CanSend()) {
+    return false;
+  }
+
   return PVideoBridgeChild::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
@@ -67,8 +78,69 @@ bool VideoBridgeChild::AllocShmem(size_t aSize,
   return PVideoBridgeChild::AllocShmem(aSize, aType, aShmem);
 }
 
+void VideoBridgeChild::ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
+                                          SharedMemory::SharedMemoryType aType,
+                                          ipc::Shmem* aShmem, bool aUnsafe,
+                                          bool* aSuccess) {
+  AutoCompleteTask complete(aTask);
+
+  if (!CanSend()) {
+    return;
+  }
+
+  bool ok = false;
+  if (aUnsafe) {
+    ok = AllocUnsafeShmem(aSize, aType, aShmem);
+  } else {
+    ok = AllocShmem(aSize, aType, aShmem);
+  }
+  *aSuccess = ok;
+}
+
+bool VideoBridgeChild::DispatchAllocShmemInternal(
+    size_t aSize, SharedMemory::SharedMemoryType aType, ipc::Shmem* aShmem,
+    bool aUnsafe) {
+  SynchronousTask task("AllocatorProxy alloc");
+
+  bool success = false;
+  RefPtr<Runnable> runnable = WrapRunnable(
+      RefPtr<VideoBridgeChild>(this), &VideoBridgeChild::ProxyAllocShmemNow,
+      &task, aSize, aType, aShmem, aUnsafe, &success);
+  GetMessageLoop()->PostTask(runnable.forget());
+
+  task.Wait();
+
+  return success;
+}
+
+void VideoBridgeChild::ProxyDeallocShmemNow(SynchronousTask* aTask,
+                                            ipc::Shmem* aShmem, bool* aResult) {
+  AutoCompleteTask complete(aTask);
+
+  if (!CanSend()) {
+    return;
+  }
+  *aResult = DeallocShmem(*aShmem);
+}
+
 bool VideoBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
-  return PVideoBridgeChild::DeallocShmem(aShmem);
+  if (MessageLoop::current() == mMessageLoop) {
+    if (!CanSend()) {
+      return false;
+    }
+    return PVideoBridgeChild::DeallocShmem(aShmem);
+  }
+
+  SynchronousTask task("AllocatorProxy Dealloc");
+  bool result = false;
+
+  RefPtr<Runnable> runnable = WrapRunnable(
+      RefPtr<VideoBridgeChild>(this), &VideoBridgeChild::ProxyDeallocShmemNow,
+      &task, &aShmem, &result);
+  GetMessageLoop()->PostTask(runnable.forget());
+
+  task.Wait();
+  return result;
 }
 
 PTextureChild* VideoBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,

@@ -35,7 +35,9 @@ SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
 
 SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(
     TextureClientRecycleAllocator* aRecycleAllocator)
-    : mRecycleAllocator(aRecycleAllocator) {}
+    : mRecycleAllocator(aRecycleAllocator) {
+  MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
+}
 
 SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
   MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
