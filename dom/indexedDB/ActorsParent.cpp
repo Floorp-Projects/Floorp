@@ -6123,6 +6123,9 @@ class Database final
   mozilla::ipc::IPCResult RecvBlocked() override;
 
   mozilla::ipc::IPCResult RecvClose() override;
+
+  template <typename T>
+  static bool InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable);
 };
 
 class Database::StartTransactionOp final
@@ -13454,79 +13457,42 @@ Database::Database(RefPtr<Factory> aFactory,
   mDirectoryLockId = mDirectoryLock->Id();
 }
 
-void Database::Invalidate() {
+template <typename T>
+bool Database::InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable) {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper final {
-   public:
-    static bool InvalidateTransactions(
-        nsTHashtable<nsPtrHashKey<TransactionBase>>& aTable) {
-      AssertIsOnBackgroundThread();
+  const uint32_t count = aTable.Count();
+  if (!count) {
+    return true;
+  }
 
-      const uint32_t count = aTable.Count();
-      if (!count) {
-        return true;
-      }
+  FallibleTArray<RefPtr<T>> elementsToInvalidate;
+  if (NS_WARN_IF(!elementsToInvalidate.SetCapacity(count, fallible))) {
+    return false;
+  }
 
-      FallibleTArray<RefPtr<TransactionBase>> transactions;
-      if (NS_WARN_IF(!transactions.SetCapacity(count, fallible))) {
-        return false;
-      }
-
-      for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
-        if (NS_WARN_IF(
-                !transactions.AppendElement(iter.Get()->GetKey(), fallible))) {
-          return false;
-        }
-      }
-
-      if (count) {
-        IDB_REPORT_INTERNAL_ERR();
-
-        for (auto& transaction : transactions) {
-          MOZ_ASSERT(transaction);
-
-          transaction->Invalidate();
-        }
-      }
-
-      return true;
+  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+    if (NS_WARN_IF(!elementsToInvalidate.AppendElement(iter.Get()->GetKey(),
+                                                       fallible))) {
+      return false;
     }
+  }
 
-    static bool InvalidateMutableFiles(
-        nsTHashtable<nsPtrHashKey<MutableFile>>& aTable) {
-      AssertIsOnBackgroundThread();
+  if (count) {
+    IDB_REPORT_INTERNAL_ERR();
 
-      const uint32_t count = aTable.Count();
-      if (!count) {
-        return true;
-      }
+    for (const auto& elementToInvalidate : elementsToInvalidate) {
+      MOZ_ASSERT(elementToInvalidate);
 
-      FallibleTArray<RefPtr<MutableFile>> mutableFiles;
-      if (NS_WARN_IF(!mutableFiles.SetCapacity(count, fallible))) {
-        return false;
-      }
-
-      for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
-        if (NS_WARN_IF(
-                !mutableFiles.AppendElement(iter.Get()->GetKey(), fallible))) {
-          return false;
-        }
-      }
-
-      if (count) {
-        IDB_REPORT_INTERNAL_ERR();
-
-        for (auto& mutableFile : mutableFiles) {
-          MOZ_ASSERT(mutableFile);
-
-          mutableFile->Invalidate();
-        }
-      }
-
-      return true;
+      elementToInvalidate->Invalidate();
     }
-  };
+  }
+
+  return true;
+}
+
+void Database::Invalidate() {
+  AssertIsOnBackgroundThread();
 
   if (mInvalidated) {
     return;
@@ -13538,11 +13504,11 @@ void Database::Invalidate() {
     Unused << SendInvalidate();
   }
 
-  if (!Helper::InvalidateTransactions(mTransactions)) {
+  if (!InvalidateAll(mTransactions)) {
     NS_WARNING("Failed to abort all transactions!");
   }
 
-  if (!Helper::InvalidateMutableFiles(mMutableFiles)) {
+  if (!InvalidateAll(mMutableFiles)) {
     NS_WARNING("Failed to abort all mutable files!");
   }
 
