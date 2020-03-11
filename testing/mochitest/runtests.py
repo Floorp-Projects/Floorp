@@ -172,8 +172,11 @@ class MessageLogger(object):
         # Even if buffering is enabled, we only want to buffer messages between
         # TEST-START/TEST-END. So it is off to begin, but will be enabled after
         # a TEST-START comes in.
-        self.buffering = False
+        self._buffering = False
         self.restore_buffering = buffering
+
+        # Guard to ensure we never buffer if this value was initially `False`
+        self._buffering_initially_enabled = buffering
 
         # Message buffering
         self.buffered_messages = []
@@ -244,6 +247,16 @@ class MessageLogger(object):
             messages.append(message)
 
         return messages
+
+    @property
+    def buffering(self):
+        if not self._buffering_initially_enabled:
+            return False
+        return self._buffering
+
+    @buffering.setter
+    def buffering(self, val):
+        self._buffering = val
 
     def process_message(self, message):
         """Processes a structured message. Takes into account buffering, errors, ..."""
