@@ -39,7 +39,7 @@ class Key;
 class KeyPath;
 class IndexUpdateInfo;
 class ObjectStoreSpec;
-struct StructuredCloneReadInfo;
+struct StructuredCloneReadInfoChild;
 }  // namespace indexedDB
 
 class IDBObjectStore final : public nsISupports, public nsWrapperCache {
@@ -47,7 +47,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   typedef indexedDB::Key Key;
   typedef indexedDB::KeyPath KeyPath;
   typedef indexedDB::ObjectStoreSpec ObjectStoreSpec;
-  typedef indexedDB::StructuredCloneReadInfo StructuredCloneReadInfo;
+  typedef indexedDB::StructuredCloneReadInfoChild StructuredCloneReadInfoChild;
 
   // For AddOrPut() and DeleteInternal().
   // TODO Consider removing this, and making the functions public?
@@ -104,19 +104,11 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
                                     nsTArray<IndexUpdateInfo>* aUpdateInfoArray,
                                     ErrorResult* aRv);
 
-  static void DeserializeIndexValueToUpdateInfos(
-      int64_t aIndexID, const KeyPath& aKeyPath, bool aMultiEntry,
-      const nsCString& aLocale, StructuredCloneReadInfo& aCloneReadInfo,
-      nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv);
-
-  static void ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo);
+  static void ClearCloneReadInfo(indexedDB::StructuredCloneReadInfo& aReadInfo);
 
   static bool DeserializeValue(JSContext* aCx,
-                               StructuredCloneReadInfo&& aCloneReadInfo,
+                               StructuredCloneReadInfoChild&& aCloneReadInfo,
                                JS::MutableHandle<JS::Value> aValue);
-
-  static nsresult DeserializeUpgradeValueToFileIds(
-      StructuredCloneReadInfo& aCloneReadInfo, nsAString& aFileIds);
 
   static const JSClass* DummyPropClass() { return &sDummyPropJSClass; }
 
