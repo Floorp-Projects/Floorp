@@ -624,7 +624,7 @@ StorageType IDBDatabase::Storage() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mSpec);
 
-  return PersistenceTypeToStorage(mSpec->metadata().persistenceType());
+  return PersistenceTypeToStorageType(mSpec->metadata().persistenceType());
 }
 
 RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
