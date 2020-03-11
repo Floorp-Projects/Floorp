@@ -6,13 +6,13 @@
 
 #ifdef WR_VERTEX_SHADER
 
-in ivec2 aTransformIds;
-in ivec4 aClipDataResourceAddress;
-in vec2 aClipLocalPos;
-in vec4 aClipTileRect;
-in vec4 aClipDeviceArea;
-in vec4 aClipOrigins;
-in float aDevicePixelScale;
+PER_INSTANCE in ivec2 aTransformIds;
+PER_INSTANCE in ivec4 aClipDataResourceAddress;
+PER_INSTANCE in vec2 aClipLocalPos;
+PER_INSTANCE in vec4 aClipTileRect;
+PER_INSTANCE in vec4 aClipDeviceArea;
+PER_INSTANCE in vec4 aClipOrigins;
+PER_INSTANCE in float aDevicePixelScale;
 
 struct ClipMaskInstance {
     int clip_transform_id;
