@@ -143,6 +143,21 @@ struct JSTryNote {
 
   template <js::XDRMode mode>
   js::XDRResult XDR(js::XDRState<mode>* xdr);
+
+  bool isLoop() const {
+    switch (kind) {
+      case JSTRY_LOOP:
+      case JSTRY_FOR_IN:
+      case JSTRY_FOR_OF:
+        return true;
+      case JSTRY_CATCH:
+      case JSTRY_FINALLY:
+      case JSTRY_FOR_OF_ITERCLOSE:
+      case JSTRY_DESTRUCTURING:
+        return false;
+    }
+    MOZ_CRASH("Unexpected try note kind");
+  }
 };
 
 namespace js {
