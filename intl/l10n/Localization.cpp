@@ -181,7 +181,7 @@ uint32_t Localization::RemoveResourceIds(
 }
 
 already_AddRefed<Promise> Localization::FormatValue(
-    JSContext* aCx, const nsAString& aId, const Optional<L10nArgs>& aArgs,
+    JSContext* aCx, const nsACString& aId, const Optional<L10nArgs>& aArgs,
     ErrorResult& aRv) {
   JS::Rooted<JS::Value> args(aCx);
 
