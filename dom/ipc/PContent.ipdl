@@ -1628,6 +1628,7 @@ child:
     async SetupFocusedAndActive(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
                                 MaybeDiscardedBrowsingContext aActiveBrowsingContext);
 both:
+    async MaybeExitFullscreen(MaybeDiscardedBrowsingContext aContext);
     async WindowPostMessage(MaybeDiscardedBrowsingContext aContext,
                             ClonedMessageData aMessage,
                             PostMessageData aData);

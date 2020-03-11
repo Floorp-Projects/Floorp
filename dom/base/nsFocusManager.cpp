@@ -1404,13 +1404,28 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   if (StaticPrefs::full_screen_api_exit_on_windowRaise() &&
       !isElementInActiveWindow &&
       aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
-    // TODO mActiveWindow in content process
-    if (Document* doc = mActiveWindow ? mActiveWindow->GetDoc() : nullptr) {
-      if (doc->GetFullscreenElement()) {
-        if (XRE_IsParentProcess()) {
+    if (XRE_IsParentProcess()) {
+      if (Document* doc = mActiveWindow ? mActiveWindow->GetDoc() : nullptr) {
+        if (doc->GetFullscreenElement()) {
           LogWarningFullscreenWindowRaise(mFocusedElement);
+          Document::AsyncExitFullscreen(doc);
         }
-        Document::AsyncExitFullscreen(doc);
+      }
+    } else {
+      BrowsingContext* activeBrowsingContext = GetActiveBrowsingContext();
+      if (activeBrowsingContext) {
+        nsIDocShell* shell = activeBrowsingContext->GetDocShell();
+        if (shell) {
+          Document* doc = shell->GetDocument();
+          if (doc && doc->GetFullscreenElement()) {
+            Document::AsyncExitFullscreen(doc);
+          }
+        } else {
+          mozilla::dom::ContentChild* contentChild =
+              mozilla::dom::ContentChild::GetSingleton();
+          MOZ_ASSERT(contentChild);
+          contentChild->SendMaybeExitFullscreen(activeBrowsingContext);
+        }
       }
     }
   }
