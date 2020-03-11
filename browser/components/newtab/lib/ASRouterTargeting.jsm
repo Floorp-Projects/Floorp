@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -564,6 +565,9 @@ const TargetingGetters = {
         .getCharPref(DISTRIBUTION_ID_PREF, "default") ===
       DISTRIBUTION_ID_CHINA_REPACK
     );
+  },
+  get userId() {
+    return ClientEnvironment.userId;
   },
 };
 
