@@ -12,7 +12,6 @@ use crate::internal_types::{FastHashMap, LayerIndex, RenderTargetInfo, Swizzle, 
 use crate::util::round_up_to_multiple;
 use crate::profiler;
 use log::Level;
-use sha2::{Digest, Sha256};
 use smallvec::SmallVec;
 use std::{
     borrow::Cow,
@@ -759,6 +758,7 @@ impl ProgramSourceInfo {
         name: &'static str,
         features: String,
     ) -> Self {
+
         // Compute the digest. Assuming the device has a `ProgramCache`, this
         // will always be needed, whereas the source is rarely needed. As such,
         // we compute the hash by walking the static strings in the same order
@@ -771,14 +771,17 @@ impl ProgramSourceInfo {
         // we precompute the digest of the expanded source file at build time,
         // and then just hash that digest here.
 
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::Hasher;
+
         // Setup.
-        let mut hasher = Sha256::new();
+        let mut hasher = DefaultHasher::new();
         let version_str = get_shader_version(&*device.gl());
         let override_path = device.resource_override_path.as_ref();
         let source_and_digest = SHADERS.get(&name).expect("Shader not found");
 
         // Hash the renderer name.
-        hasher.input(device.renderer_name.as_bytes());
+        hasher.write(device.renderer_name.as_bytes());
 
         // Hash the prefix string.
         build_shader_prefix_string(
@@ -786,20 +789,20 @@ impl ProgramSourceInfo {
             &features,
             &"DUMMY",
             &name,
-            &mut |s| hasher.input(s.as_bytes()),
+            &mut |s| hasher.write(s.as_bytes()),
         );
 
         // Hash the shader file contents. We use a precomputed digest, and
         // verify it in debug builds.
         if override_path.is_some() || cfg!(debug_assertions) {
-            let mut h = Sha256::new();
-            build_shader_main_string(&name, override_path, &mut |s| h.input(s.as_bytes()));
+            let mut h = DefaultHasher::new();
+            build_shader_main_string(&name, override_path, &mut |s| h.write(s.as_bytes()));
             let d: ProgramSourceDigest = h.into();
             let digest = format!("{}", d);
             debug_assert!(override_path.is_some() || digest == source_and_digest.digest);
-            hasher.input(digest.as_bytes());
+            hasher.write(digest.as_bytes());
         } else {
-            hasher.input(source_and_digest.digest.as_bytes());
+            hasher.write(source_and_digest.digest.as_bytes());
         };
 
         // Finish.

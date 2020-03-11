@@ -7,31 +7,27 @@
 //! This module is used during precompilation (build.rs) and regular compilation,
 //! so it has minimal dependencies.
 
-pub use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashSet;
+use std::collections::hash_map::DefaultHasher;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Default)]
 #[cfg_attr(feature = "serialize_program", derive(Deserialize, Serialize))]
-pub struct ProgramSourceDigest([u8; 32]);
+pub struct ProgramSourceDigest(u64);
 
 impl ::std::fmt::Display for ProgramSourceDigest {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        for byte in self.0.iter() {
-            f.write_fmt(format_args!("{:02x}", byte))?;
-        }
-        Ok(())
+        write!(f, "{:02x}", self.0)
     }
 }
 
-impl From<Sha256> for ProgramSourceDigest {
-    fn from(hasher: Sha256) -> Self {
-        let mut digest = Self::default();
-        digest.0.copy_from_slice(hasher.result().as_slice());
-        digest
+impl From<DefaultHasher> for ProgramSourceDigest {
+    fn from(hasher: DefaultHasher) -> Self {
+        use std::hash::Hasher;
+        ProgramSourceDigest(hasher.finish())
     }
 }
 
