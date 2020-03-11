@@ -182,6 +182,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             'fuchsia-zircon',
             'fuchsia-zircon-sys',
             'fuchsia-cprng',
+            'glsl',
         ]
     }
 
