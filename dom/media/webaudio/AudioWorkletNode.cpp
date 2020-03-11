@@ -582,14 +582,14 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     ErrorResult& aRv) {
   /**
    * 1. If nodeName does not exist as a key in the BaseAudioContext’s node
-   *    name to parameter descriptor map, throw a NotSupportedError exception
+   *    name to parameter descriptor map, throw a InvalidStateError exception
    *    and abort these steps.
    */
   const AudioParamDescriptorMap* parameterDescriptors =
       aAudioContext.GetParamMapForWorkletName(aName);
   if (!parameterDescriptors) {
     // Not using nsPrintfCString in case aName has embedded nulls.
-    aRv.ThrowNotSupportedError(
+    aRv.ThrowInvalidStateError(
         NS_LITERAL_CSTRING("Unknown AudioWorklet name '") +
         NS_ConvertUTF16toUTF8(aName) + NS_LITERAL_CSTRING("'"));
     return nullptr;
