@@ -1715,9 +1715,9 @@ dependencies = [
 
 [[package]]
 name = "gleam"
-version = "0.9.2"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "332d1f4e6c6181ed07178f84a552b2387d43ecf6821a86c22cfb3883ea3fb1b9"
+checksum = "77b1fd76468fff720bad31016688b805c6442ebf2d7c29123e10e4984aa61986"
 dependencies = [
  "gl_generator",
 ]
@@ -1757,6 +1757,22 @@ name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
+
+[[package]]
+name = "glsl"
+version = "4.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "766443890761b3c4edcce86cafaac97971b200662fbdd0446eb7c6b99b4401ea"
+dependencies = [
+ "nom",
+]
+
+[[package]]
+name = "glsl-to-cxx"
+version = "0.1.0"
+dependencies = [
+ "glsl",
+]
 
 [[package]]
 name = "goblin"
@@ -4138,6 +4154,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c666f0fed8e1e20e057af770af9077d72f3d5a33157b8537c1475dd8ffd6d32b"
 
 [[package]]
+name = "swgl"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "gleam",
+ "glsl-to-cxx",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4845,6 +4870,7 @@ dependencies = [
  "nsstring",
  "num_cpus",
  "rayon",
+ "swgl",
  "thin-vec",
  "thread_profiler",
  "uuid",
