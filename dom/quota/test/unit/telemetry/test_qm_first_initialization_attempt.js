@@ -10,6 +10,8 @@ const { TelemetryTestUtils } = Cu.import(
 
 const storageDirName = "storage";
 const storageFileName = "storage.sqlite";
+const indexedDBDirName = "indexedDB";
+const persistentStorageDirName = "storage/persistent";
 const histogramName = "QM_FIRST_INITIALIZATION_ATTEMPT";
 
 const testcases = [
@@ -450,6 +452,112 @@ const testcases = [
     },
   },
   {
+    mainKey: "UpgradeFromIndexedDBDirectory",
+    async setup(expectedInitResult) {
+      const indexedDBDir = getRelativeFile(indexedDBDirName);
+      indexedDBDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+
+      if (!expectedInitResult) {
+        // "indexedDB" directory will be moved under "storage" directory and at
+        // the same time renamed to "persistent". Create a storage file to cause
+        // the moves to fail.
+        const storageFile = getRelativeFile(storageDirName);
+        storageFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
+      }
+    },
+    initFunction: init,
+    expectedSnapshots: {
+      initFailure: {
+        // mainKey
+        UpgradeFromIndexedDBDirectory: {
+          values: [1, 0],
+        },
+        Storage: {
+          values: [1, 0],
+        },
+      },
+      initFailureThenSuccess: {
+        // mainKey
+        UpgradeFromIndexedDBDirectory: {
+          values: [1, 1, 0],
+        },
+        UpgradeFromPersistentStorageDirectory: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom0_0To1_0: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom1_0To2_0: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom2_0To2_1: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom2_1To2_2: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom2_2To2_3: {
+          values: [0, 1, 0],
+        },
+        Storage: {
+          values: [1, 1, 0],
+        },
+      },
+    },
+  },
+  {
+    mainKey: "UpgradeFromPersistentStorageDirectory",
+    async setup(expectedInitResult) {
+      const persistentStorageDir = getRelativeFile(persistentStorageDirName);
+      persistentStorageDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+
+      if (!expectedInitResult) {
+        // Create a metadata directory to break creating or upgrading directory
+        // metadata files.
+        const metadataDir = getRelativeFile(
+          "storage/persistent/https+++bad.example.com/.metadata"
+        );
+        metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+      }
+    },
+    initFunction: init,
+    expectedSnapshots: {
+      initFailure: {
+        // mainKey
+        UpgradeFromPersistentStorageDirectory: {
+          values: [1, 0],
+        },
+        Storage: {
+          values: [1, 0],
+        },
+      },
+      initFailureThenSuccess: {
+        // mainKey
+        UpgradeFromPersistentStorageDirectory: {
+          values: [1, 1, 0],
+        },
+        UpgradeStorageFrom0_0To1_0: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom1_0To2_0: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom2_0To2_1: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom2_1To2_2: {
+          values: [0, 1, 0],
+        },
+        UpgradeStorageFrom2_2To2_3: {
+          values: [0, 1, 0],
+        },
+        Storage: {
+          values: [1, 1, 0],
+        },
+      },
+    },
+  },
+  {
     mainKey: "PersistentOrigin",
     async setup(expectedInitResult) {
       if (!expectedInitResult) {
@@ -697,6 +805,11 @@ async function testSteps() {
       // call reset and clear profile manually.
       request = reset();
       await requestFinished(request);
+
+      const indexedDBDir = getRelativeFile(indexedDBDirName);
+      if (indexedDBDir.exists()) {
+        indexedDBDir.remove(false);
+      }
 
       const storageDir = getRelativeFile(storageDirName);
       if (storageDir.exists()) {
