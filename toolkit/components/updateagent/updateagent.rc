@@ -1,3 +1,0 @@
-#include <winresrc.h>
-
-1 RT_MANIFEST "updateagent.exe.manifest"
