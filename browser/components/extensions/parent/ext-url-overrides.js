@@ -18,12 +18,10 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
-
-XPCOMUtils.defineLazyServiceGetter(
+ChromeUtils.defineModuleGetter(
   this,
-  "aboutNewTabService",
-  "@mozilla.org/browser/aboutnewtab-service;1",
-  "nsIAboutNewTabService"
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
 );
 
 const STORE_TYPE = "url_overrides";
@@ -44,10 +42,10 @@ XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
     learnMoreMessageId: "newTabControlled.learnMore",
     learnMoreLink: "extension-home",
     onObserverAdded() {
-      aboutNewTabService.willNotifyUser = true;
+      AboutNewTab.willNotifyUser = true;
     },
     onObserverRemoved() {
-      aboutNewTabService.willNotifyUser = false;
+      AboutNewTab.willNotifyUser = false;
     },
     async beforeDisableAddon(popup, win) {
       // ExtensionControlledPopup will disable the add-on once this function completes.
@@ -62,7 +60,7 @@ XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
       Services.obs.addObserver(
         {
           async observe() {
-            await replaceUrlInTab(gBrowser, tab, aboutNewTabService.newTabURL);
+            await replaceUrlInTab(gBrowser, tab, AboutNewTab.newTabURL);
             // Now that the New Tab is loading, try to open the popup again. This
             // will only open the popup if a new extension is controlling the New Tab.
             popup.open();
@@ -90,7 +88,7 @@ function setNewTabURL(extensionId, url) {
     Services.prefs.clearUserPref(NEW_TAB_EXTENSION_CONTROLLED);
   }
   if (url) {
-    aboutNewTabService.newTabURL = url;
+    AboutNewTab.newTabURL = url;
   }
 }
 
@@ -168,7 +166,7 @@ this.urlOverrides = class extends ExtensionAPI {
         STORE_TYPE,
         NEW_TAB_SETTING_NAME,
         url,
-        () => aboutNewTabService.newTabURL
+        () => AboutNewTab.newTabURL
       );
 
       // Set the newTabURL to the current value of the setting.
