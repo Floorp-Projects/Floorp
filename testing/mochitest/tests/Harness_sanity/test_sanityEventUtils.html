@@ -94,12 +94,13 @@ function starttest() {
       //focus trick enables us to run this in iframes
       $("textBoxA").addEventListener("focus", function (aEvent) {
         check = false;
-        $("textBoxA").addEventListener("click", function() { check = true; });
+        $("textBoxA").addEventListener("click", function() { check = true; }, { once: true });
         synthesizeMouseAtCenter($("textBoxA"), {});
         is(check, true, 'synthesizeMouse should dispatch mouse event');
 
         check = false;
-        synthesizeMouseExpectEvent($("textBoxA"), 1, 1, {}, $("textBoxA"), "click", "synthesizeMouseExpectEvent should fire click event");
+        $("scrollB").addEventListener("click", function() { check = true; }, { once: true });
+        synthesizeMouseExpectEvent($("scrollB"), 1, 1, {}, $("scrollB"), "click", "synthesizeMouseExpectEvent should fire click event");
         is(check, true, 'synthesizeMouse should dispatch mouse event');
       }, {once: true});
       $("textBoxA").focus();
