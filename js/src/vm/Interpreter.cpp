@@ -3382,16 +3382,17 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(SetAliasedVar)
 
-    CASE(ThrowSetConst) {
-      ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, script, REGS.pc);
+    CASE(ThrowSetConst)
+    CASE(ThrowSetAliasedConst)
+    CASE(ThrowSetCallee) {
+      ReportRuntimeConstAssignment(cx, script, REGS.pc);
       goto error;
     }
     END_CASE(ThrowSetConst)
 
     CASE(CheckLexical) {
       if (REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
-        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, script,
-                                  REGS.pc);
+        ReportUninitializedLexical(cx, script, REGS.pc);
         goto error;
       }
     }
@@ -5258,11 +5259,24 @@ void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                    HandleScript script, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckLexical ||
-             JSOp(*pc) == JSOp::ThrowSetConst || JSOp(*pc) == JSOp::GetImport);
-  MOZ_ASSERT(IsAtomOp(JSOp(*pc)));
+  JSOp op = JSOp(*pc);
+  MOZ_ASSERT(op == JSOp::CheckLexical || op == JSOp::ThrowSetConst ||
+             op == JSOp::ThrowSetAliasedConst || op == JSOp::ThrowSetCallee ||
+             op == JSOp::GetImport);
 
-  RootedPropertyName name(cx, script->getName(pc));
+  RootedPropertyName name(cx);
+
+  if (op == JSOp::ThrowSetCallee) {
+    name = script->function()->explicitName()->asPropertyName();
+  } else if (IsLocalOp(op)) {
+    name = FrameSlotName(script, pc)->asPropertyName();
+  } else if (IsAtomOp(op)) {
+    name = script->getName(pc);
+  } else {
+    MOZ_ASSERT(IsAliasedVarOp(op));
+    name = EnvironmentCoordinateNameSlow(script, pc);
+  }
+
   ReportRuntimeLexicalError(cx, errorNumber, name);
 }
 
