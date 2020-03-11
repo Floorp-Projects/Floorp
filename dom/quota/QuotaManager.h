@@ -505,10 +505,11 @@ class QuotaManager final : public BackgroundThreadObject {
       PersistenceType aPersistenceType, const nsACString& aGroup,
       const nsACString& aOrigin);
 
-  nsresult MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory();
+  nsresult UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
+      nsIFile* aIndexedDBDir);
 
-  nsresult
-  MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory();
+  nsresult UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
+      nsIFile* aPersistentStorageDir);
 
   template <typename Helper>
   nsresult UpgradeStorage(const int32_t aOldVersion, const int32_t aNewVersion,
