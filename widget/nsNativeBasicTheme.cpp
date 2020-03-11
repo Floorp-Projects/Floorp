@@ -68,6 +68,9 @@ static const sRGBColor sButtonActiveColor(sRGBColor(0.88f, 0.88f, 0.90f));
 static const sRGBColor sWhiteColor(sRGBColor(1.0f, 1.0f, 1.0f, 0.0f));
 
 static const CSSIntCoord kMinimumWidgetSize = 17;
+static const CSSCoord kButtonBorderWidth = 1.0f;
+static const CSSCoord kMenulistBorderWidth = 1.0f;
+static const CSSCoord kTextFieldBorderWidth = 1.0f;
 
 }  // namespace widget
 }  // namespace mozilla
@@ -304,11 +307,10 @@ static void PaintTextField(DrawTarget* aDrawTarget, const Rect& aRect,
       isDisabled ? sDisabledColor : sBackgroundColor;
   const sRGBColor& borderColor = isHovered ? sBorderHoverColor : sBorderColor;
 
-  const CSSCoord kBorderWidth = 1.0f;
   const CSSCoord kRadius = 4.0f;
 
   PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kBorderWidth, kRadius, aDpi);
+                             kTextFieldBorderWidth, kRadius, aDpi);
 }
 
 std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
@@ -341,14 +343,13 @@ std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
 
 static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
                           const EventStates& aState, uint32_t aDpi) {
-  const CSSCoord kBorderWidth = 1.0f;
   const CSSCoord kRadius = 4.0f;
 
   sRGBColor backgroundColor, borderColor;
   std::tie(backgroundColor, borderColor) = ComputeButtonColors(aState);
 
   PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kBorderWidth, kRadius, aDpi);
+                             kMenulistBorderWidth, kRadius, aDpi);
 }
 
 static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -559,7 +560,6 @@ static void PaintScrollbarbutton(DrawTarget* aDrawTarget,
 static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                         const Rect& aRect, const EventStates& aState,
                         uint32_t aDpi) {
-  const CSSCoord kBorderWidth = 1.0f;
   const CSSCoord kRadius = 4.0f;
 
   // FIXME: The DateTimeResetButton bit feels like a bit of a hack.
@@ -568,7 +568,7 @@ static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
       ComputeButtonColors(aState, IsDateTimeResetButton(aFrame));
 
   PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kBorderWidth, kRadius, aDpi);
+                             kButtonBorderWidth, kRadius, aDpi);
 }
 
 static void PaintRangeThumb(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -697,7 +697,28 @@ aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
 
 LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  return LayoutDeviceIntMargin();
+  uint32_t dpi = GetDPIRatio(aFrame);
+  switch (aAppearance) {
+    case StyleAppearance::Textfield:
+    case StyleAppearance::Textarea:
+    case StyleAppearance::NumberInput: {
+      const LayoutDeviceIntCoord w = kTextFieldBorderWidth * dpi;
+      return LayoutDeviceIntMargin(w, w, w, w);
+    }
+    case StyleAppearance::Listbox:
+    case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::MenulistTextfield: {
+      const LayoutDeviceIntCoord w = kMenulistBorderWidth * dpi;
+      return LayoutDeviceIntMargin(w, w, w, w);
+    }
+    case StyleAppearance::Button: {
+      const LayoutDeviceIntCoord w = kButtonBorderWidth * dpi;
+      return LayoutDeviceIntMargin(w, w, w, w);
+    }
+    default:
+      return LayoutDeviceIntMargin();
+  }
 }
 
 bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
@@ -733,17 +754,17 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
-      aResult->SizeTo(7 * dpi, 8 * dpi, 7 * dpi, 8 * dpi);
+      aResult->SizeTo(6 * dpi, 7 * dpi, 6 * dpi, 7 * dpi);
       return true;
     case StyleAppearance::Button:
-      aResult->SizeTo(7 * dpi, 22 * dpi, 7 * dpi, 22 * dpi);
+      aResult->SizeTo(6 * dpi, 21 * dpi, 6 * dpi, 21 * dpi);
       return true;
     case StyleAppearance::Textfield:
       if (IsDateTimeTextField(aFrame)) {
-        aResult->SizeTo(8 * dpi, 8 * dpi, 6 * dpi, 8 * dpi);
+        aResult->SizeTo(7 * dpi, 7 * dpi, 5 * dpi, 7 * dpi);
         return true;
       }
-      aResult->SizeTo(7 * dpi, 8 * dpi, 7 * dpi, 8 * dpi);
+      aResult->SizeTo(6 * dpi, 7 * dpi, 6 * dpi, 7 * dpi);
       return true;
     default:
       break;
