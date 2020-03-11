@@ -1552,7 +1552,12 @@ WebRenderCommandBuilder::WebRenderCommandBuilder(
       mLastAsr(nullptr),
       mDumpIndent(0),
       mDoGrouping(false),
-      mContainsSVGGroup(false) {}
+      mContainsSVGGroup(false) {
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::gfx_webrender_enable_item_cache_AtStartup()) {
+    mDisplayItemCache.SetCapacity(10000, 10000);
+  }
+}
 
 void WebRenderCommandBuilder::Destroy() {
   mLastCanvasDatas.Clear();
@@ -1597,6 +1602,13 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   mLastAsr = nullptr;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
+
+  if (mDisplayItemCache.IsEnabled()) {
+    mDisplayItemCache.UpdateState(aDisplayListBuilder->PartialBuildFailed(),
+                                  aBuilder.CurrentPipelineId());
+    aBuilder.SetDisplayListCacheSize(mDisplayItemCache.CurrentCacheSize());
+    // mDisplayItemCache.Stats().Reset();
+  }
 
   {
     nsPresContext* presContext =
@@ -1667,6 +1679,10 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   // Remove the user data those are not displayed on the screen and
   // also reset the data to unused for next transaction.
   RemoveUnusedAndResetWebRenderUserData();
+
+  if (mDisplayItemCache.IsEnabled()) {
+    // mDisplayItemCache.Stats().Print();
+  }
 }
 
 bool WebRenderCommandBuilder::ShouldDumpDisplayList(
@@ -1686,10 +1702,12 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
   auto* item = aItem->AsPaintedDisplayItem();
   MOZ_RELEASE_ASSERT(item, "Tried to paint item that cannot be painted");
 
-  if (aBuilder.ReuseItem(item)) {
+  if (mDisplayItemCache.ReuseItem(item, aBuilder)) {
     // No further processing should be needed, since the item was reused.
     return;
   }
+
+  mDisplayItemCache.MaybeStartCaching(item, aBuilder);
 
   aItem->SetPaintRect(aItem->GetBuildingRect());
   RenderRootStateManager* manager =
@@ -1703,6 +1721,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
   if (!createdWRCommands) {
     PushItemAsImage(aItem, aBuilder, aResources, aSc, aDisplayListBuilder);
   }
+
+  mDisplayItemCache.MaybeEndCaching(aBuilder);
 }
 
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
