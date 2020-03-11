@@ -21,6 +21,7 @@
 #include "js/Printf.h"
 #include "util/Memory.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/Warnings.h"  // js:WarnNumberASCII
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSerialize.h"
@@ -984,8 +985,7 @@ void wasm::Log(JSContext* cx, const char* fmt, ...) {
   va_start(args, fmt);
 
   if (UniqueChars chars = JS_vsmprintf(fmt, args)) {
-    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
-                                      nullptr, JSMSG_WASM_VERBOSE, chars.get());
+    WarnNumberASCII(cx, JSMSG_WASM_VERBOSE, chars.get());
     if (cx->isExceptionPending()) {
       cx->clearPendingException();
     }

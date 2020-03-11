@@ -66,6 +66,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
+#include "vm/Warnings.h"  // js::WarnNumberLatin1
 #include "vm/Xdr.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
@@ -4000,9 +4001,8 @@ bool ScriptSource::setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url) {
   if (hasDisplayURL()) {
     // FIXME: filename() should be UTF-8 (bug 987069).
     if (!cx->isHelperThreadContext() &&
-        !JS_ReportErrorFlagsAndNumberLatin1(
-            cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-            JSMSG_ALREADY_HAS_PRAGMA, filename(), "//# sourceURL")) {
+        !WarnNumberLatin1(cx, JSMSG_ALREADY_HAS_PRAGMA, filename(),
+                          "//# sourceURL")) {
       return false;
     }
   }

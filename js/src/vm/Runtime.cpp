@@ -48,6 +48,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingGraph.h"
+#include "vm/Warnings.h"  // js::WarnNumberUC
 #include "wasm/WasmSignalHandlers.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -460,9 +461,7 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
   } else {
     chars = u"(stack not available)";
   }
-  JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                 JSMSG_TERMINATED, chars);
-
+  WarnNumberUC(cx, JSMSG_TERMINATED, chars);
   return false;
 }
 
