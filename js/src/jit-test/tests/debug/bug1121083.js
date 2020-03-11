@@ -1,5 +1,4 @@
-// |jit-test| error:terminated
-options('werror');
+// |jit-test| exitstatus: 6
 
 g = newGlobal({newCompartment: true});
 g.parent = this;

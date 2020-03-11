@@ -360,20 +360,9 @@ void js::ReportAllocationOverflow(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ALLOC_OVERFLOW);
 }
 
-// Warnings become errors when JSOPTION_WERROR is set.
-static unsigned ApplyWerrorFlag(JSContext* cx, unsigned flags) {
-  if (JSREPORT_IS_WARNING(flags) && cx->options().werror()) {
-    return flags & ~JSREPORT_WARNING;
-  }
-
-  return flags;
-}
-
 bool js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
                        ErrorArgumentsType argumentsType, va_list ap) {
   JSErrorReport report;
-
-  flags = ApplyWerrorFlag(cx, flags);
 
   UniqueChars message(JS_vsmprintf(format, ap));
   if (!message) {
@@ -835,7 +824,6 @@ bool js::ReportErrorNumberVA(JSContext* cx, unsigned flags,
   JSErrorReport report;
   bool warning;
 
-  flags = ApplyWerrorFlag(cx, flags);
   warning = JSREPORT_IS_WARNING(flags);
 
   report.flags = flags;
@@ -877,7 +865,6 @@ static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
           (argType != ArgumentsAreUnicode && std::is_same_v<CharT, char>),
       "Mismatch between character type and argument type");
 
-  flags = ApplyWerrorFlag(cx, flags);
   bool warning = JSREPORT_IS_WARNING(flags);
 
   JSErrorReport report;

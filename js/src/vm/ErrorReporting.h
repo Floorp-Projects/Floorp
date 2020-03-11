@@ -97,9 +97,6 @@ extern void ReportCompileErrorUTF8(JSContext* cx, ErrorMetadata&& metadata,
  * Report a compile warning during script processing prior to execution of the
  * script.  Returns true if the warning was successfully reported, false if an
  * error occurred.
- *
- * This function DOES NOT respect an existing werror option.  If the caller
- * wishes such option to be respected, it must do so itself.
  */
 extern MOZ_MUST_USE bool ReportCompileWarning(
     JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,

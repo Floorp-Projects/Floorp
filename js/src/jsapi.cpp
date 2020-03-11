@@ -3435,7 +3435,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   forceFullParse_ = rhs.forceFullParse_;
   forceStrictMode_ = rhs.forceStrictMode_;
   selfHostingMode = rhs.selfHostingMode;
-  werrorOption = rhs.werrorOption;
   asmJSOption = rhs.asmJSOption;
   throwOnAsmJSValidationFailureOption = rhs.throwOnAsmJSValidationFailureOption;
   forceAsync = rhs.forceAsync;
@@ -3530,7 +3529,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       introductionScriptRoot(cx),
       scriptOrModuleRoot(cx) {
   discardSource = cx->realm()->behaviors().discardSource();
-  werrorOption = cx->options().werror();
   if (!cx->options().asmJS()) {
     asmJSOption = AsmJSOption::Disabled;
   } else if (cx->realm()->debuggerObservesAsmJS()) {

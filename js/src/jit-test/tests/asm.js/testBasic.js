@@ -115,17 +115,9 @@ function assertTypeFailInEval(str)
     if (!isAsmJSCompilationAvailable())
         return;
 
-    var caught = false;
-    var oldOpts = options("werror");
-    assertEq(oldOpts.indexOf("werror"), -1);
-    try {
+    assertWarning(() => {
         eval(str);
-    } catch (e) {
-        assertEq((''+e).indexOf(ASM_TYPE_FAIL_STRING) == -1, false);
-        caught = true;
-    }
-    assertEq(caught, true);
-    options("werror");
+    }, /asm.js type error:/)
 }
 assertTypeFailInEval('function f({}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f({global}) { "use asm"; function g() {} return g }');
