@@ -91,9 +91,6 @@
 # Keep code generated from Glean Metrics
 -keep class org.mozilla.fenix.GleanMetrics.** {  *; }
 
-# Keep methods that are called by MotionLayout
--keep class org.mozilla.fenix.home.SearchView { *; }
-
 # Keep motionlayout internal methods
 # https://github.com/mozilla-mobile/fenix/issues/2094
 -keep class androidx.constraintlayout.** { *; }

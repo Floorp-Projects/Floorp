@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ConstraintSet.BOTTOM
+import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
@@ -228,6 +229,7 @@ class HomeFragment : Fragment() {
                 clone(view.toolbarLayout)
                 clear(view.bottomBarShadow.id, BOTTOM)
                 connect(view.bottomBarShadow.id, TOP, view.bottom_bar.id, BOTTOM)
+                connect(view.bottomBarShadow.id, BOTTOM, PARENT_ID, BOTTOM)
                 applyTo(view.toolbarLayout)
             }
 

@@ -83,24 +83,6 @@
         tools:context=".home.HomeFragment">
 
         <View
-            android:id="@+id/bottomBarShadow"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:background="@color/bottom_bar_shadow"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
-
-        <View
-            android:id="@+id/bottomBarHighlight"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:background="@color/bottom_bar_shadow"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
-
-        <View
             android:id="@+id/bottom_bar"
             android:layout_width="0dp"
             android:layout_height="56dp"
@@ -110,13 +92,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <org.mozilla.fenix.home.SearchView
+        <FrameLayout
             android:id="@+id/toolbar_wrapper"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="0dp"
-            android:background="@drawable/home_search_background_normal"
+            android:background="@drawable/home_search_background"
             android:clickable="true"
             android:contentDescription="@string/search_hint"
             android:focusable="true"
@@ -149,7 +131,7 @@
                 android:text="@string/search_hint"
                 android:textColor="?primaryText"
                 android:textSize="15sp" />
-        </org.mozilla.fenix.home.SearchView>
+        </FrameLayout>
 
         <ImageButton
             android:id="@+id/add_tab_button"
@@ -170,6 +152,15 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottom_bar"
             app:layout_constraintBottom_toBottomOf="@id/bottom_bar"/>
+
+        <View
+            android:id="@+id/bottomBarShadow"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/bottom_bar_shadow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
