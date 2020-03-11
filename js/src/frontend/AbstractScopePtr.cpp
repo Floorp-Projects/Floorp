@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "frontend/AbstractScope.h"
+#include "frontend/AbstractScopePtr.h"
 
 #include "mozilla/Maybe.h"
 
@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::frontend;
 
-MutableHandle<ScopeCreationData> AbstractScope::scopeCreationData() const {
+MutableHandle<ScopeCreationData> AbstractScopePtr::scopeCreationData() const {
   const Deferred& data = scope_.as<Deferred>();
   return data.compilationInfo.scopeCreationData[data.index.index];
 }
@@ -30,7 +30,8 @@ MutableHandle<ScopeCreationData> AbstractScope::scopeCreationData() const {
 //
 // This uses an outparam to disambiguate between the case where we have a
 // real nullptr scope and we failed to allocate a new scope because of OOM.
-bool AbstractScope::getOrCreateScope(JSContext* cx, MutableHandleScope scope) {
+bool AbstractScopePtr::getOrCreateScope(JSContext* cx,
+                                        MutableHandleScope scope) {
   if (isScopeCreationData()) {
     MutableHandle<ScopeCreationData> scd = scopeCreationData();
     if (scd.get().hasScope()) {
@@ -46,7 +47,7 @@ bool AbstractScope::getOrCreateScope(JSContext* cx, MutableHandleScope scope) {
   return true;
 }
 
-Scope* AbstractScope::getExistingScope() const {
+Scope* AbstractScopePtr::getExistingScope() const {
   if (scope_.is<HeapPtrScope>()) {
     return scope_.as<HeapPtrScope>();
   }
@@ -58,7 +59,7 @@ Scope* AbstractScope::getExistingScope() const {
   return scopeCreationData().get().getScope();
 }
 
-ScopeKind AbstractScope::kind() const {
+ScopeKind AbstractScopePtr::kind() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeCreationData()) {
     return scopeCreationData().get().kind();
@@ -66,15 +67,15 @@ ScopeKind AbstractScope::kind() const {
   return scope()->kind();
 }
 
-AbstractScope AbstractScope::enclosing() const {
+AbstractScopePtr AbstractScopePtr::enclosing() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeCreationData()) {
     return scopeCreationData().get().enclosing();
   }
-  return AbstractScope(scope()->enclosing());
+  return AbstractScopePtr(scope()->enclosing());
 }
 
-bool AbstractScope::hasEnvironment() const {
+bool AbstractScopePtr::hasEnvironment() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeCreationData()) {
     return scopeCreationData().get().hasEnvironment();
@@ -82,7 +83,7 @@ bool AbstractScope::hasEnvironment() const {
   return scope()->hasEnvironment();
 }
 
-bool AbstractScope::isArrow() const {
+bool AbstractScopePtr::isArrow() const {
   // nullptr will also fail the below assert, so effectively also checking
   // !isNullptr()
   MOZ_ASSERT(is<FunctionScope>());
@@ -92,7 +93,7 @@ bool AbstractScope::isArrow() const {
   return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
 }
 
-JSFunction* AbstractScope::canonicalFunction() const {
+JSFunction* AbstractScopePtr::canonicalFunction() const {
   // nullptr will also fail the below assert, so effectively also checking
   // !isNullptr()
   MOZ_ASSERT(is<FunctionScope>());
@@ -102,7 +103,7 @@ JSFunction* AbstractScope::canonicalFunction() const {
   return scope()->as<FunctionScope>().canonicalFunction();
 }
 
-uint32_t AbstractScope::nextFrameSlot() const {
+uint32_t AbstractScopePtr::nextFrameSlot() const {
   if (isScopeCreationData()) {
     return scopeCreationData().get().nextFrameSlot();
   }
@@ -142,11 +143,11 @@ uint32_t AbstractScope::nextFrameSlot() const {
   MOZ_CRASH("Not an enclosing intra-frame scope");
 }
 
-void AbstractScope::trace(JSTracer* trc) {
-  JS::GCPolicy<ScopeType>::trace(trc, &scope_, "AbstractScope");
+void AbstractScopePtr::trace(JSTracer* trc) {
+  JS::GCPolicy<ScopeType>::trace(trc, &scope_, "AbstractScopePtr");
 }
 
-bool AbstractScopeIter::hasSyntacticEnvironment() const {
-  return abstractScope().hasEnvironment() &&
-         abstractScope().kind() != ScopeKind::NonSyntactic;
+bool AbstractScopePtrIter::hasSyntacticEnvironment() const {
+  return abstractScopePtr().hasEnvironment() &&
+         abstractScopePtr().kind() != ScopeKind::NonSyntactic;
 }

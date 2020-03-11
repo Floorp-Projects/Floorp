@@ -13,7 +13,7 @@
 
 #include "jstypes.h"
 
-#include "frontend/AbstractScope.h"
+#include "frontend/AbstractScopePtr.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Stencil.h"
 #include "vm/JSFunction.h"
@@ -313,7 +313,7 @@ class FunctionBox : public SharedContext {
   //     partially initialized enclosing scopes, so we must avoid storing the
   //     scope in the LazyScript until compilation has completed
   //     successfully.)
-  AbstractScope enclosingScope_;
+  AbstractScopePtr enclosingScope_;
 
   // Names from the named lambda scope, if a named lambda.
   LexicalScope::Data* namedLambdaBindings_;
@@ -334,9 +334,8 @@ class FunctionBox : public SharedContext {
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
               CompilationInfo& compilationInfo, Directives directives,
-              GeneratorKind generatorKind,
-              FunctionAsyncKind asyncKind, JSAtom* explicitName,
-              FunctionFlags flags);
+              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+              JSAtom* explicitName, FunctionFlags flags);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionSyntaxKind kind, bool isArrow,
@@ -438,13 +437,13 @@ class FunctionBox : public SharedContext {
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, JSFunction* fun,
               uint32_t toStringStart, CompilationInfo& compilationInfo,
-              Directives directives,
-              GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
+              Directives directives, GeneratorKind generatorKind,
+              FunctionAsyncKind asyncKind);
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
               CompilationInfo& compilationInfo, Directives directives,
-              GeneratorKind generatorKind,
-              FunctionAsyncKind asyncKind, size_t functionIndex);
+              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+              size_t functionIndex);
 
 #ifdef DEBUG
   bool atomsAreKept();
@@ -491,7 +490,7 @@ class FunctionBox : public SharedContext {
                             Handle<FunctionCreationData> data);
 
   void setEnclosingScopeForInnerLazyFunction(
-      const AbstractScope& enclosingScope);
+      const AbstractScopePtr& enclosingScope);
   void finish();
 
   // Clear any function creation data which will no longer be used.

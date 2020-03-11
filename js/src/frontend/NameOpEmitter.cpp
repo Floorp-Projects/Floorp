@@ -6,7 +6,7 @@
 
 #include "frontend/NameOpEmitter.h"
 
-#include "frontend/AbstractScope.h"
+#include "frontend/AbstractScopePtr.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
 #include "frontend/TDZCheckCache.h"

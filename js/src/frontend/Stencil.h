@@ -15,7 +15,7 @@
 #include <stdint.h>  // char16_t, uint8_t, uint32_t
 #include <stdlib.h>  // size_t
 
-#include "frontend/AbstractScope.h"      // AbstractScope, ScopeIndex
+#include "frontend/AbstractScopePtr.h"   // AbstractScopePtr, ScopeIndex
 #include "frontend/NameAnalysisTypes.h"  // {AtomVector, FunctionBoxVector}
 #include "frontend/ObjLiteral.h"         // ObjLiteralCreationData
 #include "frontend/TypedIndex.h"         // TypedIndex
@@ -284,11 +284,11 @@ class EnvironmentShapeCreationData {
 };
 
 class ScopeCreationData {
-  friend class js::AbstractScope;
+  friend class js::AbstractScopePtr;
   friend class js::GCMarker;
 
   // The enclosing scope if it exists
-  AbstractScope enclosing_;
+  AbstractScopePtr enclosing_;
 
   // The kind determines data_.
   ScopeKind kind_;
@@ -297,7 +297,7 @@ class ScopeCreationData {
   EnvironmentShapeCreationData environmentShape_;
 
   // Once we've produced a scope from a scope creation data, there may still be
-  // AbstractScopes refering to this ScopeCreationData, and if reification is
+  // AbstractScopePtrs refering to this ScopeCreationData, and if reification is
   // requested multiple times, we should return the same scope rather than
   // creating multiple sopes.
   //
@@ -313,7 +313,7 @@ class ScopeCreationData {
 
  public:
   ScopeCreationData(
-      JSContext* cx, ScopeKind kind, Handle<AbstractScope> enclosing,
+      JSContext* cx, ScopeKind kind, Handle<AbstractScopePtr> enclosing,
       Handle<frontend::EnvironmentShapeCreationData> environmentShape,
       UniquePtr<BaseScopeData> data = {},
       frontend::FunctionBox* funbox = nullptr)
@@ -324,7 +324,7 @@ class ScopeCreationData {
         data_(std::move(data)) {}
 
   ScopeKind kind() const { return kind_; }
-  AbstractScope enclosing() { return enclosing_; }
+  AbstractScopePtr enclosing() { return enclosing_; }
   bool getOrCreateEnclosingScope(JSContext* cx, MutableHandleScope scope) {
     return enclosing_.getOrCreateScope(cx, scope);
   }
@@ -334,18 +334,18 @@ class ScopeCreationData {
                      Handle<FunctionScope::Data*> dataArg,
                      bool hasParameterExprs, bool needsEnvironment,
                      frontend::FunctionBox* funbox,
-                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   // LexicalScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<LexicalScope::Data*> dataArg,
-                     uint32_t firstFrameSlot, Handle<AbstractScope> enclosing,
-                     ScopeIndex* index);
+                     uint32_t firstFrameSlot,
+                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
   // VarScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<VarScope::Data*> dataArg,
                      uint32_t firstFrameSlot, bool needsEnvironment,
-                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   // GlobalScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
@@ -355,17 +355,17 @@ class ScopeCreationData {
   // EvalScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<EvalScope::Data*> dataArg,
-                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   // ModuleScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<ModuleScope::Data*> dataArg,
-                     HandleModuleObject module, Handle<AbstractScope> enclosing,
-                     ScopeIndex* index);
+                     HandleModuleObject module,
+                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   // WithScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   bool hasEnvironment() const {
     // Check if scope kind alone means we have an env shape, and
