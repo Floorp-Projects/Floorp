@@ -11,6 +11,9 @@ add_task(async function test() {
     ok(true, "This platform does not support stackwalking, skip this test.");
     return;
   }
+  // This test assumes that the Web Developer preset is set by default, which is
+  // not the case on Nightly and custom builds.
+  BackgroundJSM.changePreset("aboutprofiling", "web-developer");
 
   await withAboutProfiling(async document => {
     const webdev = await getNearestInputFromText(document, "Web Developer");

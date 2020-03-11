@@ -852,8 +852,14 @@ pref("devtools.performance.recording.ui-base-url", "https://profiler.firefox.com
 
 // The preset to use for the recording settings. If set to "custom" then the pref
 // values below will be used.
-pref("devtools.performance.recording.preset", "web-developer");
-pref("devtools.performance.recording.preset.remote", "web-developer");
+#if defined(NIGHTLY_BUILD) || !defined(MOZILLA_OFFICIAL)
+  // Use a more advanced preset on Nightly and local builds.
+  pref("devtools.performance.recording.preset", "firefox-platform");
+  pref("devtools.performance.recording.preset.remote", "firefox-platform");
+#else
+  pref("devtools.performance.recording.preset", "web-developer");
+  pref("devtools.performance.recording.preset.remote", "web-developer");
+#endif
 // Profiler buffer size. It is the maximum number of 8-bytes entries in the
 // profiler's buffer. 10000000 is ~80mb.
 pref("devtools.performance.recording.entries", 10000000);

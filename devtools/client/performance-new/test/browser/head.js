@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const BackgroundJSM = ChromeUtils.import(
+  "resource://devtools/client/performance-new/popup/background.jsm.js"
+);
+
 registerCleanupFunction(() => {
-  // Always clean up the prefs after every test.
-  const { revertRecordingPreferences } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
-  revertRecordingPreferences();
+  BackgroundJSM.revertRecordingPreferences();
 });
 
 /**
@@ -387,9 +387,7 @@ async function withDevToolsPanel(callback) {
  * @returns {Object}
  */
 function getActiveConfiguration() {
-  const { startProfiler, stopProfiler } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  );
+  const { startProfiler, stopProfiler } = BackgroundJSM;
 
   info("Start the profiler with the current about:profiling configuration.");
   startProfiler("aboutprofiling");
