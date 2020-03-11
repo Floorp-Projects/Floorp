@@ -998,8 +998,7 @@ AbortReasonOr<Ok> IonBuilder::processIterators() {
 
     for (MUseDefIterator iter(def); iter; iter++) {
       MDefinition* use = iter.def();
-      if (!use->isInWorklist() &&
-          (!use->isPhi() || !use->toPhi()->isIterator())) {
+      if (!use->isInWorklist() && use->isPhi() && !use->toPhi()->isIterator()) {
         if (!worklist.append(use)) {
           return abort(AbortReason::Alloc);
         }
