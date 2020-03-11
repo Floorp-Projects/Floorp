@@ -10,10 +10,6 @@ const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-const { AboutNewTab } = ChromeUtils.import(
-  "resource:///modules/AboutNewTab.jsm"
-);
-
 // Lazy load to avoid having Services.appinfo cached first.
 ChromeUtils.defineModuleGetter(
   this,
@@ -22,6 +18,13 @@ ChromeUtils.defineModuleGetter(
 );
 
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "aboutNewTabService",
+  "@mozilla.org/browser/aboutnewtab-service;1",
+  "nsIAboutNewTabService"
+);
 
 AddonTestUtils.init(this);
 
@@ -49,7 +52,7 @@ add_task(async function test_settings_modules_not_loaded() {
 });
 
 add_task(async function test_settings_validated() {
-  let defaultNewTab = AboutNewTab.newTabURL;
+  let defaultNewTab = aboutNewTabService.newTabURL;
   equal(defaultNewTab, "about:newtab", "Newtab url is default.");
   let defaultHomepageURL = HomePage.get();
   equal(defaultHomepageURL, "about:home", "Home page url is default.");
@@ -77,7 +80,7 @@ add_task(async function test_settings_validated() {
     "Home page url is extension controlled."
   );
   ok(
-    AboutNewTab.newTabURL.endsWith("/newtab"),
+    aboutNewTabService.newTabURL.endsWith("/newtab"),
     "newTabURL is extension controlled."
   );
 
@@ -97,12 +100,16 @@ add_task(async function test_settings_validated() {
   await prefChanged;
 
   equal(HomePage.get(), defaultHomepageURL, "Home page url is default.");
-  equal(AboutNewTab.newTabURL, defaultNewTab, "newTabURL is reset to default.");
+  equal(
+    aboutNewTabService.newTabURL,
+    defaultNewTab,
+    "newTabURL is reset to default."
+  );
   await AddonTestUtils.promiseShutdownManager();
 });
 
 add_task(async function test_settings_validated_safemode() {
-  let defaultNewTab = AboutNewTab.newTabURL;
+  let defaultNewTab = aboutNewTabService.newTabURL;
   equal(defaultNewTab, "about:newtab", "Newtab url is default.");
   let defaultHomepageURL = HomePage.get();
   equal(defaultHomepageURL, "about:home", "Home page url is default.");
@@ -114,7 +121,7 @@ add_task(async function test_settings_validated_safemode() {
       `Home page url is default ${postfix}.`
     );
     equal(
-      AboutNewTab.newTabURL,
+      aboutNewTabService.newTabURL,
       defaultNewTab,
       `newTabURL is default ${postfix}.`
     );
@@ -127,7 +134,7 @@ add_task(async function test_settings_validated_safemode() {
       `Home page url is extension controlled ${postfix}.`
     );
     ok(
-      AboutNewTab.newTabURL.endsWith("/newtab"),
+      aboutNewTabService.newTabURL.endsWith("/newtab"),
       `newTabURL is extension controlled ${postfix}.`
     );
   }

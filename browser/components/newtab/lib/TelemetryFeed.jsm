@@ -31,8 +31,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
+  "AboutNewTabStartupRecorder",
+  "resource:///modules/AboutNewTabService.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -77,6 +77,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
+  aboutNewTabService: [
+    "@mozilla.org/browser/aboutnewtab-service;1",
+    "nsIAboutNewTabService",
+  ],
 });
 
 const ACTIVITY_STREAM_ID = "activity-stream";
@@ -827,11 +831,11 @@ this.TelemetryFeed = class TelemetryFeed {
       // If so, classify them.
       if (
         Services.prefs.getBoolPref("browser.newtabpage.enabled") &&
-        AboutNewTab.newTabURLOverridden &&
-        !AboutNewTab.newTabURL.startsWith("moz-extension://")
+        aboutNewTabService.overridden &&
+        !aboutNewTabService.newTabURL.startsWith("moz-extension://")
       ) {
         value.newtab_url_category = await this._classifySite(
-          AboutNewTab.newTabURL
+          aboutNewTabService.newTabURL
         );
         newtabAffected = true;
       }
@@ -1074,7 +1078,7 @@ this.TelemetryFeed = class TelemetryFeed {
       !HomePage.overridden &&
       Services.prefs.getIntPref("browser.startup.page") === 1
     ) {
-      AboutNewTab.maybeRecordTopsitesPainted(timestamp);
+      AboutNewTabStartupRecorder.maybeRecordTopsitesPainted(timestamp);
     }
 
     Object.assign(session.perf, data);

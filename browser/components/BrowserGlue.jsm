@@ -26,12 +26,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/CustomizableUI.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "PushService",
@@ -1215,7 +1209,6 @@ BrowserGlue.prototype = {
     }
 
     SaveToPocket.init();
-
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
 
@@ -1578,8 +1571,6 @@ BrowserGlue.prototype = {
 
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
-    AboutNewTab.init();
-
     TabCrashHandler.init();
 
     ProcessHangMonitor.init();

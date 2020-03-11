@@ -2,11 +2,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(
   this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
@@ -235,7 +230,7 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
 async function whenNewTabLoaded(aWindow, aCallback) {
   aWindow.BrowserOpenTab();
 
-  let expectedURL = AboutNewTab.newTabURL;
+  let expectedURL = aboutNewTabService.newTabURL;
   let browser = aWindow.gBrowser.selectedBrowser;
   let loadPromise = BrowserTestUtils.browserLoaded(browser, false, expectedURL);
   let alreadyLoaded = await SpecialPowers.spawn(browser, [expectedURL], url => {
