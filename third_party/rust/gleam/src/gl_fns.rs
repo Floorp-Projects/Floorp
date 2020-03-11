@@ -21,7 +21,6 @@ impl GlFns {
     }
 }
 
-impl Sealed for GlFns {}
 impl Gl for GlFns {
     fn get_type(&self) -> GlType {
         GlType::Gl
