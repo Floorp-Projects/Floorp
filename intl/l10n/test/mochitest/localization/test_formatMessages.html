@@ -24,6 +24,10 @@ key2 =
     yield bundle;
   }
 
+  function getAttributeByName(attributes, name) {
+    return attributes.find(attr => attr.name === name);
+  }
+
   (async () => {
     SimpleTest.waitForExplicitFinish();
 
@@ -38,15 +42,22 @@ key2 =
         {id: "key1"},
         {id: "key2", args: { user: "Amy"}},
       ]);
-      is(msgs[0].value, "Value");
-      is(msgs[0].attributes[0].name, "title");
-      is(msgs[0].attributes[0].value, "Title 1");
-      is(msgs[0].attributes[1].name, "accesskey");
-      is(msgs[0].attributes[1].value, "K");
+      {
+        is(msgs[0].value, "Value");
+        let attr0 = getAttributeByName(msgs[0].attributes, "title");
+        is(attr0.name, "title");
+        is(attr0.value, "Title 1");
+        let attr1 = getAttributeByName(msgs[0].attributes, "accesskey");
+        is(attr1.name, "accesskey");
+        is(attr1.value, "K");
+      }
 
-      is(msgs[1].value, null);
-      is(msgs[1].attributes[0].name, "label");
-      is(msgs[1].attributes[0].value, "This is a label for Amy");
+      {
+        is(msgs[1].value, null);
+        let attr0 = getAttributeByName(msgs[1].attributes, "label");
+        is(attr0.name, "label");
+        is(attr0.value, "This is a label for Amy");
+      }
     }
 
     {
