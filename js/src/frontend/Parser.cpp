@@ -101,7 +101,7 @@ static inline void PropagateTransitiveParseFlags(const T* inner, U* outer) {
 static bool StatementKindIsBraced(StatementKind kind) {
   return kind == StatementKind::Block || kind == StatementKind::Switch ||
          kind == StatementKind::Try || kind == StatementKind::Catch ||
-         kind == StatementKind::Finally || kind == StatementKind::Class;
+         kind == StatementKind::Finally;
 }
 
 template <class ParseHandler, typename Unit>
