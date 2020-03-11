@@ -1867,10 +1867,9 @@ void BrowserParent::SendRealTouchEvent(WidgetTouchEvent& aEvent) {
     }
   }
 
-  ScrollableLayerGuid guid;
-  uint64_t blockId;
-  nsEventStatus apzResponse;
-  ApzAwareEventRoutingToChild(&guid, &blockId, &apzResponse);
+  APZData apzData;
+  ApzAwareEventRoutingToChild(&apzData.guid, &apzData.blockId,
+                              &apzData.apzResponse);
 
   if (mIsDestroyed) {
     return;
@@ -1881,28 +1880,121 @@ void BrowserParent::SendRealTouchEvent(WidgetTouchEvent& aEvent) {
         TransformParentToChild(aEvent.mTouches[i]->mRefPoint);
   }
 
-  bool inputPriorityEventEnabled = Manager()->IsInputPriorityEventEnabled();
-
+  static uint32_t sConsecutiveTouchMoveCount = 0;
   if (aEvent.mMessage == eTouchMove) {
-    DebugOnly<bool> ret =
-        inputPriorityEventEnabled
-            ? PBrowserParent::SendRealTouchMoveEvent(aEvent, guid, blockId,
-                                                     apzResponse)
-            : PBrowserParent::SendNormalPriorityRealTouchMoveEvent(
-                  aEvent, guid, blockId, apzResponse);
-
-    NS_WARNING_ASSERTION(ret,
-                         "PBrowserParent::SendRealTouchMoveEvent() failed");
-    MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+    ++sConsecutiveTouchMoveCount;
+    SendRealTouchMoveEvent(aEvent, apzData, sConsecutiveTouchMoveCount);
     return;
   }
-  DebugOnly<bool> ret = inputPriorityEventEnabled
-                            ? PBrowserParent::SendRealTouchEvent(
-                                  aEvent, guid, blockId, apzResponse)
-                            : PBrowserParent::SendNormalPriorityRealTouchEvent(
-                                  aEvent, guid, blockId, apzResponse);
+
+  sConsecutiveTouchMoveCount = 0;
+  DebugOnly<bool> ret =
+      Manager()->IsInputPriorityEventEnabled()
+          ? PBrowserParent::SendRealTouchEvent(
+                aEvent, apzData.guid, apzData.blockId, apzData.apzResponse)
+          : PBrowserParent::SendNormalPriorityRealTouchEvent(
+                aEvent, apzData.guid, apzData.blockId, apzData.apzResponse);
 
   NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealTouchEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+}
+
+void BrowserParent::SendRealTouchMoveEvent(
+    WidgetTouchEvent& aEvent, APZData& aAPZData,
+    uint32_t aConsecutiveTouchMoveCount) {
+  // Touchmove handling is complicated, since IPC compression should be used
+  // only when there are consecutive touch objects for the same touch on the
+  // same BrowserParent. IPC compression can be disabled by switching to
+  // different IPC message.
+  static bool sIPCMessageType1 = true;
+  static TabId sLastTargetBrowserParent(0);
+  static Maybe<APZData> sPreviousAPZData;
+  // Artificially limit max touch points to 10. That should be in practise
+  // more than enough.
+  const uint32_t kMaxTouchMoveIdentifiers = 10;
+  static Maybe<int32_t> sLastTouchMoveIdentifiers[kMaxTouchMoveIdentifiers];
+
+  // Returns true if aIdentifiers contains all the touches in
+  // sLastTouchMoveIdentifiers.
+  auto LastTouchMoveIdentifiersContainedIn =
+      [&](const nsTArray<int32_t>& aIdentifiers) -> bool {
+    for (Maybe<int32_t>& entry : sLastTouchMoveIdentifiers) {
+      if (entry.isSome() && !aIdentifiers.Contains(entry.value())) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Cache touch identifiers in sLastTouchMoveIdentifiers array to be used
+  // when checking whether compression can be done for the next touchmove.
+  auto SetLastTouchMoveIdentifiers =
+      [&](const nsTArray<int32_t>& aIdentifiers) {
+        for (Maybe<int32_t>& entry : sLastTouchMoveIdentifiers) {
+          entry.reset();
+        }
+
+        MOZ_ASSERT(aIdentifiers.Length() <= kMaxTouchMoveIdentifiers);
+        for (uint32_t j = 0; j < aIdentifiers.Length(); ++j) {
+          sLastTouchMoveIdentifiers[j].emplace(aIdentifiers[j]);
+        }
+      };
+
+  AutoTArray<int32_t, kMaxTouchMoveIdentifiers> changedTouches;
+  bool preventCompression = !StaticPrefs::dom_events_compress_touchmove() ||
+                            // Ensure the very first touchmove isn't overridden
+                            // by the second one, so that web pages can get
+                            // accurate coordinates for the first touchmove.
+                            aConsecutiveTouchMoveCount < 3 ||
+                            sPreviousAPZData.isNothing() ||
+                            sPreviousAPZData.value() != aAPZData ||
+                            sLastTargetBrowserParent != GetTabId() ||
+                            aEvent.mTouches.Length() > kMaxTouchMoveIdentifiers;
+
+  if (!preventCompression) {
+    for (RefPtr<Touch>& touch : aEvent.mTouches) {
+      if (touch->mChanged) {
+        changedTouches.AppendElement(touch->mIdentifier);
+      }
+    }
+
+    // Prevent compression if the new event has fewer or different touches
+    // than the old one.
+    preventCompression = !LastTouchMoveIdentifiersContainedIn(changedTouches);
+  }
+
+  if (preventCompression) {
+    sIPCMessageType1 = !sIPCMessageType1;
+  }
+
+  // Update the last touch move identifiers always, so that when the next
+  // event comes in, the new identifiers can be compared to the old ones.
+  // If the pref is disabled, this just does a quick small loop.
+  SetLastTouchMoveIdentifiers(changedTouches);
+  sPreviousAPZData.reset();
+  sPreviousAPZData.emplace(aAPZData);
+  sLastTargetBrowserParent = GetTabId();
+
+  DebugOnly<bool> ret = true;
+  if (sIPCMessageType1) {
+    ret =
+        Manager()->IsInputPriorityEventEnabled()
+            ? PBrowserParent::SendRealTouchMoveEvent(
+                  aEvent, aAPZData.guid, aAPZData.blockId, aAPZData.apzResponse)
+            : PBrowserParent::SendNormalPriorityRealTouchMoveEvent(
+                  aEvent, aAPZData.guid, aAPZData.blockId,
+                  aAPZData.apzResponse);
+  } else {
+    ret =
+        Manager()->IsInputPriorityEventEnabled()
+            ? PBrowserParent::SendRealTouchMoveEvent2(
+                  aEvent, aAPZData.guid, aAPZData.blockId, aAPZData.apzResponse)
+            : PBrowserParent::SendNormalPriorityRealTouchMoveEvent2(
+                  aEvent, aAPZData.guid, aAPZData.blockId,
+                  aAPZData.apzResponse);
+  }
+
+  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealTouchMoveEvent() failed");
   MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 

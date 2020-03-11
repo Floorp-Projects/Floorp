@@ -824,11 +824,19 @@ child:
     prio(input) async RealTouchMoveEvent(WidgetTouchEvent aEvent,
                                          ScrollableLayerGuid aGuid,
                                          uint64_t aInputBlockId,
-                                         nsEventStatus aApzResponse);
+                                         nsEventStatus aApzResponse) compress;
     async NormalPriorityRealTouchMoveEvent(WidgetTouchEvent aEvent,
                                            ScrollableLayerGuid aGuid,
                                            uint64_t aInputBlockId,
-                                           nsEventStatus aApzResponse);
+                                           nsEventStatus aApzResponse) compress;
+    prio(input) async RealTouchMoveEvent2(WidgetTouchEvent aEvent,
+                                          ScrollableLayerGuid aGuid,
+                                          uint64_t aInputBlockId,
+                                          nsEventStatus aApzResponse) compress;
+    async NormalPriorityRealTouchMoveEvent2(WidgetTouchEvent aEvent,
+                                            ScrollableLayerGuid aGuid,
+                                            uint64_t aInputBlockId,
+                                            nsEventStatus aApzResponse) compress;
 
     /*
      * We disable the input event queue when there is an active dnd session. We

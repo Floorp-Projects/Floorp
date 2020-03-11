@@ -854,6 +854,21 @@ class BrowserParent final : public PBrowserParent,
 
   void OnSubFrameCrashed();
 
+  struct APZData {
+    bool operator==(const APZData& aOther) {
+      return aOther.guid == guid && aOther.blockId == blockId &&
+             aOther.apzResponse == apzResponse;
+    }
+
+    bool operator!=(const APZData& aOther) { return !(*this == aOther); }
+
+    ScrollableLayerGuid guid;
+    uint64_t blockId;
+    nsEventStatus apzResponse;
+  };
+  void SendRealTouchMoveEvent(WidgetTouchEvent& aEvent, APZData& aAPZData,
+                              uint32_t aConsecutiveTouchMoveCount);
+
  public:
   // Unsets sTopLevelWebFocus regardless of its current value.
   static void UnsetTopLevelWebFocusAll();
