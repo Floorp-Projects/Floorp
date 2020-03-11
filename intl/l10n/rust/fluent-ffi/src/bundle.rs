@@ -1,4 +1,8 @@
-use crate::builtins::NumberFormat;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+use crate::builtins::{FluentDateTime, FluentDateTimeOptions, NumberFormat};
 use fluent::resolve::ResolverError;
 use fluent::{FluentArgs, FluentBundle, FluentError, FluentResource, FluentValue};
 use fluent_pseudo::transform_dom;
@@ -104,6 +108,18 @@ pub unsafe extern "C" fn fluent_bundle_new(
                 let mut num = n.clone();
                 num.options.merge(named);
                 FluentValue::Number(num)
+            } else {
+                FluentValue::None
+            }
+        })
+        .expect("Failed to add a function to the bundle.");
+    bundle
+        .add_function("DATETIME", |args, named| {
+            if let Some(FluentValue::Number(n)) = args.get(0) {
+                let mut options = FluentDateTimeOptions::default();
+                options.merge(&named);
+                let epoch = n.value as usize;
+                FluentValue::Custom(Box::new(FluentDateTime::new(epoch, options)))
             } else {
                 FluentValue::None
             }
