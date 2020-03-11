@@ -2399,14 +2399,39 @@
      */ \
     MACRO(ThrowMsg, throw_msg, NULL, 3, 0, 0, JOF_UINT16) \
     /*
-     * Throws a runtime TypeError for invalid assignment to a `const` binding.
+     * Throw a TypeError for invalid assignment to a `const`. The environment
+     * coordinate is used to get the variable name for the error message.
      *
      *   Category: Control flow
      *   Type: Exceptions
-     *   Operands: uint32_t nameIndex
+     *   Operands: uint8_t hops, uint24_t slot
      *   Stack:
      */ \
-    MACRO(ThrowSetConst, throw_set_const, NULL, 5, 0, 0, JOF_ATOM|JOF_NAME|JOF_DETECTING) \
+    MACRO(ThrowSetAliasedConst, throw_set_aliased_const, NULL, 5, 0, 0, JOF_ENVCOORD|JOF_NAME|JOF_DETECTING) \
+    /*
+     * Throw a TypeError for invalid assignment to the callee binding in a named
+     * lambda, which is always a `const` binding. This is a different bytecode
+     * than `JSOp::ThrowSetConst` because the named lambda callee, if not closed
+     * over, does not have a frame slot to look up the name with for the error
+     * message.
+     *
+     *   Category: Control flow
+     *   Type: Exceptions
+     *   Operands:
+     *   Stack:
+     */ \
+    MACRO(ThrowSetCallee, throw_set_callee, NULL, 1, 0, 0, JOF_BYTE) \
+    /*
+     * Throws a runtime TypeError for invalid assignment to an optimized
+     * `const` binding. `localno` is used to get the variable name for the
+     * error message.
+     *
+     *   Category: Control flow
+     *   Type: Exceptions
+     *   Operands: uint24_t localno
+     *   Stack:
+     */ \
+    MACRO(ThrowSetConst, throw_set_const, NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
@@ -3460,8 +3485,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(236)                                   \
-  MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \

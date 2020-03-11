@@ -4470,12 +4470,27 @@ bool BaselineInterpreterCodeGen::emit_NewTarget() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_ThrowSetConst() {
+bool BaselineCodeGen<Handler>::emitThrowConstAssignment() {
   prepareVMCall();
   pushArg(Imm32(JSMSG_BAD_CONST_ASSIGN));
 
   using Fn = bool (*)(JSContext*, unsigned);
   return callVM<Fn, jit::ThrowRuntimeLexicalError>();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_ThrowSetConst() {
+  return emitThrowConstAssignment();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_ThrowSetAliasedConst() {
+  return emitThrowConstAssignment();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_ThrowSetCallee() {
+  return emitThrowConstAssignment();
 }
 
 template <typename Handler>
