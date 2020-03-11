@@ -70,8 +70,6 @@ class OptionalEmitter;
 class TDZCheckCache;
 class TryEmitter;
 
-enum class ValueIsOnStack { Yes, No };
-
 struct MOZ_STACK_CLASS BytecodeEmitter {
   // Context shared between parsing and bytecode generation.
   SharedContext* const sc = nullptr;
@@ -553,8 +551,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitGetName(NameNode* name);
 
   MOZ_MUST_USE bool emitTDZCheckIfNeeded(HandleAtom name,
-                                         const NameLocation& loc,
-                                         ValueIsOnStack isOnStack);
+                                         const NameLocation& loc);
 
   MOZ_MUST_USE bool emitNameIncDec(UnaryNode* incDec);
 
