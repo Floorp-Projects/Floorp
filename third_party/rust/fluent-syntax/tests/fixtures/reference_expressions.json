@@ -1,0 +1,189 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "GroupComment",
+            "content": "Reference expressions in placeables."
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "message-reference-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "MessageReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "msg"
+                            },
+                            "attribute": null
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "term-reference-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "TermReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "term"
+                            },
+                            "attribute": null,
+                            "arguments": null
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "variable-reference-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "VariableReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "var"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "function-reference-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "MessageReference",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "FUN"
+                            },
+                            "attribute": null
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": {
+                "type": "Comment",
+                "content": "Function references are invalid outside of call expressions.\nThis parses as a valid MessageReference."
+            }
+        },
+        {
+            "type": "GroupComment",
+            "content": "Reference expressions in selectors."
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "variable-reference-selector"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "SelectExpression",
+                            "selector": {
+                                "type": "VariableReference",
+                                "id": {
+                                    "type": "Identifier",
+                                    "name": "var"
+                                }
+                            },
+                            "variants": [
+                                {
+                                    "type": "Variant",
+                                    "key": {
+                                        "type": "Identifier",
+                                        "name": "key"
+                                    },
+                                    "value": {
+                                        "type": "Pattern",
+                                        "elements": [
+                                            {
+                                                "type": "TextElement",
+                                                "value": "Value"
+                                            }
+                                        ]
+                                    },
+                                    "default": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Message values may not be used as selectors."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "message-reference-selector = {msg ->\n   *[key] Value\n}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Term values may not be used as selectors."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "term-reference-selector = {-term ->\n   *[key] Value\n}\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Function references are invalid outside of call expressions, and this\nparses as a MessageReference which isn't a valid selector."
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "function-expression-selector = {FUN ->\n   *[key] Value\n}\n"
+        }
+    ]
+}

@@ -1,0 +1,113 @@
+{
+    "type": "Resource",
+    "body": [
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "nested-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "Placeable",
+                            "expression": {
+                                "type": "Placeable",
+                                "expression": {
+                                    "value": "1",
+                                    "type": "NumberLiteral"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "padded-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "value": "1",
+                            "type": "NumberLiteral"
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Message",
+            "id": {
+                "type": "Identifier",
+                "name": "sparse-placeable"
+            },
+            "value": {
+                "type": "Pattern",
+                "elements": [
+                    {
+                        "type": "Placeable",
+                        "expression": {
+                            "type": "Placeable",
+                            "expression": {
+                                "value": "1",
+                                "type": "NumberLiteral"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": [],
+            "comment": null
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Unmatched opening brace"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "unmatched-open1 = { 1\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Unmatched opening brace"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "unmatched-open2 = {{ 1 }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Unmatched closing brace"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "unmatched-close1 = 1 }\n\n"
+        },
+        {
+            "type": "Comment",
+            "content": "ERROR Unmatched closing brace"
+        },
+        {
+            "type": "Junk",
+            "annotations": [],
+            "content": "unmatched-close2 = { 1 }}\n"
+        }
+    ]
+}
