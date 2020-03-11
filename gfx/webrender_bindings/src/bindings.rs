@@ -33,11 +33,11 @@ use program_cache::{remove_disk_cache, WrProgramCache};
 use rayon;
 use thread_profiler::register_thread_with_profiler;
 use webrender::{
-    api::units::*, api::*, set_profiler_hooks, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
-    BinaryRecorder, Compositor, CompositorCapabilities, CompositorConfig, DebugFlags, Device, NativeSurfaceId,
-    NativeSurfaceInfo, NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions,
-    RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
-    WrShaders,
+    api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
+    BinaryRecorder, Compositor, CompositorCapabilities, DebugFlags, Device,
+    NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
+    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
+    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId
 };
 
 #[cfg(target_os = "macos")]
@@ -972,7 +972,9 @@ pub struct WrHitTester {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_request_hit_tester(dh: &DocumentHandle) -> *mut WrHitTester {
+pub extern "C" fn wr_api_request_hit_tester(
+    dh: &DocumentHandle,
+) -> *mut WrHitTester {
     let hit_tester = dh.api.request_hit_tester(dh.document_id);
     Box::into_raw(Box::new(WrHitTester { ptr: hit_tester }))
 }
@@ -983,15 +985,20 @@ pub unsafe extern "C" fn wr_hit_tester_clone(hit_tester: *mut WrHitTester) -> *m
     Box::into_raw(Box::new(WrHitTester { ptr: new_ref }))
 }
 
+
 #[no_mangle]
 pub extern "C" fn wr_hit_tester_hit_test(
     hit_tester: &WrHitTester,
     point: WorldPoint,
     out_pipeline_id: &mut WrPipelineId,
     out_scroll_id: &mut u64,
-    out_hit_info: &mut u16,
+    out_hit_info: &mut u16
 ) -> bool {
-    let result = hit_tester.ptr.hit_test(None, point, HitTestFlags::empty());
+    let result = hit_tester.ptr.hit_test(
+        None,
+        point,
+        HitTestFlags::empty()
+    );
 
     for item in &result.items {
         // For now we should never be getting results back for which the tag is
@@ -1205,8 +1212,13 @@ extern "C" {
         clip_rect: DeviceIntRect,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
-    fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
-    fn wr_compositor_get_capabilities(compositor: *mut c_void) -> CompositorCapabilities;
+    fn wr_compositor_enable_native_compositor(
+        compositor: *mut c_void,
+        enable: bool,
+    );
+    fn wr_compositor_get_capabilities(
+        compositor: *mut c_void,
+    ) -> CompositorCapabilities;
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1220,7 +1232,13 @@ impl Compositor for WrCompositor {
         is_opaque: bool,
     ) {
         unsafe {
-            wr_compositor_create_surface(self.0, id, virtual_offset, tile_size, is_opaque);
+            wr_compositor_create_surface(
+                self.0,
+                id,
+                virtual_offset,
+                tile_size,
+                is_opaque,
+            );
         }
     }
 
@@ -1293,7 +1311,9 @@ impl Compositor for WrCompositor {
     }
 
     fn get_capabilities(&self) -> CompositorCapabilities {
-        unsafe { wr_compositor_get_capabilities(self.0) }
+        unsafe {
+            wr_compositor_get_capabilities(self.0)
+        }
     }
 }
 
@@ -2546,7 +2566,10 @@ pub extern "C" fn wr_dp_push_iframe(
 }
 
 // A helper fn to construct a PrimitiveFlags
-fn prim_flags(is_backface_visible: bool, prefer_compositor_surface: bool) -> PrimitiveFlags {
+fn prim_flags(
+    is_backface_visible: bool,
+    prefer_compositor_surface: bool,
+) -> PrimitiveFlags {
     let mut flags = PrimitiveFlags::empty();
 
     if is_backface_visible {
@@ -2796,18 +2819,16 @@ pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_image(
-    state: &mut WrState,
-    bounds: LayoutRect,
-    clip: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClipChain,
-    image_rendering: ImageRendering,
-    key: WrImageKey,
-    premultiplied_alpha: bool,
-    color: ColorF,
-    prefer_compositor_surface: bool,
-) {
+pub extern "C" fn wr_dp_push_image(state: &mut WrState,
+                                   bounds: LayoutRect,
+                                   clip: LayoutRect,
+                                   is_backface_visible: bool,
+                                   parent: &WrSpaceAndClipChain,
+                                   image_rendering: ImageRendering,
+                                   key: WrImageKey,
+                                   premultiplied_alpha: bool,
+                                   color: ColorF,
+                                   prefer_compositor_surface: bool) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -2880,21 +2901,19 @@ pub extern "C" fn wr_dp_push_repeating_image(
 
 /// Push a 3 planar yuv image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_planar_image(
-    state: &mut WrState,
-    bounds: LayoutRect,
-    clip: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClipChain,
-    image_key_0: WrImageKey,
-    image_key_1: WrImageKey,
-    image_key_2: WrImageKey,
-    color_depth: WrColorDepth,
-    color_space: WrYuvColorSpace,
-    color_range: WrColorRange,
-    image_rendering: ImageRendering,
-    prefer_compositor_surface: bool,
-) {
+pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
+                                              bounds: LayoutRect,
+                                              clip: LayoutRect,
+                                              is_backface_visible: bool,
+                                              parent: &WrSpaceAndClipChain,
+                                              image_key_0: WrImageKey,
+                                              image_key_1: WrImageKey,
+                                              image_key_2: WrImageKey,
+                                              color_depth: WrColorDepth,
+                                              color_space: WrYuvColorSpace,
+                                              color_range: WrColorRange,
+                                              image_rendering: ImageRendering,
+                                              prefer_compositor_surface: bool) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -2921,20 +2940,18 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(
 
 /// Push a 2 planar NV12 image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_NV12_image(
-    state: &mut WrState,
-    bounds: LayoutRect,
-    clip: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClipChain,
-    image_key_0: WrImageKey,
-    image_key_1: WrImageKey,
-    color_depth: WrColorDepth,
-    color_space: WrYuvColorSpace,
-    color_range: WrColorRange,
-    image_rendering: ImageRendering,
-    prefer_compositor_surface: bool,
-) {
+pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
+                                            bounds: LayoutRect,
+                                            clip: LayoutRect,
+                                            is_backface_visible: bool,
+                                            parent: &WrSpaceAndClipChain,
+                                            image_key_0: WrImageKey,
+                                            image_key_1: WrImageKey,
+                                            color_depth: WrColorDepth,
+                                            color_space: WrYuvColorSpace,
+                                            color_range: WrColorRange,
+                                            image_rendering: ImageRendering,
+                                            prefer_compositor_surface: bool) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -2961,19 +2978,17 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(
 
 /// Push a yuv interleaved image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_interleaved_image(
-    state: &mut WrState,
-    bounds: LayoutRect,
-    clip: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClipChain,
-    image_key_0: WrImageKey,
-    color_depth: WrColorDepth,
-    color_space: WrYuvColorSpace,
-    color_range: WrColorRange,
-    image_rendering: ImageRendering,
-    prefer_compositor_surface: bool,
-) {
+pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
+                                                   bounds: LayoutRect,
+                                                   clip: LayoutRect,
+                                                   is_backface_visible: bool,
+                                                   parent: &WrSpaceAndClipChain,
+                                                   image_key_0: WrImageKey,
+                                                   color_depth: WrColorDepth,
+                                                   color_space: WrYuvColorSpace,
+                                                   color_range: WrColorRange,
+                                                   image_rendering: ImageRendering,
+                                                   prefer_compositor_surface: bool) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -3543,26 +3558,25 @@ pub extern "C" fn wr_dp_start_cached_item(state: &mut WrState, key: ItemKey) {
     debug_assert!(state.current_item_key.is_none(), "Nested item keys");
     state.current_item_key = Some(key);
 
-    state.frame_builder.dl_builder.start_item_group(key);
+    state.frame_builder.dl_builder.start_extra_data_chunk();
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState) {
-    state.current_item_key = None;
+pub extern "C" fn wr_dp_end_cached_item(state: &mut WrState, key: ItemKey) -> bool {
+    let _previous = state.current_item_key.take().expect("Nested item keys");
+    debug_assert!(_previous == key, "Item key changed during caching");
 
-    state.frame_builder.dl_builder.cancel_item_group();
+    if !state.frame_builder.dl_builder.end_extra_data_chunk() {
+        return false;
+    }
+
+    state.frame_builder.dl_builder.push_reuse_item(key);
+    true
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_finish_item_group(state: &mut WrState, key: ItemKey) -> bool {
-    state.current_item_key = None;
-
-    state.frame_builder.dl_builder.finish_item_group(key)
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_push_reuse_items(state: &mut WrState, key: ItemKey) {
-    state.frame_builder.dl_builder.push_reuse_items(key);
+pub extern "C" fn wr_dp_push_reuse_item(state: &mut WrState, key: ItemKey) {
+    state.frame_builder.dl_builder.push_reuse_item(key);
 }
 
 #[no_mangle]
