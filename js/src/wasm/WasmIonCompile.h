@@ -27,8 +27,7 @@ namespace js {
 namespace wasm {
 
 // Return whether IonCompileFunction() can generate code on the current device.
-// Usually you do *not* want this, you want IonAvailable().
-MOZ_MUST_USE bool IonPlatformSupport();
+bool IonCanCompile();
 
 // Generates very fast code at the expense of compilation time.
 MOZ_MUST_USE bool IonCompileFunctions(const ModuleEnvironment& env,
