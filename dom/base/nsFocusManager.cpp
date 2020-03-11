@@ -742,7 +742,17 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
     }
   }
 
-  if (mActiveWindow != window) return NS_OK;
+  if (XRE_IsParentProcess()) {
+    if (mActiveWindow != window) {
+      return NS_OK;
+    }
+  } else {
+    BrowsingContext* bc = window->GetBrowsingContext();
+    BrowsingContext* active = GetActiveBrowsingContext();
+    if (active != bc->Top()) {
+      return NS_OK;
+    }
+  }
 
   // clear the mouse capture as the active window has changed
   PresShell::ReleaseCapturingContent();
@@ -769,7 +779,7 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   // keep track of the window being lowered, so that attempts to raise the
   // window can be prevented until we return. Otherwise, focus can get into
   // an unusual state.
-  mWindowBeingLowered = mActiveWindow;
+  mWindowBeingLowered = window;
   mActiveWindow = nullptr;
   if (!XRE_IsParentProcess()) {
     BrowsingContext* bc = window->GetBrowsingContext();
@@ -2012,9 +2022,27 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
     // if the object being blurred is a remote browser, deactivate remote
     // content
     if (BrowserParent* remote = BrowserParent::GetFrom(element)) {
+      MOZ_ASSERT(XRE_IsParentProcess());
+      // First, let's deactivate all out-of-process iframes.
+      BrowsingContext* topLevelBrowsingContext = remote->GetBrowsingContext();
+      topLevelBrowsingContext->PreOrderWalk([&](BrowsingContext* aContext) {
+        WindowGlobalParent* windowGlobalParent =
+            aContext->Canonical()->GetCurrentWindowGlobal();
+        if (windowGlobalParent) {
+          RefPtr<BrowserParent> browserParent =
+              windowGlobalParent->GetBrowserParent();
+          if (browserParent) {
+            browserParent->Deactivate(windowBeingLowered);
+            LOGFOCUS(("OOP iframe remote browser deactivated %p, %d", remote,
+                      windowBeingLowered));
+          }
+        }
+      });
+
+      // Now deactivate the top-level Web page.
       remote->Deactivate(windowBeingLowered);
-      LOGFOCUS(
-          ("Remote browser deactivated %p, %d", remote, windowBeingLowered));
+      LOGFOCUS(("Top-level Remote browser deactivated %p, %d", remote,
+                windowBeingLowered));
     }
 
     // Same as above but for out-of-process iframes
