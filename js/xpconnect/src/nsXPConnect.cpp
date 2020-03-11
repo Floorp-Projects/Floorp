@@ -209,13 +209,11 @@ void xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
   }
 
   mSourceLine.Assign(aReport->linebuf(), aReport->linebufLength());
-  const JSErrorFormatString* efs =
-      js::GetErrorMessage(nullptr, aReport->errorNumber);
 
-  if (efs == nullptr) {
-    mErrorMsgName.AssignLiteral("");
+  if (aReport->errorMessageName) {
+    mErrorMsgName.AssignASCII(aReport->errorMessageName);
   } else {
-    mErrorMsgName.AssignASCII(efs->name);
+    mErrorMsgName.Truncate();
   }
 
   mFlags = aReport->flags;

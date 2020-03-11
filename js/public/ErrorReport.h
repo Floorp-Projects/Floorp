@@ -106,6 +106,10 @@ class JSErrorBase {
   // the error number, e.g. see js.msg.
   unsigned errorNumber;
 
+  // Points to JSErrorFormatString::name.
+  // This string must never be freed.
+  const char* errorMessageName;
+
  private:
   bool ownsMessage_ : 1;
 
@@ -116,6 +120,7 @@ class JSErrorBase {
         lineno(0),
         column(0),
         errorNumber(0),
+        errorMessageName(nullptr),
         ownsMessage_(false) {}
 
   ~JSErrorBase() { freeMessage(); }
