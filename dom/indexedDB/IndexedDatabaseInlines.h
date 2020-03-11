@@ -12,6 +12,7 @@
 #endif
 
 #include "FileInfo.h"
+#include "FileManager.h"
 #include "IDBMutableFile.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -95,35 +96,17 @@ inline StructuredCloneReadInfo::StructuredCloneReadInfo(
 #ifdef NS_BUILD_REFCNT_LOGGING
 inline StructuredCloneReadInfo::StructuredCloneReadInfo(
     StructuredCloneReadInfo&& aOther) noexcept
-    : mData(std::move(aOther.mData)) {
-  MOZ_ASSERT(&aOther != this);
+    : mData{std::move(aOther.mData)},
+      mFiles{std::move(aOther.mFiles)},
+      mDatabase{std::move(aOther.mDatabase)},
+      mHasPreprocessInfo{std::move(aOther.mHasPreprocessInfo)} {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
-
-  mFiles.Clear();
-  mFiles.SwapElements(aOther.mFiles);
-  mDatabase = aOther.mDatabase;
-  aOther.mDatabase = nullptr;
-  mHasPreprocessInfo = aOther.mHasPreprocessInfo;
-  aOther.mHasPreprocessInfo = false;
 }
 
 inline StructuredCloneReadInfo::~StructuredCloneReadInfo() {
   MOZ_COUNT_DTOR(StructuredCloneReadInfo);
 }
 
-inline StructuredCloneReadInfo& StructuredCloneReadInfo::operator=(
-    StructuredCloneReadInfo&& aOther) noexcept {
-  MOZ_ASSERT(&aOther != this);
-
-  mData = std::move(aOther.mData);
-  mFiles.Clear();
-  mFiles.SwapElements(aOther.mFiles);
-  mDatabase = aOther.mDatabase;
-  aOther.mDatabase = nullptr;
-  mHasPreprocessInfo = aOther.mHasPreprocessInfo;
-  aOther.mHasPreprocessInfo = false;
-  return *this;
-}
 #endif
 
 inline size_t StructuredCloneReadInfo::Size() const {
