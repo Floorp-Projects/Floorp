@@ -21,7 +21,6 @@ function makeDependencies() {
     devToolsClient: (null: any),
     supportsWasm: true,
     currentTarget: (null: any),
-    targetList: (null: any),
   };
 }
 
