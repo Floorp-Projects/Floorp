@@ -33,7 +33,7 @@ object Versions {
     const val google_material = "1.1.0"
     const val google_flexbox = "2.0.1"
 
-    const val mozilla_android_components = "36.0.0-SNAPSHOT"
+    const val mozilla_android_components = "37.0.0-SNAPSHOT"
 
     const val adjust = "4.18.3"
     const val installreferrer = "1.0"
