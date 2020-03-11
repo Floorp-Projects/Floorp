@@ -21,22 +21,22 @@ flat varying vec4 vParams;
 #ifdef WR_VERTEX_SHADER
 
 // The size of the mask tile we're rendering, in pixels.
-in vec4 aTaskRect;
+PER_INSTANCE in vec4 aTaskRect;
 
 // The size of the mask tile. aLocalSize.x is always horizontal and .y vertical,
 // regardless of the line's orientation. The size is chosen by
 // prim_store::get_line_decoration_sizes.
-in vec2 aLocalSize;
+PER_INSTANCE in vec2 aLocalSize;
 
 // A LINE_STYLE_* value, indicating what sort of line to draw.
-in int aStyle;
+PER_INSTANCE in int aStyle;
 
 // 0.0 for a horizontal line, 1.0 for a vertical line.
-in float aAxisSelect;
+PER_INSTANCE in float aAxisSelect;
 
 // The thickness of the wavy line itself, not the amplitude of the waves (i.e.,
 // the thickness of the final decorated line).
-in float aWavyLineThickness;
+PER_INSTANCE in float aWavyLineThickness;
 
 void main(void) {
     vec2 size = mix(aLocalSize, aLocalSize.yx, aAxisSelect);
