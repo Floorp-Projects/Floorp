@@ -25,6 +25,8 @@ enum class Initialization {
   UpgradeStorageFrom2_0To2_1 = 1 << 6,
   UpgradeStorageFrom2_1To2_2 = 1 << 7,
   UpgradeStorageFrom2_2To2_3 = 1 << 8,
+  UpgradeFromIndexedDBDirectory = 1 << 9,
+  UpgradeFromPersistentStorageDirectory = 1 << 10,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Initialization)
@@ -105,6 +107,10 @@ class InitializationInfo final {
         return NS_LITERAL_CSTRING("UpgradeStorageFrom2_1To2_2");
       case Initialization::UpgradeStorageFrom2_2To2_3:
         return NS_LITERAL_CSTRING("UpgradeStorageFrom2_2To2_3");
+      case Initialization::UpgradeFromIndexedDBDirectory:
+        return NS_LITERAL_CSTRING("UpgradeFromIndexedDBDirectory");
+      case Initialization::UpgradeFromPersistentStorageDirectory:
+        return NS_LITERAL_CSTRING("UpgradeFromPersistentStorageDirectory");
 
       default:
         MOZ_CRASH("Bad initialization value!");
