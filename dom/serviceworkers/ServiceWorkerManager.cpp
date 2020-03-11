@@ -2313,59 +2313,13 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
   aRv = uploadChannel->EnsureUploadStreamIsCloneable(permissionsRunnable);
 }
 
-bool ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI,
-                                       nsIChannel* aChannel) {
+bool ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aURI);
-  MOZ_ASSERT(aChannel);
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetServiceWorkerRegistrationInfo(aPrincipal, aURI);
-
-  // For child interception, just check the availability.
-  if (!ServiceWorkerParentInterceptEnabled()) {
-    return registration && registration->GetActive();
-  }
-
-  if (!registration || !registration->GetActive()) {
-    return false;
-  }
-
-  // Checking if the matched service worker handles fetch events or not.
-  // If it does, directly return true and handle the client controlling logic
-  // in DispatchFetchEvent(). otherwise, do followings then return false.
-  // 1. Set the matched service worker as the controller of LoadInfo and
-  //    correspoinding ClinetInfo
-  // 2. Maybe schedule a soft update
-  if (!registration->GetActive()->HandlesFetch()) {
-    // Checkin if the channel is not storage allowed first.
-    if (StorageAllowedForChannel(aChannel) != StorageAccess::eAllow) {
-      return false;
-    }
-
-    // ServiceWorkerInterceptController::ShouldPrepareForIntercept() handles the
-    // subresource cases. Must be non-subresource case here.
-    MOZ_ASSERT(nsContentUtils::IsNonSubresourceRequest(aChannel));
-
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-
-    Maybe<ClientInfo> clientInfo = loadInfo->GetReservedClientInfo();
-    if (clientInfo.isNothing()) {
-      clientInfo = loadInfo->GetInitialClientInfo();
-    }
-
-    if (clientInfo.isSome()) {
-      StartControllingClient(clientInfo.ref(), registration);
-    }
-    loadInfo->SetController(registration->GetActive()->Descriptor());
-
-    // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm 17.1
-    // try schedule a soft-update for non-subresource case.
-    registration->MaybeScheduleTimeCheckAndUpdate();
-    return false;
-  }
-  // Found a matching service worker which handles fetch events, return true.
-  return true;
+  return registration && registration->GetActive();
 }
 
 nsresult ServiceWorkerManager::GetClientRegistration(
