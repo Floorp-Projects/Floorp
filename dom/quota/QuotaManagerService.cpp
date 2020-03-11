@@ -78,16 +78,16 @@ nsresult GetClearResetOriginParams(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  if (aPersistenceType.IsVoid()) {
+  Nullable<PersistenceType> persistenceType;
+  rv = NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (persistenceType.IsNull()) {
     aParams.persistenceTypeIsExplicit() = false;
   } else {
-    const auto maybePersistenceType =
-        PersistenceTypeFromString(aPersistenceType, fallible);
-    if (NS_WARN_IF(maybePersistenceType.isNothing())) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    aParams.persistenceType() = maybePersistenceType.value();
+    aParams.persistenceType() = persistenceType.Value();
     aParams.persistenceTypeIsExplicit() = true;
   }
 
@@ -502,13 +502,13 @@ QuotaManagerService::InitStorageAndOrigin(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  const auto maybePersistenceType =
-      PersistenceTypeFromString(aPersistenceType, fallible);
-  if (NS_WARN_IF(maybePersistenceType.isNothing())) {
+  Nullable<PersistenceType> persistenceType;
+  rv = NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
+  if (NS_WARN_IF(NS_FAILED(rv)) || persistenceType.IsNull()) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  params.persistenceType() = maybePersistenceType.value();
+  params.persistenceType() = persistenceType.Value();
 
   if (aClientType.IsVoid()) {
     params.clientTypeIsExplicit() = false;
