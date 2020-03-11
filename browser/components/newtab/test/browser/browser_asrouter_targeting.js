@@ -1034,3 +1034,14 @@ add_task(async function check_isChinaRepack() {
 
   prefDefaultBranch.deleteBranch("");
 });
+
+add_task(async function check_userId() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["app.normandy.user_id", "foo123"]],
+  });
+  is(
+    await ASRouterTargeting.Environment.userId,
+    "foo123",
+    "should read userID from normandy user id pref"
+  );
+});
