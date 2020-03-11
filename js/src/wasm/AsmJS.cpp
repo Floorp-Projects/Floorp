@@ -6843,10 +6843,10 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
   HandleValue importVal = args.get(1);
   HandleValue bufferVal = args.get(2);
 
-  // Re-check HasPlatformSupport(cx) since this varies per-thread and
+  // Re-check HasCompilerSupport(cx) since this varies per-thread and
   // 'module' may have been produced on a parser thread.
-  if (!HasPlatformSupport(cx)) {
-    return LinkFail(cx, "no platform support");
+  if (!HasCompilerSupport(cx)) {
+    return LinkFail(cx, "no compiler support");
   }
 
   Rooted<ImportValues> imports(cx);
@@ -7039,7 +7039,7 @@ static bool TypeFailureWarning(frontend::ParserBase& parser, const char* str) {
 // asm.js requires Ion to be available on the current hardware/OS and to be
 // enabled for wasm, since asm.js compilation goes via wasm.
 static bool IsAsmJSCompilerAvailable(JSContext* cx) {
-  return HasPlatformSupport(cx) && IonAvailable(cx);
+  return HasCompilerSupport(cx) && IonCanCompile() && cx->options().wasmIon();
 }
 
 static bool EstablishPreconditions(JSContext* cx,
