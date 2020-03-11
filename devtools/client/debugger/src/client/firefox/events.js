@@ -61,8 +61,6 @@ function setupEvents(dependencies: Dependencies) {
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
-  devToolsClient.mainRoot.on("processListChanged", threadListChanged);
-
   workersListener = new WorkersListener(devToolsClient.mainRoot);
 
   threadFrontListeners = new WeakMap();
