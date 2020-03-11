@@ -118,11 +118,6 @@
 !define MOZ_MAINTENANCE_SERVICE
 #endif
 
-#ifdef MOZ_UPDATE_AGENT
-!define MOZ_UPDATE_AGENT
-!define UpdateAgentFullName "Mozilla Update Agent"
-#endif
-
 #ifdef MOZ_BITS_DOWNLOAD
 !define MOZ_BITS_DOWNLOAD
 #endif
