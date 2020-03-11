@@ -19,6 +19,8 @@ const PAGESIZE = 65536;
 // should still fill up to the limit.
 
 function mem_fill(min, max, shared, backup, write=backup*2) {
+    if (shared == "shared" && !sharedMemoryEnabled())
+        return;
     let ins = wasmEvalText(
         `(module
            (memory (export "mem") ${min} ${max} ${shared})
@@ -56,6 +58,8 @@ mem_fill(2, 4, "shared", 257, 0xFFFFFFFF); // offs + len overflows 32-bit
 const mem_init_len = 16;
 
 function mem_init(min, max, shared, backup, write) {
+    if (shared == "shared" && !sharedMemoryEnabled())
+        return;
     let ins = wasmEvalText(
         `(module
            (memory (export "mem") ${min} ${max} ${shared})
@@ -111,6 +115,8 @@ mem_init(1, "", "", PAGESIZE, 0xFFFFFFFC);
 // - both oob
 
 function mem_copy(min, max, shared, srcOffs, targetOffs, len) {
+    if (shared == "shared" && !sharedMemoryEnabled())
+        return;
     let ins = wasmEvalText(
         `(module
            (memory (export "mem") ${min} ${max} ${shared})
