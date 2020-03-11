@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebugSupport()
+// |jit-test| skip-if: !wasmDebuggingIsSupported()
 //
 var mod = new WebAssembly.Module(wasmTextToBinary(`
     (module
