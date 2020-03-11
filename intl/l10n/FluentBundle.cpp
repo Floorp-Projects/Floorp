@@ -6,6 +6,7 @@
 
 #include "FluentBundle.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "unicode/numberformatter.h"
 
 using namespace mozilla::dom;
 
@@ -184,6 +185,67 @@ void FluentBundle::FormatPattern(JSContext* aCx, const FluentPattern& aPattern,
       aRv.ThrowUnknownError("Failed to add errors to an error array.");
     }
   }
+}
+
+// FFI
+
+extern "C" {
+ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
+    const nsCString* aLocale, const ffi::FluentNumberOptionsRaw* aOptions) {
+  auto grouping = aOptions->use_grouping
+                      ? UNumberGroupingStrategy::UNUM_GROUPING_AUTO
+                      : UNumberGroupingStrategy::UNUM_GROUPING_OFF;
+
+  auto formatter =
+      icu::number::NumberFormatter::with().grouping(grouping).integerWidth(
+          icu::number::IntegerWidth::zeroFillTo(
+              aOptions->minimum_integer_digits));
+
+  // JS uses ROUND_HALFUP strategy, ICU by default uses ROUND_HALFEVEN.
+  // See: http://userguide.icu-project.org/formatparse/numbers/rounding-modes
+  formatter = formatter.roundingMode(UNUM_ROUND_HALFUP);
+
+  if (aOptions->style == ffi::FluentNumberStyleRaw::Currency) {
+    UErrorCode ec = U_ZERO_ERROR;
+    formatter =
+        formatter.unit(icu::CurrencyUnit(aOptions->currency.get(), ec));
+    MOZ_ASSERT(U_SUCCESS(ec), "Failed to format the currency unit.");
+  }
+  if (aOptions->style == ffi::FluentNumberStyleRaw::Percent) {
+    formatter = formatter.unit(icu::NoUnit::percent());
+  }
+
+  if (aOptions->minimum_significant_digits >= 0 ||
+      aOptions->maximum_significant_digits >= 0) {
+    auto precision = icu::number::Precision::minMaxSignificantDigits(
+                         aOptions->minimum_significant_digits,
+                         aOptions->maximum_significant_digits)
+                         .minMaxFraction(aOptions->minimum_fraction_digits,
+                                         aOptions->maximum_fraction_digits);
+    formatter = formatter.precision(precision);
+  } else {
+    auto precision = icu::number::Precision::minMaxFraction(
+        aOptions->minimum_fraction_digits, aOptions->maximum_fraction_digits);
+    formatter = formatter.precision(precision);
+  }
+
+  return reinterpret_cast<ffi::RawNumberFormatter*>(
+      formatter.locale(aLocale->get()).clone().orphan());
+}
+
+uint8_t* FluentBuiltInNumberFormatterFormat(const ffi::RawNumberFormatter* aFormatter,
+                                        double input, uint32_t* aOutCount) {
+  auto formatter =
+      reinterpret_cast<const icu::number::LocalizedNumberFormatter*>(aFormatter);
+  UErrorCode ec = U_ZERO_ERROR;
+  icu::number::FormattedNumber result = formatter->formatDouble(input, ec);
+  icu::UnicodeString str = result.toTempString(ec);
+  return reinterpret_cast<uint8_t*>(ToNewUTF8String(nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
+}
+
+void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
+  delete reinterpret_cast<icu::number::LocalizedNumberFormatter*>(aFormatter);
+}
 }
 
 }  // namespace intl
