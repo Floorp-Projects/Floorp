@@ -711,18 +711,6 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
         return false;
       }
 
-      [[fallthrough]];
-
-    case DeclarationKind::Import:
-      // Module code is always strict, so 'let' is always a keyword and never a
-      // name.
-      MOZ_ASSERT(name != cx_->names().let);
-      [[fallthrough]];
-
-    case DeclarationKind::SimpleCatchParameter:
-    case DeclarationKind::CatchParameter: {
-      ParseContext::Scope* scope = pc_->innermostScope();
-
       // For body-level lexically declared names in a function, it is an
       // early error if there is a formal parameter of the same name. This
       // needs a special check if there is an extra var scope due to
@@ -734,6 +722,18 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
           return false;
         }
       }
+
+      [[fallthrough]];
+
+    case DeclarationKind::Import:
+      // Module code is always strict, so 'let' is always a keyword and never a
+      // name.
+      MOZ_ASSERT(name != cx_->names().let);
+      [[fallthrough]];
+
+    case DeclarationKind::SimpleCatchParameter:
+    case DeclarationKind::CatchParameter: {
+      ParseContext::Scope* scope = pc_->innermostScope();
 
       // It is an early error if there is another declaration with the same
       // name in the same scope.
