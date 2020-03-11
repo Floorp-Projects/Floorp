@@ -1,0 +1,5 @@
+# vim: filetype=dosini:
+[run]
+branch = True
+source = jsonschema
+omit = */jsonschema/_reflect.py,*/jsonschema/__main__.py,*/jsonschema/benchmarks/*

@@ -1,0 +1,147 @@
+version: 2.1
+
+commands:
+    test-python-version:
+        parameters:
+            requirements-file:
+                type: string
+                default: "requirements_dev.txt"
+        steps:
+            - checkout
+            - run:
+                    name: environment
+                    command: |
+                        echo 'export PATH=.:$HOME/.local/bin:$PATH' >> $BASH_ENV
+            - run:
+                    name: install
+                    command: |
+                        pip install --progress-bar off --user -U -r <<parameters.requirements-file>>
+                        sudo apt update -q
+                        sudo apt upgrade -q
+                        sudo apt install openjdk-11-jdk-headless
+                        make install-kotlin-linters
+            - run:
+                    name: lint
+                    command: make lint
+            - run:
+                    name: install
+                    # Set CC to something that isn't a working compiler so we
+                    # can detect if any of the dependencies require a compiler
+                    # to be installed. We can't count on a working compiler
+                    # being available to pip on all of the platforms we need to
+                    # support, so we need to make sure the dependencies are all
+                    # pure Python or provide pre-built wheels.
+                    command: CC=broken_compiler python setup.py install --user
+            - run:
+                    name: test
+                    command: make test
+
+jobs:
+    build-35:
+        docker:
+            - image: circleci/python:3.5.9
+        steps:
+            - test-python-version:
+                    requirements-file: requirements_dev_py35.txt
+
+    build-36:
+        docker:
+            - image: circleci/python:3.6.9
+        steps:
+            - test-python-version
+
+    build-37:
+        docker:
+            - image: circleci/python:3.7.5
+        steps:
+            - test-python-version
+            - run:
+                    name: make-docs
+                    command: |
+                        make docs
+                        touch docs/_build/html/.nojekyll
+            - persist_to_workspace:
+                    root: docs/_build
+                    paths: html
+
+    build-38:
+        docker:
+            - image: circleci/python:3.8.0
+        steps:
+            - test-python-version
+
+    docs-deploy:
+        docker:
+            - image: node:8.10.0
+        steps:
+            - checkout
+            - add_ssh_keys:
+                    fingerprints:
+                        - "9b:25:aa:bf:39:b6:4a:e7:c3:52:cf:ab:23:81:3d:52"
+            - attach_workspace:
+                    at: docs/_build
+            - run:
+                    name: install
+                    command: |
+                        npm install -g --silent gh-pages@2.0.1
+                        git config user.email "glean-ci@nowhere.com"
+                        git config user.name "glean-ci"
+            - run:
+                    name: deploy
+                    command: |
+                        gh-pages --dotfiles --message "[ci skip] updates" --dist docs/_build/html
+
+    pypi-deploy:
+        docker:
+            - image: circleci/python:3.7.5
+        steps:
+            - checkout
+            - run:
+                    name: environment
+                    command: |
+                        echo 'export PATH=.:$HOME/.local/bin:$PATH' >> $BASH_ENV
+            - run:
+                    name: install
+                    command: |
+                        pip install --user -U -r requirements_dev.txt
+            - run:
+                    name: deploy
+                    # Requires that the TWINE_USERNAME and TWINE_PASSWORD environment
+                    # variables are configured in CircleCI's environment variables.
+                    command: |
+                        make release
+
+workflows:
+    version: 2
+    build:
+        jobs:
+            - build-35:
+                    filters:
+                        tags:
+                            only: /.*/
+            - build-36:
+                    filters:
+                        tags:
+                            only: /.*/
+            - build-37:
+                    filters:
+                        tags:
+                            only: /.*/
+            - build-38:
+                    filters:
+                        tags:
+                            only: /.*/
+            - docs-deploy:
+                    requires:
+                        - build-37
+                    filters:
+                        branches:
+                            only: master
+            - pypi-deploy:
+                    requires:
+                        - build-37
+                    filters:
+                        branches:
+                            ignore: /.*/
+                        tags:
+                            only: /v[0-9]+(\.[0-9]+)*/

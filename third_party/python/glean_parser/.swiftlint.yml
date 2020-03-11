@@ -1,0 +1,6 @@
+identifier_name:
+  # Turn off it complaining about `id` or `let t = title`, etc, but keep
+  # warnings around e.g. enum names.
+  min_length:
+    warning: 0
+    error: 0
