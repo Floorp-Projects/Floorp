@@ -56,9 +56,10 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
 
 // static
 template <typename Destructor>
-UniquePtr<baseprofiler::ProfilerBacktrace, Destructor> BlocksRingBuffer::
+UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>
+ProfileBufferEntryReader::
     Deserializer<UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>>::Read(
-        BlocksRingBuffer::EntryReader& aER) {
+        ProfileBufferEntryReader& aER) {
   auto blocksRingBuffer = aER.ReadObject<UniquePtr<BlocksRingBuffer>>();
   if (!blocksRingBuffer) {
     return nullptr;

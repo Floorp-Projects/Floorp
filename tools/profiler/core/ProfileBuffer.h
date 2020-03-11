@@ -97,14 +97,16 @@ class ProfileBuffer final {
     mEntries.Read([&](mozilla::BlocksRingBuffer::Reader* aReader) {
       // BlocksRingBuffer cannot be out-of-session when sampler is running.
       MOZ_ASSERT(aReader);
-      for (mozilla::BlocksRingBuffer::EntryReader er : *aReader) {
-        if (er.CurrentBlockIndex().ConvertToProfileBufferIndex() > aPosition) {
+      const auto itEnd = aReader->end();
+      for (auto it = aReader->begin(); it != itEnd; ++it) {
+        if (it.CurrentBlockIndex().ConvertToProfileBufferIndex() > aPosition) {
           // Passed the block. (We need a precise position.)
           return;
         }
-        if (er.CurrentBlockIndex().ConvertToProfileBufferIndex() == aPosition) {
+        if (it.CurrentBlockIndex().ConvertToProfileBufferIndex() == aPosition) {
+          mozilla::ProfileBufferEntryReader er = *it;
           MOZ_RELEASE_ASSERT(er.RemainingBytes() <= sizeof(entry));
-          er.Read(&entry, er.RemainingBytes());
+          er.ReadBytes(&entry, er.RemainingBytes());
           return;
         }
       }

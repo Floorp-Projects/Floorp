@@ -4794,7 +4794,7 @@ static void racy_profiler_add_marker(const char* aMarkerName,
   TimeDuration delta = origin - CorePS::ProcessStartTime();
   CorePS::CoreBlocksRingBuffer().PutObjects(
       ProfileBufferEntry::Kind::MarkerData, racyRegisteredThread->ThreadId(),
-      WrapBlocksRingBufferUnownedCString(aMarkerName),
+      WrapProfileBufferUnownedCString(aMarkerName),
       static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
 }
 
@@ -4915,7 +4915,7 @@ void profiler_add_marker_for_thread(int aThreadId,
   TimeDuration delta = origin - CorePS::ProcessStartTime();
   CorePS::CoreBlocksRingBuffer().PutObjects(
       ProfileBufferEntry::Kind::MarkerData, aThreadId,
-      WrapBlocksRingBufferUnownedCString(aMarkerName),
+      WrapProfileBufferUnownedCString(aMarkerName),
       static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
 }
 

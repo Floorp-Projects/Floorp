@@ -734,7 +734,7 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(!(bi0 > bi0));
 
     // Default ProfileBufferBlockIndex can be used, but returns no valid entry.
-    rb.ReadAt(bi0, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    rb.ReadAt(bi0, [](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
@@ -747,7 +747,7 @@ void TestBlocksRingBufferAPI() {
 
     // Push `2` through ReserveAndPut, check output ProfileBufferBlockIndex.
     auto bi2 = rb.ReserveAndPut([]() { return sizeof(uint32_t); },
-                                [](BlocksRingBuffer::EntryWriter* aEW) {
+                                [](ProfileBufferEntryWriter* aEW) {
                                   MOZ_RELEASE_ASSERT(!!aEW);
                                   aEW->WriteObject(uint32_t(2));
                                   return aEW->CurrentBlockIndex();
@@ -761,17 +761,22 @@ void TestBlocksRingBufferAPI() {
     VERIFY_START_END_PUSHED_CLEARED(1, 11, 2, 0);
 
     // Check single entry at bi2, store next block index.
-    auto bi2Next =
-        rb.ReadAt(bi2, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    auto i2Next =
+        rb.ReadAt(bi2, [bi2](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
           MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
+          MOZ_RELEASE_ASSERT(aMaybeReader->CurrentBlockIndex() == bi2);
+          MOZ_RELEASE_ASSERT(aMaybeReader->NextBlockIndex() == nullptr);
+          size_t entrySize = aMaybeReader->RemainingBytes();
           MOZ_RELEASE_ASSERT(aMaybeReader->ReadObject<uint32_t>() == 2);
-          MOZ_RELEASE_ASSERT(
-              aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex())
-                  .isNothing());
-          return aMaybeReader->NextBlockIndex();
+          // The next block index is after this block, which is made of the
+          // entry size (coded as ULEB128) followed by the entry itself.
+          return bi2.ConvertToProfileBufferIndex() + ULEB128Size(entrySize) +
+                 entrySize;
         });
+    auto bi2Next = rb.GetState().mRangeEnd;
+    MOZ_RELEASE_ASSERT(bi2Next.ConvertToProfileBufferIndex() == i2Next);
     // bi2Next is at the end, nothing to read.
-    rb.ReadAt(bi2Next, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    rb.ReadAt(bi2Next, [](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
@@ -825,12 +830,12 @@ void TestBlocksRingBufferAPI() {
 
     // Push `3` through Put, check writer output
     // is returned to the initial caller.
-    auto put3 =
-        rb.Put(sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter* aEW) {
-          MOZ_RELEASE_ASSERT(!!aEW);
-          aEW->WriteObject(uint32_t(3));
-          return float(aEW->CurrentBlockIndex().ConvertToProfileBufferIndex());
-        });
+    auto put3 = rb.Put(sizeof(uint32_t), [&](ProfileBufferEntryWriter* aEW) {
+      MOZ_RELEASE_ASSERT(!!aEW);
+      aEW->WriteObject(uint32_t(3));
+      MOZ_RELEASE_ASSERT(aEW->CurrentBlockIndex() == bi2Next);
+      return float(aEW->CurrentBlockIndex().ConvertToProfileBufferIndex());
+    });
     static_assert(std::is_same<decltype(put3), float>::value,
                   "Expect float as returned by callback.");
     MOZ_RELEASE_ASSERT(put3 == 11.0);
@@ -838,26 +843,17 @@ void TestBlocksRingBufferAPI() {
     //   - S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
     VERIFY_START_END_PUSHED_CLEARED(1, 16, 3, 0);
 
-    // Re-Read single entry at bi2, should now have a next entry.
-    rb.ReadAt(bi2, [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    // Re-Read single entry at bi2, it should now have a next entry.
+    rb.ReadAt(bi2, [&](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
+      MOZ_RELEASE_ASSERT(aMaybeReader->CurrentBlockIndex() == bi2);
       MOZ_RELEASE_ASSERT(aMaybeReader->ReadObject<uint32_t>() == 2);
       MOZ_RELEASE_ASSERT(aMaybeReader->NextBlockIndex() == bi2Next);
-      MOZ_RELEASE_ASSERT(aMaybeReader->GetNextEntry().isSome());
-      MOZ_RELEASE_ASSERT(
-          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex()).isSome());
-      MOZ_RELEASE_ASSERT(
-          aMaybeReader->GetNextEntry()->CurrentBlockIndex() ==
-          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex())
-              ->CurrentBlockIndex());
-      MOZ_RELEASE_ASSERT(
-          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex())
-              ->ReadObject<uint32_t>() == 3);
     });
 
     // Check that we have `1` to `3`.
     uint32_t count = 0;
-    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
+    rb.ReadEach([&](ProfileBufferEntryReader& aReader) {
       MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
     });
     MOZ_RELEASE_ASSERT(count == 3);
@@ -883,7 +879,7 @@ void TestBlocksRingBufferAPI() {
 
     // Check that we have `2` to `4`.
     count = 1;
-    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
+    rb.ReadEach([&](ProfileBufferEntryReader& aReader) {
       MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
     });
     MOZ_RELEASE_ASSERT(count == 4);
@@ -891,33 +887,25 @@ void TestBlocksRingBufferAPI() {
     // Push 5 through Put, no returns.
     // This will clear the second entry.
     // Check that the EntryWriter can access bi4 but not bi2.
-    auto bi5_6 =
-        rb.Put(sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter* aEW) {
-          MOZ_RELEASE_ASSERT(!!aEW);
-          aEW->WriteObject(uint32_t(5));
-          MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi2).isNothing());
-          MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi4).isSome());
-          MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi4)->CurrentBlockIndex() == bi4);
-          MOZ_RELEASE_ASSERT(aEW->GetEntryAt(bi4)->ReadObject<uint32_t>() == 4);
-          return MakePair(aEW->CurrentBlockIndex(), aEW->BlockEndIndex());
-        });
-    auto& bi5 = bi5_6.first();
-    auto& bi6 = bi5_6.second();
+    auto bi5 = rb.Put(sizeof(uint32_t), [&](ProfileBufferEntryWriter* aEW) {
+      MOZ_RELEASE_ASSERT(!!aEW);
+      aEW->WriteObject(uint32_t(5));
+      return aEW->CurrentBlockIndex();
+    });
+    auto bi6 = rb.GetState().mRangeEnd;
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15 (16)
     //  [4 |    int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ]
     VERIFY_START_END_PUSHED_CLEARED(11, 26, 5, 2);
 
     // Read single entry at bi2, should now gracefully fail.
-    rb.ReadAt(bi2, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    rb.ReadAt(bi2, [](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
     // Read single entry at bi5.
-    rb.ReadAt(bi5, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    rb.ReadAt(bi5, [](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
       MOZ_RELEASE_ASSERT(aMaybeReader->ReadObject<uint32_t>() == 5);
-      MOZ_RELEASE_ASSERT(
-          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex()).isNothing());
     });
 
     rb.Read([&](BlocksRingBuffer::Reader* aReader) {
@@ -949,7 +937,7 @@ void TestBlocksRingBufferAPI() {
 
     // Check that we have `3` to `5`.
     count = 2;
-    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
+    rb.ReadEach([&](ProfileBufferEntryReader& aReader) {
       MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
     });
     MOZ_RELEASE_ASSERT(count == 5);
@@ -962,7 +950,7 @@ void TestBlocksRingBufferAPI() {
 
     // Check that we have `4` to `5`.
     count = 3;
-    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
+    rb.ReadEach([&](ProfileBufferEntryReader& aReader) {
       MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
     });
     MOZ_RELEASE_ASSERT(count == 5);
@@ -982,7 +970,7 @@ void TestBlocksRingBufferAPI() {
     rb.ReadEach([&](auto&&) { MOZ_RELEASE_ASSERT(false); });
 
     // Read single entry at bi5, should now gracefully fail.
-    rb.ReadAt(bi5, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    rb.ReadAt(bi5, [](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
@@ -1026,14 +1014,14 @@ void TestBlocksRingBufferAPI() {
     VERIFY_START_END_PUSHED_CLEARED(36, 51, 10, 7);
 
     // bi6 should now have been cleared.
-    rb.ReadAt(bi6, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+    rb.ReadAt(bi6, [](Maybe<ProfileBufferEntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
     // Check that we have `8`, `7`, `8`.
     count = 0;
     uint32_t expected[3] = {8, 7, 8};
-    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
+    rb.ReadEach([&](ProfileBufferEntryReader& aReader) {
       MOZ_RELEASE_ASSERT(count < 3);
       MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == expected[count++]);
     });
@@ -1083,7 +1071,7 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     MOZ_RELEASE_ASSERT(state.mClearedBlockCount == 0);
     // `Put()` functions run the callback with `Nothing`.
     int32_t ran = 0;
-    rb.Put(1, [&](BlocksRingBuffer::EntryWriter* aMaybeEntryWriter) {
+    rb.Put(1, [&](ProfileBufferEntryWriter* aMaybeEntryWriter) {
       MOZ_RELEASE_ASSERT(!aMaybeEntryWriter);
       ++ran;
     });
@@ -1102,17 +1090,16 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     MOZ_RELEASE_ASSERT(ran == 1);
     ran = 0;
     rb.ReadAt(ProfileBufferBlockIndex{},
-              [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeEntryReader) {
+              [&](Maybe<ProfileBufferEntryReader>&& aMaybeEntryReader) {
                 MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing());
                 ++ran;
               });
     MOZ_RELEASE_ASSERT(ran == 1);
     ran = 0;
-    rb.ReadAt(bi,
-              [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeEntryReader) {
-                MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing());
-                ++ran;
-              });
+    rb.ReadAt(bi, [&](Maybe<ProfileBufferEntryReader>&& aMaybeEntryReader) {
+      MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing());
+      ++ran;
+    });
     MOZ_RELEASE_ASSERT(ran == 1);
     // `ReadEach` shouldn't run the callback (nothing to read).
     rb.ReadEach([](auto&&) { MOZ_RELEASE_ASSERT(false); });
@@ -1156,13 +1143,12 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     }
     int32_t ran = 0;
     // The following three `Put...` will write three int32_t of value 1.
-    bi = rb.Put(sizeof(ran),
-                [&](BlocksRingBuffer::EntryWriter* aMaybeEntryWriter) {
-                  MOZ_RELEASE_ASSERT(!!aMaybeEntryWriter);
-                  ++ran;
-                  aMaybeEntryWriter->WriteObject(ran);
-                  return aMaybeEntryWriter->CurrentBlockIndex();
-                });
+    bi = rb.Put(sizeof(ran), [&](ProfileBufferEntryWriter* aMaybeEntryWriter) {
+      MOZ_RELEASE_ASSERT(!!aMaybeEntryWriter);
+      ++ran;
+      aMaybeEntryWriter->WriteObject(ran);
+      return aMaybeEntryWriter->CurrentBlockIndex();
+    });
     MOZ_RELEASE_ASSERT(ran == 1);
     MOZ_RELEASE_ASSERT(rb.PutFrom(&ran, sizeof(ran)) !=
                        ProfileBufferBlockIndex{});
@@ -1174,7 +1160,7 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     });
     MOZ_RELEASE_ASSERT(ran == 1);
     ran = 0;
-    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aEntryReader) {
+    rb.ReadEach([&](ProfileBufferEntryReader& aEntryReader) {
       MOZ_RELEASE_ASSERT(aEntryReader.RemainingBytes() == sizeof(ran));
       MOZ_RELEASE_ASSERT(aEntryReader.ReadObject<decltype(ran)>() == 1);
       ++ran;
@@ -1182,17 +1168,16 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     MOZ_RELEASE_ASSERT(ran >= 3);
     ran = 0;
     rb.ReadAt(ProfileBufferBlockIndex{},
-              [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeEntryReader) {
+              [&](Maybe<ProfileBufferEntryReader>&& aMaybeEntryReader) {
                 MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing());
                 ++ran;
               });
     MOZ_RELEASE_ASSERT(ran == 1);
     ran = 0;
-    rb.ReadAt(bi,
-              [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeEntryReader) {
-                MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing() == !bi);
-                ++ran;
-              });
+    rb.ReadAt(bi, [&](Maybe<ProfileBufferEntryReader>&& aMaybeEntryReader) {
+      MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing() == !bi);
+      ++ran;
+    });
     MOZ_RELEASE_ASSERT(ran == 1);
   };
 
@@ -1308,7 +1293,7 @@ void TestBlocksRingBufferThreading() {
             // Reserve as many bytes as the thread number (but at least enough
             // to store an int), and write an increasing int.
             rb.Put(std::max(aThreadNo, int(sizeof(push))),
-                   [&](BlocksRingBuffer::EntryWriter* aEW) {
+                   [&](ProfileBufferEntryWriter* aEW) {
                      MOZ_RELEASE_ASSERT(!!aEW);
                      aEW->WriteObject(aThreadNo * 1000000 + push);
                      *aEW += aEW->RemainingBytes();
@@ -1361,9 +1346,9 @@ void TestBlocksRingBufferSerialization() {
 #define THE_ANSWER "The answer is "
   const char* theAnswer = THE_ANSWER;
 
-  rb.PutObjects('0', WrapBlocksRingBufferLiteralCStringPointer(THE_ANSWER), 42,
+  rb.PutObjects('0', WrapProfileBufferLiteralCStringPointer(THE_ANSWER), 42,
                 std::string(" but pi="), 3.14);
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     char c0;
     const char* answer;
     int integer;
@@ -1376,7 +1361,7 @@ void TestBlocksRingBufferSerialization() {
     MOZ_RELEASE_ASSERT(str == " but pi=");
     MOZ_RELEASE_ASSERT(pi == 3.14);
   });
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     char c0 = aER.ReadObject<char>();
     MOZ_RELEASE_ASSERT(c0 == '0');
     const char* answer = aER.ReadObject<const char*>();
@@ -1410,10 +1395,10 @@ void TestBlocksRingBufferSerialization() {
   });
 
   rb.Clear();
-  rb.PutObjects(std::make_tuple(
-      '0', WrapBlocksRingBufferLiteralCStringPointer(THE_ANSWER), 42,
-      std::string(" but pi="), 3.14));
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.PutObjects(
+      std::make_tuple('0', WrapProfileBufferLiteralCStringPointer(THE_ANSWER),
+                      42, std::string(" but pi="), 3.14));
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     MOZ_RELEASE_ASSERT(aER.ReadObject<char>() == '0');
     MOZ_RELEASE_ASSERT(aER.ReadObject<const char*>() == theAnswer);
     MOZ_RELEASE_ASSERT(aER.ReadObject<int>() == 42);
@@ -1423,9 +1408,9 @@ void TestBlocksRingBufferSerialization() {
 
   rb.Clear();
   rb.PutObjects(MakeTuple('0',
-                          WrapBlocksRingBufferLiteralCStringPointer(THE_ANSWER),
+                          WrapProfileBufferLiteralCStringPointer(THE_ANSWER),
                           42, std::string(" but pi="), 3.14));
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     MOZ_RELEASE_ASSERT(aER.ReadObject<char>() == '0');
     MOZ_RELEASE_ASSERT(aER.ReadObject<const char*>() == theAnswer);
     MOZ_RELEASE_ASSERT(aER.ReadObject<int>() == 42);
@@ -1438,7 +1423,7 @@ void TestBlocksRingBufferSerialization() {
     UniqueFreePtr<char> ufps(strdup(THE_ANSWER));
     rb.PutObjects(ufps);
   }
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     auto ufps = aER.ReadObject<UniqueFreePtr<char>>();
     MOZ_RELEASE_ASSERT(!!ufps);
     MOZ_RELEASE_ASSERT(std::string(THE_ANSWER) == ufps.get());
@@ -1447,7 +1432,7 @@ void TestBlocksRingBufferSerialization() {
   rb.Clear();
   int intArray[] = {1, 2, 3, 4, 5};
   rb.PutObjects(MakeSpan(intArray));
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     int intArrayOut[sizeof(intArray) / sizeof(intArray[0])] = {0};
     auto outSpan = MakeSpan(intArrayOut);
     aER.ReadIntoObject(outSpan);
@@ -1458,7 +1443,7 @@ void TestBlocksRingBufferSerialization() {
 
   rb.Clear();
   rb.PutObjects(Maybe<int>(Nothing{}), Maybe<int>(Some(123)));
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     Maybe<int> mi0, mi1;
     aER.ReadIntoObjects(mi0, mi1);
     MOZ_RELEASE_ASSERT(mi0.isNothing());
@@ -1472,7 +1457,7 @@ void TestBlocksRingBufferSerialization() {
   V v1(3.14);
   V v2(VariantIndex<2>{}, 456);
   rb.PutObjects(v0, v1, v2);
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v0);
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v1);
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
@@ -1496,12 +1481,11 @@ void TestBlocksRingBufferSerialization() {
   }
   BlocksRingBuffer rb3(BlocksRingBuffer::ThreadSafety::WithoutMutex,
                        &buffer3[MBSize], MakePowerOfTwo32<MBSize>());
-  rb2.ReadEach(
-      [&](BlocksRingBuffer::EntryReader& aER) { aER.ReadIntoObject(rb3); });
+  rb2.ReadEach([&](ProfileBufferEntryReader& aER) { aER.ReadIntoObject(rb3); });
 
   // And a 4th heap-allocated one.
   UniquePtr<BlocksRingBuffer> rb4up;
-  rb2.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb2.ReadEach([&](ProfileBufferEntryReader& aER) {
     rb4up = aER.ReadObject<UniquePtr<BlocksRingBuffer>>();
   });
   MOZ_RELEASE_ASSERT(!!rb4up);
@@ -1512,14 +1496,14 @@ void TestBlocksRingBufferSerialization() {
   rb2.Clear();
 
   // And now the 3rd one should have the same contents as the 1st one had.
-  rb3.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb3.ReadEach([&](ProfileBufferEntryReader& aER) {
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v0);
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v1);
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
   });
 
   // And 4th.
-  rb4up->ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb4up->ReadEach([&](ProfileBufferEntryReader& aER) {
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v0);
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v1);
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
@@ -1589,10 +1573,10 @@ class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
 
   // Exploded DECL_BASE_STREAM_PAYLOAD, but without `MFBT_API`s.
   static UniquePtr<ProfilerMarkerPayload> Deserialize(
-      BlocksRingBuffer::EntryReader& aEntryReader);
+      ProfileBufferEntryReader& aEntryReader);
   BlocksRingBuffer::Length TagAndSerializationBytes() const override;
   void SerializeTagAndPayload(
-      BlocksRingBuffer::EntryWriter& aEntryWriter) const override;
+      ProfileBufferEntryWriter& aEntryWriter) const override;
   void StreamPayload(
       ::mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const ::mozilla::TimeStamp& aProcessStartTime,
@@ -1607,8 +1591,7 @@ class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
 
 // static
 UniquePtr<baseprofiler::ProfilerMarkerPayload>
-BaseTestMarkerPayload::Deserialize(
-    BlocksRingBuffer::EntryReader& aEntryReader) {
+BaseTestMarkerPayload::Deserialize(ProfileBufferEntryReader& aEntryReader) {
   CommonProps props = DeserializeCommonProps(aEntryReader);
   int data = aEntryReader.ReadObject<int>();
   return UniquePtr<baseprofiler::ProfilerMarkerPayload>(
@@ -1621,7 +1604,7 @@ BlocksRingBuffer::Length BaseTestMarkerPayload::TagAndSerializationBytes()
 }
 
 void BaseTestMarkerPayload::SerializeTagAndPayload(
-    BlocksRingBuffer::EntryWriter& aEntryWriter) const {
+    ProfileBufferEntryWriter& aEntryWriter) const {
   static const DeserializerTag tag = TagForDeserializer(Deserialize);
   SerializeTagAndCommonProps(tag, aEntryWriter);
   aEntryWriter.WriteObject(mData);
@@ -1653,7 +1636,7 @@ void TestProfilerMarkerSerialization() {
   }
 
   int read = 0;
-  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     UniquePtr<baseprofiler::ProfilerMarkerPayload> payload =
         aER.ReadObject<UniquePtr<baseprofiler::ProfilerMarkerPayload>>();
     MOZ_RELEASE_ASSERT(!!payload);
@@ -1930,6 +1913,13 @@ int wmain()
 int main()
 #endif  // defined(XP_WIN)
 {
+#ifdef MOZ_BASE_PROFILER
+  printf("BaseTestProfiler -- pid: %d, tid: %d\n",
+         baseprofiler::profiler_current_process_id(),
+         baseprofiler::profiler_current_thread_id());
+  // ::SleepMilli(10000);
+#endif  // MOZ_BASE_PROFILER
+
   // Always run tests that don't involve the profiler directly.
   TestProfilerDependencies();
 

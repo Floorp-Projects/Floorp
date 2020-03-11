@@ -222,9 +222,8 @@ class SceneBuiltNotification : public wr::NotificationHandler {
                   const override {
                 return CommonPropsTagAndSerializationBytes();
               }
-              void SerializeTagAndPayload(
-                  mozilla::BlocksRingBuffer::EntryWriter& aEntryWriter)
-                  const override {
+              void SerializeTagAndPayload(mozilla::ProfileBufferEntryWriter&
+                                              aEntryWriter) const override {
                 static const DeserializerTag tag =
                     TagForDeserializer(Deserialize);
                 SerializeTagAndCommonProps(tag, aEntryWriter);
@@ -240,7 +239,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
               explicit ContentFullPaintPayload(CommonProps&& aCommonProps)
                   : ProfilerMarkerPayload(std::move(aCommonProps)) {}
               static mozilla::UniquePtr<ProfilerMarkerPayload> Deserialize(
-                  mozilla::BlocksRingBuffer::EntryReader& aEntryReader) {
+                  mozilla::ProfileBufferEntryReader& aEntryReader) {
                 ProfilerMarkerPayload::CommonProps props =
                     DeserializeCommonProps(aEntryReader);
                 return UniquePtr<ProfilerMarkerPayload>(

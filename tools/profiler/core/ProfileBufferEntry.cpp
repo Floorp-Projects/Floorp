@@ -617,16 +617,21 @@ class EntryGetter {
     if (!Has()) {
       return true;
     }
-    BlocksRingBuffer::EntryReader aER = *mBlockIt;
+    // Read the entry "kind", which is always at the start of all entries.
+    ProfileBufferEntryReader aER = *mBlockIt;
     auto type = static_cast<ProfileBufferEntry::Kind>(
-        aER.PeekObject<ProfileBufferEntry::KindUnderlyingType>());
+        aER.ReadObject<ProfileBufferEntry::KindUnderlyingType>());
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
     if (type >= ProfileBufferEntry::Kind::LEGACY_LIMIT) {
       return false;
     }
-    aER.Read(&mEntry, aER.RemainingBytes());
+    // Here, we have a legacy item, we need to read it from the start.
+    // Because the above `ReadObject` moved the reader, we ned to reset it to
+    // the start of the entry before reading the whole entry.
+    aER = *mBlockIt;
+    aER.ReadBytes(&mEntry, aER.RemainingBytes());
     return true;
   }
 
@@ -1019,7 +1024,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           if (it.IsAtEnd()) {
             break;
           }
-          BlocksRingBuffer::EntryReader er = *it;
+          ProfileBufferEntryReader er = *it;
           ProfileBufferEntry::Kind kind =
               er.ReadObject<ProfileBufferEntry::Kind>();
 
@@ -1040,7 +1045,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
               EntryGetter stackEntryGetter(*aReader);
               if (stackEntryGetter.Has()) {
                 ReadStack(stackEntryGetter,
-                          er.CurrentBlockIndex().ConvertToProfileBufferIndex(),
+                          it.CurrentBlockIndex().ConvertToProfileBufferIndex(),
                           unresponsiveDuration);
               }
             });
@@ -1115,7 +1120,7 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart, int aThreadId,
                 if (it.IsAtEnd()) {
                   break;
                 }
-                BlocksRingBuffer::EntryReader er = *it;
+                ProfileBufferEntryReader er = *it;
                 ProfileBufferEntry::Kind kind =
                     er.ReadObject<ProfileBufferEntry::Kind>();
                 if (kind == ProfileBufferEntry::Kind::CompactStack) {
@@ -1156,7 +1161,7 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                         const TimeStamp& aProcessStartTime,
                                         double aSinceTime,
                                         UniqueStacks& aUniqueStacks) const {
-  mEntries.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+  mEntries.ReadEach([&](ProfileBufferEntryReader& aER) {
     auto type = static_cast<ProfileBufferEntry::Kind>(
         aER.ReadObject<ProfileBufferEntry::KindUnderlyingType>());
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
@@ -1175,7 +1180,7 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                 aER.ReadObject<uint32_t>()));
         auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
         double time = aER.ReadObject<double>();
-        MOZ_ASSERT(aER.IndexInEntry() == aER.EntryBytes());
+        MOZ_ASSERT(aER.RemainingBytes() == 0);
 
         aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
         aWriter.DoubleElement(time);
@@ -1632,20 +1637,21 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
             if (it.IsAtEnd()) {
               break;
             }
-            BlocksRingBuffer::EntryReader er = *it;
+            ProfileBufferEntryReader er = *it;
             auto kind = static_cast<ProfileBufferEntry::Kind>(
-                er.PeekObject<ProfileBufferEntry::KindUnderlyingType>());
+                er.ReadObject<ProfileBufferEntry::KindUnderlyingType>());
             MOZ_ASSERT(
                 static_cast<ProfileBufferEntry::KindUnderlyingType>(kind) <
                 static_cast<ProfileBufferEntry::KindUnderlyingType>(
                     ProfileBufferEntry::Kind::MODERN_LIMIT));
             if (kind == ProfileBufferEntry::Kind::CompactStack) {
               // Found our CompactStack, just make a copy of the whole entry.
+              er = *it;
               auto bytes = er.RemainingBytes();
               MOZ_ASSERT(bytes < 65536);
-              tempBuffer.Put(bytes, [&](BlocksRingBuffer::EntryWriter* aEW) {
+              tempBuffer.Put(bytes, [&](ProfileBufferEntryWriter* aEW) {
                 MOZ_ASSERT(aEW, "tempBuffer cannot be out-of-session");
-                er.ReadInto(*aEW, bytes);
+                aEW->WriteFromReader(er, bytes);
               });
               break;
             }
