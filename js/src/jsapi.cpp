@@ -195,16 +195,17 @@ bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj,
     }
 
     if (ErrorTakesObjectArgument(code_)) {
-      return JS_ReportErrorFlagsAndNumberUTF8(
-          cx, JSREPORT_ERROR, GetErrorMessage, nullptr, code_,
-          obj->getClass()->name, propName.get());
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, code_,
+                               obj->getClass()->name, propName.get());
+      return false;
     }
 
-    return JS_ReportErrorFlagsAndNumberUTF8(cx, JSREPORT_ERROR, GetErrorMessage,
-                                            nullptr, code_, propName.get());
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, code_,
+                             propName.get());
+    return false;
   }
-  return JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage,
-                                           nullptr, code_);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, code_);
+  return false;
 }
 
 bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj) {
@@ -213,8 +214,8 @@ bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(!ErrorTakesArguments(code_));
   cx->check(obj);
 
-  return JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage,
-                                           nullptr, code_);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, code_);
+  return false;
 }
 
 JS_PUBLIC_API bool JS::ObjectOpResult::failCantRedefineProp() {
