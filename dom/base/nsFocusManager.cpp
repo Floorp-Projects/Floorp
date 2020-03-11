@@ -359,6 +359,7 @@ InputContextAction::Cause nsFocusManager::GetFocusMoveActionCause(
 
 NS_IMETHODIMP
 nsFocusManager::GetActiveWindow(mozIDOMWindowProxy** aWindow) {
+  // TODO mActiveWindow in content process
   NS_IF_ADDREF(*aWindow = mActiveWindow);
   return NS_OK;
 }
@@ -1006,6 +1007,8 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
     // not happen if nsIAppStartup::eForceQuit is used to quit, and can cause
     // a leak. So if the active window is being destroyed, call WindowLowered
     // directly.
+
+    // TODO mActiveWindow in content process
     if (mActiveWindow == mFocusedWindow || mActiveWindow == window)
       WindowLowered(mActiveWindow);
     else
@@ -1401,6 +1404,7 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   if (StaticPrefs::full_screen_api_exit_on_windowRaise() &&
       !isElementInActiveWindow &&
       aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
+    // TODO mActiveWindow in content process
     if (Document* doc = mActiveWindow ? mActiveWindow->GetDoc() : nullptr) {
       if (doc->GetFullscreenElement()) {
         if (XRE_IsParentProcess()) {
@@ -2568,6 +2572,8 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
                                  CallerType aCallerType) {
   // don't raise windows that are already raised or are in the process of
   // being lowered
+
+  // TODO mActiveWindow in content process
   if (!aWindow || aWindow == mActiveWindow || aWindow == mWindowBeingLowered)
     return;
 
