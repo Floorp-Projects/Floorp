@@ -48,6 +48,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
@@ -6429,8 +6430,7 @@ static SharedModule CheckModule(JSContext* cx, AsmJSParser<Unit>& parser,
 // Link-time validation
 
 static bool LinkFail(JSContext* cx, const char* str) {
-  JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
-                                    nullptr, JSMSG_USE_ASM_LINK_FAIL, str);
+  WarnNumberASCII(cx, JSMSG_USE_ASM_LINK_FAIL, str);
   return false;
 }
 
