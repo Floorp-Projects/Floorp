@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebugSupport()
+// |jit-test| skip-if: !wasmDebuggingIsSupported()
 // Tests that wasm module scripts has inspectable globals and memory.
 
 load(libdir + "wasm.js");

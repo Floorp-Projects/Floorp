@@ -724,19 +724,19 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
 
   switch (task->env.tier()) {
     case Tier::Optimized:
-#ifdef ENABLE_WASM_CRANELIFT
-      if (task->env.optimizedBackend() == OptimizedBackend::Cranelift) {
-        if (!CraneliftCompileFunctions(task->env, task->lifo, task->inputs,
-                                       &task->output, error)) {
-          return false;
-        }
-        break;
-      }
-#endif
-      MOZ_ASSERT(task->env.optimizedBackend() == OptimizedBackend::Ion);
-      if (!IonCompileFunctions(task->env, task->lifo, task->inputs,
-                               &task->output, error)) {
-        return false;
+      switch (task->env.optimizedBackend()) {
+        case OptimizedBackend::Cranelift:
+          if (!CraneliftCompileFunctions(task->env, task->lifo, task->inputs,
+                                         &task->output, error)) {
+            return false;
+          }
+          break;
+        case OptimizedBackend::Ion:
+          if (!IonCompileFunctions(task->env, task->lifo, task->inputs,
+                                   &task->output, error)) {
+            return false;
+          }
+          break;
       }
       break;
     case Tier::Baseline:

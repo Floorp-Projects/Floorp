@@ -25,8 +25,9 @@ namespace js {
 namespace wasm {
 
 // Return whether BaselineCompileFunction can generate code on the current
-// device.
-bool BaselineCanCompile();
+// device.  Usually you do *not* want to call this, you want
+// BaselineAvailable().
+MOZ_MUST_USE bool BaselinePlatformSupport();
 
 // Generate adequate code quickly.
 MOZ_MUST_USE bool BaselineCompileFunctions(const ModuleEnvironment& env,
