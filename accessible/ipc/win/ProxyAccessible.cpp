@@ -738,5 +738,49 @@ void ProxyAccessible::TakeFocus() {
   acc->accSelect(SELFLAG_TAKEFOCUS, kChildIdSelf);
 }
 
+ProxyAccessible* ProxyAccessible::ChildAtPoint(
+    int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
+  RefPtr<IAccessible2_2> target = QueryInterface<IAccessible2_2>(this);
+  if (!target) {
+    return nullptr;
+  }
+  DocAccessibleParent* doc = Document();
+  ProxyAccessible* proxy = this;
+  // accHitTest only does direct children, but we might want the deepest child.
+  for (;;) {
+    VARIANT childVar;
+    if (FAILED(target->accHitTest(aX, aY, &childVar)) ||
+        childVar.vt == VT_EMPTY) {
+      return nullptr;
+    }
+    if (childVar.vt == VT_I4 && childVar.lVal == CHILDID_SELF) {
+      break;
+    }
+    MOZ_ASSERT(childVar.vt == VT_DISPATCH && childVar.pdispVal);
+    target = nullptr;
+    childVar.pdispVal->QueryInterface(IID_IAccessible2_2,
+                                      getter_AddRefs(target));
+    childVar.pdispVal->Release();
+    if (!target) {
+      return nullptr;
+    }
+    // We can't always use GetProxyFor because it can't cross document
+    // boundaries.
+    if (proxy->ChildrenCount() == 1) {
+      proxy = proxy->ChildAt(0);
+      if (proxy->IsDoc()) {
+        // We're crossing into a child document.
+        doc = proxy->AsDoc();
+      }
+    } else {
+      proxy = GetProxyFor(doc, target);
+    }
+    if (aWhichChild == Accessible::eDirectChild) {
+      break;
+    }
+  }
+  return proxy;
+}
+
 }  // namespace a11y
 }  // namespace mozilla

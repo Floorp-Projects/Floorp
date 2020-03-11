@@ -590,12 +590,8 @@ xpcAccessible::GetDeepestChildAtPoint(int32_t aX, int32_t aY,
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     NS_IF_ADDREF(*aAccessible = ToXPC(
                      proxy->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
-#endif
   } else {
     NS_IF_ADDREF(*aAccessible = ToXPC(
                      Intl()->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
