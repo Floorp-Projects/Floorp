@@ -41,8 +41,8 @@ class ProfilerBacktrace {
 
  private:
   // Used to de/serialize a ProfilerBacktrace.
-  friend struct BlocksRingBuffer::Serializer<ProfilerBacktrace>;
-  friend struct BlocksRingBuffer::Deserializer<ProfilerBacktrace>;
+  friend struct ProfileBufferEntryWriter::Serializer<ProfilerBacktrace>;
+  friend struct ProfileBufferEntryReader::Deserializer<ProfilerBacktrace>;
 
   UniqueFreePtr<char> mName;
   int mThreadId;
@@ -57,7 +57,7 @@ class ProfilerBacktrace {
 // Format: [ UniquePtr<BlockRingsBuffer> | threadId | name ]
 // Initial len==0 marks a nullptr or empty backtrace.
 template <>
-struct BlocksRingBuffer::Serializer<baseprofiler::ProfilerBacktrace> {
+struct ProfileBufferEntryWriter::Serializer<baseprofiler::ProfilerBacktrace> {
   static Length Bytes(const baseprofiler::ProfilerBacktrace& aBacktrace) {
     if (!aBacktrace.mProfileBuffer) {
       // No backtrace buffer.
@@ -70,10 +70,10 @@ struct BlocksRingBuffer::Serializer<baseprofiler::ProfilerBacktrace> {
     }
     return bufferBytes +
            SumBytes(aBacktrace.mThreadId,
-                    WrapBlocksRingBufferUnownedCString(aBacktrace.mName.get()));
+                    WrapProfileBufferUnownedCString(aBacktrace.mName.get()));
   }
 
-  static void Write(EntryWriter& aEW,
+  static void Write(ProfileBufferEntryWriter& aEW,
                     const baseprofiler::ProfilerBacktrace& aBacktrace) {
     if (!aBacktrace.mProfileBuffer ||
         SumBytes(aBacktrace.mBlocksRingBuffer) == 0) {
@@ -83,12 +83,12 @@ struct BlocksRingBuffer::Serializer<baseprofiler::ProfilerBacktrace> {
     }
     aEW.WriteObject(aBacktrace.mBlocksRingBuffer);
     aEW.WriteObject(aBacktrace.mThreadId);
-    aEW.WriteObject(WrapBlocksRingBufferUnownedCString(aBacktrace.mName.get()));
+    aEW.WriteObject(WrapProfileBufferUnownedCString(aBacktrace.mName.get()));
   }
 };
 
 template <typename Destructor>
-struct BlocksRingBuffer::Serializer<
+struct ProfileBufferEntryWriter::Serializer<
     UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>> {
   static Length Bytes(const UniquePtr<baseprofiler::ProfilerBacktrace,
                                       Destructor>& aBacktrace) {
@@ -99,7 +99,7 @@ struct BlocksRingBuffer::Serializer<
     return SumBytes(*aBacktrace);
   }
 
-  static void Write(EntryWriter& aEW,
+  static void Write(ProfileBufferEntryWriter& aEW,
                     const UniquePtr<baseprofiler::ProfilerBacktrace,
                                     Destructor>& aBacktrace) {
     if (!aBacktrace) {
@@ -112,16 +112,16 @@ struct BlocksRingBuffer::Serializer<
 };
 
 template <typename Destructor>
-struct BlocksRingBuffer::Deserializer<
+struct ProfileBufferEntryReader::Deserializer<
     UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>> {
   static void ReadInto(
-      EntryReader& aER,
+      ProfileBufferEntryReader& aER,
       UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>& aBacktrace) {
     aBacktrace = Read(aER);
   }
 
   static UniquePtr<baseprofiler::ProfilerBacktrace, Destructor> Read(
-      EntryReader& aER);
+      ProfileBufferEntryReader& aER);
 };
 
 }  // namespace mozilla

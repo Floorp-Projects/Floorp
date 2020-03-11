@@ -60,7 +60,7 @@ class VideoFrameMarkerPayload : public ProfilerMarkerPayload {
   }
 
   void SerializeTagAndPayload(
-      BlocksRingBuffer::EntryWriter& aEntryWriter) const override {
+      ProfileBufferEntryWriter& aEntryWriter) const override {
     static const DeserializerTag tag = TagForDeserializer(Deserialize);
     SerializeTagAndCommonProps(tag, aEntryWriter);
     aEntryWriter.WriteObject(mAudioPositionUs);
@@ -68,7 +68,7 @@ class VideoFrameMarkerPayload : public ProfilerMarkerPayload {
   }
 
   static UniquePtr<ProfilerMarkerPayload> Deserialize(
-      BlocksRingBuffer::EntryReader& aEntryReader) {
+      ProfileBufferEntryReader& aEntryReader) {
     ProfilerMarkerPayload::CommonProps props =
         DeserializeCommonProps(aEntryReader);
     auto audioPositionUs = aEntryReader.ReadObject<int64_t>();
