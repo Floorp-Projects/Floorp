@@ -16,10 +16,12 @@ ChromeUtils.defineModuleGetter(
   "Services",
   "resource://gre/modules/Services.jsm"
 );
-ChromeUtils.defineModuleGetter(
+
+XPCOMUtils.defineLazyServiceGetter(
   this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
+  "aboutNewTabService",
+  "@mozilla.org/browser/aboutnewtab-service;1",
+  "nsIAboutNewTabService"
 );
 
 var { ExtensionPreferencesManager } = ChromeUtils.import(
@@ -331,7 +333,7 @@ this.browserSettings = class extends ExtensionAPI {
           context,
           name: NEW_TAB_OVERRIDE_SETTING,
           callback() {
-            return AboutNewTab.newTabURL;
+            return aboutNewTabService.newTabURL;
           },
           storeType: URL_STORE_TYPE,
           readOnly: true,
@@ -342,7 +344,7 @@ this.browserSettings = class extends ExtensionAPI {
               let listener = (text, id) => {
                 fire.async({
                   levelOfControl: "not_controllable",
-                  value: AboutNewTab.newTabURL,
+                  value: aboutNewTabService.newTabURL,
                 });
               };
               Services.obs.addObserver(listener, "newtab-url-changed");

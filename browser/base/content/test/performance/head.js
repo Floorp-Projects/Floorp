@@ -1,7 +1,6 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
@@ -247,10 +246,13 @@ async function ensureNoPreloadedBrowser(win = window) {
     set: [["browser.newtab.preload", false]],
   });
 
-  AboutNewTab.newTabURL = "about:blank";
+  let aboutNewTabService = Cc[
+    "@mozilla.org/browser/aboutnewtab-service;1"
+  ].getService(Ci.nsIAboutNewTabService);
+  aboutNewTabService.newTabURL = "about:blank";
 
   registerCleanupFunction(() => {
-    AboutNewTab.resetNewTabURL();
+    aboutNewTabService.resetNewTabURL();
   });
 }
 

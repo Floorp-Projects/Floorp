@@ -94,8 +94,8 @@ describe("TelemetryFeed", () => {
     };
     sandbox.spy(global.Cu, "reportError");
     globals.set("gUUIDGenerator", { generateUUID: () => FAKE_UUID });
-    globals.set("AboutNewTab", {
-      newTabURLOverridden: false,
+    globals.set("aboutNewTabService", {
+      overridden: false,
       newTabURL: "",
     });
     globals.set("HomePage", fakeHomePage);
@@ -1262,7 +1262,7 @@ describe("TelemetryFeed", () => {
       const spy = sandbox.spy();
 
       sandbox.stub(Services.prefs, "getIntPref").returns(1);
-      globals.set("AboutNewTab", {
+      globals.set("AboutNewTabStartupRecorder", {
         maybeRecordTopsitesPainted: spy,
       });
       instance.addSession("port123", "about:home");
@@ -1561,8 +1561,8 @@ describe("TelemetryFeed", () => {
       assert.validate(sendEvent.firstCall.args[0], UserEventPing);
     });
     it("should send correct event data for about:newtab set to custom URL", async () => {
-      globals.set("AboutNewTab", {
-        newTabURLOverridden: true,
+      globals.set("aboutNewTabService", {
+        overridden: true,
         newTabURL: "https://searchprovider.com",
       });
       instance._prefs.set(TELEMETRY_PREF, true);

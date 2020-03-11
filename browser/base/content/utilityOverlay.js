@@ -13,7 +13,6 @@ var { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
@@ -21,6 +20,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "aboutNewTabService",
+  "@mozilla.org/browser/aboutnewtab-service;1",
+  "nsIAboutNewTabService"
+);
 
 XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
   Components.Constructor(
@@ -36,7 +42,7 @@ Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
       if (
         !PrivateBrowsingUtils.permanentPrivateBrowsing &&
-        !AboutNewTab.newTabURLOverridden
+        !aboutNewTabService.overridden
       ) {
         return "about:privatebrowsing";
       }
@@ -55,12 +61,12 @@ Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
       if (
         !privateAllowed &&
         (extensionControlled ||
-          AboutNewTab.newTabURL.startsWith("moz-extension://"))
+          aboutNewTabService.newTabURL.startsWith("moz-extension://"))
       ) {
         return "about:privatebrowsing";
       }
     }
-    return AboutNewTab.newTabURL;
+    return aboutNewTabService.newTabURL;
   },
 });
 
@@ -649,7 +655,7 @@ function openLinkIn(url, where, params) {
       focusUrlBar =
         !loadInBackground &&
         w.isBlankPageURL(url) &&
-        !AboutNewTab.willNotifyUser;
+        !aboutNewTabService.willNotifyUser;
 
       let tabUsedForLoad = w.gBrowser.loadOneTab(url, {
         referrerInfo: aReferrerInfo,
