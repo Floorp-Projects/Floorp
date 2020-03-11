@@ -25,8 +25,18 @@ namespace mozilla {
 
 class ProfileBufferEntryWriter;
 
+// Iterator-like class used to read from an entry.
+// An entry may be split in two memory segments (e.g., the ends of a ring
+// buffer, or two chunks of a chunked buffer); it doesn't deal with this
+// underlying buffer, but only with one or two spans pointing at the space
+// where the entry lives.
 class ProfileBufferEntryReader {
  public:
+  using Byte = uint8_t;
+  using Length = uint32_t;
+
+  using SpanOfConstBytes = Span<const Byte>;
+
   // Class to be specialized for types to be read from a profile buffer entry.
   // See common specializations at the bottom of this header.
   // The following static functions must be provided:
@@ -41,10 +51,249 @@ class ProfileBufferEntryReader {
   //   }
   template <typename T>
   struct Deserializer;
+
+  ProfileBufferEntryReader() = default;
+
+  // Reader over one Span.
+  ProfileBufferEntryReader(SpanOfConstBytes aSpan,
+                           ProfileBufferBlockIndex aCurrentBlockIndex,
+                           ProfileBufferBlockIndex aNextBlockIndex)
+      : mCurrentSpan(aSpan),
+        mNextSpanOrEmpty(aSpan.Last(0)),
+        mCurrentBlockIndex(aCurrentBlockIndex),
+        mNextBlockIndex(aNextBlockIndex) {
+    // 2nd internal Span points at the end of the 1st internal Span, to enforce
+    // invariants.
+    CheckInvariants();
+  }
+
+  // Reader over two Spans, the second one must not be empty.
+  ProfileBufferEntryReader(SpanOfConstBytes aSpanHead,
+                           SpanOfConstBytes aSpanTail,
+                           ProfileBufferBlockIndex aCurrentBlockIndex,
+                           ProfileBufferBlockIndex aNextBlockIndex)
+      : mCurrentSpan(aSpanHead),
+        mNextSpanOrEmpty(aSpanTail),
+        mCurrentBlockIndex(aCurrentBlockIndex),
+        mNextBlockIndex(aNextBlockIndex) {
+    MOZ_RELEASE_ASSERT(!mNextSpanOrEmpty.IsEmpty());
+    if (MOZ_UNLIKELY(mCurrentSpan.IsEmpty())) {
+      // First span is already empty, skip it.
+      mCurrentSpan = mNextSpanOrEmpty;
+      mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+    }
+    CheckInvariants();
+  }
+
+  // Allow copying, which is needed when used as an iterator in some std
+  // functions (e.g., string assignment), and to occasionally backtrack.
+  // Be aware that the main profile buffer APIs give a reference to an entry
+  // reader, and expect that reader to advance to the end of the entry, so don't
+  // just advance copies!
+  ProfileBufferEntryReader(const ProfileBufferEntryReader&) = default;
+  ProfileBufferEntryReader& operator=(const ProfileBufferEntryReader&) =
+      default;
+
+  // Don't =default moving, as it doesn't bring any benefit in this class.
+
+  MOZ_MUST_USE Length RemainingBytes() const {
+    return mCurrentSpan.LengthBytes() + mNextSpanOrEmpty.LengthBytes();
+  }
+
+  void SetRemainingBytes(Length aBytes) {
+    MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
+    if (aBytes <= mCurrentSpan.LengthBytes()) {
+      mCurrentSpan = mCurrentSpan.First(aBytes);
+      mNextSpanOrEmpty = mCurrentSpan.Last(0);
+    } else {
+      mNextSpanOrEmpty =
+          mNextSpanOrEmpty.First(aBytes - mCurrentSpan.LengthBytes());
+    }
+  }
+
+  MOZ_MUST_USE ProfileBufferBlockIndex CurrentBlockIndex() const {
+    return mCurrentBlockIndex;
+  }
+
+  MOZ_MUST_USE ProfileBufferBlockIndex NextBlockIndex() const {
+    return mNextBlockIndex;
+  }
+
+  // Create a reader of size zero, pointing at aOffset past the current position
+  // of this Reader, so it can be used as end iterator.
+  MOZ_MUST_USE ProfileBufferEntryReader
+  EmptyIteratorAtOffset(Length aOffset) const {
+    MOZ_RELEASE_ASSERT(aOffset <= RemainingBytes());
+    if (MOZ_LIKELY(aOffset < mCurrentSpan.LengthBytes())) {
+      // aOffset is before the end of mCurrentSpan.
+      return ProfileBufferEntryReader(mCurrentSpan.Subspan(aOffset, 0),
+                                      mCurrentBlockIndex, mNextBlockIndex);
+    }
+    // aOffset is right at the end of mCurrentSpan, or inside mNextSpanOrEmpty.
+    return ProfileBufferEntryReader(
+        mNextSpanOrEmpty.Subspan(aOffset - mCurrentSpan.LengthBytes(), 0),
+        mCurrentBlockIndex, mNextBlockIndex);
+  }
+
+  // Be like a limited input iterator, with only `*`, prefix-`++`, `==`, `!=`.
+  // These definitions are expected by std functions, to recognize this as an
+  // iterator. See https://en.cppreference.com/w/cpp/iterator/iterator_traits
+  using difference_type = std::make_signed_t<Length>;
+  using value_type = Byte;
+  using pointer = const Byte*;
+  using reference = const Byte&;
+  using iterator_category = std::input_iterator_tag;
+
+  MOZ_MUST_USE const Byte& operator*() {
+    // Assume the caller will read from the returned reference (and not just
+    // take the address).
+    MOZ_RELEASE_ASSERT(mCurrentSpan.LengthBytes() >= 1);
+    return *(mCurrentSpan.Elements());
+  }
+
+  ProfileBufferEntryReader& operator++() {
+    MOZ_RELEASE_ASSERT(mCurrentSpan.LengthBytes() >= 1);
+    if (MOZ_LIKELY(mCurrentSpan.LengthBytes() > 1)) {
+      // More than 1 byte left in mCurrentSpan, just eat it.
+      mCurrentSpan = mCurrentSpan.From(1);
+    } else {
+      // mCurrentSpan will be empty, move mNextSpanOrEmpty to mCurrentSpan.
+      mCurrentSpan = mNextSpanOrEmpty;
+      mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+    }
+    CheckInvariants();
+    return *this;
+  }
+
+  ProfileBufferEntryReader& operator+=(Length aBytes) {
+    MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
+    if (MOZ_LIKELY(aBytes <= mCurrentSpan.LengthBytes())) {
+      // All bytes are in mCurrentSpan.
+      // Update mCurrentSpan past the read bytes.
+      mCurrentSpan = mCurrentSpan.From(aBytes);
+      if (mCurrentSpan.IsEmpty() && !mNextSpanOrEmpty.IsEmpty()) {
+        // Don't leave mCurrentSpan empty, move non-empty mNextSpanOrEmpty into
+        // mCurrentSpan.
+        mCurrentSpan = mNextSpanOrEmpty;
+        mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+      }
+    } else {
+      // mCurrentSpan does not hold enough bytes.
+      // This should only happen at most once: Only for double spans, and when
+      // data crosses the gap.
+      const Length tail =
+          aBytes - static_cast<Length>(mCurrentSpan.LengthBytes());
+      // Move mNextSpanOrEmpty to mCurrentSpan, past the data. So the next call
+      // will go back to the true case above.
+      mCurrentSpan = mNextSpanOrEmpty.From(tail);
+      mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+    }
+    CheckInvariants();
+    return *this;
+  }
+
+  MOZ_MUST_USE bool operator==(const ProfileBufferEntryReader& aOther) const {
+    return mCurrentSpan.Elements() == aOther.mCurrentSpan.Elements();
+  }
+  MOZ_MUST_USE bool operator!=(const ProfileBufferEntryReader& aOther) const {
+    return mCurrentSpan.Elements() != aOther.mCurrentSpan.Elements();
+  }
+
+  // Read an unsigned LEB128 number and move iterator ahead.
+  template <typename T>
+  MOZ_MUST_USE T ReadULEB128() {
+    return ::mozilla::ReadULEB128<T>(*this);
+  }
+
+  // Read a sequence of bytes, like memcpy.
+  void ReadBytes(void* aDest, Length aBytes) {
+    MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
+    if (MOZ_LIKELY(aBytes <= mCurrentSpan.LengthBytes())) {
+      // All bytes are in mCurrentSpan.
+      memcpy(aDest, mCurrentSpan.Elements(), aBytes);
+      // Update mCurrentSpan past the read bytes.
+      mCurrentSpan = mCurrentSpan.From(aBytes);
+      if (mCurrentSpan.IsEmpty() && !mNextSpanOrEmpty.IsEmpty()) {
+        // Don't leave mCurrentSpan empty, move non-empty mNextSpanOrEmpty into
+        // mCurrentSpan.
+        mCurrentSpan = mNextSpanOrEmpty;
+        mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+      }
+    } else {
+      // mCurrentSpan does not hold enough bytes.
+      // This should only happen at most once: Only for double spans, and when
+      // data crosses the gap.
+      // Split data between the end of mCurrentSpan and the beginning of
+      // mNextSpanOrEmpty.
+      memcpy(aDest, mCurrentSpan.Elements(), mCurrentSpan.LengthBytes());
+      const Length tail =
+          aBytes - static_cast<Length>(mCurrentSpan.LengthBytes());
+      memcpy(reinterpret_cast<Byte*>(aDest) + mCurrentSpan.LengthBytes(),
+             mNextSpanOrEmpty.Elements(), tail);
+      // Move mNextSpanOrEmpty to mCurrentSpan, past the data. So the next call
+      // will go back to the true case above.
+      mCurrentSpan = mNextSpanOrEmpty.From(tail);
+      mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+    }
+    CheckInvariants();
+  }
+
+  template <typename T>
+  void ReadIntoObject(T& aObject) {
+    Deserializer<T>::ReadInto(*this, aObject);
+  }
+
+  // Allow `EntryReader::ReadIntoObjects()` with nothing, this could be
+  // useful for generic programming.
+  void ReadIntoObjects() {}
+
+  // Read into one or more objects, sequentially.
+  template <typename T0, typename... Ts>
+  void ReadIntoObjects(T0& aT0, Ts&... aTs) {
+    ReadIntoObject(aT0);
+    ReadIntoObjects(aTs...);
+  }
+
+  // Read data as an object and move iterator ahead.
+  template <typename T>
+  MOZ_MUST_USE T ReadObject() {
+    T ob = Deserializer<T>::Read(*this);
+    return ob;
+  }
+
+ private:
+  friend class ProfileBufferEntryWriter;
+
+  // Invariants:
+  // - mCurrentSpan cannot be empty unless mNextSpanOrEmpty is also empty. So
+  //   mCurrentSpan always points at the next byte to read or the end.
+  // - If mNextSpanOrEmpty is empty, it points at the end of mCurrentSpan. So
+  //   when reaching the end of mCurrentSpan, we can blindly move
+  //   mNextSpanOrEmpty to mCurrentSpan and keep the invariants.
+  SpanOfConstBytes mCurrentSpan;
+  SpanOfConstBytes mNextSpanOrEmpty;
+  ProfileBufferBlockIndex mCurrentBlockIndex;
+  ProfileBufferBlockIndex mNextBlockIndex;
+
+  void CheckInvariants() const {
+    MOZ_ASSERT(!mCurrentSpan.IsEmpty() || mNextSpanOrEmpty.IsEmpty());
+    MOZ_ASSERT(!mNextSpanOrEmpty.IsEmpty() ||
+               (mNextSpanOrEmpty == mCurrentSpan.Last(0)));
+  }
 };
 
+// Iterator-like class used to write into an entry.
+// An entry may be split in two memory segments (e.g., the ends of a ring
+// buffer, or two chunks of a chunked buffer); it doesn't deal with this
+// underlying buffer, but only with one or two spans pointing at the space
+// reserved for the entry.
 class ProfileBufferEntryWriter {
  public:
+  using Byte = uint8_t;
+  using Length = uint32_t;
+
+  using SpanOfBytes = Span<Byte>;
+
   // Class to be specialized for types to be written in an entry.
   // See common specializations at the bottom of this header.
   // The following static functions must be provided:
@@ -58,6 +307,215 @@ class ProfileBufferEntryWriter {
   //   }
   template <typename T>
   struct Serializer;
+
+  ProfileBufferEntryWriter() = default;
+
+  ProfileBufferEntryWriter(SpanOfBytes aSpan,
+                           ProfileBufferBlockIndex aCurrentBlockIndex,
+                           ProfileBufferBlockIndex aNextBlockIndex)
+      : mCurrentSpan(aSpan),
+        mCurrentBlockIndex(aCurrentBlockIndex),
+        mNextBlockIndex(aNextBlockIndex) {}
+
+  ProfileBufferEntryWriter(SpanOfBytes aSpanHead, SpanOfBytes aSpanTail,
+                           ProfileBufferBlockIndex aCurrentBlockIndex,
+                           ProfileBufferBlockIndex aNextBlockIndex)
+      : mCurrentSpan(aSpanHead),
+        mNextSpanOrEmpty(aSpanTail),
+        mCurrentBlockIndex(aCurrentBlockIndex),
+        mNextBlockIndex(aNextBlockIndex) {
+    // Either:
+    // - mCurrentSpan is not empty, OR
+    // - mNextSpanOrEmpty is empty if mNextSpanOrEmpty is empty as well.
+    MOZ_RELEASE_ASSERT(!mCurrentSpan.IsEmpty() || mNextSpanOrEmpty.IsEmpty());
+  }
+
+  // Disable copying and moving, so we can't have multiple writing heads.
+  ProfileBufferEntryWriter(const ProfileBufferEntryWriter&) = delete;
+  ProfileBufferEntryWriter& operator=(const ProfileBufferEntryWriter&) = delete;
+  ProfileBufferEntryWriter(ProfileBufferEntryWriter&&) = delete;
+  ProfileBufferEntryWriter& operator=(ProfileBufferEntryWriter&&) = delete;
+
+  void Set() {
+    mCurrentSpan = SpanOfBytes{};
+    mNextSpanOrEmpty = SpanOfBytes{};
+    mCurrentBlockIndex = nullptr;
+    mNextBlockIndex = nullptr;
+  }
+
+  void Set(SpanOfBytes aSpan, ProfileBufferBlockIndex aCurrentBlockIndex,
+           ProfileBufferBlockIndex aNextBlockIndex) {
+    mCurrentSpan = aSpan;
+    mNextSpanOrEmpty = SpanOfBytes{};
+    mCurrentBlockIndex = aCurrentBlockIndex;
+    mNextBlockIndex = aNextBlockIndex;
+  }
+
+  void Set(SpanOfBytes aSpan0, SpanOfBytes aSpan1,
+           ProfileBufferBlockIndex aCurrentBlockIndex,
+           ProfileBufferBlockIndex aNextBlockIndex) {
+    mCurrentSpan = aSpan0;
+    mNextSpanOrEmpty = aSpan1;
+    mCurrentBlockIndex = aCurrentBlockIndex;
+    mNextBlockIndex = aNextBlockIndex;
+    // Either:
+    // - mCurrentSpan is not empty, OR
+    // - mNextSpanOrEmpty is empty if mNextSpanOrEmpty is empty as well.
+    MOZ_RELEASE_ASSERT(!mCurrentSpan.IsEmpty() || mNextSpanOrEmpty.IsEmpty());
+  }
+
+  MOZ_MUST_USE Length RemainingBytes() const {
+    return mCurrentSpan.LengthBytes() + mNextSpanOrEmpty.LengthBytes();
+  }
+
+  MOZ_MUST_USE ProfileBufferBlockIndex CurrentBlockIndex() const {
+    return mCurrentBlockIndex;
+  }
+
+  MOZ_MUST_USE ProfileBufferBlockIndex NextBlockIndex() const {
+    return mNextBlockIndex;
+  }
+
+  // Be like a limited output iterator, with only `*` and prefix-`++`.
+  // These definitions are expected by std functions, to recognize this as an
+  // iterator. See https://en.cppreference.com/w/cpp/iterator/iterator_traits
+  using value_type = Byte;
+  using pointer = Byte*;
+  using reference = Byte&;
+  using iterator_category = std::output_iterator_tag;
+
+  MOZ_MUST_USE Byte& operator*() {
+    MOZ_RELEASE_ASSERT(RemainingBytes() >= 1);
+    return *(
+        (MOZ_LIKELY(!mCurrentSpan.IsEmpty()) ? mCurrentSpan : mNextSpanOrEmpty)
+            .Elements());
+  }
+
+  ProfileBufferEntryWriter& operator++() {
+    if (MOZ_LIKELY(mCurrentSpan.LengthBytes() >= 1)) {
+      // There is at least 1 byte in mCurrentSpan, eat it.
+      mCurrentSpan = mCurrentSpan.From(1);
+    } else {
+      // mCurrentSpan is empty, move mNextSpanOrEmpty (past the first byte) to
+      // mCurrentSpan.
+      MOZ_RELEASE_ASSERT(mNextSpanOrEmpty.LengthBytes() >= 1);
+      mCurrentSpan = mNextSpanOrEmpty.From(1);
+      mNextSpanOrEmpty = mNextSpanOrEmpty.First(0);
+    }
+    return *this;
+  }
+
+  ProfileBufferEntryWriter& operator+=(Length aBytes) {
+    // Note: This is a rare operation. The code below is a copy of `WriteBytes`
+    // but without the `memcpy`s.
+    MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
+    if (MOZ_LIKELY(aBytes <= mCurrentSpan.LengthBytes())) {
+      // Data fits in mCurrentSpan.
+      // Update mCurrentSpan. It may become empty, so in case of a double span,
+      // the next call will go to the false case below.
+      mCurrentSpan = mCurrentSpan.From(aBytes);
+    } else {
+      // Data does not fully fit in mCurrentSpan.
+      // This should only happen at most once: Only for double spans, and when
+      // data crosses the gap or starts there.
+      const Length tail =
+          aBytes - static_cast<Length>(mCurrentSpan.LengthBytes());
+      // Move mNextSpanOrEmpty to mCurrentSpan, past the data. So the next call
+      // will go back to the true case above.
+      mCurrentSpan = mNextSpanOrEmpty.From(tail);
+      mNextSpanOrEmpty = mNextSpanOrEmpty.First(0);
+    }
+    return *this;
+  }
+
+  // Number of bytes needed to represent `aValue` in unsigned LEB128.
+  template <typename T>
+  static MOZ_MUST_USE unsigned ULEB128Size(T aValue) {
+    return ::mozilla::ULEB128Size(aValue);
+  }
+
+  // Write number as unsigned LEB128 and move iterator ahead.
+  template <typename T>
+  void WriteULEB128(T aValue) {
+    ::mozilla::WriteULEB128(aValue, *this);
+  }
+
+  // No objects, no bytes! (May be useful for generic programming.)
+  static MOZ_MUST_USE Length SumBytes() { return 0; }
+
+  // Number of bytes needed to serialize objects.
+  template <typename T0, typename... Ts>
+  static MOZ_MUST_USE Length SumBytes(const T0& aT0, const Ts&... aTs) {
+    return Serializer<T0>::Bytes(aT0) + SumBytes(aTs...);
+  }
+
+  // Write a sequence of bytes, like memcpy.
+  void WriteBytes(const void* aSrc, Length aBytes) {
+    MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
+    if (MOZ_LIKELY(aBytes <= mCurrentSpan.LengthBytes())) {
+      // Data fits in mCurrentSpan.
+      memcpy(mCurrentSpan.Elements(), aSrc, aBytes);
+      // Update mCurrentSpan. It may become empty, so in case of a double span,
+      // the next call will go to the false case below.
+      mCurrentSpan = mCurrentSpan.From(aBytes);
+    } else {
+      // Data does not fully fit in mCurrentSpan.
+      // This should only happen at most once: Only for double spans, and when
+      // data crosses the gap or starts there.
+      // Split data between the end of mCurrentSpan and the beginning of
+      // mNextSpanOrEmpty. (mCurrentSpan could be empty, it's ok to do a memcpy
+      // because Span::Elements() is never null.)
+      memcpy(mCurrentSpan.Elements(), aSrc, mCurrentSpan.LengthBytes());
+      const Length tail =
+          aBytes - static_cast<Length>(mCurrentSpan.LengthBytes());
+      memcpy(mNextSpanOrEmpty.Elements(),
+             reinterpret_cast<const Byte*>(aSrc) + mCurrentSpan.LengthBytes(),
+             tail);
+      // Move mNextSpanOrEmpty to mCurrentSpan, past the data. So the next call
+      // will go back to the true case above.
+      mCurrentSpan = mNextSpanOrEmpty.From(tail);
+      mNextSpanOrEmpty = mNextSpanOrEmpty.First(0);
+    }
+  }
+
+  void WriteFromReader(ProfileBufferEntryReader& aReader, Length aBytes) {
+    MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
+    MOZ_RELEASE_ASSERT(aBytes <= aReader.RemainingBytes());
+    Length read0 = std::min(
+        aBytes, static_cast<Length>(aReader.mCurrentSpan.LengthBytes()));
+    if (read0 != 0) {
+      WriteBytes(aReader.mCurrentSpan.Elements(), read0);
+    }
+    Length read1 = aBytes - read0;
+    if (read1 != 0) {
+      WriteBytes(aReader.mNextSpanOrEmpty.Elements(), read1);
+    }
+    aReader += aBytes;
+  }
+
+  // Write a single object by using the appropriate Serializer.
+  template <typename T>
+  void WriteObject(const T& aObject) {
+    Serializer<T>::Write(*this, aObject);
+  }
+
+  // Allow `EntryWrite::WriteObjects()` with nothing, this could be useful
+  // for generic programming.
+  void WriteObjects() {}
+
+  // Write one or more objects, sequentially.
+  template <typename T0, typename... Ts>
+  void WriteObjects(const T0& aT0, const Ts&... aTs) {
+    WriteObject(aT0);
+    WriteObjects(aTs...);
+  }
+
+ private:
+  // The two spans covering the memory still to be written.
+  SpanOfBytes mCurrentSpan;
+  SpanOfBytes mNextSpanOrEmpty;
+  ProfileBufferBlockIndex mCurrentBlockIndex;
+  ProfileBufferBlockIndex mNextBlockIndex;
 };
 
 // ============================================================================
