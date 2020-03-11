@@ -10106,9 +10106,9 @@ struct ValuePopulateResponseHelper {
       return cloneInfoOrErr.unwrapErr();
     }
 
-    mCloneInfo = cloneInfoOrErr.unwrap();
+    mCloneInfo.init(cloneInfoOrErr.unwrap());
 
-    if (mCloneInfo.mHasPreprocessInfo) {
+    if (mCloneInfo->HasPreprocessInfo()) {
       IDB_WARNING("Preprocessing for cursors not yet implemented!");
       return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -10118,14 +10118,16 @@ struct ValuePopulateResponseHelper {
 
   template <typename Response>
   void MaybeFillCloneInfo(Response* const aResponse, FilesArray* const aFiles) {
-    aResponse->cloneInfo().data().data = std::move(mCloneInfo.mData);
+    auto cloneInfo = mCloneInfo.release();
+    aResponse->cloneInfo().data().data = cloneInfo.ReleaseData();
 
     // TODO (Bug 1620632) On gcc, the following fails to compile:
-    //     aFiles->AppendElement(std::move(mCloneInfo.mFiles));
+    //     aFiles->AppendElement(cloneInfo.ReleaseFiles());
     // so we construct a FallibleTArray and swap the elements...
 
+    auto files = cloneInfo.ReleaseFiles();
     FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFile> temp;
-    temp.SwapElements(mCloneInfo.mFiles);
+    temp.SwapElements(files);
     aFiles->AppendElement(std::move(temp));
   }
 
@@ -10135,8 +10137,8 @@ struct ValuePopulateResponseHelper {
   }
 
  private:
-  StructuredCloneReadInfo mCloneInfo{
-      JS::StructuredCloneScope::DifferentProcess};
+  InitializedOnce<const StructuredCloneReadInfo, LazyInit::AllowResettable>
+      mCloneInfo;
 };
 
 template <>
@@ -19312,21 +19314,22 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return Err(NS_ERROR_FILE_CORRUPTED);
   }
 
-  StructuredCloneReadInfo info(JS::StructuredCloneScope::DifferentProcess);
-  if (!info.mData.AppendBytes(uncompressedBuffer, uncompressed.Length())) {
+  JSStructuredCloneData data(JS::StructuredCloneScope::DifferentProcess);
+  if (!data.AppendBytes(uncompressedBuffer, uncompressed.Length())) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
+  nsTArray<StructuredCloneFile> files;
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
       return Err(filesOrErr.unwrapErr());
     }
 
-    info.mFiles = filesOrErr.unwrap();
+    files = filesOrErr.unwrap();
   }
 
-  return info;
+  return StructuredCloneReadInfo{std::move(data), std::move(files)};
 }
 
 // static
@@ -19341,32 +19344,33 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
 
   nsresult rv;
 
-  StructuredCloneReadInfo info(JS::StructuredCloneScope::DifferentProcess);
-
+  nsTArray<StructuredCloneFile> files;
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
       return Err(filesOrErr.unwrapErr());
     }
 
-    info.mFiles = filesOrErr.unwrap();
+    files = filesOrErr.unwrap();
   }
 
   // Higher and lower 32 bits described
   // in ObjectStoreAddOrPutRequestOp::DoDatabaseWork.
   const uint32_t index = uint32_t(aIntData & 0xFFFFFFFF);
 
-  if (index >= info.mFiles.Length()) {
+  if (index >= files.Length()) {
     MOZ_ASSERT(false, "Bad index value!");
     return Err(NS_ERROR_UNEXPECTED);
   }
 
   if (IndexedDatabaseManager::PreprocessingEnabled()) {
-    info.mHasPreprocessInfo = true;
-    return info;
+    return StructuredCloneReadInfo{
+        JSStructuredCloneData{JS::StructuredCloneScope::DifferentProcess},
+        std::move(files), nullptr, true};
   }
 
-  StructuredCloneFile& file = info.mFiles[index];
+  // XXX Why can there be multiple files, but we use only a single one here?
+  const StructuredCloneFile& file = files[index];
   MOZ_ASSERT(file.Type() == StructuredCloneFile::eStructuredClone);
 
   const nsCOMPtr<nsIFile> nativeFile =
@@ -19384,6 +19388,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   const auto snappyInputStream =
       MakeRefPtr<SnappyUncompressInputStream>(fileInputStream);
 
+  auto data = JSStructuredCloneData{JS::StructuredCloneScope::DifferentProcess};
   do {
     char buffer[kFileCopyBufferSize];
 
@@ -19397,12 +19402,12 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
       break;
     }
 
-    if (NS_WARN_IF(!info.mData.AppendBytes(buffer, numRead))) {
+    if (NS_WARN_IF(!data.AppendBytes(buffer, numRead))) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   } while (true);
 
-  return info;
+  return StructuredCloneReadInfo{std::move(data), std::move(files)};
 }
 
 // static
@@ -25565,8 +25570,8 @@ template <>
 void MoveData<SerializedStructuredCloneReadInfo>(
     StructuredCloneReadInfo& aInfo,
     SerializedStructuredCloneReadInfo& aResult) {
-  aResult.data().data = std::move(aInfo.mData);
-  aResult.hasPreprocessInfo() = aInfo.mHasPreprocessInfo;
+  aResult.data().data = aInfo.ReleaseData();
+  aResult.hasPreprocessInfo() = aInfo.HasPreprocessInfo();
 }
 
 template <>
@@ -25579,7 +25584,7 @@ nsresult ObjectStoreGetRequestOp::ConvertResponse(
   MoveData(aInfo, aResult);
 
   auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
-                                           aInfo.mFiles, aForPreprocess);
+                                           aInfo.Files(), aForPreprocess);
   if (NS_WARN_IF(res.isErr())) {
     return res.unwrapErr();
   }
@@ -25642,7 +25647,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
       return Err(cloneInfoOrErr.unwrapErr());
     }
 
-    if (cloneInfoOrErr.inspect().mHasPreprocessInfo) {
+    if (cloneInfoOrErr.inspect().HasPreprocessInfo()) {
       mPreprocessInfoCount++;
     }
 
@@ -25680,7 +25685,7 @@ nsresult ObjectStoreGetRequestOp::GetPreprocessParams(
 
     uint32_t fallibleIndex = 0;
     for (auto& info : mResponse) {
-      if (info.mHasPreprocessInfo) {
+      if (info.HasPreprocessInfo()) {
         nsresult rv = ConvertResponse<true>(
             info, falliblePreprocessInfos[fallibleIndex++]);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -26227,7 +26232,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       return cloneInfoOrErr.unwrapErr();
     }
 
-    if (cloneInfoOrErr.inspect().mHasPreprocessInfo) {
+    if (cloneInfoOrErr.inspect().HasPreprocessInfo()) {
       IDB_WARNING("Preprocessing for indexes not yet implemented!");
       return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -26270,10 +26275,10 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
         SerializedStructuredCloneReadInfo& serializedInfo =
             fallibleCloneInfos[index];
 
-        serializedInfo.data().data = std::move(info.mData);
+        serializedInfo.data().data = info.ReleaseData();
 
         auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
-                                                 info.mFiles,
+                                                 info.Files(),
                                                  /* aForPreprocess */ false);
         if (NS_WARN_IF(res.isErr())) {
           aResponse = res.unwrapErr();
@@ -26304,11 +26309,11 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
     SerializedStructuredCloneReadInfo& serializedInfo =
         aResponse.get_IndexGetResponse().cloneInfo();
 
-    serializedInfo.data().data = std::move(info.mData);
+    serializedInfo.data().data = info.ReleaseData();
 
-    auto res =
-        SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, info.mFiles,
-                                      /* aForPreprocess */ false);
+    auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
+                                             info.Files(),
+                                             /* aForPreprocess */ false);
     if (NS_WARN_IF(res.isErr())) {
       aResponse = res.unwrapErr();
       return;
