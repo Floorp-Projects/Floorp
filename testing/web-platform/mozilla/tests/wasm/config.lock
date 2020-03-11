@@ -1,0 +1,110 @@
+harness_directive = '|jit-test| skip-if: true'
+directive = '|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemoryIsSupported(); include:wasm-testharness.js; local-include:harness/sync_index.js'
+included_tests = []
+excluded_tests = [
+    'align.wast',
+    'memory_trap.wast',
+    'imports.wast',
+    'exports.wast',
+    'linking.wast',
+    'data.wast',
+    'names.wast',
+    'utf8-custom-section-id.wast',
+]
+
+[[repos]]
+name = 'spec'
+url = 'https://github.com/WebAssembly/spec'
+included_tests = []
+excluded_tests = []
+commit = 'c0e7b84c'
+skip_merge = false
+skip_wast = false
+skip_wpt = false
+skip_js = false
+
+[[repos]]
+name = 'sign-extension-ops'
+url = 'https://github.com/WebAssembly/sign-extension-ops'
+parent = 'spec'
+included_tests = []
+excluded_tests = []
+commit = 'a09a028e'
+skip_merge = false
+skip_wast = false
+skip_wpt = false
+skip_js = false
+
+[[repos]]
+name = 'nontrapping-float-to-int-conversions'
+url = 'https://github.com/WebAssembly/nontrapping-float-to-int-conversions'
+parent = 'spec'
+included_tests = []
+excluded_tests = []
+commit = 'aa25b24d'
+skip_merge = false
+skip_wast = false
+skip_wpt = false
+skip_js = false
+
+[[repos]]
+name = 'multi-value'
+url = 'https://github.com/WebAssembly/multi-value'
+parent = 'spec'
+directive = '; skip-if: !wasmMultiValueEnabled()'
+included_tests = []
+excluded_tests = [
+    'call_indirect.wast',
+    'block.wast',
+    'fac.wast',
+    'if.wast',
+]
+commit = '0032d27f'
+skip_merge = false
+skip_wast = false
+skip_wpt = true
+skip_js = false
+
+[[repos]]
+name = 'threads'
+url = 'https://github.com/WebAssembly/threads'
+parent = 'spec'
+directive = '; skip-if: !wasmThreadsSupported()'
+included_tests = []
+excluded_tests = []
+commit = 'dfdcb81a'
+skip_merge = false
+skip_wast = false
+skip_wpt = true
+skip_js = false
+
+[[repos]]
+name = 'bulk-memory-operations'
+url = 'https://github.com/WebAssembly/bulk-memory-operations'
+parent = 'spec'
+directive = '; skip-if: !wasmBulkMemSupported()'
+included_tests = []
+excluded_tests = []
+commit = 'ffdbb6e3'
+skip_merge = false
+skip_wast = false
+skip_wpt = true
+skip_js = false
+
+[[repos]]
+name = 'reference-types'
+url = 'https://github.com/WebAssembly/reference-types'
+parent = 'spec'
+directive = '; skip-if: !wasmBulkMemSupported() || !wasmReftypesEnabled()'
+included_tests = []
+excluded_tests = [
+    'table_fill.wast',
+    'select.wast',
+    'float_memory.wast',
+    'call_indirect.wast',
+]
+commit = '7cfa1996'
+skip_merge = true
+skip_wast = false
+skip_wpt = true
+skip_js = false
