@@ -3365,7 +3365,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       if (IsUninitializedLexical(val)) {
         JSOp next = JSOp(*GetNextPc(REGS.pc));
         MOZ_ASSERT(next == JSOp::CheckThis || next == JSOp::CheckReturn ||
-                   next == JSOp::CheckThisReinit || next == JSOp::CheckLexical);
+                   next == JSOp::CheckThisReinit ||
+                   next == JSOp::CheckAliasedLexical);
       }
 #endif
       PUSH_COPY(val);
@@ -3395,6 +3396,15 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
     }
     END_CASE(CheckLexical)
+
+    CASE(CheckAliasedLexical) {
+      if (REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, script,
+                                  REGS.pc);
+        goto error;
+      }
+    }
+    END_CASE(CheckAliasedLexical)
 
     CASE(InitLexical) {
       uint32_t i = GET_LOCALNO(REGS.pc);
@@ -5257,11 +5267,20 @@ void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                    HandleScript script, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckLexical ||
-             JSOp(*pc) == JSOp::ThrowSetConst || JSOp(*pc) == JSOp::GetImport);
-  MOZ_ASSERT(IsAtomOp(JSOp(*pc)));
+  JSOp op = JSOp(*pc);
+  MOZ_ASSERT(op == JSOp::CheckLexical || op == JSOp::CheckAliasedLexical ||
+             op == JSOp::ThrowSetConst || op == JSOp::GetImport);
 
-  RootedPropertyName name(cx, script->getName(pc));
+  RootedPropertyName name(cx);
+  if (IsLocalOp(op)) {
+    name = FrameSlotName(script, pc)->asPropertyName();
+  } else if (IsAliasedVarOp(op)) {
+    name = EnvironmentCoordinateNameSlow(script, pc);
+  } else {
+    MOZ_ASSERT(IsAtomOp(op));
+    name = script->getName(pc);
+  }
+
   ReportRuntimeLexicalError(cx, errorNumber, name);
 }
 
