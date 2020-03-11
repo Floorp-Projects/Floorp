@@ -31,7 +31,6 @@ use nsstring::nsAString;
 use num_cpus;
 use program_cache::{remove_disk_cache, WrProgramCache};
 use rayon;
-use swgl_bindings::SwCompositor;
 use thread_profiler::register_thread_with_profiler;
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
@@ -1217,7 +1216,6 @@ extern "C" {
         compositor: *mut c_void,
         enable: bool,
     );
-    fn wr_compositor_deinit(compositor: *mut c_void);
     fn wr_compositor_get_capabilities(
         compositor: *mut c_void,
     ) -> CompositorCapabilities;
@@ -1312,12 +1310,6 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn deinit(&mut self) {
-        unsafe {
-            wr_compositor_deinit(self.0);
-        }
-    }
-
     fn get_capabilities(&self) -> CompositorCapabilities {
         unsafe {
             wr_compositor_get_capabilities(self.0)
@@ -1336,7 +1328,6 @@ pub extern "C" fn wr_window_new(
     allow_texture_swizzling: bool,
     enable_picture_caching: bool,
     start_debug_server: bool,
-    swgl_context: *mut c_void,
     gl_context: *mut c_void,
     surface_origin_is_top_left: bool,
     program_cache: Option<&mut WrProgramCache>,
@@ -1364,20 +1355,12 @@ pub extern "C" fn wr_window_new(
         None
     };
 
-    let native_gl = if unsafe { is_glcontext_gles(gl_context) } {
-        unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) }
+    let gl;
+    if unsafe { is_glcontext_gles(gl_context) } {
+        gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     } else {
-        unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) }
-    };
-
-    let software = swgl_context != ptr::null_mut();
-    let (gl, sw_gl) = if software {
-        let ctx = swgl::Context::from(swgl_context);
-        ctx.make_current();
-        (Rc::new(ctx.clone()) as Rc<dyn gl::Gl>, Some(ctx))
-    } else {
-        (native_gl.clone(), None)
-    };
+        gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+    }
 
     let version = gl.get_string(gl::VERSION);
 
@@ -1416,17 +1399,7 @@ pub extern "C" fn wr_window_new(
         ColorF::new(0.0, 0.0, 0.0, 0.0)
     };
 
-    let compositor_config = if software {
-        let wr_compositor: Option<Box<dyn Compositor>> = if compositor != ptr::null_mut() {
-            Some(Box::new(WrCompositor(compositor)))
-        } else {
-            None
-        };
-        CompositorConfig::Native {
-            max_update_rects: 1,
-            compositor: Box::new(SwCompositor::new(sw_gl.unwrap(), Some(native_gl), wr_compositor))
-        }
-    } else if compositor != ptr::null_mut() {
+    let compositor_config = if compositor != ptr::null_mut() {
         CompositorConfig::Native {
             max_update_rects,
             compositor: Box::new(WrCompositor(compositor)),
@@ -1475,7 +1448,7 @@ pub extern "C" fn wr_window_new(
         enable_picture_caching,
         allow_pixel_local_storage_support: false,
         start_debug_server,
-        surface_origin_is_top_left: !software && surface_origin_is_top_left,
+        surface_origin_is_top_left,
         compositor_config,
         enable_gpu_markers,
         panic_on_gl_error,
