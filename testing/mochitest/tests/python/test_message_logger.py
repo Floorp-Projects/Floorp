@@ -118,6 +118,12 @@ def test_buffering_on(get_message_logger, assert_actions):
         'test_end',
     ])
 
+    # enabling buffering outside of a test has no affect
+    ml.fake_message('buffering_on')
+    ml.fake_message('log')
+    ml.fake_message('test_status')
+    assert_actions(['log', 'test_status'])
+
 
 def test_buffering_off(get_message_logger, assert_actions):
     ml = get_message_logger(buffering=False)
