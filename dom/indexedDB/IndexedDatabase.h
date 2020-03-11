@@ -165,4 +165,6 @@ struct StructuredCloneReadInfo {
 }  // namespace dom
 }  // namespace mozilla
 
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::StructuredCloneReadInfo);
+
 #endif  // mozilla_dom_indexeddatabase_h__
