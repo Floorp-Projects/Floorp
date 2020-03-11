@@ -27,9 +27,11 @@
 //   X - tab drag
 //   X - tab remove from the middle
 //   X - Without add-tab button -> can be hidden while testing manually. in talos always with the button
-let aboutNewTabService = Cc[
-  "@mozilla.org/browser/aboutnewtab-service;1"
-].getService(Ci.nsIAboutNewTabService);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 /* globals res:true, sequenceArray:true */
 
@@ -78,9 +80,9 @@ Tart.prototype = {
       }, "newtab-url-changed");
     });
     if (url === "about:newtab") {
-      aboutNewTabService.resetNewTabURL();
+      AboutNewTab.resetNewTabURL();
     } else {
-      aboutNewTabService.newTabURL = url;
+      AboutNewTab.newTabURL = url;
     }
     return promise;
   },

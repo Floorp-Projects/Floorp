@@ -8,11 +8,10 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
-XPCOMUtils.defineLazyServiceGetter(
+ChromeUtils.defineModuleGetter(
   this,
-  "aboutNewTabService",
-  "@mozilla.org/browser/aboutnewtab-service;1",
-  "nsIAboutNewTabService"
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
 );
 
 const NEWTAB_URI_1 = "webext-newtab-1.html";
@@ -720,15 +719,15 @@ add_task(async function test_overriding_newtab_incognito_not_allowed() {
   is(win.gURLBar.value, "", "newtab not used in private window");
 
   // Verify setting the pref directly doesn't bypass permissions.
-  let origUrl = aboutNewTabService.newTabURL;
-  aboutNewTabService.newTabURL = url;
+  let origUrl = AboutNewTab.newTabURL;
+  AboutNewTab.newTabURL = url;
   newTabOpened = waitForNewTab();
   win.BrowserOpenTab();
   await newTabOpened;
 
   is(win.gURLBar.value, "", "directly set newtab not used in private window");
 
-  aboutNewTabService.newTabURL = origUrl;
+  AboutNewTab.newTabURL = origUrl;
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
