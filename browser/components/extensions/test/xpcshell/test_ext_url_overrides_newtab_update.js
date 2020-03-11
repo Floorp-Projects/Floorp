@@ -2,11 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "aboutNewTabService",
-  "@mozilla.org/browser/aboutnewtab-service;1",
-  "nsIAboutNewTabService"
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
 );
 
 const { AddonTestUtils } = ChromeUtils.import(
@@ -87,9 +84,9 @@ add_task(async function test_url_overrides_newtab_update() {
     },
   });
 
-  let defaultNewTabURL = aboutNewTabService.newTabURL;
+  let defaultNewTabURL = AboutNewTab.newTabURL;
   equal(
-    aboutNewTabService.newTabURL,
+    AboutNewTab.newTabURL,
     defaultNewTabURL,
     `Default newtab url is ${defaultNewTabURL}.`
   );
@@ -102,7 +99,7 @@ add_task(async function test_url_overrides_newtab_update() {
     "The installed addon has the expected version."
   );
   ok(
-    aboutNewTabService.newTabURL.endsWith(NEWTAB_URI),
+    AboutNewTab.newTabURL.endsWith(NEWTAB_URI),
     "Newtab url is overridden by the extension."
   );
 
@@ -119,7 +116,7 @@ add_task(async function test_url_overrides_newtab_update() {
     "The updated addon has the expected version."
   );
   equal(
-    aboutNewTabService.newTabURL,
+    AboutNewTab.newTabURL,
     defaultNewTabURL,
     "Newtab url reverted to the default after update."
   );

@@ -3,13 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let gNewTabService = Cc[
-  "@mozilla.org/browser/aboutnewtab-service;1"
-].getService(Ci.nsIAboutNewTabService);
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 async function doTest(isPrivate) {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: isPrivate });
-  let defaultURL = gNewTabService.newTabURL;
+  let defaultURL = AboutNewTab.newTabURL;
   let newTabURL;
   let mode;
   let testURL = "http://example.com/";
@@ -30,8 +30,8 @@ async function doTest(isPrivate) {
   );
 
   // Set the custom newtab url
-  gNewTabService.newTabURL = testURL;
-  is(gNewTabService.newTabURL, testURL, "Custom newtab url is set");
+  AboutNewTab.newTabURL = testURL;
+  is(AboutNewTab.newTabURL, testURL, "Custom newtab url is set");
 
   // Open a newtab after setting the custom newtab url
   await openNewTab(win, testURL);
@@ -42,8 +42,8 @@ async function doTest(isPrivate) {
   );
 
   // Clear the custom url.
-  gNewTabService.resetNewTabURL();
-  is(gNewTabService.newTabURL, defaultURL, "No custom newtab url is set");
+  AboutNewTab.resetNewTabURL();
+  is(AboutNewTab.newTabURL, defaultURL, "No custom newtab url is set");
 
   win.gBrowser.removeTab(win.gBrowser.selectedTab);
   win.gBrowser.removeTab(win.gBrowser.selectedTab);
@@ -52,7 +52,7 @@ async function doTest(isPrivate) {
 
 add_task(async function test_newTabService() {
   // check whether any custom new tab url has been configured
-  ok(!gNewTabService.overridden, "No custom newtab url is set");
+  ok(!AboutNewTab.newTabURLOverridden, "No custom newtab url is set");
 
   // test normal mode
   await doTest(false);
