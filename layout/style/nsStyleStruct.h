@@ -1214,7 +1214,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleTranslate mTranslate;
   mozilla::StyleScale mScale;
 
-  uint8_t mBackfaceVisibility;
+  mozilla::StyleBackfaceVisibility mBackfaceVisibility;
   mozilla::StyleTransformStyle mTransformStyle;
   StyleGeometryBox mTransformBox;
 
@@ -1465,7 +1465,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   bool HasPerspectiveStyle() const { return !mChildPerspective.IsNone(); }
 
   bool BackfaceIsHidden() const {
-    return mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
+    return mBackfaceVisibility == mozilla::StyleBackfaceVisibility::Hidden;
   }
 
   // FIXME(emilio): This should be more fine-grained on each caller to

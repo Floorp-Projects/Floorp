@@ -574,6 +574,7 @@ ${helpers.single_keyword(
     "backface-visibility",
     "visible hidden",
     engines="gecko servo-2013",
+    gecko_enum_prefix="StyleBackfaceVisibility",
     spec="https://drafts.csswg.org/css-transforms/#backface-visibility-property",
     extra_prefixes=transform_extra_prefixes,
     animation_value_type="discrete",

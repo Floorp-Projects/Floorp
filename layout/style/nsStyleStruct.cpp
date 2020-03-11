@@ -2249,7 +2249,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mRotate(StyleRotate::None()),
       mTranslate(StyleTranslate::None()),
       mScale(StyleScale::None()),
-      mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
+      mBackfaceVisibility(StyleBackfaceVisibility::Visible),
       mTransformStyle(StyleTransformStyle::Flat),
       mTransformBox(StyleGeometryBox::BorderBox),
       mOffsetPath(StyleOffsetPath::None()),
