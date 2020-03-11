@@ -4662,6 +4662,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "updateagent"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "comedy",
+ "failure",
+ "log",
+ "winapi 0.3.7",
+]
+
+[[package]]
 name = "url"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
