@@ -51,7 +51,7 @@ class DataMigrationAbortedError extends Error {
   }
 }
 
-var DataMigrationTelemetry = {
+var ErrorsTelemetry = {
   initialized: false,
 
   lazyInit() {
@@ -117,7 +117,7 @@ var DataMigrationTelemetry = {
    * @param {string} telemetryData.histogramCategory
    *        The histogram category for the result ("success" or "failure").
    */
-  recordResult(telemetryData) {
+  recordDataMigrationResult(telemetryData) {
     try {
       const {
         backend,
@@ -163,6 +163,29 @@ var DataMigrationTelemetry = {
       // it to the caller.
       Cu.reportError(err);
     }
+  },
+
+  /**
+   * Record telemetry related to the unexpected errors raised while executing
+   * a storage.local API call.
+   *
+   * @param {string} extensionId
+   *        The id of the extension migrated.
+   * @param {string} storageMethod
+   *        The storage.local API method being run.
+   * @param {Error}  error
+   *        The unexpected error raised during the API call.
+   */
+  recordStorageLocalError({ extensionId, storageMethod, error }) {
+    this.lazyInit();
+
+    Services.telemetry.recordEvent(
+      "extensions.data",
+      "storageLocalError",
+      storageMethod,
+      getTrimmedString(extensionId),
+      { error_name: this.getErrorName(error) }
+    );
   },
 };
 
@@ -428,7 +451,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
       `storage.local data migration cancelled, unable to open IDB connection: ${err.message}::${err.stack}`
     );
 
-    DataMigrationTelemetry.recordResult({
+    ErrorsTelemetry.recordDataMigrationResult({
       backend: "JSONFile",
       extensionId: extension.id,
       error: err,
@@ -485,7 +508,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     );
 
     if (oldStorageExists && !dataMigrateCompleted) {
-      DataMigrationTelemetry.recordResult({
+      ErrorsTelemetry.recordDataMigrationResult({
         backend: "JSONFile",
         dataMigrated: dataMigrateCompleted,
         extensionId: extension.id,
@@ -539,7 +562,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
 
   ExtensionStorageIDB.setMigratedExtensionPref(extension, true);
 
-  DataMigrationTelemetry.recordResult({
+  ErrorsTelemetry.recordDataMigrationResult({
     backend: "IndexedDB",
     dataMigrated: dataMigrateCompleted,
     extensionId: extension.id,
@@ -772,13 +795,19 @@ this.ExtensionStorageIDB = {
    * from the internal IndexedDB operations have to be converted into an ExtensionError
    * to be accessible to the extension code).
    *
-   * @param {Error|ExtensionError|DOMException} error
+   * @param {object} params
+   * @param {Error|ExtensionError|DOMException} params.error
    *        The error object to normalize.
+   * @param {string} params.extensionId
+   *        The id of the extension that was executing the storage.local method.
+   * @param {string} params.storageMethod
+   *        The storage method being executed when the error has been thrown
+   *        (used to keep track of the unexpected error incidence in telemetry).
    *
    * @returns {ExtensionError}
    *          Return an ExtensionError error instance.
    */
-  normalizeStorageError(error) {
+  normalizeStorageError({ error, extensionId, storageMethod }) {
     const { ExtensionError } = ExtensionUtils;
 
     if (error instanceof ExtensionError) {
@@ -802,6 +831,12 @@ this.ExtensionStorageIDB = {
       Cu.reportError(error);
 
       errorMessage = "An unexpected error occurred";
+
+      ErrorsTelemetry.recordStorageLocalError({
+        error,
+        extensionId,
+        storageMethod,
+      });
     }
 
     return new ExtensionError(errorMessage);

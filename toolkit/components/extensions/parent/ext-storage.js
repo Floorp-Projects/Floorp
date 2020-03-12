@@ -98,7 +98,11 @@ this.storage = class extends ExtensionAPI {
               return changes;
             } catch (err) {
               const normalizedError = ExtensionStorageIDB.normalizeStorageError(
-                err
+                {
+                  error: err,
+                  extensionId: extension.id,
+                  storageMethod: method,
+                }
               ).message;
               return Promise.reject({
                 message: String(normalizedError),
