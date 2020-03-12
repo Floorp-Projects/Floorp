@@ -1926,8 +1926,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         // an exception is set and execution will halt.  Thus it's safe
         // and correct to ignore the return value here.
         Unused << ts.compileWarning(std::move(metadata), nullptr,
-                                    JSREPORT_WARNING, JSMSG_USE_ASM_TYPE_FAIL,
-                                    &args);
+                                    JSMSG_USE_ASM_TYPE_FAIL, &args);
       }
     }
 

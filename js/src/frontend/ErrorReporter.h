@@ -238,8 +238,8 @@ class ErrorReportMixin : public StrictModeGetter {
       return false;
     }
 
-    return compileWarning(std::move(metadata), std::move(notes),
-                          JSREPORT_WARNING, errorNumber, args);
+    return compileWarning(std::move(metadata), std::move(notes), errorNumber,
+                          args);
   }
 
   // ==== strictModeError ====
@@ -345,10 +345,9 @@ class ErrorReportMixin : public StrictModeGetter {
   // Reports a warning, or an error if the warning is treated as an error.
   MOZ_MUST_USE bool compileWarning(ErrorMetadata&& metadata,
                                    UniquePtr<JSErrorNotes> notes,
-                                   unsigned flags, unsigned errorNumber,
-                                   va_list* args) {
+                                   unsigned errorNumber, va_list* args) {
     return ReportCompileWarning(getContext(), std::move(metadata),
-                                std::move(notes), flags, errorNumber, args);
+                                std::move(notes), errorNumber, args);
   }
 };
 
