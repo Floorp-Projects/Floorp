@@ -4394,8 +4394,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 #endif
   }
 
-  LOG(("nsWindow [%p] %s\n", (void*)this,
-       mWindowType == eWindowType_toplevel ? "Toplevel" : "Popup"));
+  LOG(("nsWindow [%p] %s %s\n", (void*)this,
+       mWindowType == eWindowType_toplevel ? "Toplevel" : "Popup",
+       mIsPIPWindow ? "PIP window" : ""));
   if (mShell) {
     LOG(("\tmShell %p mContainer %p mGdkWindow %p 0x%lx\n", mShell, mContainer,
          mGdkWindow, mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
@@ -7490,10 +7491,10 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   if (currentDesktop) {
     // GNOME Flashback (fallback)
     if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
-      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
       // gnome-shell
     } else if (strstr(currentDesktop, "GNOME") != nullptr) {
-      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strstr(currentDesktop, "XFCE") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
@@ -7907,6 +7908,8 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
       GtkBorder decorationSize = GetCSDDecorationSize(
           gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
+      LOG(("Addind decoration size l:%d t:%d r:%d b:%d\n", decorationSize.left,
+           decorationSize.top, decorationSize.right, decorationSize.bottom));
       width += decorationSize.left + decorationSize.right;
       height += decorationSize.top + decorationSize.bottom;
     }
