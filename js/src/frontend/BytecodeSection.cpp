@@ -30,7 +30,10 @@ bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
   lastbox = funbox;
 
   *index = vector.length();
-  return vector.append(mozilla::AsVariant(JS::GCCellPtr(funbox->function())));
+  // To avoid circular include issues, funbox can't return a FunctionIndex, so
+  // instead it returns a size_t, which we wrap in FunctionIndex here to
+  // disambiguate the variant.
+  return vector.append(mozilla::AsVariant(FunctionIndex(funbox->index())));
 }
 
 void GCThingList::finishInnerFunctions() {
@@ -97,6 +100,17 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
       }
 
       output[i] = JS::GCCellPtr(scope);
+      return true;
+    }
+
+    bool operator()(const FunctionIndex& index) {
+      MutableHandle<FunctionType> data = compilationInfo.funcData[index];
+      // We should have already converted this data to a JSFunction as part
+      // of publishDeferredFunctions, which currently happens before BCE begins.
+      // Once we can do LazyScriptCreationData::create without referencing the
+      // functionbox, then we should be able to do JSFunction allocation here.
+      MOZ_ASSERT(!data.is<FunctionCreationData>());
+      output[i] = JS::GCCellPtr(data.as<JSFunction*>());
       return true;
     }
   };

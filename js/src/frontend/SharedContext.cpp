@@ -121,15 +121,15 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* explicitName,
-                         FunctionFlags flags)
+                         FunctionFlags flags, size_t index)
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives),
-      object_(nullptr),
       traceLink_(traceListHead),
       emitLink_(nullptr),
       enclosingScope_(),
       namedLambdaBindings_(nullptr),
       functionScopeBindings_(nullptr),
       extraVarScopeBindings_(nullptr),
+      funcDataIndex_(index),
       functionNode(nullptr),
       extent{0, 0, toStringStart, 0, 1, 0},
       length(0),
@@ -159,36 +159,14 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       explicitName_(explicitName),
       flags_(flags) {}
 
-FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
-                         JSFunction* fun, uint32_t toStringStart,
-                         CompilationInfo& compilationInfo,
-                         Directives directives, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind)
-    : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
-                  generatorKind, asyncKind, fun->explicitName(), fun->flags()) {
-  object_ = fun;
-  // Functions created at parse time may be set singleton after parsing and
-  // baked into JIT code, so they must be allocated tenured. They are held by
-  // the JSScript so cannot be collected during a minor GC anyway.
-  MOZ_ASSERT(fun->isTenured());
+bool FunctionBox::hasFunctionCreationData() const {
+  return compilationInfo_.funcData[funcDataIndex_]
+      .get()
+      .is<FunctionCreationData>();
 }
 
-FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
-                         uint32_t toStringStart,
-                         CompilationInfo& compilationInfo,
-                         Directives directives, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind, size_t functionIndex)
-    : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
-                  generatorKind, asyncKind,
-                  compilationInfo.funcData[functionIndex]
-                      .as<FunctionCreationData>()
-                      .get()
-                      .atom,
-                  compilationInfo.funcData[functionIndex]
-                      .as<FunctionCreationData>()
-                      .get()
-                      .flags) {
-  funcDataIndex_.emplace(functionIndex);
+bool FunctionBox::hasFunction() const {
+  return compilationInfo_.funcData[funcDataIndex_].get().is<JSFunction*>();
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
@@ -331,15 +309,22 @@ void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
 }
 
 void FunctionBox::trace(JSTracer* trc) {
-  if (object_) {
-    TraceRoot(trc, &object_, "funbox-object");
-  }
   if (enclosingScope_) {
     enclosingScope_.trace(trc);
   }
   if (explicitName_) {
     TraceRoot(trc, &explicitName_, "funbox-explicitName");
   }
+}
+
+JSFunction* FunctionBox::function() const {
+  return compilationInfo_.funcData[funcDataIndex_].as<JSFunction*>();
+}
+
+void FunctionBox::clobberFunction(JSFunction* function) {
+  compilationInfo_.funcData[funcDataIndex_].set(mozilla::AsVariant(function));
+  // After clobbering, these flags need to be updated
+  setIsInterpreted(function->isInterpreted());
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
@@ -356,14 +341,13 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
 }
 
 MutableHandle<FunctionCreationData> FunctionBox::functionCreationData() const {
-  MOZ_ASSERT(hasFunctionCreationIndex());
+  MOZ_ASSERT(hasFunctionCreationData());
   // Marked via CompilationData::funcData rooting.
   return MutableHandle<FunctionCreationData>::fromMarkedLocation(
-      &compilationInfo_.funcData[*funcDataIndex_]
+      &compilationInfo_.funcData[funcDataIndex_]
            .get()
            .as<FunctionCreationData>());
 }
 
 }  // namespace frontend
-
 }  // namespace js
