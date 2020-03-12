@@ -16,49 +16,41 @@
 
 namespace mozilla {
 enum class CheckingSupport {
-  Enabled,
   Disabled,
+  Enabled,
 };
 
+template <typename T>
+class CheckedUnsafePtr;
+
 namespace detail {
-template <CheckingSupport>
-class CheckedUnsafePtrBase;
+class CheckedUnsafePtrBaseCheckingEnabled;
 
 struct CheckedUnsafePtrCheckData {
-  using Data = nsTArray<CheckedUnsafePtrBase<CheckingSupport::Enabled>*>;
+  using Data = nsTArray<CheckedUnsafePtrBaseCheckingEnabled*>;
 
   DataMutex<Data> mPtrs{"mozilla::SupportsCheckedUnsafePtr"};
 };
 
-template <>
-class CheckedUnsafePtrBase<CheckingSupport::Disabled> {
- protected:
-  template <typename Ptr>
-  void CopyDanglingFlagIfAvailableFrom(const Ptr&) {}
-
-  template <typename Ptr, typename F>
-  void WithCheckedUnsafePtrsImpl(Ptr, F&&) {}
-};
-
-template <>
-class CheckedUnsafePtrBase<CheckingSupport::Enabled> {
+class CheckedUnsafePtrBaseCheckingEnabled {
   friend class CheckedUnsafePtrBaseAccess;
 
  protected:
-  CheckedUnsafePtrBase() = default;
-  CheckedUnsafePtrBase(const CheckedUnsafePtrBase& aOther) = default;
+  constexpr CheckedUnsafePtrBaseCheckingEnabled() = default;
+  CheckedUnsafePtrBaseCheckingEnabled(
+      const CheckedUnsafePtrBaseCheckingEnabled& aOther) = default;
 
   // When copying an CheckedUnsafePtr, its mIsDangling member must be copied as
   // well; otherwise the new copy might try to dereference a dangling pointer
   // when destructed.
   void CopyDanglingFlagIfAvailableFrom(
-      const CheckedUnsafePtrBase<CheckingSupport::Enabled>& aOther) {
+      const CheckedUnsafePtrBaseCheckingEnabled& aOther) {
     mIsDangling = aOther.mIsDangling;
   }
 
   template <typename Ptr>
-  using DisableForCheckedUnsafePtr =
-      std::enable_if_t<!std::is_base_of<CheckedUnsafePtrBase, Ptr>::value>;
+  using DisableForCheckedUnsafePtr = std::enable_if_t<
+      !std::is_base_of<CheckedUnsafePtrBaseCheckingEnabled, Ptr>::value>;
 
   // When constructing an CheckedUnsafePtr from a different kind of pointer it's
   // not possible to determine whether it's dangling; therefore it's undefined
@@ -82,10 +74,135 @@ class CheckedUnsafePtrBase<CheckingSupport::Enabled> {
 
 class CheckedUnsafePtrBaseAccess {
  protected:
-  static void SetDanglingFlag(
-      CheckedUnsafePtrBase<CheckingSupport::Enabled>& aBase) {
+  static void SetDanglingFlag(CheckedUnsafePtrBaseCheckingEnabled& aBase) {
     aBase.mIsDangling = true;
   }
+};
+
+template <typename T, CheckingSupport = T::SupportsChecking::value>
+class CheckedUnsafePtrBase;
+
+template <typename T, typename U, typename S = std::nullptr_t>
+using EnableIfCompatible =
+    std::enable_if_t<std::is_base_of<T, std::remove_reference_t<decltype(
+                                            *std::declval<U>())>>::value,
+                     S>;
+
+template <typename T>
+class CheckedUnsafePtrBase<T, CheckingSupport::Enabled>
+    : detail::CheckedUnsafePtrBaseCheckingEnabled {
+ public:
+  MOZ_IMPLICIT constexpr CheckedUnsafePtrBase(const std::nullptr_t = nullptr)
+      : mRawPtr(nullptr) {}
+
+  template <typename U, typename = EnableIfCompatible<T, U>>
+  MOZ_IMPLICIT CheckedUnsafePtrBase(const U& aPtr) {
+    Set(aPtr);
+  }
+
+  CheckedUnsafePtrBase(const CheckedUnsafePtrBase& aOther) {
+    Set(aOther.Downcast());
+  }
+
+  ~CheckedUnsafePtrBase() { Reset(); }
+
+  CheckedUnsafePtr<T>& operator=(const std::nullptr_t) {
+    Reset();
+    return Downcast();
+  }
+
+  template <typename U>
+  EnableIfCompatible<T, U, CheckedUnsafePtr<T>&> operator=(const U& aPtr) {
+    Replace(aPtr);
+    return Downcast();
+  }
+
+  CheckedUnsafePtrBase& operator=(const CheckedUnsafePtrBase& aOther) {
+    if (&aOther != this) {
+      Replace(aOther.Downcast());
+    }
+    return Downcast();
+  }
+
+  constexpr T* get() const { return mRawPtr; }
+
+ private:
+  template <typename U, CheckingSupport>
+  friend class CheckedUnsafePtrBase;
+
+  CheckedUnsafePtr<T>& Downcast() {
+    return static_cast<CheckedUnsafePtr<T>&>(*this);
+  }
+  const CheckedUnsafePtr<T>& Downcast() const {
+    return static_cast<const CheckedUnsafePtr<T>&>(*this);
+  }
+
+  using Base = detail::CheckedUnsafePtrBaseCheckingEnabled;
+
+  template <typename U>
+  void Replace(const U& aPtr) {
+    Reset();
+    Set(aPtr);
+  }
+
+  void Reset() {
+    WithCheckedUnsafePtrs(
+        [](Base* const aSelf,
+           detail::CheckedUnsafePtrCheckData::Data& aCheckedUnsafePtrs) {
+          const auto index = aCheckedUnsafePtrs.IndexOf(aSelf);
+          aCheckedUnsafePtrs.UnorderedRemoveElementAt(index);
+        });
+    mRawPtr = nullptr;
+  }
+
+  template <typename U>
+  void Set(const U& aPtr) {
+    this->CopyDanglingFlagIfAvailableFrom(aPtr);
+    mRawPtr = &*aPtr;
+    WithCheckedUnsafePtrs(
+        [](Base* const aSelf,
+           detail::CheckedUnsafePtrCheckData::Data& aCheckedUnsafePtrs) {
+          aCheckedUnsafePtrs.AppendElement(aSelf);
+        });
+  }
+
+  template <typename F>
+  void WithCheckedUnsafePtrs(F&& aClosure) {
+    this->WithCheckedUnsafePtrsImpl(mRawPtr, std::forward<F>(aClosure));
+  }
+
+  T* mRawPtr;
+};
+
+template <typename T>
+class CheckedUnsafePtrBase<T, CheckingSupport::Disabled> {
+ public:
+  MOZ_IMPLICIT constexpr CheckedUnsafePtrBase(const std::nullptr_t = nullptr)
+      : mRawPtr(nullptr) {}
+
+  template <typename U, typename = EnableIfCompatible<T, U>>
+  MOZ_IMPLICIT constexpr CheckedUnsafePtrBase(const U& aPtr) : mRawPtr(aPtr) {}
+
+  constexpr CheckedUnsafePtr<T>& operator=(const std::nullptr_t) {
+    mRawPtr = nullptr;
+    return Downcast();
+  }
+
+  template <typename U>
+  constexpr EnableIfCompatible<T, U, CheckedUnsafePtr<T>&> operator=(
+      const U& aPtr) {
+    mRawPtr = aPtr;
+    return Downcast();
+  }
+
+  constexpr T* get() const { return mRawPtr; }
+
+ private:
+  constexpr CheckedUnsafePtr<T>& Downcast() {
+    return static_cast<CheckedUnsafePtr<T>&>(*this);
+  }
+
+  T* mRawPtr;
 };
 }  // namespace detail
 
@@ -105,17 +222,16 @@ class CheckCheckedUnsafePtrs : private CheckingPolicyAccess,
       std::integral_constant<CheckingSupport, CheckingSupport::Enabled>;
 
  protected:
-  CheckCheckedUnsafePtrs() {
+  static constexpr bool ShouldCheck() {
     static_assert(
         std::is_base_of<CheckCheckedUnsafePtrs, Derived>::value,
         "cannot instantiate with a type that's not a subclass of this class");
+    return true;
   }
-
-  bool ShouldCheck() const { return true; }
 
   void Check(detail::CheckedUnsafePtrCheckData::Data& aCheckedUnsafePtrs) {
     if (!aCheckedUnsafePtrs.IsEmpty()) {
-      for (const auto aCheckedUnsafePtrBase : aCheckedUnsafePtrs) {
+      for (auto* const aCheckedUnsafePtrBase : aCheckedUnsafePtrs) {
         SetDanglingFlag(*aCheckedUnsafePtrBase);
       }
       NotifyCheckFailure(*static_cast<Derived*>(this));
@@ -218,117 +334,46 @@ class SupportsCheckedUnsafePtr
 // can be used, has the same size, and imposes no additional thread-safety
 // restrictions.
 template <typename T>
-class CheckedUnsafePtr
-    : private detail::CheckedUnsafePtrBase<T::SupportsChecking::value> {
+class CheckedUnsafePtr : public detail::CheckedUnsafePtrBase<T> {
   static_assert(
       std::is_base_of<detail::SupportsCheckedUnsafePtrTag, T>::value,
       "type T must be derived from instantiation of SupportsCheckedUnsafePtr");
 
-  template <typename U>
-  friend class CheckedUnsafePtr;
-
-  template <typename U, typename S = std::nullptr_t>
-  using EnableIfCompatible =
-      std::enable_if_t<std::is_base_of<T, std::remove_reference_t<decltype(
-                                              *std::declval<U>())>>::value,
-                       S>;
-
  public:
-  MOZ_IMPLICIT CheckedUnsafePtr(const std::nullptr_t = nullptr)
-      : mRawPtr(nullptr){};
+  using detail::CheckedUnsafePtrBase<T>::CheckedUnsafePtrBase;
+  using detail::CheckedUnsafePtrBase<T>::get;
+
+  constexpr T* operator->() const { return get(); }
+
+  constexpr T& operator*() const { return *get(); }
+
+  MOZ_IMPLICIT constexpr operator T*() const { return get(); }
 
   template <typename U>
-  MOZ_IMPLICIT CheckedUnsafePtr(const U& aPtr,
-                                EnableIfCompatible<U> = nullptr) {
-    Set(aPtr);
-  }
-
-  CheckedUnsafePtr(const CheckedUnsafePtr& aOther) { Set(aOther); }
-
-  ~CheckedUnsafePtr() { Reset(); }
-
-  CheckedUnsafePtr& operator=(const std::nullptr_t) {
-    Reset();
-    return *this;
+  constexpr bool operator==(
+      detail::EnableIfCompatible<T, U, const U&> aRhs) const {
+    return get() == aRhs.get();
   }
 
   template <typename U>
-  EnableIfCompatible<U, CheckedUnsafePtr&> operator=(const U& aPtr) {
-    Replace(aPtr);
-    return *this;
-  }
-
-  CheckedUnsafePtr& operator=(const CheckedUnsafePtr& aOther) {
-    if (&aOther != this) {
-      Replace(aOther);
-    }
-    return *this;
-  }
-
-  T* operator->() const { return mRawPtr; }
-
-  T& operator*() const { return *operator->(); }
-
-  MOZ_IMPLICIT operator T*() const { return operator->(); }
-
-  template <typename U>
-  bool operator==(EnableIfCompatible<U, const U&> aRhs) const {
-    return mRawPtr == &*aRhs;
-  }
-
-  template <typename U>
-  friend bool operator==(EnableIfCompatible<U, const U&> aLhs,
-                         const CheckedUnsafePtr& aRhs) {
+  friend constexpr bool operator==(
+      detail::EnableIfCompatible<T, U, const U&> aLhs,
+      const CheckedUnsafePtr& aRhs) {
     return aRhs == aLhs;
   }
 
   template <typename U>
-  bool operator!=(EnableIfCompatible<U, const U&> aRhs) const {
+  constexpr bool operator!=(
+      detail::EnableIfCompatible<T, U, const U&> aRhs) const {
     return !(*this == aRhs);
   }
 
   template <typename U>
-  friend bool operator!=(EnableIfCompatible<U, const U&> aLhs,
-                         const CheckedUnsafePtr& aRhs) {
+  friend constexpr bool operator!=(
+      detail::EnableIfCompatible<T, U, const U&> aLhs,
+      const CheckedUnsafePtr& aRhs) {
     return aRhs != aLhs;
   }
-
- private:
-  using Base = detail::CheckedUnsafePtrBase<CheckingSupport::Enabled>;
-
-  template <typename U>
-  void Replace(const U& aPtr) {
-    Reset();
-    Set(aPtr);
-  }
-
-  void Reset() {
-    WithCheckedUnsafePtrs(
-        [](Base* const aSelf,
-           detail::CheckedUnsafePtrCheckData::Data& aCheckedUnsafePtrs) {
-          const auto index = aCheckedUnsafePtrs.IndexOf(aSelf);
-          aCheckedUnsafePtrs.UnorderedRemoveElementAt(index);
-        });
-    mRawPtr = nullptr;
-  }
-
-  template <typename U>
-  void Set(const U& aPtr) {
-    this->CopyDanglingFlagIfAvailableFrom(aPtr);
-    mRawPtr = &*aPtr;
-    WithCheckedUnsafePtrs(
-        [](Base* const aSelf,
-           detail::CheckedUnsafePtrCheckData::Data& aCheckedUnsafePtrs) {
-          aCheckedUnsafePtrs.AppendElement(aSelf);
-        });
-  }
-
-  template <typename F>
-  void WithCheckedUnsafePtrs(F&& aClosure) {
-    this->WithCheckedUnsafePtrsImpl(mRawPtr, std::forward<F>(aClosure));
-  }
-
-  T* mRawPtr;
 };
 
 }  // namespace mozilla
@@ -336,6 +381,12 @@ class CheckedUnsafePtr
 // nsTArray<T> requires by default that T can be safely moved with std::memmove.
 // Since CheckedUnsafePtr<T> has a non-trivial copy constructor, it has to opt
 // into nsTArray<T> using them.
-DECLARE_USE_COPY_CONSTRUCTORS_FOR_TEMPLATE(mozilla::CheckedUnsafePtr)
+template <typename T>
+struct nsTArray_CopyChooser<mozilla::CheckedUnsafePtr<T>> {
+  using Type = std::conditional_t<
+      T::SupportsChecking::value == mozilla::CheckingSupport::Enabled,
+      nsTArray_CopyWithConstructors<mozilla::CheckedUnsafePtr<T>>,
+      nsTArray_CopyWithMemutils>;
+};
 
 #endif  // mozilla_CheckedUnsafePtr_h
