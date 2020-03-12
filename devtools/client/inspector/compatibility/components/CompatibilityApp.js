@@ -14,86 +14,42 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Types = require("devtools/client/inspector/compatibility/types");
 
-const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
-);
-const IssuePane = createFactory(
-  require("devtools/client/inspector/compatibility/components/IssuePane")
+const IssueList = createFactory(
+  require("devtools/client/inspector/compatibility/components/IssueList")
 );
 
 class CompatibilityApp extends PureComponent {
   static get propTypes() {
     return {
-      isTopLevelTargetProcessing: PropTypes.bool.isRequired,
       selectedNodeIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
         .isRequired,
-      topLevelTargetIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
-        .isRequired,
-      hideBoxModelHighlighter: PropTypes.func.isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
-      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
+  _renderNoIssues() {
+    return dom.div(
+      { className: "devtools-sidepanel-no-result" },
+      "No compatibility issues found."
+    );
+  }
+
   render() {
-    const {
-      isTopLevelTargetProcessing,
-      selectedNodeIssues,
-      topLevelTargetIssues,
-      hideBoxModelHighlighter,
-      setSelectedNode,
-      showBoxModelHighlighterForNode,
-    } = this.props;
+    const { selectedNodeIssues } = this.props;
 
-    const selectedNodeIssuePane = IssuePane({
-      issues: selectedNodeIssues,
-    });
-
-    const topLevelTargetIssuePane =
-      topLevelTargetIssues.length > 0 || !isTopLevelTargetProcessing
-        ? IssuePane({
-            issues: topLevelTargetIssues,
-            hideBoxModelHighlighter,
-            setSelectedNode,
-            showBoxModelHighlighterForNode,
-          })
-        : null;
-
-    const throbber = isTopLevelTargetProcessing
-      ? dom.div({
-          className: "compatibility-app__throbber devtools-throbber",
-        })
-      : null;
-
-    return dom.section(
+    return dom.div(
       {
         className: "compatibility-app theme-sidebar inspector-tabpanel",
       },
-      Accordion({
-        items: [
-          {
-            id: "compatibility-app--selected-element-pane",
-            header: "Selected Element",
-            component: selectedNodeIssuePane,
-            opened: true,
-          },
-          {
-            id: "compatibility-app--all-elements-pane",
-            header: "All Issues",
-            component: [topLevelTargetIssuePane, throbber],
-            opened: true,
-          },
-        ],
-      })
+      selectedNodeIssues.length
+        ? IssueList({ issues: selectedNodeIssues })
+        : this._renderNoIssues()
     );
   }
 }
 
 const mapStateToProps = state => {
   return {
-    isTopLevelTargetProcessing: state.compatibility.isTopLevelTargetProcessing,
     selectedNodeIssues: state.compatibility.selectedNodeIssues,
-    topLevelTargetIssues: state.compatibility.topLevelTargetIssues,
   };
 };
 module.exports = connect(mapStateToProps)(CompatibilityApp);

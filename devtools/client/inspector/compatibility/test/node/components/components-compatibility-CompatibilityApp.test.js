@@ -22,7 +22,6 @@ describe("CompatibilityApp component", () => {
     const store = mockStore({
       compatibility: {
         selectedNodeIssues: [],
-        topLevelTargetIssues: [],
       },
     });
     const wrapper = shallow(CompatibilityApp({ store })).dive();

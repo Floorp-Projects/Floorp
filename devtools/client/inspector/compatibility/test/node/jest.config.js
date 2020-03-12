@@ -10,7 +10,6 @@ module.exports = {
   moduleNameMapper: {
     "^devtools/client/shared/link": `${__dirname}/fixtures/stub`,
     "^devtools\\/(.*)": `${__dirname}/../../../../../$1`,
-    "^promise": `${__dirname}/fixtures/promise`,
     "^Services": `${__dirname}/fixtures/Services`,
   },
   setupFiles: ["<rootDir>setup.js"],

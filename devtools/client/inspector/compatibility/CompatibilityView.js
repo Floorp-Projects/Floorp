@@ -17,10 +17,8 @@ loader.lazyRequireGetter(
 );
 
 const {
-  updateNodes,
   updateSelectedNode,
   updateTargetBrowsers,
-  updateTopLevelTarget,
 } = require("devtools/client/inspector/compatibility/actions/compatibility");
 
 const CompatibilityApp = createFactory(
@@ -29,47 +27,25 @@ const CompatibilityApp = createFactory(
 
 class CompatibilityView {
   constructor(inspector, window) {
-    this._onChangeAdded = this._onChangeAdded.bind(this);
-    this._onPanelSelected = this._onPanelSelected.bind(this);
-    this._onSelectedNodeChanged = this._onSelectedNodeChanged.bind(this);
-    this._onTopLevelTargetChanged = this._onTopLevelTargetChanged.bind(this);
+    this._onNewNode = this._onNewNode.bind(this);
     this.inspector = inspector;
 
     this._init();
   }
 
   destroy() {
-    this.inspector.off("new-root", this._onTopLevelTargetChanged);
-    this.inspector.selection.off("new-node-front", this._onSelectedNodeChanged);
-    this.inspector.sidebar.off(
-      "compatibilityview-selected",
-      this._onPanelSelected
-    );
+    this.inspector.selection.off("new-node-front", this._onNewNode);
+    this.inspector.sidebar.off("compatibilityview-selected", this._onNewNode);
 
-    const changesFront = this.inspector.toolbox.target.getCachedFront(
-      "changes"
-    );
-    if (changesFront) {
-      changesFront.off("add-change", this._onChangeAdded);
+    if (this._ruleView) {
+      this._ruleView.off("ruleview-changed", this._onNewNode);
     }
 
     this.inspector = null;
   }
 
   _init() {
-    const {
-      onShowBoxModelHighlighterForNode: showBoxModelHighlighterForNode,
-      setSelectedNode,
-    } = this.inspector.getCommonComponentProps();
-    const {
-      onHideBoxModelHighlighter: hideBoxModelHighlighter,
-    } = this.inspector.getPanel("boxmodel").getComponentProps();
-
-    const compatibilityApp = new CompatibilityApp({
-      hideBoxModelHighlighter,
-      showBoxModelHighlighterForNode,
-      setSelectedNode,
-    });
+    const compatibilityApp = new CompatibilityApp();
 
     this.provider = createElement(
       Provider,
@@ -80,17 +56,25 @@ class CompatibilityView {
       compatibilityApp
     );
 
-    this.inspector.on("new-root", this._onTopLevelTargetChanged);
-    this.inspector.selection.on("new-node-front", this._onSelectedNodeChanged);
-    this.inspector.sidebar.on(
-      "compatibilityview-selected",
-      this._onPanelSelected
-    );
+    this.inspector.selection.on("new-node-front", this._onNewNode);
+    this.inspector.sidebar.on("compatibilityview-selected", this._onNewNode);
+
+    if (this._ruleView) {
+      this._ruleView.on("ruleview-changed", this._onNewNode);
+    } else {
+      this.inspector.on(
+        "ruleview-added",
+        () => {
+          this._ruleView.on("ruleview-changed", this._onNewNode);
+        },
+        { once: true }
+      );
+    }
 
     this._initTargetBrowsers();
   }
 
-  _initTargetBrowsers() {
+  async _initTargetBrowsers() {
     this.inspector.store.dispatch(
       updateTargetBrowsers(_getDefaultTargetBrowsers())
     );
@@ -106,32 +90,7 @@ class CompatibilityView {
     );
   }
 
-  _onChangeAdded({ selector }) {
-    if (!this._isAvailable()) {
-      return;
-    }
-
-    // We need to debounce updating nodes since "add-change" event on changes actor is
-    // fired for every typed character until fixing bug 1503036.
-    if (this._previousChangedSelector === selector) {
-      clearTimeout(this._updateNodesTimeoutId);
-    }
-    this._previousChangedSelector = selector;
-
-    this._updateNodesTimeoutId = setTimeout(() => {
-      // TODO: In case of keyframes changes, the selector given from changes actor is
-      // keyframe-selector such as "from" and "100%", not selector for node. Thus,
-      // we need to address this case.
-      this.inspector.store.dispatch(updateNodes(selector));
-    }, 500);
-  }
-
-  _onPanelSelected() {
-    this._onSelectedNodeChanged();
-    this._onTopLevelTargetChanged();
-  }
-
-  _onSelectedNodeChanged() {
+  _onNewNode() {
     if (!this._isAvailable()) {
       return;
     }
@@ -141,28 +100,11 @@ class CompatibilityView {
     );
   }
 
-  async _onTopLevelTargetChanged() {
-    if (!this._isAvailable()) {
-      return;
-    }
-
-    this.inspector.store.dispatch(
-      updateTopLevelTarget(this.inspector.toolbox.target)
+  get _ruleView() {
+    return (
+      this.inspector.hasPanel("ruleview") &&
+      this.inspector.getPanel("ruleview").view
     );
-
-    const changesFront = await this.inspector.toolbox.target.getFront(
-      "changes"
-    );
-
-    try {
-      // Call allChanges() in order to get the add-change qevent.
-      await changesFront.allChanges();
-    } catch (e) {
-      // The connection to the server may have been cut, for example during test teardown.
-      // Here we just catch the error and silently ignore it.
-    }
-
-    changesFront.on("add-change", this._onChangeAdded);
   }
 }
 
