@@ -66,12 +66,11 @@ async function assertIssueList(panel, expectedIssues) {
     return;
   }
 
-  const issueEls = panel.querySelectorAll("[data-qa-property]");
-
-  for (let i = 0; i < expectedIssues.length; i++) {
-    info(`Check an element at index[${i}]`);
-    const issueEl = issueEls[i];
-    const expectedIssue = expectedIssues[i];
+  for (const expectedIssue of expectedIssues) {
+    const property = expectedIssue.property;
+    info(`Check an element for ${property}`);
+    const issueEl = getIssueItem(property, panel);
+    ok(issueEl, `Issue element for the ${property} is in the panel`);
 
     for (const [key, value] of Object.entries(expectedIssue)) {
       const datasetKey = toCamelCase(`qa-${key}`);
@@ -82,6 +81,45 @@ async function assertIssueList(panel, expectedIssues) {
       );
     }
   }
+}
+
+/**
+ * Check whether the content of node item element is matched with the expected values.
+ *
+ * @param {Element} panel
+ * @param {Array} expectedNodes
+ *        e.g.
+ *        [{ property: "margin-inline-end", nodes: ["body", "div.classname"] },...]
+ */
+async function assertNodeList(panel, expectedNodes) {
+  for (const { property, nodes } of expectedNodes) {
+    info(`Check nodes for ${property}`);
+    const issueEl = getIssueItem(property, panel);
+
+    await waitUntil(
+      () =>
+        issueEl.querySelectorAll(".compatibility-node-item").length ===
+        nodes.length
+    );
+    ok(true, "The number of nodes is correct");
+
+    const nodeEls = [...issueEl.querySelectorAll(".compatibility-node-item")];
+    for (const node of nodes) {
+      const nodeEl = nodeEls.find(el => el.textContent === node);
+      ok(nodeEl, "The text content of the node element is correct");
+    }
+  }
+}
+
+/**
+ * Get IssueItem of given property from given element.
+ *
+ * @param {String} property
+ * @param {Element} element
+ * @return {Element}
+ */
+function getIssueItem(property, element) {
+  return element.querySelector(`[data-qa-property=\"\\"${property}\\"\"]`);
 }
 
 /**
