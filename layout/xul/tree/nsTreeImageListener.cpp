@@ -20,13 +20,11 @@ nsTreeImageListener::nsTreeImageListener(nsTreeBodyFrame* aTreeFrame)
 
 nsTreeImageListener::~nsTreeImageListener() { delete mInvalidationArea; }
 
-void nsTreeImageListener::Notify(imgIRequest* aRequest, int32_t aType,
-                                 const nsIntRect* aData) {
+NS_IMETHODIMP
+nsTreeImageListener::Notify(imgIRequest* aRequest, int32_t aType,
+                            const nsIntRect* aData) {
   if (aType == imgINotificationObserver::IS_ANIMATED) {
-    if (mTreeFrame) {
-      mTreeFrame->OnImageIsAnimated(aRequest);
-    }
-    return;
+    return mTreeFrame ? mTreeFrame->OnImageIsAnimated(aRequest) : NS_OK;
   }
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
@@ -48,6 +46,8 @@ void nsTreeImageListener::Notify(imgIRequest* aRequest, int32_t aType,
   if (aType == imgINotificationObserver::FRAME_UPDATE) {
     Invalidate();
   }
+
+  return NS_OK;
 }
 
 void nsTreeImageListener::AddCell(int32_t aIndex, nsTreeColumn* aCol) {

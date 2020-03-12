@@ -673,8 +673,8 @@ bool nsImageFrame::ShouldCreateImageFrameFor(const Element& aElement,
   return false;
 }
 
-void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
-                          const nsIntRect* aRect) {
+nsresult nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
+                              const nsIntRect* aRect) {
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
@@ -702,12 +702,14 @@ void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
         imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
     return OnLoadComplete(aRequest, status);
   }
+
+  return NS_OK;
 }
 
-void nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
-                                   imgIContainer* aImage) {
+nsresult nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
+                                       imgIContainer* aImage) {
   if (!aImage) {
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
 
   /* Get requested animation policy from the pres context:
@@ -719,10 +721,11 @@ void nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
-    return;
+    return NS_OK;
   }
 
   UpdateImage(aRequest, aImage);
+  return NS_OK;
 }
 
 void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
@@ -766,24 +769,22 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
   }
 }
 
-void nsImageFrame::OnFrameUpdate(imgIRequest* aRequest,
-                                 const nsIntRect* aRect) {
-  if (NS_WARN_IF(!aRect)) {
-    return;
-  }
+nsresult nsImageFrame::OnFrameUpdate(imgIRequest* aRequest,
+                                     const nsIntRect* aRect) {
+  NS_ENSURE_ARG_POINTER(aRect);
 
   if (!GotInitialReflow()) {
     // Don't bother to do anything; we have a reflow coming up!
-    return;
+    return NS_OK;
   }
 
   if (mFirstFrameComplete && !StyleVisibility()->IsVisible()) {
-    return;
+    return NS_OK;
   }
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
-    return;
+    return NS_OK;
   }
 
   nsIntRect layerInvalidRect =
@@ -792,11 +793,12 @@ void nsImageFrame::OnFrameUpdate(imgIRequest* aRequest,
   if (layerInvalidRect.IsEqualInterior(GetMaxSizedIntRect())) {
     // Invalidate our entire area.
     InvalidateSelf(nullptr, nullptr);
-    return;
+    return NS_OK;
   }
 
   nsRect frameInvalidRect = SourceRectToDest(layerInvalidRect);
   InvalidateSelf(&layerInvalidRect, &frameInvalidRect);
+  return NS_OK;
 }
 
 void nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
@@ -818,8 +820,9 @@ void nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
   }
 }
 
-void nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus) {
+nsresult nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus) {
   NotifyNewCurrentRequest(aRequest, aStatus);
+  return NS_OK;
 }
 
 void nsImageFrame::ResponsiveContentDensityChanged() {
@@ -2606,20 +2609,21 @@ nsresult nsImageFrame::StopAnimation() {
   return NS_OK;
 }
 
-void nsImageFrame::IconLoad::Notify(imgIRequest* aRequest, int32_t aType,
-                                    const nsIntRect* aData) {
+NS_IMETHODIMP
+nsImageFrame::IconLoad::Notify(imgIRequest* aRequest, int32_t aType,
+                               const nsIntRect* aData) {
   MOZ_ASSERT(aRequest);
 
   if (aType != imgINotificationObserver::LOAD_COMPLETE &&
       aType != imgINotificationObserver::FRAME_UPDATE) {
-    return;
+    return NS_OK;
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     if (!image) {
-      return;
+      return NS_ERROR_FAILURE;
     }
 
     // Retrieve the image's intrinsic size.
@@ -2640,6 +2644,8 @@ void nsImageFrame::IconLoad::Notify(imgIRequest* aRequest, int32_t aType,
     frame = iter.GetNext();
     frame->InvalidateFrame();
   }
+
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(nsImageListener, imgINotificationObserver)
@@ -2648,11 +2654,10 @@ nsImageListener::nsImageListener(nsImageFrame* aFrame) : mFrame(aFrame) {}
 
 nsImageListener::~nsImageListener() = default;
 
-void nsImageListener::Notify(imgIRequest* aRequest, int32_t aType,
-                             const nsIntRect* aData) {
-  if (!mFrame) {
-    return;
-  }
+NS_IMETHODIMP
+nsImageListener::Notify(imgIRequest* aRequest, int32_t aType,
+                        const nsIntRect* aData) {
+  if (!mFrame) return NS_ERROR_FAILURE;
 
   return mFrame->Notify(aRequest, aType, aData);
 }

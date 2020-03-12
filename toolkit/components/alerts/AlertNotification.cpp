@@ -162,9 +162,9 @@ AlertNotification::LoadImage(uint32_t aTimeout,
 
   RefPtr<AlertImageRequest> request = new AlertImageRequest(
       imageURI, mPrincipal, mInPrivateBrowsing, aTimeout, aListener, aUserData);
-  request->Start();
+  nsresult rv = request->Start();
   request.forget(aRequest);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMPL_CYCLE_COLLECTION(AlertImageRequest, mURI, mPrincipal, mListener,
@@ -198,15 +198,15 @@ AlertImageRequest::~AlertImageRequest() {
   }
 }
 
-void AlertImageRequest::Notify(imgIRequest* aRequest, int32_t aType,
-                               const nsIntRect* aData) {
+NS_IMETHODIMP
+AlertImageRequest::Notify(imgIRequest* aRequest, int32_t aType,
+                          const nsIntRect* aData) {
   MOZ_ASSERT(aRequest == mRequest);
 
   uint32_t imgStatus = imgIRequest::STATUS_ERROR;
   nsresult rv = aRequest->GetImageStatus(&imgStatus);
   if (NS_WARN_IF(NS_FAILED(rv)) || (imgStatus & imgIRequest::STATUS_ERROR)) {
-    NotifyMissing();
-    return;
+    return NotifyMissing();
   }
 
   // If the image is already decoded, `FRAME_COMPLETE` will fire before
@@ -219,8 +219,7 @@ void AlertImageRequest::Notify(imgIRequest* aRequest, int32_t aType,
       nsCOMPtr<imgIContainer> image;
       rv = aRequest->GetImage(getter_AddRefs(image));
       if (NS_WARN_IF(NS_FAILED(rv) || !image)) {
-        NotifyMissing();
-        return;
+        return NotifyMissing();
       }
 
       // Ask the image to decode at its intrinsic size.
@@ -230,12 +229,14 @@ void AlertImageRequest::Notify(imgIRequest* aRequest, int32_t aType,
       image->RequestDecodeForSize(gfx::IntSize(width, height),
                                   imgIContainer::FLAG_HIGH_QUALITY_SCALING);
     }
-    return;
+    return NS_OK;
   }
 
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
     return NotifyComplete();
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -313,20 +314,21 @@ nsresult AlertImageRequest::NotifyMissing() {
     NS_RELEASE_THIS();
     return rv;
   }
-
   return NS_OK;
 }
 
-void AlertImageRequest::NotifyComplete() {
+nsresult AlertImageRequest::NotifyComplete() {
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
   }
   if (nsCOMPtr<nsIAlertNotificationImageListener> listener =
           std::move(mListener)) {
-    listener->OnImageReady(mUserData, mRequest);
+    nsresult rv = listener->OnImageReady(mUserData, mRequest);
     NS_RELEASE_THIS();
+    return rv;
   }
+  return NS_OK;
 }
 
 }  // namespace mozilla
