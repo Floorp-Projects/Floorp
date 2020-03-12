@@ -14,6 +14,13 @@
   overflow: auto;
 }
 
+.compatibility-app__throbber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--compatibility-base-unit) * 8);
+}
+
 .compatibility-issue-list {
   list-style: none;
   margin: 0;
