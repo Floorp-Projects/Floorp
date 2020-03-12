@@ -51,7 +51,7 @@ this.TippyTopProvider = class TippyTopProvider {
     const tippyTop = this._sitesByDomain.get(getDomain(site.url));
     if (tippyTop) {
       site.tippyTopIcon = TIPPYTOP_PATH + tippyTop.image_url;
-      site.favicon = TIPPYTOP_PATH + tippyTop.favicon_url;
+      site.smallFavicon = TIPPYTOP_PATH + tippyTop.favicon_url;
       site.backgroundColor = tippyTop.background_color;
     }
     return site;
