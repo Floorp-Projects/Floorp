@@ -448,7 +448,10 @@ class nsWSAdmissionManager {
     MOZ_COUNT_CTOR(nsWSAdmissionManager);
   }
 
-  ~nsWSAdmissionManager() { MOZ_COUNT_DTOR(nsWSAdmissionManager); }
+  ~nsWSAdmissionManager() {
+    MOZ_COUNT_DTOR(nsWSAdmissionManager);
+    for (uint32_t i = 0; i < mQueue.Length(); i++) delete mQueue[i];
+  }
 
   class nsOpenConn {
    public:
@@ -482,7 +485,10 @@ class nsWSAdmissionManager {
     int32_t index = IndexOf(aChannel);
     MOZ_ASSERT(index >= 0, "connection to remove not in queue");
     if (index >= 0) {
+      nsOpenConn* olddata = mQueue[index];
       mQueue.RemoveElementAt(index);
+      LOG(("Websocket: removing conn %p from the queue", olddata));
+      delete olddata;
     }
   }
 
@@ -509,7 +515,7 @@ class nsWSAdmissionManager {
   //
   // We could hash hostnames instead of using a single big vector here, but the
   // dataset is expected to be small.
-  nsTArray<UniquePtr<nsOpenConn>> mQueue;
+  nsTArray<nsOpenConn*> mQueue;
 
   FailDelayManager mFailures;
 
