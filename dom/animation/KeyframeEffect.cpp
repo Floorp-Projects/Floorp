@@ -745,17 +745,20 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
   RefPtr<nsAtom> pseudoAtom =
       nsCSSPseudoElements::GetPseudoAtom(options.mPseudoElement);
   if (!pseudoAtom) {
-    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(
-        NS_ConvertUTF16toUTF8(options.mPseudoElement));
+    // Per the spec, we throw SyntaxError for syntactically invalid pseudos.
+    aRv.ThrowSyntaxError(
+        nsPrintfCString("'%s' is a syntactically invalid pseudo-element.",
+                        NS_ConvertUTF16toUTF8(options.mPseudoElement).get()));
     return result;
   }
 
   result.mPseudoType = nsCSSPseudoElements::GetPseudoType(
       pseudoAtom, CSSEnabledState::ForAllContent);
-
   if (!IsSupportedPseudoForWebAnimation(result.mPseudoType)) {
-    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(
-        NS_ConvertUTF16toUTF8(options.mPseudoElement));
+    // Per the spec, we throw SyntaxError for unsupported pseudos.
+    aRv.ThrowSyntaxError(
+        nsPrintfCString("'%s' is an unsupported pseudo-element.",
+                        NS_ConvertUTF16toUTF8(options.mPseudoElement).get()));
   }
 
   return result;
@@ -1064,16 +1067,20 @@ void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
   RefPtr<nsAtom> pseudoAtom =
       nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
   if (!pseudoAtom) {
-    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(
-        NS_ConvertUTF16toUTF8(aPseudoElement));
+    // Per the spec, we throw SyntaxError for syntactically invalid pseudos.
+    aRv.ThrowSyntaxError(
+        nsPrintfCString("'%s' is a syntactically invalid pseudo-element.",
+                        NS_ConvertUTF16toUTF8(aPseudoElement).get()));
     return;
   }
 
   pseudoType = nsCSSPseudoElements::GetPseudoType(
       pseudoAtom, CSSEnabledState::ForAllContent);
   if (!IsSupportedPseudoForWebAnimation(pseudoType)) {
-    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(
-        NS_ConvertUTF16toUTF8(aPseudoElement));
+    // Per the spec, we throw SyntaxError for unsupported pseudos.
+    aRv.ThrowSyntaxError(
+        nsPrintfCString("'%s' is an unsupported pseudo-element.",
+                        NS_ConvertUTF16toUTF8(aPseudoElement).get()));
     return;
   }
 
