@@ -15,6 +15,9 @@ exclude: true
 
 ## v76
 - Added [`GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS`][76.1] to control EME media key access.
+- [`RuntimeTelemetry#getSnapshots`][68.10] is deprecated and will be removed
+  in 79. Use Glean to handle Gecko telemetry.
+  ([bug 1620395]({{bugzilla}}1620395))
 
 [76.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
 
@@ -658,4 +661,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 3ccce953759d39a8b9b0b1b01dcc75c8ad6654aa
+[api-version]: 62cfb90bd471769c2e7366f8f4957fb7fa4edc4e

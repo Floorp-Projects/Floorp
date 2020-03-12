@@ -1368,7 +1368,7 @@ package org.mozilla.geckoview {
   }
 
   public final class RuntimeTelemetry {
-    method @AnyThread @NonNull public GeckoResult<JSONObject> getSnapshots(boolean);
+    method @Deprecated @AnyThread @NonNull public GeckoResult<JSONObject> getSnapshots(boolean);
   }
 
   public static interface RuntimeTelemetry.Delegate {
