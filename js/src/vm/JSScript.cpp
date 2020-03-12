@@ -690,19 +690,19 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
       coverage::CollectScriptCoverage(script, true);
     }
 
-    fop->runtime()->geckoProfiler().onScriptFinalized(script);
-
     script->destroyScriptCounts();
 
     DebugAPI::destroyDebugScript(fop, script);
+  }
+
+  fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
 #ifdef MOZ_VTUNE
-    if (zone()->scriptVTuneIdMap) {
-      // Note: we should only get here if the VTune JIT profiler is running.
-      zone()->scriptVTuneIdMap->remove(script);
-    }
-#endif
+  if (zone()->scriptVTuneIdMap) {
+    // Note: we should only get here if the VTune JIT profiler is running.
+    zone()->scriptVTuneIdMap->remove(this);
   }
+#endif
 
   if (warmUpData_.isJitScript()) {
     JSScript* script = this->asJSScript();
