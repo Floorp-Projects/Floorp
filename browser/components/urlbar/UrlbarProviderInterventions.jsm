@@ -492,7 +492,8 @@ class ProviderInterventions extends UrlbarProvider {
     if (
       !UrlbarPrefs.get("update1.interventions") ||
       !queryContext.searchString ||
-      !EN_LOCALE_MATCH.test(Services.locale.appLocaleAsBCP47)
+      !EN_LOCALE_MATCH.test(Services.locale.appLocaleAsBCP47) ||
+      !Services.policies.isAllowed("urlbarinterventions")
     ) {
       return false;
     }
@@ -570,6 +571,12 @@ class ProviderInterventions extends UrlbarProvider {
       return false;
     }
 
+    if (
+      this.currentTip == TIPS.REFRESH &&
+      !Services.policies.isAllowed("profileRefresh")
+    ) {
+      return false;
+    }
     return true;
   }
 
