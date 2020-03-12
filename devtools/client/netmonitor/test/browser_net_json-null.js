@@ -22,25 +22,30 @@ add_task(async function() {
 
   const onResponsePanelReady = waitForDOM(
     document,
-    "#response-panel .CodeMirror-code"
+    "#response-panel .accordion-item",
+    2
+  );
+
+  const onPropsViewReady = waitForDOM(
+    document,
+    "#response-panel .properties-view",
+    1
   );
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
-  await onResponsePanelReady;
-
-  checkResponsePanelDisplaysJSON();
+  await Promise.all([onResponsePanelReady, onPropsViewReady]);
 
   const tabpanel = document.querySelector("#response-panel");
   is(
-    tabpanel.querySelectorAll(".tree-section").length,
+    tabpanel.querySelectorAll(".accordion-item").length,
     2,
-    "There should be 2 tree sections displayed in this tabpanel."
+    "There should be 2 accordion items displayed in this tabpanel."
   );
   is(
-    tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length,
+    tabpanel.querySelectorAll(".treeRow").length,
     1,
     "There should be 1 json properties displayed in this tabpanel."
   );
@@ -50,12 +55,8 @@ add_task(async function() {
     "The empty notice should not be displayed in this tabpanel."
   );
 
-  const labels = tabpanel.querySelectorAll(
-    "tr:not(.tree-section) .treeLabelCell .treeLabel"
-  );
-  const values = tabpanel.querySelectorAll(
-    "tr:not(.tree-section) .treeValueCell .objectBox"
-  );
+  const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+  const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
   is(
     labels[0].textContent,
@@ -67,6 +68,20 @@ add_task(async function() {
     "null",
     "The first json property value was incorrect."
   );
+
+  const onCodeMirrorReady = waitForDOM(
+    document,
+    "#response-panel .CodeMirror-code"
+  );
+
+  const payloadHeader = document.querySelector(
+    "#response-panel .accordion-item:last-child .accordion-header"
+  );
+  clickElement(payloadHeader, monitor);
+
+  await onCodeMirrorReady;
+
+  checkResponsePanelDisplaysJSON();
 
   await teardown(monitor);
 
@@ -81,7 +96,8 @@ add_task(async function() {
       true,
       "The response error header doesn't have the intended visibility."
     );
-    const jsonView = panel.querySelector(".tree-section .treeLabel") || {};
+    const jsonView =
+      panel.querySelector(".accordion-item .accordion-header-label") || {};
     is(
       jsonView.textContent === L10N.getStr("jsonScopeName"),
       true,

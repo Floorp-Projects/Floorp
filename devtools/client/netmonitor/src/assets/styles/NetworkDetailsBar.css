@@ -12,9 +12,6 @@
 
 .network-monitor .panel-container {
   height: 100%;
-}
-
-.network-monitor .panel-container {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -82,6 +79,7 @@
   left: 0;
   right: 0;
 }
+
 
 /* Text inputs in tab panels */
 
@@ -182,7 +180,7 @@
 /* If there is a source editor shows up in the last row of TreeView,
  * it should occupy the available vertical space.
  */
-.network-monitor .tree-container .treeTable .editor-row-container,
+.network-monitor .accordion .editor-row-container,
 .network-monitor .tree-container .treeTable tr:last-child td[colspan="2"] {
   display: block;
   height: 100%;
@@ -190,7 +188,7 @@
   overflow-x: auto;
 }
 
-.network-monitor .tree-container .treeTable .editor-row-container .responseTextContainer {
+.network-monitor .accordion .responseTextContainer {
   overflow-x: auto;
   width: 100%;
   height: 100%;
@@ -379,6 +377,33 @@
 }
 
 /* Response tabpanel */
+/* Supports the single expand mode used for the accordion in the response panel */
+.network-monitor #response-panel .panel-container {
+  overflow-y: hidden;
+}
+.network-monitor #response-panel .accordion {
+  position: relative;
+  overflow: hidden;
+}
+
+.network-monitor #response-panel .accordion-item .accordion-content {
+  position: absolute;
+  top: calc(var(--theme-toolbar-height) + 1px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+
+.network-monitor #response-panel .accordion-item {
+  position: relative;
+  height: auto;
+}
+
+.network-monitor #response-panel .accordion-item.accordion-open {
+  height: 100%;
+}
 
 .network-monitor .response-image-box {
   display: flex;

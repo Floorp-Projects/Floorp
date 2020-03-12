@@ -8,7 +8,9 @@ DevToolsModules(
     'NetworkDetailsBar.js',
     'ParamsPanel.js',
     'PropertiesView.js',
+    'ResponsePanel.js',
     'SecurityPanel.js',
     'StackTracePanel.js',
     'TimingsPanel.js'
+
 )
