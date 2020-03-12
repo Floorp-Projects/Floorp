@@ -41,7 +41,7 @@ class AlertImageRequest final : public imgINotificationObserver,
   virtual ~AlertImageRequest();
 
   nsresult NotifyMissing();
-  void NotifyComplete();
+  nsresult NotifyComplete();
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;

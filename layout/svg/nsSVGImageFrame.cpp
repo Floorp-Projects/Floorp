@@ -547,10 +547,11 @@ NS_IMPL_ISUPPORTS(nsSVGImageListener, imgINotificationObserver)
 nsSVGImageListener::nsSVGImageListener(nsSVGImageFrame* aFrame)
     : mFrame(aFrame) {}
 
-void nsSVGImageListener::Notify(imgIRequest* aRequest, int32_t aType,
-                                const nsIntRect* aData) {
+NS_IMETHODIMP
+nsSVGImageListener::Notify(imgIRequest* aRequest, int32_t aType,
+                           const nsIntRect* aData) {
   if (!mFrame) {
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
@@ -584,4 +585,6 @@ void nsSVGImageListener::Notify(imgIRequest* aRequest, int32_t aType,
                                     nsChangeHint_InvalidateRenderingObservers);
     nsSVGUtils::ScheduleReflowSVG(mFrame);
   }
+
+  return NS_OK;
 }

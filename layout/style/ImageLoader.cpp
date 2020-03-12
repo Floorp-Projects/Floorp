@@ -630,12 +630,13 @@ void ImageLoader::RequestReflowOnFrame(FrameWithFlags* aFwf,
   parent->PresShell()->PostReflowCallback(unblocker);
 }
 
-void GlobalImageObserver::Notify(imgIRequest* aRequest, int32_t aType,
-                                 const nsIntRect* aData) {
+NS_IMETHODIMP
+GlobalImageObserver::Notify(imgIRequest* aRequest, int32_t aType,
+                            const nsIntRect* aData) {
   auto entry = sImages->Lookup(aRequest);
   MOZ_DIAGNOSTIC_ASSERT(entry);
   if (MOZ_UNLIKELY(!entry)) {
-    return;
+    return NS_OK;
   }
 
   auto& loaders = entry.Data()->mImageLoaders;
@@ -646,10 +647,11 @@ void GlobalImageObserver::Notify(imgIRequest* aRequest, int32_t aType,
   for (auto& loader : loadersToNotify) {
     loader->Notify(aRequest, aType, aData);
   }
+  return NS_OK;
 }
 
-void ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
-                         const nsIntRect* aData) {
+nsresult ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
+                             const nsIntRect* aData) {
 #ifdef MOZ_GECKO_PROFILER
   nsCString uriString;
   if (profiler_is_active()) {
@@ -693,20 +695,22 @@ void ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     return OnLoadComplete(aRequest);
   }
+
+  return NS_OK;
 }
 
-void ImageLoader::OnSizeAvailable(imgIRequest* aRequest,
-                                  imgIContainer* aImage) {
+nsresult ImageLoader::OnSizeAvailable(imgIRequest* aRequest,
+                                      imgIContainer* aImage) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
-    return;
+    return NS_OK;
   }
 
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
 
   FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
   if (!frameSet) {
-    return;
+    return NS_OK;
   }
 
   for (const FrameWithFlags& fwf : *frameSet) {
@@ -714,16 +718,18 @@ void ImageLoader::OnSizeAvailable(imgIRequest* aRequest,
       fwf.mFrame->SchedulePaint();
     }
   }
+
+  return NS_OK;
 }
 
-void ImageLoader::OnImageIsAnimated(imgIRequest* aRequest) {
+nsresult ImageLoader::OnImageIsAnimated(imgIRequest* aRequest) {
   if (!mDocument) {
-    return;
+    return NS_OK;
   }
 
   FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
   if (!frameSet) {
-    return;
+    return NS_OK;
   }
 
   // Register with the refresh driver now that we are aware that
@@ -732,16 +738,18 @@ void ImageLoader::OnImageIsAnimated(imgIRequest* aRequest) {
   if (presContext) {
     nsLayoutUtils::RegisterImageRequest(presContext, aRequest, nullptr);
   }
+
+  return NS_OK;
 }
 
-void ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
+nsresult ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
   if (!mDocument) {
-    return;
+    return NS_OK;
   }
 
   FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
   if (!frameSet) {
-    return;
+    return NS_OK;
   }
 
   // We may need reflow (for example if the image is from shape-outside).
@@ -751,29 +759,33 @@ void ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
   // we're now able to paint an image that we couldn't paint before (and hence
   // that we don't have retained data for).
   RequestPaintIfNeeded(frameSet, aRequest, /* aForcePaint = */ true);
+
+  return NS_OK;
 }
 
-void ImageLoader::OnFrameUpdate(imgIRequest* aRequest) {
+nsresult ImageLoader::OnFrameUpdate(imgIRequest* aRequest) {
   if (!mDocument) {
-    return;
+    return NS_OK;
   }
 
   FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
   if (!frameSet) {
-    return;
+    return NS_OK;
   }
 
   RequestPaintIfNeeded(frameSet, aRequest, /* aForcePaint = */ false);
+
+  return NS_OK;
 }
 
-void ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
+nsresult ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
   if (!mDocument) {
-    return;
+    return NS_OK;
   }
 
   FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
   if (!frameSet) {
-    return;
+    return NS_OK;
   }
 
   // Check if aRequest has an error state. If it does, we need to unblock
@@ -791,6 +803,8 @@ void ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
       }
     }
   }
+
+  return NS_OK;
 }
 
 bool ImageLoader::ImageReflowCallback::ReflowFinished() {
