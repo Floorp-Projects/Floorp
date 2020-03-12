@@ -234,6 +234,7 @@ should block the meta-bug
 `1586788 <https://bugzilla.mozilla.org/show_bug.cgi?id=1586788>`.
 
 When you take on to work on a code style evolution task:
+
 - The task may already include a sketch of a resolution. If no preferred
   solution is obvious, discuss options to resolve it via comments on the bug
   first.
@@ -282,6 +283,7 @@ the code style from the review process, so that it does not block progress on
 the underlying bug.
 
 The following should be considered when performing a review:
+
 - Remind yourself of the code style, maybe skim through the document before
   starting the review, or have it open side-by-side while doing the review.
 - If you find a violation of an existing rule, add an inline comment.

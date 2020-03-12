@@ -132,11 +132,11 @@ Remote files are not downloaded automatically. In order to keep attachments in s
     });
 
 The provided helper will:
-- fetch the remote binary content
-- write the file in the profile folder
-- check the file size
-- check the content SHA256 hash
-- do nothing if the file is already present and sound locally.
+  - fetch the remote binary content
+  - write the file in the profile folder
+  - check the file size
+  - check the content SHA256 hash
+  - do nothing if the file is already present and sound locally.
 
 .. important::
 
@@ -146,13 +146,13 @@ The provided helper will:
     - preserve bandwidth
     - resume downloads of large files
 
-.. notes::
+.. note::
 
     The ``download()`` method does not return a file path but instead a ``file://`` URL which points to the locally-downloaded file.
     This will allow us to package attachments as part of a Firefox release (see `Bug 1542177 <https://bugzilla.mozilla.org/show_bug.cgi?id=1542177>`_)
     and return them to calling code as ``resource://`` from within a package archive.
 
-.. notes::
+.. note::
 
     A ``downloadAsBytes()`` method returning an ``ArrayBuffer`` is also available, if writing the attachment into the user profile is not necessary.
 
