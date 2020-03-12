@@ -42,6 +42,7 @@ var StarUI = {
   // Edit-bookmark panel
   get panel() {
     delete this.panel;
+    this._createPanelIfNeeded();
     var element = this._element("editBookmarkPanel");
     // initially the panel is hidden
     // to avoid impacting startup / new window performance
@@ -297,6 +298,15 @@ var StarUI = {
     });
 
     this.panel.openPopup(this._anchorElement, "bottomcenter topright");
+  },
+
+  _createPanelIfNeeded() {
+    // Lazy load the editBookmarkPanel the first time we need to display it.
+    if (!this._element("editBookmarkPanel")) {
+      let template = this._element("editBookmarkPanelTemplate");
+      let clone = template.content.cloneNode(true);
+      template.replaceWith(clone);
+    }
   },
 
   _setIconAndPreviewImage() {

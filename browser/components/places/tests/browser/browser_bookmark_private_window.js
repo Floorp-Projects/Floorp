@@ -24,6 +24,7 @@ add_task(async function test_add_bookmark_from_private_window() {
   });
 
   // Open the bookmark panel.
+  win.StarUI._createPanelIfNeeded();
   let bookmarkPanel = win.document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
   let bookmarkStar = win.BookmarkingUI.star;
