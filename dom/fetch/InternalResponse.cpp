@@ -311,7 +311,6 @@ already_AddRefed<InternalResponse> InternalResponse::OpaqueResponse() {
              "Can't OpaqueResponse a already wrapped response");
   RefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
   response->mType = ResponseType::Opaque;
-  response->mTerminationReason = mTerminationReason;
   response->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
     response->mPrincipalInfo =
@@ -335,7 +334,6 @@ already_AddRefed<InternalResponse> InternalResponse::OpaqueRedirectResponse() {
 already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
   RefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
   copy->mType = mType;
-  copy->mTerminationReason = mTerminationReason;
   copy->mURLList = mURLList;
   copy->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
