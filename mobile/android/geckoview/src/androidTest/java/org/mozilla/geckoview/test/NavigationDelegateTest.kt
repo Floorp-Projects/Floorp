@@ -677,6 +677,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 innerWidth, closeTo(mobileInnerWidth, 0.1))
     }
 
+    @Suppress("deprecation")
     @Ignore // This test needs to set RuntimeSettings, TODO: Bug 1572245
     @Test fun telemetrySnapshots() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
