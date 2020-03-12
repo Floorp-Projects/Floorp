@@ -1599,35 +1599,12 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mSizeState = mSizeMode;
 }
 
-static int32_t GdkX11ScreenGetNumberOfDesktops(GdkScreen* screen) {
-  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-  GdkAtom type_returned;
-  int format_returned;
-  int length_returned;
-  long* number_of_desktops;
-
-  if (!gdk_property_get(gdk_screen_get_root_window(screen),
-                        gdk_atom_intern("_NET_NUMBER_OF_DESKTOPS", FALSE),
-                        cardinal_atom,
-                        0,          // offset
-                        INT32_MAX,  // length
-                        FALSE,      // delete
-                        &type_returned, &format_returned, &length_returned,
-                        (guchar**)&number_of_desktops)) {
-    return 0;
-  }
-
-  auto desktops = int32_t(number_of_desktops[0]);
-  g_free(number_of_desktops);
-  return desktops;
-}
-
 int32_t nsWindow::GetWorkspaceID() {
-  if (!mIsX11Display) {
+  if (!mIsX11Display || !mShell) {
     return 0;
   }
   // Get the gdk window for this widget.
-  GdkWindow* gdk_window = mGdkWindow;
+  GdkWindow* gdk_window = gtk_widget_get_window(mShell);
   if (!gdk_window) {
     return 0;
   }
@@ -1654,17 +1631,13 @@ int32_t nsWindow::GetWorkspaceID() {
 }
 
 void nsWindow::MoveToWorkspace(int32_t workspaceID) {
-  if (!workspaceID || !mIsX11Display) {
+  if (!workspaceID || !mIsX11Display || !mShell) {
     return;
   }
 
   // Get the gdk window for this widget.
-  GdkWindow* gdk_window = mGdkWindow;
+  GdkWindow* gdk_window = gtk_widget_get_window(mShell);
   if (!gdk_window) {
-    return;
-  }
-  GdkScreen* screen = gdk_window_get_screen(gdk_window);
-  if (workspaceID > GdkX11ScreenGetNumberOfDesktops(screen) - 1) {
     return;
   }
 
@@ -1673,6 +1646,7 @@ void nsWindow::MoveToWorkspace(int32_t workspaceID) {
   XEvent xevent;
   guint value = workspaceID;
   Display* xdisplay = gdk_x11_get_default_xdisplay();
+  GdkScreen* screen = gdk_window_get_screen(gdk_window);
   Window root_win = GDK_WINDOW_XID(gdk_screen_get_root_window(screen));
   GdkDisplay* display = gdk_window_get_display(gdk_window);
   Atom type = gdk_x11_get_xatom_by_name_for_display(display, "_NET_WM_DESKTOP");
