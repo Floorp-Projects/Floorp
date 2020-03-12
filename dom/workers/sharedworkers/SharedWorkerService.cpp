@@ -23,7 +23,7 @@ StaticMutex sSharedWorkerMutex;
 
 // Raw pointer because SharedWorkerParent keeps this object alive, indirectly
 // via SharedWorkerManagerHolder.
-SharedWorkerService* MOZ_NON_OWNING_REF sSharedWorkerService;
+CheckedUnsafePtr<SharedWorkerService> sSharedWorkerService;
 
 class GetOrCreateWorkerManagerRunnable final : public Runnable {
  public:
@@ -119,7 +119,7 @@ already_AddRefed<SharedWorkerService> SharedWorkerService::GetOrCreate() {
   StaticMutexAutoLock lock(sSharedWorkerMutex);
 
   if (sSharedWorkerService) {
-    RefPtr<SharedWorkerService> instance = sSharedWorkerService;
+    RefPtr<SharedWorkerService> instance = sSharedWorkerService.get();
     return instance.forget();
   }
 
