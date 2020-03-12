@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import os
@@ -100,7 +100,8 @@ class ProcessHandlerMixin(object):
                      universal_newlines=False,
                      startupinfo=None,
                      creationflags=0,
-                     ignore_children=False):
+                     ignore_children=False,
+                     encoding='utf-8'):
 
             # Parameter for whether or not we should attempt to track child processes
             self._ignore_children = ignore_children
@@ -115,12 +116,25 @@ class ProcessHandlerMixin(object):
 
                 preexec_fn = setpgidfn
 
+            kwargs = {
+                'bufsize': bufsize,
+                'executable': executable,
+                'stdin': stdin,
+                'stdout': stdout,
+                'stderr': stderr,
+                'preexec_fn': preexec_fn,
+                'close_fds': close_fds,
+                'shell': shell,
+                'cwd': cwd,
+                'env': env,
+                'universal_newlines': universal_newlines,
+                'startupinfo': startupinfo,
+                'creationflags': creationflags,
+            }
+            if six.PY3 and universal_newlines:
+                kwargs['encoding'] = encoding
             try:
-                subprocess.Popen.__init__(self, args, bufsize, executable,
-                                          stdin, stdout, stderr,
-                                          preexec_fn, close_fds,
-                                          shell, cwd, env,
-                                          universal_newlines, startupinfo, creationflags)
+                subprocess.Popen.__init__(self, args, **kwargs)
             except OSError:
                 print(args, file=sys.stderr)
                 raise
