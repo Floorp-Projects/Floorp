@@ -7,26 +7,30 @@
 
 const TEST_URL = "http://example.com/";
 
-add_task(async function() {
-  // Open a tab with about:newtab.
-  // Don't wait for load because the page is preloaded.
-  const tab = await addTab(BROWSER_NEW_TAB_URL, {
-    waitForLoad: false,
-  });
-  const browser = tab.linkedBrowser;
-  is(
-    browser.getAttribute("preloadedState"),
-    "consumed",
-    "Got a preloaded browser for newtab"
-  );
+addRDMTask(
+  null,
+  async function() {
+    // Open a tab with about:newtab.
+    // Don't wait for load because the page is preloaded.
+    const tab = await addTab(BROWSER_NEW_TAB_URL, {
+      waitForLoad: false,
+    });
+    const browser = tab.linkedBrowser;
+    is(
+      browser.getAttribute("preloadedState"),
+      "consumed",
+      "Got a preloaded browser for newtab"
+    );
 
-  // Open RDM and try to navigate
-  const { ui } = await openRDM(tab);
-  const loaded = waitForFrameLoad(ui, TEST_URL);
-  await load(browser, TEST_URL);
-  await loaded;
-  ok(true, "Test URL navigated successfully");
+    // Open RDM and try to navigate
+    const { ui } = await openRDM(tab);
+    await waitForDeviceAndViewportState(ui);
 
-  await closeRDM(tab);
-  await removeTab(tab);
-});
+    await load(browser, TEST_URL);
+    ok(true, "Test URL navigated successfully");
+
+    await closeRDM(tab);
+    await removeTab(tab);
+  },
+  { usingBrowserUI: true, onlyPrefAndTask: true }
+);

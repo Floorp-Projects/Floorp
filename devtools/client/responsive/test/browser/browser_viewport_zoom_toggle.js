@@ -49,9 +49,7 @@ addRDMTask(
     // It will now pass all of its messages through to the RDM docshell, meaning that when
     // we request zoom level from it now, we are getting the RDM zoom level.
     const { ui } = await openRDM(tab);
-
-    // Always wait for the post-init message.
-    await message.wait(ui.toolWindow, "post-init");
+    await waitForDeviceAndViewportState(ui);
 
     const uiDocShell = ui.toolWindow.docShell;
 
