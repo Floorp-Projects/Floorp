@@ -142,7 +142,10 @@ void ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t, 
 
 void ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool) {}
 
-void ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t) {}
+void ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible* aWidget, uint32_t aEventType) {
+  mozAccessible* wrapper = GetNativeFromProxy(aWidget);
+  if (wrapper) FireNativeEvent(wrapper, aEventType);
+}
 }  // namespace a11y
 }  // namespace mozilla
 
