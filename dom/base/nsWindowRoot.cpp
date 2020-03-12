@@ -16,6 +16,9 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsString.h"
+#include "nsFrameLoaderOwner.h"
+#include "nsFrameLoader.h"
+#include "nsQueryActor.h"
 #include "nsGlobalWindow.h"
 #include "nsFocusManager.h"
 #include "nsIContent.h"
@@ -164,6 +167,57 @@ nsresult nsWindowRoot::GetControllerForCommand(const char* aCommand,
                                                nsIController** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
+
+  // If this is the parent process, check if a child browsing context from
+  // another process is focused, and ask if it has a controller actor that
+  // supports the command.
+  if (XRE_IsParentProcess()) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Unfortunately, messages updating the active/focus state in the focus
+    // manager don't happen fast enough in the case when switching focus between
+    // processes when clicking on a chrome UI element while a child tab is
+    // focused, so we need to check whether the focus manager thinks a child
+    // frame is focused as well.
+    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+    nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
+        mWindow, nsFocusManager::eIncludeAllDescendants,
+        getter_AddRefs(focusedWindow));
+    RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(focusedContent);
+    if (loaderOwner) {
+      // Only check browsing contexts if a remote frame is focused. If chrome is
+      // focused, just check the controllers directly below.
+      RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+      if (frameLoader && frameLoader->IsRemoteFrame()) {
+        // GetActiveBrowsingContextInChrome actually returns the top-level
+        // browsing context if the focus is in a child process tab, or null if
+        // the focus is in chrome.
+        BrowsingContext* focusedBC =
+            fm->GetActiveBrowsingContextInChrome()
+                ? fm->GetFocusedBrowsingContextInChrome()
+                : nullptr;
+        CanonicalBrowsingContext* canonicalFocusedBC =
+            CanonicalBrowsingContext::Cast(focusedBC);
+        if (canonicalFocusedBC) {
+          // At this point, it is known that a child process is focused, so ask
+          // its Controllers actor if the command is supported.
+          nsCOMPtr<nsIController> controller =
+              do_QueryActor(u"Controllers", canonicalFocusedBC);
+          if (controller) {
+            bool supported;
+            controller->SupportsCommand(aCommand, &supported);
+            if (supported) {
+              controller.forget(_retval);
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
+  }
 
   {
     nsCOMPtr<nsIControllers> controllers;

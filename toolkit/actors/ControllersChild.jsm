@@ -6,22 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["ControllersChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
-class ControllersChild extends ActorChild {
+class ControllersChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "ControllerCommands:Do":
-        if (this.docShell.isCommandEnabled(message.data)) {
+        if (this.docShell && this.docShell.isCommandEnabled(message.data)) {
           this.docShell.doCommand(message.data);
         }
         break;
 
       case "ControllerCommands:DoWithParams":
         var data = message.data;
-        if (this.docShell.isCommandEnabled(data.cmd)) {
+        if (this.docShell && this.docShell.isCommandEnabled(data.cmd)) {
           var params = Cu.createCommandParams();
           for (var name in data.params) {
             var value = data.params[name];

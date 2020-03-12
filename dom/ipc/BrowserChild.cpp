@@ -2977,13 +2977,6 @@ void BrowserChild::SendRequestFocus(bool aCanFocus, CallerType aCallerType) {
   PBrowserChild::SendRequestFocus(aCanFocus, aCallerType);
 }
 
-void BrowserChild::EnableDisableCommands(
-    const nsAString& aAction, nsTArray<nsCString>& aEnabledCommands,
-    nsTArray<nsCString>& aDisabledCommands) {
-  PBrowserChild::SendEnableDisableCommands(PromiseFlatString(aAction),
-                                           aEnabledCommands, aDisabledCommands);
-}
-
 NS_IMETHODIMP
 BrowserChild::GetTabId(uint64_t* aId) {
   *aId = GetTabId();

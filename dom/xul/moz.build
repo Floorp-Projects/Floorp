@@ -52,6 +52,7 @@ if CONFIG['MOZ_XUL']:
     ]
 
 XPIDL_SOURCES += [
+    'nsIBrowserController.idl',
     'nsIController.idl',
     'nsIControllers.idl',
 ]
