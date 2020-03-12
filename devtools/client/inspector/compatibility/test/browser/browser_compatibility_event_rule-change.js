@@ -14,21 +14,25 @@ add_task(async function() {
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const { inspector, panel } = await openCompatibilityView();
+  const { inspector, selectedElementPane } = await openCompatibilityView();
   await selectNode("div", inspector);
 
   info("Check the initial issue");
-  await assertIssueList(panel, [{ property: "border-block-color" }]);
+  await assertIssueList(selectedElementPane, [
+    { property: "border-block-color" },
+  ]);
 
   info("Check the issue after toggling the property");
   const view = inspector.getPanel("ruleview").view;
   const rule = getRuleViewRuleEditor(view, 0).rule;
   await _togglePropStatus(view, rule.textProps[0]);
-  await assertIssueList(panel, []);
+  await assertIssueList(selectedElementPane, []);
 
   info("Check the issue after toggling the property again");
   await _togglePropStatus(view, rule.textProps[0]);
-  await assertIssueList(panel, [{ property: "border-block-color" }]);
+  await assertIssueList(selectedElementPane, [
+    { property: "border-block-color" },
+  ]);
 });
 
 async function _togglePropStatus(view, textProp) {

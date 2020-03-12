@@ -8,6 +8,7 @@ DevToolsModules(
     "CompatibilityApp.js",
     "IssueItem.js",
     "IssueList.js",
+    "IssuePane.js",
     "UnsupportedBrowserItem.js",
     "UnsupportedBrowserList.js",
 )
