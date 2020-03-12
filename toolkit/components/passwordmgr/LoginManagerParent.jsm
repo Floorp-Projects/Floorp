@@ -82,6 +82,22 @@ let gGeneratedPasswordObserver = {
   addedObserver: false,
 
   observe(subject, topic, data) {
+    if (topic == "last-pb-context-exited") {
+      // The last private browsing context closed so clear all cached generated
+      // passwords for private window origins.
+      for (let principalOrigin of gGeneratedPasswordsByPrincipalOrigin.keys()) {
+        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          principalOrigin
+        );
+        if (!principal.privateBrowsingId) {
+          // The origin isn't for a private context so leave it alone.
+          continue;
+        }
+        gGeneratedPasswordsByPrincipalOrigin.delete(principalOrigin);
+      }
+      return;
+    }
+
     if (
       topic == "passwordmgr-autosaved-login-merged" ||
       (topic == "passwordmgr-storage-changed" && data == "removeLogin")
@@ -558,6 +574,10 @@ class LoginManagerParent extends JSWindowActorParent {
       Services.obs.addObserver(
         gGeneratedPasswordObserver,
         "passwordmgr-storage-changed"
+      );
+      Services.obs.addObserver(
+        gGeneratedPasswordObserver,
+        "last-pb-context-exited"
       );
       gGeneratedPasswordObserver.addedObserver = true;
     }
