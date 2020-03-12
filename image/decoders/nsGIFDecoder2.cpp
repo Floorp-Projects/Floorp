@@ -410,8 +410,9 @@ void nsGIFDecoder2::ConvertColormap(uint32_t* aColormap, uint32_t aColors) {
   }
 
   // Apply CMS transformation if enabled and available
-  if (mCMSMode == eCMSMode_All) {
-    qcms_transform* transform = GetCMSsRGBTransform(SurfaceFormat::R8G8B8);
+  if (!(GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) &&
+      gfxPlatform::GetCMSMode() == eCMSMode_All) {
+    qcms_transform* transform = gfxPlatform::GetCMSRGBTransform();
     if (transform) {
       qcms_transform_data(transform, aColormap, aColormap, aColors);
     }
