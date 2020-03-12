@@ -6,22 +6,15 @@
 #import <Cocoa/Cocoa.h>
 #import "mozAccessible.h"
 
-/* Simple subclasses for things like checkboxes, buttons, etc. */
-
-@interface mozButtonAccessible : mozAccessible {
-}
-- (BOOL)hasPopup;
-- (void)click;
+@interface mozSelectableAccessible : mozAccessible
+- (id)selectableChildren;
 @end
 
-@interface mozCheckboxAccessible : mozButtonAccessible
-// returns one of the constants defined in CheckboxValue
-- (int)isChecked;
+@interface mozSelectableChildAccessible : mozAccessible
 @end
 
-/**
- * Accessible for a PANE
- */
-@interface mozPaneAccessible : mozAccessible
+@interface mozTabGroupAccessible : mozSelectableAccessible
+@end
 
+@interface mozTabAccessible : mozSelectableChildAccessible
 @end
