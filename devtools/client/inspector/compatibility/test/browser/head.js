@@ -27,10 +27,7 @@ async function openCompatibilityView() {
   const { inspector } = await openInspectorSidebarTab("compatibilityview");
   await Promise.all([
     waitForUpdateSelectedNodeAction(inspector.store),
-    waitForDispatch(
-      inspector.store,
-      COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE
-    ),
+    waitForUpdateTopLevelTargetAction(inspector.store),
   ]);
   const panel = inspector.panelDoc.querySelector(
     "#compatibilityview-panel .inspector-tabpanel"
@@ -95,6 +92,16 @@ async function assertIssueList(panel, expectedIssues) {
  */
 function waitForUpdateSelectedNodeAction(store) {
   return waitForDispatch(store, COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE);
+}
+
+/**
+ * Return a promise which waits for COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE action.
+ *
+ * @param {Object} store
+ * @return {Promise}
+ */
+function waitForUpdateTopLevelTargetAction(store) {
+  return waitForDispatch(store, COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE);
 }
 
 /**
