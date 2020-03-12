@@ -33,6 +33,7 @@ import mozilla.components.support.locale.LocaleAwareApplication
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
+import org.mozilla.fenix.FeatureFlags.webPushIntegration
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
@@ -183,8 +184,10 @@ open class FenixApplication : LocaleAwareApplication() {
             // Install the AutoPush singleton to receive messages.
             PushProcessor.install(it)
 
-            // WebPush integration to observe and deliver push messages to engine.
-            WebPushEngineIntegration(components.core.engine, it).start()
+            if (webPushIntegration) {
+                // WebPush integration to observe and deliver push messages to engine.
+                WebPushEngineIntegration(components.core.engine, it).start()
+            }
 
             // Perform a one-time initialization of the account manager if a message is received.
             PushFxaIntegration(it, lazy { components.backgroundServices.accountManager }).launch()
