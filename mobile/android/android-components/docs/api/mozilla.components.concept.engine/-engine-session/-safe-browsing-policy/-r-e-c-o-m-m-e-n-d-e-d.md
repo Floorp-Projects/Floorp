@@ -2,7 +2,7 @@
 
 # RECOMMENDED
 
-`RECOMMENDED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L153)
+`RECOMMENDED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L154)
 
 Blocks all unsafe sites.
 
