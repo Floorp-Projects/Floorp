@@ -99,45 +99,44 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   NeedsHomeObject = 1 << 13,
 
   IsDerivedClassConstructor = 1 << 14,
-  IsDefaultClassConstructor = 1 << 15,
 
   // 'this', 'arguments' and f.apply() are used. This is likely to be a
   // wrapper.
-  IsLikelyConstructorWrapper = 1 << 16,
+  IsLikelyConstructorWrapper = 1 << 15,
 
   // Set if this function is a generator function or async generator.
-  IsGenerator = 1 << 17,
+  IsGenerator = 1 << 16,
 
   // Set if this function is an async function or async generator.
-  IsAsync = 1 << 18,
+  IsAsync = 1 << 17,
 
   // Set if this function has a rest parameter.
-  HasRest = 1 << 19,
+  HasRest = 1 << 18,
 
   // See comments below.
-  ArgumentsHasVarBinding = 1 << 20,
+  ArgumentsHasVarBinding = 1 << 19,
 
   // Script came from eval().
-  IsForEval = 1 << 21,
+  IsForEval = 1 << 20,
 
   // Whether this is a top-level module script.
-  IsModule = 1 << 22,
+  IsModule = 1 << 21,
 
   // Whether this function needs a call object or named lambda environment.
-  NeedsFunctionEnvironmentObjects = 1 << 23,
+  NeedsFunctionEnvironmentObjects = 1 << 22,
 
   // Whether the Parser declared 'arguments'.
-  ShouldDeclareArguments = 1 << 24,
+  ShouldDeclareArguments = 1 << 23,
 
   // Script is for function.
-  IsFunction = 1 << 25,
+  IsFunction = 1 << 24,
 
   // Whether this script contains a direct eval statement.
-  HasDirectEval = 1 << 26,
+  HasDirectEval = 1 << 25,
 
   // Whether this BaseScript is a LazyScript. This flag will be removed after
   // LazyScript and JSScript are merged in Bug 1529456.
-  IsLazyScript = 1 << 27,
+  IsLazyScript = 1 << 26,
 };
 
 class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
