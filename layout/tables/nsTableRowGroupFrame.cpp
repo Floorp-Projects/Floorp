@@ -941,8 +941,7 @@ void nsTableRowGroupFrame::SlideChild(TableRowGroupReflowInput& aReflowInput,
 
 // Create a continuing frame, add it to the child list, and then push it
 // and the frames that follow
-void nsTableRowGroupFrame::CreateContinuingRowFrame(nsPresContext& aPresContext,
-                                                    nsIFrame& aRowFrame,
+void nsTableRowGroupFrame::CreateContinuingRowFrame(nsIFrame& aRowFrame,
                                                     nsIFrame** aContRowFrame) {
   // XXX what is the row index?
   if (!aContRowFrame) {
@@ -951,8 +950,7 @@ void nsTableRowGroupFrame::CreateContinuingRowFrame(nsPresContext& aPresContext,
   }
   // create the continuing frame which will create continuing cell frames
   *aContRowFrame =
-      aPresContext.PresShell()->FrameConstructor()->CreateContinuingFrame(
-          &aPresContext, &aRowFrame, this);
+      PresShell()->FrameConstructor()->CreateContinuingFrame(&aRowFrame, this);
 
   // Add the continuing row frame to the child list
   mFrames.InsertFrame(nullptr, &aRowFrame, *aContRowFrame);
@@ -1030,17 +1028,15 @@ void nsTableRowGroupFrame::SplitSpanningCells(
           }
         } else {
           if (!aContRow) {
-            CreateContinuingRowFrame(aPresContext, aLastRow,
-                                     (nsIFrame**)&aContRow);
+            CreateContinuingRowFrame(aLastRow, (nsIFrame**)&aContRow);
           }
           if (aContRow) {
             if (row != &aLastRow) {
               // aContRow needs a continuation for cell, since cell spanned into
               // aLastRow but does not originate there
               nsTableCellFrame* contCell = static_cast<nsTableCellFrame*>(
-                  aPresContext.PresShell()
-                      ->FrameConstructor()
-                      ->CreateContinuingFrame(&aPresContext, cell, &aLastRow));
+                  PresShell()->FrameConstructor()->CreateContinuingFrame(
+                      cell, &aLastRow));
               uint32_t colIndex = cell->ColIndex();
               aContRow->InsertCellFrame(contCell, colIndex);
             }
@@ -1185,8 +1181,7 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
                 rowMetrics.Height() <= rowReflowInput.AvailableHeight(),
                 "data loss - incomplete row needed more height than available, "
                 "on top of page");
-            CreateContinuingRowFrame(*aPresContext, *rowFrame,
-                                     (nsIFrame**)&contRow);
+            CreateContinuingRowFrame(*rowFrame, (nsIFrame**)&contRow);
             if (contRow) {
               aDesiredSize.Height() += rowMetrics.Height();
               if (prevRowFrame) aDesiredSize.Height() += cellSpacingB;

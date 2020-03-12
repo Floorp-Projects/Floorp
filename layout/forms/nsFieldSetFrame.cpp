@@ -894,9 +894,8 @@ void nsFieldSetFrame::EnsureChildContinuation(nsIFrame* aChild,
   } else {
     nsFrameList nifs;
     if (!nif) {
-      auto* pc = PresContext();
-      auto* fc = pc->PresShell()->FrameConstructor();
-      nif = fc->CreateContinuingFrame(pc, aChild, this);
+      auto* fc = PresShell()->FrameConstructor();
+      nif = fc->CreateContinuingFrame(aChild, this);
       if (aStatus.IsOverflowIncomplete()) {
         nif->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
       }

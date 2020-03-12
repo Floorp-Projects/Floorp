@@ -3069,9 +3069,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow
           kidNextInFlow =
-              presContext->PresShell()
-                  ->FrameConstructor()
-                  ->CreateContinuingFrame(presContext, kidFrame, this);
+              PresShell()->FrameConstructor()->CreateContinuingFrame(kidFrame,
+                                                                     this);
 
           // Insert the kid's new next-in-flow into our sibling list...
           mFrames.InsertFrame(nullptr, kidFrame, kidNextInFlow);

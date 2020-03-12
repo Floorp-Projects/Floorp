@@ -7832,8 +7832,7 @@ void nsCSSFrameConstructor::GetAlternateTextFor(Element* aElement, nsAtom* aTag,
 }
 
 nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
-    PresShell* aPresShell, nsPresContext* aPresContext, nsIFrame* aFrame,
-    nsContainerFrame* aParentFrame, nsIContent* aContent,
+    nsIFrame* aFrame, nsContainerFrame* aParentFrame, nsIContent* aContent,
     ComputedStyle* aComputedStyle) {
   nsTableWrapperFrame* newFrame =
       NS_NewTableWrapperFrame(mPresShell, aComputedStyle);
@@ -7847,7 +7846,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
   nsIFrame* childFrame = aFrame->PrincipalChildList().FirstChild();
   if (childFrame) {
     nsIFrame* continuingTableFrame =
-        CreateContinuingFrame(aPresContext, childFrame, newFrame);
+        CreateContinuingFrame(childFrame, newFrame);
     newChildFrames.AppendFrame(nullptr, continuingTableFrame);
 
     NS_ASSERTION(!childFrame->GetNextSibling(),
@@ -7861,8 +7860,8 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
 }
 
 nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
-    PresShell* aPresShell, nsIFrame* aFrame, nsContainerFrame* aParentFrame,
-    nsIContent* aContent, ComputedStyle* aComputedStyle) {
+    nsIFrame* aFrame, nsContainerFrame* aParentFrame, nsIContent* aContent,
+    ComputedStyle* aComputedStyle) {
   nsTableFrame* newFrame = NS_NewTableFrame(mPresShell, aComputedStyle);
 
   newFrame->Init(aContent, aParentFrame, aFrame);
@@ -7920,8 +7919,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
 }
 
 nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
-    nsPresContext* aPresContext, nsIFrame* aFrame,
-    nsContainerFrame* aParentFrame, bool aIsFluid) {
+    nsIFrame* aFrame, nsContainerFrame* aParentFrame, bool aIsFluid) {
   ComputedStyle* computedStyle = aFrame->Style();
   nsIFrame* newFrame = nullptr;
   nsIFrame* nextContinuation = aFrame->GetNextContinuation();
@@ -7961,13 +7959,11 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     newFrame =
         ConstructPageFrame(mPresShell, aParentFrame, aFrame, canvasFrame);
   } else if (LayoutFrameType::TableWrapper == frameType) {
-    newFrame = CreateContinuingOuterTableFrame(
-        mPresShell, aPresContext, aFrame, aParentFrame, content, computedStyle);
-
+    newFrame = CreateContinuingOuterTableFrame(aFrame, aParentFrame, content,
+                                               computedStyle);
   } else if (LayoutFrameType::Table == frameType) {
-    newFrame = CreateContinuingTableFrame(mPresShell, aFrame, aParentFrame,
-                                          content, computedStyle);
-
+    newFrame = CreateContinuingTableFrame(aFrame, aParentFrame, content,
+                                          computedStyle);
   } else if (LayoutFrameType::TableRowGroup == frameType) {
     newFrame = NS_NewTableRowGroupFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
@@ -7989,7 +7985,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
       // See if it's a table cell frame
       if (cellFrame->IsTableCellFrame()) {
         nsIFrame* continuingCellFrame =
-            CreateContinuingFrame(aPresContext, cellFrame, rowFrame);
+            CreateContinuingFrame(cellFrame, rowFrame);
         newChildList.AppendFrame(nullptr, continuingCellFrame);
       }
       cellFrame = cellFrame->GetNextSibling();
@@ -8014,8 +8010,8 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
 
     // Create a continuing area frame
     nsIFrame* blockFrame = aFrame->PrincipalChildList().FirstChild();
-    nsIFrame* continuingBlockFrame = CreateContinuingFrame(
-        aPresContext, blockFrame, static_cast<nsContainerFrame*>(cellFrame));
+    nsIFrame* continuingBlockFrame =
+        CreateContinuingFrame(blockFrame, cellFrame);
 
     SetInitialSingleChild(cellFrame, continuingBlockFrame);
     newFrame = cellFrame;
@@ -9940,8 +9936,7 @@ nsFirstLetterFrame* nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsIFrame* nextTextFrame = nullptr;
   if (NeedFirstLetterContinuation(aTextContent)) {
     // Create continuation
-    nextTextFrame =
-        CreateContinuingFrame(aState.mPresContext, aTextFrame, aParentFrame);
+    nextTextFrame = CreateContinuingFrame(aTextFrame, aParentFrame);
     RefPtr<ComputedStyle> newSC =
         styleSet->ResolveStyleForText(aTextContent, aParentComputedStyle);
     nextTextFrame->SetComputedStyle(newSC);
@@ -10638,8 +10633,7 @@ void nsCSSFrameConstructor::FinishBuildingColumns(
       finalList.AppendFrame(aColumnSetWrapper, f);
     } else {
       auto* continuingColumnSet = static_cast<nsContainerFrame*>(
-          CreateContinuingFrame(mPresShell->GetPresContext(), prevColumnSet,
-                                aColumnSetWrapper, false));
+          CreateContinuingFrame(prevColumnSet, aColumnSetWrapper, false));
       MOZ_ASSERT(continuingColumnSet->HasColumnSpanSiblings(),
                  "The bit should propagate to the next continuation!");
 
@@ -10722,8 +10716,7 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
     // Grab the consecutive non-column-span kids, and reparent them into a new
     // continuation of the last non-column-span wrapper frame.
     auto* nonColumnSpanWrapper = static_cast<nsContainerFrame*>(
-        CreateContinuingFrame(mPresShell->GetPresContext(),
-                              lastNonColumnSpanWrapper, parentFrame, false));
+        CreateContinuingFrame(lastNonColumnSpanWrapper, parentFrame, false));
     nonColumnSpanWrapper->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR |
                                        NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
     MOZ_ASSERT(nonColumnSpanWrapper->HasColumnSpanSiblings(),

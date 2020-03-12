@@ -315,7 +315,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   bool DestroyFramesFor(Element* aElement);
 
   // Request to create a continuing frame.  This method never returns null.
-  nsIFrame* CreateContinuingFrame(nsPresContext* aPresContext, nsIFrame* aFrame,
+  nsIFrame* CreateContinuingFrame(nsIFrame* aFrame,
                                   nsContainerFrame* aParentFrame,
                                   bool aIsFluid = true);
 
@@ -1672,14 +1672,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // not null).
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame);
 
-  nsIFrame* CreateContinuingOuterTableFrame(PresShell* aPresShell,
-                                            nsPresContext* aPresContext,
-                                            nsIFrame* aFrame,
+  nsIFrame* CreateContinuingOuterTableFrame(nsIFrame* aFrame,
                                             nsContainerFrame* aParentFrame,
                                             nsIContent* aContent,
                                             ComputedStyle* aComputedStyle);
 
-  nsIFrame* CreateContinuingTableFrame(PresShell* aPresShell, nsIFrame* aFrame,
+  nsIFrame* CreateContinuingTableFrame(nsIFrame* aFrame,
                                        nsContainerFrame* aParentFrame,
                                        nsIContent* aContent,
                                        ComputedStyle* aComputedStyle);
