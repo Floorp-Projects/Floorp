@@ -1,4 +1,4 @@
-use fluent_syntax::ast;
+use crate::ast;
 use serde::ser::SerializeMap;
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
@@ -10,7 +10,7 @@ pub fn serialize<'s>(res: &'s ast::Resource) -> Result<String, Box<dyn Error>> {
     Ok(serde_json::to_string(&Helper(res)).unwrap())
 }
 
-pub fn _serialize_to_pretty_json<'s>(res: &'s ast::Resource) -> Result<String, Box<dyn Error>> {
+pub fn serialize_to_pretty_json<'s>(res: &'s ast::Resource) -> Result<String, Box<dyn Error>> {
     #[derive(Serialize)]
     struct Helper<'ast>(#[serde(with = "ResourceDef")] &'ast ast::Resource<'ast>);
 

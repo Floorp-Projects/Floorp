@@ -495,7 +495,9 @@ fn get_comment<'p>(ps: &mut ParserStream<'p>) -> Result<ast::Comment<'p>> {
 
         level = Some(line_level);
 
-        if ps.is_current_byte(b'\n') {
+        if ps.ptr == ps.length {
+            break;
+        } else if ps.is_current_byte(b'\n') {
             content.push(get_comment_line(ps)?);
         } else {
             if let Err(e) = ps.expect_byte(b' ') {

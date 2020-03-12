@@ -1,5 +1,3 @@
-mod ast;
-
 use assert_json_diff::assert_json_include;
 use glob::glob;
 use serde_json::Value;
@@ -8,6 +6,7 @@ use std::io;
 use std::io::prelude::*;
 
 use fluent_syntax::parser::parse;
+use fluent_syntax::json;
 
 fn compare_jsons(value: &str, reference: &str) {
     let a: Value = serde_json::from_str(value).unwrap();
@@ -44,7 +43,7 @@ fn parse_fixtures_compare() {
             Err((res, _errors)) => res,
         };
 
-        let target_json = ast::serialize(&target_ast).unwrap();
+        let target_json = json::serialize(&target_ast).unwrap();
 
         compare_jsons(&target_json, &reference_file);
     }

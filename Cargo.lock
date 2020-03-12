@@ -1349,9 +1349,9 @@ dependencies = [
 
 [[package]]
 name = "fluent-syntax"
-version = "0.9.2"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fe937dbd784d0f085f05c15a06f0d5dd06ce31cc823f7ab12ebb3758d948b39"
+checksum = "ac0f7e83d14cccbf26e165d8881dcac5891af0d85a88543c09dd72ebd31d91ba"
 
 [[package]]
 name = "fnv"

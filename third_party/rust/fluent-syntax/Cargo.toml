@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "fluent-syntax"
-version = "0.9.2"
+version = "0.9.3"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Staś Małolepszy <stas@mozilla.com>"]
 description = "Parser/Serializer tools for Fluent Syntax. \n"
 homepage = "http://www.projectfluent.org"
@@ -23,9 +23,26 @@ categories = ["localization", "internationalization"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/projectfluent/fluent-rs"
 
+[[bin]]
+name = "parser"
+path = "src/bin/parser.rs"
+
+[[test]]
+name = "parser_fixtures"
+path = "tests/parser_fixtures.rs"
+required-features = ["json"]
+
 [[bench]]
 name = "parser"
 harness = false
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1.0"
+optional = true
 [dev-dependencies.assert-json-diff]
 version = "1.0"
 
@@ -41,3 +58,7 @@ features = ["derive"]
 
 [dev-dependencies.serde_json]
 version = "1.0"
+
+[features]
+default = []
+json = ["serde", "serde_json"]

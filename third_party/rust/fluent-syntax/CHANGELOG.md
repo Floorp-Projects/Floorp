@@ -4,6 +4,11 @@
 
   - …
 
+## fluent-syntax 0.9.3 (March 4, 2020)
+  - Move JSON serialization from tests to source code behind the feature flag.
+  - Fix a minor syntax issue that caused the parser to recognize a comment ending on EOF as Junk.
+  - Add context benchmarks for Firefox contexts - browser and preferences.
+
 ## fluent-syntax 0.9.2 (February 13, 2020)
   - Import updated tests from the reference parser.
   - Minor parser improvements to align with new tests.
