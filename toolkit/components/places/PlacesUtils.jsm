@@ -1522,22 +1522,30 @@ var PlacesUtils = {
   /**
    * Gets favicon data for a given page url.
    *
-   * @param aPageUrl url of the page to look favicon for.
+   * @param {string | URL | nsIURI} aPageUrl
+   *   url of the page to look favicon for.
+   * @param {number} preferredWidth
+   *   The preferred width of the favicon in pixels. The default value of 0
+   *   returns the largest icon available.
    * @resolves to an object representing a favicon entry, having the following
    *           properties: { uri, dataLen, data, mimeType }
    * @rejects JavaScript exception if the given url has no associated favicon.
    */
-  promiseFaviconData(aPageUrl) {
+  promiseFaviconData(aPageUrl, preferredWidth = 0) {
     return new Promise((resolve, reject) => {
+      if (!(aPageUrl instanceof Ci.nsIURI)) {
+        aPageUrl = PlacesUtils.toURI(aPageUrl);
+      }
       PlacesUtils.favicons.getFaviconDataForPage(
-        NetUtil.newURI(aPageUrl),
-        function(uri, dataLen, data, mimeType) {
+        aPageUrl,
+        function(uri, dataLen, data, mimeType, size) {
           if (uri) {
-            resolve({ uri, dataLen, data, mimeType });
+            resolve({ uri, dataLen, data, mimeType, size });
           } else {
             reject();
           }
-        }
+        },
+        preferredWidth
       );
     });
   },

@@ -121,7 +121,7 @@ class ProviderTopSites extends UrlbarProvider {
       // are stored in `label`, so prefer it.  Search top sites currently
       // don't have titles but `hostname` instead.
       title: link.label || link.title || link.hostname || "",
-      favicon: link.favicon || link.tippyTopIcon || null,
+      favicon: link.smallFavicon || link.favicon || null,
     }));
 
     for (let site of sites) {
