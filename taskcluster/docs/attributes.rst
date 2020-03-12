@@ -208,14 +208,19 @@ fetch-artifact
 
 For fetch jobs, this is the path to the artifact for that fetch operation.
 
+fetch-alias
+===========
+An alias that can be used instead of the real fetch job name in fetch
+stanzas for jobs.
+
 toolchain-artifact
 ==================
 For toolchain jobs, this is the path to the artifact for that toolchain.
 
 toolchain-alias
 ===============
-For toolchain jobs, this optionally gives an alias that can be used instead of the
-real toolchain job name in the toolchains list for build jobs.
+An alias that can be used instead of the real toolchain job name in fetch
+stanzas for jobs.
 
 always_target
 =============
