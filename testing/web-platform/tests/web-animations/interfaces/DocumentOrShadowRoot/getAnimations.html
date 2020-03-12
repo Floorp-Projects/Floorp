@@ -198,6 +198,20 @@ test(t => {
   );
 }, 'Document.getAnimations() does NOT return animations in shadow trees');
 
+test(t => {
+  const div = createDiv(t);
+  const shadow = div.attachShadow({ mode: 'open' });
+
+  div.animate(gKeyFrames, 100 * MS_PER_SEC)
+
+  assert_array_equals(
+    div.shadowRoot.getAnimations(),
+    [],
+    'getAnimations() called on ShadowRoot does not return animations from'
+    + ' Document'
+  );
+}, 'ShadowRoot.getAnimations() does NOT return animations in parent document');
+
 promise_test(async t => {
   const div = createDiv(t);
   const watcher = EventWatcher(t, div, 'transitionrun');
