@@ -357,3 +357,36 @@ talos:
     when:
         files-changed:
             - 'testing/talos/**'
+
+telemetry-integration-tests:
+    description: pytest-based integration tests for Telemetry
+    always-target: false
+    platform:
+        - linux64/opt
+    worker:
+        by-platform:
+            linux64.*:
+                docker-image: {in-tree: "ubuntu1804-test"}
+                max-run-time: 3600
+    require-build: true
+    treeherder:
+        symbol: tt(i)
+        tier: 3
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >
+            source /builds/worker/scripts/xvfb.sh &&
+            start_xvfb '1600x1200x24' 0 &&
+            export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
+            ./mach python-test --python 2 --subsuite telemetry-integration-tests
+    fetches:
+        build:
+            - target.tar.bz2
+            - artifact: target.common.tests.tar.gz
+              dest: tests
+            - artifact: target.reftest.tests.tar.gz
+              dest: tests
+    when:
+        files-changed:
+            - 'toolkit/components/telemetry/**'

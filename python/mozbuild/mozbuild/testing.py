@@ -52,8 +52,7 @@ TEST_MANIFESTS = dict(
     CRAMTEST=('cram', 'cram', '.', False),
     TELEMETRY_TESTS_CLIENT=(
         'telemetry-tests-client',
-        'toolkit/components/telemetry/tests/marionette', '.', False
-    ),
+        'toolkit/components/telemetry/tests/marionette/', '.', False),
 
     # marionette tests are run from the srcdir
     # TODO(ato): make packaging work as for other test suites

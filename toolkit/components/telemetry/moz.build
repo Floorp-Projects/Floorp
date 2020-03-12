@@ -131,6 +131,7 @@ TESTING_JS_MODULES += [
 ]
 
 PYTHON_UNITTEST_MANIFESTS += [
+    'tests/integration/tests/python.ini',
     'tests/python/python.ini',
 ]
 
