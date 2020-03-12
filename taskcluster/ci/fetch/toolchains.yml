@@ -463,7 +463,8 @@ dump-syms:
     fetch:
         type: git
         repo: https://github.com/mozilla/dump_syms/
-        revision: fcd7b79fb791da50233d6317f79e2a4b80a7f7d8
+        # 0.0.4 + fix for Windows cross builds
+        revision: c75b1fb14f07650d9490b788710af2367c7e00d0
 
 fix-stacks:
     description: fix-stacks source code
