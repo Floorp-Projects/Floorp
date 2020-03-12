@@ -8,6 +8,7 @@
  * Tests that multiple tags can be added to a bookmark using the star-shaped button, the library and the sidebar.
  */
 
+StarUI._createPanelIfNeeded();
 const bookmarkPanel = document.getElementById("editBookmarkPanel");
 let folders;
 

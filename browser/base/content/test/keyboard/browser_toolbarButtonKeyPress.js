@@ -227,6 +227,7 @@ add_task(async function testBookmarkButtonPress() {
   ) {
     let button = document.getElementById("star-button");
     forceFocus(button);
+    StarUI._createPanelIfNeeded();
     let panel = document.getElementById("editBookmarkPanel");
     let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
     // The button ignores activation while the bookmarked status is being

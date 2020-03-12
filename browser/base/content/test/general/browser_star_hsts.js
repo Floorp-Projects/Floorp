@@ -31,6 +31,7 @@ add_task(async function test_star_redirect() {
 
   await promiseStarState(BookmarkingUI.STATUS_UNSTARRED);
 
+  StarUI._createPanelIfNeeded();
   let bookmarkPanel = document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
   BookmarkingUI.star.click();
