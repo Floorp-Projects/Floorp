@@ -643,22 +643,6 @@ public class GeckoThread extends Thread {
                              "speculativeConnectNative", uri);
     }
 
-    @WrapForJNI(stubName = "WaitOnGecko")
-    @RobocopTarget
-    private static native boolean nativeWaitOnGecko(long timeoutMillis);
-
-    public static void waitOnGeckoForever() {
-        nativeWaitOnGecko(0);
-    }
-
-    public static boolean waitOnGecko() {
-        return waitOnGecko(DEFAULT_TIMEOUT);
-    }
-
-    public static boolean waitOnGecko(final long timeoutMillis) {
-        return nativeWaitOnGecko(timeoutMillis);
-    }
-
     @WrapForJNI(stubName = "OnPause", dispatchTo = "gecko")
     private static native void nativeOnPause();
 

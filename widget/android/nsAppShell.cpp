@@ -141,26 +141,6 @@ class GeckoThreadSupport final
     specConn->SpeculativeConnect(uri, principal, nullptr);
   }
 
-  static bool WaitOnGecko(int64_t timeoutMillis) {
-    struct NoOpRunnable : Runnable {
-      NoOpRunnable() : Runnable("NoOpRunnable") {}
-      NS_IMETHOD Run() override { return NS_OK; }
-    };
-
-    struct NoOpEvent : nsAppShell::Event {
-      void Run() override {
-        // We cannot call NS_DispatchToMainThread from within
-        // WaitOnGecko itself because the thread that is calling
-        // WaitOnGecko may not be an nsThread, and may not be able to do
-        // a sync dispatch.
-        NS_DispatchToMainThread(do_AddRef(new NoOpRunnable()),
-                                NS_DISPATCH_SYNC);
-      }
-    };
-    return nsAppShell::SyncRunEvent(
-        NoOpEvent(), nullptr, TimeDuration::FromMilliseconds(timeoutMillis));
-  }
-
   static void OnPause() {
     MOZ_ASSERT(NS_IsMainThread());
 
