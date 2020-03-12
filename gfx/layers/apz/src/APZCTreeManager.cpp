@@ -702,9 +702,10 @@ void APZCTreeManager::UpdateHitTestingTree(
                            aPaintSequenceNumber);
 }
 
-void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
-                                         const TimeStamp& aSampleTime,
-                                         wr::RenderRoot aRenderRoot) {
+void APZCTreeManager::SampleForWebRender(
+    wr::TransactionWrapper& aTxn, const TimeStamp& aSampleTime,
+    wr::RenderRoot aRenderRoot,
+    const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
 
@@ -726,6 +727,27 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
         apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
                                        asyncTransformComponents)
             .mTranslation;
+
+    if (Maybe<CompositionPayload> payload = apzc->NotifyScrollSampling()) {
+      RefPtr<WebRenderBridgeParent> wrBridgeParent;
+      LayersId layersId = apzc->GetGuid().mLayersId;
+      CompositorBridgeParent::CallWithIndirectShadowTree(
+          layersId, [&](LayerTreeState& aState) -> void {
+            wrBridgeParent = aState.mWrBridge;
+          });
+
+      if (wrBridgeParent) {
+        wr::PipelineId pipelineId = wr::AsPipelineId(layersId);
+        for (size_t i = 0; i < aEpochsBeingRendered->Length(); i++) {
+          if ((*aEpochsBeingRendered)[i].pipeline_id == pipelineId) {
+            auto& epoch = (*aEpochsBeingRendered)[i].epoch;
+            wrBridgeParent->AddPendingScrollPayload(
+                *payload, std::make_pair(pipelineId, epoch));
+            break;
+          }
+        }
+      }
+    }
 
     if (Maybe<uint64_t> zoomAnimationId = apzc->GetZoomAnimationId()) {
       // for now we only support zooming on root content APZCs
