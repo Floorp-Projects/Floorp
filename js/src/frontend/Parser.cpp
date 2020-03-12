@@ -293,7 +293,8 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     uint32_t toStringStart, Directives inheritedDirectives,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
   size_t index = this->getCompilationInfo().funcData.length();
-  if (!this->getCompilationInfo().funcData.emplaceBack(fcd.get())) {
+  if (!this->getCompilationInfo().funcData.emplaceBack(
+          mozilla::AsVariant(fcd.get()))) {
     return nullptr;
   }
 

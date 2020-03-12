@@ -15,6 +15,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
+#include "js/GCVariant.h"
 #include "js/GCVector.h"
 #include "js/RealmOptions.h"
 #include "js/SourceText.h"
@@ -24,6 +25,8 @@
 
 namespace js {
 namespace frontend {
+
+using FunctionType = mozilla::Variant<JSFunction*, FunctionCreationData>;
 
 // CompilationInfo owns a number of pieces of information about script
 // compilation as well as controls the lifetime of parse nodes and other data by
@@ -51,10 +54,9 @@ struct MOZ_RAII CompilationInfo {
   Vector<RegExpCreationData> regExpData;
   Vector<BigIntCreationData> bigIntData;
 
-  // A rooted vector to ensure tracing. While not strictly
-  // necessary because of the AutoKeepAtoms above, good
-  // practice neverthless.
-  JS::RootedVector<FunctionCreationData> funcData;
+  // A Rooted vector to handle tracing of JSFunction*
+  // and Atoms within.
+  JS::RootedVector<FunctionType> funcData;
 
   // A rooted list of scopes created during this parse.
   //
@@ -105,5 +107,4 @@ struct MOZ_RAII CompilationInfo {
 
 }  // namespace frontend
 }  // namespace js
-
 #endif
