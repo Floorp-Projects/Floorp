@@ -130,10 +130,11 @@ enum CheckboxValue {
 - (void)click {
   // both buttons and checkboxes have only one action. we should really stop using arbitrary
   // arrays with actions, and define constants for these actions.
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     accWrap->DoAction(0);
-  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
     proxy->DoAction(0);
+  }
 }
 
 - (BOOL)isTab {
@@ -173,15 +174,9 @@ enum CheckboxValue {
 }
 
 - (int)isChecked {
-  uint64_t state = 0;
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
-    state = accWrap->NativeState();
-  else if (ProxyAccessible* proxy = [self getProxyAccessible])
-    state = proxy->NativeState();
-
   // check if we're checked or in a mixed state
-  if (state & states::CHECKED) {
-    return (state & states::MIXED) ? kMixed : kChecked;
+  if ([self state] & states::CHECKED) {
+    return ([self state] & states::MIXED) ? kMixed : kChecked;
   }
 
   return kUnchecked;
