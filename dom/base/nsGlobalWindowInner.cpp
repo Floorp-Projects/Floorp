@@ -173,6 +173,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "nsFrameLoader.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsXPCOMCID.h"
 #include "mozilla/Logging.h"
 #include "prenv.h"
@@ -1898,29 +1899,73 @@ void nsGlobalWindowInner::FireFrameLoadEvent() {
   }
 
   // If embedder is same-process, fire the event on our embedder element.
-  //
-  // XXX: Bug 1440212 is looking into potentially changing this behaviour to act
-  // more like the remote case when in-process.
   RefPtr<Element> element = GetBrowsingContext()->GetEmbedderElement();
   if (element) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetEvent event(/* aIsTrusted = */ true, eLoad);
-    event.mFlags.mBubbles = false;
-    event.mFlags.mCancelable = false;
-
     if (mozilla::dom::DocGroup::TryToLoadIframesInBackground()) {
       nsDocShell* ds = nsDocShell::Cast(GetDocShell());
 
-      if (ds && !ds->HasFakeOnLoadDispatched()) {
-        EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+      if (!ds || ds->HasFakeOnLoadDispatched()) {
+        return;
       }
-    } else {
+    }
+
+    RefPtr<nsFrameLoaderOwner> loaderOwner(do_QueryObject(element));
+    if (!loaderOwner) {
+      // Pretty surprising!
+      MOZ_ASSERT(false, "How did we get here?");
+      return;
+    }
+
+    // Track the frameloader, not the element, for purposes of firing our load
+    // event.  That way if the element gets a new frame loader (e.g. gets moved
+    // around in the DOM) while our runnable is pending we will not fire an
+    // incorrect (because having nothing to do with the browsing context,
+    // window, etc now inside the element) load event at it.
+    RefPtr<nsFrameLoader> loader = loaderOwner->GetFrameLoader();
+    if (!loader) {
+      // Still pretty surprising, if we got this far!
+      return;
+    }
+
+    auto fireLoadEvent = [loader]() -> void {
+      RefPtr<Element> currentElement = loader->GetOwnerElement();
+      if (!currentElement) {
+        // The loader has gotten torn down.  Just bail.
+        return;
+      }
+      nsEventStatus status = nsEventStatus_eIgnore;
+      WidgetEvent event(/* aIsTrusted = */ true, eLoad);
+      event.mFlags.mBubbles = false;
+      event.mFlags.mCancelable = false;
+
       // Most of the time we could get a pres context to pass in here,
       // but not always (i.e. if this window is not shown there won't
       // be a pres context available). Since we're not firing a GUI
       // event we don't need a pres context anyway so we just pass
       // null as the pres context all the time here.
-      EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+      EventDispatcher::Dispatch(currentElement, nullptr, &event, nullptr,
+                                &status);
+    };
+
+    if (GetDocGroup() == element->GetDocGroup() ||
+        !StaticPrefs::dom_cross_docgroup_iframe_async_load_event()) {
+      fireLoadEvent();
+    } else {
+      // Make sure we don't fire the load event on |element|'s document before
+      // we fire it on the element.
+      RefPtr<Document> doc = element->OwnerDoc();
+      doc->BlockOnload();
+      RefPtr<Runnable> fireEvent = NS_NewRunnableFunction(
+          "Cross-docgroup frame load", [doc, fireLoadEvent]() -> void {
+            fireLoadEvent();
+            // Sync unblocking is OK here, because we're coming from a
+            // runnable anyway.  Note that we capture "doc" here,
+            // instead of using element->OwnerDoc(), because the
+            // latter could change before our runnable runs and then
+            // we will get incorrectly paired block/unblock calls.
+            doc->UnblockOnload(true);
+          });
+      doc->Dispatch(TaskCategory::Network, fireEvent.forget());
     }
     return;
   }
