@@ -1076,6 +1076,9 @@
         "FeatureRecommendations": {
           "type": "boolean"
         },
+        "UrlbarInterventions": {
+          "type": "boolean"
+        },
         "Locked": {
           "type": "boolean"
         }
