@@ -34,6 +34,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
             Array [
               <textarea />,
               Object {
+                "cursorBlinkRate": 530,
                 "mode": "javascript",
                 "placeholder": "Breakpoint condition, e.g. items.length > 0",
                 "theme": "mozilla",
@@ -230,6 +231,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                 I'm a condition
               </textarea>,
               Object {
+                "cursorBlinkRate": 530,
                 "mode": "javascript",
                 "placeholder": "Breakpoint condition, e.g. items.length > 0",
                 "theme": "mozilla",
@@ -428,6 +430,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                 I'm a log
               </textarea>,
               Object {
+                "cursorBlinkRate": 530,
                 "mode": "javascript",
                 "placeholder": "Log message, e.g. displayName",
                 "theme": "mozilla",
