@@ -161,7 +161,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "OSKeyStore",
-  "resource://formautofill/OSKeyStore.jsm"
+  "resource:///modules/OSKeyStore.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
