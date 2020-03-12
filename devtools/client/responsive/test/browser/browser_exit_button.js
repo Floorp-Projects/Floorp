@@ -12,37 +12,41 @@ addRDMTask(TEST_URL, async function(...args) {
 
 // Test global exit button on detached tab.
 // See Bug 1262806
-add_task(async function() {
-  let tab = await addTab(TEST_URL);
-  const { ui, manager } = await openRDM(tab);
+addRDMTask(
+  null,
+  async function() {
+    let tab = await addTab(TEST_URL);
+    const { ui, manager } = await openRDM(tab);
 
-  await waitBootstrap(ui);
+    await waitBootstrap(ui);
 
-  const waitTabIsDetached = Promise.all([
-    once(tab, "TabClose"),
-    once(tab.linkedBrowser, "SwapDocShells"),
-  ]);
+    const waitTabIsDetached = Promise.all([
+      once(tab, "TabClose"),
+      once(tab.linkedBrowser, "SwapDocShells"),
+    ]);
 
-  // Detach the tab with RDM open.
-  const newWindow = gBrowser.replaceTabWithWindow(tab);
+    // Detach the tab with RDM open.
+    const newWindow = gBrowser.replaceTabWithWindow(tab);
 
-  // Wait until the tab is detached and the new window is fully initialized.
-  await waitTabIsDetached;
-  await newWindow.delayedStartupPromise;
+    // Wait until the tab is detached and the new window is fully initialized.
+    await waitTabIsDetached;
+    await newWindow.delayedStartupPromise;
 
-  // Get the new tab instance.
-  tab = newWindow.gBrowser.tabs[0];
+    // Get the new tab instance.
+    tab = newWindow.gBrowser.tabs[0];
 
-  // Detaching a tab closes RDM.
-  ok(
-    !manager.isActiveForTab(tab),
-    "Responsive Design Mode is not active for the tab"
-  );
+    // Detaching a tab closes RDM.
+    ok(
+      !manager.isActiveForTab(tab),
+      "Responsive Design Mode is not active for the tab"
+    );
 
-  // Reopen the RDM and test the exit button again.
-  await testExitButton(await openRDM(tab));
-  await BrowserTestUtils.closeWindow(newWindow);
-});
+    // Reopen the RDM and test the exit button again.
+    await testExitButton(await openRDM(tab));
+    await BrowserTestUtils.closeWindow(newWindow);
+  },
+  { usingBrowserUI: true, onlyPrefAndTask: true }
+);
 
 async function waitBootstrap(ui) {
   const { toolWindow, tab } = ui;
