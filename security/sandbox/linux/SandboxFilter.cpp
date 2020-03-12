@@ -603,6 +603,11 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
         // prctl
       case __NR_prctl: {
+        // WARNING: do not handle __NR_prctl directly in subclasses;
+        // override PrctlPolicy instead.  The special handling of
+        // PR_SET_NO_NEW_PRIVS is used to detect that a thread already
+        // has the policy applied; see also bug 1257361.
+
         if (SandboxInfo::Get().Test(SandboxInfo::kHasSeccompTSync)) {
           return PrctlPolicy();
         }
@@ -1536,12 +1541,14 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
     }
   }
 
+  ResultExpr PrctlPolicy() const override {
+    // FIXME: bug 1619661
+    return Allow();
+  }
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       case __NR_getrusage:
-        return Allow();
-
-      case __NR_prctl:
         return Allow();
 
       case __NR_ioctl: {
