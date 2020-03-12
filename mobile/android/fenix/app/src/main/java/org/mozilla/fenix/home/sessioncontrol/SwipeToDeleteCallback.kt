@@ -50,7 +50,7 @@ class SwipeToDeleteCallback(
         icon?.setTint(recyclerView.context.getColorFromAttr(R.attr.destructive))
 
         val backgroundDrawable = when {
-            viewHolder is TabInCollectionViewHolder && viewHolder.isLastTab -> {
+            viewHolder is TabInCollectionViewHolder && viewHolder.isLastItem -> {
                 R.drawable.tab_in_collection_last_swipe_background
             }
             viewHolder is TabInCollectionViewHolder -> {

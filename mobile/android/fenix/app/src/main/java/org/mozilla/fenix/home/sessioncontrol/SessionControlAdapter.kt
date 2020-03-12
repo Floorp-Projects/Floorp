@@ -22,12 +22,12 @@ import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageWithActionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.SaveTabGroupViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingAutomaticSignInViewHolder
@@ -172,7 +172,7 @@ class SessionControlAdapter(
             NoContentMessageWithActionViewHolder.LAYOUT_ID -> NoContentMessageWithActionViewHolder(view)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
-            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor)
+            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor, differentLastItem = true)
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
             OnboardingAutomaticSignInViewHolder.LAYOUT_ID -> OnboardingAutomaticSignInViewHolder(view)
