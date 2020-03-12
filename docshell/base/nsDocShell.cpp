@@ -304,20 +304,26 @@ static void DecreasePrivateDocShellCount() {
   }
 }
 
-static bool IsTopLevelDoc(nsILoadInfo* aLoadInfo) {
+static bool IsTopLevelDoc(BrowsingContext* aBrowsingContext,
+                          nsILoadInfo* aLoadInfo) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(aLoadInfo);
+
   if (aLoadInfo->GetExternalContentPolicyType() !=
       nsIContentPolicy::TYPE_DOCUMENT) {
     return false;
   }
 
-  RefPtr<dom::BrowsingContext> bc;
-  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
-  return bc && bc->IsTopContent();
+  return aBrowsingContext->IsTopContent();
 }
 
 // True if loading for top level document loading in active tab.
-static bool IsUrgentStart(nsILoadInfo* aLoadInfo, uint32_t aLoadType) {
-  if (!IsTopLevelDoc(aLoadInfo)) {
+static bool IsUrgentStart(BrowsingContext* aBrowsingContext,
+                          nsILoadInfo* aLoadInfo, uint32_t aLoadType) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(aLoadInfo);
+
+  if (!IsTopLevelDoc(aBrowsingContext, aLoadInfo)) {
     return false;
   }
 
@@ -326,21 +332,7 @@ static bool IsUrgentStart(nsILoadInfo* aLoadInfo, uint32_t aLoadType) {
     return true;
   }
 
-  RefPtr<BrowsingContext> bc;
-  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
-  return bc && bc->GetIsActive();
-}
-
-static bool HasNonEmptySandboxingFlags(nsILoadInfo* aLoadInfo) {
-  // NOTE: HasNonEmptySandboxingFlag used to come from
-  // nsDocShell::mBrowsingContext.  nsDocShell::OpenInitializedChannel sets the
-  // mBrowsingContext->ID() to BrowsingContextID/FrameBrowsingContextID
-  // depending on the value of loadInfo->GetExternalContextPolicyType(). Use
-  // GetTargetBrowsingContext() to retrieve nsDocShell::mBrowsingContext.
-
-  RefPtr<BrowsingContext> bc;
-  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
-  return bc && bc->GetSandboxFlags() != 0;
+  return aBrowsingContext->GetIsActive();
 }
 
 nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
@@ -9387,10 +9379,11 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
 }
 
 /* static */ bool nsDocShell::CreateAndConfigureRealChannelForLoadState(
-    nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
-    nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
-    const OriginAttributes& aOriginAttributes, nsLoadFlags aLoadFlags,
-    uint32_t aCacheKey, nsresult& aRv, nsIChannel** aChannel) {
+    BrowsingContext* aBrowsingContext, nsDocShellLoadState* aLoadState,
+    LoadInfo* aLoadInfo, nsIInterfaceRequestor* aCallbacks,
+    nsDocShell* aDocShell, const OriginAttributes& aOriginAttributes,
+    nsLoadFlags aLoadFlags, uint32_t aCacheKey, nsresult& aRv,
+    nsIChannel** aChannel) {
   MOZ_ASSERT(aLoadInfo);
 
   nsString srcdoc = VoidString();
@@ -9431,7 +9424,8 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
                   attrs == aOriginAttributes);
   } else {
     attrs = aOriginAttributes;
-    attrs.SetFirstPartyDomain(IsTopLevelDoc(aLoadInfo), aLoadState->URI());
+    attrs.SetFirstPartyDomain(IsTopLevelDoc(aBrowsingContext, aLoadInfo),
+                              aLoadState->URI());
   }
 
   aRv = aLoadInfo->SetOriginAttributes(attrs);
@@ -9524,7 +9518,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
 
     // Mark the http channel as UrgentStart for top level document loading in
     // active tab.
-    if (IsUrgentStart(aLoadInfo, aLoadState->LoadType())) {
+    if (IsUrgentStart(aBrowsingContext, aLoadInfo, aLoadState->LoadType())) {
       nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
       if (cos) {
         cos->AddClassFlags(nsIClassOfService::UrgentStart);
@@ -9631,14 +9625,13 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
   if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel)) {
     timedChannel->SetTimingEnabled(true);
 
-    RefPtr<dom::BrowsingContext> bc;
-    MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetFrameBrowsingContext(getter_AddRefs(bc)));
-    if (bc && bc->GetEmbedderElementType()) {
-      timedChannel->SetInitiatorType(*bc->GetEmbedderElementType());
+    auto& embedderElementType = aBrowsingContext->GetEmbedderElementType();
+    if (embedderElementType) {
+      timedChannel->SetInitiatorType(*embedderElementType);
     }
   }
 
-  if (httpChannelInternal && HasNonEmptySandboxingFlags(aLoadInfo)) {
+  if (httpChannelInternal && aBrowsingContext->GetSandboxFlags() != 0) {
     httpChannelInternal->SetHasNonEmptySandboxingFlag(true);
   }
 
@@ -9947,8 +9940,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         new DocumentChannelChild(aLoadState, loadInfo, loadFlags, cacheKey);
     channel->SetNotificationCallbacks(this);
   } else if (!CreateAndConfigureRealChannelForLoadState(
-                 aLoadState, loadInfo, this, this, GetOriginAttributes(),
-                 loadFlags, cacheKey, rv, getter_AddRefs(channel))) {
+                 mBrowsingContext, aLoadState, loadInfo, this, this,
+                 GetOriginAttributes(), loadFlags, cacheKey, rv,
+                 getter_AddRefs(channel))) {
     return rv;
   }
 
