@@ -7,8 +7,10 @@
 #include <memory>
 
 #include <sddl.h>
+#include <stdlib.h>
 
 #include "base/logging.h"
+#include "base/rand_util.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/win_utils.h"
 
@@ -130,6 +132,14 @@ Sid Sid::AllRestrictedApplicationPackages() {
   DWORD sub_authorities[] = {SECURITY_APP_PACKAGE_BASE_RID,
                              SECURITY_BUILTIN_PACKAGE_ANY_RESTRICTED_PACKAGE};
   return FromSubAuthorities(&package_authority, 2, sub_authorities);
+}
+
+Sid Sid::GenerateRandomSid() {
+  SID_IDENTIFIER_AUTHORITY package_authority = {SECURITY_NULL_SID_AUTHORITY};
+  DWORD sub_authorities[4] = {};
+  base::RandBytes(&sub_authorities, sizeof(sub_authorities));
+  return FromSubAuthorities(&package_authority, _countof(sub_authorities),
+                            sub_authorities);
 }
 
 PSID Sid::GetPSID() const {
