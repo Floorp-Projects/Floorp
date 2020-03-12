@@ -3,53 +3,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
 const {
   Component,
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const Services = require("Services");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   decodeUnicodeBase64,
   fetchNetworkUpdatePacket,
+  formDataURI,
+  getUrlBaseName,
   isJSON,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
   Filters,
 } = require("devtools/client/netmonitor/src/utils/filter-predicates");
 const {
-  FILTER_SEARCH_DELAY,
-} = require("devtools/client/netmonitor/src/constants");
+  setTargetSearchResult,
+} = require("devtools/client/netmonitor/src/actions/search");
 
 // Components
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
-);
-const ImagePreview = createFactory(
-  require("devtools/client/netmonitor/src/components/previews/ImagePreview")
-);
-const SourcePreview = createFactory(
-  require("devtools/client/netmonitor/src/components/previews/SourcePreview")
-);
-const HtmlPreview = createFactory(
-  require("devtools/client/netmonitor/src/components/previews/HtmlPreview")
-);
-const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
-);
-const SearchBox = createFactory(
-  require("devtools/client/shared/components/SearchBox")
+  require("devtools/client/netmonitor/src/components/PropertiesView")
 );
 
-loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
-});
-
-const { div } = dom;
+const { div, img } = dom;
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
 const JSON_FILTER_TEXT = L10N.getStr("jsonFilterText");
+const RESPONSE_IMG_NAME = L10N.getStr("netmonitor.response.name");
+const RESPONSE_IMG_DIMENSIONS = L10N.getStr("netmonitor.response.dimensions");
+const RESPONSE_IMG_MIMETYPE = L10N.getStr("netmonitor.response.mime");
 const RESPONSE_PAYLOAD = L10N.getStr("responsePayload");
 const RESPONSE_PREVIEW = L10N.getStr("responsePreview");
 const RESPONSE_EMPTY_TEXT = L10N.getStr("responseEmptyText");
@@ -67,6 +57,7 @@ class ResponsePanel extends Component {
       request: PropTypes.object.isRequired,
       openLink: PropTypes.func,
       targetSearchResult: PropTypes.object,
+      resetTargetSearchResult: PropTypes.func,
       connector: PropTypes.object.isRequired,
     };
   }
@@ -75,9 +66,13 @@ class ResponsePanel extends Component {
     super(props);
 
     this.state = {
-      filterText: "",
-      currentOpen: undefined,
+      imageDimensions: {
+        width: 0,
+        height: 0,
+      },
     };
+
+    this.updateImageDimensions = this.updateImageDimensions.bind(this);
   }
 
   componentDidMount() {
@@ -107,6 +102,15 @@ class ResponsePanel extends Component {
       (this.props.targetSearchResult !== nextProps.targetSearchResult &&
         nextProps.targetSearchResult !== null)
     );
+  }
+
+  updateImageDimensions({ target }) {
+    this.setState({
+      imageDimensions: {
+        width: target.naturalWidth,
+        height: target.naturalHeight,
+      },
+    });
   }
 
   /**
@@ -173,9 +177,8 @@ class ResponsePanel extends Component {
   }
 
   render() {
-    const { request, targetSearchResult } = this.props;
+    const { openLink, request, targetSearchResult } = this.props;
     const { responseContent, url } = request;
-    const { filterText } = this.state;
 
     if (
       !responseContent ||
@@ -188,7 +191,31 @@ class ResponsePanel extends Component {
     let { encoding, mimeType, text } = responseContent.content;
 
     if (mimeType.includes("image/")) {
-      return ImagePreview({ encoding, mimeType, text, url });
+      const { width, height } = this.state.imageDimensions;
+
+      return div(
+        { className: "panel-container response-image-box devtools-monospace" },
+        img({
+          className: "response-image",
+          src: formDataURI(mimeType, encoding, text),
+          onLoad: this.updateImageDimensions,
+        }),
+        div(
+          { className: "response-summary" },
+          div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_NAME),
+          div({ className: "tabpanel-summary-value" }, getUrlBaseName(url))
+        ),
+        div(
+          { className: "response-summary" },
+          div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_DIMENSIONS),
+          div({ className: "tabpanel-summary-value" }, `${width} × ${height}`)
+        ),
+        div(
+          { className: "response-summary" },
+          div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_MIMETYPE),
+          div({ className: "tabpanel-summary-value" }, mimeType)
+        )
+      );
     }
 
     // Decode response if it's coming from JSONView.
@@ -199,13 +226,8 @@ class ResponsePanel extends Component {
     // Display Properties View
     const { json, jsonpCallback, error } =
       this.handleJSONResponse(mimeType, text) || {};
-
-    const items = [];
+    const object = {};
     let sectionName;
-
-    const onToggle = (open, item) => {
-      this.setState({ currentOpen: open ? item : null });
-    };
 
     if (json) {
       if (jsonpCallback) {
@@ -213,106 +235,32 @@ class ResponsePanel extends Component {
       } else {
         sectionName = JSON_SCOPE_NAME;
       }
-
-      items.push({
-        component: PropertiesView,
-        componentProps: {
-          object: json,
-          useQuotes: true,
-          filterText,
-          targetSearchResult,
-          mode: MODE.LONG,
-        },
-        header: sectionName,
-        id: "jsonpScopeName",
-        opened: !!targetSearchResult,
-        shouldOpen: item => {
-          const { currentOpen } = this.state;
-          if (typeof currentOpen == "undefined" && item.id === items[0].id) {
-            // if this the first and panel just displayed, open this item
-            // by default;
-            return true;
-          } else if (!currentOpen) {
-            if (!targetSearchResult) {
-              return false;
-            }
-            return true;
-          }
-          // Open the item is toggled open or there is a serch result to show
-          if (item.id == currentOpen.id || targetSearchResult) {
-            return true;
-          }
-          return false;
-        },
-        onToggle,
-      });
+      object[sectionName] = json;
     }
 
-    // Display HTML
+    // Display HTML under Properties View
     if (Filters.html(this.props.request)) {
-      items.push({
-        component: HtmlPreview,
-        componentProps: { responseContent },
-        header: RESPONSE_PREVIEW,
-        id: "responsePreview",
-        opened: false,
-        shouldOpen: item => {
-          const { currentOpen } = this.state;
-          if (typeof currentOpen == "undefined" && item.id === items[0].id) {
-            // if this the first and panel just displayed, open this item
-            // by default;
-            if (targetSearchResult) {
-              // collapse when we do a search
-              return false;
-            }
-            return true;
-          } else if (!currentOpen) {
-            return false;
-          }
-          // close this if there is a search result since
-          // it does not apply search
-          if (targetSearchResult) {
-            return false;
-          }
-          if (item.id == currentOpen.id) {
-            return true;
-          }
-          return false;
-        },
-        onToggle,
-      });
+      object[RESPONSE_PREVIEW] = {
+        HTML_PREVIEW: { responseContent },
+      };
     }
 
-    items.push({
-      component: SourcePreview,
-      componentProps: {
+    let scrollToLine;
+    let expandedNodes;
+
+    if (targetSearchResult && targetSearchResult.line) {
+      scrollToLine = targetSearchResult.line;
+      expandedNodes = new Set(["/" + RESPONSE_PAYLOAD]);
+    }
+
+    // Others like text/html, text/plain, application/javascript
+    object[RESPONSE_PAYLOAD] = {
+      EDITOR_CONFIG: {
         text,
         mode: json ? "application/json" : mimeType.replace(/;.+/, ""),
-        targetSearchResult,
-        limit: Services.prefs.getIntPref(
-          "devtools.netmonitor.response.ui.limit"
-        ),
+        scrollToLine,
       },
-      header: RESPONSE_PAYLOAD,
-      id: "paramsPostPayload",
-      opened: !!targetSearchResult,
-      shouldOpen: item => {
-        const { currentOpen } = this.state;
-        if (typeof currentOpen == "undefined" && item.id === items[0].id) {
-          return true;
-        } else if (!currentOpen) {
-          if (targetSearchResult) {
-            return true;
-          }
-          return false;
-        }
-        if (item.id == currentOpen.id || targetSearchResult) {
-          return true;
-        }
-        return false;
-      },
-      onToggle,
-    });
+    };
 
     const classList = ["panel-container"];
     if (Filters.html(this.props.request)) {
@@ -322,19 +270,22 @@ class ResponsePanel extends Component {
     return div(
       { className: classList.join(" ") },
       error && div({ className: "response-error-header", title: error }, error),
-      json &&
-        div(
-          { className: "devtools-toolbar devtools-input-toolbar" },
-          SearchBox({
-            delay: FILTER_SEARCH_DELAY,
-            type: "filter",
-            onChange: filter => this.setState({ filterText: filter }),
-            placeholder: JSON_FILTER_TEXT,
-          })
-        ),
-      Accordion({ items })
+      PropertiesView({
+        object,
+        expandedNodes,
+        useQuotes: true,
+        filterPlaceHolder: JSON_FILTER_TEXT,
+        sectionNames: Object.keys(object),
+        openLink,
+        targetSearchResult,
+      })
     );
   }
 }
 
-module.exports = ResponsePanel;
+module.exports = connect(
+  null,
+  dispatch => ({
+    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+  })
+)(ResponsePanel);

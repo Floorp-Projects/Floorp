@@ -61,7 +61,6 @@ window.onload = async function() {
       },
     ];
 
-    // Accordion basic render
     const accordion = React.createElement(Accordion, { items: testItems });
 
     matchSnapshot("Accordion basic render.", accordion);
@@ -86,7 +85,7 @@ window.onload = async function() {
           "accordion-item-1": true,
           "accordion-item-2": false,
           "accordion-item-3": true,
-        },
+        }
       },
       "State updated correctly"
     );
@@ -105,7 +104,7 @@ window.onload = async function() {
           "accordion-item-1": false,
           "accordion-item-2": false,
           "accordion-item-3": true,
-        },
+        }
       },
       "State updated correctly"
     );
@@ -124,7 +123,7 @@ window.onload = async function() {
           "accordion-item-1": false,
           "accordion-item-2": true,
           "accordion-item-3": true,
-        },
+        }
       },
       "State updated correctly"
     );

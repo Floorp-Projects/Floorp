@@ -299,16 +299,16 @@ add_task(async function() {
 
   async function testResponseTab() {
     const tabpanel = await selectTab(PANELS.RESPONSE, 3);
-    await waitForDOM(document, ".accordion .source-editor-mount");
+    await waitForDOM(document, ".treeTable tbody");
 
-    const responseAccordion = tabpanel.querySelector(".accordion");
+    const responseTable = tabpanel.querySelector(".treeTable tbody");
     is(
-      responseAccordion.querySelectorAll(".accordion-item").length,
+      responseTable.querySelectorAll(".tree-section").length,
       1,
       "There should be 1 response scope displayed in this tabpanel."
     );
     is(
-      responseAccordion.querySelectorAll(".source-editor-mount").length,
+      responseTable.querySelectorAll(".editor-row-container").length,
       1,
       "The response payload tab should be open initially."
     );
