@@ -68,6 +68,16 @@ TouchSimulator.prototype = {
       // Simulator is already started
       return;
     }
+
+    // Only simulate touch gestures if enabled.
+    if (
+      Services.prefs.getBoolPref(
+        "devtools.responsive.touchGestureSimulation.enabled"
+      )
+    ) {
+      this.events.push("dblclick");
+    }
+
     this.events.forEach(evt => {
       // Only listen trusted events to prevent messing with
       // event dispatched manually within content documents
@@ -293,6 +303,19 @@ TouchSimulator.prototype = {
           this
         );
         return;
+      case "dblclick":
+        evt.preventDefault();
+        evt.stopImmediatePropagation();
+        const win = this.getContent(evt.target);
+
+        // Bug 1621108: need to have an added delay between the "dblclick" and
+        // calls to synthesizeNativeTap, otherwise zoom animations are interrupted.
+        setTimeout(() => {
+          this.synthesizeNativeTap(win, evt.clientX, evt.clientY);
+          this.synthesizeNativeTap(win, evt.clientX, evt.clientY);
+        }, this.getDelayBeforeMouseEvent(evt));
+
+        return;
     }
 
     const target = eventTarget || this.target;
@@ -341,6 +364,63 @@ TouchSimulator.prototype = {
     }, clickHoldDelay);
 
     return timeout;
+  },
+
+  /**
+   * Synthesizes a native tap gesture on a given target element. The `x` and `y` values
+   * passed to this function should be relative to the layout viewport (what is returned
+   * by `MouseEvent.clientX/clientY`) and are reported in CSS pixels.
+   *
+   * @param {Window} win
+   *        The target window.
+   * @param {Number} x
+   *        The `x` CSS coordinate relative to the layout viewport.
+   * @param {Number} y
+   *        The `y` CSS coordinate relative to the layout viewport.
+   */
+  synthesizeNativeTap(win, x, y) {
+    const pt = this.coordinatesRelativeToScreen(win, x, y);
+    const utils = win.windowUtils;
+
+    // Bug 1619402: RDM has issues with full-zoom + resolution handling. Knowing this,
+    // it's possible the pt.x and pt.y values passed here will result in incorrect
+    // behavior when attempting to perform a native touch gesture. However, we know
+    // that setting the full-zoom to 100% will produce expected behavior. So let's
+    // leave this note here and revisit when this issue gets resolved.
+    utils.sendNativeTouchTap(pt.x, pt.y, false, null);
+    return true;
+  },
+
+  /**
+   * Calculates the given CSS coordinates into global screen coordinates, which are
+   * reported in device pixels.
+   *
+   * @param {Window} win
+   *        The target window.
+   * @param {Number} x
+   *        The `x` CSS coordinate relative to the layout viewport.
+   * @param {Number} y
+   *        The `y` CSS coordinate relative to the layout viewport.
+   *
+   * @returns {Object} the `x` and `y` global screen coordinattes.
+   */
+  coordinatesRelativeToScreen(win, x, y) {
+    const utils = win.windowUtils;
+    // Bug 1617741: Ignore RDM's override DPR. The physical size of content displayed
+    // in RDM is not scaled to the override DPR, so a workaround is to use the device
+    // scale of the physical device when calculating the cordinates.
+    const deviceScale = utils.screenPixelsPerCSSPixelNoOverride;
+
+    const resolution = utils.getResolution();
+    const offsetX = {};
+    const offsetY = {};
+
+    utils.getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+
+    return {
+      x: (win.mozInnerScreenX + (x - offsetX.value) * resolution) * deviceScale,
+      y: (win.mozInnerScreenY + (y - offsetY.value) * resolution) * deviceScale,
+    };
   },
 
   sendTouchEvent(evt, target, name) {
