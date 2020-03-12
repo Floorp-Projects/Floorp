@@ -165,7 +165,7 @@ void GeckoProfilerRuntime::enable(bool enabled) {
 
 /* Lookup the string for the function/script, creating one if necessary */
 const char* GeckoProfilerRuntime::profileString(JSContext* cx,
-                                                JSScript* script) {
+                                                BaseScript* script) {
   ProfileStringMap::AddPtr s = strings().lookupForAdd(script);
 
   if (!s) {
@@ -183,7 +183,7 @@ const char* GeckoProfilerRuntime::profileString(JSContext* cx,
   return s->value().get();
 }
 
-void GeckoProfilerRuntime::onScriptFinalized(JSScript* script) {
+void GeckoProfilerRuntime::onScriptFinalized(BaseScript* script) {
   /*
    * This function is called whenever a script is destroyed, regardless of
    * whether profiling has been turned on, so don't invoke a function on an
@@ -275,7 +275,7 @@ void GeckoProfilerThread::exit(JSContext* cx, JSScript* script) {
  */
 /* static */
 UniqueChars GeckoProfilerRuntime::allocProfileString(JSContext* cx,
-                                                     JSScript* script) {
+                                                     BaseScript* script) {
   // Note: this profiler string is regexp-matched by
   // devtools/client/profiler/cleopatra/js/parserWorker.js.
 
@@ -377,7 +377,7 @@ void GeckoProfilerThread::trace(JSTracer* trc) {
 
 void GeckoProfilerRuntime::fixupStringsMapAfterMovingGC() {
   for (ProfileStringMap::Enum e(strings()); !e.empty(); e.popFront()) {
-    JSScript* script = e.front().key();
+    BaseScript* script = e.front().key();
     if (IsForwarded(script)) {
       script = Forwarded(script);
       e.rekeyFront(script);
@@ -388,7 +388,7 @@ void GeckoProfilerRuntime::fixupStringsMapAfterMovingGC() {
 #ifdef JSGC_HASH_TABLE_CHECKS
 void GeckoProfilerRuntime::checkStringsMapAfterMovingGC() {
   for (auto r = strings().all(); !r.empty(); r.popFront()) {
-    JSScript* script = r.front().key();
+    BaseScript* script = r.front().key();
     CheckGCThingAfterMovingGC(script);
     auto ptr = strings().lookup(script);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());

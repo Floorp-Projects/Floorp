@@ -2239,7 +2239,7 @@ setterLevel:                                                                  \
   // See FunctionBox::argumentsHasLocalBinding_ comment.
   // N.B.: no setter -- custom logic in JSScript.
   IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
-  // IsForEval: custom logic below.
+  IMMUTABLE_FLAG_GETTER(isForEval, IsForEval)
   IMMUTABLE_FLAG_GETTER(isModule, IsModule)
   IMMUTABLE_FLAG_GETTER(needsFunctionEnvironmentObjects,
                         NeedsFunctionEnvironmentObjects)
@@ -2753,13 +2753,6 @@ class JSScript : public js::BaseScript {
 #endif
 
  public:
-  /* Return whether this script was compiled for 'eval' */
-  bool isForEval() const {
-    MOZ_ASSERT(hasFlag(ImmutableFlags::IsForEval) ==
-               bodyScope()->is<js::EvalScope>());
-    return hasFlag(ImmutableFlags::IsForEval);
-  }
-
   /* Return whether this is a 'direct eval' script in a function scope. */
   bool isDirectEvalInFunction() const {
     if (!isForEval()) {

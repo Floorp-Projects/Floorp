@@ -101,11 +101,11 @@
 
 namespace js {
 
-// The `ProfileStringMap` weakly holds its `JSScript*` keys and owns its string
-// values. Entries are removed when the `JSScript` is finalized; see
+// The `ProfileStringMap` weakly holds its `BaseScript*` keys and owns its
+// string values. Entries are removed when the `BaseScript` is finalized; see
 // `GeckoProfiler::onScriptFinalized`.
-using ProfileStringMap = HashMap<JSScript*, UniqueChars,
-                                 DefaultHasher<JSScript*>, SystemAllocPolicy>;
+using ProfileStringMap = HashMap<BaseScript*, UniqueChars,
+                                 DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 
 class GeckoProfilerRuntime {
   JSRuntime* rt;
@@ -125,10 +125,10 @@ class GeckoProfilerRuntime {
 
   void setEventMarker(void (*fn)(const char*));
 
-  static UniqueChars allocProfileString(JSContext* cx, JSScript* script);
-  const char* profileString(JSContext* cx, JSScript* script);
+  static UniqueChars allocProfileString(JSContext* cx, BaseScript* script);
+  const char* profileString(JSContext* cx, BaseScript* script);
 
-  void onScriptFinalized(JSScript* script);
+  void onScriptFinalized(BaseScript* script);
 
   void markEvent(const char* event);
 
