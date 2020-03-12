@@ -37,8 +37,6 @@ function doPageErrors() {
       timeStamp: /^\d+$/,
       error: false,
       warning: true,
-      exception: false,
-      strict: false,
     },
    "document.doTheImpossible();": {
       errorMessage: /doTheImpossible/,
@@ -46,10 +44,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
-      strict: false,
     },
     "(42).toString(0);": {
       errorMessage: /radix/,
@@ -57,10 +53,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
-      strict: false,
     },
      "'use strict'; (Object.freeze({name: 'Elsa', score: 157})).score = 0;": {
       errorMessage: /read.only/,
@@ -68,9 +62,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
      "([]).length = -1": {
       errorMessage: /array length/,
@@ -78,9 +71,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
      "'abc'.repeat(-1);": {
       errorMessage: /repeat count.*non-negative/,
@@ -88,9 +80,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
     "'a'.repeat(2e28);": {
       errorMessage: /repeat count.*less than infinity/,
@@ -98,9 +89,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
     "77.1234.toExponential(-1);": {
       errorMessage: /out of range/,
@@ -108,9 +98,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
     "function a() { return; 1 + 1; }": {
       errorMessage: /unreachable code/,
@@ -120,7 +109,6 @@ function doPageErrors() {
       timeStamp: /^\d+$/,
       error: false,
       warning: true,
-      exception: false,
     },
     "let a, a;": {
       errorMessage: /redeclaration of/,
@@ -128,9 +116,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
       notes: [
         {
           messageBody: /Previously declared at line/,
@@ -149,9 +136,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
     "DOMTokenList.prototype.contains.call([])": {
       errorMessage: /does not implement interface/,
@@ -159,9 +145,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
     },
     [`let error2 = new TypeError("abc");
       error2.name = "MyPromiseError";
@@ -172,9 +157,8 @@ function doPageErrors() {
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
       // Promise.reject doesn't produce an uncaught exception
       // even though |exception: true|.
       [NO_UNCAUGHT_EXCEPTION]: true
@@ -183,7 +167,7 @@ function doPageErrors() {
 
   let container = document.createElement("script");
   for (const stmt of Object.keys(expectedPageErrors)) {
-      if (expectedPageErrors[stmt].exception &&
+      if (expectedPageErrors[stmt].error &&
           !expectedPageErrors[stmt][NO_UNCAUGHT_EXCEPTION]) {
           SimpleTest.expectUncaughtException();
       }

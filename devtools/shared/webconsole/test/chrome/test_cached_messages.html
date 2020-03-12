@@ -38,8 +38,6 @@ function doPageErrors() {
       timeStamp: /^\d+$/,
       error: false,
       warning: true,
-      exception: false,
-      strict: false,
     },
     {
       _type: "PageError",
@@ -47,10 +45,8 @@ function doPageErrors() {
       sourceName: /.+/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
-      error: false,
+      error: true,
       warning: false,
-      exception: true,
-      strict: false,
     },
   ];
 
