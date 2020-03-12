@@ -10,6 +10,7 @@ const {
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 loader.lazyRequireGetter(
   this,
@@ -40,6 +41,9 @@ class IssueItem extends PureComponent {
   static get propTypes() {
     return {
       ...Types.issue,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
@@ -136,7 +140,23 @@ class IssueItem extends PureComponent {
 
   _renderNodeList() {
     const { nodes } = this.props;
-    return nodes ? NodePane({ nodes }) : null;
+
+    if (!nodes) {
+      return null;
+    }
+
+    const {
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
+
+    return NodePane({
+      nodes,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    });
   }
 
   _renderUnsupportedBrowserList() {

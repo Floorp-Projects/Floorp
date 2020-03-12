@@ -21,13 +21,31 @@ class NodeList extends PureComponent {
   static get propTypes() {
     return {
       nodes: PropTypes.arrayOf(Types.node).isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { nodes } = this.props;
+    const {
+      nodes,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
 
-    return dom.ul({}, nodes.map(node => NodeItem({ node })));
+    return dom.ul(
+      {},
+      nodes.map(node =>
+        NodeItem({
+          node,
+          hideBoxModelHighlighter,
+          setSelectedNode,
+          showBoxModelHighlighterForNode,
+        })
+      )
+    );
   }
 }
 
