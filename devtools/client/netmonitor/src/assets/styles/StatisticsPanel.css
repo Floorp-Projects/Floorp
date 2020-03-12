@@ -9,6 +9,7 @@
 .statistics-panel {
   display: flex;
   height: 100vh;
+  overflow: auto;
 }
 
 .statistics-panel .devtools-toolbarbutton.back-button {
@@ -23,8 +24,11 @@
 
 .statistics-panel .back-button {
   height: -moz-fit-content;
-  padding: 10px 15px;
-  margin: 15px;
+  position: absolute;
+  padding: 7px 5px;
+  margin: 0px;
+  top: 8px;
+  inset-inline-start: 8px;
 }
 
 .theme-light .statistics-panel .back-button {
