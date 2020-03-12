@@ -130,6 +130,8 @@ static const uintptr_t IS_PROXY = 1;
 // internal method to retrieve a child at a given index.
 - (id)childAt:(uint32_t)i;
 
+- (uint64_t)state;
+
 #pragma mark -
 
 // invalidates and removes all our children from our cached array.
