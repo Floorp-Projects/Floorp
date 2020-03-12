@@ -74,8 +74,7 @@ class nsFirstLetterFrame final : public nsContainerFrame {
   // place it in the correct place. aContinuation is an outparam for the
   // continuation that is created. aIsFluid determines if the continuation is
   // fluid or not.
-  void CreateContinuationForFloatingParent(nsPresContext* aPresContext,
-                                           nsIFrame* aChild,
+  void CreateContinuationForFloatingParent(nsIFrame* aChild,
                                            nsIFrame** aContinuation,
                                            bool aIsFluid);
 
