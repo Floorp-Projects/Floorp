@@ -565,6 +565,41 @@ const POLICIES_TESTS = [
       "signon.rememberSignons": false,
     },
   },
+
+  // POLICY: UserMessaging
+  {
+    policies: {
+      UserMessaging: {
+        WhatsNew: false,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "browser.messaging-system.whatsNewPanel.enabled": false,
+    },
+  },
+
+  {
+    policies: {
+      UserMessaging: {
+        ExtensionRecommendations: false,
+      },
+    },
+    unlockedPrefs: {
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons": false,
+    },
+  },
+
+  {
+    policies: {
+      UserMessaging: {
+        FeatureRecommendations: false,
+      },
+    },
+    unlockedPrefs: {
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
