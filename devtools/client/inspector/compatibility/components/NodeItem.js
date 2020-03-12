@@ -36,7 +36,7 @@ class NodeItem extends PureComponent {
     } = this.props;
 
     return dom.li(
-      {},
+      { className: "compatibility-node-item" },
       Rep({
         defaultRep: ElementNode,
         mode: MODE.TINY,
