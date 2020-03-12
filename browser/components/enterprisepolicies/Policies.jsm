@@ -1575,14 +1575,14 @@ var Policies = {
       }
       if ("ExtensionRecommendations" in param) {
         setDefaultPref(
-          "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+          "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
           param.ExtensionRecommendations,
           locked
         );
       }
       if ("FeatureRecommendations" in param) {
         setDefaultPref(
-          "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
+          "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
           param.FeatureRecommendations,
           locked
         );
