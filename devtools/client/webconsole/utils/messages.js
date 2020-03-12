@@ -303,7 +303,7 @@ function transformLogMessagePacket(packet) {
 function transformPageErrorPacket(packet) {
   const { pageError } = packet;
   let level = MESSAGE_LEVEL.ERROR;
-  if (pageError.warning || pageError.strict) {
+  if (pageError.warning) {
     level = MESSAGE_LEVEL.WARN;
   } else if (pageError.info) {
     level = MESSAGE_LEVEL.INFO;
