@@ -25,38 +25,20 @@ class Accordion extends Component {
         PropTypes.shape({
           buttons: PropTypes.arrayOf(PropTypes.object),
           className: PropTypes.string,
-          component: PropTypes.object,
+          component: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
           componentProps: PropTypes.object,
           contentClassName: PropTypes.string,
           header: PropTypes.string.isRequired,
           id: PropTypes.string.isRequired,
           onToggle: PropTypes.func,
+          // Determines the initial open state of the accordion item
           opened: PropTypes.bool.isRequired,
+          // Enables dynamically changing the open state of the accordion
+          // on update.
+          shouldOpen: PropTypes.func,
         })
       ).isRequired,
     };
-  }
-
-  /**
-   * Add initial data to the state.opened map, and inject new data
-   * when receiving updated props.
-   */
-  static getDerivedStateFromProps(props, state) {
-    const newItems = props.items.filter(
-      ({ id }) => typeof state.opened[id] !== "boolean"
-    );
-
-    if (newItems.length) {
-      const everOpened = { ...state.everOpened };
-      const opened = { ...state.opened };
-      for (const item of newItems) {
-        everOpened[item.id] = item.opened;
-        opened[item.id] = item.opened;
-      }
-      return { everOpened, opened };
-    }
-
-    return null;
   }
 
   constructor(props) {
@@ -68,56 +50,115 @@ class Accordion extends Component {
 
     this.onHeaderClick = this.onHeaderClick.bind(this);
     this.onHeaderKeyDown = this.onHeaderKeyDown.bind(this);
+    this.setInitialState = this.setInitialState.bind(this);
+    this.updateCurrentState = this.updateCurrentState.bind(this);
+  }
+
+  componentDidMount() {
+    this.setInitialState();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.items !== this.props.items) {
+      this.updateCurrentState();
+    }
+  }
+
+  setInitialState() {
+    /**
+     * Add initial data to the `state.opened` map.
+     * This happens only on initial mount of the accordion.
+     */
+    const newItems = this.props.items.filter(
+      ({ id }) => typeof this.state.opened[id] !== "boolean"
+    );
+
+    if (newItems.length) {
+      const everOpened = { ...this.state.everOpened };
+      const opened = { ...this.state.opened };
+      for (const item of newItems) {
+        everOpened[item.id] = item.opened;
+        opened[item.id] = item.opened;
+      }
+
+      this.setState({ everOpened, opened });
+    }
+  }
+
+  updateCurrentState() {
+    /**
+     * Updates the `state.opened` map based on the
+     * new items that have been added and those that
+     * `item.shouldOpen()` has changed. This happens
+     * on each update.
+     */
+    const updatedItems = this.props.items.filter(item => {
+      const notExist = typeof this.state.opened[item.id] !== "boolean";
+      if (typeof item.shouldOpen == "function") {
+        return notExist || this.state.opened[item.id] !== item.shouldOpen(item);
+      }
+      return notExist;
+    });
+
+    if (updatedItems.length) {
+      const everOpened = { ...this.state.everOpened };
+      const opened = { ...this.state.opened };
+      for (const item of updatedItems) {
+        let itemOpen = item.opened;
+        if (typeof item.shouldOpen == "function") {
+          itemOpen = item.shouldOpen(item);
+        }
+        everOpened[item.id] = itemOpen;
+        opened[item.id] = itemOpen;
+      }
+      this.setState({ everOpened, opened });
+    }
   }
 
   /**
    * @param {Event} event Click event.
+   * @param {Object} item The item to be collapsed/expanded.
    */
-  onHeaderClick(event) {
+  onHeaderClick(event, item) {
     event.preventDefault();
     // In the Browser Toolbox's Inspector/Layout view, handleHeaderClick is
     // called twice unless we call stopPropagation, making the accordion item
     // open-and-close or close-and-open
     event.stopPropagation();
-    this.toggleItem(event.currentTarget.parentElement.id);
+    this.toggleItem(item);
   }
 
   /**
    * @param {Event} event Keyboard event.
    * @param {Object} item The item to be collapsed/expanded.
    */
-  onHeaderKeyDown(event) {
+  onHeaderKeyDown(event, item) {
     if (event.key === " " || event.key === "Enter") {
       event.preventDefault();
-      this.toggleItem(event.currentTarget.parentElement.id);
+      this.toggleItem(item);
     }
   }
 
   /**
    * Expand or collapse an accordion list item.
-   * @param  {String} id Id of the item to be collapsed or expanded.
+   * @param  {Object} item The item to be collapsed or expanded.
    */
-  toggleItem(id) {
-    const item = this.props.items.find(x => x.id === id);
-    const opened = !this.state.opened[id];
-    // We could have no item if props just changed
-    if (!item) {
-      return;
-    }
+  toggleItem(item) {
+    const opened = !this.state.opened[item.id];
 
     this.setState({
       everOpened: {
         ...this.state.everOpened,
-        [id]: true,
+        [item.id]: true,
       },
       opened: {
         ...this.state.opened,
-        [id]: opened,
+        [item.id]: opened,
       },
     });
 
     if (typeof item.onToggle === "function") {
-      item.onToggle(opened);
+      item.onToggle(opened, item);
     }
   }
 
@@ -131,14 +172,15 @@ class Accordion extends Component {
       header,
       id,
     } = item;
+
     const headerId = `${id}-header`;
     const opened = this.state.opened[id];
     let itemContent;
 
-    // Only render content if the accordion item is open or has been opened once
-    // before. This saves us rendering complex components when users are keeping
+    // Only render content if the accordion item is open or has been opened once before.
+    // This saves us rendering complex components when users are keeping
     // them closed (e.g. in Inspector/Layout) or may not open them at all.
-    if (this.state.everOpened[id]) {
+    if (this.state.everOpened && this.state.everOpened[id]) {
       if (typeof component === "function") {
         itemContent = createElement(component, componentProps);
       } else if (typeof component === "object") {
@@ -150,7 +192,9 @@ class Accordion extends Component {
       {
         key: id,
         id,
-        className: `accordion-item ${className}`.trim(),
+        className: `accordion-item ${
+          opened ? "accordion-open" : ""
+        } ${className} `.trim(),
         "aria-labelledby": headerId,
       },
       h2(
@@ -162,8 +206,8 @@ class Accordion extends Component {
           // If the header contains buttons, make sure the heading name only
           // contains the "header" text and not the button text
           "aria-label": header,
-          onKeyDown: this.onHeaderKeyDown,
-          onClick: this.onHeaderClick,
+          onKeyDown: event => this.onHeaderKeyDown(event, item),
+          onClick: event => this.onHeaderClick(event, item),
         },
         span({
           className: `theme-twisty${opened ? " open" : ""}`,

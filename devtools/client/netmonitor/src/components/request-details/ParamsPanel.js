@@ -198,13 +198,12 @@ class ParamsPanel extends Component {
     }
 
     // Request payload section
-
     const limit = Services.prefs.getIntPref(
       "devtools.netmonitor.requestBodyLimit"
     );
 
-    // Check if the request post data has been truncated, in which case no parse should
-    // be attempted.
+    // Check if the request post data has been truncated from the backend,
+    // in which case no parse should be attempted.
     if (postData && limit <= postData.length) {
       error = REQUEST_TRUNCATED;
     }
@@ -236,6 +235,10 @@ class ParamsPanel extends Component {
           text: postData,
           mode: mimeType.replace(/;.+/, ""),
           targetSearchResult,
+          // Using the response limit to improve perf when rendering
+          limit: Services.prefs.getIntPref(
+            "devtools.netmonitor.response.ui.limit"
+          ),
         },
         header: PARAMS_POST_PAYLOAD,
         id: "paramsPostPayload",
