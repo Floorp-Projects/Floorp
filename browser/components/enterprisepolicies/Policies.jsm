@@ -1587,6 +1587,9 @@ var Policies = {
           locked
         );
       }
+      if ("UrlbarInterventions" in param && !param.UrlbarInterventions) {
+        manager.disallowFeature("urlbarinterventions");
+      }
     },
   },
 
