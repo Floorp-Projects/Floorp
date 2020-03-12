@@ -24,6 +24,7 @@ const IssuePane = createFactory(
 class CompatibilityApp extends PureComponent {
   static get propTypes() {
     return {
+      isTopLevelTargetProcessing: PropTypes.bool.isRequired,
       selectedNodeIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
         .isRequired,
       topLevelTargetIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
@@ -36,12 +37,33 @@ class CompatibilityApp extends PureComponent {
 
   render() {
     const {
+      isTopLevelTargetProcessing,
       selectedNodeIssues,
       topLevelTargetIssues,
       hideBoxModelHighlighter,
       setSelectedNode,
       showBoxModelHighlighterForNode,
     } = this.props;
+
+    const selectedNodeIssuePane = IssuePane({
+      issues: selectedNodeIssues,
+    });
+
+    const topLevelTargetIssuePane =
+      topLevelTargetIssues.length > 0 || !isTopLevelTargetProcessing
+        ? IssuePane({
+            issues: topLevelTargetIssues,
+            hideBoxModelHighlighter,
+            setSelectedNode,
+            showBoxModelHighlighterForNode,
+          })
+        : null;
+
+    const throbber = isTopLevelTargetProcessing
+      ? dom.div({
+          className: "compatibility-app__throbber devtools-throbber",
+        })
+      : null;
 
     return dom.section(
       {
@@ -52,22 +74,13 @@ class CompatibilityApp extends PureComponent {
           {
             id: "compatibility-app--selected-element-pane",
             header: "Selected Element",
-            component: IssuePane,
-            componentProps: {
-              issues: selectedNodeIssues,
-            },
+            component: selectedNodeIssuePane,
             opened: true,
           },
           {
             id: "compatibility-app--all-elements-pane",
             header: "All Issues",
-            component: IssuePane,
-            componentProps: {
-              issues: topLevelTargetIssues,
-              hideBoxModelHighlighter,
-              setSelectedNode,
-              showBoxModelHighlighterForNode,
-            },
+            component: [topLevelTargetIssuePane, throbber],
             opened: true,
           },
         ],
@@ -78,6 +91,7 @@ class CompatibilityApp extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    isTopLevelTargetProcessing: state.compatibility.isTopLevelTargetProcessing,
     selectedNodeIssues: state.compatibility.selectedNodeIssues,
     topLevelTargetIssues: state.compatibility.topLevelTargetIssues,
   };
