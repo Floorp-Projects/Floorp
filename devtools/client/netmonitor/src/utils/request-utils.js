@@ -333,11 +333,15 @@ function parseQueryString(query) {
       return {
         name: param[0] ? getUnicodeUrlPath(param[0].replace(/\+/g, " ")) : "",
         value: param[1]
-          ? getUnicodeUrlPath(param.slice(1).join("=").replace(/\+/g, " "))
+          ? getUnicodeUrlPath(
+              param
+                .slice(1)
+                .join("=")
+                .replace(/\+/g, " ")
+            )
           : "",
       };
     });
-
 }
 
 /**
