@@ -74,7 +74,7 @@ class CompatibilityView {
     this._initTargetBrowsers();
   }
 
-  async _initTargetBrowsers() {
+  _initTargetBrowsers() {
     this.inspector.store.dispatch(
       updateTargetBrowsers(_getDefaultTargetBrowsers())
     );

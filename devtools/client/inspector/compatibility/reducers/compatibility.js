@@ -4,55 +4,43 @@
 
 "use strict";
 
-loader.lazyGetter(this, "mdnCompatibility", () => {
-  const MDNCompatibility = require("devtools/client/inspector/compatibility/lib/MDNCompatibility");
-  const cssPropertiesCompatData = require("devtools/client/inspector/compatibility/lib/dataset/css-properties.json");
-  return new MDNCompatibility(cssPropertiesCompatData);
-});
-
 const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
-  COMPATIBILITY_UPDATE_TARGET_BROWSERS,
+  COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE,
 } = require("devtools/client/inspector/compatibility/actions/index");
 
 const INITIAL_STATE = {
+  selectedNode: null,
   selectedNodeIssues: [],
-  declarationBlocks: [],
   targetBrowsers: [],
 };
 
 const reducers = {
-  [COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS](state, data) {
-    return updateSelectedNodeIssues(state, data);
+  [COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS](state, { node }) {
+    return Object.assign({}, state, { selectedNode: node });
   },
   [COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE](state, { error }) {
-    console.error(
-      `[COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE] ${error.message}`
-    );
-    console.error(error.stack);
+    _showError(COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE, error);
     return state;
   },
-  [COMPATIBILITY_UPDATE_TARGET_BROWSERS](state, data) {
-    return updateSelectedNodeIssues(state, data);
+  [COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES](state, { issues }) {
+    return Object.assign({}, state, { selectedNodeIssues: issues });
+  },
+  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS](state, { targetBrowsers }) {
+    return Object.assign({}, state, { targetBrowsers });
+  },
+  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE](state, { error }) {
+    _showError(COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE, error);
+    return state;
   },
 };
 
-function updateSelectedNodeIssues(state, data) {
-  const declarationBlocks = data.declarationBlocks || state.declarationBlocks;
-  const targetBrowsers = data.targetBrowsers || state.targetBrowsers;
-
-  const selectedNodeIssues = [];
-  for (const declarationBlock of declarationBlocks) {
-    selectedNodeIssues.push(
-      ...mdnCompatibility.getCSSDeclarationBlockIssues(
-        declarationBlock,
-        targetBrowsers
-      )
-    );
-  }
-
-  return { selectedNodeIssues, declarationBlocks, targetBrowsers };
+function _showError(action, error) {
+  console.error(`[${action}] ${error.message}`);
+  console.error(error.stack);
 }
 
 module.exports = function(state = INITIAL_STATE, action) {
