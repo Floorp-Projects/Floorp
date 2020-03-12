@@ -3035,6 +3035,13 @@
   value: false
   mirror: always
 
+# When this pref is set, we can fire load events on iframe elements async if
+# the iframe is in a different docgroup from the document it contains.
+- name: dom.cross_docgroup_iframe_async_load_event
+  type: bool
+  value: false
+  mirror: always
+
 # WebIDL test prefs.
 - name: dom.webidl.test1
   type: bool
