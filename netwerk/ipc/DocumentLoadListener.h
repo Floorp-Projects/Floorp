@@ -189,8 +189,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags,
                         const Maybe<uint64_t>& aDestinationProcess);
 
-  dom::CanonicalBrowsingContext* GetBrowsingContext();
-
   // Construct a LoadInfo object to use for the internal channel.
   // TODO: This currently only supports creating top window TYPE_DOCUMENT
   // LoadInfos

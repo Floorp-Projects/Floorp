@@ -333,16 +333,6 @@ GetTopWindowExcludingExtensionAccessibleContentFrames(
   return prev.forget();
 }
 
-CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
-  MOZ_ASSERT(mChannel);
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-  MOZ_ASSERT(loadInfo);
-  RefPtr<BrowsingContext> bc;
-  MOZ_ALWAYS_SUCCEEDS(loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
-  MOZ_ASSERT(bc);
-  return bc->Canonical();
-}
-
 bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aCacheKey, const uint64_t& aChannelId,
@@ -372,23 +362,24 @@ bool DocumentLoadListener::Open(
   }
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
-          aLoadState, loadInfo, mParentChannelListener, nullptr, attrs,
-          aLoadFlags, aCacheKey, *aRv, getter_AddRefs(mChannel))) {
+          browsingContext, aLoadState, loadInfo, mParentChannelListener,
+          nullptr, attrs, aLoadFlags, aCacheKey, *aRv,
+          getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
     return false;
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
       AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(mChannel);
-  CanonicalBrowsingContext* bc = GetBrowsingContext();
   RefPtr<WindowGlobalParent> topWindow =
-      GetTopWindowExcludingExtensionAccessibleContentFrames(bc, uriBeingLoaded);
+      GetTopWindowExcludingExtensionAccessibleContentFrames(browsingContext,
+                                                            uriBeingLoaded);
 
   RefPtr<HttpBaseChannel> httpBaseChannel = do_QueryObject(mChannel, aRv);
   if (httpBaseChannel) {
     nsCOMPtr<nsIURI> topWindowURI;
     nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
-    if (bc->IsTop()) {
+    if (browsingContext->IsTop()) {
       // If this is for the top level loading, the top window URI should be the
       // URI which we are loading.
       topWindowURI = uriBeingLoaded;
