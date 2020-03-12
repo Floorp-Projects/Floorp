@@ -94,6 +94,7 @@ pub struct ExternalSurfaceDescriptor {
     pub local_rect: PictureRect,
     pub world_rect: WorldRect,
     pub device_rect: DeviceRect,
+    pub local_clip_rect: PictureRect,
     pub clip_rect: DeviceRect,
     pub image_dependencies: [ImageDependency; 3],
     pub image_rendering: ImageRendering,

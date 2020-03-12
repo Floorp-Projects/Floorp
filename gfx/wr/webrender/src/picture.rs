@@ -3175,6 +3175,7 @@ impl TileCacheInstance {
                         self.external_surfaces.push(ExternalSurfaceDescriptor {
                             local_rect: prim_info.prim_clip_rect,
                             world_rect,
+                            local_clip_rect: prim_info.prim_clip_rect,
                             image_dependencies,
                             image_rendering: prim_data.kind.image_rendering,
                             device_rect,
@@ -3370,6 +3371,13 @@ impl TileCacheInstance {
             };
         }
 
+        let map_pic_to_world = SpaceMapper::new_with_target(
+            ROOT_SPATIAL_NODE_INDEX,
+            self.spatial_node_index,
+            frame_context.global_screen_world_rect,
+            frame_context.spatial_tree,
+        );
+
         // Register the opaque region of this tile cache as an occluder, which
         // is used later in the frame to occlude other tiles.
         if self.backdrop.rect.is_well_formed_and_nonempty() {
@@ -3380,13 +3388,6 @@ impl TileCacheInstance {
                 });
 
             if let Some(backdrop_rect) = backdrop_rect {
-                let map_pic_to_world = SpaceMapper::new_with_target(
-                    ROOT_SPATIAL_NODE_INDEX,
-                    self.spatial_node_index,
-                    frame_context.global_screen_world_rect,
-                    frame_context.spatial_tree,
-                );
-
                 let world_backdrop_rect = map_pic_to_world
                     .map(&backdrop_rect)
                     .expect("bug: unable to map backdrop to world space");
@@ -3405,10 +3406,22 @@ impl TileCacheInstance {
         // able to occlude every background tile (avoiding allocation, rasterizion
         // and compositing).
         for external_surface in &self.external_surfaces {
-            frame_state.composite_state.register_occluder(
-                external_surface.z_id,
-                external_surface.world_rect,
-            );
+            let local_surface_rect = external_surface.local_rect
+                .intersection(&external_surface.local_clip_rect)
+                .and_then(|r| {
+                    r.intersection(&self.local_clip_rect)
+                });
+
+            if let Some(local_surface_rect) = local_surface_rect {
+                let world_surface_rect = map_pic_to_world
+                    .map(&local_surface_rect)
+                    .expect("bug: unable to map external surface to world space");
+
+                frame_state.composite_state.register_occluder(
+                    external_surface.z_id,
+                    world_surface_rect,
+                );
+            }
         }
 
         // A simple GC of the native external surface cache, to remove and free any
