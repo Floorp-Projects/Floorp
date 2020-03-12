@@ -1473,7 +1473,7 @@ bool JSScript::initScriptCounts(JSContext* cx) {
   }
 
   // safe to set this;  we can't fail after this point.
-  setFlag(MutableFlags::HasScriptCounts);
+  setHasScriptCounts();
 
   // Enable interrupts in any interpreter frames running on this script. This
   // is used to let the interpreter increment the PCCounts, if present.
@@ -1655,10 +1655,6 @@ void JSScript::addIonCounts(jit::IonScriptCounts* ionCounts) {
 
 jit::IonScriptCounts* JSScript::getIonCounts() {
   return getScriptCounts().ionCounts_;
-}
-
-void JSScript::clearHasScriptCounts() {
-  clearFlag(MutableFlags::HasScriptCounts);
 }
 
 void JSScript::releaseScriptCounts(ScriptCounts* counts) {
