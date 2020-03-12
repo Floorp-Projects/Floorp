@@ -308,8 +308,40 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
 }
 
 class ExtensionInstallListener {
-  constructor(aResolve) {
-    this.resolve = aResolve;
+  constructor(aResolve, aInstall, aInstallId) {
+    this.install = aInstall;
+    this.installId = aInstallId;
+    this.resolve = result => {
+      aResolve(result);
+      EventDispatcher.instance.unregisterListener(this, [
+        "GeckoView:WebExtension:CancelInstall",
+      ]);
+    };
+    EventDispatcher.instance.registerListener(this, [
+      "GeckoView:WebExtension:CancelInstall",
+    ]);
+  }
+
+  async onEvent(aEvent, aData, aCallback) {
+    debug`onEvent ${aEvent} ${aData}`;
+
+    switch (aEvent) {
+      case "GeckoView:WebExtension:CancelInstall": {
+        const { installId } = aData;
+        if (this.installId !== installId) {
+          return;
+        }
+        let cancelled = false;
+        try {
+          this.install.cancel();
+          cancelled = true;
+        } catch (_) {
+          // install may have already failed or been cancelled
+        }
+        aCallback.onSuccess({ cancelled });
+        break;
+      }
+    }
   }
 
   onDownloadCancelled(aInstall) {
@@ -534,14 +566,16 @@ var GeckoViewWebExtension = {
     return scope.extension;
   },
 
-  async installWebExtension(aUri) {
+  async installWebExtension(aInstallId, aUri) {
     const install = await AddonManager.getInstallForURL(aUri.spec, {
       telemetryInfo: {
         source: "geckoview-app",
       },
     });
     const promise = new Promise(resolve => {
-      install.addListener(new ExtensionInstallListener(resolve));
+      install.addListener(
+        new ExtensionInstallListener(resolve, install, aInstallId)
+      );
     });
 
     const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
@@ -794,14 +828,15 @@ var GeckoViewWebExtension = {
       }
 
       case "GeckoView:WebExtension:Install": {
-        const uri = Services.io.newURI(aData.locationUri);
+        const { locationUri, installId } = aData;
+        const uri = Services.io.newURI(locationUri);
         if (uri == null) {
-          aCallback.onError(`Could not parse uri: ${uri}`);
+          aCallback.onError(`Could not parse uri: ${locationUri}`);
           return;
         }
 
         try {
-          const result = await this.installWebExtension(uri);
+          const result = await this.installWebExtension(installId, uri);
           if (result.extension) {
             aCallback.onSuccess(result);
           } else {

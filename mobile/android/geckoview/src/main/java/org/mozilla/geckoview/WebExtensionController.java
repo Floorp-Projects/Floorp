@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POSTPONED;
 import static org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED;
@@ -440,6 +441,67 @@ public class WebExtensionController {
         }
     }
 
+    private static class WebExtensionInstallResult extends WebExtensionResult {
+        private static class InstallCanceller implements GeckoResult.CancellationDelegate {
+            private static class CancelResult extends GeckoResult<Boolean>
+                    implements EventCallback {
+                @Override
+                public void sendSuccess(final Object response) {
+                    final boolean result = ((GeckoBundle) response).getBoolean("cancelled");
+                    complete(result);
+                }
+
+                @Override
+                public void sendError(final Object response) {
+                    completeExceptionally(new Exception(response.toString()));
+                }
+            }
+
+            private final String mInstallId;
+            private boolean mCancelled;
+
+            public InstallCanceller(@NonNull final String aInstallId) {
+                mInstallId = aInstallId;
+                mCancelled = false;
+            }
+
+            @Override
+            public GeckoResult<Boolean> cancel() {
+                CancelResult result = new CancelResult();
+
+                final GeckoBundle bundle = new GeckoBundle(1);
+                bundle.putString("installId", mInstallId);
+
+                EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:CancelInstall",
+                        bundle, result);
+
+                return result.then(wasCancelled -> {
+                    mCancelled = wasCancelled;
+                    return GeckoResult.fromValue(wasCancelled);
+                });
+            }
+        }
+
+        /* package */ final @NonNull String installId;
+
+        private final InstallCanceller mInstallCanceller;
+
+        public WebExtensionInstallResult() {
+            super("extension");
+
+            installId = UUID.randomUUID().toString();
+            mInstallCanceller = new InstallCanceller(installId);
+            setCancellationDelegate(mInstallCanceller);
+        }
+
+        @Override
+        public void sendError(final Object response) {
+            if (!mInstallCanceller.mCancelled) {
+                super.sendError(response);
+            }
+        }
+    }
+
     /**
      * Install an extension.
      *
@@ -478,14 +540,12 @@ public class WebExtensionController {
     @NonNull
     @AnyThread
     public GeckoResult<WebExtension> install(final @NonNull String uri) {
-        final WebExtensionResult result = new WebExtensionResult("extension");
-
-        final GeckoBundle bundle = new GeckoBundle(1);
+        WebExtensionInstallResult result = new WebExtensionInstallResult();
+        final GeckoBundle bundle = new GeckoBundle(2);
         bundle.putString("locationUri", uri);
-
+        bundle.putString("installId", result.installId);
         EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:Install",
-                bundle, result);
-
+                        bundle, result);
         return result.then(extension -> {
             registerWebExtension(extension);
             return GeckoResult.fromValue(extension);
@@ -523,14 +583,12 @@ public class WebExtensionController {
 
     // TODO: Bug 1601067 make public
     GeckoResult<WebExtension> installBuiltIn(final String uri) {
-        final WebExtensionResult result = new WebExtensionResult("extension");
-
-        final GeckoBundle bundle = new GeckoBundle(1);
+        WebExtensionInstallResult result = new WebExtensionInstallResult();
+        final GeckoBundle bundle = new GeckoBundle(2);
         bundle.putString("locationUri", uri);
-
+        bundle.putString("installId", result.installId);
         EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:InstallBuiltIn",
-                bundle, result);
-
+                        bundle, result);
         return result.then(extension -> {
             registerWebExtension(extension);
             return GeckoResult.fromValue(extension);

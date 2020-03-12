@@ -18,6 +18,7 @@ import java.util.*
 class TestServer {
     private val server = AsyncHttpServer()
     private val assets: AssetManager
+    private val stallingResponses = Vector<AsyncHttpServerResponse>()
 
     constructor(context: Context) {
         assets = context.resources.assets
@@ -132,6 +133,25 @@ class TestServer {
 
             response.end()
         }
+
+        server.get("/stall/.*") { _, response ->
+            // keep trickling data for a long time (until we are stopped)
+            stallingResponses.add(response)
+
+            val count = 100
+            response.setContentType("InstallException")
+            response.headers.set("Content-Length", "${count}")
+            response.writeHead()
+
+            val payload = byteArrayOf(1)
+            for (i in 1..count - 1) {
+                response.write(ByteBufferList(payload))
+                SystemClock.sleep(250)
+            }
+
+            stallingResponses.remove(response)
+            response.end()
+        }
     }
 
     fun start(port: Int) {
@@ -139,6 +159,9 @@ class TestServer {
     }
 
     fun stop() {
+        for (response in stallingResponses) {
+          response.end()
+        }
         server.stop()
     }
 }
