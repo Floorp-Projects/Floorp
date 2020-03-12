@@ -1341,6 +1341,18 @@ class _ASRouter {
           );
         }
         break;
+      case "cfr_urlbar_chiclet":
+        if (force) {
+          CFRPageActions.forceRecommendation(target, message, this.dispatch);
+        } else {
+          CFRPageActions.addRecommendation(
+            target,
+            null,
+            message,
+            this.dispatch
+          );
+        }
+        break;
       case "fxa_bookmark_panel":
         if (force) {
           BookmarkPanelHub._forceShowMessage(target, message);
@@ -1884,7 +1896,7 @@ class _ASRouter {
         break;
       case ra.OPEN_URL:
         target.browser.ownerGlobal.openLinkIn(
-          action.data.args,
+          Services.urlFormatter.formatURL(action.data.args),
           action.data.where || "current",
           {
             private: false,

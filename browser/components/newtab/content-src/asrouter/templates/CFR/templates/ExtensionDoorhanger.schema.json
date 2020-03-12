@@ -15,10 +15,6 @@
     }
   },
   "properties": {
-    "layout": {
-      "type": "string",
-      "description": "The layout style of the pop-over."
-    },
     "category": {
       "type": "string",
       "description": "Attribute used for different groups of messages from the same provider"

@@ -810,6 +810,30 @@ const CFR_MESSAGES = [
       params: ["ContentBlockingMilestone"],
     },
   },
+  {
+    id: "HEARTBEAT_TACTIC_2",
+    template: "cfr_urlbar_chiclet",
+    content: {
+      delay: 5000,
+      layout: "chiclet_open_url",
+      category: "cfrHeartbeat",
+      bucket_id: "HEARTBEAT_TACTIC_2",
+      notification_text: "Improve Firefox",
+      active_color: "#595e91",
+      action: {
+        url: "http://example.com/%VERSION%/",
+        where: "tabshifted",
+      },
+    },
+    targeting: "false",
+    frequency: {
+      lifetime: 3,
+    },
+    trigger: {
+      id: "openURL",
+      patterns: ["*://*/*"],
+    },
+  },
 ];
 
 const CFRMessageProvider = {
