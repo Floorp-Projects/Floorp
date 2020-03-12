@@ -13,6 +13,7 @@ members = [
   "js/src/wasm/cranelift",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
+  "toolkit/components/updateagent",
   "toolkit/crashreporter/rust",
   "toolkit/library/gtest/rust",
   "toolkit/library/rust/",

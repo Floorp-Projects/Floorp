@@ -153,6 +153,7 @@ FILTER_EOF
     cat ${TOPSRCDIR}/Cargo.toml \
         | grep -v security/manager/ssl/osclientcerts \
         | grep -v testing/geckodriver \
+        | grep -v toolkit/components/updateagent \
         | grep -v toolkit/crashreporter/rust \
         | grep -v toolkit/library/gtest/rust \
         | grep -v toolkit/library/rust \
