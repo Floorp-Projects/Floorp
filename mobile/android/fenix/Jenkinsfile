@@ -39,7 +39,7 @@ pipeline {
                 if (env.BRANCH_NAME == 'master') {
                     slackSend(
                         color: 'danger',
-                        message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+                        message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}HTML_20Report/)")
                 }
             }
         }
@@ -47,7 +47,7 @@ pipeline {
         fixed {
             slackSend(
                 color: 'good',
-                message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+                message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}HTML_20Report/)")
         }
     }
 }
