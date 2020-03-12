@@ -1,7 +1,7 @@
 ---
 tryselect:
     description: tools/tryselect integration tests
-    platform: linux64/opt
+    platform: linux1804-64/opt
     treeherder:
         symbol: cram(try)
         kind: test
