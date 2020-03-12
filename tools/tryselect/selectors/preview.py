@@ -29,9 +29,11 @@ def process_args():
     return argparser.parse_args()
 
 
-def plain_display(tasklist):
+def plain_display(taskfile):
     """Original preview window display."""
-    print("\n".join(sorted(s.strip("'") for s in tasklist.split())))
+    with open(taskfile, "r") as f:
+        tasklist = [line.strip() for line in f]
+    print("\n".join(sorted(tasklist)))
 
 
 def duration_display(graph_cache_file, taskfile, cache_dir):
