@@ -38,6 +38,7 @@ fi
 : NEED_XVFB                     ${NEED_XVFB:=true}
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
+: NEED_COMPIZ                   ${NEED_COPMPIZ:=false}
 : START_VNC                     ${START_VNC:=false}
 : TASKCLUSTER_INTERACTIVE       ${TASKCLUSTER_INTERACTIVE:=false}
 : mozharness args               "${@}"
@@ -178,8 +179,10 @@ if $NEED_WINDOW_MANAGER; then
     eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
 fi
 
-if [ $DISTRIBUTION == "Ubuntu" ] && [ $RELEASE == "16.04" ]; then
+if [ $NEED_COMPIZ == "true" ]  && [ $RELEASE == "16.04" ]; then
     compiz 2>&1 &
+elif [ $NEED_COMPIZ == "true" ] && [ $RELEASE == "18.04" ]; then
+    compiz --replace 2>&1 &
 fi
 
 maybe_start_pulse
