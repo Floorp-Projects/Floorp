@@ -23,8 +23,7 @@ the repository should be less than 5GB (~ 20GB after the build).
 
 If you have any network connection issues and cannot clone with command, try :ref:`Mercurial bundles <Mercurial bundles>`.
 
-`More
-information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`__
+:ref:`More information <Mercurial Overview>`
 
 Install dependencies
 --------------------
@@ -39,8 +38,7 @@ The default options are recommended.
 If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Artifact builds>`
 and follow the instructions at the end of the bootstrap for creating a mozconfig file.
 
-`More
-information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Linux_Prerequisites>`__
+:ref:`More information <Linux build preparation>`
 
 Windows dependencies
 --------------------
@@ -161,7 +159,7 @@ more information.
     You can ask your reviewer to submit the patch for you if you don't have that
     level of access.
 
-`More information <https://firefox-source-docs.mozilla.org/tools/try/index.html>`__
+:ref:`More information <Try Server>`
 
 
 To submit a patch
