@@ -7,7 +7,7 @@ const PAGE =
   "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 async function openContextMenuInPageActionPanel(extension, win = window) {
-  SetPageProxyState("valid");
+  win.gURLBar.setPageProxyState("valid");
   await promiseAnimationFrame(win);
   const mainPanelshown = BrowserTestUtils.waitForEvent(
     BrowserPageActions.panelNode,

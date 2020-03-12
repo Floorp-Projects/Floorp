@@ -242,7 +242,7 @@ class ProviderSearchTips extends UrlbarProvider {
   pickResult(result) {
     let window = BrowserWindowTracker.getTopWindow();
     window.gURLBar.value = "";
-    window.SetPageProxyState("invalid");
+    window.gURLBar.setPageProxyState("invalid");
     window.gURLBar.focus();
   }
 

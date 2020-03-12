@@ -102,6 +102,7 @@ class UrlbarInput {
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
     this._lastSearchString = "";
+    this._lastValidURLStr = "";
     this._valueOnLastSearch = "";
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
@@ -258,7 +259,7 @@ class UrlbarInput {
    * @param {nsIURI} [uri]
    *        If this is unspecified, the current URI will be used.
    * @param {boolean} [updatePopupNotifications]
-   *        Passed though to SetPageProxyState.
+   *        Passed though to `setPageProxyState`.
    */
   setURI(uri, updatePopupNotifications) {
     let value = this.window.gBrowser.userTypedValue;
@@ -313,7 +314,7 @@ class UrlbarInput {
       this.selectionStart = this.selectionEnd = 0;
     }
 
-    this.window.SetPageProxyState(
+    this.setPageProxyState(
       valid ? "valid" : "invalid",
       updatePopupNotifications
     );
@@ -1080,10 +1081,40 @@ class UrlbarInput {
     this._toolbar.removeAttribute("urlbar-exceeds-toolbar-bounds");
   }
 
-  setPageProxyState(state) {
+  /**
+   * Updates the user interface to indicate whether the URI in the address bar
+   * is different than the loaded page, because it's being edited or because a
+   * search result is currently selected and is displayed in the location bar.
+   *
+   * @param {string} state
+   *        The string "valid" indicates that the security indicators and other
+   *        related user interface elments should be shown because the URI in
+   *        the location bar matches the loaded page. The string "invalid"
+   *        indicates that the URI in the location bar is different than the
+   *        loaded page.
+   * @param {boolean} [updatePopupNotifications]
+   *        Indicates whether we should update the PopupNotifications
+   *        visibility due to this change, otherwise avoid doing so as it is
+   *        being handled somewhere else.
+   */
+  setPageProxyState(state, updatePopupNotifications) {
+    let prevState = this.getAttribute("pageproxystate");
+
     this.setAttribute("pageproxystate", state);
     this._inputContainer.setAttribute("pageproxystate", state);
     this._identityBox.setAttribute("pageproxystate", state);
+
+    if (state == "valid") {
+      this._lastValidURLStr = this.value;
+    }
+
+    if (
+      updatePopupNotifications &&
+      prevState != state &&
+      this.window.UpdatePopupNotificationsVisibility
+    ) {
+      this.window.UpdatePopupNotificationsVisibility();
+    }
   }
 
   /**
@@ -1826,7 +1857,10 @@ class UrlbarInput {
     this._revertOnBlurValue = null;
 
     // We may have hidden popup notifications, show them again if necessary.
-    if (this.getAttribute("pageproxystate") != "valid") {
+    if (
+      this.getAttribute("pageproxystate") != "valid" &&
+      this.window.UpdatePopupNotificationsVisibility
+    ) {
       this.window.UpdatePopupNotificationsVisibility();
     }
 
@@ -1869,7 +1903,10 @@ class UrlbarInput {
     this.formatValue();
 
     // Hide popup notifications, to reduce visual noise.
-    if (this.getAttribute("pageproxystate") != "valid") {
+    if (
+      this.getAttribute("pageproxystate") != "valid" &&
+      this.window.UpdatePopupNotificationsVisibility
+    ) {
       this.window.UpdatePopupNotificationsVisibility();
     }
 
@@ -1981,6 +2018,13 @@ class UrlbarInput {
       this.removeAttribute("usertyping");
     }
     this.removeAttribute("actiontype");
+
+    if (
+      this.getAttribute("pageproxystate") == "valid" &&
+      this.value != this._lastValidURLStr
+    ) {
+      this.setPageProxyState("invalid", true);
+    }
 
     if (!this.view.isOpen) {
       this.view.clear();
@@ -2222,7 +2266,7 @@ class UrlbarInput {
     if (droppedURL && droppedURL !== this.window.gBrowser.currentURI.spec) {
       let principal = Services.droppedLinkHandler.getTriggeringPrincipal(event);
       this.value = droppedURL;
-      this.window.SetPageProxyState("invalid");
+      this.setPageProxyState("invalid");
       this.focus();
       // To simplify tracking of events, register an initial event for event
       // telemetry, to replace the missing input event.
