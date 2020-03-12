@@ -2647,8 +2647,8 @@ nsLocalFile::IsReadable(bool* aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLocalFile::IsExecutable(bool* aResult) {
+nsresult nsLocalFile::LookupExtensionIn(const char* const* aExtensionsArray,
+                                        size_t aArrayLength, bool* aResult) {
   // Check we are correctly initialized.
   CHECK_mWorkingPath();
 
@@ -2700,8 +2700,8 @@ nsLocalFile::IsExecutable(bool* aResult) {
     }
 
     nsDependentSubstring ext = Substring(path, dotIdx);
-    for (size_t i = 0; i < ArrayLength(sExecutableExts); ++i) {
-      if (ext.EqualsASCII(sExecutableExts[i])) {
+    for (size_t i = 0; i < aArrayLength; ++i) {
+      if (ext.EqualsASCII(aExtensionsArray[i])) {
         // Found a match.  Set result and quit.
         *aResult = true;
         break;
@@ -2710,6 +2710,12 @@ nsLocalFile::IsExecutable(bool* aResult) {
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::IsExecutable(bool* aResult) {
+  return LookupExtensionIn(sExecutableExts, ArrayLength(sExecutableExts),
+                           aResult);
 }
 
 NS_IMETHODIMP
@@ -3002,27 +3008,69 @@ nsLocalFile::Launch() {
     NS_WARNING("Could not set working directory for launched file.");
   }
 
-  // Ask Explorer to ShellExecute on our behalf, as some applications such as
-  // Skype for Business do not start correctly when inheriting our process's
-  // migitation policies.
-  // It does not work in a special environment such as Citrix.  In such a case
-  // we fall back to launching an application as a child process.  We need to
-  // find a way to handle the combination of these interop issues.
-  mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPath, args, verbDefault, workingDirectoryPtr, showCmd);
-  if (shellExecuteOk.isErr()) {
-    SHELLEXECUTEINFOW seinfo = {sizeof(SHELLEXECUTEINFOW)};
-    seinfo.fMask = SEE_MASK_ASYNCOK;
-    seinfo.hwnd = GetMostRecentNavigatorHWND();
-    seinfo.lpVerb = nullptr;
-    seinfo.lpFile = mResolvedPath.get();
-    seinfo.lpParameters = nullptr;
-    seinfo.lpDirectory = workingDirectoryPtr;
-    seinfo.nShow = SW_SHOWNORMAL;
+  // We have two methods to launch a file: ShellExecuteExW and
+  // ShellExecuteByExplorer.  ShellExecuteExW starts a new process as a child
+  // of the current process, while ShellExecuteByExplorer starts a new process
+  // as a child of explorer.exe.
+  //
+  // We prefer launching a process via ShellExecuteByExplorer because
+  // applications may not support the mitigation policies inherited from our
+  // process.  For example, Skype for Business does not start correctly with
+  // the PreferSystem32Images policy which is one of the policies we use.
+  //
+  // If ShellExecuteByExplorer fails for some reason e.g. a system without
+  // running explorer.exe or VDI environment like Citrix, we fall back to
+  // ShellExecuteExW which still works in those special environments.
+  //
+  // There is an exception where we go straight to ShellExecuteExW without
+  // trying ShellExecuteByExplorer.  When the extension of a downloaded file is
+  // "exe", we prefer security rather than compatibility.
+  //
+  // When a user launches a downloaded executable, the directory containing
+  // the downloaded file may contain a malicious DLL with a common name, which
+  // may have been downloaded before.  If the downloaded executable is launched
+  // without the PreferSystem32Images policy, the process can be tricked into
+  // loading the malicious DLL in the same directory if its name is in the
+  // executable's dependent modules.  Therefore, we always launch ".exe"
+  // executables via ShellExecuteExW so they inherit our process's mitigation
+  // policies including PreferSystem32Images.
+  //
+  // If the extension is not "exe", then we assume that we are launching an
+  // installed application, and therefore the security risk described above
+  // is lessened, as a malicious DLL is less likely to be installed in the
+  // application's directory.  In that case, we attempt to preserve
+  // compatibility and try ShellExecuteByExplorer first.
 
-    if (!ShellExecuteExW(&seinfo)) {
-      return NS_ERROR_FILE_EXECUTION_FAILED;
+  static const char* const onlyExeExt[] = {".exe"};
+  bool isExecutable;
+  rv = LookupExtensionIn(onlyExeExt, ArrayLength(onlyExeExt), &isExecutable);
+  if (NS_FAILED(rv)) {
+    isExecutable = false;
+  }
+
+  // If the file is an executable, go straight to ShellExecuteExW.
+  // Otherwise try ShellExecuteByExplorer first, and if it fails,
+  // run ShellExecuteExW.
+  if (!isExecutable) {
+    mozilla::LauncherVoidResult shellExecuteOk =
+        mozilla::ShellExecuteByExplorer(execPath, args, verbDefault,
+                                        workingDirectoryPtr, showCmd);
+    if (shellExecuteOk.isOk()) {
+      return NS_OK;
     }
+  }
+
+  SHELLEXECUTEINFOW seinfo = {sizeof(SHELLEXECUTEINFOW)};
+  seinfo.fMask = SEE_MASK_ASYNCOK;
+  seinfo.hwnd = GetMostRecentNavigatorHWND();
+  seinfo.lpVerb = nullptr;
+  seinfo.lpFile = mResolvedPath.get();
+  seinfo.lpParameters = nullptr;
+  seinfo.lpDirectory = workingDirectoryPtr;
+  seinfo.nShow = SW_SHOWNORMAL;
+
+  if (!ShellExecuteExW(&seinfo)) {
+    return NS_ERROR_FILE_EXECUTION_FAILED;
   }
 
   return NS_OK;
