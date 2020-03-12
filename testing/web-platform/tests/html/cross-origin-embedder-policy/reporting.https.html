@@ -120,6 +120,68 @@ async_test(async (t) => {
 
 async_test(async (t) => {
   try {
+    const IFRAME_SRC = 'resources/coep-iframe.html';
+    const SCOPE = new URL(IFRAME_SRC, location).pathname;
+    const SCRIPT =
+      'resources/sw.js?' +
+      `pipe=header(service-worker-allowed,${SCOPE})|` +
+      'header(cross-origin-embedder-policy,require-corp%3breport-to=%22endpoint%22)|' +
+      'header(cross-origin-embedder-policy-report-only,require-corp%3breport-to=%22report-only-endpoint%22)';
+
+    const reg = await service_worker_unregister_and_register(t, SCRIPT, SCOPE);
+    await wait_for_state(t, reg.installing, 'activated');
+
+    const iframe = document.createElement('iframe');
+    t.add_cleanup(() => {
+      iframe.remove();
+      reg.unregister();
+    });
+    iframe.src = IFRAME_SRC;
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener('load', resolve, {once: true});
+    });
+
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener('load', resolve, {once: true});
+    });
+
+    function fetchInIframe(url) {
+      const init = { mode: 'no-cors', cache: 'no-store' };
+      iframe.contentWindow.fetch(url, init).catch(() => {});
+    }
+
+    const suffix = 'subresource-corp-sw';
+    const sameOriginUrl = `/common/text-plain.txt?${suffix}`;
+    const blockedByPureCorp = `${REMOTE_ORIGIN}${BASE}/nothing-same-origin-corp.txt?${suffix}`;
+    const blockedDueToCoep = `${REMOTE_ORIGIN}/common/text-plain.txt?abc&${suffix}`;
+    const dest = `${REMOTE_ORIGIN}/common/text-plain.txt?xyz&${suffix}`;
+    const redirect = `/common/redirect.py?location=${encodeURIComponent(dest)}&${suffix}`;
+
+    fetchInIframe(sameOriginUrl);
+    fetchInIframe(blockedByPureCorp);
+    fetchInIframe(blockedDueToCoep);
+    fetchInIframe(redirect);
+
+    // Wait 3 seconds for reports to settle.
+    await wait(3000);
+
+    const contextUrl = SCRIPT;
+    checkReportNonExistence(reports, sameOriginUrl, contextUrl);
+    checkReportNonExistence(reports, blockedByPureCorp, contextUrl);
+    checkCorpReportExistence(reports, blockedDueToCoep, contextUrl);
+    checkCorpReportExistence(reports, redirect, contextUrl);
+    checkReportNonExistence(reports, dest, contextUrl);
+
+    t.done();
+  } catch (e) {
+    t.step(() => { throw e });
+  }
+}, 'CORP for subresource requests initiated from a service worker');
+
+async_test(async (t) => {
+  try {
     const iframe = document.createElement('iframe');
     t.add_cleanup(() => iframe.remove());
 
