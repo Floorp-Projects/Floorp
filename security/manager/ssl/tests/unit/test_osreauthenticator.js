@@ -15,6 +15,7 @@ add_task(async function test_asyncReauthenticateUser() {
   ok(
     !(await reauthenticator.asyncReauthenticateUser(
       "this is the prompt string",
+      "this is the caption string",
       null
     )),
     "nsIOSReauthenticator.asyncReauthenticateUser always resolves to false for now"
