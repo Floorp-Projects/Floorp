@@ -13,12 +13,9 @@ add_task(async function() {
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
-  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const { getDisplayedRequests, getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
   );
-
-  store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
@@ -49,19 +46,11 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
-
-  wait = waitForDOM(document, "#response-panel .accordion-item", 2);
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
-  await wait;
-
-  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
-  const header = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
-  );
-  clickElement(header, monitor);
   await wait;
 
   // CodeMirror will only load lines currently in view to the DOM. getValue()

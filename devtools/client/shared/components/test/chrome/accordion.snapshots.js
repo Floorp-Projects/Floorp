@@ -27,8 +27,8 @@ window._snapshots = {
               tabIndex: 0,
               "aria-expanded": false,
               "aria-label": "Test Accordion Item 1",
-              onKeyDown: "event => this.onHeaderKeyDown(event, item)",
-              onClick: "event => this.onHeaderClick(event, item)",
+              onKeyDown: "function() {\n    [native code]\n}",
+              onClick: "function() {\n    [native code]\n}",
             },
             children: [
               {
@@ -73,8 +73,8 @@ window._snapshots = {
               tabIndex: 0,
               "aria-expanded": false,
               "aria-label": "Test Accordion Item 2",
-              onKeyDown: "event => this.onHeaderKeyDown(event, item)",
-              onClick: "event => this.onHeaderClick(event, item)",
+              onKeyDown: "function() {\n    [native code]\n}",
+              onClick: "function() {\n    [native code]\n}",
             },
             children: [
               {
@@ -121,7 +121,7 @@ window._snapshots = {
         type: "li",
         props: {
           id: "accordion-item-3",
-          className: "accordion-item accordion-open",
+          className: "accordion-item",
           "aria-labelledby": "accordion-item-3-header",
         },
         children: [
@@ -133,8 +133,8 @@ window._snapshots = {
               tabIndex: 0,
               "aria-expanded": true,
               "aria-label": "Test Accordion Item 3",
-              onKeyDown: "event => this.onHeaderKeyDown(event, item)",
-              onClick: "event => this.onHeaderClick(event, item)",
+              onKeyDown: "function() {\n    [native code]\n}",
+              onClick: "function() {\n    [native code]\n}",
             },
             children: [
               {

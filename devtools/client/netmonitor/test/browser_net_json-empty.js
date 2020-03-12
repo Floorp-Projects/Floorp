@@ -22,35 +22,20 @@ add_task(async function() {
 
   const onResponsePanelReady = waitForDOM(
     document,
-    "#response-panel .accordion-item",
-    2
+    "#response-panel .CodeMirror-code"
   );
-
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
-
   await onResponsePanelReady;
-
-  const codeMirrorReady = waitForDOM(
-    document,
-    "#response-panel .CodeMirror-code"
-  );
-
-  const header = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
-  );
-  clickElement(header, monitor);
-
-  await codeMirrorReady;
 
   const tabpanel = document.querySelector("#response-panel");
   is(
-    tabpanel.querySelectorAll(".accordion-item").length,
+    tabpanel.querySelectorAll(".tree-section").length,
     2,
-    "There should be 2 accordion items displayed in this tabpanel."
+    "There should be 2 tree sections displayed in this tabpanel."
   );
   is(
     tabpanel.querySelectorAll(".empty-notice").length,
@@ -74,8 +59,7 @@ add_task(async function() {
     "The response image box doesn't have the intended visibility."
   );
 
-  const jsonView =
-    tabpanel.querySelector(".accordion-item .accordion-header-label") || {};
+  const jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
   is(
     jsonView.textContent === L10N.getStr("jsonScopeName"),
     true,
