@@ -54,6 +54,12 @@ FETCH_SCHEMA = Schema({
     Required('description'): text_type,
 
     Optional(
+        "fetch-alias",
+        description="An alias that can be used instead of the real fetch job name in "
+        "fetch stanzas for jobs.",
+    ): text_type,
+
+    Optional(
         'artifact-prefix',
         description="The prefix of the taskcluster artifact being uploaded. "
         "Defaults to `public/`; if it starts with something other than "
@@ -170,6 +176,11 @@ def make_task(config, jobs):
                 }],
             },
         }
+
+        alias = job.get('fetch-alias')
+        if alias:
+            task['attributes']['fetch-alias'] = alias
+
         if not taskgraph.fast:
             cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
 

@@ -61,9 +61,11 @@ toolchain_run_schema = Schema({
     # Path to the artifact produced by the toolchain job
     Required('toolchain-artifact'): text_type,
 
-    # An alias that can be used instead of the real toolchain job name in
-    # the toolchains list for build jobs.
-    Optional('toolchain-alias'): text_type,
+    Optional(
+        "toolchain-alias",
+        description="An alias that can be used instead of the real toolchain job name in "
+        "fetch stanzas for jobs.",
+    ): text_type,
 
     # Base work directory used to set up the task.
     Required('workdir'): text_type,
