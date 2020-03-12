@@ -60,12 +60,14 @@ const NormandyMigrations = {
   migrations: [
     migrateShieldPrefs,
     migrateStudiesEnabledWithoutHealthReporting,
-    AddonStudies.migrateAddonStudyFieldsToSlugAndUserFacingFields,
+    AddonStudies.migrations
+      .migration01AddonStudyFieldsToSlugAndUserFacingFields,
     PreferenceExperiments.migrations.migration01MoveExperiments,
     PreferenceExperiments.migrations.migration02MultiPreference,
     PreferenceExperiments.migrations.migration03AddActionName,
     PreferenceExperiments.migrations.migration04RenameNameToSlug,
     RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
+    AddonStudies.migrations.migration02RemoveOldAddonStudyAction,
   ],
 };
 

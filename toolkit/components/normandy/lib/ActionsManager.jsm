@@ -12,7 +12,6 @@ const { LogManager } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRollbackAction: "resource://normandy/actions/AddonRollbackAction.jsm",
   AddonRolloutAction: "resource://normandy/actions/AddonRolloutAction.jsm",
-  AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   BaseAction: "resource://normandy/actions/BaseAction.jsm",
   BranchedAddonStudyAction:
     "resource://normandy/actions/BranchedAddonStudyAction.jsm",
@@ -34,7 +33,6 @@ var EXPORTED_SYMBOLS = ["ActionsManager"];
 const log = LogManager.getLogger("recipe-runner");
 
 const actionConstructors = {
-  "addon-study": AddonStudyAction,
   "addon-rollback": AddonRollbackAction,
   "addon-rollout": AddonRolloutAction,
   "branched-addon-study": BranchedAddonStudyAction,
@@ -48,7 +46,6 @@ const actionConstructors = {
 
 // Legacy names used by the server and older clients for actions.
 const actionAliases = {
-  "opt-out-study": "addon-study",
   "preference-experiment": "single-preference-experiment",
 };
 

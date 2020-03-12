@@ -4,8 +4,8 @@ const { AddonTestUtils } = ChromeUtils.import(
 const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
-const { AddonStudyAction } = ChromeUtils.import(
-  "resource://normandy/actions/AddonStudyAction.jsm"
+const { BranchedAddonStudyAction } = ChromeUtils.import(
+  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
 );
 const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
@@ -168,16 +168,23 @@ decorate_task(
 
     const RECIPE_ID = 1;
     const UNENROLL_REASON = "test-ending";
-    let action = new AddonStudyAction();
+    let action = new BranchedAddonStudyAction();
     await action.processRecipe(
       {
         id: RECIPE_ID,
         type: "addon-study",
         arguments: {
-          name: "addon unenroll test",
-          description: "testing",
-          addonUrl: "http://example.com/study.xpi",
-          extensionApiId: API_ID,
+          slug: "addon-unenroll-test",
+          userFacingDescription: "A recipe to test add-on unenrollment",
+          userFacingName: "Add-on Unenroll Test",
+          isEnrollmentPaused: false,
+          branches: [
+            {
+              ratio: 1,
+              slug: "only",
+              extensionApiId: API_ID,
+            },
+          ],
         },
       },
       BaseAction.suitability.FILTER_MATCH
@@ -267,16 +274,23 @@ decorate_task(
 
     const RECIPE_ID = 1;
     const UNENROLL_REASON = "test-ending";
-    let action = new AddonStudyAction();
+    let action = new BranchedAddonStudyAction();
     await action.processRecipe(
       {
         id: RECIPE_ID,
         type: "addon-study",
         arguments: {
-          name: "addon unenroll test",
-          description: "testing",
-          addonUrl: "http://example.com/study.xpi",
-          extensionApiId: API_ID,
+          slug: "addon-unenroll-test",
+          userFacingDescription: "A recipe to test add-on unenrollment",
+          userFacingName: "Add-on Unenroll Test",
+          isEnrollmentPaused: false,
+          branches: [
+            {
+              ratio: 1,
+              slug: "only",
+              extensionApiId: API_ID,
+            },
+          ],
         },
       },
       BaseAction.suitability.FILTER_MATCH
