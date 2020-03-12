@@ -29,7 +29,7 @@ function convertToPrincipal(subject) {
   if (typeof subject === "string") {
     return secMan.createContentPrincipalFromOrigin(subject);
   }
-  if (subject == null || subject instanceof Ci.nsIURI) {
+  if (subject === null || subject instanceof Ci.nsIURI) {
     return secMan.createContentPrincipal(subject, {});
   }
   throw new Error(
