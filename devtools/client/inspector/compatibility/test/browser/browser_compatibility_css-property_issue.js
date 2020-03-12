@@ -15,11 +15,16 @@ const TEST_URI = `
     user-modify: read-only;
     font-variant-alternates: historical-forms;
   }
+  div {
+    margin-inline-start: 5px;
+  }
   </style>
-  <body></body>
+  <body>
+    <div>test</div>
+  </body>
 `;
 
-const TEST_DATA = [
+const TEST_DATA_SELECTED = [
   {
     type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
     property: "border-block-color",
@@ -44,11 +49,28 @@ const TEST_DATA = [
   },
 ];
 
+const TEST_DATA_ALL = [
+  ...TEST_DATA_SELECTED,
+  {
+    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
+    property: "margin-inline-start",
+    url: "https://developer.mozilla.org/docs/Web/CSS/margin-inline-start",
+    deprecated: false,
+    experimental: false,
+  },
+];
+
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const { selectedElementPane } = await openCompatibilityView();
+  const {
+    allElementsPane,
+    selectedElementPane,
+  } = await openCompatibilityView();
 
   info("Check the content of the issue list on the selected element");
-  await assertIssueList(selectedElementPane, TEST_DATA);
+  await assertIssueList(selectedElementPane, TEST_DATA_SELECTED);
+
+  info("Check the content of the issue list on all elements");
+  await assertIssueList(allElementsPane, TEST_DATA_ALL);
 });

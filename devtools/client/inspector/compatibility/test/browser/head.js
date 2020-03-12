@@ -40,7 +40,11 @@ async function openCompatibilityView() {
     "#compatibility-app--selected-element-pane"
   );
 
-  return { inspector, panel, selectedElementPane };
+  const allElementsPane = panel.querySelector(
+    "#compatibility-app--all-elements-pane"
+  );
+
+  return { allElementsPane, inspector, panel, selectedElementPane };
 }
 
 /**
