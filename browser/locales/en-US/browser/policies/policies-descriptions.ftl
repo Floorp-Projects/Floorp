@@ -33,6 +33,8 @@ policy-CertificatesDescription = Add certificates or use built-in certificates.
 
 policy-Cookies = Allow or deny websites to set cookies.
 
+policy-DisabledCiphers = Disable ciphers.
+
 policy-DefaultDownloadDirectory = Set the default download directory.
 
 policy-DisableAppUpdate = Prevent the browser from updating.
