@@ -22,8 +22,6 @@ add_task(async function os_key_store_setup() {
 
 let OSKeyStore;
 add_task(async function setup() {
-  Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
-
   ({ OSKeyStore } = ChromeUtils.import("resource:///modules/OSKeyStore.jsm"));
 });
 
@@ -87,14 +85,6 @@ add_task(async function test_reauth() {
     "Reauth logged in."
   );
   await reauthObserved;
-
-  Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", false);
-  Assert.equal(
-    await OSKeyStore.ensureLoggedIn(true),
-    true,
-    "Reauth disabled so logged in without prompt"
-  );
-  Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
 });
 
 add_task(async function test_decryption_failure() {

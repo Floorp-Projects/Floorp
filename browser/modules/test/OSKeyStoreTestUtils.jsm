@@ -15,8 +15,7 @@ const { TestUtils } = ChromeUtils.import(
 );
 
 var OSKeyStoreTestUtils = {
-  TEST_ONLY_REAUTH:
-    "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin",
+  TEST_ONLY_REAUTH: "browser.osKeyStore.unofficialBuildOnlyLogin",
 
   setup() {
     this.ORIGINAL_STORE_LABEL = OSKeyStore.STORE_LABEL;
