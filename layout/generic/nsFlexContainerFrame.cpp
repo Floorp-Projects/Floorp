@@ -1700,10 +1700,10 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
  */
 class nsFlexContainerFrame::CachedMeasuringReflowResult {
   struct Key {
-    const LogicalSize mComputedSize;
-    const nscoord mComputedMinBSize;
-    const nscoord mComputedMaxBSize;
-    const nscoord mAvailableBSize;
+    LogicalSize mComputedSize;
+    nscoord mComputedMinBSize;
+    nscoord mComputedMaxBSize;
+    nscoord mAvailableBSize;
 
     explicit Key(const ReflowInput& aRI)
         : mComputedSize(aRI.ComputedSize()),
@@ -1719,10 +1719,10 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult {
     }
   };
 
-  const Key mKey;
+  Key mKey;
 
-  const nscoord mBSize;
-  const nscoord mAscent;
+  nscoord mBSize;
+  nscoord mAscent;
 
  public:
   CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
@@ -1757,8 +1757,9 @@ void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
 const CachedMeasuringReflowResult&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     FlexItem& aItem, ReflowInput& aChildReflowInput) {
-  if (const auto* cachedResult =
-          aItem.Frame()->GetProperty(CachedMeasuringReflowResult::Prop())) {
+  auto* cachedResult =
+      aItem.Frame()->GetProperty(CachedMeasuringReflowResult::Prop());
+  if (cachedResult) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
@@ -1796,11 +1797,18 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
                     &aChildReflowInput, outerWM, dummyPosition,
                     dummyContainerSize, flags);
 
-  auto result =
-      new CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
-
-  aItem.Frame()->SetProperty(CachedMeasuringReflowResult::Prop(), result);
-  return *result;
+  // Update (or add) our cached measurement, so that we can hopefully skip this
+  // measuring reflow the next time around:
+  if (cachedResult) {
+    *cachedResult =
+        CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
+  } else {
+    cachedResult =
+        new CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
+    aItem.Frame()->SetProperty(CachedMeasuringReflowResult::Prop(),
+                               cachedResult);
+  }
+  return *cachedResult;
 }
 
 /* virtual */
