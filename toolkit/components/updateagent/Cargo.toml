@@ -1,0 +1,21 @@
+[package]
+name = "updateagent"
+version = "0.1.0"
+authors = ["The Mozilla Project Developers"]
+license = "MPL-2.0"
+autobins = false
+edition = "2018"
+
+[target."cfg(windows)".dependencies]
+chrono = "0.4"
+comedy = "0.1"
+failure = "0.1"
+log = "0.4"
+
+[target."cfg(windows)".dependencies.winapi]
+version = "0.3.7"
+features = ["minwindef", "ntdef", "oaidl", "oleauto", "taskschd", "winbase", "winerror", "winnt", "wtypes"]
+
+[[bin]]
+name = "updateagent"
+path = "src/main.rs"
