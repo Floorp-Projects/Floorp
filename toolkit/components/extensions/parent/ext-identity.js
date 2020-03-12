@@ -91,6 +91,7 @@ const openOAuthWindow = (details, redirectURI) => {
         return;
       }
 
+      wrapper.cancel(Cr.NS_ERROR_ABORT, Ci.nsILoadInfo.BLOCKING_REASON_NONE);
       window.gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
       window.removeEventListener("unload", unloadListener);
       httpActivityDistributor.removeObserver(httpObserver);

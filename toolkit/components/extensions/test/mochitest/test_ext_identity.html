@@ -200,13 +200,16 @@ function background_launchWebAuthFlow({
 
   // Ensure we do not start the actual request for the redirect url.  In the case
   // of a 303 POST redirect we are getting a request started.
+  let watchRedirectRequest = () => {};
   if (params.post !== 303) {
+    watchRedirectRequest = details => {
+      if (details.url.startsWith(expected_redirect)) {
+        browser.test.fail(`onSendHeaders called for redirect url: ${JSON.stringify(details)}`);
+      }
+    };
+
     browser.webRequest.onBeforeRequest.addListener(
-      details => {
-        if (details.url.startsWith(expected_redirect)) {
-          browser.test.fail("onBeforeRequest called for redirect url");
-        }
-      },
+      watchRedirectRequest,
       {
         urls: [
           "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/*",
@@ -230,7 +233,6 @@ function background_launchWebAuthFlow({
           "Handled auto redirection"
         );
       }
-      browser.test.sendMessage("done");
     })
     .catch(error => {
       if (redirect) {
@@ -242,6 +244,8 @@ function background_launchWebAuthFlow({
           "Auth page loaded, interaction required."
         );
       }
+    }).then(() => {
+      browser.webRequest.onBeforeRequest.removeListener(watchRedirectRequest);
       browser.test.sendMessage("done");
     });
 }
