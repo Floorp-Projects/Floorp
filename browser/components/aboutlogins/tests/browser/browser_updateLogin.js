@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+
 add_task(async function setup() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
@@ -28,7 +30,91 @@ add_task(async function test_show_logins() {
 });
 
 add_task(async function test_login_item() {
+  async function test_discard_dialog(login, exitPointSelector) {
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    await ContentTaskUtils.waitForCondition(
+      () => loginItem.dataset.editing,
+      "Entering edit mode"
+    );
+    await Promise.resolve();
+
+    let usernameInput = loginItem.shadowRoot.querySelector(
+      "input[name='username']"
+    );
+    let passwordInput = loginItem._passwordInput;
+    usernameInput.value += "-undome";
+    passwordInput.value += "-undome";
+
+    let dialog = content.document.querySelector("confirmation-dialog");
+    ok(dialog.hidden, "Confirm dialog should initially be hidden");
+
+    let exitPoint =
+      loginItem.shadowRoot.querySelector(exitPointSelector) ||
+      loginList.shadowRoot.querySelector(exitPointSelector);
+    exitPoint.click();
+
+    ok(!dialog.hidden, "Confirm dialog should be visible");
+
+    let confirmDiscardButton = dialog.shadowRoot.querySelector(
+      ".confirm-button"
+    );
+    await content.document.l10n.translateElements([
+      dialog.shadowRoot.querySelector(".title"),
+      dialog.shadowRoot.querySelector(".message"),
+      confirmDiscardButton,
+    ]);
+
+    confirmDiscardButton.click();
+
+    ok(dialog.hidden, "Confirm dialog should be hidden after confirming");
+
+    await Promise.resolve();
+
+    let loginListItem = Cu.waiveXrays(
+      loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
+    );
+
+    loginListItem.click();
+
+    await ContentTaskUtils.waitForCondition(
+      () => usernameInput.value == login.username
+    );
+
+    is(
+      usernameInput.value,
+      login.username,
+      "Username change should be reverted"
+    );
+    is(
+      passwordInput.value,
+      login.password,
+      "Password change should be reverted"
+    );
+    let passwordDisplayInput = loginItem._passwordDisplayInput;
+    is(
+      passwordDisplayInput.value,
+      " ".repeat(login.password.length),
+      "Password change should be reverted for display"
+    );
+    ok(
+      !passwordInput.hasAttribute("value"),
+      "Password shouldn't be exposed in @value"
+    );
+    is(
+      passwordInput.style.width,
+      login.password.length + "ch",
+      "Password field width shouldn't have changed"
+    );
+    is(
+      passwordDisplayInput.style.width,
+      login.password.length + "ch",
+      "Password field width shouldn't have changed"
+    );
+  }
+
   let browser = gBrowser.selectedBrowser;
+  let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await SpecialPowers.spawn(
     browser,
     [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
@@ -52,89 +138,45 @@ add_task(async function test_login_item() {
       }, "Waiting for login item to get populated");
       ok(loginItemPopulated, "The login item should get populated");
 
-      let usernameInput = loginItem.shadowRoot.querySelector(
-        "input[name='username']"
-      );
-      let passwordInput = loginItem._passwordInput;
-      let passwordDisplayInput = loginItem._passwordDisplayInput;
-
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
-
-      async function test_discard_dialog(exitPoint) {
-        editButton.click();
-        await ContentTaskUtils.waitForCondition(
-          () => loginItem.dataset.editing,
-          "Entering edit mode"
-        );
-        await Promise.resolve();
-
-        usernameInput.value += "-undome";
-        passwordInput.value += "-undome";
-
-        let dialog = content.document.querySelector("confirmation-dialog");
-        ok(dialog.hidden, "Confirm dialog should initially be hidden");
-
-        exitPoint.click();
-
-        ok(!dialog.hidden, "Confirm dialog should be visible");
-
-        let confirmDiscardButton = dialog.shadowRoot.querySelector(
-          ".confirm-button"
-        );
-        await content.document.l10n.translateElements([
-          dialog.shadowRoot.querySelector(".title"),
-          dialog.shadowRoot.querySelector(".message"),
-          confirmDiscardButton,
-        ]);
-
-        confirmDiscardButton.click();
-
-        ok(dialog.hidden, "Confirm dialog should be hidden after confirming");
-
-        await Promise.resolve();
-        loginListItem.click();
-
-        await ContentTaskUtils.waitForCondition(
-          () => usernameInput.value == login.username
-        );
-
-        is(
-          usernameInput.value,
-          login.username,
-          "Username change should be reverted"
-        );
-        is(
-          passwordInput.value,
-          login.password,
-          "Password change should be reverted"
-        );
-        is(
-          passwordDisplayInput.value,
-          " ".repeat(login.password.length),
-          "Password change should be reverted for display"
-        );
-        ok(
-          !passwordInput.hasAttribute("value"),
-          "Password shouldn't be exposed in @value"
-        );
-        is(
-          passwordInput.style.width,
-          login.password.length + "ch",
-          "Password field width shouldn't have changed"
-        );
-        is(
-          passwordDisplayInput.style.width,
-          login.password.length + "ch",
-          "Password field width shouldn't have changed"
-        );
-      }
-
-      await test_discard_dialog(loginList._createLoginButton);
-
-      let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
-      await test_discard_dialog(cancelButton);
-
       editButton.click();
+    }
+  );
+  info("waiting for oskeystore auth #1");
+  await reauthObserved;
+  await SpecialPowers.spawn(
+    browser,
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1), ".create-login-button"],
+    test_discard_dialog
+  );
+  reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+  });
+  info("waiting for oskeystore auth #2");
+  await reauthObserved;
+  await SpecialPowers.spawn(
+    browser,
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1), ".cancel-button"],
+    test_discard_dialog
+  );
+  reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+  });
+  info("waiting for oskeystore auth #3");
+  await reauthObserved;
+  await SpecialPowers.spawn(
+    browser,
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
+    async login => {
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
       await ContentTaskUtils.waitForCondition(
         () => loginItem.dataset.editing,
         "Entering edit mode"
@@ -150,6 +192,12 @@ add_task(async function test_login_item() {
         "reveal-checkbox should be checked after clicking"
       );
 
+      let usernameInput = loginItem.shadowRoot.querySelector(
+        "input[name='username']"
+      );
+      let passwordInput = loginItem._passwordInput;
+      let passwordDisplayInput = loginItem._passwordDisplayInput;
+
       usernameInput.value += "-saveme";
       passwordInput.value += "-saveme";
 
@@ -161,6 +209,9 @@ add_task(async function test_login_item() {
       saveChangesButton.click();
 
       await ContentTaskUtils.waitForCondition(() => {
+        let loginList = Cu.waiveXrays(
+          content.document.querySelector("login-list")
+        );
         let guid = loginList._loginGuidsSortedOrder[0];
         let updatedLogin = loginList._logins[guid].login;
         return (
@@ -188,8 +239,23 @@ add_task(async function test_login_item() {
         passwordDisplayInput.value.length + "ch",
         "Password display field width should be correctly updated"
       );
-
-      editButton.click();
+    }
+  );
+  reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+  });
+  info("waiting for oskeystore auth #4");
+  await reauthObserved;
+  await SpecialPowers.spawn(
+    browser,
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
+    async login => {
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
       await ContentTaskUtils.waitForCondition(
         () => loginItem.dataset.editing,
         "Entering edit mode"
@@ -207,6 +273,12 @@ add_task(async function test_login_item() {
       );
       confirmDeleteButton.click();
 
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      let loginListItem = Cu.waiveXrays(
+        loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
+      );
       await ContentTaskUtils.waitForCondition(() => {
         loginListItem = loginList.shadowRoot.querySelector(
           ".login-list-item[data-guid]"
