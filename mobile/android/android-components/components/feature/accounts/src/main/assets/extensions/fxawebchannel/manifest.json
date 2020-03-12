@@ -4,7 +4,13 @@
   "version": "1.0",
   "content_scripts": [
     {
-      "matches": ["https://accounts.firefox.com/*"],
+      "matches": [
+        "https://accounts.firefox.com/*",
+        "https://stable.dev.lcip.org/*",
+        "https://accounts.stage.mozaws.net/*",
+        "https://latest.dev.lcip.org/*",
+        "https://accounts.firefox.com.cn/*"
+      ],
       "js": ["fxawebchannel.js"],
       "run_at": "document_start"
     }

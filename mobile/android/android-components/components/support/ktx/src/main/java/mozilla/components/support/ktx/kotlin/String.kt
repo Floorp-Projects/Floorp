@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package mozilla.components.support.ktx.kotlin
 
 import mozilla.components.support.utils.URLStringUtils
@@ -106,4 +108,18 @@ fun String.tryGetHostFromUrl(): String = try {
     URL(this).host
 } catch (e: MalformedURLException) {
     this
+}
+
+/**
+ * Compares 2 URLs and returns true if they have the same origin,
+ * which means: same protocol, same host, same port.
+ */
+fun String.isSameOriginAs(other: String): Boolean {
+    fun canonicalizeOrigin(urlStr: String): String {
+        val url = URL(urlStr)
+        val port = if (url.port == -1) url.defaultPort else url.port
+        val canonicalized = URL(url.protocol, url.host, port, "")
+        return canonicalized.toString()
+    }
+    return canonicalizeOrigin(this) == canonicalizeOrigin(other)
 }
