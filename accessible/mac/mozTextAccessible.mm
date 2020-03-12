@@ -565,6 +565,9 @@ inline NSString* ToNSString(id aValue) {
   if (!supportedAttributes) {
     supportedAttributes = [[super accessibilityAttributeNames] mutableCopy];
     [supportedAttributes removeObject:NSAccessibilityChildrenAttribute];
+    // We remove our AXTitleUIElement here to avoid an IPC call in the
+    // parent class when locating values for our attributes.
+    [supportedAttributes removeObject:NSAccessibilityTitleUIElementAttribute];
   }
 
   return supportedAttributes;
@@ -604,6 +607,10 @@ inline NSString* ToNSString(id aValue) {
   }
 
   return 0;
+}
+
+- (NSString*)accessibilityLabel {
+  return nil;
 }
 
 @end
