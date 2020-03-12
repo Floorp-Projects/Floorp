@@ -77,6 +77,13 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void OnChannelConnected(int32_t peer_pid) override;
   void OnChannelError() override;
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  static bool StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
+
+  // Return the sandbox type to be used with this process type.
+  static MacSandboxType GetMacSandboxType();
+#endif
+
  private:
   ~SocketProcessHost();
 
@@ -91,6 +98,16 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void OnChannelClosed();
 
   void DestroyProcess();
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  static bool sLaunchWithMacSandbox;
+
+  // Sandbox the Socket process at launch for all instances
+  bool IsMacSandboxLaunchEnabled() override { return sLaunchWithMacSandbox; }
+
+  // Override so we can turn on Socket process-specific sandbox logging
+  bool FillMacSandboxInfo(MacSandboxInfo& aInfo) override;
+#endif
 
   DISALLOW_COPY_AND_ASSIGN(SocketProcessHost);
 
