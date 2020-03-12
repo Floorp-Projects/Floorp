@@ -6912,8 +6912,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     nsFrameList pushedList;
     nsFrameList incompleteList;
     nsFrameList overflowIncompleteList;
-    auto* pc = PresContext();
-    auto* fc = pc->PresShell()->FrameConstructor();
+    auto* fc = PresShell()->FrameConstructor();
     for (nsIFrame* child = GetChildList(kPrincipalList).FirstChild(); child;) {
       MOZ_ASSERT((pushedItems.Contains(child) ? 1 : 0) +
                          (incompleteItems.Contains(child) ? 1 : 0) +
@@ -6929,7 +6928,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
       } else if (incompleteItems.Contains(child)) {
         nsIFrame* childNIF = child->GetNextInFlow();
         if (!childNIF) {
-          childNIF = fc->CreateContinuingFrame(pc, child, this);
+          childNIF = fc->CreateContinuingFrame(child, this);
           incompleteList.AppendFrame(nullptr, childNIF);
         } else {
           auto parent =
@@ -6962,7 +6961,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
       } else if (overflowIncompleteItems.Contains(child)) {
         nsIFrame* childNIF = child->GetNextInFlow();
         if (!childNIF) {
-          childNIF = fc->CreateContinuingFrame(pc, child, this);
+          childNIF = fc->CreateContinuingFrame(child, this);
           childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
           overflowIncompleteList.AppendFrame(nullptr, childNIF);
         } else {

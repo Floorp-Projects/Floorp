@@ -8814,10 +8814,9 @@ void nsTextFrame::SetLength(int32_t aLength, nsLineLayout* aLineLayout,
       // We also skip this optimization if we were called during bidi
       // resolution, so as not to create a new frame which doesn't appear in
       // the bidi resolver's list of frames
-      nsPresContext* presContext = PresContext();
       nsIFrame* newFrame =
-          presContext->PresShell()->FrameConstructor()->CreateContinuingFrame(
-              presContext, this, GetParent());
+          PresShell()->FrameConstructor()->CreateContinuingFrame(this,
+                                                                 GetParent());
       nsTextFrame* next = static_cast<nsTextFrame*>(newFrame);
       nsFrameList temp(next, next);
       GetParent()->InsertFrames(kNoReflowPrincipalList, this,

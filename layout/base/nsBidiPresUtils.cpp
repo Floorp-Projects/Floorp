@@ -611,8 +611,7 @@ static bool IsBidiLeaf(nsIFrame* aFrame) {
  */
 static void SplitInlineAncestors(nsContainerFrame* aParent,
                                  nsLineList::iterator aLine, nsIFrame* aFrame) {
-  nsPresContext* presContext = aParent->PresContext();
-  PresShell* presShell = presContext->PresShell();
+  PresShell* presShell = aParent->PresShell();
   nsIFrame* frame = aFrame;
   nsContainerFrame* parent = aParent;
   nsContainerFrame* newParent;
@@ -627,7 +626,7 @@ static void SplitInlineAncestors(nsContainerFrame* aParent,
     if (!frame || frame->GetNextSibling()) {
       newParent = static_cast<nsContainerFrame*>(
           presShell->FrameConstructor()->CreateContinuingFrame(
-              presContext, parent, grandparent, false));
+              parent, grandparent, false));
 
       nsFrameList tail = parent->StealFramesAfter(frame);
 
@@ -740,13 +739,13 @@ static void CreateContinuation(nsIFrame* aFrame,
   // of the text that the first letter frame was made out of.
   if (parent->IsLetterFrame() && parent->IsFloating()) {
     nsFirstLetterFrame* letterFrame = do_QueryFrame(parent);
-    letterFrame->CreateContinuationForFloatingParent(presContext, aFrame,
-                                                     aNewFrame, aIsFluid);
+    letterFrame->CreateContinuationForFloatingParent(aFrame, aNewFrame,
+                                                     aIsFluid);
     return;
   }
 
   *aNewFrame = presShell->FrameConstructor()->CreateContinuingFrame(
-      presContext, aFrame, parent, aIsFluid);
+      aFrame, parent, aIsFluid);
 
   // The list name kNoReflowPrincipalList would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
