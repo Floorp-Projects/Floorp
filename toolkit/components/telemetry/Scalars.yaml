@@ -896,7 +896,7 @@ datasanitization:
       - 1589753
       - 1617241
     description: >
-      This scalar reports the value of the network.cookie.lifetimePolicy pref.      
+      This scalar reports the value of the network.cookie.lifetimePolicy pref.
     expires: "80"
     kind: uint
     notification_emails:
@@ -3803,9 +3803,10 @@ browser.searchinit:
   engines_cache_corrupted:
     bug_numbers:
       - 1578807
+      - 1621610
     description: >-
           Whether the list of engines in the search cache was found to be corrupt during initialization.
-    expires: "77"
+    expires: "85"
     kind: boolean
     notification_emails:
       - fx-search@mozilla.com
