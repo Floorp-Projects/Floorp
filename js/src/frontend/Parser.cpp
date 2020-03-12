@@ -1727,7 +1727,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      return data->create(parser->cx_, parser->compilationInfo_, funbox,
+      return data->create(parser->cx_, parser->compilationInfo_, fun, funbox,
                           parser->sourceObject_);
     };
     return root->visitRecursively(this->cx_, this, visitor);
@@ -1737,9 +1737,9 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
 
 bool LazyScriptCreationData::create(JSContext* cx,
                                     CompilationInfo& compilationInfo,
+                                    HandleFunction function,
                                     FunctionBox* funbox,
                                     HandleScriptSourceObject sourceObject) {
-  Rooted<JSFunction*> function(cx, funbox->function());
   MOZ_ASSERT(function);
   BaseScript* lazy = LazyScript::Create(cx, compilationInfo, function,
                                         sourceObject, closedOverBindings,
