@@ -68,17 +68,30 @@ static void PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext) {
   aRegs.mLR = 0;
 }
 
+// Gets a real (i.e. not pseudo) handle for the current thread, with the
+// permissions needed for profiling.
+// @return a real HANDLE for the current thread.
+static HANDLE GetRealCurrentThreadHandleForProfiling() {
+  HANDLE realCurrentThreadHandle;
+  if (!::DuplicateHandle(
+          ::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(),
+          &realCurrentThreadHandle,
+          THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION,
+          FALSE, 0)) {
+    return nullptr;
+  }
+
+  return realCurrentThreadHandle;
+}
+
 class PlatformData {
  public:
   // Get a handle to the calling thread. This is the thread that we are
-  // going to profile. We need to make a copy of the handle because we are
-  // going to use it in the sampler thread. Using GetThreadHandle() will
-  // not work in this case. We're using OpenThread because DuplicateHandle
-  // for some reason doesn't work in Chrome's sandbox.
+  // going to profile. We need a real handle because we are going to use it in
+  // the sampler thread.
   explicit PlatformData(int aThreadId)
-      : mProfiledThread(OpenThread(THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME |
-                                       THREAD_QUERY_INFORMATION,
-                                   false, aThreadId)) {
+      : mProfiledThread(GetRealCurrentThreadHandleForProfiling()) {
+    MOZ_ASSERT(aThreadId == ::GetCurrentThreadId());
     MOZ_COUNT_CTOR(PlatformData);
   }
 
