@@ -109,6 +109,8 @@ mochitest-harness:
               dest: tests
             - artifact: target.mochitest.tests.tar.gz
               dest: tests
+        toolchain:
+            - linux64-fix-stacks
     when:
         files-changed:
             - 'testing/mochitest/**'
