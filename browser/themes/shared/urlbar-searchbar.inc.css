@@ -700,6 +700,7 @@
   --cfr-animation-duration: 0.35s;
   --cfr-button-addons-icon: url(resource://activity-stream/data/content/assets/glyph-webextension-16.svg);
   --cfr-button-features-icon: url(resource://activity-stream/data/content/assets/glyph-cfr-feature-16.svg);
+  --cfr-button-highlights-icon: url(resource://activity-stream/data/content/assets/glyph-highlights-16.svg);
   --cfr-active-color: #0060df;
 }
 
@@ -719,11 +720,14 @@
   transition-timing-function: ease-in-out;
   transition-duration: var(--cfr-animation-duration);
 }
-#cfr-button[data-cfr-icon="webextensions-icon"] {
+#contextual-feature-recommendation[data-cfr-icon="webextensions-icon"] #cfr-button {
   list-style-image: var(--cfr-button-addons-icon);
 }
-#cfr-button[data-cfr-icon="recommendations-icon"] {
+#contextual-feature-recommendation[data-cfr-icon="recommendations-icon"] #cfr-button {
   list-style-image: var(--cfr-button-features-icon);
+}
+#contextual-feature-recommendation[data-cfr-icon="highlights-icon"] #cfr-button {
+  list-style-image: var(--cfr-button-highlights-icon);
 }
 #urlbar[cfr-recommendation-state="expanded"] #cfr-button {
   fill: white;
