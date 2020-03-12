@@ -123,7 +123,7 @@ use style::stylesheets::{CounterStyleRule, CssRule, CssRuleType, CssRules, CssRu
 use style::stylesheets::{DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule};
 use style::stylesheets::{KeyframesRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule};
 use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule, UrlExtraData};
-use style::stylesheets::{SanitizationData, SanitizationKind};
+use style::stylesheets::{SanitizationData, SanitizationKind, AllowImportRules};
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
 use style::timer::Timer;
@@ -1510,6 +1510,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(
         QuirksMode::NoQuirks,
         0,
         /* use_counters = */ None,
+        AllowImportRules::Yes,
         /* sanitization_data = */ None,
     ))
     .into_strong()
@@ -1530,6 +1531,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     quirks_mode: nsCompatibility,
     reusable_sheets: *mut LoaderReusableStyleSheets,
     use_counters: Option<&UseCounters>,
+    allow_import_rules: AllowImportRules,
     sanitization_kind: SanitizationKind,
     sanitized_output: Option<&mut nsAString>,
 ) -> Strong<RawServoStyleSheetContents> {
@@ -1571,6 +1573,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         quirks_mode.into(),
         line_number_offset,
         use_counters,
+        allow_import_rules,
         sanitization_data.as_mut(),
     ));
 
@@ -1590,6 +1593,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     line_number_offset: u32,
     quirks_mode: nsCompatibility,
     should_record_use_counters: bool,
+    allow_import_rules: AllowImportRules,
 ) {
     let load_data = RefPtr::new(load_data);
     let extra_data = UrlExtraData::new(extra_data);
@@ -1605,6 +1609,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
         quirks_mode.into(),
         line_number_offset,
         should_record_use_counters,
+        allow_import_rules,
     );
 
     if let Some(thread_pool) = STYLE_THREAD_POOL.pool().as_ref() {
@@ -1958,22 +1963,6 @@ pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &RawServoStyleSheetCon
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_HasImportRules(raw_contents: &RawServoStyleSheetContents) -> bool {
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-    let rules = StylesheetContents::as_arc(&raw_contents).rules(&guard);
-
-    let first_is_import = rules.iter().next().map_or(false, |r| r.rule_type() == CssRuleType::Import);
-    debug_assert_eq!(
-         first_is_import,
-         rules.iter().any(|r| r.rule_type() == CssRuleType::Import),
-         "@import must come before every other rule",
-    );
-
-    first_is_import
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetRules(
     sheet: &RawServoStyleSheetContents,
 ) -> Strong<ServoCssRules> {
@@ -2099,6 +2088,7 @@ pub extern "C" fn Servo_CssRules_InsertRule(
     index: u32,
     nested: bool,
     loader: *mut Loader,
+    allow_import_rules: AllowImportRules,
     gecko_stylesheet: *mut DomStyleSheet,
     rule_type: *mut u16,
 ) -> nsresult {
@@ -2126,6 +2116,7 @@ pub extern "C" fn Servo_CssRules_InsertRule(
         index as usize,
         nested,
         loader,
+        allow_import_rules,
     );
 
     match result {

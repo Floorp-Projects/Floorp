@@ -579,20 +579,39 @@ void StyleSheet::SetSourceURL(const nsAString& aSourceURL) {
 
 css::Rule* StyleSheet::GetDOMOwnerRule() const { return mOwnerRule; }
 
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule
+// https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-insertrule
 uint32_t StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
                                 nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv) {
   if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return 0;
   }
+
+  if (ModificationDisallowed()) {
+    aRv.ThrowNotAllowedError(
+        "This method can only be called on "
+        "modifiable style sheets");
+    return 0;
+  }
+
   return InsertRuleInternal(aRule, aIndex, aRv);
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-deleterule
+// https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-deleterule
 void StyleSheet::DeleteRule(uint32_t aIndex, nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& aRv) {
   if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return;
   }
+
+  if (ModificationDisallowed()) {
+    return aRv.ThrowNotAllowedError(
+        "This method can only be called on "
+        "modifiable style sheets");
+  }
+
   return DeleteRuleInternal(aIndex, aRv);
 }
 
@@ -717,32 +736,20 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   }
 
   // 3. Parse aText into rules.
-  // We need to create a disabled loader so that the parser will
-  // accept @import rules, but we do not want to trigger any loads.
-  auto disabledLoader = MakeRefPtr<css::Loader>();
-  disabledLoader->SetEnabled(false);
+  // 4. If rules contain @imports, skip them and continue parsing.
+  auto* loader = mConstructorDocument->CSSLoader();
   SetURLExtraData();
   RefPtr<const RawServoStyleSheetContents> rawContent =
       Servo_StyleSheet_FromUTF8Bytes(
-          disabledLoader, this,
+          loader, this,
           /* load_data = */ nullptr, &aText, mParsingMode, Inner().mURLData,
           /* line_number_offset = */ 0,
           mConstructorDocument->GetCompatibilityMode(),
           /* reusable_sheets = */ nullptr,
           mConstructorDocument->GetStyleUseCounters(),
-          StyleSanitizationKind::None,
+          StyleAllowImportRules::No, StyleSanitizationKind::None,
           /* sanitized_output = */ nullptr)
           .Consume();
-
-  // 4. If rules contain @imports, make no changes and throw NotAllowedError.
-  // FIXME(nordzilla): Checking for @import rules after parse time means that
-  // the document's use counters will be affected even if this function throws.
-  // Consider changing this to detect @import rules during parse time.
-  if (Servo_StyleSheet_HasImportRules(rawContent)) {
-    return aRv.ThrowNotAllowedError(
-        "@import rules are not allowed. Use the async replace() method "
-        "instead.");
-  }
 
   // 5. Set sheet's rules to the new rules.
   DropRuleList();
@@ -833,6 +840,10 @@ nsresult StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
 
   if (IsReadOnly()) {
     return NS_OK;
+  }
+
+  if (ModificationDisallowed()) {
+    return NS_ERROR_DOM_NOT_ALLOWED_ERR;
   }
 
   WillDirty();
@@ -1142,13 +1153,18 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
   const StyleUseCounters* useCounters =
       aLoader.GetDocument() ? aLoader.GetDocument()->GetStyleUseCounters()
                             : nullptr;
-
+  // @import rules are disallowed due to this decision:
+  // https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418
+  // We may allow @import rules again in the future.
+  auto allowImportRules = SelfOrAncestorIsConstructed()
+                              ? StyleAllowImportRules::No
+                              : StyleAllowImportRules::Yes;
   if (!AllowParallelParse(aLoader, GetSheetURI())) {
     RefPtr<RawServoStyleSheetContents> contents =
         Servo_StyleSheet_FromUTF8Bytes(
             &aLoader, this, &aLoadData, &aBytes, mParsingMode, Inner().mURLData,
             aLoadData.mLineNumber, aLoader.GetCompatibilityMode(),
-            /* reusable_sheets = */ nullptr, useCounters,
+            /* reusable_sheets = */ nullptr, useCounters, allowImportRules,
             StyleSanitizationKind::None,
             /* sanitized_output = */ nullptr)
             .Consume();
@@ -1158,7 +1174,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
     Servo_StyleSheet_FromUTF8BytesAsync(
         holder, Inner().mURLData, &aBytes, mParsingMode, aLoadData.mLineNumber,
         aLoader.GetCompatibilityMode(),
-        /* should_record_counters = */ !!useCounters);
+        /* should_record_use_counters = */ !!useCounters, allowImportRules);
   }
 
   return p;
@@ -1185,13 +1201,17 @@ void StyleSheet::ParseSheetSync(
           ? aLoader->GetDocument()->GetStyleUseCounters()
           : nullptr;
 
+  auto allowImportRules = SelfOrAncestorIsConstructed()
+                              ? StyleAllowImportRules::No
+                              : StyleAllowImportRules::Yes;
+
   SetURLExtraData();
   Inner().mContents =
-      Servo_StyleSheet_FromUTF8Bytes(aLoader, this, aLoadData, &aBytes,
-                                     mParsingMode, Inner().mURLData,
-                                     aLineNumber, compatMode, aReusableSheets,
-                                     useCounters, StyleSanitizationKind::None,
-                                     /* sanitized_output = */ nullptr)
+      Servo_StyleSheet_FromUTF8Bytes(
+          aLoader, this, aLoadData, &aBytes, mParsingMode, Inner().mURLData,
+          aLineNumber, compatMode, aReusableSheets, useCounters,
+          allowImportRules, StyleSanitizationKind::None,
+          /* sanitized_output = */ nullptr)
           .Consume();
 
   FinishParse();
@@ -1322,6 +1342,7 @@ ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
 uint32_t StyleSheet::InsertRuleInternal(const nsAString& aRule, uint32_t aIndex,
                                         ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
+  MOZ_ASSERT(!ModificationDisallowed());
 
   // Ensure mRuleList is constructed.
   GetCssRulesInternal();
@@ -1341,6 +1362,7 @@ uint32_t StyleSheet::InsertRuleInternal(const nsAString& aRule, uint32_t aIndex,
 
 void StyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
+  MOZ_ASSERT(!ModificationDisallowed());
 
   // Ensure mRuleList is constructed.
   GetCssRulesInternal();

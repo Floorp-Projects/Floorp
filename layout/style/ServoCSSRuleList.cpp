@@ -167,6 +167,9 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
   NS_ConvertUTF16toUTF8 rule(aRule);
   bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
+  auto allowImportRules = mStyleSheet->SelfOrAncestorIsConstructed()
+                              ? StyleAllowImportRules::No
+                              : StyleAllowImportRules::Yes;
 
   // TODO(emilio, bug 1535456): Should probably always be able to get a handle
   // to some loader if we're parsing an @import rule, but which one?
@@ -177,9 +180,9 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
     loader = doc->CSSLoader();
   }
   uint16_t type;
-  nsresult rv =
-      Servo_CssRules_InsertRule(mRawRules, mStyleSheet->RawContents(), &rule,
-                                aIndex, nested, loader, mStyleSheet, &type);
+  nsresult rv = Servo_CssRules_InsertRule(mRawRules, mStyleSheet->RawContents(),
+                                          &rule, aIndex, nested, loader,
+                                          allowImportRules, mStyleSheet, &type);
   if (NS_FAILED(rv)) {
     return rv;
   }
