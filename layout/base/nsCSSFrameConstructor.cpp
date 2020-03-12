@@ -7836,7 +7836,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
     nsContainerFrame* aParentFrame, nsIContent* aContent,
     ComputedStyle* aComputedStyle) {
   nsTableWrapperFrame* newFrame =
-      NS_NewTableWrapperFrame(aPresShell, aComputedStyle);
+      NS_NewTableWrapperFrame(mPresShell, aComputedStyle);
 
   newFrame->Init(aContent, aParentFrame, aFrame);
 
@@ -7863,7 +7863,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
 nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
     PresShell* aPresShell, nsIFrame* aFrame, nsContainerFrame* aParentFrame,
     nsIContent* aContent, ComputedStyle* aComputedStyle) {
-  nsTableFrame* newFrame = NS_NewTableFrame(aPresShell, aComputedStyle);
+  nsTableFrame* newFrame = NS_NewTableFrame(mPresShell, aComputedStyle);
 
   newFrame->Init(aContent, aParentFrame, aFrame);
 
@@ -7889,7 +7889,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
 
       ComputedStyle* const headerFooterComputedStyle = rowGroupFrame->Style();
       headerFooterFrame = static_cast<nsTableRowGroupFrame*>(
-          NS_NewTableRowGroupFrame(aPresShell, headerFooterComputedStyle));
+          NS_NewTableRowGroupFrame(mPresShell, headerFooterComputedStyle));
 
       nsIContent* headerFooter = rowGroupFrame->GetContent();
       headerFooterFrame->Init(headerFooter, newFrame, nullptr);
@@ -7922,7 +7922,6 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
 nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     nsPresContext* aPresContext, nsIFrame* aFrame,
     nsContainerFrame* aParentFrame, bool aIsFluid) {
-  PresShell* presShell = aPresContext->PresShell();
   ComputedStyle* computedStyle = aFrame->Style();
   nsIFrame* newFrame = nullptr;
   nsIFrame* nextContinuation = aFrame->GetNextContinuation();
@@ -7933,49 +7932,50 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   nsIContent* content = aFrame->GetContent();
 
   if (LayoutFrameType::Text == frameType) {
-    newFrame = NS_NewContinuingTextFrame(presShell, computedStyle);
+    newFrame = NS_NewContinuingTextFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Inline == frameType) {
-    newFrame = NS_NewInlineFrame(presShell, computedStyle);
+    newFrame = NS_NewInlineFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Block == frameType) {
     MOZ_ASSERT(!aFrame->IsTableCaption(),
                "no support for fragmenting table captions yet");
-    newFrame = NS_NewBlockFrame(presShell, computedStyle);
+    newFrame = NS_NewBlockFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
 #ifdef MOZ_XUL
   } else if (LayoutFrameType::XULLabel == frameType) {
-    newFrame = NS_NewXULLabelFrame(presShell, computedStyle);
+    newFrame = NS_NewXULLabelFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
 #endif
   } else if (LayoutFrameType::ColumnSetWrapper == frameType) {
     newFrame =
-        NS_NewColumnSetWrapperFrame(presShell, computedStyle, nsFrameState(0));
+        NS_NewColumnSetWrapperFrame(mPresShell, computedStyle, nsFrameState(0));
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ColumnSet == frameType) {
     MOZ_ASSERT(!aFrame->IsTableCaption(),
                "no support for fragmenting table captions yet");
-    newFrame = NS_NewColumnSetFrame(presShell, computedStyle, nsFrameState(0));
+    newFrame = NS_NewColumnSetFrame(mPresShell, computedStyle, nsFrameState(0));
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Page == frameType) {
     nsContainerFrame* canvasFrame;
-    newFrame = ConstructPageFrame(presShell, aParentFrame, aFrame, canvasFrame);
+    newFrame =
+        ConstructPageFrame(mPresShell, aParentFrame, aFrame, canvasFrame);
   } else if (LayoutFrameType::TableWrapper == frameType) {
     newFrame = CreateContinuingOuterTableFrame(
-        presShell, aPresContext, aFrame, aParentFrame, content, computedStyle);
+        mPresShell, aPresContext, aFrame, aParentFrame, content, computedStyle);
 
   } else if (LayoutFrameType::Table == frameType) {
-    newFrame = CreateContinuingTableFrame(presShell, aFrame, aParentFrame,
+    newFrame = CreateContinuingTableFrame(mPresShell, aFrame, aParentFrame,
                                           content, computedStyle);
 
   } else if (LayoutFrameType::TableRowGroup == frameType) {
-    newFrame = NS_NewTableRowGroupFrame(presShell, computedStyle);
+    newFrame = NS_NewTableRowGroupFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
     if (newFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
       nsTableFrame::RegisterPositionedTablePart(newFrame);
     }
   } else if (LayoutFrameType::TableRow == frameType) {
-    nsTableRowFrame* rowFrame = NS_NewTableRowFrame(presShell, computedStyle);
+    nsTableRowFrame* rowFrame = NS_NewTableRowFrame(mPresShell, computedStyle);
 
     rowFrame->Init(content, aParentFrame, aFrame);
     if (rowFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
@@ -8005,7 +8005,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     nsTableFrame* tableFrame =
         static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
     nsTableCellFrame* cellFrame =
-        NS_NewTableCellFrame(presShell, computedStyle, tableFrame);
+        NS_NewTableCellFrame(mPresShell, computedStyle, tableFrame);
 
     cellFrame->Init(content, aParentFrame, aFrame);
     if (cellFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
@@ -8020,41 +8020,41 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     SetInitialSingleChild(cellFrame, continuingBlockFrame);
     newFrame = cellFrame;
   } else if (LayoutFrameType::Line == frameType) {
-    newFrame = NS_NewFirstLineFrame(presShell, computedStyle);
+    newFrame = NS_NewFirstLineFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Letter == frameType) {
-    newFrame = NS_NewFirstLetterFrame(presShell, computedStyle);
+    newFrame = NS_NewFirstLetterFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Image == frameType) {
     auto* imageFrame = static_cast<nsImageFrame*>(aFrame);
-    newFrame = imageFrame->CreateContinuingFrame(presShell, computedStyle);
+    newFrame = imageFrame->CreateContinuingFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ImageControl == frameType) {
-    newFrame = NS_NewImageControlFrame(presShell, computedStyle);
+    newFrame = NS_NewImageControlFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::FieldSet == frameType) {
-    newFrame = NS_NewFieldSetFrame(presShell, computedStyle);
+    newFrame = NS_NewFieldSetFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Legend == frameType) {
-    newFrame = NS_NewLegendFrame(presShell, computedStyle);
+    newFrame = NS_NewLegendFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::FlexContainer == frameType) {
-    newFrame = NS_NewFlexContainerFrame(presShell, computedStyle);
+    newFrame = NS_NewFlexContainerFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::GridContainer == frameType) {
-    newFrame = NS_NewGridContainerFrame(presShell, computedStyle);
+    newFrame = NS_NewGridContainerFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Ruby == frameType) {
-    newFrame = NS_NewRubyFrame(presShell, computedStyle);
+    newFrame = NS_NewRubyFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::RubyBaseContainer == frameType) {
-    newFrame = NS_NewRubyBaseContainerFrame(presShell, computedStyle);
+    newFrame = NS_NewRubyBaseContainerFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::RubyTextContainer == frameType) {
-    newFrame = NS_NewRubyTextContainerFrame(presShell, computedStyle);
+    newFrame = NS_NewRubyTextContainerFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Details == frameType) {
-    newFrame = NS_NewDetailsFrame(presShell, computedStyle);
+    newFrame = NS_NewDetailsFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else {
     MOZ_CRASH("unexpected frame type");
