@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_SharedWorkerManager_h
 #define mozilla_dom_SharedWorkerManager_h
 
+#include "SharedWorkerParent.h"
 #include "mozilla/dom/RemoteWorkerController.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -20,12 +22,12 @@ class UniqueMessagePortId;
 class RemoteWorkerData;
 class SharedWorkerManager;
 class SharedWorkerService;
-class SharedWorkerParent;
 
 // Main-thread only object that keeps a manager and the service alive.
 // When the last SharedWorkerManagerHolder is released, the corresponding
 // manager unregisters itself from the service and terminates the worker.
-class SharedWorkerManagerHolder final {
+class SharedWorkerManagerHolder final
+    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
   NS_INLINE_DECL_REFCOUNTING(SharedWorkerManagerHolder);
 
@@ -39,8 +41,8 @@ class SharedWorkerManagerHolder final {
  private:
   ~SharedWorkerManagerHolder();
 
-  RefPtr<SharedWorkerManager> mManager;
-  RefPtr<SharedWorkerService> mService;
+  const RefPtr<SharedWorkerManager> mManager;
+  const RefPtr<SharedWorkerService> mService;
 };
 
 // Thread-safe wrapper for SharedWorkerManagerHolder.
@@ -124,23 +126,23 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
   nsCOMPtr<nsIEventTarget> mPBackgroundEventTarget;
 
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-  nsCString mDomain;
-  OriginAttributes mStoragePrincipalAttrs;
-  nsCOMPtr<nsIURI> mResolvedScriptURL;
-  nsString mName;
-  bool mIsSecureContext;
+  const nsCString mDomain;
+  const OriginAttributes mStoragePrincipalAttrs;
+  const nsCOMPtr<nsIURI> mResolvedScriptURL;
+  const nsString mName;
+  const bool mIsSecureContext;
   bool mSuspended;
   bool mFrozen;
 
   // Raw pointers because SharedWorkerParent unregisters itself in
   // ActorDestroy().
-  nsTArray<SharedWorkerParent*> mActors;
+  nsTArray<CheckedUnsafePtr<SharedWorkerParent>> mActors;
 
   RefPtr<RemoteWorkerController> mRemoteWorkerController;
 
   // Main-thread only. Raw Pointers because holders keep the manager alive and
   // they unregister themselves in their DTOR.
-  nsTArray<SharedWorkerManagerHolder*> mHolders;
+  nsTArray<CheckedUnsafePtr<SharedWorkerManagerHolder>> mHolders;
 };
 
 }  // namespace dom
