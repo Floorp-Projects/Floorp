@@ -177,12 +177,18 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind, size_t index)
+                         FunctionAsyncKind asyncKind, size_t functionIndex)
     : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
                   generatorKind, asyncKind,
-                  compilationInfo.funcData[index].get().atom,
-                  compilationInfo.funcData[index].get().flags) {
-  funcDataIndex_.emplace(index);
+                  compilationInfo.funcData[functionIndex]
+                      .as<FunctionCreationData>()
+                      .get()
+                      .atom,
+                  compilationInfo.funcData[functionIndex]
+                      .as<FunctionCreationData>()
+                      .get()
+                      .flags) {
+  funcDataIndex_.emplace(functionIndex);
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
@@ -351,7 +357,11 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
 
 MutableHandle<FunctionCreationData> FunctionBox::functionCreationData() const {
   MOZ_ASSERT(hasFunctionCreationIndex());
-  return compilationInfo_.funcData[*funcDataIndex_];
+  // Marked via CompilationData::funcData rooting.
+  return MutableHandle<FunctionCreationData>::fromMarkedLocation(
+      &compilationInfo_.funcData[*funcDataIndex_]
+           .get()
+           .as<FunctionCreationData>());
 }
 
 }  // namespace frontend
