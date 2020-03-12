@@ -532,9 +532,11 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::SBOX_ALL_OK == result,
       "SetDelayedIntegrityLevel should never fail, what happened?");
 
-  if (aSandboxLevel > 5) {
+  // SetLockdownDefaultDacl causes audio to fail for Windows 8.1 and earlier.
+  // Bug 1564842 tracks removing the Win10 or later restriction, once we can
+  // work around that problem.
+  if (aSandboxLevel > 5 && IsWin10OrLater()) {
     mPolicy->SetLockdownDefaultDacl();
-    mPolicy->AddRestrictingRandomSid();
   }
 
   if (aSandboxLevel > 4) {
@@ -744,9 +746,6 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
       sandbox::SBOX_ALL_OK == result,
       "SetDelayedIntegrityLevel should never fail, what happened?");
 
-  mPolicy->SetLockdownDefaultDacl();
-  mPolicy->AddRestrictingRandomSid();
-
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
@@ -836,9 +835,6 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
                          "SetDelayedIntegrityLevel should never fail with "
                          "these arguments, what happened?");
 
-  mPolicy->SetLockdownDefaultDacl();
-  mPolicy->AddRestrictingRandomSid();
-
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
@@ -917,7 +913,7 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       result,
       "SetJobLevel should never fail with these arguments, what happened?");
 
-  result = mPolicy->SetTokenLevel(sandbox::USER_LIMITED,
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
                                   sandbox::USER_LIMITED);
   SANDBOX_ENSURE_SUCCESS(
       result,
@@ -1047,9 +1043,6 @@ bool SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) {
   result = mPolicy->SetDelayedIntegrityLevel(delayedIntegrityLevel);
   SANDBOX_ENSURE_SUCCESS(
       result, "SetDelayedIntegrityLevel should never fail, what happened?");
-
-  mPolicy->SetLockdownDefaultDacl();
-  mPolicy->AddRestrictingRandomSid();
 
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
@@ -1204,9 +1197,6 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
   SANDBOX_ENSURE_SUCCESS(result,
                          "SetIntegrityLevel should never fail with these "
                          "arguments, what happened?");
-
-  mPolicy->SetLockdownDefaultDacl();
-  mPolicy->AddRestrictingRandomSid();
 
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
