@@ -42,6 +42,7 @@ class nsEffectiveTLDService final : public nsIEffectiveTLDService,
 
  private:
   nsresult GetBaseDomainInternal(nsCString& aHostname, int32_t aAdditionalParts,
+                                 bool aOnlyKnownPublicSuffix,
                                  nsACString& aBaseDomain);
   nsresult NormalizeHostname(nsCString& aHostname);
   ~nsEffectiveTLDService();

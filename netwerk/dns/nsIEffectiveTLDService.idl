@@ -37,6 +37,17 @@ interface nsIEffectiveTLDService : nsISupports
     ACString getPublicSuffix(in nsIURI aURI);
 
     /**
+     * Similar to getPublicSuffix, but the suffix is validated against
+     * the Public Suffix List. If the suffix is unknown this will return
+     * an empty string.
+     *
+     * @param   aURI   The URI to be analyzed
+     * @returns the public suffix if known, an empty string otherwise
+     * @see     getPublicSuffixFromHost()
+     */
+    ACString getKnownPublicSuffix(in nsIURI aURI);
+
+    /**
      * Returns the base domain of a URI; that is, the public suffix with a given
      * number of additional domain name parts. For example, the result of this method
      * for "www.bbc.co.uk", depending on the value of aAdditionalParts parameter, will
@@ -92,6 +103,17 @@ interface nsIEffectiveTLDService : nsISupports
      * @see     getPublicSuffix()
      */
     ACString getPublicSuffixFromHost(in AUTF8String aHost);
+
+    /**
+     * Similar to getPublicSuffixFromHost, but the suffix is validated against
+     * the Public Suffix List. If the suffix is unknown this will return
+     * an empty string.
+     *
+     * @param   aHost   The host to be analyzed.
+     * @returns the public suffix if known, an empty string otherwise
+     * @see     getPublicSuffixFromHost()
+     */
+    ACString getKnownPublicSuffixFromHost(in AUTF8String aHost);
 
     /**
      * NOTE: It is strongly recommended to use getBaseDomain() above if a suitable
