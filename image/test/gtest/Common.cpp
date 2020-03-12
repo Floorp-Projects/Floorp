@@ -36,12 +36,8 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   EXPECT_TRUE(NS_IsMainThread());
   sImageLibInitialized = true;
 
-  // Force sRGB to be consistent with reftests.
-  nsresult rv = Preferences::SetBool("gfx.color_management.force_srgb", true);
-  EXPECT_TRUE(rv == NS_OK);
-
   // Ensure WebP is enabled to run decoder tests.
-  rv = Preferences::SetBool("image.webp.enabled", true);
+  nsresult rv = Preferences::SetBool("image.webp.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
 
   // Ensure that ImageLib services are initialized.

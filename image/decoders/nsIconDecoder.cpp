@@ -51,6 +51,20 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadHeader(
   uint8_t width = uint8_t(aData[0]);
   uint8_t height = uint8_t(aData[1]);
   SurfaceFormat format = SurfaceFormat(aData[2]);
+  bool transform = bool(aData[3]);
+
+  // FIXME(aosmond): On OSX we get the icon in device space and already
+  // premultiplied, so we can't support the surface flags with icons right now.
+  SurfacePipeFlags pipeFlags = SurfacePipeFlags();
+  if (transform) {
+    if (mCMSMode == eCMSMode_All) {
+      mTransform = GetCMSsRGBTransform(format);
+    }
+
+    if (!(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA)) {
+      pipeFlags |= SurfacePipeFlags::PREMULTIPLY_ALPHA;
+    }
+  }
 
   // The input is 32bpp, so we expect 4 bytes of data per pixel.
   mBytesPerRow = width * 4;
@@ -69,7 +83,7 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadHeader(
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
       this, Size(), OutputSize(), FullFrame(), format, SurfaceFormat::OS_RGBA,
-      /* aAnimParams */ Nothing(), mTransform, SurfacePipeFlags());
+      /* aAnimParams */ Nothing(), mTransform, pipeFlags);
   if (!pipe) {
     return Transition::TerminateFailure();
   }
