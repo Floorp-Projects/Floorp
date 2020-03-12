@@ -272,23 +272,23 @@ class ScriptCounts {
 // TODO: Clean this up by either aggregating coverage results in some other
 // way, or by tweaking sweep ordering.
 using UniqueScriptCounts = js::UniquePtr<ScriptCounts>;
-using ScriptCountsMap = HashMap<JSScript*, UniqueScriptCounts,
-                                DefaultHasher<JSScript*>, SystemAllocPolicy>;
+using ScriptCountsMap = HashMap<BaseScript*, UniqueScriptCounts,
+                                DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 
 // The 'const char*' for the function name is a pointer within the LCovSource's
 // LifoAlloc and will be discarded at the same time.
 using ScriptLCovEntry = mozilla::Tuple<coverage::LCovSource*, const char*>;
-using ScriptLCovMap = HashMap<JSScript*, ScriptLCovEntry,
-                              DefaultHasher<JSScript*>, SystemAllocPolicy>;
+using ScriptLCovMap = HashMap<BaseScript*, ScriptLCovEntry,
+                              DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 
 #ifdef MOZ_VTUNE
-using ScriptVTuneIdMap =
-    HashMap<JSScript*, uint32_t, DefaultHasher<JSScript*>, SystemAllocPolicy>;
+using ScriptVTuneIdMap = HashMap<BaseScript*, uint32_t,
+                                 DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 #endif
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
-using DebugScriptMap = HashMap<JSScript*, UniqueDebugScript,
-                               DefaultHasher<JSScript*>, SystemAllocPolicy>;
+using DebugScriptMap = HashMap<BaseScript*, UniqueDebugScript,
+                               DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 
 class ScriptSource;
 
@@ -2251,8 +2251,7 @@ setterLevel:                                                                  \
 
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
-  // N.B.: no setter -- custom logic in JSScript.
-  MUTABLE_FLAG_GETTER(hasScriptCounts, HasScriptCounts)
+  MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
   // Access the flag for whether this script has a DebugScript in its realm's
   // map. This should only be used by the DebugScript class.
   MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
@@ -2898,7 +2897,6 @@ class JSScript : public js::BaseScript {
   js::jit::IonScriptCounts* getIonCounts();
   void releaseScriptCounts(js::ScriptCounts* counts);
   void destroyScriptCounts();
-  void clearHasScriptCounts();
   void resetScriptCounts();
 
   jsbytecode* main() const { return code() + mainOffset(); }
