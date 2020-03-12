@@ -21,6 +21,9 @@ class IssuePane extends PureComponent {
   static get propTypes() {
     return {
       issues: PropTypes.arrayOf(PropTypes.shape(Types.issue)).isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
@@ -32,9 +35,21 @@ class IssuePane extends PureComponent {
   }
 
   render() {
-    const { issues } = this.props;
+    const {
+      issues,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
 
-    return issues.length ? IssueList({ issues }) : this._renderNoIssues();
+    return issues.length
+      ? IssueList({
+          issues,
+          hideBoxModelHighlighter,
+          setSelectedNode,
+          showBoxModelHighlighterForNode,
+        })
+      : this._renderNoIssues();
   }
 }
 

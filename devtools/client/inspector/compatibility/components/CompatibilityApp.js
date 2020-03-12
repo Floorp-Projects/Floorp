@@ -28,11 +28,20 @@ class CompatibilityApp extends PureComponent {
         .isRequired,
       topLevelTargetIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
         .isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { selectedNodeIssues, topLevelTargetIssues } = this.props;
+    const {
+      selectedNodeIssues,
+      topLevelTargetIssues,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
 
     return dom.section(
       {
@@ -55,6 +64,9 @@ class CompatibilityApp extends PureComponent {
             component: IssuePane,
             componentProps: {
               issues: topLevelTargetIssues,
+              hideBoxModelHighlighter,
+              setSelectedNode,
+              showBoxModelHighlighterForNode,
             },
             opened: true,
           },
