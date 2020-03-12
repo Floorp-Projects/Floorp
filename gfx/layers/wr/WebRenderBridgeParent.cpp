@@ -342,7 +342,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mDestroyed(false),
       mReceivedDisplayList(false),
       mIsFirstPaint(true),
-      mSkippedComposite(false) {
+      mSkippedComposite(false),
+      mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
   mAsyncImageManager->AddPipeline(mPipelineId, this);
@@ -377,7 +378,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
       mDestroyed(true),
       mReceivedDisplayList(false),
       mIsFirstPaint(false),
-      mSkippedComposite(false) {}
+      mSkippedComposite(false),
+      mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {}
 
 WebRenderBridgeParent::~WebRenderBridgeParent() {
   if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
@@ -1043,6 +1045,28 @@ WebRenderBridgeParent::WriteCollectedFrames() {
 RefPtr<wr::WebRenderAPI::GetCollectedFramesPromise>
 WebRenderBridgeParent::GetCollectedFrames() {
   return Api(wr::RenderRoot::Default)->GetCollectedFrames();
+}
+
+void WebRenderBridgeParent::AddPendingScrollPayload(
+    CompositionPayload& aPayload,
+    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
+  auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
+  nsTArray<CompositionPayload>* payloads =
+      pendingScrollPayloads->LookupOrAdd(aKey);
+
+  payloads->AppendElement(aPayload);
+}
+
+nsTArray<CompositionPayload>* WebRenderBridgeParent::GetPendingScrollPayload(
+    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
+  auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
+  return pendingScrollPayloads->Get(aKey);
+}
+
+bool WebRenderBridgeParent::RemovePendingScrollPayload(
+    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
+  auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
+  return pendingScrollPayloads->Remove(aKey);
 }
 
 CompositorBridgeParent* WebRenderBridgeParent::GetRootCompositorBridgeParent()

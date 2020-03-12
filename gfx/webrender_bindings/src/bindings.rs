@@ -37,7 +37,7 @@ use webrender::{
     BinaryRecorder, Compositor, CompositorCapabilities, DebugFlags, Device,
     NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
-    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId
+    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId, FastHashMap
 };
 
 #[cfg(target_os = "macos")]
@@ -754,6 +754,23 @@ impl<'a> From<(&'a (WrPipelineId, WrDocumentId), &'a WrEpoch)> for WrPipelineEpo
 }
 
 #[repr(C)]
+pub struct WrPipelineIdAndEpoch {
+    pipeline_id: WrPipelineId,
+    epoch: WrEpoch
+}
+
+impl<'a> From<(&WrPipelineId, &WrEpoch)> for WrPipelineIdAndEpoch {
+    fn from(tuple: (&WrPipelineId, &WrEpoch)) -> WrPipelineIdAndEpoch {
+        WrPipelineIdAndEpoch {
+            pipeline_id: *tuple.0,
+            epoch: *tuple.1,
+        }
+    }
+}
+
+type WrPipelineIdEpochs = ThinVec<WrPipelineIdAndEpoch>;
+
+#[repr(C)]
 pub struct WrRemovedPipeline {
     pipeline_id: WrPipelineId,
     document_id: WrDocumentId,
@@ -862,7 +879,7 @@ extern "C" {
     // These callbacks are invoked from the render backend thread (aka the APZ
     // sampler thread)
     fn apz_register_sampler(window_id: WrWindowId);
-    fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction, document_id: WrDocumentId);
+    fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction, document_id: WrDocumentId, epochs_being_rendered: &WrPipelineIdEpochs);
     fn apz_deregister_sampler(window_id: WrWindowId);
 }
 
@@ -947,9 +964,14 @@ impl AsyncPropertySampler for SamplerCallback {
         unsafe { apz_register_sampler(self.window_id) }
     }
 
-    fn sample(&self, document_id: DocumentId) -> Vec<FrameMsg> {
+    fn sample(&self, document_id: DocumentId,
+              epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
         let mut transaction = Transaction::new();
-        unsafe { apz_sample_transforms(self.window_id, &mut transaction, document_id) };
+        unsafe { apz_sample_transforms(
+	    self.window_id, &mut transaction,
+            document_id, &epochs_being_rendered.iter()
+                                               .map(WrPipelineIdAndEpoch::from).collect()
+	)};
         // TODO: also omta_sample_transforms(...)
         transaction.get_frame_ops()
     }
