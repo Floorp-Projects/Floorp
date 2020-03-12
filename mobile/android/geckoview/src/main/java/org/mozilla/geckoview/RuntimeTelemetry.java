@@ -40,7 +40,10 @@ public final class RuntimeTelemetry {
      *
      * @param clear Whether the retrieved snapshots should be cleared.
      * @return A {@link GeckoResult} with the GeckoBundle snapshot results.
+     *
+     * @deprecated Use Glean instead. Planned removal in 79 (bug 1620656).
      */
+    @Deprecated
     @AnyThread
     public @NonNull GeckoResult<JSONObject> getSnapshots(final boolean clear) {
         final GeckoBundle msg = new GeckoBundle(1);
