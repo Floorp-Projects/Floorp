@@ -40,6 +40,7 @@ DIRS += [
     'finalizationwitness',
     'find',
     'fuzzyfox',
+    'glean',
     'jsoncpp/src/lib_json',
     'kvstore',
     'lz4',
