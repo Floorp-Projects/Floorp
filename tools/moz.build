@@ -53,6 +53,9 @@ with Files("update-packaging/**"):
 with Files("update-verify/**"):
     BUG_COMPONENT = ("Release Engineering", "Release Automation: Updates")
 
+with Files("vcs/**"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
 SPHINX_TREES['moztreedocs'] = 'moztreedocs/docs'
 
 with Files('lint/docs/**'):
