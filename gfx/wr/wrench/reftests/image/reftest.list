@@ -9,3 +9,4 @@ platform(linux,mac) == yuv.yaml yuv.png
 skip_on(android,device) == tiled-clip-chain.yaml tiled-clip-chain-ref.yaml
 skip_on(android,device) == tiled-complex-clip.yaml tiled-complex-clip-ref.yaml
 platform(linux,mac) == texture-rect.yaml texture-rect-ref.yaml
+platform(linux) == occlusion.yaml occlusion.png
