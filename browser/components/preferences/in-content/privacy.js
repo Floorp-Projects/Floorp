@@ -1914,7 +1914,11 @@ var gPrivacyPane = {
           id: messageId,
         },
       ]);
-      let loggedIn = await OSKeyStore.ensureLoggedIn(messageText.value, false);
+      let loggedIn = await OSKeyStore.ensureLoggedIn(
+        messageText.value,
+        window,
+        false
+      );
       if (!loggedIn) {
         return;
       }
