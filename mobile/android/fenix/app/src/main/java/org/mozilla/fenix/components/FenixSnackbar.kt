@@ -110,18 +110,19 @@ class FenixSnackbar private constructor(
         }
 
         /**
-         * Considers BrowserToolbar for padding when making snackbar
+         * Considers BrowserToolbar for padding when making snackbar. The vast majority of the time
+         * you will want to pass in `fragment.view`.
          */
         fun makeWithToolbarPadding(
-            view: View,
+            fragmentView: View,
             duration: Int = LENGTH_LONG,
             isError: Boolean = false
         ): FenixSnackbar {
-            val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
-            val toolbarHeight = view.context.resources
+            val shouldUseBottomToolbar = fragmentView.context.settings().shouldUseBottomToolbar
+            val toolbarHeight = fragmentView.context.resources
                 .getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
-            return make(view, duration, isError).apply {
+            return make(fragmentView, duration, isError).apply {
                 this.view.setPadding(
                     0,
                     0,

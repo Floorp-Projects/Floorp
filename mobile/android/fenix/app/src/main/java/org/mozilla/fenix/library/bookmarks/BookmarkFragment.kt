@@ -81,6 +81,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         bookmarkStore = StoreProvider.get(this) {
             BookmarkFragmentStore(BookmarkFragmentState(null))
         }
+
         bookmarkInteractor = BookmarkFragmentInteractor(
             bookmarkStore = bookmarkStore,
             viewModel = sharedViewModel,
