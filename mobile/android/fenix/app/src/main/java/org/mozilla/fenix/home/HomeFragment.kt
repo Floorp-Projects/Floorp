@@ -227,7 +227,9 @@ class HomeFragment : Fragment() {
 
             ConstraintSet().apply {
                 clone(view.toolbarLayout)
+                clear(view.bottom_bar.id, BOTTOM)
                 clear(view.bottomBarShadow.id, BOTTOM)
+                connect(view.bottom_bar.id, TOP, PARENT_ID, TOP)
                 connect(view.bottomBarShadow.id, TOP, view.bottom_bar.id, BOTTOM)
                 connect(view.bottomBarShadow.id, BOTTOM, PARENT_ID, BOTTOM)
                 applyTo(view.toolbarLayout)
