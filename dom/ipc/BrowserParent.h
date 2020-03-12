@@ -429,7 +429,8 @@ class BrowserParent final : public PBrowserParent,
       const bool& aIsVertical, const LayoutDeviceIntPoint& aPoint);
 
   mozilla::ipc::IPCResult RecvEnableDisableCommands(
-      const nsString& aAction, nsTArray<nsCString>&& aEnabledCommands,
+      const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aAction,
+      nsTArray<nsCString>&& aEnabledCommands,
       nsTArray<nsCString>&& aDisabledCommands);
 
   mozilla::ipc::IPCResult RecvSetCursor(

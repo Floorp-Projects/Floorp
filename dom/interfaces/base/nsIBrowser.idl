@@ -69,18 +69,6 @@ interface nsIBrowser : nsISupports
    */
   readonly attribute nsIWebProgress remoteWebProgressManager;
 
-  /**
-   * Called by the child to inform the parent that a command update has occurred
-   * and the supplied set of commands are now enabled and disabled.
-   *
-   * @param action command updater action
-   * @param enabledCommands commands to enable
-   * @param disabledCommand commands to disable
-   */
-  void enableDisableCommandsRemoteOnly(in AString action,
-                                       in Array<ACString> enabledCommands,
-                                       in Array<ACString> disabledCommands);
-
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIPrincipal contentStoragePrincipal;
   readonly attribute nsIPrincipal contentBlockingAllowListPrincipal;

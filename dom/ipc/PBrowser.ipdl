@@ -409,7 +409,8 @@ parent:
      * Indicate, based on the current state, that some commands are enabled and
      * some are disabled.
      */
-    async EnableDisableCommands(nsString action,
+    async EnableDisableCommands(MaybeDiscardedBrowsingContext bc,
+                                nsString action,
                                 nsCString[] enabledCommands,
                                 nsCString[] disabledCommands);
 

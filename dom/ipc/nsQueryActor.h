@@ -7,12 +7,18 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/JSWindowActorParent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
-class MOZ_STACK_CLASS nsQueryActor final : public nsCOMPtr_helper {
+// This type is used to get an JSWindowActorChild given a window. It
+// only has any use within a child process.
+class MOZ_STACK_CLASS nsQueryActorChild final : public nsCOMPtr_helper {
  public:
-  nsQueryActor(const nsDependentString aActorName, nsPIDOMWindowOuter* aWindow)
+  nsQueryActorChild(const nsLiteralString aActorName,
+                    nsPIDOMWindowOuter* aWindow)
       : mActorName(aActorName), mWindow(aWindow) {}
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
@@ -37,13 +43,55 @@ class MOZ_STACK_CLASS nsQueryActor final : public nsCOMPtr_helper {
   }
 
  private:
-  const nsDependentString mActorName;
+  const nsLiteralString mActorName;
   nsPIDOMWindowOuter* mWindow;
 };
 
-inline nsQueryActor do_QueryActor(const char16_t* aActorName,
-                                  nsPIDOMWindowOuter* aWindow) {
-  return nsQueryActor(nsDependentString(aActorName), aWindow);
+template <size_t length>
+inline nsQueryActorChild do_QueryActor(const char16_t (&aActorName)[length],
+                                       nsPIDOMWindowOuter* aWindow) {
+  return nsQueryActorChild(nsLiteralString(aActorName), aWindow);
+}
+
+// This type is used to get an actor given a CanonicalBrowsingContext. It
+// is only useful in the parent process.
+class MOZ_STACK_CLASS nsQueryActorParent final : public nsCOMPtr_helper {
+ public:
+  nsQueryActorParent(nsLiteralString aActorName,
+                     mozilla::dom::CanonicalBrowsingContext* aBrowsingContext)
+      : mActorName(aActorName), mBrowsingContext(aBrowsingContext) {}
+
+  virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
+                                          void** aResult) const override {
+    if (!mBrowsingContext) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+
+    RefPtr<mozilla::dom::WindowGlobalParent> wgp =
+        mBrowsingContext->GetCurrentWindowGlobal();
+    if (!wgp) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+
+    RefPtr<mozilla::dom::JSWindowActorParent> actor =
+        wgp->GetActor(mActorName, mozilla::IgnoreErrors());
+    if (!actor) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+
+    return actor->QueryInterfaceActor(aIID, aResult);
+  }
+
+ private:
+  const nsLiteralString mActorName;
+  mozilla::dom::CanonicalBrowsingContext* mBrowsingContext;
+};
+
+template <size_t length>
+inline nsQueryActorParent do_QueryActor(
+    const char16_t (&aActorName)[length],
+    mozilla::dom::CanonicalBrowsingContext* aBrowsingContext) {
+  return nsQueryActorParent(nsLiteralString(aActorName), aBrowsingContext);
 }
 
 #endif  // defined nsQueryActor_h
