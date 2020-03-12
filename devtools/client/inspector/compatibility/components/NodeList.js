@@ -36,7 +36,7 @@ class NodeList extends PureComponent {
     } = this.props;
 
     return dom.ul(
-      {},
+      { className: "compatibility-node-list" },
       nodes.map(node =>
         NodeItem({
           node,
