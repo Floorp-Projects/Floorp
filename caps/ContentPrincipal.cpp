@@ -265,12 +265,11 @@ bool ContentPrincipal::SubsumesInternal(
     }
   }
 
-  nsCOMPtr<nsIURI> otherURI;
-  rv = aOther->GetURI(getter_AddRefs(otherURI));
-  NS_ENSURE_SUCCESS(rv, false);
-
   // Compare uris.
-  return nsScriptSecurityManager::SecurityCompareURIs(mURI, otherURI);
+  bool isSameOrigin = false;
+  rv = aOther->IsSameOrigin(mURI, false, &isSameOrigin);
+  NS_ENSURE_SUCCESS(rv, false);
+  return isSameOrigin;
 }
 
 NS_IMETHODIMP
