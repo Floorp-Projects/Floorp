@@ -393,6 +393,17 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // True if the sheet was created through the Constructable StyleSheets API
   bool IsConstructed() const { return !!mConstructorDocument; }
 
+  // True if any of this sheet's ancestors were created through the
+  // Constructable StyleSheets API
+  bool SelfOrAncestorIsConstructed() const {
+    for (auto* sheet = this; sheet; sheet = sheet->mParent) {
+      if (sheet->IsConstructed()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Ture if the sheet's constructor document matches the given document
   bool ConstructorDocumentMatches(dom::Document& aDocument) const {
     return mConstructorDocument == &aDocument;
