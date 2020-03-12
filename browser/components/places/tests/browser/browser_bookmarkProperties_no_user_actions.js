@@ -24,6 +24,7 @@ add_task(async function test_change_title_from_BookmarkStar() {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
+  StarUI._createPanelIfNeeded();
   let bookmarkPanel = document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
 
