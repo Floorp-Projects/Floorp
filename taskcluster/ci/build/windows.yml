@@ -44,12 +44,10 @@ win32/debug:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    dependencies:
-        win64-clang-cl: toolchain-win64-clang-cl
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-win-cross
             - linux64-rust-cross-1.41
             - linux64-rust-size
             - linux64-nasm
@@ -62,10 +60,6 @@ win32/debug:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
-        win64-clang-cl:
-            - artifact: clang.tar.bz2
-              extract: true
-              dest: clang-cl
 
 win32/opt:
     description: "Win32 Opt"
@@ -101,12 +95,10 @@ win32/opt:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['mozilla-central', 'try']
-    dependencies:
-        win64-clang-cl: toolchain-win64-clang-cl
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-win-cross
             - linux64-rust-cross-1.41
             - linux64-rust-size
             - linux64-nasm
@@ -119,10 +111,6 @@ win32/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
-        win64-clang-cl:
-            - artifact: clang.tar.bz2
-              extract: true
-              dest: clang-cl
 
 win64/debug:
     description: "Win64 Debug"
@@ -158,12 +146,10 @@ win64/debug:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    dependencies:
-        win64-clang-cl: toolchain-win64-clang-cl
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-win-cross
             - linux64-rust-cross-1.41
             - linux64-rust-size
             - linux64-nasm
@@ -176,10 +162,6 @@ win64/debug:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
-        win64-clang-cl:
-            - artifact: clang.tar.bz2
-              extract: true
-              dest: clang-cl
 
 win64-fuzzing/debug:
     description: "Win64 Fuzzing Debug"
@@ -295,13 +277,11 @@ win64/opt:
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    dependencies:
-        win64-clang-cl: toolchain-win64-clang-cl
     run-on-projects: ['mozilla-central', 'try']
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-win-cross
             - linux64-rust-cross-1.41
             - linux64-rust-size
             - linux64-nasm
@@ -314,10 +294,6 @@ win64/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
-        win64-clang-cl:
-            - artifact: clang.tar.bz2
-              extract: true
-              dest: clang-cl
 
 win64-plain/opt:
     description: "Win64 Opt Plain"
@@ -1088,12 +1064,10 @@ win64-aarch64/debug:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: debug
-    dependencies:
-        win64-clang-cl: toolchain-win64-clang-cl
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-win-cross
             - linux64-rust-cross-1.41
             - linux64-rust-size
             - linux64-nasm
@@ -1106,10 +1080,6 @@ win64-aarch64/debug:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
-        win64-clang-cl:
-            - artifact: clang.tar.bz2
-              extract: true
-              dest: clang-cl
 
 win64-aarch64/opt:
     description: "AArch64 Win64 Opt"
@@ -1149,12 +1119,10 @@ win64-aarch64/opt:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
-    dependencies:
-        win64-clang-cl: toolchain-win64-clang-cl
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-win-cross
             - linux64-rust-cross-1.41
             - linux64-rust-size
             - linux64-nasm
@@ -1167,10 +1135,6 @@ win64-aarch64/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
-        win64-clang-cl:
-            - artifact: clang.tar.bz2
-              extract: true
-              dest: clang-cl
 
 win64-aarch64-eme/opt:
     description: "AArch64 Win64 Opt w/ EME"

@@ -208,6 +208,26 @@ linux64-clang-9-macosx-cross:
             - linux64-clang-9
             - linux64-gcc-7
 
+linux64-clang-9-win-cross:
+    description: "Clang 9 toolchain build with Windows Compiler RT libs"
+    treeherder:
+        symbol: TL(clang9-win-cross)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: build-clang-linux-win-cross.sh
+        toolchain-alias: linux64-clang-win-cross
+        toolchain-artifact: public/build/clang.tar.xz
+    dependencies:
+        win64-clang-cl: toolchain-win64-clang-cl
+    fetches:
+        toolchain:
+            - linux64-clang-9
+        win64-clang-cl:
+            - artifact: clang.tar.bz2
+              extract: false
+
 macosx64-clang:
     description: "Clang toolchain build"
     treeherder:
