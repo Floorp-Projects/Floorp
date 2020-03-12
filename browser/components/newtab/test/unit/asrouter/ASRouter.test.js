@@ -711,6 +711,43 @@ describe("ASRouter", () => {
       assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
+    it("should route cfr_urlbar_chiclet message to the right hub force = false", () => {
+      Router.routeMessageToTarget(
+        { template: "cfr_urlbar_chiclet" },
+        target,
+        { param: {} },
+        false
+      );
+
+      assert.calledOnce(CFRPageActions.addRecommendation);
+      const { args } = CFRPageActions.addRecommendation.firstCall;
+      // Host should be null
+      assert.isNull(args[1]);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
+      assert.notCalled(CFRPageActions.forceRecommendation);
+      assert.notCalled(CFRPageActions.showMilestone);
+      assert.notCalled(target.sendAsyncMessage);
+      assert.notCalled(FakeMomentsPageHub.executeAction);
+    });
+    it("should route cfr_urlbar_chiclet message to the right hub force = true", () => {
+      Router.routeMessageToTarget(
+        { template: "cfr_urlbar_chiclet" },
+        target,
+        {},
+        true
+      );
+
+      assert.calledOnce(CFRPageActions.forceRecommendation);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
+      assert.notCalled(CFRPageActions.addRecommendation);
+      assert.notCalled(CFRPageActions.showMilestone);
+      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
+      assert.notCalled(target.sendAsyncMessage);
+      assert.notCalled(FakeMomentsPageHub.executeAction);
+    });
     it("should route default to sending to content", () => {
       Router.routeMessageToTarget({ template: "snippets" }, target, {}, true);
 

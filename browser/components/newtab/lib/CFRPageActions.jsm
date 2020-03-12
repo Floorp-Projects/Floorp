@@ -7,11 +7,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ASRouterActions: ra } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -43,6 +48,7 @@ const DELAY_BEFORE_EXPAND_MS = 1000;
 const CATEGORY_ICONS = {
   cfrAddons: "webextensions-icon",
   cfrFeatures: "recommendations-icon",
+  cfrHeartbeat: "highlights-icon",
 };
 
 /**
@@ -83,6 +89,7 @@ class PageAction {
     this._popupStateChange = this._popupStateChange.bind(this);
     this._collapse = this._collapse.bind(this);
     this._showPopupOnClick = this._showPopupOnClick.bind(this);
+    this._executeNotifierAction = this._executeNotifierAction.bind(this);
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
@@ -143,10 +150,16 @@ class PageAction {
         notificationText.attributes.tooltiptext
       );
     }
-    this.button.setAttribute(
+    this.container.setAttribute(
       "data-cfr-icon",
       CATEGORY_ICONS[recommendation.content.category]
     );
+    if (recommendation.content.active_color) {
+      this.container.style.setProperty(
+        "--cfr-active-color",
+        recommendation.content.active_color
+      );
+    }
 
     // Wait for layout to flush to avoid a synchronous reflow then calculate the
     // label width. We can safely get the width even though the recommendation is
@@ -156,7 +169,11 @@ class PageAction {
     );
     this.urlbarinput.style.setProperty("--cfr-label-width", `${width}px`);
 
-    this.container.addEventListener("click", this._showPopupOnClick);
+    if (this.shouldShowDoorhanger(recommendation)) {
+      this.container.addEventListener("click", this._showPopupOnClick);
+    } else {
+      this.container.addEventListener("click", this._executeNotifierAction);
+    }
     // Collapse the recommendation on url bar focus in order to free up more
     // space to display and edit the url
     this.urlbar.addEventListener("focus", this._collapse);
@@ -183,6 +200,7 @@ class PageAction {
     this._clearScheduledStateChanges();
     this.urlbarinput.removeAttribute("cfr-recommendation-state");
     this.container.removeEventListener("click", this._showPopupOnClick);
+    this.container.removeEventListener("click", this._executeNotifierAction);
     this.urlbar.removeEventListener("focus", this._collapse);
     if (this.currentNotification) {
       this.window.PopupNotifications.remove(this.currentNotification);
@@ -264,6 +282,14 @@ class PageAction {
     } else if (state === "dismissed") {
       this._collapse();
     }
+  }
+
+  shouldShowDoorhanger(recommendation) {
+    if (recommendation.content.layout === "chiclet_open_url") {
+      return false;
+    }
+
+    return true;
   }
 
   dispatchUserAction(action) {
@@ -846,6 +872,35 @@ class PageAction {
     );
   }
 
+  _executeNotifierAction(event) {
+    const browser = this.window.gBrowser.selectedBrowser;
+    if (!RecommendationMap.has(browser)) {
+      return;
+    }
+    const message = RecommendationMap.get(browser);
+
+    switch (message.content.layout) {
+      case "chiclet_open_url":
+        this._dispatchToASRouter(
+          {
+            type: "USER_ACTION",
+            data: {
+              type: ra.OPEN_URL,
+              data: {
+                args: message.content.action.url,
+                where: message.content.action.where,
+              },
+            },
+          },
+          this.window
+        );
+        break;
+    }
+
+    this.hideAddressBarNotifier();
+    RecommendationMap.delete(browser);
+  }
+
   /**
    * Respond to a user click on the recommendation by showing a doorhanger/
    * popup notification
@@ -1085,7 +1140,15 @@ const CFRPageActions = {
       await PageActionMap.get(win).showPopup();
       PageActionMap.get(win).addImpression(recommendation);
     } else {
-      await PageActionMap.get(win).showAddressBarNotifier(recommendation, true);
+      const pageAction = PageActionMap.get(win);
+      if (content.delay) {
+        setTimeout(
+          () => pageAction.showAddressBarNotifier(recommendation, true),
+          content.delay
+        );
+      } else {
+        await pageAction.showAddressBarNotifier(recommendation, true);
+      }
     }
     return true;
   },
