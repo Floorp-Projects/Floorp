@@ -91,8 +91,8 @@ async function testRtlAnchors(doc, tooltip) {
 
   // box2 uses RTL direction, so the tooltip is aligned with the right edge of the anchor
   is(
-    panelRect.right,
-    anchorRect.right,
+    Math.round(panelRect.right),
+    Math.round(anchorRect.right),
     "Tooltip is aligned with right edge of anchor"
   );
   is(
@@ -134,8 +134,8 @@ async function testLtrAnchors(doc, tooltip) {
 
   // box3 uses LTR direction, so the tooltip is aligned with the left edge of the anchor.
   is(
-    panelRect.left,
-    anchorRect.left,
+    Math.round(panelRect.left),
+    Math.round(anchorRect.left),
     "Tooltip is aligned with left edge of anchor"
   );
   is(

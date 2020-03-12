@@ -141,7 +141,6 @@ const calculateVerticalPosition = (
   // Calculate HEIGHT.
   const availableHeight = pos === TOP ? availableTop : availableBottom;
   height = Math.min(height, availableHeight - offset);
-  height = Math.floor(height);
 
   // Calculate TOP.
   let top =
@@ -152,7 +151,11 @@ const calculateVerticalPosition = (
   // Translate back to absolute coordinates by re-including viewport top margin.
   top += viewportRect.top;
 
-  return { top, height, computedPosition: pos };
+  return {
+    top: Math.round(top),
+    height: Math.round(height),
+    computedPosition: pos,
+  };
 };
 
 /**
@@ -276,7 +279,11 @@ const calculateHorizontalPosition = (
       ? arrowStart
       : tooltipWidth - arrowWidth - arrowStart;
 
-  return { left, width: tooltipWidth, arrowLeft };
+  return {
+    left: Math.round(left),
+    width: Math.round(tooltipWidth),
+    arrowLeft: Math.round(arrowLeft),
+  };
 };
 
 /**
