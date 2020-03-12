@@ -73,6 +73,7 @@ class PolicyBase final : public TargetPolicy {
                                     const base::char16* handle_name) override;
   void AddHandleToShare(HANDLE handle) override;
   void SetLockdownDefaultDacl() override;
+  void AddRestrictingRandomSid() override;
   void SetEnableOPMRedirection() override;
   bool GetEnableOPMRedirection() override;
   ResultCode AddAppContainerProfile(const wchar_t* package_name,
@@ -167,6 +168,7 @@ class PolicyBase final : public TargetPolicy {
   base::win::ScopedHandle lowbox_directory_;
   std::unique_ptr<Dispatcher> dispatcher_;
   bool lockdown_default_dacl_;
+  bool add_restricting_random_sid_;
 
   static HDESK alternate_desktop_handle_;
   static HWINSTA alternate_winstation_handle_;
