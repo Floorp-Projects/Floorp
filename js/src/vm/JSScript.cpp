@@ -5497,12 +5497,13 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
 
 /* static */
 LazyScript* LazyScript::Create(
-    JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
+    JSContext* cx, const frontend::CompilationInfo& compilationInfo,
+    HandleFunction fun, HandleScriptSourceObject sourceObject,
     const frontend::AtomVector& closedOverBindings,
-    const frontend::FunctionBoxVector& innerFunctionBoxes,
+    const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
     const SourceExtent& extent) {
   uint32_t ngcthings =
-      innerFunctionBoxes.length() + closedOverBindings.length();
+      innerFunctionIndexes.length() + closedOverBindings.length();
 
   LazyScript* lazy =
       LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent);
@@ -5510,7 +5511,8 @@ LazyScript* LazyScript::Create(
     return nullptr;
   }
 
-  lazy->setFlag(ImmutableFlags::HasInnerFunctions, !innerFunctionBoxes.empty());
+  lazy->setFlag(ImmutableFlags::HasInnerFunctions,
+                !innerFunctionIndexes.empty());
   lazy->setFlag(ImmutableFlags::IsFunction);
 
   // Fill in gcthing data with inner functions followed by binding data.
@@ -5518,8 +5520,9 @@ LazyScript* LazyScript::Create(
       lazy->data_ ? lazy->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   auto iter = gcThings.begin();
 
-  for (const frontend::FunctionBox* funbox : innerFunctionBoxes) {
-    JSFunction* fun = funbox->function();
+  for (const frontend::FunctionIndex& index : innerFunctionIndexes) {
+    // Assumes that the associated FunctionCreationData was already published.
+    JSFunction* fun = compilationInfo.funcData[index].as<JSFunction*>();
     *iter++ = JS::GCCellPtr(fun);
 
     fun->setEnclosingLazyScript(lazy);
