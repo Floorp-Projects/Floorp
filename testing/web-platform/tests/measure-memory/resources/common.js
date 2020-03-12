@@ -5,8 +5,8 @@ function checkMeasureMemoryBreakdown(breakdown, options) {
   let allowed = new Set(options.allowed);
   assert_own_property(breakdown, 'bytes');
   assert_greater_than_equal(breakdown.bytes, 0);
-  assert_own_property(breakdown, 'userAgentSpecificType');
-  for (let userAgentSpecificType of breakdown.userAgentSpecificType) {
+  assert_own_property(breakdown, 'userAgentSpecificTypes');
+  for (let userAgentSpecificType of breakdown.userAgentSpecificTypes) {
     assert_equals(typeof userAgentSpecificType, 'string');
   }
   assert_own_property(breakdown, 'attribution');
