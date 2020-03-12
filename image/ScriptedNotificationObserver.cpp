@@ -26,9 +26,8 @@ ScriptedNotificationObserver::ScriptedNotificationObserver(
     imgIScriptedNotificationObserver* aInner)
     : mInner(aInner) {}
 
-NS_IMETHODIMP
-ScriptedNotificationObserver::Notify(imgIRequest* aRequest, int32_t aType,
-                                     const nsIntRect* /*aUnused*/) {
+void ScriptedNotificationObserver::Notify(imgIRequest* aRequest, int32_t aType,
+                                          const nsIntRect* /*aUnused*/) {
   // For now, we block (other) scripts from running to preserve the historical
   // behavior from when ScriptedNotificationObserver::Notify was called as part
   // of the observers list in nsImageLoadingContent::Notify. Now each
@@ -37,30 +36,37 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest, int32_t aType,
   nsAutoScriptBlocker scriptBlocker;
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    return mInner->SizeAvailable(aRequest);
+    mInner->SizeAvailable(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::FRAME_UPDATE) {
-    return mInner->FrameUpdate(aRequest);
+    mInner->FrameUpdate(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-    return mInner->FrameComplete(aRequest);
+    mInner->FrameComplete(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
-    return mInner->DecodeComplete(aRequest);
+    mInner->DecodeComplete(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    return mInner->LoadComplete(aRequest);
+    mInner->LoadComplete(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::DISCARD) {
-    return mInner->Discard(aRequest);
+    mInner->Discard(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::IS_ANIMATED) {
-    return mInner->IsAnimated(aRequest);
+    mInner->IsAnimated(aRequest);
+    return;
   }
   if (aType == imgINotificationObserver::HAS_TRANSPARENCY) {
-    return mInner->HasTransparency(aRequest);
+    mInner->HasTransparency(aRequest);
+    return;
   }
-  return NS_OK;
 }
 
 }  // namespace image
