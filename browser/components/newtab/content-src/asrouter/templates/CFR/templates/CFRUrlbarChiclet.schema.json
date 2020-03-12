@@ -1,0 +1,79 @@
+{
+  "title": "CFRUrlbarChiclet",
+  "description": "A template with a chiclet button with text.",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "linkUrl": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Attribute used for different groups of messages from the same provider"
+    },
+    "layout": {
+      "type": "string",
+      "description": "Describes how content should be displayed.",
+      "enum": ["chiclet_open_url"]
+    },
+    "bucket_id": {
+      "type": "string",
+      "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
+    },
+    "notification_text": {
+      "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Message shown in the location bar notification."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Id of localized string for the location bar notification."
+            }
+          },
+          "required": ["string_id"]
+        }
+      ]
+    },
+    "delay": {
+      "type": "number",
+      "description": "Should the message be shown immediately or after a fixed duration"
+    },
+    "active_color": {
+      "type": "string",
+      "description": "Background color of the button"
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "description": "The page to open when the button is clicked.",
+          "allOf": [
+            {"$ref": "#/definitions/linkUrl"},
+            {"description": "Icon associated with the message"}
+          ]
+        },
+        "where": {
+          "description": "Should it open in a new tab or the current tab",
+          "enum": ["current", "tabshifted"]
+        }
+      },
+      "additionalProperties": "false",
+      "required": ["url", "where"]
+    }
+  },
+  "additionalProperties": false,
+  "required": ["layout", "category", "bucket_id", "notification_text", "action"]
+}
