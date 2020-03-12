@@ -142,9 +142,8 @@ nsImageLoadingContent::~nsImageLoadingContent() {
 /*
  * imgINotificationObserver impl
  */
-NS_IMETHODIMP
-nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
-                              const nsIntRect* aData) {
+void nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
+                                   const nsIntRect* aData) {
   MOZ_ASSERT(aRequest, "no request?");
   MOZ_ASSERT(aRequest == mCurrentRequest || aRequest == mPendingRequest,
              "Forgot to cancel a previous request?");
@@ -155,7 +154,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
 
   if (aType == imgINotificationObserver::UNLOCKED_DRAW) {
     OnUnlockedDraw();
-    return NS_OK;
+    return;
   }
 
   {
@@ -225,12 +224,10 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
 
     UpdateImageState(true);
   }
-
-  return NS_OK;
 }
 
-nsresult nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
-                                               nsresult aStatus) {
+void nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
+                                           nsresult aStatus) {
   uint32_t oldStatus;
   aRequest->GetImageStatus(&oldStatus);
 
@@ -242,8 +239,9 @@ nsresult nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
   //       to punt when the given request doesn't appear to have terminated in
   //       an expected state.
   if (!(oldStatus &
-        (imgIRequest::STATUS_ERROR | imgIRequest::STATUS_LOAD_COMPLETE)))
-    return NS_OK;
+        (imgIRequest::STATUS_ERROR | imgIRequest::STATUS_LOAD_COMPLETE))) {
+    return;
+  }
 
   // Our state may change. Watch it.
   AutoStateChanger changer(this, true);
@@ -273,8 +271,6 @@ nsresult nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   SVGObserverUtils::InvalidateDirectRenderingObservers(thisNode->AsElement());
   MaybeResolveDecodePromises();
-
-  return NS_OK;
 }
 
 static bool ImageIsAnimated(imgIRequest* aRequest) {
@@ -327,14 +323,12 @@ void nsImageLoadingContent::OnUnlockedDraw() {
   presShell->EnsureFrameInApproximatelyVisibleList(frame);
 }
 
-nsresult nsImageLoadingContent::OnImageIsAnimated(imgIRequest* aRequest) {
+void nsImageLoadingContent::OnImageIsAnimated(imgIRequest* aRequest) {
   bool* requestFlag = GetRegisteredFlagForRequest(aRequest);
   if (requestFlag) {
     nsLayoutUtils::RegisterImageRequest(GetFramePresContext(), aRequest,
                                         requestFlag);
   }
-
-  return NS_OK;
 }
 
 /*

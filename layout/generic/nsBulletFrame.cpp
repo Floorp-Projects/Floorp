@@ -1041,9 +1041,8 @@ void nsBulletFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
   }
 }
 
-NS_IMETHODIMP
-nsBulletFrame::Notify(imgIRequest* aRequest, int32_t aType,
-                      const nsIntRect* aData) {
+void nsBulletFrame::Notify(imgIRequest* aRequest, int32_t aType,
+                           const nsIntRect* aData) {
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
@@ -1097,8 +1096,6 @@ nsBulletFrame::Notify(imgIRequest* aRequest, int32_t aType,
       }
     }
   }
-
-  return NS_OK;
 }
 
 Document* nsBulletFrame::GetOurCurrentDoc() const {
@@ -1106,15 +1103,15 @@ Document* nsBulletFrame::GetOurCurrentDoc() const {
   return parentContent ? parentContent->GetComposedDoc() : nullptr;
 }
 
-nsresult nsBulletFrame::OnSizeAvailable(imgIRequest* aRequest,
-                                        imgIContainer* aImage) {
-  if (!aImage) return NS_ERROR_INVALID_ARG;
-  if (!aRequest) return NS_ERROR_INVALID_ARG;
+void nsBulletFrame::OnSizeAvailable(imgIRequest* aRequest,
+                                    imgIContainer* aImage) {
+  if (!aImage) return;
+  if (!aRequest) return;
 
   uint32_t status;
   aRequest->GetImageStatus(&status);
   if (status & imgIRequest::STATUS_ERROR) {
-    return NS_OK;
+    return;
   }
 
   nscoord w, h;
@@ -1145,8 +1142,6 @@ nsresult nsBulletFrame::OnSizeAvailable(imgIRequest* aRequest,
   // corresponding call to Decrement for this. This Increment will be
   // 'cleaned up' by the Request when it is destroyed, but only then.
   aRequest->IncrementAnimationConsumers();
-
-  return NS_OK;
 }
 
 void nsBulletFrame::GetLoadGroup(nsPresContext* aPresContext,
@@ -1326,11 +1321,10 @@ nsBulletListener::nsBulletListener() : mFrame(nullptr) {}
 
 nsBulletListener::~nsBulletListener() {}
 
-NS_IMETHODIMP
-nsBulletListener::Notify(imgIRequest* aRequest, int32_t aType,
-                         const nsIntRect* aData) {
+void nsBulletListener::Notify(imgIRequest* aRequest, int32_t aType,
+                              const nsIntRect* aData) {
   if (!mFrame) {
-    return NS_ERROR_FAILURE;
+    return;
   }
   return mFrame->Notify(aRequest, aType, aData);
 }
