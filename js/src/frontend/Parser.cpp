@@ -1675,7 +1675,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // LazyScript. Do a full parse.
   if (pc_->closedOverBindingsForLazy().length() >=
           LazyScript::NumClosedOverBindingsLimit ||
-      pc_->innerFunctionBoxesForLazy.length() >=
+      pc_->innerFunctionIndexesForLazy.length() >=
           LazyScript::NumInnerFunctionsLimit) {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -1686,7 +1686,8 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   LazyScriptCreationData data(cx_);
   if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
-                 pc_->innerFunctionBoxesForLazy, pc_->sc()->strict())) {
+                 std::move(pc_->innerFunctionIndexesForLazy),
+                 pc_->sc()->strict())) {
     return false;
   }
 
@@ -1726,20 +1727,23 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      return data->create(parser->cx_, funbox, parser->sourceObject_);
+      return data->create(parser->cx_, parser->compilationInfo_, funbox,
+                          parser->sourceObject_);
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
   return true;
 }
 
-bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
+bool LazyScriptCreationData::create(JSContext* cx,
+                                    CompilationInfo& compilationInfo,
+                                    FunctionBox* funbox,
                                     HandleScriptSourceObject sourceObject) {
   Rooted<JSFunction*> function(cx, funbox->function());
   MOZ_ASSERT(function);
-  BaseScript* lazy =
-      LazyScript::Create(cx, function, sourceObject, closedOverBindings,
-                         innerFunctionBoxes, funbox->extent);
+  BaseScript* lazy = LazyScript::Create(cx, compilationInfo, function,
+                                        sourceObject, closedOverBindings,
+                                        innerFunctionIndexes, funbox->extent);
   if (!lazy) {
     return false;
   }
@@ -2169,10 +2173,11 @@ bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
   // the inner function so that if the outer function is eventually parsed
   // we do not need any further parsing or processing of the inner function.
   //
-  // Append the inner functionbox here unconditionally; the vector is only used
-  // if the Parser using outerpc is a syntax parsing. See
+  // Append the inner function index here unconditionally; the vector is only
+  // used if the Parser using outerpc is a syntax parsing. See
   // GeneralParser<SyntaxParseHandler>::finishFunction.
-  if (!outerpc->innerFunctionBoxesForLazy.append(pc_->functionBox())) {
+  if (!outerpc->innerFunctionIndexesForLazy.append(
+          pc_->functionBox()->index())) {
     return false;
   }
 
