@@ -44,3 +44,6 @@ dependent-build-platforms:
     linux64/debug: build-linux64/debug
     linux64.*: build-linux64-shippable/opt
     linux1804-64/opt: build-linux64/opt
+    linux1804-64/debug: build-linux64/debug
+    linux1804-64-asan/opt: build-linux64-asan/opt
+    linux1804-64-shippable.*: build-linux64-shippable/opt
