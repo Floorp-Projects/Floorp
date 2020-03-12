@@ -243,15 +243,12 @@ class ProfileBufferEntryReader {
     Deserializer<T>::ReadInto(*this, aObject);
   }
 
-  // Allow `EntryReader::ReadIntoObjects()` with nothing, this could be
-  // useful for generic programming.
-  void ReadIntoObjects() {}
-
   // Read into one or more objects, sequentially.
-  template <typename T0, typename... Ts>
-  void ReadIntoObjects(T0& aT0, Ts&... aTs) {
-    ReadIntoObject(aT0);
-    ReadIntoObjects(aTs...);
+  // `EntryReader::ReadIntoObjects()` with nothing is implicitly allowed, this
+  // could be useful for generic programming.
+  template <typename... Ts>
+  void ReadIntoObjects(Ts&... aTs) {
+    (ReadIntoObject(aTs), ...);
   }
 
   // Read data as an object and move iterator ahead.
@@ -440,13 +437,10 @@ class ProfileBufferEntryWriter {
     ::mozilla::WriteULEB128(aValue, *this);
   }
 
-  // No objects, no bytes! (May be useful for generic programming.)
-  static MOZ_MUST_USE Length SumBytes() { return 0; }
-
   // Number of bytes needed to serialize objects.
-  template <typename T0, typename... Ts>
-  static MOZ_MUST_USE Length SumBytes(const T0& aT0, const Ts&... aTs) {
-    return Serializer<T0>::Bytes(aT0) + SumBytes(aTs...);
+  template <typename... Ts>
+  static MOZ_MUST_USE Length SumBytes(const Ts&... aTs) {
+    return (0 + ... + Serializer<Ts>::Bytes(aTs));
   }
 
   // Write a sequence of bytes, like memcpy.
@@ -499,15 +493,12 @@ class ProfileBufferEntryWriter {
     Serializer<T>::Write(*this, aObject);
   }
 
+  // Write one or more objects, sequentially.
   // Allow `EntryWrite::WriteObjects()` with nothing, this could be useful
   // for generic programming.
-  void WriteObjects() {}
-
-  // Write one or more objects, sequentially.
-  template <typename T0, typename... Ts>
-  void WriteObjects(const T0& aT0, const Ts&... aTs) {
-    WriteObject(aT0);
-    WriteObjects(aTs...);
+  template <typename... Ts>
+  void WriteObjects(const Ts&... aTs) {
+    (WriteObject(aTs), ...);
   }
 
  private:
@@ -897,32 +888,14 @@ struct ProfileBufferEntryWriter::Serializer<std::tuple<Ts...>> {
   template <size_t... Is>
   static Length TupleBytes(const std::tuple<Ts...>& aTuple,
                            std::index_sequence<Is...>) {
-    Length bytes = 0;
-    // This is pre-C++17 fold trick, using `initializer_list` to unpack the `Is`
-    // variadic pack, and the comma operator to:
-    // (work on each tuple item, generate an int for the list). Note that the
-    // `initializer_list` is unused; the compiler will nicely optimize it away.
-    // `std::index_sequence` is just a way to have `Is` be a variadic pack
-    // containing numbers between 0 and (tuple size - 1).
-    // The compiled end result is like doing:
-    //   bytes += SumBytes(get<0>(aTuple));
-    //   bytes += SumBytes(get<1>(aTuple));
-    //   ...
-    //   bytes += SumBytes(get<sizeof...(aTuple) - 1>(aTuple));
-    // See https://articles.emptycrate.com/2016/05/14/folds_in_cpp11_ish.html
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (bytes += SumBytes(std::get<Is>(aTuple)), 0)...};
-    return bytes;
+    return (0 + ... + SumBytes(std::get<Is>(aTuple)));
   }
 
   template <size_t... Is>
   static void TupleWrite(ProfileBufferEntryWriter& aEW,
                          const std::tuple<Ts...>& aTuple,
                          std::index_sequence<Is...>) {
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (aEW.WriteObject(std::get<Is>(aTuple)), 0)...};
+    (aEW.WriteObject(std::get<Is>(aTuple)), ...);
   }
 
  public:
@@ -977,20 +950,14 @@ struct ProfileBufferEntryWriter::Serializer<Tuple<Ts...>> {
   template <size_t... Is>
   static Length TupleBytes(const Tuple<Ts...>& aTuple,
                            std::index_sequence<Is...>) {
-    Length bytes = 0;
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (bytes += SumBytes(Get<Is>(aTuple)), 0)...};
-    return bytes;
+    return (0 + ... + SumBytes(Get<Is>(aTuple)));
   }
 
   template <size_t... Is>
   static void TupleWrite(ProfileBufferEntryWriter& aEW,
                          const Tuple<Ts...>& aTuple,
                          std::index_sequence<Is...>) {
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (aEW.WriteObject(Get<Is>(aTuple)), 0)...};
+    (aEW.WriteObject(Get<Is>(aTuple)), ...);
   }
 
  public:
@@ -1139,9 +1106,7 @@ struct ProfileBufferEntryWriter::Serializer<Variant<Ts...>> {
   static Length VariantBytes(const Variant<Ts...>& aVariantTs,
                              std::index_sequence<Is...>) {
     Length bytes = 0;
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (VariantIBytes<Is>(aVariantTs, bytes), 0)...};
+    (VariantIBytes<Is>(aVariantTs, bytes), ...);
     MOZ_ASSERT(bytes != 0);
     return bytes;
   }
@@ -1164,9 +1129,7 @@ struct ProfileBufferEntryWriter::Serializer<Variant<Ts...>> {
   static void VariantWrite(ProfileBufferEntryWriter& aEW,
                            const Variant<Ts...>& aVariantTs,
                            std::index_sequence<Is...>) {
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (VariantIWrite<Is>(aEW, aVariantTs), 0)...};
+    (VariantIWrite<Is>(aEW, aVariantTs), ...);
   }
 
  public:
@@ -1205,9 +1168,7 @@ struct ProfileBufferEntryReader::Deserializer<Variant<Ts...>> {
                               Variant<Ts...>& aVariantTs,
                               std::index_sequence<Is...>) {
     unsigned tag = aER.ReadULEB128<unsigned>();
-    // TODO: Replace with C++17 fold.
-    Unused << std::initializer_list<int>{
-        (VariantIReadInto<Is>(aER, aVariantTs, tag), 0)...};
+    (VariantIReadInto<Is>(aER, aVariantTs, tag), ...);
   }
 
  public:
