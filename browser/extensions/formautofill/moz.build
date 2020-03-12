@@ -32,8 +32,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'skin/windows/editDialog.css',
     ]
 
-TESTING_JS_MODULES += ['test/fixtures/OSKeyStoreTestUtils.jsm']
-
 BROWSER_CHROME_MANIFESTS += [
     'test/browser/browser.ini',
     'test/browser/creditCard/browser.ini',
