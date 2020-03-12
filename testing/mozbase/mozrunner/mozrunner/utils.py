@@ -237,9 +237,7 @@ def get_stack_fixer_function(utilityPath, symbolsPath):
         return None
 
     if os.getenv('MOZ_DISABLE_STACK_FIX', 0):
-        return None
-
-    if mozinfo.isMac and not mozinfo.automation:
+        print("WARNING: No stack-fixing will occur because MOZ_DISABLE_STACK_FIX is set")
         return None
 
     def import_stack_fixer_module(module_name):
@@ -265,7 +263,7 @@ def get_stack_fixer_function(utilityPath, symbolsPath):
         stack_fixer_module = import_stack_fixer_module('fix_stacks')
 
         def stack_fixer_function(line):
-            return stack_fixer_module.fixSymbols(line)
+            return stack_fixer_module.fixSymbols(line, slowWarning=True)
 
     else:
         return None
