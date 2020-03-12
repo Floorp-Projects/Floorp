@@ -52,8 +52,6 @@ class Sid {
                                 PDWORD sub_authorities);
   // Create the restricted all application packages sid.
   static Sid AllRestrictedApplicationPackages();
-  // Generate a random SID value.
-  static Sid GenerateRandomSid();
 
   // Returns sid_.
   PSID GetPSID() const;
