@@ -114,6 +114,7 @@ mochitest-harness:
     when:
         files-changed:
             - 'testing/mochitest/**'
+            - 'testing/mozbase/mozrunner/mozrunner/**'
             - 'testing/mozbase/moztest/moztest/selftest/**'
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
@@ -272,6 +273,7 @@ reftest-harness:
     when:
         files-changed:
             - 'layout/tools/reftest/**'
+            - 'testing/mozbase/mozrunner/mozrunner/**'
             - 'testing/mozbase/moztest/moztest/selftest/**'
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
