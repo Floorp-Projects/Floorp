@@ -61,6 +61,17 @@ class FunctionBox;
 
 enum class FunctionSyntaxKind : uint8_t;
 
+// Arbitrary typename to disambiguate TypedIndexes;
+class FunctionIndexType;
+
+// We need to be able to forward declare this type, so make a subclass
+// rather than just using.
+class FunctionIndex : public TypedIndex<FunctionIndexType> {
+  // Delegate constructors;
+  using Base = TypedIndex<FunctionIndexType>;
+  using Base::Base;
+};
+
 // Data used to instantiate the lazy script before script emission.
 struct LazyScriptCreationData {
   frontend::AtomVector closedOverBindings;
@@ -424,7 +435,7 @@ class ScopeCreationData {
 // Stencil, but eventually will be removed.
 using ScriptThingVariant =
     mozilla::Variant<JS::GCCellPtr, BigIntIndex, ObjLiteralCreationData,
-                     RegExpIndex, ScopeIndex>;
+                     RegExpIndex, ScopeIndex, FunctionIndex>;
 
 // A vector of things destined to be converted to GC things.
 using ScriptThingsVector = GCVector<ScriptThingVariant>;
@@ -526,5 +537,9 @@ struct GCPolicy<js::frontend::ScopeCreationData*> {
 template <typename T>
 struct GCPolicy<js::frontend::TypedIndex<T>>
     : JS::IgnoreGCPolicy<js::frontend::TypedIndex<T>> {};
+
+template <>
+struct GCPolicy<js::frontend::FunctionIndex>
+    : JS::IgnoreGCPolicy<js::frontend::FunctionIndex> {};
 }  // namespace JS
 #endif /* frontend_Stencil_h */
