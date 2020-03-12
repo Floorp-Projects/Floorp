@@ -1,0 +1,10 @@
+This code comes from an externally managed library, available at
+<https://github.com/mozilla/fathom>. Bugs should be reported directly
+upstream and integrated back here.
+
+In order to regenerate this file, do the following:
+
+  $ git clone git@github.com:mozilla/fathom.git && cd fathom
+  $ make bundle
+  $ export MOZ_FATHOM="../mozilla-central/toolkit/modules/third_party/fathom"
+  $ cat $MOZ_FATHOM/fx-header dist/fathom.js > $MOZ_FATHOM/fathom.jsm
