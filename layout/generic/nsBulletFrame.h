@@ -57,8 +57,7 @@ class nsBulletFrame final : public nsFrame {
 
   virtual ~nsBulletFrame();
 
-  NS_IMETHOD Notify(imgIRequest* aRequest, int32_t aType,
-                    const nsIntRect* aData);
+  void Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData);
 
   // nsIFrame
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
@@ -129,7 +128,7 @@ class nsBulletFrame final : public nsFrame {
   already_AddRefed<imgIContainer> GetImage() const;
 
  protected:
-  nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
+  void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
 
   void AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
                               mozilla::LogicalMargin* aPadding);

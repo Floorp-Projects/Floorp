@@ -4340,8 +4340,6 @@ bool nsTreeBodyFrame::FullScrollbarsUpdate(bool aNeedsFullInvalidation) {
   return weakFrame.IsAlive();
 }
 
-nsresult nsTreeBodyFrame::OnImageIsAnimated(imgIRequest* aRequest) {
+void nsTreeBodyFrame::OnImageIsAnimated(imgIRequest* aRequest) {
   nsLayoutUtils::RegisterImageRequest(PresContext(), aRequest, nullptr);
-
-  return NS_OK;
 }
