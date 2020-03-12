@@ -46,7 +46,7 @@ add_task(async function test_reauth() {
   if (!canTest) {
     todo_check_true(
       canTest,
-      "test_reauth: Cannot test OS key store login on official builds."
+      "test_reauth: Cannot test OS key store login on this build. See OSKeyStoreTestUtils.canTestOSKeyStoreLogin for details"
     );
     return;
   }
@@ -54,7 +54,7 @@ add_task(async function test_reauth() {
   let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   try {
-    await OSKeyStore.decrypt(cipherText, true);
+    await OSKeyStore.decrypt(cipherText, "prompt message text");
     throw new Error("Not receiving canceled OS unlock error");
   } catch (ex) {
     Assert.equal(ex.message, "User canceled OS unlock entry");
@@ -65,7 +65,7 @@ add_task(async function test_reauth() {
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   Assert.equal(
-    await OSKeyStore.ensureLoggedIn(true),
+    await OSKeyStore.ensureLoggedIn("test message"),
     false,
     "Reauth cancelled."
   );
@@ -73,14 +73,14 @@ add_task(async function test_reauth() {
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
-  let plainText2 = await OSKeyStore.decrypt(cipherText, true);
+  let plainText2 = await OSKeyStore.decrypt(cipherText, "prompt message text");
   await reauthObserved;
   Assert.equal(testText, plainText2);
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   Assert.equal(
-    await OSKeyStore.ensureLoggedIn(true),
+    await OSKeyStore.ensureLoggedIn("test message"),
     true,
     "Reauth logged in."
   );

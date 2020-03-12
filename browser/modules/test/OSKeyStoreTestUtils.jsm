@@ -38,7 +38,8 @@ var OSKeyStoreTestUtils = {
    * @returns {boolean} True if the test can be preformed.
    */
   canTestOSKeyStoreLogin() {
-    return !AppConstants.MOZILLA_OFFICIAL;
+    // Skip on Linux due to bug 1527745.
+    return AppConstants.DEBUG && AppConstants.platform != "linux";
   },
 
   // Wait for the observer message that simulates login success of failure.
