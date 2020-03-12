@@ -154,6 +154,13 @@ add_task(function test() {
       phrase: "résumé",
       expected: [[0, 6]],
     },
+    {
+      // This test should succeed even in a Spanish locale where N and Ñ are
+      // considered distinct letters.
+      tokens: ["jalapeno"],
+      phrase: "jalapeño",
+      expected: [[0, 8]],
+    },
   ];
   for (let { tokens, phrase, expected } of tests) {
     tokens = tokens.map(t => ({
