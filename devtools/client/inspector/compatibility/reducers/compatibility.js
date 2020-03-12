@@ -6,6 +6,8 @@
 
 const {
   COMPATIBILITY_APPEND_NODE,
+  COMPATIBILITY_UPDATE_NODE,
+  COMPATIBILITY_UPDATE_NODES_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
@@ -26,21 +28,24 @@ const INITIAL_STATE = {
 
 const reducers = {
   [COMPATIBILITY_APPEND_NODE](state, { node, issues }) {
-    const topLevelTargetIssues = [...state.topLevelTargetIssues];
-    for (const issue of issues) {
-      const index = topLevelTargetIssues.findIndex(
-        i => i.type === issue.type && i.property === issue.property
-      );
-
-      if (index < 0) {
-        issue.nodes = [node];
-        topLevelTargetIssues.push(issue);
-      } else {
-        const topLevelTargetIssue = topLevelTargetIssues[index];
-        topLevelTargetIssue.nodes = [...topLevelTargetIssue.nodes, node];
-      }
-    }
+    const topLevelTargetIssues = _appendTopLevelTargetIssues(
+      state.topLevelTargetIssues,
+      node,
+      issues
+    );
     return Object.assign({}, state, { topLevelTargetIssues });
+  },
+  [COMPATIBILITY_UPDATE_NODE](state, { node, issues }) {
+    const topLevelTargetIssues = _updateTopLebelTargetIssues(
+      state.topLevelTargetIssues,
+      node,
+      issues
+    );
+    return Object.assign({}, state, { topLevelTargetIssues });
+  },
+  [COMPATIBILITY_UPDATE_NODES_FAILURE](state, { error }) {
+    _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
+    return state;
   },
   [COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS](state, { node }) {
     return Object.assign({}, state, { selectedNode: node });
@@ -70,6 +75,70 @@ const reducers = {
     return state;
   },
 };
+
+function _appendTopLevelTargetIssues(targetIssues, node, issues) {
+  targetIssues = [...targetIssues];
+  for (const issue of issues) {
+    const index = _indexOfIssue(targetIssues, issue);
+    if (index < 0) {
+      issue.nodes = [node];
+      targetIssues.push(issue);
+      continue;
+    }
+
+    const targetIssue = targetIssues[index];
+    targetIssue.nodes = [...targetIssue.nodes, node];
+  }
+  return targetIssues;
+}
+
+function _indexOfIssue(issues, issue) {
+  return issues.findIndex(
+    i => i.type === issue.type && i.property === issue.property
+  );
+}
+
+function _indexOfNode(issue, node) {
+  return issue.nodes.findIndex(n => n.actorID === node.actorID);
+}
+
+function _updateTopLebelTargetIssues(targetIssues, node, issues) {
+  // Remove issues or node.
+  targetIssues = targetIssues.reduce((newIssues, targetIssue) => {
+    if (_indexOfIssue(issues, targetIssue) >= 0) {
+      // The targetIssue is still in the node.
+      return [...newIssues, targetIssue];
+    }
+
+    const indexOfNodeInTarget = _indexOfNode(targetIssue, node);
+    if (indexOfNodeInTarget < 0) {
+      // The targetIssue does not have the node to remove.
+      return [...newIssues, targetIssue];
+    }
+
+    // This issue on the updated node is gone.
+    if (targetIssue.nodes.length === 1) {
+      // Remove issue.
+      return newIssues;
+    }
+
+    // Remove node from the nodes.
+    targetIssue.nodes = [
+      ...targetIssue.nodes.splice(0, indexOfNodeInTarget),
+      ...targetIssue.nodes.splice(indexOfNodeInTarget + 1),
+    ];
+    return [...newIssues, targetIssue];
+  }, []);
+
+  // Append issues or node.
+  const appendables = issues.filter(issue => {
+    const indexOfIssue = _indexOfIssue(targetIssues, issue);
+    return (
+      indexOfIssue < 0 || _indexOfNode(targetIssues[indexOfIssue], node) < 0
+    );
+  });
+  return _appendTopLevelTargetIssues(targetIssues, node, appendables);
+}
 
 function _showError(action, error) {
   console.error(`[${action}] ${error.message}`);
