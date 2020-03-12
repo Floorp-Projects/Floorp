@@ -84,6 +84,9 @@ class nsLocalFile final : public nsILocalFileWin {
     mShortWorkingPath.Truncate();
   }
 
+  nsresult LookupExtensionIn(const char* const* aExtensionsArray,
+                             size_t aArrayLength, bool* aResult);
+
   nsresult ResolveAndStat();
   nsresult Resolve();
   nsresult ResolveShortcut();
