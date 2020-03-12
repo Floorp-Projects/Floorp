@@ -97,6 +97,9 @@ class nsPNGDecoder : public Decoder {
   uint8_t* interlacebuf;
   gfx::SurfaceFormat mFormat;
 
+  // whether CMS or premultiplied alpha are forced off
+  uint32_t mCMSMode;
+
   uint8_t mChannels;
   uint8_t mPass;
   bool mFrameIsHidden;
