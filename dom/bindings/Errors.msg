@@ -76,8 +76,6 @@ MSG_DEF(MSG_CACHE_ADD_FAILED_RESPONSE, 4, true, JSEXN_TYPEERR, "{0}Cache got {1}
 MSG_DEF(MSG_SW_UPDATE_BAD_REGISTRATION, 3, true, JSEXN_TYPEERR, "{0}Failed to update the ServiceWorker for scope {1} because the registration has been {2} since the update was scheduled.")
 MSG_DEF(MSG_INVALID_DURATION_ERROR, 2, true, JSEXN_TYPEERR, "{0}Invalid duration '{1}'.")
 MSG_DEF(MSG_INVALID_EASING_ERROR, 2, true, JSEXN_TYPEERR, "{0}Invalid easing '{1}'.")
-MSG_DEF(MSG_INVALID_PSEUDO_SELECTOR, 2, true, JSEXN_TYPEERR, "{0}Invalid pseudo-selector '{1}'")
-MSG_DEF(MSG_UNSUPPORTED_PSEUDO_SELECTOR, 2, true, JSEXN_TYPEERR, "{0}Unsupported pseudo-selector '{1}'")
 MSG_DEF(MSG_TOKENLIST_NO_SUPPORTED_TOKENS, 3, true, JSEXN_TYPEERR, "{0}{1} attribute of <{2}> does not define any supported tokens")
 MSG_DEF(MSG_TIME_VALUE_OUT_OF_RANGE, 2, true, JSEXN_TYPEERR, "{0}{1} is outside the supported range for time values.")
 MSG_DEF(MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN, 2, true, JSEXN_TYPEERR, "{0}Request mode '{1}' was used, but request cache mode 'only-if-cached' can only be used with request mode 'same-origin'.")
