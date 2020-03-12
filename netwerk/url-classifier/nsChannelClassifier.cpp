@@ -202,8 +202,8 @@ nsresult nsChannelClassifier::StartInternal() {
   bool expectCallback;
   if (UC_LOG_ENABLED()) {
     nsCOMPtr<nsIURI> principalURI;
-    principal->GetURI(getter_AddRefs(principalURI));
-    nsCString spec = principalURI->GetSpecOrDefault();
+    nsCString spec;
+    principal->GetAsciiSpec(spec);
     spec.Truncate(std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
     UC_LOG(("nsChannelClassifier[%p]: Classifying principal %s on channel[%p]",
             this, spec.get(), mChannel.get()));
