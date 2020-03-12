@@ -917,8 +917,7 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       result,
       "SetJobLevel should never fail with these arguments, what happened?");
 
-  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                  sandbox::USER_LIMITED);
+  result = mPolicy->SetTokenLevel(sandbox::USER_LIMITED, sandbox::USER_LIMITED);
   SANDBOX_ENSURE_SUCCESS(
       result,
       "SetTokenLevel should never fail with these arguments, what happened?");
