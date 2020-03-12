@@ -100,9 +100,17 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::ALLOW_SCRIPT},
     {"plugins", "chrome://global/content/plugins.html",
      nsIAboutModule::URI_MUST_LOAD_IN_CHILD},
+    // about:serviceworkers always wants to load in the parent process because
+    // when dom.serviceWorkers.parent_intercept is set to true (the new default)
+    // then the only place nsIServiceWorkerManager has any data is in the
+    // parent process.
+    //
+    // There is overlap without about:debugging, but about:debugging is not
+    // available on mobile at this time, and it's useful to be able to know if
+    // a ServiceWorker is registered directly from the mobile browser without
+    // having to connect the device to a desktop machine and all that entails.
     {"serviceworkers", "chrome://global/content/aboutServiceWorkers.xhtml",
-     nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
-         nsIAboutModule::URI_MUST_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT},
 #ifndef ANDROID
     {"profiles", "chrome://global/content/aboutProfiles.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
