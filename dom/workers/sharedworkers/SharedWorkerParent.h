@@ -8,7 +8,6 @@
 #define mozilla_dom_dom_SharedWorkerParent_h
 
 #include "mozilla/dom/PSharedWorkerParent.h"
-#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsISupportsImpl.h"
 
@@ -19,9 +18,7 @@ class MessagePortIdentifier;
 class RemoteWorkerData;
 class SharedWorkerManagerWrapper;
 
-class SharedWorkerParent final
-    : public mozilla::dom::PSharedWorkerParent,
-      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+class SharedWorkerParent final : public mozilla::dom::PSharedWorkerParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerParent)
 
