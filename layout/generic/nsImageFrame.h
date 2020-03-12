@@ -137,7 +137,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsresult StopAnimation();
 
   already_AddRefed<imgIRequest> GetCurrentRequest() const;
-  nsresult Notify(imgIRequest*, int32_t aType, const nsIntRect* aData);
+  void Notify(imgIRequest*, int32_t aType, const nsIntRect* aData);
 
   /**
    * Function to test whether given an element and its style, that element
@@ -267,9 +267,9 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   friend class nsImageLoadingContent;
   friend class mozilla::PresShell;
 
-  nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
-  nsresult OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
-  nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
+  void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
+  void OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
+  void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
 
   /**
    * Notification that aRequest will now be the current request.

@@ -64,7 +64,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   // Callback handler methods for refresh driver based animations.
   // Calls to these functions are forwarded from nsTreeImageListener. These
   // mirror how nsImageFrame works.
-  nsresult OnImageIsAnimated(imgIRequest* aRequest);
+  void OnImageIsAnimated(imgIRequest* aRequest);
 
   // non-virtual signatures like nsITreeBodyFrame
   already_AddRefed<nsTreeColumns> Columns() const {

@@ -113,14 +113,11 @@ class ImageCallbackHelper : public imgIContainerCallback,
     return NS_OK;
   }
 
-  NS_IMETHOD
-  Notify(imgIRequest* aRequest, int32_t aType,
-         const nsIntRect* aData) override {
+  void Notify(imgIRequest* aRequest, int32_t aType,
+              const nsIntRect* aData) override {
     if (aType == imgINotificationObserver::DECODE_COMPLETE) {
       SendBitmap();
     }
-
-    return NS_OK;
   }
 
  private:

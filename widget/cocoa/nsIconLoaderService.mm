@@ -123,15 +123,14 @@ NSImage* nsIconLoaderService::GetNativeIconImage() { return mNativeIconImage; }
 // imgINotificationObserver
 //
 
-NS_IMETHODIMP
-nsIconLoaderService::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData) {
+void nsIconLoaderService::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData) {
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     // Make sure the image loaded successfully.
     uint32_t status = imgIRequest::STATUS_ERROR;
     if (NS_FAILED(aRequest->GetImageStatus(&status)) || (status & imgIRequest::STATUS_ERROR)) {
       mIconRequest->Cancel(NS_BINDING_ABORTED);
       mIconRequest = nullptr;
-      return NS_ERROR_FAILURE;
+      return;
     }
 
     nsCOMPtr<imgIContainer> image;
@@ -149,14 +148,14 @@ nsIconLoaderService::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
     nsresult rv = OnFrameComplete(aRequest);
 
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
 
     NSImage* newImage = mNativeIconImage;
     mNativeIconImage = nil;
-    rv = mCompletionHandler->OnComplete(newImage);
+    mCompletionHandler->OnComplete(newImage);
 
-    return rv;
+    return;
   }
 
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
@@ -165,8 +164,6 @@ nsIconLoaderService::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
       mIconRequest = nullptr;
     }
   }
-
-  return NS_OK;
 }
 
 nsresult nsIconLoaderService::OnFrameComplete(imgIRequest* aRequest) {
