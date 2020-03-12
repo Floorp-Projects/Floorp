@@ -50,6 +50,7 @@ linux64-rust-cross-1.41:
             '--target', 'i686-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
         ]
+        toolchain-alias: linux64-rust-cross
 
 linux64-rust-macos-1.41:
     description: "rust repack with macos-cross support"
