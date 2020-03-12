@@ -267,6 +267,8 @@ reftest-harness:
               dest: tests
             - artifact: target.reftest.tests.tar.gz
               dest: tests
+        toolchain:
+            - linux64-fix-stacks
     when:
         files-changed:
             - 'layout/tools/reftest/**'
