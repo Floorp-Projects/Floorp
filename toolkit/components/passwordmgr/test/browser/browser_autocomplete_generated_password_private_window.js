@@ -5,6 +5,25 @@ const FORM_PAGE_PATH =
 const passwordInputSelector = "#form-basic-password";
 
 add_task(async function test_autocomplete_new_password_popup_item_visible() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN,
+    },
+    async function(browser) {
+      info("Generate and cache a password for a non-private context");
+      let lmp = browser.browsingContext.currentWindowGlobal.getActor(
+        "LoginManager"
+      );
+      lmp.getGeneratedPassword();
+      is(
+        LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
+        1,
+        "Non-Private password should be cached"
+      );
+    }
+  );
+
   await LoginTestUtils.addLogin({ username: "username", password: "pass1" });
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   const doc = win.document;
@@ -40,7 +59,17 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
       await onPopupClosed;
     }
   );
+
+  let lastPBContextExitedPromise = TestUtils.topicObserved(
+    "last-pb-context-exited"
+  ).then(() => TestUtils.waitForTick());
   await BrowserTestUtils.closeWindow(win);
+  await lastPBContextExitedPromise;
+  is(
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
+    1,
+    "Only private-context passwords should be cleared"
+  );
 });
 
 add_task(async function test_autocomplete_menu_item_enabled() {
