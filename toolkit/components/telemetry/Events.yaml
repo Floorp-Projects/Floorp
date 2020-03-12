@@ -322,6 +322,24 @@ extensions.data:
     description: >
       These events are sent when an extension is migrating its data to the new IndexedDB backend,
       the value of this event is the addon id.
+  storageLocalError:
+    objects: ["get", "set", "remove", "clear"]
+    bug_numbers: [1606903]
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: "81"
+    products:
+      - "firefox"
+      - "geckoview"
+    record_in_processes: ["main", "content"]
+    release_channel_collection: opt-out
+    extra_keys:
+      error_name: >
+        A DOMException error name if any ("OtherError" for unknown errors).
+    description: >
+      These events are collected when an extension triggers an unexpected error
+      while running a storage.local API call (e.g. because of some underlying
+      QuotaManager and/or IndexedDB error), the value of this event is the
+      addon id.
 
 homepage:
   preference:

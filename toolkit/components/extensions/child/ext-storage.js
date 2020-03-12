@@ -270,7 +270,11 @@ this.storage = class extends ExtensionAPI {
           const result = await selectedBackend[method](...args);
           return result;
         } catch (err) {
-          throw ExtensionStorageIDB.normalizeStorageError(err);
+          throw ExtensionStorageIDB.normalizeStorageError({
+            error: err,
+            extensionId: extension.id,
+            storageMethod: method,
+          });
         }
       };
     }
