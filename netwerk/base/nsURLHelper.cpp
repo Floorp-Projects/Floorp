@@ -415,11 +415,7 @@ nsresult net_ResolveRelativePath(const nsACString& relativePath,
 //----------------------------------------------------------------------------
 
 static bool net_IsValidSchemeChar(const char aChar) {
-  if (IsAsciiAlpha(aChar) || IsAsciiDigit(aChar) || aChar == '+' ||
-      aChar == '.' || aChar == '-') {
-    return true;
-  }
-  return false;
+  return rust_net_is_valid_scheme_char(aChar);
 }
 
 /* Extract URI-Scheme if possible */

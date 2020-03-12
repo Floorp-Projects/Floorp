@@ -18,6 +18,8 @@ nsresult rust_prepare_accept_languages(const nsACString* i_accept_languages,
 bool rust_net_is_valid_ipv4_addr(const nsACString& aAddr);
 
 bool rust_net_is_valid_ipv6_addr(const nsACString& aAddr);
+
+bool rust_net_is_valid_scheme_char(const char aChar);
 }
 
 #endif  // RUST_NS_NET_HELPER

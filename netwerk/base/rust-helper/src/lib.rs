@@ -282,3 +282,10 @@ pub fn is_valid_ipv6_addr<'a>(addr: &'a [u8]) -> bool {
 
     double_colon && blocks < 8 || !double_colon && blocks == 8
 }
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn rust_net_is_valid_scheme_char(a_char: u8) -> bool {
+    let a_char = a_char as char;
+    a_char.is_ascii_alphanumeric() || a_char == '+' || a_char == '.' || a_char == '-'
+}
