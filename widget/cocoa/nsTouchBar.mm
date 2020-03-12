@@ -323,6 +323,9 @@ static const uint32_t kInputIconSize = 16;
   if ([input imageURI]) {
     [button setImagePosition:NSImageOnly];
     [self loadIconForInput:input forItem:aButton];
+    // Because we are hiding the title, NSAccessibility also does not get it.
+    // Therefore, set an accessibility label as alternative text for image-only buttons.
+    [button setAccessibilityLabel:[input title]];
   }
 
   [button setEnabled:![input isDisabled]];
