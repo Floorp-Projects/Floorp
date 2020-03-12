@@ -19,6 +19,7 @@ loader.lazyRequireGetter(
 const {
   updateSelectedNode,
   updateTargetBrowsers,
+  updateTopLevelTarget,
 } = require("devtools/client/inspector/compatibility/actions/compatibility");
 
 const CompatibilityApp = createFactory(
@@ -27,15 +28,21 @@ const CompatibilityApp = createFactory(
 
 class CompatibilityView {
   constructor(inspector, window) {
-    this._onNewNode = this._onNewNode.bind(this);
+    this._onPanelSelected = this._onPanelSelected.bind(this);
+    this._onSelectedNodeChanged = this._onSelectedNodeChanged.bind(this);
+    this._onTopLevelTargetChanged = this._onTopLevelTargetChanged.bind(this);
     this.inspector = inspector;
 
     this._init();
   }
 
   destroy() {
-    this.inspector.selection.off("new-node-front", this._onNewNode);
-    this.inspector.sidebar.off("compatibilityview-selected", this._onNewNode);
+    this.inspector.off("new-root", this._onTopLevelTargetChanged);
+    this.inspector.selection.off("new-node-front", this._onSelectedNodeChanged);
+    this.inspector.sidebar.off(
+      "compatibilityview-selected",
+      this._onPanelSelected
+    );
 
     if (this._ruleView) {
       this._ruleView.off("ruleview-changed", this._onNewNode);
@@ -56,16 +63,20 @@ class CompatibilityView {
       compatibilityApp
     );
 
-    this.inspector.selection.on("new-node-front", this._onNewNode);
-    this.inspector.sidebar.on("compatibilityview-selected", this._onNewNode);
+    this.inspector.on("new-root", this._onTopLevelTargetChanged);
+    this.inspector.selection.on("new-node-front", this._onSelectedNodeChanged);
+    this.inspector.sidebar.on(
+      "compatibilityview-selected",
+      this._onPanelSelected
+    );
 
     if (this._ruleView) {
-      this._ruleView.on("ruleview-changed", this._onNewNode);
+      this._ruleView.on("ruleview-changed", this._onSelectedNodeChanged);
     } else {
       this.inspector.on(
         "ruleview-added",
         () => {
-          this._ruleView.on("ruleview-changed", this._onNewNode);
+          this._ruleView.on("ruleview-changed", this._onSelectedNodeChanged);
         },
         { once: true }
       );
@@ -90,13 +101,28 @@ class CompatibilityView {
     );
   }
 
-  _onNewNode() {
+  _onPanelSelected() {
+    this._onSelectedNodeChanged();
+    this._onTopLevelTargetChanged();
+  }
+
+  _onSelectedNodeChanged() {
     if (!this._isAvailable()) {
       return;
     }
 
     this.inspector.store.dispatch(
       updateSelectedNode(this.inspector.selection.nodeFront)
+    );
+  }
+
+  _onTopLevelTargetChanged() {
+    if (!this._isAvailable()) {
+      return;
+    }
+
+    this.inspector.store.dispatch(
+      updateTopLevelTarget(this.inspector.toolbox.target)
     );
   }
 

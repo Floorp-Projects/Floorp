@@ -4,6 +4,8 @@
 
 "use strict";
 
+const nodeConstants = require("devtools/shared/dom-node-constants");
+
 loader.lazyGetter(this, "mdnCompatibility", () => {
   const MDNCompatibility = require("devtools/client/inspector/compatibility/lib/MDNCompatibility");
   const cssPropertiesCompatData = require("devtools/client/inspector/compatibility/lib/dataset/css-properties.json");
@@ -11,6 +13,7 @@ loader.lazyGetter(this, "mdnCompatibility", () => {
 });
 
 const {
+  COMPATIBILITY_APPEND_NODE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_START,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
@@ -20,6 +23,10 @@ const {
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE,
+  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
+  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS,
+  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
+  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
 } = require("devtools/client/inspector/compatibility/actions/index");
 
 function updateSelectedNode(node) {
@@ -50,10 +57,18 @@ function updateTargetBrowsers(targetBrowsers) {
     dispatch({ type: COMPATIBILITY_UPDATE_TARGET_BROWSERS_START });
 
     try {
-      const { selectedNode } = getState().compatibility;
+      const { selectedNode, topLevelTarget } = getState().compatibility;
 
       if (selectedNode) {
         await _updateSelectedNodeIssues(selectedNode, targetBrowsers, dispatch);
+      }
+
+      if (topLevelTarget) {
+        await _updateTopLevelTargetIssues(
+          topLevelTarget,
+          targetBrowsers,
+          dispatch
+        );
       }
 
       dispatch({
@@ -65,6 +80,23 @@ function updateTargetBrowsers(targetBrowsers) {
     }
 
     dispatch({ type: COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE });
+  };
+}
+
+function updateTopLevelTarget(target) {
+  return async ({ dispatch, getState }) => {
+    dispatch({ type: COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START });
+
+    try {
+      const { targetBrowsers } = getState().compatibility;
+      await _updateTopLevelTargetIssues(target, targetBrowsers, dispatch);
+
+      dispatch({ type: COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS, target });
+    } catch (error) {
+      dispatch({ type: COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE, error });
+    }
+
+    dispatch({ type: COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE });
   };
 }
 
@@ -96,6 +128,27 @@ async function _getNodeIssues(node, targetBrowsers) {
     }, []);
 }
 
+async function _inspectNode(node, targetBrowsers, walker, dispatch) {
+  if (node.nodeType !== nodeConstants.ELEMENT_NODE) {
+    return;
+  }
+
+  const issues = await _getNodeIssues(node, targetBrowsers);
+
+  if (issues.length) {
+    dispatch({
+      type: COMPATIBILITY_APPEND_NODE,
+      node,
+      issues,
+    });
+  }
+
+  const { nodes: children } = await walker.children(node);
+  for (const child of children) {
+    await _inspectNode(child, targetBrowsers, walker, dispatch);
+  }
+}
+
 async function _updateSelectedNodeIssues(node, targetBrowsers, dispatch) {
   const issues = await _getNodeIssues(node, targetBrowsers);
 
@@ -105,7 +158,14 @@ async function _updateSelectedNodeIssues(node, targetBrowsers, dispatch) {
   });
 }
 
+async function _updateTopLevelTargetIssues(target, targetBrowsers, dispatch) {
+  const { walker } = await target.getFront("inspector");
+  const documentElement = await walker.documentElement();
+  await _inspectNode(documentElement, targetBrowsers, walker, dispatch);
+}
+
 module.exports = {
   updateSelectedNode,
   updateTargetBrowsers,
+  updateTopLevelTarget,
 };
