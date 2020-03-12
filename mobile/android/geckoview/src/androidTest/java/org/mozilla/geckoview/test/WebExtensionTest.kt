@@ -6,6 +6,7 @@ package org.mozilla.geckoview.test
 
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.util.concurrent.CancellationException;
 import org.hamcrest.core.StringEndsWith.endsWith
 import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
@@ -1336,6 +1337,33 @@ class WebExtensionTest : BaseSessionTest() {
 
         // Check that the WebExtension was not applied after being unregistered
         assertBodyBorderEqualTo("")
+    }
+
+    @Test(expected = CancellationException::class)
+    fun cancelInstall() {
+        val install = controller.install("$TEST_ENDPOINT/stall/test.xpi")
+        val cancel = sessionRule.waitForResult(install.cancel())
+        assertTrue(cancel)
+
+        sessionRule.waitForResult(install)
+    }
+
+    @Test
+    fun cancelInstallFailsAfterInstalled() {
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        var install = controller.install("resource://android/assets/web_extensions/borderify.xpi");
+        val borderify = sessionRule.waitForResult(install)
+
+        val cancel = sessionRule.waitForResult(install.cancel())
+        assertFalse(cancel)
+
+        sessionRule.waitForResult(controller.uninstall(borderify))
     }
 
     @Test
