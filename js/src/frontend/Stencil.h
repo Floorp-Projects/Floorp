@@ -77,20 +77,17 @@ struct LazyScriptCreationData {
   frontend::AtomVector closedOverBindings;
 
   // This is traced by the functionbox which owns this LazyScriptCreationData
-  FunctionBoxVector innerFunctionBoxes;
+  Vector<FunctionIndex> innerFunctionIndexes;
   bool strict = false;
 
   mozilla::Maybe<FieldInitializers> fieldInitializers;
 
-  explicit LazyScriptCreationData(JSContext* cx) : innerFunctionBoxes(cx) {}
+  explicit LazyScriptCreationData(JSContext* cx) : innerFunctionIndexes(cx) {}
 
   bool init(JSContext* cx, const frontend::AtomVector& COB,
-            FunctionBoxVector& innerBoxes, bool isStrict) {
+            Vector<FunctionIndex>&& innerIndexes, bool isStrict) {
     strict = isStrict;
-    // Copy out of the stack allocated vectors.
-    if (!innerFunctionBoxes.appendAll(innerBoxes)) {
-      return false;
-    }
+    innerFunctionIndexes = std::move(innerIndexes);
 
     if (!closedOverBindings.appendAll(COB)) {
       ReportOutOfMemory(cx);  // closedOverBindings uses SystemAllocPolicy.
@@ -99,8 +96,8 @@ struct LazyScriptCreationData {
     return true;
   }
 
-  bool create(JSContext* cx, FunctionBox* funbox,
-              HandleScriptSourceObject sourceObject);
+  bool create(JSContext* cx, CompilationInfo& compilationInfo,
+              FunctionBox* funbox, HandleScriptSourceObject sourceObject);
 };
 
 // Metadata that can be used to allocate a JSFunction object.
