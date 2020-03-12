@@ -18,6 +18,7 @@ using mozilla::IsSame;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
+using mozilla::SomeRef;
 using mozilla::ToMaybe;
 using mozilla::UniquePtr;
 
@@ -993,6 +994,131 @@ static bool TestTypeConversion() {
   return true;
 }
 
+static bool TestReference() {
+  static_assert(std::is_literal_type_v<Maybe<int&>>);
+  static_assert(std::is_trivially_copy_constructible_v<Maybe<int&>>);
+  static_assert(std::is_trivially_copy_assignable_v<Maybe<int&>>);
+
+  {
+    Maybe<int&> defaultConstructed;
+
+    MOZ_RELEASE_ASSERT(defaultConstructed.isNothing());
+    MOZ_RELEASE_ASSERT(!defaultConstructed.isSome());
+    MOZ_RELEASE_ASSERT(!defaultConstructed);
+  }
+
+  {
+    Maybe<int&> nothing = Nothing();
+
+    MOZ_RELEASE_ASSERT(nothing.isNothing());
+    MOZ_RELEASE_ASSERT(!nothing.isSome());
+    MOZ_RELEASE_ASSERT(!nothing);
+  }
+
+  {
+    int foo = 42;
+    Maybe<int&> some = SomeRef(foo);
+
+    MOZ_RELEASE_ASSERT(!some.isNothing());
+    MOZ_RELEASE_ASSERT(some.isSome());
+    MOZ_RELEASE_ASSERT(some);
+    MOZ_RELEASE_ASSERT(&some.ref() == &foo);
+
+    some.ref()++;
+    MOZ_RELEASE_ASSERT(43 == foo);
+
+    (*some)++;
+    MOZ_RELEASE_ASSERT(44 == foo);
+  }
+
+  {
+    int foo = 42;
+    Maybe<int&> some;
+    some.emplace(foo);
+
+    MOZ_RELEASE_ASSERT(!some.isNothing());
+    MOZ_RELEASE_ASSERT(some.isSome());
+    MOZ_RELEASE_ASSERT(some);
+    MOZ_RELEASE_ASSERT(&some.ref() == &foo);
+
+    some.ref()++;
+    MOZ_RELEASE_ASSERT(43 == foo);
+  }
+
+  {
+    // Comparison has value semantics.
+
+    int foo = 42;
+    int bar = 42;
+    Maybe<int&> someFoo = SomeRef(foo);
+    Maybe<int&> someBar = SomeRef(bar);
+
+    MOZ_RELEASE_ASSERT(someFoo == someBar);
+
+    ++bar;
+    MOZ_RELEASE_ASSERT(someFoo != someBar);
+  }
+
+  {
+    Maybe<int&> defaultConstructed;
+    defaultConstructed.reset();
+
+    MOZ_RELEASE_ASSERT(defaultConstructed.isNothing());
+    MOZ_RELEASE_ASSERT(!defaultConstructed.isSome());
+    MOZ_RELEASE_ASSERT(!defaultConstructed);
+  }
+
+  {
+    int foo = 42;
+    Maybe<int&> some = SomeRef(foo);
+    some.reset();
+
+    MOZ_RELEASE_ASSERT(some.isNothing());
+    MOZ_RELEASE_ASSERT(!some.isSome());
+    MOZ_RELEASE_ASSERT(!some);
+  }
+
+  {
+    int foo = 42;
+    Maybe<int&> some = SomeRef(foo);
+
+    auto& applied = some.apply([](int& ref) { ref++; });
+
+    MOZ_RELEASE_ASSERT(&some == &applied);
+    MOZ_RELEASE_ASSERT(43 == foo);
+  }
+
+  {
+    Maybe<int&> nothing;
+
+    auto& applied = nothing.apply([](int& ref) { ref++; });
+
+    MOZ_RELEASE_ASSERT(&nothing == &applied);
+  }
+
+  {
+    int foo = 42;
+    Maybe<int&> some = SomeRef(foo);
+
+    auto mapped = some.map([](int& ref) { return &ref; });
+    static_assert(std::is_same_v<decltype(mapped), Maybe<int*>>);
+
+    MOZ_RELEASE_ASSERT(&foo == *mapped);
+  }
+
+  {
+    Maybe<int&> nothing;
+
+    auto mapped = nothing.map([](int& ref) { return &ref; });
+
+    MOZ_RELEASE_ASSERT(mapped.isNothing());
+    MOZ_RELEASE_ASSERT(!mapped.isSome());
+    MOZ_RELEASE_ASSERT(!mapped);
+  }
+
+  return true;
+}
+
 // These are quasi-implementation details, but we assert them here to prevent
 // backsliding to earlier times when Maybe<T> for smaller T took up more space
 // than T's alignment required.
@@ -1007,6 +1133,7 @@ static_assert(sizeof(Maybe<long>) <= 2 * sizeof(long),
               "Maybe<long> shouldn't bloat");
 static_assert(sizeof(Maybe<double>) <= 2 * sizeof(double),
               "Maybe<double> shouldn't bloat");
+static_assert(sizeof(Maybe<int&>) == sizeof(int*));
 
 int main() {
   RUN_TEST(TestBasicFeatures);
@@ -1020,6 +1147,7 @@ int main() {
   RUN_TEST(TestSomeNullptrConversion);
   RUN_TEST(TestSomePointerConversion);
   RUN_TEST(TestTypeConversion);
+  RUN_TEST(TestReference);
 
   return 0;
 }
