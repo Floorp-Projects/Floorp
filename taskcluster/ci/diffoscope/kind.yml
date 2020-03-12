@@ -28,9 +28,6 @@ job-defaults:
         --max-page-diff-block-lines 10000
         --exclude-directory-metadata
         --exclude-command .--line-numbers
-        --exclude **/*freeblpriv3.chk
-        --exclude **/*nssdbm3.chk
-        --exclude **/*softokn3.chk
 
 jobs:
     artifact-win64-aarch64-eme-validation:
