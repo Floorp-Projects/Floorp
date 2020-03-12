@@ -2,6 +2,7 @@
 
 exports[`createEditor Adds codeFolding 1`] = `
 Object {
+  "cursorBlinkRate": 530,
   "enableCodeFolding": true,
   "extraKeys": Object {
     "Cmd-F": false,
@@ -31,6 +32,7 @@ Object {
 
 exports[`createEditor Returns a SourceEditor 1`] = `
 Object {
+  "cursorBlinkRate": 530,
   "enableCodeFolding": false,
   "extraKeys": Object {
     "Cmd-F": false,
