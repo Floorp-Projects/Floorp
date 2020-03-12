@@ -2,7 +2,7 @@
 
 # CONTENT
 
-`CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L230)
+`CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L231)
 
 Blocks content trackers from the content-track-digest256 list.
 May cause issues with some web sites.
