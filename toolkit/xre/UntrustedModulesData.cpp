@@ -287,7 +287,7 @@ uint64_t ProcessedModuleLoadEvent::QPCTimeStampToProcessUptimeMilliseconds(
 }
 
 bool ProcessedModuleLoadEvent::IsXULLoad() const {
-  if (!mModule || !mLoadDurationMS) {
+  if (!mModule) {
     return false;
   }
 
