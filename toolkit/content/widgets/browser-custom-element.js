@@ -321,8 +321,6 @@
 
       this._lastSearchString = null;
 
-      this._controller = null;
-
       this._remoteWebNavigation = null;
 
       this._remoteWebProgress = null;
@@ -1237,12 +1235,6 @@
             true
           );
         }
-
-        const { RemoteController } = ChromeUtils.import(
-          "resource://gre/modules/RemoteController.jsm"
-        );
-        this._controller = new RemoteController(this);
-        this.controllers.appendController(this._controller);
       }
 
       try {
@@ -1318,17 +1310,6 @@
         }
       }
 
-      // All controllers are released upon browser element removal, but not
-      // when destruction is triggered before element removal in tabbrowser.
-      // Release the controller in the latter case.
-      if (this._controller && this.controllers.getControllerCount()) {
-        try {
-          this.controllers.removeController(this._controller);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      }
-
       this.resetFields();
 
       if (!this.mInitialized) {
@@ -1361,20 +1342,6 @@
           default:
             break;
         }
-      }
-    }
-
-    enableDisableCommandsRemoteOnly(
-      aAction,
-      aEnabledCommands,
-      aDisabledCommands
-    ) {
-      if (this._controller) {
-        this._controller.enableDisableCommands(
-          aAction,
-          aEnabledCommands,
-          aDisabledCommands
-        );
       }
     }
 

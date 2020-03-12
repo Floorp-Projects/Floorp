@@ -61,6 +61,7 @@
 #include "nsFrameManager.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowser.h"
+#include "nsIBrowserController.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
@@ -2248,16 +2249,17 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvEnableDisableCommands(
-    const nsString& aAction, nsTArray<nsCString>&& aEnabledCommands,
+    const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aAction,
+    nsTArray<nsCString>&& aEnabledCommands,
     nsTArray<nsCString>&& aDisabledCommands) {
-  nsCOMPtr<nsIBrowser> browser =
-      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
-  bool isRemoteBrowser = false;
-  if (browser) {
-    browser->GetIsRemoteBrowser(&isRemoteBrowser);
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
   }
-  if (isRemoteBrowser) {
-    browser->EnableDisableCommandsRemoteOnly(aAction, aEnabledCommands,
+
+  nsCOMPtr<nsIBrowserController> browserController =
+      do_QueryActor(u"Controllers", aContext.get_canonical());
+  if (browserController) {
+    browserController->EnableDisableCommands(aAction, aEnabledCommands,
                                              aDisabledCommands);
   }
 

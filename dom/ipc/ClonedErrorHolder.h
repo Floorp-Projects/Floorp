@@ -16,7 +16,7 @@
 #include "mozilla/ErrorResult.h"
 
 class nsIGlobalObject;
-class nsQueryActor;
+class nsQueryActorChild;
 
 namespace mozilla {
 namespace dom {
