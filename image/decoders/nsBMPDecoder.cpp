@@ -717,7 +717,12 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
     mBytesPerColor = (mH.mBIHSize == InfoHeaderLength::WIN_V2) ? 3 : 4;
   }
 
-  if (mCMSMode != eCMSMode_Off) {
+  auto cmsMode = gfxPlatform::GetCMSMode();
+  if (GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
+    cmsMode = eCMSMode_Off;
+  }
+
+  if (cmsMode != eCMSMode_Off) {
     switch (mH.mCsType) {
       case InfoColorSpace::EMBEDDED:
         return SeekColorProfile(aLength);
@@ -729,9 +734,9 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
         MOZ_LOG(sBMPLog, LogLevel::Debug, ("using sRGB color profile\n"));
         if (mColors) {
           // We will transform the color table instead of the output pixels.
-          mTransform = GetCMSsRGBTransform(SurfaceFormat::R8G8B8);
+          mTransform = gfxPlatform::GetCMSRGBTransform();
         } else {
-          mTransform = GetCMSsRGBTransform(SurfaceFormat::OS_RGBA);
+          mTransform = gfxPlatform::GetCMSOSRGBATransform();
         }
         break;
       case InfoColorSpace::LINKED:
@@ -777,15 +782,15 @@ void nsBMPDecoder::PrepareCalibratedColorProfile() {
             ("failed to create calibrated RGB color profile, using sRGB\n"));
     if (mColors) {
       // We will transform the color table instead of the output pixels.
-      mTransform = GetCMSsRGBTransform(SurfaceFormat::R8G8B8);
+      mTransform = gfxPlatform::GetCMSRGBTransform();
     } else {
-      mTransform = GetCMSsRGBTransform(SurfaceFormat::OS_RGBA);
+      mTransform = gfxPlatform::GetCMSOSRGBATransform();
     }
   }
 }
 
 void nsBMPDecoder::PrepareColorProfileTransform() {
-  if (!mInProfile || !GetCMSOutputProfile()) {
+  if (!mInProfile || !gfxPlatform::GetCMSOutputProfile()) {
     return;
   }
 
@@ -817,8 +822,8 @@ void nsBMPDecoder::PrepareColorProfileTransform() {
       break;
   }
 
-  mTransform = qcms_transform_create(mInProfile, inType, GetCMSOutputProfile(),
-                                     outType, intent);
+  mTransform = qcms_transform_create(
+      mInProfile, inType, gfxPlatform::GetCMSOutputProfile(), outType, intent);
   if (!mTransform) {
     MOZ_LOG(sBMPLog, LogLevel::Debug,
             ("failed to create color profile transform\n"));

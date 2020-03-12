@@ -27,8 +27,7 @@ static void CheckFrameAnimatorBlendResults(const ImageTestCase& aTestCase,
   ASSERT_TRUE(surface != nullptr);
 
   CheckGeneratedSurface(surface, IntRect(0, 0, 50, 50),
-                        BGRAColor::Transparent(),
-                        aTestCase.ChooseColor(BGRAColor::Red()));
+                        BGRAColor::Transparent(), BGRAColor::Red());
 
   // Advance to the next/final frame.
   now = TimeStamp::Now() + TimeDuration::FromMilliseconds(500);
@@ -37,9 +36,8 @@ static void CheckFrameAnimatorBlendResults(const ImageTestCase& aTestCase,
   surface =
       aImage->GetFrame(imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_NONE);
   ASSERT_TRUE(surface != nullptr);
-  CheckGeneratedSurface(surface, IntRect(0, 0, 50, 50),
-                        aTestCase.ChooseColor(BGRAColor::Green()),
-                        aTestCase.ChooseColor(BGRAColor::Red()));
+  CheckGeneratedSurface(surface, IntRect(0, 0, 50, 50), BGRAColor::Green(),
+                        BGRAColor::Red());
 }
 
 template <typename Func>
@@ -82,7 +80,7 @@ static void WithFrameAnimatorDecode(const ImageTestCase& aTestCase,
   // Create an AnimationSurfaceProvider which will manage the decoding process
   // and make this decoder's output available in the surface cache.
   DecoderFlags decoderFlags = DefaultDecoderFlags();
-  SurfaceFlags surfaceFlags = aTestCase.mSurfaceFlags;
+  SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
   rv = DecoderFactory::CreateAnimationDecoder(
       decoderType, rasterImage, sourceBuffer, aTestCase.mSize, decoderFlags,
       surfaceFlags, 0, getter_AddRefs(task));

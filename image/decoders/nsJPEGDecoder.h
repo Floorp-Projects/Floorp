@@ -104,6 +104,8 @@ class nsJPEGDecoder : public Decoder {
 
   const Decoder::DecodeStyle mDecodeStyle;
 
+  uint32_t mCMSMode;
+
   SurfacePipe mPipe;
 };
 
