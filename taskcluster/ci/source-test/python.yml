@@ -3,16 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    platform: linux1804-64/opt
+    platform: linux64/opt
     always-target: true
     worker-type:
         by-platform:
-            linux1804-64.*: t-linux-xlarge
+            linux64.*: t-linux-xlarge
             macosx1014-64.*: t-osx-1014
             windows10-64.*: t-win10-64
     worker:
         by-platform:
-            linux1804-64.*:
+            linux64.*:
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
                 env:
@@ -47,7 +47,7 @@ taskgraph-tests:
 mach:
     description: python/mach unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - macosx1014-64/opt
         - windows10-64/opt
     python-version: [2, 3]
@@ -63,7 +63,7 @@ mach:
 marionette-harness:
     description: testing/marionette/harness unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - windows10-64/opt
     python-version: [2]
     treeherder:
@@ -81,16 +81,16 @@ marionette-harness:
 mochitest-harness:
     description: testing/mochitest unittests
     platform:
-        - linux1804-64/opt
-        - linux1804-64/debug
-        - linux1804-64-asan/opt
+        - linux64/opt
+        - linux64/debug
+        - linux64-asan/opt
     require-build: true
     always-target: false
     treeherder:
         symbol: py2(mch)
     worker:
         by-platform:
-            linux1804-64.*:
+            linux64.*:
                 docker-image: {in-tree: "ubuntu1804-test"}
                 max-run-time: 3600
     run:
@@ -123,7 +123,7 @@ mochitest-harness:
 mozbase:
     description: testing/mozbase unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - macosx1014-64/opt
         - windows10-64/opt
     python-version: [2, 3]
@@ -167,7 +167,7 @@ mozharness-py3:
 mozlint:
     description: python/mozlint unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - macosx1014-64/opt
         - windows10-64/opt
     python-version: [3]
@@ -196,7 +196,7 @@ mozrelease:
 mozterm:
     description: python/mozterm unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - windows10-64/opt
     python-version: [2, 3]
     treeherder:
@@ -223,7 +223,7 @@ mozversioncontrol:
 raptor:
     description: testing/raptor unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - macosx1014-64/opt
         - windows10-64/opt
     python-version: [2, 3]
@@ -239,16 +239,16 @@ raptor:
 reftest-harness:
     description: layout/tools/reftest unittests
     platform:
-        - linux1804-64/opt
-        - linux1804-64/debug
-        - linux1804-64-asan/opt
+        - linux64/opt
+        - linux64/debug
+        - linux64-asan/opt
     require-build: true
     always-target: false
     treeherder:
         symbol: py2(ref)
     worker:
         by-platform:
-            linux1804-64.*:
+            linux64.*:
                 docker-image: {in-tree: "ubuntu1804-test"}
                 max-run-time: 3600
     run:
@@ -280,7 +280,7 @@ reftest-harness:
 tryselect:
     description: tools/tryselect unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - windows10-64/opt
     python-version: [2]
     treeherder:
@@ -297,7 +297,7 @@ tryselect:
 mozbuild:
     description: mozbuild unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - macosx1014-64/opt
         - windows10-64/opt
     python-version: [2, 3]
@@ -309,7 +309,7 @@ mozbuild:
     fetches:
         toolchain:
             by-platform:
-                linux1804-64/opt:
+                linux64/opt:
                     - linux64-node
                 macosx1014-64/opt:
                     - macosx64-node
@@ -331,7 +331,7 @@ mozbuild:
 condprof:
     description: testing/condprofile unit tests
     platform:
-        - linux1804-64/opt
+        - linux64/opt
         - macosx1014-64/opt
         - windows10-64/opt
     python-version: [2]
