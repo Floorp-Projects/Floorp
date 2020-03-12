@@ -26,7 +26,7 @@ const TEST_URI = `
   </body>
 `;
 
-const TEST_DATA = [
+const TEST_DATA_SELECTED = [
   {
     selector: ".has-issue",
     expectedIssues: [
@@ -44,14 +44,26 @@ const TEST_DATA = [
   },
 ];
 
+const TEST_DATA_ALL = [
+  { property: "border-block-color" },
+  { property: "border-inline-color" },
+  { property: "user-modify" },
+];
+
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const { inspector, selectedElementPane } = await openCompatibilityView();
+  const {
+    allElementsPane,
+    inspector,
+    selectedElementPane,
+  } = await openCompatibilityView();
 
-  for (const { selector, expectedIssues } of TEST_DATA) {
+  for (const { selector, expectedIssues } of TEST_DATA_SELECTED) {
     info(`Check the issue list for ${selector} node`);
     await selectNode(selector, inspector);
     await assertIssueList(selectedElementPane, expectedIssues);
+    info("Check whether the issues on all elements pane are not changed");
+    await assertIssueList(allElementsPane, TEST_DATA_ALL);
   }
 });
