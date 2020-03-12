@@ -298,8 +298,6 @@ class FunctionBox : public SharedContext {
 
   // The parser handles tracing the fields below via the FunctionBox linked
   // list represented by |traceLink_|.
-
-  JSFunction* object_;
   FunctionBox* traceLink_;
   FunctionBox* emitLink_;
 
@@ -325,28 +323,21 @@ class FunctionBox : public SharedContext {
   // has expressions.
   VarScope::Data* extraVarScopeBindings_;
 
-  // Index into funcData, which lives inside of compilationInfo, for the
-  // functionCreationData associated with this functionBox. If there is not a
-  // functionCreationData associated with this functionBox, as in the case of
-  // the function box representing an already allocated function, then
-  // this index will be mozilla::Nothing.
-  mozilla::Maybe<size_t> funcDataIndex_;
-
-  FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
-              CompilationInfo& compilationInfo, Directives directives,
-              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              JSAtom* explicitName, FunctionFlags flags);
+  // Index into CompilationInfo::funcData, which contains the function
+  // information, either a JSFunction* (for a FunctionBox representing a real
+  // function) or a FunctionCreationData.
+  size_t funcDataIndex_;
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionSyntaxKind kind, bool isArrow,
                                      bool allowSuperProperty);
 
-  const mozilla::Maybe<size_t>& functionCreationDataIndex() const {
-    return funcDataIndex_;
-  }
-  mozilla::Maybe<size_t>& functionCreationDataIndex() { return funcDataIndex_; }
-
  public:
+  FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
+              CompilationInfo& compilationInfo, Directives directives,
+              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+              JSAtom* explicitName, FunctionFlags flags, size_t index);
+
   // Back pointer used by asm.js for error messages.
   FunctionNode* functionNode;
 
@@ -433,17 +424,8 @@ class FunctionBox : public SharedContext {
 
   MutableHandle<FunctionCreationData> functionCreationData() const;
 
-  bool hasFunctionCreationIndex() const { return funcDataIndex_.isSome(); }
-
-  FunctionBox(JSContext* cx, FunctionBox* traceListHead, JSFunction* fun,
-              uint32_t toStringStart, CompilationInfo& compilationInfo,
-              Directives directives, GeneratorKind generatorKind,
-              FunctionAsyncKind asyncKind);
-
-  FunctionBox(JSContext* cx, FunctionBox* traceListHead, uint32_t toStringStart,
-              CompilationInfo& compilationInfo, Directives directives,
-              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              size_t functionIndex);
+  bool hasFunctionCreationData() const;
+  bool hasFunction() const;
 
 #ifdef DEBUG
   bool atomsAreKept();
@@ -493,12 +475,7 @@ class FunctionBox : public SharedContext {
       const AbstractScopePtr& enclosingScope);
   void finish();
 
-  // Clear any function creation data which will no longer be used.
-  void clearFunctionCreationData() { functionCreationDataIndex().reset(); }
-
-  bool hasObject() const { return object_ != nullptr; }
-
-  JSFunction* function() const { return object_; }
+  JSFunction* function() const;
 
   // Initialize FunctionBox with a deferred allocation Function
   void initializeFunction(JSFunction* fun) {
@@ -506,11 +483,7 @@ class FunctionBox : public SharedContext {
     synchronizeArgCount();
   }
 
-  void clobberFunction(JSFunction* function) {
-    object_ = function;
-    // After clobbering, these flags need to be updated
-    setIsInterpreted(function->isInterpreted());
-  }
+  void clobberFunction(JSFunction* function);
 
   Scope* compilationEnclosingScope() const override {
     // This is used when emitting code for the current FunctionBox and therefore
@@ -563,7 +536,7 @@ class FunctionBox : public SharedContext {
 
   bool isArrow() const { return flags_.isArrow(); }
   bool isLambda() const {
-    if (hasObject()) {
+    if (hasFunction()) {
       return function()->isLambda();
     }
     return functionCreationData().get().flags.isLambda();
@@ -611,16 +584,14 @@ class FunctionBox : public SharedContext {
     definitelyNeedsArgsObj_ = true;
   }
   void setNeedsHomeObject() {
-    MOZ_ASSERT_IF(hasObject(), function()->allowSuperProperty());
-    MOZ_ASSERT_IF(!hasObject(), functionCreationDataIndex().isSome());
-    MOZ_ASSERT_IF(!hasObject(),
+    MOZ_ASSERT_IF(hasFunction(), function()->allowSuperProperty());
+    MOZ_ASSERT_IF(!hasFunction(),
                   functionCreationData().get().flags.allowSuperProperty());
     needsHomeObject_ = true;
   }
   void setDerivedClassConstructor() {
-    MOZ_ASSERT_IF(hasObject(), function()->isClassConstructor());
-    MOZ_ASSERT_IF(!hasObject(), functionCreationDataIndex().isSome());
-    MOZ_ASSERT_IF(!hasObject(),
+    MOZ_ASSERT_IF(hasFunction(), function()->isClassConstructor());
+    MOZ_ASSERT_IF(!hasFunction(),
                   functionCreationData().get().flags.isClassConstructor());
     isDerivedClassConstructor_ = true;
   }
@@ -669,13 +640,13 @@ class FunctionBox : public SharedContext {
   // Flush the acquired argCount to the associated function.
   // If the function doesn't exist yet, this of course isn't necessary;
   void synchronizeArgCount() {
-    if (hasObject()) {
+    if (hasFunction()) {
       function()->setArgCount(nargs_);
     }
   }
 
   void setFieldInitializers(FieldInitializers fi) {
-    if (hasObject()) {
+    if (hasFunction()) {
       MOZ_ASSERT(function()->baseScript());
       function()->baseScript()->setFieldInitializers(fi);
       return;
@@ -685,7 +656,7 @@ class FunctionBox : public SharedContext {
   }
 
   bool setTypeForScriptedFunction(JSContext* cx, bool singleton) {
-    if (hasObject()) {
+    if (hasFunction()) {
       RootedFunction fun(cx, function());
       return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
     }
@@ -696,7 +667,7 @@ class FunctionBox : public SharedContext {
   void setTreatAsRunOnce() { function()->baseScript()->setTreatAsRunOnce(); }
 
   void setInferredName(JSAtom* atom) {
-    if (hasObject()) {
+    if (hasFunction()) {
       function()->setInferredName(atom);
       return;
     }
@@ -704,18 +675,20 @@ class FunctionBox : public SharedContext {
   }
 
   JSAtom* inferredName() const {
-    if (hasObject()) {
+    if (hasFunction()) {
       return function()->inferredName();
     }
     return functionCreationData().get().inferredName();
   }
 
   bool hasInferredName() const {
-    if (hasObject()) {
+    if (hasFunction()) {
       return function()->hasInferredName();
     }
     return functionCreationData().get().hasInferredName();
   }
+
+  size_t index() { return funcDataIndex_; }
 
   void trace(JSTracer* trc);
 

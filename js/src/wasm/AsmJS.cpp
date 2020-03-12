@@ -7119,13 +7119,6 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   MOZ_ASSERT(funbox->isInterpreted());
   funbox->clobberFunction(moduleFun);
 
-  // Clear any function creation data. This is important in particular
-  // to avoid publishing a deferred function allocation on top of the
-  // module function set on the funbox above.
-  if (funbox->hasFunctionCreationIndex()) {
-    funbox->clearFunctionCreationData();
-  }
-
   // Success! Write to the console with a "warning" message indicating
   // total compilation time.
   *validated = true;

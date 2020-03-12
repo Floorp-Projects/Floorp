@@ -264,6 +264,12 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(fun);
 
+  size_t index = this->getCompilationInfo().funcData.length();
+  if (!this->getCompilationInfo().funcData.emplaceBack(
+          mozilla::AsVariant(fun))) {
+    return nullptr;
+  }
+
   /*
    * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
    * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
@@ -272,8 +278,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fun, toStringStart, this->getCompilationInfo(),
-      inheritedDirectives, generatorKind, asyncKind);
+      cx_, traceListHead_, toStringStart, this->getCompilationInfo(),
+      inheritedDirectives, generatorKind, asyncKind, fun->displayAtom(),
+      fun->flags(), index);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -307,7 +314,8 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, traceListHead_, toStringStart, this->getCompilationInfo(),
-      inheritedDirectives, generatorKind, asyncKind, index);
+      inheritedDirectives, generatorKind, asyncKind, fcd.get().atom,
+      fcd.get().flags, index);
 
   if (!funbox) {
     ReportOutOfMemory(cx_);
@@ -1695,11 +1703,16 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      if (!funbox->hasFunctionCreationIndex()) {
+      if (!funbox->hasFunctionCreationData()) {
         return true;
       }
 
-      MutableHandle<FunctionCreationData> fcd = funbox->functionCreationData();
+      // Move the FCD out of the funcDataArray onto the stack here, because
+      // funbox->initializeFunction() below clobbers the funcDataAray element,
+      // and we want fcd to remain alive so that we can work on the lazy
+      // script creation data.
+      Rooted<FunctionCreationData> fcd(
+          parser->cx_, std::move(funbox->functionCreationData().get()));
       RootedFunction fun(parser->cx_, AllocNewFunction(parser->cx_, fcd));
       if (!fun) {
         return false;
@@ -7117,7 +7130,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
 
     // Set the same information, but on the lazyScript.
-    if (ctorbox->hasObject()) {
+    if (ctorbox->hasFunction()) {
       if (!ctorbox->emitBytecode) {
         ctorbox->function()->baseScript()->setToStringEnd(classEndOffset);
 
