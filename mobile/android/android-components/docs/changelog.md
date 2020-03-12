@@ -29,6 +29,10 @@ permalink: /changelog/
 * **feature-addons**
   * Added `DefaultSupportedAddonsChecker` which checks for add-ons that were previously unsupported, and creates a notification to let the user known when they are available to be used.
 
+* **feature-push**
+  * `AutoPushFeature` now properly notifies observers that they have changed by the `Observer.onSubscriptionChanged` callback.
+  *  ⚠️ **This is a breaking change**: `RustPushConnection.verifyConnection` now returns a list of subscriptions that have changed.
+
 # 35.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v34.0.0...v35.0.0)
@@ -56,7 +60,7 @@ permalink: /changelog/
 
 * **feature-accounts-push**
   * Add known prefix to FxA push scope.
-  
+
 * **browser-toolbar**
   * Add the possibility to listen to menu dismissal through `setMenuDismissAction` in `DisplayToolbar`
 

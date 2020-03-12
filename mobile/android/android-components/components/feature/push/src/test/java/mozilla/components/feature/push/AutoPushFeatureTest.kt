@@ -249,11 +249,17 @@ class AutoPushFeatureTest {
 
         verify(observers, never()).onSubscriptionChanged(any())
 
-        // When there are subscription updates, observers should not be notified.
-        whenever(connection.verifyConnection()).thenReturn(true)
+        // When there are no subscription updates, observers should not be notified.
+        whenever(connection.verifyConnection()).thenReturn(emptyList())
         feature.verifyActiveSubscriptions()
 
-        verify(observers).onSubscriptionChanged(any())
+        verify(observers, never()).onSubscriptionChanged(any())
+
+        // When there are subscription updates, observers should be notified.
+        whenever(connection.verifyConnection()).thenReturn(listOf(AutoPushSubscriptionChanged("scope", "1246")))
+        feature.verifyActiveSubscriptions()
+
+        verify(observers).onSubscriptionChanged("scope")
     }
 
     @Test
@@ -337,7 +343,7 @@ class AutoPushFeatureTest {
 
         override suspend fun updateToken(token: String) = true
 
-        override suspend fun verifyConnection(): Boolean = false
+        override suspend fun verifyConnection(): List<AutoPushSubscriptionChanged> = emptyList()
 
         override suspend fun decryptMessage(
             channelId: String,
