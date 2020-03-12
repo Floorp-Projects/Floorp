@@ -1401,7 +1401,6 @@ void JSScript::setDefaultClassConstructorSpan(
     js::ScriptSourceObject* sourceObject, uint32_t start, uint32_t end,
     unsigned line, unsigned column) {
   MOZ_ASSERT(compartment() == sourceObject->compartment());
-  MOZ_ASSERT(isDefaultClassConstructor());
   sourceObject_ = sourceObject;
   extent_.toStringStart = start;
   extent_.toStringEnd = end;
