@@ -7,7 +7,7 @@
 # This script uses `fix-stacks` to post-process the entries produced by
 # MozFormatCodeAddress().
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from subprocess import Popen, PIPE
 import os
 import platform
@@ -21,7 +21,7 @@ line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
 fix_stacks = None
 
 
-def fixSymbols(line, jsonMode=False):
+def fixSymbols(line, jsonMode=False, slowWarning=False):
     global fix_stacks
 
     result = line_re.search(line)
@@ -51,6 +51,9 @@ def fixSymbols(line, jsonMode=False):
             args.append('-j')
 
         fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=None)
+
+        if slowWarning:
+            print("Initializing stack-fixing for the first stack frame, this may take a while...")
 
     # Sometimes `line` is lacking a trailing newline. If we pass such a `line`
     # to `fix-stacks` it will wait until it receives a newline, causing this
