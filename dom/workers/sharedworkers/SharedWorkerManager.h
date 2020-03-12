@@ -8,7 +8,6 @@
 #define mozilla_dom_SharedWorkerManager_h
 
 #include "mozilla/dom/RemoteWorkerController.h"
-#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -26,8 +25,7 @@ class SharedWorkerParent;
 // Main-thread only object that keeps a manager and the service alive.
 // When the last SharedWorkerManagerHolder is released, the corresponding
 // manager unregisters itself from the service and terminates the worker.
-class SharedWorkerManagerHolder final
-    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+class SharedWorkerManagerHolder final {
  public:
   NS_INLINE_DECL_REFCOUNTING(SharedWorkerManagerHolder);
 
@@ -41,8 +39,8 @@ class SharedWorkerManagerHolder final
  private:
   ~SharedWorkerManagerHolder();
 
-  const RefPtr<SharedWorkerManager> mManager;
-  const RefPtr<SharedWorkerService> mService;
+  RefPtr<SharedWorkerManager> mManager;
+  RefPtr<SharedWorkerService> mService;
 };
 
 // Thread-safe wrapper for SharedWorkerManagerHolder.
@@ -126,23 +124,23 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
   nsCOMPtr<nsIEventTarget> mPBackgroundEventTarget;
 
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-  const nsCString mDomain;
-  const OriginAttributes mStoragePrincipalAttrs;
-  const nsCOMPtr<nsIURI> mResolvedScriptURL;
-  const nsString mName;
-  const bool mIsSecureContext;
+  nsCString mDomain;
+  OriginAttributes mStoragePrincipalAttrs;
+  nsCOMPtr<nsIURI> mResolvedScriptURL;
+  nsString mName;
+  bool mIsSecureContext;
   bool mSuspended;
   bool mFrozen;
 
   // Raw pointers because SharedWorkerParent unregisters itself in
   // ActorDestroy().
-  nsTArray<CheckedUnsafePtr<SharedWorkerParent>> mActors;
+  nsTArray<SharedWorkerParent*> mActors;
 
   RefPtr<RemoteWorkerController> mRemoteWorkerController;
 
   // Main-thread only. Raw Pointers because holders keep the manager alive and
   // they unregister themselves in their DTOR.
-  nsTArray<CheckedUnsafePtr<SharedWorkerManagerHolder>> mHolders;
+  nsTArray<SharedWorkerManagerHolder*> mHolders;
 };
 
 }  // namespace dom
