@@ -6,9 +6,15 @@ SANDBOXED_WASM_LIBRARY_NAME = 'dummy'
 WASM_SOURCES += ['test1.c']
 
 value = 'xyz'
-WASM_DEFINES['FOO'] = True
+WASM_DEFINES = {
+    'FOO': True,
+}
+
 WASM_DEFINES['BAZ'] = '"abcd"'
-WASM_DEFINES['BAR'] = 7
-WASM_DEFINES['VALUE'] = value
-WASM_DEFINES['QUX'] = False
+WASM_DEFINES.update({
+    'BAR': 7,
+    'VALUE': value,
+    'QUX': False,
+})
+
 WASM_CFLAGS += ['-funroll-loops', '-wasm-arg']

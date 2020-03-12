@@ -14,9 +14,8 @@ from collections import (
     defaultdict,
     namedtuple,
 )
-from itertools import chain
-from operator import itemgetter
 from six import StringIO
+from itertools import chain
 
 from mozpack.manifests import (
     InstallManifest,
@@ -746,21 +745,20 @@ class RecursiveMakeBackend(MakeBackend):
         root_deps_mk = Makefile()
 
         # Fill the dependencies for traversal of each tier.
-        for tier, filter in sorted(filters, key=itemgetter(0)):
+        for tier, filter in filters:
             main, all_deps = \
                 self._traversal.compute_dependencies(filter)
-            for dir, deps in sorted(all_deps.items()):
+            for dir, deps in all_deps.items():
                 if deps is not None or (dir in self._idl_dirs
                                         and tier == 'export'):
                     rule = root_deps_mk.create_rule(['%s/%s' % (dir, tier)])
-                    if deps:
-                        rule.add_dependencies(
-                            '%s/%s' % (d, tier) for d in sorted(deps) if d)
-                    if dir in self._idl_dirs and tier == 'export':
-                        rule.add_dependencies(['xpcom/xpidl/%s' % tier])
+                if deps:
+                    rule.add_dependencies('%s/%s' % (d, tier) for d in deps if d)
+                if dir in self._idl_dirs and tier == 'export':
+                    rule.add_dependencies(['xpcom/xpidl/%s' % tier])
             rule = root_deps_mk.create_rule(['recurse_%s' % tier])
             if main:
-                rule.add_dependencies('%s/%s' % (d, tier) for d in sorted(main))
+                rule.add_dependencies('%s/%s' % (d, tier) for d in main)
 
         all_compile_deps = six.moves.reduce(
             lambda x, y: x | y,
@@ -785,8 +783,8 @@ class RecursiveMakeBackend(MakeBackend):
             # Directories containing rust compilations don't generally depend
             # on other directories in the tree, so putting them first here will
             # start them earlier in the build.
-            rust_roots = sorted(r for r in roots if r in self._rust_targets)
-            rust_libs = sorted(r for r in roots if r in self._rust_lib_targets)
+            rust_roots = [r for r in roots if r in self._rust_targets]
+            rust_libs = [r for r in roots if r in self._rust_lib_targets]
             if category == 'compile' and rust_roots:
                 rust_rule = root_deps_mk.create_rule(['recurse_rust'])
                 rust_rule.add_dependencies(rust_roots)
@@ -802,11 +800,11 @@ class RecursiveMakeBackend(MakeBackend):
                     r = root_deps_mk.create_rule([target])
                     r.add_dependencies([prior_target])
 
-            rule.add_dependencies(sorted(chain(rust_roots, roots)))
+            rule.add_dependencies(chain(rust_roots, roots))
             for target, deps in sorted(graph.items()):
                 if deps:
                     rule = root_deps_mk.create_rule([target])
-                    rule.add_dependencies(sorted(deps))
+                    rule.add_dependencies(deps)
 
         non_default_roots = defaultdict(list)
         non_default_graphs = defaultdict(lambda: OrderedDefaultDict(set))
@@ -832,7 +830,7 @@ class RecursiveMakeBackend(MakeBackend):
                 self._no_skip['syms'].remove(dirname)
 
         add_category_rules('compile', compile_roots, self._compile_graph)
-        for category, graph in sorted(six.iteritems(non_default_graphs)):
+        for category, graph in six.iteritems(non_default_graphs):
             add_category_rules(category, non_default_roots[category], graph)
 
         root_mk = Makefile()
@@ -854,7 +852,7 @@ class RecursiveMakeBackend(MakeBackend):
         root_mk.add_statement('non_default_tiers := %s' % ' '.join(sorted(
             non_default_roots.keys())))
 
-        for category, graphs in sorted(six.iteritems(non_default_graphs)):
+        for category, graphs in six.iteritems(non_default_graphs):
             category_dirs = [mozpath.dirname(target)
                              for target in graphs.keys()]
             root_mk.add_statement('%s_dirs := %s' % (category,
