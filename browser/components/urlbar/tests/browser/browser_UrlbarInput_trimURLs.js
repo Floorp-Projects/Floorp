@@ -83,7 +83,7 @@ add_task(async function() {
 
   await testCopy("example.com", "http://example.com/");
 
-  SetPageProxyState("invalid");
+  gURLBar.setPageProxyState("invalid");
   gURLBar.valueIsTyped = true;
   await testCopy("example.com", "example.com");
 });
