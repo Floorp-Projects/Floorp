@@ -38,7 +38,6 @@ DWORD CreateRestrictedToken(HANDLE effective_token,
                             IntegrityLevel integrity_level,
                             TokenType token_type,
                             bool lockdown_default_dacl,
-                            PSID unique_restricted_sid,
                             bool use_restricting_sids,
                             base::win::ScopedHandle* token);
 

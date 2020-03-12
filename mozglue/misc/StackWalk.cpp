@@ -380,6 +380,8 @@ MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
                                  uint32_t aSkipFrames, uint32_t aMaxFrames,
                                  void* aClosure, HANDLE aThread,
                                  CONTEXT* aContext) {
+  static HANDLE myProcess = nullptr;
+  HANDLE myThread;
   struct WalkStackData data;
 
   InitializeDbgHelpCriticalSection();
@@ -394,9 +396,29 @@ MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
     data.walkCallingThread = (threadId == currentThreadId);
   }
 
+  // Have to duplicate handle to get a real handle.
+  if (!myProcess) {
+    if (!::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentProcess(),
+                           ::GetCurrentProcess(), &myProcess,
+                           PROCESS_ALL_ACCESS, FALSE, 0)) {
+      if (data.walkCallingThread) {
+        PrintError("DuplicateHandle (process)");
+      }
+      return;
+    }
+  }
+  if (!::DuplicateHandle(::GetCurrentProcess(), targetThread,
+                         ::GetCurrentProcess(), &myThread, THREAD_ALL_ACCESS,
+                         FALSE, 0)) {
+    if (data.walkCallingThread) {
+      PrintError("DuplicateHandle (thread)");
+    }
+    return;
+  }
+
   data.skipFrames = aSkipFrames;
-  data.thread = targetThread;
-  data.process = ::GetCurrentProcess();
+  data.thread = myThread;
+  data.process = myProcess;
   void* local_pcs[1024];
   data.pcs = local_pcs;
   data.pc_count = 0;
@@ -419,6 +441,8 @@ MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
     data.sp_count = 0;
     WalkStackMain64(&data);
   }
+
+  ::CloseHandle(myThread);
 
   for (uint32_t i = 0; i < data.pc_count; ++i) {
     (*aCallback)(i + 1, data.pcs[i], data.sps[i], aClosure);

@@ -1024,7 +1024,7 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // On windows these levels are:
   // See - security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
   // SetSecurityLevelForContentProcess() for what the different settings mean.
-  pref("security.sandbox.content.level", 6);
+  pref("security.sandbox.content.level", 5);
 
   // This controls the depth of stack trace that is logged when Windows sandbox
   // logging is turned on.  This is only currently available for the content
