@@ -94,7 +94,7 @@ add_task(async function() {
           const arrowCenter = arrowBounds.left + arrowBounds.width / 2;
           const delta = Math.abs(arrowCenter - buttonCenter);
           ok(
-            delta < 1,
+            Math.round(delta) <= 1,
             "Center of arrow is within 1px of button center" +
               ` (delta: ${delta})`
           );
