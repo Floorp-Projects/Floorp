@@ -83,7 +83,7 @@ class SmooshScriptStencil : public ScriptStencil {
 
   virtual bool finishGCThings(JSContext* cx,
                               mozilla::Span<JS::GCCellPtr> output) const {
-    gcthings[0] = JS::GCCellPtr(&cx->global()->emptyGlobalScope());
+    output[0] = JS::GCCellPtr(&cx->global()->emptyGlobalScope());
     return true;
   }
 
