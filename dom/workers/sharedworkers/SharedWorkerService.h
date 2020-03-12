@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SharedWorkerService_h
 #define mozilla_dom_SharedWorkerService_h
 
-#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -25,8 +24,7 @@ class SharedWorkerManager;
 class SharedWorkerParent;
 class UniqueMessagePortId;
 
-class SharedWorkerService final
-    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+class SharedWorkerService final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerService);
 
