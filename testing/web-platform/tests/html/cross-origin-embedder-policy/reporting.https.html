@@ -28,8 +28,8 @@ async function pollReports(endpoint, reports) {
   }
 }
 
-let reports = []
-let reportsForReportOnly = []
+const reports = [];
+const reportsForReportOnly = [];
 pollReports('endpoint', reports);
 pollReports('report-only-endpoint', reportsForReportOnly);
 
@@ -39,6 +39,21 @@ function checkCorpReportExistence(reports, blockedUrl, contextUrl) {
   for (const report of reports) {
     if (report.type !== 'coep' || report.url !== contextUrl ||
         report.body.type !== 'corp') {
+      continue;
+    }
+    if (report.body['blocked-url'] === blockedUrl) {
+      return;
+    }
+  }
+  assert_unreached(`A report whose blocked-url is ${blockedUrl} and url is ${contextUrl} is not found.`);
+}
+
+function checkNavigationReportExistence(reports, blockedUrl, contextUrl) {
+  blockedUrl = new URL(blockedUrl, location).href;
+  contextUrl = new URL(contextUrl, location).href;
+  for (const report of reports) {
+    if (report.type !== 'coep' || report.url !== contextUrl ||
+        report.body.type !== 'navigation') {
       continue;
     }
     if (report.body['blocked-url'] === blockedUrl) {
@@ -87,7 +102,8 @@ async_test(async (t) => {
     fetchInIframe(blockedDueToCoep);
     fetchInIframe(redirect);
 
-    await new Promise(resolve => t.step_timeout(resolve, 3000));
+    // Wait 3 seconds for reports to settle.
+    await wait(3000);
 
     checkReportNonExistence(reports, sameOriginUrl, iframe.src);
     checkReportNonExistence(reports, blockedByPureCorp, iframe.src);
@@ -121,16 +137,18 @@ async_test(async (t) => {
     }
 
     const suffix = 'navigation-corp';
-    const sameOrigin = `/common/blank.html?${suffix}`;
-    const blockedDueToCoep = `${REMOTE_ORIGIN}/common/blank.html?abc&${suffix}`;
-    const dest = `${REMOTE_ORIGIN}/common/blank.html?xyz&${suffix}`;
+    const coep = `pipe=header(cross-origin-embedder-policy,require-corp)`;
+    const sameOrigin = `/common/blank.html?${coep}&${suffix}`;
+    const blockedDueToCoep = `${REMOTE_ORIGIN}/common/blank.html?${coep}&${suffix}-a`;
+    const dest = `${REMOTE_ORIGIN}/common/blank.html?${coep}&${suffix}-b`;
     const redirect = `/common/redirect.py?location=${encodeURIComponent(dest)}&${suffix}`;
 
     attachFrame(sameOrigin);
     attachFrame(blockedDueToCoep);
     attachFrame(redirect);
 
-    await new Promise(resolve => t.step_timeout(resolve, 3000));
+    // Wait 3 seconds for reports to settle.
+    await wait(3000);
 
     checkReportNonExistence(reports, sameOrigin, iframe.src);
     checkCorpReportExistence(reports, blockedDueToCoep, iframe.src);
@@ -143,4 +161,98 @@ async_test(async (t) => {
   }
 }, 'navigation CORP');
 
-</script>
+async_test(async (t) => {
+  try {
+    const iframe = document.createElement('iframe');
+    t.add_cleanup(() => iframe.remove());
+
+    const suffix = '&navigation-coep';
+    const corp = 'header(cross-origin-resource-policy,cross-origin)';
+    const noCoep = `pipe=${corp}`;
+    const coep =
+      `pipe=header(cross-origin-embedder-policy,require-corp%3breport-to=%22endpoint%22)|${corp}`;
+    const coepReportOnly =
+      `pipe=header(cross-origin-embedder-policy-report-only,require-corp%3breport-to=%22report-only-endpoint%22)|${corp}`;
+    const path = `/common/blank.html`;
+    const pipes = [noCoep, coep, coepReportOnly];
+    const settings = new Map();
+    settings.set(noCoep, {
+      pipe: noCoep,
+      value: 'unsafe-none',
+      reportOnlyValue: 'unsafe-none',
+    });
+    settings.set(coep, {
+      pipe: coep,
+      value: 'require-corp',
+      reportOnlyValue: 'unsafe-none',
+    });
+    settings.set(coepReportOnly, {
+      pipe: coepReportOnly,
+      value: 'unsafe-none',
+      reportOnlyValue: 'require-corp',
+    });
+
+    function genUrl(pipe) {
+      return `${path}?${pipe}${suffix}`;
+    }
+
+    for (const outer of settings.keys()) {
+      for (const inner of settings.keys()) {
+        const iframe = document.createElement('iframe');
+        t.add_cleanup(() => iframe.remove());
+
+        iframe.src = genUrl(outer);
+        iframe.addEventListener('load', () => {
+          const w = iframe.contentWindow;
+          const d = iframe.contentDocument;
+          const nested = d.createElement('iframe');
+          nested.src = genUrl(inner) + '-nested';
+          d.body.appendChild(nested);
+        }, {once: true});
+        document.body.appendChild(iframe);
+      }
+    }
+
+    // Wait 3 seconds for reports to settle.
+    await wait(3000);
+
+    function check(rs, inner, outer) {
+      checkNavigationReportExistence(
+        rs, genUrl(inner) + '-nested', genUrl(outer));
+    }
+    function checkNoReport(reports, inner, outer) {
+      checkReportNonExistence(
+        reports, genUrl(inner) + '-nested', genUrl(outer));
+    }
+
+    // outer === noCoep
+    checkNoReport(reports, noCoep, noCoep);
+    checkNoReport(reports, coep, noCoep);
+    checkNoReport(reports, coepReportOnly, noCoep);
+    checkNoReport(reportsForReportOnly, noCoep, noCoep);
+    checkNoReport(reportsForReportOnly, coep, noCoep);
+    checkNoReport(reportsForReportOnly, coepReportOnly, noCoep);
+
+    // outer === coep
+    check(reports, noCoep, coep);
+    checkNoReport(reports, coep, coep);
+    check(reports, coepReportOnly, coep);
+    checkNoReport(reportsForReportOnly, noCoep, coep);
+    checkNoReport(reportsForReportOnly, coep, coep);
+    checkNoReport(reportsForReportOnly, coepReportOnly, coep);
+
+    // outer === coepReportOnly
+    checkNoReport(reports, noCoep, coepReportOnly);
+    checkNoReport(reports, coep, coepReportOnly);
+    checkNoReport(reports, coepReportOnly, coepReportOnly);
+    check(reportsForReportOnly, noCoep, coepReportOnly);
+    checkNoReport(reportsForReportOnly, coep, coepReportOnly);
+    check(reportsForReportOnly, coepReportOnly, coepReportOnly);
+
+    t.done();
+  } catch (e) {
+    t.step(() => { throw e });
+  }
+}, 'COEP violation on nested frame navigation');
+
+</script>$
