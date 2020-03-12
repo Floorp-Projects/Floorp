@@ -532,8 +532,6 @@ static bool intrinsic_MakeDefaultConstructor(JSContext* cx, unsigned argc,
 
   RootedFunction ctor(cx, &args[0].toObject().as<JSFunction>());
 
-  ctor->baseScript()->setIsDefaultClassConstructor();
-
   // Because self-hosting code does not allow top-level lexicals,
   // class constructors are class expressions in top-level vars.
   // Because of this, we give them an inferred atom. Since they
