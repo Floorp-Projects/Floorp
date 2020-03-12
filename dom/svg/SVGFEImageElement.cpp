@@ -319,9 +319,10 @@ SVGFEImageElement::FrameCreated(nsIFrame* aFrame) {
 //----------------------------------------------------------------------
 // imgINotificationObserver methods
 
-void SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType,
-                               const nsIntRect* aData) {
-  nsImageLoadingContent::Notify(aRequest, aType, aData);
+NS_IMETHODIMP
+SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType,
+                          const nsIntRect* aData) {
+  nsresult rv = nsImageLoadingContent::Notify(aRequest, aType, aData);
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     // Request a decode
@@ -340,6 +341,8 @@ void SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType,
           static_cast<SVGFilterElement*>(GetParent()));
     }
   }
+
+  return rv;
 }
 
 }  // namespace dom

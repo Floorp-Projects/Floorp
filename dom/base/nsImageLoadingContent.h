@@ -219,9 +219,9 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   void BindToTree(mozilla::dom::BindContext&, nsINode& aParent);
   void UnbindFromTree(bool aNullParent);
 
-  void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
+  nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnUnlockedDraw();
-  void OnImageIsAnimated(imgIRequest* aRequest);
+  nsresult OnImageIsAnimated(imgIRequest* aRequest);
 
   // The nsContentPolicyType we would use for this ImageLoadType
   static nsContentPolicyType PolicyTypeForLoad(ImageLoadType aImageLoadType);
