@@ -11,14 +11,18 @@ const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS_START,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
+  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
 } = require("devtools/client/inspector/compatibility/actions/index");
 
 const INITIAL_STATE = {
+  isTopLevelTargetProcessing: false,
   selectedNode: null,
   selectedNodeIssues: [],
   topLevelTarget: null,
@@ -57,6 +61,9 @@ const reducers = {
   [COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES](state, { issues }) {
     return Object.assign({}, state, { selectedNodeIssues: issues });
   },
+  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_START](state) {
+    return Object.assign({}, state, { isTopLevelTargetProcessing: true });
+  },
   [COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS](state, { targetBrowsers }) {
     return Object.assign({}, state, { targetBrowsers });
   },
@@ -64,8 +71,14 @@ const reducers = {
     _showError(COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE, error);
     return state;
   },
+  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE](state) {
+    return Object.assign({}, state, { isTopLevelTargetProcessing: false });
+  },
   [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START](state) {
-    return Object.assign({}, state, { topLevelTargetIssues: [] });
+    return Object.assign({}, state, {
+      isTopLevelTargetProcessing: true,
+      topLevelTargetIssues: [],
+    });
   },
   [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS](state, { target }) {
     return Object.assign({}, state, { topLevelTarget: target });
@@ -73,6 +86,9 @@ const reducers = {
   [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE, error);
     return state;
+  },
+  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE](state, { target }) {
+    return Object.assign({}, state, { isTopLevelTargetProcessing: false });
   },
 };
 
