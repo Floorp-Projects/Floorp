@@ -371,7 +371,7 @@ class ManageCreditCards extends ManageRecords {
     // Ask for reauth if user is trying to edit an existing credit card.
     if (
       !creditCard ||
-      (await OSKeyStore.ensureLoggedIn(reauthPasswordPromptMessage))
+      (await FormAutofillUtils.ensureLoggedIn(reauthPasswordPromptMessage))
     ) {
       let decryptedCCNumObj = {};
       if (creditCard && creditCard["cc-number-encrypted"]) {

@@ -34,8 +34,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // Skip reauth during tests, only works in non-official builds.
-const TEST_ONLY_REAUTH =
-  "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin";
+const TEST_ONLY_REAUTH = "browser.osKeyStore.unofficialBuildOnlyLogin";
 
 var OSKeyStore = {
   /**
@@ -139,7 +138,7 @@ var OSKeyStore = {
     let unlockPromise;
 
     // Decides who should handle reauth
-    if (!this._reauthEnabledByUser || (typeof reauth == "boolean" && !reauth)) {
+    if (typeof reauth == "boolean" && !reauth) {
       unlockPromise = Promise.resolve();
     } else if (!AppConstants.MOZILLA_OFFICIAL && this._testReauth) {
       unlockPromise = this._reauthInTests();
@@ -293,7 +292,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {})
     .ConsoleAPI;
   return new ConsoleAPI({
-    maxLogLevelPref: "extensions.formautofill.loglevel",
+    maxLogLevelPref: "browser.osKeyStore.loglevel",
     prefix: "OSKeyStore",
   });
 });
@@ -303,10 +302,4 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "_testReauth",
   TEST_ONLY_REAUTH,
   ""
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  OSKeyStore,
-  "_reauthEnabledByUser",
-  "extensions.formautofill.reauth.enabled",
-  false
 );
