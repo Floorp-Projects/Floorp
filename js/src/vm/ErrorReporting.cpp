@@ -57,7 +57,7 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
 }
 
 bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
-                              UniquePtr<JSErrorNotes> notes, unsigned flags,
+                              UniquePtr<JSErrorNotes> notes,
                               unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
   // thread, save the error so that the thread finishing the parse can report
@@ -69,7 +69,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   }
 
   err->notes = std::move(notes);
-  err->flags = flags;
+  err->flags = JSREPORT_WARNING;
   err->errorNumber = errorNumber;
 
   err->filename = metadata.filename;
