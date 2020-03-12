@@ -3,17 +3,24 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/utils.js"></script>
-<form>
-  <input type="text" id='myInput'>
-</form>
+<style>
+  #masked {
+    width: 0px;
+    height: 100px;
+    -webkit-mask-image: url(resources/circle.svg);
+    mask-image: url(resources/circle.svg);
+  }
+</style>
+<div id='masked'></div>
 <script>
 promise_test(async t => {
   const onload = new Promise(r => window.addEventListener('load', r));
   await onload;
   return assertNoFirstContentfulPaint(t).then(() => {
-    document.getElementById('myInput').value = 'default text';
+    document.getElementById('masked').style.width = '100px';
+  }).then(() => {
     return assertFirstContentfulPaint(t);
   });
-}, 'Text from a form control triggers First Contentful Paint.');
+}, 'Mask image triggers First Contentful Paint.');
 </script>
 </body>
