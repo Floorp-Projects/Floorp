@@ -1743,21 +1743,22 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult {
   nscoord BSize() const { return mBSize; }
 
   nscoord Ascent() const { return mAscent; }
-};
 
-NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
-                                    CachedMeasuringReflowResult);
+  // Instances of this class are stored under this frame property, on
+  // frames that are flex items:
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, CachedMeasuringReflowResult)
+};
 
 void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
     nsIFrame* aItemFrame) {
-  aItemFrame->RemoveProperty(CachedFlexMeasuringReflow());
+  aItemFrame->RemoveProperty(CachedMeasuringReflowResult::Prop());
 }
 
 const CachedMeasuringReflowResult&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     FlexItem& aItem, ReflowInput& aChildReflowInput) {
   if (const auto* cachedResult =
-          aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
+          aItem.Frame()->GetProperty(CachedMeasuringReflowResult::Prop())) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
@@ -1798,7 +1799,7 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   auto result =
       new CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
 
-  aItem.Frame()->SetProperty(CachedFlexMeasuringReflow(), result);
+  aItem.Frame()->SetProperty(CachedMeasuringReflowResult::Prop(), result);
   return *result;
 }
 
