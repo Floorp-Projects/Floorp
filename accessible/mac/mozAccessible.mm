@@ -132,14 +132,8 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // unknown (either unimplemented, or irrelevant) elements are marked as ignored
   // as well as expired elements.
 
-  bool noRole = [[self role] isEqualToString:NSAccessibilityUnknownRole];
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
-    return (noRole && !(accWrap->InteractiveState() & states::FOCUSABLE));
-
-  if (ProxyAccessible* proxy = [self getProxyAccessible])
-    return (noRole && !(proxy->State() & states::FOCUSABLE));
-
-  return true;
+  return [[self role] isEqualToString:NSAccessibilityUnknownRole] &&
+    ([self state] & states::FOCUSABLE);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -241,6 +235,18 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (uint64_t)state {
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    return accWrap->State();
+  }
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    return proxy->State();
+  }
+
+  return 0;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
@@ -1056,16 +1062,15 @@ struct RoleDescrComparator {
 - (NSString*)orientation {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  uint64_t state;
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
-    state = accWrap->InteractiveState();
-  else if (ProxyAccessible* proxy = [self getProxyAccessible])
-    state = proxy->State();
-  else
-    state = 0;
+  uint64_t state = [self state];
 
-  if (state & states::HORIZONTAL) return NSAccessibilityHorizontalOrientationValue;
-  if (state & states::VERTICAL) return NSAccessibilityVerticalOrientationValue;
+  if (state & states::HORIZONTAL) {
+    return NSAccessibilityHorizontalOrientationValue;
+  }
+
+  if (state & states::VERTICAL) {
+    return NSAccessibilityVerticalOrientationValue;
+  }
 
   return NSAccessibilityUnknownOrientationValue;
 
@@ -1090,15 +1095,7 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)canBeFocused {
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    return (accWrap->InteractiveState() & states::FOCUSABLE) != 0;
-  }
-
-  if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    return (proxy->State() & states::FOCUSABLE) != 0;
-  }
-
-  return false;
+  return (([self state] & states::FOCUSABLE) != 0);
 }
 
 - (BOOL)focus {
@@ -1113,13 +1110,7 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)isEnabled {
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
-    return ((accWrap->InteractiveState() & states::UNAVAILABLE) == 0);
-
-  if (ProxyAccessible* proxy = [self getProxyAccessible])
-    return ((proxy->State() & states::UNAVAILABLE) == 0);
-
-  return false;
+  return (([self state] & states::UNAVAILABLE) == 0);
 }
 
 // The root accessible calls this when the focused node was
