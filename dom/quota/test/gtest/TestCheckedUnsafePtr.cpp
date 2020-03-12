@@ -8,6 +8,19 @@
 
 using namespace mozilla;
 
+class NoCheckTestType
+    : public SupportsCheckedUnsafePtr<DoNotCheckCheckedUnsafePtrs> {};
+
+static_assert(std::is_literal_type_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_copy_constructible_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_copy_assignable_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_move_constructible_v<CheckedUnsafePtr<NoCheckTestType>>);
+static_assert(
+    std::is_trivially_move_assignable_v<CheckedUnsafePtr<NoCheckTestType>>);
+
 class TestCheckingPolicy : public CheckCheckedUnsafePtrs<TestCheckingPolicy> {
  protected:
   explicit TestCheckingPolicy(bool& aPassedCheck)
@@ -48,6 +61,25 @@ TYPED_TEST_P(TypedCheckedUnsafePtrTest, PointeeWithOneCheckedUnsafePtr) {
   {
     DerivedPointee pointee{this->mPassedCheck};
     CheckedUnsafePtr<TypeParam> ptr = &pointee;
+  }
+  ASSERT_TRUE(this->mPassedCheck);
+}
+
+TYPED_TEST_P(TypedCheckedUnsafePtrTest, CheckedUnsafePtrCopyConstructed) {
+  {
+    DerivedPointee pointee{this->mPassedCheck};
+    CheckedUnsafePtr<TypeParam> ptr1 = &pointee;
+    CheckedUnsafePtr<TypeParam> ptr2 = ptr1;
+  }
+  ASSERT_TRUE(this->mPassedCheck);
+}
+
+TYPED_TEST_P(TypedCheckedUnsafePtrTest, CheckedUnsafePtrCopyAssigned) {
+  {
+    DerivedPointee pointee{this->mPassedCheck};
+    CheckedUnsafePtr<TypeParam> ptr1 = &pointee;
+    CheckedUnsafePtr<TypeParam> ptr2;
+    ptr2 = ptr1;
   }
   ASSERT_TRUE(this->mPassedCheck);
 }
@@ -94,6 +126,8 @@ TYPED_TEST_P(TypedCheckedUnsafePtrTest,
 
 REGISTER_TYPED_TEST_CASE_P(TypedCheckedUnsafePtrTest,
                            PointeeWithOneCheckedUnsafePtr,
+                           CheckedUnsafePtrCopyConstructed,
+                           CheckedUnsafePtrCopyAssigned,
                            PointeeWithOneDanglingCheckedUnsafePtr,
                            PointeeWithOneCopiedDanglingCheckedUnsafePtr,
                            PointeeWithOneCopyAssignedDanglingCheckedUnsafePtr);
