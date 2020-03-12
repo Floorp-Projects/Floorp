@@ -169,8 +169,12 @@ XPCOM_MANIFESTS += [
 
 if CONFIG['OS_TARGET'] == 'Darwin':
     if not CONFIG['HOST_MAJOR_VERSION']:
-        DEFINES['HAS_CONNECTX'] = True
+        DEFINES.update(
+            HAS_CONNECTX=True,
+        )
     elif CONFIG['HOST_MAJOR_VERSION'] >= '15':
-        DEFINES['HAS_CONNECTX'] = True
+        DEFINES.update(
+            HAS_CONNECTX=True,
+        )
 
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
