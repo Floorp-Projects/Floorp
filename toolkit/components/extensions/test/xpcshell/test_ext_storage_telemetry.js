@@ -5,6 +5,15 @@
 const { ExtensionStorageIDB } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageIDB.jsm"
 );
+const { getTrimmedString } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionTelemetry.jsm"
+);
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const HISTOGRAM_JSON_IDS = [
   "WEBEXT_STORAGE_LOCAL_SET_MS",
@@ -253,6 +262,21 @@ async function test_telemetry_background() {
   await contentPage.close();
 }
 
+add_task(async function setup() {
+  // Telemetry test setup needed to ensure that the builtin events are defined
+  // and they can be collected and verified.
+  await TelemetryController.testSetup();
+
+  // This is actually only needed on Android, because it does not properly support unified telemetry
+  // and so, if not enabled explicitly here, it would make these tests to fail when running on a
+  // non-Nightly build.
+  const oldCanRecordBase = Services.telemetry.canRecordBase;
+  Services.telemetry.canRecordBase = true;
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordBase = oldCanRecordBase;
+  });
+});
+
 add_task(function test_telemetry_background_file_backend() {
   return runWithPrefs(
     [[ExtensionStorageIDB.BACKEND_ENABLED_PREF, false]],
@@ -279,4 +303,62 @@ add_task(function test_telemetry_background_idb_backend() {
     ],
     test_telemetry_background
   );
+});
+
+// This test verifies that we do record the expected telemetry event when we
+// normalize the error message for an unexpected error (an error raised internally
+// by the QuotaManager and/or IndexedDB, which it is being normalized into the generic
+// "An unexpected error occurred" error message).
+add_task(async function test_telemetry_storage_local_unexpected_error() {
+  // Clear any telemetry events collected so far.
+  Services.telemetry.clearEvents();
+
+  const methods = ["clear", "get", "remove", "set"];
+  const veryLongErrorName = `VeryLongErrorName${Array(200)
+    .fill(0)
+    .join("")}`;
+  const otherError = new Error("an error recorded as OtherError");
+
+  const recordedErrors = [
+    new DOMException("error message", "UnexpectedDOMException"),
+    new DOMException("error message", veryLongErrorName),
+    otherError,
+  ];
+
+  // We expect the following errors to not be recorded in telemetry (because they
+  // are raised on scenarios that we already expect).
+  const nonRecordedErrors = [
+    new DOMException("error message", "QuotaExceededError"),
+    new DOMException("error message", "DataCloneError"),
+  ];
+
+  const expectedEvents = [];
+
+  const errors = [].concat(recordedErrors, nonRecordedErrors);
+
+  for (let i = 0; i < errors.length; i++) {
+    const error = errors[i];
+    const storageMethod = methods[i] || "set";
+    ExtensionStorageIDB.normalizeStorageError({
+      error: errors[i],
+      extensionId: EXTENSION_ID1,
+      storageMethod,
+    });
+
+    if (recordedErrors.includes(error)) {
+      let error_name =
+        error === otherError ? "OtherError" : getTrimmedString(error.name);
+
+      expectedEvents.push({
+        value: EXTENSION_ID1,
+        object: storageMethod,
+        extra: { error_name },
+      });
+    }
+  }
+
+  await TelemetryTestUtils.assertEvents(expectedEvents, {
+    category: "extensions.data",
+    method: "storageLocalError",
+  });
 });
