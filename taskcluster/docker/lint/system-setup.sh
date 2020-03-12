@@ -67,10 +67,10 @@ mv /build/node_modules /build/node_modules_eslint-plugin-mozilla
 tooltool_fetch <<EOF
 [
   {
-    "size": 866160,
-    "digest": "9f0ef6bf44b8622bd0e4e8b0b5b5c714c0a2ce4487e6f234e7d4caac458164c521949f4d84b8296274e8bd20966f835e26f6492ba499405d38b620181e82429e",
+    "size": 1161860,
+    "digest": "3246470715e1ddf4c7e5136fdddd2ca269928c2de3074a98233faef189efd88fc9b28ddbe68642a31cf647a97f630941d764187006c5115e6f357d49322ef58d",
     "algorithm": "sha512",
-    "filename": "fzf-0.16.11-linux_amd64.tgz",
+    "filename": "fzf-0.20.0-linux_amd64.tgz",
     "unpack": true
   }
 ]

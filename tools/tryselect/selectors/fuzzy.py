@@ -218,6 +218,9 @@ def fzf_bootstrap(update=False):
     the install script.
     """
     fzf_bin = find_executable('fzf')
+    if fzf_bin and should_force_fzf_update(fzf_bin):
+        update = True
+
     if fzf_bin and not update:
         return fzf_bin
 
