@@ -917,6 +917,17 @@ forms-master-pw-change =
 forms-master-pw-fips-title = You are currently in FIPS mode. FIPS requires a non-empty Master Password.
 forms-master-pw-fips-desc = Password Change Failed
 
+## OS Authentication dialog
+
+# This message can be seen by trying to add a Master Password.
+master-password-os-auth-dialog-message = Verify your identity to create a Master Password.
+
+# This message can be seen by trying to add a Master Password.
+# The macOS strings are preceded by the operating system with "Firefox is trying to "
+# and includes subtitle of "Enter password for the user "xxx" to allow this." These
+# notes are only valid for English. Please test in your locale.
+master-password-os-auth-dialog-message-macosx = create a Master Password
+
 ## Privacy Section - History
 
 history-header = History
