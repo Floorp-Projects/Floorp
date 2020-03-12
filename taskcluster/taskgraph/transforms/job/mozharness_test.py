@@ -111,10 +111,24 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'MOZILLA_BUILD_URL': {'task-reference': installer_url},
         'NEED_PULSEAUDIO': 'true',
         'NEED_WINDOW_MANAGER': 'true',
-        'NEED_COMPIZ': 'true',
         'ENABLE_E10S': text_type(bool(test.get('e10s'))).lower(),
         'WORKING_DIR': '/builds/worker',
     })
+
+    # Legacy linux64 tests rely on compiz.
+    if test.get('docker-image', {}).get('in-tree') == 'desktop1604-test':
+        env.update({
+            'NEED_COMPIZ': 'true'
+        })
+
+    # Bug 1602701/1601828 - use compiz on ubuntu1804 due to GTK asynchiness
+    # when manipulating windows.
+    if test.get('docker-image', {}).get('in-tree') == 'ubuntu1804-test':
+        if ('wdspec' in job['run']['test']['suite'] or
+            ('marionette' in job['run']['test']['suite'] and 'headless' not in job['label'])):
+            env.update({
+                'NEED_COMPIZ': 'true'
+            })
 
     if mozharness.get('mochitest-flavor'):
         env['MOCHITEST_FLAVOR'] = mozharness['mochitest-flavor']
