@@ -27,5 +27,5 @@
 #downloadsListEmptyDescription {
   margin: 1em;
   text-align: center;
-  color: GrayText;
+  color: var(--in-content-deemphasized-text);
 }
