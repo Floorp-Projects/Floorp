@@ -48,7 +48,7 @@ win32/debug:
         toolchain:
             - linux64-binutils
             - linux64-clang-win-cross
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
@@ -99,7 +99,7 @@ win32/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang-win-cross
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
@@ -150,7 +150,7 @@ win64/debug:
         toolchain:
             - linux64-binutils
             - linux64-clang-win-cross
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
@@ -282,7 +282,7 @@ win64/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang-win-cross
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
@@ -1068,7 +1068,7 @@ win64-aarch64/debug:
         toolchain:
             - linux64-binutils
             - linux64-clang-win-cross
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
@@ -1123,7 +1123,7 @@ win64-aarch64/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang-win-cross
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
