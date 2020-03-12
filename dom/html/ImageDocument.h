@@ -104,8 +104,8 @@ class ImageDocument final : public MediaDocument,
   };
   void SetModeClass(eModeClasses mode);
 
-  nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
-  nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
+  void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
+  void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnHasTransparency();
 
   nsCOMPtr<Element> mImageContent;

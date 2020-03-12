@@ -69,8 +69,8 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
   virtual void UnbindFromTree(bool aNullParent) override;
   virtual EventStates IntrinsicState() const override;
 
-  NS_IMETHOD Notify(imgIRequest* aRequest, int32_t aType,
-                    const nsIntRect* aData) override;
+  void Notify(imgIRequest* aRequest, int32_t aType,
+              const nsIntRect* aData) override;
 
   // Override for nsIImageLoadingContent.
   NS_IMETHOD_(void) FrameCreated(nsIFrame* aFrame) override;
