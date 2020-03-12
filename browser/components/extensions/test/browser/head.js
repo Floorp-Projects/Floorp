@@ -642,7 +642,7 @@ function closeChromeContextMenu(menuId, itemToSelect, win = window) {
 
 async function openActionContextMenu(extension, kind, win = window) {
   // See comment from getPageActionButton below.
-  SetPageProxyState("valid");
+  win.gURLBar.setPageProxyState("valid");
   await promiseAnimationFrame(win);
   let buttonID;
   let menuID;
@@ -693,11 +693,11 @@ async function getPageActionButton(extension, win = window) {
   //
   // Unfortunately, that doesn't happen automatically in browser chrome
   // tests.
-  SetPageProxyState("valid");
+  win.gURLBar.setPageProxyState("valid");
 
   // If the current tab is blank and the previously selected tab was an internal
   // page, the urlbar will now be showing the internal identity box due to the
-  // SetPageProxyState call above.  The page action button is hidden in that
+  // setPageProxyState call above.  The page action button is hidden in that
   // case, so make sure we're not showing the internal identity box.
   gIdentityHandler._identityBox.classList.remove("chromeUI");
 
@@ -720,7 +720,7 @@ async function clickPageAction(extension, win = window, modifiers = {}) {
 // all available page actions
 async function showPageActionsPanel(win = window) {
   // See the comment at getPageActionButton
-  SetPageProxyState("valid");
+  win.gURLBar.setPageProxyState("valid");
   await promiseAnimationFrame(win);
 
   let pageActionsPopup = win.document.getElementById("pageActionPanel");
