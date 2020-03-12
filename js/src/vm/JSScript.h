@@ -2213,6 +2213,7 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
   IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(treatAsRunOnce, TreatAsRunOnce)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(forceStrict, ForceStrict)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(strict, Strict)
   IMMUTABLE_FLAG_GETTER(hasNonSyntacticScope, HasNonSyntacticScope)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(bindingsAccessedDynamically,
