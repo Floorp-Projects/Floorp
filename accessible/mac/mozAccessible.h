@@ -123,6 +123,7 @@ static const uintptr_t IS_PROXY = 1;
 - (void)didReceiveFocus;
 - (void)valueDidChange;
 - (void)selectedTextDidChange;
+- (void)selectionDidChange;
 - (void)documentLoadComplete;
 - (void)menuOpened;
 - (void)menuClosed;
