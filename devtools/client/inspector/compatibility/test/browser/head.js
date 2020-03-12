@@ -13,6 +13,7 @@ Services.scriptloader.loadSubScript(
 
 const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE,
+  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
 } = require("devtools/client/inspector/compatibility/actions/index");
 
 const {
@@ -24,7 +25,13 @@ async function openCompatibilityView() {
   await pushPref("devtools.inspector.compatibility.enabled", true);
 
   const { inspector } = await openInspectorSidebarTab("compatibilityview");
-  await waitForUpdateSelectedNodeAction(inspector.store);
+  await Promise.all([
+    waitForUpdateSelectedNodeAction(inspector.store),
+    waitForDispatch(
+      inspector.store,
+      COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE
+    ),
+  ]);
   const panel = inspector.panelDoc.querySelector(
     "#compatibilityview-panel .inspector-tabpanel"
   );
