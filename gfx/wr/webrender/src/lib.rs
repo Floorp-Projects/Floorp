@@ -218,6 +218,7 @@ pub use crate::renderer::{
     MAX_VERTEX_TEXTURE_WIDTH,
 };
 pub use crate::hit_test::SharedHitTester;
+pub use crate::internal_types::FastHashMap;
 pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
 pub use crate::shade::{Shaders, WrShaders};
 pub use api as webrender_api;
