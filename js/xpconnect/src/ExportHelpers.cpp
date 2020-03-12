@@ -15,7 +15,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -41,18 +40,6 @@ enum StackScopedCloneTags {
   SCTAG_BLOB,
   SCTAG_FUNCTION,
 };
-
-// The HTML5 structured cloning algorithm includes a few DOM objects, notably
-// FileList. That wouldn't in itself be a reason to support them here,
-// but we've historically supported them for Cu.cloneInto (where we didn't
-// support other reflectors), so we need to continue to do so in the
-// wrapReflectors == false case to maintain compatibility.
-//
-// FileList clones are supposed to give brand new objects, rather than
-// cross-compartment wrappers. For this, our current implementation relies on
-// the fact that these objects are implemented with XPConnect and have one
-// reflector per scope.
-bool IsFileList(JSObject* obj) { return IS_INSTANCE_OF(FileList, obj); }
 
 class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
  public:
@@ -156,8 +143,7 @@ class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
       }
     }
 
-    if ((mOptions->wrapReflectors && IsReflector(aObj, aCx)) ||
-        IsFileList(aObj)) {
+    if (mOptions->wrapReflectors && IsReflector(aObj, aCx)) {
       if (!mReflectors.append(aObj)) {
         return false;
       }
