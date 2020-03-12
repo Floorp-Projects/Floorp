@@ -4,161 +4,55 @@
 
 "use strict";
 
+loader.lazyGetter(this, "mdnCompatibility", () => {
+  const MDNCompatibility = require("devtools/client/inspector/compatibility/lib/MDNCompatibility");
+  const cssPropertiesCompatData = require("devtools/client/inspector/compatibility/lib/dataset/css-properties.json");
+  return new MDNCompatibility(cssPropertiesCompatData);
+});
+
 const {
-  COMPATIBILITY_APPEND_NODE,
-  COMPATIBILITY_UPDATE_NODE,
-  COMPATIBILITY_UPDATE_NODES_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
-  COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
-  COMPATIBILITY_UPDATE_TARGET_BROWSERS_START,
-  COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
-  COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE,
-  COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE,
-  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
-  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS,
-  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
-  COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS,
 } = require("devtools/client/inspector/compatibility/actions/index");
 
 const INITIAL_STATE = {
-  isTopLevelTargetProcessing: false,
-  selectedNode: null,
   selectedNodeIssues: [],
-  topLevelTarget: null,
-  topLevelTargetIssues: [],
+  declarationBlocks: [],
   targetBrowsers: [],
 };
 
 const reducers = {
-  [COMPATIBILITY_APPEND_NODE](state, { node, issues }) {
-    const topLevelTargetIssues = _appendTopLevelTargetIssues(
-      state.topLevelTargetIssues,
-      node,
-      issues
-    );
-    return Object.assign({}, state, { topLevelTargetIssues });
-  },
-  [COMPATIBILITY_UPDATE_NODE](state, { node, issues }) {
-    const topLevelTargetIssues = _updateTopLebelTargetIssues(
-      state.topLevelTargetIssues,
-      node,
-      issues
-    );
-    return Object.assign({}, state, { topLevelTargetIssues });
-  },
-  [COMPATIBILITY_UPDATE_NODES_FAILURE](state, { error }) {
-    _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
-    return state;
-  },
-  [COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS](state, { node }) {
-    return Object.assign({}, state, { selectedNode: node });
+  [COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS](state, data) {
+    return updateSelectedNodeIssues(state, data);
   },
   [COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE](state, { error }) {
-    _showError(COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE, error);
+    console.error(
+      `[COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE] ${error.message}`
+    );
+    console.error(error.stack);
     return state;
   },
-  [COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES](state, { issues }) {
-    return Object.assign({}, state, { selectedNodeIssues: issues });
-  },
-  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_START](state) {
-    return Object.assign({}, state, { isTopLevelTargetProcessing: true });
-  },
-  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS](state, { targetBrowsers }) {
-    return Object.assign({}, state, { targetBrowsers });
-  },
-  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE](state, { error }) {
-    _showError(COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE, error);
-    return state;
-  },
-  [COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE](state) {
-    return Object.assign({}, state, { isTopLevelTargetProcessing: false });
-  },
-  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START](state) {
-    return Object.assign({}, state, {
-      isTopLevelTargetProcessing: true,
-      topLevelTargetIssues: [],
-    });
-  },
-  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS](state, { target }) {
-    return Object.assign({}, state, { topLevelTarget: target });
-  },
-  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE](state, { error }) {
-    _showError(COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE, error);
-    return state;
-  },
-  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE](state, { target }) {
-    return Object.assign({}, state, { isTopLevelTargetProcessing: false });
+  [COMPATIBILITY_UPDATE_TARGET_BROWSERS](state, data) {
+    return updateSelectedNodeIssues(state, data);
   },
 };
 
-function _appendTopLevelTargetIssues(targetIssues, node, issues) {
-  targetIssues = [...targetIssues];
-  for (const issue of issues) {
-    const index = _indexOfIssue(targetIssues, issue);
-    if (index < 0) {
-      issue.nodes = [node];
-      targetIssues.push(issue);
-      continue;
-    }
+function updateSelectedNodeIssues(state, data) {
+  const declarationBlocks = data.declarationBlocks || state.declarationBlocks;
+  const targetBrowsers = data.targetBrowsers || state.targetBrowsers;
 
-    const targetIssue = targetIssues[index];
-    targetIssue.nodes = [...targetIssue.nodes, node];
-  }
-  return targetIssues;
-}
-
-function _indexOfIssue(issues, issue) {
-  return issues.findIndex(
-    i => i.type === issue.type && i.property === issue.property
-  );
-}
-
-function _indexOfNode(issue, node) {
-  return issue.nodes.findIndex(n => n.actorID === node.actorID);
-}
-
-function _updateTopLebelTargetIssues(targetIssues, node, issues) {
-  // Remove issues or node.
-  targetIssues = targetIssues.reduce((newIssues, targetIssue) => {
-    if (_indexOfIssue(issues, targetIssue) >= 0) {
-      // The targetIssue is still in the node.
-      return [...newIssues, targetIssue];
-    }
-
-    const indexOfNodeInTarget = _indexOfNode(targetIssue, node);
-    if (indexOfNodeInTarget < 0) {
-      // The targetIssue does not have the node to remove.
-      return [...newIssues, targetIssue];
-    }
-
-    // This issue on the updated node is gone.
-    if (targetIssue.nodes.length === 1) {
-      // Remove issue.
-      return newIssues;
-    }
-
-    // Remove node from the nodes.
-    targetIssue.nodes = [
-      ...targetIssue.nodes.splice(0, indexOfNodeInTarget),
-      ...targetIssue.nodes.splice(indexOfNodeInTarget + 1),
-    ];
-    return [...newIssues, targetIssue];
-  }, []);
-
-  // Append issues or node.
-  const appendables = issues.filter(issue => {
-    const indexOfIssue = _indexOfIssue(targetIssues, issue);
-    return (
-      indexOfIssue < 0 || _indexOfNode(targetIssues[indexOfIssue], node) < 0
+  const selectedNodeIssues = [];
+  for (const declarationBlock of declarationBlocks) {
+    selectedNodeIssues.push(
+      ...mdnCompatibility.getCSSDeclarationBlockIssues(
+        declarationBlock,
+        targetBrowsers
+      )
     );
-  });
-  return _appendTopLevelTargetIssues(targetIssues, node, appendables);
-}
+  }
 
-function _showError(action, error) {
-  console.error(`[${action}] ${error.message}`);
-  console.error(error.stack);
+  return { selectedNodeIssues, declarationBlocks, targetBrowsers };
 }
 
 module.exports = function(state = INITIAL_STATE, action) {

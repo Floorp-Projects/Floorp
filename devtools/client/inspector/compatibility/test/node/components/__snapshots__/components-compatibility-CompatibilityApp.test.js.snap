@@ -1,35 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CompatibilityApp component renders zero issues 1`] = `
-<section
+<div
   className="compatibility-app theme-sidebar inspector-tabpanel"
 >
-  <Accordion
-    items={
-      Array [
-        Object {
-          "component": [Function],
-          "componentProps": Object {
-            "issues": Array [],
-          },
-          "header": "Selected Element",
-          "id": "compatibility-app--selected-element-pane",
-          "opened": true,
-        },
-        Object {
-          "component": [Function],
-          "componentProps": Object {
-            "hideBoxModelHighlighter": undefined,
-            "issues": Array [],
-            "setSelectedNode": undefined,
-            "showBoxModelHighlighterForNode": undefined,
-          },
-          "header": "All Issues",
-          "id": "compatibility-app--all-elements-pane",
-          "opened": true,
-        },
-      ]
-    }
-  />
-</section>
+  <div
+    className="devtools-sidepanel-no-result"
+  >
+    No compatibility issues found.
+  </div>
+</div>
 `;
