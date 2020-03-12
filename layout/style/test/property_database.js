@@ -8950,8 +8950,8 @@ var gCSSProperties = {
     domProp: "imageOrientation",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["from-image"],
-    other_values: ["none"],
+    initial_values: ["none"],
+    other_values: ["from-image"],
     invalid_values: ["0", "0deg"],
   },
   "image-rendering": {
