@@ -7,6 +7,8 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import attr
+
 from mozbuild.shellutil import quote as shell_quote
 
 import io
@@ -15,9 +17,9 @@ import re
 from six import text_type
 
 from voluptuous import (
-    Any,
     Optional,
     Required,
+    Extra,
 )
 
 import taskgraph
@@ -29,7 +31,7 @@ from ..util.cached_tasks import (
     add_optimization,
 )
 from ..util.schema import (
-    Schema,
+    Schema, validate_schema
 )
 from ..util.treeherder import (
     join_symbol,
@@ -49,71 +51,31 @@ FETCH_SCHEMA = Schema({
     # Description of the task.
     Required('description'): text_type,
 
-    Required('fetch'): Any(
-        {
-            'type': 'static-url',
-
-            # The URL to download.
-            Required('url'): text_type,
-
-            # The SHA-256 of the downloaded content.
-            Required('sha256'): text_type,
-
-            # Size of the downloaded entity, in bytes.
-            Required('size'): int,
-
-            # GPG signature verification.
-            Optional('gpg-signature'): {
-                # URL where GPG signature document can be obtained. Can contain the
-                # value ``{url}``, which will be substituted with the value from
-                # ``url``.
-                Required('sig-url'): text_type,
-                # Path to file containing GPG public key(s) used to validate
-                # download.
-                Required('key-path'): text_type,
-            },
-
-            # The name to give to the generated artifact. Defaults to the file
-            # portion of the URL. Using a different extension converts the
-            # archive to the given type. Only conversion to .tar.zst is
-            # supported.
-            Optional('artifact-name'): text_type,
-
-            # Strip the given number of path components at the beginning of
-            # each file entry in the archive.
-            # Requires an artifact-name ending with .tar.zst.
-            Optional('strip-components'): int,
-
-            # Add the given prefix to each file entry in the archive.
-            # Requires an artifact-name ending with .tar.zst.
-            Optional('add-prefix'): text_type,
-
-            # IMPORTANT: when adding anything that changes the behavior of the task,
-            # it is important to update the digest data used to compute cache hits.
-        },
-        {
-            'type': 'chromium-fetch',
-
-            Required('script'): text_type,
-
-            # Platform type for chromium build
-            Required('platform'): text_type,
-
-            # Chromium revision to obtain
-            Optional('revision'): text_type,
-
-            # The name to give to the generated artifact.
-            Required('artifact-name'): text_type
-        },
-        {
-            'type': 'git',
-            Required('repo'): text_type,
-            Required('revision'): text_type,
-            Optional('artifact-name'): text_type,
-            Optional('path-prefix'): text_type,
-        }
-    ),
+    Required('fetch'): {
+        Required('type'): text_type,
+        Extra: object,
+    },
 })
+
+
+# define a collection of payload builders, depending on the worker implementation
+fetch_builders = {}
+
+
+@attr.s(frozen=True)
+class FetchBuilder(object):
+    schema = attr.ib(type=Schema)
+    builder = attr.ib()
+
+
+def fetch_builder(name, schema):
+    schema = Schema({Required('type'): name}).extend(schema)
+
+    def wrap(func):
+        fetch_builders[name] = FetchBuilder(schema, func)
+        return func
+    return wrap
+
 
 transforms = TransformSequence()
 transforms.add_validate(FETCH_SCHEMA)
@@ -123,24 +85,31 @@ transforms.add_validate(FETCH_SCHEMA)
 def process_fetch_job(config, jobs):
     # Converts fetch-url entries to the job schema.
     for job in jobs:
-        if 'fetch' not in job:
-            continue
-
         typ = job['fetch']['type']
         name = job['name']
         fetch = job.pop('fetch')
 
-        if typ == 'static-url':
-            job.update(create_fetch_url_task(config, name, fetch))
-        elif typ == 'chromium-fetch':
-            job.update(create_chromium_fetch_task(config, name, fetch))
-        elif typ == 'git':
-            job.update(create_git_fetch_task(config, name, fetch))
-        else:
-            # validate() should have caught this.
-            assert False
+        if typ not in fetch_builders:
+            raise Exception("Unknown fetch type {} in fetch {}".format(typ, name))
+        validate_schema(
+           fetch_builders[typ].schema,
+           fetch,
+           "In task.fetch {!r}:".format(name))
+
+        job.update(configure_fetch(config, typ, name, fetch))
 
         yield job
+
+
+def configure_fetch(config, typ, name, fetch):
+    if typ not in fetch_builders:
+        raise Exception("No fetch type {} in fetch {}".format(typ, name))
+    validate_schema(
+       fetch_builders[typ].schema,
+       fetch,
+       "In task.fetch {!r}:".format(name))
+
+    return fetch_builders[typ].builder(config, name, fetch)
 
 
 @transforms.add
@@ -205,6 +174,45 @@ def make_task(config, jobs):
         yield task
 
 
+@fetch_builder('static-url', schema={
+    # The URL to download.
+    Required('url'): text_type,
+
+    # The SHA-256 of the downloaded content.
+    Required('sha256'): text_type,
+
+    # Size of the downloaded entity, in bytes.
+    Required('size'): int,
+
+    # GPG signature verification.
+    Optional('gpg-signature'): {
+        # URL where GPG signature document can be obtained. Can contain the
+        # value ``{url}``, which will be substituted with the value from
+        # ``url``.
+        Required('sig-url'): text_type,
+        # Path to file containing GPG public key(s) used to validate
+        # download.
+        Required('key-path'): text_type,
+    },
+
+    # The name to give to the generated artifact. Defaults to the file
+    # portion of the URL. Using a different extension converts the
+    # archive to the given type. Only conversion to .tar.zst is
+    # supported.
+    Optional('artifact-name'): text_type,
+
+    # Strip the given number of path components at the beginning of
+    # each file entry in the archive.
+    # Requires an artifact-name ending with .tar.zst.
+    Optional('strip-components'): int,
+
+    # Add the given prefix to each file entry in the archive.
+    # Requires an artifact-name ending with .tar.zst.
+    Optional('add-prefix'): text_type,
+
+    # IMPORTANT: when adding anything that changes the behavior of the task,
+    # it is important to update the digest data used to compute cache hits.
+})
 def create_fetch_url_task(config, name, fetch):
     artifact_name = fetch.get('artifact-name')
     if not artifact_name:
@@ -259,6 +267,12 @@ def create_fetch_url_task(config, name, fetch):
     }
 
 
+@fetch_builder('git', schema={
+    Required('repo'): text_type,
+    Required('revision'): text_type,
+    Optional('artifact-name'): text_type,
+    Optional('path-prefix'): text_type,
+})
 def create_git_fetch_task(config, name, fetch):
     path_prefix = fetch.get('path-prefix')
     if not path_prefix:
@@ -288,6 +302,18 @@ def create_git_fetch_task(config, name, fetch):
     }
 
 
+@fetch_builder('chromium-fetch', schema={
+    Required('script'): text_type,
+
+    # Platform type for chromium build
+    Required('platform'): text_type,
+
+    # Chromium revision to obtain
+    Optional('revision'): text_type,
+
+    # The name to give to the generated artifact.
+    Required('artifact-name'): text_type
+})
 def create_chromium_fetch_task(config, name, fetch):
     artifact_name = fetch.get('artifact-name')
 
