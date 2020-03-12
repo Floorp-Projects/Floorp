@@ -19,7 +19,8 @@ namespace image {
  */
 enum class SurfaceFlags : uint8_t {
   NO_PREMULTIPLY_ALPHA = 1 << 0,
-  NO_COLORSPACE_CONVERSION = 1 << 1
+  NO_COLORSPACE_CONVERSION = 1 << 1,
+  TO_SRGB_COLORSPACE = 2 << 1,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SurfaceFlags)
 
@@ -40,6 +41,9 @@ inline SurfaceFlags ToSurfaceFlags(uint32_t aFlags) {
   if (aFlags & imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION) {
     flags |= SurfaceFlags::NO_COLORSPACE_CONVERSION;
   }
+  if (aFlags & imgIContainer::FLAG_DECODE_TO_SRGB_COLORSPACE) {
+    flags |= SurfaceFlags::TO_SRGB_COLORSPACE;
+  }
   return flags;
 }
 
@@ -54,6 +58,9 @@ inline uint32_t FromSurfaceFlags(SurfaceFlags aFlags) {
   }
   if (aFlags & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
     flags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
+  }
+  if (aFlags & SurfaceFlags::TO_SRGB_COLORSPACE) {
+    flags |= imgIContainer::FLAG_DECODE_TO_SRGB_COLORSPACE;
   }
   return flags;
 }
