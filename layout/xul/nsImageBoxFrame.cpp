@@ -752,8 +752,8 @@ nsresult nsImageBoxFrame::GetFrameName(nsAString& aResult) const {
 }
 #endif
 
-nsresult nsImageBoxFrame::Notify(imgIRequest* aRequest, int32_t aType,
-                                 const nsIntRect* aData) {
+void nsImageBoxFrame::Notify(imgIRequest* aRequest, int32_t aType,
+                             const nsIntRect* aData) {
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
@@ -779,13 +779,13 @@ nsresult nsImageBoxFrame::Notify(imgIRequest* aRequest, int32_t aType,
   if (aType == imgINotificationObserver::FRAME_UPDATE) {
     return OnFrameUpdate(aRequest);
   }
-
-  return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnSizeAvailable(imgIRequest* aRequest,
-                                          imgIContainer* aImage) {
-  NS_ENSURE_ARG_POINTER(aImage);
+void nsImageBoxFrame::OnSizeAvailable(imgIRequest* aRequest,
+                                      imgIContainer* aImage) {
+  if (NS_WARN_IF(!aImage)) {
+    return;
+  }
 
   // Ensure the animation (if any) is started. Note: There is no
   // corresponding call to Decrement for this. This Increment will be
@@ -805,18 +805,14 @@ nsresult nsImageBoxFrame::OnSizeAvailable(imgIRequest* aRequest,
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
   }
-
-  return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnDecodeComplete(imgIRequest* aRequest) {
+void nsImageBoxFrame::OnDecodeComplete(imgIRequest* aRequest) {
   nsBoxLayoutState state(PresContext());
   this->XULRedraw(state);
-  return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnLoadComplete(imgIRequest* aRequest,
-                                         nsresult aStatus) {
+void nsImageBoxFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus) {
   if (NS_SUCCEEDED(aStatus)) {
     // Fire an onload DOM event.
     FireImageDOMEvent(mContent, eLoad);
@@ -827,21 +823,17 @@ nsresult nsImageBoxFrame::OnLoadComplete(imgIRequest* aRequest,
                                   NS_FRAME_IS_DIRTY);
     FireImageDOMEvent(mContent, eLoadError);
   }
-
-  return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnImageIsAnimated(imgIRequest* aRequest) {
+void nsImageBoxFrame::OnImageIsAnimated(imgIRequest* aRequest) {
   // Register with our refresh driver, if we're animated.
   nsLayoutUtils::RegisterImageRequest(PresContext(), aRequest,
                                       &mRequestRegistered);
-
-  return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest) {
+void nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest) {
   if ((0 == mRect.width) || (0 == mRect.height)) {
-    return NS_OK;
+    return;
   }
 
   // Check if WebRender has interacted with this frame. If it has
@@ -849,12 +841,10 @@ nsresult nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest) {
   const auto type = DisplayItemType::TYPE_XUL_IMAGE;
   const auto producerId = aRequest->GetProducerId();
   if (WebRenderUserData::ProcessInvalidateForImage(this, type, producerId)) {
-    return NS_OK;
+    return;
   }
 
   InvalidateLayer(type);
-
-  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver)
@@ -864,10 +854,11 @@ nsImageBoxListener::nsImageBoxListener(nsImageBoxFrame* frame)
 
 nsImageBoxListener::~nsImageBoxListener() {}
 
-NS_IMETHODIMP
-nsImageBoxListener::Notify(imgIRequest* request, int32_t aType,
-                           const nsIntRect* aData) {
-  if (!mFrame) return NS_OK;
+void nsImageBoxListener::Notify(imgIRequest* request, int32_t aType,
+                                const nsIntRect* aData) {
+  if (!mFrame) {
+    return;
+  }
 
   return mFrame->Notify(request, aType, aData);
 }
