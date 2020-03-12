@@ -8,6 +8,10 @@
 
 const TEST_URI = `<div style="border-block-color: lime;"></div>`;
 
+const {
+  COMPATIBILITY_UPDATE_NODES_COMPLETE,
+} = require("devtools/client/inspector/compatibility/actions/index");
+
 add_task(async function() {
   info("Enable 3 pane mode");
   await pushPref("devtools.inspector.three-pane-enabled", true);
@@ -23,20 +27,24 @@ add_task(async function() {
   ]);
 
   info("Check the issue after toggling the property");
-  const view = inspector.getPanel("ruleview").view;
-  const rule = getRuleViewRuleEditor(view, 0).rule;
-  await _togglePropStatus(view, rule.textProps[0]);
+  await _togglePropRule(inspector, 0, 0);
   await assertIssueList(selectedElementPane, []);
 
   info("Check the issue after toggling the property again");
-  await _togglePropStatus(view, rule.textProps[0]);
+  await _togglePropRule(inspector, 0, 0);
   await assertIssueList(selectedElementPane, [
     { property: "border-block-color" },
   ]);
 });
 
-async function _togglePropStatus(view, textProp) {
-  const onRuleViewRefreshed = view.once("ruleview-changed");
+async function _togglePropRule(inspector, ruleIndex, propIndex) {
+  const ruleView = inspector.getPanel("ruleview").view;
+  const onNodesUpdated = waitForDispatch(
+    inspector.store,
+    COMPATIBILITY_UPDATE_NODES_COMPLETE
+  );
+  const rule = getRuleViewRuleEditor(ruleView, ruleIndex).rule;
+  const textProp = rule.textProps[propIndex];
   textProp.editor.enable.click();
-  await onRuleViewRefreshed;
+  await onNodesUpdated;
 }
