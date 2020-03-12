@@ -14,8 +14,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Types = require("devtools/client/inspector/compatibility/types");
 
-const IssueList = createFactory(
-  require("devtools/client/inspector/compatibility/components/IssueList")
+const Accordion = createFactory(
+  require("devtools/client/shared/components/Accordion")
+);
+const IssuePane = createFactory(
+  require("devtools/client/inspector/compatibility/components/IssuePane")
 );
 
 class CompatibilityApp extends PureComponent {
@@ -23,26 +26,40 @@ class CompatibilityApp extends PureComponent {
     return {
       selectedNodeIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
         .isRequired,
+      topLevelTargetIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
+        .isRequired,
     };
   }
 
-  _renderNoIssues() {
-    return dom.div(
-      { className: "devtools-sidepanel-no-result" },
-      "No compatibility issues found."
-    );
-  }
-
   render() {
-    const { selectedNodeIssues } = this.props;
+    const { selectedNodeIssues, topLevelTargetIssues } = this.props;
 
-    return dom.div(
+    return dom.section(
       {
         className: "compatibility-app theme-sidebar inspector-tabpanel",
       },
-      selectedNodeIssues.length
-        ? IssueList({ issues: selectedNodeIssues })
-        : this._renderNoIssues()
+      Accordion({
+        items: [
+          {
+            id: "compatibility-app--selected-element-pane",
+            header: "Selected Element",
+            component: IssuePane,
+            componentProps: {
+              issues: selectedNodeIssues,
+            },
+            opened: true,
+          },
+          {
+            id: "compatibility-app--all-elements-pane",
+            header: "All Issues",
+            component: IssuePane,
+            componentProps: {
+              issues: topLevelTargetIssues,
+            },
+            opened: true,
+          },
+        ],
+      })
     );
   }
 }
@@ -50,6 +67,7 @@ class CompatibilityApp extends PureComponent {
 const mapStateToProps = state => {
   return {
     selectedNodeIssues: state.compatibility.selectedNodeIssues,
+    topLevelTargetIssues: state.compatibility.topLevelTargetIssues,
   };
 };
 module.exports = connect(mapStateToProps)(CompatibilityApp);

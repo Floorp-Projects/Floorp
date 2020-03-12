@@ -16,7 +16,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, panel } = await openCompatibilityView();
+  const { inspector, selectedElementPane } = await openCompatibilityView();
 
   info("Get the taget browsers we set as default");
   const { targetBrowsers } = inspector.store.getState().compatibility;
@@ -28,5 +28,5 @@ add_task(async function() {
       unsupportedBrowsers: targetBrowsers,
     },
   ];
-  await assertIssueList(panel, expectedIssues);
+  await assertIssueList(selectedElementPane, expectedIssues);
 });

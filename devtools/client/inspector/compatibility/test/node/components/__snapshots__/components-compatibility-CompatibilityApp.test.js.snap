@@ -1,13 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CompatibilityApp component renders zero issues 1`] = `
-<div
+<section
   className="compatibility-app theme-sidebar inspector-tabpanel"
 >
-  <div
-    className="devtools-sidepanel-no-result"
-  >
-    No compatibility issues found.
-  </div>
-</div>
+  <Accordion
+    items={
+      Array [
+        Object {
+          "component": [Function],
+          "componentProps": Object {
+            "issues": Array [],
+          },
+          "header": "Selected Element",
+          "id": "compatibility-app--selected-element-pane",
+          "opened": true,
+        },
+        Object {
+          "component": [Function],
+          "componentProps": Object {
+            "issues": Array [],
+          },
+          "header": "All Issues",
+          "id": "compatibility-app--all-elements-pane",
+          "opened": true,
+        },
+      ]
+    }
+  />
+</section>
 `;
