@@ -1687,7 +1687,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   LazyScriptCreationData data(cx_);
   if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
                  std::move(pc_->innerFunctionIndexesForLazy),
-                 pc_->sc()->strict())) {
+                 options().forceStrictMode(), pc_->sc()->strict())) {
     return false;
   }
 
@@ -1750,6 +1750,9 @@ bool LazyScriptCreationData::create(JSContext* cx,
 
   // Flags that need to be copied into the JSScript when we do the full
   // parse.
+  if (forceStrict) {
+    lazy->setForceStrict();
+  }
   if (strict) {
     lazy->setStrict();
   }

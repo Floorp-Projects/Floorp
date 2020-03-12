@@ -78,6 +78,7 @@ struct LazyScriptCreationData {
 
   // This is traced by the functionbox which owns this LazyScriptCreationData
   Vector<FunctionIndex> innerFunctionIndexes;
+  bool forceStrict = false;
   bool strict = false;
 
   mozilla::Maybe<FieldInitializers> fieldInitializers;
@@ -85,7 +86,9 @@ struct LazyScriptCreationData {
   explicit LazyScriptCreationData(JSContext* cx) : innerFunctionIndexes(cx) {}
 
   bool init(JSContext* cx, const frontend::AtomVector& COB,
-            Vector<FunctionIndex>&& innerIndexes, bool isStrict) {
+            Vector<FunctionIndex>&& innerIndexes, bool isForceStrict,
+            bool isStrict) {
+    forceStrict = isForceStrict;
     strict = isStrict;
     innerFunctionIndexes = std::move(innerIndexes);
 
