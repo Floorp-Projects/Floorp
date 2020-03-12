@@ -9,7 +9,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
-        <title data-l10n-id="title"></title>
+        <title data-l10n-id="about-networking-title"></title>
         <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css" type="text/css" />
         <script src="chrome://global/content/aboutNetworking.js"></script>
         <link rel="localization"  href="toolkit/about/aboutNetworking.ftl"/>
@@ -17,38 +17,38 @@
     <body id="body">
         <div id="categories">
             <div class="category" selected="true" id="category-http">
-                <span class="category-name" data-l10n-id="http"/>
+                <span class="category-name" data-l10n-id="about-networking-http"/>
             </div>
             <div class="category" id="category-sockets">
-                <span class="category-name" data-l10n-id="sockets"/>
+                <span class="category-name" data-l10n-id="about-networking-sockets"/>
             </div>
             <div class="category" id="category-dns">
-                <span class="category-name" data-l10n-id="dns"/>
+                <span class="category-name" data-l10n-id="about-networking-dns"/>
             </div>
             <div class="category" id="category-websockets">
-                <span class="category-name" data-l10n-id="websockets"/>
+                <span class="category-name" data-l10n-id="about-networking-websockets"/>
             </div>
             <hr></hr>
             <div class="category" id="category-dnslookuptool">
-                <span class="category-name" data-l10n-id="dns-lookup"/>
+                <span class="category-name" data-l10n-id="about-networking-dns-lookup"/>
             </div>
             <div class="category" id="category-logging">
-                <span class="category-name" data-l10n-id="logging"/>
+                <span class="category-name" data-l10n-id="about-networking-logging"/>
             </div>
             <div class="category" id="category-rcwn">
-                <span class="category-name" data-l10n-id="rcwn"/>
+                <span class="category-name" data-l10n-id="about-networking-rcwn"/>
             </div>
             <div class="category" id="category-networkid">
-                <span class="category-name" data-l10n-id="networkid"/>
+                <span class="category-name" data-l10n-id="about-networking-networkid"/>
             </div>
         </div>
         <div class="main-content">
             <div class="header">
-                <div id="sectionTitle" class="header-name" data-l10n-id="http"></div>
+                <div id="sectionTitle" class="header-name" data-l10n-id="about-networking-http"></div>
                 <div id="refreshDiv" class="toggle-container-with-text">
-                    <button id="refreshButton" data-l10n-id="refresh"></button>
+                    <button id="refreshButton" data-l10n-id="about-networking-refresh"></button>
                     <input id="autorefcheck" type="checkbox" name="Autorefresh" role="checkbox" />
-                    <label for="autorefcheck" data-l10n-id="auto-refresh"></label>
+                    <label for="autorefcheck" data-l10n-id="about-networking-auto-refresh"></label>
                 </div>
             </div>
 
@@ -56,12 +56,12 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="hostname"/>
-                          <th data-l10n-id="port"/>
+                          <th data-l10n-id="about-networking-hostname"/>
+                          <th data-l10n-id="about-networking-port"/>
                           <th data-l10n-id="about-networking-http-version"/>
-                          <th data-l10n-id="ssl"/>
-                          <th data-l10n-id="active"/>
-                          <th data-l10n-id="idle"/>
+                          <th data-l10n-id="about-networking-ssl"/>
+                          <th data-l10n-id="about-networking-active"/>
+                          <th data-l10n-id="about-networking-idle"/>
                       </tr>
                   </thead>
                   <tbody id="http_content" />
@@ -72,12 +72,12 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="host"/>
-                          <th data-l10n-id="port"/>
-                          <th data-l10n-id="tcp"/>
-                          <th data-l10n-id="active"/>
-                          <th data-l10n-id="sent"/>
-                          <th data-l10n-id="received"/>
+                          <th data-l10n-id="about-networking-host"/>
+                          <th data-l10n-id="about-networking-port"/>
+                          <th data-l10n-id="about-networking-tcp"/>
+                          <th data-l10n-id="about-networking-active"/>
+                          <th data-l10n-id="about-networking-sent"/>
+                          <th data-l10n-id="about-networking-received"/>
                       </tr>
                   </thead>
                   <tbody id="sockets_content" />
@@ -88,7 +88,7 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="dnssuffix"/>
+                          <th data-l10n-id="about-networking-dns-suffix"/>
                       </tr>
                   </thead>
                   <tbody id="dns_suffix_content" />
@@ -97,11 +97,11 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="hostname"/>
-                          <th data-l10n-id="family"/>
-                          <th data-l10n-id="trr"/>
-                          <th data-l10n-id="addresses"/>
-                          <th data-l10n-id="expires"/>
+                          <th data-l10n-id="about-networking-hostname"/>
+                          <th data-l10n-id="about-networking-family"/>
+                          <th data-l10n-id="about-networking-trr"/>
+                          <th data-l10n-id="about-networking-addresses"/>
+                          <th data-l10n-id="about-networking-expires"/>
                       </tr>
                   </thead>
                   <tbody id="dns_content" />
@@ -112,12 +112,12 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="hostname"/>
-                          <th data-l10n-id="ssl"/>
-                          <th data-l10n-id="messages-sent"/>
-                          <th data-l10n-id="messages-received"/>
-                          <th data-l10n-id="bytes-sent"/>
-                          <th data-l10n-id="bytes-received"/>
+                          <th data-l10n-id="about-networking-hostname"/>
+                          <th data-l10n-id="about-networking-ssl"/>
+                          <th data-l10n-id="about-networking-messages-sent"/>
+                          <th data-l10n-id="about-networking-messages-received"/>
+                          <th data-l10n-id="about-networking-bytes-sent"/>
+                          <th data-l10n-id="about-networking-bytes-received"/>
                       </tr>
                   </thead>
                   <tbody id="websockets_content" />
@@ -125,14 +125,14 @@
           </div>
 
           <div id="dnslookuptool" class="tab" hidden="true">
-              <label data-l10n-id="dns-domain"></label>
+              <label data-l10n-id="about-networking-dns-domain"></label>
               <input type="text" name="host" id="host"></input>
-              <button id="dnsLookupButton" data-l10n-id="dns-lookup-button"></button>
+              <button id="dnsLookupButton" data-l10n-id="about-networking-dns-lookup-button"></button>
               <hr/>
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="dns-lookup-table-column"/>
+                          <th data-l10n-id="about-networking-dns-lookup-table-column"/>
                       </tr>
                   </thead>
                   <tbody id="dnslookuptool_content" />
@@ -143,10 +143,10 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="rcwn-status"/>
-                          <th data-l10n-id="total-network-requests"/>
-                          <th data-l10n-id="rcwn-cache-won-count"/>
-                          <th data-l10n-id="rcwn-net-won-count"/>
+                          <th data-l10n-id="about-networking-rcwn-status"/>
+                          <th data-l10n-id="about-networking-total-network-requests"/>
+                          <th data-l10n-id="about-networking-rcwn-cache-won-count"/>
+                          <th data-l10n-id="about-networking-rcwn-net-won-count"/>
                       </tr>
                   </thead>
                   <tbody id="rcwn_content">
@@ -164,33 +164,33 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="rcwn-operation"/>
-                          <th data-l10n-id="rcwn-avg-short"/>
-                          <th data-l10n-id="rcwn-avg-long"/>
-                          <th data-l10n-id="rcwn-std-dev-long"/>
+                          <th data-l10n-id="about-networking-rcwn-operation"/>
+                          <th data-l10n-id="about-networking-rcwn-avg-short"/>
+                          <th data-l10n-id="about-networking-rcwn-avg-long"/>
+                          <th data-l10n-id="about-networking-rcwn-std-dev-long"/>
                       </tr>
                   </thead>
                   <tbody id="cacheperf_content">
                       <tr>
-                          <td data-l10n-id="rcwn-perf-open"/>
+                          <td data-l10n-id="about-networking-rcwn-perf-open"/>
                           <td id="rcwn_perfstats_open_avgShort"> </td>
                           <td id="rcwn_perfstats_open_avgLong"> </td>
                           <td id="rcwn_perfstats_open_stddevLong"> </td>
                       </tr>
                       <tr>
-                          <td data-l10n-id="rcwn-perf-read"/>
+                          <td data-l10n-id="about-networking-rcwn-perf-read"/>
                           <td id="rcwn_perfstats_read_avgShort"> </td>
                           <td id="rcwn_perfstats_read_avgLong"> </td>
                           <td id="rcwn_perfstats_read_stddevLong"> </td>
                       </tr>
                       <tr>
-                          <td data-l10n-id="rcwn-perf-write"/>
+                          <td data-l10n-id="about-networking-rcwn-perf-write"/>
                           <td id="rcwn_perfstats_write_avgShort"> </td>
                           <td id="rcwn_perfstats_write_avgLong"> </td>
                           <td id="rcwn_perfstats_write_stddevLong"> </td>
                       </tr>
                       <tr>
-                          <td data-l10n-id="rcwn-perf-entry-open"/>
+                          <td data-l10n-id="about-networking-rcwn-perf-entry-open"/>
                           <td id="rcwn_perfstats_entryopen_avgShort"> </td>
                           <td id="rcwn_perfstats_entryopen_avgLong"> </td>
                           <td id="rcwn_perfstats_entryopen_stddevLong"> </td>
@@ -203,8 +203,8 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="rcwn-cache-slow"/>
-                          <th data-l10n-id="rcwn-cache-not-slow"/>
+                          <th data-l10n-id="about-networking-rcwn-cache-slow"/>
+                          <th data-l10n-id="about-networking-rcwn-cache-not-slow"/>
                       </tr>
                   </thead>
                   <tbody>
@@ -218,27 +218,27 @@
 
           <div id="logging" class="tab" hidden="true">
             <div>
-              <button id="start-logging-button" data-l10n-id="start-logging"></button>
-              <button id="stop-logging-button" data-l10n-id="stop-logging"></button>
+              <button id="start-logging-button" data-l10n-id="about-networking-start-logging"></button>
+              <button id="stop-logging-button" data-l10n-id="about-networking-stop-logging"></button>
             </div>
             <br/>
             <br/>
             <div>
-              <label data-l10n-id="current-log-file"></label>
+              <label data-l10n-id="about-networking-current-log-file"></label>
               <div id="current-log-file"></div><br/>
               <input type="text" name="log-file" id="log-file"></input>
-              <button id="set-log-file-button" data-l10n-id="set-log-file"></button>
+              <button id="set-log-file-button" data-l10n-id="about-networking-set-log-file"></button>
             </div>
             <div>
-              <label data-l10n-id="current-log-modules"></label>
+              <label data-l10n-id="about-networking-current-log-modules"></label>
               <div id="current-log-modules"></div><br/>
               <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5"></input>
-              <button id="set-log-modules-button" data-l10n-id="set-log-modules"></button>
+              <button id="set-log-modules-button" data-l10n-id="about-networking-set-log-modules"></button>
             </div>
             <br>
             <br>
 
-            <p id="log-tutorial" data-l10n-id="log-tutorial">
+            <p id="log-tutorial" data-l10n-id="about-networking-log-tutorial">
               <a data-l10n-name="logging" href="https://developer.mozilla.org/docs/Mozilla/Debugging/HTTP_logging"></a>
             </p>
           </div>
@@ -247,9 +247,9 @@
               <table>
                   <thead>
                       <tr>
-                          <th data-l10n-id="networkid-isUp"/>
-                          <th data-l10n-id="networkid-statusKnown"/>
-                          <th data-l10n-id="networkid-id"/>
+                          <th data-l10n-id="about-networking-networkid-is-up"/>
+                          <th data-l10n-id="about-networking-networkid-status-known"/>
+                          <th data-l10n-id="about-networking-networkid-id"/>
                       </tr>
                   </thead>
                   <tbody id="networkid_content">
