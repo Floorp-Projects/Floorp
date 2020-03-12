@@ -2140,8 +2140,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
 
   DocumentOrShadowRoot::Traverse(tmp, cb);
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadImageObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMImplementation)
@@ -2250,11 +2248,23 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   tmp->UnlinkOriginalDocumentIfStatic();
 
   tmp->mCachedRootElement = nullptr;  // Avoid a dangling pointer
+
+  tmp->SetScriptGlobalObject(nullptr);
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadImageObserver)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParser)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImageMaps)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStateObjectCached)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentTimeline)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
@@ -2266,17 +2276,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchors);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnonymousContents)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFeaturePolicy)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuppressedEventListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrototypeDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMidasCommandManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAll)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReferrerInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadReferrerInfo)
+
+  if (tmp->IsTopLevelContentDocument()) {
+    RemoveToplevelLoadingDocument(tmp);
+  }
 
   tmp->mParentDocument = nullptr;
 
@@ -16110,6 +16122,7 @@ void Document::SetIsInitialDocument(bool aIsInitialDocument) {
   }
 }
 
+// static
 void Document::AddToplevelLoadingDocument(Document* aDoc) {
   MOZ_ASSERT(aDoc && aDoc->IsTopLevelContentDocument());
   // Currently we're interested in foreground documents only, so bail out early.
@@ -16130,6 +16143,7 @@ void Document::AddToplevelLoadingDocument(Document* aDoc) {
   }
 }
 
+// static
 void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
   MOZ_ASSERT(aDoc && aDoc->IsTopLevelContentDocument());
   if (sLoadingForegroundTopLevelContentDocument) {
