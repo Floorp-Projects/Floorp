@@ -27,10 +27,10 @@ const TARGET_BROWSERS = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, selectedElementPane } = await openCompatibilityView();
+  const { inspector, panel } = await openCompatibilityView();
 
   info("Update the target browsers for this test");
-  await inspector.store.dispatch(updateTargetBrowsers(TARGET_BROWSERS));
+  inspector.store.dispatch(updateTargetBrowsers(TARGET_BROWSERS));
 
   info("Check the content of the issue item");
   const expectedIssues = [
@@ -42,5 +42,5 @@ add_task(async function() {
       ],
     },
   ];
-  await assertIssueList(selectedElementPane, expectedIssues);
+  await assertIssueList(panel, expectedIssues);
 });

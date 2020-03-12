@@ -40,7 +40,6 @@ function getDevToolsPrefBranchName(extensionId) {
  *   The cloned devtools target associated to the context.
  */
 global.getDevToolsTargetForContext = async context => {
-  /*
   if (!context.devToolsTargetPromise) {
     if (!context.devToolsToolbox || !context.devToolsToolbox.target) {
       throw new Error(
@@ -57,32 +56,11 @@ global.getDevToolsTargetForContext = async context => {
     const tab = context.devToolsToolbox.target.localTab;
     context.devToolsTargetPromise = DevToolsShim.createTargetForTab(tab);
   }
-  */
 
-  if (!context._onTargetAvailable) {
-    if (!context.devToolsToolbox) {
-      throw new Error(
-        "Unable to get a Target for a context not associated to any toolbox"
-      );
-    }
+  const target = await context.devToolsTargetPromise;
+  await target.attach();
 
-    context._onTargetAvailable = (({ targetFront, isTopLevel }) => {
-      if (isTopLevel) {
-        context._targetFront = targetFront;
-      }
-    });
-
-    await context.devToolsToolbox.targetList.watchTargets(
-      [context.devToolsToolbox.targetList.TYPES.FRAME],
-      context._onTargetAvailable,
-    );
-  }
-
-  //const target = await context.devToolsTargetPromise;
-  //await target.attach();
-
-  //return target;
-  return context._targetFront;
+  return target;
 };
 
 /**

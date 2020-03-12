@@ -10,6 +10,9 @@ var { SpreadArgs } = ExtensionCommon;
 
 this.devtools_inspectedWindow = class extends ExtensionAPI {
   getAPI(context) {
+    // Lazily retrieved inspectedWindow actor front per child context.
+    let waitForInspectedWindowFront;
+
     // TODO - Bug 1448878: retrieve a more detailed callerInfo object,
     // like the filename and lineNumber of the actual extension called
     // in the child process.
@@ -22,7 +25,11 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
       devtools: {
         inspectedWindow: {
           async eval(expression, options) {
-            const front = await getInspectedWindowFront(context);
+            if (!waitForInspectedWindowFront) {
+              waitForInspectedWindowFront = getInspectedWindowFront(context);
+            }
+
+            const front = await waitForInspectedWindowFront;
 
             const toolboxEvalOptions = await getToolboxEvalOptions(context);
             const evalOptions = Object.assign({}, options, toolboxEvalOptions);
@@ -40,7 +47,11 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
           async reload(options) {
             const { ignoreCache, userAgent, injectedScript } = options || {};
 
-            const front = await getInspectedWindowFront(context);
+            if (!waitForInspectedWindowFront) {
+              waitForInspectedWindowFront = getInspectedWindowFront(context);
+            }
+
+            const front = await waitForInspectedWindowFront;
             front.reload(callerInfo, {
               ignoreCache,
               userAgent,

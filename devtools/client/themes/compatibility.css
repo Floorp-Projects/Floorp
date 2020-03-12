@@ -14,42 +14,28 @@
   overflow: auto;
 }
 
-.compatibility-app__throbber {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: calc(var(--compatibility-base-unit) * 8);
-}
-
 .compatibility-issue-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+/*
+ * Layout of the issue item
+ *  +------+--------------+-----------------+---------------------------+
+ *  | icon | issue factor | (issue causes)? | unsupported browser icons |
+ *  +------+--------------+-----------------+---------------------------+
+ */
 .compatibility-issue-item {
+  display: grid;
+  grid-template-columns: var(--compatibility-issue-icon-size) max-content 1fr max-content;
+  align-items: center;
   padding-inline-start: calc(var(--compatibility-base-unit) * 2);
   padding-inline-end: calc(var(--compatibility-base-unit) * 4);
   padding-block: calc(var(--compatibility-base-unit) * 2);
 }
 
-.compatibility-issue-item:not(:last-child) {
-  border-block-end: 1px solid var(--theme-splitter-color);
-}
-
-/*
- * Layout of the issue description
- *  +------+--------------+-----------------+---------------------------+
- *  | icon | issue factor | (issue causes)? | unsupported browser icons |
- *  +------+--------------+-----------------+---------------------------+
- */
-.compatibility-issue-item__description {
-  display: grid;
-  grid-template-columns: var(--compatibility-issue-icon-size) max-content 1fr max-content;
-  align-items: center;
-}
-
-.compatibility-issue-item__description > *:nth-child(-n+2) {
+.compatibility-issue-item > *:nth-child(-n+2) {
   /*
    * The reason why we don't use `gap` in `.compatibility-issue-item` is
    * because there are cases that the `issue causes` element is null,
@@ -58,7 +44,11 @@
   margin-inline-start: var(--compatibility-base-unit);
 }
 
-.compatibility-issue-item__description::before {
+.compatibility-issue-item:not(:last-child) {
+  border-block-end: 1px solid var(--theme-splitter-color);
+}
+
+.compatibility-issue-item::before {
   content: "";
   width: var(--compatibility-issue-icon-size);
   height: var(--compatibility-issue-icon-size);
@@ -66,12 +56,12 @@
   -moz-context-properties: fill;
 }
 
-.compatibility-issue-item__description--experimental::before,
-.compatibility-issue-item__description--unsupported::before {
+.compatibility-issue-item--experimental::before,
+.compatibility-issue-item--unsupported::before {
   background-image: url(chrome://devtools/skin/images/info.svg);
 }
 
-.compatibility-issue-item__description--deprecated::before {
+.compatibility-issue-item--deprecated::before {
   background-image: url(chrome://devtools/skin/images/alert-small.svg);
   fill: var(--theme-icon-warning-color);
 }
@@ -121,24 +111,4 @@
   height: 100%;
   fill: var(--theme-icon-dimmed-color);
   -moz-context-properties: fill;
-}
-
-.compatibility-node-pane {
-  padding-inline-start: calc(var(--compatibility-base-unit) * 4);
-}
-
-.compatibility-node-pane__summary {
-  color: var(--theme-comment);
-  cursor: pointer;
-  padding-block-start: var(--compatibility-base-unit);
-}
-
-.compatibility-node-list {
-  list-style: none;
-  margin: 0;
-  padding-inline-start: calc(var(--compatibility-base-unit) * 2);
-}
-
-.compatibility-node-item {
-  padding-block-start: var(--compatibility-base-unit);
 }
