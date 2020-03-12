@@ -5842,14 +5842,13 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
 mozilla::ipc::IPCResult ContentParent::RecvUpdateSHEntriesInBC(
     PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
     const MaybeDiscarded<BrowsingContext>& aMaybeContext) {
-  if (aMaybeContext.IsNull()) {
+  if (aMaybeContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to update a browsing context that does not "
              "exist or has been discarded"));
     return IPC_OK();
   }
-  // if aContext has been discarded we can still update the entries
-  auto aContext = aMaybeContext.GetMaybeDiscarded()->Canonical();
+  auto aContext = aMaybeContext.get()->Canonical();
   MOZ_ASSERT(aContext);
   if (!aContext->IsOwnedByProcess(ChildID())) {
     // We are trying to update a child BrowsingContext in another child
