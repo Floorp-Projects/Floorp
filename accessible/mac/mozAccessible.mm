@@ -32,6 +32,7 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 #define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
+#define NSAccessibilityHasPopupAttribute @"AXHasPopup"
 #define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
 #define NSAccessibilityMathRootIndexAttribute @"AXMathRootIndex"
 #define NSAccessibilityMathFractionNumeratorAttribute @"AXMathFractionNumerator"
@@ -203,7 +204,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
                         NSAccessibilityEnabledAttribute, NSAccessibilitySizeAttribute,
                         NSAccessibilityWindowAttribute, NSAccessibilityFocusedAttribute,
                         NSAccessibilityHelpAttribute, NSAccessibilityTitleUIElementAttribute,
-                        NSAccessibilityTopLevelUIElementAttribute,
+                        NSAccessibilityTopLevelUIElementAttribute, NSAccessibilityHasPopupAttribute,
 #if DEBUG
                         @"AXMozDescription",
 #endif
@@ -273,6 +274,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   if ([attribute isEqualToString:NSAccessibilitySubroleAttribute]) return [self subrole];
   if ([attribute isEqualToString:NSAccessibilityEnabledAttribute])
     return [NSNumber numberWithBool:[self isEnabled]];
+  if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
+    return [NSNumber numberWithBool:([self state] & states::HASPOPUP) != 0];
+  }
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self value];
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return [self roleDescription];
