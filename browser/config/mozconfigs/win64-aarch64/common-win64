@@ -23,12 +23,8 @@ export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
 if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
 fi
-CLANG_CL_EXE_DIR="${MOZ_FETCHES_DIR}/clang-cl/clang/bin"
-if [ -d "${CLANG_CL_EXE_DIR}" ]; then
-    chmod +x "${CLANG_CL_EXE_DIR}/clang-cl.exe"
-fi
 export WINE=${MOZ_FETCHES_DIR}/wine/bin/wine64
-mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/arm64:${MOZ_FETCHES_DIR}/nsis-3.01:${CLANG_CL_EXE_DIR}:${PATH}"
+mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/arm64:${MOZ_FETCHES_DIR}/nsis-3.01:${PATH}"
 mk_add_options "export WINEPATH=${VSPATH}/VC/bin/Hostx64/x64"
 
 unset VC_PATH
