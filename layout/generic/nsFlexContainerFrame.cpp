@@ -1726,10 +1726,10 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult {
 
  public:
   CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
-                              const ReflowOutput& aDesiredSize)
+                              const ReflowOutput& aReflowOutput)
       : mKey(aReflowInput),
-        mBSize(aDesiredSize.BSize(aReflowInput.GetWritingMode())),
-        mAscent(aDesiredSize.BlockStartAscent()) {}
+        mBSize(aReflowOutput.BSize(aReflowInput.GetWritingMode())),
+        mAscent(aReflowOutput.BlockStartAscent()) {}
 
   /**
    * Returns true if this cached flex item measurement is valid for (i.e. can
@@ -1767,7 +1767,7 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
         "[perf] MeasureAscentAndBSizeForFlexItem didn't have a cached value");
   }
 
-  ReflowOutput childDesiredSize(aChildReflowInput);
+  ReflowOutput childReflowOutput(aChildReflowInput);
   nsReflowStatus childReflowStatus;
 
   const ReflowChildFlags flags = ReflowChildFlags::NoMoveFrame;
@@ -1777,9 +1777,9 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
 
   // We use NoMoveFrame, so the position and container size used here are
   // unimportant.
-  ReflowChild(aItem.Frame(), PresContext(), childDesiredSize, aChildReflowInput,
-              outerWM, dummyPosition, dummyContainerSize, flags,
-              childReflowStatus);
+  ReflowChild(aItem.Frame(), PresContext(), childReflowOutput,
+              aChildReflowInput, outerWM, dummyPosition, dummyContainerSize,
+              flags, childReflowStatus);
   aItem.SetHadMeasuringReflow();
 
   // XXXdholbert Once we do pagination / splitting, we'll need to actually
@@ -1791,12 +1791,12 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
 
   // Tell the child we're done with its initial reflow.
   // (Necessary for e.g. GetBaseline() to work below w/out asserting)
-  FinishReflowChild(aItem.Frame(), PresContext(), childDesiredSize,
+  FinishReflowChild(aItem.Frame(), PresContext(), childReflowOutput,
                     &aChildReflowInput, outerWM, dummyPosition,
                     dummyContainerSize, flags);
 
   auto result =
-      new CachedMeasuringReflowResult(aChildReflowInput, childDesiredSize);
+      new CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
 
   aItem.Frame()->SetProperty(CachedFlexMeasuringReflow(), result);
   return *result;
@@ -4077,7 +4077,7 @@ void nsFlexContainerFrame::SizeItemInCrossAxis(ReflowInput& aChildReflowInput,
   // -----------------------------------------------------
 
   // Tentatively store the child's desired content-box cross-size.
-  // Note that childDesiredSize is the border-box size, so we have to
+  // Note that childReflowOutput is the border-box size, so we have to
   // subtract border & padding to get the content-box size.
   nscoord crossAxisBorderPadding = aItem.BorderPaddingSizeInCrossAxis();
   if (reflowResult.BSize() < crossAxisBorderPadding) {
@@ -4125,18 +4125,18 @@ void FlexLine::PositionItemsInCrossAxis(
 }
 
 void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
-                                  ReflowOutput& aDesiredSize,
+                                  ReflowOutput& aReflowOutput,
                                   const ReflowInput& aReflowInput,
                                   nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFlexContainerFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aPresContext == PresContext());
 
   FLEX_LOG("Reflow() for nsFlexContainerFrame %p", this);
 
-  if (IsFrameTreeTooDeep(aReflowInput, aDesiredSize, aStatus)) {
+  if (IsFrameTreeTooDeep(aReflowInput, aReflowOutput, aStatus)) {
     return;
   }
 
@@ -4228,7 +4228,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                  flexContainerAscent, lines, placeholders, axisTracker,
                  hasLineClampEllipsis);
 
-  ComputeFinalSize(aDesiredSize, aReflowInput, aStatus, contentBoxMainSize,
+  ComputeFinalSize(aReflowOutput, aReflowInput, aStatus, contentBoxMainSize,
                    contentBoxCrossSize, flexContainerAscent, lines,
                    axisTracker);
 
@@ -4907,7 +4907,7 @@ void nsFlexContainerFrame::ReflowChildren(
 }
 
 void nsFlexContainerFrame::ComputeFinalSize(
-    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
+    ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput,
     nsReflowStatus& aStatus, const nscoord aContentBoxMainSize,
     const nscoord aContentBoxCrossSize, nscoord aFlexContainerAscent,
     LinkedList<FlexLine>& aLines, const FlexboxAxisTracker& aAxisTracker) {
@@ -4925,14 +4925,14 @@ void nsFlexContainerFrame::ComputeFinalSize(
       GetLogicalSkipSides(&aReflowInput) | LogicalSides(eLogicalSideBitsBEnd);
   containerBP.ApplySkipSides(skipSides);
 
-  // Compute flex container's desired size (in its own writing-mode),
-  // starting w/ content-box size & growing from there:
-  LogicalSize desiredSizeInFlexWM =
+  // Compute flex container's reflow-output measurements (in its own
+  // writing-mode), starting w/ content-box size & growing from there:
+  LogicalSize reflowOutputInFlexWM =
       aAxisTracker.LogicalSizeFromFlexRelativeSizes(aContentBoxMainSize,
                                                     aContentBoxCrossSize);
   // Add border/padding (w/ skipSides already applied):
-  desiredSizeInFlexWM.ISize(flexWM) += containerBP.IStartEnd(flexWM);
-  desiredSizeInFlexWM.BSize(flexWM) += containerBP.BStartEnd(flexWM);
+  reflowOutputInFlexWM.ISize(flexWM) += containerBP.IStartEnd(flexWM);
+  reflowOutputInFlexWM.BSize(flexWM) += containerBP.BStartEnd(flexWM);
 
   if (aFlexContainerAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no
@@ -4948,17 +4948,17 @@ void nsFlexContainerFrame::ComputeFinalSize(
     // XXXdholbert This only makes sense if parent's writing mode is
     // horizontal (& even then, really we should be using the BSize in terms
     // of the parent's writing mode, not ours). Clean up in bug 1155322.
-    aFlexContainerAscent = desiredSizeInFlexWM.BSize(flexWM);
+    aFlexContainerAscent = reflowOutputInFlexWM.BSize(flexWM);
   }
 
   if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
     // This will force our parent to call GetLogicalBaseline, which will
     // synthesize a margin-box baseline.
-    aDesiredSize.SetBlockStartAscent(ReflowOutput::ASK_FOR_BASELINE);
+    aReflowOutput.SetBlockStartAscent(ReflowOutput::ASK_FOR_BASELINE);
   } else {
     // XXXdholbert aFlexContainerAscent needs to be in terms of
     // our parent's writing-mode here. See bug 1155322.
-    aDesiredSize.SetBlockStartAscent(aFlexContainerAscent);
+    aReflowOutput.SetBlockStartAscent(aFlexContainerAscent);
   }
 
   // Now: If we're complete, add bottom border/padding to desired height (which
@@ -4970,14 +4970,14 @@ void nsFlexContainerFrame::ComputeFinalSize(
   // consistency with the behavior of "display:block" elements.
   if (aStatus.IsComplete()) {
     nscoord desiredBSizeWithBEndBP =
-        desiredSizeInFlexWM.BSize(flexWM) + blockEndContainerBP;
+        reflowOutputInFlexWM.BSize(flexWM) + blockEndContainerBP;
 
     if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE ||
-        desiredSizeInFlexWM.BSize(flexWM) == 0 ||
+        reflowOutputInFlexWM.BSize(flexWM) == 0 ||
         desiredBSizeWithBEndBP <= aReflowInput.AvailableBSize() ||
         aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
       // Update desired height to include block-end border/padding
-      desiredSizeInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
+      reflowOutputInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
     } else {
       // We couldn't fit bottom border/padding, so we'll need a continuation.
       aStatus.SetIncomplete();
@@ -4991,22 +4991,23 @@ void nsFlexContainerFrame::ComputeFinalSize(
     // XXX we fall back to a mirrored first baseline here for now, but this
     // should probably use the last baseline of the last item or something.
     mLastBaselineFromLastReflow =
-        desiredSizeInFlexWM.BSize(flexWM) - aFlexContainerAscent;
+        reflowOutputInFlexWM.BSize(flexWM) - aFlexContainerAscent;
   }
 
-  // Convert flex container's final desired size to parent's WM, for outparam.
-  aDesiredSize.SetSize(flexWM, desiredSizeInFlexWM);
+  // Convert flex container's final reflow-output measurements to parent's WM,
+  // for outparam.
+  aReflowOutput.SetSize(flexWM, reflowOutputInFlexWM);
 
   // Overflow area = union(my overflow area, kids' overflow areas)
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  aReflowOutput.SetOverflowAreasToDesiredBounds();
   for (nsIFrame* childFrame : mFrames) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, childFrame);
+    ConsiderChildOverflow(aReflowOutput.mOverflowAreas, childFrame);
   }
 
-  FinishReflowWithAbsoluteFrames(PresContext(), aDesiredSize, aReflowInput,
+  FinishReflowWithAbsoluteFrames(PresContext(), aReflowOutput, aReflowInput,
                                  aStatus);
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize)
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput)
 }
 
 void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
@@ -5121,9 +5122,9 @@ void nsFlexContainerFrame::ReflowFlexItem(
   // after this point, because some of its methods (e.g. SetComputedWidth)
   // internally call InitResizeFlags and stomp on mVResize & mHResize.
 
-  ReflowOutput childDesiredSize(childReflowInput);
+  ReflowOutput childReflowOutput(childReflowInput);
   nsReflowStatus childReflowStatus;
-  ReflowChild(aItem.Frame(), PresContext(), childDesiredSize, childReflowInput,
+  ReflowChild(aItem.Frame(), PresContext(), childReflowOutput, childReflowInput,
               outerWM, aFramePos, aContainerSize, ReflowChildFlags::Default,
               childReflowStatus);
 
@@ -5137,11 +5138,11 @@ void nsFlexContainerFrame::ReflowFlexItem(
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 
-  FinishReflowChild(aItem.Frame(), PresContext(), childDesiredSize,
+  FinishReflowChild(aItem.Frame(), PresContext(), childReflowOutput,
                     &childReflowInput, outerWM, aFramePos, aContainerSize,
                     ReflowChildFlags::ApplyRelativePositioning);
 
-  aItem.SetAscent(childDesiredSize.BlockStartAscent());
+  aItem.SetAscent(childReflowOutput.BlockStartAscent());
 }
 
 void nsFlexContainerFrame::ReflowPlaceholders(
@@ -5160,13 +5161,13 @@ void nsFlexContainerFrame::ReflowPlaceholders(
                                  availSize);
     // No need to set the -webkit-line-clamp related flags when reflowing
     // a placeholder.
-    ReflowOutput childDesiredSize(childReflowInput);
+    ReflowOutput childReflowOutput(childReflowInput);
     nsReflowStatus childReflowStatus;
-    ReflowChild(placeholder, PresContext(), childDesiredSize, childReflowInput,
+    ReflowChild(placeholder, PresContext(), childReflowOutput, childReflowInput,
                 outerWM, aContentBoxOrigin, aContainerSize,
                 ReflowChildFlags::Default, childReflowStatus);
 
-    FinishReflowChild(placeholder, PresContext(), childDesiredSize,
+    FinishReflowChild(placeholder, PresContext(), childReflowOutput,
                       &childReflowInput, outerWM, aContentBoxOrigin,
                       aContainerSize, ReflowChildFlags::Default);
 
