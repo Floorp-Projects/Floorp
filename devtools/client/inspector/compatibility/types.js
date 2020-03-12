@@ -22,6 +22,8 @@ const browser = {
   version: PropTypes.string.isRequired,
 };
 
+const node = PropTypes.object;
+
 const issue = {
   // Type of this issue. The type should be one of MDNCompatibility.ISSUE_TYPE.
   type: PropTypes.string.isRequired,
@@ -35,7 +37,10 @@ const issue = {
   experimental: PropTypes.bool.isRequired,
   // The browsers which do not support the CSS property.
   unsupportedBrowsers: PropTypes.arrayOf(PropTypes.shape(browser)).isRequired,
+  // Nodes that caused this issue. This will be available for top-level target issues only.
+  nodes: PropTypes.arrayOf(node),
 };
 
 exports.browser = browser;
 exports.issue = issue;
+exports.node = node;
