@@ -499,6 +499,7 @@ class nsDocShell final : public nsDocLoader,
   // Configuration options here are ones that should be applied to only the
   // real channel, especially ones that need to QI to channel subclasses.
   static bool CreateAndConfigureRealChannelForLoadState(
+      mozilla::dom::BrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, mozilla::net::LoadInfo* aLoadInfo,
       nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
       const mozilla::OriginAttributes& aOriginAttributes,
