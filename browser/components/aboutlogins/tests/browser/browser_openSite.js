@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+
 add_task(async function setup() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
@@ -20,9 +22,14 @@ add_task(async function test_launch_login_item() {
   );
 
   let browser = gBrowser.selectedBrowser;
+  let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     loginItem._editButton.click();
+  });
+  await reauthObserved;
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     loginItem._usernameInput.value += "-changed";
 
     ok(
