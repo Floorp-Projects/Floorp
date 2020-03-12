@@ -2349,15 +2349,17 @@ static AllocKinds ForegroundUpdateKinds(AllocKinds kinds) {
 
 void GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone) {
   // We need to update each type descriptor object and any objects stored in
-  // its slots, since some of these contain array objects which also need to
-  // be updated.
+  // its reserved slots, since some of these contain array objects that also
+  // need to be updated. Do not update any non-reserved slots, since they might
+  // point back to unprocessed descriptor objects.
 
   zone->typeDescrObjects().sweep();
 
   for (auto r = zone->typeDescrObjects().all(); !r.empty(); r.popFront()) {
     NativeObject* obj = &r.front()->as<NativeObject>();
     UpdateCellPointers(trc, obj);
-    for (size_t i = 0; i < obj->slotSpan(); i++) {
+    MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(obj->getClass()) == JS_DESCR_SLOTS);
+    for (size_t i = 0; i < JS_DESCR_SLOTS; i++) {
       Value value = obj->getSlot(i);
       if (value.isObject()) {
         UpdateCellPointers(trc, &value.toObject());
