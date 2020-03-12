@@ -2,8 +2,13 @@
 <head>
 <title>crash in nsContentList::nsContentList on print preview</title>
 </head><body>
-
-<iframe  onload="window.location.reload()" src="data:text/html,">
+<script>
+  onmessage = function () {
+    window.location.reload();
+  }
+</script>
+<!-- Give our load event a chance to fire too -->
+<iframe onload="postMessage(null, '*')" src="data:text/html,">
 </iframe>
 
 
