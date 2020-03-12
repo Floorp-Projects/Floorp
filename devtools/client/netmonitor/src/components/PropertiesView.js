@@ -45,7 +45,7 @@ loader.lazyGetter(this, "SourceEditor", function() {
 });
 loader.lazyGetter(this, "HTMLPreview", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/previews/HtmlPreview")
+    require("devtools/client/netmonitor/src/components/HtmlPreview")
   );
 });
 

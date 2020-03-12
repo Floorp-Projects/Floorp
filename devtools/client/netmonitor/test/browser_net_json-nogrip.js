@@ -22,26 +22,22 @@ add_task(async function() {
 
   const onResponsePanelReady = waitForDOM(
     document,
-    "#response-panel .accordion-item",
-    2
+    "#response-panel .CodeMirror-code"
   );
-
-  const onPropsViewReady = waitForDOM(
-    document,
-    "#response-panel .properties-view",
-    1
-  );
-
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
-  await Promise.all([onResponsePanelReady, onPropsViewReady]);
+  await onResponsePanelReady;
 
   const tabpanel = document.querySelector("#response-panel");
-  const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
-  const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
+  const labels = tabpanel.querySelectorAll(
+    "tr:not(.tree-section) .treeLabelCell .treeLabel"
+  );
+  const values = tabpanel.querySelectorAll(
+    "tr:not(.tree-section) .treeValueCell .objectBox"
+  );
 
   is(labels[0].textContent, "obj", "The first json property name is correct.");
   is(
