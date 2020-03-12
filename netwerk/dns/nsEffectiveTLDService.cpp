@@ -164,7 +164,21 @@ nsEffectiveTLDService::GetPublicSuffix(nsIURI* aURI,
     return rv;
   }
 
-  return GetBaseDomainInternal(host, 0, aPublicSuffix);
+  return GetBaseDomainInternal(host, 0, false, aPublicSuffix);
+}
+
+NS_IMETHODIMP
+nsEffectiveTLDService::GetKnownPublicSuffix(nsIURI* aURI,
+                                            nsACString& aPublicSuffix) {
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsAutoCString host;
+  nsresult rv = NS_GetInnermostURIHost(aURI, host);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return GetBaseDomainInternal(host, 0, true, aPublicSuffix);
 }
 
 // External function for dealing with URI's correctly.
@@ -182,7 +196,7 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI* aURI, uint32_t aAdditionalParts,
     return rv;
   }
 
-  return GetBaseDomainInternal(host, aAdditionalParts + 1, aBaseDomain);
+  return GetBaseDomainInternal(host, aAdditionalParts + 1, false, aBaseDomain);
 }
 
 // External function for dealing with a host string directly: finds the public
@@ -196,7 +210,19 @@ nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString& aHostname,
   nsresult rv = NormalizeHostname(normHostname);
   if (NS_FAILED(rv)) return rv;
 
-  return GetBaseDomainInternal(normHostname, 0, aPublicSuffix);
+  return GetBaseDomainInternal(normHostname, 0, false, aPublicSuffix);
+}
+
+NS_IMETHODIMP
+nsEffectiveTLDService::GetKnownPublicSuffixFromHost(const nsACString& aHostname,
+                                                    nsACString& aPublicSuffix) {
+  // Create a mutable copy of the hostname and normalize it to ACE.
+  // This will fail if the hostname includes invalid characters.
+  nsAutoCString normHostname(aHostname);
+  nsresult rv = NormalizeHostname(normHostname);
+  if (NS_FAILED(rv)) return rv;
+
+  return GetBaseDomainInternal(normHostname, 0, true, aPublicSuffix);
 }
 
 // External function for dealing with a host string directly: finds the base
@@ -214,7 +240,8 @@ nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString& aHostname,
   nsresult rv = NormalizeHostname(normHostname);
   if (NS_FAILED(rv)) return rv;
 
-  return GetBaseDomainInternal(normHostname, aAdditionalParts + 1, aBaseDomain);
+  return GetBaseDomainInternal(normHostname, aAdditionalParts + 1, false,
+                               aBaseDomain);
 }
 
 NS_IMETHODIMP
@@ -226,7 +253,7 @@ nsEffectiveTLDService::GetNextSubDomain(const nsACString& aHostname,
   nsresult rv = NormalizeHostname(normHostname);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetBaseDomainInternal(normHostname, -1, aBaseDomain);
+  return GetBaseDomainInternal(normHostname, -1, false, aBaseDomain);
 }
 
 // Finds the base domain for a host, with requested number of additional parts.
@@ -234,9 +261,9 @@ nsEffectiveTLDService::GetNextSubDomain(const nsACString& aHostname,
 // if more subdomain parts are requested than are available, or if the hostname
 // includes characters that are not valid in a URL. Normalization is performed
 // on the host string and the result will be in UTF8.
-nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
-                                                      int32_t aAdditionalParts,
-                                                      nsACString& aBaseDomain) {
+nsresult nsEffectiveTLDService::GetBaseDomainInternal(
+    nsCString& aHostname, int32_t aAdditionalParts, bool aOnlyKnownPublicSuffix,
+    nsACString& aBaseDomain) {
   const int kExceptionRule = 1;
   const int kWildcardRule = 2;
 
@@ -295,6 +322,7 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
   const char* end = currDomain + aHostname.Length();
   // Default value of *eTLD is currDomain as set in the while loop below
   const char* eTLD = nullptr;
+  bool hasKnownPublicSuffix = false;
   while (true) {
     // sanity check the string we're about to look up: it should not begin
     // with a '.'; this would mean the hostname began with a '.' or had an
@@ -316,6 +344,7 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
       result = mGraph->Lookup(Substring(currDomain, end));
     }
     if (result != Dafsa::kKeyNotFound) {
+      hasKnownPublicSuffix = true;
       if (result == kWildcardRule && prevDomain) {
         // wildcard rules imply an eTLD one level inferior to the match.
         eTLD = prevDomain;
@@ -342,6 +371,11 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
     prevDomain = currDomain;
     currDomain = nextDot + 1;
     nextDot = strchr(currDomain, '.');
+  }
+
+  if (aOnlyKnownPublicSuffix && !hasKnownPublicSuffix) {
+    aBaseDomain.Truncate();
+    return NS_OK;
   }
 
   const char *begin, *iter;
