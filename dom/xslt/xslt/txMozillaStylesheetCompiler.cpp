@@ -408,12 +408,10 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    nsCOMPtr<nsIURI> referrerURI;
-    aReferrerPrincipal->GetURI(getter_AddRefs(referrerURI));
-    if (referrerURI) {
-      DebugOnly<nsresult> rv;
-      nsCOMPtr<nsIReferrerInfo> referrerInfo =
-          new dom::ReferrerInfo(referrerURI, aReferrerPolicy);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    nsresult rv = aReferrerPrincipal->CreateReferrerInfo(
+        aReferrerPolicy, getter_AddRefs(referrerInfo));
+    if (NS_SUCCEEDED(rv)) {
       rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
