@@ -116,7 +116,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
 
   void MarkIntrinsicISizesDirty() override;
 
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
@@ -442,7 +442,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                             children, pass nscoord_MIN to synthesize a
    *                             value from the flex container itself).
    */
-  void ComputeFinalSize(ReflowOutput& aDesiredSize,
+  void ComputeFinalSize(ReflowOutput& aReflowOutput,
                         const ReflowInput& aReflowInput,
                         nsReflowStatus& aStatus,
                         const nscoord aContentBoxMainSize,
