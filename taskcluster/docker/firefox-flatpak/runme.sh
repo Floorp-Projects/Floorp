@@ -62,7 +62,8 @@ cp -v "$SCRIPT_DIRECTORY/launch-script.sh" "$WORKSPACE"
 cd "${WORKSPACE}"
 
 flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install -y flathub org.mozilla.Firefox.BaseApp//${FIREFOX_BASEAPP_CHANNEL} --no-deps
+# XXX: added --user to `flatpak install` to avoid ambiguity
+flatpak install --user -y flathub org.mozilla.Firefox.BaseApp//${FIREFOX_BASEAPP_CHANNEL} --no-deps
 
 # XXX: this command is temporarily, there's an upcoming fix in the upstream Docker image
 # that we work on top of, from `freedesktopsdk`, that will make these two lines go away eventually
@@ -76,6 +77,18 @@ name=org.mozilla.firefox
 runtime=org.freedesktop.Platform/${ARCH}/${FREEDESKTOP_VERSION}
 sdk=org.freedesktop.Sdk/${ARCH}/${FREEDESKTOP_VERSION}
 base=app/org.mozilla.Firefox.BaseApp/${ARCH}/${FIREFOX_BASEAPP_CHANNEL}
+[Extension org.mozilla.firefox.Locale]
+directory=share/runtime/langpack
+autodelete=true
+locale-subset=true
+EOF
+
+cat <<EOF > build/metadata.locale
+[Runtime]
+name=org.mozilla.firefox.Locale
+
+[ExtensionOf]
+ref=app/org.mozilla.firefox/${ARCH}/${FLATPAK_BRANCH}
 EOF
 
 appdir=build/files
@@ -94,8 +107,8 @@ mkdir -p "${appdir}/lib/firefox/distribution/extensions"
 # directory to where Firefox looks them up; this way only subset configured
 # on user system is downloaded vs all locales
 for locale in $locales; do
-    install -D -m644 -t "${appdir}/share/locales/${locale}/" "${DISTRIBUTION_DIR}/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
-    ln -sf "${appdir}/share/locales/${locale}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+    install -D -m644 -t "${appdir}/share/runtime/langpack/${locale:0:2}/" "${DISTRIBUTION_DIR}/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+    ln -sf "${appdir}/share/runtime/langpack/${locale:0:2}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
 done
 install -D -m644 -t "${appdir}/lib/firefox/distribution" distribution.ini
 install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
@@ -108,10 +121,6 @@ flatpak build-finish build                                      \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \
         --device=all                                            \
-        --filesystem=xdg-run/dconf                              \
-        --filesystem=xdg-config/dconf:ro                        \
-        --talk-name=ca.desrt.dconf                              \
-        --env=DCONF_USER_CONFIG_DIR=.config/dconf               \
         --talk-name=org.freedesktop.FileManager1                \
         --system-talk-name=org.freedesktop.NetworkManager       \
         --talk-name=org.a11y.Bus                                \
@@ -120,7 +129,8 @@ flatpak build-finish build                                      \
         --talk-name="org.gtk.vfs.*"                             \
         --command=firefox
 
-flatpak build-export --disable-sandbox repo build "$FLATPAK_BRANCH"
+flatpak build-export --disable-sandbox --no-update-summary --exclude='/share/runtime/langpack/*/*' repo build "$FLATPAK_BRANCH"
+flatpak build-export --disable-sandbox --no-update-summary --metadata=metadata.locale --files=files/share/runtime/langpack repo build "$FLATPAK_BRANCH"
 flatpak build-update-repo repo
 tar cvfz flatpak.tar.gz repo
 
