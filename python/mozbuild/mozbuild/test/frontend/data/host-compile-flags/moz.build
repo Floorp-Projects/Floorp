@@ -11,15 +11,10 @@ HostLibrary('dummy')
 HOST_SOURCES += ['test1.c']
 
 value = 'xyz'
-HOST_DEFINES = {
-    'FOO': True,
-}
-
+HOST_DEFINES['FOO'] = True
 HOST_DEFINES['BAZ'] = '"abcd"'
-HOST_DEFINES.update({
-    'BAR': 7,
-    'VALUE': value,
-    'QUX': False,
-})
+HOST_DEFINES['BAR'] = 7
+HOST_DEFINES['VALUE'] = value
+HOST_DEFINES['QUX'] = False
 
 HOST_CFLAGS += ['-funroll-loops', '-host-arg']

@@ -26,14 +26,12 @@ else:
         '/js/src/ctypes/libffi/src/%s' % CONFIG['FFI_TARGET_DIR'],
     ]
 
-    DEFINES.update({
-        'TARGET': CONFIG['FFI_TARGET'],
-        CONFIG['FFI_TARGET']: True,
-        'FFI_NO_RAW_API': True,
-        'HAVE_AS_ASCII_PSEUDO_OP': True,
-        'HAVE_AS_STRING_PSEUDO_OP': True,
-        'HAVE_AS_X86_64_UNWIND_SECTION_TYPE': True,
-    })
+    DEFINES['TARGET'] = CONFIG['FFI_TARGET']
+    DEFINES[CONFIG['FFI_TARGET']] = True
+    DEFINES['FFI_NO_RAW_API'] = True
+    DEFINES['HAVE_AS_ASCII_PSEUDO_OP'] = True
+    DEFINES['HAVE_AS_STRING_PSEUDO_OP'] = True
+    DEFINES['HAVE_AS_X86_64_UNWIND_SECTION_TYPE'] = True
 
     if CONFIG['MOZ_DEBUG']:
         DEFINES['FFI_DEBUG'] = True
