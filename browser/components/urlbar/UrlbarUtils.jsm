@@ -332,7 +332,11 @@ var UrlbarUtils = {
       if (!found) {
         if (!compareIgnoringDiacritics) {
           if (!this._compareIgnoringDiacritics) {
-            this._compareIgnoringDiacritics = new Intl.Collator(undefined, {
+            // Diacritic insensitivity in the search engine follows a set of
+            // general rules that are not locale-dependent, so use a generic
+            // English collator for highlighting matching words instead of a
+            // collator for the user's particular locale.
+            this._compareIgnoringDiacritics = new Intl.Collator("en", {
               sensitivity: "base",
             }).compare;
           }
