@@ -22,7 +22,7 @@ const CLASSES_TO_PRESERVE = [
   "caption",
   "emoji",
   "hidden",
-  "invisble",
+  "invisible",
   "sr-only",
   "visually-hidden",
   "visuallyhidden",
