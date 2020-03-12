@@ -4172,9 +4172,10 @@ class Document : public nsINode,
   already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
       nsIURI* aContentURI);
 
-  void AddToplevelLoadingDocument(Document* aDoc);
-  void RemoveToplevelLoadingDocument(Document* aDoc);
+  static void AddToplevelLoadingDocument(Document* aDoc);
+  static void RemoveToplevelLoadingDocument(Document* aDoc);
   static AutoTArray<Document*, 8>* sLoadingForegroundTopLevelContentDocument;
+  friend class cycleCollection;
 
   nsCOMPtr<nsIReferrerInfo> mPreloadReferrerInfo;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
