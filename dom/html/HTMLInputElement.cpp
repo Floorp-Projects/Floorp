@@ -1193,9 +1193,13 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     // of the element so, if the value of the element is different than @value,
     // we have to re-set it. This is only the case when GetValueMode() returns
     // VALUE_MODE_VALUE.
-    if (aName == nsGkAtoms::value && !mValueChanged &&
-        GetValueMode() == VALUE_MODE_VALUE) {
-      SetDefaultValueAsValue();
+    if (aName == nsGkAtoms::value) {
+      if (!mValueChanged && GetValueMode() == VALUE_MODE_VALUE) {
+        SetDefaultValueAsValue();
+      }
+      // GetStepBase() depends on the `value` attribute if `min` is not present,
+      // even if the value doesn't change.
+      UpdateStepMismatchValidityState();
     }
 
     //
