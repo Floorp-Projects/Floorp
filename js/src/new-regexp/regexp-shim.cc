@@ -105,6 +105,13 @@ PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
   MOZ_CRASH("Tried to take ownership of pseudohandle that is not in the arena");
 }
 
+PseudoHandle<ByteArrayData> ByteArray::takeOwnership(Isolate* isolate) {
+  PseudoHandle<ByteArrayData> result =
+    isolate->takeOwnership<ByteArrayData>(value_.toPrivate());
+  value_ = JS::PrivateValue(nullptr);
+  return result;
+}
+
 void Isolate::trace(JSTracer* trc) {
   js::gc::AssertRootMarkingPhase(trc);
 

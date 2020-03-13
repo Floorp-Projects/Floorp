@@ -480,18 +480,52 @@ class FixedArray : public HeapObject {
   }
 };
 
-// A fixed-size array of bytes.
-// TODO: figure out the best implementation for this. Uint8Array might work,
-// but it's not currently visible outside of TypedArrayObject.cpp.
-class ByteArray : public HeapObject {
- public:
-  uint8_t get(uint32_t index);
-  void set(uint32_t index, uint8_t val);
-  uint32_t length();
-  byte* GetDataStartAddress();
-  byte* GetDataEndAddress();
+class ByteArrayData {
+public:
+  uint32_t length;
+  uint8_t* data();
+};
 
-  static ByteArray cast(Object object);
+/*
+ * Conceptually, ByteArrayData is a variable-size structure. To
+ * implement this in a C++-approved way, we allocate a struct
+ * containing the 32-bit length field, followed by additional memory
+ * for the data. To access the data, we get a pointer to the next byte
+ * after the length field and cast it to the correct type.
+ */
+inline uint8_t* ByteArrayData::data() {
+  static_assert(alignof(uint8_t) <= alignof(ByteArrayData),
+                "The trailing data must be aligned to start immediately "
+                "after the header with no padding.");
+  ByteArrayData* immediatelyAfter = this + 1;
+  return reinterpret_cast<uint8_t*>(immediatelyAfter);
+}
+
+// A fixed-size array of bytes.
+class ByteArray : public HeapObject {
+  ByteArrayData* inner() const {
+    return static_cast<ByteArrayData*>(value_.toPrivate());
+  }
+  PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
+
+  friend class SMRegExpMacroAssembler;
+public:
+  byte get(uint32_t index) {
+    MOZ_ASSERT(index < length());
+    return inner()->data()[index];
+  }
+  void set(uint32_t index, byte val) {
+    MOZ_ASSERT(index < length());
+    inner()->data()[index] = val;
+  }
+  uint32_t length() const { return inner()->length; }
+  byte* GetDataStartAddress() { return inner()->data(); }
+
+  static ByteArray cast(Object object) {
+    ByteArray b;
+    b.value_ = JS::Value(object);
+    return b;
+  }
 };
 
 // Like Handles in SM, V8 handles are references to marked pointers.
