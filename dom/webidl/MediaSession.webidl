@@ -7,7 +7,11 @@
  * https://w3c.github.io/mediasession/#idl-index
  */
 
-// TODO: Implement MediaSessionPlaybackState (bug 1582508)
+enum MediaSessionPlaybackState {
+  "none",
+  "paused",
+  "playing"
+};
 
 // TODO: Implement the missing seek* (bug 1580623) and skipad (bug 1582569) actions
 enum MediaSessionAction {
@@ -24,7 +28,7 @@ callback MediaSessionActionHandler = void(MediaSessionActionDetails details);
 interface MediaSession {
   attribute MediaMetadata? metadata;
 
-  // TODO: attribute MediaSessionPlaybackState playbackState; (bug 1582508)
+  attribute MediaSessionPlaybackState playbackState;
 
   void setActionHandler(MediaSessionAction action, MediaSessionActionHandler? handler);
 
