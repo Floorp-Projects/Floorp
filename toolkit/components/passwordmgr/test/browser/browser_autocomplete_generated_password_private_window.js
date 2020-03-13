@@ -4,6 +4,14 @@ const FORM_PAGE_PATH =
   "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const passwordInputSelector = "#form-basic-password";
 
+add_task(async function setup() {
+  Services.telemetry.clearEvents();
+  TelemetryTestUtils.assertEvents([], {
+    category: "pwmgr",
+    method: "autocomplete_shown",
+  });
+});
+
 add_task(async function test_autocomplete_new_password_popup_item_visible() {
   await LoginTestUtils.addLogin({ username: "username", password: "pass1" });
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
@@ -36,6 +44,12 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
       );
 
       await TestUtils.waitForTick();
+
+      TelemetryTestUtils.assertEvents(
+        [["pwmgr", "autocomplete_shown", "generatedpassword"]],
+        { category: "pwmgr", method: "autocomplete_shown" }
+      );
+
       await closePopup(popup);
       await onPopupClosed;
     }
