@@ -3540,8 +3540,11 @@ void EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
       NS_WARNING("nsRange::Create() failed");
       return;
     }
-    range.mSelection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
-                                                                aError);
+    // The `MOZ_KnownLive` annotation is only necessary because of a bug
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253) in the
+    // static analyzer.
+    MOZ_KnownLive(range.mSelection)
+        ->AddRangeAndSelectFramesAndNotifyListeners(*newRange, aError);
     if (aError.Failed()) {
       NS_WARNING(
           "Selection::AddRangeAndSelectFramesAndNotifyListeners() failed");
@@ -3722,8 +3725,11 @@ nsresult EditorBase::DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
     }
 
     ErrorResult error;
-    range.mSelection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
-                                                                error);
+    // The `MOZ_KnownLive` annotation is only necessary because of a bug
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253) in the
+    // static analyzer.
+    MOZ_KnownLive(range.mSelection)
+        ->AddRangeAndSelectFramesAndNotifyListeners(*newRange, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -4929,7 +4935,8 @@ nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
   }
 
   ErrorResult err;
-  SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
   NS_WARNING_ASSERTION(!err.Failed(), "Failed to add range to Selection");
   return err.StealNSResult();
 }

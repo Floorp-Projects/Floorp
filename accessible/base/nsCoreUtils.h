@@ -143,8 +143,8 @@ class nsCoreUtils {
    * @param aRange    the range to scroll to
    * @param aScrollType   the place a range should be scrolled to
    */
-  static nsresult ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
-                                    uint32_t aScrollType);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult ScrollSubstringTo(
+      nsIFrame* aFrame, nsRange* aRange, uint32_t aScrollType);
 
   /** Helper method to scroll range into view, used for implementation of
    * nsIAccessibleText::scrollSubstringTo[Point]().
@@ -156,9 +156,9 @@ class nsCoreUtils {
    * @param aHorizontal     how to align horizontally, specified in percents,
    * and when.
    */
-  static nsresult ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
-                                    mozilla::ScrollAxis aVertical,
-                                    mozilla::ScrollAxis aHorizontal);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult ScrollSubstringTo(
+      nsIFrame* aFrame, nsRange* aRange, mozilla::ScrollAxis aVertical,
+      mozilla::ScrollAxis aHorizontal);
 
   /**
    * Scrolls the given frame to the point, used for implememntation of

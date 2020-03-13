@@ -258,8 +258,8 @@ class nsPrintJob final : public nsIObserver,
   bool DoSetPixelScale();
   void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
   MOZ_CAN_RUN_SCRIPT nsresult ReconstructAndReflow(bool aDoSetPixelScale);
-  nsresult UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
-                                               bool aDocumentIsTopLevel);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult UpdateSelectionAndShrinkPrintObject(
+      nsPrintObject* aPO, bool aDocumentIsTopLevel);
   MOZ_CAN_RUN_SCRIPT nsresult InitPrintDocConstruction(bool aHandleError);
   void FirePrintPreviewUpdateEvent();
 
