@@ -2973,7 +2973,7 @@
      * #### Fine print for environment chain instructions
      *
      * The following rules for `JSOp::{Push,Pop}LexicalEnv` also apply to
-     * `JSOp::{Push,Pop}VarEnv` and `JSOp::{Enter,Leave}With`.
+     * `JSOp::PushVarEnv` and `JSOp::{Enter,Leave}With`.
      *
      * Each `JSOp::PopLexicalEnv` instruction matches a particular
      * `JSOp::PushLexicalEnv` instruction in the same script and must have the
