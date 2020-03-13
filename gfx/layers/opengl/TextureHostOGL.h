@@ -430,6 +430,8 @@ class SurfaceTextureHost : public TextureHost {
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
+  uint32_t NumSubTextures() override;
+
   void PushResourceUpdates(wr::TransactionBuilder& aResources,
                            ResourceUpdateOp aOp,
                            const Range<wr::ImageKey>& aImageKeys,
