@@ -1031,8 +1031,8 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
-  SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*aReplaceRange,
-                                                               error);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->AddRangeAndSelectFramesAndNotifyListeners(*aReplaceRange, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

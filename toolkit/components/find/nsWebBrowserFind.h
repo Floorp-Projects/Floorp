@@ -61,7 +61,8 @@ class nsWebBrowserFind : public nsIWebBrowserFind,
 
   nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);
 
-  void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetSelectionAndScroll(
+      nsPIDOMWindowOuter* aWindow, nsRange* aRange);
 
   nsresult GetRootNode(mozilla::dom::Document* aDomDoc,
                        mozilla::dom::Element** aNode);

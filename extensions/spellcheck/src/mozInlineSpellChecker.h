@@ -226,8 +226,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=1620540).
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   RemoveRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
-  nsresult AddRange(mozilla::dom::Selection* aSpellCheckSelection,
-                    nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  AddRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
   bool SpellCheckSelectionIsFull() {
     return mNumWordsInSpellSelection >= mMaxNumWordsInSpellSelection;
   }

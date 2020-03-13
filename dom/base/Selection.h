@@ -302,7 +302,8 @@ class Selection final : public nsSupportsWeakReference,
   void GetType(nsAString& aOutType) const;
 
   nsRange* GetRangeAt(uint32_t aIndex, mozilla::ErrorResult& aRv);
-  void AddRangeJS(nsRange& aRange, mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void AddRangeJS(nsRange& aRange,
+                                     mozilla::ErrorResult& aRv);
 
   /**
    * Callers need to keep `aRange` alive.
@@ -449,9 +450,8 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
-                                                 mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void AddRangeAndSelectFramesAndNotifyListeners(
+      nsRange& aRange, mozilla::ErrorResult& aRv);
 
   /**
    * Adds all children of the specified node to the selection.
