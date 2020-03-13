@@ -112,7 +112,11 @@ class js::VerifyPreTracer final : public JS::CallbackTracer {
         curnode(nullptr),
         root(nullptr),
         edgeptr(nullptr),
-        term(nullptr) {}
+        term(nullptr) {
+    // We don't care about weak edges here. Since they are not marked they
+    // cannot cause the problem that the pre-write barrier protects against.
+    setTraceWeakEdges(false);
+  }
 
   ~VerifyPreTracer() { js_free(root); }
 };
