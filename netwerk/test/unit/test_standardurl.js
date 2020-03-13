@@ -1260,3 +1260,81 @@ add_test(
     run_next_test();
   }
 );
+
+add_task(async function test_emptyHostWithURLType() {
+  let makeURL = (str, type) => {
+    return Cc["@mozilla.org/network/standard-url-mutator;1"]
+      .createInstance(Ci.nsIStandardURLMutator)
+      .init(type, 80, str, "UTF-8", null)
+      .finalize()
+      .QueryInterface(Ci.nsIURL);
+  };
+
+  let url = makeURL("http://foo.com/bar/", Ci.nsIStandardURL.URLTYPE_AUTHORITY);
+  Assert.throws(
+    () =>
+      url
+        .mutate()
+        .setHost("")
+        .finalize().spec,
+    /NS_ERROR_UNEXPECTED/,
+    "Empty host is not allowed for URLTYPE_AUTHORITY"
+  );
+
+  url = makeURL("http://foo.com/bar/", Ci.nsIStandardURL.URLTYPE_STANDARD);
+  Assert.throws(
+    () =>
+      url
+        .mutate()
+        .setHost("")
+        .finalize().spec,
+    /NS_ERROR_UNEXPECTED/,
+    "Empty host is not allowed for URLTYPE_STANDARD"
+  );
+
+  url = makeURL("http://foo.com/bar/", Ci.nsIStandardURL.URLTYPE_NO_AUTHORITY);
+  equal(
+    url.spec,
+    "http:///bar/",
+    "Host is removed when parsing URLTYPE_NO_AUTHORITY"
+  );
+  equal(
+    url
+      .mutate()
+      .setHost("")
+      .finalize().spec,
+    "http:///bar/",
+    "Setting an empty host does nothing for URLTYPE_NO_AUTHORITY"
+  );
+  Assert.throws(
+    () =>
+      url
+        .mutate()
+        .setHost("something")
+        .finalize().spec,
+    /NS_ERROR_UNEXPECTED/,
+    "Setting a non-empty host is not allowed for URLTYPE_NO_AUTHORITY"
+  );
+  equal(
+    url
+      .mutate()
+      .setHost("#j")
+      .finalize().spec,
+    "http:///bar/",
+    "Setting a pseudo-empty host does nothing for URLTYPE_NO_AUTHORITY"
+  );
+
+  url = makeURL(
+    "http://example.org:123/foo?bar#baz",
+    Ci.nsIStandardURL.URLTYPE_AUTHORITY
+  );
+  Assert.throws(
+    () =>
+      url
+        .mutate()
+        .setHost("#j")
+        .finalize().spec,
+    /NS_ERROR_UNEXPECTED/,
+    "A pseudo-empty host is not allowed for URLTYPE_AUTHORITY"
+  );
+});
