@@ -11,7 +11,7 @@ add_task(
   threadFrontTest(async ({ threadFront, debuggee, client, targetFront }) => {
     await threadFront.detach();
     Assert.equal(threadFront.state, "detached");
-    const [, newThreadFront] = await targetFront.attachThread({});
+    const newThreadFront = await targetFront.attachThread({});
     Assert.notEqual(threadFront, newThreadFront);
     Assert.equal(newThreadFront.state, "paused");
     Assert.equal(targetFront.threadFront, newThreadFront);

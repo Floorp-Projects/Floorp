@@ -53,7 +53,7 @@ add_task(async function test_webextension_addon_debugging_connect() {
 
   // When running in oop mode we can explicitly attach the thread without locking
   // the main process.
-  const [, threadFront] = await addonTarget.attachThread();
+  const threadFront = await addonTarget.attachThread();
 
   ok(threadFront, "Got a threadFront for the target addon");
   is(threadFront.paused, true, "The addon threadActor is paused");
