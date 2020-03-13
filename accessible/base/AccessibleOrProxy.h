@@ -119,6 +119,9 @@ class AccessibleOrProxy {
 
   AccessibleOrProxy Parent() const;
 
+  AccessibleOrProxy ChildAtPoint(int32_t aX, int32_t aY,
+                                 Accessible::EWhichChildAtPoint aWhichChild);
+
   // XXX these are implementation details that ideally would not be exposed.
   uintptr_t Bits() const { return mBits; }
   void SetBits(uintptr_t aBits) { mBits = aBits; }

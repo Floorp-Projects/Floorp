@@ -566,17 +566,8 @@ xpcAccessible::GetChildAtPoint(int32_t aX, int32_t aY,
 
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    NS_IF_ADDREF(*aAccessible = ToXPC(
-                     proxy->ChildAtPoint(aX, aY, Accessible::eDirectChild)));
-#endif
-  } else {
-    NS_IF_ADDREF(*aAccessible = ToXPC(
-                     Intl()->ChildAtPoint(aX, aY, Accessible::eDirectChild)));
-  }
+  NS_IF_ADDREF(*aAccessible = ToXPC(IntlGeneric().ChildAtPoint(
+                   aX, aY, Accessible::eDirectChild)));
 
   return NS_OK;
 }
@@ -589,13 +580,8 @@ xpcAccessible::GetDeepestChildAtPoint(int32_t aX, int32_t aY,
 
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
-    NS_IF_ADDREF(*aAccessible = ToXPC(
-                     proxy->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
-  } else {
-    NS_IF_ADDREF(*aAccessible = ToXPC(
-                     Intl()->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
-  }
+  NS_IF_ADDREF(*aAccessible = ToXPC(IntlGeneric().ChildAtPoint(
+                   aX, aY, Accessible::eDeepestChild)));
 
   return NS_OK;
 }

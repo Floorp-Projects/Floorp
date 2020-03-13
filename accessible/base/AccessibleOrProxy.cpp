@@ -30,6 +30,37 @@ AccessibleOrProxy AccessibleOrProxy::Parent() const {
   return proxy->OuterDocOfRemoteBrowser();
 }
 
+AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
+    int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
+  if (IsProxy()) {
+    return AsProxy()->ChildAtPoint(aX, aY, aWhichChild);
+  }
+  ProxyAccessible* childDoc = RemoteChildDoc();
+  if (childDoc) {
+    // This is an OuterDocAccessible.
+    nsIntRect docRect = AsAccessible()->Bounds();
+    if (!docRect.Contains(aX, aY)) {
+      return nullptr;
+    }
+    if (aWhichChild == Accessible::eDirectChild) {
+      return childDoc;
+    }
+    return childDoc->ChildAtPoint(aX, aY, aWhichChild);
+  }
+  AccessibleOrProxy target = AsAccessible()->ChildAtPoint(aX, aY, aWhichChild);
+  MOZ_ASSERT(target.IsAccessible());
+  if (aWhichChild == Accessible::eDirectChild) {
+    return target;
+  }
+  childDoc = target.RemoteChildDoc();
+  if (childDoc) {
+    // Accessible::ChildAtPoint stopped at an OuterDocAccessible, since it
+    // can't traverse into ProxyAccessibles. Continue the search from childDoc.
+    return childDoc->ChildAtPoint(aX, aY, aWhichChild);
+  }
+  return target;
+}
+
 ProxyAccessible* AccessibleOrProxy::RemoteChildDoc() const {
   // This pref should be removed once the Dev Tools A11y Panel Fission
   // groundwork has landed and it has been verified that this doesn't cause
