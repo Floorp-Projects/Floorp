@@ -50,11 +50,15 @@ class VsyncSource {
 
     RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
 
-    void AddCompositorVsyncDispatcher(
+    void RegisterCompositorVsyncDispatcher(
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void RemoveCompositorVsyncDispatcher(
+    void DeregisterCompositorVsyncDispatcher(
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void MoveListenersToNewSource(VsyncSource::Display& aNewDisplay);
+    void EnableCompositorVsyncDispatcher(
+        CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+    void DisableCompositorVsyncDispatcher(
+        CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+    void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
     void NotifyRefreshTimerVsyncStatus(bool aEnable);
     virtual TimeDuration GetVsyncRate();
 
@@ -69,17 +73,24 @@ class VsyncSource {
 
     Mutex mDispatcherLock;
     bool mRefreshTimerNeedsVsync;
-    nsTArray<RefPtr<CompositorVsyncDispatcher>> mCompositorVsyncDispatchers;
+    nsTArray<RefPtr<CompositorVsyncDispatcher>>
+        mEnabledCompositorVsyncDispatchers;
+    nsTArray<RefPtr<CompositorVsyncDispatcher>>
+        mRegisteredCompositorVsyncDispatchers;
     RefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
     VsyncId mVsyncId;
   };
 
-  void AddCompositorVsyncDispatcher(
+  void EnableCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void RemoveCompositorVsyncDispatcher(
+  void DisableCompositorVsyncDispatcher(
+      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+  void RegisterCompositorVsyncDispatcher(
+      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+  void DeregisterCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
 
-  void MoveListenersToNewSource(VsyncSource* aNewSource);
+  void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
 
   RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
   virtual Display& GetGlobalDisplay() = 0;  // Works across all displays
