@@ -1,5 +1,6 @@
 {
   "policies": {
-    "DisableAppUpdate": true
+    "DisableAppUpdate": true,
+    "DontCheckDefaultBrowser": true
   }
 }
