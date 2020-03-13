@@ -1552,6 +1552,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   ScriptSource* ss = lazy->scriptSource();
   size_t sourceStart = lazy->sourceStart();
   size_t sourceLength = lazy->sourceEnd() - lazy->sourceStart();
+  bool hadLazyScriptData = lazy->hasPrivateScriptData();
 
   if (ss->hasBinASTSource()) {
 #if defined(JS_BUILD_BINAST)
@@ -1608,10 +1609,11 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   RootedScript script(cx, fun->nonLazyScript());
   MOZ_ASSERT(lazy->maybeScript() == script);
 
-  if (script->isRelazifiable()) {
-    // Remember the lazy script on the compiled script, so it can be
-    // stored on the function again in case of re-lazification.
-    // Only functions without inner functions are re-lazified.
+  // NOTE: Only allow relazification if there was no lazy PrivateScriptData.
+  // This excludes non-leaf functions and all script class constructors.
+  if (script->isRelazifiable() && !hadLazyScriptData) {
+    // Remember the lazy script on the compiled script, so it can be stored on
+    // the function again in case of re-lazification.
     script->setLazyScript(lazy);
     script->setAllowRelazify();
   } else if (lazy->isWrappedByDebugger()) {

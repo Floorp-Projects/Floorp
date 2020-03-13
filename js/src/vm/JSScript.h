@@ -2346,6 +2346,8 @@ setterLevel:                                                                  \
     return hasJitScript() ? jitScript() : nullptr;
   }
 
+  bool hasPrivateScriptData() const { return data_ != nullptr; }
+
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   }
