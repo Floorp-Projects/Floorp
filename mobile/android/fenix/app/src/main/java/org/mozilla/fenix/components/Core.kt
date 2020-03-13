@@ -89,7 +89,7 @@ class Core(private val context: Context) {
         )
     }
 
-    val sessionStorage: SessionStorage by lazy {
+    private val sessionStorage: SessionStorage by lazy {
         SessionStorage(context, engine = engine)
     }
 

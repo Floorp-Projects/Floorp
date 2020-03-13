@@ -2,7 +2,7 @@
 buildscript {
     repositories {
         maven {
-            url "https://snapshots.maven.mozilla.org/maven2"
+            url "https://nightly.maven.mozilla.org/maven2"
         }
         maven {
             url "https://maven.mozilla.org/maven2"
