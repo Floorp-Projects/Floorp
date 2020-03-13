@@ -151,6 +151,7 @@ either Raptor or browsertime."""
         self.benchmark = None
         self.gecko_profiler = None
         self.device = None
+        self.runtime_error = None
         self.profile_class = profile_class or app
         self.conditioned_profile_dir = None
         self.interrupt_handler = interrupt_handler
@@ -330,8 +331,7 @@ either Raptor or browsertime."""
                     # Check for crashes before showing the timeout error.
                     self.check_for_crashes()
                     if self.crashes == 0:
-                        LOG.critical("Tests failed to finish! Application timed out.")
-                        LOG.error(e)
+                        LOG.critical(e)
                     os.sys.exit(1)
                 finally:
                     self.run_test_teardown(test)

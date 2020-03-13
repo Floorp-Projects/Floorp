@@ -30,7 +30,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def MakeCustomHandlerClass(
-    results_handler, shutdown_browser, handle_gecko_profile, background_app, foreground_app
+    results_handler,
+    error_handler,
+    shutdown_browser,
+    handle_gecko_profile,
+    background_app,
+    foreground_app
 ):
     class MyHandler(server.BaseHTTPRequestHandler, object):
         """
@@ -112,6 +117,7 @@ def MakeCustomHandlerClass(
 
         def __init__(self, *args, **kwargs):
             self.results_handler = results_handler
+            self.error_handler = error_handler
             self.shutdown_browser = shutdown_browser
             self.handle_gecko_profile = handle_gecko_profile
             self.background_app = background_app
@@ -189,7 +195,12 @@ def MakeCustomHandlerClass(
                 # leave it alone so it will not cause further waits.
                 MyHandler.wait_after_messages[wait_key] = True
 
-            if data["type"] == "webext_gecko_profile":
+            if data["type"] == "webext_error":
+                error, stack = data["data"]
+                LOG.info("received " + data["type"] + ": " + str(error))
+                self.error_handler(error, stack)
+
+            elif data["type"] == "webext_gecko_profile":
                 # received file name of the saved gecko profile
                 filename = str(data["data"])
                 LOG.info("received gecko profile filename: {}".format(filename))
@@ -299,6 +310,7 @@ class RaptorControlServer:
         self.results_handler = results_handler
         self.browser_proc = None
         self._finished = False
+        self._runtime_error = None
         self.device = None
         self.app_name = None
         self.gecko_profile_dir = None
@@ -319,6 +331,7 @@ class RaptorControlServer:
         server_class = ThreadedHTTPServer
         handler_class = MakeCustomHandlerClass(
             self.results_handler,
+            self.error_handler,
             self.shutdown_browser,
             self.handle_gecko_profile,
             self.background_app,
@@ -332,6 +345,9 @@ class RaptorControlServer:
         self._server_thread.start()
         LOG.info("raptor control server running on port %d..." % self.port)
         self.server = httpd
+
+    def error_handler(self, error, stack):
+        self._runtime_error = {"error": error, "stack": stack}
 
     def shutdown_browser(self):
         # if debug-mode enabled, leave the browser running - require manual shutdown
