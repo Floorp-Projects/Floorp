@@ -32,6 +32,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LongClickDuration
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -54,8 +55,9 @@ class BrowserRobot {
             Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
             waitingTime
         )
+        TestAssetHelper.waitingTime
         onView(withId(R.id.mozac_browser_toolbar_url_view))
-            .check(matches(withText(containsString(url))))
+                .check(matches(withText(containsString(url))))
     }
 
     fun verifyHelpUrl() {

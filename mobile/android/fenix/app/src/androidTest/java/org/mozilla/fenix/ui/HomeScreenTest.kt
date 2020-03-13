@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui
 import androidx.test.uiautomator.UiDevice
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Ignore
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -51,12 +50,17 @@ class HomeScreenTest {
             verifyNoCollectionsTextIsNotShown()
             verifyHomeToolbar()
             verifyHomeComponent()
+
+            // Verify Top Sites
+            verifyExistingTopSitesList()
+            verifyExistingTopSitesTabs("Wikipedia")
+            verifyExistingTopSitesTabs("YouTube")
+            verifyExistingTopSitesTabs("Top Articles")
         }
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
-    fun firstRunHomeScreenItemsTest() {
+    fun firstRunScreenTest() {
         homeScreen {
             verifyHomeScreen()
             verifyNavigationToolbar()
@@ -65,39 +69,59 @@ class HomeScreenTest {
             verifyHomeWordmark()
 
             verifyWelcomeHeader()
-
+            // Sign in to Firefox
             verifyGetTheMostHeader()
             verifyAccountsSignInButton()
+
+            // Intro to other sections
             verifyGetToKnowHeader()
 
-            swipeUpToDismissFirstRun()
+            // See What's new
+            scrollToElementByText("See what’s new")
+            verifyWhatsNewHeader()
+            verifyWhatsNewLink()
 
-            verifyChooseThemeHeader()
-            verifyChooseThemeText()
-            verifyLightThemeToggle()
-            verifyLightThemeDescription()
-            verifyDarkThemeToggle()
-            verifyDarkThemeDescription()
-            verifyAutomaticThemeToggle()
-            verifyAutomaticThemeDescription()
-
+            // Protect yourself
+            scrollToElementByText("Protect yourself")
             verifyProtectYourselfHeader()
             verifyTrackingProtectionToggle()
             verifyProtectYourselfText()
 
+            /* Check disable due to Firebase failures on Pixel 2 API 28
+            // Choose your theme
+            verifyChooseThemeHeader()
+            verifyChooseThemeText()
+            verifyDarkThemeDescription()
+            verifyDarkThemeToggle()
+            verifyLightThemeDescription()
+            verifyLightThemeToggle()
+
+            // Browse privately
+            scrollToElementByText("Open Settings")
             verifyBrowsePrivatelyHeader()
             verifyBrowsePrivatelyText()
+             */
+
+            swipeToBottom()
+
+            // Take a position
+            scrollToElementByText("Take a position")
+            verifyTakePositionHeader()
+            verifyTakePositionElements()
+
+            // Your privacy
+            scrollToElementByText("Your privacy")
             verifyYourPrivacyHeader()
             verifyYourPrivacyText()
-
             verifyPrivacyNoticeButton()
+
+            // Start Browsing
+            swipeToBottom()
             verifyStartBrowsingButton()
         }
     }
 
     @Test
-    @Ignore("Temp disable broken test - see:  https://github.com/mozilla-mobile/fenix/issues/5050")
-
     fun privateModeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
         homeScreen { }.togglePrivateBrowsingMode()
@@ -114,9 +138,10 @@ class HomeScreenTest {
             verifyPrivateSessionMessage(visible = true)
             verifyHomeToolbar()
             verifyHomeComponent()
+        }.openCommonMythsLink {
+            verifyUrl("common-myths-about-private-browsing")
+            mDevice.pressBack()
         }
-
-        homeScreen { }.addNewTab()
 
         homeScreen {
             // To deal with the race condition where multiple "add tab" buttons are present,
