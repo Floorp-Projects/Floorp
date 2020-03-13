@@ -155,6 +155,8 @@ function Editor(config) {
     // Set to true to prevent the search addon to be activated.
     disableSearchAddon: false,
     maxHighlightLength: 1000,
+    // Disable codeMirror setTimeout-based cursor blinking (will be replaced by a CSS animation)
+    cursorBlinkRate: 0,
   };
 
   // Additional shortcuts.
@@ -240,15 +242,6 @@ function Editor(config) {
   if (this.config.cssProperties) {
     // Ensure that autocompletion has cssProperties if it's passed in via the options.
     this.config.autocompleteOpts.cssProperties = this.config.cssProperties;
-  }
-
-  // Can't use CodeMirror.defaults here because it's loaded later in _setup()
-  // Hardcode the fallback value to that of CodeMirror.defaults.cursorBlinkRate.
-  if (Services.prefs.prefHasUserValue(CARET_BLINK_TIME)) {
-    this.config.cursorBlinkRate = Services.prefs.getIntPref(
-      CARET_BLINK_TIME,
-      530
-    );
   }
 
   EventEmitter.decorate(this);
@@ -470,6 +463,23 @@ Editor.prototype = {
         replaceAll: null,
       });
     }
+
+    // Retrieve the cursor blink rate from user preference, or fall back to CodeMirror's
+    // default value.
+    let cursorBlinkingRate = win.CodeMirror.defaults.cursorBlinkRate;
+    if (Services.prefs.prefHasUserValue(CARET_BLINK_TIME)) {
+      cursorBlinkingRate = Services.prefs.getIntPref(
+        CARET_BLINK_TIME,
+        cursorBlinkingRate
+      );
+    }
+    // This will be used in the animation-duration property we set on the cursor to
+    // implement the blinking animation. If cursorBlinkingRate is 0 or less, the cursor
+    // won't blink.
+    cm.getWrapperElement().style.setProperty(
+      "--caret-blink-time",
+      `${Math.max(0, cursorBlinkingRate)}ms`
+    );
 
     editors.set(this, cm);
 
