@@ -225,6 +225,8 @@ class Utf16 {
   static const uchar kMaxNonSurrogateCharCode = 0xffff;
 };
 
+#ifndef V8_INTL_SUPPORT
+
 // A cache used in case conversion.  It caches the value for characters
 // that either have no mapping or map to a single character independent
 // of context.  Characters that map to more than one character or that
@@ -235,11 +237,37 @@ template <class T, int size = 256>
 class Mapping {
  public:
   inline Mapping() = default;
-  int get(uchar c, uchar n, uchar* result);
+  inline int get(uchar c, uchar n, uchar* result) {
+    CacheEntry entry = entries_[c & kMask];
+    if (entry.code_point_ == c) {
+      if (entry.offset_ == 0) {
+        return 0;
+      } else {
+        result[0] = c + entry.offset_;
+        return 1;
+      }
+    } else {
+      return CalculateValue(c, n, result);
+    }
+  }
 
  private:
-  friend class Test;
-  int CalculateValue(uchar c, uchar n, uchar* result);
+  int CalculateValue(uchar c, uchar n, uchar* result) {
+    bool allow_caching = true;
+    int length = T::Convert(c, n, result, &allow_caching);
+    if (allow_caching) {
+      if (length == 1) {
+        entries_[c & kMask] = CacheEntry(c, result[0] - c);
+        return 1;
+      } else {
+        entries_[c & kMask] = CacheEntry(c, 0);
+        return 0;
+      }
+    } else {
+      return length;
+    }
+  }
+
   struct CacheEntry {
     inline CacheEntry() : code_point_(kNoChar), offset_(0) {}
     inline CacheEntry(uchar code_point, signed offset)
@@ -260,12 +288,18 @@ struct Ecma262Canonicalize {
   static int Convert(uchar c, uchar n, uchar* result, bool* allow_caching_ptr);
 };
 struct Ecma262UnCanonicalize {
-  static const int kMaxWidth = 1;
+  static const int kMaxWidth = 4;
   static int Convert(uchar c, uchar n, uchar* result, bool* allow_caching_ptr);
 };
 struct CanonicalizationRange {
   static const int kMaxWidth = 1;
   static int Convert(uchar c, uchar n, uchar* result, bool* allow_caching_ptr);
+};
+
+#endif  // !V8_INTL_SUPPORT
+
+struct Letter {
+  static bool Is(uchar c);
 };
 
 }  // namespace unibrow
@@ -909,11 +943,26 @@ class Isolate {
   bool has_pending_exception() { return cx()->isExceptionPending(); }
   void StackOverflow() { js::ReportOverRecursed(cx()); }
 
-  unibrow::Mapping<unibrow::Ecma262UnCanonicalize>* jsregexp_uncanonicalize();
+#ifndef V8_INTL_SUPPORT
+  unibrow::Mapping<unibrow::Ecma262UnCanonicalize>* jsregexp_uncanonicalize() {
+    return &jsregexp_uncanonicalize_;
+  }
   unibrow::Mapping<unibrow::Ecma262Canonicalize>*
-  regexp_macro_assembler_canonicalize();
-  unibrow::Mapping<unibrow::CanonicalizationRange>* jsregexp_canonrange();
+  regexp_macro_assembler_canonicalize() {
+    return &regexp_macro_assembler_canonicalize_;
+  }
+  unibrow::Mapping<unibrow::CanonicalizationRange>* jsregexp_canonrange() {
+    return &jsregexp_canonrange_;
+  }
 
+private:
+  unibrow::Mapping<unibrow::Ecma262UnCanonicalize> jsregexp_uncanonicalize_;
+  unibrow::Mapping<unibrow::Ecma262Canonicalize>
+  regexp_macro_assembler_canonicalize_;
+  unibrow::Mapping<unibrow::CanonicalizationRange> jsregexp_canonrange_;
+#endif // !V8_INTL_SUPPORT
+
+public:
   // An empty stub for telemetry we don't support
   void IncreaseTotalRegexpCodeGenerated(int size) {}
 
