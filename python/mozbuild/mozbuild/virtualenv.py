@@ -17,7 +17,6 @@ import warnings
 from distutils.version import LooseVersion
 
 IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
-IS_MSYS2 = (sys.platform == 'win32' and os.sep == '/')
 IS_CYGWIN = (sys.platform == 'cygwin')
 
 # Minimum versions of Python required to build.
