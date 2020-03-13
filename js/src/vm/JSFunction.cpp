@@ -134,10 +134,6 @@ void js::ThrowTypeErrorBehavior(JSContext* cx) {
 static bool IsSloppyNormalFunction(JSFunction* fun) {
   // FunctionDeclaration or FunctionExpression in sloppy mode.
   if (fun->kind() == FunctionFlags::NormalFunction) {
-    if (!fun->isInterpreted()) {
-      return false;
-    }
-
     if (fun->isBuiltin() || fun->isBoundFunction()) {
       return false;
     }
@@ -146,7 +142,13 @@ static bool IsSloppyNormalFunction(JSFunction* fun) {
       return false;
     }
 
+    MOZ_ASSERT(fun->isInterpreted());
     return !fun->strict();
+  }
+
+  // Or asm.js function in sloppy mode.
+  if (fun->kind() == FunctionFlags::AsmJS) {
+    return !IsAsmJSStrictModeModuleOrFunction(fun);
   }
 
   return false;
@@ -160,6 +162,8 @@ static bool IsSloppyNormalFunction(JSFunction* fun) {
 // me.
 static bool ArgumentsRestrictions(JSContext* cx, HandleFunction fun) {
   // Throw unless the function is a sloppy, normal function.
+  // TODO (bug 1057208): ensure semantics are correct for all possible
+  // pairings of callee/caller.
   if (!IsSloppyNormalFunction(fun)) {
     ThrowTypeErrorBehavior(cx);
     return false;
@@ -232,6 +236,8 @@ static bool ArgumentsSetter(JSContext* cx, unsigned argc, Value* vp) {
 // me.
 static bool CallerRestrictions(JSContext* cx, HandleFunction fun) {
   // Throw unless the function is a sloppy, normal function.
+  // TODO (bug 1057208): ensure semantics are correct for all possible
+  // pairings of callee/caller.
   if (!IsSloppyNormalFunction(fun)) {
     ThrowTypeErrorBehavior(cx);
     return false;
