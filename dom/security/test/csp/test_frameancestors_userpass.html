@@ -29,12 +29,7 @@ SpecialPowers.registerObservers("csp-on-violate-policy");
 // This is used to watch the blocked data bounce off CSP and allowed data
 // get sent out to the wire.
 function examiner() {
-  // Depending on whether frame-ancestor checks are performed in the parent
-  // or in the content process we have to use the specialpowers version
-  // for observing CSP violations. After Bug 1574372 we should be able
-  // to remove the "csp-on-violate-policy" here.
   SpecialPowers.addObserver(this, "specialpowers-csp-on-violate-policy");
-  SpecialPowers.addObserver(this, "csp-on-violate-policy");
 }
 examiner.prototype  = {
   observe(subject, topic, data) {
@@ -60,8 +55,7 @@ examiner.prototype  = {
       // was not an nsIURI, so it was probably a cross-origin report.
     }
 
-    if (topic === "specialpowers-csp-on-violate-policy" ||
-        topic === "csp-on-violate-policy") {
+    if (topic === "specialpowers-csp-on-violate-policy") {
       //these were blocked... record that they were blocked
       window.frameBlocked(asciiSpec, data);
     }
@@ -71,7 +65,6 @@ examiner.prototype  = {
   // or mochitests might get borked.
   remove() {
     SpecialPowers.removeObserver(this, "specialpowers-csp-on-violate-policy");
-    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }
 
