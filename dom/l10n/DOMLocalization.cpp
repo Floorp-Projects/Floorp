@@ -132,7 +132,7 @@ void DOMLocalization::SetAttributes(
     nsAutoString data;
     JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*aArgs.Value()));
     if (!nsContentUtils::StringifyJSON(aCx, &val, data)) {
-      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      aRv.NoteJSContextException(aCx);
       return;
     }
     if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::datal10nargs, data,
