@@ -319,3 +319,9 @@ register_strategy('fuzzing-builds', args=('skip-unless-schedules', 'seta'))(Eith
 relevant_tests = {
     'test': Either('skip-unless-schedules', 'skip-unless-has-relevant-tests'),
 }
+
+# Queries the bugbug push schedules endpoint which uses machine learning to
+# determine which tasks to run.
+bugbug_push_schedules = {
+    'test': Either('skip-unless-schedules', 'bugbug-push-schedules'),
+}
