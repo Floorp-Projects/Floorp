@@ -127,19 +127,24 @@ def process_fetch_job(config, jobs):
             continue
 
         typ = job['fetch']['type']
+        name = job['name']
+        fetch = job.pop('fetch')
 
         if typ == 'static-url':
-            yield create_fetch_url_task(config, job)
+            job.update(create_fetch_url_task(config, name, fetch))
         elif typ == 'chromium-fetch':
-            yield create_chromium_fetch_task(config, job)
+            job.update(create_chromium_fetch_task(config, name, fetch))
         elif typ == 'git':
-            yield create_git_fetch_task(config, job)
+            job.update(create_git_fetch_task(config, name, fetch))
         else:
             # validate() should have caught this.
             assert False
 
+        yield job
 
-def make_base_task(config, name, description, command):
+
+@transforms.add
+def make_task(config, jobs):
     # Fetch tasks are idempotent and immutable. Have them live for
     # essentially forever.
     if config.params['level'] == '3':
@@ -147,37 +152,60 @@ def make_base_task(config, name, description, command):
     else:
         expires = '28 days'
 
-    return {
-        'attributes': {},
-        'name': name,
-        'description': description,
-        'expires-after': expires,
-        'label': 'fetch-%s' % name,
-        'run-on-projects': [],
-        'treeherder': {
-            'kind': 'build',
-            'platform': 'fetch/opt',
-            'tier': 1,
-        },
-        'run': {
-            'using': 'run-task',
-            'checkout': False,
-            'command': command,
-        },
-        'worker-type': 'images',
-        'worker': {
-            'chain-of-trust': True,
-            'docker-image': {'in-tree': 'fetch'},
-            'env': {},
-            'max-run-time': 900,
-        },
-    }
+    for job in jobs:
+        name = job['name']
+        env = job.get('env', {})
+        env.update({
+            'UPLOAD_DIR': '/builds/worker/artifacts'
+        })
+        task = {
+            'attributes': {
+                'fetch-artifact': 'public/%s' % job['artifact_name']
+            },
+            'name': name,
+            'description': job['description'],
+            'expires-after': expires,
+            'label': 'fetch-%s' % name,
+            'run-on-projects': [],
+            'treeherder': {
+                'symbol': join_symbol('Fetch', name),
+                'kind': 'build',
+                'platform': 'fetch/opt',
+                'tier': 1,
+            },
+            'run': {
+                'using': 'run-task',
+                'checkout': False,
+                'command': job['command'],
+            },
+            'worker-type': 'images',
+            'worker': {
+                'chain-of-trust': True,
+                'docker-image': {'in-tree': 'fetch'},
+                'env': env,
+                'max-run-time': 900,
+                'artifacts': [{
+                    'type': 'directory',
+                    'name': 'public',
+                    'path': '/builds/worker/artifacts',
+                }],
+            },
+        }
+        if not taskgraph.fast:
+            cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
+
+            # This adds the level to the index path automatically.
+            add_optimization(
+                config,
+                task,
+                cache_type=CACHE_TYPE,
+                cache_name=cache_name,
+                digest_data=job['digest_data']
+            )
+        yield task
 
 
-def create_fetch_url_task(config, job):
-    name = job['name']
-    fetch = job['fetch']
-
+def create_fetch_url_task(config, name, fetch):
     artifact_name = fetch.get('artifact-name')
     if not artifact_name:
         artifact_name = fetch['url'].split('/')[-1]
@@ -220,37 +248,18 @@ def create_fetch_url_task(config, job):
         fetch['url'], '/builds/worker/artifacts/%s' % artifact_name,
     ])
 
-    task = make_base_task(config, name, job['description'], command)
-    task['treeherder']['symbol'] = join_symbol('Fetch', name)
-    task['worker']['artifacts'] = [{
-        'type': 'directory',
-        'name': 'public',
-        'path': '/builds/worker/artifacts',
-    }]
-    task['worker']['env'] = env
-    task['attributes']['fetch-artifact'] = 'public/%s' % artifact_name
-
-    if not taskgraph.fast:
-        cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
-
-        # This adds the level to the index path automatically.
-        add_optimization(
-            config,
-            task,
-            cache_type=CACHE_TYPE,
-            cache_name=cache_name,
-            # We don't include the GPG signature in the digest because it isn't
-            # materially important for caching: GPG signatures are supplemental
-            # trust checking beyond what the shasum already provides.
-            digest_data=args + [artifact_name],
-        )
-
-    return task
+    return {
+        'command': command,
+        'artifact_name': artifact_name,
+        'env': env,
+        # We don't include the GPG signature in the digest because it isn't
+        # materially important for caching: GPG signatures are supplemental
+        # trust checking beyond what the shasum already provides.
+        'digest_data': args + [artifact_name],
+    }
 
 
-def create_git_fetch_task(config, job):
-    name = job['name']
-    fetch = job['fetch']
+def create_git_fetch_task(config, name, fetch):
     path_prefix = fetch.get('path-prefix')
     if not path_prefix:
         path_prefix = fetch['repo'].rstrip('/').rsplit('/', 1)[-1]
@@ -272,33 +281,14 @@ def create_git_fetch_task(config, job):
         '/builds/worker/artifacts/%s' % artifact_name,
     ]
 
-    task = make_base_task(config, name, job['description'], args)
-    task['treeherder']['symbol'] = join_symbol('Fetch', name)
-    task['worker']['artifacts'] = [{
-        'type': 'directory',
-        'name': 'public',
-        'path': '/builds/worker/artifacts',
-    }]
-    task['attributes']['fetch-artifact'] = 'public/%s' % artifact_name
-
-    if not taskgraph.fast:
-        cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
-
-        # This adds the level to the index path automatically.
-        add_optimization(
-            config,
-            task,
-            cache_type=CACHE_TYPE,
-            cache_name=cache_name,
-            digest_data=[fetch['revision'], path_prefix, artifact_name],
-        )
-
-    return task
+    return {
+        'command': args,
+        'artifact_name': artifact_name,
+        'digest_data': [fetch['revision'], path_prefix, artifact_name],
+    }
 
 
-def create_chromium_fetch_task(config, job):
-    name = job['name']
-    fetch = job['fetch']
+def create_chromium_fetch_task(config, name, fetch):
     artifact_name = fetch.get('artifact-name')
 
     workdir = '/builds/worker'
@@ -319,34 +309,12 @@ def create_chromium_fetch_task(config, job):
         )
     ]
 
-    env = {
-        'UPLOAD_DIR': '/builds/worker/artifacts'
+    return {
+        'command': cmd,
+        'artifact_name': artifact_name,
+        'digest_data': [
+            "revision={}".format(revision),
+            "platform={}".format(platform),
+            "artifact_name={}".format(artifact_name),
+        ],
     }
-
-    task = make_base_task(config, name, job['description'], cmd)
-    task['treeherder']['symbol'] = join_symbol('Fetch', name)
-    task['worker']['artifacts'] = [{
-        'type': 'directory',
-        'name': 'public',
-        'path': '/builds/worker/artifacts',
-    }]
-    task['worker']['env'] = env
-    task['attributes']['fetch-artifact'] = 'public/%s' % artifact_name
-
-    if not taskgraph.fast:
-        cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
-
-        # This adds the level to the index path automatically.
-        add_optimization(
-            config,
-            task,
-            cache_type=CACHE_TYPE,
-            cache_name=cache_name,
-            digest_data=[
-                "revision={}".format(revision),
-                "platform={}".format(platform),
-                "artifact_name={}".format(artifact_name),
-            ],
-        )
-
-    return task
