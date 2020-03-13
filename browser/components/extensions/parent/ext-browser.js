@@ -1221,13 +1221,6 @@ class WindowManager extends WindowManagerBase {
     return this.getWrapper(window);
   }
 
-  canAccessWindow(window, context) {
-    return (
-      (context && context.canAccessWindow(window)) ||
-      this.extension.canAccessWindow(window)
-    );
-  }
-
   *getAll(context) {
     for (let window of windowTracker.browserWindows()) {
       if (!this.canAccessWindow(window, context)) {

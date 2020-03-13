@@ -2070,6 +2070,23 @@ class WindowManagerBase {
     }
   }
 
+  /**
+   * Returns whether this window can be accessed by the extension in the given
+   * context.
+   *
+   * @param {DOMWindow} window
+   *        The browser window that is being tested
+   * @param {BaseContext|null} context
+   *        The extension context for which this test is being performed.
+   * @returns {boolean}
+   */
+  canAccessWindow(window, context) {
+    return (
+      (context && context.canAccessWindow(window)) ||
+      this.extension.canAccessWindow(window)
+    );
+  }
+
   // The JSDoc validator does not support @returns tags in abstract functions or
   // star functions without return statements.
   /* eslint-disable valid-jsdoc */
