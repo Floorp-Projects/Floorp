@@ -4011,7 +4011,7 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
  * JSTryNote        tryNotes()
  */
 
-ImmutableScriptData* js::ImmutableScriptData::new_(
+js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
     JSContext* cx, uint32_t codeLength, uint32_t noteLength,
     uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
   // Compute size including trailing arrays
@@ -4027,8 +4027,9 @@ ImmutableScriptData* js::ImmutableScriptData::new_(
 
   // Constuct the ImmutableScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) ImmutableScriptData(codeLength, noteLength, numResumeOffsets,
-                                       numScopeNotes, numTryNotes);
+  UniquePtr<ImmutableScriptData> result(new (raw) ImmutableScriptData(
+      codeLength, noteLength, numResumeOffsets, numScopeNotes, numTryNotes));
+  return result;
 }
 
 RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
