@@ -77,13 +77,11 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
     object PrivateBrowsingDescription : AdapterItem(PrivateBrowsingDescriptionViewHolder.LAYOUT_ID)
     data class NoContentMessage(
-        @DrawableRes val icon: Int,
         @StringRes val header: Int,
         @StringRes val description: Int
     ) : AdapterItem(NoContentMessageViewHolder.LAYOUT_ID)
 
     data class NoContentMessageWithAction(
-        @DrawableRes val icon: Int,
         @StringRes val header: Int,
         @StringRes val description: Int,
         @DrawableRes val buttonIcon: Int = 0,
@@ -208,12 +206,12 @@ class SessionControlAdapter(
             }
             is NoContentMessageWithActionViewHolder -> {
                 val listener = { interactor.onOpenNewTabClicked() }
-                val (icon, header, description, buttonIcon, buttonText) = item as AdapterItem.NoContentMessageWithAction
-                holder.bind(icon, header, description, buttonIcon, buttonText, listener)
+                val (header, description, buttonIcon, buttonText) = item as AdapterItem.NoContentMessageWithAction
+                holder.bind(header, description, buttonIcon, buttonText, listener)
             }
             is NoContentMessageViewHolder -> {
-                val (icon, header, description) = item as AdapterItem.NoContentMessage
-                holder.bind(icon, header, description)
+                val (header, description) = item as AdapterItem.NoContentMessage
+                holder.bind(header, description)
             }
             is CollectionViewHolder -> {
                 val (collection, expanded, sessionHasOpenTabs) = item as AdapterItem.CollectionItem

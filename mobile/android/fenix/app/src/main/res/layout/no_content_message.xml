@@ -18,10 +18,7 @@
             android:id="@+id/no_content_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:drawableTint="?primaryText"
-            android:drawablePadding="8dp"
             tools:text="@tools:sample/lorem"
-            tools:drawableEnd="@drawable/ic_tab_collection"
             android:textAppearance="@style/HeaderTextStyle"
             android:textSize="16sp" />
 

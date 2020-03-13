@@ -5,22 +5,18 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.no_content_message.view.*
-import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
 open class NoContentMessageViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
 
     fun bind(
-        @DrawableRes icon: Int,
         @StringRes header: Int,
         @StringRes description: Int
     ) {
         with(view.context) {
-            view.no_content_header.putCompoundDrawablesRelativeWithIntrinsicBounds(end = getDrawable(icon))
             view.no_content_header.text = getString(header)
             view.no_content_description.text = getString(description)
         }

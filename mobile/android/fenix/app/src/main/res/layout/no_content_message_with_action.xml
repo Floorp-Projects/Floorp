@@ -18,11 +18,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
-        android:drawablePadding="8dp"
         android:textAppearance="@style/HeaderTextStyle"
         android:textSize="16sp"
-        app:drawableTint="?primaryText"
-        tools:drawableEnd="@drawable/ic_tabs"
         tools:text="@tools:sample/lorem" />
 
     <TextView

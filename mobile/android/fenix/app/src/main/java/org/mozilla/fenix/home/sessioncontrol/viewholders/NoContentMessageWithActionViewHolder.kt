@@ -16,7 +16,6 @@ class NoContentMessageWithActionViewHolder(
 ) : NoContentMessageViewHolder(view) {
 
     /**
-     * @param icon The visible label for header text this menu item.
      * @param header ID of string resource for title text.
      * @param description ID of string resource for description text.
      * @param buttonIcon Optional ID of drawable resource for button icon.
@@ -25,14 +24,13 @@ class NoContentMessageWithActionViewHolder(
      */
     @Suppress("LongParameterList")
     fun bind(
-        @DrawableRes icon: Int,
         @StringRes header: Int,
         @StringRes description: Int,
         @DrawableRes buttonIcon: Int = 0,
         @StringRes buttonText: Int = 0,
         listener: (() -> Unit)? = null
     ) {
-        super.bind(icon, header, description)
+        super.bind(header, description)
         with(view.context) {
 
             if (buttonIcon != 0 || buttonText != 0) {
