@@ -1,7 +1,7 @@
 {
   "applications": {
     "gecko": {
-      "id": "set-tab-active@tests.mozilla.org"
+      "id": "set-tab-active-2@tests.mozilla.org"
     }
   },
   "manifest_version": 2,
