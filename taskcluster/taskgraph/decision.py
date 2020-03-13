@@ -25,6 +25,7 @@ from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
 from taskgraph.util.python_path import find_object
 from .try_option_syntax import parse_message
+from .util.chunking import resolver
 from .util.hg import get_hg_revision_branch, get_hg_commit_message
 from .util.partials import populate_release_history
 from .util.schema import validate_schema, Schema
@@ -212,6 +213,9 @@ def taskgraph_decision(options, parameters=None):
     # write out the public/manifests-by-task.json file
     write_artifact('manifests-by-task.json.gz',
                    full_task_graph_to_manifests_by_task(full_task_json))
+
+    # write out the public/tests-by-manifest.json file
+    write_artifact('tests-by-manifest.json.gz', resolver.tests_by_manifest)
 
     # this is just a test to check whether the from_json() function is working
     _, _ = TaskGraph.from_json(full_task_json)
