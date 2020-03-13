@@ -87,7 +87,7 @@ mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerActionPathToVR(
 }
 
 mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerManifestPathToVR(
-    const OpenVRControllerType& aType, const nsCString& aPath) {
+    const VRControllerType& aType, const nsCString& aPath) {
   mOpenVRControllerManifest.Put(static_cast<uint32_t>(aType), aPath);
   return IPC_OK();
 }
@@ -187,7 +187,7 @@ bool VRParent::GetOpenVRControllerActionPath(nsCString* aPath) {
   return false;
 }
 
-bool VRParent::GetOpenVRControllerManifestPath(OpenVRControllerType aType,
+bool VRParent::GetOpenVRControllerManifestPath(VRControllerType aType,
                                                nsCString* aPath) {
   return mOpenVRControllerManifest.Get(static_cast<uint32_t>(aType), aPath);
 }

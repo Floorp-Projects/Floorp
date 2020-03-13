@@ -11,7 +11,7 @@
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/ipc/CrashReporterHelper.h"
 #include "mozilla/VsyncDispatcher.h"
-#include "gfxVR.h"
+#include "moz_external_vr.h"
 
 namespace mozilla {
 namespace dom {
@@ -46,7 +46,7 @@ class VRChild final : public PVRChild,
   mozilla::ipc::IPCResult RecvOpenVRControllerActionPathToParent(
       const nsCString& aPath);
   mozilla::ipc::IPCResult RecvOpenVRControllerManifestPathToParent(
-      const OpenVRControllerType& aType, const nsCString& aPath);
+      const VRControllerType& aType, const nsCString& aPath);
   mozilla::ipc::IPCResult RecvInitComplete();
 
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
