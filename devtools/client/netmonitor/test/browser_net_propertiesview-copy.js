@@ -33,7 +33,7 @@ add_task(async function() {
 
   const responsePanel = document.querySelector("#response-panel");
 
-  const objectRow = responsePanel.querySelectorAll(".objectRow")[1];
+  const objectRow = responsePanel.querySelectorAll(".objectRow")[0];
   const stringRow = responsePanel.querySelectorAll(".stringRow")[0];
 
   /* Test for copy an object */
@@ -46,9 +46,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" }, objectRow);
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "properties-view-context-menu-copyall").click();
-  }, `{"JSON":{"obj":{"type":"string"}},` +
-    `"Response Payload":{"EDITOR_CONFIG":{"text":` +
-    `"{\\"obj\\": {\\"type\\": \\"string\\" }}","mode":"application/json"}}}`);
+  }, `{"obj":{"type":"string"}}`);
 
   /* Test for copy a single row */
   EventUtils.sendMouseEvent({ type: "contextmenu" }, stringRow);
@@ -95,9 +93,7 @@ add_task(async function() {
 
   const cookiesPanel = document.querySelector("#cookies-panel");
 
-  const objectRows = cookiesPanel.querySelectorAll(
-    ".objectRow:not(.tree-section)"
-  );
+  const objectRows = cookiesPanel.querySelectorAll(".objectRow");
   const stringRows = cookiesPanel.querySelectorAll(".stringRow");
 
   const expectedResponseCookies = [

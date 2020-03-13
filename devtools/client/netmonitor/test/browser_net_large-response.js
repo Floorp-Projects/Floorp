@@ -52,12 +52,19 @@ add_task(async function() {
     }
   );
 
-  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
+  wait = waitForDOM(document, "#response-panel .accordion-item", 2);
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
+  await wait;
+
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
+  const payloadHeader = document.querySelector(
+    "#response-panel .accordion-item:last-child .accordion-header"
+  );
+  clickElement(payloadHeader, monitor);
   await wait;
 
   ok(

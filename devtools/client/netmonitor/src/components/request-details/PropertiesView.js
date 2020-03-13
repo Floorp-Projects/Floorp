@@ -50,7 +50,7 @@ const { div } = dom;
 class PropertiesView extends Component {
   static get propTypes() {
     return {
-      object: PropTypes.object,
+      object: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
       provider: PropTypes.object,
       enableInput: PropTypes.bool,
       expandableStrings: PropTypes.bool,
@@ -59,6 +59,7 @@ class PropertiesView extends Component {
       cropLimit: PropTypes.number,
       targetSearchResult: PropTypes.object,
       resetTargetSearchResult: PropTypes.func,
+      mode: PropTypes.symbol,
     };
   }
 
@@ -169,7 +170,7 @@ class PropertiesView extends Component {
         // FIXME: A workaround for the issue in StringRep
         // Force StringRep to crop the text every time
         member: Object.assign({}, member, { open: false }),
-        mode: MODE.TINY,
+        mode: this.props.mode || MODE.TINY,
         cropLimit: this.props.cropLimit,
         noGrip: true,
       })
