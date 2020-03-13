@@ -585,9 +585,15 @@ class WindowManager extends WindowManagerBase {
     return this.getWrapper(window);
   }
 
-  *getAll() {
+  *getAll(context) {
     for (let window of windowTracker.browserWindows()) {
-      yield this.getWrapper(window);
+      if (!this.canAccessWindow(window, context)) {
+        continue;
+      }
+      let wrapped = this.getWrapper(window);
+      if (wrapped) {
+        yield wrapped;
+      }
     }
   }
 
