@@ -3556,12 +3556,34 @@ already_AddRefed<GeckoContentController> APZCTreeManager::GetContentController(
 bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
                                      APZTestData* aOutData) {
   AssertOnUpdaterThread();
-  MutexAutoLock lock(mTestDataLock);
-  auto it = mTestData.find(aLayersId);
-  if (it == mTestData.end()) {
-    return false;
+
+  {  // copy the relevant test data into aOutData while holding the
+     // mTestDataLock
+    MutexAutoLock lock(mTestDataLock);
+    auto it = mTestData.find(aLayersId);
+    if (it == mTestData.end()) {
+      return false;
+    }
+    *aOutData = *(it->second);
   }
-  *aOutData = *(it->second);
+
+  {  // add some additional "current state" into the returned APZTestData
+    RecursiveMutexAutoLock treeLock(
+        mTreeLock);                   // for IsCurrentlyCheckerboarding
+    MutexAutoLock mapLock(mMapLock);  // for mApzcMap
+    for (const auto& mapping : mApzcMap) {
+      if (mapping.first.mLayersId != aLayersId) {
+        continue;
+      }
+      AsyncPanZoomController* apzc = mapping.second;
+      std::string viewId = std::to_string(mapping.first.mScrollId);
+      std::string apzcState;
+      if (apzc->IsCurrentlyCheckerboarding()) {
+        apzcState += "checkerboarding,";
+      }
+      aOutData->RecordAdditionalData(viewId, apzcState);
+    }
+  }
   return true;
 }
 
