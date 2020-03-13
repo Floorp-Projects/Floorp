@@ -8193,6 +8193,10 @@ nsresult nsDocShell::MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
 
   *aDidHandleLoad = false;
 
+  if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate();
   // If we don't have a delegate or we're trying to load the error page, we
   // shouldn't be trying to do sandbox loads.
