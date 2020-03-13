@@ -231,34 +231,37 @@ class AutoCompleteParent extends JSWindowActorParent {
     this.openedPopup.view = AutoCompleteResultView;
     this.openedPopup.selectedIndex = -1;
 
-    if (results.length) {
-      // Reset fields that were set from the last time the search popup was open
-      this.openedPopup.mInput = AutoCompleteResultView;
-      // Temporarily increase the maxRows as we don't want to show
-      // the scrollbar in login or form autofill popups.
-      if (
-        resultStyles.size &&
-        (resultStyles.has("autofill-profile") ||
-          resultStyles.has("loginsFooter"))
-      ) {
-        this.openedPopup._normalMaxRows = this.openedPopup.maxRows;
-        this.openedPopup.mInput.maxRows = 100;
-      }
-      this.openedPopup.addEventListener("popuphidden", this);
-      this.openedPopup.addEventListener("popupshowing", this);
-      this.openedPopup.openPopupAtScreenRect(
-        "after_start",
-        rect.left,
-        rect.top,
-        rect.width,
-        rect.height,
-        false,
-        false
-      );
-      this.openedPopup.invalidate();
-    } else {
-      this.closePopup();
+    // Reset fields that were set from the last time the search popup was open
+    this.openedPopup.mInput = AutoCompleteResultView;
+    // Temporarily increase the maxRows as we don't want to show
+    // the scrollbar in login or form autofill popups.
+    if (
+      resultStyles.size &&
+      (resultStyles.has("autofill-profile") || resultStyles.has("loginsFooter"))
+    ) {
+      this.openedPopup._normalMaxRows = this.openedPopup.maxRows;
+      this.openedPopup.mInput.maxRows = 100;
     }
+    this.openedPopup.addEventListener("popuphidden", this);
+    this.openedPopup.addEventListener("popupshowing", this);
+    this.openedPopup.openPopupAtScreenRect(
+      "after_start",
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height,
+      false,
+      false
+    );
+    this.openedPopup.invalidate();
+    this._maybeRecordPasswordGenerationShownTelemetryEvent(results);
+  }
+
+  _maybeRecordPasswordGenerationShownTelemetryEvent(results) {
+    let actor = this.browsingContext.currentWindowGlobal.getActor(
+      "LoginManager"
+    );
+    actor.maybeRecordPasswordGenerationShownTelemetryEvent(results);
   }
 
   invalidate(results) {
@@ -271,6 +274,7 @@ class AutoCompleteParent extends JSWindowActorParent {
     } else {
       AutoCompleteResultView.setResults(this, results);
       this.openedPopup.invalidate();
+      this._maybeRecordPasswordGenerationShownTelemetryEvent(results);
     }
   }
 
