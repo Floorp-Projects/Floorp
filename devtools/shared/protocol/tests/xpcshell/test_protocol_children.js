@@ -378,6 +378,11 @@ function expectRootChildren(size) {
   }
 }
 
+function childrenOfType(pool, type) {
+  const children = [...rootFront.poolChildren()];
+  return children.filter(child => child instanceof type);
+}
+
 add_task(async function() {
   DevToolsServer.createRootActor = conn => {
     return RootActor(conn);
@@ -404,6 +409,7 @@ add_task(async function() {
   await testManyChildren(trace);
   await testGenerator(trace);
   await testPolymorphism(trace);
+  await testUnmanageChildren(trace);
 
   await client.close();
 });
@@ -711,4 +717,18 @@ async function testPolymorphism(trace) {
   Assert.throws(() => {
     rootFront.requestPolymorphism(0, rootFront);
   }, /Was expecting one of these actors 'childActor,otherChildActor' but instead got an actor of type: 'root'/);
+}
+
+async function testUnmanageChildren(trace) {
+  // There is already one front of type OtherChildFront
+  Assert.equal(childrenOfType(rootFront, OtherChildFront).length, 1);
+
+  // Create another front of type OtherChildFront
+  const front = await rootFront.getPolymorphism(1);
+  Assert.ok(front instanceof OtherChildFront);
+  Assert.equal(childrenOfType(rootFront, OtherChildFront).length, 2);
+
+  // Remove all fronts of type OtherChildFront
+  rootFront.unmanageChildren(OtherChildFront);
+  Assert.equal(childrenOfType(rootFront, OtherChildFront).length, 0);
 }

@@ -48,6 +48,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     this.before("paused", this._beforePaused);
     this.before("resumed", this._beforeResumed);
     this.before("detached", this._beforeDetached);
+    this.targetFront.on("will-navigate", this._onWillNavigate.bind(this));
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "threadActor";
   }
@@ -262,14 +263,6 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     this[gripCacheName] = {};
   }
 
-  _clearFrameFronts() {
-    for (const front of this.poolChildren()) {
-      if (front instanceof FrameFront) {
-        this.unmanage(front);
-      }
-    }
-  }
-
   /**
    * Invalidate pause-lifetime grip clients and clear the list of current grip
    * clients.
@@ -294,14 +287,18 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   _beforeResumed() {
     this._state = "attached";
     this._onThreadState(null);
-    this._clearFrameFronts();
+    this.unmanageChildren(FrameFront);
   }
 
   _beforeDetached(packet) {
     this._state = "detached";
     this._onThreadState(packet);
     this._clearThreadGrips();
-    this._clearFrameFronts();
+    this.unmanageChildren(FrameFront);
+  }
+
+  _onWillNavigate() {
+    this.unmanageChildren(SourceFront);
   }
 
   /**
