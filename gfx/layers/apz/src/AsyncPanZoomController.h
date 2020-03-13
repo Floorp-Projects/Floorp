@@ -1207,6 +1207,12 @@ class AsyncPanZoomController {
   CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const;
   CSSToParentLayerScale2D GetEffectiveZoom(AsyncTransformConsumer aMode) const;
 
+  /**
+   * Returns the visible portion of the content scrolled by this APZC, in
+   * CSS pixels. The caller must have acquired the mRecursiveMutex lock.
+   */
+  CSSRect GetVisibleRect(const RecursiveMutexAutoLock& aProofOfLock) const;
+
  private:
   friend class AutoApplyAsyncTestAttributes;
 
