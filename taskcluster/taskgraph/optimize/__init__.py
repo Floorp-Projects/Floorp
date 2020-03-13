@@ -325,3 +325,9 @@ relevant_tests = {
 bugbug_push_schedules = {
     'test': Either('skip-unless-schedules', 'bugbug-push-schedules'),
 }
+
+# Provides a stable history of SETA's performance in the event we make it
+# non-default in the future.
+seta = {
+    'test': Either('skip-unless-schedules', 'seta'),
+}
