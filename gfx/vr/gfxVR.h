@@ -41,14 +41,6 @@ class VRManagerPromise;
 // conservative value.
 static const int kVRMaxLatencyFrames = 100;
 
-enum class OpenVRControllerType : uint16_t {
-  Vive,
-  WMR,
-  Knuckles,
-  Cosmos,
-  NumOpenVRControllerTypes
-};
-
 struct VRDisplayInfo {
   uint32_t mDisplayID;
   uint32_t mPresentingGroups;
