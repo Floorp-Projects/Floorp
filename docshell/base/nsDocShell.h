@@ -151,6 +151,9 @@ class nsDocShell final : public nsDocLoader,
 
     // Whether the load was triggered by user interaction.
     INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED = 0x1000,
+
+    // Whether the load should go through LoadURIDelegate.
+    INTERNAL_LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE = 0x2000,
   };
 
   // Event type dispatched by RestorePresentation

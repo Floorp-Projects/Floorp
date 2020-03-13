@@ -233,6 +233,11 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_FORCE_TRR = 0x2000000;
 
   /**
+   * This load should bypass the LoadURIDelegate.loadUri.
+   */
+  const unsigned long LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE = 0x4000000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content
