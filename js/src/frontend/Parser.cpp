@@ -262,6 +262,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionNodeType funNode, JSFunction* fun, uint32_t toStringStart,
     Directives inheritedDirectives, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind) {
+  MOZ_ASSERT(funNode);
   MOZ_ASSERT(fun);
 
   size_t index = this->getCompilationInfo().funcData.length();
@@ -287,9 +288,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   }
 
   traceListHead_ = funbox;
-  if (funNode) {
-    handler_.setFunctionBox(funNode, funbox);
-  }
+  handler_.setFunctionBox(funNode, funbox);
 
   return funbox;
 }
@@ -299,6 +298,8 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionNodeType funNode, Handle<FunctionCreationData> fcd,
     uint32_t toStringStart, Directives inheritedDirectives,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
+  MOZ_ASSERT(funNode);
+
   size_t index = this->getCompilationInfo().funcData.length();
   if (!this->getCompilationInfo().funcData.emplaceBack(
           mozilla::AsVariant(fcd.get()))) {
@@ -323,9 +324,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   }
 
   traceListHead_ = funbox;
-  if (funNode) {
-    handler_.setFunctionBox(funNode, funbox);
-  }
+  handler_.setFunctionBox(funNode, funbox);
 
   return funbox;
 }
