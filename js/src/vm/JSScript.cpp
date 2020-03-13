@@ -719,6 +719,30 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
   freeSharedData();
 }
 
+void js::BaseScript::swapData(UniquePtr<PrivateScriptData>& other) {
+  PrivateScriptData* tmp = other.release();
+
+  if (data_) {
+    // When disconnecting script data from the BaseScript, we must pre-barrier
+    // all edges contained in it. Those edges are no longer reachable from
+    // current location in the graph.
+    if (zone()->needsIncrementalBarrier()) {
+      data_->trace(zone()->barrierTracer());
+    }
+
+    RemoveCellMemory(this, data_->allocationSize(),
+                     MemoryUse::ScriptPrivateData);
+  }
+
+  std::swap(tmp, data_);
+
+  if (data_) {
+    AddCellMemory(this, data_->allocationSize(), MemoryUse::ScriptPrivateData);
+  }
+
+  other.reset(tmp);
+}
+
 template <XDRMode mode>
 /* static */
 XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
@@ -4367,15 +4391,14 @@ uint32_t JSScript::vtuneMethodID() {
 bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
                                        uint32_t ngcthings) {
   cx->check(script);
-  MOZ_ASSERT(!script->data_);
 
-  PrivateScriptData* data = PrivateScriptData::new_(cx, ngcthings);
+  UniquePtr<PrivateScriptData> data(PrivateScriptData::new_(cx, ngcthings));
   if (!data) {
     return false;
   }
 
-  script->data_ = data;
-  AddCellMemory(script, data->allocationSize(), MemoryUse::ScriptPrivateData);
+  script->swapData(data);
+  MOZ_ASSERT(!data);
 
   return true;
 }
@@ -5480,12 +5503,12 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
   // Allocate a PrivateScriptData if it will not be empty. Lazy class
   // constructors also need PrivateScriptData for field lists.
   if (ngcthings || fun->isClassConstructor()) {
-    lazy->data_ = PrivateScriptData::new_(cx, ngcthings);
-    if (!lazy->data_) {
+    UniquePtr<PrivateScriptData> data(PrivateScriptData::new_(cx, ngcthings));
+    if (!data) {
       return nullptr;
     }
-    AddCellMemory(lazy, lazy->data_->allocationSize(),
-                  MemoryUse::ScriptPrivateData);
+    lazy->swapData(data);
+    MOZ_ASSERT(!data);
   }
 
   cx->realm()->scheduleDelazificationForDebugger();
