@@ -273,16 +273,6 @@ template <>
 struct ParamTraits<mozilla::layers::RenderRootBoundary>
     : public PlainOldDataSerializer<mozilla::layers::RenderRootBoundary> {};
 
-// When ScrollbarData is stored on the layer tree, it's part of
-// SimpleAttributes which itself uses PlainOldDataSerializer, so
-// we don't need a ParamTraits specialization for ScrollbarData
-// separately. Here, however, ScrollbarData is stored as part
-// of WebRenderLayerScrollData whose fields are serialized
-// individually, so we do.
-template <>
-struct ParamTraits<mozilla::layers::ScrollbarData>
-    : public PlainOldDataSerializer<mozilla::layers::ScrollbarData> {};
-
 template <>
 struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
   typedef mozilla::layers::WebRenderLayerScrollData paramType;
