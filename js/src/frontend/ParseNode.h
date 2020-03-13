@@ -2281,12 +2281,6 @@ inline bool ParseNode::isConstant() {
   }
 }
 
-enum ParseReportKind {
-  ParseError,
-  ParseWarning,
-  ParseStrictError
-};
-
 static inline ParseNode* FunctionFormalParametersList(ParseNode* fn,
                                                       unsigned* numFormals) {
   MOZ_ASSERT(fn->isKind(ParseNodeKind::Function));
