@@ -6312,6 +6312,7 @@ impl Renderer {
             if self.debug_overlay_state.current_size.is_some() {
                 compositor.destroy_surface(NativeSurfaceId::DEBUG_OVERLAY);
             }
+            compositor.deinit();
         }
         self.gpu_cache_texture.deinit(&mut self.device);
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
