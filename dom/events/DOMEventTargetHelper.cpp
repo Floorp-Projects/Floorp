@@ -333,6 +333,10 @@ nsresult DOMEventTargetHelper::CheckCurrentGlobalCorrectness() const {
     return NS_ERROR_FAILURE;
   }
 
+  if (mParentObject->IsDying()) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
