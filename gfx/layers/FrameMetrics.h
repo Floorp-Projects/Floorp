@@ -217,7 +217,7 @@ struct FrameMetrics {
    * Calculate the composition bounds of this frame in the CSS pixels of
    * the content surrounding the scroll frame. (This can be thought of as
    * "parent CSS" pixels).
-   * Note that it does not make to ask for the composition bounds in the
+   * Note that it does not make sense to ask for the composition bounds in the
    * CSS pixels of the scrolled content (that is, regular CSS pixels),
    * because the origin of the composition bounds is not meaningful in that
    * coordinate space. (The size is, use CalculateCompositedSizeInCssPixels()
@@ -554,7 +554,9 @@ struct FrameMetrics {
   // change during zooming).
   //
   // The origin of the composition bounds is relative to the layer tree origin.
-  // Unlike the scroll port's origin, it does not change during scrolling.
+  // Unlike the scroll port's origin, it does not change during scrolling of
+  // the scrollable layer to which it is associated. However, it may change due
+  // to scrolling of ancestor layers.
   //
   // This value is provided by Gecko at layout/paint time.
   ParentLayerRect mCompositionBounds;
