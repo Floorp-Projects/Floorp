@@ -40,6 +40,11 @@ TASK_CONFIG_TESTS = {
         (['--rebuild', '1'], SystemExit),
         (['--rebuild', '21'], SystemExit),
     ],
+    'strategy': [
+        ([], None),
+        (['--strategy', 'foo'], {'optimize-strategies': 'taskgraph.optimize:foo'}),
+        (['--strategy', 'foo:bar'], {'optimize-strategies': 'foo:bar'}),
+    ],
     'worker-overrides': [
         ([], None),
         (['--worker-override', 'alias=worker/pool'],
