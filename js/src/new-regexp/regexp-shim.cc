@@ -50,6 +50,70 @@ std::ostream& operator<<(std::ostream& os, const AsUC32& c) {
   return os << buf;
 }
 
+HandleScope::HandleScope(Isolate* isolate)
+  : isolate_(isolate) {
+  isolate->openHandleScope(*this);
+}
+
+HandleScope::~HandleScope() {
+  isolate_->closeHandleScope(level_, non_gc_level_);
+}
+
+template <typename T>
+Handle<T>::Handle(T object, Isolate* isolate)
+    : location_(isolate->getHandleLocation(JS::Value(object))) {}
+
+template Handle<ByteArray>::Handle(ByteArray b, Isolate* isolate);
+template Handle<String>::Handle(String s, Isolate* isolate);
+
+template <typename T>
+Handle<T>::Handle(JS::Value value, Isolate* isolate)
+  : location_(isolate->getHandleLocation(value)) {
+  T::cast(Object(value)); // Assert that value has the correct type.
+}
+
+JS::Value* Isolate::getHandleLocation(JS::Value value) {
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!handleArena_.Append(value)) {
+    oomUnsafe.crash("Irregexp handle allocation");
+  }
+  return &handleArena_.GetLast();
+}
+
+void* Isolate::allocatePseudoHandle(size_t bytes) {
+  PseudoHandle<void> ptr;
+  ptr.reset(js_malloc(bytes));
+  if (!ptr) {
+    return nullptr;
+  }
+  if (!uniquePtrArena_.Append(std::move(ptr))) {
+    return nullptr;
+  }
+  return uniquePtrArena_.GetLast().get();
+}
+
+template <typename T>
+PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
+  for (auto iter = uniquePtrArena_.IterFromLast(); !iter.Done(); iter.Prev()) {
+    auto& entry = iter.Get();
+    if (entry.get() == ptr) {
+      PseudoHandle<T> result;
+      result.reset(static_cast<T*>(entry.release()));
+      return result;
+    }
+  }
+  MOZ_CRASH("Tried to take ownership of pseudohandle that is not in the arena");
+}
+
+void Isolate::trace(JSTracer* trc) {
+  js::gc::AssertRootMarkingPhase(trc);
+
+  for (auto iter = handleArena_.Iter(); !iter.Done(); iter.Next()) {
+    auto& elem = iter.Get();
+    JS::GCPolicy<JS::Value>::trace(trc, &elem, "Isolate handle arena");
+  }
+}
+
 // TODO: Map flags to jitoptions
 bool FLAG_correctness_fuzzer_suppressions = false;
 bool FLAG_enable_regexp_unaligned_accesses = false;
