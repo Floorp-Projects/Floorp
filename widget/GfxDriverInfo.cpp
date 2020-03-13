@@ -454,6 +454,41 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x06c0, INT32_MAX);
       break;
     case DeviceFamily::IntelRolloutWebRender:
+      // broadwell gt2+ (gen8)
+      APPEND_DEVICE(0x1612);
+      APPEND_DEVICE(0x1616);
+      APPEND_DEVICE(0x161a);
+      APPEND_DEVICE(0x161b);
+      APPEND_DEVICE(0x161d);
+      APPEND_DEVICE(0x161e);
+      APPEND_DEVICE(0x1622);
+      APPEND_DEVICE(0x1626);
+      APPEND_DEVICE(0x162a);
+      APPEND_DEVICE(0x162b);
+      APPEND_DEVICE(0x162d);
+      APPEND_DEVICE(0x162e);
+      APPEND_DEVICE(0x1632);
+      APPEND_DEVICE(0x1636);
+      APPEND_DEVICE(0x163a);
+      APPEND_DEVICE(0x163b);
+      APPEND_DEVICE(0x163d);
+      APPEND_DEVICE(0x163e);
+
+#ifdef MOZ_WIDGET_GTK
+      // Gen7.5 not allowed until bug 1576637 is resolved.
+      APPEND_DEVICE(0x0412);
+      APPEND_DEVICE(0x0416);
+      APPEND_DEVICE(0x041a);
+      APPEND_DEVICE(0x041b);
+      APPEND_DEVICE(0x041e);
+      APPEND_DEVICE(0x0a12);
+      APPEND_DEVICE(0x0a16);
+      APPEND_DEVICE(0x0a1a);
+      APPEND_DEVICE(0x0a1b);
+      APPEND_DEVICE(0x0a1e);
+#endif
+      [[fallthrough]];
+    case DeviceFamily::IntelModernRolloutWebRender:
       // skylake gt2+
       APPEND_DEVICE(0x1912);
       APPEND_DEVICE(0x1913);
@@ -505,39 +540,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x9bc8);
       APPEND_RANGE(0x9bca, 0x9bcc);
 
-      // broadwell gt2+
-      APPEND_DEVICE(0x1612);
-      APPEND_DEVICE(0x1616);
-      APPEND_DEVICE(0x161a);
-      APPEND_DEVICE(0x161b);
-      APPEND_DEVICE(0x161d);
-      APPEND_DEVICE(0x161e);
-      APPEND_DEVICE(0x1622);
-      APPEND_DEVICE(0x1626);
-      APPEND_DEVICE(0x162a);
-      APPEND_DEVICE(0x162b);
-      APPEND_DEVICE(0x162d);
-      APPEND_DEVICE(0x162e);
-      APPEND_DEVICE(0x1632);
-      APPEND_DEVICE(0x1636);
-      APPEND_DEVICE(0x163a);
-      APPEND_DEVICE(0x163b);
-      APPEND_DEVICE(0x163d);
-      APPEND_DEVICE(0x163e);
-
-#ifdef MOZ_WIDGET_GTK
-      // Gen7.5 not allowed until bug 1576637 is resolved.
-      APPEND_DEVICE(0x0412);
-      APPEND_DEVICE(0x0416);
-      APPEND_DEVICE(0x041a);
-      APPEND_DEVICE(0x041b);
-      APPEND_DEVICE(0x041e);
-      APPEND_DEVICE(0x0a12);
-      APPEND_DEVICE(0x0a16);
-      APPEND_DEVICE(0x0a1a);
-      APPEND_DEVICE(0x0a1b);
-      APPEND_DEVICE(0x0a1e);
-#endif
       break;
     case DeviceFamily::AtiRolloutWebRender:
       APPEND_RANGE(0x6600, 0x66af);
@@ -666,6 +668,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelHD520:
     case DeviceFamily::IntelMobileHDGraphics:
     case DeviceFamily::IntelRolloutWebRender:
+    case DeviceFamily::IntelModernRolloutWebRender:
     case DeviceFamily::Bug1116812:
     case DeviceFamily::Bug1155608:
     case DeviceFamily::Bug1207665:
