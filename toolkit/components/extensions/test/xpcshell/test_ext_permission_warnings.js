@@ -25,12 +25,12 @@ async function getManifestPermissions(extensionData) {
   return extension.manifestPermissions;
 }
 
-function getPermissionWarnings(manifestPermissions) {
+function getPermissionWarnings(manifestPermissions, options) {
   let info = {
     permissions: manifestPermissions,
     appName: DUMMY_APP_NAME,
   };
-  let { msgs } = ExtensionData.formatPermissionStrings(info, bundle);
+  let { msgs } = ExtensionData.formatPermissionStrings(info, bundle, options);
   return msgs;
 }
 
@@ -223,6 +223,71 @@ add_task(async function host_permissions() {
           bundle.GetStringFromName("webextPerms.hostDescription.tooManySites")
         ).replace("#1", "2"),
       ],
+      options: {
+        collapseOrigins: true,
+      },
+    },
+    {
+      description:
+        "many host permissions without item limit in the warning list",
+      manifest: {
+        permissions: [
+          "http://a/",
+          "http://b/",
+          "http://c/",
+          "http://d/",
+          "http://e/*",
+          "http://*.1/",
+          "http://*.2/",
+          "http://*.3/",
+          "http://*.4/",
+          "http://*.5/",
+        ],
+      },
+      expectedOrigins: [
+        "http://a/",
+        "http://b/",
+        "http://c/",
+        "http://d/",
+        "http://e/*",
+        "http://*.1/",
+        "http://*.2/",
+        "http://*.3/",
+        "http://*.4/",
+        "http://*.5/",
+      ],
+      expectedWarnings: [
+        bundle.formatStringFromName("webextPerms.hostDescription.wildcard", [
+          "1",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.wildcard", [
+          "2",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.wildcard", [
+          "3",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.wildcard", [
+          "4",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.wildcard", [
+          "5",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.oneSite", [
+          "a",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.oneSite", [
+          "b",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.oneSite", [
+          "c",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.oneSite", [
+          "d",
+        ]),
+        bundle.formatStringFromName("webextPerms.hostDescription.oneSite", [
+          "e",
+        ]),
+      ],
     },
   ];
   for (let {
@@ -230,6 +295,7 @@ add_task(async function host_permissions() {
     manifest,
     expectedOrigins,
     expectedWarnings,
+    options,
   } of permissionTestCases) {
     let manifestPermissions = await getManifestPermissions({
       manifest,
@@ -246,7 +312,7 @@ add_task(async function host_permissions() {
       `Expected no non-host permissions (${description})`
     );
 
-    let warnings = getPermissionWarnings(manifestPermissions);
+    let warnings = getPermissionWarnings(manifestPermissions, options);
     deepEqual(warnings, expectedWarnings, `Expected warnings (${description})`);
   }
 });
