@@ -319,7 +319,7 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
       // function scope, which encloses the var scope. This means the
       // isVarRedeclaredInInnermostScope call above would not catch this
       // case, so test it manually.
-      if (AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(name)) {
+      if (DeclaredNamePtr p = funScope.lookupDeclaredName(name)) {
         DeclarationKind declaredKind = p->value()->kind();
         if (DeclarationKindIsParameter(declaredKind)) {
           redeclaredKind = Some(declaredKind);
