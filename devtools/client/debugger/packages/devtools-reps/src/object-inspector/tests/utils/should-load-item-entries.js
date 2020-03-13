@@ -35,7 +35,7 @@ describe("shouldLoadItemEntries", () => {
     expect(shouldLoadItemEntries(entriesNode, loadedProperties)).toBeFalsy();
   });
 
-  it("returns false for entries on a Map with everything in preview", () => {
+  it("returns true for entries on a Map with everything in preview", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
@@ -43,10 +43,10 @@ describe("shouldLoadItemEntries", () => {
       },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
-    expect(shouldLoadItemEntries(entriesNode)).toBeFalsy();
+    expect(shouldLoadItemEntries(entriesNode)).toBeTruthy();
   });
 
-  it("returns false for entries on a Set with everything in preview", () => {
+  it("returns true for entries on a Set with everything in preview", () => {
     const setStubNode = createNode({
       name: "set",
       contents: {
@@ -54,7 +54,7 @@ describe("shouldLoadItemEntries", () => {
       },
     });
     const entriesNode = makeNodesForEntries(setStubNode);
-    expect(shouldLoadItemEntries(entriesNode)).toBeFalsy();
+    expect(shouldLoadItemEntries(entriesNode)).toBeTruthy();
   });
 
   it("returns false for a Set node", () => {
