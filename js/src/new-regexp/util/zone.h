@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "ds/LifoAlloc.h"
+#include "ds/Sort.h"
 #include "new-regexp/util/vector.h"
 
 namespace v8 {
@@ -202,9 +203,19 @@ class ZoneList final {
   }
 
   template <typename CompareFunction>
-  void StableSort(CompareFunction cmp, size_t s, size_t l) {
-    std::stable_sort(begin() + s, begin() + s + l,
-		     [cmp](const T& a, const T& b) { return cmp(&a, &b) < 0; });
+  void StableSort(CompareFunction cmp, size_t start, size_t length) {
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    T* scratch = static_cast<T*>(js_malloc(length * sizeof(T)));
+    if (!scratch) {
+      oomUnsafe.crash("Irregexp stable sort scratch space");
+    }
+    auto comparator = [cmp](const T& a, const T& b, bool* lessOrEqual) {
+			*lessOrEqual = cmp(&a, &b) <= 0;
+			return true;
+		      };
+    MOZ_ALWAYS_TRUE(js::MergeSort(begin() + start, length, scratch,
+				  comparator));
+    js_free(scratch);
   }
 
   void operator delete(void* pointer) { MOZ_CRASH("unreachable"); }
