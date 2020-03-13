@@ -25,7 +25,7 @@ def main(output, file):
         pass
     appdata = dict(("%s:%s" % (s, o), config.get(s, o))
                    for s in config.sections() for o in config.options(s))
-    appdata['flags'] = ' | '.join(flags) if flags else '0'
+    appdata['flags'] = ' | '.join(sorted(flags)) if flags else '0'
     appdata['App:profile'] = ('"%s"' % appdata['App:profile']
                               if 'App:profile' in appdata else 'NULL')
     expected = ('App:vendor', 'App:name', 'App:remotingname', 'App:version', 'App:buildid',
