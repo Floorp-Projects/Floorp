@@ -136,10 +136,6 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
 
   // Whether this script contains a direct eval statement.
   HasDirectEval = 1 << 26,
-
-  // Whether this BaseScript is a LazyScript. This flag will be removed after
-  // LazyScript and JSScript are merged in Bug 1529456.
-  IsLazyScript = 1 << 27,
 };
 
 class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
@@ -248,8 +244,8 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Set if the script has opted into spew
   SpewEnabled = 1 << 27,
 
-  // Set for LazyScripts which have been wrapped by some Debugger.
-  WrappedByDebugger = 1 << 28,
+  // Set if this is a LazyScript.
+  IsLazyScript = 1 << 28,
 };
 
 class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {

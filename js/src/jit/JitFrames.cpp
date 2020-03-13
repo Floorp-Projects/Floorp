@@ -2055,11 +2055,7 @@ void InlineFrameIterator::findNextFrame() {
     si_.nextFrame();
 
     calleeTemplate_ = &funval.toObject().as<JSFunction>();
-
-    // Inlined functions may be clones that still point to the lazy script
-    // for the executed script, if they are clones. The actual script
-    // exists though, just make sure the function points to it.
-    script_ = calleeTemplate_->existingScript();
+    script_ = calleeTemplate_->nonLazyScript();
     MOZ_ASSERT(script_->hasBaselineScript());
 
     pc_ = script_->offsetToPC(si_.pcOffset());

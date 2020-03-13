@@ -699,29 +699,22 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(fun->isInterpreted());
     MOZ_ASSERT(cx);
 
-    if (fun->hasBaseScript() && !fun->hasBytecode()) {
-      if (!delazifyLazilyInterpretedFunction(cx, fun)) {
-        return nullptr;
-      }
-    } else if (fun->hasSelfHostedLazyScript()) {
+    if (fun->hasSelfHostedLazyScript()) {
       if (!delazifySelfHostedLazyFunction(cx, fun)) {
         return nullptr;
       }
+      return fun->nonLazyScript();
     }
 
+    MOZ_ASSERT(fun->hasBaseScript());
+    JS::Rooted<js::BaseScript*> script(cx, fun->baseScript());
+
+    if (!script->hasBytecode()) {
+      if (!delazifyLazilyInterpretedFunction(cx, fun)) {
+        return nullptr;
+      }
+    }
     return fun->nonLazyScript();
-  }
-
-  JSScript* existingScript() {
-    MOZ_ASSERT(isInterpreted());
-    if (!hasBytecode()) {
-      JSFunction* canonicalFunction = baseScript()->function();
-      JSScript* script = canonicalFunction->nonLazyScript();
-
-      clearLazyScript();
-      initScript(script);
-    }
-    return nonLazyScript();
   }
 
   // If this is a scripted function, returns its canonical function (the
@@ -836,21 +829,6 @@ class JSFunction : public js::NativeObject {
     flags_.setBaseScript();
     u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
-  }
-
-  // Transform from lazy to non-lazy mode.
-  void setUnlazifiedScript(JSScript* script) {
-    MOZ_ASSERT(isInterpreted() && !hasBytecode());
-    if (hasBaseScript()) {
-      if (!lazyScript()->maybeScript()) {
-        lazyScript()->initScript(script);
-      }
-      clearLazyScript();
-    } else {
-      MOZ_ASSERT(isSelfHostedBuiltin());
-      clearSelfHostedLazyScript();
-    }
-    initScript(script);
   }
 
   JSNative native() const {

@@ -1546,7 +1546,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               HandleFunction fun) {
   Rooted<LazyScript*> lazy(cx, fun->lazyScript());
 
-  MOZ_ASSERT(!lazy->maybeScript(), "Script is already compiled!");
+  MOZ_ASSERT(lazy->isLazyScript(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
 
   ScriptSource* ss = lazy->scriptSource();
@@ -1559,7 +1559,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
     if (!frontend::CompileLazyBinASTFunction(
             cx, lazy, ss->binASTSource() + sourceStart, sourceLength)) {
       MOZ_ASSERT(fun->baseScript() == lazy);
-      MOZ_ASSERT(!lazy->hasScript());
+      MOZ_ASSERT(lazy->isLazyScript());
       return false;
     }
 #else
@@ -1583,7 +1583,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->baseScript() == lazy);
-        MOZ_ASSERT(!lazy->hasScript());
+        MOZ_ASSERT(lazy->isLazyScript());
         return false;
       }
     } else {
@@ -1600,29 +1600,18 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->baseScript() == lazy);
-        MOZ_ASSERT(!lazy->hasScript());
+        MOZ_ASSERT(lazy->isLazyScript());
         return false;
       }
     }
   }
 
   RootedScript script(cx, fun->nonLazyScript());
-  MOZ_ASSERT(lazy->maybeScript() == script);
 
   // NOTE: Only allow relazification if there was no lazy PrivateScriptData.
   // This excludes non-leaf functions and all script class constructors.
   if (script->isRelazifiable() && !hadLazyScriptData) {
-    // Remember the lazy script on the compiled script, so it can be stored on
-    // the function again in case of re-lazification.
-    script->setLazyScript(lazy);
     script->setAllowRelazify();
-  } else if (lazy->isWrappedByDebugger()) {
-    // Associate the LazyScript with the JSScript even though the latter
-    // can't be relazified. This is needed to ensure the Debugger can find
-    // the LazyScript when wrapping the JSScript.
-    //
-    // See Debugger::wrapVariantReferent.
-    script->setLazyScript(lazy);
   }
 
   // XDR the newly delazified function.
@@ -1659,16 +1648,13 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
       return false;
     }
 
-    fun->setUnlazifiedScript(script);
+    // Delazifying the canonical function should naturally make us non-lazy
+    // because we share a BaseScript with the canonical function.
+    MOZ_ASSERT(fun->hasBytecode());
     return true;
   }
 
-  // Even if we relazified the canonical function, the GC may not have swept
-  // the non-lazy script yet. In this case, we can reuse it.
-  if (lazy->hasScript()) {
-    fun->setUnlazifiedScript(lazy->maybeScript());
-    return true;
-  }
+  MOZ_ASSERT(lazy->isLazyScript());
 
   // Finally, compile the script if it really doesn't exist.
   return DelazifyCanonicalScriptedFunction(cx, fun);
@@ -1735,19 +1721,10 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
     return;
   }
 
-  BaseScript* lazy = script->maybeLazyScript();
-  if (lazy) {
-    u.scripted.s.script_ = lazy;
-    MOZ_ASSERT(hasBaseScript());
+  if (isSelfHostedBuiltin()) {
+    initSelfHostedLazyScript(&rt->selfHostedLazyScript.ref());
   } else {
-    // Lazy self-hosted builtins point to a SelfHostedLazyScript that may be
-    // called from JIT scripted calls.
-    flags_.clearBaseScript();
-    flags_.setSelfHostedLazy();
-    u.scripted.s.selfHostedLazy_ = &rt->selfHostedLazyScript.ref();
-    MOZ_ASSERT(isSelfHostedBuiltin());
-    MOZ_ASSERT(isExtended());
-    MOZ_ASSERT(GetClonedSelfHostedFunctionName(this));
+    script->relazify(rt);
   }
 
   realm->scheduleDelazificationForDebugger();

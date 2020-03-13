@@ -912,6 +912,8 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
 #ifdef DEBUG
   // These flags are expect to be unset for lazy scripts and are only valid
   // after a script has been compiled with the full parser.
+  //
+  // NOTE: Keep in sync with JSScript::relazify().
   constexpr uint32_t NonLazyFlagsMask =
       uint32_t(BaseScript::ImmutableFlags::HasNonSyntacticScope) |
       uint32_t(BaseScript::ImmutableFlags::FunctionHasExtraBodyVarScope) |
@@ -920,13 +922,10 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
   // These flags are computed for lazy scripts and may have a different
   // definition for non-lazy scripts.
   //
-  //  IsLazyScript:       This flag will be removed in Bug 1529456.
-  //
   //  TreatAsRunOnce:     Some conditions depend on parent context and are
   //                      computed during lazy parsing, while other conditions
   //                      need to full parse.
   constexpr uint32_t CustomFlagsMask =
-      uint32_t(BaseScript::ImmutableFlags::IsLazyScript) |
       uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce);
 
   // These flags are expected to match between lazy and full parsing.
@@ -934,6 +933,13 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
 
   MOZ_ASSERT((lazy & NonLazyFlagsMask) == 0);
   MOZ_ASSERT((lazy & MatchedFlagsMask) == (nonLazy & MatchedFlagsMask));
+
+  // The TreatAsRunOnce conditions are stricter for compiled scripts than for
+  // lazy scripts. A compiled script should only have set it if the lazy script
+  // had it. As a result, during relazification we can inherit the compiled
+  // value as the new lazy value.
+  MOZ_ASSERT_IF(nonLazy & uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce),
+                lazy & uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce));
 #endif  // DEBUG
 }
 
@@ -1001,10 +1007,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
-  Rooted<JSScript*> script(cx, JSScript::CreateFromLazy(cx, lazy));
-  if (!script) {
-    return false;
-  }
+  Rooted<JSScript*> script(cx, JSScript::CastFromLazy(lazy));
+  uint32_t lazyFlags = lazy->immutableFlags();
 
   FieldInitializers fieldInitializers = FieldInitializers::Invalid();
   if (fun->isClassConstructor()) {
@@ -1022,7 +1026,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
-  CheckFlagsOnDelazification(lazy->immutableFlags(), script->immutableFlags());
+  CheckFlagsOnDelazification(lazyFlags, script->immutableFlags());
 
   assertException.reset();
   return true;
@@ -1067,10 +1071,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   CompilationInfo compilationInfo(cx, allocScope, options);
   compilationInfo.initFromSourceObject(lazy->sourceObject());
 
-  RootedScript script(cx, JSScript::CreateFromLazy(cx, lazy));
-  if (!script) {
-    return false;
-  }
+  RootedScript script(cx, JSScript::CastFromLazy(lazy));
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
                                          compilationInfo.sourceObject, lazy);

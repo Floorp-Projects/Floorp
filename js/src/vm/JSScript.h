@@ -2057,25 +2057,6 @@ class BaseScript : public gc::TenuredCell {
 
   ScriptWarmUpData warmUpData_ = {};
 
-  union TwinPointer {
-    // Information used to re-lazify a lazily-parsed interpreted function.
-    js::LazyScript* lazyScript;
-
-    // If non-nullptr, the script has been compiled and this is a forwarding
-    // pointer to the result. This is a weak pointer: after relazification, we
-    // can collect the script if there are no other pointers to it.
-    WeakHeapPtrScript script_;
-
-    // Default to the lazyScript union arm which is used by JSScripts. This
-    // corresponds to the default IsLazyScript flag being clear. Remember that a
-    // non-lazy script points *to* a LazyScript.
-    TwinPointer() : lazyScript(nullptr) {}
-
-    // The BaseScript uses a finalizer instead of a C++ destructor so this
-    // should never be run. We need to define to appease compiler though.
-    ~TwinPointer() { MOZ_CRASH(); }
-  } u;
-
   BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
              ScriptSourceObject* sourceObject, SourceExtent extent)
       : jitCodeRaw_(stubEntry),
@@ -2090,6 +2071,7 @@ class BaseScript : public gc::TenuredCell {
 
  public:
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
+  bool isUsingInterpreterTrampoline(JSRuntime* rt) const;
 
   // Canonical function for the script, if it has a function. For global and
   // eval scripts this is nullptr.
@@ -2246,7 +2228,6 @@ setterLevel:                                                                  \
                                       ShouldDeclareArguments)
   IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasDirectEval, HasDirectEval)
-  IMMUTABLE_FLAG_GETTER(isLazyScript, IsLazyScript)
 
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
@@ -2267,7 +2248,7 @@ setterLevel:                                                                  \
   // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(hideScriptFromDebugger, HideScriptFromDebugger)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
-  MUTABLE_FLAG_GETTER_SETTER(isWrappedByDebugger, WrappedByDebugger);
+  MUTABLE_FLAG_GETTER_SETTER(isLazyScript, IsLazyScript)
 
 #undef IMMUTABLE_FLAG_GETTER
 #undef IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC
@@ -2336,6 +2317,7 @@ setterLevel:                                                                  \
     return gcthings()[outermostScopeIndex].as<Scope>().enclosing();
   }
   void setEnclosingScope(Scope* enclosingScope);
+  Scope* releaseEnclosingScope();
 
   bool hasJitScript() const { return warmUpData_.isJitScript(); }
   js::jit::JitScript* jitScript() const {
@@ -2381,11 +2363,6 @@ setterLevel:                                                                  \
 
   void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
-
-  WeakHeapPtrScript* getLazyScriptScriptEdgeForTracing() {
-    MOZ_ASSERT(isLazyScript());
-    return &u.script_;
-  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(data_);
@@ -2513,8 +2490,10 @@ class JSScript : public js::BaseScript {
                           js::ImmutableScriptFlags flags,
                           bool hideScriptFromDebugger, js::SourceExtent extent);
 
-  static JSScript* CreateFromLazy(JSContext* cx,
-                                  js::Handle<js::BaseScript*> lazy);
+  // NOTE: This should only be used while delazifying.
+  static JSScript* CastFromLazy(js::BaseScript* lazy) {
+    return static_cast<JSScript*>(lazy);
+  }
 
   // NOTE: If you use createPrivateScriptData directly instead of via
   // fullyInitFromStencil, you are responsible for notifying the debugger
@@ -2728,9 +2707,6 @@ class JSScript : public js::BaseScript {
            !isAsync() && !hasCallSiteObj();
   }
 
-  void setLazyScript(js::LazyScript* lazy) { u.lazyScript = lazy; }
-  js::LazyScript* maybeLazyScript() { return u.lazyScript; }
-
   js::ModuleObject* module() const {
     if (bodyScope()->is<js::ModuleScope>()) {
       return bodyScope()->as<js::ModuleScope>().module();
@@ -2848,6 +2824,9 @@ class JSScript : public js::BaseScript {
   }
 
   inline js::LexicalScope* maybeNamedLambdaScope() const;
+
+  // Drop script data and set the IsLazyScript flag.
+  void relazify(JSRuntime* rt);
 
  private:
   bool createJitScript(JSContext* cx);
@@ -3213,14 +3192,6 @@ class LazyScript : public BaseScript {
                                  HandleScriptSourceObject sourceObject,
                                  Handle<LazyScript*> lazy,
                                  bool hasFieldInitializer);
-
-  void initScript(JSScript* script);
-
-  JSScript* maybeScript() { return u.script_; }
-  const JSScript* maybeScriptUnbarriered() const {
-    return u.script_.unbarrieredGet();
-  }
-  bool hasScript() const { return bool(u.script_); }
 };
 
 struct ScriptAndCounts {
