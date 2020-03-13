@@ -72,14 +72,6 @@ void gecko_profiler_end_marker(const char* name) {
 #endif
 }
 
-void gecko_profiler_event_marker(const char* name) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_tracing_marker("WebRender", name,
-                          JS::ProfilingCategoryPair::GRAPHICS,
-                          TRACING_EVENT);
-#endif
-}
-
 void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,
                                     size_t text_len, uint64_t microseconds) {
 #ifdef MOZ_GECKO_PROFILER
