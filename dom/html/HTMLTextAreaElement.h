@@ -99,7 +99,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   virtual void EnablePreview() override;
   virtual bool IsPreviewEnabled() override;
   virtual void InitializeKeyboardEventListeners() override;
-  virtual void OnValueChanged(bool aNotify, ValueChangeKind) override;
+  virtual void OnValueChanged(ValueChangeKind) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT virtual nsresult SetValueFromSetRangeText(
       const nsAString& aValue) override;

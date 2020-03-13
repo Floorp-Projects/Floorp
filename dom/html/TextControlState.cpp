@@ -1047,8 +1047,7 @@ void TextInputListener::HandleValueChanged(nsTextControlFrame* aFrame) {
   }
 
   if (!mSettingValue) {
-    mTxtCtrlElement->OnValueChanged(/* aNotify = */ true,
-                                    ValueChangeKind::UserInteraction);
+    mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction);
   }
 }
 
@@ -1249,7 +1248,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
       if (!(mSetValueFlags & TextControlState::eSetValue_Notify)) {
         // Listener doesn't update frame, but it is required for
         // placeholder
-        mTextControlState.ValueWasChanged(true);
+        mTextControlState.ValueWasChanged();
       }
     }
     if (!IsOriginalTextControlFrameAlive()) {
@@ -2687,10 +2686,7 @@ bool TextControlState::SetValue(const nsAString& aValue,
   auto changeKind = (aFlags & eSetValue_Internal) ? ValueChangeKind::Internal
                                                   : ValueChangeKind::Script;
 
-  // XXX Should we stop notifying "value changed" if mTextCtrlElement has
-  //     been cleared?
-  handlingSetValue.GetTextControlElement()->OnValueChanged(
-      /* aNotify = */ !!mBoundFrame, changeKind);
+  handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
   return true;
 }
 
@@ -2976,7 +2972,7 @@ bool TextControlState::SetValueWithoutTextEditor(
       // Update validity state before dispatching "input" event for its
       // listeners like `EditorBase::NotifyEditorObservers()`.
       aHandlingSetValue.GetTextControlElement()->OnValueChanged(
-          true, ValueChangeKind::UserInteraction);
+          ValueChangeKind::UserInteraction);
 
       MOZ_ASSERT(!aHandlingSetValue.GetSettingValue().IsVoid());
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
@@ -2997,9 +2993,7 @@ bool TextControlState::SetValueWithoutTextEditor(
     }
   }
 
-  // If we've reached the point where the root node has been created, we
-  // can assume that it's safe to notify.
-  ValueWasChanged(!!mBoundFrame);
+  ValueWasChanged();
   return true;
 }
 
@@ -3034,9 +3028,7 @@ void TextControlState::InitializeKeyboardEventListeners() {
   mSelCon->SetScrollableFrame(mBoundFrame->GetScrollTargetFrame());
 }
 
-void TextControlState::ValueWasChanged(bool aNotify) {
-  UpdateOverlayTextVisibility(aNotify);
-}
+void TextControlState::ValueWasChanged() { UpdateOverlayTextVisibility(true); }
 
 void TextControlState::SetPreviewText(const nsAString& aValue, bool aNotify) {
   // If we don't have a preview div, there's nothing to do.

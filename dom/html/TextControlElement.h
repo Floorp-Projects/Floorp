@@ -199,7 +199,7 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
   /**
    * Callback called whenever the value is changed.
    */
-  virtual void OnValueChanged(bool aNotify, ValueChangeKind) = 0;
+  virtual void OnValueChanged(ValueChangeKind) = 0;
 
   /**
    * Helpers for value manipulation from SetRangeText.
