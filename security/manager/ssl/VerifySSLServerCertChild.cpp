@@ -13,6 +13,8 @@
 #include "nsNSSIOLayer.h"
 #include "nsSerializationHelper.h"
 
+extern mozilla::LazyLogModule gPIPNSSLog;
+
 namespace mozilla {
 namespace psm {
 
