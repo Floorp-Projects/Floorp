@@ -168,6 +168,26 @@ inline uint8_t saturated_cast<uint8_t, int>(int x) {
   return (x >= 0) ? ((x < 255) ? uint8_t(x) : 255) : 0;
 }
 
+#define LAZY_INSTANCE_INITIALIZER { mozilla::Nothing() }
+
+template <typename T>
+struct LazyInstanceImpl {
+  mozilla::Maybe<T> value_;
+  T* Pointer() {
+    if (value_.isNothing()) {
+      value_.emplace();
+    }
+    return value_.ptr();
+  }
+};
+
+template <typename T>
+class LazyInstance {
+public:
+  using type = LazyInstanceImpl<T>;
+};
+
+
 namespace bits {
 
 inline uint64_t CountTrailingZeros(uint64_t value) {
