@@ -132,8 +132,7 @@ struct ScrollbarData {
 };
 
 /**
- * Infrequently changing layer attributes that require no special
- * serialization work.
+ * Infrequently changing layer attributes.
  */
 class SimpleLayerAttributes final {
   friend struct IPC::ParamTraits<mozilla::layers::SimpleLayerAttributes>;
@@ -388,6 +387,8 @@ class SimpleLayerAttributes final {
     SideBits mSides;
   };
   Maybe<FixedPositionData> mFixedPositionData;
+  friend struct IPC::ParamTraits<
+      mozilla::layers::SimpleLayerAttributes::FixedPositionData>;
 
   struct StickyPositionData {
     ScrollableLayerGuid::ViewID mScrollId;
@@ -395,11 +396,11 @@ class SimpleLayerAttributes final {
     LayerRectAbsolute mInner;
   };
   Maybe<StickyPositionData> mStickyPositionData;
+  friend struct IPC::ParamTraits<
+      mozilla::layers::SimpleLayerAttributes::StickyPositionData>;
 
-  /**
-   * This class may only contain plain-old-data members that can be safely
-   * copied over IPC. Make sure to add new members to operator ==.
-   */
+  // Make sure to add new members to operator== and the ParamTraits template
+  // instantiation.
 };
 
 }  // namespace layers
