@@ -52,7 +52,6 @@ add_task(async function test_change_title_from_BookmarkStar() {
     BrowserTestUtils.removeTab(tab);
   });
 
-  StarUI._createPanelIfNeeded();
   let bookmarkPanel = document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
 
