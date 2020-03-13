@@ -8668,7 +8668,9 @@ function safeModeRestart() {
 function duplicateTabIn(aTab, where, delta) {
   switch (where) {
     case "window":
-      let otherWin = OpenBrowserWindow();
+      let otherWin = OpenBrowserWindow({
+        private: PrivateBrowsingUtils.isBrowserPrivate(aTab.linkedBrowser),
+      });
       let delayedStartupFinished = (subject, topic) => {
         if (
           topic == "browser-delayed-startup-finished" &&
