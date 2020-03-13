@@ -1766,11 +1766,9 @@ class alignas(uint32_t) ImmutableScriptData final {
   }
 
  public:
-  static ImmutableScriptData* new_(JSContext* cx, uint32_t codeLength,
-                                   uint32_t noteLength,
-                                   uint32_t numResumeOffsets,
-                                   uint32_t numScopeNotes,
-                                   uint32_t numTryNotes);
+  static js::UniquePtr<ImmutableScriptData> new_(
+      JSContext* cx, uint32_t codeLength, uint32_t noteLength,
+      uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
 
   // The code() and note() arrays together maintain an target alignment by
   // padding the source notes with null. This allows arrays with stricter
