@@ -47,7 +47,6 @@ endif
 # Helper variables to convert from MOZ_AUTOMATION_* variables to the
 # corresponding the make target
 tier_MOZ_AUTOMATION_BUILD_SYMBOLS = buildsymbols
-tier_MOZ_AUTOMATION_L10N_CHECK = l10n-check
 tier_MOZ_AUTOMATION_PACKAGE = package
 tier_MOZ_AUTOMATION_PACKAGE_TESTS = package-tests
 tier_MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES = package-generated-sources
@@ -65,7 +64,6 @@ moz_automation_symbols = \
   MOZ_AUTOMATION_UPLOAD_SYMBOLS \
   MOZ_AUTOMATION_PACKAGE \
   MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES \
-  MOZ_AUTOMATION_L10N_CHECK \
   MOZ_AUTOMATION_UPLOAD \
   MOZ_AUTOMATION_CHECK \
   $(NULL)
@@ -73,8 +71,6 @@ MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,
 
 # Dependencies between automation build steps
 automation-start/uploadsymbols: automation/buildsymbols
-
-automation-start/l10n-check: automation/package
 
 automation-start/upload: automation/package
 automation-start/upload: automation/package-tests
@@ -86,9 +82,6 @@ automation-start/check: $(addprefix automation/,$(filter-out check,$(MOZ_AUTOMAT
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 	@echo Automation steps completed.
-
-# Note: We have to force -j1 here, at least until bug 1036563 is fixed.
-AUTOMATION_EXTRA_CMDLINE-l10n-check = -j1
 
 # Run as many tests as possible, even in case of one of them failing.
 AUTOMATION_EXTRA_CMDLINE-check = --keep-going
