@@ -8,6 +8,7 @@
 if CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [
         'OculusSession.cpp',
+        'OpenVRWMRMapper.cpp',
     ]
 
 # Build OSVR on all platforms except Android
@@ -39,7 +40,11 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     # which define Size and Points types in the root namespace that
     # often conflict with our own types.
     SOURCES += [
+        'OpenVRControllerMapper.cpp',
+        'OpenVRCosmosMapper.cpp',
+        'OpenVRDefaultMapper.cpp',
         'OpenVRSession.cpp',
+        'OpenVRViveMapper.cpp',
     ]
 
 FINAL_LIBRARY = 'xul'
