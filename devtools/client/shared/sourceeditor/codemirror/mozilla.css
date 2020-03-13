@@ -270,3 +270,20 @@
   line-height: var(--theme-code-line-height);
   min-height: 15px;
 }
+
+/* Make our own cursor-blink animation */
+@keyframes cursor-blink {
+  0% {}
+  50% { opacity: 0; }
+  100% {}
+}
+
+.CodeMirror-cursor {
+  /*
+   * We're using the --caret-blink-time custom property for the animation duration.
+   * It is set in editor.js when we setup the CodeMirror instance, and will map either
+   * to the value of the ui.caretBlinkTime preference, or to CodeMirror's default for
+   * cursorBlinkRate. (See Bug 1609567 for more information on why this is needed).
+   */
+  animation: cursor-blink calc(var(--caret-blink-time, 0.53s) * 2) steps(1) infinite;
+}
