@@ -280,6 +280,27 @@ class GeckoProfile(TryConfig):
             }
 
 
+class OptimizeStrategies(TryConfig):
+
+    arguments = [
+        [['--strategy'],
+         {'default': None,
+          'help': 'Override the default optimization strategy. Valid values '
+                  'are the experimental strategies defined at the bottom of '
+                  '`taskcluster/taskgraph/optimize/__init__.py`.'
+          }],
+    ]
+
+    def try_config(self, strategy, **kwargs):
+        if strategy:
+            if ':' not in strategy:
+                strategy = "taskgraph.optimize:{}".format(strategy)
+
+            return {
+                'optimize-strategies': strategy,
+            }
+
+
 class Browsertime(TryConfig):
     arguments = [
         [['--browsertime'],
@@ -395,5 +416,6 @@ all_task_configs = {
     'path': Path,
     'pernosco': Pernosco,
     'rebuild': Rebuild,
+    'strategy': OptimizeStrategies,
     'worker-overrides': WorkerOverrides,
 }

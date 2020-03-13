@@ -119,6 +119,12 @@ try_task_config_schema = Schema({
     Optional('disable-pgo'): bool,
     Optional('env'): {text_type: text_type},
     Optional('gecko-profile'): bool,
+    Optional(
+        "optimize-strategies",
+        description="Alternative optimization strategies to use instead of the default. "
+                    "A module path pointing to a dict to be use as the `strategy_override` "
+                    "argument in `taskgraph.optimize.optimize_task_graph`."
+    ): text_type,
     Optional('rebuild'): int,
     Optional('use-artifact-builds'): bool,
     Optional(
