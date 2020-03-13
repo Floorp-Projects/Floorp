@@ -13,14 +13,14 @@ flat varying vec4 vColor3;
 
 #ifdef WR_VERTEX_SHADER
 
-in vec4 aTaskRect;
-in float aAxisSelect;
-in vec4 aStops;
-in vec4 aColor0;
-in vec4 aColor1;
-in vec4 aColor2;
-in vec4 aColor3;
-in vec2 aStartStop;
+PER_INSTANCE in vec4 aTaskRect;
+PER_INSTANCE in float aAxisSelect;
+PER_INSTANCE in vec4 aStops;
+PER_INSTANCE in vec4 aColor0;
+PER_INSTANCE in vec4 aColor1;
+PER_INSTANCE in vec4 aColor2;
+PER_INSTANCE in vec4 aColor3;
+PER_INSTANCE in vec2 aStartStop;
 
 void main(void) {
     vPos = mix(aStartStop.x, aStartStop.y, mix(aPosition.x, aPosition.y, aAxisSelect));
