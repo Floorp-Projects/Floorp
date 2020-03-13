@@ -460,7 +460,10 @@ function runChecks(dbgObject, environment, sandbox) {
     "Test children getters are executed if matching an authorizedEvaluation element"
   );
   results = propertyProvider("testGetters.y.y.", {
-    authorizedEvaluations: [["testGetters", "y"], ["testGetters", "y", "y"]],
+    authorizedEvaluations: [
+      ["testGetters", "y"],
+      ["testGetters", "y", "y"],
+    ],
   });
   test_has_result(results, "trim");
 

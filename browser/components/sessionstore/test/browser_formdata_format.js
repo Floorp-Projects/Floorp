@@ -112,7 +112,10 @@ function test() {
     promises.push(testTabRestoreData(formData[i], expectedValues[i]));
   }
 
-  Promise.all(promises).then(() => finish(), ex => ok(false, ex));
+  Promise.all(promises).then(
+    () => finish(),
+    ex => ok(false, ex)
+  );
 }
 
 async function testTabRestoreData(aFormData, aExpectedValue) {

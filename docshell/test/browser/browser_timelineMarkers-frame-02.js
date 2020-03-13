@@ -34,15 +34,24 @@ var TESTS = [
       ok(markers.length > 0, "markers were returned");
       console.log(markers);
       info(JSON.stringify(markers.filter(m => m.name == "Paint")));
-      ok(markers.some(m => m.name == "Reflow"), "markers includes Reflow");
-      ok(markers.some(m => m.name == "Paint"), "markers includes Paint");
+      ok(
+        markers.some(m => m.name == "Reflow"),
+        "markers includes Reflow"
+      );
+      ok(
+        markers.some(m => m.name == "Paint"),
+        "markers includes Paint"
+      );
       for (let marker of markers.filter(m => m.name == "Paint")) {
         // This change should generate at least one rectangle.
         ok(marker.rectangles.length >= 1, "marker has one rectangle");
         // One of the rectangles should contain the div.
         ok(marker.rectangles.some(r => rectangleContains(r, 0, 0, 100, 100)));
       }
-      ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
+      ok(
+        markers.some(m => m.name == "Styles"),
+        "markers includes Restyle"
+      );
     },
   },
   {
@@ -59,14 +68,20 @@ var TESTS = [
         !markers.some(m => m.name == "Reflow"),
         "markers doesn't include Reflow"
       );
-      ok(markers.some(m => m.name == "Paint"), "markers includes Paint");
+      ok(
+        markers.some(m => m.name == "Paint"),
+        "markers includes Paint"
+      );
       for (let marker of markers.filter(m => m.name == "Paint")) {
         // This change should generate at least one rectangle.
         ok(marker.rectangles.length >= 1, "marker has one rectangle");
         // One of the rectangles should contain the div.
         ok(marker.rectangles.some(r => rectangleContains(r, 0, 0, 50, 50)));
       }
-      ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
+      ok(
+        markers.some(m => m.name == "Styles"),
+        "markers includes Restyle"
+      );
     },
   },
   {
@@ -87,7 +102,10 @@ var TESTS = [
         !markers.some(m => m.name == "Paint"),
         "markers doesn't include Paint"
       );
-      ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
+      ok(
+        markers.some(m => m.name == "Styles"),
+        "markers includes Restyle"
+      );
     },
   },
   {

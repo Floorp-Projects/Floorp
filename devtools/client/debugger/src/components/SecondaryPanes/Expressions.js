@@ -397,18 +397,15 @@ const mapStateToProps = state => ({
   expressionError: getExpressionError(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    autocomplete: actions.autocomplete,
-    clearAutocomplete: actions.clearAutocomplete,
-    addExpression: actions.addExpression,
-    clearExpressionError: actions.clearExpressionError,
-    updateExpression: actions.updateExpression,
-    deleteExpression: actions.deleteExpression,
-    openLink: actions.openLink,
-    openElementInInspector: actions.openElementInInspectorCommand,
-    highlightDomElement: actions.highlightDomElement,
-    unHighlightDomElement: actions.unHighlightDomElement,
-  }
-)(Expressions);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  autocomplete: actions.autocomplete,
+  clearAutocomplete: actions.clearAutocomplete,
+  addExpression: actions.addExpression,
+  clearExpressionError: actions.clearExpressionError,
+  updateExpression: actions.updateExpression,
+  deleteExpression: actions.deleteExpression,
+  openLink: actions.openLink,
+  openElementInInspector: actions.openElementInInspectorCommand,
+  highlightDomElement: actions.highlightDomElement,
+  unHighlightDomElement: actions.unHighlightDomElement,
+})(Expressions);

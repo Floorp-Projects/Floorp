@@ -11,7 +11,10 @@ const START_VALUE = "example.org";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.altClickSave", true], ["browser.urlbar.autoFill", false]],
+    set: [
+      ["browser.altClickSave", true],
+      ["browser.urlbar.autoFill", false],
+    ],
   });
 });
 

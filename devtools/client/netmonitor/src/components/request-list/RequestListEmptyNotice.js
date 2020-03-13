@@ -85,11 +85,8 @@ class RequestListEmptyNotice extends Component {
   }
 }
 
-module.exports = connect(
-  undefined,
-  (dispatch, props) => ({
-    onPerfClick: () => dispatch(Actions.openStatistics(props.connector, true)),
-    onReloadClick: () =>
-      props.connector.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
-  })
-)(RequestListEmptyNotice);
+module.exports = connect(undefined, (dispatch, props) => ({
+  onPerfClick: () => dispatch(Actions.openStatistics(props.connector, true)),
+  onReloadClick: () =>
+    props.connector.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
+}))(RequestListEmptyNotice);

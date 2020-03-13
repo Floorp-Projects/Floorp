@@ -213,9 +213,7 @@ var TelemetryTestUtils = {
           !matches(expected[j], actual[j]),
           actual[j],
           expected[j],
-          `${FIELD_NAMES[j]} in event ${actual[0]}#${actual[1]}#${
-            actual[2]
-          } must match.`,
+          `${FIELD_NAMES[j]} in event ${actual[0]}#${actual[1]}#${actual[2]} must match.`,
           "matches"
         );
       }
@@ -227,9 +225,7 @@ var TelemetryTestUtils = {
       ) {
         Assert.ok(
           actual.length > EXTRA_INDEX,
-          `Actual event ${actual[0]}#${actual[1]}#${
-            actual[2]
-          } expected to have extra.`
+          `Actual event ${actual[0]}#${actual[1]}#${actual[2]} expected to have extra.`
         );
         let expectedExtra = expected[EXTRA_INDEX];
         let actualExtra = actual[EXTRA_INDEX];
@@ -244,9 +240,7 @@ var TelemetryTestUtils = {
             !matches(value, actualExtra[key]),
             actualExtra[key],
             value,
-            `extra[${key}] must match in event ${actual[0]}#${actual[1]}#${
-              actual[2]
-            }.`,
+            `extra[${key}] must match in event ${actual[0]}#${actual[1]}#${actual[2]}.`,
             "matches"
           );
         }

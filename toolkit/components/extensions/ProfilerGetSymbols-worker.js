@@ -110,7 +110,10 @@ onmessage = async e => {
         output.take_buffer(),
       ];
       output.free();
-      postMessage({ result }, result.map(r => r.buffer));
+      postMessage(
+        { result },
+        result.map(r => r.buffer)
+      );
     } finally {
       binaryData.free();
       if (debugData != binaryData) {

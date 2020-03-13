@@ -19,7 +19,11 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Deprecated.jsm"
 );
 
-const kAutoDetectors = [["off", ""], ["ru", "ruprob"], ["uk", "ukprob"]];
+const kAutoDetectors = [
+  ["off", ""],
+  ["ru", "ruprob"],
+  ["uk", "ukprob"],
+];
 
 /**
  * This set contains encodings that are in the Encoding Standard, except:

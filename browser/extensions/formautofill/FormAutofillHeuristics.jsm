@@ -472,7 +472,10 @@ this.FormAutofillHeuristics = {
         options.map(e => +e.value),
         desiredValues
       ) ||
-      this._matchContiguousSubArray(options.map(e => +e.label), desiredValues)
+      this._matchContiguousSubArray(
+        options.map(e => +e.label),
+        desiredValues
+      )
     );
   },
 
@@ -502,7 +505,10 @@ this.FormAutofillHeuristics = {
         options.map(e => +e.value),
         desiredValues
       ) ||
-      this._matchContiguousSubArray(options.map(e => +e.label), desiredValues)
+      this._matchContiguousSubArray(
+        options.map(e => +e.label),
+        desiredValues
+      )
     );
   },
 

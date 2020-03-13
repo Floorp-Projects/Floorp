@@ -206,8 +206,5 @@ const mapDispatchToProps = dispatch => ({
 });
 
 module.exports = FluentReact.withLocalization(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(App)
+  connect(mapStateToProps, mapDispatchToProps)(App)
 );

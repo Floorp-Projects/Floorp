@@ -31,12 +31,10 @@ add_task(async function run_test() {
   _("Engines are registered.");
   let engines = Service.engineManager.getAll();
   Assert.ok(
-    Utils.deepEquals(engines.map(engine => engine.name), [
-      "tabs",
-      "bookmarks",
-      "forms",
-      "history",
-    ])
+    Utils.deepEquals(
+      engines.map(engine => engine.name),
+      ["tabs", "bookmarks", "forms", "history"]
+    )
   );
 
   // Clean up.

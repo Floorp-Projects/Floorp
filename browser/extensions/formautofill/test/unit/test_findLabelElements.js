@@ -94,7 +94,10 @@ TESTCASES.forEach(testcase => {
     let input = doc.getElementById(testcase.inputId);
     let labels = LabelUtils.findLabelElements(input);
 
-    Assert.deepEqual(labels.map(l => l.id), testcase.expectedLabelIds);
+    Assert.deepEqual(
+      labels.map(l => l.id),
+      testcase.expectedLabelIds
+    );
     LabelUtils.clearLabelMap();
   });
 });

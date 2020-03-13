@@ -132,7 +132,8 @@ function PollPromise(func, { timeout = null, interval = 10 } = {}) {
   }
   if (
     (timeout && (!Number.isInteger(timeout) || timeout < 0)) ||
-    (!Number.isInteger(interval) || interval < 0)
+    !Number.isInteger(interval) ||
+    interval < 0
   ) {
     throw new RangeError();
   }

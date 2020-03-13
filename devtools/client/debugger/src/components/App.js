@@ -344,14 +344,11 @@ const mapStateToProps = state => ({
   orientation: getOrientation(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    setActiveSearch: actions.setActiveSearch,
-    closeActiveSearch: actions.closeActiveSearch,
-    closeProjectSearch: actions.closeProjectSearch,
-    openQuickOpen: actions.openQuickOpen,
-    closeQuickOpen: actions.closeQuickOpen,
-    setOrientation: actions.setOrientation,
-  }
-)(App);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  setActiveSearch: actions.setActiveSearch,
+  closeActiveSearch: actions.closeActiveSearch,
+  closeProjectSearch: actions.closeProjectSearch,
+  openQuickOpen: actions.openQuickOpen,
+  closeQuickOpen: actions.closeQuickOpen,
+  setOrientation: actions.setOrientation,
+})(App);

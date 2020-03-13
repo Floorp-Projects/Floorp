@@ -6,7 +6,10 @@ const PREF_ANIMATION = "toolkit.cosmeticAnimations.enabled";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true], [PREF_ANIMATION, false]],
+    set: [
+      [PREF_MULTISELECT_TABS, true],
+      [PREF_ANIMATION, false],
+    ],
   });
 });
 

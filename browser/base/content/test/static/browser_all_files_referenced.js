@@ -806,9 +806,9 @@ add_task(async function checkAllTheFiles() {
   // read the contents.  This will populate gExtensionRoots with all
   // embedded extension APIs, and return any manifest.json files that aren't
   // webextensions.
-  let nonWebextManifests = (await Promise.all(
-    jsonManifests.map(parseJsonManifest)
-  )).filter(uri => !!uri);
+  let nonWebextManifests = (
+    await Promise.all(jsonManifests.map(parseJsonManifest))
+  ).filter(uri => !!uri);
   uris.push(...nonWebextManifests);
 
   addActorModules();

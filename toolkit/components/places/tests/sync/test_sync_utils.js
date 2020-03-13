@@ -2096,9 +2096,11 @@ add_task(async function test_pullChanges_import_html() {
   // All Bookmarks.html bookmarks are stored under the menu. For toolbar
   // bookmarks, this means they're imported into a "Bookmarks Toolbar"
   // subfolder under the menu, instead of the real toolbar root.
-  let toolbarSubfolder = (await PlacesUtils.bookmarks.search({
-    title: "Bookmarks Toolbar",
-  })).find(item => item.guid != PlacesUtils.bookmarks.toolbarGuid);
+  let toolbarSubfolder = (
+    await PlacesUtils.bookmarks.search({
+      title: "Bookmarks Toolbar",
+    })
+  ).find(item => item.guid != PlacesUtils.bookmarks.toolbarGuid);
   let importedFields = await PlacesTestUtils.fetchBookmarkSyncFields(
     mozBmk.guid,
     fxBmk.guid,

@@ -201,10 +201,12 @@ add_task(async function valid_cookieStoreId() {
 
     async function executeScriptAndGetResult(tabId) {
       try {
-        return (await browser.tabs.executeScript(tabId, {
-          matchAboutBlank: true,
-          code: "`${document.URL} - ${origin}`",
-        }))[0];
+        return (
+          await browser.tabs.executeScript(tabId, {
+            matchAboutBlank: true,
+            code: "`${document.URL} - ${origin}`",
+          })
+        )[0];
       } catch (e) {
         return e.message;
       }

@@ -206,25 +206,27 @@ async function buildManifestForBrowser(browser) {
 
   // Cache all the icons as data URIs since we can need access to them when
   // the website is not loaded.
-  manifest.icons = (await Promise.all(
-    manifest.icons.map(async icon => {
-      if (icon.src.startsWith("data:")) {
+  manifest.icons = (
+    await Promise.all(
+      manifest.icons.map(async icon => {
+        if (icon.src.startsWith("data:")) {
+          return icon;
+        }
+
+        let actor = browser.browsingContext.currentWindowGlobal.getActor(
+          "SiteSpecificBrowser"
+        );
+        try {
+          icon.src = await actor.sendQuery("LoadIcon", icon.src);
+        } catch (e) {
+          // Bad icon, drop it from the list.
+          return null;
+        }
+
         return icon;
-      }
-
-      let actor = browser.browsingContext.currentWindowGlobal.getActor(
-        "SiteSpecificBrowser"
-      );
-      try {
-        icon.src = await actor.sendQuery("LoadIcon", icon.src);
-      } catch (e) {
-        // Bad icon, drop it from the list.
-        return null;
-      }
-
-      return icon;
-    })
-  )).filter(icon => icon);
+      })
+    )
+  ).filter(icon => icon);
 
   // If the site provided no icons then try to use the normal page icons.
   if (!manifest.icons.length) {

@@ -11,7 +11,7 @@ function goUpdateGlobalEditMenuItems(force) {
   // cut, copy, and paste buttons been added to the toolbars) for performance.
   // This only works in applications/on platforms that set the gEditUIVisible
   // flag, so we check to see if that flag is defined before using it.
-  if (!force && (typeof gEditUIVisible != "undefined" && !gEditUIVisible)) {
+  if (!force && typeof gEditUIVisible != "undefined" && !gEditUIVisible) {
     return;
   }
 

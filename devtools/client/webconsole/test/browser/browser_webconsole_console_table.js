@@ -29,7 +29,11 @@ add_task(async function() {
       input: ["apples", "oranges", "bananas"],
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "apples"], ["1", "oranges"], ["2", "bananas"]],
+        rows: [
+          ["0", "apples"],
+          ["1", "oranges"],
+          ["2", "bananas"],
+        ],
       },
     },
     {
@@ -62,15 +66,24 @@ add_task(async function() {
       input: new Person("John", "Smith"),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["firstName", "John"], ["lastName", "Smith"]],
+        rows: [
+          ["firstName", "John"],
+          ["lastName", "Smith"],
+        ],
       },
     },
     {
       info: "Testing when data argument is an array of arrays",
-      input: [["Jane", "Doe"], ["Emily", "Jones"]],
+      input: [
+        ["Jane", "Doe"],
+        ["Emily", "Jones"],
+      ],
       expected: {
         columns: ["(index)", "0", "1"],
-        rows: [["0", "Jane", "Doe"], ["1", "Emily", "Jones"]],
+        rows: [
+          ["0", "Jane", "Doe"],
+          ["1", "Emily", "Jones"],
+        ],
       },
     },
     {
@@ -111,15 +124,25 @@ add_task(async function() {
       input: new Set(["a", "b", "c"]),
       expected: {
         columns: ["(iteration index)", "Values"],
-        rows: [["0", "a"], ["1", "b"], ["2", "c"]],
+        rows: [
+          ["0", "a"],
+          ["1", "b"],
+          ["2", "c"],
+        ],
       },
     },
     {
       info: "Testing when data argument is a Map",
-      input: new Map([["key-a", "value-a"], ["key-b", "value-b"]]),
+      input: new Map([
+        ["key-a", "value-a"],
+        ["key-b", "value-b"],
+      ]),
       expected: {
         columns: ["(iteration index)", "Key", "Values"],
-        rows: [["0", "key-a", "value-a"], ["1", "key-b", "value-b"]],
+        rows: [
+          ["0", "key-a", "value-a"],
+          ["1", "key-b", "value-b"],
+        ],
       },
     },
     {
@@ -127,7 +150,12 @@ add_task(async function() {
       input: new Int8Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -135,7 +163,12 @@ add_task(async function() {
       input: new Uint8Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -143,7 +176,12 @@ add_task(async function() {
       input: new Int16Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -151,7 +189,12 @@ add_task(async function() {
       input: new Uint16Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -159,7 +202,12 @@ add_task(async function() {
       input: new Int32Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -167,7 +215,12 @@ add_task(async function() {
       input: new Uint32Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -175,7 +228,12 @@ add_task(async function() {
       input: new Float32Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -183,7 +241,12 @@ add_task(async function() {
       input: new Float64Array([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -191,7 +254,12 @@ add_task(async function() {
       input: new Uint8ClampedArray([1, 2, 3, 4]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+        rows: [
+          ["0", "1"],
+          ["1", "2"],
+          ["2", "3"],
+          ["3", "4"],
+        ],
       },
     },
     {
@@ -200,7 +268,12 @@ add_task(async function() {
       input: new BigInt64Array([1n, 2n, 3n, 4n]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1n"], ["1", "2n"], ["2", "3n"], ["3", "4n"]],
+        rows: [
+          ["0", "1n"],
+          ["1", "2n"],
+          ["2", "3n"],
+          ["3", "4n"],
+        ],
       },
     },
     {
@@ -209,7 +282,12 @@ add_task(async function() {
       input: new BigUint64Array([1n, 2n, 3n, 4n]),
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "1n"], ["1", "2n"], ["2", "3n"], ["3", "4n"]],
+        rows: [
+          ["0", "1n"],
+          ["1", "2n"],
+          ["2", "3n"],
+          ["3", "4n"],
+        ],
       },
     },
     {
@@ -218,7 +296,10 @@ add_task(async function() {
       headers: ["firstName"],
       expected: {
         columns: ["(index)", "firstName"],
-        rows: [["0", "Sam"], ["1", "Elena"]],
+        rows: [
+          ["0", "Sam"],
+          ["1", "Elena"],
+        ],
       },
     },
     {
@@ -241,7 +322,11 @@ add_task(async function() {
       headers: [[]],
       expected: {
         columns: ["(index)", "Values"],
-        rows: [["0", "apples"], ["1", "oranges"], ["2", "bananas"]],
+        rows: [
+          ["0", "apples"],
+          ["1", "oranges"],
+          ["2", "bananas"],
+        ],
       },
     },
     {

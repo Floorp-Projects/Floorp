@@ -94,10 +94,9 @@ async function jsWindowOpen(browser, iframeId) {
     let destWin = content;
     if (args.iframeId) {
       // Create a cross origin iframe
-      destWin = (await content.wrappedJSObject.createIframe(
-        args.iframeId,
-        true
-      )).contentWindow;
+      destWin = (
+        await content.wrappedJSObject.createIframe(args.iframeId, true)
+      ).contentWindow;
     }
     // Send message to either the iframe or the current page to open a popup
     await content.wrappedJSObject.sendMessage(destWin, "open");

@@ -367,11 +367,8 @@ const mapStateToProps = (state, props) => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    selectSource: actions.selectSource,
-    setExpandedState: actions.setExpandedState,
-    focusItem: actions.focusItem,
-  }
-)(SourcesTree);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  selectSource: actions.selectSource,
+  setExpandedState: actions.setExpandedState,
+  focusItem: actions.focusItem,
+})(SourcesTree);

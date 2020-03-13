@@ -159,7 +159,10 @@ add_task(async function test_retry_on_busy() {
   info("Verify our writes succeeded");
   let select1Stmt = db2.createAsyncStatement("SELECT b FROM a");
   let rows = await promiseExecuteStatement(select1Stmt);
-  deepEqual(rows.map(row => row.getResultByName("b")), [2, 3]);
+  deepEqual(
+    rows.map(row => row.getResultByName("b")),
+    [2, 3]
+  );
 
   info("Clean up");
   for (let stmt of [

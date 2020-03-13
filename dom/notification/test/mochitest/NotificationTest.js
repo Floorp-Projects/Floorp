@@ -132,7 +132,8 @@ var NotificationTest = (function() {
           JSON.stringify(dataObj.imageData.data) ===
             JSON.stringify(fakeCustomData.imageData.data) &&
           dataObj.map.get("test") == 42 &&
-          (dataObj.set.has(4) && dataObj.set.has(2))
+          dataObj.set.has(4) &&
+          dataObj.set.has(2)
         );
       } catch (e) {
         return false;

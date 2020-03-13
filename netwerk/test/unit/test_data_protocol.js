@@ -58,9 +58,7 @@ function run_test() {
 
     if (urls[idx][3] && request.nsIChannel.contentCharset !== urls[idx][3]) {
       do_throw(
-        `Charset mismatch! Test <${urls[idx][0]}> - Is <${
-          request.nsIChannel.contentCharset
-        }>, should be <${urls[idx][3]}>`
+        `Charset mismatch! Test <${urls[idx][0]}> - Is <${request.nsIChannel.contentCharset}>, should be <${urls[idx][3]}>`
       );
     }
 

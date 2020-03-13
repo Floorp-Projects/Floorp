@@ -107,7 +107,10 @@ var MockFilePicker = {
     file.append("testfile");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
     let promise = this.window.File.createFromNsIFile(file)
-      .then(domFile => domFile, () => null)
+      .then(
+        domFile => domFile,
+        () => null
+      )
       // domFile can be null.
       .then(domFile => {
         this.returnData = [this.internalFileData({ nsIFile: file, domFile })];

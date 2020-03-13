@@ -26,7 +26,10 @@ add_task(async function domainsAll() {
   await new Promise(resolve =>
     cps.removeAllDomainsSince(0, null, makeCallback(resolve))
   );
-  await dbOK([[null, "foo", 3], [null, "bar", 4]]);
+  await dbOK([
+    [null, "foo", 3],
+    [null, "bar", 4],
+  ]);
   await getOK(["a.com", "foo"], undefined);
   await getOK(["a.com", "bar"], undefined);
   await getGlobalOK(["foo"], 3);
@@ -72,7 +75,10 @@ add_task(async function privateBrowsing() {
   await new Promise(resolve =>
     cps.removeAllDomainsSince(0, context, makeCallback(resolve))
   );
-  await dbOK([[null, "foo", 3], [null, "bar", 4]]);
+  await dbOK([
+    [null, "foo", 3],
+    [null, "bar", 4],
+  ]);
   await getOK(["a.com", "foo", context], undefined);
   await getOK(["a.com", "bar", context], undefined);
   await getGlobalOK(["foo", context], 7);

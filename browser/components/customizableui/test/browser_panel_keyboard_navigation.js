@@ -15,7 +15,7 @@ function getEnabledNavigableElementsForView(panelView) {
     panelView.querySelectorAll("button,toolbarbutton,menulist,.text-link")
   ).filter(element => {
     let bounds = element.getBoundingClientRect();
-    return !element.disabled && (bounds.width > 0 && bounds.height > 0);
+    return !element.disabled && bounds.width > 0 && bounds.height > 0;
   });
 }
 

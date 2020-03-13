@@ -79,8 +79,14 @@ add_task(function test_mutator() {
     verify(m.finalize());
   };
 
-  check(m => m.setSpec("test:bla"), u => equal(u.spec, "test:bla"));
-  check(m => m.setSpec("test:bla"), u => equal(u.spec, "test:bla"));
+  check(
+    m => m.setSpec("test:bla"),
+    u => equal(u.spec, "test:bla")
+  );
+  check(
+    m => m.setSpec("test:bla"),
+    u => equal(u.spec, "test:bla")
+  );
   check(
     m => m.setScheme("some"),
     u => equal(u.spec, "some://user:pass@host:123/path/to/file?query#hash")

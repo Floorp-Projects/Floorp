@@ -22,7 +22,8 @@ export function isAwaitExpression(path: SimplePath) {
   const { node, parent } = path;
   return (
     t.isAwaitExpression(node) ||
-    (t.isAwaitExpression(parent.init) || t.isAwaitExpression(parent))
+    t.isAwaitExpression(parent.init) ||
+    t.isAwaitExpression(parent)
   );
 }
 
@@ -30,7 +31,8 @@ export function isYieldExpression(path: SimplePath) {
   const { node, parent } = path;
   return (
     t.isYieldExpression(node) ||
-    (t.isYieldExpression(parent.init) || t.isYieldExpression(parent))
+    t.isYieldExpression(parent.init) ||
+    t.isYieldExpression(parent)
   );
 }
 

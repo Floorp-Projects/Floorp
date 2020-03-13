@@ -2588,7 +2588,11 @@ add_task(async function test_duplicate_local_tags() {
   // doesn't enforce this. We should still sync the correct set of tags,
   // though, even if there are duplicates for the same URL.
   info("Manually insert local tags for A");
-  for (let [tag, dupes] of [["one", 2], ["two", 1], ["three", 2]]) {
+  for (let [tag, dupes] of [
+    ["one", 2],
+    ["two", 1],
+    ["three", 2],
+  ]) {
     let tagFolderInfo = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.tagsGuid,
       title: tag,

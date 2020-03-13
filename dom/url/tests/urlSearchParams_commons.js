@@ -326,7 +326,10 @@ function testCTORs() {
   var a = new URLSearchParams("a=b");
   is(a.get("a"), "b", "CTOR with string");
 
-  var b = new URLSearchParams([["a", "b"], ["c", "d"]]);
+  var b = new URLSearchParams([
+    ["a", "b"],
+    ["c", "d"],
+  ]);
   is(b.get("a"), "b", "CTOR with sequence");
   is(b.get("c"), "d", "CTOR with sequence");
 

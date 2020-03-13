@@ -77,7 +77,10 @@ async function test_counter() {
 
 add_task(function test_performance_counter() {
   return runWithPrefs(
-    [[ENABLE_COUNTER_PREF, true], [TIMING_MAX_AGE, 1]],
+    [
+      [ENABLE_COUNTER_PREF, true],
+      [TIMING_MAX_AGE, 1],
+    ],
     test_counter
   );
 });

@@ -6,7 +6,10 @@
 // Tests that line graphs hide the 'max' tooltip when the distance between
 // the 'min' and 'max' tooltip is too small.
 
-const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 59.9 }];
+const TEST_DATA = [
+  { delta: 100, value: 60 },
+  { delta: 200, value: 59.9 },
+];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
 add_task(async function() {

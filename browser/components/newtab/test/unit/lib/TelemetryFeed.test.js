@@ -1613,8 +1613,14 @@ describe("TelemetryFeed", () => {
       const spy = sandbox.spy(instance, "sendStructuredIngestionEvent");
       const session = {
         impressionSets: {
-          source_foo: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }],
-          source_bar: [{ id: 3, pos: 0 }, { id: 4, pos: 1 }],
+          source_foo: [
+            { id: 1, pos: 0 },
+            { id: 2, pos: 1 },
+          ],
+          source_bar: [
+            { id: 3, pos: 0 },
+            { id: 4, pos: 1 },
+          ],
         },
       };
       instance.sendDiscoveryStreamImpressions("foo", session);
@@ -1634,8 +1640,14 @@ describe("TelemetryFeed", () => {
       const spy = sandbox.spy(instance, "sendStructuredIngestionEvent");
       const session = {
         loadedContentSets: {
-          source_foo: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }],
-          source_bar: [{ id: 3, pos: 0 }, { id: 4, pos: 1 }],
+          source_foo: [
+            { id: 1, pos: 0 },
+            { id: 2, pos: 1 },
+          ],
+          source_bar: [
+            { id: 3, pos: 0 },
+            { id: 4, pos: 1 },
+          ],
         },
       };
       instance.sendDiscoveryStreamLoadedContent("foo", session);

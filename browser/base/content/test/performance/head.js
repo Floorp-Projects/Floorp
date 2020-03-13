@@ -798,18 +798,20 @@ async function runUrlbarTest(
       filter: rects =>
         rects.filter(
           r =>
-            !// We put text into the urlbar so expect its textbox to change.
-            (
-              (r.x1 >= Math.floor(textBoxRect.left) &&
-                r.x2 <= Math.ceil(textBoxRect.right) &&
-                r.y1 >= Math.floor(textBoxRect.top) &&
-                r.y2 <= Math.ceil(textBoxRect.bottom)) ||
-              // The dropmarker is displayed as active during some of the test.
-              // dropmarkerRect.left isn't always an integer.
-              (r.x1 >= Math.floor(dropmarkerRect.left) &&
-                r.x2 <= Math.ceil(dropmarkerRect.right) &&
-                r.y1 >= Math.floor(dropmarkerRect.top) &&
-                r.y2 <= Math.ceil(dropmarkerRect.bottom))
+            !(
+              // We put text into the urlbar so expect its textbox to change.
+              (
+                (r.x1 >= Math.floor(textBoxRect.left) &&
+                  r.x2 <= Math.ceil(textBoxRect.right) &&
+                  r.y1 >= Math.floor(textBoxRect.top) &&
+                  r.y2 <= Math.ceil(textBoxRect.bottom)) ||
+                // The dropmarker is displayed as active during some of the test.
+                // dropmarkerRect.left isn't always an integer.
+                (r.x1 >= Math.floor(dropmarkerRect.left) &&
+                  r.x2 <= Math.ceil(dropmarkerRect.right) &&
+                  r.y1 >= Math.floor(dropmarkerRect.top) &&
+                  r.y2 <= Math.ceil(dropmarkerRect.bottom))
+              )
             )
         ),
     };

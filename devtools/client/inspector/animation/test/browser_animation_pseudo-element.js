@@ -9,12 +9,18 @@ const TEST_DATA = [
   {
     expectedTargetLabel: "::before",
     expectedAnimationNameLabel: "body",
-    expectedKeyframsGraphPathSegments: [{ x: 0, y: 0 }, { x: 1000, y: 100 }],
+    expectedKeyframsGraphPathSegments: [
+      { x: 0, y: 0 },
+      { x: 1000, y: 100 },
+    ],
   },
   {
     expectedTargetLabel: "::before",
     expectedAnimationNameLabel: "div-before",
-    expectedKeyframsGraphPathSegments: [{ x: 0, y: 100 }, { x: 1000, y: 0 }],
+    expectedKeyframsGraphPathSegments: [
+      { x: 0, y: 100 },
+      { x: 1000, y: 0 },
+    ],
   },
   {
     expectedTargetLabel: "::after",

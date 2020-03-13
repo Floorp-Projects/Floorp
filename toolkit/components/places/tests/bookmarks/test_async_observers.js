@@ -10,16 +10,20 @@ let gBookmarkGuids = [];
 add_task(async function setup() {
   // Add multiple bookmarks to the same uri.
   gBookmarkGuids.push(
-    (await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      url: "http://book.ma.rk/",
-    })).guid
+    (
+      await PlacesUtils.bookmarks.insert({
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        url: "http://book.ma.rk/",
+      })
+    ).guid
   );
   gBookmarkGuids.push(
-    (await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      url: "http://book.ma.rk/",
-    })).guid
+    (
+      await PlacesUtils.bookmarks.insert({
+        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+        url: "http://book.ma.rk/",
+      })
+    ).guid
   );
   Assert.equal(gBookmarkGuids.length, 2);
 });

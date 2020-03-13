@@ -179,9 +179,9 @@ describe("ASRouterUISurface", () => {
 
   it("should render a trailhead message in the header portal", async () => {
     // wrapper = shallow(<ASRouterUISurface document={fakeDocument} />);
-    const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-      msg => msg.template === "trailhead"
-    );
+    const message = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).find(msg => msg.template === "trailhead");
 
     wrapper.setState({ message });
 
@@ -239,9 +239,9 @@ describe("ASRouterUISurface", () => {
 
   describe("trailhead", () => {
     it("should render trailhead if a trailhead message is received", async () => {
-      const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-        msg => msg.template === "trailhead"
-      );
+      const message = (
+        await OnboardingMessageProvider.getUntranslatedMessages()
+      ).find(msg => msg.template === "trailhead");
       wrapper.setState({ message });
       assert.lengthOf(wrapper.find(Trailhead), 1);
     });
@@ -264,9 +264,9 @@ describe("ASRouterUISurface", () => {
           },
         },
       ];
-      const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-        msg => msg.template === "trailhead"
-      );
+      const message = (
+        await OnboardingMessageProvider.getUntranslatedMessages()
+      ).find(msg => msg.template === "trailhead");
       wrapper.setState({
         message: { ...message, bundle: FAKE_TRIPLETS_BUNDLE },
       });
@@ -292,9 +292,9 @@ describe("ASRouterUISurface", () => {
           },
         },
       ];
-      const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-        msg => msg.id === "TRAILHEAD_1"
-      );
+      const message = (
+        await OnboardingMessageProvider.getUntranslatedMessages()
+      ).find(msg => msg.id === "TRAILHEAD_1");
       wrapper.setState({
         message: { ...message, bundle: FAKE_TRIPLETS_BUNDLE_1 },
       });

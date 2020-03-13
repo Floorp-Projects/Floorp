@@ -130,9 +130,10 @@ async function exportToFile(parent, cert) {
     "pkcs7-chain": "*.p7c",
   };
   let [saveCertAs, ...formatLabels] = await document.l10n.formatValues(
-    ["save-cert-as", ...Object.keys(formats).map(f => "cert-format-" + f)].map(
-      id => ({ id })
-    )
+    [
+      "save-cert-as",
+      ...Object.keys(formats).map(f => "cert-format-" + f),
+    ].map(id => ({ id }))
   );
 
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);

@@ -681,10 +681,9 @@ nsUnknownContentTypeDialog.prototype = {
         primaryExtension = mimeInfo.primaryExtension;
       } catch (ex) {}
       if (primaryExtension != "") {
-        typeString = this.dialogElement("strings").getFormattedString(
-          "fileType",
-          [primaryExtension.toUpperCase()]
-        );
+        typeString = this.dialogElement(
+          "strings"
+        ).getFormattedString("fileType", [primaryExtension.toUpperCase()]);
       }
       // 3. If we can't even do that, just give up and show the MIME type.
       else {
@@ -696,10 +695,9 @@ nsUnknownContentTypeDialog.prototype = {
       let [size, unit] = DownloadUtils.convertByteUnits(
         this.mLauncher.contentLength
       );
-      type.value = this.dialogElement("strings").getFormattedString(
-        "orderedFileSizeWithType",
-        [typeString, size, unit]
-      );
+      type.value = this.dialogElement(
+        "strings"
+      ).getFormattedString("orderedFileSizeWithType", [typeString, size, unit]);
     } else {
       type.value = typeString;
     }
@@ -730,10 +728,9 @@ nsUnknownContentTypeDialog.prototype = {
     // Use description, if we can get one.
     var desc = this.mLauncher.MIMEInfo.defaultDescription;
     if (desc) {
-      var defaultApp = this.dialogElement("strings").getFormattedString(
-        "defaultApp",
-        [desc]
-      );
+      var defaultApp = this.dialogElement(
+        "strings"
+      ).getFormattedString("defaultApp", [desc]);
       this.dialogElement("defaultHandler").label = defaultApp;
     } else {
       this.dialogElement("modeDeck").setAttribute("selectedIndex", "1");
@@ -1179,10 +1176,9 @@ nsUnknownContentTypeDialog.prototype = {
         // If there is none, use the extension to
         // identify the file, e.g. "ZIP file"
         if (fileExtension) {
-          typeString = this.dialogElement("strings").getFormattedString(
-            "fileType",
-            [fileExtension.toUpperCase()]
-          );
+          typeString = this.dialogElement(
+            "strings"
+          ).getFormattedString("fileType", [fileExtension.toUpperCase()]);
         } else {
           // If we can't even do that, just give up and show the MIME type.
           typeString = this.mLauncher.MIMEInfo.MIMEType;

@@ -38,11 +38,13 @@ add_task(async function test_isr_empty() {
 });
 
 add_task(async function test_isr_cycles() {
-  let c = (await inspectServerRecords([
-    { id: "C", type: "folder", children: ["A", "B"], parentid: "places" },
-    { id: "A", type: "folder", children: ["B"], parentid: "B" },
-    { id: "B", type: "folder", children: ["A"], parentid: "A" },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "C", type: "folder", children: ["A", "B"], parentid: "places" },
+      { id: "A", type: "folder", children: ["B"], parentid: "B" },
+      { id: "B", type: "folder", children: ["A"], parentid: "A" },
+    ])
+  ).problemData;
 
   equal(c.cycles.length, 1);
   ok(c.cycles[0].includes("A"));
@@ -50,11 +52,13 @@ add_task(async function test_isr_cycles() {
 });
 
 add_task(async function test_isr_orphansMultiParents() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "bookmark", parentid: "D" },
-    { id: "B", type: "folder", parentid: "places", children: ["A"] },
-    { id: "C", type: "folder", parentid: "places", children: ["A"] },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "bookmark", parentid: "D" },
+      { id: "B", type: "folder", parentid: "places", children: ["A"] },
+      { id: "C", type: "folder", parentid: "places", children: ["A"] },
+    ])
+  ).problemData;
   deepEqual(c.orphans, [{ id: "A", parent: "D" }]);
   equal(c.multipleParents.length, 1);
   ok(c.multipleParents[0].parents.includes("B"));
@@ -62,57 +66,69 @@ add_task(async function test_isr_orphansMultiParents() {
 });
 
 add_task(async function test_isr_orphansMultiParents2() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "bookmark", parentid: "D" },
-    { id: "B", type: "folder", parentid: "places", children: ["A"] },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "bookmark", parentid: "D" },
+      { id: "B", type: "folder", parentid: "places", children: ["A"] },
+    ])
+  ).problemData;
   equal(c.orphans.length, 1);
   equal(c.orphans[0].id, "A");
   equal(c.multipleParents.length, 0);
 });
 
 add_task(async function test_isr_deletedParents() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "bookmark", parentid: "B" },
-    { id: "C", type: "folder", parentid: "places", children: ["A"] },
-    { id: "B", type: "item", deleted: true },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "bookmark", parentid: "B" },
+      { id: "C", type: "folder", parentid: "places", children: ["A"] },
+      { id: "B", type: "item", deleted: true },
+    ])
+  ).problemData;
   deepEqual(c.deletedParents, ["A"]);
 });
 
 add_task(async function test_isr_badChildren() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "bookmark", parentid: "places", children: ["B", "C"] },
-    { id: "C", type: "bookmark", parentid: "A" },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "bookmark", parentid: "places", children: ["B", "C"] },
+      { id: "C", type: "bookmark", parentid: "A" },
+    ])
+  ).problemData;
   deepEqual(c.childrenOnNonFolder, ["A"]);
   deepEqual(c.missingChildren, [{ parent: "A", child: "B" }]);
   deepEqual(c.parentNotFolder, ["C"]);
 });
 
 add_task(async function test_isr_parentChildMismatches() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "folder", parentid: "places", children: [] },
-    { id: "B", type: "bookmark", parentid: "A" },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "folder", parentid: "places", children: [] },
+      { id: "B", type: "bookmark", parentid: "A" },
+    ])
+  ).problemData;
   deepEqual(c.parentChildMismatches, [{ parent: "A", child: "B" }]);
 });
 
 add_task(async function test_isr_duplicatesAndMissingIDs() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "folder", parentid: "places", children: [] },
-    { id: "A", type: "folder", parentid: "places", children: [] },
-    { type: "folder", parentid: "places", children: [] },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "folder", parentid: "places", children: [] },
+      { id: "A", type: "folder", parentid: "places", children: [] },
+      { type: "folder", parentid: "places", children: [] },
+    ])
+  ).problemData;
   equal(c.missingIDs, 1);
   deepEqual(c.duplicates, ["A"]);
 });
 
 add_task(async function test_isr_duplicateChildren() {
-  let c = (await inspectServerRecords([
-    { id: "A", type: "folder", parentid: "places", children: ["B", "B"] },
-    { id: "B", type: "bookmark", parentid: "A" },
-  ])).problemData;
+  let c = (
+    await inspectServerRecords([
+      { id: "A", type: "folder", parentid: "places", children: ["B", "B"] },
+      { id: "B", type: "bookmark", parentid: "A" },
+    ])
+  ).problemData;
   deepEqual(c.duplicateChildren, ["A"]);
 });
 

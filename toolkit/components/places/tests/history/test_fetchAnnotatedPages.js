@@ -101,7 +101,10 @@ add_task(async function test_fetchAnnotatedPages_multiple_match() {
 
   await PlacesUtils.history.update({
     url: TEST_URL2,
-    annotations: new Map([["test/anno", "testContent2"], ["test/anno2", 1234]]),
+    annotations: new Map([
+      ["test/anno", "testContent2"],
+      ["test/anno2", 1234],
+    ]),
   });
 
   let result = await PlacesUtils.history.fetchAnnotatedPages([

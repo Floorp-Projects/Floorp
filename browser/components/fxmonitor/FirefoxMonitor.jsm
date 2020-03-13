@@ -251,9 +251,9 @@ this.FirefoxMonitor = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     if (
       !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
-      (!aWebProgress.isTopLevel ||
-        aWebProgress.isLoadingDocument ||
-        !Components.isSuccessCode(aStatus))
+      !aWebProgress.isTopLevel ||
+      aWebProgress.isLoadingDocument ||
+      !Components.isSuccessCode(aStatus)
     ) {
       return;
     }

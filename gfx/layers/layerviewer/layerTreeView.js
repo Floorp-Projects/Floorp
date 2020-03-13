@@ -431,7 +431,11 @@ function parseLayers(layersDumpLines) {
 
     if (!layerObject["shadow-transform"]) {
       // No shadow transform = identify
-      layerObject["shadow-transform"] = [[1, 0], [0, 1], [0, 0]];
+      layerObject["shadow-transform"] = [
+        [1, 0],
+        [0, 1],
+        [0, 0],
+      ];
     }
 
     // Compute screenTransformX/screenTransformY

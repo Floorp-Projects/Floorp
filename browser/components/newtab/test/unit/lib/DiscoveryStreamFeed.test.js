@@ -2980,10 +2980,22 @@ describe("DiscoveryStreamFeed", () => {
         { id: 8, reason: "below_min_score", displayed: 0, full_recalc: 1 },
       ];
       const filtered = {
-        frequency_cap: [{ id: 1, flight_id: 1 }, { id: 2, flight_id: 2 }],
-        blocked_by_user: [{ id: 3, flight_id: 3 }, { id: 4, flight_id: 4 }],
-        flight_duplicate: [{ id: 5, flight_id: 5 }, { id: 6, flight_id: 6 }],
-        below_min_score: [{ id: 7, flight_id: 7 }, { id: 8, flight_id: 8 }],
+        frequency_cap: [
+          { id: 1, flight_id: 1 },
+          { id: 2, flight_id: 2 },
+        ],
+        blocked_by_user: [
+          { id: 3, flight_id: 3 },
+          { id: 4, flight_id: 4 },
+        ],
+        flight_duplicate: [
+          { id: 5, flight_id: 5 },
+          { id: 6, flight_id: 6 },
+        ],
+        below_min_score: [
+          { id: 7, flight_id: 7 },
+          { id: 8, flight_id: 8 },
+        ],
       };
       feed._sendSpocsFill(filtered, true);
 
@@ -2999,7 +3011,10 @@ describe("DiscoveryStreamFeed", () => {
         { id: 2, reason: "frequency_cap", displayed: 0, full_recalc: 0 },
       ];
       const filtered = {
-        frequency_cap: [{ id: 1, flight_id: 1 }, { id: 2, flight_id: 2 }],
+        frequency_cap: [
+          { id: 1, flight_id: 1 },
+          { id: 2, flight_id: 2 },
+        ],
       };
       feed._sendSpocsFill(filtered, false);
 

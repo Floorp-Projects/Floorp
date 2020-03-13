@@ -19,7 +19,10 @@ add_task(async function test_storing_a_normal_16x16_icon() {
 
   let { data, mimeType } = await getFaviconDataForPage(PAGE_URL);
   Assert.equal(mimeType, "image/png");
-  Assert.deepEqual(data, "test".split("").map(c => c.charCodeAt(0)));
+  Assert.deepEqual(
+    data,
+    "test".split("").map(c => c.charCodeAt(0))
+  );
 
   info("Refresh favicon");
   await setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI, false);

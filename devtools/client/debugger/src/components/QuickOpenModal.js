@@ -481,12 +481,9 @@ function mapStateToProps(state) {
 }
 
 /* istanbul ignore next: ignoring testing of redux connection stuff */
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    selectSpecificLocation: actions.selectSpecificLocation,
-    setQuickOpenQuery: actions.setQuickOpenQuery,
-    highlightLineRange: actions.highlightLineRange,
-    closeQuickOpen: actions.closeQuickOpen,
-  }
-)(QuickOpenModal);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  selectSpecificLocation: actions.selectSpecificLocation,
+  setQuickOpenQuery: actions.setQuickOpenQuery,
+  highlightLineRange: actions.highlightLineRange,
+  closeQuickOpen: actions.closeQuickOpen,
+})(QuickOpenModal);

@@ -12,7 +12,10 @@ const TEST_URI =
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.audioworklet.enabled", true], ["dom.worklet.enabled", true]],
+    set: [
+      ["dom.audioworklet.enabled", true],
+      ["dom.worklet.enabled", true],
+    ],
   });
 
   const hud = await openNewTabAndConsole(TEST_URI);

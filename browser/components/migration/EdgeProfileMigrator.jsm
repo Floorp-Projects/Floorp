@@ -344,9 +344,9 @@ EdgeReadingListMigrator.prototype = {
         parentGuid,
         title: folderTitle,
       };
-      this.__readingListFolderGuid = (await MigrationUtils.insertBookmarkWrapper(
-        folderSpec
-      )).guid;
+      this.__readingListFolderGuid = (
+        await MigrationUtils.insertBookmarkWrapper(folderSpec)
+      ).guid;
     }
     return this.__readingListFolderGuid;
   },

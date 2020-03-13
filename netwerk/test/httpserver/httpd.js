@@ -347,10 +347,7 @@ function printObj(o, showMembers) {
   var s = "******************************\n";
   s += "o = {\n";
   for (var i in o) {
-    if (
-      typeof i != "string" ||
-      (showMembers || (i.length > 0 && i[0] != "_"))
-    ) {
+    if (typeof i != "string" || showMembers || (i.length > 0 && i[0] != "_")) {
       s += "      " + i + ": " + o[i] + ",\n";
     }
   }

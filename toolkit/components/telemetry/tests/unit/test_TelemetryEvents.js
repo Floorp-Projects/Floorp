@@ -176,25 +176,37 @@ add_task(async function test_recording_state() {
   // Both test categories should be off by default.
   events.forEach(e => Telemetry.recordEvent(...e));
   TelemetryTestUtils.assertEvents([]);
-  checkEventSummary(events.map(e => ["parent", e, 1]), true);
+  checkEventSummary(
+    events.map(e => ["parent", e, 1]),
+    true
+  );
 
   // Enable one test category and see that we record correctly.
   Telemetry.setEventRecordingEnabled("telemetry.test", true);
   events.forEach(e => Telemetry.recordEvent(...e));
   TelemetryTestUtils.assertEvents([events[0]]);
-  checkEventSummary(events.map(e => ["parent", e, 1]), true);
+  checkEventSummary(
+    events.map(e => ["parent", e, 1]),
+    true
+  );
 
   // Also enable the other test category and see that we record correctly.
   Telemetry.setEventRecordingEnabled("telemetry.test.second", true);
   events.forEach(e => Telemetry.recordEvent(...e));
   TelemetryTestUtils.assertEvents(events);
-  checkEventSummary(events.map(e => ["parent", e, 1]), true);
+  checkEventSummary(
+    events.map(e => ["parent", e, 1]),
+    true
+  );
 
   // Now turn of one category again and check that this works as expected.
   Telemetry.setEventRecordingEnabled("telemetry.test", false);
   events.forEach(e => Telemetry.recordEvent(...e));
   TelemetryTestUtils.assertEvents([events[1]]);
-  checkEventSummary(events.map(e => ["parent", e, 1]), true);
+  checkEventSummary(
+    events.map(e => ["parent", e, 1]),
+    true
+  );
 });
 
 add_task(async function recording_setup() {
@@ -668,7 +680,10 @@ add_task(async function test_dynamicEvents() {
   }
 
   // Check that we've summarized the recorded events
-  checkEventSummary(expected.map(ev => ["dynamic", ev, 1]), true);
+  checkEventSummary(
+    expected.map(ev => ["dynamic", ev, 1]),
+    true
+  );
 
   // Check that the opt-out snapshot contains only the one expected event.
   snapshot = Telemetry.snapshotEvents(ALL_CHANNELS, false);
@@ -724,7 +739,10 @@ add_task(async function test_dynamicEvents() {
     1,
     "Should have one opt-out event in the snapshot."
   );
-  Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
+  Assert.deepEqual(
+    snapshot.dynamic.map(e => e.slice(1)),
+    expected
+  );
 });
 
 add_task(async function test_dynamicEventRegistrationValidation() {
@@ -936,7 +954,10 @@ add_task(async function test_dynamicEventRegisterAgain() {
     expected.length,
     "Should have right number of events in the snapshot."
   );
-  Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
+  Assert.deepEqual(
+    snapshot.dynamic.map(e => e.slice(1)),
+    expected
+  );
 
   // Register the same event again and make sure it can still be recorded.
   Telemetry.registerEvents(category, events);
@@ -948,7 +969,10 @@ add_task(async function test_dynamicEventRegisterAgain() {
     expected.length,
     "Should have right number of events in the snapshot."
   );
-  Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
+  Assert.deepEqual(
+    snapshot.dynamic.map(e => e.slice(1)),
+    expected
+  );
 
   // Now register another event in the same category and make sure both events can be recorded.
   events.test2 = {
@@ -957,7 +981,10 @@ add_task(async function test_dynamicEventRegisterAgain() {
   };
   Telemetry.registerEvents(category, events);
 
-  expected = [[category, "test1", "object1"], [category, "test2", "object2"]];
+  expected = [
+    [category, "test1", "object1"],
+    [category, "test2", "object2"],
+  ];
   expected.forEach(e => Telemetry.recordEvent(...e));
 
   snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
@@ -966,7 +993,10 @@ add_task(async function test_dynamicEventRegisterAgain() {
     expected.length,
     "Should have right number of events in the snapshot."
   );
-  Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
+  Assert.deepEqual(
+    snapshot.dynamic.map(e => e.slice(1)),
+    expected
+  );
 
   // Check that adding a new object to an event entry works.
   events.test1.methods = ["test1a"];
@@ -987,7 +1017,10 @@ add_task(async function test_dynamicEventRegisterAgain() {
     expected.length,
     "Should have right number of events in the snapshot."
   );
-  Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
+  Assert.deepEqual(
+    snapshot.dynamic.map(e => e.slice(1)),
+    expected
+  );
 
   // Make sure that we can expire events that are already registered.
   events.test2.expired = true;
@@ -1002,7 +1035,10 @@ add_task(async function test_dynamicEventRegisterAgain() {
     expected.length,
     "Should have right number of events in the snapshot."
   );
-  Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
+  Assert.deepEqual(
+    snapshot.dynamic.map(e => e.slice(1)),
+    expected
+  );
 });
 
 add_task(

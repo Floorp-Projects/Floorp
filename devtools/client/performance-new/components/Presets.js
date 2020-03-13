@@ -123,7 +123,4 @@ const mapDispatchToProps = {
   changePreset: actions.changePreset,
 };
 
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Presets);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(Presets);

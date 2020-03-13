@@ -146,9 +146,11 @@ add_task(async function test_records_crypto() {
     // Explicitly check that it's using the bookmarks key.
     // This should succeed.
     Assert.equal(
-      (await bookmarkItem.decrypt(
-        Service.collectionKeys.keyForCollection("bookmarks")
-      )).stuff,
+      (
+        await bookmarkItem.decrypt(
+          Service.collectionKeys.keyForCollection("bookmarks")
+        )
+      ).stuff,
       "my payload here"
     );
 

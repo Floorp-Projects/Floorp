@@ -31,12 +31,19 @@ add_task(async function names() {
   await getOK(["a.com", "foo"], 1);
 
   await set("a.com", "bar", 2);
-  await dbOK([["a.com", "foo", 1], ["a.com", "bar", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    ["a.com", "bar", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getOK(["a.com", "bar"], 2);
 
   await setGlobal("foo", 3);
-  await dbOK([["a.com", "foo", 1], ["a.com", "bar", 2], [null, "foo", 3]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    ["a.com", "bar", 2],
+    [null, "foo", 3],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getOK(["a.com", "bar"], 2);
   await getGlobalOK(["foo"], 3);
@@ -58,7 +65,10 @@ add_task(async function names() {
 add_task(async function subdomains() {
   await set("a.com", "foo", 1);
   await set("b.a.com", "foo", 2);
-  await dbOK([["a.com", "foo", 1], ["b.a.com", "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    ["b.a.com", "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getOK(["b.a.com", "foo"], 2);
   await reset();

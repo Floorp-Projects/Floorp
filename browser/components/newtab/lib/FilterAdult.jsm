@@ -29,7 +29,10 @@ function md5Hash(text) {
   gCryptoHash.init(gCryptoHash.MD5);
 
   // Convert the text to a byte array for hashing
-  gCryptoHash.update(text.split("").map(c => c.charCodeAt(0)), text.length);
+  gCryptoHash.update(
+    text.split("").map(c => c.charCodeAt(0)),
+    text.length
+  );
 
   // Request the has result as ASCII base64
   return gCryptoHash.finish(true);

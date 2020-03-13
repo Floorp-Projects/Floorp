@@ -5,7 +5,10 @@
 async function check_has_child(aParentGuid, aChildGuid) {
   let parentTree = await PlacesUtils.promiseBookmarksTree(aParentGuid);
   Assert.ok("children" in parentTree);
-  Assert.notEqual(parentTree.children.find(e => e.guid == aChildGuid), null);
+  Assert.notEqual(
+    parentTree.children.find(e => e.guid == aChildGuid),
+    null
+  );
 }
 
 async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {

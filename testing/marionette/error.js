@@ -100,7 +100,7 @@ error.isError = function(val) {
  *     false otherwise.
  */
 error.isWebDriverError = function(obj) {
-  return error.isError(obj) && ("name" in obj && ERRORS.has(obj.name));
+  return error.isError(obj) && "name" in obj && ERRORS.has(obj.name);
 };
 
 /**

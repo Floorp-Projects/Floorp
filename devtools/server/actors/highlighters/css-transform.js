@@ -167,7 +167,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
    */
   _isTransformed(node) {
     const style = getComputedStyle(node);
-    return style && (style.transform !== "none" && style.display !== "inline");
+    return style && style.transform !== "none" && style.display !== "inline";
   }
 
   _setPolygonPoints(quad, id) {

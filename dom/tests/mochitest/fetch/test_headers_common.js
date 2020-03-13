@@ -225,7 +225,10 @@ function TestFilledHeaders() {
 
   shouldThrow(
     function() {
-      filled = new Headers([["zxy", "987", "654"], ["uts", "321"]]);
+      filled = new Headers([
+        ["zxy", "987", "654"],
+        ["uts", "321"],
+      ]);
     },
     TypeError,
     "Fill with non-tuple sequence should throw TypeError."
@@ -291,18 +294,27 @@ function TestHeadersIterator() {
   );
   arrayEquals(
     iterate(entries_iter),
-    [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]],
+    [
+      ["foo", "bar, " + ehsanInflated],
+      ["foo2", "baz2"],
+    ],
     "Correct entries iterator"
   );
 
   arrayEquals(
     iterateForOf(headers),
-    [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]],
+    [
+      ["foo", "bar, " + ehsanInflated],
+      ["foo2", "baz2"],
+    ],
     "Correct entries iterator"
   );
   arrayEquals(
     iterateForOf(new Headers(headers)),
-    [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]],
+    [
+      ["foo", "bar, " + ehsanInflated],
+      ["foo2", "baz2"],
+    ],
     "Correct entries iterator"
   );
 }

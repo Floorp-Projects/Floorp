@@ -135,11 +135,12 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      * @param {object} data The data object to send.
      */
     _sendToAll(message, data) {
-      ChromeUtils.nondeterministicGetWeakSetKeys(BrowsingContexts).forEach(
-        browser =>
-          browser.currentWindowGlobal
-            .getActor("ShieldFrame")
-            .sendAsyncMessage(message, data)
+      ChromeUtils.nondeterministicGetWeakSetKeys(
+        BrowsingContexts
+      ).forEach(browser =>
+        browser.currentWindowGlobal
+          .getActor("ShieldFrame")
+          .sendAsyncMessage(message, data)
       );
     },
 

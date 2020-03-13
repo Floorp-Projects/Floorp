@@ -94,7 +94,10 @@ add_task(async function test_working_bid_exchange_with_nodetype() {
 add_task(async function test_invalid_arguments() {
   _("Ensure invalid arguments to APIs are rejected.");
 
-  let args = [[null, "assertion"], ["http://example.com/", null]];
+  let args = [
+    [null, "assertion"],
+    ["http://example.com/", null],
+  ];
 
   for (let arg of args) {
     let client = new TokenServerClient();

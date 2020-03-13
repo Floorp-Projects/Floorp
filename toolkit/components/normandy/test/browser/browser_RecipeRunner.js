@@ -307,9 +307,9 @@ decorate_task(
     await rsCollection.db.saveLastModified(42);
     rsCollection.db.close();
 
-    let recipesFromRS = (await RecipeRunner._remoteSettingsClientForTesting.get()).map(
-      ({ recipe, signature }) => recipe
-    );
+    let recipesFromRS = (
+      await RecipeRunner._remoteSettingsClientForTesting.get()
+    ).map(({ recipe, signature }) => recipe);
     // Sort the records by id so that they match the order in the assertion
     recipesFromRS.sort((a, b) => a.id - b.id);
     Assert.deepEqual(

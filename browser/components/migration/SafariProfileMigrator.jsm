@@ -153,11 +153,15 @@ Bookmarks.prototype = {
         // Reading list items are imported as regular bookmarks.
         // They are imported under their own folder, created either under the
         // bookmarks menu (in the case of startup migration).
-        folderGuid = (await MigrationUtils.insertBookmarkWrapper({
-          parentGuid: PlacesUtils.bookmarks.menuGuid,
-          type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          title: MigrationUtils.getLocalizedString("importedSafariReadingList"),
-        })).guid;
+        folderGuid = (
+          await MigrationUtils.insertBookmarkWrapper({
+            parentGuid: PlacesUtils.bookmarks.menuGuid,
+            type: PlacesUtils.bookmarks.TYPE_FOLDER,
+            title: MigrationUtils.getLocalizedString(
+              "importedSafariReadingList"
+            ),
+          })
+        ).guid;
         break;
       }
       default:

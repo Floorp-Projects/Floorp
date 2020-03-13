@@ -1494,7 +1494,13 @@ class SpecialPowersChild extends JSWindowActorChild {
     try {
       Cc["@mozilla.org/memory-reporter-manager;1"]
         .getService(Ci.nsIMemoryReporterManager)
-        .getReports(() => {}, null, () => {}, null, false);
+        .getReports(
+          () => {},
+          null,
+          () => {},
+          null,
+          false
+        );
     } catch (e) {}
   }
 

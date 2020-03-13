@@ -103,7 +103,7 @@ function toggle(document) {
     // The widgets are not being properly destroyed. This is a workaround
     // until Bug 1552565 lands.
     const element = document.getElementById("PanelUI-profiler");
-    delete /** @type {any} */ (element)._addedEventListeners;
+    delete (/** @type {any} */ (element._addedEventListeners));
   }
 }
 

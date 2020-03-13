@@ -123,7 +123,4 @@ function mapDispatchToProps(dispatch) {
       dispatch(actions.unHighlightDomElement(grip)),
   };
 }
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(EagerEvaluation);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(EagerEvaluation);

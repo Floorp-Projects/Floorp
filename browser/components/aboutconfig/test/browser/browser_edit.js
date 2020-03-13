@@ -73,7 +73,11 @@ add_task(async function test_add_user_pref() {
 });
 
 add_task(async function test_delete_user_pref() {
-  for (let [radioIndex, testValue] of [[0, false], [1, -1], [2, "value"]]) {
+  for (let [radioIndex, testValue] of [
+    [0, false],
+    [1, -1],
+    [2, "value"],
+  ]) {
     Preferences.set(PREF_NEW, testValue);
     await AboutConfigTest.withNewTab(async function() {
       // Deleting the preference should keep the row.
@@ -116,7 +120,11 @@ add_task(async function test_click_type_label_multiple_forms() {
 
     let newRow = this.getRow(PREF_NEW_WHILE_DELETED);
 
-    for (let [radioIndex, expectedValue] of [[0, true], [1, 0], [2, ""]]) {
+    for (let [radioIndex, expectedValue] of [
+      [0, true],
+      [1, 0],
+      [2, ""],
+    ]) {
       let radioLabels = newRow.element.querySelectorAll("label > span");
       await this.document.l10n.translateElements(radioLabels);
 

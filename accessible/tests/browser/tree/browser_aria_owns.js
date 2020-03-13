@@ -194,7 +194,10 @@ addAccessibleTask(
     let two = findAccessibleChildByID(accDoc, "two");
 
     let waitfor = {
-      expected: [[EVENT_REORDER, "one"], [EVENT_REORDER, "two"]],
+      expected: [
+        [EVENT_REORDER, "one"],
+        [EVENT_REORDER, "two"],
+      ],
     };
 
     await contentSpawnMutation(browser, waitfor, function() {

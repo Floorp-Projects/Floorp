@@ -198,7 +198,10 @@ add_task(async function test_sendOnTimeout() {
   let PING_TYPE = "ping-on-timeout";
 
   // Disable send retry to make this test more deterministic.
-  fakePingSendTimer(() => {}, () => {});
+  fakePingSendTimer(
+    () => {},
+    () => {}
+  );
 
   // Set up small ping submission timeout to always have timeout error.
   fakeSendSubmissionTimeout(2);

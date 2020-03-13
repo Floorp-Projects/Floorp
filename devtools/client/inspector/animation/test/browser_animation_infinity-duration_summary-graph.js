@@ -11,19 +11,28 @@
 const TEST_DATA = [
   {
     targetClass: "infinity",
-    expectedIterationPath: [{ x: 0, y: 0 }, { x: 200000, y: 0 }],
+    expectedIterationPath: [
+      { x: 0, y: 0 },
+      { x: 200000, y: 0 },
+    ],
     expectedTooltip: {
       duration: "\u221E",
     },
   },
   {
     targetClass: "infinity-delay-iteration-start",
-    expectedDelayPath: [{ x: 0, y: 0 }, { x: 100000, y: 0 }],
+    expectedDelayPath: [
+      { x: 0, y: 0 },
+      { x: 100000, y: 0 },
+    ],
     expectedDelaySign: {
       marginInlineStart: "0%",
       width: "50%",
     },
-    expectedIterationPath: [{ x: 100000, y: 50 }, { x: 200000, y: 50 }],
+    expectedIterationPath: [
+      { x: 100000, y: 50 },
+      { x: 200000, y: 50 },
+    ],
     expectedTooltip: {
       delay: "100s",
       duration: "\u221E",
@@ -32,7 +41,10 @@ const TEST_DATA = [
   },
   {
     targetClass: "limited",
-    expectedIterationPath: [{ x: 0, y: 0 }, { x: 100000, y: 100 }],
+    expectedIterationPath: [
+      { x: 0, y: 0 },
+      { x: 100000, y: 100 },
+    ],
     expectedTooltip: {
       duration: "100s",
     },

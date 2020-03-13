@@ -448,7 +448,10 @@ function truncateToDays(aMsec) {
 // Returns a promise that resolves to true when the passed promise rejects,
 // false otherwise.
 function promiseRejects(promise) {
-  return promise.then(() => false, () => true);
+  return promise.then(
+    () => false,
+    () => true
+  );
 }
 
 // Generates a random string of at least a specific length.
@@ -561,6 +564,9 @@ if (runningInParent) {
 TelemetryController.testInitLogging();
 
 // Avoid timers interrupting test behavior.
-fakeSchedulerTimer(() => {}, () => {});
+fakeSchedulerTimer(
+  () => {},
+  () => {}
+);
 // Make pind sending predictable.
 fakeMidnightPingFuzzingDelay(0);

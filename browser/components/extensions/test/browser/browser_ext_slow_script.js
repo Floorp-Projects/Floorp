@@ -10,7 +10,10 @@ add_task(async function test_slow_content_script() {
   // Make sure we get a new process for our tab, or our reportProcessHangs
   // preferences value won't apply to it.
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.processCount", 1], ["dom.ipc.keepProcessesAlive.web", 0]],
+    set: [
+      ["dom.ipc.processCount", 1],
+      ["dom.ipc.keepProcessesAlive.web", 0],
+    ],
   });
   await SpecialPowers.popPrefEnv();
 

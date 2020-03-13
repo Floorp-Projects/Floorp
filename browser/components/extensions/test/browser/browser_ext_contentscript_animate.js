@@ -86,7 +86,10 @@ add_task(async function test_KeyframeEffect() {
 
         let effect = new KeyframeEffect(
           elem,
-          [{ opacity: 1, offset: 0 }, { opacity: 0, offset: 1 }],
+          [
+            { opacity: 1, offset: 0 },
+            { opacity: 0, offset: 1 },
+          ],
           { duration: 1000, fill: "forwards" }
         );
         let frames = effect.getKeyframes();

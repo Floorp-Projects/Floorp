@@ -2071,7 +2071,7 @@
       // Use the JSM global to create the permanentKey, so that if the
       // permanentKey is held by something after this window closes, it
       // doesn't keep the window alive.
-      b.permanentKey = new (Cu.getGlobalForObject(Services)).Object();
+      b.permanentKey = new (Cu.getGlobalForObject(Services).Object)();
 
       const defaultBrowserAttributes = {
         contextmenu: "contentAreaContextMenu",

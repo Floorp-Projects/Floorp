@@ -6,7 +6,10 @@ const BASE_URI = "http://mochi.test:8888/browser/dom/file/ipc/tests/empty.html";
 
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.blob.memoryToTemporaryFile", 1], ["dom.ipc.processCount", 4]],
+    set: [
+      ["dom.blob.memoryToTemporaryFile", 1],
+      ["dom.ipc.processCount", 4],
+    ],
   });
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);

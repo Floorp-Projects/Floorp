@@ -150,7 +150,4 @@ const mapDispatchToProps = {
   switchProfilerContext: Actions.switchProfilerContext,
 };
 
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ProfilerDialog);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(ProfilerDialog);

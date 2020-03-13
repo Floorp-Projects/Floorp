@@ -2645,13 +2645,25 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       // Shape renders for "circle()" and "ellipse()" use the same SVG nodes.
       this._updateEllipseShape(width, height, zoom);
       // Draw markers for center and radius points.
-      this._drawMarkers([[cx, cy], [cx + rx, cy]], width, height, zoom);
+      this._drawMarkers(
+        [
+          [cx, cy],
+          [cx + rx, cy],
+        ],
+        width,
+        height,
+        zoom
+      );
     } else if (this.shapeType === "ellipse") {
       const { rx, ry, cx, cy } = this.coordinates;
       this._updateEllipseShape(width, height, zoom);
       // Draw markers for center, horizontal radius and vertical radius points.
       this._drawMarkers(
-        [[cx, cy], [cx + rx, cy], [cx, cy + ry]],
+        [
+          [cx, cy],
+          [cx + rx, cy],
+          [cx, cy + ry],
+        ],
         width,
         height,
         zoom

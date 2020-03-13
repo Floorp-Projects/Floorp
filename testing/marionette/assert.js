@@ -77,9 +77,11 @@ assert.acyclic = function(obj, msg = "", error = JavaScriptError) {
  *     If <var>driver</var> does not have a session ID.
  */
 assert.session = function(driver, msg = "") {
-  assert.that(sessionID => sessionID, msg, InvalidSessionIDError)(
-    driver.sessionID
-  );
+  assert.that(
+    sessionID => sessionID,
+    msg,
+    InvalidSessionIDError
+  )(driver.sessionID);
   return driver.sessionID;
 };
 
@@ -145,9 +147,11 @@ assert.fennec = function(msg = "") {
  */
 assert.content = function(context, msg = "") {
   msg = msg || "Only supported in content context";
-  assert.that(c => c.toString() == "content", msg, UnsupportedOperationError)(
-    context
-  );
+  assert.that(
+    c => c.toString() == "content",
+    msg,
+    UnsupportedOperationError
+  )(context);
 };
 
 /**
@@ -180,9 +184,11 @@ assert.open = function(context, msg = "") {
   }
 
   msg = msg || "Browsing context has been discarded";
-  return assert.that(ctx => ctx && !ctx.closed, msg, NoSuchWindowError)(
-    context
-  );
+  return assert.that(
+    ctx => ctx && !ctx.closed,
+    msg,
+    NoSuchWindowError
+  )(context);
 };
 
 /**
