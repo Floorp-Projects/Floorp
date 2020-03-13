@@ -785,6 +785,43 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::ScrollbarLayerType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::ScrollbarLayerType,
+          mozilla::layers::ScrollbarLayerType::None,
+          mozilla::layers::kHighestScrollbarLayerType> {};
+
+template <>
+struct ParamTraits<mozilla::layers::ScrollbarData> {
+  typedef mozilla::layers::ScrollbarData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mDirection);
+    WriteParam(aMsg, aParam.mScrollbarLayerType);
+    WriteParam(aMsg, aParam.mThumbRatio);
+    WriteParam(aMsg, aParam.mThumbStart);
+    WriteParam(aMsg, aParam.mThumbLength);
+    WriteParam(aMsg, aParam.mThumbIsAsyncDraggable);
+    WriteParam(aMsg, aParam.mScrollTrackStart);
+    WriteParam(aMsg, aParam.mScrollTrackLength);
+    WriteParam(aMsg, aParam.mTargetViewId);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mDirection) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollbarLayerType) &&
+           ReadParam(aMsg, aIter, &aResult->mThumbRatio) &&
+           ReadParam(aMsg, aIter, &aResult->mThumbStart) &&
+           ReadParam(aMsg, aIter, &aResult->mThumbLength) &&
+           ReadParam(aMsg, aIter, &aResult->mThumbIsAsyncDraggable) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollTrackStart) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollTrackLength) &&
+           ReadParam(aMsg, aIter, &aResult->mTargetViewId);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::layers::SimpleLayerAttributes>
     : public PlainOldDataSerializer<mozilla::layers::SimpleLayerAttributes> {};
 
