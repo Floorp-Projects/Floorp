@@ -2,7 +2,7 @@
 
 # PushConnection
 
-`interface PushConnection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L27)
+`interface PushConnection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L28)
 
 An interface that wraps the [PushAPI](#).
 
@@ -19,7 +19,7 @@ on the API.
 | [unsubscribe](unsubscribe.md) | `abstract suspend fun unsubscribe(scope: `[`PushScope`](../-push-scope.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Un-subscribes a push subscription for the given scope. |
 | [unsubscribeAll](unsubscribe-all.md) | `abstract suspend fun unsubscribeAll(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Un-subscribes all push subscriptions. |
 | [updateToken](update-token.md) | `abstract suspend fun updateToken(token: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Updates the registration token to the native Push API if it changes. |
-| [verifyConnection](verify-connection.md) | `abstract suspend fun verifyConnection(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks validity of current push subscriptions. |
+| [verifyConnection](verify-connection.md) | `abstract suspend fun verifyConnection(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`AutoPushSubscriptionChanged`](../-auto-push-subscription-changed/index.md)`>`<br>Checks validity of current push subscriptions. |
 
 ### Extension Functions
 
