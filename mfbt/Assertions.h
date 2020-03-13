@@ -664,56 +664,22 @@ struct AssertionConditionType {
 #endif
 
 /*
- * MOZ_ALWAYS_TRUE(expr) and MOZ_ALWAYS_FALSE(expr) always evaluate the provided
- * expression, in debug builds and in release builds both.  Then, in debug
- * builds only, the value of the expression is asserted either true or false
- * using MOZ_ASSERT.
+ * MOZ_ALWAYS_TRUE(expr) and friends always evaluate the provided expression,
+ * in debug builds and in release builds both.  Then, in debug builds only, the
+ * value of the expression is asserted either true or false using MOZ_ASSERT.
  */
-#ifdef DEBUG
-#  define MOZ_ALWAYS_TRUE(expr)   \
-    do {                          \
-      if ((expr)) {               \
-        /* Do nothing. */         \
-      } else {                    \
-        MOZ_ASSERT(false, #expr); \
-      }                           \
-    } while (false)
-#  define MOZ_ALWAYS_FALSE(expr)  \
-    do {                          \
-      if ((expr)) {               \
-        MOZ_ASSERT(false, #expr); \
-      } else {                    \
-        /* Do nothing. */         \
-      }                           \
-    } while (false)
-#  define MOZ_ALWAYS_OK(expr) MOZ_ASSERT((expr).isOk())
-#  define MOZ_ALWAYS_ERR(expr) MOZ_ASSERT((expr).isErr())
-#else
-#  define MOZ_ALWAYS_TRUE(expr)     \
-    do {                            \
-      if ((expr)) {                 \
-        /* Silence MOZ_MUST_USE. */ \
-      }                             \
-    } while (false)
-#  define MOZ_ALWAYS_FALSE(expr)    \
-    do {                            \
-      if ((expr)) {                 \
-        /* Silence MOZ_MUST_USE. */ \
-      }                             \
-    } while (false)
-#  define MOZ_ALWAYS_OK(expr)       \
-    do {                            \
-      if ((expr).isOk()) {          \
-        /* Silence MOZ_MUST_USE. */ \
-      }                             \
-    } while (false)
-#  define MOZ_ALWAYS_ERR(expr)      \
-    do {                            \
-      if ((expr).isErr()) {         \
-        /* Silence MOZ_MUST_USE. */ \
-      }                             \
-    } while (false)
-#endif
+#define MOZ_ALWAYS_TRUE(expr)     \
+  do {                            \
+    if (MOZ_LIKELY(expr)) {       \
+      /* Silence MOZ_MUST_USE. */ \
+    } else {                      \
+      MOZ_ASSERT(false, #expr);   \
+    }                             \
+  } while (false)
+
+#define MOZ_ALWAYS_FALSE(expr) MOZ_ALWAYS_TRUE(!(expr))
+#define MOZ_ALWAYS_OK(expr) MOZ_ALWAYS_TRUE((expr).isOk())
+#define MOZ_ALWAYS_ERR(expr) MOZ_ALWAYS_TRUE((expr).isErr())
 
 /*
  * MOZ_DIAGNOSTIC_ALWAYS_TRUE is like MOZ_ALWAYS_TRUE, but using
