@@ -399,7 +399,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   MOZ_CAN_RUN_SCRIPT void UnlinkInternal();
 
-  void ValueWasChanged(bool aNotify);
+  void ValueWasChanged();
 
   MOZ_CAN_RUN_SCRIPT void DestroyEditor();
   MOZ_CAN_RUN_SCRIPT void Clear();
