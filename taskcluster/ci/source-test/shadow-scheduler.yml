@@ -23,7 +23,7 @@ job-defaults:
         sparse-profile: taskgraph
 
 relevant_tests:
-    description: Runs the relevant_tests optimization strategy instead of SETA.
+    description: Runs the relevant_tests optimization strategy instead of the default.
     treeherder:
         symbol: SS(relevant_tests)
     index:
@@ -43,3 +43,14 @@ bugbug_push_schedules:
     worker:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:bugbug_push_schedules
+
+seta:
+    description: Runs the SETA optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(seta)
+    index:
+        product: source
+        job-name: shadow-scheduler-seta
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta
