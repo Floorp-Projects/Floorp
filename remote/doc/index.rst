@@ -49,13 +49,7 @@ Bugs are tracked under the `Remote Protocol product`_.
 Communication
 =============
 
-The mailing list for Firefox remote debugging discussion is
-`dev-remote@lists.mozilla.org`_ (`subscribe`_, `archive`_).
+See `Communication`_ on `our project wiki`_.
 
-If you prefer real-time chat, there is often someone in
-the *#remote* channel on the `DevTools Slack`_ instance.
-
-.. _dev-remote@lists.mozilla.org: mailto:dev-remote@lists.mozilla.org
-.. _subscribe: https://lists.mozilla.org/listinfo/dev-remote
-.. _archive: https://lists.mozilla.org/pipermail/dev-remote/
-.. _DevTools Slack: https://devtools-html-slack.herokuapp.com/
+.. _Communication: https://wiki.mozilla.org/Remote#Communication
+.. _our project wiki: https://wiki.mozilla.org/Remote
