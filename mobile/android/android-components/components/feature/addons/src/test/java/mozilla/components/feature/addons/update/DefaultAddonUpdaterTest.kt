@@ -128,7 +128,7 @@ class DefaultAddonUpdaterTest {
 
         updater.updateStatusStorage.clear(context)
 
-        updater.onUpdatePermissionRequest(currentExt, updatedExt, emptyList()) {
+        updater.onUpdatePermissionRequest(currentExt, updatedExt, listOf("privacy")) {
             allowedPreviously = it
         }
 
@@ -139,6 +139,57 @@ class DefaultAddonUpdaterTest {
         assertTrue(isNotificationVisible(notificationId))
 
         updater.updateStatusStorage.clear(context)
+    }
+
+    @Test
+    fun `onUpdatePermissionRequest - should not show a notification for unknown permissions`() {
+        val context = spy(testContext).also {
+            val packageManager: PackageManager = mock()
+            doReturn(Intent()).`when`(packageManager).getLaunchIntentForPackage(
+                    ArgumentMatchers.anyString()
+            )
+            doReturn(packageManager).`when`(it).packageManager
+        }
+
+        var allowedPreviously = false
+        val updater = DefaultAddonUpdater(context)
+        val currentExt: WebExtension = mock()
+        val updatedExt: WebExtension = mock()
+        whenever(currentExt.id).thenReturn("addonId")
+        whenever(updatedExt.id).thenReturn("addonId")
+
+        updater.updateStatusStorage.clear(context)
+
+        updater.onUpdatePermissionRequest(currentExt, updatedExt, listOf("normandyAddonStudy")) {
+            allowedPreviously = it
+        }
+
+        assertTrue(allowedPreviously)
+
+        val notificationId = SharedIdsHelper.getIdForTag(context, NOTIFICATION_TAG)
+
+        assertFalse(isNotificationVisible(notificationId))
+        assertFalse(updater.updateStatusStorage.isPreviouslyAllowed(testContext, currentExt.id))
+
+        updater.updateStatusStorage.clear(context)
+    }
+
+    @Test
+    fun `createContentText - notification content must adapt to the amount of valid permissions`() {
+
+        val updater = DefaultAddonUpdater(testContext)
+        val validPermissions = listOf("privacy", "management")
+
+        var content = updater.createContentText(validPermissions).split("\n")
+        assertEquals("2 new permissions are required:", content[0].trim())
+        assertEquals("1-Read and modify privacy settings", content[1].trim())
+        assertEquals("2-Monitor extension usage and manage themes", content[2].trim())
+
+        val validAndInvalidPermissions = listOf("privacy", "invalid")
+        content = updater.createContentText(validAndInvalidPermissions).split("\n")
+
+        assertEquals("A new permissions is required:", content[0].trim())
+        assertEquals("1-Read and modify privacy settings", content[1].trim())
     }
 
     @Test
