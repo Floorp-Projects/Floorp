@@ -18,18 +18,6 @@ function doTest() {
     window.parent.ok_wrapper(true, "a document that was loaded, navigated to another document, had 'allow-same-origin' added and then was" +
       " navigated back should be same-origin with its parent");
   } catch (e) {
-  }
-}
-
-// We depend on our link click adding a new session history entry for the new
-// load.  That means we need to make sure it runs after our parent is done
-// loading.  Otherwise the load can get turned into a replace load, not create a
-// new session history entry, and then the back() call in the parent will fail.
-//
-// Since we are not same-origin with the parent, we wait for it to tell us when
-// it's done loading.
-onmessage = function(e) {
-  if (e.data == "start") {
     navigateAway();
   }
 }
