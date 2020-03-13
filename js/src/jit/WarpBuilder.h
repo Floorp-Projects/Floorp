@@ -109,6 +109,10 @@ namespace jit {
   _(Typeof)                 \
   _(TypeofExpr)             \
   _(Arguments)              \
+  _(ObjWithProto)           \
+  _(GetAliasedVar)          \
+  _(SetAliasedVar)          \
+  _(EnvCallee)              \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -188,6 +192,7 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildDefLexicalOp(BytecodeLocation loc);
 
   bool usesEnvironmentChain() const;
+  MDefinition* walkEnvironmentChain(uint32_t numHops);
 
 #define BUILD_OP(OP) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
   WARP_OPCODE_LIST(BUILD_OP)
