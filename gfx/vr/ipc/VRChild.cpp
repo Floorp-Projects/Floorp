@@ -27,7 +27,7 @@ class OpenVRControllerManifestManager {
     mAction = aPath;
   }
 
-  void SetOpenVRControllerManifestPath(OpenVRControllerType aType,
+  void SetOpenVRControllerManifestPath(VRControllerType aType,
                                        const nsCString& aPath) {
     mManifest.Put(static_cast<uint32_t>(aType), aPath);
   }
@@ -40,7 +40,7 @@ class OpenVRControllerManifestManager {
     return false;
   }
 
-  bool GetManifestPath(OpenVRControllerType aType, nsCString* aPath) {
+  bool GetManifestPath(VRControllerType aType, nsCString* aPath) {
     return mManifest.Get(static_cast<uint32_t>(aType), aPath);
   }
 
@@ -126,18 +126,17 @@ void VRChild::Init() {
   if (sOpenVRControllerManifestManager->GetActionPath(&output)) {
     SendOpenVRControllerActionPathToVR(output);
   }
-  if (sOpenVRControllerManifestManager->GetManifestPath(
-          OpenVRControllerType::Vive, &output)) {
-    SendOpenVRControllerManifestPathToVR(OpenVRControllerType::Vive, output);
+  if (sOpenVRControllerManifestManager->GetManifestPath(VRControllerType::Vive,
+                                                        &output)) {
+    SendOpenVRControllerManifestPathToVR(VRControllerType::Vive, output);
+  }
+  if (sOpenVRControllerManifestManager->GetManifestPath(VRControllerType::WMR,
+                                                        &output)) {
+    SendOpenVRControllerManifestPathToVR(VRControllerType::WMR, output);
   }
   if (sOpenVRControllerManifestManager->GetManifestPath(
-          OpenVRControllerType::WMR, &output)) {
-    SendOpenVRControllerManifestPathToVR(OpenVRControllerType::WMR, output);
-  }
-  if (sOpenVRControllerManifestManager->GetManifestPath(
-          OpenVRControllerType::Knuckles, &output)) {
-    SendOpenVRControllerManifestPathToVR(OpenVRControllerType::Knuckles,
-                                         output);
+          VRControllerType::Knuckles, &output)) {
+    SendOpenVRControllerManifestPathToVR(VRControllerType::Knuckles, output);
   }
   gfxVars::AddReceiver(this);
 }
@@ -157,7 +156,7 @@ mozilla::ipc::IPCResult VRChild::RecvOpenVRControllerActionPathToParent(
 }
 
 mozilla::ipc::IPCResult VRChild::RecvOpenVRControllerManifestPathToParent(
-    const OpenVRControllerType& aType, const nsCString& aPath) {
+    const VRControllerType& aType, const nsCString& aPath) {
   sOpenVRControllerManifestManager->SetOpenVRControllerManifestPath(aType,
                                                                     aPath);
   return IPC_OK();
