@@ -22,7 +22,7 @@ use std::{
 };
 use xpcom::{
     getter_addrefs,
-    interfaces::{nsIEventTarget, nsIRunnable, nsISupports, nsIThread},
+    interfaces::{nsIEventTarget, nsIRunnable, nsISerialEventTarget, nsISupports, nsIThread},
     xpcom, xpcom_method, AtomicRefcnt, RefCounted, RefPtr, XpCom,
 };
 
@@ -42,6 +42,10 @@ extern "C" {
         doomed: *const nsISupports,
         always_proxy: bool,
     );
+    fn NS_CreateBackgroundTaskQueue(
+        name: *const libc::c_char,
+        target: *mut *const nsISerialEventTarget,
+    ) -> nsresult;
 }
 
 pub fn get_current_thread() -> Result<RefPtr<nsIThread>, nsresult> {
@@ -64,6 +68,12 @@ pub fn create_thread(name: &str) -> Result<RefPtr<nsIThread>, nsresult> {
 
 pub fn is_current_thread(thread: &nsIThread) -> bool {
     unsafe { NS_IsCurrentThread(thread.coerce()) }
+}
+
+pub fn create_background_task_queue(
+    name: &'static CStr,
+) -> Result<RefPtr<nsISerialEventTarget>, nsresult> {
+    getter_addrefs(|p| unsafe { NS_CreateBackgroundTaskQueue(name.as_ptr(), p) })
 }
 
 /// A task represents an operation that asynchronously executes on a target
@@ -103,7 +113,7 @@ impl TaskRunnable {
         }))
     }
 
-    pub fn dispatch(&self, target_thread: &nsIThread) -> Result<(), nsresult> {
+    pub fn dispatch(&self, target_thread: &nsIEventTarget) -> Result<(), nsresult> {
         unsafe {
             target_thread.DispatchFromScript(self.coerce(), nsIEventTarget::DISPATCH_NORMAL as u32)
         }
