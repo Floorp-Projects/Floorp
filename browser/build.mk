@@ -32,7 +32,7 @@ source-upload::
 hg-bundle::
 	@$(MAKE) -C browser/installer hg-bundle
 
-l10n-check wget-en-US:
+wget-en-US:
 	@$(MAKE) -C browser/locales $@
 
 # make -j1 because dependencies in l10n build targets don't work
