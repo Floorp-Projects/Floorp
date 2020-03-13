@@ -12012,6 +12012,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
           }
         }
       }
+      clonedDoc->CloneAdoptedSheetsFrom(*this);
 
       for (int t = 0; t < AdditionalSheetTypeCount; ++t) {
         auto& sheets = mAdditionalSheets[additionalSheetType(t)];

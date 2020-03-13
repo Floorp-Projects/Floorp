@@ -221,6 +221,13 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
       dom::DocumentOrShadowRoot* aCloneDocumentOrShadowRoot,
       nsINode* aCloneOwningNode) const;
 
+  /**
+   * Creates a clone of the adopted style sheet as though it were constructed
+   * by aConstructorDocument. This should only be used for printing.
+   */
+  already_AddRefed<StyleSheet> CloneAdoptedSheet(
+      dom::Document& aConstructorDocument) const;
+
   bool HasForcedUniqueInner() const {
     return bool(mState & State::ForcedUniqueInner);
   }
