@@ -1725,9 +1725,7 @@ class ICUnaryArith_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
   explicit ICUnaryArith_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(UnaryArith_Fallback, stubCode) {
-    extra_ = 0;
-  }
+      : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
 
  public:
   bool sawDoubleResult() { return extra_; }
@@ -1760,9 +1758,7 @@ class ICBinaryArith_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
   explicit ICBinaryArith_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(BinaryArith_Fallback, stubCode) {
-    extra_ = 0;
-  }
+      : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
 
   static const uint16_t SAW_DOUBLE_RESULT_BIT = 0x1;
 
