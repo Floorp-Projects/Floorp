@@ -631,10 +631,11 @@ pwmgr:
     record_in_processes: [content]
   autocomplete_field:
     objects: ["generatedpassword"]
-    methods: ["autocomplete_field"]
+    methods: ["autocomplete_field", "autocomplete_shown"]
     description: >
-      Sent the first time each unique generated password is used to fill a login field - i.e. the user selects it from from the autocomplete dropdown on a password input
-    bug_numbers: [1548878]
+      "autocomplete_field": The first time each unique generated password is used to fill a login field - i.e. the user selects it from from the autocomplete dropdown on a password input
+      "autocomplete_shown": The first time the password generation option is shown in the autocomplete dropdown on a password input for a site per session
+    bug_numbers: [1548878, 1616356]
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "sfoster@mozilla.com"]
     products:
       - "firefox"
