@@ -754,7 +754,8 @@ void RenderThread::InitDeviceTask() {
   MOZ_ASSERT(!mSharedGL);
 
   mSharedGL = CreateGLContext();
-  if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
+  if (gfx::gfxVars::UseWebRenderProgramBinaryDisk() &&
+      !gfx::gfxVars::UseSoftwareWebRender()) {
     mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
   }
   // Query the shared GL context to force the
@@ -842,7 +843,7 @@ gl::GLContext* RenderThread::SharedGL() {
     mSharedGL = CreateGLContext();
     mShaders = nullptr;
   }
-  if (mSharedGL && !mShaders) {
+  if (mSharedGL && !mShaders && !gfx::gfxVars::UseSoftwareWebRender()) {
     mShaders = MakeUnique<WebRenderShaders>(mSharedGL, mProgramCache.get());
   }
 
