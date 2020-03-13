@@ -265,6 +265,12 @@ struct ParamTraits<mozilla::gfx::ColorSpace>
                                       mozilla::gfx::ColorSpace::SRGB,
                                       mozilla::gfx::ColorSpace::Max> {};
 
+template <>
+struct ParamTraits<mozilla::gfx::CompositionOp>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::gfx::CompositionOp, mozilla::gfx::CompositionOp::OP_OVER,
+          mozilla::gfx::CompositionOp::OP_COUNT> {};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
