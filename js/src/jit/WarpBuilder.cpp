@@ -1151,3 +1151,74 @@ bool WarpBuilder::build_Arguments(BytecodeLocation loc) {
   current->push(argsObj);
   return true;
 }
+
+bool WarpBuilder::build_ObjWithProto(BytecodeLocation loc) {
+  MDefinition* proto = current->pop();
+  MInstruction* ins = MObjectWithProto::New(alloc(), proto);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+MDefinition* WarpBuilder::walkEnvironmentChain(uint32_t numHops) {
+  MDefinition* env = current->environmentChain();
+
+  for (uint32_t i = 0; i < numHops; i++) {
+    MInstruction* ins = MEnclosingEnvironment::New(alloc(), env);
+    current->add(ins);
+    env = ins;
+  }
+
+  return env;
+}
+
+bool WarpBuilder::build_GetAliasedVar(BytecodeLocation loc) {
+  EnvironmentCoordinate ec = loc.getEnvironmentCoordinate();
+  MDefinition* obj = walkEnvironmentChain(ec.hops());
+
+  MInstruction* load;
+  if (EnvironmentObject::nonExtensibleIsFixedSlot(ec)) {
+    load = MLoadFixedSlot::New(alloc(), obj, ec.slot());
+  } else {
+    MInstruction* slots = MSlots::New(alloc(), obj);
+    current->add(slots);
+
+    uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
+    load = MLoadSlot::New(alloc(), slots, slot);
+  }
+
+  current->add(load);
+  current->push(load);
+  return true;
+}
+
+bool WarpBuilder::build_SetAliasedVar(BytecodeLocation loc) {
+  EnvironmentCoordinate ec = loc.getEnvironmentCoordinate();
+  MDefinition* val = current->peek(-1);
+  MDefinition* obj = walkEnvironmentChain(ec.hops());
+
+  current->add(MPostWriteBarrier::New(alloc(), obj, val));
+
+  MInstruction* store;
+  if (EnvironmentObject::nonExtensibleIsFixedSlot(ec)) {
+    store = MStoreFixedSlot::NewBarriered(alloc(), obj, ec.slot(), val);
+  } else {
+    MInstruction* slots = MSlots::New(alloc(), obj);
+    current->add(slots);
+
+    uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
+    store = MStoreSlot::NewBarriered(alloc(), slots, slot, val);
+  }
+
+  current->add(store);
+  return resumeAfter(store, loc);
+}
+
+bool WarpBuilder::build_EnvCallee(BytecodeLocation loc) {
+  uint32_t numHops = loc.getEnvCalleeNumHops();
+  MDefinition* env = walkEnvironmentChain(numHops);
+  auto* callee = MLoadFixedSlot::New(alloc(), env, CallObject::calleeSlot());
+  current->add(callee);
+  current->push(callee);
+  return true;
+}
