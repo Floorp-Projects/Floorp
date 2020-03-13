@@ -55,18 +55,30 @@ class ProxyAccessibleBase {
     return mChildren.Length() ? mChildren[mChildren.Length() - 1] : nullptr;
   }
   Derived* PrevSibling() const {
-    size_t idx = IndexInParent();
+    int32_t idx = IndexInParent();
+    if (idx == -1) {
+      return nullptr;  // No parent.
+    }
     return idx > 0 ? Parent()->mChildren[idx - 1] : nullptr;
   }
   Derived* NextSibling() const {
-    size_t idx = IndexInParent();
-    return idx + 1 < Parent()->mChildren.Length() ? Parent()->mChildren[idx + 1]
-                                                  : nullptr;
+    int32_t idx = IndexInParent();
+    if (idx == -1) {
+      return nullptr;  // No parent.
+    }
+    MOZ_ASSERT(idx >= 0);
+    size_t newIdx = idx + 1;
+    return newIdx < Parent()->mChildren.Length() ? Parent()->mChildren[newIdx]
+                                                 : nullptr;
   }
 
   // XXX evaluate if this is fast enough.
-  size_t IndexInParent() const {
-    return Parent()->mChildren.IndexOf(static_cast<const Derived*>(this));
+  int32_t IndexInParent() const {
+    Derived* parent = Parent();
+    if (!parent) {
+      return -1;
+    }
+    return parent->mChildren.IndexOf(static_cast<const Derived*>(this));
   }
   uint32_t EmbeddedChildCount() const;
   int32_t IndexOfEmbeddedChild(const Derived* aChild);
