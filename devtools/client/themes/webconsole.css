@@ -484,7 +484,7 @@ html #webconsole-notificationbox {
 }
 
 .webconsole-app .cm-auto-complete-shadow-text::after {
-  content: attr(title);
+  content: attr(data-completion);
   color: var(--theme-comment);
   /* This is important for the completion text not to move while the user is typing */
   /* See Bugs 1491776 & 1558248 */

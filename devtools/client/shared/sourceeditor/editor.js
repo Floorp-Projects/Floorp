@@ -1357,7 +1357,7 @@ Editor.prototype = {
       return "";
     }
 
-    return mark.title || "";
+    return mark.attributes["data-completion"] || "";
   },
 
   setAutoCompletionText: function(text) {
@@ -1375,7 +1375,9 @@ Editor.prototype = {
       if (text) {
         cm.markText({ ...cursor, ch: cursor.ch - 1 }, cursor, {
           className,
-          title: text,
+          attributes: {
+            "data-completion": text,
+          },
         });
       }
     });
