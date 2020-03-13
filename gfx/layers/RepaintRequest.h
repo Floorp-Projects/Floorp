@@ -210,7 +210,9 @@ struct RepaintRequest {
   // change during zooming).
   //
   // The origin of the composition bounds is relative to the layer tree origin.
-  // Unlike the scroll port's origin, it does not change during scrolling.
+  // Unlike the scroll port's origin, it does not change during scrolling of
+  // the scrollable layer to which it is associated. However, it may change due
+  // to scrolling of ancestor layers.
   //
   // This value is provided by Gecko at layout/paint time.
   ParentLayerRect mCompositionBounds;
