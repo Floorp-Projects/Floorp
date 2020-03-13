@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
   Management: "resource://gre/modules/Extension.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -433,6 +434,7 @@ class MobileWindowTracker extends EventEmitter {
   constructor() {
     super();
     this._topWindow = null;
+    this._topNonPBWindow = null;
   }
 
   get topWindow() {
@@ -442,15 +444,28 @@ class MobileWindowTracker extends EventEmitter {
     return null;
   }
 
+  get topNonPBWindow() {
+    if (this._topNonPBWindow) {
+      return this._topNonPBWindow.get();
+    }
+    return null;
+  }
+
   setTabActive(aWindow, aActive) {
-    const tab = aWindow.BrowserApp.selectedTab;
+    const { browser, BrowserApp, windowUtils } = aWindow;
+    const tab = BrowserApp.selectedTab;
     tab.active = aActive;
 
     if (aActive) {
       this._topWindow = Cu.getWeakReference(aWindow);
+      const isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
+      if (!isPrivate) {
+        this._topNonPBWindow = this._topWindow;
+      }
       this.emit("tab-activated", {
-        windowId: aWindow.windowUtils.outerWindowID,
+        windowId: windowUtils.outerWindowID,
         tabId: tab.id,
+        isPrivate,
       });
     }
   }

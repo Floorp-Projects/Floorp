@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 addons = [
+    'tabs-activate-remove',
+    'tabs-activate-remove-2',
     'update-1',
     'update-2',
     'update-postpone-1',

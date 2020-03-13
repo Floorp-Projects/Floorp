@@ -125,9 +125,13 @@ this.tabs = class extends ExtensionAPI {
           name: "tabs.onActivated",
           register: fire => {
             let listener = (eventName, event) => {
+              const { windowId, tabId, isPrivate } = event;
+              if (isPrivate && !context.privateBrowsingAllowed) {
+                return;
+              }
               fire.async({
-                windowId: event.windowId,
-                tabId: event.tabId,
+                windowId,
+                tabId,
                 // In GeckoView each window has only one tab, so previousTabId is omitted.
               });
             };
