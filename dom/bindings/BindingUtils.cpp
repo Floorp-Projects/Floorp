@@ -29,8 +29,8 @@
 #include "nsHTMLTags.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsINode.h"
+#include "nsIOService.h"
 #include "nsIPrincipal.h"
-#include "nsIURIFixup.h"
 #include "nsIXPConnect.h"
 #include "nsUTF8Utils.h"
 #include "WorkerPrivate.h"
@@ -3974,20 +3974,9 @@ void ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
   // Anonymize the URL.
   // Strip the URL of any possible username/password and make it ready to be
   // presented in the UI.
-  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-  if (NS_WARN_IF(!urifixup)) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> exposableURI;
-  nsresult rv =
-      urifixup->CreateExposableURI(aURI, getter_AddRefs(exposableURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
+  nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(aURI);
   nsAutoCString spec;
-  rv = exposableURI->GetSpec(spec);
+  nsresult rv = exposableURI->GetSpec(spec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

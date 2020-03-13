@@ -17,7 +17,7 @@
 #include "nsIRunnable.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"
-#include "nsIURIFixup.h"
+#include "nsIOService.h"
 #include "nsGlobalWindowInner.h"
 #include "nsJSUtils.h"
 #include "mozIThirdPartyUtil.h"
@@ -110,19 +110,14 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
 
         // Strip the URL of any possible username/password and make it ready
         // to be presented in the UI.
-        nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-        NS_ENSURE_TRUE_VOID(urifixup);
-        nsCOMPtr<nsIURI> exposableURI;
-        nsresult rv =
-            urifixup->CreateExposableURI(uri, getter_AddRefs(exposableURI));
-        NS_ENSURE_SUCCESS_VOID(rv);
-
+        nsCOMPtr<nsIURI> exposableURI =
+            net::nsIOService::CreateExposableURI(uri);
         AutoTArray<nsString, 1> params;
         CopyUTF8toUTF16(exposableURI->GetSpecOrDefault(),
                         *params.AppendElement());
 
         nsAutoString errorText;
-        rv = nsContentUtils::FormatLocalizedString(
+        nsresult rv = nsContentUtils::FormatLocalizedString(
             nsContentUtils::eNECKO_PROPERTIES, message, params, errorText);
         NS_ENSURE_SUCCESS_VOID(rv);
 

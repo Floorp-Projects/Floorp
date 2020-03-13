@@ -24,6 +24,9 @@ UNIFIED_SOURCES += [
   'FeaturePolicyUtils.cpp',
 ]
 
+LOCAL_INCLUDES += [
+  '/netwerk/base',
+]
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

@@ -23,6 +23,7 @@
 #include "nsIPermission.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
+#include "nsIOService.h"
 #include "nsIWebProgressListener.h"
 #include "nsPermissionManager.h"
 #include "nsScriptSecurityManager.h"

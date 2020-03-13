@@ -272,7 +272,7 @@ class UrlbarInput {
       uri = uri || this.window.gBrowser.currentURI;
       // Strip off usernames and passwords for the location bar
       try {
-        uri = Services.uriFixup.createExposableURI(uri);
+        uri = Services.io.createExposableURI(uri);
       } catch (e) {}
 
       // Replace initial page URIs with an empty string
@@ -340,7 +340,7 @@ class UrlbarInput {
     }
 
     try {
-      return Services.uriFixup.createExposableURI(uri);
+      return Services.io.createExposableURI(uri);
     } catch (ex) {}
 
     return uri;
