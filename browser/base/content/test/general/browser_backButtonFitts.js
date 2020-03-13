@@ -22,7 +22,8 @@ add_task(async function() {
 
   let popStatePromise = BrowserTestUtils.waitForContentEvent(
     gBrowser.selectedBrowser,
-    "popstate"
+    "popstate",
+    true
   );
   EventUtils.synthesizeMouseAtPoint(xPixel, yPixel, {}, window);
   await popStatePromise;

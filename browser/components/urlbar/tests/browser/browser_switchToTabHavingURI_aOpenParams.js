@@ -17,7 +17,7 @@ add_task(async function test_ignoreFragment() {
     tabRefAboutHome.linkedBrowser,
     [],
     async function() {
-      await ContentTaskUtils.waitForEvent(this, "hashchange", false);
+      await ContentTaskUtils.waitForEvent(this, "hashchange", true);
     }
   );
   switchTab("about:home#2", true, {
