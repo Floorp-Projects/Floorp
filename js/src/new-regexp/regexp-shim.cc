@@ -121,6 +121,71 @@ void Isolate::trace(JSTracer* trc) {
   }
 }
 
+/*static*/ Handle<String> String::Flatten(Isolate* isolate,
+                                          Handle<String> string) {
+  if (string->IsFlat()) {
+    return string;
+  }
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+  JSLinearString* linear = string->str()->ensureLinear(isolate->cx());
+  if (!linear) {
+    oomUnsafe.crash("Irregexp String::Flatten");
+  }
+  return Handle<String>(JS::StringValue(linear), isolate);
+}
+
+// This is only used for trace messages printing the source of a
+// regular expression. To keep things simple, we just return an
+// empty string and don't print anything.
+std::unique_ptr<char[]> String::ToCString() {
+  return std::unique_ptr<char[]>();
+}
+
+Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
+  MOZ_RELEASE_ASSERT(length >= 0);
+
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+
+  size_t alloc_size = sizeof(uint32_t) + length;
+  ByteArrayData* data =
+    static_cast<ByteArrayData*>(allocatePseudoHandle(alloc_size));
+  if (!data) {
+    oomUnsafe.crash("Irregexp NewByteArray");
+  }
+  data->length = length;
+
+  return Handle<ByteArray>(JS::PrivateValue(data), this);
+}
+
+Handle<FixedArray> Isolate::NewFixedArray(int length, AllocationType alloc) {
+  MOZ_RELEASE_ASSERT(length >= 0);
+
+  js::NewObjectKind kind = (alloc == AllocationType::kOld)
+    ? js::TenuredObject : js::GenericObject;
+
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+  JSObject* array = js::NewDenseFullyAllocatedArray(cx(), length, nullptr, kind);
+  if (!array) {
+    oomUnsafe.crash("Irregexp NewFixedArray");
+  }
+  return Handle<FixedArray>(JS::ObjectValue(*array), this);
+}
+
+template <typename CharT>
+Handle<String> Isolate::InternalizeString(const Vector<const CharT>& str) {
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+  JSAtom* atom = js::AtomizeChars(cx(), str.begin(), str.length());
+  if (!atom) {
+    oomUnsafe.crash("Irregexp InternalizeString");
+  }
+  return Handle<String>(JS::StringValue(atom), this);
+}
+
+template Handle<String>
+Isolate::InternalizeString(const Vector<const uint8_t>& str);
+template Handle<String>
+Isolate::InternalizeString(const Vector<const char16_t>& str);
+
 // TODO: Map flags to jitoptions
 bool FLAG_correctness_fuzzer_suppressions = false;
 bool FLAG_enable_regexp_unaligned_accesses = false;
