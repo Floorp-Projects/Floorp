@@ -86,11 +86,13 @@ Try Configuration
 -----------------
 
 ``try_mode``
-    The mode in which a try push is operating.  This can be one of
-    ``"try_task_config"``, ``"try_option_syntax"``, ``"try_select"`` or ``None`` meaning no try
-    input was provided.
+   The mode in which a try push is operating.  This can be one of:
 
-    ``"try_select"`` is used by ``mach try fuzzy`` to build a list of tasks to select from.
+    * ``"try_task_config"`` - Used to configure the taskgraph.
+    * ``"try_option_syntax"`` - Used when pushing to try with legacy try syntax.
+    * ``"try_auto"`` - Used to make try pushes behave more like a push on ``autoland``.
+    * ``"try_select"`` - Used by ``mach try`` to build a list of tasks locally.
+    * ``None`` - Not a try push or ``mach try release``.
 
 ``try_options``
     The arguments given as try syntax (as a dictionary), or ``None`` if
@@ -194,19 +196,19 @@ Repository Merge Day
 
 ``source_repo``
    The clone/push URI of the source repository, such as https://hg.mozilla.org/mozilla-central
- 
+
 ``target_repo``
    The clone/push URI of the target repository, such as https://hg.mozilla.org/releases/mozilla-beta
- 
+
 ``source_branch``
    The firefoxtree alias of the source branch, such as 'central', 'beta'
- 
+
 ``target_branch``
    The firefoxtree alias of the target branch, such as 'beta', 'release'
 
 ``force-dry-run``
    Don't push any results to target repositories.
- 
+
 
 Comm Push Information
 ---------------------
