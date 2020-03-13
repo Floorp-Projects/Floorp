@@ -198,6 +198,30 @@ function isLayerized(elementId) {
   return false;
 }
 
+// Return a rect (or null) that holds the last known content-side displayport
+// for a given element. (The element selection works the same way, and with
+// the same assumptions as the isLayerized function above).
+function getLastContentDisplayportFor(elementId) {
+  var contentTestData = SpecialPowers.getDOMWindowUtils(
+    window
+  ).getContentAPZTestData();
+  var nonEmptyBucket = getLastNonemptyBucket(contentTestData.paints);
+  ok(nonEmptyBucket != null, "expected at least one nonempty paint");
+  var seqno = nonEmptyBucket.sequenceNumber;
+  contentTestData = convertTestData(contentTestData);
+  var paint = contentTestData.paints[seqno];
+  for (var scrollId in paint) {
+    if ("contentDescription" in paint[scrollId]) {
+      if (paint[scrollId].contentDescription.includes(elementId)) {
+        if ("displayport" in paint[scrollId]) {
+          return parseRect(paint[scrollId].displayport);
+        }
+      }
+    }
+  }
+  return null;
+}
+
 // Return a promise that is resolved on the next rAF callback
 function waitForFrame() {
   return new Promise(resolve => {
