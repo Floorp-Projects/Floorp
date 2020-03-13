@@ -749,9 +749,7 @@ ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
 }
 
 JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::New || JSOp(*pc) == JSOp::SuperCall ||
-             JSOp(*pc) == JSOp::SpreadNew ||
-             JSOp(*pc) == JSOp::SpreadSuperCall);
+  MOZ_ASSERT(IsConstructPC(pc));
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.firstStub();
