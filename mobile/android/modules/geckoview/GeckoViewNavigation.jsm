@@ -39,10 +39,10 @@ const createReferrerInfo = aReferrer => {
 };
 
 function convertFlags(aFlags) {
+  let navFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
   if (!aFlags) {
-    return Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    return navFlags;
   }
-  let navFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   // These need to match the values in GeckoSession.LOAD_FLAGS_*
   if (aFlags & (1 << 0)) {
     navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
