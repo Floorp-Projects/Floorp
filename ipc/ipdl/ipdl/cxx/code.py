@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # This module contains functionality for adding formatted, opaque "code" blocks
 # into the IPDL ast. These code objects follow IPDL C++ ast patterns, and
 # perform lowering in much the same way.
