@@ -773,6 +773,14 @@ inline bool MatchingOperatingSystems(OperatingSystem aBlockedOS,
     // versions.
     return aSystemOSBuild >= kMinWin10BuildNumber;
   }
+
+  if (aBlockedOS == OperatingSystem::NotRecentWindows10) {
+    if (aSystemOS == OperatingSystem::Windows10) {
+      return aSystemOSBuild < kMinWin10BuildNumber;
+    } else {
+      return true;
+    }
+  }
 #endif
 
 #if defined(XP_MACOSX)
