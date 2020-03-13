@@ -1837,7 +1837,7 @@ class alignas(uint32_t) ImmutableScriptData final {
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script);
+                                    js::UniquePtr<ImmutableScriptData>& script);
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
                               const js::frontend::ScriptStencil& stencil);
@@ -2438,10 +2438,6 @@ class JSScript : public js::BaseScript {
   template <js::XDRMode mode>
   friend js::XDRResult js::RuntimeScriptData::XDR(js::XDRState<mode>* xdr,
                                                   js::HandleScript script);
-
-  template <js::XDRMode mode>
-  friend js::XDRResult js::ImmutableScriptData::XDR(js::XDRState<mode>* xdr,
-                                                    js::HandleScript script);
 
   friend bool js::RuntimeScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
