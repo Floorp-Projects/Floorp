@@ -54,23 +54,29 @@ const CONFIG_PREFS = [
   "identity.fxaccounts.remote.pairing.uri",
   "identity.sync.tokenserver.uri",
 ];
+const SYNC_PARAM = "sync";
 
 var FxAccountsConfig = {
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
     return this._buildURL("", {
-      extraParams: { entrypoint, email, ...extraParams },
+      extraParams: { entrypoint, email, service: SYNC_PARAM, ...extraParams },
     });
   },
 
   async promiseConnectAccountURI(entrypoint, extraParams = {}) {
     return this._buildURL("", {
-      extraParams: { entrypoint, action: "email", ...extraParams },
+      extraParams: {
+        entrypoint,
+        action: "email",
+        service: SYNC_PARAM,
+        ...extraParams,
+      },
     });
   },
 
   async promiseForceSigninURI(entrypoint, extraParams = {}) {
     return this._buildURL("force_auth", {
-      extraParams: { entrypoint, ...extraParams },
+      extraParams: { entrypoint, service: SYNC_PARAM, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
@@ -98,7 +104,7 @@ var FxAccountsConfig = {
 
   async promiseConnectDeviceURI(entrypoint, extraParams = {}) {
     return this._buildURL("connect_another_device", {
-      extraParams: { entrypoint, ...extraParams },
+      extraParams: { entrypoint, service: SYNC_PARAM, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
@@ -125,7 +131,7 @@ var FxAccountsConfig = {
   },
 
   get defaultParams() {
-    return { service: "sync", context: CONTEXT_PARAM };
+    return { context: CONTEXT_PARAM };
   },
 
   /**

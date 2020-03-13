@@ -16,7 +16,7 @@ add_task(
     );
     Assert.equal(
       await FxAccounts.config.promiseConnectAccountURI("test"),
-      "http://example.com/?service=sync&context=null&entrypoint=test&action=email"
+      "http://example.com/?context=null&entrypoint=test&action=email&service=sync"
     );
 
     Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
