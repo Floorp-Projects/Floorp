@@ -193,7 +193,7 @@ var ReaderMode = {
         return null;
       }
       try {
-        return Services.uriFixup.createExposableURI(uriObj);
+        return Services.io.createExposableURI(uriObj);
       } catch (ex) {
         return null;
       }

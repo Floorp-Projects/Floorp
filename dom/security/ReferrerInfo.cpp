@@ -9,7 +9,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsIURIFixup.h"
+#include "nsIOService.h"
 #include "nsIURL.h"
 
 #include "nsWhitespaceTokenizer.h"
@@ -1253,17 +1253,7 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
 
   // strip away any userpass; we don't want to be giving out passwords ;-)
   // This is required by Referrer Policy stripping algorithm.
-  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-  if (NS_WARN_IF(!urifixup)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> exposableURI;
-  rv = urifixup->CreateExposableURI(referrer, getter_AddRefs(exposableURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  nsCOMPtr<nsIURI> exposableURI = nsIOService::CreateExposableURI(referrer);
   referrer = exposableURI;
 
   TrimmingPolicy trimmingPolicy = ComputeTrimmingPolicy(aChannel);

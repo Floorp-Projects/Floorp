@@ -572,7 +572,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     let fixedURI = aLocationURI;
 
     try {
-      fixedURI = Services.uriFixup.createExposableURI(aLocationURI);
+      fixedURI = Services.io.createExposableURI(aLocationURI);
     } catch (ex) {}
 
     // We manually fire the initial about:blank messages to make sure that we

@@ -1135,7 +1135,7 @@ BrowserElementChild.prototype = {
       }
 
       // Remove password from uri.
-      location = Services.uriFixup.createExposableURI(location);
+      location = Services.io.createExposableURI(location);
 
       var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
 

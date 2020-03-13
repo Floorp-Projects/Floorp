@@ -17,6 +17,7 @@
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsIBrowserChild.h"
+#include "nsIOService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -95,7 +96,6 @@ static const char kPrintingPromptService[] =
 
 #include "nsFocusManager.h"
 #include "nsRange.h"
-#include "nsIURIFixup.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFrameElement.h"
@@ -1276,17 +1276,7 @@ void nsPrintJob::GetDisplayTitleAndURL(Document& aDoc,
       return;
     }
 
-    nsCOMPtr<nsIURIFixup> urifixup(components::URIFixup::Service());
-    if (!urifixup) {
-      return;
-    }
-
-    nsCOMPtr<nsIURI> exposableURI;
-    urifixup->CreateExposableURI(url, getter_AddRefs(exposableURI));
-    if (!exposableURI) {
-      return;
-    }
-
+    nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(url);
     nsAutoCString urlCStr;
     nsresult rv = exposableURI->GetSpec(urlCStr);
     if (NS_FAILED(rv)) {

@@ -16,7 +16,6 @@
 #include "nsIHttpPushListener.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIOService.h"
-#include "nsIURIFixup.h"
 #include "nsISeekableStream.h"
 #include "nsURLHelper.h"
 #include "ReferrerInfo.h"
@@ -544,17 +543,7 @@ nsresult TRRServiceChannel::SetupTransaction() {
     if (NS_FAILED(rv)) return rv;
     if (!buf.IsEmpty() && ((strncmp(mSpec.get(), "http:", 5) == 0) ||
                            strncmp(mSpec.get(), "https:", 6) == 0)) {
-      nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-      if (NS_WARN_IF(!urifixup)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIURI> tempURI;
-      nsresult rv = urifixup->CreateExposableURI(mURI, getter_AddRefs(tempURI));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
+      nsCOMPtr<nsIURI> tempURI = nsIOService::CreateExposableURI(mURI);
       rv = tempURI->GetAsciiSpec(path);
       if (NS_FAILED(rv)) return rv;
       requestURI = &path;

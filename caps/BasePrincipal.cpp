@@ -11,6 +11,7 @@
 #include "ExpandedPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
+#include "nsIOService.h"
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
@@ -23,7 +24,6 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/Components.h"
-#include "nsIURIFixup.h"
 #include "mozilla/dom/StorageUtils.h"
 
 #include "nsIURIMutator.h"
@@ -581,19 +581,8 @@ BasePrincipal::GetExposablePrePath(nsACString& aPrepath) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURIFixup> fixup(components::URIFixup::Service());
-  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-  if (NS_WARN_IF(!urifixup)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> fixedURI;
-  rv = fixup->CreateExposableURI(prinURI, getter_AddRefs(fixedURI));
-
-  if (NS_FAILED(rv) || NS_WARN_IF(!fixedURI)) {
-    return NS_OK;
-  }
-  return fixedURI->GetDisplayPrePath(aPrepath);
+  nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(prinURI);
+  return exposableURI->GetDisplayPrePath(aPrepath);
 }
 
 NS_IMETHODIMP
