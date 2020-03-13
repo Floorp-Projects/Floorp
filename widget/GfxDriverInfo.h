@@ -195,6 +195,7 @@ enum class DeviceFamily : uint8_t {
   NvidiaBlockWebRender,
   NvidiaRolloutWebRender,
   IntelRolloutWebRender,
+  IntelModernRolloutWebRender,
   AtiRolloutWebRender,
 
   Max
