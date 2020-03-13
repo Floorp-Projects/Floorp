@@ -20,11 +20,20 @@ function* testSteps() {
     { add: { x: 1, id: 1 }, indexes: [{ v: 1, k: 1 }] },
     {
       add: { x: [2, 3], id: 2 },
-      indexes: [{ v: 1, k: 1 }, { v: 2, k: 2 }, { v: 3, k: 2 }],
+      indexes: [
+        { v: 1, k: 1 },
+        { v: 2, k: 2 },
+        { v: 3, k: 2 },
+      ],
     },
     {
       put: { x: [2, 4], id: 1 },
-      indexes: [{ v: 2, k: 1 }, { v: 2, k: 2 }, { v: 3, k: 2 }, { v: 4, k: 1 }],
+      indexes: [
+        { v: 2, k: 1 },
+        { v: 2, k: 2 },
+        { v: 3, k: 2 },
+        { v: 4, k: 1 },
+      ],
     },
     {
       add: { x: [5, 6, 5, -2, 3], id: 3 },
@@ -46,9 +55,19 @@ function* testSteps() {
     },
     {
       add: { x: [{}, /x/, -12, "food", null, [false], undefined], id: 3 },
-      indexes: [{ v: -12, k: 3 }, { v: "food", k: 2 }, { v: "food", k: 3 }],
+      indexes: [
+        { v: -12, k: 3 },
+        { v: "food", k: 2 },
+        { v: "food", k: 3 },
+      ],
     },
-    { put: { x: [], id: 2 }, indexes: [{ v: -12, k: 3 }, { v: "food", k: 3 }] },
+    {
+      put: { x: [], id: 2 },
+      indexes: [
+        { v: -12, k: 3 },
+        { v: "food", k: 3 },
+      ],
+    },
     { put: { x: { y: 3 }, id: 3 }, indexes: [] },
     { add: { x: false, id: 7 }, indexes: [] },
     { delete: IDBKeyRange.lowerBound(0), indexes: [] },
@@ -121,12 +140,21 @@ function* testSteps() {
     { add: { x: 1, id: 1 }, indexes: [{ v: 1, k: 1 }] },
     {
       add: { x: [2, 3], id: 2 },
-      indexes: [{ v: 1, k: 1 }, { v: 2, k: 2 }, { v: 3, k: 2 }],
+      indexes: [
+        { v: 1, k: 1 },
+        { v: 2, k: 2 },
+        { v: 3, k: 2 },
+      ],
     },
     { put: { x: [2, 4], id: 3 }, fail: true },
     {
       put: { x: [1, 4], id: 1 },
-      indexes: [{ v: 1, k: 1 }, { v: 2, k: 2 }, { v: 3, k: 2 }, { v: 4, k: 1 }],
+      indexes: [
+        { v: 1, k: 1 },
+        { v: 2, k: 2 },
+        { v: 3, k: 2 },
+        { v: 4, k: 1 },
+      ],
     },
     {
       add: { x: [5, 0, 5, 5, 5], id: 3 },
@@ -141,7 +169,10 @@ function* testSteps() {
     },
     {
       delete: IDBKeyRange.bound(1, 2),
-      indexes: [{ v: 0, k: 3 }, { v: 5, k: 3 }],
+      indexes: [
+        { v: 0, k: 3 },
+        { v: 5, k: 3 },
+      ],
     },
     { add: { x: [0, 6], id: 8 }, fail: true },
     { add: { x: 5, id: 8 }, fail: true },

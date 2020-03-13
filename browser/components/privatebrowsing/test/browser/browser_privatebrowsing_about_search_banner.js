@@ -34,7 +34,10 @@ add_task(async function setup() {
 
 add_task(async function test_not_shown_if_pref_off() {
   SpecialPowers.pushPrefEnv({
-    set: [[PREF_UI_ENABLED, false], [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, 5]],
+    set: [
+      [PREF_UI_ENABLED, false],
+      [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, 5],
+    ],
   });
 
   const { win, tab } = await openAboutPrivateBrowsing();
@@ -62,7 +65,10 @@ add_task(async function test_not_shown_if_max_count_0() {
   AboutPrivateBrowsingHandler._searchBannerShownThisSession = false;
 
   SpecialPowers.pushPrefEnv({
-    set: [[PREF_UI_ENABLED, true], [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, 0]],
+    set: [
+      [PREF_UI_ENABLED, true],
+      [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, 0],
+    ],
   });
   const { win, tab } = await openAboutPrivateBrowsing();
 

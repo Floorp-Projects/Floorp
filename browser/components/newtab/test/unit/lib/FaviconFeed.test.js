@@ -169,7 +169,10 @@ describe("FaviconFeed", () => {
     it("should setAndFetchFaviconForPage if the url was redirected with a icon", async () => {
       sandbox
         .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
-        .resolves([{ visit_id: 1, url: domain }, { visit_id: 2, url }]);
+        .resolves([
+          { visit_id: 1, url: domain },
+          { visit_id: 2, url },
+        ]);
       sandbox
         .stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
         .callsArgWith(1, { spec: iconUrl }, 0, null, null, 96);
@@ -199,7 +202,10 @@ describe("FaviconFeed", () => {
     it("should NOT setAndFetchFaviconForPage if the original url doesn't have a icon", async () => {
       sandbox
         .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
-        .resolves([{ visit_id: 1, url: domain }, { visit_id: 2, url }]);
+        .resolves([
+          { visit_id: 1, url: domain },
+          { visit_id: 2, url },
+        ]);
       sandbox
         .stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
         .callsArgWith(1, null, null, null, null, null);
@@ -211,7 +217,10 @@ describe("FaviconFeed", () => {
     it("should NOT setAndFetchFaviconForPage if the original url doesn't have a rich icon", async () => {
       sandbox
         .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
-        .resolves([{ visit_id: 1, url: domain }, { visit_id: 2, url }]);
+        .resolves([
+          { visit_id: 1, url: domain },
+          { visit_id: 2, url },
+        ]);
       sandbox
         .stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
         .callsArgWith(1, { spec: iconUrl }, 0, null, null, 16);

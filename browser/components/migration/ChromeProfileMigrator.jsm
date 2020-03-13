@@ -264,7 +264,10 @@ async function GetBookmarksResource(aProfileFolder, aLocalePropertySuffix) {
         if (gotErrors) {
           throw new Error("The migration included errors.");
         }
-      })().then(() => aCallback(true), () => aCallback(false));
+      })().then(
+        () => aCallback(true),
+        () => aCallback(false)
+      );
     },
   };
 }

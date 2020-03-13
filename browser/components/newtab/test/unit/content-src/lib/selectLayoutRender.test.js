@@ -65,7 +65,12 @@ describe("selectLayoutRender", () => {
       type: "foo",
       feed: { url: "foo.com" },
       properties: { items: 2 },
-      data: { recommendations: [{ id: "foo", pos: 0 }, { id: "bar", pos: 1 }] },
+      data: {
+        recommendations: [
+          { id: "foo", pos: 0 },
+          { id: "bar", pos: 1 },
+        ],
+      },
     });
   });
 

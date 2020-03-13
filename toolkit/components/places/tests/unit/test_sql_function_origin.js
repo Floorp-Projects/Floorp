@@ -40,19 +40,25 @@ add_task(async function urls() {
 add_task(async function nonURLs() {
   let db = await PlacesUtils.promiseDBConnection();
 
-  let value = (await db.execute(`
+  let value = (
+    await db.execute(`
     SELECT get_prefix("hello");
-  `))[0].getString(0);
+  `)
+  )[0].getString(0);
   Assert.equal(value, "");
 
-  value = (await db.execute(`
+  value = (
+    await db.execute(`
     SELECT get_host_and_port("hello");
-  `))[0].getString(0);
+  `)
+  )[0].getString(0);
   Assert.equal(value, "hello");
 
-  value = (await db.execute(`
+  value = (
+    await db.execute(`
     SELECT strip_prefix_and_userinfo("hello");
-  `))[0].getString(0);
+  `)
+  )[0].getString(0);
   Assert.equal(value, "hello");
 });
 

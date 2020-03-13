@@ -130,7 +130,10 @@ add_task(async function test_blocker_state() {
         );
         deepEqual(
           s.counts,
-          [{ name: "items", count: 6 }, { name: "deletions", count: 0 }],
+          [
+            { name: "items", count: 6 },
+            { name: "deletions", count: 0 },
+          ],
           "Should report number of items in local tree"
         );
         break;
@@ -143,7 +146,10 @@ add_task(async function test_blocker_state() {
         );
         deepEqual(
           s.counts,
-          [{ name: "items", count: 6 }, { name: "deletions", count: 0 }],
+          [
+            { name: "items", count: 6 },
+            { name: "deletions", count: 0 },
+          ],
           "Should report number of items in remote tree"
         );
         break;

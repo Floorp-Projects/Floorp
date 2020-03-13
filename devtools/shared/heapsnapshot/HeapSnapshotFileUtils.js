@@ -82,5 +82,8 @@ exports.haveHeapSnapshotTempFile = function(snapshotId) {
     return Promise.resolve(false);
   }
 
-  return OS.File.stat(path).then(() => true, () => false);
+  return OS.File.stat(path).then(
+    () => true,
+    () => false
+  );
 };

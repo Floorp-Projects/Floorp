@@ -109,7 +109,8 @@ class ConfirmDialog extends Component {
   render() {
     if (
       (this.state && this.state.hasError) ||
-      (!this.props || !this.props.getterPath)
+      !this.props ||
+      !this.props.getterPath
     ) {
       return null;
     }
@@ -192,7 +193,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ConfirmDialog);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(ConfirmDialog);

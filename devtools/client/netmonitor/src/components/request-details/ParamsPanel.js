@@ -263,10 +263,7 @@ class ParamsPanel extends Component {
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    updateRequest: (id, data, batch) =>
-      dispatch(Actions.updateRequest(id, data, batch)),
-  })
-)(ParamsPanel);
+module.exports = connect(null, dispatch => ({
+  updateRequest: (id, data, batch) =>
+    dispatch(Actions.updateRequest(id, data, batch)),
+}))(ParamsPanel);

@@ -64,7 +64,8 @@ function promiseInstallResumed(addonID1, addonID2) {
         if (
           seenEnded.includes(addonID1) &&
           seenEnded.includes(addonID2) &&
-          (seenPostponed.includes(addonID1) && seenPostponed.includes(addonID2))
+          seenPostponed.includes(addonID1) &&
+          seenPostponed.includes(addonID2)
         ) {
           AddonManager.removeInstallListener(listener);
           resolve();

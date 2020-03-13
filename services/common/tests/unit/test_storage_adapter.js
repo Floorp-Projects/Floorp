@@ -186,7 +186,10 @@ function test_collection_operations() {
       { id: 2, foo: "baz" },
     ]);
     Assert.equal(impactedRecords.length, 2);
-    await adapter.loadDump([{ id: 1, foo: "baz" }, { id: 3, foo: "bab" }]);
+    await adapter.loadDump([
+      { id: 1, foo: "baz" },
+      { id: 3, foo: "bab" },
+    ]);
     records = await adapter.list();
     Assert.equal(records.length, 3);
     let newRecord1 = await adapter.get("1");

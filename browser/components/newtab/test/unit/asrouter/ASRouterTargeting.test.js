@@ -364,7 +364,10 @@ describe("ASRouterTargeting", () => {
           messages,
           returnAll: true,
         }),
-        [{ id: "FOO", targeting: "match" }, { id: "BAR", targeting: "match" }]
+        [
+          { id: "FOO", targeting: "match" },
+          { id: "BAR", targeting: "match" },
+        ]
       );
     });
     it("should return an empty array if no matches were found and returnAll is true", async () => {

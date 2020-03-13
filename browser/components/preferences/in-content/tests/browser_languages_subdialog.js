@@ -29,7 +29,10 @@ add_task(async function() {
   is(dialogOverlay.style.visibility, "", "The dialog is invisible.");
 
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.resistFingerprinting", true], ["privacy.spoof_english", 0]],
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.spoof_english", 0],
+    ],
   });
 
   win = await languagesSubdialogOpened();

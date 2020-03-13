@@ -299,12 +299,9 @@ const mapStateToProps = state => ({
   expandedCategories: getEventListenerExpanded(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    addEventListeners: actions.addEventListenerBreakpoints,
-    removeEventListeners: actions.removeEventListenerBreakpoints,
-    addEventListenerExpanded: actions.addEventListenerExpanded,
-    removeEventListenerExpanded: actions.removeEventListenerExpanded,
-  }
-)(EventListeners);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  addEventListeners: actions.addEventListenerBreakpoints,
+  removeEventListeners: actions.removeEventListenerBreakpoints,
+  addEventListenerExpanded: actions.addEventListenerExpanded,
+  removeEventListenerExpanded: actions.removeEventListenerExpanded,
+})(EventListeners);

@@ -21,14 +21,12 @@ add_task(
 
     const objectFront = threadFront.pauseGrip(arg1);
 
-    const obj1 = (await objectFront.getPropertyValue(
-      "obj1",
-      null
-    )).value.return.getGrip();
-    const obj2 = (await objectFront.getPropertyValue(
-      "obj2",
-      null
-    )).value.return.getGrip();
+    const obj1 = (
+      await objectFront.getPropertyValue("obj1", null)
+    ).value.return.getGrip();
+    const obj2 = (
+      await objectFront.getPropertyValue("obj2", null)
+    ).value.return.getGrip();
 
     info(`Retrieve "context" function reference`);
     const context = (await objectFront.getPropertyValue("context", null)).value

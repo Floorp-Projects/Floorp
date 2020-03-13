@@ -808,9 +808,11 @@ add_task(async function test_mergeToStorage() {
 
   // Empty computed fields shouldn't cause any problem.
   Assert.equal(
-    (await profileStorage.addresses.mergeToStorage(
-      TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD
-    )).length,
+    (
+      await profileStorage.addresses.mergeToStorage(
+        TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD
+      )
+    ).length,
     3
   );
 });
@@ -835,10 +837,12 @@ add_task(async function test_mergeToStorage_strict() {
 
   // Empty computed fields shouldn't cause any problem.
   Assert.equal(
-    (await profileStorage.addresses.mergeToStorage(
-      TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD,
-      true
-    )).length,
+    (
+      await profileStorage.addresses.mergeToStorage(
+        TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD,
+        true
+      )
+    ).length,
     1
   );
 });

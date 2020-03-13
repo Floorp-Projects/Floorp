@@ -14,18 +14,74 @@
 //  ] count can be left to represent 1
 // ]
 const KEY_STATES = [
-  ["s", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["p", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["a", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["n", [["span", 1], [".span", 1], ["#span", 1]]],
+  [
+    "s",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
+  [
+    "p",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
+  [
+    "a",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
+  [
+    "n",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
   [" ", [["span div", 1]]],
   // mixed tag/class/id suggestions only work for the first word
   ["d", [["span div", 1]]],
   ["VK_BACK_SPACE", [["span div", 1]]],
-  ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
+  [
+    "VK_BACK_SPACE",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
+  [
+    "VK_BACK_SPACE",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
+  [
+    "VK_BACK_SPACE",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
+  [
+    "VK_BACK_SPACE",
+    [
+      ["span", 1],
+      [".span", 1],
+      ["#span", 1],
+    ],
+  ],
   ["VK_BACK_SPACE", []],
   // Test that mixed tags, classes and ids are grouped by types, sorted by
   // count and alphabetical order

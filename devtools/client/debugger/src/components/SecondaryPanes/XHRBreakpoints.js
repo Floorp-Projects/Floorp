@@ -366,14 +366,11 @@ const mapStateToProps = state => ({
   shouldPauseOnAny: shouldPauseOnAnyXHR(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    setXHRBreakpoint: actions.setXHRBreakpoint,
-    removeXHRBreakpoint: actions.removeXHRBreakpoint,
-    enableXHRBreakpoint: actions.enableXHRBreakpoint,
-    disableXHRBreakpoint: actions.disableXHRBreakpoint,
-    updateXHRBreakpoint: actions.updateXHRBreakpoint,
-    togglePauseOnAny: actions.togglePauseOnAny,
-  }
-)(XHRBreakpoints);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  setXHRBreakpoint: actions.setXHRBreakpoint,
+  removeXHRBreakpoint: actions.removeXHRBreakpoint,
+  enableXHRBreakpoint: actions.enableXHRBreakpoint,
+  disableXHRBreakpoint: actions.disableXHRBreakpoint,
+  updateXHRBreakpoint: actions.updateXHRBreakpoint,
+  togglePauseOnAny: actions.togglePauseOnAny,
+})(XHRBreakpoints);

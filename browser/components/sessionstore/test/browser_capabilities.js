@@ -19,7 +19,10 @@ add_task(async function docshell_capabilities() {
   // Check that everything is allowed by default for new tabs.
   let state = JSON.parse(ss.getTabState(tab));
   ok(!("disallow" in state), "everything allowed by default");
-  ok(flags.every(f => docShell[f]), "all flags set to true");
+  ok(
+    flags.every(f => docShell[f]),
+    "all flags set to true"
+  );
 
   // Flip a couple of allow* flags.
   docShell.allowImages = false;
@@ -52,7 +55,10 @@ add_task(async function docshell_capabilities() {
   // After restoring disallowed features must be available again.
   state = JSON.parse(ss.getTabState(tab));
   ok(!("disallow" in state), "everything allowed again");
-  ok(flags.every(f => docShell[f]), "all flags set to true");
+  ok(
+    flags.every(f => docShell[f]),
+    "all flags set to true"
+  );
 
   // Restore the state with disallowed features.
   await promiseTabState(tab, disallowedState);

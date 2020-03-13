@@ -1617,11 +1617,9 @@ add_task(async function test_storage_sync_pulls_changes() {
       server.etag = 900;
 
       await extensionStorageSync.syncAll();
-      const remoteValue = (await extensionStorageSync.get(
-        extension,
-        "remote-key",
-        context
-      ))["remote-key"];
+      const remoteValue = (
+        await extensionStorageSync.get(extension, "remote-key", context)
+      )["remote-key"];
       equal(
         remoteValue,
         6,
@@ -1654,11 +1652,9 @@ add_task(async function test_storage_sync_pulls_changes() {
       });
 
       await extensionStorageSync.syncAll();
-      const remoteValue2 = (await extensionStorageSync.get(
-        extension,
-        "remote-key",
-        context
-      ))["remote-key"];
+      const remoteValue2 = (
+        await extensionStorageSync.get(extension, "remote-key", context)
+      )["remote-key"];
       equal(
         remoteValue2,
         7,
@@ -1782,11 +1778,9 @@ add_task(async function test_storage_sync_pushes_changes() {
       );
 
       await extensionStorageSync.syncAll();
-      const localValue = (await extensionStorageSync.get(
-        extension,
-        "my-key",
-        context
-      ))["my-key"];
+      const localValue = (
+        await extensionStorageSync.get(extension, "my-key", context)
+      )["my-key"];
       equal(
         localValue,
         5,
@@ -1922,11 +1916,9 @@ add_task(async function test_storage_sync_retries_failed_auth() {
 
       equal(server.failedAuths.length, 1, "an auth was failed");
 
-      const remoteValue = (await extensionStorageSync.get(
-        extension,
-        "remote-key",
-        context
-      ))["remote-key"];
+      const remoteValue = (
+        await extensionStorageSync.get(extension, "remote-key", context)
+      )["remote-key"];
       equal(
         remoteValue,
         6,
@@ -1954,11 +1946,9 @@ add_task(async function test_storage_sync_retries_failed_auth() {
 
       equal(server.failedAuths.length, 2, "an auth was failed");
 
-      const newRemoteValue = (await extensionStorageSync.get(
-        extension,
-        "remote-key",
-        context
-      ))["remote-key"];
+      const newRemoteValue = (
+        await extensionStorageSync.get(extension, "remote-key", context)
+      )["remote-key"];
       equal(
         newRemoteValue,
         7,
@@ -2010,11 +2000,9 @@ add_task(async function test_storage_sync_pulls_conflicts() {
       );
 
       await extensionStorageSync.syncAll();
-      const remoteValue = (await extensionStorageSync.get(
-        extension,
-        "remote-key",
-        context
-      ))["remote-key"];
+      const remoteValue = (
+        await extensionStorageSync.get(extension, "remote-key", context)
+      )["remote-key"];
       equal(remoteValue, 8, "locally set value overrides remote value");
 
       equal(calls.length, 1, "conflicts manifest in on-changed listener");
@@ -2043,11 +2031,9 @@ add_task(async function test_storage_sync_pulls_conflicts() {
       });
 
       await extensionStorageSync.syncAll();
-      const remoteValue2 = (await extensionStorageSync.get(
-        extension,
-        "remote-key",
-        context
-      ))["remote-key"];
+      const remoteValue2 = (
+        await extensionStorageSync.get(extension, "remote-key", context)
+      )["remote-key"];
       equal(
         remoteValue2,
         7,

@@ -5,7 +5,10 @@ const kPrefModalHighlight = "findbar.modalHighlight";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [[kPrefHighlightAll, true], [kPrefModalHighlight, true]],
+    set: [
+      [kPrefHighlightAll, true],
+      [kPrefModalHighlight, true],
+    ],
   });
 });
 

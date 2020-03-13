@@ -333,15 +333,11 @@ class Decoder {
       );
 
       let r = await Promise.all(
-        chunkArray(this.ciphertext, this.chunkSize).map(
-          (slice, index, chunks) =>
-            this.decodeChunk(
-              slice,
-              index,
-              nonce,
-              key,
-              index >= chunks.length - 1
-            )
+        chunkArray(
+          this.ciphertext,
+          this.chunkSize
+        ).map((slice, index, chunks) =>
+          this.decodeChunk(slice, index, nonce, key, index >= chunks.length - 1)
         )
       );
 

@@ -13,14 +13,20 @@ add_task(async function nonexistent() {
   await new Promise(resolve =>
     cps.removeByDomain("bogus", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    [null, "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
 
   await new Promise(resolve =>
     cps.removeBySubdomain("bogus", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    [null, "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
   await reset();
@@ -70,7 +76,10 @@ add_task(async function domains() {
   await new Promise(resolve =>
     cps.removeAllGlobals(null, makeCallback(resolve))
   );
-  await dbOK([["b.com", "foo", 5], ["b.com", "bar", 6]]);
+  await dbOK([
+    ["b.com", "foo", 5],
+    ["b.com", "bar", 6],
+  ]);
   await getOK(["a.com", "foo"], undefined);
   await getOK(["a.com", "bar"], undefined);
   await getGlobalOK(["foo"], undefined);
@@ -190,7 +199,13 @@ add_task(async function removeByDomain_invalidateCache() {
 add_task(async function removeBySubdomain_invalidateCache() {
   await set("a.com", "foo", 1);
   await set("b.a.com", "foo", 2);
-  getCachedSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [
+      ["a.com", 1],
+      ["b.a.com", 2],
+    ]
+  );
   let promiseRemoved = new Promise(resolve => {
     cps.removeBySubdomain("a.com", null, makeCallback(resolve));
   });

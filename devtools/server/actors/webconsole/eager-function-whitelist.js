@@ -10,7 +10,10 @@ const idlPureWhitelist = require("devtools/server/actors/webconsole/webidl-pure-
 
 // TODO: Bug 1616013 - Move more of these to be part of the pure list.
 const customEagerFunctions = {
-  Document: [["prototype", "getSelection"], ["prototype", "hasStorageAccess"]],
+  Document: [
+    ["prototype", "getSelection"],
+    ["prototype", "hasStorageAccess"],
+  ],
   Range: [
     ["prototype", "isPointInRange"],
     ["prototype", "comparePoint"],
@@ -22,7 +25,10 @@ const customEagerFunctions = {
     ["prototype", "getClientRects"],
     ["prototype", "getBoundingClientRect"],
   ],
-  Selection: [["prototype", "getRangeAt"], ["prototype", "containsNode"]],
+  Selection: [
+    ["prototype", "getRangeAt"],
+    ["prototype", "containsNode"],
+  ],
 };
 
 const mergedFunctions = {};

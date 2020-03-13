@@ -183,7 +183,10 @@ add_task(async function test_subsessionsChaining() {
   // with profileSubsessionCounter: 3, subsessionCounter: 1, subsessionId: C and
   // previousSubsessionId: B to be archived.
   let schedulerTickCallback = null;
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
   moveClockForward(6);
   // Trigger the an aborted session ping save. When testing,we are not saving the aborted-session

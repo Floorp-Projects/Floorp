@@ -16,18 +16,22 @@ add_task(async function sort_bookmark_by_relevance() {
   let modifiedTime = new Date(now.setHours(now.getHours() - 2));
 
   let url = "http://foo.tld.com/";
-  let parentGuid = (await bm.insert({
-    type: bm.TYPE_FOLDER,
-    title: "test folder",
-    parentGuid: bm.unfiledGuid,
-  })).guid;
+  let parentGuid = (
+    await bm.insert({
+      type: bm.TYPE_FOLDER,
+      title: "test folder",
+      parentGuid: bm.unfiledGuid,
+    })
+  ).guid;
   let item1Guid = (await bm.insert({ url, parentGuid })).guid;
-  let item2Guid = (await bm.insert({
-    url,
-    parentGuid,
-    dateAdded: modifiedTime,
-    lastModified: modifiedTime,
-  })).guid;
+  let item2Guid = (
+    await bm.insert({
+      url,
+      parentGuid,
+      dateAdded: modifiedTime,
+      lastModified: modifiedTime,
+    })
+  ).guid;
   let bms = [];
   await bm.fetch({ url }, bm1 => bms.push(bm1));
   Assert.equal(bms[0].guid, item1Guid);

@@ -85,9 +85,9 @@ describe("OnboardingMessage", () => {
         .resolves({ content: fakeContent, source: "addons.mozilla.org" }),
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const [
       translatedMessage,
     ] = await OnboardingMessageProvider.translateMessages(msgs);
@@ -105,9 +105,9 @@ describe("OnboardingMessage", () => {
         .resolves({ content: fakeContent, source: "addons.mozilla.org" }),
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const [
       translatedMessage,
     ] = await OnboardingMessageProvider.translateMessages(msgs);
@@ -125,11 +125,9 @@ describe("OnboardingMessage", () => {
         .resolves({ content: fakeContent, source: "addons.allizom.org" }),
     });
 
-    const [
-      returnToAMOMsg,
-    ] = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const [returnToAMOMsg] = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     assert.propertyVal(returnToAMOMsg.content.text.args, "addon-name", null);
   });
   it("should correctly add all addon information to the message after translation", async () => {
@@ -140,9 +138,9 @@ describe("OnboardingMessage", () => {
         .resolves({ content: fakeContent, source: "addons.mozilla.org" }),
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const [
       translatedMessage,
     ] = await OnboardingMessageProvider.translateMessages(msgs);
@@ -180,9 +178,9 @@ describe("OnboardingMessage", () => {
       ],
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const translatedMessages = await OnboardingMessageProvider.translateMessages(
       msgs
     );
@@ -205,9 +203,9 @@ describe("OnboardingMessage", () => {
       ],
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const translatedMessages = await OnboardingMessageProvider.translateMessages(
       msgs
     );
@@ -230,9 +228,9 @@ describe("OnboardingMessage", () => {
       ],
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const translatedMessages = await OnboardingMessageProvider.translateMessages(
       msgs
     );
@@ -255,9 +253,9 @@ describe("OnboardingMessage", () => {
       ],
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const translatedMessages = await OnboardingMessageProvider.translateMessages(
       msgs
     );
@@ -268,9 +266,9 @@ describe("OnboardingMessage", () => {
       getAttrDataAsync: sandbox.stub().rejects(),
     });
 
-    const msgs = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
-      ({ id }) => id === "RETURN_TO_AMO_1"
-    );
+    const msgs = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).filter(({ id }) => id === "RETURN_TO_AMO_1");
     const translatedMessages = await OnboardingMessageProvider.translateMessages(
       msgs
     );

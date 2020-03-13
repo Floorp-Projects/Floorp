@@ -58,7 +58,10 @@ add_task(async function test_abortedSessionQueued() {
   let now = new Date(2040, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   Assert.ok(
@@ -122,7 +125,10 @@ add_task(async function test_abortedSession_canary_clientid() {
   let now = new Date(2040, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   Assert.ok(

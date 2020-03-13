@@ -65,7 +65,10 @@ async function waitUntilVideoStarted({ muted, volume } = {}) {
     video.volume = volume;
   }
   ok(
-    await video.play().then(() => true, () => false),
+    await video.play().then(
+      () => true,
+      () => false
+    ),
     `video started playing.`
   );
 }

@@ -45,7 +45,10 @@ add_task(async function() {
 
   let d = await File.createFromNsIFile(unknownFile, {
     existenceCheck: true,
-  }).then(_ => true, _ => false);
+  }).then(
+    _ => true,
+    _ => false
+  );
   ok(d === false, "Exception thrown");
 
   existingFile.remove(true);

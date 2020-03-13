@@ -221,7 +221,8 @@ Submitter.prototype = {
 
       if (
         (data.length == 2 &&
-          (data[0] == "CrashID" && SUBMISSION_REGEX.test(data[1]))) ||
+          data[0] == "CrashID" &&
+          SUBMISSION_REGEX.test(data[1])) ||
         data[0] == "ViewURL"
       ) {
         parsedResponse[data[0]] = data[1];

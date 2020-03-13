@@ -787,7 +787,11 @@ if (AppConstants.platform !== "win") {
     // the latter will automatically be normalized to valid UTF-8.
     let val = new TextDecoder().decode(Uint8Array.of(1, 255));
 
-    libc.setenv("FOO", Uint8Array.from(val + "\0", c => c.charCodeAt(0)), 1);
+    libc.setenv(
+      "FOO",
+      Uint8Array.from(val + "\0", c => c.charCodeAt(0)),
+      1
+    );
 
     let proc = await Subprocess.call({
       command: PYTHON,

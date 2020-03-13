@@ -838,10 +838,12 @@ nsPlacesExpiration.prototype = {
       try {
         db = await PlacesUtils.promiseDBConnection();
         if (db) {
-          let row = (await db.execute(`SELECT * FROM pragma_page_size(),
+          let row = (
+            await db.execute(`SELECT * FROM pragma_page_size(),
                                                 pragma_page_count(),
                                                 pragma_freelist_count(),
-                                                (SELECT count(*) FROM moz_places)`))[0];
+                                                (SELECT count(*) FROM moz_places)`)
+          )[0];
           let pageSize = row.getResultByIndex(0);
           let pageCount = row.getResultByIndex(1);
           let freelistCount = row.getResultByIndex(2);

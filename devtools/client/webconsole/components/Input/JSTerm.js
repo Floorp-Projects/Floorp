@@ -1417,7 +1417,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(JSTerm);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(JSTerm);

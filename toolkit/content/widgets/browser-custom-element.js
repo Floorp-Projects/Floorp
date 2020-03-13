@@ -1676,7 +1676,8 @@
             if (
               x > this._AUTOSCROLL_SNAP ||
               x < -this._AUTOSCROLL_SNAP ||
-              (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP)
+              y > this._AUTOSCROLL_SNAP ||
+              y < -this._AUTOSCROLL_SNAP
             ) {
               this._ignoreMouseEvents = false;
             }

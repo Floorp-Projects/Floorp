@@ -29,12 +29,18 @@ var history1 = [
   {
     uri: "http://www.cnn.com/",
     title: "CNN",
-    visits: [{ type: 1, date: -1 }, { type: 2, date: -36 }],
+    visits: [
+      { type: 1, date: -1 },
+      { type: 2, date: -36 },
+    ],
   },
   {
     uri: "http://www.mozilla.com/",
     title: "Mozilla",
-    visits: [{ type: 1, date: 0 }, { type: 2, date: -36 }],
+    visits: [
+      { type: 1, date: 0 },
+      { type: 2, date: -36 },
+    ],
   },
 ];
 
@@ -48,7 +54,10 @@ var history_not = [
   {
     uri: "http://www.cnn.com/",
     title: "CNN",
-    visits: [{ type: 1, date: -1 }, { type: 2, date: -36 }],
+    visits: [
+      { type: 1, date: -1 },
+      { type: 2, date: -36 },
+    ],
   },
 ];
 

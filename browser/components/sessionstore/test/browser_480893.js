@@ -25,7 +25,10 @@ add_task(async function() {
   // if Firefox is configured to display a homepage at startup (browser.startup.page = 1)
   let homepage = "http://mochi.test:8888/";
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.startup.homepage", homepage], ["browser.startup.page", 1]],
+    set: [
+      ["browser.startup.homepage", homepage],
+      ["browser.startup.page", 1],
+    ],
   });
 
   BrowserTestUtils.loadURI(browser, "about:sessionrestore");

@@ -8,7 +8,11 @@
 function run_test() {
   const { flatten } = DevToolsUtils;
 
-  const flat = flatten([["a", "b", "c"], ["d", "e", "f"], ["g", "h", "i"]]);
+  const flat = flatten([
+    ["a", "b", "c"],
+    ["d", "e", "f"],
+    ["g", "h", "i"],
+  ]);
 
   equal(flat.length, 9);
   equal(flat[0], "a");

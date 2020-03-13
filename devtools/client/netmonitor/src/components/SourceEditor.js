@@ -130,9 +130,6 @@ class SourceEditor extends Component {
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-  })
-)(SourceEditor);
+module.exports = connect(null, dispatch => ({
+  resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+}))(SourceEditor);

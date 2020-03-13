@@ -206,9 +206,6 @@ class SourcePreview extends Component {
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-  })
-)(SourcePreview);
+module.exports = connect(null, dispatch => ({
+  resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+}))(SourcePreview);

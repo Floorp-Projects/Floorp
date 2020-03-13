@@ -14,7 +14,10 @@ add_task(async function() {
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
 
   await checkState([
-    [["sessionStorage", "http://test1.example.org"], ["ss1", "ss2", "ss3"]],
+    [
+      ["sessionStorage", "http://test1.example.org"],
+      ["ss1", "ss2", "ss3"],
+    ],
   ]);
 
   await setSessionStorageItem("ss4", "new-item");
@@ -39,7 +42,10 @@ add_task(async function() {
   await gUI.once("store-objects-edit");
 
   await checkState([
-    [["sessionStorage", "http://test1.example.org"], ["ss2", "ss4"]],
+    [
+      ["sessionStorage", "http://test1.example.org"],
+      ["ss2", "ss4"],
+    ],
   ]);
 
   await selectTableItem("ss2");

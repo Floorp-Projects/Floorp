@@ -145,7 +145,12 @@ describe("Store", () => {
       sinon.stub(store, "initFeed");
       store._prefs.set("foo", true);
       store._prefs.set("bar", true);
-      await store.init(new Map([["foo", () => {}], ["bar", () => {}]]));
+      await store.init(
+        new Map([
+          ["foo", () => {}],
+          ["bar", () => {}],
+        ])
+      );
       assert.calledWith(store.initFeed, "foo");
       assert.calledWith(store.initFeed, "bar");
     });
@@ -242,7 +247,11 @@ describe("Store", () => {
     it("should clear .feeds and ._feedFactories", () => {
       store._prefs.set("a", true);
       store.init(
-        new Map([["a", () => ({})], ["b", () => ({})], ["c", () => ({})]])
+        new Map([
+          ["a", () => ({})],
+          ["b", () => ({})],
+          ["c", () => ({})],
+        ])
       );
 
       store.uninit();

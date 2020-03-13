@@ -8050,8 +8050,8 @@ function warnAboutClosingWindow() {
   // closing multiple tabs.
   return (
     AppConstants.platform != "macosx" ||
-    (isPBWindow ||
-      gBrowser.warnAboutClosingTabs(closingTabs, gBrowser.closingTabsEnum.ALL))
+    isPBWindow ||
+    gBrowser.warnAboutClosingTabs(closingTabs, gBrowser.closingTabsEnum.ALL)
   );
 }
 
@@ -8274,20 +8274,22 @@ const gAccessibilityServiceIndicator = {
     if (this.enabled && accessibilityEnabled) {
       this._active = true;
       document.documentElement.setAttribute("accessibilitymode", "true");
-      [...document.querySelectorAll(".accessibility-indicator")].forEach(
-        indicator =>
-          ["click", "keypress"].forEach(type =>
-            indicator.addEventListener(type, this)
-          )
+      [
+        ...document.querySelectorAll(".accessibility-indicator"),
+      ].forEach(indicator =>
+        ["click", "keypress"].forEach(type =>
+          indicator.addEventListener(type, this)
+        )
       );
     } else if (this._active) {
       this._active = false;
       document.documentElement.removeAttribute("accessibilitymode");
-      [...document.querySelectorAll(".accessibility-indicator")].forEach(
-        indicator =>
-          ["click", "keypress"].forEach(type =>
-            indicator.removeEventListener(type, this)
-          )
+      [
+        ...document.querySelectorAll(".accessibility-indicator"),
+      ].forEach(indicator =>
+        ["click", "keypress"].forEach(type =>
+          indicator.removeEventListener(type, this)
+        )
       );
     }
   },

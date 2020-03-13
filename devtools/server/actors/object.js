@@ -484,8 +484,8 @@ const proto = {
         // by not including it as a safe getter value (see Bug 1477765).
         if (
           getterValue &&
-          (getterValue.class == "Promise" &&
-            getterValue.promiseState == "rejected")
+          getterValue.class == "Promise" &&
+          getterValue.promiseState == "rejected"
         ) {
           // Until we have a good way to handle Promise rejections through the
           // debugger API (Bug 1478076), call `catch` when it's safe to do so.

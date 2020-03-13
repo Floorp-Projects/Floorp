@@ -17,9 +17,7 @@ add_task(async function() {
 
   let page = "<!DOCTYPE HTML>\n<html>\n<head>\n";
   for (let i = 0; i < test_cases.length; ++i) {
-    page += `<style type="text/css"> #x${i} { color: red; }${
-      test_cases[i][0]
-    }</style>\n`;
+    page += `<style type="text/css"> #x${i} { color: red; }${test_cases[i][0]}</style>\n`;
   }
   page += "</head><body>some text</body></html>";
 

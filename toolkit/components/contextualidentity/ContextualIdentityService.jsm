@@ -439,7 +439,10 @@ _ContextualIdentityService.prototype = {
 
   getPublicIdentities() {
     this.ensureDataReady();
-    return Cu.cloneInto(this._identities.filter(info => info.public), {});
+    return Cu.cloneInto(
+      this._identities.filter(info => info.public),
+      {}
+    );
   },
 
   getPrivateIdentity(name) {

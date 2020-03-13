@@ -157,12 +157,10 @@ function testResponses() {
       });
       var p = fetch(req).then(res => {
         is(res.status, 200, "wrong status");
-        return res
-          .json()
-          .then(
-            v => ok(false, "expected json parse failure"),
-            e => ok(true, "expected json parse failure")
-          );
+        return res.json().then(
+          v => ok(false, "expected json parse failure"),
+          e => ok(true, "expected json parse failure")
+        );
       });
       resolve(p);
     }),

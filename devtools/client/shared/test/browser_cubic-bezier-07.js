@@ -40,9 +40,7 @@ async function previewDotReactsToChanges(widget, coords, expectedEasing) {
   const animations = animatedDot.getAnimations();
 
   if (!expectedEasing) {
-    expectedEasing = `cubic-bezier(${coords[0]}, ${coords[1]}, ${coords[2]}, ${
-      coords[3]
-    })`;
+    expectedEasing = `cubic-bezier(${coords[0]}, ${coords[1]}, ${coords[2]}, ${coords[3]})`;
   }
 
   is(animations.length, 1, "The dot is animated");

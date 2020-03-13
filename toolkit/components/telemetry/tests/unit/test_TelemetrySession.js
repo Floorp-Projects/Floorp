@@ -625,7 +625,10 @@ add_task(async function test_simplePing() {
 
   const expectedSessionUUID = "bd314d15-95bf-4356-b682-b6c4a8942202";
   const expectedSubsessionUUID = "3e2e5f6c-74ba-4e4d-a93f-a48af238a8c7";
-  fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
+  fakeGenerateUUID(
+    () => expectedSessionUUID,
+    () => expectedSubsessionUUID
+  );
   await TelemetryController.testReset();
 
   // Session and subsession start dates are faked during TelemetrySession setup. We can
@@ -794,7 +797,10 @@ add_task(async function test_dailyCollection() {
   fakeNow(now);
 
   // Fake scheduler functions to control daily collection flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
 
   // Init and check timer.
   await TelemetryStorage.testClearPendingPings();
@@ -896,7 +902,10 @@ add_task(async function test_dailyDuplication() {
   let now = new Date(2030, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control daily collection flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   // Make sure the daily ping gets triggered at midnight.
@@ -949,7 +958,10 @@ add_task(async function test_dailyOverdue() {
   let now = new Date(2030, 1, 1, 11, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control daily collection flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
 
@@ -1511,7 +1523,10 @@ add_task(async function test_savedSessionData() {
   const expectedSubsessions = sessionState.profileSubsessionCounter + 2;
   const expectedSessionUUID = "ff602e52-47a1-b7e8-4c1a-ffffffffc87a";
   const expectedSubsessionUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
-  fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
+  fakeGenerateUUID(
+    () => expectedSessionUUID,
+    () => expectedSubsessionUUID
+  );
 
   if (gIsAndroid) {
     // We don't support subsessions yet on Android, so skip the next checks.
@@ -1571,7 +1586,10 @@ add_task(async function test_sessionData_ShortSession() {
 
   const expectedSessionUUID = "ff602e52-47a1-b7e8-4c1a-ffffffffc87a";
   const expectedSubsessionUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
-  fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
+  fakeGenerateUUID(
+    () => expectedSessionUUID,
+    () => expectedSubsessionUUID
+  );
 
   // We intentionally don't wait for the setup to complete and shut down to simulate
   // short sessions. We expect the profile subsession counter to be 1.
@@ -1636,7 +1654,10 @@ add_task(async function test_invalidSessionData() {
   const expectedSubsessions = 1;
   const expectedSessionUUID = "ff602e52-47a1-b7e8-4c1a-ffffffffc87a";
   const expectedSubsessionUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
-  fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
+  fakeGenerateUUID(
+    () => expectedSessionUUID,
+    () => expectedSubsessionUUID
+  );
 
   // Start TelemetryController so that it loads the session data file.
   await TelemetryController.testShutdown();
@@ -1675,7 +1696,10 @@ add_task(async function test_abortedSession() {
   let now = new Date(2040, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   Assert.ok(
@@ -1741,7 +1765,10 @@ add_task(async function test_abortedSession_Shutdown() {
   let schedulerTickCallback = null;
   let now = fakeNow(2040, 1, 1, 0, 0, 0);
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   Assert.ok(
@@ -1786,7 +1813,10 @@ add_task(async function test_abortedDailyCoalescing() {
   fakeNow(nowDate);
 
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
   await TelemetryController.testReset();
@@ -1850,7 +1880,10 @@ add_task(async function test_schedulerComputerSleep() {
   // Set a fake current date and start Telemetry.
   let nowDate = fakeNow(2009, 10, 18, 0, 0, 0);
   let schedulerTickCallback = null;
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   // Set the current time 3 days in the future at midnight, before running the callback.
@@ -1927,7 +1960,10 @@ add_task(async function test_schedulerEnvironmentReschedules() {
     gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE
   );
   let schedulerTickCallback = null;
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
   await TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
 
@@ -1985,7 +2021,10 @@ add_task(async function test_schedulerNothingDue() {
   let nowDate = new Date(2009, 10, 18, 11, 0, 0);
   fakeNow(nowDate);
   let schedulerTickCallback = null;
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   // Delay the callback execution to a time when no ping should be due.
@@ -2153,7 +2192,10 @@ add_task(async function test_DailyDueAndIdle() {
   let now = new Date(2030, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control daily collection flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryController.testReset();
 
   // Trigger the daily ping.
@@ -2199,7 +2241,10 @@ add_task(async function test_userIdleAndSchedlerTick() {
   let now = new Date(2030, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control daily collection flow in tests.
-  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
+  fakeSchedulerTimer(
+    callback => (schedulerTickCallback = callback),
+    () => {}
+  );
   await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
   PingServer.clearRequests();

@@ -37,7 +37,10 @@ async function callMediaPlay(shouldStartPlaying) {
     }, 3000);
   });
 
-  let isStartPlaying = await playPromise.then(() => true, () => false);
+  let isStartPlaying = await playPromise.then(
+    () => true,
+    () => false
+  );
   is(
     isStartPlaying,
     shouldStartPlaying,

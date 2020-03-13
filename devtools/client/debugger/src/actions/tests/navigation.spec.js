@@ -87,7 +87,10 @@ describe("navigation", () => {
   it("navigation clears the file-search results", async () => {
     const { dispatch, getState, cx } = createStore(threadFront);
 
-    const searchResults = [{ line: 1, ch: 3 }, { line: 3, ch: 2 }];
+    const searchResults = [
+      { line: 1, ch: 3 },
+      { line: 3, ch: 2 },
+    ];
     dispatch(actions.updateSearchResults(cx, 2, 3, searchResults));
     expect(getFileSearchResults(getState())).toEqual({
       count: 2,

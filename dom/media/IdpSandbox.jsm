@@ -178,9 +178,10 @@ IdpSandbox.prototype = {
 
   start() {
     if (!this.active) {
-      this.active = ResourceLoader.load(this.source, this.window.document).then(
-        result => this._createSandbox(result)
-      );
+      this.active = ResourceLoader.load(
+        this.source,
+        this.window.document
+      ).then(result => this._createSandbox(result));
     }
     return this.active;
   },

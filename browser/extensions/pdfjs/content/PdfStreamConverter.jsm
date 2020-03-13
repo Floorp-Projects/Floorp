@@ -151,7 +151,9 @@ function isValidMatchesCount(data) {
   if (
     typeof total !== "number" ||
     total < 0 ||
-    (typeof current !== "number" || current < 0 || current > total)
+    typeof current !== "number" ||
+    current < 0 ||
+    current > total
   ) {
     return false;
   }

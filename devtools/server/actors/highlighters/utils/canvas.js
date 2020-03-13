@@ -451,7 +451,12 @@ function getPathDescriptionFromPoints(points) {
  * matrix given.
  */
 function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
-  return [[x1, y1], [x2, y1], [x2, y2], [x1, y2]].map(point => {
+  return [
+    [x1, y1],
+    [x2, y1],
+    [x2, y2],
+    [x1, y2],
+  ].map(point => {
     const transformedPoint = apply(matrix, point);
 
     return { x: transformedPoint[0], y: transformedPoint[1] };

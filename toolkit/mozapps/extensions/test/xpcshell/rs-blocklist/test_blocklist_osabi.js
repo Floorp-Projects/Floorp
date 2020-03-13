@@ -13,7 +13,10 @@ const ADDONS = [
     version: "1.0",
 
     // No info in blocklist, shouldn't be blocked
-    notBlocklisted: [["1", "1.9"], [null, null]],
+    notBlocklisted: [
+      ["1", "1.9"],
+      [null, null],
+    ],
   },
   {
     id: "test_bug393285_2@tests.mozilla.org",
@@ -21,7 +24,10 @@ const ADDONS = [
     version: "1.0",
 
     // Should always be blocked
-    blocklisted: [["1", "1.9"], [null, null]],
+    blocklisted: [
+      ["1", "1.9"],
+      [null, null],
+    ],
   },
   {
     id: "test_bug393285_3a@tests.mozilla.org",
@@ -29,7 +35,10 @@ const ADDONS = [
     version: "1.0",
 
     // Only version 1 should be blocked
-    blocklisted: [["1", "1.9"], [null, null]],
+    blocklisted: [
+      ["1", "1.9"],
+      [null, null],
+    ],
   },
   {
     id: "test_bug393285_3b@tests.mozilla.org",
@@ -45,7 +54,10 @@ const ADDONS = [
     version: "1.0",
 
     // Should be blocked for app version 1
-    blocklisted: [["1", "1.9"], [null, null]],
+    blocklisted: [
+      ["1", "1.9"],
+      [null, null],
+    ],
     notBlocklisted: [["2", "1.9"]],
   },
   {

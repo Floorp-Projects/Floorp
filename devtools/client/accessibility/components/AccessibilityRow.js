@@ -325,9 +325,6 @@ const mapStateToProps = ({
   scrollContentNodeIntoView,
 });
 
-module.exports = connect(
-  mapStateToProps,
-  null,
-  null,
-  { withRef: true }
-)(AccessibilityRow);
+module.exports = connect(mapStateToProps, null, null, { withRef: true })(
+  AccessibilityRow
+);

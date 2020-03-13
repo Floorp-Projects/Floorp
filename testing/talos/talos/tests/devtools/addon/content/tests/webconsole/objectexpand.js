@@ -62,7 +62,7 @@ module.exports = async function() {
   if (tree.querySelectorAll(".node").length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
     await new Promise(resolve => {
-      const observer = new (getBrowserWindow()).MutationObserver(mutations => {
+      const observer = new (getBrowserWindow().MutationObserver)(mutations => {
         resolve(mutations);
         observer.disconnect();
       });

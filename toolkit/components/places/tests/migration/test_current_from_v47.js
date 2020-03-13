@@ -117,6 +117,12 @@ add_task(async function test_frecency_stats() {
   let squares = rows[0].getResultByIndex(2);
 
   Assert.equal(count, frecencies.length);
-  Assert.equal(sum, frecencies.reduce((memo, f) => memo + f, 0));
-  Assert.equal(squares, frecencies.reduce((memo, f) => memo + f * f, 0));
+  Assert.equal(
+    sum,
+    frecencies.reduce((memo, f) => memo + f, 0)
+  );
+  Assert.equal(
+    squares,
+    frecencies.reduce((memo, f) => memo + f * f, 0)
+  );
 });

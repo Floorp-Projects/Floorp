@@ -40,7 +40,10 @@ function cleanUpAfterTests() {
 
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_ACTIVE, true], [PREF_DISPLAY, true]],
+    set: [
+      [PREF_ACTIVE, true],
+      [PREF_DISPLAY, true],
+    ],
   });
   let url = HTTP_TEST_ROOT + "test_no_mcb_on_http_site_img.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);

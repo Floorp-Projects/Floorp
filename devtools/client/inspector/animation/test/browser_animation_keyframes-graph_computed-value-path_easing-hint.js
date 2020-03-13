@@ -17,7 +17,11 @@ const TEST_DATA = [
         expectedHints: [
           {
             hint: "linear",
-            path: [{ x: 0, y: 100 }, { x: 500, y: 50 }, { x: 1000, y: 0 }],
+            path: [
+              { x: 0, y: 100 },
+              { x: 500, y: 50 },
+              { x: 1000, y: 0 },
+            ],
           },
         ],
       },
@@ -76,7 +80,11 @@ const TEST_DATA = [
         expectedHints: [
           {
             hint: "steps(1)",
-            path: [{ x: 0, y: 0 }, { x: 999, y: 0 }, { x: 1000, y: 100 }],
+            path: [
+              { x: 0, y: 0 },
+              { x: 999, y: 0 },
+              { x: 1000, y: 100 },
+            ],
           },
         ],
       },
@@ -105,15 +113,24 @@ const TEST_DATA = [
         expectedHints: [
           {
             hint: "linear",
-            path: [{ x: 0, y: 0 }, { x: 100, y: 100 }],
+            path: [
+              { x: 0, y: 0 },
+              { x: 100, y: 100 },
+            ],
           },
           {
             hint: "steps(1)",
-            path: [{ x: 129, y: 100 }, { x: 130, y: 0 }],
+            path: [
+              { x: 129, y: 100 },
+              { x: 130, y: 0 },
+            ],
           },
           {
             hint: "linear",
-            path: [{ x: 130, y: 0 }, { x: 1000, y: 100 }],
+            path: [
+              { x: 130, y: 0 },
+              { x: 1000, y: 100 },
+            ],
           },
         ],
       },
@@ -127,15 +144,25 @@ const TEST_DATA = [
         expectedHints: [
           {
             hint: "linear",
-            path: [{ x: 0, y: 0 }, { x: 500, y: 100 }],
+            path: [
+              { x: 0, y: 0 },
+              { x: 500, y: 100 },
+            ],
           },
           {
             hint: "",
-            path: [{ x: 500, y: 100 }, { x: 500, y: 0 }],
+            path: [
+              { x: 500, y: 100 },
+              { x: 500, y: 0 },
+            ],
           },
           {
             hint: "steps(1)",
-            path: [{ x: 500, y: 0 }, { x: 999, y: 0 }, { x: 1000, y: 100 }],
+            path: [
+              { x: 500, y: 0 },
+              { x: 999, y: 0 },
+              { x: 1000, y: 100 },
+            ],
           },
         ],
       },

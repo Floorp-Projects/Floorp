@@ -42,27 +42,42 @@ add_task(
       {
         evaledObject: { 1: 1, length: 42, a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", 42], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", 42],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: 2.34, a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", 2.34], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", 2.34],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: -0, a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", -0], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", -0],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: -10, a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", -10], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", -10],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: true, a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", true], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", true],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: null, a: 10 },
@@ -75,12 +90,18 @@ add_task(
       {
         evaledObject: { 1: 1, length: Math.pow(2, 53), a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", 9007199254740992], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", 9007199254740992],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: "fake", a: 10 },
         expectedIndexedProperties: [["1", 1]],
-        expectedNonIndexedProperties: [["length", "fake"], ["a", 10]],
+        expectedNonIndexedProperties: [
+          ["length", "fake"],
+          ["a", 10],
+        ],
       },
       {
         evaledObject: { 1: 1, length: Infinity, a: 10 },
@@ -97,7 +118,10 @@ add_task(
       },
       {
         evaledObject: { 0: 0, 1: 1, length: 1 },
-        expectedIndexedProperties: [["0", 0], ["1", 1]],
+        expectedIndexedProperties: [
+          ["0", 0],
+          ["1", 1],
+        ],
         expectedNonIndexedProperties: [["length", 1]],
       },
       {
@@ -113,7 +137,10 @@ add_task(
       {
         evaledObject: { a: 1, [2 ** 32 - 2]: 2, [2 ** 32 - 1]: 3 },
         expectedIndexedProperties: [["4294967294", 2]],
-        expectedNonIndexedProperties: [["a", 1], ["4294967295", 3]],
+        expectedNonIndexedProperties: [
+          ["a", 1],
+          ["4294967295", 3],
+        ],
       },
       {
         evaledObject: `(() => {
@@ -121,8 +148,14 @@ add_task(
           x.foo = 90;
           return x;
         })()`,
-        expectedIndexedProperties: [["0", 12], ["1", 42]],
-        expectedNonIndexedProperties: [["length", 2], ["foo", 90]],
+        expectedIndexedProperties: [
+          ["0", 12],
+          ["1", 42],
+        ],
+        expectedNonIndexedProperties: [
+          ["length", 2],
+          ["foo", 90],
+        ],
       },
       {
         evaledObject: `(() => {
@@ -130,7 +163,11 @@ add_task(
           x.length = 3;
           return x;
         })()`,
-        expectedIndexedProperties: [["0", 12], ["1", 42], ["2", undefined]],
+        expectedIndexedProperties: [
+          ["0", 12],
+          ["1", 42],
+          ["2", undefined],
+        ],
         expectedNonIndexedProperties: [["length", 3]],
       },
       {
@@ -153,7 +190,10 @@ add_task(
           ["1", 42],
           ["2", undefined],
         ],
-        expectedNonIndexedProperties: [["length", 3], ["foo", 90]],
+        expectedNonIndexedProperties: [
+          ["length", 3],
+          ["foo", 90],
+        ],
       },
       {
         evaledObject: `(() => {
@@ -162,7 +202,10 @@ add_task(
           x.bar = "foo";
           return x;
         })()`,
-        expectedIndexedProperties: [["0", undefined], ["1", undefined]],
+        expectedIndexedProperties: [
+          ["0", undefined],
+          ["1", undefined],
+        ],
         expectedNonIndexedProperties: [
           ["length", 2],
           ["foo", "bar"],
@@ -176,7 +219,10 @@ add_task(
           x.bar = "foo";
           return x;
         })()`,
-        expectedIndexedProperties: [["0", 0], ["1", 0]],
+        expectedIndexedProperties: [
+          ["0", 0],
+          ["1", 0],
+        ],
         expectedNonIndexedProperties: [
           ["foo", "bar"],
           ["bar", "foo"],
@@ -192,7 +238,10 @@ add_task(
           Object.defineProperty(x, 'length', {value: 0});
           return x;
         })()`,
-        expectedIndexedProperties: [["0", 1], ["1", 2]],
+        expectedIndexedProperties: [
+          ["0", 1],
+          ["1", 2],
+        ],
         expectedNonIndexedProperties: [
           ["length", 0],
           ["buffer", DO_NOT_CHECK_VALUE],
@@ -206,14 +255,20 @@ add_task(
           Object.setPrototypeOf(x, null);
           return x;
         })()`,
-        expectedIndexedProperties: [["0", 1], ["1", 2]],
+        expectedIndexedProperties: [
+          ["0", 1],
+          ["1", 2],
+        ],
         expectedNonIndexedProperties: [],
       },
       {
         evaledObject: `(() => {
           return new (class extends Int8Array {})([1, 2]);
         })()`,
-        expectedIndexedProperties: [["0", 1], ["1", 2]],
+        expectedIndexedProperties: [
+          ["0", 1],
+          ["1", 2],
+        ],
         expectedNonIndexedProperties: [
           ["length", 2],
           ["buffer", DO_NOT_CHECK_VALUE],

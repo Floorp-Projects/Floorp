@@ -15,7 +15,10 @@ add_task(function() {
 
   ok(count, "Should have a non-empty list of categories available.");
 
-  ok(CATEGORIES.some(e => e.color), "All categories have an associated color.");
+  ok(
+    CATEGORIES.some(e => e.color),
+    "All categories have an associated color."
+  );
 
   ok(
     CATEGORIES.every(e => e.label),

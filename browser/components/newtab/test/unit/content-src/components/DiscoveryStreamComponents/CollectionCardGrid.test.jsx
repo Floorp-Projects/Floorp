@@ -139,7 +139,11 @@ describe("<CollectionCardGrid>", () => {
     assert.deepEqual(thirdCall.args[0].data, {
       source: "COLLECTIONCARDGRID",
       block: 0,
-      tiles: [{ id: 123, pos: 0 }, { id: 456, pos: 1 }, { id: 789, pos: 2 }],
+      tiles: [
+        { id: 123, pos: 0 },
+        { id: 456, pos: 1 },
+        { id: 789, pos: 2 },
+      ],
     });
   });
 });

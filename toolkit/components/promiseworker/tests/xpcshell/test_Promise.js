@@ -72,12 +72,9 @@ add_task(async function test_transfer_args() {
   }
   Assert.equal(array.buffer.byteLength, 4, "The buffer is not detached yet");
 
-  let result = (await worker.post(
-    "bounce",
-    [array.buffer],
-    [],
-    [array.buffer]
-  ))[0];
+  let result = (
+    await worker.post("bounce", [array.buffer], [], [array.buffer])
+  )[0];
 
   // Check that the buffer has been sent
   Assert.equal(array.buffer.byteLength, 0, "The buffer has been detached");

@@ -300,16 +300,13 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    openLink: actions.openLink,
-    openElementInInspector: actions.openElementInInspectorCommand,
-    highlightDomElement: actions.highlightDomElement,
-    unHighlightDomElement: actions.unHighlightDomElement,
-    toggleMapScopes: actions.toggleMapScopes,
-    setExpandedScope: actions.setExpandedScope,
-    addWatchpoint: actions.addWatchpoint,
-    removeWatchpoint: actions.removeWatchpoint,
-  }
-)(Scopes);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  openLink: actions.openLink,
+  openElementInInspector: actions.openElementInInspectorCommand,
+  highlightDomElement: actions.highlightDomElement,
+  unHighlightDomElement: actions.unHighlightDomElement,
+  toggleMapScopes: actions.toggleMapScopes,
+  setExpandedScope: actions.setExpandedScope,
+  addWatchpoint: actions.addWatchpoint,
+  removeWatchpoint: actions.removeWatchpoint,
+})(Scopes);

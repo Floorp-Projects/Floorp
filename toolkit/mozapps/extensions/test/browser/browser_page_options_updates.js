@@ -21,7 +21,10 @@ const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 add_task(async function testUpdateAutomaticallyButton() {
   Services.telemetry.clearEvents();
   SpecialPowers.pushPrefEnv({
-    set: [[PREF_UPDATE_ENABLED, true], [PREF_AUTOUPDATE_DEFAULT, true]],
+    set: [
+      [PREF_UPDATE_ENABLED, true],
+      [PREF_AUTOUPDATE_DEFAULT, true],
+    ],
   });
 
   let win = await loadInitialView("extension");

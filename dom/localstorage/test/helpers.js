@@ -28,7 +28,10 @@ if (!window.runTest) {
     info("Pushing preferences");
 
     await SpecialPowers.pushPrefEnv({
-      set: [["dom.storage.testing", true], ["dom.quotaManager.testing", true]],
+      set: [
+        ["dom.storage.testing", true],
+        ["dom.quotaManager.testing", true],
+      ],
     });
 
     info("Clearing old databases");

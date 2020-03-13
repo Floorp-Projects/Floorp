@@ -496,12 +496,13 @@ var Impl = {
 
     // Always persist the pings if we are allowed to. We should not yield on any of the
     // following operations to keep this function synchronous for the majority of the calls.
-    let archivePromise = TelemetryArchive.promiseArchivePing(pingData).catch(
-      e =>
-        this._log.error(
-          "submitExternalPing - Failed to archive ping " + pingData.id,
-          e
-        )
+    let archivePromise = TelemetryArchive.promiseArchivePing(
+      pingData
+    ).catch(e =>
+      this._log.error(
+        "submitExternalPing - Failed to archive ping " + pingData.id,
+        e
+      )
     );
     let p = [archivePromise];
 

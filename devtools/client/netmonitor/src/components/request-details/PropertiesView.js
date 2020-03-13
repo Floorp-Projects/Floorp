@@ -222,9 +222,6 @@ class PropertiesView extends Component {
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-  })
-)(PropertiesView);
+module.exports = connect(null, dispatch => ({
+  resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+}))(PropertiesView);

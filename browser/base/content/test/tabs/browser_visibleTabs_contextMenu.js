@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const remoteClientsFixture = [{ id: 1, name: "Foo" }, { id: 2, name: "Bar" }];
+const remoteClientsFixture = [
+  { id: 1, name: "Foo" },
+  { id: 2, name: "Bar" },
+];
 
 add_task(async function test() {
   // There should be one tab when we start the test

@@ -127,7 +127,12 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[11]
   );
   await wait;
-  testParamsTabGetWithArgs(new Map([["a", ["b", "c"]], ["d", "1"]]));
+  testParamsTabGetWithArgs(
+    new Map([
+      ["a", ["b", "c"]],
+      ["d", "1"],
+    ])
+  );
 
   await teardown(monitor);
 

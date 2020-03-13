@@ -308,7 +308,9 @@ var gEditItemOverlay = {
 
     // Selection count.
     if (showOrCollapse("selectionCount", bulkTagging)) {
-      this._element("itemsCountText").value = PlacesUIUtils.getPluralString(
+      this._element(
+        "itemsCountText"
+      ).value = PlacesUIUtils.getPluralString(
         "detailsPane.itemsCountLabel",
         uris.length,
         [uris.length]

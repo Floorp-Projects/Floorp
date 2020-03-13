@@ -314,7 +314,10 @@ DominatorTreeNode.getNodeByIdAlongPath = function(id, tree, path) {
     }
 
     const nextId = path[i + 1];
-    return find(node.children.find(c => c.nodeId === nextId), i + 1);
+    return find(
+      node.children.find(c => c.nodeId === nextId),
+      i + 1
+    );
   }
 
   return find(tree, 0);

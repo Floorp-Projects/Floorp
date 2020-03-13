@@ -104,7 +104,10 @@ add_task(async function test_duping_local_newer() {
   );
   deepEqual(
     mergeTelemetryCounts,
-    [{ name: "items", count: 9 }, { name: "dupes", count: 2 }],
+    [
+      { name: "items", count: 9 },
+      { name: "dupes", count: 2 },
+    ],
     "Should record telemetry with dupe counts"
   );
 
@@ -601,18 +604,18 @@ add_task(async function test_duping_remote_newer() {
   );
 
   ok(
-    (await PlacesTestUtils.fetchBookmarkSyncFields(
-      "menu________",
-      "folderB11111",
-      "bookmarkC222",
-      "separatorF11",
-      "folderA11111",
-      "bookmarkG111",
-      "separatorE11",
-      "queryD111111"
-    )).every(
-      info => info.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
-    )
+    (
+      await PlacesTestUtils.fetchBookmarkSyncFields(
+        "menu________",
+        "folderB11111",
+        "bookmarkC222",
+        "separatorF11",
+        "folderA11111",
+        "bookmarkG111",
+        "separatorE11",
+        "queryD111111"
+      )
+    ).every(info => info.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL)
   );
 
   await storeChangesInMirror(buf, changesToUpload);

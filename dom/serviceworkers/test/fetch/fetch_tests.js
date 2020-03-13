@@ -172,7 +172,10 @@ fetchXHR(
     finish();
   },
   null,
-  [["X-Test1", "header1"], ["X-Test2", "header2"]]
+  [
+    ["X-Test1", "header1"],
+    ["X-Test2", "header2"],
+  ]
 );
 
 fetchXHR("http://user:pass@mochi.test:8888/user-pass", function(xhr) {

@@ -179,8 +179,10 @@ function saveImageURL(
 
   if (
     !aShouldBypassCache &&
-    (aDoc && !Cu.isCrossProcessWrapper(aDoc)) &&
-    (!aContentType && !aContentDisp)
+    aDoc &&
+    !Cu.isCrossProcessWrapper(aDoc) &&
+    !aContentType &&
+    !aContentDisp
   ) {
     try {
       var imageCache = Cc["@mozilla.org/image/tools;1"]

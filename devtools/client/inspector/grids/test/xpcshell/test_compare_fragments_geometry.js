@@ -15,7 +15,10 @@ const TESTS = [
   },
   {
     desc: "Different number of fragments",
-    grids: [[{}, {}, {}], [{}, {}]],
+    grids: [
+      [{}, {}, {}],
+      [{}, {}],
+    ],
     expected: false,
   },
   {

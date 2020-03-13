@@ -91,7 +91,11 @@ stubs.set("testMaxEntries", {
   preview: {
     kind: "MapLike",
     size: 3,
-    entries: [["key-a", "value-a"], ["key-b", "value-b"], ["key-c", "value-c"]],
+    entries: [
+      ["key-a", "value-a"],
+      ["key-b", "value-b"],
+      ["key-c", "value-c"],
+    ],
   },
 });
 

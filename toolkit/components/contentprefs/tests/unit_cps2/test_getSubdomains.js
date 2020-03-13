@@ -35,7 +35,13 @@ add_task(async function names() {
 add_task(async function subdomains() {
   await set("a.com", "foo", 1);
   await set("b.a.com", "foo", 2);
-  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
+  await getSubdomainsOK(
+    ["a.com", "foo"],
+    [
+      ["a.com", 1],
+      ["b.a.com", 2],
+    ]
+  );
   await getSubdomainsOK(["b.a.com", "foo"], [["b.a.com", 2]]);
   await reset();
 });

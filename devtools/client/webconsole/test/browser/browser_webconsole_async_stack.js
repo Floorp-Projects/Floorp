@@ -74,9 +74,9 @@ async function getSimplifiedStack(messageEl) {
 
   return Array.from(framesEl)
     .map(frameEl =>
-      Array.from(frameEl.querySelectorAll(".title,.location-async-cause")).map(
-        el => el.textContent.trim()
-      )
+      Array.from(
+        frameEl.querySelectorAll(".title,.location-async-cause")
+      ).map(el => el.textContent.trim())
     )
     .flat()
     .join("\n");

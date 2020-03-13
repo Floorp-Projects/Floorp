@@ -31,13 +31,24 @@ add_task(async function() {
   });
 
   info("Check the rows of the first table");
-  checkTable(table1, [[0, "a"], [1, "b"]]);
+  checkTable(table1, [
+    [0, "a"],
+    [1, "b"],
+  ]);
 
   info("Check the rows of the table after adding an element to the array");
-  checkTable(table2, [[0, "a"], [1, "b"], [2, "c"]]);
+  checkTable(table2, [
+    [0, "a"],
+    [1, "b"],
+    [2, "c"],
+  ]);
 
   info("Check the rows of the table after sorting the array");
-  checkTable(table3, [[0, "c"], [1, "b"], [2, "a"]]);
+  checkTable(table3, [
+    [0, "c"],
+    [1, "b"],
+    [2, "a"],
+  ]);
 });
 
 function checkTable(node, expectedRows) {

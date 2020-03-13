@@ -59,7 +59,7 @@ function ErrorRep(props) {
     content.push(`${name}: "${preview.message}"`);
   }
 
-  if (preview.stack && (mode !== MODE.TINY && mode !== MODE.SHORT)) {
+  if (preview.stack && mode !== MODE.TINY && mode !== MODE.SHORT) {
     const stacktrace = props.renderStacktrace
       ? props.renderStacktrace(parseStackString(preview.stack))
       : getStacktraceElements(props, preview);

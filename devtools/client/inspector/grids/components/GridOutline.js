@@ -136,7 +136,8 @@ class GridOutline extends PureComponent {
       area =>
         area.rowStart <= rowNumber &&
         area.rowEnd > rowNumber &&
-        (area.columnStart <= columnNumber && area.columnEnd > columnNumber)
+        area.columnStart <= columnNumber &&
+        area.columnEnd > columnNumber
     );
 
     if (!gridArea) {

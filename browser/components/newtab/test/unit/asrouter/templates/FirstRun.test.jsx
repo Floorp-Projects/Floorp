@@ -51,9 +51,9 @@ const FAKE_FLOW_PARAMS = {
 };
 
 async function getTestMessage(id, requestNewBundle) {
-  const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-    msg => msg.id === id
-  );
+  const message = (
+    await OnboardingMessageProvider.getUntranslatedMessages()
+  ).find(msg => msg.id === id);
 
   // Simulate dynamic triplets by returning a different bundle
   if (requestNewBundle) {

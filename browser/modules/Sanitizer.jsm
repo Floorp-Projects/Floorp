@@ -724,12 +724,10 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
       // Catch errors here, so later we can just loop through these.
       handles.push({
         name,
-        promise: item
-          .clear(range, options)
-          .then(
-            () => (progress[name] = "cleared"),
-            ex => annotateError(name, ex)
-          ),
+        promise: item.clear(range, options).then(
+          () => (progress[name] = "cleared"),
+          ex => annotateError(name, ex)
+        ),
       });
     } catch (ex) {
       annotateError(name, ex);

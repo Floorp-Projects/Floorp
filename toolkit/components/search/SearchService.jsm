@@ -3348,9 +3348,9 @@ SearchService.prototype = {
       };
 
       processDomain(urlParsingInfo.mainDomain, false);
-      SearchStaticData.getAlternateDomains(urlParsingInfo.mainDomain).forEach(
-        d => processDomain(d, true)
-      );
+      SearchStaticData.getAlternateDomains(
+        urlParsingInfo.mainDomain
+      ).forEach(d => processDomain(d, true));
     }
   },
 
