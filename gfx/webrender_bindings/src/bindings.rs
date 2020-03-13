@@ -819,7 +819,6 @@ pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer
 extern "C" {
     pub fn gecko_profiler_start_marker(name: *const c_char);
     pub fn gecko_profiler_end_marker(name: *const c_char);
-    pub fn gecko_profiler_event_marker(name: *const c_char);
     pub fn gecko_profiler_add_text_marker(
         name: *const c_char,
         text_bytes: *const c_char,
@@ -843,12 +842,6 @@ impl ProfilerHooks for GeckoProfilerHooks {
     fn end_marker(&self, label: &CStr) {
         unsafe {
             gecko_profiler_end_marker(label.as_ptr());
-        }
-    }
-
-    fn event_marker(&self, label: &CStr) {
-        unsafe {
-            gecko_profiler_event_marker(label.as_ptr());
         }
     }
 
