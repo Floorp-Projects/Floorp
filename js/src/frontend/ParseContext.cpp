@@ -238,7 +238,6 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
       scriptId_(compilationInfo.usedNames.nextScriptId()),
-      isStandaloneFunctionBody_(false),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
     // We exclude ASM bodies because they are always eager, and the
