@@ -332,6 +332,7 @@ class ExtensionInstallListener {
         if (this.installId !== installId) {
           return;
         }
+        this.cancelling = true;
         let cancelled = false;
         try {
           this.install.cancel();
@@ -346,8 +347,12 @@ class ExtensionInstallListener {
   }
 
   onDownloadCancelled(aInstall) {
-    const { error: installError, state } = aInstall;
-    this.resolve({ installError, state });
+    // Do not resolve we were told to CancelInstall,
+    // to prevent racing with that handler.
+    if (!this.cancelling) {
+      const { error: installError, state } = aInstall;
+      this.resolve({ installError, state });
+    }
   }
 
   onDownloadFailed(aInstall) {
@@ -360,8 +365,12 @@ class ExtensionInstallListener {
   }
 
   onInstallCancelled(aInstall) {
-    const { error: installError, state } = aInstall;
-    this.resolve({ installError, state });
+    // Do not resolve we were told to CancelInstall,
+    // to prevent racing with that handler.
+    if (!this.cancelling) {
+      const { error: installError, state } = aInstall;
+      this.resolve({ installError, state });
+    }
   }
 
   onInstallFailed(aInstall) {
