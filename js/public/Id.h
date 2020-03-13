@@ -70,10 +70,6 @@ using jsid = JS::PropertyKey;
 
 #define JSID_BITS(id) (id.asBits)
 
-// Avoid using canonical 'id' for jsid parameters since this is a magic word in
-// Objective-C++ which, apparently, wants to be able to #include jsapi.h.
-#define id iden
-
 static MOZ_ALWAYS_INLINE bool JSID_IS_STRING(jsid id) {
   return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_STRING;
 }
@@ -242,8 +238,6 @@ bool ApplyGCThingTyped(const jsid& id, F&& f) {
                          })
       .isSome();
 }
-
-#undef id
 
 }  // namespace js
 
