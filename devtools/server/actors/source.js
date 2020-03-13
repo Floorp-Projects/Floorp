@@ -483,7 +483,15 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     function scriptMatches(script) {
       // These tests are approximate, as we can't easily get the script's end
       // column.
-      const lineCount = script.lineCount;
+      let lineCount;
+      try {
+        lineCount = script.lineCount;
+      } catch (err) {
+        // Accessing scripts which were optimized out during parsing can throw
+        // an exception. Tolerate these so that we can still get positions for
+        // other scripts in the source.
+        return false;
+      }
 
       if (
         script.startLine > endLine ||
@@ -522,17 +530,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     const positions = [];
     for (const script of scripts) {
-      try {
-        await this._addScriptBreakpointPositions(query, script, positions);
-      } catch (e) {
-        // Accessing scripts which were optimized out during parsing can throw
-        // an exception. Tolerate these so that we can still get positions for
-        // other scripts in the source.
-        reportError(
-          e,
-          "Got an exception during SA_addScriptBreakpointPositions: "
-        );
-      }
+      await this._addScriptBreakpointPositions(query, script, positions);
     }
 
     return (
