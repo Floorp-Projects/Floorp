@@ -330,10 +330,6 @@ class ParseContext : public Nestable<ParseContext> {
   // Monotonically increasing id.
   uint32_t scriptId_;
 
-  // Set when compiling a function using Parser::standaloneFunctionBody via
-  // the Function or Generator constructor.
-  bool isStandaloneFunctionBody_;
-
   // Set when encountering a super.property inside a method. We need to mark
   // the nearest super scope as needing a home object.
   bool superScopeNeedsHomeObject_;
@@ -440,10 +436,6 @@ class ParseContext : public Nestable<ParseContext> {
   // and the outermost |if (cond)| at top level, and everything else would not
   // be at top level.
   bool atTopLevel() { return atBodyLevel() && sc_->isTopLevelContext(); }
-
-  void setIsStandaloneFunctionBody() { isStandaloneFunctionBody_ = true; }
-
-  bool isStandaloneFunctionBody() const { return isStandaloneFunctionBody_; }
 
   void setSuperScopeNeedsHomeObject() {
     MOZ_ASSERT(sc_->allowSuperProperty());

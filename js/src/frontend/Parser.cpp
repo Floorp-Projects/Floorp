@@ -1881,7 +1881,6 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   if (!funpc.init()) {
     return null();
   }
-  funpc.setIsStandaloneFunctionBody();
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
   AwaitHandling awaitHandling = GetAwaitHandling(asyncKind);
