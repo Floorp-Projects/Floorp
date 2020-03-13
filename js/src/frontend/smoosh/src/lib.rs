@@ -16,13 +16,13 @@
  */
 
 use bumpalo;
-use jsparagus::ast::types::Program;
 use jsparagus::ast::source_atom_set::SourceAtomSet;
+use jsparagus::ast::types::Program;
 use jsparagus::emitter::{emit, EmitError, EmitOptions, EmitResult};
 use jsparagus::parser::{parse_module, parse_script, ParseError, ParseOptions};
-use std::{mem, slice, str};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::{mem, slice, str};
 
 #[repr(C)]
 pub struct CVec<T> {
@@ -293,8 +293,11 @@ fn smoosh(text: &str, options: &SmooshCompileOptions) -> Result<EmitResult, Smoo
 
     let mut emit_options = EmitOptions::new();
     emit_options.no_script_rval = options.no_script_rval;
-    match emit(&mut Program::Script(parse_result.unbox()), &emit_options,
-               atoms.replace(SourceAtomSet::new_uninitialized())) {
+    match emit(
+        &mut Program::Script(parse_result.unbox()),
+        &emit_options,
+        atoms.replace(SourceAtomSet::new_uninitialized()),
+    ) {
         Ok(result) => Ok(result),
         Err(EmitError::NotImplemented(message)) => {
             println!("Unimplemented: {}", message);
