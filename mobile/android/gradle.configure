@@ -212,6 +212,8 @@ def gradle_android_archive_geckoview_tasks(build_config):
         'geckoview:assemble{geckoview.variant.name}AndroidTest'.format(geckoview=build_config.geckoview),
         'geckoview_example:assemble{geckoview_example.variant.name}'.format(geckoview_example=build_config.geckoview_example),
         'geckoview_example:assemble{geckoview_example.variant.name}AndroidTest'.format(geckoview_example=build_config.geckoview_example),
+        'messaging_example:assemble{geckoview_example.variant.name}AndroidTest'.format(geckoview_example=build_config.geckoview_example),
+        'port_messaging_example:assemble{geckoview_example.variant.name}AndroidTest'.format(geckoview_example=build_config.geckoview_example),
         'geckoview:publish{geckoview.variant.name}PublicationToMavenRepository'.format(geckoview=build_config.geckoview),
     ]
 
