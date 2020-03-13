@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/SegmentedVector.h"
 #include "mozilla/Types.h"
 
 #include <algorithm>
@@ -357,6 +358,10 @@ mozilla::Nothing Nothing() {
   return mozilla::Nothing();
 }
 
+
+template <typename T>
+using PseudoHandle = mozilla::UniquePtr<T, JS::FreePolicy>;
+
 // Origin:
 // https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/utils/utils.h#L600-L642
 // Compare 8bit/16bit chars to 8bit/16bit chars.
@@ -452,10 +457,12 @@ class Smi : public Object {
 
 // V8::HeapObject ~= JSObject
 class HeapObject : public Object {
-public:
-  // Only used for bookkeeping of total code generated in regexp-compiler.
-  // We may be able to refactor this away.
-  int Size() const;
+ public:
+  inline static HeapObject cast(Object object) {
+    HeapObject h;
+    h.value_ = JS::Value(object);
+    return h;
+  }
 };
 
 // A fixed-size array with Objects (aka Values) as element types
@@ -465,6 +472,11 @@ class FixedArray : public HeapObject {
   inline void set(uint32_t index, Object value) {
     JS::Value(*this).toObject().as<js::NativeObject>().setDenseElement(index,
                                                                        value);
+  }
+  inline static FixedArray cast(Object object) {
+    FixedArray f;
+    f.value_ = JS::Value(object);
+    return f;
   }
 };
 
@@ -484,45 +496,94 @@ class ByteArray : public HeapObject {
 
 // Like Handles in SM, V8 handles are references to marked pointers.
 // Unlike SM, where Rooted pointers are created individually on the
-// stack, the target of a V8 handle lives in a HandleScope.
-// HandleScopes are created on the stack and register themselves with
-// the isolate (~= JSContext). Whenever a Handle is created, the
-// outermost HandleScope is retrieved from the isolate, and a new root
-// is created in that HandleScope. The Handle remains valid for the
-// lifetime of the HandleScope.
-class HandleScope {
- public:
+// stack, the target of a V8 handle lives in an arena on the isolate
+// (~= JSContext). Whenever a Handle is created, a new "root" is
+// created at the end of the arena.
+//
+// HandleScopes are used to manage the lifetimes of these handles.  A
+// HandleScope lives on the stack and stores the size of the arena at
+// the time of its creation. When the function returns and the
+// HandleScope is destroyed, the arena is truncated to its previous
+// size, clearing all roots that were created since the creation of
+// the HandleScope.
+//
+// In some cases, objects that are GC-allocated in V8 are not in SM.
+// In particular, irregexp allocates ByteArrays during code generation
+// to store lookup tables. This does not play nicely with the SM
+// macroassembler's requirement that no GC allocations take place
+// while it is on the stack. To work around this, this shim layer also
+// provides the ability to create pseudo-handles, which are not
+// managed by the GC but provide the same API to irregexp. The "root"
+// of a pseudohandle is a unique pointer living in a second arena. If
+// the allocated object should outlive the HandleScope, it must be
+// manually moved out of the arena using takeOwnership.
+
+class MOZ_STACK_CLASS HandleScope {
+public:
   HandleScope(Isolate* isolate);
+ ~HandleScope();
+
+ private:
+  size_t level_;
+  size_t non_gc_level_;
+  Isolate* isolate_;
+
+  friend class Isolate;
 };
 
 // Origin:
 // https://github.com/v8/v8/blob/5792f3587116503fc047d2f68c951c72dced08a5/src/handles/handles.h#L88-L171
 template <typename T>
-class Handle {
+class MOZ_NONHEAP_CLASS Handle {
  public:
-  Handle();
+  Handle() : location_(nullptr) {}
   Handle(T object, Isolate* isolate);
+  Handle(JS::Value value, Isolate* isolate);
 
   // Constructor for handling automatic up casting.
   template <typename S, typename = typename std::enable_if<
                             std::is_convertible<S*, T*>::value>::type>
-  /*inline*/ Handle(Handle<S> handle);
+  inline Handle(Handle<S> handle) : location_(handle.location_) {}
 
   template <typename S>
-  /*inline*/ static const Handle<T> cast(Handle<S> that);
+  inline static const Handle<T> cast(Handle<S> that) {
+    return Handle<T>(that.location_);
+  }
 
-  T* operator->() const;
-  T operator*() const;
+  inline bool is_null() const { return location_ == nullptr; }
 
-  bool is_null() const;
+  inline T operator*() const {
+    return T::cast(Object(*location_));
+  };
 
-  Address address();
+  // {ObjectRef} is returned by {Handle::operator->}. It should never be stored
+  // anywhere or used in any other code; no one should ever have to spell out
+  // {ObjectRef} in code. Its only purpose is to be dereferenced immediately by
+  // "operator-> chaining". Returning the address of the field is valid because
+  // this object's lifetime only ends at the end of the full statement.
+  // Origin:
+  // https://github.com/v8/v8/blob/03aaa4b3bf4cb01eee1f223b252e6869b04ab08c/src/handles/handles.h#L91-L105
+  class MOZ_TEMPORARY_CLASS ObjectRef {
+   public:
+    T* operator->() { return &object_; }
+
+   private:
+    friend class Handle;
+    explicit ObjectRef(T object) : object_(object) {}
+
+    T object_;
+  };
+  inline ObjectRef operator->() const { return ObjectRef{**this}; }
 
  private:
+  Handle(JS::Value* location) : location_(location) {}
+
   template <typename>
   friend class Handle;
   template <typename>
   friend class MaybeHandle;
+
+  JS::Value* location_;
 };
 
 // A Handle can be converted into a MaybeHandle. Converting a MaybeHandle
@@ -535,21 +596,35 @@ class Handle {
 // Origin:
 // https://github.com/v8/v8/blob/5792f3587116503fc047d2f68c951c72dced08a5/src/handles/maybe-handles.h#L15-L78
 template <typename T>
-class MaybeHandle final {
+class MOZ_NONHEAP_CLASS MaybeHandle final {
  public:
-  MaybeHandle() = default;
+  MaybeHandle() : location_(nullptr) {}
 
   // Constructor for handling automatic up casting from Handle.
   // Ex. Handle<JSArray> can be passed when MaybeHandle<Object> is expected.
   template <typename S, typename = typename std::enable_if<
                             std::is_convertible<S*, T*>::value>::type>
-  MaybeHandle(Handle<S> handle);
+  MaybeHandle(Handle<S> handle) : location_(handle.location_) {}
 
-  /*inline*/ Handle<T> ToHandleChecked() const;
+  inline Handle<T> ToHandleChecked() const {
+    MOZ_RELEASE_ASSERT(location_);
+    return Handle<T>(location_);
+  }
 
   // Convert to a Handle with a type that can be upcasted to.
   template <typename S>
-  /*inline*/ bool ToHandle(Handle<S>* out) const;
+  inline bool ToHandle(Handle<S>* out) const {
+    if (location_) {
+      *out = Handle<T>(location_);
+      return true;
+    } else {
+      *out = Handle<T>();
+      return false;
+    }
+  }
+
+private:
+  JS::Value* location_;
 };
 
 // From v8/src/handles/handles-inl.h
@@ -831,7 +906,37 @@ class Isolate {
 
   JSContext* cx() const { return cx_; }
 
+  void trace(JSTracer* trc);
+
+  //********** Handle code **********//
+
+  JS::Value* getHandleLocation(JS::Value value);
+
  private:
+
+  mozilla::SegmentedVector<JS::Value> handleArena_;
+  mozilla::SegmentedVector<PseudoHandle<void>> uniquePtrArena_;
+
+  void* allocatePseudoHandle(size_t bytes);
+
+public:
+  template <typename T>
+  PseudoHandle<T> takeOwnership(void* ptr);
+
+private:
+  void openHandleScope(HandleScope& scope) {
+    scope.level_ = handleArena_.Length();
+    scope.non_gc_level_ = uniquePtrArena_.Length();
+  }
+  void closeHandleScope(size_t prevLevel, size_t prevUniqueLevel) {
+    size_t currLevel = handleArena_.Length();
+    handleArena_.PopLastN(currLevel - prevLevel);
+
+    size_t currUniqueLevel = uniquePtrArena_.Length();
+    uniquePtrArena_.PopLastN(currUniqueLevel - prevUniqueLevel);
+  }
+  friend class HandleScope;
+
   JSContext* cx_;
   RegExpStack* regexp_stack_;
   Counters counters_;
