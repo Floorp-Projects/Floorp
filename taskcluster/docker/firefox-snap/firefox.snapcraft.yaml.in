@@ -81,6 +81,18 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/mime
       update-mime-database $SNAPCRAFT_PART_INSTALL/usr/share/mime
 
+  # Find files provided by the base and platform snap and ensure they aren't
+  # duplicated in this snap
+  cleanup:
+    after: [shared-mime-info]
+    plugin: nil
+    build-snaps: [core18, gnome-3-28-1804]
+    override-prime: |
+      set -eux
+      for snap in "core18" "gnome-3-28-1804"; do
+        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
+      done
+
 slots:
   dbus-daemon:
     interface: dbus
