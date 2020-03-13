@@ -806,6 +806,14 @@ DevToolsClient.prototype = {
   get transport() {
     return this._transport;
   },
+
+  dumpPools() {
+    for (const pool of this._pools) {
+      console.log(`%c${pool.actorID}`, "font-weight: bold;", [
+        ...pool.__poolMap.keys(),
+      ]);
+    }
+  },
 };
 
 EventEmitter.decorate(DevToolsClient.prototype);

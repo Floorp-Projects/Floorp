@@ -84,6 +84,14 @@ class Pool extends EventEmitter {
     this._poolMap.set(actor.actorID, actor);
   }
 
+  unmanageChildren(FrontType) {
+    for (const front of this.poolChildren()) {
+      if (!FrontType || front instanceof FrontType) {
+        this.unmanage(front);
+      }
+    }
+  }
+
   /**
    * Remove an actor as a child of this pool.
    */
