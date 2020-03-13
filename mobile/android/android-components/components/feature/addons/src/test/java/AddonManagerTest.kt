@@ -313,11 +313,32 @@ class AddonManagerTest {
     }
 
     @Test
-    fun `updateAddon - when extensionId is not installed`() {
+    fun `updateAddon - when extension is not installed`() {
         var updateStatus: Status? = null
 
         val manager = AddonManager(mock(), mock(), mock(), mock())
 
+        manager.updateAddon("extensionId") { status ->
+            updateStatus = status
+        }
+
+        assertEquals(Status.NotInstalled, updateStatus)
+    }
+
+    @Test
+    fun `updateAddon - when extension is not supported`() {
+        var updateStatus: Status? = null
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("unsupportedExt")
+
+        val metadata: Metadata = mock()
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.APP_SUPPORT))
+        whenever(extension.getMetadata()).thenReturn(metadata)
+
+        WebExtensionSupport.installedExtensions["extensionId"] = extension
+
+        val manager = AddonManager(mock(), mock(), mock(), mock())
         manager.updateAddon("extensionId") { status ->
             updateStatus = status
         }

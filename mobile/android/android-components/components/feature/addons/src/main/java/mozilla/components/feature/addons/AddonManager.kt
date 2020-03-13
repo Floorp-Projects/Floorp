@@ -9,8 +9,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitAll
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.webextensions.WebExtensionSupport
@@ -249,7 +249,7 @@ class AddonManager(
     fun updateAddon(id: String, onFinish: ((Status) -> Unit)) {
         val extension = installedExtensions[id]
 
-        if (extension == null) {
+        if (extension == null || extension.isUnsupported()) {
             onFinish(Status.NotInstalled)
             return
         }
@@ -299,5 +299,5 @@ private fun WebExtension.toInstalledState() =
         optionsPageUrl = getMetadata()?.optionsPageUrl,
         openOptionsPageInTab = getMetadata()?.openOptionsPageInTab ?: false,
         enabled = isEnabled(),
-        disabledAsUnsupported = getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true
+        disabledAsUnsupported = isUnsupported()
     )
