@@ -194,6 +194,8 @@ export type Target = {
   form: { consoleActor: any },
   root: any,
   navigateTo: ({ url: string }) => Promise<*>,
+  attach: () => Promise<*>,
+  attachThread: Object => Promise<ThreadFront>,
   listWorkers: () => Promise<*>,
   reload: () => Promise<*>,
   destroy: () => void,
@@ -207,6 +209,7 @@ export type Target = {
   url: string,
   isParentProcess: Boolean,
   isServiceWorker: boolean,
+  targetForm: Object,
 
   // Property installed by the debugger itself.
   debuggerServiceWorkerStatus: string,
@@ -261,6 +264,23 @@ export type DevToolsClient = {
 };
 
 type ProcessDescriptor = Object;
+
+/**
+ * DevToolsClient
+ * @memberof firefox
+ * @static
+ */
+export type TargetList = {
+  watchTargets: (Array<string>, Function, Function) => void,
+  unwatchTargets: (Array<string>, Function, Function) => void,
+  getAllTargets: string => Array<Target>,
+  targetFront: Target,
+  TYPES: {
+    FRAME: string,
+    PROCESS: string,
+    WORKER: string,
+  },
+};
 
 /**
  * A grip is a JSON value that refers to a specific JavaScript value in the
