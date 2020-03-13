@@ -7,6 +7,7 @@
 package org.mozilla.geckoview;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -15,6 +16,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.util.Log;
 
 public class WebPushController {
     private static final String LOGTAG = "WebPushController";
@@ -61,10 +63,12 @@ public class WebPushController {
     public void onPushEvent(final @NonNull String scope, final @Nullable byte[] data) {
         ThreadUtils.assertOnUiThread();
 
-        final GeckoBundle msg = new GeckoBundle(2);
-        msg.putString("scope", scope);
-        msg.putString("data", Base64Utils.encode(data));
-        EventDispatcher.getInstance().dispatch("GeckoView:PushEvent", msg);
+        GeckoThread.waitForState(GeckoThread.State.JNI_READY).accept(val -> {
+            final GeckoBundle msg = new GeckoBundle(2);
+            msg.putString("scope", scope);
+            msg.putString("data", Base64Utils.encode(data));
+            EventDispatcher.getInstance().dispatch("GeckoView:PushEvent", msg);
+        }, e -> Log.e(LOGTAG, "Unable to deliver Web Push message", e));
     }
 
     /**
