@@ -3,6 +3,7 @@
  */
 
 const TEST_URL = "about:robots";
+StarUI._createPanelIfNeeded();
 const bookmarkPanel = document.getElementById("editBookmarkPanel");
 let folders;
 

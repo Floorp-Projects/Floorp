@@ -256,59 +256,61 @@
       <description/>
     </panel>
 
-    <panel id="editBookmarkPanel"
-           class="panel-no-padding"
-           type="arrow"
-           orient="vertical"
-           ignorekeys="true"
-           hidden="true"
-           tabspecific="true"
-           aria-labelledby="editBookmarkPanelTitle">
-      <box class="panel-header">
-        <label id="editBookmarkPanelTitle"/>
-        <toolbarbutton tabindex="0" id="editBookmarkPanelInfoButton" class="panel-info-button" oncommand="StarUI.toggleRecommendation();" >
-          <image/>
-        </toolbarbutton>
-      </box>
-      <html:div id="editBookmarkPanelInfoArea">
-        <html:div id="editBookmarkPanelRecommendation"></html:div>
-        <html:div id="editBookmarkPanelFaviconContainer">
-          <html:img id="editBookmarkPanelFavicon"/>
+    <html:template id="editBookmarkPanelTemplate"> 
+      <panel id="editBookmarkPanel"
+             class="panel-no-padding"
+             type="arrow"
+             orient="vertical"
+             ignorekeys="true"
+             hidden="true"
+             tabspecific="true"
+             aria-labelledby="editBookmarkPanelTitle">
+        <box class="panel-header">
+          <label id="editBookmarkPanelTitle"/>
+          <toolbarbutton tabindex="0" id="editBookmarkPanelInfoButton" class="panel-info-button" oncommand="StarUI.toggleRecommendation();" >
+            <image/>
+          </toolbarbutton>
+        </box>
+        <html:div id="editBookmarkPanelInfoArea">
+          <html:div id="editBookmarkPanelRecommendation"></html:div>
+          <html:div id="editBookmarkPanelFaviconContainer">
+            <html:img id="editBookmarkPanelFavicon"/>
+          </html:div>
+          <html:div id="editBookmarkPanelImage"></html:div>
         </html:div>
-        <html:div id="editBookmarkPanelImage"></html:div>
-      </html:div>
 #include ../../components/places/content/editBookmarkPanel.inc.xhtml
-      <vbox id="editBookmarkPanelBottomContent"
-            flex="1">
-        <checkbox id="editBookmarkPanel_showForNewBookmarks"
-                  data-l10n-id="bookmark-panel-show-editor-checkbox"
-                  oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
-      </vbox>
-      <hbox id="editBookmarkPanelBottomButtons"
-            class="panel-footer"
-            data-l10n-id="bookmark-panel"
-            data-l10n-attrs="style">
+          <vbox id="editBookmarkPanelBottomContent"
+                flex="1">
+            <checkbox id="editBookmarkPanel_showForNewBookmarks"
+                      data-l10n-id="bookmark-panel-show-editor-checkbox"
+                      oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
+          </vbox>
+          <hbox id="editBookmarkPanelBottomButtons"
+                class="panel-footer"
+                data-l10n-id="bookmark-panel"
+                data-l10n-attrs="style">
 #ifndef XP_UNIX
-        <button id="editBookmarkPanelDoneButton"
-                class="editBookmarkPanelBottomButton"
-                data-l10n-id="bookmark-panel-done-button"
-                default="true"
-                oncommand="StarUI.panel.hidePopup();"/>
-        <button id="editBookmarkPanelRemoveButton"
-                class="editBookmarkPanelBottomButton"
-                oncommand="StarUI.removeBookmarkButtonCommand();"/>
+            <button id="editBookmarkPanelDoneButton"
+                    class="editBookmarkPanelBottomButton"
+                    data-l10n-id="bookmark-panel-done-button"
+                    default="true"
+                    oncommand="StarUI.panel.hidePopup();"/>
+            <button id="editBookmarkPanelRemoveButton"
+                    class="editBookmarkPanelBottomButton"
+                    oncommand="StarUI.removeBookmarkButtonCommand();"/>
 #else
-        <button id="editBookmarkPanelRemoveButton"
-                class="editBookmarkPanelBottomButton"
-                oncommand="StarUI.removeBookmarkButtonCommand();"/>
-        <button id="editBookmarkPanelDoneButton"
-                class="editBookmarkPanelBottomButton"
-                data-l10n-id="bookmark-panel-done-button"
-                default="true"
-                oncommand="StarUI.panel.hidePopup();"/>
+            <button id="editBookmarkPanelRemoveButton"
+                    class="editBookmarkPanelBottomButton"
+                    oncommand="StarUI.removeBookmarkButtonCommand();"/>
+            <button id="editBookmarkPanelDoneButton"
+                    class="editBookmarkPanelBottomButton"
+                    data-l10n-id="bookmark-panel-done-button"
+                    default="true"
+                    oncommand="StarUI.panel.hidePopup();"/>
 #endif
-      </hbox>
-    </panel>
+          </hbox>
+      </panel>
+    </html:template>
 
     <!-- UI tour experience -->
     <panel id="UITourTooltip"

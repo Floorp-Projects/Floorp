@@ -63,6 +63,7 @@ add_task(async function() {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
+  StarUI._createPanelIfNeeded();
   let bookmarkPanel = document.getElementById("editBookmarkPanel");
   bookmarkPanel.setAttribute("animate", false);
   let shownPromise = promisePopupShown(bookmarkPanel);
