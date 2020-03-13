@@ -271,7 +271,7 @@ bool ParseContext::init() {
     }
     // Named lambdas always need a binding for their own name. If this
     // binding is closed over when we finish parsing the function in
-    // finishExtraFunctionScopes, the function box needs to be marked as
+    // finishFunctionScopes, the function box needs to be marked as
     // needing a dynamic DeclEnv object.
     if (functionBox()->isNamedLambda()) {
       if (!namedLambdaScope_->init(this)) {
