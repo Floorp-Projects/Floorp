@@ -22,6 +22,8 @@ from voluptuous import (
     Extra,
 )
 
+from mozpack import path as mozpath
+
 import taskgraph
 
 from .base import (
@@ -50,6 +52,13 @@ FETCH_SCHEMA = Schema({
 
     # Description of the task.
     Required('description'): text_type,
+
+    Optional(
+        'artifact-prefix',
+        description="The prefix of the taskcluster artifact being uploaded. "
+        "Defaults to `public/`; if it starts with something other than "
+        "`public/` the artifact will require scopes to access.",
+    ): text_type,
 
     Required('fetch'): {
         Required('type'): text_type,
@@ -123,13 +132,14 @@ def make_task(config, jobs):
 
     for job in jobs:
         name = job['name']
+        artifact_prefix = job.get('artifact-prefix', 'public')
         env = job.get('env', {})
         env.update({
             'UPLOAD_DIR': '/builds/worker/artifacts'
         })
         task = {
             'attributes': {
-                'fetch-artifact': 'public/%s' % job['artifact_name']
+                'fetch-artifact': mozpath.join(artifact_prefix, job['artifact_name'])
             },
             'name': name,
             'description': job['description'],
@@ -155,7 +165,7 @@ def make_task(config, jobs):
                 'max-run-time': 900,
                 'artifacts': [{
                     'type': 'directory',
-                    'name': 'public',
+                    'name': artifact_prefix,
                     'path': '/builds/worker/artifacts',
                 }],
             },
