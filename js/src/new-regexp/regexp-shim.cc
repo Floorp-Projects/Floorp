@@ -166,18 +166,9 @@ Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
   return Handle<ByteArray>(JS::PrivateValue(data), this);
 }
 
-Handle<FixedArray> Isolate::NewFixedArray(int length, AllocationType alloc) {
+Handle<FixedArray> Isolate::NewFixedArray(int length) {
   MOZ_RELEASE_ASSERT(length >= 0);
-
-  js::NewObjectKind kind = (alloc == AllocationType::kOld)
-    ? js::TenuredObject : js::GenericObject;
-
-  js::AutoEnterOOMUnsafeRegion oomUnsafe;
-  JSObject* array = js::NewDenseFullyAllocatedArray(cx(), length, nullptr, kind);
-  if (!array) {
-    oomUnsafe.crash("Irregexp NewFixedArray");
-  }
-  return Handle<FixedArray>(JS::ObjectValue(*array), this);
+  MOZ_CRASH("TODO");
 }
 
 template <typename CharT>

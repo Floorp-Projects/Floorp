@@ -531,18 +531,13 @@ class HeapObject : public Object {
 };
 
 // A fixed-size array with Objects (aka Values) as element types
-// Implemented as a wrapper around a regular native object with dense elements.
+// Only used for named captures. Allocated during parsing, so
+// can't be a GC thing.
+// TODO: implement.
 class FixedArray : public HeapObject {
  public:
-  inline void set(uint32_t index, Object value) {
-    JS::Value(*this).toObject().as<js::NativeObject>().setDenseElement(index,
-                                                                       value);
-  }
-  inline static FixedArray cast(Object object) {
-    FixedArray f;
-    f.value_ = JS::Value(object);
-    return f;
-  }
+  inline void set(uint32_t index, Object value) {}
+  inline static FixedArray cast(Object object) { MOZ_CRASH("TODO"); }
 };
 
 class ByteArrayData {
@@ -1021,8 +1016,7 @@ public:
       int length, AllocationType allocation = AllocationType::kYoung);
 
   // Allocates a fixed array initialized with undefined values.
-  Handle<FixedArray> NewFixedArray(
-      int length, AllocationType allocation = AllocationType::kYoung);
+  Handle<FixedArray> NewFixedArray(int length);
 
   template <typename Char>
   Handle<String> InternalizeString(const Vector<const Char>& str);
