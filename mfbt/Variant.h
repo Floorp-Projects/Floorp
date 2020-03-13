@@ -182,12 +182,12 @@ struct VariantImplementation<Tag, N, T> {
 
   template <typename Matcher, typename ConcreteVariant>
   static decltype(auto) match(Matcher&& aMatcher, ConcreteVariant& aV) {
-    return aMatcher(aV.template as<N>());
+    return std::forward<Matcher>(aMatcher)(aV.template as<N>());
   }
 
   template <typename ConcreteVariant, typename Matcher>
   static decltype(auto) matchN(ConcreteVariant& aV, Matcher&& aMatcher) {
-    return aMatcher(aV.template as<N>());
+    return std::forward<Matcher>(aMatcher)(aV.template as<N>());
   }
 };
 
@@ -242,7 +242,7 @@ struct VariantImplementation<Tag, N, T, Ts...> {
   template <typename Matcher, typename ConcreteVariant>
   static decltype(auto) match(Matcher&& aMatcher, ConcreteVariant& aV) {
     if (aV.template is<N>()) {
-      return aMatcher(aV.template as<N>());
+      return std::forward<Matcher>(aMatcher)(aV.template as<N>());
     } else {
       // If you're seeing compilation errors here like "no matching
       // function for call to 'match'" then that means that the
@@ -260,7 +260,7 @@ struct VariantImplementation<Tag, N, T, Ts...> {
   template <typename ConcreteVariant, typename Mi, typename... Ms>
   static decltype(auto) matchN(ConcreteVariant& aV, Mi&& aMi, Ms&&... aMs) {
     if (aV.template is<N>()) {
-      return aMi(aV.template as<N>());
+      return std::forward<Mi>(aMi)(aV.template as<N>());
     } else {
       // If you're seeing compilation errors here like "no matching
       // function for call to 'match'" then that means that the

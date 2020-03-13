@@ -425,54 +425,108 @@ static void testEquality() {
 }
 
 struct Describer {
-  static const char* little;
-  static const char* medium;
-  static const char* big;
+  static const char* littleNonConst;
+  static const char* mediumNonConst;
+  static const char* bigNonConst;
 
-  const char* operator()(const uint8_t&) { return little; }
-  const char* operator()(const uint32_t&) { return medium; }
-  const char* operator()(const uint64_t&) { return big; }
+  static const char* littleConst;
+  static const char* mediumConst;
+  static const char* bigConst;
+
+  static const char* littleRRef;
+  static const char* mediumRRef;
+  static const char* bigRRef;
+
+  const char* operator()(const uint8_t&) & { return littleNonConst; }
+  const char* operator()(const uint32_t&) & { return mediumNonConst; }
+  const char* operator()(const uint64_t&) & { return bigNonConst; }
+
+  const char* operator()(const uint8_t&) const& { return littleConst; }
+  const char* operator()(const uint32_t&) const& { return mediumConst; }
+  const char* operator()(const uint64_t&) const& { return bigConst; }
+
+  const char* operator()(const uint8_t&) && { return littleRRef; }
+  const char* operator()(const uint32_t&) && { return mediumRRef; }
+  const char* operator()(const uint64_t&) && { return bigRRef; }
+
+  // Catch-all, to verify that there is no call with any type other than the
+  // expected ones above.
+  template <typename Other>
+  const char* operator()(const Other&) {
+    MOZ_RELEASE_ASSERT(false);
+    return "uh?";
+  }
 };
 
-const char* Describer::little = "little";
-const char* Describer::medium = "medium";
-const char* Describer::big = "big";
+const char* Describer::littleNonConst = "little non-const";
+const char* Describer::mediumNonConst = "medium non-const";
+const char* Describer::bigNonConst = "big non-const";
+
+const char* Describer::littleConst = "little const";
+const char* Describer::mediumConst = "medium const";
+const char* Describer::bigConst = "big const";
+
+const char* Describer::littleRRef = "little rvalue-ref";
+const char* Describer::mediumRRef = "medium rvalue-ref";
+const char* Describer::bigRRef = "big rvalue-ref";
 
 static void testMatching() {
   printf("testMatching\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
   Describer desc;
+  const Describer descConst;
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::little);
-  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::medium);
-  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::big);
+  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::littleNonConst);
+  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::mediumNonConst);
+  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::bigNonConst);
+
+  MOZ_RELEASE_ASSERT(v1.match(descConst) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(v2.match(descConst) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(v3.match(descConst) == Describer::bigConst);
+
+  MOZ_RELEASE_ASSERT(v1.match(Describer()) == Describer::littleRRef);
+  MOZ_RELEASE_ASSERT(v2.match(Describer()) == Describer::mediumRRef);
+  MOZ_RELEASE_ASSERT(v3.match(Describer()) == Describer::bigRRef);
 
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
-  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::little);
-  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::medium);
-  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::big);
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::littleNonConst);
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::mediumNonConst);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigNonConst);
+
+  MOZ_RELEASE_ASSERT(constRef1.match(descConst) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(constRef2.match(descConst) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(constRef3.match(descConst) == Describer::bigConst);
+
+  MOZ_RELEASE_ASSERT(constRef1.match(Describer()) == Describer::littleRRef);
+  MOZ_RELEASE_ASSERT(constRef2.match(Describer()) == Describer::mediumRRef);
+  MOZ_RELEASE_ASSERT(constRef3.match(Describer()) == Describer::bigRRef);
 }
 
 static void testMatchingLambda() {
   printf("testMatchingLambda\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
+  // Note: Lambdas' call operators are const by default (unless the lambda is
+  // declared `mutable`), hence the use of "...Const" strings below.
+  // There is no need to test mutable lambdas, nor rvalue lambda, because there
+  // would be no way to distinguish how each lambda is actually invoked because
+  // there is only one choice of call operator in each overload set.
   auto desc = [](auto& a) {
     switch (sizeof(a)) {
       case 1:
-        return Describer::little;
+        return Describer::littleConst;
       case 4:
-        return Describer::medium;
+        return Describer::mediumConst;
       case 8:
-        return Describer::big;
+        return Describer::bigConst;
       default:
         MOZ_RELEASE_ASSERT(false);
         return "";
@@ -483,51 +537,45 @@ static void testMatchingLambda() {
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::little);
-  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::medium);
-  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::big);
+  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::bigConst);
 
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
-  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::little);
-  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::medium);
-  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::big);
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigConst);
 }
 
 static void testMatchingLambdas() {
   printf("testMatchingLambdas\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
-  auto desc8 = [](const uint8_t& a) { return Describer::little; };
-  auto desc32 = [](const uint32_t& a) { return Describer::medium; };
-  auto desc64 = [](const uint64_t& a) { return Describer::big; };
+  auto desc8 = [](const uint8_t& a) { return Describer::littleConst; };
+  auto desc32 = [](const uint32_t& a) { return Describer::mediumConst; };
+  auto desc64 = [](const uint64_t& a) { return Describer::bigConst; };
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) == Describer::little);
-  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) == Describer::medium);
-  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) == Describer::big);
+  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) == Describer::bigConst);
 
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
   MOZ_RELEASE_ASSERT(constRef1.match(desc8, desc32, desc64) ==
-                     Describer::little);
+                     Describer::littleConst);
   MOZ_RELEASE_ASSERT(constRef2.match(desc8, desc32, desc64) ==
-                     Describer::medium);
-  MOZ_RELEASE_ASSERT(constRef3.match(desc8, desc32, desc64) == Describer::big);
-}
-
-static void testRvalueMatcher() {
-  printf("testRvalueMatcher\n");
-  using V = Variant<uint8_t, uint32_t, uint64_t>;
-  V v(uint8_t(1));
-  MOZ_RELEASE_ASSERT(v.match(Describer()) == Describer::little);
+                     Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc8, desc32, desc64) ==
+                     Describer::bigConst);
 }
 
 static void testAddTagToHash() {
@@ -576,7 +624,6 @@ int main() {
   testMatching();
   testMatchingLambda();
   testMatchingLambdas();
-  testRvalueMatcher();
   testAddTagToHash();
 
   printf("TestVariant OK!\n");
