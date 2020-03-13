@@ -39,4 +39,3 @@ mod program_cache;
 pub mod bindings;
 pub mod moz2d_renderer;
 mod swgl_bindings;
-

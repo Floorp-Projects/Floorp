@@ -34,11 +34,11 @@ use rayon;
 use swgl_bindings::SwCompositor;
 use thread_profiler::register_thread_with_profiler;
 use webrender::{
-    api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
-    BinaryRecorder, Compositor, CompositorCapabilities, DebugFlags, Device,
-    NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
-    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
-    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId, FastHashMap
+    api::units::*, api::*, set_profiler_hooks, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
+    BinaryRecorder, Compositor, CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap,
+    NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer,
+    RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod,
+    VertexUsageHint, WrShaders,
 };
 
 #[cfg(target_os = "macos")]
@@ -757,7 +757,7 @@ impl<'a> From<(&'a (WrPipelineId, WrDocumentId), &'a WrEpoch)> for WrPipelineEpo
 #[repr(C)]
 pub struct WrPipelineIdAndEpoch {
     pipeline_id: WrPipelineId,
-    epoch: WrEpoch
+    epoch: WrEpoch,
 }
 
 impl<'a> From<(&WrPipelineId, &WrEpoch)> for WrPipelineIdAndEpoch {
@@ -880,7 +880,12 @@ extern "C" {
     // These callbacks are invoked from the render backend thread (aka the APZ
     // sampler thread)
     fn apz_register_sampler(window_id: WrWindowId);
-    fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction, document_id: WrDocumentId, epochs_being_rendered: &WrPipelineIdEpochs);
+    fn apz_sample_transforms(
+        window_id: WrWindowId,
+        transaction: &mut Transaction,
+        document_id: WrDocumentId,
+        epochs_being_rendered: &WrPipelineIdEpochs,
+    );
     fn apz_deregister_sampler(window_id: WrWindowId);
 }
 
@@ -965,14 +970,16 @@ impl AsyncPropertySampler for SamplerCallback {
         unsafe { apz_register_sampler(self.window_id) }
     }
 
-    fn sample(&self, document_id: DocumentId,
-              epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
+    fn sample(&self, document_id: DocumentId, epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
         let mut transaction = Transaction::new();
-        unsafe { apz_sample_transforms(
-	    self.window_id, &mut transaction,
-            document_id, &epochs_being_rendered.iter()
-                                               .map(WrPipelineIdAndEpoch::from).collect()
-	)};
+        unsafe {
+            apz_sample_transforms(
+                self.window_id,
+                &mut transaction,
+                document_id,
+                &epochs_being_rendered.iter().map(WrPipelineIdAndEpoch::from).collect(),
+            )
+        };
         // TODO: also omta_sample_transforms(...)
         transaction.get_frame_ops()
     }
@@ -995,9 +1002,7 @@ pub struct WrHitTester {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_request_hit_tester(
-    dh: &DocumentHandle,
-) -> *mut WrHitTester {
+pub extern "C" fn wr_api_request_hit_tester(dh: &DocumentHandle) -> *mut WrHitTester {
     let hit_tester = dh.api.request_hit_tester(dh.document_id);
     Box::into_raw(Box::new(WrHitTester { ptr: hit_tester }))
 }
@@ -1008,20 +1013,15 @@ pub unsafe extern "C" fn wr_hit_tester_clone(hit_tester: *mut WrHitTester) -> *m
     Box::into_raw(Box::new(WrHitTester { ptr: new_ref }))
 }
 
-
 #[no_mangle]
 pub extern "C" fn wr_hit_tester_hit_test(
     hit_tester: &WrHitTester,
     point: WorldPoint,
     out_pipeline_id: &mut WrPipelineId,
     out_scroll_id: &mut u64,
-    out_hit_info: &mut u16
+    out_hit_info: &mut u16,
 ) -> bool {
-    let result = hit_tester.ptr.hit_test(
-        None,
-        point,
-        HitTestFlags::empty()
-    );
+    let result = hit_tester.ptr.hit_test(None, point, HitTestFlags::empty());
 
     for item in &result.items {
         // For now we should never be getting results back for which the tag is
@@ -1235,14 +1235,9 @@ extern "C" {
         clip_rect: DeviceIntRect,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
-    fn wr_compositor_enable_native_compositor(
-        compositor: *mut c_void,
-        enable: bool,
-    );
+    fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
     fn wr_compositor_deinit(compositor: *mut c_void);
-    fn wr_compositor_get_capabilities(
-        compositor: *mut c_void,
-    ) -> CompositorCapabilities;
+    fn wr_compositor_get_capabilities(compositor: *mut c_void) -> CompositorCapabilities;
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1256,13 +1251,7 @@ impl Compositor for WrCompositor {
         is_opaque: bool,
     ) {
         unsafe {
-            wr_compositor_create_surface(
-                self.0,
-                id,
-                virtual_offset,
-                tile_size,
-                is_opaque,
-            );
+            wr_compositor_create_surface(self.0, id, virtual_offset, tile_size, is_opaque);
         }
     }
 
@@ -1341,9 +1330,7 @@ impl Compositor for WrCompositor {
     }
 
     fn get_capabilities(&self) -> CompositorCapabilities {
-        unsafe {
-            wr_compositor_get_capabilities(self.0)
-        }
+        unsafe { wr_compositor_get_capabilities(self.0) }
     }
 }
 
@@ -1446,7 +1433,7 @@ pub extern "C" fn wr_window_new(
         };
         CompositorConfig::Native {
             max_update_rects: 1,
-            compositor: Box::new(SwCompositor::new(sw_gl.unwrap(), Some(native_gl), wr_compositor))
+            compositor: Box::new(SwCompositor::new(sw_gl.unwrap(), Some(native_gl), wr_compositor)),
         }
     } else if compositor != ptr::null_mut() {
         CompositorConfig::Native {
@@ -2615,10 +2602,7 @@ pub extern "C" fn wr_dp_push_iframe(
 }
 
 // A helper fn to construct a PrimitiveFlags
-fn prim_flags(
-    is_backface_visible: bool,
-    prefer_compositor_surface: bool,
-) -> PrimitiveFlags {
+fn prim_flags(is_backface_visible: bool, prefer_compositor_surface: bool) -> PrimitiveFlags {
     let mut flags = PrimitiveFlags::empty();
 
     if is_backface_visible {
@@ -2868,16 +2852,18 @@ pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_image(state: &mut WrState,
-                                   bounds: LayoutRect,
-                                   clip: LayoutRect,
-                                   is_backface_visible: bool,
-                                   parent: &WrSpaceAndClipChain,
-                                   image_rendering: ImageRendering,
-                                   key: WrImageKey,
-                                   premultiplied_alpha: bool,
-                                   color: ColorF,
-                                   prefer_compositor_surface: bool) {
+pub extern "C" fn wr_dp_push_image(
+    state: &mut WrState,
+    bounds: LayoutRect,
+    clip: LayoutRect,
+    is_backface_visible: bool,
+    parent: &WrSpaceAndClipChain,
+    image_rendering: ImageRendering,
+    key: WrImageKey,
+    premultiplied_alpha: bool,
+    color: ColorF,
+    prefer_compositor_surface: bool,
+) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -2950,19 +2936,21 @@ pub extern "C" fn wr_dp_push_repeating_image(
 
 /// Push a 3 planar yuv image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
-                                              bounds: LayoutRect,
-                                              clip: LayoutRect,
-                                              is_backface_visible: bool,
-                                              parent: &WrSpaceAndClipChain,
-                                              image_key_0: WrImageKey,
-                                              image_key_1: WrImageKey,
-                                              image_key_2: WrImageKey,
-                                              color_depth: WrColorDepth,
-                                              color_space: WrYuvColorSpace,
-                                              color_range: WrColorRange,
-                                              image_rendering: ImageRendering,
-                                              prefer_compositor_surface: bool) {
+pub extern "C" fn wr_dp_push_yuv_planar_image(
+    state: &mut WrState,
+    bounds: LayoutRect,
+    clip: LayoutRect,
+    is_backface_visible: bool,
+    parent: &WrSpaceAndClipChain,
+    image_key_0: WrImageKey,
+    image_key_1: WrImageKey,
+    image_key_2: WrImageKey,
+    color_depth: WrColorDepth,
+    color_space: WrYuvColorSpace,
+    color_range: WrColorRange,
+    image_rendering: ImageRendering,
+    prefer_compositor_surface: bool,
+) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -2989,18 +2977,20 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
 
 /// Push a 2 planar NV12 image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
-                                            bounds: LayoutRect,
-                                            clip: LayoutRect,
-                                            is_backface_visible: bool,
-                                            parent: &WrSpaceAndClipChain,
-                                            image_key_0: WrImageKey,
-                                            image_key_1: WrImageKey,
-                                            color_depth: WrColorDepth,
-                                            color_space: WrYuvColorSpace,
-                                            color_range: WrColorRange,
-                                            image_rendering: ImageRendering,
-                                            prefer_compositor_surface: bool) {
+pub extern "C" fn wr_dp_push_yuv_NV12_image(
+    state: &mut WrState,
+    bounds: LayoutRect,
+    clip: LayoutRect,
+    is_backface_visible: bool,
+    parent: &WrSpaceAndClipChain,
+    image_key_0: WrImageKey,
+    image_key_1: WrImageKey,
+    color_depth: WrColorDepth,
+    color_space: WrYuvColorSpace,
+    color_range: WrColorRange,
+    image_rendering: ImageRendering,
+    prefer_compositor_surface: bool,
+) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
@@ -3027,17 +3017,19 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
 
 /// Push a yuv interleaved image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
-                                                   bounds: LayoutRect,
-                                                   clip: LayoutRect,
-                                                   is_backface_visible: bool,
-                                                   parent: &WrSpaceAndClipChain,
-                                                   image_key_0: WrImageKey,
-                                                   color_depth: WrColorDepth,
-                                                   color_space: WrYuvColorSpace,
-                                                   color_range: WrColorRange,
-                                                   image_rendering: ImageRendering,
-                                                   prefer_compositor_surface: bool) {
+pub extern "C" fn wr_dp_push_yuv_interleaved_image(
+    state: &mut WrState,
+    bounds: LayoutRect,
+    clip: LayoutRect,
+    is_backface_visible: bool,
+    parent: &WrSpaceAndClipChain,
+    image_key_0: WrImageKey,
+    color_depth: WrColorDepth,
+    color_space: WrYuvColorSpace,
+    color_range: WrColorRange,
+    image_rendering: ImageRendering,
+    prefer_compositor_surface: bool,
+) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
