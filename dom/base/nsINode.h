@@ -307,6 +307,7 @@ class nsINode : public mozilla::dom::EventTarget {
   static const auto DOCUMENT_FRAGMENT_NODE =
       mozilla::dom::Node_Binding::DOCUMENT_FRAGMENT_NODE;
   static const auto NOTATION_NODE = mozilla::dom::Node_Binding::NOTATION_NODE;
+  static const auto MAX_NODE_TYPE = NOTATION_NODE;
 
   template <class T>
   using Sequence = mozilla::dom::Sequence<T>;
