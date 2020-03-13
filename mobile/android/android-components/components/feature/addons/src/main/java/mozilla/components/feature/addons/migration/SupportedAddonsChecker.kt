@@ -30,6 +30,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -80,7 +81,7 @@ class DefaultSupportedAddonsChecker(
     override fun registerForChecks() {
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
                 CHECKER_UNIQUE_PERIODIC_WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.REPLACE,
                 createPeriodicWorkerRequest()
         )
         logger.info("Register check for new supported add-ons")
@@ -160,7 +161,9 @@ internal class SupportedAddonsWorker(
             }
         } catch (exception: Exception) {
             logger.error("An exception happened trying to check for new supported add-ons, re-schedule ${exception.message}", exception)
-            GlobalAddonDependencyProvider.onCrash?.invoke(exception)
+            if (!exception.shouldReport()) {
+                GlobalAddonDependencyProvider.onCrash?.invoke(exception)
+            }
         }
         return Result.success()
     }
@@ -243,4 +246,6 @@ internal class SupportedAddonsWorker(
 
         internal var onNotificationClickIntent: Intent = Intent()
     }
+
+    private fun Exception.shouldReport(): Boolean = cause is IOException
 }
