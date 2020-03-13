@@ -2830,9 +2830,10 @@ class JSScript : public js::BaseScript {
   bool createJitScript(JSContext* cx);
 
   bool createScriptData(JSContext* cx, uint32_t natoms);
-  bool createImmutableScriptData(JSContext* cx, uint32_t codeLength,
-                                 uint32_t noteLength, uint32_t numResumeOffsets,
-                                 uint32_t numScopeNotes, uint32_t numTryNotes);
+  void initImmutableScriptData(js::UniquePtr<js::ImmutableScriptData>&& data) {
+    MOZ_ASSERT(!sharedData_->isd_);
+    sharedData_->isd_ = std::move(data);
+  }
   bool shareScriptData(JSContext* cx);
 
  public:
