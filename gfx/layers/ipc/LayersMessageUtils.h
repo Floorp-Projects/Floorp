@@ -822,8 +822,54 @@ struct ParamTraits<mozilla::layers::ScrollbarData> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::SimpleLayerAttributes>
-    : public PlainOldDataSerializer<mozilla::layers::SimpleLayerAttributes> {};
+struct ParamTraits<mozilla::layers::SimpleLayerAttributes::FixedPositionData>
+    : public PlainOldDataSerializer<
+          mozilla::layers::SimpleLayerAttributes::FixedPositionData> {};
+
+template <>
+struct ParamTraits<mozilla::layers::SimpleLayerAttributes::StickyPositionData>
+    : public PlainOldDataSerializer<
+          mozilla::layers::SimpleLayerAttributes::StickyPositionData> {};
+
+template <>
+struct ParamTraits<mozilla::layers::SimpleLayerAttributes> {
+  typedef mozilla::layers::SimpleLayerAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mTransform);
+    WriteParam(aMsg, aParam.mTransformIsPerspective);
+    WriteParam(aMsg, aParam.mScrolledClip);
+    WriteParam(aMsg, aParam.mPostXScale);
+    WriteParam(aMsg, aParam.mPostYScale);
+    WriteParam(aMsg, aParam.mContentFlags);
+    WriteParam(aMsg, aParam.mOpacity);
+    WriteParam(aMsg, aParam.mIsFixedPosition);
+    WriteParam(aMsg, aParam.mIsAsyncZoomContainerForViewId);
+    WriteParam(aMsg, aParam.mScrollbarData);
+    WriteParam(aMsg, aParam.mMixBlendMode);
+    WriteParam(aMsg, aParam.mForceIsolatedGroup);
+    WriteParam(aMsg, aParam.mFixedPositionData);
+    WriteParam(aMsg, aParam.mStickyPositionData);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mTransform) &&
+           ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective) &&
+           ReadParam(aMsg, aIter, &aResult->mScrolledClip) &&
+           ReadParam(aMsg, aIter, &aResult->mPostXScale) &&
+           ReadParam(aMsg, aIter, &aResult->mPostYScale) &&
+           ReadParam(aMsg, aIter, &aResult->mContentFlags) &&
+           ReadParam(aMsg, aIter, &aResult->mOpacity) &&
+           ReadParam(aMsg, aIter, &aResult->mIsFixedPosition) &&
+           ReadParam(aMsg, aIter, &aResult->mIsAsyncZoomContainerForViewId) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
+           ReadParam(aMsg, aIter, &aResult->mMixBlendMode) &&
+           ReadParam(aMsg, aIter, &aResult->mForceIsolatedGroup) &&
+           ReadParam(aMsg, aIter, &aResult->mFixedPositionData) &&
+           ReadParam(aMsg, aIter, &aResult->mStickyPositionData);
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::layers::ScrollUpdateInfo>
