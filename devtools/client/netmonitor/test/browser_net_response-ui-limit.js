@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Tests if large response contents are  displayed usin <pre>
+ * Tests if large response contents are  displayed using <pre>
  * and not using syntax color highlighting (e.g. using CodeMirror)
  */
 const HTML_LONG_URL = CONTENT_TYPE_SJS + "?fmt=html-long";
@@ -32,12 +32,19 @@ add_task(async function() {
   });
   await wait;
 
-  wait = waitForDOM(document, "#response-panel .responseTextContainer");
+  wait = waitForDOM(document, "#response-panel .accordion-item", 2);
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
+  await wait;
+
+  wait = waitForDOM(document, "#response-panel .responseTextContainer");
+  const payloadHeader = document.querySelector(
+    "#response-panel .accordion-item:last-child .accordion-header"
+  );
+  clickElement(payloadHeader, monitor);
   await wait;
 
   await teardown(monitor);
