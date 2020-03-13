@@ -228,7 +228,7 @@ class HTMLInputElement final : public TextControlElement,
   virtual bool GetPlaceholderVisibility() override;
   virtual bool GetPreviewVisibility() override;
   virtual void InitializeKeyboardEventListeners() override;
-  virtual void OnValueChanged(bool aNotify, ValueChangeKind) override;
+  virtual void OnValueChanged(ValueChangeKind) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT virtual nsresult SetValueFromSetRangeText(
       const nsAString& aValue) override;
