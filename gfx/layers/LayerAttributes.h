@@ -21,7 +21,13 @@ struct ParamTraits;
 namespace mozilla {
 namespace layers {
 
-enum class ScrollbarLayerType : uint8_t { None, Thumb, Container };
+// clang-format off
+MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollbarLayerType, uint8_t, (
+  None,
+  Thumb,
+  Container
+));
+// clang-format on
 
 /**
  *  It stores data for scroll thumb layer or container layers.
