@@ -160,8 +160,8 @@ async function testSearchEngine(engineDetails) {
       code: engineDetails.codes.newTab,
       async preTest(tab) {
         let browser = tab.linkedBrowser;
-        await BrowserTestUtils.loadURI(browser, "about:newtab");
-        await BrowserTestUtils.browserLoaded(browser);
+        BrowserTestUtils.loadURI(browser, "about:newtab");
+        await BrowserTestUtils.browserLoaded(browser, false, "about:newtab");
 
         await promiseContentSearchReady(browser);
       },
