@@ -969,6 +969,10 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
     return false;
   }
 
+  if (aContent->GetProperty(nsGkAtoms::apzDisabled)) {
+    return true;
+  }
+
   Document* doc = aContent->GetComposedDoc();
   if (PresShell* rootPresShell =
           APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
