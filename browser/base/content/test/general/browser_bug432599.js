@@ -75,7 +75,6 @@ add_task(async function() {
 var initialValue;
 var initialRemoveHidden;
 function checkBookmarksPanel(phase) {
-  StarUI._createPanelIfNeeded();
   let popupElement = document.getElementById("editBookmarkPanel");
   let titleElement = document.getElementById("editBookmarkPanelTitle");
   let removeElement = document.getElementById("editBookmarkPanelRemoveButton");
