@@ -4,23 +4,52 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-addons = [
-    'tabs-activate-remove',
-    'tabs-activate-remove-2',
-    'update-1',
-    'update-2',
-    'update-postpone-1',
-    'update-postpone-2',
-    'update-with-perms-1',
-    'update-with-perms-2',
-]
+addons = {
+    'tabs-activate-remove': [
+        'background.js',
+        'manifest.json',
+    ],
+    'tabs-activate-remove-2': [
+        'background.js',
+        'manifest.json',
+    ],
+    'update-1': [
+        'borderify.js',
+        'manifest.json',
+    ],
+    'update-2': [
+        'borderify.js',
+        'manifest.json',
+    ],
+    'update-postpone-1': [
+        'background.js',
+        'borderify.js',
+        'manifest.json',
+    ],
+    'update-postpone-2': [
+        'borderify.js',
+        'manifest.json',
+    ],
+    'update-with-perms-1': [
+        'borderify.js',
+        'manifest.json',
+    ],
+    'update-with-perms-2': [
+        'borderify.js',
+        'manifest.json',
+    ],
+}
 
-for addon in addons:
+for addon, files in addons.items():
     indir = 'web_extensions/%s' % addon
     xpi = '%s.xpi' % indir
+    inputs = [indir]
+    for file in files:
+        inputs.append('%s/%s' % (indir, file))
 
     GENERATED_FILES += [xpi]
-    GENERATED_FILES[xpi].script = '../../../../../../toolkit/mozapps/extensions/test/create_xpi.py'
-    GENERATED_FILES[xpi].inputs = [indir]
+    GENERATED_FILES[xpi].script = '/toolkit/mozapps/extensions/test/create_xpi.py'
+    GENERATED_FILES[xpi].py2 = True
+    GENERATED_FILES[xpi].inputs = inputs
 
     TEST_HARNESS_FILES.testing.mochitest.tests.junit += ['!%s' % xpi]
