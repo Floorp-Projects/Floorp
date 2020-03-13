@@ -5451,7 +5451,7 @@ var XULBrowserWindow = {
     gURLBar.formatValue();
 
     try {
-      uri = Services.uriFixup.createExposableURI(uri);
+      uri = Services.io.createExposableURI(uri);
     } catch (e) {}
     gIdentityHandler.updateIdentity(this._state, uri);
   },

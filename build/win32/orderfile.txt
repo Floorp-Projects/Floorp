@@ -7139,7 +7139,7 @@ Gecko_StyleSheet_AddRef
 ?GetHasRef@nsStandardURL@net@mozilla@@UAG?AW4nsresult@@PA_N@Z
 ?EqualsExceptRef@nsSimpleURI@net@mozilla@@UAG?AW4nsresult@@PAVnsIURI@@PA_N@Z
 ?EqualsInternal@nsSimpleNestedURI@net@mozilla@@UAE?AW4nsresult@@PAVnsIURI@@W4RefHandlingEnum@nsSimpleURI@23@PA_N@Z
-?CreateExposableURI@nsDefaultURIFixup@@UAG?AW4nsresult@@PAVnsIURI@@PAPAV3@@Z
+?CreateExposableURI@nsIOService@net@mozilla@@SA_NXZ
 ?GetUserPass@nsSimpleURI@net@mozilla@@UAG?AW4nsresult@@AAV?$nsTSubstring@D@@@Z
 ?SchemeIsJavascript@net@mozilla@@YA_NPAVnsIURI@@@Z
 ?GetDOMTiming@PerformanceMainThread@dom@mozilla@@UBEPAVnsDOMNavigationTiming@@XZ

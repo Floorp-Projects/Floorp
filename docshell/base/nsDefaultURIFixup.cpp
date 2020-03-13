@@ -41,30 +41,6 @@ nsDefaultURIFixup::nsDefaultURIFixup() {}
 nsDefaultURIFixup::~nsDefaultURIFixup() {}
 
 NS_IMETHODIMP
-nsDefaultURIFixup::CreateExposableURI(nsIURI* aURI, nsIURI** aReturn) {
-  NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  nsAutoCString userPass;
-  aURI->GetUserPass(userPass);
-
-  // most of the time we can just AddRef and return
-  if (userPass.IsEmpty()) {
-    *aReturn = aURI;
-    NS_ADDREF(*aReturn);
-    return NS_OK;
-  }
-
-  // Rats, we have to massage the URI
-  nsCOMPtr<nsIURI> uri = aURI;
-
-  Unused << NS_MutateURI(uri).SetUserPass(EmptyCString()).Finalize(uri);
-
-  uri.forget(aReturn);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI,
                                   uint32_t aFixupFlags,
                                   nsIInputStream** aPostData, nsIURI** aURI) {

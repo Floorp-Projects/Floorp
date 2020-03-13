@@ -7096,7 +7096,7 @@ Gecko_StyleSheet_AddRef
 ?GetHasRef@nsStandardURL@net@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
 ?EqualsExceptRef@nsSimpleURI@net@mozilla@@UEAA?AW4nsresult@@PEAVnsIURI@@PEA_N@Z
 ?EqualsInternal@nsSimpleNestedURI@net@mozilla@@UEAA?AW4nsresult@@PEAVnsIURI@@W4RefHandlingEnum@nsSimpleURI@23@PEA_N@Z
-?CreateExposableURI@nsDefaultURIFixup@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAPEAV3@@Z
+?CreateExposableURI@nsIOService@net@mozilla@@SA_NXZ
 ?GetUserPass@nsSimpleURI@net@mozilla@@UEAA?AW4nsresult@@AEAV?$nsTSubstring@D@@@Z
 ?SchemeIsJavascript@net@mozilla@@YA_NPEAVnsIURI@@@Z
 ?GetDOMTiming@PerformanceMainThread@dom@mozilla@@UEBAPEAVnsDOMNavigationTiming@@XZ

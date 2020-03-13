@@ -10,7 +10,7 @@
 var gIdentityHandler = {
   /**
    * nsIURI for which the identity UI is displayed. This has been already
-   * processed by nsIURIFixup.createExposableURI.
+   * processed by createExposableURI.
    */
   _uri: null,
 
@@ -501,7 +501,7 @@ var gIdentityHandler = {
    *        Bitmask provided by nsIWebProgressListener.onSecurityChange.
    * @param uri
    *        nsIURI for which the identity UI should be displayed, already
-   *        processed by nsIURIFixup.createExposableURI.
+   *        processed by createExposableURI.
    */
   updateIdentity(state, uri) {
     let shouldHidePopup = this._uri && this._uri.spec != uri.spec;

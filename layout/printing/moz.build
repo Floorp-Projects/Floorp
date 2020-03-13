@@ -38,5 +38,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
     '/dom/base',
-    '/gfx/2d/'
+    '/gfx/2d/',
+    '/netwerk/base/',
 ]

@@ -939,6 +939,30 @@ nsIOService::NewFileURI(nsIFile* file, nsIURI** result) {
   return fileHandler->NewFileURI(file, result);
 }
 
+// static
+already_AddRefed<nsIURI> nsIOService::CreateExposableURI(nsIURI* aURI) {
+  MOZ_ASSERT(aURI, "Must have a URI");
+  nsCOMPtr<nsIURI> uri = aURI;
+
+  nsAutoCString userPass;
+  uri->GetUserPass(userPass);
+  if (!userPass.IsEmpty()) {
+    DebugOnly<nsresult> rv =
+        NS_MutateURI(uri).SetUserPass(EmptyCString()).Finalize(uri);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && uri, "Mutating URI should never fail");
+  }
+  return uri.forget();
+}
+
+NS_IMETHODIMP
+nsIOService::CreateExposableURI(nsIURI* aURI, nsIURI** _result) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(_result);
+  nsCOMPtr<nsIURI> exposableURI = CreateExposableURI(aURI);
+  exposableURI.forget(_result);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI* aURI, nsINode* aLoadingNode,
                                nsIPrincipal* aLoadingPrincipal,
