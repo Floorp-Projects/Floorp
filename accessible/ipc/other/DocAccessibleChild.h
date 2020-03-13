@@ -461,8 +461,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   virtual mozilla::ipc::IPCResult RecvAccessibleAtPoint(
       const uint64_t& aID, const int32_t& aX, const int32_t& aY,
-      const bool& aNeedsScreenCoords, const uint32_t& aWhich, uint64_t* aResult,
-      bool* aOk) override;
+      const bool& aNeedsScreenCoords, const uint32_t& aWhich,
+      PDocAccessibleChild** aResultDoc, uint64_t* aResultID) override;
 
   virtual mozilla::ipc::IPCResult RecvExtents(const uint64_t& aID,
                                               const bool& aNeedsScreenCoords,

@@ -1605,10 +1605,10 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvURLDocTypeMimeType(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAccessibleAtPoint(
     const uint64_t& aID, const int32_t& aX, const int32_t& aY,
-    const bool& aNeedsScreenCoords, const uint32_t& aWhich, uint64_t* aResult,
-    bool* aOk) {
-  *aResult = 0;
-  *aOk = false;
+    const bool& aNeedsScreenCoords, const uint32_t& aWhich,
+    PDocAccessibleChild** aResultDoc, uint64_t* aResultID) {
+  *aResultDoc = nullptr;
+  *aResultID = 0;
   Accessible* acc = IdToAccessible(aID);
   if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
     int32_t x = aX;
@@ -1623,8 +1623,10 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAccessibleAtPoint(
     Accessible* result = acc->ChildAtPoint(
         x, y, static_cast<Accessible::EWhichChildAtPoint>(aWhich));
     if (result) {
-      *aResult = reinterpret_cast<uint64_t>(result->UniqueID());
-      *aOk = true;
+      // Accessible::ChildAtPoint can return an Accessible from a descendant
+      // document.
+      *aResultDoc = result->Document()->IPCDoc();
+      *aResultID = reinterpret_cast<uint64_t>(result->UniqueID());
     }
   }
 
