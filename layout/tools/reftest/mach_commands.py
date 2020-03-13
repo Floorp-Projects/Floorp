@@ -230,7 +230,7 @@ class MachCommands(MachCommandBase):
         reftest.log_manager.enable_unstructured()
         if conditions.is_android(self):
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
-            install = InstallIntent.NO if kwargs.get('no_install') else InstallIntent.PROMPT
+            install = InstallIntent.NO if kwargs.get('no_install') else InstallIntent.YES
             verify_android_device(self, install=install, xre=True, network=True,
                                   app=kwargs["app"], device_serial=kwargs["deviceSerial"])
             return reftest.run_android_test(**kwargs)
