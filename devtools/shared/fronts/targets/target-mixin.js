@@ -361,7 +361,7 @@ function TargetMixin(parentClass) {
         );
       }
       this.threadFront = await this.getFront("thread");
-      const result = await this.threadFront.attach(options);
+      await this.threadFront.attach(options);
 
       this.threadFront.on("newSource", this._onNewSource);
 
@@ -369,7 +369,7 @@ function TargetMixin(parentClass) {
       // wait for the thread to be attached can resume.
       this._resolveOnThreadAttached();
 
-      return [result, this.threadFront];
+      return this.threadFront;
     }
 
     // Listener for "newSource" event fired by the thread actor

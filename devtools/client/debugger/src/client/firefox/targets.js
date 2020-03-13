@@ -48,7 +48,7 @@ async function attachTargets(targetLists, args) {
       // But workers targets are still only managed by the debugger codebase
       // and so we have to attach their thread actor
       if (!threadFront) {
-        [, threadFront] = await targetFront.attachThread({
+        threadFront = await targetFront.attachThread({
           ...defaultThreadOptions(),
           ...args.options,
         });
