@@ -2348,6 +2348,9 @@ setterLevel:                                                                  \
 
   bool hasPrivateScriptData() const { return data_ != nullptr; }
 
+  // Update data_ pointer while also informing GC MemoryUse tracking.
+  void swapData(UniquePtr<PrivateScriptData>& other);
+
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   }
