@@ -51,12 +51,11 @@ for locale in $locales; do
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
 done
 
-# Add a group policy file to disable app updates, as those are handled by Flathub
-cp -v "$SCRIPT_DIRECTORY/policies.json" "$DISTRIBUTION_DIR"
-
 envsubst < "$SCRIPT_DIRECTORY/org.mozilla.firefox.appdata.xml.in" > "${WORKSPACE}/org.mozilla.firefox.appdata.xml"
 cp -v "$SCRIPT_DIRECTORY/org.mozilla.firefox.desktop" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/distribution.ini" "$WORKSPACE"
+# Add a group policy file to disable app updates, as those are handled by Flathub
+cp -v "$SCRIPT_DIRECTORY/policies.json" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/default-preferences.js" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/launch-script.sh" "$WORKSPACE"
 cd "${WORKSPACE}"
@@ -108,9 +107,10 @@ mkdir -p "${appdir}/lib/firefox/distribution/extensions"
 # on user system is downloaded vs all locales
 for locale in $locales; do
     install -D -m644 -t "${appdir}/share/runtime/langpack/${locale:0:2}/" "${DISTRIBUTION_DIR}/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
-    ln -sf "${appdir}/share/runtime/langpack/${locale:0:2}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+    ln -sf "/app/share/runtime/langpack/${locale:0:2}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
 done
 install -D -m644 -t "${appdir}/lib/firefox/distribution" distribution.ini
+install -D -m644 -t "${appdir}/lib/firefox/distribution" policies.json
 install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
 install -D -m755 launch-script.sh "${appdir}/bin/firefox"
 
