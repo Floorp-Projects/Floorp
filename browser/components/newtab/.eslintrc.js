@@ -1,6 +1,5 @@
 module.exports = {
   // When adding items to this file please check for effects on sub-directories.
-  parser: "babel-eslint",
   parserOptions: {
     ecmaVersion: 2018,
     ecmaFeatures: {
