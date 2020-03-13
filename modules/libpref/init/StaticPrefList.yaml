@@ -2402,13 +2402,6 @@
   value: false
   mirror: always
 
-# If true, all content requests will get upgraded to HTTPS://
-# (some Firefox functionality requests, like OCSP will not be affected)
-- name: dom.security.https_only_mode
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Is support for selection event APIs enabled?
 - name: dom.select_events.enabled
   type: bool
