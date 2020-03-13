@@ -61,24 +61,39 @@ def get_root_url(use_proxy):
     return six.ensure_text(os.environ['TASKCLUSTER_ROOT_URL'])
 
 
-@memoize
-def get_session():
-    session = requests.Session()
-
-    retry = Retry(total=5, backoff_factor=0.1,
-                  status_forcelist=[500, 502, 503, 504])
+def requests_retry_session(
+    retries,
+    backoff_factor=0.1,
+    status_forcelist=(500, 502, 504),
+    concurrency=CONCURRENCY,
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
 
     # Default HTTPAdapter uses 10 connections. Mount custom adapter to increase
     # that limit. Connections are established as needed, so using a large value
     # should not negatively impact performance.
     http_adapter = requests.adapters.HTTPAdapter(
-        pool_connections=CONCURRENCY,
-        pool_maxsize=CONCURRENCY,
-        max_retries=retry)
-    session.mount('https://', http_adapter)
+        pool_connections=concurrency,
+        pool_maxsize=concurrency,
+        max_retries=retry,
+    )
     session.mount('http://', http_adapter)
+    session.mount('https://', http_adapter)
 
     return session
+
+
+@memoize
+def get_session():
+    return requests_retry_session(retries=5)
 
 
 def _do_request(url, force_get=False, **kwargs):
