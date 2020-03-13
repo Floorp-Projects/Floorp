@@ -140,7 +140,7 @@ def push_to_try(method, msg, try_task_config=None,
                 push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
 
-    if try_task_config:
+    if try_task_config and method not in ('auto', 'empty'):
         display_push_estimates(try_task_config)
 
     # Format the commit message
@@ -151,7 +151,7 @@ def push_to_try(method, msg, try_task_config=None,
     config_path = None
     changed_files = []
     if try_task_config:
-        if push and method != 'again':
+        if push and method not in ('again', 'auto', 'empty'):
             write_task_config_history(msg, try_task_config)
         config_path = write_task_config(try_task_config)
         changed_files.append(config_path)
