@@ -87,6 +87,9 @@ class DeviceManagerDx final {
   // Enumerate and return all outputs on the current adapter.
   nsTArray<DXGI_OUTPUT_DESC1> EnumerateOutputs();
 
+  // Check if the current adapter supports hardware stretching
+  bool CheckHardwareStretchingSupport();
+
   bool CreateCompositorDevices();
   void CreateContentDevices();
   void CreateDirectCompositionDevice();
