@@ -19,10 +19,15 @@ add_task(async function test() {
   await withDevToolsPanel(async document => {
     const getRecordingState = setupGetRecordingState(document);
 
-    is(
-      getRecordingState(),
-      "not-yet-known",
-      "The component starts out in an unknown state."
+    // The initial state of the profiler UI is racy, as it calls out to the PerfFront
+    // to get the status of the profiler. This can race with the initialization of
+    // the test. Most of the the time the result is "not-yet-known", but rarely
+    // the PerfFront will win this race. Allow for both outcomes of the race in this
+    // test.
+    ok(
+      getRecordingState() === "not-yet-known" ||
+        getRecordingState() === "recording",
+      "The component starts out in an unknown state or in a recording state."
     );
 
     const cancelRecording = await getActiveButtonFromText(
