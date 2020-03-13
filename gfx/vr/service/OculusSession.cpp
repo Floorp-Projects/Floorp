@@ -139,33 +139,37 @@ static pfn_ovr_GetMirrorTextureBufferGL ovr_GetMirrorTextureBufferGL = nullptr;
 #define OVR_MAJOR_VERSION 1
 #define OVR_MINOR_VERSION 19
 
-static const uint32_t kNumOculusButtons = 6;
+static const uint32_t kNumOculusButtons = 7;
 static const uint32_t kNumOculusHaptcs = 1;
-static const uint32_t kNumOculusAxes = 2;
+static const uint32_t kNumOculusAxes = 4;
 ovrControllerType OculusControllerTypes[2] = {ovrControllerType_LTouch,
                                               ovrControllerType_RTouch};
 const char* OculusControllerNames[2] = {"Oculus Touch (Left)",
                                         "Oculus Touch (Right)"};
 dom::GamepadHand OculusControllerHand[2] = {dom::GamepadHand::Left,
                                             dom::GamepadHand::Right};
+
 ovrButton OculusControllerButtons[2][kNumOculusButtons] = {
-    {ovrButton_LThumb, (ovrButton)0, (ovrButton)0, ovrButton_X, ovrButton_Y,
-     (ovrButton)0},
-    {ovrButton_RThumb, (ovrButton)0, (ovrButton)0, ovrButton_A, ovrButton_B,
-     (ovrButton)0},
+    {(ovrButton)0, (ovrButton)0, (ovrButton)0, ovrButton_LThumb, ovrButton_X,
+     ovrButton_Y, (ovrButton)0},
+    {(ovrButton)0, (ovrButton)0, (ovrButton)0, ovrButton_RThumb, ovrButton_A,
+     ovrButton_B, (ovrButton)0},
 };
 
 ovrTouch OculusControllerTouches[2][kNumOculusButtons] = {
-    {ovrTouch_LThumb, ovrTouch_LIndexTrigger, (ovrTouch)0, ovrTouch_X,
-     ovrTouch_Y, ovrTouch_LThumbRest},
-    {ovrTouch_RThumb, ovrTouch_RIndexTrigger, (ovrTouch)0, ovrTouch_A,
-     ovrTouch_B, ovrTouch_RThumbRest},
+    {ovrTouch_LIndexTrigger, (ovrTouch)0, (ovrTouch)0, ovrTouch_LThumb,
+     ovrTouch_X, ovrTouch_Y, ovrTouch_LThumbRest},
+    {ovrTouch_RIndexTrigger, (ovrTouch)0, (ovrTouch)0, ovrTouch_RThumb,
+     ovrTouch_A, ovrTouch_B, ovrTouch_RThumbRest},
 };
 
 void UpdateButton(const ovrInputState& aInputState, uint32_t aHandIdx,
                   uint32_t aButtonIdx, VRControllerState& aControllerState) {
   if (aInputState.Buttons & OculusControllerButtons[aHandIdx][aButtonIdx]) {
     aControllerState.buttonPressed |= ((uint64_t)1 << aButtonIdx);
+    aControllerState.triggerValue[aButtonIdx] = 1.0f;
+  } else {
+    aControllerState.triggerValue[aButtonIdx] = 0.0f;
   }
   if (aInputState.Touches & OculusControllerTouches[aHandIdx][aButtonIdx]) {
     aControllerState.buttonTouched |= ((uint64_t)1 << aButtonIdx);
@@ -1322,6 +1326,7 @@ void OculusSession::EnumerateControllers(VRSystemState& aState,
         controllerState.numButtons = kNumOculusButtons;
         controllerState.numAxes = kNumOculusAxes;
         controllerState.numHaptics = kNumOculusHaptcs;
+        controllerState.type = VRControllerType::OculusTouch;
         bNewController = true;
       }
     } else {
@@ -1349,26 +1354,40 @@ void OculusSession::UpdateControllerInputs(VRSystemState& aState,
       controllerState.buttonTouched = 0;
       uint32_t buttonIdx = 0;
 
+      // Button 0: Trigger
+      VRSession::UpdateTrigger(controllerState, buttonIdx,
+                               aInputState.IndexTrigger[handIdx],
+                               triggerThreshold);
+      ++buttonIdx;
+      // Button 1: Grip
+      VRSession::UpdateTrigger(controllerState, buttonIdx,
+                               aInputState.HandTrigger[handIdx],
+                               triggerThreshold);
+      ++buttonIdx;
+      // Button 2: a placeholder button for trackpad.
       UpdateButton(aInputState, handIdx, buttonIdx, controllerState);
-      buttonIdx++;
-      UpdateTrigger(controllerState, buttonIdx,
-                    aInputState.IndexTrigger[handIdx], triggerThreshold);
+      ++buttonIdx;
+      // Button 3: Thumbstick
       UpdateButton(aInputState, handIdx, buttonIdx, controllerState);
-      buttonIdx++;
-      UpdateTrigger(controllerState, buttonIdx,
-                    aInputState.HandTrigger[handIdx], triggerThreshold);
-      buttonIdx++;
+      ++buttonIdx;
+      // Button 4: A
       UpdateButton(aInputState, handIdx, buttonIdx, controllerState);
-      buttonIdx++;
+      ++buttonIdx;
+      // Button 5: B
       UpdateButton(aInputState, handIdx, buttonIdx, controllerState);
-      buttonIdx++;
+      ++buttonIdx;
+      // Button 6: ThumbRest
       UpdateButton(aInputState, handIdx, buttonIdx, controllerState);
-      buttonIdx++;
+      ++buttonIdx;
 
       MOZ_ASSERT(buttonIdx == kNumOculusButtons);
 
       // Update Thumbstick axis
       uint32_t axisIdx = 0;
+      // Axis 0, 1: placeholder axes for trackpad.
+      axisIdx += 2;
+
+      // Axis 2, 3: placeholder axes for thumbstick.
       float axisValue = aInputState.Thumbstick[handIdx].x;
       if (abs(axisValue) < 0.0000009f) {
         axisValue = 0.0f;  // Clear noise signal
