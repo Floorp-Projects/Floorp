@@ -318,29 +318,11 @@ import android.view.inputmethod.EditorInfo;
          * @return true if discarding composition
          */
         private boolean isDiscardingComposition() {
-            boolean wasComposing = false;
-            Object[] spans = mShadowText.getSpans(0, mShadowText.length(), Object.class);
-            for (final Object span : spans) {
-                if ((mShadowText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                    wasComposing = true;
-                    break;
-                }
-            }
-
-            if (!wasComposing) {
+            if (!isComposing(mShadowText)) {
                 return false;
             }
 
-            boolean isComposing = false;
-            spans = mCurrentText.getSpans(0, mCurrentText.length(), Object.class);
-            for (final Object span : spans) {
-                if ((mCurrentText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                    isComposing = true;
-                    break;
-                }
-            }
-
-            return !isComposing;
+            return !isComposing(mCurrentText);
         }
 
         public synchronized void syncShadowText(
@@ -1071,6 +1053,24 @@ import android.view.inputmethod.EditorInfo;
 
         mInBatchMode = inBatchMode;
 
+        if (!inBatchMode && mFocusedChild != null) {
+            // We may not commit composition on Gecko even if Java side has
+            // no composition. So we have to sync composition state with Gecko
+            // when batch edit is done.
+            //
+            // i.e. Although finishComposingText removes composing span, we
+            // don't commit current composition yet.
+            final Editable editable = getEditable();
+            if (editable != null && !isComposing(editable)) {
+                try {
+                    mFocusedChild.onImeRequestCommit();
+                } catch (final RemoteException e) {
+                    Log.e(LOGTAG, "Remote call failed", e);
+                }
+            }
+            // Committing composition doesn't change text, so we can sync shadow text.
+        }
+
         if (!inBatchMode && mNeedSync) {
             icSyncShadowText();
         }
@@ -1380,13 +1380,9 @@ import android.view.inputmethod.EditorInfo;
                 //
                 // Nevertheless, if we somehow lost the composition, we must force the
                 // keyboard to reset.
-                final Spanned text = mText.getShadowText();
-                final Object[] spans = text.getSpans(0, text.length(), Object.class);
-                for (final Object span : spans) {
-                    if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                        // Still have composition; no need to reset.
-                        return; // Don't notify listener.
-                    }
+                if (isComposing(mText.getShadowText())) {
+                    // Still have composition; no need to reset.
+                    return; // Don't notify listener.
                 }
                 // No longer have composition; perform reset.
                 icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE,
@@ -2198,6 +2194,17 @@ import android.view.inputmethod.EditorInfo;
                 return false;
         }
         return true;
+    }
+
+    private static boolean isComposing(final Spanned text) {
+        final Object[] spans = text.getSpans(0, text.length(), Object.class);
+        for (final Object span : spans) {
+            if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
