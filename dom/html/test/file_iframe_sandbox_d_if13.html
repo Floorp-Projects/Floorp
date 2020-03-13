@@ -25,16 +25,9 @@ function ok_wrapper(result, msg) {
 function doIf11TestPart2() {
   var if_11 = document.getElementById('if_11');
   if_11.sandbox = 'allow-scripts allow-same-origin';
-  // History is unified for the entire toplevel window and all its
-  // subframes, so we can just call history.back() on ourselves; we
-  // don't have to do it on our child.
-  history.back();
-}
-
-onload = function() {
-  document.getElementById('if_11').contentWindow.postMessage("start", "*");
-}
-
+  // window.history is no longer cross-origin accessible in gecko.
+  SpecialPowers.wrap(if_11).contentWindow.history.back();
+} 
 </script>
 <body>
   <iframe sandbox='allow-scripts' id="if_11" src="file_iframe_sandbox_d_if11.html" height="10" width="10"></iframe>
