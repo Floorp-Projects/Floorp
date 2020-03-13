@@ -2131,6 +2131,7 @@ STATIC_ATOMS = [
     Atom("labelMouseDownPtProperty", "LabelMouseDownPtProperty"),
     Atom("lockedStyleStates", "lockedStyleStates"),
     Atom("apzCallbackTransform", "apzCallbackTransform"),
+    Atom("apzDisabled", "ApzDisabled"),  # bool
     Atom("restylableAnonymousNode", "restylableAnonymousNode"),  # bool
     Atom("docLevelNativeAnonymousContent", "docLevelNativeAnonymousContent"),  # bool
     Atom("paintRequestTime", "PaintRequestTime"),
