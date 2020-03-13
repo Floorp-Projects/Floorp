@@ -55,7 +55,6 @@ is_jython = sys.platform.startswith('java')
 is_pypy = hasattr(sys, 'pypy_version_info')
 is_win = (sys.platform == 'win32' and os.sep == '\\')
 is_cygwin = (sys.platform == 'cygwin')
-is_msys2 = (sys.platform == 'win32' and os.sep == '/')
 is_darwin = (sys.platform == 'darwin')
 abiflags = getattr(sys, 'abiflags', '')
 
@@ -131,8 +130,6 @@ if majver == 2:
         REQUIRED_MODULES.extend(['warnings', 'linecache', '_abcoll', 'abc'])
     if minver >= 7:
         REQUIRED_MODULES.extend(['_weakrefset'])
-    if is_msys2:
-        REQUIRED_MODULES.extend(['functools'])
 elif majver == 3:
     # Some extra modules are needed for Python 3, but different ones
     # for different versions.
