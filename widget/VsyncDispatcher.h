@@ -53,8 +53,6 @@ class CompositorVsyncDispatcher final {
   // Called on the vsync thread when a hardware vsync occurs
   void NotifyVsync(const VsyncEvent& aVsync);
 
-  void MoveToSource(const RefPtr<gfx::VsyncSource>& aVsyncSource);
-
   // Compositor vsync observers must be added/removed on the compositor thread
   void SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
   void Shutdown();
