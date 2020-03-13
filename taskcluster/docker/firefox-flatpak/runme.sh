@@ -17,7 +17,7 @@ test "$FLATPAK_BRANCH"
 pwd
 
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-TARGET_TAR_GZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.gz"
+TARGET_TAR_XZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.xz"
 SOURCE_DEST="${WORKSPACE}/source"
 FREEDESKTOP_VERSION="19.08"
 FIREFOX_BASEAPP_CHANNEL="stable"
@@ -132,9 +132,9 @@ flatpak build-finish build                                      \
 flatpak build-export --disable-sandbox --no-update-summary --exclude='/share/runtime/langpack/*/*' repo build "$FLATPAK_BRANCH"
 flatpak build-export --disable-sandbox --no-update-summary --metadata=metadata.locale --files=files/share/runtime/langpack repo build "$FLATPAK_BRANCH"
 flatpak build-update-repo repo
-tar cvfz flatpak.tar.gz repo
+tar cvfJ flatpak.tar.xz repo
 
-mv -- flatpak.tar.gz "$TARGET_TAR_GZ_FULL_PATH"
+mv -- flatpak.tar.xz "$TARGET_TAR_XZ_FULL_PATH"
 
 # XXX: if we ever wanted to go back to building flatpak bundles, we can revert this command; useful for testing individual artifacts, not publishable
 # flatpak build-bundle "$WORKSPACE"/repo org.mozilla.firefox.flatpak org.mozilla.firefox
