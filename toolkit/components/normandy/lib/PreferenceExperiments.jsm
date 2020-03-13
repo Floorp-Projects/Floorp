@@ -956,9 +956,7 @@ var PreferenceExperiments = {
             });
           } catch (e) {
             log.error(
-              `Stopping preference experiment ${
-                experiment.slug
-              } during migration failed: ${e}`
+              `Stopping preference experiment ${experiment.slug} during migration failed: ${e}`
             );
           }
         }
