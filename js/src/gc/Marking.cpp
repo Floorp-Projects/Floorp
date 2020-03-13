@@ -1119,18 +1119,6 @@ void BaseScript::traceChildren(JSTracer* trc) {
     }
   }
 
-  // Trace the edge to our twin. Note that it will have the opposite type of
-  // current script.
-  if (isLazyScript()) {
-    if (trc->traceWeakEdges()) {
-      TraceNullableEdge(trc, &u.script_, "script");
-    }
-  } else {
-    if (u.lazyScript) {
-      TraceManuallyBarrieredEdge(trc, &u.lazyScript, "lazyScript");
-    }
-  }
-
   if (trc->isMarkingTracer()) {
     GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
