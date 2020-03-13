@@ -2459,6 +2459,21 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
+  aElement->SetProperty(nsGkAtoms::apzDisabled, reinterpret_cast<void*>(true));
+  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aElement);
+  if (!sf) {
+    return NS_OK;
+  }
+  nsIFrame* frame = do_QueryFrame(sf);
+  if (!frame) {
+    return NS_OK;
+  }
+  frame->SchedulePaint();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ZoomToFocusedInput() {
   nsIWidget* widget = GetWidget();
   if (!widget) {
