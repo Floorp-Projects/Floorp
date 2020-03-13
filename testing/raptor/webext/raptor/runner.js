@@ -666,28 +666,7 @@ async function cleanUp() {
 }
 
 async function raptorRunner() {
-  raptorLog("starting raptorRunner");
-
-  const config = getTestConfig();
-  testName = config.test_name;
-  settingsURL = config.test_settings_url;
-  csPort = config.cs_port;
-  browserName = config.browser;
-  benchmarkPort = config.benchmark_port;
-  postStartupDelay = config.post_startup_delay;
-  host = config.host;
-  debugMode = config.debug_mode;
-  browserCycle = config.browser_cycle;
-
-  isGecko = GECKO_BROWSERS.includes(browserName);
-  isGeckoView = GECKOVIEW_BROWSERS.includes(browserName);
-
-  ext = isGecko ? browser : chrome;
-
-  raptorLog(`test name is: ${testName}`);
-  raptorLog(`test settings url is: ${settingsURL}`);
-
-  await postToControlServer("status", "raptor runner.js is loaded!");
+  await postToControlServer("status", "starting raptorRunner");
 
   if (isBackgroundTest) {
     await postToControlServer(
@@ -725,19 +704,6 @@ async function raptorRunner() {
   }
 }
 
-async function delayedstart() {
-  // Delay the start of raptorRunner a bit to help
-  // with intermittent failures.
-  setTimeout(async () => {
-    try {
-      await raptorRunner();
-    } catch (e) {
-      await postToControlServer("error", [e.message, e.stack]);
-      await postToControlServer("shutdownBrowser");
-    }
-  }, 5000);
-}
-
 function raptorLog(text, level = "info") {
   let prefix = "";
 
@@ -748,10 +714,40 @@ function raptorLog(text, level = "info") {
   console[level](`${prefix}[raptor-runnerjs] ${text}`);
 }
 
-if (window.addEventListener) {
-  raptorLog("waiting for load event...");
-  window.addEventListener("load", delayedstart);
-  postToControlServer("status", "Attaching event listener successful!");
-} else {
-  postToControlServer("status", "Attaching event listener failed!");
+async function init() {
+  const config = getTestConfig();
+  testName = config.test_name;
+  settingsURL = config.test_settings_url;
+  csPort = config.cs_port;
+  browserName = config.browser;
+  benchmarkPort = config.benchmark_port;
+  postStartupDelay = config.post_startup_delay;
+  host = config.host;
+  debugMode = config.debug_mode;
+  browserCycle = config.browser_cycle;
+
+  isGecko = GECKO_BROWSERS.includes(browserName);
+  isGeckoView = GECKOVIEW_BROWSERS.includes(browserName);
+
+  ext = isGecko ? browser : chrome;
+
+  await postToControlServer("status", "raptor runner.js is loaded!");
+  await postToControlServer("status", `test name is: ${testName}`);
+  await postToControlServer("status", `test settings url is: ${settingsURL}`);
+
+  try {
+    if (window.document.readyState != "complete") {
+      await new Promise(resolve => {
+        window.addEventListener("load", resolve);
+        raptorLog("Waiting for load event...");
+      });
+    }
+
+    await raptorRunner();
+  } catch (e) {
+    await postToControlServer("error", [e.message, e.stack]);
+    await postToControlServer("shutdownBrowser");
+  }
 }
+
+init();
