@@ -53,6 +53,10 @@ class AccessibleOrProxy {
       return AsProxy()->ChildrenCount();
     }
 
+    if (RemoteChildDoc()) {
+      return 1;
+    }
+
     return AsAccessible()->ChildCount();
   }
 
@@ -63,6 +67,11 @@ class AccessibleOrProxy {
   AccessibleOrProxy ChildAt(uint32_t aIdx) {
     if (IsProxy()) {
       return AsProxy()->ChildAt(aIdx);
+    }
+
+    ProxyAccessible* childDoc = RemoteChildDoc();
+    if (childDoc && aIdx == 0) {
+      return childDoc;
     }
 
     return AsAccessible()->GetChildAt(aIdx);
@@ -76,15 +85,25 @@ class AccessibleOrProxy {
       return AsProxy()->FirstChild();
     }
 
+    ProxyAccessible* childDoc = RemoteChildDoc();
+    if (childDoc) {
+      return childDoc;
+    }
+
     return AsAccessible()->FirstChild();
   }
 
   /**
-   * Return the first child object.
+   * Return the last child object.
    */
   AccessibleOrProxy LastChild() {
     if (IsProxy()) {
       return AsProxy()->LastChild();
+    }
+
+    ProxyAccessible* childDoc = RemoteChildDoc();
+    if (childDoc) {
+      return childDoc;
     }
 
     return AsAccessible()->LastChild();
@@ -105,6 +124,11 @@ class AccessibleOrProxy {
   void SetBits(uintptr_t aBits) { mBits = aBits; }
 
  private:
+  /**
+   * If this is an OuterDocAccessible, return the remote child document.
+   */
+  ProxyAccessible* RemoteChildDoc() const;
+
   uintptr_t mBits;
   static const uintptr_t IS_PROXY = 0x1;
 };

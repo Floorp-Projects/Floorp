@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccessibleOrProxy.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
+#include "mozilla/a11y/OuterDocAccessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 namespace mozilla {
 namespace a11y {
@@ -25,6 +28,20 @@ AccessibleOrProxy AccessibleOrProxy::Parent() const {
 
   // Otherwise this should be the proxy for the tab's top level document.
   return proxy->OuterDocOfRemoteBrowser();
+}
+
+ProxyAccessible* AccessibleOrProxy::RemoteChildDoc() const {
+  // This pref should be removed once the Dev Tools A11y Panel Fission
+  // groundwork has landed and it has been verified that this doesn't cause
+  // problems.
+  if (!StaticPrefs::accessibility_xpcom_traverse_outerdoc() || IsProxy()) {
+    return nullptr;
+  }
+  OuterDocAccessible* outerDoc = AsAccessible()->AsOuterDoc();
+  if (!outerDoc) {
+    return nullptr;
+  }
+  return outerDoc->RemoteChildDoc();
 }
 
 }  // namespace a11y
