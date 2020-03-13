@@ -9,7 +9,6 @@
  * Test opening and closing the bookmarks panel.
  */
 
-StarUI._createPanelIfNeeded();
 let bookmarkPanel = document.getElementById("editBookmarkPanel");
 let bookmarkStar = BookmarkingUI.star;
 let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
