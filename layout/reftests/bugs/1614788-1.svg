@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="830" height="520.9100000000001">
+    <rect width="830" height="520.9100000000001" rx="5" ry="5"></rect>
+    <svg height="455.91" viewBox="0 0 2 1" width="800" x="15" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" y="50">
+        <style>
+            .h {
+                fill: rgb(152, 195, 121);
+            }
+            
+            .q {
+                fill: rgb(255, 99, 54)
+            }
+            
+            .s {
+                animation-duration: 4s;
+                animation-iteration-count: infinite;
+                animation-name: r;
+                animation-timing-function: steps(1, end)
+            }
+            
+            @keyframes r {
+                0% {
+                    transform: translateX(-80px)
+                }
+                25% {
+                    transform: translateX(-160px)
+                }
+                50% {
+                    transform: translateX(-240px)
+                }
+                75% {
+                    transform: translateX(-320px)
+                }
+                100% {
+                    transform: translateX(-400px)
+                }
+            }
+        </style>
+        <g font-size="1.67">
+            <rect height="45.591" width="80"></rect>
+            <g class="s">
+                <svg x="0" y="0" width="19760">
+                    <svg x="0">
+                        <rect height="20" width="80" x="0" y="0" class="p"></rect>
+                        <circle r="0.333" cx="1.5" cy="0.666" class="q"></circle>
+                        <text x="0.166" y="0.166" class="h" font-size="0.2">some text</text>
+                        <image x="0.166" y="0.333" width="0.833" height="0.833" xlink:href="repeatable-diagonal-gradient.png"></image>
+                    </svg>
+                    <svg x="80">
+                        <rect height="20" width="80" x="0" y="0" class="p"></rect>
+                        <circle r="0.333" cx="1.5" cy="0.666" class="q"></circle>
+                        <text x="0.166" y="0.166" class="h" font-size="0.2">some text</text>
+                        <image x="0.166" y="0.333" width="0.833" height="0.833" xlink:href="repeatable-diagonal-gradient.png"></image>
+                    </svg>
+                    <svg x="160">
+                        <rect height="20" width="80" x="0" y="0" class="p"></rect>
+                        <circle r="0.333" cx="1.5" cy="0.666" class="q"></circle>
+                        <text x="0.166" y="0.166" class="h" font-size="0.2">some text</text>
+                        <image x="0.166" y="0.333" width="0.833" height="0.833" xlink:href="repeatable-diagonal-gradient.png"></image>
+                    </svg>
+                    <svg x="240">
+                        <rect height="20" width="80" x="0" y="0" class="p"></rect>
+                        <circle r="0.333" cx="1.5" cy="0.666" class="q"></circle>
+                        <text x="0.166" y="0.166" class="h" font-size="0.2">some text</text>
+                        <image x="0.166" y="0.333" width="0.833" height="0.833" xlink:href="repeatable-diagonal-gradient.png"></image>
+                    </svg>
+                    <svg x="320">
+                        <rect height="20" width="80" x="0" y="0" class="p"></rect>
+                        <circle r="0.333" cx="1.5" cy="0.666" class="q"></circle>
+                        <text x="0.166" y="0.166" class="h" font-size="0.2">some text</text>
+                        <image x="0.166" y="0.333" width="0.833" height="0.833" xlink:href="repeatable-diagonal-gradient.png"></image>
+                    </svg>
+                    <svg x="400">
+                        <rect height="20" width="80" x="0" y="0" class="p"></rect>
+                        <circle r="0.333" cx="1.5" cy="0.666" class="q"></circle>
+                        <text x="0.166" y="0.166" class="h" font-size="0.2">some text</text>
+                        <image x="0.166" y="0.333" width="0.833" height="0.833" xlink:href="repeatable-diagonal-gradient.png"></image>
+                    </svg>
+
+                </svg>
+            </g>
+        </g>
+    </svg>
+</svg>
