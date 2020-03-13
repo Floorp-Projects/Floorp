@@ -43,12 +43,12 @@ add_task(async function test_disable_profile_import() {
 });
 
 add_task(async function test_file_menu() {
-  updateFileMenuImportUIVisibility("cmd_importFromAnotherBrowser");
+  updateImportCommandEnabledState();
 
-  let command = document.getElementById("cmd_importFromAnotherBrowser");
+  let command = document.getElementById("cmd_file_importFromAnotherBrowser");
   ok(
     command.getAttribute("disabled"),
-    "The `Import from Another Browser…` menu item command should be disabled"
+    "The `Import from Another Browser…` File menu item command should be disabled"
   );
 
   if (Services.appinfo.OS == "Darwin") {
@@ -57,7 +57,27 @@ add_task(async function test_file_menu() {
     let menuitem = document.getElementById("menu_importFromAnotherBrowser");
     ok(
       menuitem.disabled,
-      "The `Import from Another Browser…` menu item should be disabled"
+      "The `Import from Another Browser…` File menu item should be disabled"
+    );
+  }
+});
+
+add_task(async function test_help_menu() {
+  updateImportCommandEnabledState();
+
+  let command = document.getElementById("cmd_help_importFromAnotherBrowser");
+  ok(
+    command.getAttribute("disabled"),
+    "The `Import from Another Browser…` Help menu item command should be disabled"
+  );
+
+  if (Services.appinfo.OS == "Darwin") {
+    // We would need to have a lot of boilerplate to open the menus on Windows
+    // and Linux to test this there.
+    let menuitem = document.getElementById("help_importFromAnotherBrowser");
+    ok(
+      menuitem.disabled,
+      "The `Import from Another Browser…` Help menu item should be disabled"
     );
   }
 });

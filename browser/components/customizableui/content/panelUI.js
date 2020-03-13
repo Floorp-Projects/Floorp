@@ -722,7 +722,7 @@ const PanelUI = {
 
     let helpMenu = document.getElementById("menu_HelpPopup");
     let items = this.getElementsByTagName("vbox")[0];
-    let attrs = ["oncommand", "onclick", "label", "key", "disabled"];
+    let attrs = ["command", "oncommand", "onclick", "label", "key", "disabled"];
 
     // Remove all buttons from the view
     while (items.firstChild) {
@@ -746,7 +746,10 @@ const PanelUI = {
         }
         button.setAttribute(attrName, node.getAttribute(attrName));
       }
-      button.setAttribute("class", "subviewbutton");
+      if (node.id) {
+        button.id = "appMenu_" + node.id;
+      }
+      button.setAttribute("class", "subviewbutton subviewbutton-iconic");
       fragment.appendChild(button);
     }
     items.appendChild(fragment);
