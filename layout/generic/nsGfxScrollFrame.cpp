@@ -3865,17 +3865,23 @@ nsRect ScrollFrameHelper::RestrictToRootCompositionBounds(
   if (!rootFrame) {
     return aDisplayportBase;
   }
-  nsRect rootCompBounds = nsRect(
-      nsPoint(0, 0),
-      nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame));
 
-  // If rootFrame is the RCD-RSF then
-  // CalculateCompositionSizeForFrame did not take the document's
-  // resolution into account, so we must.
-  if (rootPresContext->IsRootContentDocument() &&
-      rootFrame == rootPresShell->GetRootScrollFrame()) {
-    rootCompBounds = rootCompBounds.RemoveResolution(
-        rootPresShell->GetResolution());
+  nsRect rootCompBounds;
+  bool hasDisplayPort = rootFrame->GetContent() &&
+      nsLayoutUtils::GetDisplayPort(rootFrame->GetContent(), &rootCompBounds);
+  if (!hasDisplayPort) {
+    rootCompBounds = nsRect(
+        nsPoint(0, 0),
+        nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame));
+
+    // If rootFrame is the RCD-RSF then
+    // CalculateCompositionSizeForFrame did not take the document's
+    // resolution into account, so we must.
+    if (rootPresContext->IsRootContentDocument() &&
+        rootFrame == rootPresShell->GetRootScrollFrame()) {
+      rootCompBounds = rootCompBounds.RemoveResolution(
+          rootPresShell->GetResolution());
+    }
   }
 
   // We want to convert the root composition bounds from the
