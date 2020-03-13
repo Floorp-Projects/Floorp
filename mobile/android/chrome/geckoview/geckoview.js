@@ -597,6 +597,12 @@ function startup() {
       Services.obs.notifyObservers(window, "browser-delayed-startup-finished")
     );
 
+    // Let the extension code know it can start loading things that were delayed
+    // while GeckoView started up.
+    InitLater(() => {
+      Services.obs.notifyObservers(window, "extensions-late-startup");
+    });
+
     // This should always go last, since the idle tasks (except for the ones with
     // timeouts) should execute in order. Note that this observer notification is
     // not guaranteed to fire, since the window could close before we get here.
