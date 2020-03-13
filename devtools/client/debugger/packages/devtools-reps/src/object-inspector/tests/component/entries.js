@@ -78,10 +78,6 @@ describe("ObjectInspector - entries", () => {
 
     wrapper.update();
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
-
-    // enumEntries shouldn't have been called since everything
-    // is already in the preview property.
-    expect(enumEntries.mock.calls).toHaveLength(0);
   });
 
   it("calls ObjectFront.enumEntries when expected", async () => {

@@ -18,7 +18,6 @@ const {
   getFront,
   getValue,
   nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
   nodeHasProperties,
   nodeIsBucket,
   nodeIsDefaultProperties,
@@ -179,7 +178,6 @@ function shouldLoadItemEntries(
   return (
     value &&
     nodeIsEntries(getClosestNonBucketNode(item)) &&
-    !nodeHasAllEntriesInPreview(gripItem) &&
     !loadedProperties.has(item.path) &&
     !nodeNeedsNumericalBuckets(item)
   );

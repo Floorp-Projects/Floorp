@@ -455,12 +455,12 @@ async function testMapGetter(oi) {
   const entriesNode = findObjectInspectorNode(oi, "<entries>");
   expandObjectInspectorNode(entriesNode);
   await waitFor(() => getObjectInspectorChildrenNodes(entriesNode).length > 0);
-  checkChildren(entriesNode, [`foo → Object { ${ELLIPSIS} }`]);
+  checkChildren(entriesNode, [`foo → Object { bar: "baz" }`]);
 
   const entryNode = getObjectInspectorChildrenNodes(entriesNode)[0];
   expandObjectInspectorNode(entryNode);
   await waitFor(() => getObjectInspectorChildrenNodes(entryNode).length > 0);
-  checkChildren(entryNode, [`<key>: "foo"`, `<value>: Object { ${ELLIPSIS} }`]);
+  checkChildren(entryNode, [`<key>: "foo"`, `<value>: Object { bar: "baz" }`]);
 }
 
 async function testProxyGetter(oi) {
@@ -656,7 +656,7 @@ function checkChildren(node, expectedChildren) {
   children.forEach((child, index) => {
     ok(
       child.textContent.includes(expectedChildren[index]),
-      `Expected "${expectedChildren[index]}" child`
+      `Expected "${child.textContent}" to include "${expectedChildren[index]}"`
     );
   });
 }
