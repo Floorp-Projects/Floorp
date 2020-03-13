@@ -812,6 +812,12 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     return NS_OK;
   }
 
+  // If https-only mode is enabled we'll upgrade this later anyway
+  if (StaticPrefs::dom_security_https_only_mode()) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
   // The page might have set the CSP directive 'upgrade-insecure-requests'. In
   // such a case allow the http: load to succeed with the promise that the
   // channel will get upgraded to https before fetching any data from the
