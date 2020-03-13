@@ -55,6 +55,7 @@ export CC="${CLANGDIR}/bin/clang"
 export CFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT}"
 export CXX="${CLANGDIR}/bin/clang++"
 export CXXFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT} -stdlib=libc++"
+export AR="${CLANGDIR}/bin/llvm-ar"
 
 # See documentation in cargo-linker for why we need this. TL;DR is that passing
 # the right arguments to the linker when invoked by cargo is nigh impossible
