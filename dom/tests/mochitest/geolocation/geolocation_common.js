@@ -27,7 +27,10 @@ function sleep(delay) {
 function force_prompt(allow, callback) {
   SpecialPowers.pushPrefEnv(
     {
-      set: [["geo.prompt.testing", true], ["geo.prompt.testing.allow", allow]],
+      set: [
+        ["geo.prompt.testing", true],
+        ["geo.prompt.testing.allow", allow],
+      ],
     },
     callback
   );

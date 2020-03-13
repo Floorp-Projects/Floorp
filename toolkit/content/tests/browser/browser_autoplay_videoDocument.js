@@ -15,7 +15,12 @@ function setup_test_preference() {
 async function checkIsVideoDocumentAutoplay(browser) {
   const played = await SpecialPowers.spawn(browser, [], async () => {
     const video = content.document.getElementsByTagName("video")[0];
-    const played = video && (await video.play().then(() => true, () => false));
+    const played =
+      video &&
+      (await video.play().then(
+        () => true,
+        () => false
+      ));
     return played;
   });
   ok(played, "Should be able to play in video document.");

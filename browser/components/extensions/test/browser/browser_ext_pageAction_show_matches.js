@@ -247,7 +247,10 @@ add_task(async function test_pageAction_all_urls() {
     show_matches: ["*://mochi.test/*"],
     hide_matches: ["<all_urls>"],
   });
-  let rejects = await extension.startup().then(() => false, () => true);
+  let rejects = await extension.startup().then(
+    () => false,
+    () => true
+  );
   is(rejects, true, "startup failed");
 });
 

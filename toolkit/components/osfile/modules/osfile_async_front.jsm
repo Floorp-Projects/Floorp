@@ -1518,10 +1518,10 @@ DirectoryIterator.prototype = {
     if (this._isClosed) {
       return { value: undefined, done: true };
     }
-    let { value, done } = await Scheduler.post(
-      "DirectoryIterator_prototype_next",
-      [iterator]
-    );
+    let {
+      value,
+      done,
+    } = await Scheduler.post("DirectoryIterator_prototype_next", [iterator]);
     if (done) {
       this.close();
       return { value: undefined, done: true };

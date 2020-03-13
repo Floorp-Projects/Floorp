@@ -224,7 +224,10 @@ add_task(async function() {
       results = walkerSearch.search("before element");
       isDeeply(
         results,
-        [{ node: styleText, type: "text" }, { node: beforeElt, type: "text" }],
+        [
+          { node: styleText, type: "text" },
+          { node: beforeElt, type: "text" },
+        ],
         "Text search works for pseudo element"
       );
 
@@ -242,7 +245,10 @@ add_task(async function() {
       results = walkerSearch.search("after element");
       isDeeply(
         results,
-        [{ node: styleText, type: "text" }, { node: afterElt, type: "text" }],
+        [
+          { node: styleText, type: "text" },
+          { node: afterElt, type: "text" },
+        ],
         "Text search works for pseudo element"
       );
 

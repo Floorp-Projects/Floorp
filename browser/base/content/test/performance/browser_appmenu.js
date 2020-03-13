@@ -59,12 +59,14 @@ add_task(async function() {
     filter: rects =>
       rects.filter(
         r =>
-          !// We expect the menu button to get into the active state.
-          (
-            r.y1 >= menuButtonRect.top &&
-            r.y2 <= menuButtonRect.bottom &&
-            r.x1 >= menuButtonRect.left &&
-            r.x2 <= menuButtonRect.right
+          !(
+            // We expect the menu button to get into the active state.
+            (
+              r.y1 >= menuButtonRect.top &&
+              r.y2 <= menuButtonRect.bottom &&
+              r.x1 >= menuButtonRect.left &&
+              r.x2 <= menuButtonRect.right
+            )
           )
         // XXX For some reason the menu panel isn't in our screenshots,
         // but that's where we actually expect many changes.

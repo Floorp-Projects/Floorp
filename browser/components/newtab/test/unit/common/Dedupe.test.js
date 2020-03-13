@@ -7,12 +7,20 @@ describe("Dedupe", () => {
   });
   describe("group", () => {
     it("should remove duplicates inside the groups", () => {
-      const beforeItems = [[1, 1, 1], [2, 2, 2], [3, 3, 3]];
+      const beforeItems = [
+        [1, 1, 1],
+        [2, 2, 2],
+        [3, 3, 3],
+      ];
       const afterItems = [[1], [2], [3]];
       assert.deepEqual(instance.group(...beforeItems), afterItems);
     });
     it("should remove duplicates between groups, favouring earlier groups", () => {
-      const beforeItems = [[1, 2, 3], [2, 3, 4], [3, 4, 5]];
+      const beforeItems = [
+        [1, 2, 3],
+        [2, 3, 4],
+        [3, 4, 5],
+      ];
       const afterItems = [[1, 2, 3], [4], [5]];
       assert.deepEqual(instance.group(...beforeItems), afterItems);
     });

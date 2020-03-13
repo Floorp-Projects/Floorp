@@ -113,11 +113,8 @@ class InlinePreviewRow extends PureComponent<Props> {
   }
 }
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  () => ({}),
-  {
-    openElementInInspector: actions.openElementInInspectorCommand,
-    highlightDomElement: actions.highlightDomElement,
-    unHighlightDomElement: actions.unHighlightDomElement,
-  }
-)(InlinePreviewRow);
+export default connect<Props, OwnProps, _, _, _, _>(() => ({}), {
+  openElementInInspector: actions.openElementInInspectorCommand,
+  highlightDomElement: actions.highlightDomElement,
+  unHighlightDomElement: actions.unHighlightDomElement,
+})(InlinePreviewRow);

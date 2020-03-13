@@ -20,7 +20,10 @@ async function addMediaTab() {
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true], [PREF_DELAY_AUTOPLAY, true]],
+    set: [
+      [PREF_MULTISELECT_TABS, true],
+      [PREF_DELAY_AUTOPLAY, true],
+    ],
   });
 });
 

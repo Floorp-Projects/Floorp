@@ -1465,7 +1465,10 @@ describe("Top Stories Feed", () => {
 
       const response = {
         settings: { spocsPerNewTabs: 0.5 },
-        spocs: [{ id: 1, campaign_id: 5 }, { id: 4, campaign_id: 6 }],
+        spocs: [
+          { id: 1, campaign_id: 5 },
+          { id: 4, campaign_id: 6 },
+        ],
       };
 
       instance._prefs = { get: pref => undefined, set: sinon.spy() };
@@ -1538,7 +1541,10 @@ describe("Top Stories Feed", () => {
 
       const response = {
         settings: { spocsPerNewTabs: 0.5 },
-        spocs: [{ id: 1, campaign_id: 5 }, { id: 4, campaign_id: 6 }],
+        spocs: [
+          { id: 1, campaign_id: 5 },
+          { id: 4, campaign_id: 6 },
+        ],
       };
 
       instance._prefs = { get: pref => undefined, set: sinon.spy() };
@@ -1580,7 +1586,10 @@ describe("Top Stories Feed", () => {
 
       const response = {
         settings: { spocsPerNewTabs: 0.5 },
-        spocs: [{ id: 1, campaign_id: 5 }, { id: 4, campaign_id: 6 }],
+        spocs: [
+          { id: 1, campaign_id: 5 },
+          { id: 4, campaign_id: 6 },
+        ],
       };
       fetchStub.resolves({
         ok: true,

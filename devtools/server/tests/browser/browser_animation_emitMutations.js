@@ -54,7 +54,10 @@ add_task(async function() {
 
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
-  ok(changes.every(({ type }) => type === "removed"), "Both are removals");
+  ok(
+    changes.every(({ type }) => type === "removed"),
+    "Both are removals"
+  );
   ok(
     changes[0].player === p1 || changes[0].player === p2,
     "The first removed player was one of the previously added players"

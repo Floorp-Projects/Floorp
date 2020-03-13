@@ -54,8 +54,14 @@ add_task(async function() {
       ["indexedDB", actualPath, "MyDatabase (default)", "MyObjectStore"],
       [12345, 54321, 67890, 98765],
     ],
-    [["localStorage", actualPath], ["test3", "test4"]],
-    [["sessionStorage", actualPath], ["test5", "test6"]],
+    [
+      ["localStorage", actualPath],
+      ["test3", "test4"],
+    ],
+    [
+      ["sessionStorage", actualPath],
+      ["test5", "test6"],
+    ],
   ]);
 
   await finishTests();

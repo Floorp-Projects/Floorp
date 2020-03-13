@@ -35,13 +35,11 @@ function send(type, data, callback) {
     } catch (e) {}
   }
 
-  EventDispatcher.instance
-    .sendRequestForResult(msg)
-    .then(
-      result => callback(result, null),
-      err =>
-        callback(null, typeof err === "number" ? err : FAILURE_INTERNAL_ERROR)
-    );
+  EventDispatcher.instance.sendRequestForResult(msg).then(
+    result => callback(result, null),
+    err =>
+      callback(null, typeof err === "number" ? err : FAILURE_INTERNAL_ERROR)
+  );
 }
 
 // Receives service found/lost event from NsdManager

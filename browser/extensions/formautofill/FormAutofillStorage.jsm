@@ -1505,10 +1505,9 @@ class Addresses extends AutofillRecords {
     if (!("country-name" in address)) {
       if (address.country) {
         try {
-          address["country-name"] = Services.intl.getRegionDisplayNames(
-            undefined,
-            [address.country]
-          );
+          address[
+            "country-name"
+          ] = Services.intl.getRegionDisplayNames(undefined, [address.country]);
         } catch (e) {
           address["country-name"] = "";
         }

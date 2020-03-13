@@ -81,7 +81,10 @@ function hasQuotaStorage(origin, attr) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.quotaManager.testing", true], ["dom.simpleDB.enabled", true]],
+    set: [
+      ["dom.quotaManager.testing", true],
+      ["dom.simpleDB.enabled", true],
+    ],
   });
 });
 

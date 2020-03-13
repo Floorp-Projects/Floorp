@@ -82,12 +82,9 @@ const mapStateToProps = (state, { source }) => ({
   breakpointsForSource: getBreakpointsForSource(state, source.id),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    selectSource: actions.selectSource,
-    enableBreakpointsInSource: actions.enableBreakpointsInSource,
-    disableBreakpointsInSource: actions.disableBreakpointsInSource,
-    removeBreakpointsInSource: actions.removeBreakpointsInSource,
-  }
-)(BreakpointHeading);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  selectSource: actions.selectSource,
+  enableBreakpointsInSource: actions.enableBreakpointsInSource,
+  disableBreakpointsInSource: actions.disableBreakpointsInSource,
+  removeBreakpointsInSource: actions.removeBreakpointsInSource,
+})(BreakpointHeading);

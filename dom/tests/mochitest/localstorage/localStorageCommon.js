@@ -121,7 +121,10 @@ function notify(top) {
 function localStorageEnableTestingMode(cb) {
   SpecialPowers.pushPrefEnv(
     {
-      set: [["dom.storage.testing", true], ["dom.quotaManager.testing", true]],
+      set: [
+        ["dom.storage.testing", true],
+        ["dom.quotaManager.testing", true],
+      ],
     },
     cb
   );

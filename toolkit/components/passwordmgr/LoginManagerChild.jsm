@@ -1668,8 +1668,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let newPasswordFieldValue = newPasswordField.value;
     if (
       (!dismissedPrompt &&
-        (CreditCard.isValidNumber(usernameValue) &&
-          newPasswordFieldValue.trim().match(/^[0-9]{3}$/))) ||
+        CreditCard.isValidNumber(usernameValue) &&
+        newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
       (CreditCard.isValidNumber(newPasswordFieldValue) &&
         newPasswordField.getAutocompleteInfo().fieldName == "cc-number")
     ) {

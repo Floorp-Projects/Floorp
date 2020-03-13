@@ -351,7 +351,8 @@ exports.canTakeCensus = function(snapshot) {
     snapshot.state === states.READ &&
     (!snapshot.census ||
       snapshot.census.state === censusState.SAVED ||
-      (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED))
+      !snapshot.treeMap ||
+      snapshot.treeMap.state === treeMapState.SAVED)
   );
 };
 

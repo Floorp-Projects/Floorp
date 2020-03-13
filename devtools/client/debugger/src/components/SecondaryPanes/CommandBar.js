@@ -249,15 +249,12 @@ const mapStateToProps = state => ({
   skipPausing: getSkipPausing(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    resume: actions.resume,
-    stepIn: actions.stepIn,
-    stepOut: actions.stepOut,
-    stepOver: actions.stepOver,
-    breakOnNext: actions.breakOnNext,
-    pauseOnExceptions: actions.pauseOnExceptions,
-    toggleSkipPausing: actions.toggleSkipPausing,
-  }
-)(CommandBar);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  resume: actions.resume,
+  stepIn: actions.stepIn,
+  stepOut: actions.stepOut,
+  stepOver: actions.stepOver,
+  breakOnNext: actions.breakOnNext,
+  pauseOnExceptions: actions.pauseOnExceptions,
+  toggleSkipPausing: actions.toggleSkipPausing,
+})(CommandBar);

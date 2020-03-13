@@ -7,7 +7,10 @@
 add_task(async function() {
   let homepage = "about:preferences";
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.startup.homepage", homepage], ["browser.startup.page", 1]],
+    set: [
+      ["browser.startup.homepage", homepage],
+      ["browser.startup.page", 1],
+    ],
   });
 
   let win = OpenBrowserWindow();

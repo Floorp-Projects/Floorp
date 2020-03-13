@@ -53,9 +53,9 @@ PlacesInsertionPoint.prototype = {
     if (this.dropNearNode) {
       // If dropNearNode is set up we must calculate the index of the item near
       // which we will drop.
-      let index = (await PlacesUtils.bookmarks.fetch(
-        this.dropNearNode.bookmarkGuid
-      )).index;
+      let index = (
+        await PlacesUtils.bookmarks.fetch(this.dropNearNode.bookmarkGuid)
+      ).index;
       return this.orientation == Ci.nsITreeView.DROP_BEFORE ? index : index + 1;
     }
     return this._index;

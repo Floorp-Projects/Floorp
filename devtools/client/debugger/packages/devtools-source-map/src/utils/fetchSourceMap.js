@@ -97,7 +97,10 @@ function fetchSourceMap(generatedSource: SourceMapInput): SourceMapConsumer {
   const req = _resolveAndFetch(generatedSource);
   // Make sure the cached promise does not reject, because we only
   // want to report the error once.
-  setSourceMap(generatedSource.id, req.catch(() => null));
+  setSourceMap(
+    generatedSource.id,
+    req.catch(() => null)
+  );
   return req;
 }
 

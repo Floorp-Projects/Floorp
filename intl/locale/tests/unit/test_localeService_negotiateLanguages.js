@@ -13,15 +13,27 @@ const data = {
       [["en-Latn-US"], ["en-Latn-US"], ["en-Latn-US"]],
       [["en-Latn-US-windows"], ["en-Latn-US-windows"], ["en-Latn-US-windows"]],
       [["fr-FR"], ["de", "it", "fr-FR"], ["fr-FR"]],
-      [["fr", "pl", "de-DE"], ["pl", "en-US", "de-DE"], ["pl", "de-DE"]],
+      [
+        ["fr", "pl", "de-DE"],
+        ["pl", "en-US", "de-DE"],
+        ["pl", "de-DE"],
+      ],
     ],
     "available as range": [
       [["en-US"], ["en"], ["en"]],
       [["en-Latn-US"], ["en-US"], ["en-US"]],
       [["en-US-windows"], ["en-US"], ["en-US"]],
-      [["fr-CA", "de-DE"], ["fr", "it", "de"], ["fr", "de"]],
+      [
+        ["fr-CA", "de-DE"],
+        ["fr", "it", "de"],
+        ["fr", "de"],
+      ],
       [["ja-JP-windows"], ["ja"], ["ja"]],
-      [["en-Latn-GB", "en-Latn-IN"], ["en-IN", "en-GB"], ["en-GB", "en-IN"]],
+      [
+        ["en-Latn-GB", "en-Latn-IN"],
+        ["en-IN", "en-GB"],
+        ["en-GB", "en-IN"],
+      ],
     ],
     "should match on likely subtag": [
       [["en"], ["en-GB", "de", "en-US"], ["en-US", "en-GB"]],
@@ -103,7 +115,11 @@ const data = {
       [["fr_Cyrl_FR_macos"], ["fr_Cyrl_fr-macos"], ["fr_Cyrl_fr-macos"]],
     ],
     "should handle mozilla specific 3-letter variants": [
-      [["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"]],
+      [
+        ["ja-JP-mac", "de-DE"],
+        ["ja-JP-mac", "de-DE"],
+        ["ja-JP-mac", "de-DE"],
+      ],
     ],
     "should not crash on invalid input": [
       [["fą-FŻ"], ["ór_Fń"], []],

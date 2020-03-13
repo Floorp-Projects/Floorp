@@ -12,42 +12,66 @@ add_task(function test() {
     {
       tokens: ["mozilla", "is", "i"],
       phrase: "mozilla is for the Open Web",
-      expected: [[0, 7], [8, 2]],
+      expected: [
+        [0, 7],
+        [8, 2],
+      ],
     },
     {
       tokens: ["mozilla", "is", "i"],
       phrase: "MOZILLA IS for the Open Web",
-      expected: [[0, 7], [8, 2]],
+      expected: [
+        [0, 7],
+        [8, 2],
+      ],
     },
     {
       tokens: ["mozilla", "is", "i"],
       phrase: "MoZiLlA Is for the Open Web",
-      expected: [[0, 7], [8, 2]],
+      expected: [
+        [0, 7],
+        [8, 2],
+      ],
     },
     {
       tokens: ["MOZILLA", "IS", "I"],
       phrase: "mozilla is for the Open Web",
-      expected: [[0, 7], [8, 2]],
+      expected: [
+        [0, 7],
+        [8, 2],
+      ],
     },
     {
       tokens: ["MoZiLlA", "Is", "I"],
       phrase: "mozilla is for the Open Web",
-      expected: [[0, 7], [8, 2]],
+      expected: [
+        [0, 7],
+        [8, 2],
+      ],
     },
     {
       tokens: ["mo", "b"],
       phrase: "mozilla is for the Open Web",
-      expected: [[0, 2], [26, 1]],
+      expected: [
+        [0, 2],
+        [26, 1],
+      ],
     },
     {
       tokens: ["mo", "b"],
       phrase: "MOZILLA is for the OPEN WEB",
-      expected: [[0, 2], [26, 1]],
+      expected: [
+        [0, 2],
+        [26, 1],
+      ],
     },
     {
       tokens: ["MO", "B"],
       phrase: "mozilla is for the Open Web",
-      expected: [[0, 2], [26, 1]],
+      expected: [
+        [0, 2],
+        [26, 1],
+      ],
     },
     {
       tokens: ["mo", ""],
@@ -137,17 +161,29 @@ add_task(function test() {
     {
       tokens: ["mo", "om"],
       phrase: "mozilla mozzarella momo",
-      expected: [[0, 2], [8, 2], [19, 4]],
+      expected: [
+        [0, 2],
+        [8, 2],
+        [19, 4],
+      ],
     },
     {
       tokens: ["mo", "om"],
       phrase: "MOZILLA MOZZARELLA MOMO",
-      expected: [[0, 2], [8, 2], [19, 4]],
+      expected: [
+        [0, 2],
+        [8, 2],
+        [19, 4],
+      ],
     },
     {
       tokens: ["MO", "OM"],
       phrase: "mozilla mozzarella momo",
-      expected: [[0, 2], [8, 2], [19, 4]],
+      expected: [
+        [0, 2],
+        [8, 2],
+        [19, 4],
+      ],
     },
     {
       tokens: ["resume"],
@@ -180,12 +216,18 @@ add_task(function testReverse() {
     {
       tokens: ["mozilla", "is", "i"],
       phrase: "mozilla is for the Open Web",
-      expected: [[7, 1], [10, 17]],
+      expected: [
+        [7, 1],
+        [10, 17],
+      ],
     },
     {
       tokens: ["\u9996"],
       phrase: "Test \u9996\u9875 Test",
-      expected: [[0, 5], [6, 6]],
+      expected: [
+        [0, 5],
+        [6, 6],
+      ],
     },
     {
       tokens: ["mo", "zilla"],
@@ -205,17 +247,26 @@ add_task(function testReverse() {
     {
       tokens: ["mo", "om"],
       phrase: "mozilla mozzarella momo",
-      expected: [[2, 6], [10, 9]],
+      expected: [
+        [2, 6],
+        [10, 9],
+      ],
     },
     {
       tokens: ["mo", "om"],
       phrase: "MOZILLA MOZZARELLA MOMO",
-      expected: [[2, 6], [10, 9]],
+      expected: [
+        [2, 6],
+        [10, 9],
+      ],
     },
     {
       tokens: ["MO", "OM"],
       phrase: "mozilla mozzarella momo",
-      expected: [[2, 6], [10, 9]],
+      expected: [
+        [2, 6],
+        [10, 9],
+      ],
     },
   ];
   for (let { tokens, phrase, expected } of tests) {

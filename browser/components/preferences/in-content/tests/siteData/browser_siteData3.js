@@ -36,7 +36,10 @@ add_task(async function test_exclusions() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, hosts.filter(host => host != "shopping.xyz.com"));
+  assertSitesListed(
+    doc,
+    hosts.filter(host => host != "shopping.xyz.com")
+  );
 
   await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

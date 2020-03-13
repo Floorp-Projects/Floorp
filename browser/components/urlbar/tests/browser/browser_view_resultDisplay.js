@@ -209,7 +209,11 @@ add_task(async function test_case_insensitive_highlights_1() {
         ["EXAM", true],
         ["ple", false],
       ],
-      highlightedUrl: [["exam", true], ["ple.com/", false], ["ExAm", true]],
+      highlightedUrl: [
+        ["exam", true],
+        ["ple.com/", false],
+        ["ExAm", true],
+      ],
     }
   );
 });
@@ -232,7 +236,11 @@ add_task(async function test_case_insensitive_highlights_2() {
         ["EXAM", true],
         ["ple", false],
       ],
-      highlightedUrl: [["exam", true], ["ple.com/", false], ["ExAm", true]],
+      highlightedUrl: [
+        ["exam", true],
+        ["ple.com/", false],
+        ["ExAm", true],
+      ],
     }
   );
 });
@@ -255,7 +263,11 @@ add_task(async function test_case_insensitive_highlights_3() {
         ["EXAM", true],
         ["ple", false],
       ],
-      highlightedUrl: [["exam", true], ["ple.com/", false], ["ExAm", true]],
+      highlightedUrl: [
+        ["exam", true],
+        ["ple.com/", false],
+        ["ExAm", true],
+      ],
     }
   );
 });
@@ -278,7 +290,11 @@ add_task(async function test_case_insensitive_highlights_4() {
         ["EXAM", true],
         ["ple", false],
       ],
-      highlightedUrl: [["exam", true], ["ple.com/", false], ["ExAm", true]],
+      highlightedUrl: [
+        ["exam", true],
+        ["ple.com/", false],
+        ["ExAm", true],
+      ],
     }
   );
 });

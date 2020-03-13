@@ -55,9 +55,9 @@ describe("<Trailhead>", () => {
       },
     };
 
-    const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-      msg => msg.id === "TRAILHEAD_1"
-    );
+    const message = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).find(msg => msg.id === "TRAILHEAD_1");
     message.cards = CARDS;
     wrapper = mount(
       <Trailhead

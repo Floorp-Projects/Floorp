@@ -557,14 +557,11 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    toggleAllBreakpoints: actions.toggleAllBreakpoints,
-    evaluateExpressions: actions.evaluateExpressions,
-    pauseOnExceptions: actions.pauseOnExceptions,
-    toggleMapScopes: actions.toggleMapScopes,
-    breakOnNext: actions.breakOnNext,
-    toggleEventLogging: actions.toggleEventLogging,
-  }
-)(SecondaryPanes);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  toggleAllBreakpoints: actions.toggleAllBreakpoints,
+  evaluateExpressions: actions.evaluateExpressions,
+  pauseOnExceptions: actions.pauseOnExceptions,
+  toggleMapScopes: actions.toggleMapScopes,
+  breakOnNext: actions.breakOnNext,
+  toggleEventLogging: actions.toggleEventLogging,
+})(SecondaryPanes);

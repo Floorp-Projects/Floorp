@@ -226,9 +226,7 @@ add_task(async function test_dynamicBuiltinEvents() {
       "Should have recorded the expected event data."
     );
 
-    const uniqueEventName = `${expected[i][0]}#${expected[i][1]}#${
-      expected[i][2]
-    }`;
+    const uniqueEventName = `${expected[i][0]}#${expected[i][1]}#${expected[i][2]}`;
     const summaryCount =
       scalars.parent["telemetry.event_counts"][uniqueEventName];
     Assert.equal(1, summaryCount, `${uniqueEventName} had wrong summary count`);

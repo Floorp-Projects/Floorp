@@ -42,7 +42,13 @@ add_task(async function names() {
 add_task(async function subdomains() {
   await set("a.com", "foo", 1);
   await set("b.a.com", "foo", 2);
-  getCachedSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [
+      ["a.com", 1],
+      ["b.a.com", 2],
+    ]
+  );
   getCachedSubdomainsOK(["b.a.com", "foo"], [["b.a.com", 2]]);
   await reset();
 });
@@ -103,7 +109,10 @@ add_task(async function populateViaRemove() {
   );
   getCachedSubdomainsOK(
     ["a.com", "foo"],
-    [["a.com", undefined], ["b.a.com", undefined]]
+    [
+      ["a.com", undefined],
+      ["b.a.com", undefined],
+    ]
   );
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
@@ -115,7 +124,10 @@ add_task(async function populateViaRemove() {
   );
   getCachedSubdomainsOK(
     ["a.com", "foo"],
-    [["a.com", undefined], ["b.a.com", undefined]]
+    [
+      ["a.com", undefined],
+      ["b.a.com", undefined],
+    ]
   );
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
@@ -133,11 +145,17 @@ add_task(async function populateViaRemoveByDomain() {
   );
   getCachedSubdomainsOK(
     ["a.com", "foo"],
-    [["a.com", undefined], ["b.a.com", 3]]
+    [
+      ["a.com", undefined],
+      ["b.a.com", 3],
+    ]
   );
   getCachedSubdomainsOK(
     ["a.com", "bar"],
-    [["a.com", undefined], ["b.a.com", 4]]
+    [
+      ["a.com", undefined],
+      ["b.a.com", 4],
+    ]
   );
 
   await set("a.com", "foo", 5);
@@ -147,11 +165,17 @@ add_task(async function populateViaRemoveByDomain() {
   );
   getCachedSubdomainsOK(
     ["a.com", "foo"],
-    [["a.com", undefined], ["b.a.com", undefined]]
+    [
+      ["a.com", undefined],
+      ["b.a.com", undefined],
+    ]
   );
   getCachedSubdomainsOK(
     ["a.com", "bar"],
-    [["a.com", undefined], ["b.a.com", undefined]]
+    [
+      ["a.com", undefined],
+      ["b.a.com", undefined],
+    ]
   );
 
   await setGlobal("foo", 7);

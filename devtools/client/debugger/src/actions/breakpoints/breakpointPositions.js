@@ -47,9 +47,10 @@ async function mapLocations(
     generatedLocations
   );
 
-  return zip(originalLocations, generatedLocations).map(
-    ([location, generatedLocation]) => ({ location, generatedLocation })
-  );
+  return zip(
+    originalLocations,
+    generatedLocations
+  ).map(([location, generatedLocation]) => ({ location, generatedLocation }));
 }
 
 // Filter out positions, that are not in the original source Id

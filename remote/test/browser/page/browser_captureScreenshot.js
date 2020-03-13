@@ -411,7 +411,11 @@ add_task(async function clipPosition({ client }) {
     },
   });
 
-  for (const [x, y] of [[10, 20], [20, 10], [20, 20]]) {
+  for (const [x, y] of [
+    [10, 20],
+    [20, 10],
+    [20, 20],
+  ]) {
     console.info(`Check postion for ${x} and ${y}`);
     await loadURLWithElement({ x, y });
     var { data } = await Page.captureScreenshot({
@@ -435,7 +439,11 @@ add_task(async function clipDimension({ client }) {
   const { Page } = client;
   const ratio = await getDevicePixelRatio();
 
-  for (const [width, height] of [[10, 20], [20, 10], [20, 20]]) {
+  for (const [width, height] of [
+    [10, 20],
+    [20, 10],
+    [20, 20],
+  ]) {
     console.info(`Check width and height for ${width} and ${height}`);
 
     // Get reference image as section from a larger image

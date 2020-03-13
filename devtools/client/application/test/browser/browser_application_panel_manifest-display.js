@@ -58,9 +58,9 @@ add_task(async function() {
   const issuesEl = doc.querySelector(".js-manifest-issues");
   ok(issuesEl !== null, "Validation issues are displayed");
 
-  const warningEl = [...issuesEl.querySelectorAll(".js-manifest-issue")].find(
-    x => x.textContent.includes("background_color")
-  );
+  const warningEl = [
+    ...issuesEl.querySelectorAll(".js-manifest-issue"),
+  ].find(x => x.textContent.includes("background_color"));
   ok(warningEl !== null, "A warning about background_color is displayed");
 
   // close the tab

@@ -56,7 +56,10 @@ const testCases = [
       ),
     ],
   ],
-  [["localStorage", "http://test1.example.org"], ["ls1", "ls2"]],
+  [
+    ["localStorage", "http://test1.example.org"],
+    ["ls1", "ls2"],
+  ],
   [["localStorage", "http://sectest1.example.org"], ["iframe-u-ls1"]],
   [["localStorage", "https://sectest1.example.org"], ["iframe-s-ls1"]],
   [["sessionStorage", "http://test1.example.org"], ["ss1"]],

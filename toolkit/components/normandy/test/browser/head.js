@@ -475,20 +475,21 @@ this.safeUninstallAddon = async function(addon) {
 this.withInstalledWebExtensionSafe = function(manifestOverrides = {}) {
   return testFunction => {
     return async function wrappedTestFunction(...args) {
-      const decorated = withInstalledWebExtension(manifestOverrides, true)(
-        async ([id, file]) => {
-          try {
-            await testFunction(...args, [id, file]);
-          } finally {
-            let addon = await AddonManager.getAddonByID(id);
-            if (addon) {
-              await safeUninstallAddon(addon);
-              addon = await AddonManager.getAddonByID(id);
-              ok(!addon, "add-on should be uninstalled");
-            }
+      const decorated = withInstalledWebExtension(
+        manifestOverrides,
+        true
+      )(async ([id, file]) => {
+        try {
+          await testFunction(...args, [id, file]);
+        } finally {
+          let addon = await AddonManager.getAddonByID(id);
+          if (addon) {
+            await safeUninstallAddon(addon);
+            addon = await AddonManager.getAddonByID(id);
+            ok(!addon, "add-on should be uninstalled");
           }
         }
-      );
+      });
       await decorated();
     };
   };

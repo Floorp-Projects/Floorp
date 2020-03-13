@@ -25,7 +25,10 @@ async function requestCameraPermission(browser) {
   return SpecialPowers.spawn(browser, [], () =>
     content.navigator.mediaDevices
       .getUserMedia({ video: true, fake: true })
-      .then(() => true, () => false)
+      .then(
+        () => true,
+        () => false
+      )
   );
 }
 

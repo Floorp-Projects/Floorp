@@ -405,12 +405,9 @@ const mapStateToProps = (state, props: OwnProps) => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    setProjectDirectoryRoot: actions.setProjectDirectoryRoot,
-    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
-    toggleBlackBox: actions.toggleBlackBox,
-    loadSourceText: actions.loadSourceText,
-  }
-)(SourceTreeItem);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  setProjectDirectoryRoot: actions.setProjectDirectoryRoot,
+  clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+  toggleBlackBox: actions.toggleBlackBox,
+  loadSourceText: actions.loadSourceText,
+})(SourceTreeItem);

@@ -13,28 +13,40 @@ add_task(async function nonexistent() {
   await new Promise(resolve =>
     cps.removeByDomainAndName("a.com", "bogus", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    [null, "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
 
   await new Promise(resolve =>
     cps.removeBySubdomainAndName("a.com", "bogus", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    [null, "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
 
   await new Promise(resolve =>
     cps.removeGlobal("bogus", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    [null, "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
 
   await new Promise(resolve =>
     cps.removeByDomainAndName("bogus", "bogus", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
+  await dbOK([
+    ["a.com", "foo", 1],
+    [null, "foo", 2],
+  ]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
   await reset();
@@ -71,7 +83,11 @@ add_task(async function names() {
   await new Promise(resolve =>
     cps.removeByDomainAndName("a.com", "foo", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "bar", 2], [null, "foo", 3], [null, "bar", 4]]);
+  await dbOK([
+    ["a.com", "bar", 2],
+    [null, "foo", 3],
+    [null, "bar", 4],
+  ]);
   await getOK(["a.com", "foo"], undefined);
   await getOK(["a.com", "bar"], 2);
   await getGlobalOK(["foo"], 3);
@@ -80,7 +96,10 @@ add_task(async function names() {
   await new Promise(resolve =>
     cps.removeGlobal("foo", null, makeCallback(resolve))
   );
-  await dbOK([["a.com", "bar", 2], [null, "bar", 4]]);
+  await dbOK([
+    ["a.com", "bar", 2],
+    [null, "bar", 4],
+  ]);
   await getOK(["a.com", "foo"], undefined);
   await getOK(["a.com", "bar"], 2);
   await getGlobalOK(["foo"], undefined);
@@ -167,7 +186,11 @@ add_task(async function privateBrowsing() {
   await new Promise(resolve =>
     cps.removeByDomainAndName("b.com", "foo", context, makeCallback(resolve))
   );
-  await dbOK([["a.com", "bar", 2], [null, "bar", 4], ["b.com", "bar", 7]]);
+  await dbOK([
+    ["a.com", "bar", 2],
+    [null, "bar", 4],
+    ["b.com", "bar", 7],
+  ]);
   await getOK(["a.com", "foo", context], undefined);
   await getOK(["a.com", "bar", context], 2);
   await getGlobalOK(["foo", context], undefined);
@@ -217,7 +240,13 @@ add_task(async function removeByDomainAndName_invalidateCache() {
 add_task(async function removeBySubdomainAndName_invalidateCache() {
   await set("a.com", "foo", 1);
   await set("b.a.com", "foo", 2);
-  getCachedSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [
+      ["a.com", 1],
+      ["b.a.com", 2],
+    ]
+  );
   let promiseRemoved = new Promise(resolve => {
     cps.removeBySubdomainAndName("a.com", "foo", null, makeCallback(resolve));
   });

@@ -148,9 +148,11 @@ add_task(async function test_bookmarks() {
 
   // after just inserting, modified should not be set
   let lastModified = PlacesUtils.toPRTime(
-    (await PlacesUtils.bookmarks.fetch(
-      await PlacesUtils.promiseItemGuid(newId)
-    )).lastModified
+    (
+      await PlacesUtils.bookmarks.fetch(
+        await PlacesUtils.promiseItemGuid(newId)
+      )
+    ).lastModified
   );
 
   // The time before we set the title, in microseconds.
@@ -170,9 +172,11 @@ add_task(async function test_bookmarks() {
 
   // check lastModified after we set the title
   let lastModified2 = PlacesUtils.toPRTime(
-    (await PlacesUtils.bookmarks.fetch(
-      await PlacesUtils.promiseItemGuid(newId)
-    )).lastModified
+    (
+      await PlacesUtils.bookmarks.fetch(
+        await PlacesUtils.promiseItemGuid(newId)
+      )
+    ).lastModified
   );
   info("test setItemTitle");
   info("beforeSetTitle = " + beforeSetTitle);
@@ -460,9 +464,11 @@ add_task(async function test_bookmarks() {
   );
   bs.setItemLastModified(newId14, 1234000000000000);
   let fakeLastModified = PlacesUtils.toPRTime(
-    (await PlacesUtils.bookmarks.fetch(
-      await PlacesUtils.promiseItemGuid(newId14)
-    )).lastModified
+    (
+      await PlacesUtils.bookmarks.fetch(
+        await PlacesUtils.promiseItemGuid(newId14)
+      )
+    ).lastModified
   );
   Assert.equal(fakeLastModified, 1234000000000000);
 

@@ -49,10 +49,12 @@ addAccessibleTask(
     const state = {};
     nestedDocAcc.getState(state, {});
     if (state.value & STATE_BUSY) {
-      nestedDocAcc = (await waitForEvent(
-        EVENT_DOCUMENT_LOAD_COMPLETE,
-        NESTED_IFRAME_DOC_BODY_ID
-      )).accessible;
+      nestedDocAcc = (
+        await waitForEvent(
+          EVENT_DOCUMENT_LOAD_COMPLETE,
+          NESTED_IFRAME_DOC_BODY_ID
+        )
+      ).accessible;
     }
 
     if (gIsRemoteIframe) {

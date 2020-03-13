@@ -69,9 +69,6 @@ const mapStateToProps = (state, props) => ({
   isPaused: getIsPaused(state, props.thread.actor),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    selectThread: actions.selectThread,
-  }
-)(Thread);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  selectThread: actions.selectThread,
+})(Thread);

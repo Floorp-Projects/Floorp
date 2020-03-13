@@ -14,8 +14,8 @@ add_task(async function database_is_valid() {
   let db = await PlacesUtils.promiseDBConnection();
   Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
 
-  let vacuum = (await db.execute(
-    `PRAGMA favicons.auto_vacuum`
-  ))[0].getResultByIndex(0);
+  let vacuum = (
+    await db.execute(`PRAGMA favicons.auto_vacuum`)
+  )[0].getResultByIndex(0);
   Assert.equal(vacuum, 2, "Incremental vacuum is enabled");
 });

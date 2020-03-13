@@ -233,15 +233,12 @@ const mapStateToProps = state => ({
   displayFullUrl: false,
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    selectFrame: actions.selectFrame,
-    selectLocation: actions.selectLocation,
-    toggleBlackBox: actions.toggleBlackBox,
-    toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
-  }
-)(Frames);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  selectFrame: actions.selectFrame,
+  selectLocation: actions.selectLocation,
+  toggleBlackBox: actions.toggleBlackBox,
+  toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
+})(Frames);
 
 // Export the non-connected component in order to use it outside of the debugger
 // panel (e.g. console, netmonitor, …).

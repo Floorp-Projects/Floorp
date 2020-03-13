@@ -103,9 +103,12 @@ var UpdatePing = {
       usePingSender: false,
     };
 
-    TelemetryController.submitExternalPing(PING_TYPE, payload, options).catch(
-      e =>
-        this._log.error("handleUpdateSuccess - failed to submit update ping", e)
+    TelemetryController.submitExternalPing(
+      PING_TYPE,
+      payload,
+      options
+    ).catch(e =>
+      this._log.error("handleUpdateSuccess - failed to submit update ping", e)
     );
   },
 
@@ -153,9 +156,12 @@ var UpdatePing = {
       usePingSender: true,
     };
 
-    TelemetryController.submitExternalPing(PING_TYPE, payload, options).catch(
-      e =>
-        this._log.error("_handleUpdateReady - failed to submit update ping", e)
+    TelemetryController.submitExternalPing(
+      PING_TYPE,
+      payload,
+      options
+    ).catch(e =>
+      this._log.error("_handleUpdateReady - failed to submit update ping", e)
     );
   },
 

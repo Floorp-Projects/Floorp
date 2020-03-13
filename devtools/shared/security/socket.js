@@ -96,7 +96,7 @@ var DebuggerSocket = {};
 DebuggerSocket.connect = async function(settings) {
   // Default to PROMPT |Authenticator| instance if not supplied
   if (!settings.authenticator) {
-    settings.authenticator = new (Authenticators.get()).Client();
+    settings.authenticator = new (Authenticators.get().Client)();
   }
   _validateSettings(settings);
   // eslint-disable-next-line no-shadow
@@ -435,7 +435,7 @@ function SocketListener(devToolsServer, socketOptions) {
   // Set socket options with default value
   this._socketOptions = {
     authenticator:
-      socketOptions.authenticator || new (Authenticators.get()).Server(),
+      socketOptions.authenticator || new (Authenticators.get().Server)(),
     discoverable: !!socketOptions.discoverable,
     encryption: !!socketOptions.encryption,
     portOrPath: socketOptions.portOrPath || null,

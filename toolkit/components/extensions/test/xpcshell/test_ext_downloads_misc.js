@@ -937,7 +937,10 @@ add_task(async function test_erase() {
 
   msg = await runInExtension(
     "waitForEvents",
-    [{ type: "onErased", data: ids.dl2 }, { type: "onErased", data: ids.dl3 }],
+    [
+      { type: "onErased", data: ids.dl2 },
+      { type: "onErased", data: ids.dl3 },
+    ],
     { inorder: false }
   );
   equal(msg.status, "success", "received 2 onErased events");

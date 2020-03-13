@@ -235,7 +235,4 @@ const mapDispatchToProps = {
   getProfileAndStopProfiler: actions.getProfileAndStopProfiler,
 };
 
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(RecordingButton);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(RecordingButton);

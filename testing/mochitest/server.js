@@ -612,7 +612,7 @@ function linksToTableRows(links, recursionLevel) {
   for (let link in links) {
     const value = links[link];
     var classVal =
-      !isTest(link) && (value instanceof Object && "test" in value)
+      !isTest(link) && value instanceof Object && "test" in value
         ? "non-test invisible"
         : "";
 

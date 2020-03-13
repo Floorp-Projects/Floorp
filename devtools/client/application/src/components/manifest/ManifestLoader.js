@@ -103,7 +103,4 @@ const mapStateToProps = state => ({
   isLoading: state.manifest.isLoading,
 });
 
-module.exports = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ManifestLoader);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(ManifestLoader);

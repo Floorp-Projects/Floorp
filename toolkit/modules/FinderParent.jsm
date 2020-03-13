@@ -150,9 +150,10 @@ FinderParent.prototype = {
     let windowGlobal = aBrowsingContext.currentWindowGlobal;
     if (windowGlobal) {
       let actor = windowGlobal.getActor("Finder");
-      return actor
-        .sendQuery(aMessageName, aArgs)
-        .then(result => result, r => {});
+      return actor.sendQuery(aMessageName, aArgs).then(
+        result => result,
+        r => {}
+      );
     }
 
     return Promise.resolve({});

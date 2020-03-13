@@ -5,7 +5,10 @@ add_task(async function test_first_time_save() {
   let addresses = await getAddresses();
   is(addresses.length, 0, "No address in storage");
   await SpecialPowers.pushPrefEnv({
-    set: [[FTU_PREF, true], [ENABLED_AUTOFILL_ADDRESSES_PREF, true]],
+    set: [
+      [FTU_PREF, true],
+      [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
+    ],
   });
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(

@@ -23,7 +23,11 @@ function run_test() {
 
   dbg.memory.allocationSamplingProbability = 1;
 
-  for (const [func, n] of [[g.f, 20], [g.g, 10], [g.h, 5]]) {
+  for (const [func, n] of [
+    [g.f, 20],
+    [g.g, 10],
+    [g.h, 5],
+  ]) {
     for (let i = 0; i < n; i++) {
       dbg.memory.trackingAllocationSites = true;
       // All allocations of allocationMarker occur with this line as the oldest

@@ -12,7 +12,10 @@ add_task(async function test_fetchTags() {
 
   PlacesUtils.tagging.tagURI(Services.io.newURI(bm.url.href), ["1", "2"]);
   tags = await PlacesUtils.bookmarks.fetchTags();
-  Assert.deepEqual(tags, [{ name: "1", count: 1 }, { name: "2", count: 1 }]);
+  Assert.deepEqual(tags, [
+    { name: "1", count: 1 },
+    { name: "2", count: 1 },
+  ]);
 
   PlacesUtils.tagging.untagURI(Services.io.newURI(bm.url.href), ["1"]);
   tags = await PlacesUtils.bookmarks.fetchTags();
@@ -24,7 +27,10 @@ add_task(async function test_fetchTags() {
   });
   PlacesUtils.tagging.tagURI(Services.io.newURI(bm2.url.href), ["2", "3"]);
   tags = await PlacesUtils.bookmarks.fetchTags();
-  Assert.deepEqual(tags, [{ name: "2", count: 2 }, { name: "3", count: 1 }]);
+  Assert.deepEqual(tags, [
+    { name: "2", count: 2 },
+    { name: "3", count: 1 },
+  ]);
 });
 
 add_task(async function test_fetch_by_tags() {
@@ -81,9 +87,11 @@ add_task(async function test_fetch_by_tags() {
   info("Fetch multiple tags.");
   bms = [];
   Assert.equal(
-    (await PlacesUtils.bookmarks.fetch({ tags: ["egg", "ratafià"] }, b =>
-      bms.push(b)
-    )).guid,
+    (
+      await PlacesUtils.bookmarks.fetch({ tags: ["egg", "ratafià"] }, b =>
+        bms.push(b)
+      )
+    ).guid,
     bm1.guid,
     "Found the expected recent bookmark"
   );
@@ -107,9 +115,11 @@ add_task(async function test_fetch_by_tags() {
   info("Check case insensitive");
   bms = [];
   Assert.equal(
-    (await PlacesUtils.bookmarks.fetch({ tags: ["eGg", "raTafiÀ"] }, b =>
-      bms.push(b)
-    )).guid,
+    (
+      await PlacesUtils.bookmarks.fetch({ tags: ["eGg", "raTafiÀ"] }, b =>
+        bms.push(b)
+      )
+    ).guid,
     bm1.guid,
     "Found the expected recent bookmark"
   );

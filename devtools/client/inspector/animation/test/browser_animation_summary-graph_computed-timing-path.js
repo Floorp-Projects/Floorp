@@ -39,7 +39,10 @@ const TEST_DATA = [
   },
   {
     targetClass: "delay-positive",
-    expectedDelayPath: [{ x: 0, y: 0 }, { x: 500000, y: 0 }],
+    expectedDelayPath: [
+      { x: 0, y: 0 },
+      { x: 500000, y: 0 },
+    ],
     expectedIterationPathList: [
       [
         { x: 500000, y: 0 },
@@ -75,7 +78,10 @@ const TEST_DATA = [
         { x: 1000000, y: 0 },
       ],
     ],
-    expectedEndDelayPath: [{ x: 1000000, y: 0 }, { x: 1500000, y: 0 }],
+    expectedEndDelayPath: [
+      { x: 1000000, y: 0 },
+      { x: 1500000, y: 0 },
+    ],
   },
   {
     targetClass: "enddelay-negative",
@@ -106,7 +112,10 @@ const TEST_DATA = [
       { x: 1500000, y: 100 },
       { x: 1500000, y: 0 },
     ],
-    expectedForwardsPath: [{ x: 1500000, y: 0 }, { x: 1500000, y: 100 }],
+    expectedForwardsPath: [
+      { x: 1500000, y: 0 },
+      { x: 1500000, y: 100 },
+    ],
   },
   {
     targetClass: "enddelay-with-iterations-infinity",
@@ -119,7 +128,11 @@ const TEST_DATA = [
         { x: 1000000, y: 100 },
         { x: 1000000, y: 0 },
       ],
-      [{ x: 1000000, y: 0 }, { x: 1250000, y: 25 }, { x: 1500000, y: 50 }],
+      [
+        { x: 1000000, y: 0 },
+        { x: 1250000, y: 25 },
+        { x: 1500000, y: 50 },
+      ],
     ],
     isInfinity: true,
   },
@@ -154,7 +167,11 @@ const TEST_DATA = [
         { x: 750000, y: 25 },
         { x: 1000000, y: 0 },
       ],
-      [{ x: 1000000, y: 0 }, { x: 1250000, y: 25 }, { x: 1500000, y: 50 }],
+      [
+        { x: 1000000, y: 0 },
+        { x: 1250000, y: 25 },
+        { x: 1500000, y: 50 },
+      ],
     ],
     isInfinity: true,
   },
@@ -255,7 +272,10 @@ const TEST_DATA = [
         { x: 1500000, y: 0 },
       ],
     ],
-    expectedForwardsPath: [{ x: 1500000, y: 0 }, { x: 1500000, y: 50 }],
+    expectedForwardsPath: [
+      { x: 1500000, y: 0 },
+      { x: 1500000, y: 50 },
+    ],
   },
   {
     targetClass: "fill-forwards",

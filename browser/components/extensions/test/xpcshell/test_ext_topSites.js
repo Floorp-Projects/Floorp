@@ -264,16 +264,21 @@ add_task(async function test_topSites_complete() {
     includeSearchShortcuts: true,
     includeFavicon: true,
   });
-  Assert.ok(topSites.every(f => f.favicon == IMAGE_1x1), "favicon is correct");
+  Assert.ok(
+    topSites.every(f => f.favicon == IMAGE_1x1),
+    "favicon is correct"
+  );
 
   // Test options.limit.
   Assert.equal(
     1,
-    (await getSites({
-      includePinned: true,
-      includeSearchShortcuts: true,
-      limit: 1,
-    })).length,
+    (
+      await getSites({
+        includePinned: true,
+        includeSearchShortcuts: true,
+        limit: 1,
+      })
+    ).length,
     "limit to 1 topSite"
   );
 

@@ -1945,7 +1945,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const container = this.getElement("line-infobar-container");
     moveInfobar(
       container,
-      getBoundsFromPoints([{ x, y }, { x, y }, { x, y }, { x, y }]),
+      getBoundsFromPoints([
+        { x, y },
+        { x, y },
+        { x, y },
+        { x, y },
+      ]),
       this.win
     );
   }

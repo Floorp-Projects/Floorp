@@ -213,9 +213,9 @@ var PlacesDBUtils = {
     return PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: incrementalVacuum",
       async db => {
-        let count = (await db.execute(
-          "PRAGMA favicons.freelist_count"
-        ))[0].getResultByIndex(0);
+        let count = (
+          await db.execute("PRAGMA favicons.freelist_count")
+        )[0].getResultByIndex(0);
         if (count < 10) {
           logs.push(
             `The favicons database has only ${count} free pages, not vacuuming.`
@@ -225,9 +225,9 @@ var PlacesDBUtils = {
             `The favicons database has ${count} free pages, vacuuming.`
           );
           await db.execute("PRAGMA favicons.incremental_vacuum");
-          count = (await db.execute(
-            "PRAGMA favicons.freelist_count"
-          ))[0].getResultByIndex(0);
+          count = (
+            await db.execute("PRAGMA favicons.freelist_count")
+          )[0].getResultByIndex(0);
           logs.push(
             `The database has been vacuumed and has now ${count} free pages.`
           );
@@ -1246,10 +1246,9 @@ var PlacesDBUtils = {
       let val;
       if ("query" in probe) {
         let db = await PlacesUtils.promiseDBConnection();
-        val = (await db.execute(
-          probe.query,
-          probe.params || {}
-        ))[0].getResultByIndex(0);
+        val = (
+          await db.execute(probe.query, probe.params || {})
+        )[0].getResultByIndex(0);
       }
       // Report the result of the probe through Telemetry.
       // The resulting promise cannot reject.

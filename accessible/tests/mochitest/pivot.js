@@ -56,7 +56,8 @@ var ObjectTraversalRule = {
     var role = aAccessible.role;
     if (
       hasState(aAccessible, STATE_FOCUSABLE) &&
-      (role != ROLE_DOCUMENT && role != ROLE_INTERNAL_FRAME)
+      role != ROLE_DOCUMENT &&
+      role != ROLE_INTERNAL_FRAME
     ) {
       rv = FILTER_IGNORE_SUBTREE | FILTER_MATCH;
     } else if (

@@ -469,7 +469,10 @@ tests.push({
     this._changeCounterStmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    Assert.deepEqual(tombstones.map(info => info.guid), ["bookmarkAAAA"]);
+    Assert.deepEqual(
+      tombstones.map(info => info.guid),
+      ["bookmarkAAAA"]
+    );
   },
 });
 
@@ -723,7 +726,10 @@ tests.push({
     stmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    Assert.deepEqual(tombstones.map(info => info.guid), ["itemAAAAAAAA"]);
+    Assert.deepEqual(
+      tombstones.map(info => info.guid),
+      ["itemAAAAAAAA"]
+    );
   },
 });
 
@@ -812,7 +818,10 @@ tests.push({
     stmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    Assert.deepEqual(tombstones.map(info => info.guid), ["bookmarkAAAA"]);
+    Assert.deepEqual(
+      tombstones.map(info => info.guid),
+      ["bookmarkAAAA"]
+    );
   },
 });
 
@@ -918,10 +927,10 @@ tests.push({
     stmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    Assert.deepEqual(tombstones.map(info => info.guid), [
-      "bookmarkAAAA",
-      "folderBBBBBB",
-    ]);
+    Assert.deepEqual(
+      tombstones.map(info => info.guid),
+      ["bookmarkAAAA", "folderBBBBBB"]
+    );
   },
 });
 
@@ -2107,10 +2116,12 @@ tests.push({
   desc: "recalculate foreign_count.",
 
   async setup() {
-    this._pageGuid = (await PlacesUtils.history.insert({
-      url: "http://l4.moz.org/",
-      visits: [{ date: new Date() }],
-    })).guid;
+    this._pageGuid = (
+      await PlacesUtils.history.insert({
+        url: "http://l4.moz.org/",
+        visits: [{ date: new Date() }],
+      })
+    ).guid;
     await PlacesUtils.bookmarks.insert({
       url: "http://l4.moz.org/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -2144,10 +2155,12 @@ tests.push({
   desc: "recalculate hashes when missing.",
 
   async setup() {
-    this._pageGuid = (await PlacesUtils.history.insert({
-      url: "http://l5.moz.org/",
-      visits: [{ date: new Date() }],
-    })).guid;
+    this._pageGuid = (
+      await PlacesUtils.history.insert({
+        url: "http://l5.moz.org/",
+        visits: [{ date: new Date() }],
+      })
+    ).guid;
     Assert.ok((await this._getHash()) > 0);
     await PlacesUtils.withConnectionWrapper("change url hash", async function(
       db
@@ -2334,10 +2347,10 @@ tests.push({
     }
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    Assert.deepEqual(tombstones.map(info => info.guid), [
-      "bookmarkAAAA\n",
-      "{123456}",
-    ]);
+    Assert.deepEqual(
+      tombstones.map(info => info.guid),
+      ["bookmarkAAAA\n", "{123456}"]
+    );
   },
 });
 
@@ -2373,7 +2386,10 @@ tests.push({
 
   async check() {
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    Assert.deepEqual(tombstones.map(info => info.guid), ["bookmarkBBBB"]);
+    Assert.deepEqual(
+      tombstones.map(info => info.guid),
+      ["bookmarkBBBB"]
+    );
   },
 });
 

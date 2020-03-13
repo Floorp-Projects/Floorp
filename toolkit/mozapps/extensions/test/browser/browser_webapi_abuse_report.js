@@ -322,12 +322,10 @@ add_task(async function test_reject_on_unsupported_addon_types() {
     );
 
     let webAPIResult = await SpecialPowers.spawn(browser, [addonId], id =>
-      content.navigator.mozAddonManager
-        .reportAbuse(id)
-        .then(
-          res => ({ gotRejection: false, result: res }),
-          err => ({ gotRejection: true, message: err.message })
-        )
+      content.navigator.mozAddonManager.reportAbuse(id).then(
+        res => ({ gotRejection: false, result: res }),
+        err => ({ gotRejection: true, message: err.message })
+      )
     );
 
     Assert.deepEqual(

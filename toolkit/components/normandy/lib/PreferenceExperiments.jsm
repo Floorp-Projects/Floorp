@@ -457,9 +457,7 @@ var PreferenceExperiments = {
         reason: "pref-conflict",
       });
       throw new Error(
-        `Another preference experiment for the pref "${
-          preferencesWithConflicts[0]
-        }" is currently active.`
+        `Another preference experiment for the pref "${preferencesWithConflicts[0]}" is currently active.`
       );
     }
 

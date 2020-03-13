@@ -95,9 +95,9 @@ add_task(async function v4_upgrade() {
       serverKeys = serverResp = serverDecrypted = null;
 
       serverKeys = new CryptoWrapper("crypto", "keys");
-      serverResp = (await serverKeys.fetch(
-        Service.resource(Service.cryptoKeysURL)
-      )).response;
+      serverResp = (
+        await serverKeys.fetch(Service.resource(Service.cryptoKeysURL))
+      ).response;
       Assert.ok(serverResp.success);
 
       serverDecrypted = await serverKeys.decrypt(

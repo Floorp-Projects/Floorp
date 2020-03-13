@@ -28,7 +28,10 @@ add_task(async function() {
   );
 
   await checkState([
-    [["cookies", "http://test1.example.org"], [id1, id2, id3]],
+    [
+      ["cookies", "http://test1.example.org"],
+      [id1, id2, id3],
+    ],
   ]);
 
   const sameSite1 = getRowValues(id1).sameSite;

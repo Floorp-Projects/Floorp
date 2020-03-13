@@ -59,9 +59,9 @@ describe("<FullPageInterrupt>", () => {
       },
     };
 
-    const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
-      msg => msg.id === "FULL_PAGE_1"
-    );
+    const message = (
+      await OnboardingMessageProvider.getUntranslatedMessages()
+    ).find(msg => msg.id === "FULL_PAGE_1");
 
     wrapper = mount(
       <FullPageInterrupt

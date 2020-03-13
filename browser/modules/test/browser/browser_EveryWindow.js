@@ -13,9 +13,11 @@ const { EveryWindow } = ChromeUtils.import(
 async function windowInited(aId, aWin) {
   // TestUtils.topicObserved returns [subject, data]. We return the
   // subject, which in this case is the window.
-  return (await TestUtils.topicObserved(`${aId}:init`, win => {
-    return aWin ? win == aWin : true;
-  }))[0];
+  return (
+    await TestUtils.topicObserved(`${aId}:init`, win => {
+      return aWin ? win == aWin : true;
+    })
+  )[0];
 }
 
 function windowUninited(aId, aWin, aClosing) {

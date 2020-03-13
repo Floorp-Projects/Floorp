@@ -343,14 +343,11 @@ const mapStateToProps = state => ({
   status: getTextSearchStatus(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    closeProjectSearch: actions.closeProjectSearch,
-    searchSources: actions.searchSources,
-    clearSearch: actions.clearSearch,
-    selectSpecificLocation: actions.selectSpecificLocation,
-    setActiveSearch: actions.setActiveSearch,
-    doSearchForHighlight: actions.doSearchForHighlight,
-  }
-)(ProjectSearch);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  closeProjectSearch: actions.closeProjectSearch,
+  searchSources: actions.searchSources,
+  clearSearch: actions.clearSearch,
+  selectSpecificLocation: actions.selectSpecificLocation,
+  setActiveSearch: actions.setActiveSearch,
+  doSearchForHighlight: actions.doSearchForHighlight,
+})(ProjectSearch);

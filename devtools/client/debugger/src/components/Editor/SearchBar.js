@@ -385,14 +385,11 @@ const mapStateToProps = (state, p: OwnProps) => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    toggleFileSearchModifier: actions.toggleFileSearchModifier,
-    setFileSearchQuery: actions.setFileSearchQuery,
-    setActiveSearch: actions.setActiveSearch,
-    closeFileSearch: actions.closeFileSearch,
-    doSearch: actions.doSearch,
-    traverseResults: actions.traverseResults,
-  }
-)(SearchBar);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  toggleFileSearchModifier: actions.toggleFileSearchModifier,
+  setFileSearchQuery: actions.setFileSearchQuery,
+  setActiveSearch: actions.setActiveSearch,
+  closeFileSearch: actions.closeFileSearch,
+  doSearch: actions.doSearch,
+  traverseResults: actions.traverseResults,
+})(SearchBar);

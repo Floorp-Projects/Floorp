@@ -1706,7 +1706,10 @@ describe("ASRouter", () => {
         await Router.onMessage(msg);
 
         assert.calledWith(global.fetch, url);
-        assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
       });
       it("should make a request to the provided endpoint on ADMIN_CONNECT_STATE and remove the endpoint", async () => {
         const url = "https://snippets-admin.mozilla.org/foo";
@@ -1717,7 +1720,10 @@ describe("ASRouter", () => {
         await Router.onMessage(msg);
 
         assert.calledWith(global.fetch, url);
-        assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
       });
       it("should dispatch SNIPPETS_PREVIEW_MODE when adding a preview endpoint", async () => {
         const url = "https://snippets-admin.mozilla.org/foo";
@@ -1743,7 +1749,10 @@ describe("ASRouter", () => {
         });
         await Router.onMessage(msg);
 
-        assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
       });
       it("should reject bad urls", async () => {
         const url = "foo";
@@ -1753,7 +1762,10 @@ describe("ASRouter", () => {
         });
         await Router.onMessage(msg);
 
-        assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
       });
       it("should handle onboarding message provider", async () => {
         const handleMessageRequestStub = sandbox.stub(
@@ -4025,7 +4037,10 @@ describe("ASRouter", () => {
   describe("#setGroupState", () => {
     it("should clear group impressions", async () => {
       await Router.setState({
-        groups: [{ id: "foo", enabled: true }, { id: "bar", enabled: true }],
+        groups: [
+          { id: "foo", enabled: true },
+          { id: "bar", enabled: true },
+        ],
         groupImpressions: { foo: [1], bar: [2] },
       });
 

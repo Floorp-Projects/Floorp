@@ -530,7 +530,10 @@ function dispatch(fn) {
     });
 
     req
-      .then(rv => sendResponse(rv, id), err => sendError(err, id))
+      .then(
+        rv => sendResponse(rv, id),
+        err => sendError(err, id)
+      )
       .catch(err => sendError(err, id));
   };
 }

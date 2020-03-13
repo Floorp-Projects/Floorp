@@ -264,11 +264,13 @@ add_task(async function create_in_tags() {
       }),
     /Can't use insertTree to insert tags/
   );
-  let guidForTag = (await PlacesUtils.bookmarks.insert({
-    title: "test-tag",
-    url: "http://www.unused.com/",
-    parentGuid: PlacesUtils.bookmarks.tagsGuid,
-  })).guid;
+  let guidForTag = (
+    await PlacesUtils.bookmarks.insert({
+      title: "test-tag",
+      url: "http://www.unused.com/",
+      parentGuid: PlacesUtils.bookmarks.tagsGuid,
+    })
+  ).guid;
   await Assert.rejects(
     PlacesUtils.bookmarks.insertTree({
       children: [

@@ -190,7 +190,10 @@ add_task(function testMoveInSuccession_appendFalse() {
     await verifySuccessors([1, 2, TAB_ID_NONE], "unknown tab ID");
 
     browser.test.assertTrue(
-      await browser.tabs.moveInSuccession([1e8]).then(() => true, () => false),
+      await browser.tabs.moveInSuccession([1e8]).then(
+        () => true,
+        () => false
+      ),
       "When all tab IDs are unknown, tabs.moveInSuccession should not throw"
     );
 

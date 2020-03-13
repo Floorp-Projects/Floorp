@@ -200,7 +200,10 @@ describe("Highlights Feed", () => {
       feed.filterForThumbnailExpiration(stub);
 
       assert.calledOnce(stub);
-      assert.calledWithExactly(stub, rows.map(r => r.url));
+      assert.calledWithExactly(
+        stub,
+        rows.map(r => r.url)
+      );
     });
     it("should include preview_image_url (if present) in the callback results", () => {
       const rows = [

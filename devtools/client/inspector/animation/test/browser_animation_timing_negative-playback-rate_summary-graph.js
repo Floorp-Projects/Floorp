@@ -15,7 +15,11 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 100000, y: 0 }],
+        path: [
+          { x: 0, y: 100 },
+          { x: 50000, y: 50 },
+          { x: 100000, y: 0 },
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -26,7 +30,11 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 100000, y: 0 }],
+        path: [
+          { x: 0, y: 100 },
+          { x: 50000, y: 50 },
+          { x: 100000, y: 0 },
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -2",
@@ -46,7 +54,11 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 100000, y: 0 }],
+        path: [
+          { x: 0, y: 100 },
+          { x: 50000, y: 50 },
+          { x: 100000, y: 0 },
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -65,11 +77,18 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 50000, y: 0 }],
+        path: [
+          { x: 0, y: 100 },
+          { x: 50000, y: 50 },
+          { x: 50000, y: 0 },
+        ],
       },
       {
         selector: ".animation-negative-delay-path path",
-        path: [{ x: 50000, y: 50 }, { x: 100000, y: 0 }],
+        path: [
+          { x: 50000, y: 50 },
+          { x: 100000, y: 0 },
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -89,7 +108,11 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [{ x: 50000, y: 100 }, { x: 100000, y: 50 }, { x: 150000, y: 0 }],
+        path: [
+          { x: 50000, y: 100 },
+          { x: 100000, y: 50 },
+          { x: 150000, y: 0 },
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -109,11 +132,17 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [{ x: 0, y: 50 }, { x: 50000, y: 0 }],
+        path: [
+          { x: 0, y: 50 },
+          { x: 50000, y: 0 },
+        ],
       },
       {
         selector: ".animation-negative-end-delay-path path",
-        path: [{ x: -50000, y: 100 }, { x: 0, y: 0 }],
+        path: [
+          { x: -50000, y: 100 },
+          { x: 0, y: 0 },
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",

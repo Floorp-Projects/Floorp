@@ -615,8 +615,8 @@ this.FormAutofillUtils = {
       !subKeys ||
       !subKeys.length ||
       (!subNames && !subLnames) ||
-      ((subNames && subKeys.length != subNames.length) ||
-        (subLnames && subKeys.length != subLnames.length))
+      (subNames && subKeys.length != subNames.length) ||
+      (subLnames && subKeys.length != subLnames.length)
     ) {
       return null;
     }

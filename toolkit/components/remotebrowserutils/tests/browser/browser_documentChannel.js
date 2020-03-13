@@ -16,13 +16,19 @@ const LINKED_WEB_IN_FILE_PREF =
 
 async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[DOCUMENT_CHANNEL_PREF, true], [LINKED_WEB_IN_FILE_PREF, false]],
+    set: [
+      [DOCUMENT_CHANNEL_PREF, true],
+      [LINKED_WEB_IN_FILE_PREF, false],
+    ],
   });
 }
 
 async function unsetPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[DOCUMENT_CHANNEL_PREF, false], [LINKED_WEB_IN_FILE_PREF, true]],
+    set: [
+      [DOCUMENT_CHANNEL_PREF, false],
+      [LINKED_WEB_IN_FILE_PREF, true],
+    ],
   });
 }
 

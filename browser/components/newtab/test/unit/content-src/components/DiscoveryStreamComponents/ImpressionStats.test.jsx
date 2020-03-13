@@ -36,7 +36,11 @@ describe("<ImpressionStats>", () => {
   }
 
   const DEFAULT_PROPS = {
-    rows: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }, { id: 3, pos: 2 }],
+    rows: [
+      { id: 1, pos: 0 },
+      { id: 2, pos: 1 },
+      { id: 3, pos: 2 },
+    ],
     source: SOURCE,
     IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
     document: {

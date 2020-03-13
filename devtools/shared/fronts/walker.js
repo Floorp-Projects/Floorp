@@ -486,9 +486,9 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     const parentWalker = (await parentTarget.getFront("inspector")).walker;
     // As this <iframe> most likely runs in another process, we have to get it through the parent
     // target's WalkerFront.
-    const parentNode = (await parentWalker.getEmbedderElement(
-      descriptorFront.id
-    )).node;
+    const parentNode = (
+      await parentWalker.getEmbedderElement(descriptorFront.id)
+    ).node;
 
     // Finally, set this embedder element's node front as the
     const documentNode = await this.getRootNode();

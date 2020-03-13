@@ -26,8 +26,18 @@ function makeChan(url, inIsolatedMozBrowser, userContextId) {
 }
 
 // [inIsolatedMozBrowser, userContextId, expected_handlers_called]
-var firstTests = [[false, 0, 1], [true, 0, 1], [false, 1, 1], [true, 1, 1]];
-var secondTests = [[false, 0, 0], [true, 0, 0], [false, 1, 1], [true, 1, 0]];
+var firstTests = [
+  [false, 0, 1],
+  [true, 0, 1],
+  [false, 1, 1],
+  [true, 1, 1],
+];
+var secondTests = [
+  [false, 0, 0],
+  [true, 0, 0],
+  [false, 1, 1],
+  [true, 1, 0],
+];
 
 async function run_all_tests() {
   for (let test of firstTests) {

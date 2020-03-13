@@ -71,7 +71,10 @@ add_task(async function test_open_links() {
     });
 
     await SpecialPowers.pushPrefEnv({
-      set: [[pref, urlBase], ["services.sync.engine.passwords", true]],
+      set: [
+        [pref, urlBase],
+        ["services.sync.engine.passwords", true],
+      ],
     });
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);

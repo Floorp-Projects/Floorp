@@ -223,19 +223,16 @@ const mapStateToProps = (state, p: OwnProps) => ({
   frame: getFormattedFrame(state, getCurrentThread(state)),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    enableBreakpoint: actions.enableBreakpoint,
-    removeBreakpoint: actions.removeBreakpoint,
-    removeBreakpoints: actions.removeBreakpoints,
-    removeAllBreakpoints: actions.removeAllBreakpoints,
-    disableBreakpoint: actions.disableBreakpoint,
-    selectSpecificLocation: actions.selectSpecificLocation,
-    setBreakpointOptions: actions.setBreakpointOptions,
-    toggleAllBreakpoints: actions.toggleAllBreakpoints,
-    toggleBreakpoints: actions.toggleBreakpoints,
-    toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
-    openConditionalPanel: actions.openConditionalPanel,
-  }
-)(Breakpoint);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  enableBreakpoint: actions.enableBreakpoint,
+  removeBreakpoint: actions.removeBreakpoint,
+  removeBreakpoints: actions.removeBreakpoints,
+  removeAllBreakpoints: actions.removeAllBreakpoints,
+  disableBreakpoint: actions.disableBreakpoint,
+  selectSpecificLocation: actions.selectSpecificLocation,
+  setBreakpointOptions: actions.setBreakpointOptions,
+  toggleAllBreakpoints: actions.toggleAllBreakpoints,
+  toggleBreakpoints: actions.toggleBreakpoints,
+  toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
+  openConditionalPanel: actions.openConditionalPanel,
+})(Breakpoint);

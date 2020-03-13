@@ -55,7 +55,10 @@ async function expectLocalProfiles(profileStorage, expected) {
   expected.sort((a, b) => a.guid.localeCompare(b.guid));
   profiles.sort((a, b) => a.guid.localeCompare(b.guid));
   try {
-    deepEqual(profiles.map(p => p.guid), expected.map(p => p.guid));
+    deepEqual(
+      profiles.map(p => p.guid),
+      expected.map(p => p.guid)
+    );
     for (let i = 0; i < expected.length; i++) {
       let thisExpected = expected[i];
       let thisGot = profiles[i];
@@ -395,9 +398,11 @@ add_task(async function test_applyIncoming_nonexistent_tombstone() {
       !(await profileStorage.addresses.get(guid)),
       "Should not return record for uknown deleted item"
     );
-    let localTombstone = (await profileStorage.addresses.getAll({
-      includeDeleted: true,
-    })).find(record => record.guid == guid);
+    let localTombstone = (
+      await profileStorage.addresses.getAll({
+        includeDeleted: true,
+      })
+    ).find(record => record.guid == guid);
     ok(localTombstone, "Should store tombstone for unknown item");
   } finally {
     await cleanup(server);
@@ -431,9 +436,11 @@ add_task(async function test_applyIncoming_incoming_deleted() {
       "Should delete unmodified item locally"
     );
 
-    let localTombstone = (await profileStorage.addresses.getAll({
-      includeDeleted: true,
-    })).find(record => record.guid == guid);
+    let localTombstone = (
+      await profileStorage.addresses.getAll({
+        includeDeleted: true,
+      })
+    ).find(record => record.guid == guid);
     ok(localTombstone, "Should keep local tombstone for remotely deleted item");
     strictEqual(
       getSyncChangeCounter(profileStorage.addresses, guid),

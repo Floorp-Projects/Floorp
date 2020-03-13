@@ -118,7 +118,10 @@ class Tab extends PureComponent<Props> {
           ...tabMenuItems.closeTabsToEnd,
           click: () => {
             const tabIndex = tabSources.findIndex(t => t.id == tab);
-            closeTabs(cx, tabURLs.filter((t, i) => i > tabIndex));
+            closeTabs(
+              cx,
+              tabURLs.filter((t, i) => i > tabIndex)
+            );
           },
           disabled:
             tabCount === 1 ||
@@ -200,7 +203,8 @@ class Tab extends PureComponent<Props> {
     const active =
       selectedSource &&
       sourceId == selectedSource.id &&
-      (!this.isProjectSearchEnabled() && !this.isSourceSearchEnabled());
+      !this.isProjectSearchEnabled() &&
+      !this.isSourceSearchEnabled();
     const isPrettyCode = isPretty(source);
 
     function onClickClose(e) {

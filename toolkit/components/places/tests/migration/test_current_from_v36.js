@@ -93,7 +93,10 @@ add_task(async function test_icons() {
       rows = await db.execute(`SELECT page_url FROM moz_pages_w_icons
                                WHERE id IN(${page_ids.join(",")})`);
       let urls = rows.map(r => r.getResultByName("page_url"));
-      Assert.ok(urls.some(url => url == entry.page_url), "page_url found");
+      Assert.ok(
+        urls.some(url => url == entry.page_url),
+        "page_url found"
+      );
     }
   }
 });
