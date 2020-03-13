@@ -5693,10 +5693,21 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
     if (mSizeMode != nsSizeMode_Fullscreen) mLastSizeMode = mSizeMode;
 
     mSizeMode = nsSizeMode_Fullscreen;
+
+    if (mIsPIPWindow) {
+      gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                               GDK_WINDOW_TYPE_HINT_NORMAL);
+    }
+
     gtk_window_fullscreen(GTK_WINDOW(mShell));
   } else {
     mSizeMode = mLastSizeMode;
     gtk_window_unfullscreen(GTK_WINDOW(mShell));
+
+    if (mIsPIPWindow) {
+      gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                               GDK_WINDOW_TYPE_HINT_UTILITY);
+    }
   }
 
   NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
