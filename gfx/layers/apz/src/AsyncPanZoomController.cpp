@@ -4097,16 +4097,13 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime) {
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     {  // scope lock
-      MutexAutoLock lock(mCheckerboardEventLock);
+      MutexAutoLock lock2(mCheckerboardEventLock);
       // Update RendertraceProperty before UpdateAnimation() call, since
       // the UpdateAnimation() updates effective ScrollOffset for next frame
       // if APZFrameDelay is enabled.
       if (mCheckerboardEvent) {
         mCheckerboardEvent->UpdateRendertraceProperty(
-            CheckerboardEvent::UserVisible,
-            CSSRect(GetEffectiveScrollOffset(
-                        AsyncPanZoomController::eForCompositing),
-                    Metrics().CalculateCompositedSizeInCssPixels()));
+            CheckerboardEvent::UserVisible, GetVisibleRect(lock));
       }
     }
 
@@ -4315,16 +4312,22 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
       .PostScale(zoomChange.width, zoomChange.height, 1);
 }
 
-uint32_t AsyncPanZoomController::GetCheckerboardMagnitude() const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-
+CSSRect AsyncPanZoomController::GetVisibleRect(
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   CSSPoint currentScrollOffset =
       GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing) +
       mTestAsyncScrollOffset;
-  CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() +
-                    mLastContentPaintMetrics.GetScrollOffset();
   CSSRect visible = CSSRect(currentScrollOffset,
                             Metrics().CalculateCompositedSizeInCssPixels());
+  return visible;
+}
+
+uint32_t AsyncPanZoomController::GetCheckerboardMagnitude() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() +
+                    mLastContentPaintMetrics.GetScrollOffset();
+  CSSRect visible = GetVisibleRect(lock);
 
   CSSIntRegion checkerboard;
   // Round so as to minimize checkerboarding; if we're only showing fractional
@@ -4401,14 +4404,11 @@ bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
     return false;
   }
 
-  CSSPoint currentScrollOffset =
-      Metrics().GetScrollOffset() + mTestAsyncScrollOffset;
   CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() +
                     mLastContentPaintMetrics.GetScrollOffset();
   painted.Inflate(CSSMargin::FromAppUnits(
       nsMargin(1, 1, 1, 1)));  // fuzz for rounding error
-  CSSRect visible = CSSRect(currentScrollOffset,
-                            Metrics().CalculateCompositedSizeInCssPixels());
+  CSSRect visible = GetVisibleRect(lock);
   if (painted.Contains(visible)) {
     return false;
   }
