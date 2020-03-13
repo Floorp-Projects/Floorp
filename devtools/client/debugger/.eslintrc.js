@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 module.exports = {
-  parser: "babel-eslint",
   plugins: [
     "react",
     "mozilla",

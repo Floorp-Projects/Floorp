@@ -50,6 +50,13 @@ const ignorePatterns = [
 ];
 
 module.exports = {
+  parser: "babel-eslint",
+  parserOptions: {
+    sourceType: "script",
+    babelOptions: {
+      configFile: path.join(__dirname, ".babel-eslint.rc.js"),
+    },
+  },
   ignorePatterns,
   // Ignore eslint configurations in parent directories.
   root: true,
