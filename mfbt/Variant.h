@@ -182,12 +182,22 @@ struct VariantImplementation<Tag, N, T> {
 
   template <typename Matcher, typename ConcreteVariant>
   static decltype(auto) match(Matcher&& aMatcher, ConcreteVariant& aV) {
-    return std::forward<Matcher>(aMatcher)(aV.template as<N>());
+    if constexpr (std::is_invocable_v<Matcher, Tag,
+                                      decltype(aV.template as<N>())>) {
+      return std::forward<Matcher>(aMatcher)(Tag(N), aV.template as<N>());
+    } else {
+      return std::forward<Matcher>(aMatcher)(aV.template as<N>());
+    }
   }
 
   template <typename ConcreteVariant, typename Matcher>
   static decltype(auto) matchN(ConcreteVariant& aV, Matcher&& aMatcher) {
-    return std::forward<Matcher>(aMatcher)(aV.template as<N>());
+    if constexpr (std::is_invocable_v<Matcher, Tag,
+                                      decltype(aV.template as<N>())>) {
+      return std::forward<Matcher>(aMatcher)(Tag(N), aV.template as<N>());
+    } else {
+      return std::forward<Matcher>(aMatcher)(aV.template as<N>());
+    }
   }
 };
 
@@ -242,7 +252,12 @@ struct VariantImplementation<Tag, N, T, Ts...> {
   template <typename Matcher, typename ConcreteVariant>
   static decltype(auto) match(Matcher&& aMatcher, ConcreteVariant& aV) {
     if (aV.template is<N>()) {
-      return std::forward<Matcher>(aMatcher)(aV.template as<N>());
+      if constexpr (std::is_invocable_v<Matcher, Tag,
+                                        decltype(aV.template as<N>())>) {
+        return std::forward<Matcher>(aMatcher)(Tag(N), aV.template as<N>());
+      } else {
+        return std::forward<Matcher>(aMatcher)(aV.template as<N>());
+      }
     } else {
       // If you're seeing compilation errors here like "no matching
       // function for call to 'match'" then that means that the
@@ -260,7 +275,12 @@ struct VariantImplementation<Tag, N, T, Ts...> {
   template <typename ConcreteVariant, typename Mi, typename... Ms>
   static decltype(auto) matchN(ConcreteVariant& aV, Mi&& aMi, Ms&&... aMs) {
     if (aV.template is<N>()) {
-      return std::forward<Mi>(aMi)(aV.template as<N>());
+      if constexpr (std::is_invocable_v<Mi, Tag,
+                                        decltype(aV.template as<N>())>) {
+        return std::forward<Mi>(aMi)(Tag(N), aV.template as<N>());
+      } else {
+        return std::forward<Mi>(aMi)(aV.template as<N>());
+      }
     } else {
       // If you're seeing compilation errors here like "no matching
       // function for call to 'match'" then that means that the
@@ -462,7 +482,7 @@ struct VariantIndex {
  *
  *     // In some situations, a single generic lambda may also be appropriate:
  *     char* foo(Variant<A, B, C, D>& v) {
- *       return v.match([](auto&){...});
+ *       return v.match([](auto&) {...});
  *     }
  *
  *     // Alternatively, multiple function objects may be provided, each one
@@ -472,6 +492,16 @@ struct VariantIndex {
  *                      [](B&) { ... },
  *                      [](C&) { ... },
  *                      [](D&) { ... });
+ *     }
+ *
+ *     // In rare cases, the index of the currently-active alternative is
+ *     // needed, it may be obtained by adding a first parameter in the matcner
+ *     // callback, which will receive the index in its most compact type (just
+ *     // use `size_t` if the exact type is not important), e.g.:
+ *     char* foo(Variant<A, B, C, D>& v) {
+ *       return v.match([](auto aIndex, auto& aAlternative) {...});
+ *       // --OR--
+ *       return v.match([](size_t aIndex, auto& aAlternative) {...});
  *     }
  *
  * ## Examples
