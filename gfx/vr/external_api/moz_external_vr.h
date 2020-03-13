@@ -47,8 +47,8 @@ namespace gfx {
 // and mapped files if we have both release and nightlies
 // running at the same time? Or...what if we have multiple
 // release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.7"
-static const int32_t kVRExternalVersion = 14;
+#define SHMEM_VERSION "0.0.8"
+static const int32_t kVRExternalVersion = 15;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -130,6 +130,16 @@ enum class ControllerCapabilityFlags : uint16_t {
 };
 
 #endif  // ifndef MOZILLA_INTERNAL_API
+
+enum class VRControllerType : uint8_t {
+  _empty,
+  Vive,
+  WMR,
+  Knuckles,
+  Cosmos,
+  OculusTouch,
+  _end
+};
 
 enum class TargetRayMode : uint8_t { Gaze, TrackedPointer, Screen };
 
@@ -341,6 +351,9 @@ struct VRControllerState {
 #else
   ControllerHand hand;
 #endif
+  // For WebXR->WebVR mapping conversion, once we remove WebVR,
+  // we can remove this item.
+  VRControllerType type;
   // https://immersive-web.github.io/webxr/#enumdef-xrtargetraymode
   TargetRayMode targetRayMode;
 
