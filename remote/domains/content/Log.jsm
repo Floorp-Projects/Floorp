@@ -122,10 +122,7 @@ function fromScriptError(error) {
     flags & Ci.nsIScriptError.errorFlag
   ) {
     level = "error";
-  } else if (
-    flags & Ci.nsIScriptError.warningFlag ||
-    flags & Ci.nsIScriptError.strictFlag
-  ) {
+  } else if (flags & Ci.nsIScriptError.warningFlag) {
     level = "warning";
   } else if (flags & Ci.nsIScriptError.infoFlag) {
     level = "info";

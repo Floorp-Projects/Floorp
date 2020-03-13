@@ -47,10 +47,6 @@ interface nsIScriptError : nsIConsoleMessage
     /** exception was thrown for this case - exception-aware hosts can ignore */
     const unsigned long exceptionFlag = 0x2;
 
-    // XXX check how strict is implemented these days.
-    /** error or warning is due to strict option */
-    const unsigned long strictFlag = 0x4;
-
     /** just a log message */
     const unsigned long infoFlag = 0x8;
 
