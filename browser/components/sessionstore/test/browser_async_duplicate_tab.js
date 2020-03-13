@@ -21,7 +21,7 @@ add_task(async function test_duplicate() {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
         () => resolve(),
-        { once: true }
+        { once: true, capture: true }
       );
 
       // Click the link.
@@ -60,7 +60,7 @@ add_task(async function test_duplicate_remove() {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
         () => resolve(),
-        { once: true }
+        { once: true, capture: true }
       );
 
       // Click the link.

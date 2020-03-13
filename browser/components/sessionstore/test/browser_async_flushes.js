@@ -25,7 +25,7 @@ add_task(async function test_flush() {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
         () => resolve(),
-        { once: true }
+        { once: true, capture: true }
       );
 
       // Click the link.
@@ -64,7 +64,7 @@ add_task(async function test_crash() {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
         () => resolve(),
-        { once: true }
+        { once: true, capture: true }
       );
 
       // Click the link.
@@ -107,7 +107,7 @@ add_task(async function test_remove() {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
         () => resolve(),
-        { once: true }
+        { once: true, capture: true }
       );
 
       // Click the link.
