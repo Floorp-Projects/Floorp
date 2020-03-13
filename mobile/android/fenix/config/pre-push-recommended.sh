@@ -18,8 +18,8 @@
         ktlint \
         detekt \
         assembleGeckoBetaDebug \
-        testGeckoBetaDebug \
-        assembleGeckoBetaDebugAndroidTest
+        assembleGeckoBetaDebugAndroidTest \
+        testGeckoBetaDebug
 
 # Tasks omitted because they take a long time to run:
 # - assembling all variants
