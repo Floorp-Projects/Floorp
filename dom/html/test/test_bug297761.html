@@ -47,8 +47,8 @@ function nextTest()
 function frameLoaded(aFrame)
 {
   var documentLocation = location.href.replace(/\.html.*/, "\.html");
-  is(aFrame.contentWindow.location.href.replace(/\?x=0&y=0/, ""),
-     documentLocation.replace(/test_bug/, "file_bug"),
+  is(aFrame.contentWindow.location.href.replace(/\?x=0&y=0/, "?"),
+     documentLocation.replace(/test_bug/, "file_bug") + "?",
      "form should have been submitted to the document location");
 
   if (++curTest == nbTests) {

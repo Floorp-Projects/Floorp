@@ -74,6 +74,7 @@ function backgroundScript() {
 
 const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
 const URL = BASE + "/file_WebNavigation_page1.html";
+const FORM_URL = URL + "?";
 const FRAME = BASE + "/file_WebNavigation_page2.html";
 const FRAME2 = BASE + "/file_WebNavigation_page3.html";
 const FRAME_PUSHSTATE = BASE + "/file_WebNavigation_page3_pushState.html";
@@ -187,11 +188,11 @@ add_task(async function webnav_transitions_props() {
 
   // transitionType: form_submit
   received = [];
-  await loadAndWait(win, "onCompleted", URL, () => {
+  await loadAndWait(win, "onCompleted", FORM_URL, () => {
     win.document.querySelector("form").submit();
   });
 
-  found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
+  found = received.find((data) => (data.event == "onCommitted" && data.url == FORM_URL));
 
   ok(found, "Got the onCommitted event");
 
@@ -220,9 +221,9 @@ add_task(async function webnav_transitions_props() {
 
   // transitionQualifier: forward_back
   received = [];
-  await loadAndWait(win, "onCompleted", URL, () => { win.history.back(); });
+  await loadAndWait(win, "onCompleted", FORM_URL, () => { win.history.back(); });
 
-  found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
+  found = received.find((data) => (data.event == "onCommitted" && data.url == FORM_URL));
 
   ok(found, "Got the onCommitted event");
 
