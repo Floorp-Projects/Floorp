@@ -45,7 +45,7 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sPrimitiveHeadersF;
 uniform HIGHP_SAMPLER_FLOAT isampler2D sPrimitiveHeadersI;
 
 // Instanced attributes
-in ivec4 aData;
+PER_INSTANCE in ivec4 aData;
 
 #define VECS_PER_PRIM_HEADER_F 2U
 #define VECS_PER_PRIM_HEADER_I 2U

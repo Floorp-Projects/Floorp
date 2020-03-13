@@ -50,7 +50,7 @@
     uniform mat4 uTransform;       // Orthographic projection
 
     // Attribute inputs
-    in vec3 aPosition;
+    in vec2 aPosition;
 
     // get_fetch_uv is a macro to work around a macOS Intel driver parsing bug.
     // TODO: convert back to a function once the driver issues are resolved, if ever.
