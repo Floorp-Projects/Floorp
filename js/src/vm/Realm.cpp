@@ -626,14 +626,11 @@ static bool CreateLazyScriptsForRealm(JSContext* cx) {
       continue;
     }
 
-    bool lazyScriptHadNoScript = !fun->lazyScript()->maybeScript();
-
     JSScript* script = JSFunction::getOrCreateScript(cx, fun);
     if (!script) {
       return false;
     }
-    if (lazyScriptHadNoScript &&
-        !AddInnerLazyFunctionsFromScript(script, &lazyFunctions)) {
+    if (!AddInnerLazyFunctionsFromScript(script, &lazyFunctions)) {
       return false;
     }
   }

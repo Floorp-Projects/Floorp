@@ -1632,7 +1632,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
     MOZ_ASSERT(nextCallee);
     fun = nextCallee;
-    scr = fun->existingScript();
+    scr = fun->nonLazyScript();
 
     frameNo++;
 

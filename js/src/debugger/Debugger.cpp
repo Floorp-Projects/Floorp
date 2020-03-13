@@ -5269,7 +5269,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     }
 
     // If the script is already delazified, it should be in scriptVector.
-    if (lazyScript->maybeScript()) {
+    if (lazyScript->hasBytecode()) {
       return;
     }
 
@@ -5447,7 +5447,7 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase {
     }
 
     // If the script is already delazified, it should already be handled.
-    if (lazyScript->maybeScript()) {
+    if (lazyScript->hasBytecode()) {
       return;
     }
 
@@ -6061,65 +6061,12 @@ typename Map::WrapperType* Debugger::wrapVariantReferent(
 
 DebuggerScript* Debugger::wrapVariantReferent(
     JSContext* cx, Handle<DebuggerScriptReferent> referent) {
-  DebuggerScript* obj;
-
-  // A single script can be, at different times, represented by a JSScript,
-  // LazyScript, or both a LazyScript and JSScript. In the latter case, the
-  // LazyScript will have a pointer to the JSScript, and the JSScript might have
-  // a pointer to the LazyScript.
-  //
-  // When the same Debugger wraps either the LazyScript or JSScript at any
-  // different time, we have to ensure that the wrapper is always the same,
-  // i.e. Debugger.Script identity is preserved. We have to pick either the
-  // JSScript or the LazyScript consistently as the canonical referent.
-  //
-  // We have to work together with the lazification code in order to ensure we
-  // can always pick a canonical referent for the script. If a LazyScript with
-  // no JSScript is wrapped by any Debugger, and a JSScript is created later,
-  // that JSScript must point to the LazyScript.
-  //
-  // The JSScript is canonical when there is a JSScript with no LazyScript
-  // pointer. Either the JSScript is not lazifiable, or there is (or was)
-  // a LazyScript but the JSScript is not relazifiable. In the latter case we
-  // know from above that no Debugger ever wrapped the LazyScript.
-  //
-  // The LazyScript is canonical in all other cases.
-
   if (referent.is<BaseScript*>()) {
-    Rooted<BaseScript*> base(cx, referent.as<BaseScript*>());
-    if (!base->isLazyScript()) {
-      RootedScript untaggedReferent(cx, base->asJSScript());
-      if (untaggedReferent->maybeLazyScript()) {
-        // This JSScript has a LazyScript, so the LazyScript is canonical.
-        Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
-        return wrapScript(cx, lazyScript);
-      }
-      // This JSScript doesn't have a LazyScript, so the JSScript is canonical.
-      obj = wrapVariantReferent<BaseScript>(cx, scripts, referent);
-    } else {
-      Rooted<LazyScript*> untaggedReferent(
-          cx, static_cast<LazyScript*>(base.get()));
-      if (untaggedReferent->maybeScript()) {
-        RootedScript script(cx, untaggedReferent->maybeScript());
-        if (!script->maybeLazyScript()) {
-          // Even though we have a LazyScript, we found a JSScript which doesn't
-          // have a LazyScript (which also means that no Debugger has wrapped
-          // this LazyScript), and the JSScript is canonical.
-          MOZ_ASSERT(!untaggedReferent->isWrappedByDebugger());
-          return wrapScript(cx, script);
-        }
-      }
-      // If there is an associated JSScript, this LazyScript is reachable from
-      // it, so this LazyScript is canonical.
-      untaggedReferent->setWrappedByDebugger();
-      obj = wrapVariantReferent<BaseScript>(cx, scripts, referent);
-    }
-  } else {
-    obj = wrapVariantReferent<WasmInstanceObject>(cx, wasmInstanceScripts,
-                                                  referent);
+    return wrapVariantReferent<BaseScript>(cx, scripts, referent);
   }
-  MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
-  return obj;
+
+  return wrapVariantReferent<WasmInstanceObject>(cx, wasmInstanceScripts,
+                                                 referent);
 }
 
 DebuggerScript* Debugger::wrapScript(JSContext* cx,

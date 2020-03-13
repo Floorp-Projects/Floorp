@@ -4948,22 +4948,6 @@ void GCRuntime::sweepCompressionTasks() {
   }
 }
 
-void GCRuntime::sweepLazyScripts() {
-  for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    AutoSetThreadIsSweeping threadIsSweeping(zone);
-    for (auto iter = zone->cellIter<BaseScript>(); !iter.done(); iter.next()) {
-      BaseScript* base = iter.unbarrieredGet();
-      if (!base->isLazyScript()) {
-        continue;
-      }
-      WeakHeapPtrScript* edge = base->getLazyScriptScriptEdgeForTracing();
-      if (*edge && IsAboutToBeFinalized(edge)) {
-        *edge = nullptr;
-      }
-    }
-  }
-}
-
 void GCRuntime::sweepWeakMaps() {
   AutoSetThreadIsSweeping threadIsSweeping;  // This may touch any zone.
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
@@ -5258,8 +5242,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
                                   PhaseKind::SWEEP_MISC, lock);
     AutoRunParallelTask sweepCompTasks(this, &GCRuntime::sweepCompressionTasks,
                                        PhaseKind::SWEEP_COMPRESSION, lock);
-    AutoRunParallelTask sweepLazyScripts(this, &GCRuntime::sweepLazyScripts,
-                                         PhaseKind::SWEEP_LAZYSCRIPTS, lock);
     AutoRunParallelTask sweepWeakMaps(this, &GCRuntime::sweepWeakMaps,
                                       PhaseKind::SWEEP_WEAKMAPS, lock);
     AutoRunParallelTask sweepUniqueIds(this, &GCRuntime::sweepUniqueIds,
