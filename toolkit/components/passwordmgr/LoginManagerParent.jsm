@@ -536,6 +536,7 @@ class LoginManagerParent extends JSWindowActorParent {
     }
 
     generatedPW = {
+      autocompleteShown: false,
       edited: false,
       filled: false,
       /**
@@ -563,6 +564,37 @@ class LoginManagerParent extends JSWindowActorParent {
 
     gGeneratedPasswordsByPrincipalOrigin.set(framePrincipalOrigin, generatedPW);
     return generatedPW.value;
+  }
+
+  maybeRecordPasswordGenerationShownTelemetryEvent(autocompleteResults) {
+    let browsingContext = this.getBrowsingContextToUse();
+
+    let framePrincipalOrigin =
+      browsingContext.currentWindowGlobal.documentPrincipal.origin;
+    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
+      framePrincipalOrigin
+    );
+
+    // We only want to record the first time it was shown for an origin
+    if (generatedPW.autocompleteShown) {
+      return;
+    }
+
+    let resultStyles = new Set(
+      autocompleteResults.map(r => r.style).filter(r => !!r)
+    );
+    if (!resultStyles.has("generatedPassword")) {
+      return;
+    }
+
+    generatedPW.autocompleteShown = true;
+    gGeneratedPasswordsByPrincipalOrigin.set(framePrincipalOrigin, generatedPW);
+
+    Services.telemetry.recordEvent(
+      "pwmgr",
+      "autocomplete_shown",
+      "generatedpassword"
+    );
   }
 
   /**
