@@ -1816,29 +1816,6 @@ function nodeHasEntries(item) {
   return value.class === "Map" || value.class === "Set" || value.class === "WeakMap" || value.class === "WeakSet" || value.class === "Storage";
 }
 
-function nodeHasAllEntriesInPreview(item) {
-  const {
-    preview
-  } = getValue(item) || {};
-
-  if (!preview) {
-    return false;
-  }
-
-  const {
-    entries,
-    items,
-    length,
-    size
-  } = preview;
-
-  if (!entries && !items) {
-    return false;
-  }
-
-  return entries ? entries.length === size : items.length === length;
-}
-
 function nodeNeedsNumericalBuckets(item) {
   return nodeSupportsNumericalBucketing(item) && getNumericalPropertiesCount(item) > MAX_NUMERICAL_PROPERTIES;
 }
@@ -1922,46 +1899,6 @@ function makeNodesForProxyProperties(loadedProps, item) {
 
 function makeNodesForEntries(item) {
   const nodeName = "<entries>";
-  const entriesPath = "<entries>";
-
-  if (nodeHasAllEntriesInPreview(item)) {
-    let entriesNodes = [];
-    const {
-      preview
-    } = getValue(item);
-
-    if (preview.entries) {
-      entriesNodes = preview.entries.map(([key, value], index) => {
-        return createNode({
-          parent: item,
-          name: index,
-          path: createPath(entriesPath, index),
-          contents: {
-            value: GripMapEntryRep.createGripMapEntry(key, value)
-          }
-        });
-      });
-    } else if (preview.items) {
-      entriesNodes = preview.items.map((value, index) => {
-        return createNode({
-          parent: item,
-          name: index,
-          path: createPath(entriesPath, index),
-          contents: {
-            value
-          }
-        });
-      });
-    }
-
-    return createNode({
-      parent: item,
-      name: nodeName,
-      contents: entriesNodes,
-      type: NODE_TYPES.ENTRIES
-    });
-  }
-
   return createNode({
     parent: item,
     name: nodeName,
@@ -2554,7 +2491,6 @@ module.exports = {
   makeNodesForProperties,
   makeNumericalBuckets,
   nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
   nodeHasChildren,
   nodeHasEntries,
   nodeHasProperties,
@@ -4036,7 +3972,6 @@ const {
   getFront,
   getValue,
   nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
   nodeHasProperties,
   nodeIsBucket,
   nodeIsDefaultProperties,
@@ -4148,7 +4083,7 @@ function shouldLoadItemNonIndexedProperties(item, loadedProperties = new Map()) 
 function shouldLoadItemEntries(item, loadedProperties = new Map()) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
-  return value && nodeIsEntries(getClosestNonBucketNode(item)) && !nodeHasAllEntriesInPreview(gripItem) && !loadedProperties.has(item.path) && !nodeNeedsNumericalBuckets(item);
+  return value && nodeIsEntries(getClosestNonBucketNode(item)) && !loadedProperties.has(item.path) && !nodeNeedsNumericalBuckets(item);
 }
 
 function shouldLoadItemPrototype(item, loadedProperties = new Map()) {

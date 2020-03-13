@@ -285,21 +285,6 @@ function nodeHasEntries(item: Node): boolean {
   );
 }
 
-function nodeHasAllEntriesInPreview(item: Node): boolean {
-  const { preview } = getValue(item) || {};
-  if (!preview) {
-    return false;
-  }
-
-  const { entries, items, length, size } = preview;
-
-  if (!entries && !items) {
-    return false;
-  }
-
-  return entries ? entries.length === size : items.length === length;
-}
-
 function nodeNeedsNumericalBuckets(item: Node): boolean {
   return (
     nodeSupportsNumericalBucketing(item) &&
@@ -389,37 +374,7 @@ function makeNodesForProxyProperties(
 
 function makeNodesForEntries(item: Node): Node {
   const nodeName = "<entries>";
-  const entriesPath = "<entries>";
 
-  if (nodeHasAllEntriesInPreview(item)) {
-    let entriesNodes = [];
-    const { preview } = getValue(item);
-    if (preview.entries) {
-      entriesNodes = preview.entries.map(([key, value], index) => {
-        return createNode({
-          parent: item,
-          name: index,
-          path: createPath(entriesPath, index),
-          contents: { value: GripMapEntryRep.createGripMapEntry(key, value) },
-        });
-      });
-    } else if (preview.items) {
-      entriesNodes = preview.items.map((value, index) => {
-        return createNode({
-          parent: item,
-          name: index,
-          path: createPath(entriesPath, index),
-          contents: { value },
-        });
-      });
-    }
-    return createNode({
-      parent: item,
-      name: nodeName,
-      contents: entriesNodes,
-      type: NODE_TYPES.ENTRIES,
-    });
-  }
   return createNode({
     parent: item,
     name: nodeName,
@@ -1058,7 +1013,6 @@ module.exports = {
   makeNodesForProperties,
   makeNumericalBuckets,
   nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
   nodeHasChildren,
   nodeHasEntries,
   nodeHasProperties,
