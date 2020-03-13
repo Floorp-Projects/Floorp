@@ -240,49 +240,83 @@ class NameCollectionPool {
   }
 };
 
-#define POOLED_COLLECTION_PTR_METHODS(N, T)                                   \
-  NameCollectionPool& pool_;                                                  \
-  T* collection_;                                                             \
-                                                                              \
-  T& collection() {                                                           \
-    MOZ_ASSERT(collection_);                                                  \
-    return *collection_;                                                      \
-  }                                                                           \
-                                                                              \
-  const T& collection() const {                                               \
-    MOZ_ASSERT(collection_);                                                  \
-    return *collection_;                                                      \
-  }                                                                           \
-                                                                              \
- public:                                                                      \
-  explicit N(NameCollectionPool& pool) : pool_(pool), collection_(nullptr) {} \
-                                                                              \
-  ~N() { pool_.release##T(&collection_); }                                    \
-                                                                              \
-  bool acquire(JSContext* cx) {                                               \
-    MOZ_ASSERT(!collection_);                                                 \
-    collection_ = pool_.acquire##T<T>(cx);                                    \
-    return !!collection_;                                                     \
-  }                                                                           \
-                                                                              \
-  explicit operator bool() const { return !!collection_; }                    \
-                                                                              \
-  T* operator->() { return &collection(); }                                   \
-                                                                              \
-  const T* operator->() const { return &collection(); }                       \
-                                                                              \
-  T& operator*() { return collection(); }                                     \
-                                                                              \
+template <typename T, template <typename> typename Impl>
+class PooledCollectionPtr {
+  NameCollectionPool& pool_;
+  T* collection_ = nullptr;
+
+ protected:
+  ~PooledCollectionPtr() { Impl<T>::releaseCollection(pool_, &collection_); }
+
+  T& collection() {
+    MOZ_ASSERT(collection_);
+    return *collection_;
+  }
+
+  const T& collection() const {
+    MOZ_ASSERT(collection_);
+    return *collection_;
+  }
+
+ public:
+  explicit PooledCollectionPtr(NameCollectionPool& pool) : pool_(pool) {}
+
+  bool acquire(JSContext* cx) {
+    MOZ_ASSERT(!collection_);
+    collection_ = Impl<T>::acquireCollection(cx, pool_);
+    return !!collection_;
+  }
+
+  explicit operator bool() const { return !!collection_; }
+
+  T* operator->() { return &collection(); }
+
+  const T* operator->() const { return &collection(); }
+
+  T& operator*() { return collection(); }
+
   const T& operator*() const { return collection(); }
+};
 
 template <typename Map>
-class PooledMapPtr {
-  POOLED_COLLECTION_PTR_METHODS(PooledMapPtr, Map)
+class PooledMapPtr : public PooledCollectionPtr<Map, PooledMapPtr> {
+  friend class PooledCollectionPtr<Map, PooledMapPtr>;
+
+  static Map* acquireCollection(JSContext* cx, NameCollectionPool& pool) {
+    return pool.acquireMap<Map>(cx);
+  }
+
+  static void releaseCollection(NameCollectionPool& pool, Map** ptr) {
+    pool.releaseMap(ptr);
+  }
+
+  using Base = PooledCollectionPtr<Map, PooledMapPtr>;
+
+ public:
+  using Base::Base;
+
+  ~PooledMapPtr() = default;
 };
 
 template <typename Vector>
-class PooledVectorPtr {
-  POOLED_COLLECTION_PTR_METHODS(PooledVectorPtr, Vector)
+class PooledVectorPtr : public PooledCollectionPtr<Vector, PooledVectorPtr> {
+  friend class PooledCollectionPtr<Vector, PooledVectorPtr>;
+
+  static Vector* acquireCollection(JSContext* cx, NameCollectionPool& pool) {
+    return pool.acquireVector<Vector>(cx);
+  }
+
+  static void releaseCollection(NameCollectionPool& pool, Vector** ptr) {
+    pool.releaseVector(ptr);
+  }
+
+  using Base = PooledCollectionPtr<Vector, PooledVectorPtr>;
+  using Base::collection;
+
+ public:
+  using Base::Base;
+
+  ~PooledVectorPtr() = default;
 
   typename Vector::ElementType& operator[](size_t index) {
     return collection()[index];
@@ -292,8 +326,6 @@ class PooledVectorPtr {
     return collection()[index];
   }
 };
-
-#undef POOLED_COLLECTION_PTR_METHODS
 
 }  // namespace frontend
 }  // namespace js
