@@ -138,7 +138,7 @@ class WindowTracker extends WindowTrackerBase {
   }
 
   get topNonPBWindow() {
-    return Services.wm.getMostRecentNonPBWindow(WINDOW_TYPE);
+    return mobileWindowTracker.topNonPBWindow;
   }
 
   isBrowserWindow(window) {
