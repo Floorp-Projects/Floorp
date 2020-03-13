@@ -7,7 +7,6 @@ if [ -z "$NO_NDK" -a -z "$USE_ARTIFACT" ]; then
   . "$topsrcdir/build/mozconfig.stylo"
 fi
 
-MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
 # For Android builds in TaskCluster, the system image is Debian, and
