@@ -9,9 +9,6 @@
   },
   "version": "1.0",
   "description": "Adds a red border to all webpages matching example.com.",
-  "icons": {
-    "48": "icons/border-48.png"
-  },
   "content_scripts": [
     {
       "matches": ["*://*.example.com/*"],
