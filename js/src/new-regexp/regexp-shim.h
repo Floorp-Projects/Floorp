@@ -19,6 +19,7 @@
 #include "mozilla/Types.h"
 
 #include <algorithm>
+#include <cctype>
 
 #include "jit/Label.h"
 #include "js/Value.h"
@@ -394,10 +395,20 @@ struct AsUC32 {
   int32_t value;
 };
 
-class StdoutStream : public std::ostream {};
-
 std::ostream& operator<<(std::ostream& os, const AsUC16& c);
 std::ostream& operator<<(std::ostream& os, const AsUC32& c);
+
+// This class is used for the output of trace-regexp-parser.  V8 has
+// an elaborate implementation to ensure that the output gets to the
+// right place, even on Android. We just need something that will
+// print output (ideally to stderr, to match the rest of our tracing
+// code). This is an empty wrapper that will convert itself to
+// std::cerr when used.
+class StdoutStream {
+public:
+  operator std::ostream&() const;
+  template <typename T> std::ostream& operator<<(T t);
+};
 
 // Reuse existing Maybe implementation
 using mozilla::Maybe;
