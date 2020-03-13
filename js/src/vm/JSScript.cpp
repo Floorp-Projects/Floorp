@@ -755,6 +755,13 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   size += codeLength * sizeof(jsbytecode);
   size += noteLength * sizeof(jssrcnote);
 
+#ifdef DEBUG
+  // The compact arrays need to maintain uint32_t alignment. This should have
+  // been done by padding out source notes.
+  MOZ_ASSERT(size % sizeof(uint32_t) == 0,
+             "Source notes should have been padded already");
+#endif
+
   unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
                                unsigned(numScopeNotes > 0) +
                                unsigned(numTryNotes > 0);
@@ -901,6 +908,7 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   uint32_t numTryNotes = 0;
 
   JSContext* cx = xdr->cx();
+  UniquePtr<ImmutableScriptData> isd_owner;
   ImmutableScriptData* isd = nullptr;
 
   if (mode == XDR_ENCODE) {
@@ -921,13 +929,14 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   MOZ_TRY(xdr->codeUint32(&numTryNotes));
 
   if (mode == XDR_DECODE) {
-    if (!script->createImmutableScriptData(cx, codeLength, noteLength,
-                                           numResumeOffsets, numScopeNotes,
-                                           numTryNotes)) {
+    isd_owner =
+        ImmutableScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
+                                  numScopeNotes, numTryNotes);
+    if (!isd_owner) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
-    isd = script->immutableScriptData();
+    isd = isd_owner.get();
   }
 
   MOZ_TRY(xdr->codeUint32(&isd->mainOffset));
@@ -956,6 +965,10 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
 
   for (JSTryNote& elem : isd->tryNotes()) {
     MOZ_TRY(elem.XDR(xdr));
+  }
+
+  if (mode == XDR_DECODE) {
+    script->initImmutableScriptData(std::move(isd_owner));
   }
 
   return Ok();
@@ -4060,33 +4073,6 @@ bool JSScript::createScriptData(JSContext* cx, uint32_t natoms) {
   return true;
 }
 
-bool JSScript::createImmutableScriptData(JSContext* cx, uint32_t codeLength,
-                                         uint32_t noteLength,
-                                         uint32_t numResumeOffsets,
-                                         uint32_t numScopeNotes,
-                                         uint32_t numTryNotes) {
-#ifdef DEBUG
-  // The compact arrays need to maintain uint32_t alignment. This should have
-  // been done by padding out source notes.
-  size_t byteArrayLength =
-      sizeof(ImmutableScriptData::Flags) + codeLength + noteLength;
-  MOZ_ASSERT(byteArrayLength % sizeof(uint32_t) == 0,
-             "Source notes should have been padded already");
-#endif
-
-  MOZ_ASSERT(!sharedData_->isd_);
-
-  js::UniquePtr<ImmutableScriptData> isd(
-      ImmutableScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
-                                numScopeNotes, numTryNotes));
-  if (!isd) {
-    return false;
-  }
-
-  sharedData_->isd_ = std::move(isd);
-  return true;
-}
-
 void JSScript::relazify(JSRuntime* rt) {
   js::Scope* scope = enclosingScope();
   UniquePtr<PrivateScriptData> scriptData;
@@ -5162,12 +5148,12 @@ bool ImmutableScriptData::InitFromStencil(
   uint32_t numTryNotes = stencil.numTryNotes;
 
   // Allocate ImmutableScriptData
-  if (!script->createImmutableScriptData(
-          cx, codeLength, noteLength + nullLength, numResumeOffsets,
-          numScopeNotes, numTryNotes)) {
+  js::UniquePtr<ImmutableScriptData> data(
+      ImmutableScriptData::new_(cx, codeLength, noteLength + nullLength,
+                                numResumeOffsets, numScopeNotes, numTryNotes));
+  if (!data) {
     return false;
   }
-  js::ImmutableScriptData* data = script->immutableScriptData();
 
   // Initialize POD fields
   data->mainOffset = stencil.mainOffset;
@@ -5190,6 +5176,8 @@ bool ImmutableScriptData::InitFromStencil(
   stencil.finishResumeOffsets(data->resumeOffsets());
   stencil.finishScopeNotes(data->scopeNotes());
   stencil.finishTryNotes(data->tryNotes());
+
+  script->initImmutableScriptData(std::move(data));
 
   return true;
 }
