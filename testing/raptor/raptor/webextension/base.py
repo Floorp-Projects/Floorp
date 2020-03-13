@@ -27,7 +27,7 @@ webext_dir = os.path.join(here, "..", "..", "webext")
 
 
 class WebExtension(Perftest):
-    """Container class for WebExtension"""
+    """Container class for WebExtension."""
 
     def __init__(self, *args, **kwargs):
         self.raptor_webext = None
@@ -121,6 +121,13 @@ class WebExtension(Perftest):
                         "Application timed out after {} seconds".format(timeout)
                     )
 
+        if self.control_server._runtime_error:
+            raise RuntimeError("Failed to run {}: {}\nStack:\n{}".format(
+                test["name"],
+                self.control_server._runtime_error["error"],
+                self.control_server._runtime_error["stack"],
+            ))
+
     def run_test_teardown(self, test):
         super(WebExtension, self).run_test_teardown(test)
 
@@ -144,7 +151,10 @@ class WebExtension(Perftest):
             self.control_server.user_profile = self.profile
 
     def start_control_server(self):
-        self.control_server = RaptorControlServer(self.results_handler, self.debug_mode)
+        self.control_server = RaptorControlServer(
+            self.results_handler,
+            self.debug_mode
+        )
         self.control_server.user_profile = self.profile
         self.control_server.start()
 
