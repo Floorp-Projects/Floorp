@@ -16,6 +16,8 @@ add_task(async function test_fxa_message_shown() {
   const testURL = "data:text/plain,test cfr fxa bookmark panel message";
   const browser = gBrowser.selectedBrowser;
 
+  StarUI._createPanelIfNeeded();
+
   BrowserTestUtils.loadURI(browser, testURL);
   await BrowserTestUtils.browserLoaded(browser, false, testURL);
 
