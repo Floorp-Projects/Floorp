@@ -50,7 +50,6 @@ license:
         - modules/libpref/greprefs.js
         - mozglue/android/NativeCrypto.h
         - parser/html/java/named-character-references.html
-        - python/mozboot/support/ConEmu.xml
         - python/mozbuild/mozbuild/action/tooltool.py
         - python/mozbuild/mozbuild/artifact_commands.py
         - python/mozbuild/mozbuild/export_telemetry_schema.py
