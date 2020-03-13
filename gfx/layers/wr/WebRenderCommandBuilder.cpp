@@ -2236,7 +2236,9 @@ WebRenderCommandBuilder::GenerateFallbackData(
   }
 
   auto visibleSize = visibleRect.Size();
-  if (visibleSize.IsEmpty()) {
+  // these rectangles can overflow from scaling so try to
+  // catch that with IsEmpty() checks. See bug 1622126.
+  if (visibleSize.IsEmpty() || dtRect.IsEmpty()) {
     return nullptr;
   }
 
