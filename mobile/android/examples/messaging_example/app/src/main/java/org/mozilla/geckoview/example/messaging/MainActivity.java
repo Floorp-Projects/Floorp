@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             return null;
         });
 
-        session.setMessageDelegate(extension, messageDelegate, "browser");
+        extension.setMessageDelegate(messageDelegate, "browser");
 
         session.open(sRuntime);
         view.setSession(session);
