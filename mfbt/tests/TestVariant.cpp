@@ -550,6 +550,50 @@ static void testMatchingLambda() {
   MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigConst);
 }
 
+static void testMatchingLambdaWithIndex() {
+  printf("testMatchingLambdaWithIndex\n");
+  using V = Variant<uint8_t, uint32_t, uint64_t>;
+
+  // Note: Lambdas' call operators are const by default (unless the lambda is
+  // declared `mutable`), hence the use of "...Const" strings below.
+  // There is no need to test mutable lambdas, nor rvalue lambda, because there
+  // would be no way to distinguish how each lambda is actually invoked because
+  // there is only one choice of call operator in each overload set.
+  auto desc = [](auto aIndex, auto& a) {
+    static_assert(sizeof(aIndex) < sizeof(size_t), "Expected small index type");
+    switch (sizeof(a)) {
+      case 1:
+        MOZ_RELEASE_ASSERT(aIndex == 0);
+        return Describer::littleConst;
+      case 4:
+        MOZ_RELEASE_ASSERT(aIndex == 1);
+        return Describer::mediumConst;
+      case 8:
+        MOZ_RELEASE_ASSERT(aIndex == 2);
+        return Describer::bigConst;
+      default:
+        MOZ_RELEASE_ASSERT(false);
+        return "";
+    }
+  };
+
+  V v1(uint8_t(1));
+  V v2(uint32_t(2));
+  V v3(uint64_t(3));
+
+  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::bigConst);
+
+  const V& constRef1 = v1;
+  const V& constRef2 = v2;
+  const V& constRef3 = v3;
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigConst);
+}
+
 static void testMatchingLambdas() {
   printf("testMatchingLambdas\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
@@ -557,6 +601,43 @@ static void testMatchingLambdas() {
   auto desc8 = [](const uint8_t& a) { return Describer::littleConst; };
   auto desc32 = [](const uint32_t& a) { return Describer::mediumConst; };
   auto desc64 = [](const uint64_t& a) { return Describer::bigConst; };
+
+  V v1(uint8_t(1));
+  V v2(uint32_t(2));
+  V v3(uint64_t(3));
+
+  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) == Describer::littleConst);
+  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) == Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) == Describer::bigConst);
+
+  const V& constRef1 = v1;
+  const V& constRef2 = v2;
+  const V& constRef3 = v3;
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc8, desc32, desc64) ==
+                     Describer::littleConst);
+  MOZ_RELEASE_ASSERT(constRef2.match(desc8, desc32, desc64) ==
+                     Describer::mediumConst);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc8, desc32, desc64) ==
+                     Describer::bigConst);
+}
+
+static void testMatchingLambdasWithIndex() {
+  printf("testMatchingLambdasWithIndex\n");
+  using V = Variant<uint8_t, uint32_t, uint64_t>;
+
+  auto desc8 = [](size_t aIndex, const uint8_t& a) {
+    MOZ_RELEASE_ASSERT(aIndex == 0);
+    return Describer::littleConst;
+  };
+  auto desc32 = [](size_t aIndex, const uint32_t& a) {
+    MOZ_RELEASE_ASSERT(aIndex == 1);
+    return Describer::mediumConst;
+  };
+  auto desc64 = [](size_t aIndex, const uint64_t& a) {
+    MOZ_RELEASE_ASSERT(aIndex == 2);
+    return Describer::bigConst;
+  };
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
@@ -623,7 +704,9 @@ int main() {
   testEquality();
   testMatching();
   testMatchingLambda();
+  testMatchingLambdaWithIndex();
   testMatchingLambdas();
+  testMatchingLambdasWithIndex();
   testAddTagToHash();
 
   printf("TestVariant OK!\n");
