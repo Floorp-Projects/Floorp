@@ -24,14 +24,22 @@ class Zone {
     lifoAlloc_.setAsInfallibleByDefault();
   }
 
-  void* New(size_t size) { return lifoAlloc_.alloc(size); }
+  void* New(size_t size) {
+    js::LifoAlloc::AutoFallibleScope fallible(&lifoAlloc_);
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    void* result = lifoAlloc_.alloc(size);
+    if (!result) {
+      oomUnsafe.crash("Irregexp Zone::new");
+    }
+    return result;
+  }
 
   void DeleteAll() { lifoAlloc_.freeAll(); }
 
   // Returns true if the total memory allocated exceeds a threshold.
   static const size_t kExcessLimit = 256 * 1024 * 1024;
   bool excess_allocation() const {
-    return lifoAlloc_.peakSizeOfExcludingThis() > kExcessLimit;
+    return lifoAlloc_.computedSizeOfExcludingThis() > kExcessLimit;
   }
 private:
   js::LifoAlloc lifoAlloc_;
