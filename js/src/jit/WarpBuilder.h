@@ -185,6 +185,12 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBody();
   MOZ_MUST_USE bool buildEpilogue();
 
+  MOZ_MUST_USE bool buildEnvironmentChain();
+  MInstruction* buildNamedLambdaEnv(MDefinition* callee, MDefinition* env,
+                                    LexicalEnvironmentObject* templateObj);
+  MInstruction* buildCallObject(MDefinition* callee, MDefinition* env,
+                                CallObject* templateObj);
+
   MOZ_MUST_USE bool buildUnaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildBinaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
