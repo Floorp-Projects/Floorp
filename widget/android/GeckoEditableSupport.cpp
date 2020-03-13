@@ -1317,6 +1317,15 @@ void GeckoEditableSupport::OnImeRequestCursorUpdates(int aRequestMode) {
   mIMEMonitorCursor = (aRequestMode == EditableClient::START_MONITOR);
 }
 
+void GeckoEditableSupport::OnImeRequestCommit() {
+  if (mIMEMaskEventsCount > 0) {
+    // Not focused.
+    return;
+  }
+
+  RemoveComposition(COMMIT_IME_COMPOSITION);
+}
+
 void GeckoEditableSupport::AsyncNotifyIME(int32_t aNotification) {
   RefPtr<GeckoEditableSupport> self(this);
 

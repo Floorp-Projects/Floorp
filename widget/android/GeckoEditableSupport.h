@@ -240,6 +240,9 @@ class GeckoEditableSupport final
 
   // Set cursor mode whether IME requests
   void OnImeRequestCursorUpdates(int aRequestMode);
+
+  // Commit current composition to sync Gecko text state with Java.
+  void OnImeRequestCommit();
 };
 
 }  // namespace widget

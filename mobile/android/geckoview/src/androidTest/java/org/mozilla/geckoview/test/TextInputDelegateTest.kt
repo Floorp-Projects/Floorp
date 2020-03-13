@@ -93,6 +93,16 @@ class TextInputDelegateTest : BaseSessionTest() {
         promise.value
     }
 
+    private fun finishComposingText(ic: InputConnection) {
+        val promise = mainSession.evaluatePromiseJS(
+                when (id) {
+                    "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionend', r, { once: true }))"
+                    else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionend', r, { once: true }))"
+                })
+        ic.finishComposingText()
+        promise.value
+    }
+
     private fun pressKey(keyCode: Int) {
         // Create a Promise to listen to the key event, and wait on it below.
         val promise = mainSession.evaluatePromiseJS(
@@ -525,5 +535,28 @@ class TextInputDelegateTest : BaseSessionTest() {
         ic.endBatchEdit()
         promise.value
         assertText("empty text", ic, "")
+    }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun bug1613804_finishComposingText() {
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
+
+        mainSession.loadTestPath(INPUTS_PATH)
+        mainSession.waitForPageStop()
+
+        textContent = ""
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
+        mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        ic.beginBatchEdit();
+        ic.setComposingText("abc", 1)
+        ic.endBatchEdit()
+
+        // finishComposingText has to dispatch compositionend event.
+        finishComposingText(ic)
+
+        assertText("commit abc", ic, "abc")
     }
 }

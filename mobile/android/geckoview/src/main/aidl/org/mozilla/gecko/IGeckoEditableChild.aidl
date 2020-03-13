@@ -35,4 +35,7 @@ interface IGeckoEditableChild {
 
     // Request cursor updates from the child.
     void onImeRequestCursorUpdates(int requestMode);
+
+    // Commit current composition.
+    void onImeRequestCommit();
 }
