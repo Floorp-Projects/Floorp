@@ -28,6 +28,9 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Izbriši sejo</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Dodajte bližnjico za odpiranje zasebnih zavihkov z začetnega zaslona.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Dodaj bližnjico</string>
     <!-- Text for the negative button -->
@@ -252,6 +255,10 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prejeti zavihki</string>
 
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Zavihek prejet</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Zavihki prejeti</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Zavihek iz naprave %s</string>
 
@@ -291,6 +298,9 @@
 
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prijava</string>
+
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Odstrani račun</string>
 
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Odpri kamero</string>

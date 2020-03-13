@@ -1,6 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Поверителен Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (поверителен)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Повече настройки</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Включване на поверително разглеждане</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Изключване на поверително разглеждане</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Търсете или въведете адрес</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Няма отворени раздели</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Отворените раздели ще бъдат показани тук.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Вие сте в поверителен прозорец</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s изчиства историята на търсенето и разглеждането, когато излезете от приложението или затворите всички раздели в поверително разглеждане. Въпреки че това не ви прави анонимни за уеб сайтовете или доставчиците на интернет услуги, това улеснява запазването анонимността на вашите действия онлайн, от останалите ползващи същото устройство.</string>
+    <string name="private_browsing_common_myths">Разпространени легенди относно поверителното разглеждане</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Изтриване на сесията</string>
+
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Разрешете %1$s да отвори %2$s</string>

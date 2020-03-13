@@ -14,4 +14,163 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Ieškokite arba įveskite adresą</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Nėra atvertų kortelių</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Čia bus rodomos jūsų atvertos kortelės.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Esate privačiojo naršymo seanse</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Ištrinti seansą</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Nauja kortelė</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nauja privačioji kortelė</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Atvertos kortelės</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Atgal</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Pirmyn</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Atsiųsti iš naujo</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Stabdyti</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Įtraukti į adresyną</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Redaguoti adresyno įrašą</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Priedų tvarkytuvė</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Čia nėra jokių priedų</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Žinynas</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Kas naujo</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Nuostatos</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Jūsų archyvas</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Įdiegti</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Rasti tinklalapyje</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Privačioji kortelė</string>
+
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Nauja kortelė</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Įrašyti į rinkinį</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Dalintis</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Dalintis su…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Atverti naudojant „%1$s“</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Skaitymo rodinys</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Atverti programoje</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Išvaizda</string>
+
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Duomenų rinkimas</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Naudojimo ir techniniai duomenys</string>
+
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">„%1$s“ tobulinimo tikslais siunčia „Mozillai“ duomenis apie naršyklės našumą, naudojimą, tinkinimą ir aparatinę įrangą</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Rinkodaros duomenys</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Duomenys apie jūsų naudojamas „%1$s“ funkcijas bus perduodami „Leanplum“, mūsų mobiliosios rinkodaros pardavėjui.</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Leidžia „Mozillai“ įdiegti ir rinkti duomenis apie eksperimentines funkcijas</string>
+
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Įrašyti į rinkinį</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Įrašyti į rinkinį</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Pašalinti rinkinį</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Pervadinti rinkinį</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Atverti korteles</string>
+
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Išsaugokite jums svarbius dalykus. Norėdami pradėti, įrašykite atvertas korteles į naują rinkinį.</string>
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Rinkiniai</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Rinkinių meniu</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">Rinkinių nėra</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">Čia bus rodomi jūsų rinkiniai.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Pasirinkite korteles</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Pasirinkite rinkinį</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Pavadinkite rinkinį</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Pridėti naują rinkinį</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Pažymėti viską</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Atžymėti viską</string>
+
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Pažymėkite korteles, kurias norite įrašyti</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Pažymėta kortelių: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">Pažymėta %d kortelė</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Kortelės įrašytos!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Kortelė įrašyta!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Užverti</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Įrašyti</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Rinkinys %d</string>
+
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Rinkinys pašalintas</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Rinkinys pervadintas</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">Atšaukti</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Atšaukti</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Patvirtinti</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Ar tikrai norite pašalinti „%1$s“?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Pašalinti</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Atsisakyti</string>
+
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Neleidžia rinkti jūsų įrenginį identifikuojančių duomenų, kurie gali būti naudojami stebėjimo tikslams.</string>
+
     </resources>

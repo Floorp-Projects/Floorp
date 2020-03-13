@@ -123,7 +123,7 @@
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Comenzi rapide</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Setări motor de căutare</string>
+    <string name="search_shortcuts_engine_settings">Setări pentru motorul de căutare</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Căutare cu</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -187,7 +187,7 @@
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Confidențialitate și securitate</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Permisiuni site-uri</string>
+    <string name="preferences_site_permissions">Permisiuni pentru site-uri</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Navigare privată</string>
     <!-- Preference for opening links in a private tab-->
@@ -233,11 +233,11 @@
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Afișează  sugestii din clipboard</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Căutare în istoricul de navigare</string>
+    <string name="preferences_search_browsing_history">Caută în istoricul de navigare</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
-    <string name="preferences_search_bookmarks">Căutare în marcaje</string>
+    <string name="preferences_search_bookmarks">Caută în marcaje</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Setări cont</string>
+    <string name="preferences_account_settings">Setările contului</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Deschide linkuri în aplicații</string>
     <!-- Preference for add_ons -->
@@ -255,9 +255,9 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Date de autentificare</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">Deconectare</string>
+    <string name="preferences_sign_out">Deconectează-te</string>
     <!-- Preference displays and allows changing current FxA device name -->
-    <string name="preferences_sync_device_name">Nume dispozitiv</string>
+    <string name="preferences_sync_device_name">Numele dispozitivului</string>
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Numele dispozitivului nu poate fi gol.</string>
     <!-- Label indicating that sync is in progress -->
@@ -313,7 +313,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Date tehnice și de utilizare</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Partajează cu Mozilla date de performanță, despre utilizare, echipamente și de personalizare din browser pentru a ne ajuta să îmbunătățim %1$s</string>
+    <string name="preferences_usage_data_description">Partajează cu Mozilla date privind performanța, utilizarea, hardware-ul și personalizările browserului tău pentru a ne ajuta să îmbunătățim %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Date de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -581,7 +581,7 @@
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Notificare</string>
     <!-- Label that indicates that a permission must be asked always -->
-    <string name="preference_option_phone_feature_ask_to_allow">Solicitare permisiune</string>
+    <string name="preference_option_phone_feature_ask_to_allow">Solicită pentru a permite</string>
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Blocat</string>
     <!-- Label that indicates that a permission must be allowed -->
@@ -594,10 +594,18 @@
     <string name="tracking_protection_on">Activată</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Dezactivată</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Video și audio blocate</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video și audio permise</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Permite audio și video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Permite audio și video numai pe Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Blochează audio</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Blochează audio și video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Activat</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -611,7 +619,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meniu de colecții</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Fără colecții</string>
+    <string name="no_collections_header">Nicio colecție</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">Aici vor apărea colecțiile tale.</string>
 
@@ -748,16 +756,16 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copiat</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Acesta este un exemplu de text, pentru a arăta cum va apărea textul când mărești sau micșorezi mărimea cu această setare.</string>
+    <string name="accessibility_text_size_sample_text_1">Acesta este un exemplu de text. Se află aici pentru a arăta cum va apărea textul când mărești sau micșorezi dimensiunea cu această setare.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Mărește sau micșorează textul pe site-urile web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_font_size_title">Mărime font</string>
+    <string name="preference_accessibility_font_size_title">Dimensiunea fontului</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Mărime automată fonturi</string>
+    <string name="preference_accessibility_auto_size">Dimensionare automată pentru fonturi</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Mărimea fontului va coincide cu cea din setările Android. Dezactivează pentru a gestiona aici mărimea fontului.</string>
+    <string name="preference_accessibility_auto_size_summary">Dimensiunea fontului va coincide cu cea din setările Android. Dezactivează pentru a gestiona aici dimensiunea fontului.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Șterge datele de navigare</string>
@@ -785,7 +793,7 @@
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Eliberează spațiul de stocare</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">Permisiuni site-uri</string>
+    <string name="preferences_delete_browsing_data_site_permissions">Permisiuni pentru site-uri</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Șterge datele de navigare</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -938,7 +946,7 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Navighează fără să fii urmărit(ă)</string>
 
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Protejează-ți datele. %s te protejează împotriva multora dintre cele mai frecvente elemente de urmărire care monitorizează ce faci online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Păstrează-ți datele pentru tine. %s te protejează de multe dintre cele mai frecvente elemente de urmărire care monitorizează ce faci online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Află mai multe</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1027,12 +1035,12 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Drepturile tale</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Biblioteci cu sursă deschisă pe care le folosim</string>
+    <string name="about_open_source_licenses">Librării cu sursă deschisă pe care le folosim</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Ce este nou în %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">%s | Biblioteci OSS</string>
+    <string name="open_source_licenses_title">%s | Librării OSS</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Asistență</string>
@@ -1043,7 +1051,7 @@
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Informații despre licențiere</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">Biblioteci pe care le folosim</string>
+    <string name="about_other_open_source_libraries">Librării pe care le folosim</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 filă</string>
@@ -1162,7 +1170,7 @@
     <string name="preference_accessibility_force_enable_zoom_summary">Activează permiterea gesturilor de pișcare și zoom, chiar și pe site-uri web care le împiedică.</string>
 
     <!-- Title of the Add search engine screen -->
-    <string name="search_engine_add_custom_search_engine_title">Adăugă un motor de căutare</string>
+    <string name="search_engine_add_custom_search_engine_title">Adaugă un motor de căutare</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Editează motorul de căutare</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1211,7 +1219,7 @@
     <string name="migration_title">Bine ai venit la un %s nou-nouț</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Te așteaptă un browser reproiectat de la zero, cu o performanță îmbunătățită și funcționalități sporite care să te ajute să faci mai multe online. \n\nAșteaptă cât actualizăm %s cu</string>
+    <string name="migration_description">Te așteaptă un browser complet reproiectat de la zero, cu performanță și funcționalități sporite care te ajută să faci mai multe online.\n\nTe rugăm să aștepți cât timp actualizăm %s cu</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Se actualizează %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1253,4 +1261,8 @@
     <string name="certificate_info_verified_by">Verificat de: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Șterge</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Sigur vrei să ștergi aceste date de autentificare?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Șterge</string>
 </resources>

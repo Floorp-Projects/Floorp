@@ -239,6 +239,8 @@
 
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Activar en tolos sitios</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Les esceiciones déxente desactivar la proteición escontra\'l rastrexu nos sitios esbillaos.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Deprender más</string>
 
@@ -416,9 +418,9 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Non</string>
 
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Blóquiase</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Permítese</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Sí</string>
@@ -669,6 +671,8 @@
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Toles cookies (va causar que los sitios web ruempan)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Conteníu que rastrexa</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->

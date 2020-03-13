@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Тамна тема</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Светла тема</string>
+
+    </resources>

@@ -16,6 +16,13 @@
     <!-- No Open Tabs Message Header -->
     <string name="no_open_tabs_header_2">کوئی کھلے ٹیب نہیں</string>
 
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">آپ کے کھلے ٹیبز یہاں دکھائے جائیں گے۔</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">آپ ایک نجی سیشن میں ہیں</string>
+    <string name="private_browsing_common_myths">نجی براؤزنگ کے بارے میں عمومی فرضی داستان</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">سیشن کو حذف کریں</string>
 
@@ -45,6 +52,10 @@
     <string name="browser_menu_bookmark">بک مارک</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">بُک مارک کی تدوین کریں</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">ایڈ اون منتظم</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">یہاں کوئی ایڈونس نہیں ہے</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">مدد</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -55,6 +66,8 @@
     <string name="browser_menu_your_library">آپ کی لائبریری</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ڈیسک ٹاپ سائٹ</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">ہوم اسکرین میں جوڑے</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">تنصیب کریں</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -66,6 +79,8 @@
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection">مجموعہ میں محفوظ کریں</string>
 
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">سائٹ مسلہ رپورٹ کریں</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">شیئر کریں</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -188,12 +203,26 @@
     <string name="preferences_account_default_name">Firefox اکاؤنٹ</string>
     <!-- Preference for language -->
     <string name="preferences_language">زبان</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">ڈیٹا کے انتخاب</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">ڈیٹا اکٹھا کرنا</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">رازداری کا نوٹس</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">تخلیق کار ٹول</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB کے ذریعے بعید ٹھیک کاری</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">تلاش کے شارٹکٹس دکھائیں</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">تلاش تجاویز دکھائیں</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">نجی سیشن میں دکھائیں</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">کلپبورڈ کی تجاویز دکھائیں</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">براؤزنگ کی تاریخ تلاش کریں</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">بک مارک تلاش کریں</string>
     <!-- Preference for account settings -->
@@ -220,8 +249,18 @@
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">آلہ کا نام</string>
 
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">آلہ کا نام خالی نہیں ہوسکتا ہے۔</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">sync ہو رہا ہے…</string>
+
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">آخری بار synced: %s</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s پر %s%s</string>
 
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">ٹیب حاصل ہوا</string>
@@ -244,11 +283,18 @@
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">ٹیلیمیٹری</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">مارکیٹنگ کا ڈیٹا</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">تجربات</string>
 
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">کریش رپورٹر</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">٘Mozilla مقام سروس</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s صحت کی رپورٹ</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -274,6 +320,11 @@
     <string name="preference_light_theme">ہلکا</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">گہرا</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">بیٹری سیور کے ذریعہ مرتب کردہ</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">آلہ کے تھیم پر عمل کریں</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -302,6 +353,8 @@
     <string name="library_title">لائبریری</string>
     <!-- Settings Page Title -->
     <string name="settings_title">سیٹنگز</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">تاریخ کے آئٹم کا مینو</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کریں</string>
 
@@ -316,12 +369,20 @@
     <string name="add_tab">ٹيب کا اضافہ کريں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ٹیب بند کر دیں</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s ٹیب بند کر دیں</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">ٹیبز کا مینو کھولیں</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">تمام ٹیبز بند کریں</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">ٹیبز شیئر کریں</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection">مجموعہ میں محفوظ کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ٹیب مینو</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">ٹیب شیئر کریں</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">مٹائیں</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
@@ -329,8 +390,14 @@
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">شیئر کریں</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">موجودہ سیشن کی تصویر</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">مجموعہ میں محفوظ کریں</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">مجموعہ حذف کریں</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">مجموعہ کا نام تبدیل کریں</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ٹیب کھولیں</string>
     <!-- Text for the menu button to remove a top site -->
@@ -346,6 +413,9 @@
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">مٹائیں</string>
 
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d منتخب کیا گیا</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">آخری 24 گھنٹے</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -363,6 +433,12 @@
     <string name="tab_crash_close">ٹیب بند کر دیں</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">ٹیب بحال کریں</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">سیشن کے آپشن</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">سیشن شیئر کریں</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
@@ -395,6 +471,9 @@
     <string name="bookmark_menu_delete_button">مٹائیں</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">محفوظ کریں</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d منتخب کیا گیا</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">بکمارک میں ترمیم کریں</string>
     <!-- Bookmark folder editing screen title -->
@@ -469,10 +548,18 @@
     <string name="tracking_protection_on">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">بند</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">ویڈیو اور آڈیو مسدود ہے</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">ویڈیو اور آڈیو کی اجازت ہے</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">آڈیو اور ویڈیو کی اجازت دیں</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">آڈیو اور ویڈیو کو صرف Wi-Fi پر اجازت دیں</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">آڈیو کو مسدود کریں</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">ویڈیو اور آڈیو کو مسدود کریں</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">چالو</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -500,11 +587,29 @@
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">متخب کو ہٹایں</string>
 
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">محفوظ کرنے کے لئے ٹیبز کو منتخب کریں</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d ٹیبز منتخب کی گئیں</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d ٹیب منتخب کیا گیا</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">ٹیبز محفوظ ہوگئے!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">ٹیب محفوظ ہوگئی!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">بند کریں</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">محفوظ کریں</string>
 
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">%d کا مجموعہ</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">بھیجیں اور شئیر کریں</string>
     <!-- Share screen header -->
     <string name="share_header_2">شیئر</string>
     <!-- Content description (not visible, for screen readers etc.):
@@ -514,14 +619,24 @@
     <string name="share_link_subheader">ایک لنک شیئر کریں</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">آلہ پر بھیجیں</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">تمام اعمال</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">حال ہی میں استعمال کی گئی</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Sync کے لئے سائن ان کریں</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">‏تمام آلات پر ارسال کریں</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Sync سے دوبارہ رابطہ کریں</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">آف لائن</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">ایک اور آلہ جوڑیں</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">آلہ پر بھیجیں</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">کوئی آلات جڑے ہوئے نہیں ہیں</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">ایک اور آلہ جوڑیں…</string>
 
@@ -529,19 +644,50 @@
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">نجی برائوزنگ سیشن</string>
 
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">نجی ٹیبز کو حذف کریں</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">نجی ٹیب بند کریں</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">کھولیں</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">حذف کریں اور کھولیں</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">مجموعہ حذف ہوگیا</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">مجموعہ نام تبدیل کردیا گیا</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">ٹیب حذف کردیا گیا</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">ٹیبز کو حذف کردیا گیا</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">ٹیب بند ہے</string>
 
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ٹیبز بند ہوگئیں</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">سر فہرست سائٹوں میں شامل!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">نجی ٹیب بند ہوگئیں</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">نجی ٹیبز بند ہوگئیں</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">نجی ٹیبز حذف ہوگئے</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">‏‏پہلے جیسا کریں</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">سائٹ ہٹا دی گئی</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">ہلے جیسا کریں</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">تصدیق کریں</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s کو %2$s کھولنے کی اجازت دیں</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">اجازت دیں</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">‏‏رد کریں</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">مٹائیں</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -577,10 +723,16 @@
     <string name="onboarding_whats_new_header1">دیکھیں نیا کیا ہے</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">یہاں جوابات حاصل کریں</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">ہاں ، مجھے سائن ان کریں</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">سائن ان ہو رہا ہے…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Firefox کے لیے سائن ان کریں</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">سائن آؤٹ رہیں</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sync چالو ہے</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">سائن ان کرنے میں ناکام</string>
     <!-- text for the tracking protection onboarding card header -->
@@ -590,12 +742,19 @@
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">رازداری سے براؤز کریں</string>
 
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">سیٹنگز کھولیں</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">آپ کی رازداری</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">براؤزنگ شروع کریں</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">اپنے تھیم کا انتخاب کریں</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">خود بخود</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">سیاہ تھیم</string>
 
@@ -603,14 +762,32 @@
     <string name="sync_sent_tab_error_snackbar_action">پھر کوشش کريں</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">کوڈ کو اسکین کریں</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">منقطع کریں</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">منسوخ کریں</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">مزید سیکھیں</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">معیاری</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">معیاری (سفارش شدا)</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">سخت</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">سخت (طے شدہ)</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">سخت (سفارش شدا)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">مخصوص</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">منتخب کریں کہ کون سے ٹریکرز اور اسکرپٹ کو مسدود کرنا ہے</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">کوکیز</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">کراس سائٹ اور سوشل میڈیا ٹریکرز</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ٹریکنگ مواد</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -627,6 +804,8 @@
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">‏‏اجازت شدہ</string>
 
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">سوشل میڈیا ٹریکرز</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">کراس-سائٹ ٹریکنگ کوکیز</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -639,6 +818,9 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">آپ کے حقوق</string>
 
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s میں نیا کیا ہے</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">معاونت</string>
 
@@ -646,6 +828,9 @@
     <string name="about_privacy_notice">رازداری کا نوٹس</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">اپنے حقوق جانیں</string>
+
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">لائسنس کی معلومات</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ٹیب</string>
@@ -660,13 +845,23 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">چسپاں</string>
 
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL کو کلپ بورڈ میں کاپی کیا گیا</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">ہوم اسکرین میں جوڑے</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">منسوخ کریں</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">شامل کریں</string>
 
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">شارٹکٹ کے نام</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">لاگ ان اور پاس ورڈ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">لاگ ان اور پاس ورڈ کو محفوظ کریں</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">کبھِی بھی محفوظ مت کریں</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -742,6 +937,10 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">حذف شدہ %s</string>
 
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s تازہ کارى کر رہا ہے…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s شروع کریں</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">پاس ورڈ</string>
 
@@ -760,4 +959,4 @@
     <string name="certificate_info_verified_by">توثیق کردہ برائے: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">حذف کریں</string>
-</resources>
+    </resources>

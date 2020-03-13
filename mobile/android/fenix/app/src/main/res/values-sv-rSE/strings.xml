@@ -613,11 +613,19 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Av</string>
 
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Video och ljud blockerat</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video och ljud tillåtet</string>
 
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Tillåt ljud och video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Tillåt endast ljud och video med Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Blockera ljud</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Blockera video och ljud</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">På</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -641,7 +649,7 @@
     <!-- Title for the "name collection" step of the collection creator -->
     <string name="create_collection_name_collection">Namnge samling</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">Lägg till samling</string>
+    <string name="create_collection_add_new_collection">Lägg till ny samling</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Markera alla</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
@@ -1278,4 +1286,8 @@
     <string name="certificate_info_verified_by">Verifierad av: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Ta bort</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Är du säker på att du vill ta bort den här inloggningen?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Ta bort</string>
 </resources>

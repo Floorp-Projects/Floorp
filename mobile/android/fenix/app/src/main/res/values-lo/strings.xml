@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview ສ່ວນຕົວ</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (ສ່ວນຕົວ)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ຕົວເລືອກເພີ່ມເຕີມ</string>
@@ -17,6 +21,7 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">ທ່ານກຳລັງຢູ່ໃນເຊສສັນສ່ວນຕົວ</string>
+    <string name="private_browsing_common_myths">ຄວາມເຂົ້າໃຈຜິດທີ່ມັກພົບຕະລອດກ່ຽວກັບການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ລົບເຊສສັນ</string>
 
@@ -86,6 +91,8 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">ຂັບເຄື່ອນໂດຍ %1$s</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">ມຸມມອງຂອງຜູ້ອ່ານ</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">ເປີດໃນ App</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -106,8 +113,14 @@
     <string name="search_scan_button">ສະແກນ</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">ທາງລັດ</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">ການຕັ້ງຄ່າຂອງເຄື່ອງມືຄົ້ນຫາ</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">ຄົ້ນຫາດ້ວຍ</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">ຄັ້ງນີ້ ຄົ້ນຫາດ້ວຍ:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">ເຕີມລີ້ງຈາກຄິບບອດ</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">ອະນຸຍາດ</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -189,6 +202,9 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ການດີບັກທາງໄກຜ່ານທາງ USB</string>
 
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Add-ons</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync ຕອນນີ້</string>
@@ -211,8 +227,58 @@
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">ການ sync ລົ້ມເຫລວ. ການ sync ສຳເລັດຄັ້ງສຸດທ້າຍ: %s</string>
 
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Sync ຄັ້ງຫລ້າສຸດ: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Sync ຄັ້ງຫລ່າສຸດ: ບໍ່ເຄີຍ</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s ໃນ %s %s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">ແຖບທີ່ໄດ້ຮັບ</string>
+
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">ແທັບທີ່ໄດ້ຮັບ</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">ແທັບທີ່ໄດ້ຮັບ</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">ແທັບຈາກ %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">ການປ້ອງກັນການຕິດຕາມ</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">ການປ້ອງກັນການຕິດຕາມ</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">ບັອກເນື້ອຫາ ແລະ ສະຄິບທີ່ຕິດຕາມການອອນໄລນຂອງທ່ານ</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">ຂໍ້ຍົກເວັ້ນ</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">ການປ້ອງກັນການຕິດຕາມໄດ້ປິດສຳລັບເວັບໄຊທເຫລົ່ານີ້</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ເປີດໃຊ້ງານສຳລັບທຸກເວັບໄຊທ</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">ຂໍ້ຍົກເວັ້ນຊ່ວຍໃຫ້ທ່ານປິດການປົກປ້ອງການຕິດຕາມສຳລັບເວັບໄຊທທີ່ທ່ານເລືອກ.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">ຖືກປິດໃຊ້ງານສຳລັບທຸກເວັບໄຊທແລ້ວ, ໃຫ້ໄປທີ່ການຕັ້ງຄ່າເພື່ອເປີດມັນ.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">ການວັດແທກ ແລະ ສົ່ງຂໍ້ມູນທາງໄກ</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">ການໃຊ້ງານ ແລະ ຂໍ້ມູນທາງເຕັກນິກ</string>
+
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">ຂໍ້ມູນດ້ານການຕະຫຼາດ</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">ການທົດລອງ</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">ຕົວລາຍງານຂໍ້ຜິດພາດ</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -239,6 +305,8 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">ເຂັ້ມ</string>
 
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">ພາບຫນ້າຈໍ</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">ດາວໂຫລດ</string>
     <!-- Option in library to open Bookmarks page -->
@@ -285,5 +353,15 @@
     <string name="current_session_save">ບັນທຶກ</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">ແບ່ງປັນ</string>
+
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">ເປີດແທັບ</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ລຶບ</string>
+
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">ລົບລ້າງ</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">ລຶບ</string>
 
     </resources>

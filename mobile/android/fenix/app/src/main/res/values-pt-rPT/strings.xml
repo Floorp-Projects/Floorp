@@ -604,10 +604,18 @@
     <string name="tracking_protection_on">Ativada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desativada</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Vídeo e áudio bloqueado</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Vídeo e áudio permitido</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Permitir áudio e vídeo</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Permitir áudio e vídeo apenas em Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Bloquear áudio</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Bloquear áudio e vídeo</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Ativado</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -868,7 +876,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description">Bloqueia menos rastreadores, mas permite que as páginas sejam carregadas normalmente</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Rigoroso (recomendado)</string>
+    <string name="onboarding_tracking_protection_strict_button">Rigorosa (recomendado)</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Bloqueia mais rastreadores para uma melhor proteção e desempenho, mas pode fazer com que alguns sites não funcionem corretamente</string>
     <!-- text for the toolbar position card header
@@ -963,13 +971,13 @@
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">O que é bloqueado pela proteção padrão contra a monitorização</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict">Rigoroso</string>
+    <string name="preference_enhanced_tracking_protection_strict">Rigorosa</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Rigoroso (padrão)</string>
+    <string name="preference_enhanced_tracking_protection_strict_default">Rigorosa (predefinição)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_default_description">Proteção contra a monitorização mais forte e um desempenho mais rápido, mas alguns sites podem não funcionar corretamente.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Rigoroso (recomendado)</string>
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Rigorosa (recomendado)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Proteção mais forte, mas pode causar problemas em alguns sites ou conteúdos.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1266,4 +1274,8 @@
     <string name="certificate_info_verified_by">Confirmado por: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Eliminar</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Tem a certeza que deseja eliminar esta credencial?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Eliminar</string>
 </resources>

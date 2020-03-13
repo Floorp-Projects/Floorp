@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">खाजगी Firefox पूर्वावलोकन</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox पूर्वावलोकन (खाजगी)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">अधिक पर्याय</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">खाजगी ब्राउझिंग सक्षम करा</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">खाजगी ब्राउझिंग अक्षम करा</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">शोधा किंवा पत्ता द्या</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">कुठलेही उघडे टॅब नाही</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">आपले उघडे टॅब येथे दाखविले जातील.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">आपण खाजगी सत्रात आहात</string>
+    <string name="private_browsing_common_myths">खाजगी ब्राउझिंग बद्दल सामान्य समजुती</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">सत्र हटवा</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">आपल्या मुख्यस्क्रीनवरून खाजगी टॅब उघडण्यासाठी शॉर्टकट जोडा.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">शॉर्टकट जोडा</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">नाही धन्यवाद</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">नवीन टॅब</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">नवीन खाजगी टॅब</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">उघडे टॅब</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">मागे</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">पुढे</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">रीफ्रेश करा</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">थांबा</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">वाचनखूण</string>
+
+    </resources>

@@ -4,6 +4,11 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Paluruh atawa asupkeun alamat</string>
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s meresihan jujutan sungsian jeung langlangan nalika anjeun kaluar ti aplikasi atawa nutup sakabéh tab nyamuni. Najan henteu matak anonim ka raramatloka atawa panyadia layanan internét anjeun, bakal
+        leuwih gampang pikeun ngajaga anu dipigawé jering tetep nyamuni ti batur nu maké ieu piranti.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Eureun</string>
 
@@ -169,6 +174,11 @@
     <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">Euweuh markah di dieu</string>
 
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Ngahapus markah anu dipilih</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">BEDO</string>
+
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Beresihan idin</string>
     <!-- Button label for clearing a site permission-->
@@ -213,6 +223,17 @@
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lenyepan</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Réréméh</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Palacak meuntas loka jeung média sosial</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Réréméh ti loka anu teu dianjangan</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Sakabéh réréméh pihak katilu (bisa ngabalukarkeun raramatloka jadi teu bener)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Sakabéh réréméh (bakal ngabalukarkeun raramatloka jadi teu bener)</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Réréméh Palacak Meuntas-Loka</string>
 
@@ -260,6 +281,8 @@
     <string name="search_add_custom_engine_error_empty_search_string">Asupkeun string pamaluruhan</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Pariksa yén string pamaluruhan akur jeung format Conto</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Masalah nyambungkeun ka “%s”</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Nyieun %s</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -273,4 +296,6 @@
     <string name="confirm_clear_permissions_site">Yakin rék ngaberesihan sadaya idin di ieu loka?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Yakin rék ngaberesihan ieu idin di ieu loka?</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Yakin anjeun rék mupus ieu markah?</string>
     </resources>

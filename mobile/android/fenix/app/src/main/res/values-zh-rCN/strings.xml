@@ -621,11 +621,19 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">关</string>
 
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">已阻止视频和音频</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">已允许视频和音频</string>
 
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">允许音频和视频</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">仅在 Wi-Fi 下允许音频和视频</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">阻止音频</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">阻止视频和音频</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">开</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1297,4 +1305,8 @@
     <string name="certificate_info_verified_by">验证者：%1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">删除</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">您确定要删除此登录信息吗？</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">删除</string>
 </resources>

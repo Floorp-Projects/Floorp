@@ -522,9 +522,9 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">כבויה</string>
 
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">וידאו ושמע חסומים</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">וידאו ושמע מאופשרים</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">פעיל</string>
@@ -824,6 +824,8 @@
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">הגדרות הגנה</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">הגנת מעקב מתקדמת</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">לגלוש מבלי שעוקבים אחריך</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
@@ -896,6 +898,8 @@
     <string name="etp_panel_on">ההגנות פעילות עבור אתר זה</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">ההגנות כבויות עבור אתר זה</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">הגנת מעקב מתקדמת כבויה עבור האתרים האלו</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">הזכויות שלך</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1090,4 +1094,8 @@
     <string name="certificate_info_verified_by">אומת על־ידי %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">מחיקה</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">האם ברצונך למחוק את כניסה זו?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">מחיקה</string>
 </resources>
