@@ -11,7 +11,7 @@ in vec4 aColor;
 
 void main(void) {
     vColor = vec4(aColor.rgb * aColor.a, aColor.a);
-    vec4 pos = vec4(aPosition, 1.0);
+    vec4 pos = vec4(aPosition, 0.0, 1.0);
     pos.xy = floor(pos.xy + 0.5);
     gl_Position = uTransform * pos;
 }
