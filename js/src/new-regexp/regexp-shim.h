@@ -195,6 +195,10 @@ inline uint64_t CountTrailingZeros(uint64_t value) {
   return mozilla::CountTrailingZeroes64(value);
 }
 
+inline size_t RoundUpToPowerOfTwo32(size_t value) {
+  return mozilla::RoundUpPow2(value);
+}
+
 }  // namespace bits
 }  // namespace base
 
@@ -1149,6 +1153,8 @@ extern bool FLAG_trace_regexp_assembler;
 extern bool FLAG_trace_regexp_bytecodes;
 extern bool FLAG_trace_regexp_parser;
 extern bool FLAG_trace_regexp_peephole_optimization;
+
+#define V8_USE_COMPUTED_GOTO 1
 
 }  // namespace internal
 }  // namespace v8
