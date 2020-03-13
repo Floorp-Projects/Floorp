@@ -3846,8 +3846,13 @@ void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
   }
 }
 
-nsRect ScrollFrameHelper::RestrictToRootCompositionBounds(
+nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
     const nsRect& aDisplayportBase) {
+  // This function clips aDisplayportBase so that it is no larger than the
+  // root frame's displayport (or the root composition bounds, if we can't
+  // obtain the root frame's displayport). This is useful for ensuring that
+  // the displayport of a tall scrollframe doesn't gobble up all the memory.
+
   nsPresContext* pc = mOuter->PresContext();
   const nsPresContext* rootPresContext =
       pc->GetToplevelContentDocumentPresContext();
@@ -3866,13 +3871,16 @@ nsRect ScrollFrameHelper::RestrictToRootCompositionBounds(
     return aDisplayportBase;
   }
 
-  nsRect rootCompBounds;
-  bool hasDisplayPort = rootFrame->GetContent() &&
-      nsLayoutUtils::GetDisplayPort(rootFrame->GetContent(), &rootCompBounds);
+  nsRect rootDisplayPort;
+  bool hasDisplayPort =
+      rootFrame->GetContent() &&
+      nsLayoutUtils::GetDisplayPort(rootFrame->GetContent(), &rootDisplayPort);
   if (!hasDisplayPort) {
-    rootCompBounds = nsRect(
-        nsPoint(0, 0),
-        nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame));
+    // If we don't have a display port on the root frame let's fall back to
+    // the root composition bounds instead.
+    nsRect rootCompBounds =
+        nsRect(nsPoint(0, 0),
+               nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame));
 
     // If rootFrame is the RCD-RSF then
     // CalculateCompositionSizeForFrame did not take the document's
@@ -3882,12 +3890,14 @@ nsRect ScrollFrameHelper::RestrictToRootCompositionBounds(
       rootCompBounds = rootCompBounds.RemoveResolution(
           rootPresShell->GetResolution());
     }
+
+    rootDisplayPort = rootCompBounds;
   }
 
-  // We want to convert the root composition bounds from the
+  // We want to convert the root display port from the
   // coordinate space of |rootFrame| to the coordinate space of
   // |mOuter|. We do that with the TransformRect call below.
-  // However, since we care about the root composition bounds
+  // However, since we care about the root display port
   // relative to what the user is actually seeing, we also need to
   // incorporate the APZ callback transforms into this. Most of the
   // time those transforms are negligible, but in some cases (e.g.
@@ -3896,46 +3906,44 @@ nsRect ScrollFrameHelper::RestrictToRootCompositionBounds(
   // XXX: Eventually we may want to create a modified version of
   // TransformRect that includes the APZ callback transforms
   // directly.
-  nsLayoutUtils::TransformRect(rootFrame, mOuter, rootCompBounds);
-  rootCompBounds += CSSPoint::ToAppUnits(
+  nsLayoutUtils::TransformRect(rootFrame, mOuter, rootDisplayPort);
+  rootDisplayPort += CSSPoint::ToAppUnits(
       nsLayoutUtils::GetCumulativeApzCallbackTransform(mOuter));
 
   // We want to limit aDisplayportBase to be no larger than
-  // rootCompBounds on either axis, but we don't want to just
-  // blindly intersect the two, because rootCompBounds might be
+  // rootDisplayPort on either axis, but we don't want to just
+  // blindly intersect the two, because rootDisplayPort might be
   // offset from where aDisplayportBase is (see bug 1327095 comment
-  // 8). Instead, we translate rootCompBounds so as to maximize the
+  // 8). Instead, we translate rootDisplayPort so as to maximize the
   // overlap with aDisplayportBase, and *then* do the intersection.
-  if (rootCompBounds.x > aDisplayportBase.x &&
-      rootCompBounds.XMost() > aDisplayportBase.XMost()) {
-    // rootCompBounds is at a greater x-position for both left and
+  if (rootDisplayPort.x > aDisplayportBase.x &&
+      rootDisplayPort.XMost() > aDisplayportBase.XMost()) {
+    // rootDisplayPort is at a greater x-position for both left and
     // right, so translate it such that the XMost() values are the
     // same. This will line up the right edge of the two rects, and
-    // might mean that rootCompbounds.x is smaller than
+    // might mean that rootDisplayPort.x is smaller than
     // aDisplayportBase.x. We can avoid that by taking the min of the
     // x delta and XMost() delta, but it doesn't really matter
     // because the intersection between the two rects below will end
     // up the same.
-    rootCompBounds.x -=
-        (rootCompBounds.XMost() - aDisplayportBase.XMost());
-  } else if (rootCompBounds.x < aDisplayportBase.x &&
-             rootCompBounds.XMost() < aDisplayportBase.XMost()) {
-    // Analaogous code for when the rootCompBounds is at a smaller
+    rootDisplayPort.x -= (rootDisplayPort.XMost() - aDisplayportBase.XMost());
+  } else if (rootDisplayPort.x < aDisplayportBase.x &&
+             rootDisplayPort.XMost() < aDisplayportBase.XMost()) {
+    // Analaogous code for when the rootDisplayPort is at a smaller
     // x-position.
-    rootCompBounds.x = aDisplayportBase.x;
+    rootDisplayPort.x = aDisplayportBase.x;
   }
   // Do the same for y-axis
-  if (rootCompBounds.y > aDisplayportBase.y &&
-      rootCompBounds.YMost() > aDisplayportBase.YMost()) {
-    rootCompBounds.y -=
-        (rootCompBounds.YMost() - aDisplayportBase.YMost());
-  } else if (rootCompBounds.y < aDisplayportBase.y &&
-             rootCompBounds.YMost() < aDisplayportBase.YMost()) {
-    rootCompBounds.y = aDisplayportBase.y;
+  if (rootDisplayPort.y > aDisplayportBase.y &&
+      rootDisplayPort.YMost() > aDisplayportBase.YMost()) {
+    rootDisplayPort.y -= (rootDisplayPort.YMost() - aDisplayportBase.YMost());
+  } else if (rootDisplayPort.y < aDisplayportBase.y &&
+             rootDisplayPort.YMost() < aDisplayportBase.YMost()) {
+    rootDisplayPort.y = aDisplayportBase.y;
   }
 
   // Now we can do the intersection
-  return aDisplayportBase.Intersect(rootCompBounds);
+  return aDisplayportBase.Intersect(rootDisplayPort);
 }
 
 bool ScrollFrameHelper::DecideScrollableLayer(
@@ -3965,10 +3973,10 @@ bool ScrollFrameHelper::DecideScrollableLayer(
         // scrollport.
         displayportBase = aVisibleRect->Intersect(mScrollPort);
 
-        // Only restrict to the root composition bounds if necessary,
+        // Only restrict to the root displayport bounds if necessary,
         // as the required coordinate transformation is expensive.
         if (usingDisplayPort) {
-          displayportBase = RestrictToRootCompositionBounds(displayportBase);
+          displayportBase = RestrictToRootDisplayPort(displayportBase);
         }
         displayportBase -= mScrollPort.TopLeft();
       }
