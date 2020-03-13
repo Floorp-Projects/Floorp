@@ -265,6 +265,11 @@ OCSPRequest::Run() {
                         nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
                         nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
 
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+
+  // Prevent HTTPS-Only Mode from upgrading the OCSP request.
+  loadInfo->SetHttpsOnlyNoUpgrade(true);
+
   // For OCSP requests, only the first party domain and private browsing id
   // aspects of origin attributes are used. This means that:
   // a) if first party isolation is enabled, OCSP requests will be isolated
@@ -277,7 +282,6 @@ OCSPRequest::Run() {
     attrs.mFirstPartyDomain = mOriginAttributes.mFirstPartyDomain;
     attrs.mPrivateBrowsingId = mOriginAttributes.mPrivateBrowsingId;
 
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     rv = loadInfo->SetOriginAttributes(attrs);
     if (NS_FAILED(rv)) {
       return NotifyDone(rv, lock);
