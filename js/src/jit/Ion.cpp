@@ -2018,9 +2018,6 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
     return Method_Skipped;
   }
 
-  // If constructing, allocate a new |this| object before building Ion.
-  // Creating |this| is done before building Ion because it may change the
-  // type information and invalidate compilation results.
   if (state.isInvoke()) {
     InvokeState& invoke = *state.asInvoke();
 
