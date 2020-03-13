@@ -186,8 +186,8 @@ function* run_test() {
      "Event type should be 'hashchange'.");
   is(gSampleEvent.cancelable, false,
      "The hashchange event shouldn't be cancelable.");
-  is(gSampleEvent.bubbles, true,
-     "The hashchange event should bubble.");
+  is(gSampleEvent.bubbles, false,
+     "The hashchange event should not bubble.");
 
   /*
    * TEST 3 tests that:
