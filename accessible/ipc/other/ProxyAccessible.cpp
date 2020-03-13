@@ -770,14 +770,38 @@ ProxyAccessible* ProxyAccessible::FocusedChild() {
 
 ProxyAccessible* ProxyAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
-  PDocAccessibleParent* resultDoc = nullptr;
-  uint64_t resultID = 0;
-  Unused << mDoc->SendAccessibleAtPoint(mID, aX, aY, false,
-                                        static_cast<uint32_t>(aWhichChild),
-                                        &resultDoc, &resultID);
-  auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
-  // If resultDoc is null, this means there is no child at this point.
-  return resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
+  ProxyAccessible* target = this;
+  do {
+    if (target->mOuterDoc) {
+      MOZ_ASSERT(target->ChildrenCount() == 1);
+      DocAccessibleParent* childDoc = target->ChildAt(0)->AsDoc();
+      MOZ_ASSERT(childDoc);
+      if (childDoc->IsTopLevelInContentProcess()) {
+        // This is an OOP iframe. Remote calls can only work within their
+        // process, so they stop at OOP iframes.
+        if (aWhichChild == Accessible::eDirectChild) {
+          // Return the child document if it's within the bounds of the iframe.
+          nsIntRect docRect = target->Bounds();
+          if (docRect.Contains(aX, aY)) {
+            return childDoc;
+          }
+          return nullptr;
+        }
+        // We must continue the search from the child document.
+        target = childDoc;
+      }
+    }
+    PDocAccessibleParent* resultDoc = nullptr;
+    uint64_t resultID = 0;
+    Unused << target->mDoc->SendAccessibleAtPoint(
+        target->mID, aX, aY, false, static_cast<uint32_t>(aWhichChild),
+        &resultDoc, &resultID);
+    // If resultDoc is null, this means there is no child at this point.
+    auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
+    target = resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
+  } while (target && target->mOuterDoc &&
+           aWhichChild == Accessible::eDeepestChild);
+  return target;
 }
 
 nsIntRect ProxyAccessible::Bounds() {
