@@ -70,6 +70,8 @@ class VRDisplayClient {
   VRControllerState mLastEventControllerState[kVRControllerMaxCount];
 
  private:
+  void GamepadMappingForWebVR(VRControllerState& aControllerState);
+
   VRSubmitFrameResultInfo mSubmitFrameResult;
 };
 

@@ -115,7 +115,91 @@ void VRDisplayClient::FireEvents() {
     vm->RunFrameRequestCallbacks();
   }
 
+  // We only call FireGamepadEvents() in WebVR instead of WebXR
   FireGamepadEvents();
+}
+
+void VRDisplayClient::GamepadMappingForWebVR(
+    VRControllerState& aControllerState) {
+  float triggerValue[kVRControllerMaxButtons];
+  memcpy(triggerValue, aControllerState.triggerValue,
+         sizeof(aControllerState.triggerValue));
+  const uint64_t buttonPressed = aControllerState.buttonPressed;
+  const uint64_t buttonTouched = aControllerState.buttonTouched;
+
+  auto SetTriggerValue = [&](uint64_t newSlot, uint64_t oldSlot) {
+    aControllerState.triggerValue[newSlot] = triggerValue[oldSlot];
+  };
+  auto ShiftButtonBitForNewSlot = [&](uint64_t newSlot, uint64_t oldSlot,
+                                      bool aIsTouch = false) {
+    if (aIsTouch) {
+      return ((buttonTouched & (1ULL << oldSlot)) != 0) * (1ULL << newSlot);
+    }
+    SetTriggerValue(newSlot, oldSlot);
+    return ((buttonPressed & (1ULL << oldSlot)) != 0) * (1ULL << newSlot);
+  };
+
+  switch (aControllerState.type) {
+    case VRControllerType::Vive:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(1, 0) | ShiftButtonBitForNewSlot(2, 1) |
+          ShiftButtonBitForNewSlot(0, 2) | ShiftButtonBitForNewSlot(3, 4);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 1, true) |
+                                       ShiftButtonBitForNewSlot(2, 1, true) |
+                                       ShiftButtonBitForNewSlot(0, 2, true) |
+                                       ShiftButtonBitForNewSlot(3, 4, true);
+      aControllerState.numButtons = 4;
+      aControllerState.numAxes = 2;
+      break;
+    case VRControllerType::WMR:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(1, 0) | ShiftButtonBitForNewSlot(2, 1) |
+          ShiftButtonBitForNewSlot(0, 2) | ShiftButtonBitForNewSlot(3, 3) |
+          ShiftButtonBitForNewSlot(4, 4);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(1, 0, true) |
+                                       ShiftButtonBitForNewSlot(2, 1, true) |
+                                       ShiftButtonBitForNewSlot(0, 2, true) |
+                                       ShiftButtonBitForNewSlot(3, 3, true) |
+                                       ShiftButtonBitForNewSlot(4, 4, true);
+      aControllerState.numButtons = 5;
+      aControllerState.numAxes = 4;
+      break;
+    case VRControllerType::Cosmos:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(0, 0) | ShiftButtonBitForNewSlot(1, 1) |
+          ShiftButtonBitForNewSlot(4, 3) | ShiftButtonBitForNewSlot(2, 4) |
+          ShiftButtonBitForNewSlot(3, 5) | ShiftButtonBitForNewSlot(5, 6);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 0, true) |
+                                       ShiftButtonBitForNewSlot(1, 1, true) |
+                                       ShiftButtonBitForNewSlot(4, 3, true) |
+                                       ShiftButtonBitForNewSlot(2, 4, true) |
+                                       ShiftButtonBitForNewSlot(3, 5, true) |
+                                       ShiftButtonBitForNewSlot(5, 6, true);
+      aControllerState.axisValue[0] = aControllerState.axisValue[2];
+      aControllerState.axisValue[1] = aControllerState.axisValue[3];
+      aControllerState.numButtons = 6;
+      aControllerState.numAxes = 2;
+      break;
+    case VRControllerType::OculusTouch:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(0, 3) | ShiftButtonBitForNewSlot(1, 0) |
+          ShiftButtonBitForNewSlot(2, 1) | ShiftButtonBitForNewSlot(3, 4) |
+          ShiftButtonBitForNewSlot(4, 5) | ShiftButtonBitForNewSlot(5, 6);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 3, true) |
+                                       ShiftButtonBitForNewSlot(1, 0, true) |
+                                       ShiftButtonBitForNewSlot(2, 1, true) |
+                                       ShiftButtonBitForNewSlot(3, 4, true) |
+                                       ShiftButtonBitForNewSlot(4, 5, true) |
+                                       ShiftButtonBitForNewSlot(5, 6, true);
+      aControllerState.axisValue[0] = aControllerState.axisValue[2];
+      aControllerState.axisValue[1] = aControllerState.axisValue[3];
+      aControllerState.numButtons = 6;
+      aControllerState.numAxes = 2;
+      break;
+    default:
+      // Undefined controller type, we will keep its the same order.
+      break;
+  }
 }
 
 void VRDisplayClient::FireGamepadEvents() {
@@ -124,8 +208,14 @@ void VRDisplayClient::FireGamepadEvents() {
     return;
   }
   for (int stateIndex = 0; stateIndex < kVRControllerMaxCount; stateIndex++) {
-    const VRControllerState& state = mDisplayInfo.mControllerState[stateIndex];
-    const VRControllerState& lastState = mLastEventControllerState[stateIndex];
+    VRControllerState state = {}, lastState = {};
+    memcpy(&state, &mDisplayInfo.mControllerState[stateIndex],
+           sizeof(VRControllerState));
+    memcpy(&lastState, &mLastEventControllerState[stateIndex],
+           sizeof(VRControllerState));
+    GamepadMappingForWebVR(state);
+    GamepadMappingForWebVR(lastState);
+
     uint32_t gamepadId =
         mDisplayInfo.mDisplayID * kVRControllerMaxCount + stateIndex;
     bool bIsNew = false;
