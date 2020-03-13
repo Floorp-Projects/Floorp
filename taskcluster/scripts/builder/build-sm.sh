@@ -17,9 +17,12 @@ mkdir -p $UPLOAD_DIR
 # Copy artifacts for upload by TaskCluster
 cp -rL $SRCDIR/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py} $UPLOAD_DIR
 
-# Fuzzing users would really like to have llvm-symbolizer available in the same
-# directory as the built output.
-gzip -c $MOZ_FETCHES_DIR/clang/bin/llvm-symbolizer > $UPLOAD_DIR/llvm-symbolizer.gz || true
+# Fuzzing users want the correct version of llvm-symbolizer available in the
+# same directory as the built output.
+for f in "$MOZ_FETCHES_DIR/clang/bin/llvm-symbolizer"*; do
+    gzip -c "$f" > "$UPLOAD_DIR/llvm-symbolizer.gz" || echo "gzip $f failed" >&2
+    break
+done
 
 # Fuzzing also uses a few fields in target.json file for automated downloads to
 # identify what was built.
