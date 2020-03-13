@@ -7,6 +7,7 @@
 #ifndef vm_BytecodeLocation_h
 #define vm_BytecodeLocation_h
 
+#include "frontend/NameAnalysisTypes.h"
 #include "js/TypeDecls.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/StringType.h"
@@ -222,6 +223,16 @@ class BytecodeLocation {
   uint8_t getUnpickDepth() const {
     MOZ_ASSERT(is(JSOp::Unpick));
     return GET_UINT8(rawBytecode_);
+  }
+
+  uint32_t getEnvCalleeNumHops() const {
+    MOZ_ASSERT(is(JSOp::EnvCallee));
+    return GET_UINT8(rawBytecode_);
+  }
+
+  EnvironmentCoordinate getEnvironmentCoordinate() const {
+    MOZ_ASSERT(JOF_OPTYPE(getOp()) == JOF_ENVCOORD);
+    return EnvironmentCoordinate(rawBytecode_);
   }
 
   int8_t getInt8() const {
