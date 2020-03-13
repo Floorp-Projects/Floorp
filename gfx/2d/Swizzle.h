@@ -55,6 +55,12 @@ GFX2D_API SwizzleRowFn PremultiplyRow(SurfaceFormat aSrcFormat,
                                       SurfaceFormat aDstFormat);
 
 /**
+ * Get a function pointer to perform unpremultiplication between two formats.
+ */
+GFX2D_API SwizzleRowFn UnpremultiplyRow(SurfaceFormat aSrcFormat,
+                                        SurfaceFormat aDstFormat);
+
+/**
  * Get a function pointer to perform swizzling between two formats.
  */
 GFX2D_API SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat,

@@ -243,6 +243,36 @@ static MOZ_ALWAYS_INLINE __m128i UnpremultiplyVector_SSE2(const __m128i& aSrc) {
 }
 
 template <bool aSwapRB>
+static MOZ_ALWAYS_INLINE void UnpremultiplyChunk_SSE2(const uint8_t*& aSrc,
+                                                      uint8_t*& aDst,
+                                                      int32_t aAlignedRow,
+                                                      int32_t aRemainder) {
+  // Process all 4-pixel chunks as one vector.
+  for (const uint8_t* end = aSrc + aAlignedRow; aSrc < end;) {
+    __m128i px = _mm_loadu_si128(reinterpret_cast<const __m128i*>(aSrc));
+    px = UnpremultiplyVector_SSE2<aSwapRB>(px);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(aDst), px);
+    aSrc += 4 * 4;
+    aDst += 4 * 4;
+  }
+
+  // Handle any 1-3 remaining pixels.
+  if (aRemainder) {
+    __m128i px = LoadRemainder_SSE2(aSrc, aRemainder);
+    px = UnpremultiplyVector_SSE2<aSwapRB>(px);
+    StoreRemainder_SSE2(aDst, aRemainder, px);
+  }
+}
+
+template <bool aSwapRB>
+void UnpremultiplyRow_SSE2(const uint8_t* aSrc, uint8_t* aDst,
+                           int32_t aLength) {
+  int32_t alignedRow = 4 * (aLength & ~3);
+  int32_t remainder = aLength & 3;
+  UnpremultiplyChunk_SSE2<aSwapRB>(aSrc, aDst, alignedRow, remainder);
+}
+
+template <bool aSwapRB>
 void Unpremultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
                         int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
@@ -252,28 +282,15 @@ void Unpremultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    // Process all 4-pixel chunks as one vector.
-    for (const uint8_t* end = aSrc + alignedRow; aSrc < end;) {
-      __m128i px = _mm_loadu_si128(reinterpret_cast<const __m128i*>(aSrc));
-      px = UnpremultiplyVector_SSE2<aSwapRB>(px);
-      _mm_storeu_si128(reinterpret_cast<__m128i*>(aDst), px);
-      aSrc += 4 * 4;
-      aDst += 4 * 4;
-    }
-
-    // Handle any 1-3 remaining pixels.
-    if (remainder) {
-      __m128i px = LoadRemainder_SSE2(aSrc, remainder);
-      px = UnpremultiplyVector_SSE2<aSwapRB>(px);
-      StoreRemainder_SSE2(aDst, remainder, px);
-    }
-
+    UnpremultiplyChunk_SSE2<aSwapRB>(aSrc, aDst, alignedRow, remainder);
     aSrc += aSrcGap;
     aDst += aDstGap;
   }
 }
 
 // Force instantiation of unpremultiply variants here.
+template void UnpremultiplyRow_SSE2<false>(const uint8_t*, uint8_t*, int32_t);
+template void UnpremultiplyRow_SSE2<true>(const uint8_t*, uint8_t*, int32_t);
 template void Unpremultiply_SSE2<false>(const uint8_t*, int32_t, uint8_t*,
                                         int32_t, IntSize);
 template void Unpremultiply_SSE2<true>(const uint8_t*, int32_t, uint8_t*,
