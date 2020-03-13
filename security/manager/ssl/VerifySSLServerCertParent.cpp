@@ -21,6 +21,8 @@ extern mozilla::LazyLogModule gPIPNSSLog;
 using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::IsOnBackgroundThread;
 
+using namespace mozilla::pkix;
+
 namespace mozilla {
 namespace psm {
 

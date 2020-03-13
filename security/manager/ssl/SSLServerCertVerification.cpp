@@ -452,77 +452,6 @@ static nsresult OverrideAllowedForHost(
   return NS_OK;
 }
 
-class SSLServerCertVerificationJob : public Runnable {
- public:
-  // Must be called only on the socket transport thread
-  static SECStatus Dispatch(uint64_t addrForLogging, void* aPinArg,
-                            const UniqueCERTCertificate& serverCert,
-                            nsTArray<nsTArray<uint8_t>>&& peerCertChain,
-                            const nsACString& aHostName, int32_t aPort,
-                            const OriginAttributes& aOriginAttributes,
-                            Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-                            Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
-                            Maybe<DelegatedCredentialInfo>& dcInfo,
-                            uint32_t providerFlags, Time time, PRTime prtime,
-                            uint32_t certVerifierFlags,
-                            BaseSSLServerCertVerificationResult* aResultTask);
-
- private:
-  NS_DECL_NSIRUNNABLE
-
-  // Must be called only on the socket transport thread
-  SSLServerCertVerificationJob(
-      uint64_t addrForLogging, void* aPinArg, const UniqueCERTCertificate& cert,
-      nsTArray<nsTArray<uint8_t>>&& peerCertChain, const nsACString& aHostName,
-      int32_t aPort, const OriginAttributes& aOriginAttributes,
-      Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-      Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
-      Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
-      PRTime prtime, uint32_t certVerifierFlags,
-      BaseSSLServerCertVerificationResult* aResultTask);
-  uint64_t mAddrForLogging;
-  void* mPinArg;
-  const UniqueCERTCertificate mCert;
-  nsTArray<nsTArray<uint8_t>> mPeerCertChain;
-  nsCString mHostName;
-  int32_t mPort;
-  OriginAttributes mOriginAttributes;
-  const uint32_t mProviderFlags;
-  const uint32_t mCertVerifierFlags;
-  const Time mTime;
-  const PRTime mPRTime;
-  Maybe<nsTArray<uint8_t>> mStapledOCSPResponse;
-  Maybe<nsTArray<uint8_t>> mSCTsFromTLSExtension;
-  Maybe<DelegatedCredentialInfo> mDCInfo;
-  RefPtr<BaseSSLServerCertVerificationResult> mResultTask;
-};
-
-SSLServerCertVerificationJob::SSLServerCertVerificationJob(
-    uint64_t addrForLogging, void* aPinArg, const UniqueCERTCertificate& cert,
-    nsTArray<nsTArray<uint8_t>>&& peerCertChain, const nsACString& aHostName,
-    int32_t aPort, const OriginAttributes& aOriginAttributes,
-    Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
-    Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
-    PRTime prtime, uint32_t certVerifierFlags,
-    BaseSSLServerCertVerificationResult* aResultTask)
-    : Runnable("psm::SSLServerCertVerificationJob"),
-      mAddrForLogging(addrForLogging),
-      mPinArg(aPinArg),
-      mCert(CERT_DupCertificate(cert.get())),
-      mPeerCertChain(std::move(peerCertChain)),
-      mHostName(aHostName),
-      mPort(aPort),
-      mOriginAttributes(aOriginAttributes),
-      mProviderFlags(providerFlags),
-      mCertVerifierFlags(certVerifierFlags),
-      mTime(time),
-      mPRTime(prtime),
-      mStapledOCSPResponse(std::move(stapledOCSPResponse)),
-      mSCTsFromTLSExtension(std::move(sctsFromTLSExtension)),
-      mDCInfo(std::move(dcInfo)),
-      mResultTask(aResultTask) {}
-
 // This function assumes that we will only use the SPDY connection coalescing
 // feature on connections where we have negotiated SPDY using NPN. If we ever
 // talk SPDY without having negotiated it with SPDY, this code will give wrong
@@ -1185,52 +1114,6 @@ Result AuthCertificate(
   return rv;
 }
 
-/*static*/
-SECStatus SSLServerCertVerificationJob::Dispatch(
-    uint64_t addrForLogging, void* aPinArg,
-    const UniqueCERTCertificate& serverCert,
-    nsTArray<nsTArray<uint8_t>>&& peerCertChain, const nsACString& aHostName,
-    int32_t aPort, const OriginAttributes& aOriginAttributes,
-    Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
-    Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
-    PRTime prtime, uint32_t certVerifierFlags,
-    BaseSSLServerCertVerificationResult* aResultTask) {
-  // Runs on the socket transport thread
-  if (!aResultTask || !serverCert) {
-    NS_ERROR("Invalid parameters for SSL server cert validation");
-    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-    return SECFailure;
-  }
-
-  if (!gCertVerificationThreadPool) {
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
-  }
-
-  RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
-      addrForLogging, aPinArg, serverCert, std::move(peerCertChain), aHostName,
-      aPort, aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension,
-      dcInfo, providerFlags, time, prtime, certVerifierFlags, aResultTask));
-
-  nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
-  if (NS_FAILED(nrv)) {
-    // We can't call SetCertVerificationResult here to change
-    // mCertVerificationState because SetCertVerificationResult will call
-    // libssl functions that acquire SSL locks that are already being held at
-    // this point. However, we can set an error with PR_SetError and return
-    // SECFailure, and the correct thing will happen (the error will be
-    // propagated and this connection will be terminated).
-    PRErrorCode error = nrv == NS_ERROR_OUT_OF_MEMORY ? PR_OUT_OF_MEMORY_ERROR
-                                                      : PR_INVALID_STATE_ERROR;
-    PR_SetError(error, 0);
-    return SECFailure;
-  }
-
-  PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
-  return SECWouldBlock;
-}
-
 PRErrorCode AuthCertificateParseResults(
     uint64_t aPtrForLog, const nsACString& aHostName, int32_t aPort,
     const OriginAttributes& aOriginAttributes,
@@ -1346,6 +1229,54 @@ PRErrorCode AuthCertificateParseResults(
                    : errorCodeTime ? errorCodeTime : aDefaultErrorCodeToReport;
 }
 
+}  // unnamed namespace
+
+/*static*/
+SECStatus SSLServerCertVerificationJob::Dispatch(
+    uint64_t addrForLogging, void* aPinArg,
+    const UniqueCERTCertificate& serverCert,
+    nsTArray<nsTArray<uint8_t>>&& peerCertChain, const nsACString& aHostName,
+    int32_t aPort, const OriginAttributes& aOriginAttributes,
+    Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
+    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+    Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
+    PRTime prtime, uint32_t certVerifierFlags,
+    BaseSSLServerCertVerificationResult* aResultTask) {
+  // Runs on the socket transport thread
+  if (!aResultTask || !serverCert) {
+    NS_ERROR("Invalid parameters for SSL server cert validation");
+    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+    return SECFailure;
+  }
+
+  if (!gCertVerificationThreadPool) {
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
+      addrForLogging, aPinArg, serverCert, std::move(peerCertChain), aHostName,
+      aPort, aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension,
+      dcInfo, providerFlags, time, prtime, certVerifierFlags, aResultTask));
+
+  nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(nrv)) {
+    // We can't call SetCertVerificationResult here to change
+    // mCertVerificationState because SetCertVerificationResult will call
+    // libssl functions that acquire SSL locks that are already being held at
+    // this point. However, we can set an error with PR_SetError and return
+    // SECFailure, and the correct thing will happen (the error will be
+    // propagated and this connection will be terminated).
+    PRErrorCode error = nrv == NS_ERROR_OUT_OF_MEMORY ? PR_OUT_OF_MEMORY_ERROR
+                                                      : PR_INVALID_STATE_ERROR;
+    PR_SetError(error, 0);
+    return SECFailure;
+  }
+
+  PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
+  return SECWouldBlock;
+}
+
 NS_IMETHODIMP
 SSLServerCertVerificationJob::Run() {
   // Runs on a cert verification thread and only on parent process.
@@ -1408,8 +1339,6 @@ SSLServerCertVerificationJob::Run() {
       EVStatus::NotEV, false, finalError, collectedErrors);
   return NS_OK;
 }
-
-}  // unnamed namespace
 
 // Takes information needed for cert verification, does some consistency
 //  checks and calls SSLServerCertVerificationJob::Dispatch.
