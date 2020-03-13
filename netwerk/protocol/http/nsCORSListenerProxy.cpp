@@ -44,6 +44,7 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsQueryObject.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -774,17 +775,17 @@ nsCORSListenerProxy::CheckListenerChain() {
   return retargetableListener->CheckListenerChain();
 }
 
-// Please note that the CSP directive 'upgrade-insecure-requests' relies
-// on the promise that channels get updated from http: to https: before
-// the channel fetches any data from the netwerk. Such channels should
-// not be blocked by CORS and marked as cross origin requests. E.g.:
-// toplevel page: https://www.example.com loads
-//           xhr: http://www.example.com/foo which gets updated to
-//                https://www.example.com/foo
+// Please note that the CSP directive 'upgrade-insecure-requests' and the
+// HTTPS-Only Mode are relying on the promise that channels get updated from
+// http: to https: before the channel fetches any data from the netwerk. Such
+// channels should not be blocked by CORS and marked as cross origin requests.
+// E.g.: toplevel page: https://www.example.com loads
+//                 xhr: http://www.example.com/foo which gets updated to
+//                      https://www.example.com/foo
 // In such a case we should bail out of CORS and rely on the promise that
 // nsHttpChannel::Connect() upgrades the request from http to https.
-bool CheckUpgradeInsecureRequestsPreventsCORS(
-    nsIPrincipal* aRequestingPrincipal, nsIChannel* aChannel) {
+bool CheckInsecureUpgradePreventsCORS(nsIPrincipal* aRequestingPrincipal,
+                                      nsIChannel* aChannel) {
   nsCOMPtr<nsIURI> channelURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
   NS_ENSURE_SUCCESS(rv, false);
@@ -817,11 +818,7 @@ bool CheckUpgradeInsecureRequestsPreventsCORS(
     return false;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  // lets see if the loadInfo indicates that the request will
-  // be upgraded before fetching any data from the netwerk.
-  return loadInfo->GetUpgradeInsecureRequests() ||
-         loadInfo->GetBrowserUpgradeInsecureRequests();
+  return true;
 }
 
 nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
@@ -879,16 +876,24 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     return NS_OK;
   }
 
-  // if the CSP directive 'upgrade-insecure-requests' is used then we should
-  // not incorrectly require CORS if the only difference of a subresource
-  // request and the main page is the scheme.
-  // e.g. toplevel page: https://www.example.com loads
-  //                xhr: http://www.example.com/somefoo,
+  // If the CSP directive 'upgrade-insecure-requests' is used or the HTTPS-Only
+  // Mode is enabled then we should not incorrectly require CORS if the only
+  // difference of a subresource request and the main page is the scheme. e.g.
+  // toplevel page: https://www.example.com loads
+  //           xhr: http://www.example.com/somefoo,
   // then the xhr request will be upgraded to https before it fetches any data
   // from the netwerk, hence we shouldn't require CORS in that specific case.
-  if (CheckUpgradeInsecureRequestsPreventsCORS(mRequestingPrincipal,
-                                               aChannel)) {
-    return NS_OK;
+  if (CheckInsecureUpgradePreventsCORS(mRequestingPrincipal, aChannel)) {
+    // Check if HTTPS-Only Mode is enabled
+    if (!loadInfo->GetHttpsOnlyNoUpgrade() &&
+        StaticPrefs::dom_security_https_only_mode()) {
+      return NS_OK;
+    }
+    // Check if 'upgrade-insecure-requests' is used
+    if (loadInfo->GetUpgradeInsecureRequests() ||
+        loadInfo->GetBrowserUpgradeInsecureRequests()) {
+      return NS_OK;
+    }
   }
 
   // Check if we need to do a preflight, and if so set one up. This must be

@@ -19,6 +19,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
@@ -26,6 +27,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsAutoPtr.h"
 #include "mozilla/LoadInfo.h"
 #include "nsGlobalWindow.h"
@@ -1576,6 +1578,26 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
       // Disallowed by content policy
       return NS_ERROR_CONTENT_BLOCKED;
     }
+  }
+
+  // If the HTTPS-Only mode is enabled, we need to upgrade the websocket
+  // connection from ws:// to wss:// and mark it as secure.
+  if (!mIsServerSide && !mSecure &&
+      StaticPrefs::dom_security_https_only_mode()) {
+    // let's use the old specification before the upgrade for logging
+    AutoTArray<nsString, 2> params;
+    CopyUTF8toUTF16(mURI, *params.AppendElement());
+
+    mURI.ReplaceSubstring("ws://", "wss://");
+    if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
+      return NS_OK;
+    }
+    mSecure = true;
+
+    params.AppendElement(NS_LITERAL_STRING("wss"));
+    nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeInsecureRequest",
+                                         params, nsIScriptError::warningFlag,
+                                         mInnerWindowID, mPrivateBrowsing);
   }
 
   // Potentially the page uses the CSP directive 'upgrade-insecure-requests'.
