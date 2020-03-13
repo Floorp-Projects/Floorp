@@ -118,6 +118,15 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
         return GeckoResult.fromValue(AllowOrDeny.ALLOW);
     }
 
+    @Nullable
+    @Override
+    public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension currentlyInstalled,
+                                                   @NonNull WebExtension updatedExtension,
+                                                   @NonNull String[] newPermissions,
+                                                   @NonNull String[] newOrigins) {
+        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+    }
+
     @Override
     public void onExtensionListUpdated() {
         refreshExtensionList();
@@ -311,6 +320,17 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
             extension = null;
             mDefaultAction = null;
             updateAction(null);
+        });
+    }
+
+    public GeckoResult<WebExtension> updateExtension() {
+        if (extension == null) {
+            return GeckoResult.fromValue(null);
+        }
+
+        return mRuntime.getWebExtensionController().update(extension).then((newExtension) -> {
+            registerExtension(extension);
+            return GeckoResult.fromValue(extension);
         });
     }
 
@@ -862,6 +882,9 @@ public class GeckoViewActivity
             case R.id.install_addon:
                 installAddon();
                 break;
+            case R.id.update_addon:
+                updateAddon();
+                break;
             case R.id.settings:
                 openSettingsActivity();
                 break;
@@ -907,6 +930,23 @@ public class GeckoViewActivity
         });
 
         builder.show();
+    }
+
+    private void updateAddon() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.update_addon);
+
+        sExtensionManager.updateExtension().accept(extension -> {
+            if (extension != null) {
+                builder.setMessage("Success");
+            } else {
+                builder.setMessage("No addon to update");
+            }
+            builder.show();
+        }, exception -> {
+            builder.setMessage("Failed: " + exception);
+            builder.show();
+        });
     }
 
     private void createNewTab() {
