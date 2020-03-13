@@ -14,7 +14,6 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
-import org.mozilla.fenix.ext.settings
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(
@@ -23,7 +22,6 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         hasUserGesture: Boolean,
         isSameDomain: Boolean
     ): RequestInterceptor.InterceptionResponse? {
-        adjustTrackingProtection(context, engineSession)
         var result: RequestInterceptor.InterceptionResponse? = null
 
         // WebChannel-driven authentication does not require a separate redirect interceptor.
@@ -39,19 +37,6 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         }
 
         return result
-    }
-
-    private fun adjustTrackingProtection(context: Context, session: EngineSession) {
-        val trackingProtectionEnabled = context.settings().shouldUseTrackingProtection
-        if (!trackingProtectionEnabled) {
-            session.disableTrackingProtection()
-        } else {
-            val core = context.components.core
-            val policy = core.trackingProtectionPolicyFactory
-                .createTrackingProtectionPolicy(normalMode = true)
-            core.engine.settings.trackingProtectionPolicy = policy
-            session.enableTrackingProtection(policy)
-        }
     }
 
     override fun onErrorRequest(
