@@ -130,6 +130,20 @@ class TsBase(Test):
                          # more recent copy).
     ]
 
+    def __init__(self, **kw):
+        super(TsBase, self).__init__(**kw)
+
+        # Unless set to False explicitly, all TsBase tests will have the blocklist
+        # enabled by default in order to more accurately test the startup paths.
+        BLOCKLIST_PREF = "extensions.blocklist.enabled"
+
+        if not hasattr(self, "preferences"):
+            self.preferences = {
+              BLOCKLIST_PREF: True,
+            }
+        elif BLOCKLIST_PREF not in self.preferences:
+            self.preferences[BLOCKLIST_PREF] = True
+
 
 @register_test()
 class ts_paint(TsBase):
