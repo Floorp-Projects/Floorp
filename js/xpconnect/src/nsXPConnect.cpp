@@ -281,9 +281,6 @@ void xpc::ErrorReport::LogToStderr() {
 
   nsAutoCString error;
   error.AssignLiteral("JavaScript ");
-  if (JSREPORT_IS_STRICT(mFlags)) {
-    error.AppendLiteral("strict ");
-  }
   if (JSREPORT_IS_WARNING(mFlags)) {
     error.AppendLiteral("warning: ");
   } else {

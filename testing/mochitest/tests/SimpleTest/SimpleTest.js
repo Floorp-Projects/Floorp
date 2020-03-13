@@ -1505,7 +1505,7 @@ SimpleTest.finish = function() {
  *   message, errorMessage, sourceName, sourceLine, category:
  *     string or regexp
  *   lineNumber, columnNumber: number
- *   isScriptError, isWarning, isException, isStrict: boolean
+ *   isScriptError, isWarning, isException: boolean
  * Strings, numbers, and booleans must compare equal to the named
  * property of the Nth console message.  Regexps must match.  Any
  * fields present in the message but not in the pattern object are ignored.

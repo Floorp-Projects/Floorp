@@ -277,10 +277,6 @@ function scriptErrorFlagsToKind(flags) {
     kind = "error";
   }
 
-  if (flags & Ci.nsIScriptError.strictFlag) {
-    kind = "strict " + kind;
-  }
-
   return kind;
 }
 

@@ -45,10 +45,6 @@ function scriptErrorFlagsToKind(flags) {
     kind = "error";
   }
 
-  if (flags & Ci.nsIScriptError.strictFlag) {
-    kind = "strict " + kind;
-  }
-
   return kind;
 }
 
@@ -85,10 +81,7 @@ var listener = {
       xpcInspector.exitNestedEventLoop();
     }
 
-    // Print in most cases, but ignore the "strict" messages
-    if (!(message.flags & Ci.nsIScriptError.strictFlag)) {
-      info("head_dbg.js got console message: " + string + "\n");
-    }
+    info("head_dbg.js got console message: " + string + "\n");
   },
 };
 
