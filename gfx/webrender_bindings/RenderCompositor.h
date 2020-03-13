@@ -100,6 +100,7 @@ class RenderCompositor {
   virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                           wr::DeviceIntRect aClipRect) {}
   virtual void EnableNativeCompositor(bool aEnable) {}
+  virtual void DeInit() {}
   virtual CompositorCapabilities GetCompositorCapabilities() = 0;
 
   // Interface for partial present
