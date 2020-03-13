@@ -52,7 +52,7 @@ static inline bool IsOptimizedArguments(AbstractFramePtr frame,
  * However, this speculation must be guarded before calling 'apply' in case it
  * is not the builtin Function.prototype.apply.
  */
-static inline bool GuardFunApplyArgumentsOptimization(JSContext* cx,
+static inline void GuardFunApplyArgumentsOptimization(JSContext* cx,
                                                       AbstractFramePtr frame,
                                                       CallArgs& args) {
   if (args.length() == 2 && IsOptimizedArguments(frame, args[1])) {
@@ -62,8 +62,6 @@ static inline bool GuardFunApplyArgumentsOptimization(JSContext* cx,
       args[1].setObject(frame.argsObj());
     }
   }
-
-  return true;
 }
 
 /*

@@ -2983,9 +2983,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(FunApply) {
       CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
-      if (!GuardFunApplyArgumentsOptimization(cx, REGS.fp(), args)) {
-        goto error;
-      }
+      GuardFunApplyArgumentsOptimization(cx, REGS.fp(), args);
       /* FALL THROUGH */
     }
 
