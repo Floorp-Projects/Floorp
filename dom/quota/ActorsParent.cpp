@@ -2997,7 +2997,7 @@ void DirectoryLockImpl::Log() const {
   if (mPersistenceType.IsNull()) {
     persistenceType.AssignLiteral("null");
   } else {
-    PersistenceTypeToText(mPersistenceType.Value(), persistenceType);
+    persistenceType.Assign(PersistenceTypeToString(mPersistenceType.Value()));
   }
   QM_LOG(("  mPersistenceType: %s", persistenceType.get()));
 
@@ -4302,11 +4302,13 @@ nsresult QuotaManager::LoadQuota() {
         return rv;
       }
 
-      PersistenceType persistenceType;
-      rv = PersistenceTypeFromInt32(repositoryId, persistenceType);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      const auto maybePersistenceType =
+          PersistenceTypeFromInt32(repositoryId, fallible);
+      if (NS_WARN_IF(maybePersistenceType.isNothing())) {
+        return NS_ERROR_FAILURE;
       }
+
+      const PersistenceType persistenceType = maybePersistenceType.value();
 
       nsCString origin;
       rv = stmt->GetUTF8String(1, origin);
@@ -6641,10 +6643,9 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           return rv;
         }
 
-        nsCString name;
-        PersistenceTypeToText(persistenceType, name);
-
-        rv = insertStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("name"), name);
+        rv = insertStmt->BindUTF8StringByName(
+            NS_LITERAL_CSTRING("name"),
+            PersistenceTypeToString(persistenceType));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }

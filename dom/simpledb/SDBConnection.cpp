@@ -227,15 +227,21 @@ SDBConnection::Init(nsIPrincipal* aPrincipal,
     return NS_ERROR_INVALID_ARG;
   }
 
-  Nullable<PersistenceType> persistenceType;
-  rv = NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_INVALID_ARG;
+  PersistenceType persistenceType;
+  if (aPersistenceType.IsVoid()) {
+    persistenceType = PERSISTENCE_TYPE_DEFAULT;
+  } else {
+    const auto maybePersistenceType =
+        PersistenceTypeFromString(aPersistenceType, fallible);
+    if (NS_WARN_IF(maybePersistenceType.isNothing())) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    persistenceType = maybePersistenceType.value();
   }
 
   mPrincipalInfo = std::move(principalInfo);
-  mPersistenceType = persistenceType.IsNull() ? PERSISTENCE_TYPE_DEFAULT
-                                              : persistenceType.Value();
+  mPersistenceType = persistenceType;
 
   return NS_OK;
 }
