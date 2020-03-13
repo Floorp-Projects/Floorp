@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph import try_option_syntax
+from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import match_run_on_projects, match_run_on_hg_branches
 
 _target_task_methods = {}
@@ -169,6 +170,21 @@ def target_tasks_try(full_task_graph, parameters, graph_config):
         # With no try mode, we schedule nothing, allowing the user to add tasks
         # later via treeherder.
         return []
+
+
+@_target_task('try_auto')
+def target_tasks_try_auto(full_task_graph, parameters, graph_config):
+    """Target the tasks which have indicated they should be run on autoland
+    (rather than try) via the `run_on_projects` attributes.
+
+    Should do the same thing as the `default` target tasks method.
+    """
+    params = dict(parameters)
+    params['project'] = 'autoland'
+    parameters = Parameters(**params)
+    return [l for l, t in full_task_graph.tasks.iteritems()
+            if standard_filter(t, parameters)
+            and filter_out_nightly(t, parameters)]
 
 
 @_target_task('default')
