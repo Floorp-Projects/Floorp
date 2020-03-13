@@ -72,8 +72,22 @@ struct ParamTraits<mozilla::VsyncEvent> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::MatrixMessage>
-    : public PlainOldDataSerializer<mozilla::layers::MatrixMessage> {};
+struct ParamTraits<mozilla::layers::MatrixMessage> {
+  typedef mozilla::layers::MatrixMessage paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mMatrix);
+    WriteParam(aMsg, aParam.mTopLevelViewportVisibleRectInBrowserCoords);
+    WriteParam(aMsg, aParam.mLayersId);
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mMatrix) &&
+           ReadParam(aMsg, aIter,
+                     &aResult->mTopLevelViewportVisibleRectInBrowserCoords) &&
+           ReadParam(aMsg, aIter, &aResult->mLayersId);
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::layers::LayersObserverEpoch>
