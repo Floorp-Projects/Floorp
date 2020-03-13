@@ -150,7 +150,7 @@ void CGTryNoteList::finish(mozilla::Span<JSTryNote> array) {
 
 bool CGScopeNoteList::append(uint32_t scopeIndex, BytecodeOffset offset,
                              uint32_t parent) {
-  CGScopeNote note;
+  ScopeNote note;
   mozilla::PodZero(&note);
 
   // Offsets are given relative to sections. In finish() we will fixup base
@@ -174,15 +174,14 @@ void CGScopeNoteList::recordEndFunctionBodyVar(uint32_t index) {
 void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   MOZ_ASSERT(index < length());
   MOZ_ASSERT(list[index].length == 0);
-  list[index].end = offset;
+  MOZ_ASSERT(offset >= list[index].start);
+  list[index].length = offset - list[index].start;
 }
 
 void CGScopeNoteList::finish(mozilla::Span<ScopeNote> array) {
   MOZ_ASSERT(length() == array.size());
 
   for (unsigned i = 0; i < length(); i++) {
-    MOZ_ASSERT(list[i].end >= list[i].start);
-    list[i].length = list[i].end - list[i].start;
     array[i] = list[i];
   }
 }

@@ -128,13 +128,8 @@ struct CGTryNoteList {
   void finish(mozilla::Span<JSTryNote> array);
 };
 
-struct CGScopeNote : public ScopeNote {
-  // The end offset. Used to compute the length.
-  uint32_t end;
-};
-
 struct CGScopeNoteList {
-  Vector<CGScopeNote> list;
+  Vector<ScopeNote> list;
   explicit CGScopeNoteList(JSContext* cx) : list(cx) {}
 
   MOZ_MUST_USE bool append(uint32_t scopeIndex, BytecodeOffset offset,
