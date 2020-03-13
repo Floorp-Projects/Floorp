@@ -11,7 +11,7 @@
             <menu id="file-menu" data-l10n-id="menu-file">
               <menupopup id="menu_FilePopup"
                          onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');
-                                         updateFileMenuImportUIVisibility('cmd_importFromAnotherBrowser');">
+                                         updateImportCommandEnabledState();">
                 <menuitem id="menu_newNavigatorTab"
                           command="cmd_newNavigatorTab"
                           key="key_newNavigatorTab" data-l10n-id="menu-file-new-tab"/>
@@ -69,7 +69,7 @@
                           command="cmd_print" data-l10n-id="menu-file-print"/>
                 <menuseparator/>
                 <menuitem id="menu_importFromAnotherBrowser"
-                          command="cmd_importFromAnotherBrowser" data-l10n-id="menu-file-import-from-another-browser"/>
+                          command="cmd_file_importFromAnotherBrowser" data-l10n-id="menu-file-import-from-another-browser"/>
                 <menuseparator/>
                 <menuitem id="goOfflineMenuitem"
                           type="checkbox"
@@ -466,6 +466,8 @@
 #endif
                 <menuitem id="menu_openTour"
                           oncommand="openTourPage();" data-l10n-id="menu-help-show-tour"/>
+                <menuitem id="help_importFromAnotherBrowser"
+                          command="cmd_help_importFromAnotherBrowser" data-l10n-id="menu-help-import-from-another-browser"/>
                 <menuitem id="menu_keyboardShortcuts"
                           oncommand="openHelpLink('keyboard-shortcuts')"
                           onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-keyboard-shortcuts"/>

@@ -1091,6 +1091,8 @@ function buildHelpMenu() {
   if (typeof gSafeBrowsing != "undefined") {
     gSafeBrowsing.setReportPhishingMenu();
   }
+
+  updateImportCommandEnabledState();
 }
 
 function isElementVisible(aElement) {
@@ -1131,12 +1133,16 @@ function openPrefsHelp(aEvent) {
 }
 
 /**
- * Updates visibility of "Import From Another Browser" command depending on
- * the DisableProfileImport policy.
+ * Updates the enabled state of the "Import From Another Browser" command
+ * depending on the DisableProfileImport policy.
  */
-function updateFileMenuImportUIVisibility(id) {
+function updateImportCommandEnabledState() {
   if (!Services.policies.isAllowed("profileImport")) {
-    let command = document.getElementById(id);
-    command.setAttribute("disabled", "true");
+    document
+      .getElementById("cmd_file_importFromAnotherBrowser")
+      .setAttribute("disabled", "true");
+    document
+      .getElementById("cmd_help_importFromAnotherBrowser")
+      .setAttribute("disabled", "true");
   }
 }
