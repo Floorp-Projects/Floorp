@@ -516,7 +516,7 @@ class GTestCommands(MachCommandBase):
                                       package, adb_path, device_serial,
                                       remote_test_root, libxul_path,
                                       enable_webrender,
-                                      InstallIntent.NO if no_install else InstallIntent.PROMPT)
+                                      InstallIntent.NO if no_install else InstallIntent.YES)
 
         if package or adb_path or device_serial or remote_test_root or libxul_path or no_install:
             print("One or more Android-only options will be ignored")
@@ -885,7 +885,7 @@ class RunProgram(MachCommandBase):
 
         # `verify_android_device` respects `DEVICE_SERIAL` if it is set and sets it otherwise.
         verify_android_device(self, app=app,
-                              install=InstallIntent.NO if no_install else InstallIntent.PROMPT)
+                              install=InstallIntent.NO if no_install else InstallIntent.YES)
         device_serial = os.environ.get('DEVICE_SERIAL')
         if not device_serial:
             print('No ADB devices connected.')

@@ -38,7 +38,6 @@ devices = {}
 class InstallIntent(Enum):
     YES = 1
     NO = 2
-    PROMPT = 3
 
 
 class AvdInfo(object):
@@ -182,6 +181,10 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
        Returns True if the emulator was started or another device was
        already connected.
     """
+    if "MOZ_DISABLE_ADB_INSTALL" in os.environ:
+        install = InstallIntent.NO
+        _log_info("Found MOZ_DISABLE_ADB_INSTALL in environment, skipping android app"
+                  "installation")
     device_verified = False
     emulator = AndroidEmulator('*', substs=build_obj.substs, verbose=verbose)
     adb_path = _find_sdk_exe(build_obj.substs, 'adb', False)
@@ -228,45 +231,33 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
             app = "org.mozilla.geckoview.test"
         device = _get_device(build_obj.substs, device_serial)
         response = ''
-        action = 'Re-install'
         installed = device.is_app_installed(app)
-
-        def should_install(appname):
-            if install == InstallIntent.YES:
-                return True
-            else:  # InstallIntent.PROMPT
-                response = input("%s %s? (Y/n) " % (action, appname)).strip()
-                return response.lower().startswith('y') or response == ''
 
         if not installed:
             _log_info("It looks like %s is not installed on this device." % app)
-            action = 'Install'
         if 'fennec' in app or 'firefox' in app:
-            if should_install("Firefox"):
-                if installed:
-                    device.uninstall_app(app)
-                _log_info("Installing Firefox...")
-                build_obj._run_make(directory=".", target='install',
-                                    ensure_exit_code=False)
+            if installed:
+                device.uninstall_app(app)
+            _log_info("Installing Firefox...")
+            build_obj._run_make(directory=".", target='install',
+                                ensure_exit_code=False)
         elif app == 'org.mozilla.geckoview.test':
-            if should_install("geckoview AndroidTest"):
-                if installed:
-                    device.uninstall_app(app)
-                _log_info("Installing geckoview AndroidTest...")
-                sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
-                build_obj._mach_context.commands.dispatch('gradle',
-                                                          args=[sub],
-                                                          context=build_obj._mach_context)
+            if installed:
+                device.uninstall_app(app)
+            _log_info("Installing geckoview AndroidTest...")
+            sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
+            build_obj._mach_context.commands.dispatch('gradle',
+                                                      args=[sub],
+                                                      context=build_obj._mach_context)
         elif app == 'org.mozilla.geckoview_example':
-            if should_install("geckoview_example"):
-                if installed:
-                    device.uninstall_app(app)
-                _log_info("Installing geckoview_example...")
-                sub = 'install-geckoview_example'
-                build_obj._mach_context.commands.dispatch('android',
-                                                          subcommand=sub,
-                                                          args=[],
-                                                          context=build_obj._mach_context)
+            if installed:
+                device.uninstall_app(app)
+            _log_info("Installing geckoview_example...")
+            sub = 'install-geckoview_example'
+            build_obj._mach_context.commands.dispatch('android',
+                                                      subcommand=sub,
+                                                      args=[],
+                                                      context=build_obj._mach_context)
         elif not installed:
             response = input(
                 "It looks like %s is not installed on this device,\n"

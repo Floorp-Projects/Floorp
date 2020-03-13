@@ -423,7 +423,7 @@ class MachCommands(MachCommandBase):
             if not app:
                 app = "org.mozilla.geckoview.test"
             device_serial = kwargs.get('deviceSerial')
-            install = InstallIntent.NO if kwargs.get('no_install') else InstallIntent.PROMPT
+            install = InstallIntent.NO if kwargs.get('no_install') else InstallIntent.YES
 
             # verify installation
             verify_android_device(self, install=install, xre=False, network=True,
@@ -481,7 +481,7 @@ class GeckoviewJunitCommands(MachCommandBase):
         app = kwargs.get('app')
         device_serial = kwargs.get('deviceSerial')
         verify_android_device(self,
-                              install=InstallIntent.NO if no_install else InstallIntent.PROMPT,
+                              install=InstallIntent.NO if no_install else InstallIntent.YES,
                               xre=False, app=app,
                               device_serial=device_serial)
 

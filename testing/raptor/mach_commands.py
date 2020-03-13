@@ -219,7 +219,7 @@ class MachRaptor(MachCommandBase):
         if is_android:
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
             from mozdevice import ADBAndroid
-            install = InstallIntent.NO if kwargs.pop('noinstall', False) else InstallIntent.PROMPT
+            install = InstallIntent.NO if kwargs.pop('noinstall', False) else InstallIntent.YES
             if not verify_android_device(build_obj, install=install,
                                          app=kwargs['binary'],
                                          xre=True):  # Equivalent to 'run_local' = True.
