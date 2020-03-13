@@ -71,10 +71,9 @@ class CompositionTransaction final : public EditTransactionBase {
 
   void MarkFixed();
 
-  static nsresult SetIMESelection(EditorBase& aEditorBase, dom::Text* aTextNode,
-                                  uint32_t aOffsetInNode,
-                                  uint32_t aLengthOfCompositionString,
-                                  const TextRangeArray* aRanges);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult SetIMESelection(
+      EditorBase& aEditorBase, dom::Text* aTextNode, uint32_t aOffsetInNode,
+      uint32_t aLengthOfCompositionString, const TextRangeArray* aRanges);
 
  private:
   virtual ~CompositionTransaction() = default;

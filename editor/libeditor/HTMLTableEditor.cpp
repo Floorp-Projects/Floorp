@@ -831,7 +831,8 @@ nsresult HTMLEditor::DeleteTableElementAndChildrenWithTransaction(
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
-    SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*range, error);
+    MOZ_KnownLive(SelectionRefPtr())
+        ->AddRangeAndSelectFramesAndNotifyListeners(*range, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }

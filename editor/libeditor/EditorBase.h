@@ -2582,7 +2582,8 @@ class EditorBase : public nsIEditor,
    * Creates a range with just the supplied node and appends that to the
    * selection.
    */
-  nsresult AppendNodeToSelectionAsRange(nsINode* aNode);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  AppendNodeToSelectionAsRange(nsINode* aNode);
 
   /**
    * When you are using AppendNodeToSelectionAsRange(), call this first to

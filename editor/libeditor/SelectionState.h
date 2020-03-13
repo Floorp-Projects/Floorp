@@ -88,7 +88,7 @@ class SelectionState final {
   ~SelectionState();
 
   void SaveSelection(dom::Selection* aSel);
-  nsresult RestoreSelection(dom::Selection* aSel);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult RestoreSelection(dom::Selection* aSel);
   bool IsCollapsed();
   bool IsEqual(SelectionState* aSelState);
   void MakeEmpty();

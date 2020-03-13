@@ -1892,8 +1892,9 @@ nsresult nsPrintJob::UpdateSelectionAndShrinkPrintObject(
     int32_t cnt = selection->RangeCount();
     int32_t inx;
     for (inx = 0; inx < cnt; ++inx) {
-      selectionPS->AddRangeAndSelectFramesAndNotifyListeners(
-          *selection->GetRangeAt(inx), IgnoreErrors());
+      const RefPtr<nsRange> range{selection->GetRangeAt(inx)};
+      selectionPS->AddRangeAndSelectFramesAndNotifyListeners(*range,
+                                                             IgnoreErrors());
     }
   }
 
@@ -2248,7 +2249,8 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aNode,
 
 static NS_NAMED_LITERAL_STRING(kEllipsis, u"\x2026");
 
-static nsresult DeleteUnselectedNodes(Document* aOrigDoc, Document* aDoc) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteUnselectedNodes(
+    Document* aOrigDoc, Document* aDoc) {
   PresShell* origPresShell = aOrigDoc->GetPresShell();
   PresShell* presShell = aDoc->GetPresShell();
   NS_ENSURE_STATE(origPresShell && presShell);

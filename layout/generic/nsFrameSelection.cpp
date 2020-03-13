@@ -103,8 +103,8 @@ static nsAtom* GetTag(nsINode* aNode);
 // returns the parent
 static nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset);
 static nsINode* GetCellParent(nsINode* aDomNode);
-static nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset,
-                                  Selection& aNormalSelection);
+MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult CreateAndAddRange(
+    nsINode* aContainer, int32_t aOffset, Selection& aNormalSelection);
 static nsresult SelectCellElement(nsIContent* aCellElement,
                                   Selection& aNormalSelection);
 
@@ -1320,8 +1320,9 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
         return error.StealNSResult();
       }
       MOZ_ASSERT(newRange);
-      mDomSelections[index]->AddRangeAndSelectFramesAndNotifyListeners(
-          *newRange, IgnoreErrors());
+      const RefPtr<Selection> selection{mDomSelections[index]};
+      selection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
+                                                           IgnoreErrors());
       mBatching = saveBatching;
     } else {
       bool oldDesiredPosSet = mDesiredPos.mIsSet;  // need to keep old desired
