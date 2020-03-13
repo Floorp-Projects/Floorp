@@ -829,8 +829,11 @@ already_AddRefed<DOMStringList> nsAccessibilityService::GetStringStates(
   if (aStates & states::SENSITIVE) {
     stringStates->Add(NS_LITERAL_STRING("sensitive"));
   }
-  if (aStates & states::EXPANDABLE) {
-    stringStates->Add(NS_LITERAL_STRING("expandable"));
+  if (aStates & states::PINNED) {
+    stringStates->Add(NS_LITERAL_STRING("pinned"));
+  }
+  if (aStates & states::CURRENT) {
+    stringStates->Add(NS_LITERAL_STRING("current"));
   }
 
   return stringStates.forget();
