@@ -414,7 +414,7 @@ void js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee,
   }
 }
 
-enum class PrintErrorKind { Error, Warning, StrictWarning, Note };
+enum class PrintErrorKind { Error, Warning, Note };
 
 static void PrintErrorLine(FILE* file, const char* prefix,
                            JSErrorReport* report) {
@@ -479,9 +479,6 @@ static bool PrintSingleError(JSContext* cx, FILE* file,
       case PrintErrorKind::Warning:
         kindPrefix = "warning";
         break;
-      case PrintErrorKind::StrictWarning:
-        kindPrefix = "strict warning";
-        break;
       case PrintErrorKind::Note:
         kindPrefix = "note";
         break;
@@ -529,11 +526,7 @@ bool js::PrintError(JSContext* cx, FILE* file,
 
   PrintErrorKind kind = PrintErrorKind::Error;
   if (JSREPORT_IS_WARNING(report->flags)) {
-    if (JSREPORT_IS_STRICT(report->flags)) {
-      kind = PrintErrorKind::StrictWarning;
-    } else {
-      kind = PrintErrorKind::Warning;
-    }
+    kind = PrintErrorKind::Warning;
   }
   PrintSingleError(cx, file, toStringResult, report, kind);
 
