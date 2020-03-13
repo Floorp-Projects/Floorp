@@ -255,18 +255,6 @@ describe("makeNodesForProperties", () => {
 
     const entriesNode = nodes[2];
     expect(nodeIsEntries(entriesNode)).toBe(true);
-
-    const children = entriesNode.contents;
-
-    // There are 2 entries in the map.
-    expect(children).toHaveLength(2);
-    // And the 2 nodes created are typed as map entries.
-    expect(children.every(child => nodeIsMapEntry(child))).toBe(true);
-
-    const childrenNames = children.map(n => n.name);
-    const childrenPaths = children.map(n => n.path.toString());
-    expect(childrenNames).toEqual([0, 1]);
-    expect(childrenPaths).toEqual(["root◦<entries>◦0", "root◦<entries>◦1"]);
   });
 
   it("quotes property names", () => {
