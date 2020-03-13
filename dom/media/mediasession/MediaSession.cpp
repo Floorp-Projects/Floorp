@@ -39,6 +39,20 @@ void MediaSession::SetMetadata(MediaMetadata* aMetadata) {
   NotifyMetadataUpdated();
 }
 
+void MediaSession::SetPlaybackState(
+    const MediaSessionPlaybackState& aPlaybackState) {
+  if (mDeclaredPlaybackState == aPlaybackState) {
+    return;
+  }
+  mDeclaredPlaybackState = aPlaybackState;
+  // TODO : propagate declared state to the media controller in chrome process
+  // in order to call `media session actions update algorithm`.
+}
+
+MediaSessionPlaybackState MediaSession::PlaybackState() const {
+  return mDeclaredPlaybackState;
+}
+
 void MediaSession::SetActionHandler(MediaSessionAction aAction,
                                     MediaSessionActionHandler* aHandler) {
   size_t index = static_cast<size_t>(aAction);

@@ -39,6 +39,10 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
 
   void SetMetadata(MediaMetadata* aMetadata);
 
+  void SetPlaybackState(const MediaSessionPlaybackState& aPlaybackState);
+
+  MediaSessionPlaybackState PlaybackState() const;
+
   void SetActionHandler(MediaSessionAction aAction,
                         MediaSessionActionHandler* aHandler);
 
@@ -72,6 +76,12 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   RefPtr<MediaMetadata> mMediaMetadata;
   static const size_t ACTIONS = MediaSessionActionValues::Count;
   RefPtr<MediaSessionActionHandler> mActionHandlers[ACTIONS] = {nullptr};
+
+  // This is used as is a hint for the user agent to determine whether the
+  // browsing context is playing or paused.
+  // https://w3c.github.io/mediasession/#declared-playback-state
+  MediaSessionPlaybackState mDeclaredPlaybackState =
+      MediaSessionPlaybackState::None;
 };
 
 }  // namespace dom
