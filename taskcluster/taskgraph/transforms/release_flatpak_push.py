@@ -66,5 +66,5 @@ def generate_upstream_artifacts(dependencies):
     return [{
         'taskId': {'task-reference': '<{}>'.format(task_kind)},
         'taskType': 'build',
-        'paths': ['public/build/target.flatpak.tar.gz'],
+        'paths': ['public/build/target.flatpak.tar.xz'],
     } for task_kind in dependencies.keys()]
