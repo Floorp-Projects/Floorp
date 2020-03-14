@@ -115,7 +115,6 @@ def _try_option_syntax(full_task_graph, parameters, graph_config):
 
     attributes = {
         k: getattr(options, k) for k in [
-            'env',
             'no_retry',
             'tag',
         ]

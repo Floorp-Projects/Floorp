@@ -224,6 +224,7 @@ def parse_message(message):
     try_task_config = {
         "use-artifact-builds": try_options.pop("artifact"),
         "gecko-profile": try_options.pop("profile"),
+        "env": dict(arg.split("=") for arg in try_options.pop("env") or [])
     }
     return {
         "try_options": try_options,
@@ -247,7 +248,6 @@ class TryOptionSyntax(object):
         - interactive: true if --interactive
         - notifications: either None if no notifications or one of 'all' or 'failure'
         - talos_trigger_tests: the number of time talos tests should be triggered (--rebuild-talos)
-        - env: additional environment variables (ENV=value)
         - tag: restrict tests to the specified tag
         - no_retry: do not retry failed jobs
 
@@ -272,7 +272,6 @@ class TryOptionSyntax(object):
         self.notifications = None
         self.talos_trigger_tests = 0
         self.raptor_trigger_tests = 0
-        self.env = []
         self.tag = None
         self.no_retry = False
 
@@ -291,7 +290,6 @@ class TryOptionSyntax(object):
         self.notifications = options['notifications']
         self.talos_trigger_tests = options['talos_trigger_tests']
         self.raptor_trigger_tests = options['raptor_trigger_tests']
-        self.env = options['env']
         self.tag = options['tag']
         self.no_retry = options['no_retry']
         self.include_nightly = options['include_nightly']
@@ -686,7 +684,6 @@ class TryOptionSyntax(object):
             "notifications: " + str(self.notifications),
             "talos_trigger_tests: " + str(self.talos_trigger_tests),
             "raptor_trigger_tests: " + str(self.raptor_trigger_tests),
-            "env: " + str(self.env),
             "tag: " + str(self.tag),
             "no_retry: " + str(self.no_retry),
         ])
