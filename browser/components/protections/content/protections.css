@@ -206,21 +206,14 @@ a.hidden,
   position: absolute;
   width: var(--exit-icon-size);
   height: var(--exit-icon-size);
+  top: var(--exit-icon-position);
+  inset-inline-end: var(--exit-icon-position);
   background-image: url(chrome://browser/skin/stop.svg);
   background-size: calc(var(--exit-icon-size) - 2px);
   background-position: center;
   background-repeat: no-repeat;
-  top: var(--exit-icon-position);
   -moz-context-properties: fill;
   fill: var(--in-content-deemphasized-text);
-}
-
-.exit-icon:dir(ltr) {
-  right: var(--exit-icon-position);
-}
-
-.exit-icon:dir(rtl) {
-  left: var(--exit-icon-position);
 }
 
 .exit-icon:hover {
@@ -240,6 +233,7 @@ a.hidden,
 }
 
 #protection-details {
+  margin-block: 24px 0;
   padding-inline: 24px 3px;
   -moz-context-properties: fill;
   fill: currentColor;
@@ -247,7 +241,6 @@ a.hidden,
   font-size: 0.75em;
   cursor: default;
   width: max-content;
-  margin-block: 24px 0;
 }
 
 #protection-details:dir(rtl) {
@@ -726,7 +719,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   -moz-context-properties: fill,fill-opacity;
   fill: white;
   fill-opacity: 0.65;
-  display: block;
   padding: 5px;
   display: inline-block;
   vertical-align: middle;
