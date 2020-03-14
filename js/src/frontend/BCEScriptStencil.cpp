@@ -13,12 +13,10 @@
 using namespace js;
 using namespace js::frontend;
 
-BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce, uint32_t nslots)
-    : ScriptStencil(bce.cx), bce_(bce) {
-  init(nslots);
-}
+BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce)
+    : ScriptStencil(bce.cx), bce_(bce) {}
 
-void BCEScriptStencil::init(uint32_t nslots) {
+bool BCEScriptStencil::init(JSContext* cx, uint32_t nslots) {
   lineno = bce_.firstLine;
   column = bce_.firstColumn;
 
@@ -26,36 +24,39 @@ void BCEScriptStencil::init(uint32_t nslots) {
 
   ngcthings = bce_.perScriptData().gcThingList().length();
 
-  numResumeOffsets = bce_.bytecodeSection().resumeOffsetList().length();
-  numScopeNotes = bce_.bytecodeSection().scopeNoteList().length();
-  numTryNotes = bce_.bytecodeSection().tryNoteList().length();
+  bool isFunction = bce_.sc->isFunctionBox();
+  uint16_t funLength = isFunction ? bce_.sc->asFunctionBox()->length : 0;
 
-  mainOffset = bce_.mainOffset();
-  nfixed = bce_.maxFixedSlots;
-  this->nslots = nslots;
-  bodyScopeIndex = bce_.bodyScopeIndex;
-  numICEntries = bce_.bytecodeSection().numICEntries();
-  numBytecodeTypeSets = bce_.bytecodeSection().numTypeSets();
+  immutableScriptData = ImmutableScriptData::new_(
+      cx, bce_.mainOffset(), bce_.maxFixedSlots, nslots, bce_.bodyScopeIndex,
+      bce_.bytecodeSection().numICEntries(),
+      bce_.bytecodeSection().numTypeSets(), isFunction, funLength,
+      bce_.bytecodeSection().code(), bce_.bytecodeSection().notes(),
+      bce_.bytecodeSection().resumeOffsetList().span(),
+      bce_.bytecodeSection().scopeNoteList().span(),
+      bce_.bytecodeSection().tryNoteList().span());
+  if (!immutableScriptData) {
+    return false;
+  }
 
   strict = bce_.sc->strict();
   bindingsAccessedDynamically = bce_.sc->bindingsAccessedDynamically();
   hasCallSiteObj = bce_.sc->hasCallSiteObj();
   isForEval = bce_.sc->isEvalContext();
   isModule = bce_.sc->isModuleContext();
-  isFunction = bce_.sc->isFunctionBox();
+  this->isFunction = isFunction;
   hasNonSyntacticScope =
       bce_.outermostScope().hasOnChain(ScopeKind::NonSyntactic);
   needsFunctionEnvironmentObjects = getNeedsFunctionEnvironmentObjects();
   hasModuleGoal = bce_.sc->hasModuleGoal();
   hasInnerFunctions = bce_.sc->hasInnerFunctions();
 
-  code = bce_.bytecodeSection().code();
-  notes = bce_.bytecodeSection().notes();
-
   gcThings = bce_.perScriptData().gcThingList().stealGCThings();
+
   if (isFunction) {
     functionBox = bce_.sc->asFunctionBox();
   }
+  return true;
 }
 
 bool BCEScriptStencil::getNeedsFunctionEnvironmentObjects() const {
@@ -95,20 +96,6 @@ void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
     MOZ_ASSERT(index < indices.count());
     atoms[index].init(atom);
   }
-}
-
-void BCEScriptStencil::finishResumeOffsets(
-    mozilla::Span<uint32_t> resumeOffsets) const {
-  bce_.bytecodeSection().resumeOffsetList().finish(resumeOffsets);
-}
-
-void BCEScriptStencil::finishScopeNotes(
-    mozilla::Span<ScopeNote> scopeNotes) const {
-  bce_.bytecodeSection().scopeNoteList().finish(scopeNotes);
-}
-
-void BCEScriptStencil::finishTryNotes(mozilla::Span<JSTryNote> tryNotes) const {
-  bce_.bytecodeSection().tryNoteList().finish(tryNotes);
 }
 
 void BCEScriptStencil::finishInnerFunctions() const {

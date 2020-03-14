@@ -4367,7 +4367,7 @@ void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
 
 /* static */
 bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
-                                    const frontend::ScriptStencil& stencil) {
+                                    frontend::ScriptStencil& stencil) {
   ImmutableScriptFlags lazyFlags;
   MutableScriptFlags lazyMutableFlags;
   RootedScope lazyEnclosingScope(cx);
@@ -5120,65 +5120,67 @@ JSScript* js::CloneScriptIntoFunction(
   return dst;
 }
 
+template <typename SourceSpan, typename TargetSpan>
+void CopySpan(const SourceSpan& source, TargetSpan target) {
+  MOZ_ASSERT(source.size() == target.size());
+  std::copy(source.cbegin(), source.cend(), target.begin());
+}
+
 /* static */
-bool ImmutableScriptData::InitFromStencil(
-    JSContext* cx, js::HandleScript script,
-    const frontend::ScriptStencil& stencil) {
-  size_t codeLength = stencil.code.Length();
-  MOZ_RELEASE_ASSERT(codeLength <= frontend::MaxBytecodeLength);
+js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
+    JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
+    uint32_t bodyScopeIndex, uint32_t numICEntries,
+    uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
+    mozilla::Span<const jsbytecode> code, mozilla::Span<const jssrcnote> notes,
+    mozilla::Span<const uint32_t> resumeOffsets,
+    mozilla::Span<const ScopeNote> scopeNotes,
+    mozilla::Span<const JSTryNote> tryNotes) {
+  MOZ_RELEASE_ASSERT(code.Length() <= frontend::MaxBytecodeLength);
 
   // There are 1-4 copies of SN_MAKE_TERMINATOR appended after the source
   // notes. These are a combination of sentinel and padding values.
   static_assert(frontend::MaxSrcNotesLength <= UINT32_MAX - CodeNoteAlign,
                 "Length + CodeNoteAlign shouldn't overflow UINT32_MAX");
-  size_t noteLength = stencil.notes.Length();
+  size_t noteLength = notes.Length();
   MOZ_RELEASE_ASSERT(noteLength <= frontend::MaxSrcNotesLength);
 
-  size_t nullLength = ComputeNotePadding(codeLength, noteLength);
-
-  uint32_t numResumeOffsets = stencil.numResumeOffsets;
-  uint32_t numScopeNotes = stencil.numScopeNotes;
-  uint32_t numTryNotes = stencil.numTryNotes;
+  size_t nullLength = ComputeNotePadding(code.Length(), noteLength);
 
   // Allocate ImmutableScriptData
-  js::UniquePtr<ImmutableScriptData> data(
-      ImmutableScriptData::new_(cx, codeLength, noteLength + nullLength,
-                                numResumeOffsets, numScopeNotes, numTryNotes));
+  js::UniquePtr<ImmutableScriptData> data(ImmutableScriptData::new_(
+      cx, code.Length(), noteLength + nullLength, resumeOffsets.Length(),
+      scopeNotes.Length(), tryNotes.Length()));
   if (!data) {
-    return false;
+    return data;
   }
 
   // Initialize POD fields
-  data->mainOffset = stencil.mainOffset;
-  data->nfixed = stencil.nfixed;
-  data->nslots = stencil.nslots;
-  data->bodyScopeIndex = stencil.bodyScopeIndex;
-  data->numICEntries = stencil.numICEntries;
+  data->mainOffset = mainOffset;
+  data->nfixed = nfixed;
+  data->nslots = nslots;
+  data->bodyScopeIndex = bodyScopeIndex;
+  data->numICEntries = numICEntries;
   data->numBytecodeTypeSets = std::min<uint32_t>(
-      uint32_t(JSScript::MaxBytecodeTypeSets), stencil.numBytecodeTypeSets);
+      uint32_t(JSScript::MaxBytecodeTypeSets), numBytecodeTypeSets);
 
-  if (stencil.isFunction) {
-    data->funLength = stencil.functionBox->length;
+  if (isFunction) {
+    data->funLength = funLength;
   }
 
   // Initialize trailing arrays
-  std::copy_n(stencil.code.data(), codeLength, data->code());
-  std::copy_n(stencil.notes.data(), noteLength, data->notes());
+  CopySpan(code, data->codeSpan());
+  CopySpan(notes, data->notesSpan().To(noteLength));
   std::fill_n(data->notes() + noteLength, nullLength, SRC_NULL);
+  CopySpan(resumeOffsets, data->resumeOffsets());
+  CopySpan(scopeNotes, data->scopeNotes());
+  CopySpan(tryNotes, data->tryNotes());
 
-  stencil.finishResumeOffsets(data->resumeOffsets());
-  stencil.finishScopeNotes(data->scopeNotes());
-  stencil.finishTryNotes(data->tryNotes());
-
-  script->initImmutableScriptData(std::move(data));
-
-  return true;
+  return data;
 }
 
 /* static */
-bool RuntimeScriptData::InitFromStencil(
-    JSContext* cx, js::HandleScript script,
-    const frontend::ScriptStencil& stencil) {
+bool RuntimeScriptData::InitFromStencil(JSContext* cx, js::HandleScript script,
+                                        frontend::ScriptStencil& stencil) {
   // Allocate RuntimeScriptData
   if (!script->createScriptData(cx, stencil.natoms)) {
     return false;
@@ -5188,7 +5190,8 @@ bool RuntimeScriptData::InitFromStencil(
   // Initialize trailing arrays
   stencil.initAtomMap(data->atoms());
 
-  return ImmutableScriptData::InitFromStencil(cx, script, stencil);
+  script->initImmutableScriptData(std::move(stencil.immutableScriptData));
+  return true;
 }
 
 void RuntimeScriptData::traceChildren(JSTracer* trc) {
