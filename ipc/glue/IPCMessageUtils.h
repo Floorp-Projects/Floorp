@@ -252,8 +252,10 @@ struct BitFlagsEnumSerializer
  */
 template <typename T>
 struct PlainOldDataSerializer {
-  // TODO: Once the mozilla::IsPod trait is in good enough shape (bug 900042),
-  //       static_assert that mozilla::IsPod<T>::value is true.
+  static_assert(
+      std::is_trivially_copyable<T>::value,
+      "PlainOldDataSerializer can only be used with trivially copyable types!");
+
   typedef T paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
