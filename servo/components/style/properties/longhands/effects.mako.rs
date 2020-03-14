@@ -86,7 +86,7 @@ ${helpers.single_keyword(
     saturation color luminosity""",
     engines="gecko servo-2013 servo-2020",
     servo_2020_pref="layout.2020.unimplemented",
-    gecko_constant_prefix="NS_STYLE_BLEND",
+    gecko_enum_prefix="StyleBlend",
     animation_value_type="discrete",
     flags="CREATES_STACKING_CONTEXT",
     spec="https://drafts.fxtf.org/compositing/#propdef-mix-blend-mode",

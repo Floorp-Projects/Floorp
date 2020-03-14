@@ -300,7 +300,7 @@ void nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     }
 
     if (opacity != 1.0f ||
-        StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+        StyleEffects()->mMixBlendMode != StyleBlend::Normal) {
       aContext.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity);
     }
 
@@ -375,7 +375,7 @@ void nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     }
 
     if (opacity != 1.0f ||
-        StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+        StyleEffects()->mMixBlendMode != StyleBlend::Normal) {
       aContext.PopGroupAndBlend();
     }
     // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext

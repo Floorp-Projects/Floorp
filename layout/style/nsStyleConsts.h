@@ -764,22 +764,24 @@ enum class StyleVectorEffect : uint8_t { None = 0, NonScalingStroke = 1 };
 enum class StyleBackfaceVisibility : uint8_t { Hidden = 0, Visible = 1 };
 
 // blending
-#define NS_STYLE_BLEND_NORMAL 0
-#define NS_STYLE_BLEND_MULTIPLY 1
-#define NS_STYLE_BLEND_SCREEN 2
-#define NS_STYLE_BLEND_OVERLAY 3
-#define NS_STYLE_BLEND_DARKEN 4
-#define NS_STYLE_BLEND_LIGHTEN 5
-#define NS_STYLE_BLEND_COLOR_DODGE 6
-#define NS_STYLE_BLEND_COLOR_BURN 7
-#define NS_STYLE_BLEND_HARD_LIGHT 8
-#define NS_STYLE_BLEND_SOFT_LIGHT 9
-#define NS_STYLE_BLEND_DIFFERENCE 10
-#define NS_STYLE_BLEND_EXCLUSION 11
-#define NS_STYLE_BLEND_HUE 12
-#define NS_STYLE_BLEND_SATURATION 13
-#define NS_STYLE_BLEND_COLOR 14
-#define NS_STYLE_BLEND_LUMINOSITY 15
+enum class StyleBlend : uint8_t {
+  Normal = 0,
+  Multiply = 1,
+  Screen = 2,
+  Overlay = 3,
+  Darken = 4,
+  Lighten = 5,
+  ColorDodge = 6,
+  ColorBurn = 7,
+  HardLight = 8,
+  SoftLight = 9,
+  Difference = 10,
+  Exclusion = 11,
+  Hue = 12,
+  Saturation = 13,
+  Color = 14,
+  Luminosity = 15,
+};
 
 // composite
 #define NS_STYLE_MASK_COMPOSITE_ADD 0

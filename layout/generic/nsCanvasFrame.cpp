@@ -533,7 +533,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       if (layers.mLayers[i].mImage.IsNone() || suppressBackgroundImage) {
         continue;
       }
-      if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
+      if (layers.mLayers[i].mBlendMode != StyleBlend::Normal) {
         needBlendContainer = true;
       }
 
@@ -592,7 +592,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         }
       }
 
-      if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
+      if (layers.mLayers[i].mBlendMode != StyleBlend::Normal) {
         DisplayListClipState::AutoSaveRestore blendClip(aBuilder);
         thisItemList.AppendNewToTop<nsDisplayBlendMode>(
             aBuilder, this, &thisItemList, layers.mLayers[i].mBlendMode,
