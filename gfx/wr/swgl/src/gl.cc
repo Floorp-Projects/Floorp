@@ -151,7 +151,7 @@ struct Framebuffer {
 struct Renderbuffer {
   GLuint texture = 0;
 
-  ~Renderbuffer();
+  void on_erase();
 };
 
 TextureFilter gl_filter_to_texture_filter(int type) {
@@ -376,8 +376,14 @@ struct ObjectStore {
 
   O* find(size_t i) const { return i < size ? objects[i] : nullptr; }
 
+  template <typename T> void on_erase(T* o, ...) {}
+  template <typename T> void on_erase(T* o, decltype(&T::on_erase)) {
+    o->on_erase();
+  }
+
   bool erase(size_t i) {
     if (i < size && objects[i]) {
+      on_erase(objects[i], nullptr);
       delete objects[i];
       objects[i] = nullptr;
       if (i < first_free) first_free = i;
@@ -1398,7 +1404,7 @@ void GenRenderbuffers(int n, GLuint* result) {
   }
 }
 
-Renderbuffer::~Renderbuffer() {
+void Renderbuffer::on_erase() {
   for (auto* fb : ctx->framebuffers) {
     if (fb) {
       if (unlink(fb->color_attachment, texture)) {
