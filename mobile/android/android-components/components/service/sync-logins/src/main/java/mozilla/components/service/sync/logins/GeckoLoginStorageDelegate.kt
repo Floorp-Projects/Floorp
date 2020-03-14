@@ -4,7 +4,6 @@
 
 package mozilla.components.service.sync.logins
 
-import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -13,14 +12,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginStorageDelegate
+import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.concept.storage.LoginsStorage
-import mozilla.components.support.base.log.logger.Logger
-
-/**
- * A type of persistence operation, either 'create' or 'update'.
- */
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-enum class Operation { CREATE, UPDATE }
 
 /**
  * [LoginStorageDelegate] implementation.
@@ -58,8 +51,6 @@ class GeckoLoginStorageDelegate(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : LoginStorageDelegate {
 
-    private val logger = Logger("GeckoLoginStorageDelegate")
-
     override fun onLoginUsed(login: Login) {
         val guid = login.guid
         // If the guid is null, we have no way of associating the login with any record in the DB
@@ -78,68 +69,23 @@ class GeckoLoginStorageDelegate(
 
     @Synchronized
     override fun onLoginSave(login: Login) {
+        val validationDelegate = DefaultLoginValidationDelegate(storage = loginStorage)
         scope.launch {
-            val existingLogin = login.guid?.let { loginStorage.value.get(it) }
-
-            when (getPersistenceOperation(login, existingLogin)) {
-                Operation.UPDATE -> {
-                    existingLogin?.let { loginStorage.value.update(it.mergeWithLogin(login)) }
+            when (val result = validationDelegate.ensureValidAsync(login).await()) {
+                is LoginValidationDelegate.Result.CanBeUpdated -> {
+                    loginStorage.value.update(result.foundLogin)
                 }
-                Operation.CREATE -> {
+                LoginValidationDelegate.Result.CanBeCreated -> {
                     // If an existing Login was autofilled, we want to clear its guid to
                     // avoid updating its record
                     loginStorage.value.add(login.copy(guid = null))
                 }
+                else -> {
+                    // There was an error, do not attempt to save/update
+                }
             }
         }
     }
-
-    /**
-     * Returns whether an existing login record should be UPDATED or a new one [CREATE]d, based
-     * on the saved [Login] and new [Login].
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getPersistenceOperation(newLogin: Login, savedLogin: Login?): Operation = when {
-        newLogin.guid.isNullOrEmpty() || savedLogin == null -> Operation.CREATE
-        newLogin.guid != savedLogin.guid -> {
-            logger.debug(
-                "getPersistenceOperation called with a non-null `savedLogin` with" +
-                        " a guid that does not match `newLogin`. This is unexpected. Falling back to create " +
-                        "new login."
-            )
-            Operation.CREATE
-        }
-        // This means a password was saved for this site with a blank username. Update that record
-        savedLogin.username.isEmpty() -> Operation.UPDATE
-        newLogin.username != savedLogin.username -> Operation.CREATE
-        else -> Operation.UPDATE
-    }
-}
-
-/**
- * Will use values from [this] if they are 1) non-null and 2) non-empty.  Otherwise, will fall
- * back to values from [this].
- */
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-fun Login.mergeWithLogin(login: Login): Login {
-    infix fun String?.orUseExisting(other: String?) =
-        if (this?.isNotEmpty() == true) this else other
-
-    infix fun String?.orUseExisting(other: String) = if (this?.isNotEmpty() == true) this else other
-
-    val origin = login.origin orUseExisting origin
-    val username = login.username orUseExisting username
-    val password = login.password orUseExisting password
-    val httpRealm = login.httpRealm orUseExisting httpRealm
-    val formActionOrigin = login.formActionOrigin orUseExisting formActionOrigin
-
-    return copy(
-        origin = origin,
-        username = username,
-        password = password,
-        httpRealm = httpRealm,
-        formActionOrigin = formActionOrigin
-    )
 }
 
 /**
