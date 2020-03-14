@@ -3,10 +3,10 @@
 <html>
 <script>
 window.onload = function () {
-  window.parent.postMessage('grandchild-loaded', '*');
+  document.location.href = document.location.href.replace('redirecting-child', 'child');
 }
 </script>
 <body>
-  Hello from grandchild iframe.
+  Hello from child iframe.
 </body>
 </html>
