@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <meta charset="utf-8">
-<title>Valid "content_security/policies" member must be ignored</title>
+<title>Origin policy manifests delivered with a 404 status code must be ignored</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="../resources/origin-policy-test-runner.js"></script>
@@ -10,7 +10,8 @@
 <script>
 "use strict";
 runTestsInSubframe({
-  hostname: "op100",
-  testJS: "resources/allow-unsafe-eval.mjs"
+  hostname: "op99",
+  testJS: "../content-security/resources/allow-unsafe-eval.mjs",
+  expectedIds: []
 });
 </script>
