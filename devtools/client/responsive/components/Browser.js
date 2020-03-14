@@ -160,7 +160,7 @@ class Browser extends PureComponent {
     // access to browser features as regular browser tabs. The `swapFrameLoaders` platform
     // API we use compares such features before allowing the swap to proceed.
     return dom.iframe({
-      allowFullScreen: "true",
+      allowFullScreen: true,
       className: "browser",
       height: "100%",
       mozbrowser: "true",
