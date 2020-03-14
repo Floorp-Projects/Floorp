@@ -1,5 +1,6 @@
 // META: script=/common/get-host-info.sub.js
 // META: script=./resources/common.js
+// META: timeout=long
 'use strict';
 
 promise_test(async testCase => {
