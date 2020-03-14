@@ -24,7 +24,6 @@ class TimeStamp;
 namespace wr {
 struct Transaction;
 class TransactionWrapper;
-struct WrTransformProperty;
 struct WrWindowId;
 }  // namespace wr
 

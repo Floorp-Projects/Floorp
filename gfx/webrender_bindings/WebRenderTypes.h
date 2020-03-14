@@ -632,7 +632,7 @@ static inline wr::WrTransformProperty ToWrTransformProperty(
     uint64_t id, const gfx::Matrix4x4Typed<S, T>& transform) {
   wr::WrTransformProperty prop;
   prop.id = id;
-  prop.transform = ToLayoutTransform(transform);
+  prop.value = ToLayoutTransform(transform);
   return prop;
 }
 
@@ -640,7 +640,7 @@ static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id,
                                                         const float opacity) {
   wr::WrOpacityProperty prop;
   prop.id = id;
-  prop.opacity = opacity;
+  prop.value = opacity;
   return prop;
 }
 
@@ -648,7 +648,7 @@ static inline wr::WrColorProperty ToWrColorProperty(
     uint64_t id, const gfx::DeviceColor& color) {
   wr::WrColorProperty prop;
   prop.id = id;
-  prop.color = ToColorF(color);
+  prop.value = ToColorF(color);
   return prop;
 }
 
