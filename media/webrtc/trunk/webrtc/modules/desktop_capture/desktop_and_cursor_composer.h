@@ -62,7 +62,7 @@ class DesktopAndCursorComposer : public DesktopCapturer,
   // MouseCursorMonitor::Callback interface.
   void OnMouseCursor(MouseCursor* cursor) override;
   void OnMouseCursorPosition(webrtc::MouseCursorMonitor::CursorState,
-                             const webrtc::DesktopVector&) override {};
+                             const webrtc::DesktopVector&) override;
   void OnMouseCursorPosition(const DesktopVector& position) override;
 
  private:
