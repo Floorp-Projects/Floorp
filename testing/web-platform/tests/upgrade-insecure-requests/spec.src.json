@@ -103,12 +103,8 @@
         "req",
         "srcdoc",
         "iframe",
-        "worker-classic-inherit",
-        "worker-module-inherit",
         "worker-module-data",
-        "sharedworker-classic",
         "sharedworker-classic-data",
-        "sharedworker-module",
         "sharedworker-module-data"
       ],
       "delivery_type": "*",
