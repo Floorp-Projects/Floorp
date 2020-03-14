@@ -140,14 +140,6 @@ bool CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth,
   return list.append(note);
 }
 
-void CGTryNoteList::finish(mozilla::Span<JSTryNote> array) {
-  MOZ_ASSERT(length() == array.size());
-
-  for (unsigned i = 0; i < length(); i++) {
-    array[i] = list[i];
-  }
-}
-
 bool CGScopeNoteList::append(uint32_t scopeIndex, BytecodeOffset offset,
                              uint32_t parent) {
   ScopeNote note;
@@ -176,22 +168,6 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   MOZ_ASSERT(list[index].length == 0);
   MOZ_ASSERT(offset >= list[index].start);
   list[index].length = offset - list[index].start;
-}
-
-void CGScopeNoteList::finish(mozilla::Span<ScopeNote> array) {
-  MOZ_ASSERT(length() == array.size());
-
-  for (unsigned i = 0; i < length(); i++) {
-    array[i] = list[i];
-  }
-}
-
-void CGResumeOffsetList::finish(mozilla::Span<uint32_t> array) {
-  MOZ_ASSERT(length() == array.size());
-
-  for (unsigned i = 0; i < length(); i++) {
-    array[i] = list[i];
-  }
 }
 
 JSObject* ObjLiteralCreationData::create(JSContext* cx) const {

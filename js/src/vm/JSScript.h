@@ -1767,6 +1767,16 @@ class alignas(uint32_t) ImmutableScriptData final {
 
  public:
   static js::UniquePtr<ImmutableScriptData> new_(
+      JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
+      uint32_t bodyScopeIndex, uint32_t numICEntries,
+      uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
+      mozilla::Span<const jsbytecode> code,
+      mozilla::Span<const jssrcnote> notes,
+      mozilla::Span<const uint32_t> resumeOffsets,
+      mozilla::Span<const ScopeNote> scopeNotes,
+      mozilla::Span<const JSTryNote> tryNotes);
+
+  static js::UniquePtr<ImmutableScriptData> new_(
       JSContext* cx, uint32_t codeLength, uint32_t noteLength,
       uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
 
@@ -1800,9 +1810,11 @@ class alignas(uint32_t) ImmutableScriptData final {
 
   uint32_t codeLength() const { return codeLength_; }
   jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
+  mozilla::Span<jsbytecode> codeSpan() { return {code(), codeLength()}; }
 
   uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
   jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
+  mozilla::Span<jssrcnote> notesSpan() { return {notes(), noteLength()}; }
 
   mozilla::Span<uint32_t> resumeOffsets() {
     return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),
@@ -1838,9 +1850,6 @@ class alignas(uint32_t) ImmutableScriptData final {
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
                                     js::UniquePtr<ImmutableScriptData>& script);
-
-  static bool InitFromStencil(JSContext* cx, js::HandleScript script,
-                              const js::frontend::ScriptStencil& stencil);
 
   // ImmutableScriptData has trailing data so isn't copyable or movable.
   ImmutableScriptData(const ImmutableScriptData&) = delete;
@@ -1922,7 +1931,7 @@ class RuntimeScriptData final {
   void markForCrossZone(JSContext* cx);
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
-                              const js::frontend::ScriptStencil& stencil);
+                              js::frontend::ScriptStencil& stencil);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(this) + mallocSizeOf(isd_.get());
@@ -2441,11 +2450,7 @@ class JSScript : public js::BaseScript {
 
   friend bool js::RuntimeScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
-      const js::frontend::ScriptStencil& stencil);
-
-  friend bool js::ImmutableScriptData::InitFromStencil(
-      JSContext* cx, js::HandleScript script,
-      const js::frontend::ScriptStencil& stencil);
+      js::frontend::ScriptStencil& stencil);
 
   template <js::XDRMode mode>
   friend js::XDRResult js::PrivateScriptData::XDR(
@@ -2501,7 +2506,7 @@ class JSScript : public js::BaseScript {
 
  public:
   static bool fullyInitFromStencil(JSContext* cx, js::HandleScript script,
-                                   const js::frontend::ScriptStencil& stencil);
+                                   js::frontend::ScriptStencil& stencil);
 
 #ifdef DEBUG
  private:
