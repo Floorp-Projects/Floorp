@@ -567,13 +567,17 @@ void WebGLContext::Resize(uvec2 requestedSize) {
     requestedSize.y = 1;
   }
 
-  // If we've already drawn, we should commit the current buffer.
-  PresentScreenBuffer();
-
-  if (IsContextLost()) {
-    GenerateWarning("WebGL context was lost due to swap failure.");
-    return;
-  }
+  // WebGL 1 spec:
+  //   WebGL presents its drawing buffer to the HTML page compositor immediately
+  //   before a compositing operation, but only if at least one of the following
+  //   has occurred since the previous compositing operation:
+  //
+  //   * Context creation
+  //   * Canvas resize
+  //   * clear, drawArrays, or drawElements has been called while the drawing
+  //     buffer is the currently bound framebuffer
+  mShouldPresent = true;
+  if (requestedSize == mRequestedSize) return;
 
   // Kill our current default fb(s), for later lazy allocation.
   mRequestedSize = requestedSize;
