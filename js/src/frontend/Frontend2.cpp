@@ -227,12 +227,13 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   RootedScript script(cx,
                       JSScript::Create(cx, cx->global(), options, sso, extent));
 
-  SmooshScriptStencil stencil(cx, smoosh, compilationInfo);
-  if (!stencil.createAtoms(cx)) {
+  Rooted<SmooshScriptStencil> stencil(
+      cx, SmooshScriptStencil(cx, smoosh, compilationInfo));
+  if (!stencil.get().createAtoms(cx)) {
     return nullptr;
   }
 
-  if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
+  if (!JSScript::fullyInitFromStencil(cx, script, stencil.get())) {
     return nullptr;
   }
 

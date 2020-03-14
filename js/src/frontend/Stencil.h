@@ -444,6 +444,8 @@ using ScriptThingsVector = GCVector<ScriptThingVariant>;
 // Data used to instantiate the non-lazy script.
 class ScriptStencil {
  public:
+  js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
+
   // See `BaseScript::{lineno_,column_}`.
   unsigned lineno = 0;
   unsigned column = 0;
@@ -453,23 +455,6 @@ class ScriptStencil {
 
   // See `finishGCThings` method.
   uint32_t ngcthings = 0;
-
-  // See `finishResumeOffsets` method.
-  uint32_t numResumeOffsets = 0;
-
-  // See `finishScopeNotes` method.
-  uint32_t numScopeNotes = 0;
-
-  // See `finishTryNotes` method.
-  uint32_t numTryNotes = 0;
-
-  // See `ImmutableScriptData`.
-  uint32_t mainOffset = 0;
-  uint32_t nfixed = 0;
-  uint32_t nslots = 0;
-  uint32_t bodyScopeIndex = 0;
-  uint32_t numICEntries = 0;
-  uint32_t numBytecodeTypeSets = 0;
 
   // `See BaseScript::ImmutableFlags`.
   bool strict = false;
@@ -482,12 +467,6 @@ class ScriptStencil {
   bool needsFunctionEnvironmentObjects = false;
   bool hasModuleGoal = false;
   bool hasInnerFunctions = false;
-
-  // FIXME: Create Stencil structs for the following fields, instead of
-  //        relying on the data owned by BytecodeEmitter.
-
-  mozilla::Span<const jsbytecode> code;
-  mozilla::Span<const jssrcnote> notes;
 
   ScriptThingsVector gcThings;
 
@@ -503,19 +482,6 @@ class ScriptStencil {
   // Store all atoms into `atoms`
   // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
   virtual void initAtomMap(GCPtrAtom* atoms) const = 0;
-
-  // Store all resume offsets into `resumeOffsets`
-  // `resumeOffsets.Length()` is `this.numResumeOffsets`.
-  virtual void finishResumeOffsets(
-      mozilla::Span<uint32_t> resumeOffsets) const = 0;
-
-  // Store all scope notes into `scopeNotes`.
-  // `scopeNotes.Length()` is `this.numScopeNotes`.
-  virtual void finishScopeNotes(mozilla::Span<ScopeNote> scopeNotes) const = 0;
-
-  // Store all try notes into `tryNotes`.
-  // `tryNotes.Length()` is `this.numTryNotes`.
-  virtual void finishTryNotes(mozilla::Span<JSTryNote> tryNotes) const = 0;
 
   // Call `FunctionBox::finish` for all inner functions.
   virtual void finishInnerFunctions() const = 0;
