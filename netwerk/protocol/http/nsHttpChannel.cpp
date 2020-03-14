@@ -128,7 +128,6 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "js/Conversions.h"
-#include "mozilla/dom/SecFetch.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -584,8 +583,6 @@ nsresult nsHttpChannel::OnBeforeConnect() {
                           NS_LITERAL_CSTRING("1"), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  SecFetch::AddSecFetchHeader(this);
 
   nsCOMPtr<nsIPrincipal> resultPrincipal;
   if (!mURI->SchemeIs("https")) {
