@@ -153,6 +153,11 @@ class PolicyDelivery(object):
                 return PolicyDelivery(delivery_type, self.key, None)
             else:
                 return PolicyDelivery(delivery_type, self.key, 'opt-in')
+        elif self.key == 'upgradeInsecureRequests':
+            if self.value == 'upgrade':
+                return PolicyDelivery(delivery_type, self.key, None)
+            else:
+                return PolicyDelivery(delivery_type, self.key, 'upgrade')
         else:
             raise Exception('delivery key is invalid: ' + self.key)
 
