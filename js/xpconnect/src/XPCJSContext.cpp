@@ -61,6 +61,9 @@
 #include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
 #include "ExpandedPrincipal.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
 // For getrlimit and min/max.
@@ -581,6 +584,21 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
 
   // Now is a good time to turn on profiling if it's pending.
   PROFILER_JS_INTERRUPT_CALLBACK();
+
+#ifdef MOZ_GECKO_PROFILER
+  nsDependentCString filename("unknown file");
+  JS::AutoFilename scriptFilename;
+  // Computing the line number can be very expensive (see bug 1330231 for
+  // example), so don't request it here.
+  if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
+    if (const char* file = scriptFilename.get()) {
+      filename.Assign(file, strlen(file));
+    }
+    PROFILER_ADD_MARKER_WITH_PAYLOAD("JS::InterruptCallback", JS,
+                                     TextMarkerPayload,
+                                     (filename, TimeStamp::Now()));
+  }
+#endif
 
   // Normally we record mSlowScriptCheckpoint when we start to process an
   // event. However, we can run JS outside of event handlers. This code takes
