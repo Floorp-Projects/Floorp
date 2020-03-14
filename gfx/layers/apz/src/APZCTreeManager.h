@@ -40,7 +40,6 @@ class MultiTouchInput;
 namespace wr {
 class TransactionWrapper;
 class WebRenderAPI;
-struct WrTransformProperty;
 }  // namespace wr
 
 namespace layers {

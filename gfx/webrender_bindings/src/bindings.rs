@@ -439,24 +439,14 @@ pub struct WrAnimationProperty {
 /// cbindgen:derive-eq=false
 #[repr(C)]
 #[derive(Debug)]
-pub struct WrTransformProperty {
+pub struct WrAnimationPropertyValue<T> {
     pub id: u64,
-    pub transform: LayoutTransform,
+    pub value: T,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct WrOpacityProperty {
-    pub id: u64,
-    pub opacity: f32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct WrColorProperty {
-    pub id: u64,
-    pub color: ColorF,
-}
+pub type WrTransformProperty = WrAnimationPropertyValue<LayoutTransform>;
+pub type WrOpacityProperty = WrAnimationPropertyValue<f32>;
+pub type WrColorProperty = WrAnimationPropertyValue<ColorF>;
 
 /// cbindgen:field-names=[mHandle]
 /// cbindgen:derive-lt=true
@@ -1745,7 +1735,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
         for element in transform_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
-                value: element.transform,
+                value: element.value,
             };
 
             properties.transforms.push(prop);
@@ -1759,7 +1749,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
         for element in opacity_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
-                value: element.opacity,
+                value: element.value,
             };
             properties.floats.push(prop);
         }
@@ -1772,7 +1762,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
         for element in color_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
-                value: element.color,
+                value: element.value,
             };
             properties.colors.push(prop);
         }
@@ -1797,7 +1787,7 @@ pub extern "C" fn wr_transaction_append_transform_properties(
     for element in transform_slice.iter() {
         let prop = PropertyValue {
             key: PropertyBindingKey::new(element.id),
-            value: element.transform,
+            value: element.value,
         };
 
         transforms.push(prop);
