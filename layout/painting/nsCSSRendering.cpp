@@ -2404,7 +2404,7 @@ nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
                      repeat.mYRepeat == StyleImageLayerRepeat::Round;
   if (aDrawBackgroundColor && xFullRepeat && yFullRepeat &&
       bg->BottomLayer().mImage.IsOpaque() &&
-      bg->BottomLayer().mBlendMode == NS_STYLE_BLEND_NORMAL) {
+      bg->BottomLayer().mBlendMode == StyleBlend::Normal) {
     aDrawBackgroundColor = false;
   }
 

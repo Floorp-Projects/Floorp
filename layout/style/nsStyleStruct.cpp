@@ -1968,7 +1968,7 @@ nsStyleImageLayers::Layer::Layer()
 
       mClip(StyleGeometryBox::BorderBox),
       mAttachment(StyleImageLayerAttachment::Scroll),
-      mBlendMode(NS_STYLE_BLEND_NORMAL),
+      mBlendMode(StyleBlend::Normal),
       mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
       mMaskMode(StyleMaskMode::MatchSource) {}
 
@@ -3249,7 +3249,7 @@ nsChangeHint nsStyleUIReset::CalcDifference(
 nsStyleEffects::nsStyleEffects(const Document&)
     : mClip(StyleClipRectOrAuto::Auto()),
       mOpacity(1.0f),
-      mMixBlendMode(NS_STYLE_BLEND_NORMAL) {
+      mMixBlendMode(StyleBlend::Normal) {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
 

@@ -5773,7 +5773,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 class nsDisplayBlendMode : public nsDisplayWrapList {
  public:
   nsDisplayBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                     nsDisplayList* aList, uint8_t aBlendMode,
+                     nsDisplayList* aList, mozilla::StyleBlend aBlendMode,
                      const ActiveScrolledRoot* aActiveScrolledRoot,
                      uint16_t aIndex = 0);
   nsDisplayBlendMode(nsDisplayListBuilder* aBuilder,
@@ -5823,7 +5823,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
   mozilla::gfx::CompositionOp BlendMode();
 
  protected:
-  uint8_t mBlendMode;
+  mozilla::StyleBlend mBlendMode;
   uint16_t mIndex;
 
  private:
@@ -5833,7 +5833,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
 class nsDisplayTableBlendMode : public nsDisplayBlendMode {
  public:
   nsDisplayTableBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsDisplayList* aList, uint8_t aBlendMode,
+                          nsDisplayList* aList, mozilla::StyleBlend aBlendMode,
                           const ActiveScrolledRoot* aActiveScrolledRoot,
                           uint16_t aIndex, nsIFrame* aAncestorFrame)
       : nsDisplayBlendMode(aBuilder, aFrame, aList, aBlendMode,
