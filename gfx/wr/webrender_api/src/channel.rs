@@ -79,8 +79,7 @@ pub struct MsgReceiver<T> {
 
 impl<T> MsgReceiver<T> {
     pub fn recv(&self) -> Result<T, Error> {
-        use std::error::Error;
-        self.rx.recv().map_err(|e| io::Error::new(ErrorKind::Other, e.description()))
+        self.rx.recv().map_err(|e| io::Error::new(ErrorKind::Other, e.to_string()))
     }
 
     pub fn to_mpsc_receiver(self) -> mpsc::Receiver<T> {
