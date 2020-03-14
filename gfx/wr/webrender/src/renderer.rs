@@ -78,7 +78,7 @@ use crate::picture::{RecordedDirtyRegion, tile_cache_sizes, ResolvedSurfaceTextu
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
-use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle};
+use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle, add_event_marker};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use crate::record::ApiRecordingReceiver;
@@ -96,6 +96,7 @@ use crate::render_target::{RenderTarget, TextureCacheRenderTarget, RenderTargetL
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
 use crate::render_task_graph::RenderPassKind;
 use crate::util::drain_filter;
+use crate::c_str;
 
 use std;
 use std::cmp;
@@ -3581,6 +3582,12 @@ impl Renderer {
         upload_time.profile(|| {
             for update_list in pending_texture_updates.drain(..) {
                 for allocation in update_list.allocations {
+                    match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(_) => add_event_marker(c_str!("TextureCacheAlloc")),
+                        TextureCacheAllocationKind::Realloc(_) => add_event_marker(c_str!("TextureCacheRealloc")),
+                        TextureCacheAllocationKind::Reset(_) => add_event_marker(c_str!("TextureCacheReset")),
+                        TextureCacheAllocationKind::Free => add_event_marker(c_str!("TextureCacheFree")),
+                    };
                     let old = match allocation.kind {
                         TextureCacheAllocationKind::Alloc(ref info) |
                         TextureCacheAllocationKind::Realloc(ref info) |
