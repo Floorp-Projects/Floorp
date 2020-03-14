@@ -118,8 +118,7 @@ pub unsafe extern "C" fn fluent_bundle_new(
             if let Some(FluentValue::Number(n)) = args.get(0) {
                 let mut options = FluentDateTimeOptions::default();
                 options.merge(&named);
-                let epoch = n.value as usize;
-                FluentValue::Custom(Box::new(FluentDateTime::new(epoch, options)))
+                FluentValue::Custom(Box::new(FluentDateTime::new(n.value, options)))
             } else {
                 FluentValue::None
             }
