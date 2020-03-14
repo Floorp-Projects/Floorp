@@ -1745,7 +1745,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
         for element in transform_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
-                value: element.transform.into(),
+                value: element.transform,
             };
 
             properties.transforms.push(prop);
@@ -1797,7 +1797,7 @@ pub extern "C" fn wr_transaction_append_transform_properties(
     for element in transform_slice.iter() {
         let prop = PropertyValue {
             key: PropertyBindingKey::new(element.id),
-            value: element.transform.into(),
+            value: element.transform,
         };
 
         transforms.push(prop);
