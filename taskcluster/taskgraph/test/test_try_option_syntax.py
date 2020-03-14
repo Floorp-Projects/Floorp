@@ -334,8 +334,7 @@ class TestTryOptionSyntax(unittest.TestCase):
     def test_setenv(self):
         "--setenv VAR=value adds a environment variables setting to env"
         parameters = parse_message('try: --setenv VAR1=value1 --setenv VAR2=value2')
-        tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
-        self.assertEqual(tos.env, ['VAR1=value1', 'VAR2=value2'])
+        assert parameters["try_task_config"]["env"] == {"VAR1": "value1", "VAR2": "value2"}
 
     def test_profile(self):
         "--geckoProfile sets profile to true"

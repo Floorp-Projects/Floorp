@@ -147,18 +147,6 @@ def use_profile_data(config, jobs):
 
 
 @transforms.add
-def set_env(config, jobs):
-    """Set extra environment variables from try command line."""
-    env = []
-    if config.params['try_mode'] == 'try_option_syntax':
-        env = config.params['try_options']['env'] or []
-    for job in jobs:
-        if env:
-            job['worker']['env'].update(dict(x.split('=') for x in env))
-        yield job
-
-
-@transforms.add
 def enable_full_crashsymbols(config, jobs):
     """Enable full crashsymbols on jobs with
     'enable-full-crashsymbols' set to True and on release branches, or

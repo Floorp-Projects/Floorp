@@ -101,6 +101,7 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['try_task_config'], {
             'gecko-profile': False,
             'use-artifact-builds': True,
+            'env': {},
         })
 
     @patch('taskgraph.decision.get_hg_revision_branch')
