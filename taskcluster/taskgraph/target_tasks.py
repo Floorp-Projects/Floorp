@@ -131,17 +131,14 @@ def _try_option_syntax(full_task_graph, parameters, graph_config):
         # If the developer wants test jobs to be rebuilt N times we add that value here
         if options.trigger_tests > 1 and 'unittest_suite' in task.attributes:
             task.attributes['task_duplicates'] = options.trigger_tests
-            task.attributes['profile'] = False
 
         # If the developer wants test talos jobs to be rebuilt N times we add that value here
         if options.talos_trigger_tests > 1 and task.attributes.get('unittest_suite') == 'talos':
             task.attributes['task_duplicates'] = options.talos_trigger_tests
-            task.attributes['profile'] = options.profile
 
         # If the developer wants test raptor jobs to be rebuilt N times we add that value here
         if options.raptor_trigger_tests > 1 and task.attributes.get('unittest_suite') == 'raptor':
             task.attributes['task_duplicates'] = options.raptor_trigger_tests
-            task.attributes['profile'] = options.profile
 
         task.attributes.update(attributes)
 

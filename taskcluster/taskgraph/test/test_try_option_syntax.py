@@ -77,7 +77,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_unknown_args(self):
         "unknown arguments are ignored"
-        parameters = {'try_options': parse_message('try: --doubledash -z extra')}
+        parameters = parse_message('try: --doubledash -z extra')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         # equilvant to "try:"..
         self.assertEqual(tos.build_types, [])
@@ -85,85 +85,85 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_apostrophe_in_message(self):
         "apostrophe does not break parsing"
-        parameters = {'try_options': parse_message('Increase spammy log\'s log level. try: -b do')}
+        parameters = parse_message('Increase spammy log\'s log level. try: -b do')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.build_types), ['debug', 'opt'])
 
     def test_b_do(self):
         "-b do should produce both build_types"
-        parameters = {'try_options': parse_message('try: -b do')}
+        parameters = parse_message('try: -b do')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.build_types), ['debug', 'opt'])
 
     def test_b_d(self):
         "-b d should produce build_types=['debug']"
-        parameters = {'try_options': parse_message('try: -b d')}
+        parameters = parse_message('try: -b d')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.build_types), ['debug'])
 
     def test_b_o(self):
         "-b o should produce build_types=['opt']"
-        parameters = {'try_options': parse_message('try: -b o')}
+        parameters = parse_message('try: -b o')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.build_types), ['opt'])
 
     def test_build_o(self):
         "--build o should produce build_types=['opt']"
-        parameters = {'try_options': parse_message('try: --build o')}
+        parameters = parse_message('try: --build o')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.build_types), ['opt'])
 
     def test_b_dx(self):
         "-b dx should produce build_types=['debug'], silently ignoring the x"
-        parameters = {'try_options': parse_message('try: -b dx')}
+        parameters = parse_message('try: -b dx')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.build_types), ['debug'])
 
     def test_j_job(self):
         "-j somejob sets jobs=['somejob']"
-        parameters = {'try_options': parse_message('try: -j somejob')}
+        parameters = parse_message('try: -j somejob')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.jobs), ['somejob'])
 
     def test_j_jobs(self):
         "-j job1,job2 sets jobs=['job1', 'job2']"
-        parameters = {'try_options': parse_message('try: -j job1,job2')}
+        parameters = parse_message('try: -j job1,job2')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.jobs), ['job1', 'job2'])
 
     def test_j_all(self):
         "-j all sets jobs=None"
-        parameters = {'try_options': parse_message('try: -j all')}
+        parameters = parse_message('try: -j all')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.jobs, None)
 
     def test_j_twice(self):
         "-j job1 -j job2 sets jobs=job1, job2"
-        parameters = {'try_options': parse_message('try: -j job1 -j job2')}
+        parameters = parse_message('try: -j job1 -j job2')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.jobs), sorted(['job1', 'job2']))
 
     def test_p_all(self):
         "-p all sets platforms=None"
-        parameters = {'try_options': parse_message('try: -p all')}
+        parameters = parse_message('try: -p all')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.platforms, None)
 
     def test_p_linux(self):
         "-p linux sets platforms=['linux', 'linux-ridealong']"
-        parameters = {'try_options': parse_message('try: -p linux')}
+        parameters = parse_message('try: -p linux')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.platforms, ['linux', 'linux-ridealong'])
 
     def test_p_linux_win32(self):
         "-p linux,win32 sets platforms=['linux', 'linux-ridealong', 'win32']"
-        parameters = {'try_options': parse_message('try: -p linux,win32')}
+        parameters = parse_message('try: -p linux,win32')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.platforms), ['linux', 'linux-ridealong', 'win32'])
 
     def test_p_expands_ridealongs(self):
         "-p linux,linux64 includes the RIDEALONG_BUILDS"
-        parameters = {'try_options': parse_message('try: -p linux,linux64')}
+        parameters = parse_message('try: -p linux,linux64')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         platforms = set(['linux'] + RIDEALONG_BUILDS['linux'])
         platforms |= set(['linux64'] + RIDEALONG_BUILDS['linux64'])
@@ -171,25 +171,25 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_none(self):
         "-u none sets unittests=[]"
-        parameters = {'try_options': parse_message('try: -u none')}
+        parameters = parse_message('try: -u none')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), [])
 
     def test_u_all(self):
         "-u all sets unittests=[..whole list..]"
-        parameters = {'try_options': parse_message('try: -u all')}
+        parameters = parse_message('try: -u all')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([{'test': t} for t in unittest_tasks]))
 
     def test_u_single(self):
         "-u mochitest-webgl1-core sets unittests=[mochitest-webgl1-core]"
-        parameters = {'try_options': parse_message('try: -u mochitest-webgl1-core')}
+        parameters = parse_message('try: -u mochitest-webgl1-core')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([{'test': 'mochitest-webgl1-core'}]))
 
     def test_u_alias(self):
         "-u mochitest-gl sets unittests=[mochitest-webgl*]"
-        parameters = {'try_options': parse_message('try: -u mochitest-gl')}
+        parameters = parse_message('try: -u mochitest-gl')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([{'test': t} for t in [
             'mochitest-webgl1-core',
@@ -201,7 +201,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_multi_alias(self):
         "-u e10s sets unittests=[all e10s unittests]"
-        parameters = {'try_options': parse_message('try: -u e10s')}
+        parameters = parse_message('try: -u e10s')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': t} for t in unittest_tasks if 'e10s' in t
@@ -209,7 +209,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_commas(self):
         "-u mochitest-webgl1-core,gtest sets unittests=both"
-        parameters = {'try_options': parse_message('try: -u mochitest-webgl1-core,gtest')}
+        parameters = parse_message('try: -u mochitest-webgl1-core,gtest')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'mochitest-webgl1-core'},
@@ -218,7 +218,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_chunks(self):
         "-u gtest-3,gtest-4 selects the third and fourth chunk of gtest"
-        parameters = {'try_options': parse_message('try: -u gtest-3,gtest-4')}
+        parameters = parse_message('try: -u gtest-3,gtest-4')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'only_chunks': set('34')},
@@ -226,7 +226,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_platform(self):
         "-u gtest[linux] selects the linux platform for gtest"
-        parameters = {'try_options': parse_message('try: -u gtest[linux]')}
+        parameters = parse_message('try: -u gtest[linux]')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'platforms': ['linux']},
@@ -234,7 +234,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_platforms(self):
         "-u gtest[linux,win32] selects the linux and win32 platforms for gtest"
-        parameters = {'try_options': parse_message('try: -u gtest[linux,win32]')}
+        parameters = parse_message('try: -u gtest[linux,win32]')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'platforms': ['linux', 'win32']},
@@ -243,7 +243,7 @@ class TestTryOptionSyntax(unittest.TestCase):
     def test_u_platforms_pretty(self):
         """-u gtest[Ubuntu] selects the linux, linux64 and linux64-asan
         platforms for gtest"""
-        parameters = {'try_options': parse_message('try: -u gtest[Ubuntu]')}
+        parameters = parse_message('try: -u gtest[Ubuntu]')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'platforms': ['linux32', 'linux64', 'linux64-asan',
@@ -252,7 +252,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_platforms_negated(self):
         "-u gtest[-linux] selects all platforms but linux for gtest"
-        parameters = {'try_options': parse_message('try: -u gtest[-linux]')}
+        parameters = parse_message('try: -u gtest[-linux]')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         all_platforms = set([x.attributes['test_platform'] for x in unittest_tasks.values()])
         self.assertEqual(sorted(tos.unittests[0]['platforms']), sorted(
@@ -261,7 +261,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_platforms_negated_pretty(self):
         "-u gtest[Ubuntu,-x64] selects just linux for gtest"
-        parameters = {'try_options': parse_message('try: -u gtest[Ubuntu,-x64]')}
+        parameters = parse_message('try: -u gtest[Ubuntu,-x64]')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'platforms': ['linux32']},
@@ -269,7 +269,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_u_chunks_platforms(self):
         "-u gtest-1[linux,win32] selects the linux and win32 platforms for chunk 1 of gtest"
-        parameters = {'try_options': parse_message('try: -u gtest-1[linux,win32]')}
+        parameters = parse_message('try: -u gtest-1[linux,win32]')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'platforms': ['linux', 'win32'], 'only_chunks': set('1')},
@@ -277,19 +277,19 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_t_none(self):
         "-t none sets talos=[]"
-        parameters = {'try_options': parse_message('try: -t none')}
+        parameters = parse_message('try: -t none')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.talos), [])
 
     def test_t_all(self):
         "-t all sets talos=[..whole list..]"
-        parameters = {'try_options': parse_message('try: -t all')}
+        parameters = parse_message('try: -t all')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.talos), sorted([{'test': t} for t in talos_tasks]))
 
     def test_t_single(self):
         "-t mochitest-webgl sets talos=[mochitest-webgl]"
-        parameters = {'try_options': parse_message('try: -t mochitest-webgl')}
+        parameters = parse_message('try: -t mochitest-webgl')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.talos), sorted([{'test': 'mochitest-webgl'}]))
 
@@ -297,70 +297,67 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_trigger_tests(self):
         "--rebuild 10 sets trigger_tests"
-        parameters = {'try_options': parse_message('try: --rebuild 10')}
+        parameters = parse_message('try: --rebuild 10')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.trigger_tests, 10)
 
     def test_talos_trigger_tests(self):
         "--rebuild-talos 10 sets talos_trigger_tests"
-        parameters = {'try_options': parse_message('try: --rebuild-talos 10')}
+        parameters = parse_message('try: --rebuild-talos 10')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.talos_trigger_tests, 10)
 
     def test_interactive(self):
         "--interactive sets interactive"
-        parameters = {'try_options': parse_message('try: --interactive')}
+        parameters = parse_message('try: --interactive')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.interactive, True)
 
     def test_all_email(self):
         "--all-emails sets notifications"
-        parameters = {'try_options': parse_message('try: --all-emails')}
+        parameters = parse_message('try: --all-emails')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.notifications, 'all')
 
     def test_fail_email(self):
         "--failure-emails sets notifications"
-        parameters = {'try_options': parse_message('try: --failure-emails')}
+        parameters = parse_message('try: --failure-emails')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.notifications, 'failure')
 
     def test_no_email(self):
         "no email settings don't set notifications"
-        parameters = {'try_options': parse_message('try:')}
+        parameters = parse_message('try:')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.notifications, None)
 
     def test_setenv(self):
         "--setenv VAR=value adds a environment variables setting to env"
-        parameters = {'try_options': parse_message(
-            'try: --setenv VAR1=value1 --setenv VAR2=value2')}
+        parameters = parse_message('try: --setenv VAR1=value1 --setenv VAR2=value2')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.env, ['VAR1=value1', 'VAR2=value2'])
 
     def test_profile(self):
         "--geckoProfile sets profile to true"
-        parameters = {'try_options': parse_message('try: --geckoProfile')}
-        tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
-        self.assertTrue(tos.profile)
+        parameters = parse_message('try: --geckoProfile')
+        assert parameters["try_task_config"]["gecko-profile"] is True
 
     def test_tag(self):
         "--tag TAG sets tag to TAG value"
-        parameters = {'try_options': parse_message('try: --tag tagName')}
+        parameters = parse_message('try: --tag tagName')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(tos.tag, 'tagName')
 
     def test_no_retry(self):
         "--no-retry sets no_retry to true"
-        parameters = {'try_options': parse_message('try: --no-retry')}
+        parameters = parse_message('try: --no-retry')
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertTrue(tos.no_retry)
 
     def test_artifact(self):
         "--artifact sets artifact to true"
-        parameters = {'try_options': parse_message('try: --artifact')}
-        tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
-        self.assertTrue(tos.artifact)
+        parameters = parse_message('try: --artifact')
+        assert parameters["try_task_config"]["use-artifact-builds"] is True
 
 
 if __name__ == '__main__':

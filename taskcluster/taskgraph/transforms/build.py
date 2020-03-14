@@ -177,10 +177,10 @@ def enable_full_crashsymbols(config, jobs):
 
 @transforms.add
 def use_artifact(config, jobs):
-    if config.params['try_mode'] == 'try_option_syntax':
-        use_artifact = config.params['try_options'].get('artifact')
-    else:
+    if config.params.is_try():
         use_artifact = config.params['try_task_config'].get('use-artifact-builds', False)
+    else:
+        use_artifact = False
     for job in jobs:
         if (config.kind == 'build' and use_artifact and
             not job.get('attributes', {}).get('nightly', False) and
