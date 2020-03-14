@@ -257,14 +257,6 @@ impl From<semver::ReqParseError> for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::VersionError(ref x) => &*x,
-            Error::MetadataError(ref x) => &*x,
-            Error::SemVerError(ref e) => e.description(),
-        }
-    }
-
     fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             Error::SemVerError(ref e) => Some(e),
