@@ -1012,6 +1012,15 @@
 #endif
   mirror: always
 
+# When this pref is enabled, the browser will check no-cors responses that
+# have the Cross-Origin-Resource-Policy header and will fail the request if
+# the origin of the resource's loading document doesn't match the origin
+# (or base domain) of the loaded resource.
+- name: browser.tabs.remote.useCORP
+  type: bool
+  value: true
+  mirror: always
+
 # The percentage of the screen that needs to be scrolled before toolbar
 # manipulation is allowed.
 - name: browser.ui.scroll-toolbar-threshold
