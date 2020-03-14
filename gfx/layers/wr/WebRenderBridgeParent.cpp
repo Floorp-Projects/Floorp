@@ -2308,20 +2308,22 @@ bool WebRenderBridgeParent::SampleAnimations(WrAnimations& aAnimations) {
          iter.Next()) {
       AnimatedValue* value = iter.UserData();
       wr::RenderRoot renderRoot = mAnimStorage->AnimationRenderRoot(iter.Key());
-      if (value->Is<AnimationTransform>()) {
-        auto& transformArray = aAnimations.mTransformArrays[renderRoot];
-        transformArray.AppendElement(wr::ToWrTransformProperty(
-            iter.Key(), value->Transform().mTransformInDevSpace));
-      } else if (value->Is<float>()) {
-        auto& opacityArray = aAnimations.mOpacityArrays[renderRoot];
-        opacityArray.AppendElement(
-            wr::ToWrOpacityProperty(iter.Key(), value->Opacity()));
-      } else if (value->Is<nscolor>()) {
-        auto& colorArray = aAnimations.mColorArrays[renderRoot];
-        colorArray.AppendElement(wr::ToWrColorProperty(
-            iter.Key(),
-            ToDeviceColor(gfx::sRGBColor::FromABGR(value->Color()))));
-      }
+      value->Value().match(
+          [&](const AnimationTransform& aTransform) {
+            auto& transformArray = aAnimations.mTransformArrays[renderRoot];
+            transformArray.AppendElement(wr::ToWrTransformProperty(
+                iter.Key(), aTransform.mTransformInDevSpace));
+          },
+          [&](const float& aOpacity) {
+            auto& opacityArray = aAnimations.mOpacityArrays[renderRoot];
+            opacityArray.AppendElement(
+                wr::ToWrOpacityProperty(iter.Key(), aOpacity));
+          },
+          [&](const nscolor& aColor) {
+            auto& colorArray = aAnimations.mColorArrays[renderRoot];
+            colorArray.AppendElement(wr::ToWrColorProperty(
+                iter.Key(), ToDeviceColor(gfx::sRGBColor::FromABGR(aColor))));
+          });
     }
   }
 
