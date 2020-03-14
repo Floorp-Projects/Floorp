@@ -7663,10 +7663,6 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
 
 // https://mikewest.github.io/corpp/#corp-check
 nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
-  if (!StaticPrefs::browser_tabs_remote_useCORP()) {
-    return NS_OK;
-  }
-
   // Fetch 4.5.9
   uint32_t corsMode;
   MOZ_ALWAYS_SUCCEEDS(GetCorsMode(&corsMode));
