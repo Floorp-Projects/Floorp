@@ -355,19 +355,19 @@ impl From<serde_json::Error> for WebDriverError {
 
 impl From<io::Error> for WebDriverError {
     fn from(err: io::Error) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.to_string())
     }
 }
 
 impl From<DecodeError> for WebDriverError {
     fn from(err: DecodeError) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.to_string())
     }
 }
 
 impl From<Box<dyn Error>> for WebDriverError {
     fn from(err: Box<dyn Error>) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.to_string())
     }
 }
 
