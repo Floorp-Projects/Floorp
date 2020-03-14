@@ -410,8 +410,7 @@ def set_try_config(parameters, task_config_file):
 
     if 'try:' in parameters['message']:
         parameters['try_mode'] = 'try_option_syntax'
-        args = parse_message(parameters['message'])
-        parameters['try_options'] = args
+        parameters.update(parse_message(parameters['message']))
     else:
         parameters['try_options'] = None
 

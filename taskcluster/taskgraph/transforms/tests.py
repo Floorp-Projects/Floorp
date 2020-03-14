@@ -1410,11 +1410,7 @@ def set_retry_exit_status(config, tests):
 @transforms.add
 def set_profile(config, tests):
     """Set profiling mode for tests."""
-    profile = None
-    if config.params['try_mode'] == 'try_option_syntax':
-        profile = config.params['try_options']['profile']
-    else:
-        profile = config.params['try_task_config'].get('gecko-profile', False)
+    profile = config.params['try_task_config'].get('gecko-profile', False)
 
     for test in tests:
         if profile and test['suite'] in ['talos', 'raptor']:
