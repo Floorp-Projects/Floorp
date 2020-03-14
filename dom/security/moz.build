@@ -24,6 +24,7 @@ EXPORTS.mozilla.dom += [
     'nsMixedContentBlocker.h',
     'PolicyTokenizer.h',
     'ReferrerInfo.h',
+    'SecFetch.h',
     'SRICheck.h',
     'SRILogHelper.h',
     'SRIMetadata.h',
@@ -50,6 +51,7 @@ UNIFIED_SOURCES += [
     'nsMixedContentBlocker.cpp',
     'PolicyTokenizer.cpp',
     'ReferrerInfo.cpp',
+    'SecFetch.cpp',
     'SRICheck.cpp',
     'SRIMetadata.cpp',
 ]
