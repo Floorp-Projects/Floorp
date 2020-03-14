@@ -470,10 +470,13 @@ class WebRenderBridgeParent final
   // Returns true if there is any animation (including animations in delay
   // phase).
   bool AdvanceAnimations();
-  bool SampleAnimations(
-      wr::RenderRootArray<nsTArray<wr::WrOpacityProperty>>& aOpacityArrays,
-      wr::RenderRootArray<nsTArray<wr::WrTransformProperty>>& aTransformArrays,
-      wr::RenderRootArray<nsTArray<wr::WrColorProperty>>& aColorArrays);
+
+  struct WrAnimations {
+    wr::RenderRootArray<nsTArray<wr::WrOpacityProperty>> mOpacityArrays;
+    wr::RenderRootArray<nsTArray<wr::WrTransformProperty>> mTransformArrays;
+    wr::RenderRootArray<nsTArray<wr::WrColorProperty>> mColorArrays;
+  };
+  bool SampleAnimations(WrAnimations& aAnimations);
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
