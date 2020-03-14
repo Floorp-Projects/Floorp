@@ -1712,6 +1712,31 @@ pub extern "C" fn wr_transaction_invalidate_rendered_frame(txn: &mut Transaction
     txn.invalidate_rendered_frame();
 }
 
+fn wr_animation_properties_into_vec<T>(
+    animation_array: *const WrAnimationPropertyValue<T>,
+    array_count: usize,
+    vec: &mut Vec<PropertyValue<T>>,
+) where
+    T: Copy,
+{
+    if array_count > 0 {
+        debug_assert!(
+            vec.capacity() - vec.len() >= array_count,
+            "The Vec should have fufficient free capacity"
+        );
+        let slice = unsafe { make_slice(animation_array, array_count) };
+
+        for element in slice.iter() {
+            let prop = PropertyValue {
+                key: PropertyBindingKey::new(element.id),
+                value: element.value,
+            };
+
+            vec.push(prop);
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn wr_transaction_update_dynamic_properties(
     txn: &mut Transaction,
@@ -1728,45 +1753,11 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
         colors: Vec::with_capacity(color_count),
     };
 
-    if transform_count > 0 {
-        let transform_slice = unsafe { make_slice(transform_array, transform_count) };
+    wr_animation_properties_into_vec(transform_array, transform_count, &mut properties.transforms);
 
-        properties.transforms.reserve(transform_slice.len());
-        for element in transform_slice.iter() {
-            let prop = PropertyValue {
-                key: PropertyBindingKey::new(element.id),
-                value: element.value,
-            };
+    wr_animation_properties_into_vec(opacity_array, opacity_count, &mut properties.floats);
 
-            properties.transforms.push(prop);
-        }
-    }
-
-    if opacity_count > 0 {
-        let opacity_slice = unsafe { make_slice(opacity_array, opacity_count) };
-
-        properties.floats.reserve(opacity_slice.len());
-        for element in opacity_slice.iter() {
-            let prop = PropertyValue {
-                key: PropertyBindingKey::new(element.id),
-                value: element.value,
-            };
-            properties.floats.push(prop);
-        }
-    }
-
-    if color_count > 0 {
-        let color_slice = unsafe { make_slice(color_array, color_count) };
-
-        properties.colors.reserve(color_slice.len());
-        for element in color_slice.iter() {
-            let prop = PropertyValue {
-                key: PropertyBindingKey::new(element.id),
-                value: element.value,
-            };
-            properties.colors.push(prop);
-        }
-    }
+    wr_animation_properties_into_vec(color_array, color_count, &mut properties.colors);
 
     txn.update_dynamic_properties(properties);
 }
@@ -1782,16 +1773,7 @@ pub extern "C" fn wr_transaction_append_transform_properties(
     }
 
     let mut transforms = Vec::with_capacity(transform_count);
-    let transform_slice = unsafe { make_slice(transform_array, transform_count) };
-    transforms.reserve(transform_slice.len());
-    for element in transform_slice.iter() {
-        let prop = PropertyValue {
-            key: PropertyBindingKey::new(element.id),
-            value: element.value,
-        };
-
-        transforms.push(prop);
-    }
+    wr_animation_properties_into_vec(transform_array, transform_count, &mut transforms);
 
     txn.append_dynamic_transform_properties(transforms);
 }
