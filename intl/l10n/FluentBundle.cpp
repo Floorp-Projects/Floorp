@@ -78,8 +78,9 @@ already_AddRefed<FluentBundle> FluentBundle::Constructor(
   }
 
   if (!raw) {
-    aRv.ThrowInvalidStateError("Failed to create the FluentBundle. Check the "
-                               "locales and pseudo strategy arguments.");
+    aRv.ThrowInvalidStateError(
+        "Failed to create the FluentBundle. Check the "
+        "locales and pseudo strategy arguments.");
     return nullptr;
   }
 
@@ -177,8 +178,9 @@ void FluentBundle::FormatPattern(JSContext* aCx, const FluentPattern& aPattern,
                                                 &argValues, &aRetVal, &errors);
 
   if (!succeeded) {
-    return aRv.ThrowInvalidStateError("Failed to format the FluentPattern. Likely the "
-                               "pattern could not be retrieved from the bundle.");
+    return aRv.ThrowInvalidStateError(
+        "Failed to format the FluentPattern. Likely the "
+        "pattern could not be retrieved from the bundle.");
   }
 
   if (aErrors.WasPassed()) {
@@ -208,8 +210,7 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
 
   if (aOptions->style == ffi::FluentNumberStyleRaw::Currency) {
     UErrorCode ec = U_ZERO_ERROR;
-    formatter =
-        formatter.unit(icu::CurrencyUnit(aOptions->currency.get(), ec));
+    formatter = formatter.unit(icu::CurrencyUnit(aOptions->currency.get(), ec));
     MOZ_ASSERT(U_SUCCESS(ec), "Failed to format the currency unit.");
   }
   if (aOptions->style == ffi::FluentNumberStyleRaw::Percent) {
@@ -234,14 +235,17 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
       formatter.locale(aLocale->get()).clone().orphan());
 }
 
-uint8_t* FluentBuiltInNumberFormatterFormat(const ffi::RawNumberFormatter* aFormatter,
-                                        double input, uint32_t* aOutCount) {
+uint8_t* FluentBuiltInNumberFormatterFormat(
+    const ffi::RawNumberFormatter* aFormatter, double input,
+    uint32_t* aOutCount) {
   auto formatter =
-      reinterpret_cast<const icu::number::LocalizedNumberFormatter*>(aFormatter);
+      reinterpret_cast<const icu::number::LocalizedNumberFormatter*>(
+          aFormatter);
   UErrorCode ec = U_ZERO_ERROR;
   icu::number::FormattedNumber result = formatter->formatDouble(input, ec);
   icu::UnicodeString str = result.toTempString(ec);
-  return reinterpret_cast<uint8_t*>(ToNewUTF8String(nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
+  return reinterpret_cast<uint8_t*>(ToNewUTF8String(
+      nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
 }
 
 void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
@@ -297,14 +301,16 @@ ffi::RawDateTimeFormatter* FluentBuiltInDateTimeFormatterCreate(
   return reinterpret_cast<ffi::RawDateTimeFormatter*>(dtmf);
 }
 
-uint8_t* FluentBuiltInDateTimeFormatterFormat(const ffi::RawDateTimeFormatter* aFormatter,
-                                          uintptr_t input, uint32_t* aOutCount) {
+uint8_t* FluentBuiltInDateTimeFormatterFormat(
+    const ffi::RawDateTimeFormatter* aFormatter, double input,
+    uint32_t* aOutCount) {
   auto formatter = reinterpret_cast<const icu::DateFormat*>(aFormatter);
   UDate myDate = input;
 
   icu::UnicodeString str;
   formatter->format(myDate, str);
-  return reinterpret_cast<uint8_t*>(ToNewUTF8String(nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
+  return reinterpret_cast<uint8_t*>(ToNewUTF8String(
+      nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
 }
 
 void FluentBuiltInDateTimeFormatterDestroy(
