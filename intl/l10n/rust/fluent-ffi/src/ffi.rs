@@ -146,7 +146,7 @@ extern "C" {
     ) -> *mut RawDateTimeFormatter;
     pub fn FluentBuiltInDateTimeFormatterFormat(
         formatter: *const RawDateTimeFormatter,
-        input: usize,
+        input: f64,
         out_count: &mut u32,
     ) -> *mut u8;
     pub fn FluentBuiltInDateTimeFormatterDestroy(formatter: *mut RawDateTimeFormatter);

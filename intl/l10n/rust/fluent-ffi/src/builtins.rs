@@ -375,7 +375,7 @@ impl From<&FluentDateTimeOptions> for FluentDateTimeOptionsRaw {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FluentDateTime {
-    epoch: usize,
+    epoch: f64,
     options: FluentDateTimeOptions,
 }
 
@@ -406,7 +406,7 @@ impl std::fmt::Display for FluentDateTime {
 }
 
 impl FluentDateTime {
-    pub fn new(epoch: usize, options: FluentDateTimeOptions) -> Self {
+    pub fn new(epoch: f64, options: FluentDateTimeOptions) -> Self {
         Self { epoch, options }
     }
 }
@@ -436,7 +436,7 @@ impl DateTimeFormat {
         }
     }
 
-    pub fn format(&self, input: usize) -> String {
+    pub fn format(&self, input: f64) -> String {
         unsafe {
             let mut byte_count = 0;
             let buffer = ffi::FluentBuiltInDateTimeFormatterFormat(
