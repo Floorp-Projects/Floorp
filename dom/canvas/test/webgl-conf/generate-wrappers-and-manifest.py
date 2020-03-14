@@ -7,8 +7,9 @@
 # Write a Mochitest manifest for WebGL conformance test files.
 
 import os
-import re
 from pathlib import *
+import re
+import shutil
 
 # All paths in this file are based where this file is run.
 WRAPPER_TEMPLATE_FILE = 'mochi-wrapper.html.template'
@@ -540,6 +541,7 @@ def GetFilePathListForDir(baseDir):
 if __name__ == '__main__':
     file_dir = Path(__file__).parent
     os.chdir(str(file_dir))
+    shutil.rmtree(file_dir / 'generated', True)
 
     testEntryList = GetTestList()
     wrapperPathStrList = WriteWrappers(testEntryList)
