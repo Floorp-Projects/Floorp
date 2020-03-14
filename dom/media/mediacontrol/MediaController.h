@@ -97,7 +97,7 @@ class MediaController final : public MediaSessionController {
   void Activate();
   void Deactivate();
 
-  void SetPlayState(PlaybackState aState);
+  void SetGuessedPlayState(PlaybackState aState);
 
   bool mAudible = false;
   bool mIsRegisteredToService = false;
@@ -105,7 +105,14 @@ class MediaController final : public MediaSessionController {
   int64_t mPlayingControlledMediaNum = 0;
   bool mShutdown = false;
 
-  PlaybackState mState = PlaybackState::eStopped;
+  // This state can match to the `guessed playback state` in the spec [1], it
+  // indicates if we have any media element playing within the tab which this
+  // controller belongs to. But currently we only take media elements into
+  // account, which is different from the way the spec recommends. In addition,
+  // We don't support web audio and plugin and not consider audible state of
+  // media.
+  // [1] https://w3c.github.io/mediasession/#guessed-playback-state
+  PlaybackState mGuessedPlaybackState = PlaybackState::eStopped;
   MediaEventProducer<PlaybackState> mPlaybackStateChangedEvent;
 };
 
