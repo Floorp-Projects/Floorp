@@ -957,7 +957,7 @@ impl Shaders {
     }
 
     fn get_yuv_shader_index(buffer_kind: ImageBufferKind) -> usize {
-        (buffer_kind as usize)
+        buffer_kind as usize
     }
 
     pub fn get_composite_shader(
