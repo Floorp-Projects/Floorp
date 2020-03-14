@@ -184,13 +184,18 @@ struct ScopeNote {
   // Sentinel index for no ScopeNote.
   static const uint32_t NoScopeNoteIndex = UINT32_MAX;
 
-  uint32_t index;   // Index of Scope in the scopes array, or
-                    // NoScopeIndex if there is no block scope in
-                    // this range.
-  uint32_t start;   // Bytecode offset at which this scope starts
-                    // relative to script->code().
-  uint32_t length;  // Bytecode length of scope.
-  uint32_t parent;  // Index of parent block scope in notes, or NoScopeNote.
+  // Index of the js::Scope in the script's gcthings array, or NoScopeIndex if
+  // there is no block scope in this range.
+  uint32_t index = 0;
+
+  // Bytecode offset at which this scope starts relative to script->code().
+  uint32_t start = 0;
+
+  // Length of bytecode span this scope covers.
+  uint32_t length = 0;
+
+  // Index of parent block scope in notes, or NoScopeNote.
+  uint32_t parent = 0;
 
   template <js::XDRMode mode>
   js::XDRResult XDR(js::XDRState<mode>* xdr);
