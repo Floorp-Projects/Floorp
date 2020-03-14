@@ -2351,7 +2351,8 @@ class nsDisplaySelectionOverlay : public nsPaintedDisplayItem {
   int16_t mSelectionValue;
 };
 
-DeviceColor nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(nscolor aColor) {
+DeviceColor nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(
+    nscolor aColor) {
   // If it has already alpha, leave it like that.
   if (NS_GET_A(aColor) != 255) {
     return ToDeviceColor(aColor);
@@ -3183,7 +3184,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  const bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
+  const bool useBlendMode = effects->mMixBlendMode != StyleBlend::Normal;
   if (useBlendMode) {
     aBuilder->SetContainsBlendMode(true);
   }
@@ -10221,8 +10222,7 @@ bool nsIFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
       // When clicked on, the selection position within the element
       // will be enough to make them keyboard scrollable.
       nsIScrollableFrame* scrollFrame = do_QueryFrame(this);
-      if (scrollFrame &&
-          !scrollFrame->IsForTextControlWithNoScrollbars() &&
+      if (scrollFrame && !scrollFrame->IsForTextControlWithNoScrollbars() &&
           !scrollFrame->GetScrollStyles().IsHiddenInBothDirections() &&
           !scrollFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
         // Scroll bars will be used for overflow
@@ -11073,7 +11073,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
          // strictly speaking, 'perspective' doesn't require visual atomicity,
          // but the spec says it acts like the rest of these
          ChildrenHavePerspective(aStyleDisplay) ||
-         aStyleEffects->mMixBlendMode != NS_STYLE_BLEND_NORMAL ||
+         aStyleEffects->mMixBlendMode != StyleBlend::Normal ||
          nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
          (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
                             aStylePosition->mZIndex.IsInteger())) ||

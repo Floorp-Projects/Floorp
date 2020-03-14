@@ -223,8 +223,8 @@ struct nsStyleImageLayers {
 
     // This property is used for background layer only.
     // For a mask layer, it should always be the initial value, which is
-    // NS_STYLE_BLEND_NORMAL.
-    uint8_t mBlendMode;  // NS_STYLE_BLEND_*
+    // StyleBlend::Normal.
+    mozilla::StyleBlend mBlendMode;
 
     // This property is used for mask layer only.
     // For a background layer, it should always be the initial value, which is
@@ -1854,7 +1854,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
   }
 
   bool HasMixBlendMode() const {
-    return mMixBlendMode != NS_STYLE_BLEND_NORMAL;
+    return mMixBlendMode != mozilla::StyleBlend::Normal;
   }
 
   mozilla::StyleOwnedSlice<mozilla::StyleFilter> mFilters;
@@ -1862,7 +1862,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
   mozilla::StyleOwnedSlice<mozilla::StyleFilter> mBackdropFilters;
   mozilla::StyleClipRectOrAuto mClip;  // offsets from UL border edge
   float mOpacity;
-  uint8_t mMixBlendMode;  // NS_STYLE_BLEND_*
+  mozilla::StyleBlend mMixBlendMode;
 };
 
 #define STATIC_ASSERT_TYPE_LAYOUTS_MATCH(T1, T2)           \
