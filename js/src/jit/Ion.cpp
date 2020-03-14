@@ -2427,7 +2427,7 @@ static void InvalidateActivation(JSFreeOp* fop,
         } else if (frame.isBailoutJS()) {
           type = "Bailing";
         }
-        JSScript* script = MaybeForwarded(frame.script());
+        JSScript* script = frame.maybeForwardedScript();
         JitSpew(JitSpew_IonInvalidate,
                 "#%zu %s JS frame @ %p, %s:%u:%u (fun: %p, script: %p, pc %p)",
                 frameno, type, frame.fp(), script->maybeForwardedFilename(),
@@ -2467,7 +2467,7 @@ static void InvalidateActivation(JSFreeOp* fop,
       continue;
     }
 
-    JSScript* script = MaybeForwarded(frame.script());
+    JSScript* script = frame.maybeForwardedScript();
     if (!script->hasIonScript()) {
       continue;
     }
