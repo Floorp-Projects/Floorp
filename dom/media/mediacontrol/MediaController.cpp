@@ -37,14 +37,14 @@ MediaController::~MediaController() {
 
 void MediaController::Play() {
   LOG("Play");
-  SetPlayState(PlaybackState::ePlaying);
+  SetGuessedPlayState(PlaybackState::ePlaying);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePlay);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
-  SetPlayState(PlaybackState::ePaused);
+  SetGuessedPlayState(PlaybackState::ePaused);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePause);
 }
@@ -75,7 +75,7 @@ void MediaController::SeekForward() {
 
 void MediaController::Stop() {
   LOG("Stop");
-  SetPlayState(PlaybackState::eStopped);
+  SetGuessedPlayState(PlaybackState::eStopped);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::eStop);
 }
@@ -102,7 +102,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 
 void MediaController::Shutdown() {
   MOZ_ASSERT(!mShutdown, "Do not call shutdown twice!");
-  SetPlayState(PlaybackState::eStopped);
+  SetGuessedPlayState(PlaybackState::eStopped);
   // The media controller would be removed from the service when we receive a
   // notification from the content process about all controlled media has been
   // stoppped. However, if controlled media is stopped after detaching
@@ -175,7 +175,7 @@ void MediaController::IncreasePlayingControlledMediaNum() {
              "The number of playing media should not exceed the number of "
              "controlled media!");
   if (mPlayingControlledMediaNum == 1) {
-    SetPlayState(PlaybackState::ePlaying);
+    SetGuessedPlayState(PlaybackState::ePlaying);
   }
 }
 
@@ -186,7 +186,7 @@ void MediaController::DecreasePlayingControlledMediaNum() {
       mPlayingControlledMediaNum);
   MOZ_ASSERT(mPlayingControlledMediaNum >= 0);
   if (mPlayingControlledMediaNum == 0) {
-    SetPlayState(PlaybackState::ePaused);
+    SetGuessedPlayState(PlaybackState::ePaused);
   }
 }
 
@@ -212,19 +212,21 @@ void MediaController::Deactivate() {
   }
 }
 
-void MediaController::SetPlayState(PlaybackState aState) {
-  if (mShutdown || mState == aState) {
+void MediaController::SetGuessedPlayState(PlaybackState aState) {
+  if (mShutdown || mGuessedPlaybackState == aState) {
     return;
   }
-  LOG("SetPlayState : '%s'", ToPlaybackStateEventStr(aState));
-  mState = aState;
-  mPlaybackStateChangedEvent.Notify(mState);
+  LOG("SetGuessedPlayState : '%s'", ToPlaybackStateEventStr(aState));
+  mGuessedPlaybackState = aState;
+  mPlaybackStateChangedEvent.Notify(mGuessedPlaybackState);
 }
 
-PlaybackState MediaController::GetState() const { return mState; }
+PlaybackState MediaController::GetState() const {
+  return mGuessedPlaybackState;
+}
 
 bool MediaController::IsAudible() const {
-  return mState == PlaybackState::ePlaying && mAudible;
+  return mGuessedPlaybackState == PlaybackState::ePlaying && mAudible;
 }
 
 uint64_t MediaController::ControlledMediaNum() const {
