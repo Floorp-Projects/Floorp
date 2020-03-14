@@ -1178,3 +1178,13 @@ pub fn round_up_to_multiple(val: usize, mul: NonZeroUsize) -> usize {
     }
 }
 
+
+#[macro_export]
+macro_rules! c_str {
+    ($lit:expr) => {
+        unsafe {
+            std::ffi::CStr::from_ptr(concat!($lit, "\0").as_ptr()
+                                     as *const std::os::raw::c_char)
+        }
+    }
+}
