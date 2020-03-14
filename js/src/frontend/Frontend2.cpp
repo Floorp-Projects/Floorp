@@ -40,7 +40,12 @@ class SmooshScriptStencil : public ScriptStencil {
   CompilationInfo& compilationInfo_;
   JSAtom** allAtoms_ = nullptr;
 
-  void init() {
+ public:
+  SmooshScriptStencil(JSContext* cx, const SmooshResult& result,
+                      CompilationInfo& compilationInfo)
+      : ScriptStencil(cx), result_(result), compilationInfo_(compilationInfo) {}
+
+  MOZ_MUST_USE bool init(JSContext* cx) {
     lineno = result_.lineno;
     column = result_.column;
 
@@ -48,37 +53,40 @@ class SmooshScriptStencil : public ScriptStencil {
 
     ngcthings = 1;
 
-    numResumeOffsets = 0;
-    numScopeNotes = 0;
-    numTryNotes = 0;
-
-    mainOffset = result_.main_offset;
-    nfixed = result_.max_fixed_slots;
-    nslots = nfixed + result_.maximum_stack_depth;
-    bodyScopeIndex = result_.body_scope_index;
-    numICEntries = result_.num_ic_entries;
-    numBytecodeTypeSets = result_.num_type_sets;
+    uint32_t nfixed = result_.max_fixed_slots;
+    uint64_t nslots64 =
+        nfixed + static_cast<uint64_t>(result_.maximum_stack_depth);
+    if (nslots64 > UINT32_MAX) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEED_DIET,
+                                js_script_str);
+      return false;
+    }
+    immutableScriptData = ImmutableScriptData::new_(
+        cx, result_.main_offset, nfixed, uint32_t(nslots64),
+        result_.body_scope_index, result_.num_ic_entries, result_.num_type_sets,
+        result_.is_function, /* funLength = */ 0,
+        mozilla::MakeSpan(result_.bytecode.data, result_.bytecode.len),
+        mozilla::Span<const jssrcnote>(), mozilla::Span<const uint32_t>(),
+        mozilla::Span<const ScopeNote>(), mozilla::Span<const JSTryNote>());
+    if (!immutableScriptData) {
+      return false;
+    }
 
     strict = result_.strict;
     bindingsAccessedDynamically = result_.bindings_accessed_dynamically;
     hasCallSiteObj = result_.has_call_site_obj;
     isForEval = result_.is_for_eval;
     isModule = result_.is_module;
-    isFunction = result_.is_function;
+
     hasNonSyntacticScope = result_.has_non_syntactic_scope;
     needsFunctionEnvironmentObjects =
         result_.needs_function_environment_objects;
     hasModuleGoal = result_.has_module_goal;
 
-    code = mozilla::MakeSpan(result_.bytecode.data, result_.bytecode.len);
-    MOZ_ASSERT(notes.IsEmpty());
-  }
-
- public:
-  explicit SmooshScriptStencil(JSContext* cx, const SmooshResult& result,
-                               CompilationInfo& compilationInfo)
-      : ScriptStencil(cx), result_(result), compilationInfo_(compilationInfo) {
-    init();
+    if (!createAtoms(cx)) {
+      return false;
+    }
+    return true;
   }
 
   virtual bool finishGCThings(JSContext* cx,
@@ -94,6 +102,7 @@ class SmooshScriptStencil : public ScriptStencil {
     }
   }
 
+ private:
   bool createAtoms(JSContext* cx) {
     size_t numAtoms = result_.all_atoms.len;
 
@@ -117,6 +126,7 @@ class SmooshScriptStencil : public ScriptStencil {
     return true;
   }
 
+ public:
   virtual void finishResumeOffsets(
       mozilla::Span<uint32_t> resumeOffsets) const {}
 
@@ -229,7 +239,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
 
   Rooted<SmooshScriptStencil> stencil(
       cx, SmooshScriptStencil(cx, smoosh, compilationInfo));
-  if (!stencil.get().createAtoms(cx)) {
+  if (!stencil.get().init(cx)) {
     return nullptr;
   }
 
