@@ -82,6 +82,10 @@ pub trait ProfilerHooks : Send + Sync {
     /// be a C string (null terminated).
     fn end_marker(&self, label: &CStr);
 
+    /// Called to mark an event happening. The label must
+    /// be a C string (null terminated).
+    fn event_marker(&self, label: &CStr);
+
     /// Called with a duration to indicate a text marker that just ended. Text
     /// markers allow different types of entries to be recorded on the same row
     /// in the timeline, by adding labels to the entry.
@@ -119,6 +123,15 @@ pub fn add_text_marker(label: &CStr, text: &str, duration: Duration) {
     unsafe {
         if let Some(ref hooks) = PROFILER_HOOKS {
             hooks.add_text_marker(label, text, duration);
+        }
+    }
+}
+
+/// Records a marker of the given duration that just ended.
+pub fn add_event_marker(label: &CStr) {
+    unsafe {
+        if let Some(ref hooks) = PROFILER_HOOKS {
+            hooks.event_marker(label);
         }
     }
 }
