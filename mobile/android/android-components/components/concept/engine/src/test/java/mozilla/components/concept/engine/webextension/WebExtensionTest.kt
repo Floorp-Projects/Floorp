@@ -6,8 +6,11 @@ package mozilla.components.concept.engine.webextension
 
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.json.JSONObject
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WebExtensionTest {
@@ -54,5 +57,21 @@ class WebExtensionTest {
         }
 
         assertSame(engineSession, port.engineSession)
+    }
+
+    @Test
+    fun `unsupported check`() {
+        val extension: WebExtension = mock()
+        assertFalse(extension.isUnsupported())
+
+        val metadata: Metadata = mock()
+        whenever(extension.getMetadata()).thenReturn(metadata)
+        assertFalse(extension.isUnsupported())
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.BLOCKLIST))
+        assertFalse(extension.isUnsupported())
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.APP_SUPPORT))
+        assertTrue(extension.isUnsupported())
     }
 }

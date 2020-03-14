@@ -26,6 +26,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.AddonUpdater.Frequency
@@ -80,15 +81,19 @@ interface AddonUpdater {
     )
 
     /**
-     * Registers the given [extensions] for periodic updates.
+     * Registers the [extensions] for periodic updates, if applicable. Built-in and
+     * unsupported extensions will not update automatically.
+     *
      * @param extensions The extensions to be registered for updates.
      */
     fun registerForFutureUpdates(extensions: List<WebExtension>) {
-        extensions.forEach { extension ->
-            if (!extension.isBuiltIn()) {
+        extensions
+            .filter { extension ->
+                !extension.isBuiltIn() && !extension.isUnsupported()
+            }
+            .forEach { extension ->
                 registerForFutureUpdates(extension.id)
             }
-        }
     }
 
     /**

@@ -422,3 +422,8 @@ class DisabledFlags internal constructor(val value: Int) {
      */
     fun contains(flag: Int) = (value and flag) != 0
 }
+
+/**
+ * Returns whether or not the extension is disabled because it is unsupported.
+ */
+fun WebExtension.isUnsupported() = getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true
