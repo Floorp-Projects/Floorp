@@ -11,15 +11,14 @@ promise_test(async testCase => {
     }
   });
   const frame = document.createElement('iframe');
-  const child = getUrl(SAME_ORIGIN, 'resources/child.sub.html');
-  const grandchild = getUrl(SAME_ORIGIN, 'resources/grandchild.sub.html');
-  frame.src = child;
+  const redirecting_child = getUrl(CROSS_ORIGIN, 'resources/redirecting-child.sub.html');
+  frame.src = redirecting_child;
   document.body.append(frame);
   await grandchildLoaded;
   try {
     let result = await performance.measureMemory();
     checkMeasureMemory(result, {
-      allowed: [window.location.href, child, grandchild],
+      allowed: [window.location.href, redirecting_child]
     });
   } catch (error) {
     if (!(error instanceof DOMException)) {
@@ -27,4 +26,4 @@ promise_test(async testCase => {
     }
     assert_equals(error.name, 'SecurityError');
   }
-}, 'Well-formed result of performance.measureMemory with same-origin iframe.');
+}, 'Well-formed result of performance.measureMemory with cross-origin iframe.');
