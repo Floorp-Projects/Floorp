@@ -69,19 +69,6 @@ class TryToolsMixin(TransferMixin):
             'web-plaftform-tests',
             'xpcshell',
         )),
-        '--setenv': ({
-            'action': 'append',
-            'dest': 'setenv',
-            'default': [],
-            'metavar': 'NAME=VALUE',
-        }, (
-            'browser-chrome',
-            'chrome',
-            'crashtest',
-            'devtools-chrome',
-            'mochitest',
-            'reftest',
-        )),
     }
 
     def _extract_try_message(self):
