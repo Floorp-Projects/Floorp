@@ -278,12 +278,6 @@ var gIdentityHandler = {
     }
     return (this._permissionAnchors = permissionAnchors);
   },
-  get _trackingProtectionIconContainer() {
-    delete this._trackingProtectionIconContainer;
-    return (this._trackingProtectionIconContainer = document.getElementById(
-      "tracking-protection-icon-container"
-    ));
-  },
 
   get _geoSharingIcon() {
     delete this._geoSharingIcon;
@@ -939,7 +933,7 @@ var gIdentityHandler = {
     this._refreshPermissionIcons();
 
     // Hide the shield icon if it is a chrome page.
-    this._trackingProtectionIconContainer.classList.toggle(
+    gProtectionsHandler._trackingProtectionIconContainer.classList.toggle(
       "chromeUI",
       this._isSecureInternalUI
     );
