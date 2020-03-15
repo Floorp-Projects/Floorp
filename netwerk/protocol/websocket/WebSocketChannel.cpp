@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 #include "nsThreadUtils.h"
 #include "nsError.h"
+#include "mozilla/Base64.h"
 #include "nsStringStream.h"
 #include "nsAlgorithm.h"
 #include "nsProxyRelease.h"
@@ -2738,11 +2739,12 @@ nsresult WebSocketChannel::SetupRequest() {
 
   rv = mRandomGenerator->GenerateRandomBytes(16, &secKey);
   NS_ENSURE_SUCCESS(rv, rv);
-  char* b64 = PL_Base64Encode((const char*)secKey, 16, nullptr);
+  rv = Base64Encode(nsDependentCSubstring((char*)secKey, 16), secKeyString);
   free(secKey);
-  if (!b64) return NS_ERROR_OUT_OF_MEMORY;
-  secKeyString.Assign(b64);
-  PR_Free(b64);  // PL_Base64Encode() uses PR_Malloc.
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
                                       secKeyString, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
