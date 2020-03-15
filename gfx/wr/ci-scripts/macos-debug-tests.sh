@@ -38,4 +38,5 @@ cargo check ${CARGOFLAGS}
 popd
 
 cargo test ${CARGOFLAGS} ${CARGOTESTFLAGS} \
-    --all --exclude compositor-windows --exclude compositor
+    --all --exclude compositor-windows --exclude compositor \
+    --exclude glsl-to-cxx --exclude swgl

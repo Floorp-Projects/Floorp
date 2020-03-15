@@ -32,4 +32,5 @@ cargo build ${CARGOFLAGS}
 popd
 
 cargo test ${CARGOFLAGS} \
-    --all --exclude compositor-windows --exclude compositor
+    --all --exclude compositor-windows --exclude compositor \
+    --exclude glsl-to-cxx --exclude swgl
