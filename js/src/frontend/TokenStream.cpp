@@ -630,8 +630,7 @@ void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
   ErrorMetadata metadata;
   computeErrorMetadataNoOffset(&metadata);
 
-  ReportCompileErrorLatin1(cx, std::move(metadata), nullptr, JSREPORT_ERROR,
-                           errorNumber, args);
+  ReportCompileErrorLatin1(cx, std::move(metadata), nullptr, errorNumber, args);
 }
 
 // Use the fastest available getc.
@@ -1048,7 +1047,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     }
 
     ReportCompileErrorLatin1(anyChars.cx, std::move(err), std::move(notes),
-                             JSREPORT_ERROR, errorNumber, &args);
+                             errorNumber, &args);
   } while (false);
 
   va_end(args);
