@@ -336,7 +336,7 @@ RegExpParser<CharT>::SyntaxError(unsigned errorNumber, ...)
     va_start(args, errorNumber);
 
     ReportCompileErrorLatin1(ts.context(), std::move(err), nullptr,
-                             JSREPORT_ERROR, errorNumber, &args);
+                             errorNumber, &args);
 
     va_end(args);
 }

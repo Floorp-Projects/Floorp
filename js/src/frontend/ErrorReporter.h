@@ -145,8 +145,7 @@ class ErrorReportMixin : public StrictModeGetter {
     }
 
     ReportCompileErrorLatin1(getContext(), std::move(metadata),
-                             std::move(notes), JSREPORT_ERROR, errorNumber,
-                             args);
+                             std::move(notes), errorNumber, args);
   }
 
   // ==== warning ====
@@ -337,8 +336,7 @@ class ErrorReportMixin : public StrictModeGetter {
     }
 
     ReportCompileErrorLatin1(getContext(), std::move(metadata),
-                             std::move(notes), JSREPORT_ERROR, errorNumber,
-                             args);
+                             std::move(notes), errorNumber, args);
     return false;
   }
 
