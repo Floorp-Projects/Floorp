@@ -453,18 +453,8 @@ nsresult net_ExtractURLScheme(const nsACString& inURI, nsACString& scheme) {
   return NS_OK;
 }
 
-bool net_IsValidScheme(const char* scheme, uint32_t schemeLen) {
-  // first char must be alpha
-  if (!IsAsciiAlpha(*scheme)) return false;
-
-  // nsCStrings may have embedded nulls -- reject those too
-  for (; schemeLen; ++scheme, --schemeLen) {
-    if (!(IsAsciiAlpha(*scheme) || IsAsciiDigit(*scheme) || *scheme == '+' ||
-          *scheme == '.' || *scheme == '-'))
-      return false;
-  }
-
-  return true;
+bool net_IsValidScheme(const nsACString& scheme) {
+  return rust_net_is_valid_scheme(scheme);
 }
 
 bool net_IsAbsoluteURL(const nsACString& uri) {
