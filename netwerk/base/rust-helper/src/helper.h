@@ -20,6 +20,8 @@ bool rust_net_is_valid_ipv4_addr(const nsACString& aAddr);
 bool rust_net_is_valid_ipv6_addr(const nsACString& aAddr);
 
 bool rust_net_is_valid_scheme_char(const char aChar);
+
+bool rust_net_is_valid_scheme(const nsACString& scheme);
 }
 
 #endif  // RUST_NS_NET_HELPER

@@ -94,11 +94,7 @@ bool net_IsAbsoluteURL(const nsACString& inURL);
 nsresult net_ExtractURLScheme(const nsACString& inURI, nsACString& scheme);
 
 /* check that the given scheme conforms to RFC 2396 */
-bool net_IsValidScheme(const char* scheme, uint32_t schemeLen);
-
-inline bool net_IsValidScheme(const nsCString& scheme) {
-  return net_IsValidScheme(scheme.get(), scheme.Length());
-}
+bool net_IsValidScheme(const nsACString& scheme);
 
 /**
  * This function strips out all C0 controls and space at the beginning and end
