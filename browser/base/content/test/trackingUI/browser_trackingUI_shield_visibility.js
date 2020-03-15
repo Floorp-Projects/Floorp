@@ -96,7 +96,7 @@ add_task(async function setup() {
 
     is(
       BrowserTestUtils.is_hidden(
-        gIdentityHandler._trackingProtectionIconContainer
+        gProtectionsHandler._trackingProtectionIconContainer
       ),
       testData.hidden,
       "tracking protection icon container is correctly displayed"
