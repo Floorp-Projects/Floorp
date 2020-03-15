@@ -52,8 +52,7 @@ function openIdentityPopup() {
 function openProtectionsPopup() {
   let mainView = document.getElementById("protections-popup-mainView");
   let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  // TODO: This should click on the icon once we have it.
-  gIdentityHandler._trackingProtectionIconContainer.click();
+  gProtectionsHandler._trackingProtectionIconContainer.click();
   return viewShown;
 }
 
