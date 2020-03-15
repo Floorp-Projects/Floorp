@@ -420,12 +420,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
       aKey == dom::KeyboardEvent_Binding::DOM_VK_DOWN ||
       aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP ||
       aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_DOWN) {
+    // Prevent the input from handling up/down events, as it may move
+    // the cursor to home/end on some systems
+    *_retval = true;
+
     bool isOpen = false;
     input->GetPopupOpen(&isOpen);
     if (isOpen) {
-      // Prevent the input from handling up/down events, as it may move
-      // the cursor to home/end on some systems
-      *_retval = true;
       bool reverse = aKey == dom::KeyboardEvent_Binding::DOM_VK_UP ||
                              aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP
                          ? true
@@ -487,71 +488,59 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
         }
       }
     } else {
-      // Only show the popup if the caret is at the start or end of the input
-      // and there is no selection, so that the default defined key shortcuts
-      // for up and down move to the beginning and end of the field otherwise.
-      if (aKey == dom::KeyboardEvent_Binding::DOM_VK_UP ||
-          aKey == dom::KeyboardEvent_Binding::DOM_VK_DOWN) {
-        const bool isUp = aKey == dom::KeyboardEvent_Binding::DOM_VK_UP;
-
-        int32_t start, end;
+#ifdef XP_MACOSX
+      // on Mac, only show the popup if the caret is at the start or end of
+      // the input and there is no selection, so that the default defined key
+      // shortcuts for up and down move to the beginning and end of the field
+      // otherwise.
+      int32_t start, end;
+      if (aKey == dom::KeyboardEvent_Binding::DOM_VK_UP) {
         input->GetSelectionStart(&start);
         input->GetSelectionEnd(&end);
+        if (start > 0 || start != end) *_retval = false;
+      } else if (aKey == dom::KeyboardEvent_Binding::DOM_VK_DOWN) {
+        nsAutoString text;
+        input->GetTextValue(text);
+        input->GetSelectionStart(&start);
+        input->GetSelectionEnd(&end);
+        if (start != end || end < (int32_t)text.Length()) *_retval = false;
+      }
+#endif
+      if (*_retval) {
+        nsAutoString oldSearchString;
+        uint16_t oldResult = 0;
 
-        if (isUp) {
-          if (start > 0 || start != end) {
-            return NS_OK;
+        // Open the popup if there has been a previous non-errored search, or
+        // else kick off a new search
+        if (!mResults.IsEmpty() &&
+            NS_SUCCEEDED(mResults[0]->GetSearchResult(&oldResult)) &&
+            oldResult != nsIAutoCompleteResult::RESULT_FAILURE &&
+            NS_SUCCEEDED(mResults[0]->GetSearchString(oldSearchString)) &&
+            oldSearchString.Equals(mSearchString,
+                                   nsCaseInsensitiveStringComparator())) {
+          if (mMatchCount) {
+            OpenPopup();
           }
         } else {
-          nsAutoString text;
-          input->GetTextValue(text);
-          if (start != end || end < (int32_t)text.Length()) {
+          // Stop all searches in case they are async.
+          StopSearch();
+
+          if (!mInput) {
+            // StopSearch() can call PostSearchCleanup() which might result
+            // in a blur event, which could null out mInput, so we need to check
+            // it again.  See bug #395344 for more details
             return NS_OK;
           }
+
+          // Some script may have changed the value of the text field since our
+          // last keypress or after our focus handler and we don't want to
+          // search for a stale string.
+          nsAutoString value;
+          input->GetTextValue(value);
+          SetSearchStringInternal(value);
+
+          StartSearches();
         }
-      }
-
-      nsAutoString oldSearchString;
-      uint16_t oldResult = 0;
-
-      // Open the popup if there has been a previous non-errored search, or
-      // else kick off a new search
-      if (!mResults.IsEmpty() &&
-          NS_SUCCEEDED(mResults[0]->GetSearchResult(&oldResult)) &&
-          oldResult != nsIAutoCompleteResult::RESULT_FAILURE &&
-          NS_SUCCEEDED(mResults[0]->GetSearchString(oldSearchString)) &&
-          oldSearchString.Equals(mSearchString,
-                                 nsCaseInsensitiveStringComparator())) {
-        if (mMatchCount) {
-          OpenPopup();
-        }
-      } else {
-        // Stop all searches in case they are async.
-        StopSearch();
-
-        if (!mInput) {
-          // StopSearch() can call PostSearchCleanup() which might result
-          // in a blur event, which could null out mInput, so we need to check
-          // it again.  See bug #395344 for more details
-          return NS_OK;
-        }
-
-        // Some script may have changed the value of the text field since our
-        // last keypress or after our focus handler and we don't want to
-        // search for a stale string.
-        nsAutoString value;
-        input->GetTextValue(value);
-        SetSearchStringInternal(value);
-
-        StartSearches();
-      }
-
-      bool isOpen = false;
-      input->GetPopupOpen(&isOpen);
-      if (isOpen) {
-        // Prevent the default action if we opened the popup in any of the code
-        // paths above.
-        *_retval = true;
       }
     }
   } else if (aKey == dom::KeyboardEvent_Binding::DOM_VK_LEFT ||
@@ -997,9 +986,7 @@ nsresult nsAutoCompleteController::StartSearch(uint16_t aSearchType) {
 
 void nsAutoCompleteController::AfterSearches() {
   mResultCache.Clear();
-  if (mSearchesFailed == mSearches.Length()) {
-    PostSearchCleanup();
-  }
+  if (mSearchesFailed == mSearches.Length()) PostSearchCleanup();
 }
 
 NS_IMETHODIMP

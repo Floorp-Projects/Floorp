@@ -22,8 +22,8 @@ function keyCaretTest()
   var autocomplete = $("autocomplete");
 
   autocomplete.focus();
-  checkKeyCaretTest("KEY_ArrowUp", 0, 0, true, "no value up");
-  checkKeyCaretTest("KEY_ArrowDown", 0, 0, true, "no value down");
+  checkKeyCaretTest("KEY_ArrowUp", 0, 0, false, "no value up");
+  checkKeyCaretTest("KEY_ArrowDown", 0, 0, false, "no value down");
 
   autocomplete.value = "Sample";
 
