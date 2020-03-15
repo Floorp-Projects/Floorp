@@ -24,3 +24,9 @@
 |---|---|
 | [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`Action`](-action/index.md) |
 | [WebExtensionPageAction](-web-extension-page-action.md) | `typealias WebExtensionPageAction = `[`Action`](-action/index.md) |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [isUnsupported](is-unsupported.md) | `fun `[`WebExtension`](-web-extension/index.md)`.isUnsupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not the extension is disabled because it is unsupported. |
