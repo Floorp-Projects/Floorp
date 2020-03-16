@@ -485,9 +485,9 @@ GtkWidget* nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(
 
 NS_IMPL_ISUPPORTS(nsPrintDialogServiceGTK, nsIPrintDialogService)
 
-nsPrintDialogServiceGTK::nsPrintDialogServiceGTK() {}
+nsPrintDialogServiceGTK::nsPrintDialogServiceGTK() = default;
 
-nsPrintDialogServiceGTK::~nsPrintDialogServiceGTK() {}
+nsPrintDialogServiceGTK::~nsPrintDialogServiceGTK() = default;
 
 NS_IMETHODIMP
 nsPrintDialogServiceGTK::Init() { return NS_OK; }

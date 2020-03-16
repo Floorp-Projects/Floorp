@@ -1067,7 +1067,7 @@ class WidgetGUIEvent : public WidgetEvent {
                  EventClassID aEventClassID)
       : WidgetEvent(aIsTrusted, aMessage, aEventClassID), mWidget(aWidget) {}
 
-  WidgetGUIEvent() {}
+  WidgetGUIEvent() = default;
 
  public:
   virtual WidgetGUIEvent* AsGUIEvent() override { return this; }

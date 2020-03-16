@@ -15,9 +15,9 @@ namespace widget {
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-HeadlessLookAndFeel::HeadlessLookAndFeel() {}
+HeadlessLookAndFeel::HeadlessLookAndFeel() = default;
 
-HeadlessLookAndFeel::~HeadlessLookAndFeel() {}
+HeadlessLookAndFeel::~HeadlessLookAndFeel() = default;
 
 nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
   // For headless mode, we use GetStandinForNativeColor for everything we can,
