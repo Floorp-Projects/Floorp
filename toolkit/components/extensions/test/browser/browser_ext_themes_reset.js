@@ -37,8 +37,8 @@ add_task(async function theme_reset_by_extension() {
       let final_reset_theme = await browser.theme.getCurrent();
 
       browser.test.assertEq(
-        undefined,
-        final_reset_theme.colors,
+        JSON.stringify({ colors: null, images: null, properties: null }),
+        JSON.stringify(final_reset_theme),
         "Should reset when extension had replaced the global theme"
       );
       browser.test.sendMessage("done");

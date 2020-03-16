@@ -98,8 +98,8 @@ add_task(async function test_get_current() {
 
       function testEmptyTheme(returnedTheme) {
         browser.test.assertEq(
-          0,
-          Object.keys(returnedTheme).length,
+          JSON.stringify({ colors: null, images: null, properties: null }),
+          JSON.stringify(returnedTheme),
           JSON.stringify(returnedTheme, null, 2)
         );
       }
