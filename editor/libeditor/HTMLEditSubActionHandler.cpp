@@ -248,8 +248,9 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
-    TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
-        SelectionRefPtr()->GetRangeAt(0));
+    if (nsRange* range = SelectionRefPtr()->GetRangeAt(0)) {
+      TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(*range);
+    }
   }
   nsCOMPtr<nsINode> selStartNode =
       TopLevelEditSubActionDataRef().mSelectedRange->mStartContainer;
@@ -258,7 +259,7 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
 
   // Register with range updater to track this as we perturb the doc
   RangeUpdaterRef().RegisterRangeItem(
-      TopLevelEditSubActionDataRef().mSelectedRange);
+      *TopLevelEditSubActionDataRef().mSelectedRange);
 
   // Remember current inline styles for deletion and normal insertion ops
   bool cacheInlineStyles;
@@ -335,8 +336,10 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubAction() {
     // modify the DOM tree nor Selection.
 
     // Free up selectionState range item
-    RangeUpdaterRef().DropRangeItem(
-        TopLevelEditSubActionDataRef().mSelectedRange);
+    if (TopLevelEditSubActionDataRef().mSelectedRange) {
+      RangeUpdaterRef().DropRangeItem(
+          *TopLevelEditSubActionDataRef().mSelectedRange);
+    }
 
     // Reset the contenteditable count to its previous value
     if (TopLevelEditSubActionDataRef().mRestoreContentEditableCount) {
@@ -7682,8 +7685,8 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
   // First register ranges for special editor gravity
   for (auto& rangeItem : rangeItemArray) {
     rangeItem = new RangeItem();
-    rangeItem->StoreRange(aArrayOfRanges[0]);
-    RangeUpdaterRef().RegisterRangeItem(rangeItem);
+    rangeItem->StoreRange(*aArrayOfRanges[0]);
+    RangeUpdaterRef().RegisterRangeItem(*rangeItem);
     aArrayOfRanges.RemoveElementAt(0);
   }
   // Now bust up inlines.

@@ -120,7 +120,7 @@ DeleteTextTransaction::DoTransaction() {
   }
 
   DebugOnly<nsresult> rvIgnored =
-      editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
+      editorBase->RangeUpdaterRef().SelAdjDeleteText(*textNode, mOffset,
                                                      mLengthToDelete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjDeleteText() failed, but ignored");
