@@ -30,7 +30,6 @@
 #include <sys/prctl.h>
 #include "sqlite3.h"
 #include "SQLiteBridge.h"
-#include "NSSBridge.h"
 #include "Linker.h"
 #include "application.ini.h"
 
@@ -286,7 +285,7 @@ static mozglueresult loadNSSLibs() {
   }
 #endif
 
-  return setup_nss_functions(nss_handle, nspr_handle, plc_handle);
+  return SUCCESS;
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
