@@ -2275,7 +2275,6 @@ setterLevel:                                                                  \
   // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(hideScriptFromDebugger, HideScriptFromDebugger)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
-  MUTABLE_FLAG_GETTER_SETTER(isLazyScript, IsLazyScript)
 
 #undef IMMUTABLE_FLAG_GETTER
 #undef IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC
@@ -2851,7 +2850,7 @@ class JSScript : public js::BaseScript {
 
   inline js::LexicalScope* maybeNamedLambdaScope() const;
 
-  // Drop script data and set the IsLazyScript flag.
+  // Drop script data and reset warmUpData to reference enclosing scope.
   void relazify(JSRuntime* rt);
 
  private:
