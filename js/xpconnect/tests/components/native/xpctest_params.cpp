@@ -8,9 +8,9 @@
 
 NS_IMPL_ISUPPORTS(nsXPCTestParams, nsIXPCTestParams)
 
-nsXPCTestParams::nsXPCTestParams() {}
+nsXPCTestParams::nsXPCTestParams() = default;
 
-nsXPCTestParams::~nsXPCTestParams() {}
+nsXPCTestParams::~nsXPCTestParams() = default;
 
 #define GENERIC_METHOD_IMPL \
   {                         \

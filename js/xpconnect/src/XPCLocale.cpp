@@ -28,7 +28,7 @@ class XPCLocaleObserver : public nsIObserver {
   void Init();
 
  private:
-  virtual ~XPCLocaleObserver(){};
+  virtual ~XPCLocaleObserver() = default;
 };
 
 NS_IMPL_ISUPPORTS(XPCLocaleObserver, nsIObserver);

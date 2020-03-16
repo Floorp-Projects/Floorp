@@ -42,8 +42,7 @@ struct BinaryASTSupport {
   struct CharSlice {
     const char* start_;
     uint32_t byteLen_;
-    CharSlice(const CharSlice& other)
-        : start_(other.start_), byteLen_(other.byteLen_) {}
+    CharSlice(const CharSlice& other) = default;
     CharSlice(const char* start, const uint32_t byteLen)
         : start_(start), byteLen_(byteLen) {}
     explicit CharSlice(JSContext*) : CharSlice(nullptr, 0) {}

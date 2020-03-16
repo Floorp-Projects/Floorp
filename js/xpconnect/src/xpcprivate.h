@@ -1091,7 +1091,7 @@ class MOZ_STACK_CLASS XPCNativeSetKey final {
   // |addition| inserted after existing interfaces. |addition| must
   // not already be present in |baseSet|.
   explicit XPCNativeSetKey(XPCNativeSet* baseSet, XPCNativeInterface* addition);
-  ~XPCNativeSetKey() {}
+  ~XPCNativeSetKey() = default;
 
   XPCNativeSet* GetBaseSet() const { return mBaseSet; }
   XPCNativeInterface* GetAddition() const { return mAddition; }
@@ -2153,7 +2153,7 @@ class XPCVariant : public nsIVariant {
   void RemovePurple() { mRefCnt.RemovePurple(); }
 
  protected:
-  virtual ~XPCVariant() {}
+  virtual ~XPCVariant() = default;
 
   bool InitializeData(JSContext* cx);
 

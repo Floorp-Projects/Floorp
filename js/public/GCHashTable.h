@@ -443,7 +443,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
 
   struct Range {
     explicit Range(const typename Map::Range& r) : range(r) { settle(); }
-    Range() {}
+    Range() = default;
 
     bool empty() const { return range.empty(); }
     const Entry& front() const { return range.front(); }
@@ -624,7 +624,7 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
 
   struct Range {
     explicit Range(const typename Set::Range& r) : range(r) { settle(); }
-    Range() {}
+    Range() = default;
 
     bool empty() const { return range.empty(); }
     const Entry& front() const { return range.front(); }

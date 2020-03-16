@@ -56,7 +56,7 @@ struct AllocationIntegrityState {
     Vector<LDefinition, 0, SystemAllocPolicy> temps;
     Vector<LDefinition, 1, SystemAllocPolicy> outputs;
 
-    InstructionInfo() {}
+    InstructionInfo() = default;
 
     InstructionInfo(const InstructionInfo& o) {
       AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -70,7 +70,7 @@ struct AllocationIntegrityState {
 
   struct BlockInfo {
     Vector<InstructionInfo, 5, SystemAllocPolicy> phis;
-    BlockInfo() {}
+    BlockInfo() = default;
     BlockInfo(const BlockInfo& o) {
       AutoEnterOOMUnsafeRegion oomUnsafe;
       if (!phis.appendAll(o.phis)) {

@@ -25,9 +25,9 @@ namespace mozilla::jsdebugger {
 
 NS_IMPL_ISUPPORTS(JSDebugger, IJSDebugger)
 
-JSDebugger::JSDebugger() {}
+JSDebugger::JSDebugger() = default;
 
-JSDebugger::~JSDebugger() {}
+JSDebugger::~JSDebugger() = default;
 
 NS_IMETHODIMP
 JSDebugger::AddClass(JS::Handle<JS::Value> global, JSContext* cx) {

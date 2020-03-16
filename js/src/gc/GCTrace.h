@@ -21,7 +21,7 @@ namespace gc {
  */
 class GCTrace {
  public:
-  GCTrace(){};
+  GCTrace() = default;
 
 #ifdef JS_GC_TRACE
 

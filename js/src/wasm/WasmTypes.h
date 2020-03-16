@@ -2584,7 +2584,7 @@ class CalleeDesc {
   } u;
 
  public:
-  CalleeDesc() {}
+  CalleeDesc() = default;
   static CalleeDesc function(uint32_t funcIndex) {
     CalleeDesc c;
     c.which_ = Func;
