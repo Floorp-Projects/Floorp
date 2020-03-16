@@ -1978,6 +1978,7 @@ set_define('MOZ_FOGOTYPE', True, when=fogotype)
 check_prog('DUMP_SYMS', ['dump_syms'], allow_missing=True, paths=toolchain_search_path,
            when=compile_environment & target_is_windows)
 
+
 # Fork server
 @depends(target, build_project)
 def forkserver_default(target, build_project):
@@ -2006,3 +2007,22 @@ option('--disable-new-cert-storage', env='MOZ_NEW_CERT_STORAGE',
 
 set_config('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
 set_define('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
+
+
+# Enable or disable the default browser agent, which monitors the user's default
+# browser setting on Windows.
+# ==============================================================================
+
+@depends(target)
+def default_browser_agent_default(target):
+    return target.os == 'WINNT'
+
+option('--enable-default-browser-agent', default=default_browser_agent_default,
+       help='{Enable|Disable} building the default browser agent')
+
+@depends('--enable-default-browser-agent', when=target_is_windows)
+def default_agent_flag(enabled):
+    if enabled:
+        return True
+
+set_config('MOZ_DEFAULT_BROWSER_AGENT', default_agent_flag)
