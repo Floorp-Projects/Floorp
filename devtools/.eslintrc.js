@@ -152,6 +152,7 @@ module.exports = {
     // devtools coding style.
 
     // Rules from the mozilla plugin
+    "mozilla/balanced-observers": "error",
     "mozilla/no-aArgs": "error",
     // See bug 1224289.
     "mozilla/reject-importGlobalProperties": ["error", "everything"],
