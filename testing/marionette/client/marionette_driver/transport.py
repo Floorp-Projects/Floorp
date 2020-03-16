@@ -205,10 +205,9 @@ class TcpTransport(object):
                 # which we can use to tell which protocol level we are at
                 raw = self.receive(unmarshal=False)
         except socket.timeout:
+            exc_cls, exc, tb = sys.exc_info()
             msg = "Connection attempt failed because no data has been received over the socket: {}"
-            exc, val, tb = sys.exc_info()
-
-            reraise(exc, msg.format(val), tb)
+            reraise(exc_cls, exc_cls(msg.format(exc)), tb)
 
         hello = json.loads(raw)
         application_type = hello.get("applicationType")
