@@ -52,6 +52,15 @@ class Front extends Pool {
     this._beforeListeners = new Map();
   }
 
+  /**
+   * Return the parent front.
+   */
+  parent() {
+    return this.parentFront && this.parentFront.actorID
+      ? this.parentFront
+      : null;
+  }
+
   destroy() {
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
@@ -86,6 +95,21 @@ class Front extends Pool {
           "."
       );
     }
+
+    if (front.parentFront && front.parentFront !== this) {
+      throw new Error(
+        `${this.actorID} (${this.typeName}) can't manage ${front.actorID}
+        (${front.typeName}) since it has a different parentFront ${
+          front.parentFront
+            ? front.parentFront.actordID +
+              "(" +
+              front.parentFront.typeName +
+              ")"
+            : "<no parentFront>"
+        }`
+      );
+    }
+
     super.manage(front);
 
     if (typeof front.initialize == "function") {
