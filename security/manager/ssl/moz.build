@@ -91,7 +91,6 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.psm += [
-    'PSMContentListener.h',
     'TransportSecurityInfo.h',
     'VerifySSLServerCertChild.h',
     'VerifySSLServerCertParent.h',
@@ -139,7 +138,6 @@ UNIFIED_SOURCES += [
     'nsTLSSocketProvider.cpp',
     'OSKeyStore.cpp',
     'PKCS11ModuleDB.cpp',
-    'PSMContentListener.cpp',
     'PSMRunnable.cpp',
     'PublicKeyPinningService.cpp',
     'RootCertificateTelemetryUtils.cpp',
@@ -189,7 +187,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
 IPDL_SOURCES += [
-    'PPSMContentDownloader.ipdl',
     'PSMIPCTypes.ipdlh',
     'PVerifySSLServerCert.ipdl',
 ]

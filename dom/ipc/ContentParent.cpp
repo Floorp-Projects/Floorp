@@ -150,7 +150,6 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/plugins/PluginBridge.h"
-#include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
@@ -3652,20 +3651,6 @@ PParentToChildStreamParent* ContentParent::AllocPParentToChildStreamParent() {
 bool ContentParent::DeallocPParentToChildStreamParent(
     PParentToChildStreamParent* aActor) {
   delete aActor;
-  return true;
-}
-
-PPSMContentDownloaderParent* ContentParent::AllocPPSMContentDownloaderParent(
-    const uint32_t& aCertType) {
-  RefPtr<PSMContentDownloaderParent> downloader =
-      new PSMContentDownloaderParent(aCertType);
-  return downloader.forget().take();
-}
-
-bool ContentParent::DeallocPPSMContentDownloaderParent(
-    PPSMContentDownloaderParent* aListener) {
-  auto* listener = static_cast<PSMContentDownloaderParent*>(aListener);
-  RefPtr<PSMContentDownloaderParent> downloader = dont_AddRef(listener);
   return true;
 }
 
