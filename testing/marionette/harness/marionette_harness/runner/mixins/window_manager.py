@@ -71,8 +71,8 @@ class WindowManagerMixin(object):
                         "Newly opened browsing context is of type {} and not tab.".format(
                             result["type"]))
         except Exception:
-            exc, val, tb = sys.exc_info()
-            reraise(exc, 'Failed to trigger opening a new tab: {}'.format(val), tb)
+            exc_cls, exc, tb = sys.exc_info()
+            reraise(exc_cls, exc_cls('Failed to trigger opening a new tab: {}'.format(exc)), tb)
         else:
             Wait(self.marionette).until(
                 lambda mn: len(mn.window_handles) == len(current_tabs) + 1,
@@ -106,8 +106,8 @@ class WindowManagerMixin(object):
                         "Newly opened browsing context is of type {} and not window.".format(
                             result["type"]))
         except Exception:
-            exc, val, tb = sys.exc_info()
-            reraise(exc, 'Failed to trigger opening a new window: {}'.format(val), tb)
+            exc_cls, exc, tb = sys.exc_info()
+            reraise(exc_cls, exc_cls('Failed to trigger opening a new window: {}'.format(exc)), tb)
         else:
             Wait(self.marionette).until(
                 lambda mn: len(mn.chrome_window_handles) == len(current_windows) + 1,

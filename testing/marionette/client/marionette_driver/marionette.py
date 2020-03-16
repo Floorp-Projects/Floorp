@@ -475,7 +475,7 @@ class Marionette(object):
         except socket.error:
             _, value, tb = sys.exc_info()
             msg = "Port {}:{} is unavailable ({})".format(self.host, self.port, value)
-            reraise(IOError, msg, tb)
+            reraise(IOError, IOError(msg), tb)
 
         try:
             self.instance.start()
@@ -487,8 +487,7 @@ class Marionette(object):
 
             msg = "Process killed after {}s because no connection to Marionette "\
                   "server could be established. Check gecko.log for errors"
-            _, _, tb = sys.exc_info()
-            reraise(IOError, msg.format(timeout), tb)
+            reraise(IOError, IOError(msg.format(timeout)), sys.exc_info()[2])
 
     def cleanup(self):
         if self.session is not None:
@@ -642,12 +641,12 @@ class Marionette(object):
         frame, and is only called via the `@do_process_check` decorator.
 
         """
-        exc, val, tb = sys.exc_info()
+        exc_cls, exc, tb = sys.exc_info()
 
         # If the application hasn't been launched by Marionette no further action can be done.
         # In such cases we simply re-throw the exception.
         if not self.instance:
-            reraise(exc, val, tb)
+            reraise(exc_cls, exc, tb)
 
         else:
             # Somehow the socket disconnected. Give the application some time to shutdown
@@ -675,7 +674,7 @@ class Marionette(object):
 
             message += ' (Reason: {reason})'
 
-            reraise(IOError, message.format(returncode=returncode, reason=val), tb)
+            reraise(IOError, IOError(message.format(returncode=returncode, reason=exc)), tb)
 
     @staticmethod
     def convert_keys(*string):
@@ -1024,7 +1023,7 @@ class Marionette(object):
                 self.raise_for_port(timeout=self.shutdown_timeout,
                                     check_process_status=False)
             except socket.timeout:
-                exc, val, tb = sys.exc_info()
+                exc_cls, _, tb = sys.exc_info()
 
                 if self.instance.runner.returncode is None:
                     # The process is still running, which means the shutdown
@@ -1033,13 +1032,13 @@ class Marionette(object):
                     self._send_message("Marionette:AcceptConnections", {"value": True})
 
                     message = "Process still running {}s after restart request"
-                    reraise(exc, message.format(self.shutdown_timeout), tb)
+                    reraise(exc_cls, exc_cls(message.format(self.shutdown_timeout)), tb)
 
                 else:
                     # The process shutdown but didn't start again.
                     self.cleanup()
                     msg = "Process unexpectedly quit without restarting (exit code: {})"
-                    reraise(exc, msg.format(self.instance.runner.returncode), tb)
+                    reraise(exc_cls, exc_cls(msg.format(self.instance.runner.returncode)), tb)
 
             finally:
                 self.is_shutting_down = False
