@@ -163,14 +163,14 @@ add_task(async function pinTabFromURLBar() {
     // Click the Pin Tab button.
     let pinTabButton = document.getElementById("pageAction-urlbar-pinTab");
     EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => gBrowser.selectedTab.pinned,
       "Tab was pinned"
     );
 
     // Click the Unpin Tab button
     EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => !gBrowser.selectedTab.pinned,
       "Tab was unpinned"
     );
@@ -976,7 +976,7 @@ add_task(async function sendToDevice_inUrlbar() {
 
     // For good measure, wait until it's visible.
     let dwu = window.windowUtils;
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       let bounds = dwu.getBoundsWithoutFlushing(deviceMenuItem);
       return bounds.height > 0 && bounds.width > 0;
     }, "Waiting for first device menu item to appear");
@@ -1037,7 +1037,7 @@ add_task(async function contextMenu() {
     // The action should be removed from the urlbar.  In this case, the bookmark
     // star, the node in the urlbar should be hidden.
     let starButtonBox = document.getElementById("star-button-box");
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return starButtonBox.hidden;
     }, "Waiting for star button to become hidden");
 
@@ -1063,7 +1063,7 @@ add_task(async function contextMenu() {
     await contextMenuPromise;
 
     // The action should be added to the urlbar.
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return !starButtonBox.hidden;
     }, "Waiting for star button to become unhidden");
 
@@ -1088,7 +1088,7 @@ add_task(async function contextMenu() {
     await contextMenuPromise;
 
     // The action should be removed from the urlbar.
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return starButtonBox.hidden;
     }, "Waiting for star button to become hidden");
 
@@ -1112,7 +1112,7 @@ add_task(async function contextMenu() {
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     EventUtils.synthesizeMouseAtCenter(menuItems[0], {});
     await contextMenuPromise;
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return !starButtonBox.hidden;
     }, "Waiting for star button to become unhidden");
   });
