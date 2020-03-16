@@ -5148,8 +5148,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   static void considerLazyScript(JSRuntime* rt, void* data, BaseScript* script,
                                  const JS::AutoRequireNoGC& nogc) {
     ScriptQuery* self = static_cast<ScriptQuery*>(data);
-    LazyScript* lazy = static_cast<LazyScript*>(script);
-    self->consider(lazy, nogc);
+    self->considerLazy(script, nogc);
   }
 
   bool needsDelazifyBeforeQuery() const {
@@ -5257,7 +5256,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     }
   }
 
-  void consider(LazyScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
+  void considerLazy(BaseScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
     MOZ_ASSERT(!needsDelazifyBeforeQuery());
 
     if (oom) {
@@ -5413,8 +5412,7 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase {
   static void considerLazyScript(JSRuntime* rt, void* data, BaseScript* script,
                                  const JS::AutoRequireNoGC& nogc) {
     SourceQuery* self = static_cast<SourceQuery*>(data);
-    LazyScript* lazy = static_cast<LazyScript*>(script);
-    self->consider(lazy, nogc);
+    self->considerLazy(script, nogc);
   }
 
   void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
@@ -5437,7 +5435,7 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase {
     }
   }
 
-  void consider(LazyScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
+  void considerLazy(BaseScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
     if (oom) {
       return;
     }
