@@ -82,13 +82,7 @@ impl Cert {
             slice::from_raw_parts(cert_info.Issuer.pbData, cert_info.Issuer.cbData as usize)
         };
         let issuer = issuer.to_vec();
-        let serial_number = unsafe {
-            slice::from_raw_parts(
-                cert_info.SerialNumber.pbData,
-                cert_info.SerialNumber.cbData as usize,
-            )
-        };
-        let serial_number = serial_number.to_vec();
+        let serial_number = read_encoded_serial_number(&value)?;
         let subject = unsafe {
             slice::from_raw_parts(cert_info.Subject.pbData, cert_info.Subject.cbData as usize)
         };
