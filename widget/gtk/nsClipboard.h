@@ -38,7 +38,7 @@ class nsRetrievalContext {
 
   virtual bool HasSelectionSupport(void) = 0;
 
-  virtual ~nsRetrievalContext() = default;
+  virtual ~nsRetrievalContext(){};
 };
 
 class nsClipboard : public nsIClipboard, public nsIObserver {

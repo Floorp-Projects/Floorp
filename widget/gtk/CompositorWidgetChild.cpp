@@ -19,7 +19,7 @@ CompositorWidgetChild::CompositorWidgetChild(
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
 }
 
-CompositorWidgetChild::~CompositorWidgetChild() = default;
+CompositorWidgetChild::~CompositorWidgetChild() {}
 
 bool CompositorWidgetChild::Initialize() { return true; }
 

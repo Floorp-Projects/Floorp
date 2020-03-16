@@ -87,8 +87,8 @@ class XPCShellDirProvider : public nsIDirectoryServiceProvider2 {
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
-  XPCShellDirProvider() = default;
-  ~XPCShellDirProvider() = default;
+  XPCShellDirProvider() {}
+  ~XPCShellDirProvider() {}
 
   // The platform resource folder
   void SetGREDirs(nsIFile* greDir);

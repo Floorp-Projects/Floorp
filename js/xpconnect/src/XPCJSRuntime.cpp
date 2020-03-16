@@ -1230,7 +1230,7 @@ static int64_t JSMainRuntimeRealmsUserDistinguishedAmount() {
 }
 
 class JSMainRuntimeTemporaryPeakReporter final : public nsIMemoryReporter {
-  ~JSMainRuntimeTemporaryPeakReporter() = default;
+  ~JSMainRuntimeTemporaryPeakReporter() {}
 
  public:
   NS_DECL_ISUPPORTS
@@ -2071,7 +2071,7 @@ void ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
 }  // namespace xpc
 
 class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter {
-  ~JSMainRuntimeRealmsReporter() = default;
+  ~JSMainRuntimeRealmsReporter() {}
 
  public:
   NS_DECL_ISUPPORTS

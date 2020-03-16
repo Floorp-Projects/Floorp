@@ -632,7 +632,7 @@ namespace JS {
 
 template <typename T>
 struct DeletePolicy {
-  constexpr DeletePolicy() = default;
+  constexpr DeletePolicy() {}
 
   template <typename U>
   MOZ_IMPLICIT DeletePolicy(

@@ -16,7 +16,7 @@ namespace widget {
 // A class for drawing to double-buffered windows.
 class WindowSurface {
  public:
-  virtual ~WindowSurface() = default;
+  virtual ~WindowSurface() {}
 
   // Locks a region of the window for drawing, returning a draw target
   // capturing the bounds of the provided region.

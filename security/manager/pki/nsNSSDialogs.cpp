@@ -30,9 +30,9 @@
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
-nsNSSDialogs::nsNSSDialogs() = default;
+nsNSSDialogs::nsNSSDialogs() {}
 
-nsNSSDialogs::~nsNSSDialogs() = default;
+nsNSSDialogs::~nsNSSDialogs() {}
 
 NS_IMPL_ISUPPORTS(nsNSSDialogs, nsITokenPasswordDialogs, nsICertificateDialogs,
                   nsIClientAuthDialogs, nsITokenDialogs)

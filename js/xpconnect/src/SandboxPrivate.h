@@ -66,7 +66,7 @@ class SandboxPrivate : public nsIGlobalObject,
  private:
   explicit SandboxPrivate(nsIPrincipal* principal) : mPrincipal(principal) {}
 
-  virtual ~SandboxPrivate() = default;
+  virtual ~SandboxPrivate() {}
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };

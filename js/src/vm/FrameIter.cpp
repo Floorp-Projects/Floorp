@@ -345,7 +345,16 @@ FrameIter::Data::Data(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
       activations_(cx),
       ionInlineFrameNo_(0) {}
 
-FrameIter::Data::Data(const FrameIter::Data& other) = default;
+FrameIter::Data::Data(const FrameIter::Data& other)
+    : cx_(other.cx_),
+      debuggerEvalOption_(other.debuggerEvalOption_),
+      principals_(other.principals_),
+      state_(other.state_),
+      pc_(other.pc_),
+      interpFrames_(other.interpFrames_),
+      activations_(other.activations_),
+      jitFrames_(other.jitFrames_),
+      ionInlineFrameNo_(other.ionInlineFrameNo_) {}
 
 FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)
     : data_(cx, debuggerEvalOption, nullptr),

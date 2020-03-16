@@ -15,7 +15,7 @@ namespace widget {
 class HeadlessScreenHelper final : public ScreenManager::Helper {
  public:
   HeadlessScreenHelper();
-  ~HeadlessScreenHelper() override = default;
+  ~HeadlessScreenHelper() override{};
 
  private:
   static LayoutDeviceIntRect GetScreenRect();

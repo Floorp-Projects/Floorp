@@ -63,7 +63,7 @@ extern mozilla::LazyLogModule gWidgetLog;
 
 nsLookAndFeel::nsLookAndFeel() = default;
 
-nsLookAndFeel::~nsLookAndFeel() = default;
+nsLookAndFeel::~nsLookAndFeel() {}
 
 // Modifies color |*aDest| as if a pattern of color |aSource| was painted with
 // CAIRO_OPERATOR_OVER to a surface with color |*aDest|.

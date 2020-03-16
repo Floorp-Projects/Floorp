@@ -28,7 +28,7 @@ class AutoFile {
   FILE* fp_ = nullptr;
 
  public:
-  AutoFile() = default;
+  AutoFile() {}
 
   ~AutoFile() {
     if (fp_ && fp_ != stdin) {

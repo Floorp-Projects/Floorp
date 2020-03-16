@@ -98,7 +98,7 @@ class MarkStack {
     Cell* ptr() const;
 
    public:
-    TaggedPtr() = default;
+    TaggedPtr() {}
     TaggedPtr(Tag tag, Cell* ptr);
     Tag tag() const;
     template <typename T>

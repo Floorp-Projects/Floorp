@@ -11,7 +11,7 @@
 
 using namespace JS;
 
-xpcJSWeakReference::xpcJSWeakReference() = default;
+xpcJSWeakReference::xpcJSWeakReference() {}
 
 NS_IMPL_ISUPPORTS(xpcJSWeakReference, xpcIJSWeakReference)
 

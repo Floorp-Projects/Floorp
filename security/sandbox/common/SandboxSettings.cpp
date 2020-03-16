@@ -73,10 +73,10 @@ class SandboxSettings final : public mozISandboxSettings {
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISANDBOXSETTINGS
 
-  SandboxSettings() = default;
+  SandboxSettings() {}
 
  private:
-  ~SandboxSettings() = default;
+  ~SandboxSettings() {}
 };
 
 NS_IMPL_ISUPPORTS(SandboxSettings, mozISandboxSettings)

@@ -351,7 +351,7 @@ class RegisterSet {
   friend class AnyRegisterIterator;
 
  public:
-  RegisterSet() = default;
+  RegisterSet() {}
   constexpr RegisterSet(const GeneralRegisterSet& gpr,
                         const FloatRegisterSet& fpu)
       : gpr_(gpr), fpu_(fpu) {}
@@ -1103,7 +1103,8 @@ class AnyRegisterIterator {
       : geniter_(set.gpr_), floatiter_(set.fpu_) {}
   explicit AnyRegisterIterator(const LiveSet<RegisterSet>& set)
       : geniter_(set.gprs()), floatiter_(set.fpus()) {}
-  AnyRegisterIterator(const AnyRegisterIterator& other) = default;
+  AnyRegisterIterator(const AnyRegisterIterator& other)
+      : geniter_(other.geniter_), floatiter_(other.floatiter_) {}
   bool more() const { return geniter_.more() || floatiter_.more(); }
   AnyRegisterIterator& operator++() {
     if (geniter_.more()) {

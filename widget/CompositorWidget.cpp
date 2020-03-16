@@ -13,7 +13,7 @@ namespace widget {
 CompositorWidget::CompositorWidget(const layers::CompositorOptions& aOptions)
     : mOptions(aOptions) {}
 
-CompositorWidget::~CompositorWidget() = default;
+CompositorWidget::~CompositorWidget() {}
 
 already_AddRefed<gfx::DrawTarget> CompositorWidget::StartRemoteDrawing() {
   return nullptr;

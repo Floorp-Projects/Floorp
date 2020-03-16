@@ -81,7 +81,7 @@ class WindowBackBuffer {
 
   WindowBackBuffer(WindowSurfaceWayland* aWindowSurfaceWayland)
       : mWindowSurfaceWayland(aWindowSurfaceWayland){};
-  virtual ~WindowBackBuffer() = default;
+  virtual ~WindowBackBuffer(){};
 
  protected:
   WindowSurfaceWayland* mWindowSurfaceWayland;

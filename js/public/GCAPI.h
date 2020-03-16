@@ -857,8 +857,8 @@ extern JS_PUBLIC_API bool IsGenerationalGCEnabled(JSRuntime* rt);
  */
 class JS_PUBLIC_API AutoRequireNoGC {
  protected:
-  AutoRequireNoGC() = default;
-  ~AutoRequireNoGC() = default;
+  AutoRequireNoGC() {}
+  ~AutoRequireNoGC() {}
 };
 
 /**

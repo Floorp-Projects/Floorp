@@ -21,9 +21,9 @@ using mozilla::gfx::SourceSurface;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::ipc::Shmem;
 
-nsDragServiceProxy::nsDragServiceProxy() = default;
+nsDragServiceProxy::nsDragServiceProxy() {}
 
-nsDragServiceProxy::~nsDragServiceProxy() = default;
+nsDragServiceProxy::~nsDragServiceProxy() {}
 
 nsresult nsDragServiceProxy::InvokeDragSessionImpl(
     nsIArray* aArrayTransferables, const Maybe<CSSIntRegion>& aRegion,

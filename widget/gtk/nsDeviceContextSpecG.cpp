@@ -71,7 +71,7 @@ class GlobalPrinters {
   void GetDefaultPrinterName(nsAString& aDefaultPrinterName);
 
  protected:
-  GlobalPrinters() = default;
+  GlobalPrinters() {}
 
   static GlobalPrinters mGlobalPrinters;
   static nsTArray<nsString>* mGlobalPrinterList;
@@ -370,7 +370,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
 }
 
 //  Printer Enumerator
-nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK() = default;
+nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK() {}
 
 NS_IMPL_ISUPPORTS(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
 

@@ -223,7 +223,7 @@ class XDRState : public XDRCoderBase {
   XDRState(const XDRState&) = delete;
   XDRState& operator=(const XDRState&) = delete;
 
-  virtual ~XDRState() = default;
+  virtual ~XDRState(){};
 
   JSContext* cx() const { return mainBuf.cx(); }
 
@@ -569,7 +569,7 @@ class XDRIncrementalEncoder : public XDREncoder {
         headerBuf_(cx, header_, 0),
         oom_(false) {}
 
-  virtual ~XDRIncrementalEncoder() = default;
+  virtual ~XDRIncrementalEncoder() {}
 
   bool hasAtomMap() const override { return true; }
   XDRAtomMap& atomMap() override { return atomMap_; }

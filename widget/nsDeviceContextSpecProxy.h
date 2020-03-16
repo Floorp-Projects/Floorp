@@ -53,7 +53,7 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
   NS_IMETHOD EndPage() final;
 
  private:
-  ~nsDeviceContextSpecProxy() = default;
+  ~nsDeviceContextSpecProxy() {}
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintSession> mPrintSession;

@@ -23,7 +23,7 @@ class nsRandomGenerator final : public nsIRandomGenerator {
   NS_DECL_NSIRANDOMGENERATOR
 
  private:
-  ~nsRandomGenerator() = default;
+  ~nsRandomGenerator() {}
 };
 
 #endif  // nsRandomGenerator_h
