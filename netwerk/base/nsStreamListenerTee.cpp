@@ -9,11 +9,18 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS(nsStreamListenerTee, nsIStreamListener, nsIRequestObserver,
-                  nsIStreamListenerTee, nsIThreadRetargetableStreamListener)
+                  nsIStreamListenerTee, nsIThreadRetargetableStreamListener,
+                  nsIMultiPartChannelListener)
 
 NS_IMETHODIMP
 nsStreamListenerTee::OnStartRequest(nsIRequest* request) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(request);
+  if (multiPartChannel) {
+    mIsMultiPart = true;
+  }
+
   nsresult rv1 = mListener->OnStartRequest(request);
   nsresult rv2 = NS_OK;
   if (mObserver) rv2 = mObserver->OnStartRequest(request);
@@ -31,16 +38,21 @@ nsStreamListenerTee::OnStopRequest(nsIRequest* request, nsresult status) {
     mInputTee = nullptr;
   }
 
-  // release sink on the same thread where the data was written (bug 716293)
-  if (mEventTarget) {
-    NS_ProxyRelease("nsStreamListenerTee::mSink", mEventTarget, mSink.forget());
-  } else {
-    mSink = nullptr;
+  if (!mIsMultiPart) {
+    // release sink on the same thread where the data was written (bug 716293)
+    if (mEventTarget) {
+      NS_ProxyRelease("nsStreamListenerTee::mSink", mEventTarget,
+                      mSink.forget());
+    } else {
+      mSink = nullptr;
+    }
   }
 
   nsresult rv = mListener->OnStopRequest(request, status);
   if (mObserver) mObserver->OnStopRequest(request, status);
-  mObserver = nullptr;
+  if (!mIsMultiPart) {
+    mObserver = nullptr;
+  }
   return rv;
 }
 
@@ -72,6 +84,30 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
   }
 
   return mListener->OnDataAvailable(request, tee, offset, count);
+}
+
+NS_IMETHODIMP
+nsStreamListenerTee::OnAfterLastPart(nsresult aStatus) {
+  // release sink on the same thread where the data was written (bug 716293)
+  if (mEventTarget) {
+    NS_ProxyRelease("nsStreamListenerTee::mSink", mEventTarget, mSink.forget());
+  } else {
+    mSink = nullptr;
+  }
+
+  if (nsCOMPtr<nsIMultiPartChannelListener> multi =
+          do_QueryInterface(mListener)) {
+    multi->OnAfterLastPart(aStatus);
+  }
+  if (!SameCOMIdentity(mListener, mObserver)) {
+    if (nsCOMPtr<nsIMultiPartChannelListener> multi =
+            do_QueryInterface(mObserver)) {
+      multi->OnAfterLastPart(aStatus);
+    }
+  }
+
+  mObserver = nullptr;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
