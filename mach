@@ -40,7 +40,6 @@ py2commands="
     gtest
     hazards
     ide
-    import-pr
     install
     jsapi-tests
     jsshell-bench
