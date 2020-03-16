@@ -11,9 +11,9 @@
 
 using mozilla::OriginAttributes;
 
-nsTLSSocketProvider::nsTLSSocketProvider() = default;
+nsTLSSocketProvider::nsTLSSocketProvider() {}
 
-nsTLSSocketProvider::~nsTLSSocketProvider() = default;
+nsTLSSocketProvider::~nsTLSSocketProvider() {}
 
 NS_IMPL_ISUPPORTS(nsTLSSocketProvider, nsISocketProvider)
 

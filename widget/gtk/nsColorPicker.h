@@ -24,10 +24,10 @@ class nsColorPicker final : public nsIColorPicker {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOLORPICKER
 
-  nsColorPicker() = default;
+  nsColorPicker(){};
 
  private:
-  ~nsColorPicker() = default;
+  ~nsColorPicker(){};
 
   static nsString ToHexString(int n);
 

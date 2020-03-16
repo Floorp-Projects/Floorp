@@ -181,7 +181,7 @@ class ZoneAllCellIter<TenuredCell> {
 
  protected:
   // For use when a subclass wants to insert some setup before init().
-  ZoneAllCellIter() = default;
+  ZoneAllCellIter() {}
 
   void init(JS::Zone* zone, AllocKind kind) {
     MOZ_ASSERT_IF(IsNurseryAllocable(kind),

@@ -532,7 +532,7 @@ class InlineSpaghettiStack : protected InlineSpaghettiStackNode<T> {
   using Node = InlineSpaghettiStackNode<T>;
 
  public:
-  InlineSpaghettiStack() = default;
+  InlineSpaghettiStack() {}
 
  public:
   using iterator = InlineSpaghettiStackIterator<T>;

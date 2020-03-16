@@ -36,7 +36,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
                               public nsISerializable,
                               public nsIClassInfo {
  protected:
-  virtual ~TransportSecurityInfo() = default;
+  virtual ~TransportSecurityInfo() {}
 
  public:
   TransportSecurityInfo();

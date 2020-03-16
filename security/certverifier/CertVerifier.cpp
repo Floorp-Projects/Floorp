@@ -128,7 +128,7 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
   }
 }
 
-CertVerifier::~CertVerifier() = default;
+CertVerifier::~CertVerifier() {}
 
 Result IsCertChainRootBuiltInRoot(const UniqueCERTCertList& chain,
                                   bool& result) {

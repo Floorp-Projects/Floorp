@@ -32,6 +32,19 @@ class nsCertOverride {
   nsCertOverride()
       : mPort(-1), mIsTemporary(false), mOverrideBits(OverrideBits::None) {}
 
+  nsCertOverride(const nsCertOverride& other) { this->operator=(other); }
+
+  nsCertOverride& operator=(const nsCertOverride& other) {
+    mAsciiHost = other.mAsciiHost;
+    mPort = other.mPort;
+    mIsTemporary = other.mIsTemporary;
+    mFingerprint = other.mFingerprint;
+    mOverrideBits = other.mOverrideBits;
+    mDBKey = other.mDBKey;
+    mCert = other.mCert;
+    return *this;
+  }
+
   nsCString mAsciiHost;
   int32_t mPort;
   bool mIsTemporary;  // true: session only, false: stored on disk
@@ -61,7 +74,7 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr {
         mSettings(std::move(toMove.mSettings)),
         mHostWithPort(std::move(toMove.mHostWithPort)) {}
 
-  ~nsCertOverrideEntry() = default;
+  ~nsCertOverrideEntry() {}
 
   KeyType GetKey() const { return HostWithPortPtr(); }
 

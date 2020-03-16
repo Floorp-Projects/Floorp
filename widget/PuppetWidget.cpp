@@ -1185,7 +1185,7 @@ void PuppetWidget::StartAsyncScrollbarDrag(
 
 PuppetScreen::PuppetScreen(void* nativeScreen) {}
 
-PuppetScreen::~PuppetScreen() = default;
+PuppetScreen::~PuppetScreen() {}
 
 static ScreenConfiguration ScreenConfig() {
   ScreenConfiguration config;
@@ -1230,7 +1230,7 @@ PuppetScreenManager::PuppetScreenManager() {
   mOneScreen = new PuppetScreen(nullptr);
 }
 
-PuppetScreenManager::~PuppetScreenManager() = default;
+PuppetScreenManager::~PuppetScreenManager() {}
 
 NS_IMETHODIMP
 PuppetScreenManager::GetPrimaryScreen(nsIScreen** outScreen) {

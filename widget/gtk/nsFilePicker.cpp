@@ -166,7 +166,7 @@ nsFilePicker::nsFilePicker()
   giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
 }
 
-nsFilePicker::~nsFilePicker() = default;
+nsFilePicker::~nsFilePicker() {}
 
 void ReadMultipleFiles(gpointer filename, gpointer array) {
   nsCOMPtr<nsIFile> localfile;

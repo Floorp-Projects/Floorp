@@ -25,7 +25,7 @@ class nsIX509Cert;
 class nsPKCS12Blob {
  public:
   nsPKCS12Blob();
-  ~nsPKCS12Blob() = default;
+  ~nsPKCS12Blob() {}
 
   // PKCS#12 Import
   nsresult ImportFromFile(nsIFile* file, const nsAString& password,

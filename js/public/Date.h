@@ -78,14 +78,14 @@ inline ClippedTime TimeClip(double time);
  * as only the user knows what behavior is desired when clipping occurs.
  */
 class ClippedTime {
-  double t = mozilla::UnspecifiedNaN<double>();
+  double t;
 
   explicit ClippedTime(double time) : t(time) {}
   friend ClippedTime TimeClip(double time);
 
  public:
   // Create an invalid date.
-  ClippedTime() = default;
+  ClippedTime() : t(mozilla::UnspecifiedNaN<double>()) {}
 
   // Create an invalid date/time, more explicitly; prefer this to the default
   // constructor.

@@ -40,7 +40,7 @@ class nsClipboardProxy final : public nsIClipboardProxy {
       const ClipboardCapabilities& aClipboardCaps) override;
 
  private:
-  ~nsClipboardProxy() = default;
+  ~nsClipboardProxy() {}
 
   ClipboardCapabilities mClipboardCaps;
 };

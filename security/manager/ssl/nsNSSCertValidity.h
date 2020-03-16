@@ -17,7 +17,7 @@ class nsX509CertValidity : public nsIX509CertValidity {
   explicit nsX509CertValidity(const mozilla::UniqueCERTCertificate& cert);
 
  protected:
-  virtual ~nsX509CertValidity() = default;
+  virtual ~nsX509CertValidity() {}
 
  private:
   nsresult FormatTime(const PRTime& aTime, PRTimeParamFn aParamFn,

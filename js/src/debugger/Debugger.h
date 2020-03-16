@@ -1294,7 +1294,7 @@ class DebuggerDebuggeeLink : public NativeObject {
  * js::gc::MemoryUse categories.
  */
 struct Handler {
-  virtual ~Handler() = default;
+  virtual ~Handler() {}
 
   /*
    * If this Handler is a reference to a callable JSObject, return that
@@ -1378,8 +1378,8 @@ class BreakpointSite {
   BreakpointList breakpoints;
 
  protected:
-  BreakpointSite() = default;
-  virtual ~BreakpointSite() = default;
+  BreakpointSite(){};
+  virtual ~BreakpointSite() {}
   void finalize(JSFreeOp* fop);
   virtual gc::Cell* owningCell() = 0;
 

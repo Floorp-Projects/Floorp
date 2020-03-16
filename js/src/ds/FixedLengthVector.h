@@ -28,7 +28,7 @@ class FixedLengthVector {
   size_t length_ = 0;
 
  public:
-  FixedLengthVector() = default;
+  FixedLengthVector() {}
 
   FixedLengthVector(FixedLengthVector&) = delete;
   FixedLengthVector(FixedLengthVector&&) = default;

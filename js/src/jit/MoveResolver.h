@@ -59,7 +59,8 @@ class MoveOperand {
     }
   }
   MoveOperand(MacroAssembler& masm, const ABIArg& arg);
-  MoveOperand(const MoveOperand& other) = default;
+  MoveOperand(const MoveOperand& other)
+      : kind_(other.kind_), code_(other.code_), disp_(other.disp_) {}
   bool isFloatReg() const { return kind_ == FLOAT_REG; }
   bool isGeneralReg() const { return kind_ == REG; }
   bool isGeneralRegPair() const {

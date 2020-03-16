@@ -59,7 +59,7 @@ struct SweepAction {
     SliceBudget& budget;
   };
 
-  virtual ~SweepAction() = default;
+  virtual ~SweepAction() {}
   virtual IncrementalProgress run(Args& state) = 0;
   virtual void assertFinished() const = 0;
   virtual bool shouldSkip() { return false; }

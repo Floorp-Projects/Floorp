@@ -613,7 +613,7 @@ struct ChunkBitmap {
   volatile uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
 
  public:
-  ChunkBitmap() = default;
+  ChunkBitmap() {}
 
   MOZ_ALWAYS_INLINE void getMarkWordAndMask(const TenuredCell* cell,
                                             ColorBit colorBit,

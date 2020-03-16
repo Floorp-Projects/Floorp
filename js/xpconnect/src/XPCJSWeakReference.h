@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 
 class xpcJSWeakReference final : public xpcIJSWeakReference {
-  ~xpcJSWeakReference() = default;
+  ~xpcJSWeakReference() {}
 
  public:
   xpcJSWeakReference();

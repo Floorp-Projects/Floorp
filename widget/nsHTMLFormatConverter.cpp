@@ -16,9 +16,9 @@
 #include "nsIDocumentEncoder.h"
 #include "nsContentUtils.h"
 
-nsHTMLFormatConverter::nsHTMLFormatConverter() = default;
+nsHTMLFormatConverter::nsHTMLFormatConverter() {}
 
-nsHTMLFormatConverter::~nsHTMLFormatConverter() = default;
+nsHTMLFormatConverter::~nsHTMLFormatConverter() {}
 
 NS_IMPL_ISUPPORTS(nsHTMLFormatConverter, nsIFormatConverter)
 

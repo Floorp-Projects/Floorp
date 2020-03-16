@@ -360,7 +360,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
 
   explicit Metadata(ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind), debugEnabled(false), debugHash() {}
-  virtual ~Metadata() = default;
+  virtual ~Metadata() {}
 
   MetadataCacheablePod& pod() { return *this; }
   const MetadataCacheablePod& pod() const { return *this; }

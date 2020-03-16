@@ -52,7 +52,7 @@ struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
 
 class nsCertAddonInfo final : public nsISupports {
  private:
-  ~nsCertAddonInfo() = default;
+  ~nsCertAddonInfo() {}
 
  public:
   NS_DECL_ISUPPORTS

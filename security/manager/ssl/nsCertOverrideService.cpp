@@ -88,7 +88,7 @@ NS_IMPL_ISUPPORTS(nsCertOverrideService, nsICertOverrideService, nsIObserver,
 nsCertOverrideService::nsCertOverrideService()
     : mDisableAllSecurityCheck(false), mMutex("nsCertOverrideService.mutex") {}
 
-nsCertOverrideService::~nsCertOverrideService() = default;
+nsCertOverrideService::~nsCertOverrideService() {}
 
 nsresult nsCertOverrideService::Init() {
   if (!NS_IsMainThread()) {
