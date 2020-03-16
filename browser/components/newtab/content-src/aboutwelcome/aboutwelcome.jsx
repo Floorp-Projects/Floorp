@@ -49,8 +49,8 @@ class AboutWelcome extends React.PureComponent {
   render() {
     const { props } = this;
     return (
-      <div className="trailheadCards">
-        <div className="trailheadCardsInner">
+      <div className="welcomeContainer">
+        <div className="welcomeContainerInner">
           <main>
             <HeroText title={props.title} subtitle={props.subtitle} />
             <FxCards

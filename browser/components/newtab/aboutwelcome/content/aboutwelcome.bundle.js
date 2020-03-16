@@ -156,9 +156,9 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       props
     } = this;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "trailheadCards"
+      className: "welcomeContainer"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "trailheadCardsInner"
+      className: "welcomeContainerInner"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_HeroText__WEBPACK_IMPORTED_MODULE_2__["HeroText"], {
       title: props.title,
       subtitle: props.subtitle
@@ -388,11 +388,11 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
       props
     } = this;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `trailheadCardGrid show`
+      className: `welcomeCardGrid show`
     }, props.cards.map(card => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_asrouter_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__["OnboardingCard"], _extends({
       key: card.id,
       message: card,
-      className: "trailheadCard",
+      className: "welcomeCard",
       sendUserActionTelemetry: props.sendTelemetry,
       onAction: this.onCardAction,
       UISurface: "ABOUT_WELCOME"
