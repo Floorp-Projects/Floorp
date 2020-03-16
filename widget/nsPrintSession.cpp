@@ -16,10 +16,10 @@ typedef mozilla::layout::RemotePrintJobChild RemotePrintJobChild;
 NS_IMPL_ISUPPORTS(nsPrintSession, nsIPrintSession, nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
-nsPrintSession::nsPrintSession() {}
+nsPrintSession::nsPrintSession() = default;
 
 //-----------------------------------------------------------------------------
-nsPrintSession::~nsPrintSession() {}
+nsPrintSession::~nsPrintSession() = default;
 
 //-----------------------------------------------------------------------------
 nsresult nsPrintSession::Init() { return NS_OK; }

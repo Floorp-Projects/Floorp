@@ -61,7 +61,7 @@ class GfxInfo final : public GfxInfoBase {
 #endif
 
  protected:
-  ~GfxInfo() {}
+  ~GfxInfo() = default;
 
   virtual nsresult GetFeatureStatusImpl(
       int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,

@@ -23,9 +23,9 @@ namespace mozilla::widget {
 
 NS_IMPL_ISUPPORTS(ScreenManager, nsIScreenManager)
 
-ScreenManager::ScreenManager() {}
+ScreenManager::ScreenManager() = default;
 
-ScreenManager::~ScreenManager() {}
+ScreenManager::~ScreenManager() = default;
 
 static StaticRefPtr<ScreenManager> sSingleton;
 

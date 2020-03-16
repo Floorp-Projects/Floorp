@@ -112,7 +112,7 @@ nsNativeThemeGTK::nsNativeThemeGTK() {
   ThemeChanged();
 }
 
-nsNativeThemeGTK::~nsNativeThemeGTK() {}
+nsNativeThemeGTK::~nsNativeThemeGTK() = default;
 
 NS_IMETHODIMP
 nsNativeThemeGTK::Observe(nsISupports* aSubject, const char* aTopic,

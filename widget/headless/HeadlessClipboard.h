@@ -21,7 +21,7 @@ class HeadlessClipboard final : public nsIClipboard {
   HeadlessClipboard();
 
  protected:
-  ~HeadlessClipboard() {}
+  ~HeadlessClipboard() = default;
 
  private:
   UniquePtr<HeadlessClipboardData> mClipboard;
