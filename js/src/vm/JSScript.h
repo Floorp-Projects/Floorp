@@ -2322,11 +2322,12 @@ setterLevel:                                                                  \
   }
   void setEnclosingScript(BaseScript* enclosingScript);
 
-  // Returns true if the enclosing script has ever been compiled. Once the
-  // enclosing script is compiled, the scope chain is created. This BaseScript
-  // is delazify-able as long as it has the enclosing scope, even if the
-  // enclosing JSScript is GCed.
-  bool enclosingScriptHasEverBeenCompiled() const {
+  // Returns true is the script has an enclosing scope but no bytecode. It is
+  // ready for delazification.
+  // NOTE: The enclosing script must have been successfully compiled at some
+  // point for the enclosing scope to exist. That script may have since been
+  // GC'd, but we kept the scope live so we can still compile ourselves.
+  bool isReadyForDelazification() const {
     return warmUpData_.isEnclosingScope();
   }
 

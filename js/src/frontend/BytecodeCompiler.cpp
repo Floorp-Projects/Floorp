@@ -959,8 +959,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
   // function's immediately enclosing scope.
-  MOZ_ASSERT(lazy->enclosingScriptHasEverBeenCompiled());
-
+  MOZ_ASSERT(lazy->isReadyForDelazification());
   MOZ_ASSERT(!lazy->isBinAST());
 
   AutoAssertReportedException assertException(cx);
@@ -1061,7 +1060,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
   // function's immediately enclosing scope.
-  MOZ_ASSERT(lazy->enclosingScriptHasEverBeenCompiled());
+  MOZ_ASSERT(lazy->isReadyForDelazification());
   MOZ_ASSERT(lazy->isBinAST());
 
   AutoAssertReportedException assertException(cx);

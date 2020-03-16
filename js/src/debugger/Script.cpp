@@ -134,7 +134,7 @@ static JSScript* DelazifyScript(JSContext* cx, Handle<BaseScript*> script) {
       return nullptr;
     }
 
-    if (!script->enclosingScriptHasEverBeenCompiled()) {
+    if (!script->isReadyForDelazification()) {
       // It didn't work! Delazifying the enclosing script still didn't
       // delazify this script. This happens when the function
       // corresponding to this script was removed by constant folding.
