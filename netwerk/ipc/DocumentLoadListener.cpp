@@ -805,17 +805,12 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 
   if (baseChannel) {
-    uint32_t loadFlags = 0;
-    if (!aIsCrossProcess) {
-      loadFlags |= nsIChannel::LOAD_REPLACE;
-    }
-
-    aArgs.init() = Some(
-        baseChannel
-            ->CloneReplacementChannelConfig(
-                true, aRedirectFlags,
-                HttpBaseChannel::ReplacementReason::DocumentChannel, loadFlags)
-            .Serialize());
+    aArgs.init() =
+        Some(baseChannel
+                 ->CloneReplacementChannelConfig(
+                     true, aRedirectFlags,
+                     HttpBaseChannel::ReplacementReason::DocumentChannel)
+                 .Serialize());
   }
 
   uint32_t contentDispositionTemp;
