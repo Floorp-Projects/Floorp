@@ -21,7 +21,7 @@ exports.fetchChildren = accessible => dispatch =>
     .catch(error => dispatch({ accessible, type: FETCH_CHILDREN, error }));
 
 exports.select = accessible => dispatch => {
-  const accessibleWalkerFront = accessible.parent();
+  const accessibleWalkerFront = accessible.getParent();
   if (!accessibleWalkerFront) {
     dispatch({
       accessible,
@@ -39,7 +39,7 @@ exports.select = accessible => dispatch => {
 };
 
 exports.highlight = accessible => dispatch => {
-  const accessibleWalkerFront = accessible.parent();
+  const accessibleWalkerFront = accessible.getParent();
   if (!accessibleWalkerFront) {
     dispatch({
       accessible,

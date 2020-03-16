@@ -230,7 +230,7 @@ class Accessible extends Component {
       return;
     }
 
-    const accessibleWalkerFront = accessibleFront.parent();
+    const accessibleWalkerFront = accessibleFront.getParent();
     if (!accessibleWalkerFront) {
       return;
     }
@@ -250,7 +250,7 @@ class Accessible extends Component {
       return;
     }
 
-    const accessibleWalkerFront = accessibleFront.parent();
+    const accessibleWalkerFront = accessibleFront.getParent();
     if (!accessibleWalkerFront) {
       return;
     }

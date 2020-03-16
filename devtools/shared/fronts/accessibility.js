@@ -35,7 +35,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   }
 
   marshallPool() {
-    return this.parent();
+    return this.getParent();
   }
 
   get role() {
@@ -96,7 +96,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     this._form.name = name;
     // Name change event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    const accessibilityWalkerFront = this.parent();
+    const accessibilityWalkerFront = this.getParent();
     if (accessibilityWalkerFront) {
       events.emit(accessibilityWalkerFront, "name-change", this, parent);
     }
@@ -118,7 +118,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     this._form.childCount = childCount;
     // Reorder event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    const accessibilityWalkerFront = this.parent();
+    const accessibilityWalkerFront = this.getParent();
     if (accessibilityWalkerFront) {
       events.emit(accessibilityWalkerFront, "reorder", this);
     }
@@ -127,7 +127,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   textChange() {
     // Text event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    const accessibilityWalkerFront = this.parent();
+    const accessibilityWalkerFront = this.getParent();
     if (accessibilityWalkerFront) {
       events.emit(accessibilityWalkerFront, "text-change", this);
     }

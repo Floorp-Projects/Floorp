@@ -26,7 +26,7 @@ loader.lazyRequireGetter(
 class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
   constructor(conn, targetFront, parentFront) {
     super(conn, targetFront, parentFront);
-    this.inspector = this.parent();
+    this.inspector = this.getParent();
   }
 
   form(form) {

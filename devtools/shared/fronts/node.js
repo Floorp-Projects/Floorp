@@ -32,7 +32,7 @@ const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
  */
 class NodeListFront extends FrontClassWithSpec(nodeListSpec) {
   marshallPool() {
-    return this.parent();
+    return this.getParent();
   }
 
   // Update the object given a form representation off the wire.
