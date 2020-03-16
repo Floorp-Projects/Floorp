@@ -4,6 +4,10 @@
 
 "use strict";
 
+// protocol.js uses objects as exceptions in order to define
+// error packets.
+/* eslint-disable no-throw-literal */
+
 const DebuggerNotificationObserver = require("DebuggerNotificationObserver");
 const Services = require("Services");
 const { Cr, Ci } = require("chrome");
@@ -341,14 +345,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   // Request handlers
   onAttach: function({ options }) {
     if (this.state === "exited") {
-      return {
+      throw {
         error: "exited",
         message: "threadActor has exited",
       };
     }
 
     if (this.state !== "detached") {
-      return {
+      throw {
         error: "wrongState",
         message: "Current state is " + this.state,
       };
@@ -395,7 +399,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // Put ourselves in the paused state.
       const packet = this._paused();
       if (!packet) {
-        return {
+        throw {
           error: "notAttached",
           message: "cannot attach, could not create pause packet",
         };
@@ -411,12 +415,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // Start a nested event loop.
       this._pushThreadPause();
 
-      // We already sent a response to this request, don't send one
-      // now
-      return null;
+      // We already sent a response to this request via this.conn.send(),
+      // don't send one now. But protocol.js probably still emits a second
+      // empty packet.
     } catch (e) {
       reportException("DBG-SERVER", e);
-      return {
+      throw {
         error: "notAttached",
         message: e.toString(),
       };
