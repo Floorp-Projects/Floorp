@@ -110,9 +110,9 @@ function onPopupMenuShowing(event) {
   } else {
     activeStreams = webrtcUI.getActiveStreams(false, false, true);
   }
-
-  if (activeStreams.length == 1) {
-    webrtcUI.showSharingDoorhanger(activeStreams[0]);
+  if (activeStreams.length) {
+    let index = activeStreams.length - 1;
+    webrtcUI.showSharingDoorhanger(activeStreams[index]);
     event.preventDefault();
     return;
   }
