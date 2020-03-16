@@ -56,7 +56,11 @@ add_task(async function test_getcurrent() {
   updatedPromise = extension.awaitMessage("theme-updated");
   await theme.unload();
   receivedTheme = await updatedPromise;
-  Assert.equal(Object.keys(receivedTheme), 0, "getCurrent returns empty theme");
+  Assert.equal(
+    JSON.stringify({ colors: null, images: null, properties: null }),
+    JSON.stringify(receivedTheme),
+    "getCurrent returns empty theme"
+  );
 
   await extension.unload();
 });
