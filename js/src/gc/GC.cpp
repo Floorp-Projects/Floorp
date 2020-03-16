@@ -213,7 +213,7 @@
 #include "jsfriendapi.h"
 #include "jstypes.h"
 
-#include "builtin/FinalizationGroupObject.h"
+#include "builtin/FinalizationRegistryObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
@@ -1567,17 +1567,17 @@ void GCRuntime::callFinalizeCallbacks(JSFreeOp* fop,
   }
 }
 
-void GCRuntime::setHostCleanupFinalizationGroupCallback(
-    JSHostCleanupFinalizationGroupCallback callback, void* data) {
-  hostCleanupFinalizationGroupCallback.ref() = {callback, data};
+void GCRuntime::setHostCleanupFinalizationRegistryCallback(
+    JSHostCleanupFinalizationRegistryCallback callback, void* data) {
+  hostCleanupFinalizationRegistryCallback.ref() = {callback, data};
 }
 
-void GCRuntime::callHostCleanupFinalizationGroupCallback(
-    FinalizationGroupObject* group) {
+void GCRuntime::callHostCleanupFinalizationRegistryCallback(
+    FinalizationRegistryObject* registry) {
   JS::AutoSuppressGCAnalysis nogc;
-  const auto& callback = hostCleanupFinalizationGroupCallback.ref();
+  const auto& callback = hostCleanupFinalizationRegistryCallback.ref();
   if (callback.op) {
-    callback.op(group, callback.data);
+    callback.op(registry, callback.data);
   }
 }
 
@@ -2144,7 +2144,7 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
   sweepTypesAfterCompacting(zone);
-  sweepFinalizationGroups(zone);
+  sweepFinalizationRegistries(zone);
   zone->weakRefMap().sweep();
   zone->sweepWeakMaps();
   for (auto* cache : zone->weakCaches()) {
@@ -4977,12 +4977,13 @@ void GCRuntime::sweepWeakRefs() {
   }
 }
 
-void GCRuntime::sweepFinalizationGroupsOnMainThread() {
+void GCRuntime::sweepFinalizationRegistriesOnMainThread() {
   // This calls back into the browser which expects to be called from the main
   // thread.
-  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_FINALIZATION_GROUPS);
+  gcstats::AutoPhase ap(stats(),
+                        gcstats::PhaseKind::SWEEP_FINALIZATION_REGISTRIES);
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    sweepFinalizationGroups(zone);
+    sweepFinalizationRegistries(zone);
   }
 }
 
@@ -5265,7 +5266,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     {
       AutoUnlockHelperThreadState unlock(lock);
       sweepJitDataOnMainThread(fop);
-      sweepFinalizationGroupsOnMainThread();
+      sweepFinalizationRegistriesOnMainThread();
     }
 
     for (auto& task : sweepCacheTasks) {

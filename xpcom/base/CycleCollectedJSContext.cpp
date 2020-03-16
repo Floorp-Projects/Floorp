@@ -79,8 +79,8 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
     return;
   }
 
-  JS::SetHostCleanupFinalizationGroupCallback(mJSContext, nullptr, nullptr);
-  mFinalizationGroupsToCleanUp.reset();
+  JS::SetHostCleanupFinalizationRegistryCallback(mJSContext, nullptr, nullptr);
+  mFinalizationRegistriesToCleanUp.reset();
 
   JS_SetContextPrivate(mJSContext, nullptr);
 
@@ -149,9 +149,9 @@ nsresult CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
                            JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(
                                js::SystemAllocPolicy()));
 
-  mFinalizationGroupsToCleanUp.init(mJSContext);
-  JS::SetHostCleanupFinalizationGroupCallback(
-      mJSContext, CleanupFinalizationGroupCallback, this);
+  mFinalizationRegistriesToCleanUp.init(mJSContext);
+  JS::SetHostCleanupFinalizationRegistryCallback(
+      mJSContext, CleanupFinalizationRegistryCallback, this);
 
   // Cast to PerThreadAtomCache for dom::GetAtomCache(JSContext*).
   JS_SetContextPrivate(mJSContext, static_cast<PerThreadAtomCache*>(this));
@@ -741,10 +741,11 @@ nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
   return NS_OK;
 }
 
-class CleanupFinalizationGroupsRunnable : public CancelableRunnable {
+class CleanupFinalizationRegistriesRunnable : public CancelableRunnable {
  public:
-  explicit CleanupFinalizationGroupsRunnable(CycleCollectedJSContext* aContext)
-      : CancelableRunnable("CleanupFinalizationGroupsRunnable"),
+  explicit CleanupFinalizationRegistriesRunnable(
+      CycleCollectedJSContext* aContext)
+      : CancelableRunnable("CleanupFinalizationRegistriesRunnable"),
         mContext(aContext) {}
   NS_DECL_NSIRUNNABLE
  private:
@@ -752,41 +753,42 @@ class CleanupFinalizationGroupsRunnable : public CancelableRunnable {
 };
 
 NS_IMETHODIMP
-CleanupFinalizationGroupsRunnable::Run() {
-  if (mContext->mFinalizationGroupsToCleanUp.empty()) {
+CleanupFinalizationRegistriesRunnable::Run() {
+  if (mContext->mFinalizationRegistriesToCleanUp.empty()) {
     return NS_OK;
   }
 
   JS::RootingContext* cx = mContext->RootingCx();
 
-  JS::Rooted<CycleCollectedJSContext::ObjectVector> groups(cx);
-  std::swap(groups.get(), mContext->mFinalizationGroupsToCleanUp.get());
+  JS::Rooted<CycleCollectedJSContext::ObjectVector> registries(cx);
+  std::swap(registries.get(), mContext->mFinalizationRegistriesToCleanUp.get());
 
-  JS::Rooted<JSObject*> group(cx);
-  for (const auto& g : groups) {
-    group = g;
+  JS::Rooted<JSObject*> registry(cx);
+  for (const auto& r : registries) {
+    registry = r;
 
-    AutoEntryScript aes(group, "cleanupFinalizationGroup");
-    mozilla::Unused << JS::CleanupQueuedFinalizationGroup(aes.cx(), group);
+    AutoEntryScript aes(registry, "cleanupFinalizationRegistry");
+    mozilla::Unused << JS::CleanupQueuedFinalizationRegistry(aes.cx(),
+                                                             registry);
   }
 
   return NS_OK;
 }
 
 /* static */
-void CycleCollectedJSContext::CleanupFinalizationGroupCallback(JSObject* aGroup,
-                                                               void* aData) {
+void CycleCollectedJSContext::CleanupFinalizationRegistryCallback(
+    JSObject* aRegistry, void* aData) {
   CycleCollectedJSContext* ccjs = static_cast<CycleCollectedJSContext*>(aData);
-  ccjs->QueueFinalizationGroupForCleanup(aGroup);
+  ccjs->QueueFinalizationRegistryForCleanup(aRegistry);
 }
 
-void CycleCollectedJSContext::QueueFinalizationGroupForCleanup(
-    JSObject* aGroup) {
-  bool firstGroup = mFinalizationGroupsToCleanUp.empty();
-  MOZ_ALWAYS_TRUE(mFinalizationGroupsToCleanUp.append(aGroup));
-  if (firstGroup) {
-    RefPtr<CleanupFinalizationGroupsRunnable> cleanup =
-        new CleanupFinalizationGroupsRunnable(this);
+void CycleCollectedJSContext::QueueFinalizationRegistryForCleanup(
+    JSObject* aRegistry) {
+  bool firstRegistry = mFinalizationRegistriesToCleanUp.empty();
+  MOZ_ALWAYS_TRUE(mFinalizationRegistriesToCleanUp.append(aRegistry));
+  if (firstRegistry) {
+    RefPtr<CleanupFinalizationRegistriesRunnable> cleanup =
+        new CleanupFinalizationRegistriesRunnable(this);
     NS_DispatchToCurrentThread(cleanup.forget());
   }
 }

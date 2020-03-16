@@ -33,7 +33,7 @@
 #include "builtin/AtomicsObject.h"
 #include "builtin/Boolean.h"
 #include "builtin/Eval.h"
-#include "builtin/FinalizationGroupObject.h"
+#include "builtin/FinalizationRegistryObject.h"
 #include "builtin/JSON.h"
 #include "builtin/MapObject.h"
 #include "builtin/Promise.h"
@@ -1341,19 +1341,19 @@ JS_PUBLIC_API void JS_RemoveFinalizeCallback(JSContext* cx,
   cx->runtime()->gc.removeFinalizeCallback(cb);
 }
 
-JS_PUBLIC_API void JS::SetHostCleanupFinalizationGroupCallback(
-    JSContext* cx, JSHostCleanupFinalizationGroupCallback cb, void* data) {
+JS_PUBLIC_API void JS::SetHostCleanupFinalizationRegistryCallback(
+    JSContext* cx, JSHostCleanupFinalizationRegistryCallback cb, void* data) {
   AssertHeapIsIdle();
-  cx->runtime()->gc.setHostCleanupFinalizationGroupCallback(cb, data);
+  cx->runtime()->gc.setHostCleanupFinalizationRegistryCallback(cb, data);
 }
 
-JS_PUBLIC_API bool JS::CleanupQueuedFinalizationGroup(JSContext* cx,
-                                                      HandleObject group) {
+JS_PUBLIC_API bool JS::CleanupQueuedFinalizationRegistry(
+    JSContext* cx, HandleObject registry) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(group);
-  return cx->runtime()->gc.cleanupQueuedFinalizationGroup(
-      cx, group.as<FinalizationGroupObject>());
+  cx->check(registry);
+  return cx->runtime()->gc.cleanupQueuedFinalizationRegistry(
+      cx, registry.as<FinalizationRegistryObject>());
 }
 
 JS_PUBLIC_API void JS::ClearKeptObjects(JSContext* cx) {

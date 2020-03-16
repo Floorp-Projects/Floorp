@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Finalization group GC implementation.
+ * Finalization registry GC implementation.
  */
 
-#include "builtin/FinalizationGroupObject.h"
+#include "builtin/FinalizationRegistryObject.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
 
@@ -17,9 +17,9 @@
 using namespace js;
 using namespace js::gc;
 
-bool GCRuntime::registerWithFinalizationGroup(JSContext* cx,
-                                              HandleObject target,
-                                              HandleObject record) {
+bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
+                                                 HandleObject target,
+                                                 HandleObject record) {
   MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
   MOZ_ASSERT(
       UncheckedUnwrapWithoutExpose(record)->is<FinalizationRecordObject>());
@@ -40,10 +40,10 @@ bool GCRuntime::registerWithFinalizationGroup(JSContext* cx,
   return true;
 }
 
-void GCRuntime::markFinalizationGroupRoots(JSTracer* trc) {
+void GCRuntime::markFinalizationRegistryRoots(JSTracer* trc) {
   // The held values for all finalization records store in zone maps are marked
-  // as roots. Finalization records store a finalization group as a weak pointer
-  // in a private value, which does not get marked.
+  // as roots. Finalization records store a finalization registry as a weak
+  // pointer in a private value, which does not get marked.
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
     for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
@@ -57,14 +57,14 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
   if (!obj->is<FinalizationRecordObject>()) {
     MOZ_ASSERT(JS_IsDeadWrapper(obj));
     // CCWs between the compartments have been nuked. The
-    // FinalizationGroup's callback doesn't run in this case.
+    // FinalizationRegistry's callback doesn't run in this case.
     return nullptr;
   }
   return &obj->as<FinalizationRecordObject>();
 }
 
-void GCRuntime::sweepFinalizationGroups(Zone* zone) {
-  // Sweep finalization group data and queue finalization records for cleanup
+void GCRuntime::sweepFinalizationRegistries(Zone* zone) {
+  // Sweep finalization registry data and queue finalization records for cleanup
   // for any entries whose target is dying and remove them from the map.
 
   Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
@@ -79,8 +79,8 @@ void GCRuntime::sweepFinalizationGroups(Zone* zone) {
       FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
       return !record ||              // Nuked CCW to record.
              !record->isActive() ||  // Unregistered record or dead finalization
-                                     // group in previous sweep group.
-             !record->sweep();       // Dead finalization group in this sweep
+                                     // registry in previous sweep group.
+             !record->sweep();       // Dead finalization registry in this sweep
                                      // group.
     });
 
@@ -88,27 +88,27 @@ void GCRuntime::sweepFinalizationGroups(Zone* zone) {
     if (IsAboutToBeFinalized(&e.front().mutableKey())) {
       for (JSObject* obj : records) {
         FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
-        FinalizationGroupObject* group = record->groupDuringGC(this);
-        group->queueRecordToBeCleanedUp(record);
-        queueFinalizationGroupForCleanup(group);
+        FinalizationRegistryObject* registry = record->registryDuringGC(this);
+        registry->queueRecordToBeCleanedUp(record);
+        queueFinalizationRegistryForCleanup(registry);
       }
       e.removeFront();
     }
   }
 }
 
-void GCRuntime::queueFinalizationGroupForCleanup(
-    FinalizationGroupObject* group) {
+void GCRuntime::queueFinalizationRegistryForCleanup(
+    FinalizationRegistryObject* registry) {
   // Prod the embedding to call us back later to run the finalization callbacks.
-  if (!group->isQueuedForCleanup()) {
-    callHostCleanupFinalizationGroupCallback(group);
-    group->setQueuedForCleanup(true);
+  if (!registry->isQueuedForCleanup()) {
+    callHostCleanupFinalizationRegistryCallback(registry);
+    registry->setQueuedForCleanup(true);
   }
 }
 
-bool GCRuntime::cleanupQueuedFinalizationGroup(
-    JSContext* cx, HandleFinalizationGroupObject group) {
-  group->setQueuedForCleanup(false);
-  bool ok = FinalizationGroupObject::cleanupQueuedRecords(cx, group);
+bool GCRuntime::cleanupQueuedFinalizationRegistry(
+    JSContext* cx, HandleFinalizationRegistryObject registry) {
+  registry->setQueuedForCleanup(false);
+  bool ok = FinalizationRegistryObject::cleanupQueuedRecords(cx, registry);
   return ok;
 }
