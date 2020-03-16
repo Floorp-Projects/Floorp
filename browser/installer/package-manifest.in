@@ -483,3 +483,7 @@ i686/gmp-clearkey/0.1/clearkey.dll
 ; build, which, practically speaking, is the case.
 @BINPATH@/gmp-clearkey/0.1/manifest.json
 #endif
+
+#if defined(XP_WIN) && defined(MOZ_DEFAULT_BROWSER_AGENT)
+@BINPATH@/default-browser-agent@BIN_SUFFIX@
+#endif
