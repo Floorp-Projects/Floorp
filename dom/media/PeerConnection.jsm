@@ -523,7 +523,7 @@ class RTCPeerConnection {
     this.makeGetterSetterEH("onidpvalidationerror");
 
     this._pc = new this._win.PeerConnectionImpl();
-    this._operations = 0;
+    this._operations = [];
 
     this.__DOM_IMPL__._innerObject = this;
     const observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
@@ -589,21 +589,28 @@ class RTCPeerConnection {
 
   // Add a function to the internal operations chain.
 
-  async _chain(func) {
-    const p = (async () => {
-      if (this._operations++) {
-        await this._operationsChain;
-      }
-      if (this._closed) {
-        return null;
-      }
-      return func();
-    })();
-    // don't propagate errors in the operations chain (this is a fork of p).
-    this._operationsChain = p.then(
-      () => this._operations--,
-      () => this._operations--
-    );
+  _chain(operation) {
+    let resolveP, rejectP;
+    const p = new Promise((r, e) => {
+      resolveP = r;
+      rejectP = e;
+    });
+    this._operations.push(() => {
+      operation().then(resolveP, rejectP);
+      const doNextOperation = () => {
+        if (this._closed) {
+          return;
+        }
+        this._operations.shift();
+        if (this._operations.length) {
+          this._operations[0]();
+        }
+      };
+      p.then(doNextOperation, doNextOperation);
+    });
+    if (this._operations.length == 1) {
+      this._operations[0]();
+    }
     return p;
   }
 
