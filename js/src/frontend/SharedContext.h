@@ -307,9 +307,9 @@ class FunctionBox : public SharedContext {
   //   * If this FunctionBox refers to a lazy child of the function being
   //     compiled, this field holds the child's immediately enclosing scope.
   //     Once compilation succeeds, we will store it in the child's
-  //     LazyScript.  (Debugger may become confused if LazyScripts refer to
+  //     BaseScript.  (Debugger may become confused if lazy scripts refer to
   //     partially initialized enclosing scopes, so we must avoid storing the
-  //     scope in the LazyScript until compilation has completed
+  //     scope in the BaseScript until compilation has completed
   //     successfully.)
   AbstractScopePtr enclosingScope_;
 

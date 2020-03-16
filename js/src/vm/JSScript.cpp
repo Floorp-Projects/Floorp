@@ -240,7 +240,7 @@ template XDRResult js::XDRScriptConst(XDRState<XDR_ENCODE>*,
 template XDRResult js::XDRScriptConst(XDRState<XDR_DECODE>*,
                                       MutableHandleValue);
 
-// Code LazyScript's closed over bindings.
+// Code lazy scripts's closed over bindings.
 template <XDRMode mode>
 /* static */
 XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
@@ -1125,9 +1125,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (!sourceObjectArg) {
       xdrFlags |= OwnSource;
     }
-    // If script allows relazifying back to a LazyScript we must save that lazy
-    // script. If the lazy script only existed for the Debugger, we do not
-    // preserve it.
+    // Preserve the MutableFlags::AllowRelazify flag.
     if (script->allowRelazify()) {
       xdrFlags |= HasLazyScript;
     }
@@ -1336,7 +1334,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 
       // Set the enclosing scope of the lazy function. This value should only be
       // set if we have a non-lazy enclosing script at this point.
-      // LazyScript::enclosingScriptHasEverBeenCompiled relies on the enclosing
+      // BaseScript::enclosingScriptHasEverBeenCompiled relies on the enclosing
       // scope being non-null if we have ever been nested inside non-lazy
       // function.
       if (enclosingScope) {
@@ -5474,7 +5472,7 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
     return nullptr;
   }
 
-  // Flag this script as a LazyScript
+  // Flag this script as a lazy BaseScript.
   lazy->setIsLazyScript();
 
   // Allocate a PrivateScriptData if it will not be empty. Lazy class

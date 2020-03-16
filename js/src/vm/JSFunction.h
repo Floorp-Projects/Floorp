@@ -682,12 +682,9 @@ class JSFunction : public js::NativeObject {
 
   // Function Scripts
   //
-  // Interpreted functions may either have an explicit JSScript (hasScript())
-  // or be lazy with sufficient information to construct the JSScript if
-  // necessary (isInterpretedLazy()).
-  //
-  // A lazy function will have a LazyScript if the function came from parsed
-  // source, or nullptr if the function is a clone of a self hosted function.
+  // Interpreted functions have either a BaseScript or a SelfHostedLazyScript. A
+  // BaseScript may either be lazy or non-lazy (hasBytecode()). Methods may
+  // return a JSScript* if underlying BaseScript is known to have bytecode.
   //
   // There are several methods to get the script of an interpreted function:
   //

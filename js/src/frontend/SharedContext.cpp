@@ -284,7 +284,7 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(
     const AbstractScopePtr& enclosingScope) {
   // For lazy functions inside a function which is being compiled, we cache
   // the incomplete scope object while compiling, and store it to the
-  // LazyScript once the enclosing script successfully finishes compilation
+  // BaseScript once the enclosing script successfully finishes compilation
   // in FunctionBox::finish.
   MOZ_ASSERT(!enclosingScope_);
   enclosingScope_ = enclosingScope;

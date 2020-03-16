@@ -202,8 +202,9 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has an entry in Realm::debugScriptMap.
   HasDebugScript = 1 << 13,
 
-  // Script has an associated LazyScript that may be used for relazification.
-  // This flag may be used to prevent relazification from happening.
+  // Script supports relazification where it releases bytecode and gcthings to
+  // save memory. This process is opt-in since various complexities may disallow
+  // this for some scripts.
   // NOTE: Must check for isRelazifiable() before setting this flag.
   AllowRelazify = 1 << 14,
 
@@ -244,7 +245,7 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Set if the script has opted into spew
   SpewEnabled = 1 << 27,
 
-  // Set if this is a LazyScript.
+  // Set if this is a lazy script.
   IsLazyScript = 1 << 28,
 };
 

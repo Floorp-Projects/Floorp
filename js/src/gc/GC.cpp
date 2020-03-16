@@ -2414,7 +2414,7 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
 // Also, there can be data races calling IsForwarded() on the new location of a
 // cell that is being updated in parallel on another thread. This can be avoided
 // by updating some kinds of cells in different phases. This is done for
-// JSScripts and LazyScripts, and JSScripts and Scopes.
+// BaseScripts and Scopes.
 //
 // Since we want to minimize the number of phases, arrange kinds into three
 // arbitrary phases.
@@ -7589,9 +7589,9 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   source->zone()->clearTables();
   source->unsetIsDebuggee();
 
-  // The delazification flag indicates the presence of LazyScripts in a
-  // realm for the Debugger API, so if the source realm created LazyScripts,
-  // the flag must be propagated to the target realm.
+  // The delazification flag indicates the presence of lazy scripts in a realm
+  // for the Debugger API, so if the source realm created lazy scripts, the flag
+  // must be propagated to the target realm.
   if (source->needsDelazificationForDebugger()) {
     target->scheduleDelazificationForDebugger();
   }

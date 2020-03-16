@@ -565,10 +565,6 @@ static bool AddLazyFunctionsForRealm(JSContext* cx,
   // script. The last condition is so that we don't compile lazy scripts
   // whose enclosing scripts failed to compile, indicating that the lazy
   // script did not escape the script.
-  //
-  // Some LazyScripts have a non-null |JSScript* script| pointer. We still
-  // want to delazify in that case: this pointer is weak so the JSScript
-  // could be destroyed at the next GC.
 
   for (auto i = cx->zone()->cellIter<JSObject>(kind); !i.done(); i.next()) {
     JSFunction* fun = &i->as<JSFunction>();

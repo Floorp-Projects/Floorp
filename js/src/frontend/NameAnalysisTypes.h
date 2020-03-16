@@ -327,7 +327,7 @@ class NameLocation {
   }
 };
 
-// These types are declared here for LazyScript::Create.
+// These types are declared here for BaseScript::CreateLazy.
 using AtomVector = Vector<JSAtom*, 24, SystemAllocPolicy>;
 
 class FunctionBox;

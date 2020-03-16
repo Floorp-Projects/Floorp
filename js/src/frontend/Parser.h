@@ -515,9 +515,8 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                                                  Node destruct);
 
   bool noteUsedName(HandlePropertyName name) {
-    // If the we are delazifying, the LazyScript already has all the
-    // closed-over info for bindings and there's no need to track used
-    // names.
+    // If the we are delazifying, the BaseScript already has all the closed-over
+    // info for bindings and there's no need to track used names.
     if (handler_.canSkipLazyClosedOverBindings()) {
       return true;
     }

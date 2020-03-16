@@ -5216,13 +5216,8 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   if (call->mir()->needsArgCheck()) {
     masm.loadJitCodeRaw(calleereg, objreg);
   } else {
-    // In order to use the jitCodeNoArgCheck entry point, we must ensure the
-    // JSFunction is pointing to the canonical JSScript. Due to lambda cloning,
-    // we may still be referencing the original LazyScript.
-    //
     // NOTE: We checked that canonical function script had a valid JitScript.
     // This will not be tossed without all Ion code being tossed first.
-
     masm.loadJitCodeMaybeNoArgCheck(calleereg, objreg);
   }
 

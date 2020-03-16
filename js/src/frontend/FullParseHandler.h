@@ -109,11 +109,11 @@ class FullParseHandler {
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
         sourceKind_(kind) {
-    // The LazyScript::gcthings() array contains the inner function list
+    // The BaseScript::gcthings() array contains the inner function list
     // followed by the closed-over bindings data. Advance the index for
     // closed-over bindings to the end of the inner functions. The
     // nextLazyInnerFunction / nextLazyClosedOverBinding accessors confirm we
-    // have the expected types. See also: LazyScript::Create.
+    // have the expected types. See also: BaseScript::CreateLazy.
     if (lazyOuterFunction) {
       for (JS::GCCellPtr gcThing : lazyOuterFunction->gcthings()) {
         if (gcThing.is<JSObject>()) {

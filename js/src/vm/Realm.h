@@ -769,7 +769,7 @@ class JS::Realm : public JS::shadow::Realm {
     return debugModeBits_ & DebuggerNeedsDelazification;
   }
 
-  // Schedule the realm to be delazified. Called from LazyScript::Create.
+  // Schedule the realm to be delazified. Called from BaseScript::CreateLazy.
   void scheduleDelazificationForDebugger() {
     debugModeBits_ |= DebuggerNeedsDelazification;
   }
