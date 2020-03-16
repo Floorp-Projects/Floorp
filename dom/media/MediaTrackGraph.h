@@ -1008,13 +1008,16 @@ class MediaTrackGraph {
   };
   static const uint32_t AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT = 20 * 1000;
   static const TrackRate REQUEST_DEFAULT_SAMPLE_RATE = 0;
+  constexpr static const CubebUtils::AudioDeviceID DEFAULT_OUTPUT_DEVICE =
+      nullptr;
 
   // Main thread only
-  static MediaTrackGraph* GetInstanceIfExists(nsPIDOMWindowInner* aWindow,
-                                              TrackRate aSampleRate);
-  static MediaTrackGraph* GetInstance(GraphDriverType aGraphDriverRequested,
-                                      nsPIDOMWindowInner* aWindow,
-                                      TrackRate aSampleRate);
+  static MediaTrackGraph* GetInstanceIfExists(
+      nsPIDOMWindowInner* aWindow, TrackRate aSampleRate,
+      CubebUtils::AudioDeviceID aOutputDeviceID);
+  static MediaTrackGraph* GetInstance(
+      GraphDriverType aGraphDriverRequested, nsPIDOMWindowInner* aWindow,
+      TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID);
   static MediaTrackGraph* CreateNonRealtimeInstance(
       TrackRate aSampleRate, nsPIDOMWindowInner* aWindowId);
 

@@ -115,6 +115,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   explicit MediaTrackGraphImpl(GraphDriverType aGraphDriverRequested,
                                GraphRunType aRunTypeRequested,
                                TrackRate aSampleRate, uint32_t aChannelCount,
+                               CubebUtils::AudioDeviceID aOutputDeviceID,
                                AbstractThread* aWindow);
 
   // Intended only for assertions, either on graph thread or not running (in

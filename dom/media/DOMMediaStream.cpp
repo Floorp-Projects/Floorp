@@ -233,7 +233,8 @@ already_AddRefed<Promise> DOMMediaStream::CountUnderlyingStreams(
   }
 
   MediaTrackGraph* graph = MediaTrackGraph::GetInstanceIfExists(
-      window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+      window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
+      MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
   if (!graph) {
     p->MaybeResolve(0);
     return p.forget();

@@ -326,7 +326,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   // MediaTrackGraph
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
       MediaTrackGraph::AUDIO_THREAD_DRIVER, aContext->GetParentObject(),
-      aContext->SampleRate());
+      aContext->SampleRate(), MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
   AudioNodeEngine* engine = new DestinationNodeEngine(this);
 
   mTrack = AudioNodeTrack::Create(aContext, engine, kTrackFlags, graph);

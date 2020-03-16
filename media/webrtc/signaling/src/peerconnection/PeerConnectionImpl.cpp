@@ -1822,7 +1822,8 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
       audio ? MediaTrackGraph::AUDIO_THREAD_DRIVER
             : MediaTrackGraph::SYSTEM_THREAD_DRIVER,
-      GetWindow(), MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+      GetWindow(), MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
+      MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
 
   RefPtr<MediaStreamTrack> track;
   RefPtr<RemoteTrackSource> trackSource;
