@@ -11,9 +11,9 @@
 
 NS_IMPL_ISUPPORTS(nsBaseScreen, nsIScreen)
 
-nsBaseScreen::nsBaseScreen() {}
+nsBaseScreen::nsBaseScreen() = default;
 
-nsBaseScreen::~nsBaseScreen() {}
+nsBaseScreen::~nsBaseScreen() = default;
 
 NS_IMETHODIMP
 nsBaseScreen::GetRectDisplayPix(int32_t* outLeft, int32_t* outTop,

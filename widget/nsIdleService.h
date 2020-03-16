@@ -30,7 +30,7 @@ class IdleListener {
 
   IdleListener(nsIObserver* obs, uint32_t reqIT, bool aIsIdle = false)
       : observer(obs), reqIdleTime(reqIT), isIdle(aIsIdle) {}
-  ~IdleListener() {}
+  ~IdleListener() = default;
 };
 
 // This one will be declared later.
