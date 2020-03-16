@@ -725,7 +725,6 @@ class GCRuntime {
   void sweepObjectGroups();
   void sweepMisc();
   void sweepCompressionTasks();
-  void sweepLazyScripts();
   void sweepWeakMaps();
   void sweepUniqueIds();
   void sweepDebuggerOnMainThread(JSFreeOp* fop);

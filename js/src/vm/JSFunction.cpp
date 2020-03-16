@@ -560,7 +560,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
   RootedFunction fun(cx);
   RootedAtom atom(cx);
   RootedScript script(cx);
-  Rooted<LazyScript*> lazy(cx);
+  Rooted<BaseScript*> lazy(cx);
 
   if (mode == XDR_ENCODE) {
     fun = objp;
@@ -585,7 +585,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     } else {
       // Encode a lazy script.
       xdrFlags |= IsLazy;
-      lazy = fun->lazyScript();
+      lazy = fun->baseScript();
     }
 
     if (fun->displayAtom()) {
@@ -1544,7 +1544,7 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
 
 static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               HandleFunction fun) {
-  Rooted<LazyScript*> lazy(cx, fun->lazyScript());
+  Rooted<BaseScript*> lazy(cx, fun->baseScript());
 
   MOZ_ASSERT(lazy->isLazyScript(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
@@ -1635,7 +1635,7 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
   // the script is created in the function's realm.
   AutoRealm ar(cx, fun);
 
-  Rooted<LazyScript*> lazy(cx, fun->lazyScript());
+  Rooted<BaseScript*> lazy(cx, fun->baseScript());
   RootedFunction canonicalFun(cx, lazy->function());
 
   // If this function is non-canonical, then use the canonical function first
