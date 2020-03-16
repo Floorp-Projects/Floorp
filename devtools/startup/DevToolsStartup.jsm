@@ -375,11 +375,29 @@ DevToolsStartup.prototype = {
 
       // Store devtoolsFlag to check it later in onWindowReady.
       this.devtoolsFlag = flags.devtools;
+
+      /* eslint-disable mozilla/balanced-observers */
+      // We are not expecting to remove those listeners until Firefox closes.
+
       // Only top level Firefox Windows fire a browser-delayed-startup-finished event
       Services.obs.addObserver(
         this.onWindowReady,
         "browser-delayed-startup-finished"
       );
+
+      // Update menu items when devtools.enabled changes.
+      Services.prefs.addObserver(
+        DEVTOOLS_ENABLED_PREF,
+        this.onEnabledPrefChanged
+      );
+
+      // Watch for the profiler to enable or disable the profiler popup, then toggle
+      // the keyboard shortcuts on and off.
+      Services.prefs.addObserver(
+        PROFILER_POPUP_ENABLED_PREF,
+        this.toggleProfilerKeyShortcuts
+      );
+      /* eslint-enable mozilla/balanced-observers */
 
       if (!this.isDisabledByPolicy()) {
         if (AppConstants.MOZ_DEV_EDITION) {
@@ -390,12 +408,6 @@ DevToolsStartup.prototype = {
 
         this.hookProfilerRecordingButton();
       }
-
-      // Update menu items when devtools.enabled changes.
-      Services.prefs.addObserver(
-        DEVTOOLS_ENABLED_PREF,
-        this.onEnabledPrefChanged
-      );
     }
 
     if (flags.console) {
@@ -658,7 +670,12 @@ DevToolsStartup.prototype = {
     // Register a channel for the URL in preferences. Also update the WebChannel if
     // the URL changes.
     const urlPref = "devtools.performance.recording.ui-base-url";
+
+    // This method is only run once per Firefox instance, so it should not be
+    // strictly necessary to remove observers here.
+    // eslint-disable-next-line mozilla/balanced-observers
     Services.prefs.addObserver(urlPref, registerWebChannel);
+
     registerWebChannel();
 
     function registerWebChannel() {
@@ -781,13 +798,6 @@ DevToolsStartup.prototype = {
     // account (see bug 832984).
     const mainKeyset = doc.getElementById("mainKeyset");
     mainKeyset.parentNode.insertBefore(keyset, mainKeyset);
-
-    // Watch for the profiler to enable or disable the profiler popup, then toggle
-    // the keyboard shortcuts on and off.
-    Services.prefs.addObserver(
-      PROFILER_POPUP_ENABLED_PREF,
-      this.toggleProfilerKeyShortcuts
-    );
   },
 
   /**

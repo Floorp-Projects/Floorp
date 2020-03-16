@@ -376,9 +376,16 @@ function dumpn(str) {
 }
 
 var wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
-
-Services.prefs.addObserver("devtools.debugger.log", {
+const prefObserver = {
   observe: (...args) => {
     wantLogging = Services.prefs.getBoolPref(args.pop());
   },
-});
+};
+Services.prefs.addObserver("devtools.debugger.log", prefObserver);
+const unloadObserver = function(subject) {
+  if (subject.wrappedJSObject == require("@loader/unload")) {
+    Services.prefs.removeObserver("devtools.debugger.log", prefObserver);
+    Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");
+  }
+};
+Services.obs.addObserver(unloadObserver, "devtools:loader:destroy");
