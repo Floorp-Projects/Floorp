@@ -211,6 +211,15 @@ function resume(threadFront) {
   return threadFront.resume();
 }
 
+async function addWatchpoint(threadFront, frame, variable, property, type) {
+  const path = `${variable}.${property}`;
+  info(`Add an ${path} ${type} watchpoint`);
+  const environment = await frame.getEnvironment();
+  const obj = environment.bindings.variables[variable];
+  const objFront = threadFront.pauseGrip(obj.value);
+  return objFront.addWatchpoint(property, path, type);
+}
+
 function getSources(threadFront) {
   dump("Getting sources.\n");
   return threadFront.getSources();

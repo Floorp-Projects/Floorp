@@ -25,18 +25,26 @@ class WatchpointMap {
         ? desc.value.unsafeDereference()
         : desc.value;
     }
+
     function setValue(v) {
       desc.value = objActor.obj.makeDebuggeeValue(v);
     }
+
     const maybeHandlePause = type => {
       const frame = this.thread.dbg.getNewestFrame();
 
-      if (this.thread.hasMoved(frame, type) && !this.thread.skipBreakpoints) {
-        this.thread._pauseAndRespond(frame, {
-          type: type,
-          message: label,
-        });
+      if (
+        !this.thread.hasMoved(frame, type) ||
+        this.thread.skipBreakpoints ||
+        this.thread.sources.isFrameBlackBoxed(frame)
+      ) {
+        return;
       }
+
+      this.thread._pauseAndRespond(frame, {
+        type: type,
+        message: label,
+      });
     };
 
     if (watchpointType === "get") {
