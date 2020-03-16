@@ -68,7 +68,7 @@ class Pool extends EventEmitter {
    */
   manage(actor) {
     if (!actor.actorID) {
-      actor.actorID = this.conn.allocID(actor.actorPrefix || actor.typeName);
+      actor.actorID = this.conn.allocID(actor.typeName);
     } else {
       // If the actor is already registered in a pool, remove it without destroying it.
       // This happens for example when an addon is reloaded. To see this behavior, take a
