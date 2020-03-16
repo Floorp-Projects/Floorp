@@ -168,7 +168,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         # Guard against an accumulation of hung processes by killing
         # them here. Note also that IPC tests may spawn new instances
         # of xpcshell.
-        self.device.pkill("xpcshell")
+        self.device.pkill("xpcshell", root=True)
         return output_file
 
     def checkForCrashes(self,
@@ -197,7 +197,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         return None
 
     def kill(self, proc):
-        return self.device.pkill("xpcshell")
+        return self.device.pkill("xpcshell", root=True)
 
     def getReturnCode(self, proc):
         if self.shellReturnCode is not None:
