@@ -415,21 +415,19 @@ void Arena::checkNoMarkedFreeCells() {
 /* static */
 void Arena::staticAsserts() {
   static_assert(size_t(AllocKind::LIMIT) <= 255,
-                "We must be able to fit the allockind into uint8_t.");
-  static_assert(mozilla::ArrayLength(ThingSizes) == size_t(AllocKind::LIMIT),
+                "All AllocKinds and AllocKind::LIMIT must fit in a uint8_t.");
+  static_assert(mozilla::ArrayLength(ThingSizes) == AllocKindCount,
                 "We haven't defined all thing sizes.");
-  static_assert(
-      mozilla::ArrayLength(FirstThingOffsets) == size_t(AllocKind::LIMIT),
-      "We haven't defined all offsets.");
-  static_assert(
-      mozilla::ArrayLength(ThingsPerArena) == size_t(AllocKind::LIMIT),
-      "We haven't defined all counts.");
+  static_assert(mozilla::ArrayLength(FirstThingOffsets) == AllocKindCount,
+                "We haven't defined all offsets.");
+  static_assert(mozilla::ArrayLength(ThingsPerArena) == AllocKindCount,
+                "We haven't defined all counts.");
 }
 
 /* static */
 inline void Arena::checkLookupTables() {
 #ifdef DEBUG
-  for (size_t i = 0; i < size_t(AllocKind::LIMIT); i++) {
+  for (size_t i = 0; i < AllocKindCount; i++) {
     MOZ_ASSERT(
         FirstThingOffsets[i] + ThingsPerArena[i] * ThingSizes[i] == ArenaSize,
         "Inconsistent arena lookup table data");
@@ -1185,7 +1183,7 @@ const char* js::gc::AllocKindName(AllocKind kind) {
       FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
 #  undef EXPAND_THING_NAME
   };
-  static_assert(ArrayLength(names) == size_t(AllocKind::LIMIT),
+  static_assert(ArrayLength(names) == AllocKindCount,
                 "names array should have an entry for every AllocKind");
 
   size_t i = size_t(kind);
