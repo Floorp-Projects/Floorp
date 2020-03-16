@@ -29,7 +29,6 @@
 #include <sys/resource.h>
 #include <sys/prctl.h>
 #include "sqlite3.h"
-#include "SQLiteBridge.h"
 #include "Linker.h"
 #include "application.ini.h"
 
@@ -250,7 +249,6 @@ static mozglueresult loadSQLiteLibs() {
   }
 #endif
 
-  setup_sqlite_functions(sqlite_handle);
   return SUCCESS;
 }
 

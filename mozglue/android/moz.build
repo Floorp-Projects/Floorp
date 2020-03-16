@@ -17,7 +17,6 @@ SOURCES += [
     'nsGeckoUtils.cpp',
     'pbkdf2_sha256.c',
     'SharedMemNatives.cpp',
-    'SQLiteBridge.cpp',
 ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
