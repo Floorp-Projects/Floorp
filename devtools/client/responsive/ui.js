@@ -161,6 +161,10 @@ class ResponsiveUI {
 
     if (this.isBrowserUIEnabled) {
       this.initRDMFrame();
+
+      // Hide the browser content temporarily while things move around to avoid displaying
+      // strange intermediate states.
+      this.hideBrowserUI();
     }
 
     // Watch for tab close and window close so we can clean up RDM synchronously
@@ -235,6 +239,9 @@ class ResponsiveUI {
 
     // Restore the previous UI state.
     await this.restoreUIState();
+
+    // Show the browser UI now that its state is ready.
+    this.showBrowserUI();
 
     if (!this.isBrowserUIEnabled) {
       // Force the newly created Zoom actor to cache its 1.0 zoom level. This
@@ -385,6 +392,9 @@ class ResponsiveUI {
       if (this.isBrowserUIEnabled) {
         await this.responsiveFront.setDocumentInRDMPane(false);
         await this.responsiveFront.setFloatingScrollbars(false);
+
+        // Hide browser UI to avoid displaying weird intermediate states while closing.
+        this.hideBrowserUI();
       }
 
       this.targetList.unwatchTargets(
@@ -440,6 +450,9 @@ class ResponsiveUI {
         this.getViewportBrowser().reload();
       }
     }
+
+    // Show the browser UI now.
+    this.showBrowserUI();
 
     // Destroy local state
     const swap = this.swap;
@@ -508,6 +521,20 @@ class ResponsiveUI {
     this.showReloadNotification();
     const pref = RELOAD_CONDITION_PREF_PREFIX + id;
     return Services.prefs.getBoolPref(pref, false);
+  }
+
+  hideBrowserUI() {
+    if (this.isBrowserUIEnabled) {
+      this.tab.linkedBrowser.style.visibility = "hidden";
+      this.resizeHandle.style.visibility = "hidden";
+    }
+  }
+
+  showBrowserUI() {
+    if (this.isBrowserUIEnabled) {
+      this.tab.linkedBrowser.style.removeProperty("visibility");
+      this.resizeHandle.style.removeProperty("visibility");
+    }
   }
 
   handleEvent(event) {
@@ -857,13 +884,6 @@ class ResponsiveUI {
       );
 
       this.updateUIAlignment(leftAlignmentEnabled);
-    }
-
-    const hasDeviceState = await this.hasDeviceState();
-    if (hasDeviceState) {
-      // Return if there is a device state to restore, this will be done when the
-      // device list is loaded after the post-init.
-      return;
     }
 
     const height = Services.prefs.getIntPref(
