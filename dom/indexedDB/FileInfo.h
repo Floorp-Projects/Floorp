@@ -27,8 +27,6 @@ class FileInfo final {
   const RefPtr<FileManager> mFileManager;
 
  public:
-  class CustomCleanupCallback;
-
   FileInfo(RefPtr<FileManager> aFileManager, const int64_t aFileId,
            const nsrefcnt aInitialDBRefCnt = 0)
       : mFileId(aFileId),
@@ -40,8 +38,8 @@ class FileInfo final {
 
   void AddRef() { UpdateReferences(mRefCnt, 1); }
 
-  void Release(CustomCleanupCallback* aCustomCleanupCallback = nullptr) {
-    UpdateReferences(mRefCnt, -1, aCustomCleanupCallback);
+  void Release(const bool aSyncDeleteFile = false) {
+    UpdateReferences(mRefCnt, -1, aSyncDeleteFile);
   }
 
   void UpdateDBRefs(int32_t aDelta) { UpdateReferences(mDBRefCnt, aDelta); }
@@ -60,21 +58,12 @@ class FileInfo final {
   nsCOMPtr<nsIFile> GetFileForFileInfo() const;
 
  private:
-  void UpdateReferences(
-      ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,
-      CustomCleanupCallback* aCustomCleanupCallback = nullptr);
+  void UpdateReferences(ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,
+                        bool aSyncDeleteFile = false);
 
   bool LockedClearDBRefs();
 
   void Cleanup();
-};
-
-class NS_NO_VTABLE FileInfo::CustomCleanupCallback {
- public:
-  virtual nsresult Cleanup(FileManager* aFileManager, int64_t aId) = 0;
-
- protected:
-  CustomCleanupCallback() = default;
 };
 
 }  // namespace indexedDB
