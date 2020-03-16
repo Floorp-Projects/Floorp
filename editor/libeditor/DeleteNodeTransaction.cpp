@@ -65,7 +65,7 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
   // give range updater a chance.  SelAdjDeleteNode() needs to be called
   // *before* we do the action, unlike some of the other RangeItem update
   // methods.
-  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(mNodeToDelete);
+  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mNodeToDelete);
 
   ErrorResult error;
   mParentNode->RemoveChild(*mNodeToDelete, error);
@@ -116,7 +116,7 @@ NS_IMETHODIMP DeleteNodeTransaction::RedoTransaction() {
     }
   }
 
-  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(mNodeToDelete);
+  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mNodeToDelete);
 
   ErrorResult error;
   mParentNode->RemoveChild(*mNodeToDelete, error);

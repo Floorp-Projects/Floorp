@@ -7,6 +7,7 @@
 #define mozilla_SelectionState_h
 
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/OwningNonNull.h"
 #include "nsCOMPtr.h"
 #include "nsDirection.h"
 #include "nsINode.h"
@@ -18,6 +19,7 @@ class nsRange;
 namespace mozilla {
 class RangeUpdater;
 namespace dom {
+class Element;
 class Selection;
 class Text;
 }  // namespace dom
@@ -26,14 +28,14 @@ class Text;
  * A helper struct for saving/setting ranges.
  */
 struct RangeItem final {
-  RangeItem();
+  RangeItem() : mStartOffset(0), mEndOffset(0) {}
 
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~RangeItem() = default;
 
  public:
-  void StoreRange(nsRange* aRange);
+  void StoreRange(nsRange& aRange);
   void StoreRange(const EditorRawDOMPoint& aStartPoint,
                   const EditorRawDOMPoint& aEndPoint) {
     MOZ_ASSERT(aStartPoint.IsSet());
@@ -69,9 +71,9 @@ struct RangeItem final {
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(RangeItem)
 
   nsCOMPtr<nsINode> mStartContainer;
-  int32_t mStartOffset;
   nsCOMPtr<nsINode> mEndContainer;
-  int32_t mEndOffset;
+  int32_t mStartOffset;  // TODO: Change this to uint32_t
+  int32_t mEndOffset;    // TODO: Change this to uint32_t
 };
 
 /**
@@ -85,14 +87,15 @@ struct RangeItem final {
 class SelectionState final {
  public:
   SelectionState();
-  ~SelectionState();
+  ~SelectionState() { Clear(); }
 
-  void SaveSelection(dom::Selection* aSel);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult RestoreSelection(dom::Selection* aSel);
-  bool IsCollapsed();
-  bool IsEqual(SelectionState* aSelState);
-  void MakeEmpty();
-  bool IsEmpty();
+  void SaveSelection(dom::Selection& aSelection);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  RestoreSelection(dom::Selection& aSelection);
+  bool IsCollapsed() const;
+  bool Equals(SelectionState& aOther) const;
+  void Clear();
+  bool IsEmpty() const;
 
  private:
   AutoTArray<RefPtr<RangeItem>, 1> mArray;
@@ -118,12 +121,11 @@ inline void ImplCycleCollectionUnlink(SelectionState& aField) {
 class MOZ_STACK_CLASS RangeUpdater final {
  public:
   RangeUpdater();
-  ~RangeUpdater();
 
-  void RegisterRangeItem(RangeItem* aRangeItem);
-  void DropRangeItem(RangeItem* aRangeItem);
-  nsresult RegisterSelectionState(SelectionState& aSelState);
-  nsresult DropSelectionState(SelectionState& aSelState);
+  void RegisterRangeItem(RangeItem& aRangeItem);
+  void DropRangeItem(RangeItem& aRangeItem);
+  void RegisterSelectionState(SelectionState& aSelectionState);
+  void DropSelectionState(SelectionState& aSelectionState);
 
   // editor selection gravity routines.  Note that we can't always depend on
   // DOM Range gravity to do what we want to the "real" selection.  For
@@ -135,33 +137,52 @@ class MOZ_STACK_CLASS RangeUpdater final {
   nsresult SelAdjCreateNode(const EditorDOMPointBase<PT, CT>& aPoint);
   template <typename PT, typename CT>
   nsresult SelAdjInsertNode(const EditorDOMPointBase<PT, CT>& aPoint);
-  void SelAdjDeleteNode(nsINode* aNode);
-  nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent* aNewLeftNode);
+  void SelAdjDeleteNode(nsINode& aNode);
+  nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent& aNewLeftNode);
   nsresult SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
                            nsINode& aParent, int32_t aOffset,
                            int32_t aOldLeftNodeLength);
-  void SelAdjInsertText(dom::Text& aTextNode, int32_t aOffset,
+  void SelAdjInsertText(const dom::Text& aTextNode, int32_t aOffset,
                         const nsAString& aString);
-  nsresult SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
+  nsresult SelAdjDeleteText(const dom::Text& aTextNode, int32_t aOffset,
                             int32_t aLength);
   // the following gravity routines need will/did sandwiches, because the other
   // gravity routines will be called inside of these sandwiches, but should be
   // ignored.
-  nsresult WillReplaceContainer();
-  nsresult DidReplaceContainer(dom::Element* aOriginalNode,
-                               dom::Element* aNewNode);
-  nsresult WillRemoveContainer();
-  nsresult DidRemoveContainer(nsINode* aNode, nsINode* aParent, int32_t aOffset,
-                              uint32_t aNodeOrigLen);
-  nsresult WillInsertContainer();
-  nsresult DidInsertContainer();
-  void WillMoveNode();
-  void DidMoveNode(nsINode* aOldParent, int32_t aOldOffset, nsINode* aNewParent,
-                   int32_t aNewOffset);
+  void WillReplaceContainer() {
+    // XXX Isn't this possible with mutation event listener?
+    NS_WARNING_ASSERTION(!mLocked, "Has already been locked");
+    mLocked = true;
+  }
+  void DidReplaceContainer(const dom::Element& aRemovedElement,
+                           dom::Element& aInsertedElement);
+  void WillRemoveContainer() {
+    // XXX Isn't this possible with mutation event listener?
+    NS_WARNING_ASSERTION(!mLocked, "Has already been locked");
+    mLocked = true;
+  }
+  void DidRemoveContainer(const dom::Element& aRemovedElement,
+                          nsINode& aRemovedElementContainerNode,
+                          uint32_t aOldOffsetOfRemovedElement,
+                          uint32_t aOldChildCountOfRemovedElement);
+  void WillInsertContainer() {
+    // XXX Isn't this possible with mutation event listener?
+    NS_WARNING_ASSERTION(!mLocked, "Has already been locked");
+    mLocked = true;
+  }
+  void DidInsertContainer() {
+    NS_WARNING_ASSERTION(mLocked, "Not locked");
+    mLocked = false;
+  }
+  void WillMoveNode() { mLocked = true; }
+  void DidMoveNode(const nsINode& aOldParent, int32_t aOldOffset,
+                   const nsINode& aNewParent, int32_t aNewOffset);
 
  private:
+  // TODO: A lot of loop in these methods check whether each item `nullptr` or
+  //       not. We should make it not nullable later.
   nsTArray<RefPtr<RangeItem>> mArray;
-  bool mLock;
+  bool mLocked;
 };
 
 /**
@@ -170,22 +191,15 @@ class MOZ_STACK_CLASS RangeUpdater final {
  */
 
 class MOZ_STACK_CLASS AutoTrackDOMPoint final {
- private:
-  RangeUpdater& mRangeUpdater;
-  // Allow tracking nsINode until nsNode is gone
-  nsCOMPtr<nsINode>* mNode;
-  int32_t* mOffset;
-  EditorDOMPoint* mPoint;
-  RefPtr<RangeItem> mRangeItem;
-
  public:
+  AutoTrackDOMPoint() = delete;
   AutoTrackDOMPoint(RangeUpdater& aRangeUpdater, nsCOMPtr<nsINode>* aNode,
                     int32_t* aOffset)
       : mRangeUpdater(aRangeUpdater),
         mNode(aNode),
         mOffset(aOffset),
-        mPoint(nullptr) {
-    mRangeItem = new RangeItem();
+        mPoint(nullptr),
+        mRangeItem(do_AddRef(new RangeItem())) {
     mRangeItem->mStartContainer = *mNode;
     mRangeItem->mEndContainer = *mNode;
     mRangeItem->mStartOffset = *mOffset;
@@ -197,8 +211,8 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
       : mRangeUpdater(aRangeUpdater),
         mNode(nullptr),
         mOffset(nullptr),
-        mPoint(aPoint) {
-    mRangeItem = new RangeItem();
+        mPoint(aPoint),
+        mRangeItem(do_AddRef(new RangeItem())) {
     mRangeItem->mStartContainer = mPoint->GetContainer();
     mRangeItem->mEndContainer = mPoint->GetContainer();
     mRangeItem->mStartOffset = mPoint->Offset();
@@ -228,6 +242,14 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
     *mNode = mRangeItem->mStartContainer;
     *mOffset = mRangeItem->mStartOffset;
   }
+
+ private:
+  RangeUpdater& mRangeUpdater;
+  // Allow tracking nsINode until nsNode is gone
+  nsCOMPtr<nsINode>* mNode;
+  int32_t* mOffset;
+  EditorDOMPoint* mPoint;
+  OwningNonNull<RangeItem> mRangeItem;
 };
 
 /**
@@ -236,15 +258,13 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
  */
 
 class MOZ_STACK_CLASS AutoReplaceContainerSelNotify final {
- private:
-  RangeUpdater& mRangeUpdater;
-  dom::Element* mOriginalElement;
-  dom::Element* mNewElement;
-
  public:
-  AutoReplaceContainerSelNotify(RangeUpdater& aRangeUpdater,
-                                dom::Element* aOriginalElement,
-                                dom::Element* aNewElement)
+  AutoReplaceContainerSelNotify() = delete;
+  // FYI: Marked as `MOZ_CAN_RUN_SCRIPT` for avoiding to use strong pointers
+  //      for the members.
+  MOZ_CAN_RUN_SCRIPT AutoReplaceContainerSelNotify(
+      RangeUpdater& aRangeUpdater, dom::Element& aOriginalElement,
+      dom::Element& aNewElement)
       : mRangeUpdater(aRangeUpdater),
         mOriginalElement(aOriginalElement),
         mNewElement(aNewElement) {
@@ -254,6 +274,11 @@ class MOZ_STACK_CLASS AutoReplaceContainerSelNotify final {
   ~AutoReplaceContainerSelNotify() {
     mRangeUpdater.DidReplaceContainer(mOriginalElement, mNewElement);
   }
+
+ private:
+  RangeUpdater& mRangeUpdater;
+  dom::Element& mOriginalElement;
+  dom::Element& mNewElement;
 };
 
 /**
@@ -262,33 +287,39 @@ class MOZ_STACK_CLASS AutoReplaceContainerSelNotify final {
  */
 
 class MOZ_STACK_CLASS AutoRemoveContainerSelNotify final {
- private:
-  RangeUpdater& mRangeUpdater;
-  nsINode* mNode;
-  nsINode* mParent;
-  int32_t mOffset;
-  uint32_t mNodeOrigLen;
-
  public:
-  AutoRemoveContainerSelNotify(RangeUpdater& aRangeUpdater, nsINode* aNode,
-                               nsINode* aParent, int32_t aOffset,
-                               uint32_t aNodeOrigLen)
+  AutoRemoveContainerSelNotify() = delete;
+  AutoRemoveContainerSelNotify(RangeUpdater& aRangeUpdater,
+                               const EditorDOMPoint& aAtRemovingElement)
       : mRangeUpdater(aRangeUpdater),
-        mNode(aNode),
-        mParent(aParent),
-        mOffset(aOffset),
-        mNodeOrigLen(aNodeOrigLen) {
+        mRemovingElement(*aAtRemovingElement.GetChild()->AsElement()),
+        mParentNode(*aAtRemovingElement.GetContainer()),
+        mOffsetInParent(aAtRemovingElement.Offset()),
+        mChildCountOfRemovingElement(mRemovingElement->GetChildCount()) {
+    MOZ_ASSERT(aAtRemovingElement.IsSet());
     mRangeUpdater.WillRemoveContainer();
   }
 
   ~AutoRemoveContainerSelNotify() {
-    mRangeUpdater.DidRemoveContainer(mNode, mParent, mOffset, mNodeOrigLen);
+    mRangeUpdater.DidRemoveContainer(mRemovingElement, mParentNode,
+                                     mOffsetInParent,
+                                     mChildCountOfRemovingElement);
   }
+
+ private:
+  RangeUpdater& mRangeUpdater;
+  OwningNonNull<dom::Element> mRemovingElement;
+  OwningNonNull<nsINode> mParentNode;
+  uint32_t mOffsetInParent;
+  uint32_t mChildCountOfRemovingElement;
 };
 
 /**
  * Another helper class for SelectionState.  Stack based class for doing
  * Will/DidInsertContainer()
+ * XXX The lock state isn't useful if the edit action is triggered from
+ *     a mutation event listener so that looks like that we can remove
+ *     this class.
  */
 
 class MOZ_STACK_CLASS AutoInsertContainerSelNotify final {
@@ -296,6 +327,7 @@ class MOZ_STACK_CLASS AutoInsertContainerSelNotify final {
   RangeUpdater& mRangeUpdater;
 
  public:
+  AutoInsertContainerSelNotify() = delete;
   explicit AutoInsertContainerSelNotify(RangeUpdater& aRangeUpdater)
       : mRangeUpdater(aRangeUpdater) {
     mRangeUpdater.WillInsertContainer();
@@ -311,16 +343,17 @@ class MOZ_STACK_CLASS AutoInsertContainerSelNotify final {
 
 class MOZ_STACK_CLASS AutoMoveNodeSelNotify final {
  public:
+  AutoMoveNodeSelNotify() = delete;
   AutoMoveNodeSelNotify(RangeUpdater& aRangeUpdater,
                         const EditorDOMPoint& aOldPoint,
                         const EditorDOMPoint& aNewPoint)
       : mRangeUpdater(aRangeUpdater),
-        mOldParent(aOldPoint.GetContainer()),
-        mNewParent(aNewPoint.GetContainer()),
+        mOldParent(*aOldPoint.GetContainer()),
+        mNewParent(*aNewPoint.GetContainer()),
         mOldOffset(aOldPoint.Offset()),
         mNewOffset(aNewPoint.Offset()) {
-    MOZ_ASSERT(mOldParent);
-    MOZ_ASSERT(mNewParent);
+    MOZ_ASSERT(aOldPoint.IsSet());
+    MOZ_ASSERT(aNewPoint.IsSet());
     mRangeUpdater.WillMoveNode();
   }
 
@@ -329,16 +362,16 @@ class MOZ_STACK_CLASS AutoMoveNodeSelNotify final {
   }
 
   EditorRawDOMPoint ComputeInsertionPoint() const {
-    if (mOldParent == mNewParent && mOldOffset < mNewOffset) {
-      return EditorRawDOMPoint(mNewParent, mNewOffset - 1);
+    if (&mOldParent == &mNewParent && mOldOffset < mNewOffset) {
+      return EditorRawDOMPoint(&mNewParent, mNewOffset - 1);
     }
-    return EditorRawDOMPoint(mNewParent, mNewOffset);
+    return EditorRawDOMPoint(&mNewParent, mNewOffset);
   }
 
  private:
   RangeUpdater& mRangeUpdater;
-  nsINode* mOldParent;
-  nsINode* mNewParent;
+  nsINode& mOldParent;
+  nsINode& mNewParent;
   uint32_t mOldOffset;
   uint32_t mNewOffset;
 };

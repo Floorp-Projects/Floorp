@@ -967,18 +967,14 @@ void EditorBase::BeginPlaceholderTransaction(nsAtom* aTransactionName) {
     mPlaceholderTransaction = nullptr;
     mPlaceholderName = aTransactionName;
     mSelState.emplace();
-    mSelState->SaveSelection(SelectionRefPtr());
+    mSelState->SaveSelection(*SelectionRefPtr());
     // Composition transaction can modify multiple nodes and it merges text
     // node for ime into single text node.
     // So if current selection is into IME text node, it might be failed
     // to restore selection by UndoTransaction.
     // So we need update selection by range updater.
     if (mPlaceholderName == nsGkAtoms::IMETxnName) {
-      DebugOnly<nsresult> rvIgnored =
-          RangeUpdaterRef().RegisterSelectionState(*mSelState);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "RangeUpdater::RegisterSelectionState() failed, but ignored");
+      RangeUpdaterRef().RegisterSelectionState(*mSelState);
     }
   }
   mPlaceholderBatch++;
@@ -1019,11 +1015,7 @@ void EditorBase::EndPlaceholderTransaction() {
       // (else we ould have nulled out this pointer), so destroy it to prevent
       // leaks.
       if (mPlaceholderName == nsGkAtoms::IMETxnName) {
-        DebugOnly<nsresult> rvIgnored =
-            RangeUpdaterRef().DropSelectionState(*mSelState);
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "RangeUpdater::DropSelectionState() failed, but ignored");
+        RangeUpdaterRef().DropSelectionState(*mSelState);
       }
       mSelState.reset();
     }
@@ -1692,13 +1684,14 @@ already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
   nsCOMPtr<nsIContent> newContent = transaction->GetNewNode();
   NS_WARNING_ASSERTION(newContent, "Failed to create a new left node");
 
-  // XXX Some other transactions manage range updater by themselves.
-  //     Why doesn't SplitNodeTransaction do it?
-  DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
-      *aStartOfRightNode.GetContainerAsContent(), newContent);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "RangeUpdater::SelAdjSplitNode() failed, but ignored");
-
+  if (newContent) {
+    // XXX Some other transactions manage range updater by themselves.
+    //     Why doesn't SplitNodeTransaction do it?
+    DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
+        *aStartOfRightNode.GetContainerAsContent(), *newContent);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "RangeUpdater::SelAdjSplitNode() failed, but ignored");
+  }
   if (AsHTMLEditor() && newContent) {
     TopLevelEditSubActionDataRef().DidSplitContent(
         *this, *aStartOfRightNode.GetContainerAsContent(), *newContent);
@@ -1909,8 +1902,8 @@ already_AddRefed<Element> EditorBase::ReplaceContainerWithTransactionInternal(
   // Notify our internal selection state listener.
   // Note: An AutoSelectionRestorer object must be created before calling this
   // to initialize RangeUpdaterRef().
-  AutoReplaceContainerSelNotify selStateNotify(RangeUpdaterRef(),
-                                               &aOldContainer, newContainer);
+  AutoReplaceContainerSelNotify selStateNotify(RangeUpdaterRef(), aOldContainer,
+                                               *newContainer);
   {
     AutoTransactionsConserveSelection conserveSelection(*this);
     // Move all children from the old container to the new container.
@@ -1962,9 +1955,8 @@ nsresult EditorBase::RemoveContainerWithTransaction(Element& aElement) {
   }
 
   // Notify our internal selection state listener.
-  AutoRemoveContainerSelNotify selNotify(
-      RangeUpdaterRef(), &aElement, pointToInsertChildren.GetContainer(),
-      pointToInsertChildren.Offset(), aElement.GetChildCount());
+  AutoRemoveContainerSelNotify selNotify(RangeUpdaterRef(),
+                                         pointToInsertChildren);
 
   // Move all children from aNode to its parent.
   while (aElement.HasChildren()) {
@@ -2457,12 +2449,8 @@ bool EditorBase::ArePreservingSelection() {
 void EditorBase::PreserveSelectionAcrossActions() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  SavedSelectionRef().SaveSelection(SelectionRefPtr());
-  DebugOnly<nsresult> rvIgnored =
-      RangeUpdaterRef().RegisterSelectionState(SavedSelectionRef());
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "RangeUpdater::RegisterSelectionState() failed, but ignored");
+  SavedSelectionRef().SaveSelection(*SelectionRefPtr());
+  RangeUpdaterRef().RegisterSelectionState(SavedSelectionRef());
 }
 
 nsresult EditorBase::RestorePreservedSelection() {
@@ -2472,7 +2460,7 @@ nsresult EditorBase::RestorePreservedSelection() {
     return NS_ERROR_FAILURE;
   }
   DebugOnly<nsresult> rvIgnored =
-      SavedSelectionRef().RestoreSelection(SelectionRefPtr());
+      SavedSelectionRef().RestoreSelection(*SelectionRefPtr());
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "SelectionState::RestoreSelection() failed, but ignored");
@@ -2483,12 +2471,8 @@ nsresult EditorBase::RestorePreservedSelection() {
 void EditorBase::StopPreservingSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  DebugOnly<nsresult> rvIgnored =
-      RangeUpdaterRef().DropSelectionState(SavedSelectionRef());
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "RangeUpdater::DropSelectionState() failed, but ignored");
-  SavedSelectionRef().MakeEmpty();
+  RangeUpdaterRef().DropSelectionState(SavedSelectionRef());
+  SavedSelectionRef().Clear();
 }
 
 NS_IMETHODIMP EditorBase::ForceCompositionEnd() {
@@ -3264,7 +3248,7 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
                "Selection::Collapse() failed, but ignored");
 
-  rvIgnored = RangeUpdaterRef().SelAdjDeleteText(&aTextNode, 0, length);
+  rvIgnored = RangeUpdaterRef().SelAdjDeleteText(aTextNode, 0, length);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjDeleteText() failed, but ignored");
   RangeUpdaterRef().SelAdjInsertText(aTextNode, 0, aString);
