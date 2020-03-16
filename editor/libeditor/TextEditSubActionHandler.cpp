@@ -40,9 +40,9 @@ namespace mozilla {
 
 using namespace dom;
 
-#define CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY \
-  if (IsReadonly()) {                                              \
-    return EditActionCanceled(NS_OK);                              \
+#define CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED \
+  if (IsReadonly() || IsDisabled()) {                                          \
+    return EditActionCanceled(NS_OK);                                          \
   }
 
 nsresult TextEditor::InitEditorContentAndSelection() {
@@ -172,7 +172,7 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
 
   UndefineCaretBidiLevel();
 
-  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
   if (mMaxTextLength >= 0) {
     nsAutoString insertionString(NS_LITERAL_STRING("\n"));
@@ -450,7 +450,7 @@ EditActionResult TextEditor::HandleInsertText(
   }
 
   // XXX Why don't we cancel here?  Shouldn't we do this first?
-  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
   MaybeDoAutoPasswordMasking();
 
@@ -585,7 +585,7 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
   UndefineCaretBidiLevel();
 
   // XXX If we're setting value, shouldn't we keep setting the new value here?
-  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
   MaybeDoAutoPasswordMasking();
 
@@ -697,7 +697,7 @@ EditActionResult TextEditor::HandleDeleteSelection(
 
   UndefineCaretBidiLevel();
 
-  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
   // if there is only padding <br> element for empty editor, cancel the
   // operation.

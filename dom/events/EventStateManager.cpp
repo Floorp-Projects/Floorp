@@ -5165,7 +5165,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
     if (NS_WARN_IF(!document)) {
       return NS_ERROR_FAILURE;
     }
-    selection = nsCopySupport::GetSelectionForCopy(document);
+    nsCopySupport::GetSelectionForCopy(document, getter_AddRefs(selection));
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
@@ -5214,7 +5214,8 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   }
 
   // Check if the editor is still the good target to paste.
-  if (aTextEditor->Destroyed() || aTextEditor->IsReadonly()) {
+  if (aTextEditor->Destroyed() || aTextEditor->IsReadonly() ||
+      aTextEditor->IsDisabled()) {
     // XXX Should we consume the event when the editor is readonly and/or
     //     disabled?
     return NS_OK;

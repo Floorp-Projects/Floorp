@@ -631,7 +631,7 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   // NOTE: When you change this method, you should also change:
   //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html
 
-  if (IsReadonly()) {
+  if (IsReadonly() || IsDisabled()) {
     // When we're not editable, the events are handled on EditorBase, so, we can
     // bypass TextEditor.
     return EditorBase::HandleKeyPressEvent(aKeyboardEvent);
@@ -1533,7 +1533,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
 
   CommitComposition();
 
-  if (IsReadonly()) {
+  if (IsReadonly() || IsDisabled()) {
     return NS_OK;
   }
 
@@ -4985,7 +4985,7 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
 nsresult HTMLEditor::GetPreferredIMEState(IMEState* aState) {
   // HTML editor don't prefer the CSS ime-mode because IE didn't do so too.
   aState->mOpen = IMEState::DONT_CHANGE_OPEN_STATE;
-  if (IsReadonly()) {
+  if (IsReadonly() || IsDisabled()) {
     aState->mEnabled = IMEState::DISABLED;
   } else {
     aState->mEnabled = IMEState::ENABLED;

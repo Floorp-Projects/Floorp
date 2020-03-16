@@ -17,7 +17,6 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsFocusManager.h"
-#include "nsFrameSelection.h"
 #include "mozilla/dom/DataTransfer.h"
 
 #include "nsIDocShell.h"
@@ -674,27 +673,37 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 }
 #endif  // XP_WIN
 
-already_AddRefed<Selection> nsCopySupport::GetSelectionForCopy(
-    Document* aDocument) {
+nsIContent* nsCopySupport::GetSelectionForCopy(Document* aDocument,
+                                               Selection** aSelection) {
+  *aSelection = nullptr;
+
   PresShell* presShell = aDocument->GetPresShell();
   if (!presShell) {
     return nullptr;
   }
 
-  RefPtr<nsFrameSelection> frameSel = presShell->GetLastFocusedFrameSelection();
-  if (!frameSel) {
+  nsCOMPtr<nsIContent> focusedContent;
+  nsCOMPtr<nsISelectionController> selectionController =
+      presShell->GetSelectionControllerForFocusedContent(
+          getter_AddRefs(focusedContent));
+  if (!selectionController) {
     return nullptr;
   }
 
-  RefPtr<Selection> sel = frameSel->GetSelection(SelectionType::eNormal);
-  return sel.forget();
+  RefPtr<Selection> sel = selectionController->GetSelection(
+      nsISelectionController::SELECTION_NORMAL);
+  sel.forget(aSelection);
+  return focusedContent;
 }
 
 bool nsCopySupport::CanCopy(Document* aDocument) {
   if (!aDocument) return false;
 
-  RefPtr<Selection> sel = GetSelectionForCopy(aDocument);
-  return sel && !sel->IsCollapsed();
+  RefPtr<Selection> sel;
+  GetSelectionForCopy(aDocument, getter_AddRefs(sel));
+  NS_ENSURE_TRUE(sel, false);
+
+  return !sel->IsCollapsed();
 }
 
 static bool IsInsideRuby(nsINode* aNode) {
@@ -708,6 +717,7 @@ static bool IsInsideRuby(nsINode* aNode) {
 
 static bool IsSelectionInsideRuby(Selection* aSelection) {
   uint32_t rangeCount = aSelection->RangeCount();
+  ;
   for (auto i : IntegerRange(rangeCount)) {
     nsRange* range = aSelection->GetRangeAt(i);
     if (!IsInsideRuby(range->GetClosestCommonInclusiveAncestor())) {
@@ -766,7 +776,7 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   // If a selection was not supplied, try to find it.
   RefPtr<Selection> sel = aSelection;
   if (!sel) {
-    sel = GetSelectionForCopy(doc);
+    GetSelectionForCopy(doc, getter_AddRefs(sel));
   }
 
   // Retrieve the event target node from the start of the selection.

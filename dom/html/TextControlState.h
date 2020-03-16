@@ -274,6 +274,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   void SetPreviewText(const nsAString& aValue, bool aNotify);
   void GetPreviewText(nsAString& aValue);
   bool GetPreviewVisibility() { return mPreviewVisibility; }
+  void HideSelectionIfBlurred();
 
   struct SelectionProperties {
    public:
@@ -314,6 +315,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   bool IsSelectionCached() const { return mSelectionCached; }
   SelectionProperties& GetSelectionProperties() { return mSelectionProperties; }
   MOZ_CAN_RUN_SCRIPT void SetSelectionProperties(SelectionProperties& aProps);
+  void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
   // Sync up our selection properties with our editor prior to being destroyed.
   // This will invoke UnbindFromFrame() to ensure that we grab whatever
@@ -454,6 +456,8 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   bool mValueTransferInProgress;  // Whether a value is being transferred to the
                                   // frame
   bool mSelectionCached;          // Whether mSelectionProperties is valid
+  mutable bool mSelectionRestoreEagerInit;  // Whether we're eager initing
+                                            // because of selection restore
   bool mPlaceholderVisibility;
   bool mPreviewVisibility;
 

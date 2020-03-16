@@ -6639,13 +6639,18 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind) {
 }
 
 bool HTMLInputElement::HasCachedSelection() {
+  bool isCached = false;
   TextControlState* state = GetEditorState();
-  if (!state) {
-    return false;
+  if (state) {
+    isCached = state->IsSelectionCached() &&
+               state->HasNeverInitializedBefore() &&
+               state->GetSelectionProperties().GetStart() !=
+                   state->GetSelectionProperties().GetEnd();
+    if (isCached) {
+      state->WillInitEagerly();
+    }
   }
-  return state->IsSelectionCached() && state->HasNeverInitializedBefore() &&
-         state->GetSelectionProperties().GetStart() !=
-             state->GetSelectionProperties().GetEnd();
+  return isCached;
 }
 
 void HTMLInputElement::FieldSetDisabledChanged(bool aNotify) {
