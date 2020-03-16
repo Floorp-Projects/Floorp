@@ -55,6 +55,10 @@ For options that accept ``true`` or ``false``, ``=true`` can be left off to get 
 ``/OptionalExtensions={true,false}``
   Set to ``false`` to disable installing any bundled extensions that are present. Normally none of these exist, except in special distributions of Firefox such as the one produced by Mozilla China or by other partner organizations. ``true`` by default.
 
+``/RegisterDefaultAgent={true,false}``
+  Set to ``false`` to disable creating a recurring scheduled task to run the default browser agent. There are other ways (a policy and a pref) to disable the actions that the agent takes; this option is provided for tightly-controlled environments where even a
+  scheduled task that simply exits immediately is undesirable.
+
 ``/INI=[absolute path to .ini file]``
   Read configuration from an .ini file. All settings should be placed into one section, called ``[Install]``, and use the standard INI syntax. All settings are optional; they can be included or left out in any combination. Order does not matter.
 

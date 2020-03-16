@@ -39,6 +39,7 @@ Var InstallOptionalExtensions
 Var ExtensionRecommender
 Var PageName
 Var PreventRebootRequired
+Var RegisterDefaultAgent
 
 ; Telemetry ping fields
 Var SetAsDefault
@@ -692,6 +693,16 @@ Section "-Application" APP_IDX
     ; Add the registry keys for allowed certificates.
     ${AddMaintCertKeys}
   ${EndIf}
+!endif
+
+!ifdef MOZ_DEFAULT_BROWSER_AGENT
+  ${If} $RegisterDefaultAgent != "0"
+    Exec '"$INSTDIR\default-browser-agent.exe" register-task $AppUserModelID'
+  ${EndIf}
+  ; Remember whether we were told to skip registering the agent, so that updates
+  ; won't try to create a registration when they don't find an existing one.
+  WriteRegDWORD HKCU "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
+                     "DidRegisterDefaultBrowserAgent" $RegisterDefaultAgent
 !endif
 SectionEnd
 
