@@ -141,6 +141,7 @@ class SettingsPrivacyTest {
     }
 
     @Test
+    @Ignore("Passes locally, fails on CI. Fix in https://github.com/mozilla-mobile/fenix/issues/9189")
     fun saveLoginFromPromptTest() {
         val saveLoginTest =
             TestAssetHelper.getSaveLoginAsset(mockWebServer)
@@ -166,6 +167,7 @@ class SettingsPrivacyTest {
     }
 
     @Test
+    @Ignore("Passes locally, fails on CI. Fix in https://github.com/mozilla-mobile/fenix/issues/9189")
     fun doNotSaveLoginFromPromptTest() {
         val saveLoginTest = TestAssetHelper.getSaveLoginAsset(mockWebServer)
 
