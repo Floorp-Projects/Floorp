@@ -71,9 +71,10 @@ class CrashHandlerServiceTest {
     @Test
     fun `CrashHandlerService forwards fatal native code crash to crash reporter`() {
         doNothing().`when`(reporter)?.sendCrashReport(any(), any())
+        doNothing().`when`(service)?.kill()
 
         intent?.putExtra("fatal", true)
-        service?.onStartCommand(intent, 0, 0)
+        service?.onHandleIntent(intent)
         verify(reporter)?.onCrash(any(), any())
         verify(reporter)?.sendCrashReport(any(), any())
         verify(reporter, never())?.sendNonFatalCrashIntent(any(), any())
@@ -82,9 +83,10 @@ class CrashHandlerServiceTest {
     @Test
     fun `CrashHandlerService forwards non-fatal native code crash to crash reporter`() {
         doNothing().`when`(reporter)?.sendCrashReport(any(), any())
+        doNothing().`when`(service)?.kill()
 
         intent?.putExtra("fatal", false)
-        service?.onStartCommand(intent, 0, 0)
+        service?.onHandleIntent(intent)
         verify(reporter)?.onCrash(any(), any())
         verify(reporter)?.sendNonFatalCrashIntent(any(), any())
         verify(reporter, never())?.sendCrashReport(any(), any())
