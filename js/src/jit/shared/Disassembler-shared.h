@@ -82,7 +82,7 @@ class DisassemblerSpew {
     const bool bound;
     const bool valid;
 #else
-    LabelDoc() {}
+    LabelDoc() = default;
     LabelDoc(uint32_t, bool) {}
 #endif
   };
@@ -108,7 +108,7 @@ class DisassemblerSpew {
     explicit LiteralDoc(float v) : type(Type::F32) { value.f32 = v; }
     explicit LiteralDoc(double v) : type(Type::F64) { value.f64 = v; }
 #else
-    LiteralDoc() {}
+    LiteralDoc() = default;
     explicit LiteralDoc(int32_t) {}
     explicit LiteralDoc(uint32_t) {}
     explicit LiteralDoc(int64_t) {}

@@ -122,7 +122,7 @@ struct CompileTask : public RunnableTask {
               size_t defaultChunkSize)
       : env(env), state(state), lifo(defaultChunkSize) {}
 
-  virtual ~CompileTask(){};
+  virtual ~CompileTask() = default;
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

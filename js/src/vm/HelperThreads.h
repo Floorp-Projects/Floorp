@@ -848,7 +848,7 @@ class SourceCompressionTask : public RunnableTask {
       : runtime_(rt),
         majorGCNumber_(rt->gc.majorGCCount()),
         sourceHolder_(source) {}
-  virtual ~SourceCompressionTask() {}
+  virtual ~SourceCompressionTask() = default;
 
   bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
   bool shouldStart() const {

@@ -1641,7 +1641,7 @@ namespace {
 // type set. */
 class ConstraintDataFreeze {
  public:
-  ConstraintDataFreeze() {}
+  ConstraintDataFreeze() = default;
 
   const char* kind() { return "freeze"; }
 
@@ -2091,7 +2091,7 @@ namespace {
 
 class ConstraintDataConstantProperty {
  public:
-  explicit ConstraintDataConstantProperty() {}
+  explicit ConstraintDataConstantProperty() = default;
 
   const char* kind() { return "constantProperty"; }
 
@@ -2163,7 +2163,7 @@ bool HeapTypeSetKey::constant(CompilerConstraintList* constraints,
 // A constraint that never triggers recompilation.
 class ConstraintDataInert {
  public:
-  explicit ConstraintDataInert() {}
+  explicit ConstraintDataInert() = default;
 
   const char* kind() { return "inert"; }
 

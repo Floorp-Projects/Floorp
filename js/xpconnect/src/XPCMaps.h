@@ -43,7 +43,7 @@ class JSObject2WrappedJSMap {
                           InfallibleAllocPolicy>;
 
  public:
-  JSObject2WrappedJSMap() : mTable(XPC_JS_MAP_LENGTH) {}
+  JSObject2WrappedJSMap() = default;
 
   inline nsXPCWrappedJS* Find(JSObject* Obj) {
     MOZ_ASSERT(Obj, "bad param");
@@ -99,7 +99,7 @@ class JSObject2WrappedJSMap {
   size_t SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  Map mTable;
+  Map mTable{XPC_JS_MAP_LENGTH};
 };
 
 /*************************/
@@ -391,7 +391,7 @@ class JSObject2JSObjectMap {
                             js::SystemAllocPolicy>;
 
  public:
-  JSObject2JSObjectMap() : mTable(XPC_WRAPPER_MAP_LENGTH) {}
+  JSObject2JSObjectMap() = default;
 
   inline JSObject* Find(JSObject* key) {
     MOZ_ASSERT(key, "bad param");
@@ -427,7 +427,7 @@ class JSObject2JSObjectMap {
   void Sweep() { mTable.sweep(); }
 
  private:
-  Map mTable;
+  Map mTable{XPC_WRAPPER_MAP_LENGTH};
 };
 
 #endif /* xpcmaps_h___ */

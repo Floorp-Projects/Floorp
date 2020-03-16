@@ -59,7 +59,7 @@ namespace js {
  */
 class SourceHook {
  public:
-  virtual ~SourceHook() {}
+  virtual ~SourceHook() = default;
 
   /**
    * Attempt to load the source for |filename|.

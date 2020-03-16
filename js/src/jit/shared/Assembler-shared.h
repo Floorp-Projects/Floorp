@@ -427,7 +427,7 @@ class CodeLabel {
 #endif
 
  public:
-  CodeLabel() {}
+  CodeLabel() = default;
   explicit CodeLabel(const CodeOffset& patchAt) : patchAt_(patchAt) {}
   CodeLabel(const CodeOffset& patchAt, const CodeOffset& target)
       : patchAt_(patchAt), target_(target) {}

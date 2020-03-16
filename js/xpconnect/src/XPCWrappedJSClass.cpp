@@ -207,7 +207,7 @@ namespace {
 class WrappedJSNamed final : public nsINamed {
   nsCString mName;
 
-  ~WrappedJSNamed() {}
+  ~WrappedJSNamed() = default;
 
  public:
   NS_DECL_ISUPPORTS

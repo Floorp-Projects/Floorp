@@ -30,7 +30,7 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase> {
   explicit WeakCacheBase(Zone* zone) { shadow::RegisterWeakCache(zone, this); }
   explicit WeakCacheBase(JSRuntime* rt) { shadow::RegisterWeakCache(rt, this); }
   WeakCacheBase(WeakCacheBase&& other) = default;
-  virtual ~WeakCacheBase() {}
+  virtual ~WeakCacheBase() = default;
 
   virtual size_t sweep() = 0;
   virtual bool needsSweep() = 0;

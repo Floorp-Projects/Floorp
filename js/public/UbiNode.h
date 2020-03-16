@@ -874,7 +874,7 @@ using EdgeName = UniqueTwoByteChars;
 // An outgoing edge to a referent node.
 class Edge {
  public:
-  Edge() : name(nullptr), referent() {}
+  Edge() = default;
 
   // Construct an initialized Edge, taking ownership of |name|.
   Edge(char16_t* name, const Node& referent) : name(name), referent(referent) {}
@@ -902,7 +902,7 @@ class Edge {
   // (In real life we'll want a better representation for names, to avoid
   // creating tons of strings when the names follow a pattern; and we'll need
   // to think about lifetimes carefully to ensure traversal stays cheap.)
-  EdgeName name;
+  EdgeName name = nullptr;
 
   // This edge's referent.
   Node referent;
@@ -924,7 +924,7 @@ class EdgeRange {
   EdgeRange() : front_(nullptr) {}
 
  public:
-  virtual ~EdgeRange() {}
+  virtual ~EdgeRange() = default;
 
   // True if there are no more edges in this range.
   bool empty() const { return !front_; }

@@ -28,7 +28,7 @@ class xpcTestObjectReadOnly final : public nsIXPCTestObjectReadOnly {
   xpcTestObjectReadOnly();
 
  private:
-  ~xpcTestObjectReadOnly() {}
+  ~xpcTestObjectReadOnly() = default;
 
   bool boolProperty;
   int16_t shortProperty;
