@@ -1,11 +1,11 @@
-commit 4383f2c6bacbc4f3fb11dcec6afebdf1a98786a4
-Author: Alexey Shvayka <shvaikalesh@gmail.com>
-Date:   Tue Jan 14 18:31:45 2020 +0200
+commit 25c9e334d301944537215caba1d7f44319f3e0da
+Author: Mathias Bynens <mathias@qiwi.be>
+Date:   Wed Mar 11 17:53:16 2020 -0300
 
-    Add Object.{freeze,preventExtensions,seal} abrupt completion tests (#2468)
+    Update RegExp property escape tests per Unicode v13.0.0 (#2526)
     
-    * Add Object.freeze test
+    Upstream change in test generator:
+    https://github.com/mathiasbynens/unicode-property-escapes-tests/commit/11fa92ca644f1b6c0f3be40f32533ff0ec64e86c
     
-    * Add Object.preventExtensions test
-    
-    * Add Object.seal test
+    Unicode v13.0.0:
+    https://unicode.org/versions/Unicode13.0.0/

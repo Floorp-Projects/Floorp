@@ -1,4 +1,4 @@
-// |reftest| skip async -- optional-chaining is not supported
+// |reftest| async
 // Copyright 2019 Google, Inc.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
