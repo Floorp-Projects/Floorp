@@ -2,13 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Test FinalizationGroup works in workers</title>
+    <title>Test FinalizationRegistry works in workers</title>
     <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript">
       function go() {
         SimpleTest.waitForExplicitFinish();
 
-        let worker = new Worker('finalizationGroup_worker.js');
+        let worker = new Worker('finalizationRegistry_worker.js');
 
         worker.onevent = (event) => {
           console.log(event.message);

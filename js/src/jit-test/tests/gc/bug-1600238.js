@@ -8,7 +8,7 @@ function f() {
         newCompartment: true
     });
     try {
-        return global.eval("new FinalizationGroup(function(){})");
+        return global.eval("new FinalizationRegistry(function(){})");
     } catch (e) {
         if (e instanceof TypeError && e.message.includes('dead')) {
             // Creating a new CCW to the global fails with
@@ -18,6 +18,6 @@ function f() {
         throw e;
     }
 }
-g = f();
-g.register({}, {}, {});
+r = f();
+r.register({}, {}, {});
 startgc();

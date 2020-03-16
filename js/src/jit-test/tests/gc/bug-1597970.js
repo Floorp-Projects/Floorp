@@ -2,5 +2,5 @@
 enableShellAllocationMetadataBuilder();
 evaluate(`
   gczeal(9,3);
-  new FinalizationGroup(function() {});
+  new FinalizationRegistry(function() {});
 `);

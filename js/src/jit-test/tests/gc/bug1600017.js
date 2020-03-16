@@ -1,6 +1,6 @@
 // |jit-test| --enable-weak-refs
 
-var group = new FinalizationGroup(x => {
+var registry = new FinalizationRegistry(x => {
   if (target1 === null) {
       return;
   }
@@ -13,10 +13,10 @@ var group = new FinalizationGroup(x => {
 });
 
 var target1 = {};
-group.register(target1, "target1");
+registry.register(target1, "target1");
 
 var target2 = {};
-group.register(target2, "target2");
+registry.register(target2, "target2");
 
 target2 = null;
 
