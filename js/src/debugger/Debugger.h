@@ -440,11 +440,7 @@ using Env = JSObject;
 
 // The referent of a Debugger.Script.
 //
-// - For most scripts, we point at their LazyScript, because that address
-//   doesn't change as the script is lazified/delazified.
-//
-// - For scripts that cannot be lazified, and thus have no LazyScript, we point
-//   directly to their JSScript.
+// - For most scripts, we point at their BaseScript.
 //
 // - For Web Assembly instances for which we are presenting a script-like
 //   interface, we point at their WasmInstanceObject.

@@ -99,8 +99,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool mutedErrors_ = false;
 
   // Either the Realm configuration or specialized VM operating modes may
-  // disallow syntax-parse (and the LazyScript data type) altogether. These
-  // conditions are checked in the CompileOptions constructor.
+  // disallow syntax-parse altogether. These conditions are checked in the
+  // CompileOptions constructor.
   bool forceFullParse_ = false;
 
   // Either the Realm configuration or the compile request may force
@@ -187,14 +187,14 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   // The offset within the ScriptSource's full uncompressed text of the first
   // character we're presenting for compilation with this CompileOptions.
   //
-  // When we compile a LazyScript, we pass the compiler only the substring of
-  // the source the lazy function occupies. With chunked decompression, we
-  // may not even have the complete uncompressed source present in memory. But
-  // parse node positions are offsets within the ScriptSource's full text,
-  // and LazyScripts indicate their substring of the full source by its
-  // starting and ending offsets within the full text. This
-  // scriptSourceOffset field lets the frontend convert between these
-  // offsets and offsets within the substring presented for compilation.
+  // When we compile a lazy script, we pass the compiler only the substring of
+  // the source the lazy function occupies. With chunked decompression, we may
+  // not even have the complete uncompressed source present in memory. But parse
+  // node positions are offsets within the ScriptSource's full text, and
+  // BaseScript indicate their substring of the full source by its starting and
+  // ending offsets within the full text. This scriptSourceOffset field lets the
+  // frontend convert between these offsets and offsets within the substring
+  // presented for compilation.
   unsigned scriptSourceOffset = 0;
 
   // isRunOnce only applies to non-function scripts.

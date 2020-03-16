@@ -125,8 +125,8 @@ class XDRIncrementalEncoder;
 // XDRIncrementalEncoder.
 //
 // Its primary goal is to identify functions, such that we can first encode them
-// as LazyScript, and later replaced by them by their corresponding bytecode
-// once delazified.
+// as a lazy BaseScript, and later replaced by them by their corresponding
+// bytecode once delazified.
 //
 // As a convenience, this is also used to identify the top-level of the content
 // encoded by an XDRIncrementalEncoder.
