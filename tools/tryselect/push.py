@@ -105,7 +105,7 @@ def display_push_estimates(try_task_config):
     graph_cache = None
     dep_cache = None
     target_file = None
-    for graph_cache_file in ["full_task_graph", "target_task_graph"]:
+    for graph_cache_file in ["target_task_graph", "full_task_graph"]:
         graph_cache = os.path.join(cache_dir, graph_cache_file)
         if os.path.isfile(graph_cache):
             dep_cache = graph_cache.replace("task_graph", "task_dependencies")
