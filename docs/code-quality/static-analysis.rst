@@ -146,6 +146,8 @@ If you want to build with the Firefox Clang plug-in
 (located in ``/build/clang-plugin`` and associated with
 ``MOZ_CLANG_PLUGIN`` and the attributes in ``/mfbt/Attributes.h``)
 just add ``--enable-clang-plugin`` to your mozconfig!
+If you want to also have our experimental checkers that will produce ``warnings`` as
+diagnostic messages also add ``--enable-clang-plugin-alpha``.
 This requires to build Firefox using Clang.
 
 Configuring the build environment

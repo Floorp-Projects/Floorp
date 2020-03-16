@@ -20,6 +20,9 @@ public:
 #define CHECK(cls, name) CheckFactories.registerCheck<cls>("mozilla-" name);
 #include "Checks.inc"
 #include "external/ExternalChecks.inc"
+#ifdef MOZ_CLANG_PLUGIN_ALPHA
+#include "alpha/AlphaChecks.inc"
+#endif
 #undef CHECK
   }
 };

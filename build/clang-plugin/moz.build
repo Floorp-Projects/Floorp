@@ -95,6 +95,10 @@ DIRS += [
 
 include('external/sources.mozbuild')
 
+if CONFIG['ENABLE_CLANG_PLUGIN_ALPHA']:
+    HOST_DEFINES["MOZ_CLANG_PLUGIN_ALPHA"] = "1"
+    include('alpha/sources.mozbuild')
+
 # In the current moz.build world, we need to override essentially every
 # variable to limit ourselves to what we need to build the clang plugin.
 if CONFIG['HOST_OS_ARCH'] == 'WINNT':
