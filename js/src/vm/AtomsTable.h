@@ -49,7 +49,7 @@ class AtomStateEntry {
 
  public:
   AtomStateEntry() : bits(0) {}
-  AtomStateEntry(const AtomStateEntry& other) : bits(other.bits) {}
+  AtomStateEntry(const AtomStateEntry& other) = default;
   AtomStateEntry(JSAtom* ptr, bool tagged)
       : bits(uintptr_t(ptr) | uintptr_t(tagged)) {
     MOZ_ASSERT((uintptr_t(ptr) & 0x1) == 0);
