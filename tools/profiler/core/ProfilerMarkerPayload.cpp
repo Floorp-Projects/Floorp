@@ -12,10 +12,10 @@
 
 #include "gfxASurface.h"
 #include "Layers.h"
-#include "mozilla/BlocksRingBufferGeckoExtensions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
 #include "mozilla/Sprintf.h"
 
 #include <inttypes.h>
@@ -106,12 +106,12 @@ void ProfilerMarkerPayload::StreamType(const char* aMarkerType,
   aWriter.StringProperty("type", aMarkerType);
 }
 
-BlocksRingBuffer::Length
+ProfileBufferEntryWriter::Length
 ProfilerMarkerPayload::CommonPropsTagAndSerializationBytes() const {
   return sizeof(DeserializerTag) +
-         BlocksRingBuffer::SumBytes(mCommonProps.mStartTime,
-                                    mCommonProps.mEndTime, mCommonProps.mStack,
-                                    mCommonProps.mInnerWindowID);
+         ProfileBufferEntryWriter::SumBytes(
+             mCommonProps.mStartTime, mCommonProps.mEndTime,
+             mCommonProps.mStack, mCommonProps.mInnerWindowID);
 }
 
 void ProfilerMarkerPayload::SerializeTagAndCommonProps(
@@ -160,11 +160,11 @@ void ProfilerMarkerPayload::StreamCommonProps(
   }
 }
 
-BlocksRingBuffer::Length TracingMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+TracingMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mCategory),
-                                    mKind);
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mCategory), mKind);
 }
 
 void TracingMarkerPayload::SerializeTagAndPayload(
@@ -208,10 +208,11 @@ void TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length FileIOMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length FileIOMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mSource),
-                                    mOperation, mFilename);
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mSource), mOperation, mFilename);
 }
 
 void FileIOMarkerPayload::SerializeTagAndPayload(
@@ -246,11 +247,12 @@ void FileIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length UserTimingMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+UserTimingMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mEntryType),
-                                    mName, mStartMark, mEndMark);
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mEntryType), mName, mStartMark,
+             mEndMark);
 }
 
 void UserTimingMarkerPayload::SerializeTagAndPayload(
@@ -298,9 +300,10 @@ void UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length TextMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length TextMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mText);
+         ProfileBufferEntryWriter::SumBytes(mText);
 }
 
 void TextMarkerPayload::SerializeTagAndPayload(
@@ -327,9 +330,10 @@ void TextMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("name", mText.get());
 }
 
-BlocksRingBuffer::Length LogMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length LogMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mModule, mText);
+         ProfileBufferEntryWriter::SumBytes(mModule, mText);
 }
 
 void LogMarkerPayload::SerializeTagAndPayload(
@@ -359,10 +363,10 @@ void LogMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("module", mModule.get());
 }
 
-BlocksRingBuffer::Length DOMEventMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+DOMEventMarkerPayload::TagAndSerializationBytes() const {
   return TracingMarkerPayload::TagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mTimeStamp, mEventType);
+         ProfileBufferEntryWriter::SumBytes(mTimeStamp, mEventType);
 }
 
 void DOMEventMarkerPayload::SerializeTagAndPayload(
@@ -398,10 +402,11 @@ void DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType).get());
 }
 
-BlocksRingBuffer::Length PrefMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length PrefMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mPrefAccessTime, mPrefName, mPrefKind,
-                                    mPrefType, mPrefValue);
+         ProfileBufferEntryWriter::SumBytes(mPrefAccessTime, mPrefName,
+                                            mPrefKind, mPrefType, mPrefValue);
 }
 
 void PrefMarkerPayload::SerializeTagAndPayload(
@@ -467,11 +472,11 @@ void PrefMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("prefValue", mPrefValue.get());
 }
 
-BlocksRingBuffer::Length
+ProfileBufferEntryWriter::Length
 LayerTranslationMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mLayer),
-                                    mPoint);
+         ProfileBufferEntryWriter::SumBytes(WrapProfileBufferRawPointer(mLayer),
+                                            mPoint);
 }
 
 void LayerTranslationMarkerPayload::SerializeTagAndPayload(
@@ -506,7 +511,8 @@ void LayerTranslationMarkerPayload::StreamPayload(
   aWriter.IntProperty("y", mPoint.y);
 }
 
-BlocksRingBuffer::Length VsyncMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length VsyncMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes();
 }
 
@@ -531,11 +537,12 @@ void VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   StreamType("VsyncTimestamp", aWriter);
 }
 
-BlocksRingBuffer::Length NetworkMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+NetworkMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mID, mURI, mRedirectURI, mType, mPri,
-                                    mCount, mTimings, mCacheDisposition);
+         ProfileBufferEntryWriter::SumBytes(mID, mURI, mRedirectURI, mType,
+                                            mPri, mCount, mTimings,
+                                            mCacheDisposition);
 }
 
 void NetworkMarkerPayload::SerializeTagAndPayload(
@@ -643,10 +650,11 @@ void NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length ScreenshotPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length ScreenshotPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mScreenshotDataURL, mWindowSize,
-                                    mWindowIdentifier);
+         ProfileBufferEntryWriter::SumBytes(mScreenshotDataURL, mWindowSize,
+                                            mWindowIdentifier);
 }
 
 void ScreenshotPayload::SerializeTagAndPayload(
@@ -685,10 +693,10 @@ void ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.DoubleProperty("windowHeight", mWindowSize.height);
 }
 
-BlocksRingBuffer::Length GCSliceMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+GCSliceMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mTimingJSON);
+         ProfileBufferEntryWriter::SumBytes(mTimingJSON);
 }
 
 void GCSliceMarkerPayload::SerializeTagAndPayload(
@@ -720,10 +728,10 @@ void GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length GCMajorMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+GCMajorMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mTimingJSON);
+         ProfileBufferEntryWriter::SumBytes(mTimingJSON);
 }
 
 void GCMajorMarkerPayload::SerializeTagAndPayload(
@@ -755,10 +763,10 @@ void GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length GCMinorMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+GCMinorMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mTimingData);
+         ProfileBufferEntryWriter::SumBytes(mTimingData);
 }
 
 void GCMinorMarkerPayload::SerializeTagAndPayload(
@@ -790,7 +798,8 @@ void GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-BlocksRingBuffer::Length HangMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length HangMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes();
 }
 
@@ -816,9 +825,10 @@ void HangMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                     aUniqueStacks);
 }
 
-BlocksRingBuffer::Length StyleMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length StyleMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mStats);
+         ProfileBufferEntryWriter::SumBytes(mStats);
 }
 
 void StyleMarkerPayload::SerializeTagAndPayload(
@@ -850,8 +860,8 @@ void StyleMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("stylesReused", mStats.mStylesReused);
 }
 
-BlocksRingBuffer::Length LongTaskMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+LongTaskMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes();
 }
 
@@ -878,11 +888,12 @@ void LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("category", "LongTask");
 }
 
-BlocksRingBuffer::Length JsAllocationMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+JsAllocationMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mTypeName, mClassName, mDescriptiveTypeName,
-                                    mCoarseType, mSize, mInNursery);
+         ProfileBufferEntryWriter::SumBytes(mTypeName, mClassName,
+                                            mDescriptiveTypeName, mCoarseType,
+                                            mSize, mInNursery);
 }
 
 void JsAllocationMarkerPayload::SerializeTagAndPayload(
@@ -936,10 +947,10 @@ void JsAllocationMarkerPayload::StreamPayload(
   aWriter.BoolProperty("inNursery", mInNursery);
 }
 
-BlocksRingBuffer::Length
+ProfileBufferEntryWriter::Length
 NativeAllocationMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mSize, mThreadId, mMemoryAddress);
+         ProfileBufferEntryWriter::SumBytes(mSize, mThreadId, mMemoryAddress);
 }
 
 void NativeAllocationMarkerPayload::SerializeTagAndPayload(
@@ -973,10 +984,11 @@ void NativeAllocationMarkerPayload::StreamPayload(
   aWriter.IntProperty("threadId", mThreadId);
 }
 
-BlocksRingBuffer::Length IPCMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length IPCMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mOtherPid, mMessageSeqno, mMessageType,
-                                    mSide, mDirection, mSync);
+         ProfileBufferEntryWriter::SumBytes(
+             mOtherPid, mMessageSeqno, mMessageType, mSide, mDirection, mSync);
 }
 
 void IPCMarkerPayload::SerializeTagAndPayload(

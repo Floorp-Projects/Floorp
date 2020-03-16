@@ -106,12 +106,12 @@ void ProfilerMarkerPayload::StreamType(const char* aMarkerType,
   aWriter.StringProperty("type", aMarkerType);
 }
 
-BlocksRingBuffer::Length
+ProfileBufferEntryWriter::Length
 ProfilerMarkerPayload::CommonPropsTagAndSerializationBytes() const {
   return sizeof(DeserializerTag) +
-         BlocksRingBuffer::SumBytes(mCommonProps.mStartTime,
-                                    mCommonProps.mEndTime, mCommonProps.mStack,
-                                    mCommonProps.mInnerWindowID);
+         ProfileBufferEntryWriter::SumBytes(
+             mCommonProps.mStartTime, mCommonProps.mEndTime,
+             mCommonProps.mStack, mCommonProps.mInnerWindowID);
 }
 
 void ProfilerMarkerPayload::SerializeTagAndCommonProps(
@@ -176,11 +176,11 @@ TracingMarkerPayload::TracingMarkerPayload(CommonProps&& aCommonProps,
 
 TracingMarkerPayload::~TracingMarkerPayload() = default;
 
-BlocksRingBuffer::Length TracingMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+TracingMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mCategory),
-                                    mKind);
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mCategory), mKind);
 }
 
 void TracingMarkerPayload::SerializeTagAndPayload(
@@ -242,10 +242,11 @@ FileIOMarkerPayload::FileIOMarkerPayload(CommonProps&& aCommonProps,
 
 FileIOMarkerPayload::~FileIOMarkerPayload() = default;
 
-BlocksRingBuffer::Length FileIOMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length FileIOMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mSource),
-                                    mOperation, mFilename);
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mSource), mOperation, mFilename);
 }
 
 void FileIOMarkerPayload::SerializeTagAndPayload(
@@ -308,11 +309,12 @@ UserTimingMarkerPayload::UserTimingMarkerPayload(
 
 UserTimingMarkerPayload::~UserTimingMarkerPayload() = default;
 
-BlocksRingBuffer::Length UserTimingMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+UserTimingMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(WrapProfileBufferRawPointer(mEntryType),
-                                    mName, mStartMark, mEndMark);
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mEntryType), mName, mStartMark,
+             mEndMark);
 }
 
 void UserTimingMarkerPayload::SerializeTagAndPayload(
@@ -388,9 +390,10 @@ TextMarkerPayload::TextMarkerPayload(CommonProps&& aCommonProps,
 
 TextMarkerPayload::~TextMarkerPayload() = default;
 
-BlocksRingBuffer::Length TextMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length TextMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mText);
+         ProfileBufferEntryWriter::SumBytes(mText);
 }
 
 void TextMarkerPayload::SerializeTagAndPayload(
@@ -431,9 +434,10 @@ LogMarkerPayload::LogMarkerPayload(CommonProps&& aCommonProps,
 
 LogMarkerPayload::~LogMarkerPayload() = default;
 
-BlocksRingBuffer::Length LogMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length LogMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mModule, mText);
+         ProfileBufferEntryWriter::SumBytes(mModule, mText);
 }
 
 void LogMarkerPayload::SerializeTagAndPayload(
@@ -472,7 +476,8 @@ HangMarkerPayload::HangMarkerPayload(CommonProps&& aCommonProps)
 
 HangMarkerPayload::~HangMarkerPayload() = default;
 
-BlocksRingBuffer::Length HangMarkerPayload::TagAndSerializationBytes() const {
+ProfileBufferEntryWriter::Length HangMarkerPayload::TagAndSerializationBytes()
+    const {
   return CommonPropsTagAndSerializationBytes();
 }
 
@@ -507,8 +512,8 @@ LongTaskMarkerPayload::LongTaskMarkerPayload(CommonProps&& aCommonProps)
 
 LongTaskMarkerPayload::~LongTaskMarkerPayload() = default;
 
-BlocksRingBuffer::Length LongTaskMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+LongTaskMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes();
 }
 

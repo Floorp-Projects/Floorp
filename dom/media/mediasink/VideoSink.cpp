@@ -54,9 +54,10 @@ class VideoFrameMarkerPayload : public ProfilerMarkerPayload {
         mAudioPositionUs(aAudioPositionUs),
         mVideoFrameTimeUs(aVideoFrameTimeUs) {}
 
-  BlocksRingBuffer::Length TagAndSerializationBytes() const override {
+  ProfileBufferEntryWriter::Length TagAndSerializationBytes() const override {
     return CommonPropsTagAndSerializationBytes() +
-           BlocksRingBuffer::SumBytes(mAudioPositionUs, mVideoFrameTimeUs);
+           ProfileBufferEntryWriter::SumBytes(mAudioPositionUs,
+                                              mVideoFrameTimeUs);
   }
 
   void SerializeTagAndPayload(

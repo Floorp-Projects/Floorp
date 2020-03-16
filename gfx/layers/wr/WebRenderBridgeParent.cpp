@@ -218,8 +218,8 @@ class SceneBuiltNotification : public wr::NotificationHandler {
               ContentFullPaintPayload(const mozilla::TimeStamp& aStartTime,
                                       const mozilla::TimeStamp& aEndTime)
                   : ProfilerMarkerPayload(aStartTime, aEndTime) {}
-              mozilla::BlocksRingBuffer::Length TagAndSerializationBytes()
-                  const override {
+              mozilla::ProfileBufferEntryWriter::Length
+              TagAndSerializationBytes() const override {
                 return CommonPropsTagAndSerializationBytes();
               }
               void SerializeTagAndPayload(mozilla::ProfileBufferEntryWriter&

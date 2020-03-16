@@ -194,16 +194,6 @@ class BlocksRingBuffer {
                                : 0};
   }
 
-  // No objects, no bytes! (May be useful for generic programming.)
-  static Length SumBytes() { return 0; }
-
-  // Number of bytes needed to serialize objects.
-  template <typename T0, typename... Ts>
-  static Length SumBytes(const T0& aT0, const Ts&... aTs) {
-    return ProfileBufferEntryWriter::Serializer<T0>::Bytes(aT0) +
-           SumBytes(aTs...);
-  }
-
   class Reader;
 
   // Class that can iterate through blocks and provide
@@ -496,15 +486,16 @@ class BlocksRingBuffer {
   ProfileBufferBlockIndex PutObjects(const Ts&... aTs) {
     static_assert(sizeof...(Ts) > 0,
                   "PutObjects must be given at least one object.");
-    return ReserveAndPut([&]() { return SumBytes(aTs...); },
-                         [&](ProfileBufferEntryWriter* aEntryWriter) {
-                           if (MOZ_UNLIKELY(!aEntryWriter)) {
-                             // Out-of-session, return "empty" index.
-                             return ProfileBufferBlockIndex{};
-                           }
-                           aEntryWriter->WriteObjects(aTs...);
-                           return aEntryWriter->CurrentBlockIndex();
-                         });
+    return ReserveAndPut(
+        [&]() { return ProfileBufferEntryWriter::SumBytes(aTs...); },
+        [&](ProfileBufferEntryWriter* aEntryWriter) {
+          if (MOZ_UNLIKELY(!aEntryWriter)) {
+            // Out-of-session, return "empty" index.
+            return ProfileBufferBlockIndex{};
+          }
+          aEntryWriter->WriteObjects(aTs...);
+          return aEntryWriter->CurrentBlockIndex();
+        });
   }
 
   // Add a new entry copied from the given object, return block index.
@@ -896,7 +887,7 @@ struct ProfileBufferEntryReader::Deserializer<BlocksRingBuffer> {
     // Expect an empty buffer, as we're going to overwrite it.
     MOZ_ASSERT(aBuffer.GetState().mRangeStart == aBuffer.GetState().mRangeEnd);
     // Read the stored buffer length.
-    const auto len = aER.ReadULEB128<BlocksRingBuffer::Length>();
+    const auto len = aER.ReadULEB128<Length>();
     if (len == 0) {
       // 0-length means an "uninteresting" buffer, just return now.
       return;
@@ -908,7 +899,7 @@ struct ProfileBufferEntryReader::Deserializer<BlocksRingBuffer> {
       MOZ_RELEASE_ASSERT(aBuffer.BufferLength()->Value() >= len);
     } else {
       // Output buffer is out-of-session, attach a new memory buffer.
-      aBuffer.Set(PowerOfTwo<BlocksRingBuffer::Length>(len));
+      aBuffer.Set(PowerOfTwo<Length>(len));
       MOZ_ASSERT(aBuffer.BufferLength()->Value() >= len);
     }
     // Read start and end indices.
@@ -980,7 +971,7 @@ struct ProfileBufferEntryReader::Deserializer<UniquePtr<BlocksRingBuffer>> {
     // from here below.
     ProfileBufferEntryReader readerBeforeLen = aER;
     // Read the stored buffer length.
-    const auto len = aER.ReadULEB128<BlocksRingBuffer::Length>();
+    const auto len = aER.ReadULEB128<Length>();
     if (len == 0) {
       // 0-length means an "uninteresting" buffer, just return nullptr.
       return bufferUPtr;
