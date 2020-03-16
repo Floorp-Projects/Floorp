@@ -601,40 +601,72 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         return inputMethod ?: ""
     }
 
+    /**
+     * This class watches for text changes and adds or removes autocomplete text accordingly.
+     * Using this class is preferred when making text changes as it will not interfere
+     * with any composing text at the same time as custom keyboards.
+     *
+     * Known issue: autocomplete will not be added when replacing the current text with one
+     * that has a text length equal to the one being replaced minus 1.
+     * */
     private inner class TextChangeListener : TextWatcher {
+
+        /**
+         * Holds the value of the non-autocomplete text before any changes have been made.
+         * */
         private var beforeChangedTextNonAutocomplete: String = ""
 
+        /**
+         * The start index of the characters about to be replaced.
+         * When using keyboards that have their own text correction enabled this value
+         * will be 0 if no text has been selected beforehand.
+         * This is because text correction from keyboards usually works by replacing the
+         * whole text when the user is typing.
+         * (e.g.: a text of 5 chars is replaced by a text of 6 when inputting a character
+         * or by a text of 4 when backspacing.)
+         * */
+        private var beforeTextChangedIndex: Int = 0
+
+        /**
+         * The number of characters that have been changed in [onTextChanged].
+         * When using keyboards that do not have their own text correction enabled
+         * and the user is pressing backspace this value will be 0.
+         * */
+        private var textChangedCount: Int = 0
+
         override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            if (!isEnabled || settingAutoComplete) return
             beforeChangedTextNonAutocomplete = getNonAutocompleteText(text)
+            beforeTextChangedIndex = start
         }
 
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-            // do nothing
+            if (!isEnabled || settingAutoComplete) return
+
+            textChangedCount = count
         }
 
         override fun afterTextChanged(editable: Editable) {
-            if (!isEnabled || settingAutoComplete) {
-                return
-            }
+            if (!isEnabled || settingAutoComplete) return
 
             val afterNonAutocompleteText = getNonAutocompleteText(editable)
 
-            val hasTextBeenRemoved: Boolean =
-                    (beforeChangedTextNonAutocomplete.contains(afterNonAutocompleteText) &&
-                            beforeChangedTextNonAutocomplete.length > afterNonAutocompleteText.length)
+            val hasTextShortenedByOne: Boolean =
+                    beforeChangedTextNonAutocomplete.length == afterNonAutocompleteText.length + 1
+
+            // Covers both keyboards with text correction activated and those without.
+            val hasBackspaceBeenPressed =
+                    (textChangedCount == 0) || (hasTextShortenedByOne && beforeTextChangedIndex == 0)
+
+            // No autocompleting when typing a search query
+            val afterTextIsSearch = afterNonAutocompleteText.contains(" ")
 
             val hasTextBeenAdded: Boolean =
-                    (afterNonAutocompleteText.contains(beforeChangedTextNonAutocomplete) &&
-                            afterNonAutocompleteText.length > beforeChangedTextNonAutocomplete.length)
+                    (afterNonAutocompleteText.contains(beforeChangedTextNonAutocomplete) ||
+                            beforeChangedTextNonAutocomplete.isEmpty()) &&
+                            afterNonAutocompleteText.length > beforeChangedTextNonAutocomplete.length
 
-            // If true autocomplete text will be added, if false autocomplete text will be removed.
-            var shouldAddAutocomplete: Boolean =
-                    // Remove autocomplete if search query
-                    (!afterNonAutocompleteText.contains(" ") &&
-                            // ... or if user is hitting a backspace (the string is getting smaller)
-                            !hasTextBeenRemoved && afterNonAutocompleteText.isNotEmpty()) ||
-                            // Add autocomplete if valid text has been added
-                            (hasTextBeenAdded && !afterNonAutocompleteText.contains(" "))
+            var shouldAddAutocomplete: Boolean = hasTextBeenAdded || (!afterTextIsSearch && !hasBackspaceBeenPressed)
 
             autoCompletePrefixLength = afterNonAutocompleteText.length
 

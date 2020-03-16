@@ -272,10 +272,6 @@ class InlineAutocompleteEditTextTest {
         et.setText("tex")
         assertEquals(1, invokedCounter)
 
-        // Simulate removing a block of text.  We don't expect autocomplete to have been called
-        et.setText("t")
-        assertEquals(1, invokedCounter)
-
         // Presence of a space is counted as a 'search query', we don't autocomplete those.
         et.setText("search term")
         assertEquals(1, invokedCounter)
@@ -394,6 +390,21 @@ class InlineAutocompleteEditTextTest {
     fun `GIVEN field with selected text WHEN text 'g' added THEN autocomplete to google`() {
         val et = InlineAutocompleteEditText(testContext, attributes)
         et.setText("testestest")
+        et.selectAll()
+        et.onAttachedToWindow()
+        et.autocompleteResult = AutocompleteResult(
+                text = "google.com",
+                source = "test-source",
+                totalItems = 100)
+
+        et.setText("g")
+        assertEquals("google.com", "${et.text}")
+    }
+
+    @Test
+    fun `GIVEN field with selected text 'google ' WHEN text 'g' added THEN autocomplete to google`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        et.setText("https://www.google.com/")
         et.selectAll()
         et.onAttachedToWindow()
         et.autocompleteResult = AutocompleteResult(
