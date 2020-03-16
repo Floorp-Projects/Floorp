@@ -208,9 +208,15 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    * attach to the thread actor.
    */
   async attach(options) {
-    const onPaused = this.once("paused");
-    await super.attach(options);
-    await onPaused;
+    let response;
+    try {
+      const onPaused = this.once("paused");
+      response = await super.attach(options);
+      await onPaused;
+    } catch (e) {
+      throw new Error(e);
+    }
+    return response;
   }
 
   /**

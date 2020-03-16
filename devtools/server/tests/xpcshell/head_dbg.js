@@ -787,7 +787,7 @@ async function setupTestFromUrl(url) {
   const targetFront = findTab(tabs, "test");
   await targetFront.attach();
 
-  const threadFront = await attachThread(targetFront);
+  const [, threadFront] = await attachThread(targetFront);
   await resume(threadFront);
 
   const sourceUrl = getFileUrl(url);
