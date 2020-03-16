@@ -96,7 +96,7 @@ class SiteHPKPState : public nsISiteHPKPState {
   void ToString(nsCString& aString);
 
  protected:
-  virtual ~SiteHPKPState(){};
+  virtual ~SiteHPKPState() = default;
 };
 
 /**
@@ -148,7 +148,7 @@ class SiteHSTSState : public nsISiteHSTSState {
   void ToString(nsCString& aString);
 
  protected:
-  virtual ~SiteHSTSState() {}
+  virtual ~SiteHSTSState() = default;
 };
 
 struct nsSTSPreload;

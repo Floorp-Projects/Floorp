@@ -100,7 +100,7 @@ nsCertTreeDispInfo::nsCertTreeDispInfo(nsCertTreeDispInfo& other) {
   mCert = other.mCert;
 }
 
-nsCertTreeDispInfo::~nsCertTreeDispInfo() {}
+nsCertTreeDispInfo::~nsCertTreeDispInfo() = default;
 
 NS_IMETHODIMP
 nsCertTreeDispInfo::GetCert(nsIX509Cert** _cert) {
