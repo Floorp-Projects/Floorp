@@ -1994,6 +1994,8 @@ using RuntimeScriptDataTable =
 //
 // NOTE: These are counted in Code Units from the start of the script source.
 struct SourceExtent {
+  SourceExtent() = default;
+
   SourceExtent(uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
                uint32_t toStringEnd, uint32_t lineno, uint32_t column)
       : sourceStart(sourceStart),
@@ -3149,6 +3151,7 @@ class LazyScript : public BaseScript {
 
   using BaseScript::BaseScript;
 
+ public:
   // Create a LazyScript without initializing the closedOverBindings and the
   // innerFunctions. To be GC-safe, the caller must initialize both vectors
   // with valid atoms and functions.
@@ -3157,7 +3160,6 @@ class LazyScript : public BaseScript {
                                HandleScriptSourceObject sourceObject,
                                const SourceExtent& extent);
 
- public:
   // Create a LazyScript and initialize closedOverBindings and innerFunctions
   // with the provided vectors.
   static LazyScript* Create(
@@ -3166,24 +3168,6 @@ class LazyScript : public BaseScript {
       const frontend::AtomVector& closedOverBindings,
       const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
       const SourceExtent& extent);
-
-  // Create a LazyScript and initialize the closedOverBindings and the
-  // innerFunctions with dummy values to be replaced in a later initialization
-  // phase.
-  //
-  // The "script" argument to this function can be null.  If it's non-null,
-  // then this LazyScript should be associated with the given JSScript.
-  //
-  // The sourceObject and enclosingScope arguments may be null if the
-  // enclosing function is also lazy.
-  static LazyScript* CreateForXDR(JSContext* cx, uint32_t ngcthings,
-                                  HandleFunction fun, HandleScript script,
-                                  HandleScope enclosingScope,
-                                  HandleScriptSourceObject sourceObject,
-                                  uint32_t immutableFlags, uint32_t sourceStart,
-                                  uint32_t sourceEnd, uint32_t toStringStart,
-                                  uint32_t toStringEnd, uint32_t lineno,
-                                  uint32_t column);
 
   template <XDRMode mode>
   static XDRResult XDRScriptData(XDRState<mode>* xdr,

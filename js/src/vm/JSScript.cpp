@@ -1303,48 +1303,43 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
   JSContext* cx = xdr->cx();
 
   {
-    uint32_t sourceStart;
-    uint32_t sourceEnd;
-    uint32_t toStringStart;
-    uint32_t toStringEnd;
-    uint32_t lineno;
-    uint32_t column;
+    SourceExtent extent;
     uint32_t immutableFlags;
     uint32_t ngcthings;
 
     if (mode == XDR_ENCODE) {
-      // Note: it's possible the LazyScript has a non-null script_ pointer
-      // to a JSScript. We don't encode it: we can just delazify the
-      // lazy script.
-
       MOZ_ASSERT(fun == lazy->function());
 
-      sourceStart = lazy->sourceStart();
-      sourceEnd = lazy->sourceEnd();
-      toStringStart = lazy->toStringStart();
-      toStringEnd = lazy->toStringEnd();
-      lineno = lazy->lineno();
-      column = lazy->column();
+      extent = lazy->extent();
       immutableFlags = lazy->immutableFlags();
       ngcthings = lazy->gcthings().size();
     }
 
-    MOZ_TRY(xdr->codeUint32(&sourceStart));
-    MOZ_TRY(xdr->codeUint32(&sourceEnd));
-    MOZ_TRY(xdr->codeUint32(&toStringStart));
-    MOZ_TRY(xdr->codeUint32(&toStringEnd));
-    MOZ_TRY(xdr->codeUint32(&lineno));
-    MOZ_TRY(xdr->codeUint32(&column));
+    MOZ_TRY(xdr->codeUint32(&extent.sourceStart));
+    MOZ_TRY(xdr->codeUint32(&extent.sourceEnd));
+    MOZ_TRY(xdr->codeUint32(&extent.toStringStart));
+    MOZ_TRY(xdr->codeUint32(&extent.toStringEnd));
+    MOZ_TRY(xdr->codeUint32(&extent.lineno));
+    MOZ_TRY(xdr->codeUint32(&extent.column));
+
     MOZ_TRY(xdr->codeUint32(&immutableFlags));
     MOZ_TRY(xdr->codeUint32(&ngcthings));
 
     if (mode == XDR_DECODE) {
-      lazy.set(LazyScript::CreateForXDR(
-          cx, ngcthings, fun, nullptr, enclosingScope, sourceObject,
-          immutableFlags, sourceStart, sourceEnd, toStringStart, toStringEnd,
-          lineno, column));
+      lazy.set(LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
+      }
+
+      lazy->setImmutableFlags(immutableFlags);
+
+      // Set the enclosing scope of the lazy function. This value should only be
+      // set if we have a non-lazy enclosing script at this point.
+      // LazyScript::enclosingScriptHasEverBeenCompiled relies on the enclosing
+      // scope being non-null if we have ever been nested inside non-lazy
+      // function.
+      if (enclosingScope) {
+        lazy->setEnclosingScope(enclosingScope);
       }
 
       fun->initLazyScript(lazy);
@@ -5539,35 +5534,6 @@ LazyScript* LazyScript::Create(
   }
 
   MOZ_ASSERT(iter == gcThings.end());
-
-  return lazy;
-}
-
-/* static */
-LazyScript* LazyScript::CreateForXDR(
-    JSContext* cx, uint32_t ngcthings, HandleFunction fun, HandleScript script,
-    HandleScope enclosingScope, HandleScriptSourceObject sourceObject,
-    uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
-    uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
-    uint32_t column) {
-  SourceExtent extent{sourceStart, sourceEnd, toStringStart,
-                      toStringEnd, lineno,    column};
-  LazyScript* lazy =
-      LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent);
-  if (!lazy) {
-    return nullptr;
-  }
-
-  lazy->setImmutableFlags(immutableFlags);
-
-  // Set the enclosing scope of the lazy function. This value should only be
-  // set if we have a non-lazy enclosing script at this point.
-  // LazyScript::enclosingScriptHasEverBeenCompiled relies on the enclosing
-  // scope being non-null if we have ever been nested inside non-lazy
-  // function.
-  if (enclosingScope) {
-    lazy->setEnclosingScope(enclosingScope);
-  }
 
   return lazy;
 }
