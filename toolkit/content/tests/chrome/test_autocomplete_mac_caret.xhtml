@@ -22,20 +22,20 @@ function keyCaretTest()
   var autocomplete = $("autocomplete");
 
   autocomplete.focus();
-  checkKeyCaretTest("KEY_ArrowUp", 0, 0, false, "no value up");
-  checkKeyCaretTest("KEY_ArrowDown", 0, 0, false, "no value down");
+  checkKeyCaretTest("KEY_ArrowUp", 0, 0, true, "no value up");
+  checkKeyCaretTest("KEY_ArrowDown", 0, 0, true, "no value down");
 
   autocomplete.value = "Sample";
 
   autocomplete.selectionStart = 3;
   autocomplete.selectionEnd = 3;
   checkKeyCaretTest("KEY_ArrowUp", 0, 0, true, "value up with caret in middle");
-  checkKeyCaretTest("KEY_ArrowUp", 0, 0, false, "value up with caret in middle again");
+  checkKeyCaretTest("KEY_ArrowUp", 0, 0, true, "value up with caret in middle again");
 
   autocomplete.selectionStart = 2;
   autocomplete.selectionEnd = 2;
   checkKeyCaretTest("KEY_ArrowDown", 6, 6, true, "value down with caret in middle");
-  checkKeyCaretTest("KEY_ArrowDown", 6, 6, false, "value down with caret in middle again");
+  checkKeyCaretTest("KEY_ArrowDown", 6, 6, true, "value down with caret in middle again");
 
   autocomplete.selectionStart = 1;
   autocomplete.selectionEnd = 4;
