@@ -7,16 +7,16 @@
 import { addThreadEventListeners, attachAllTargets } from "./events";
 import { features } from "../../utils/prefs";
 import { sameOrigin } from "../../utils/url";
-import type { DevToolsClient, Target } from "./types";
+import type { DevToolsClient, TargetList, Target } from "./types";
 
 // $FlowIgnore
 const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
 
 type Args = {
-  currentTarget: Target,
   devToolsClient: DevToolsClient,
   targets: { [string]: Target },
   options: Object,
+  targetList: TargetList,
 };
 
 async function attachTargets(targetLists, args) {
@@ -66,7 +66,8 @@ async function attachTargets(targetLists, args) {
 }
 
 async function listWorkerTargets(args: Args) {
-  const { currentTarget, devToolsClient } = args;
+  const { targetList, devToolsClient } = args;
+  const currentTarget = targetList.targetFront;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
     return [];
   }
@@ -144,7 +145,8 @@ async function getAllProcessTargets(args) {
 }
 
 async function listProcessTargets(args: Args) {
-  const { currentTarget } = args;
+  const { targetList } = args;
+  const currentTarget = targetList.targetFront;
   if (!attachAllTargets(currentTarget)) {
     if (currentTarget.url && features.windowlessServiceWorkers) {
       // Service workers associated with our target's origin need to pause until
