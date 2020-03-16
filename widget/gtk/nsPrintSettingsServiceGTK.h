@@ -17,7 +17,7 @@ class PrintData;
 
 class nsPrintSettingsServiceGTK final : public nsPrintSettingsService {
  public:
-  nsPrintSettingsServiceGTK() {}
+  nsPrintSettingsServiceGTK() = default;
 
   NS_IMETHODIMP SerializeToPrintData(
       nsIPrintSettings* aSettings,

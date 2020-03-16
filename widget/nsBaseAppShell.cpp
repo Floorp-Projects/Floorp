@@ -35,7 +35,7 @@ nsBaseAppShell::nsBaseAppShell()
       mBlockNativeEvent(false),
       mProcessedGeckoEvents(false) {}
 
-nsBaseAppShell::~nsBaseAppShell() {}
+nsBaseAppShell::~nsBaseAppShell() = default;
 
 nsresult nsBaseAppShell::Init() {
   // Configure ourselves as an observer for the current thread:

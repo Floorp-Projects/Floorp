@@ -187,7 +187,7 @@ nsTransferable::nsTransferable()
 // Transferable destructor
 //
 //-------------------------------------------------------------------------
-nsTransferable::~nsTransferable() {}
+nsTransferable::~nsTransferable() = default;
 
 NS_IMETHODIMP
 nsTransferable::Init(nsILoadContext* aContext) {
