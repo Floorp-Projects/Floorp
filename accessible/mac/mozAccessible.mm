@@ -31,6 +31,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+#define NSAccessibilityARIACurrentAttribute @"AXARIACurrent"
 #define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
 #define NSAccessibilityHasPopupAttribute @"AXHasPopup"
 #define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
@@ -134,7 +135,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // as well as expired elements.
 
   return [[self role] isEqualToString:NSAccessibilityUnknownRole] &&
-    ([self state] & states::FOCUSABLE);
+         ([self state] & states::FOCUSABLE);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -205,6 +206,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
                         NSAccessibilityWindowAttribute, NSAccessibilityFocusedAttribute,
                         NSAccessibilityHelpAttribute, NSAccessibilityTitleUIElementAttribute,
                         NSAccessibilityTopLevelUIElementAttribute, NSAccessibilityHasPopupAttribute,
+                        NSAccessibilityARIACurrentAttribute,
 #if DEBUG
                         @"AXMozDescription",
 #endif
@@ -278,6 +280,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     return [NSNumber numberWithBool:([self state] & states::HASPOPUP) != 0];
   }
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self value];
+  if ([attribute isEqualToString:NSAccessibilityARIACurrentAttribute]) {
+    return utils::GetAccAttr(self, "current");
+  }
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return [self roleDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
@@ -344,24 +349,13 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
         // Per the MathML 3 spec, the latter happens iff the linethickness
         // attribute is of the form [zero-float][optional-unit]. In that case we
         // set line thickness to zero and in the other cases we set it to one.
-        nsAutoString thickness;
-        if (accWrap) {
-          nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
-          nsAccUtils::GetAccAttr(attributes, nsGkAtoms::linethickness_, thickness);
+        if (NSString* thickness = utils::GetAccAttr(self, "thickness")) {
+          NSNumberFormatter* formatter = [[[NSNumberFormatter alloc] init] autorelease];
+          NSNumber* value = [formatter numberFromString:thickness];
+          return [NSNumber numberWithBool:[value boolValue]];
         } else {
-          AutoTArray<Attribute, 10> attrs;
-          proxy->Attributes(&attrs);
-          for (size_t i = 0; i < attrs.Length(); i++) {
-            if (attrs.ElementAt(i).Name() == "thickness") {
-              thickness = attrs.ElementAt(i).Value();
-              break;
-            }
-          }
+          return [NSNumber numberWithInteger:0];
         }
-        double value = 1.0;
-        if (!thickness.IsEmpty())
-          value = PR_strtod(NS_LossyConvertUTF16toASCII(thickness).get(), nullptr);
-        return [NSNumber numberWithInteger:(value ? 1 : 0)];
       }
       break;
     case roles::MATHML_SUB:

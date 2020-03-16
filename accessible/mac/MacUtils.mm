@@ -7,8 +7,9 @@
 #import "MacUtils.h"
 
 #include "Accessible.h"
-
 #include "nsCocoaUtils.h"
+#include "mozilla/a11y/PDocAccessible.h"
+#include "nsIPersistentProperties2.h"
 
 namespace mozilla {
 namespace a11y {
@@ -26,6 +27,28 @@ NSString* LocalizedString(const nsString& aString) {
   return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
 }
 
+NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName) {
+  nsAutoString result;
+  if (AccessibleWrap* accWrap = [aNativeAccessible getGeckoAccessible]) {
+    nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
+    attributes->GetStringProperty(nsCString(aAttrName), result);
+  } else if (ProxyAccessible* proxy = [aNativeAccessible getProxyAccessible]) {
+    AutoTArray<Attribute, 10> attrs;
+    proxy->Attributes(&attrs);
+    for (size_t i = 0; i < attrs.Length(); i++) {
+      if (attrs.ElementAt(i).Name() == aAttrName) {
+        result = attrs.ElementAt(i).Value();
+        break;
+      }
+    }
+  }
+
+  if (!result.IsEmpty()) {
+    return nsCocoaUtils::ToNSString(result);
+  }
+
+  return nil;
+}
 }
 }
 }
