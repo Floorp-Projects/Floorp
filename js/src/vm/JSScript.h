@@ -68,7 +68,6 @@ class JitScript;
 }  // namespace jit
 
 class AutoSweepJitScript;
-class LazyScript;
 class ModuleObject;
 class RegExpObject;
 class ScriptSourceHolder;
@@ -2084,6 +2083,21 @@ class BaseScript : public gc::TenuredCell {
   }
 
  public:
+  // Create a lazy BaseScript without initializing any gc-things.
+  static BaseScript* CreateRawLazy(JSContext* cx, uint32_t ngcthings,
+                                   HandleFunction fun,
+                                   HandleScriptSourceObject sourceObject,
+                                   const SourceExtent& extent);
+
+  // Create a lazy BaseScript and initialize gc-things with provided
+  // closedOverBindings and innerFunctions.
+  static BaseScript* CreateLazy(
+      JSContext* cx, const frontend::CompilationInfo& compilationInfo,
+      HandleFunction fun, HandleScriptSourceObject sourceObject,
+      const frontend::AtomVector& closedOverBindings,
+      const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
+      const SourceExtent& extent);
+
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
   bool isUsingInterpreterTrampoline(JSRuntime* rt) const;
 
@@ -3073,108 +3087,6 @@ class JSScript : public js::BaseScript {
 };
 
 namespace js {
-
-// Information about a script which may be (or has been) lazily compiled to
-// bytecode from its source.
-class LazyScript : public BaseScript {
-  // The BaseScript::warmUpData_ field is used as follows:
-  //   * LazyScript in which the script is nested.  This case happens if the
-  //     enclosing script is lazily parsed and have never been compiled.
-  //
-  //     This is used by the debugger to delazify the enclosing scripts
-  //     recursively.  The all ancestor LazyScripts in this linked-list are
-  //     kept alive as long as this LazyScript is alive, which doesn't result
-  //     in keeping them unnecessarily alive outside of the debugger for the
-  //     following reasons:
-  //
-  //       * Outside of the debugger, a LazyScript is visible to user (which
-  //         means the LazyScript can be pointed from somewhere else than the
-  //         enclosing script) only if the enclosing script is compiled and
-  //         executed.  While compiling the enclosing script, this field is
-  //         changed to point the enclosing scope.  So the enclosing
-  //         LazyScript is no more in the list.
-  //       * Before the enclosing script gets compiled, this LazyScript is
-  //         kept alive only if the outermost LazyScript in the list is kept
-  //         alive.
-  //       * Once this field is changed to point the enclosing scope, this
-  //         field will never point the enclosing LazyScript again, since
-  //         relazification is not performed on non-leaf scripts.
-  //
-  //   * Scope in which the script is nested.  This case happens if the
-  //     enclosing script has ever been compiled.
-  //
-  //   * nullptr for incomplete (initial or failure) state
-  //      NOTE: We currently represent this as WarmUpCount(0) inside the
-  //      ScriptWarmUpData tagged pointer.
-  //
-  // This field should be accessed via accessors:
-  //   * enclosingScope
-  //   * setEnclosingScope (cannot be called twice)
-  //   * enclosingLazyScript
-  //   * setEnclosingLazyScript (cannot be called twice)
-  // after checking:
-  //   * hasEnclosingLazyScript
-  //   * hasEnclosingScope
-  //
-  // The transition of fields are following:
-  //
-  //  o                               o
-  //  | when function is lazily       | when decoded from XDR,
-  //  | parsed inside a function      | and enclosing script is lazy
-  //  | which is lazily parsed        | (CreateForXDR without enclosingScope)
-  //  | (Create)                      |
-  //  v                               v
-  // +---------+                     +---------+
-  // | nullptr |                     | nullptr |
-  // +---------+                     +---------+
-  //  |                               |
-  //  | when enclosing function is    | when enclosing script is decoded
-  //  | lazily parsed and this        | and this script's function is put
-  //  | script's function is put      | into innerFunctions()
-  //  | into innerFunctions()         | (setEnclosingLazyScript)
-  //  | (setEnclosingLazyScript)      |
-  //  |                               |
-  //  |                               |     o
-  //  |                               |     | when function is lazily
-  //  |                               |     | parsed inside a function
-  //  |                               |     | which is eagerly parsed
-  //  |                               |     | (Create)
-  //  v                               |     v
-  // +----------------------+         |    +---------+
-  // | enclosing LazyScript |<--------+    | nullptr |
-  // +----------------------+              +---------+
-  //  |                                     |
-  //  v                                     |
-  //  +<------------------------------------+
-  //  |
-  //  | when the enclosing script     o
-  //  | is successfully compiled      | when decoded from XDR,
-  //  | (setEnclosingScope)           | and enclosing script is not lazy
-  //  v                               | (CreateForXDR with enclosingScope)
-  // +-----------------+              |
-  // | enclosing Scope |<-------------+
-  // +-----------------+
-
-  using BaseScript::BaseScript;
-
- public:
-  // Create a LazyScript without initializing the closedOverBindings and the
-  // innerFunctions. To be GC-safe, the caller must initialize both vectors
-  // with valid atoms and functions.
-  static LazyScript* CreateRaw(JSContext* cx, uint32_t ngcthings,
-                               HandleFunction fun,
-                               HandleScriptSourceObject sourceObject,
-                               const SourceExtent& extent);
-
-  // Create a LazyScript and initialize closedOverBindings and innerFunctions
-  // with the provided vectors.
-  static LazyScript* Create(
-      JSContext* cx, const frontend::CompilationInfo& compilationInfo,
-      HandleFunction fun, HandleScriptSourceObject sourceObject,
-      const frontend::AtomVector& closedOverBindings,
-      const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
-      const SourceExtent& extent);
-};
 
 struct ScriptAndCounts {
   /* This structure is stored and marked from the JSRuntime. */
