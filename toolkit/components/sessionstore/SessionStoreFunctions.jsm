@@ -8,21 +8,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
 });
 
-function UpdateSessionStore(
-  aBrowser,
-  aFlushId,
-  aIsFinal,
-  aEpoch,
-  aData,
-  aCollectSHistory
-) {
+function UpdateSessionStore(aBrowser, aFlushId, aIsFinal, aEpoch, aData) {
   return SessionStoreFuncInternal.updateSessionStore(
     aBrowser,
     aFlushId,
     aIsFinal,
     aEpoch,
-    aData,
-    aCollectSHistory
+    aData
   );
 }
 
@@ -390,8 +382,7 @@ var SessionStoreFuncInternal = {
     aFlushId,
     aIsFinal,
     aEpoch,
-    aData,
-    aCollectSHistory
+    aData
   ) {
     let currentData = {};
     if (aData.docShellCaps != undefined) {
@@ -443,7 +434,6 @@ var SessionStoreFuncInternal = {
       flushID: aFlushId,
       isFinal: aIsFinal,
       epoch: aEpoch,
-      sHistoryNeeded: aCollectSHistory,
     });
     this._formDataId = [];
     this._formDataIdValue = [];

@@ -11,7 +11,5 @@ webidl Element;
 interface nsISessionStoreFunctions : nsISupports {
   // update sessionStore from the tabListener implemented by C++
   // aData is a UpdateSessionStoreData dictionary (From SessionStoreUtils.webidl)
-  void UpdateSessionStore(
-    in Element aBrowser, in uint32_t aFlushId, in boolean aIsFinal,
-    in uint32_t aEpoch, in jsval aData, in boolean aCollectSHistory);
+  void UpdateSessionStore(in Element aBrowser, in uint32_t aFlushId, in boolean aIsFinal, in uint32_t aEpoch, in jsval aData);
 };
