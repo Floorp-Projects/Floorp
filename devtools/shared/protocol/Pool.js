@@ -70,13 +70,11 @@ class Pool extends EventEmitter {
     if (!actor.actorID) {
       actor.actorID = this.conn.allocID(actor.actorPrefix || actor.typeName);
     } else {
-      // If the actor is already registerd in a pool, remove it without destroying it.
+      // If the actor is already registered in a pool, remove it without destroying it.
       // This happens for example when an addon is reloaded. To see this behavior, take a
       // look at devtools/server/tests/xpcshell/test_addon_reload.js
 
-      // TODO: not all actors have been moved to protocol.js, so they do not all have
-      // a parent field. Remove the check for the parent once the conversion is finished
-      const parent = this.poolFor(actor.actorID);
+      const parent = actor.parent();
       if (parent) {
         parent.unmanage(actor);
       }
