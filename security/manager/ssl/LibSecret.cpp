@@ -189,7 +189,7 @@ typedef std::unique_ptr<SecretCollection, ScopedMaybeDelete<SecretCollection>>
 typedef std::unique_ptr<SecretService, ScopedMaybeDelete<SecretService>>
     ScopedSecretService;
 
-LibSecret::LibSecret() {}
+LibSecret::LibSecret() = default;
 
 LibSecret::~LibSecret() {
   MOZ_ASSERT(NS_IsMainThread());

@@ -20,13 +20,13 @@ namespace psm {
 
 class PKCS11ModuleDB : public nsIPKCS11ModuleDB {
  public:
-  PKCS11ModuleDB() {}
+  PKCS11ModuleDB() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11MODULEDB
 
  protected:
-  virtual ~PKCS11ModuleDB() {}
+  virtual ~PKCS11ModuleDB() = default;
 };
 
 }  // namespace psm

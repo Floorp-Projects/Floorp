@@ -28,7 +28,7 @@ class CryptoTask : public Runnable {
  protected:
   CryptoTask() : Runnable("CryptoTask"), mRv(NS_ERROR_NOT_INITIALIZED) {}
 
-  virtual ~CryptoTask() {}
+  virtual ~CryptoTask() = default;
 
   /**
    * Called on a background thread (never the main thread). Its result will be

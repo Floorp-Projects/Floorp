@@ -460,7 +460,7 @@ nsSiteSecurityService::nsSiteSecurityService()
       mProcessPKPHeadersFromNonBuiltInRoots(false),
       mDafsa(kDafsa) {}
 
-nsSiteSecurityService::~nsSiteSecurityService() {}
+nsSiteSecurityService::~nsSiteSecurityService() = default;
 
 NS_IMPL_ISUPPORTS(nsSiteSecurityService, nsIObserver, nsISiteSecurityService)
 

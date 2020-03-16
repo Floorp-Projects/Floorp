@@ -34,7 +34,7 @@ class AbstractOSKeyStore {
   virtual nsresult Lock() = 0;
   // Unlock the key store.
   virtual nsresult Unlock() = 0;
-  virtual ~AbstractOSKeyStore() {}
+  virtual ~AbstractOSKeyStore() = default;
 
   // Returns true if the secret with the given label is available in the key
   // store, false otherwise.

@@ -27,19 +27,6 @@ using mozilla::OriginAttributes;
 
 class nsClientAuthRemember {
  public:
-  nsClientAuthRemember() {}
-
-  nsClientAuthRemember(const nsClientAuthRemember& aOther) {
-    this->operator=(aOther);
-  }
-
-  nsClientAuthRemember& operator=(const nsClientAuthRemember& aOther) {
-    mAsciiHost = aOther.mAsciiHost;
-    mFingerprint = aOther.mFingerprint;
-    mDBKey = aOther.mDBKey;
-    return *this;
-  }
-
   nsCString mAsciiHost;
   nsCString mFingerprint;
   nsCString mDBKey;
@@ -60,7 +47,7 @@ class nsClientAuthRememberEntry final : public PLDHashEntryHdr {
         mSettings(std::move(aToMove.mSettings)),
         mEntryKey(std::move(aToMove.mEntryKey)) {}
 
-  ~nsClientAuthRememberEntry() {}
+  ~nsClientAuthRememberEntry() = default;
 
   KeyType GetKey() const { return EntryKeyPtr(); }
 
