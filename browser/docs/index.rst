@@ -13,6 +13,7 @@ This is the nascent documentation of the Firefox front-end code.
    extensions/formautofill/docs/index
    components/newtab/docs/index
    installer/windows/installer/index
+   /toolkit/mozapps/defaultagent/default-browser-agent/index
    components/newtab/content-src/asrouter/docs/index
    base/sslerrorreport/index
    base/tabbrowser/index
