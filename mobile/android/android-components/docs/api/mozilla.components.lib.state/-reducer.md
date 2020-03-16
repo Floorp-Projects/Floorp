@@ -2,7 +2,7 @@
 
 # Reducer
 
-`typealias Reducer<S, A> = (`[`S`](-reducer.md#S)`, `[`A`](-reducer.md#A)`) -> `[`S`](-reducer.md#S) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L26)
+`typealias Reducer<S, A> = (`[`S`](-reducer.md#S)`, `[`A`](-reducer.md#A)`) -> `[`S`](-reducer.md#S) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Reducer.kt#L13)
 
 Reducers specify how the application's [State](-state.md) changes in response to [Action](-action.md)s sent to the [Store](-store/index.md).
 

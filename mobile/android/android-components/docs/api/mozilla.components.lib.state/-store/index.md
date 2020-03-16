@@ -2,7 +2,7 @@
 
 # Store
 
-`open class Store<S : `[`State`](../-state.md)`, A : `[`Action`](../-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L42)
+`open class Store<S : `[`State`](../-state.md)`, A : `[`Action`](../-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L31)
 
 A generic store holding an immutable [State](../-state.md).
 
@@ -15,6 +15,8 @@ The [State](../-state.md) can only be modified by dispatching [Action](../-actio
 
 `reducer` - A function that gets the current [State](../-state.md) and [Action](../-action.md) passed in and will return a new [State](../-state.md).
 
+`middleware` - Optional list of [Middleware](../-middleware.md) sitting between the [Store](./index.md) and the [Reducer](../-reducer.md).
+
 ### Types
 
 | Name | Summary |
@@ -25,7 +27,7 @@ The [State](../-state.md) can only be modified by dispatching [Action](../-actio
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Store(initialState: `[`S`](index.md#S)`, reducer: `[`Reducer`](../-reducer.md)`<`[`S`](index.md#S)`, `[`A`](index.md#A)`>)`<br>A generic store holding an immutable [State](../-state.md). |
+| [&lt;init&gt;](-init-.md) | `Store(initialState: `[`S`](index.md#S)`, reducer: `[`Reducer`](../-reducer.md)`<`[`S`](index.md#S)`, `[`A`](index.md#A)`>, middleware: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Middleware`](../-middleware.md)`<`[`S`](index.md#S)`, `[`A`](index.md#A)`>> = emptyList())`<br>A generic store holding an immutable [State](../-state.md). |
 
 ### Properties
 
