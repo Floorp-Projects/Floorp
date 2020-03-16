@@ -4386,7 +4386,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
 
   // If we are using an existing lazy script, record enough info to be able to
   // rollback on failure.
-  if (script->isLazyScript()) {
+  if (script->isReadyForDelazification()) {
     lazyFlags = script->immutableScriptFlags_;
     lazyMutableFlags = script->mutableFlags_;
     lazyEnclosingScope = script->releaseEnclosingScope();
@@ -4406,7 +4406,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
       script->swapData(lazyData.get());
       script->sharedData_ = nullptr;
 
-      MOZ_ASSERT(script->isLazyScript());
+      MOZ_ASSERT(script->isReadyForDelazification());
     } else {
       script->sharedData_ = nullptr;
     }

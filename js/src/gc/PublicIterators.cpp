@@ -114,35 +114,27 @@ static inline void DoScriptCallback(JSContext* cx, void* data,
                                     BaseScript* script,
                                     IterateScriptCallback callback,
                                     const JS::AutoRequireNoGC& nogc) {
-  if (script->isLazyScript()) {
-    // We call the callback only for the lazy script that:
-    //   (a) its enclosing script has ever been fully compiled and
-    //       itself is delazifyable (handled in this function)
-    //   (b) it is contained in the (a)'s inner function tree
-    //       (handled in TraverseInnerLazyScriptsForLazyScript)
-    if (!script->enclosingScriptHasEverBeenCompiled()) {
-      return;
-    }
-  } else {
-    // We check for presence of script->isUncompleted() because it is possible
-    // that the script was created and thus exposed to GC, but *not* fully
-    // initialized from fullyInitFromStencil due to errors.
-    if (static_cast<JSScript*>(script)->isUncompleted()) {
-      return;
-    }
+  // Exclude any scripts that may be the result of a failed compile. Check that
+  // script either has bytecode or is ready to delazify.
+  //
+  // This excludes lazy scripts that do not have an enclosing scope because we
+  // cannot distinguish a failed compile fragment from a lazy script with a lazy
+  // parent.
+  if (!script->hasBytecode() && !script->isReadyForDelazification()) {
+    return;
   }
 
   // Invoke callback.
   callback(cx->runtime(), data, script, nogc);
 
-  // Recursively visit inner lazy scripts. See the filter above for
-  // enclosingScriptHasEverBeenCompiled.
-  if (script->isLazyScript()) {
+  // The check above excluded lazy scripts with lazy parents, so explicitly
+  // visit inner scripts now if we are lazy with a successfully compiled parent.
+  if (!script->hasBytecode()) {
     TraverseInnerLazyScriptsForLazyScript(cx, data, script, callback, nogc);
   }
 }
 
-template <bool MatchLazy>
+template <bool HasBytecode>
 static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
                                IterateScriptCallback scriptCallback) {
   MOZ_ASSERT(!cx->suppressGC);
@@ -153,10 +145,10 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
     Zone* zone = realm->zone();
     for (auto iter = zone->cellIter<BaseScript>(prep); !iter.done();
          iter.next()) {
-      if (MatchLazy != iter->isLazyScript()) {
+      if (iter->realm() != realm) {
         continue;
       }
-      if (iter->realm() != realm) {
+      if (HasBytecode != iter->hasBytecode()) {
         continue;
       }
       DoScriptCallback(cx, data, iter.get(), scriptCallback, nogc);
@@ -165,7 +157,7 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
     for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
       for (auto iter = zone->cellIter<BaseScript>(prep); !iter.done();
            iter.next()) {
-        if (MatchLazy != iter->isLazyScript()) {
+        if (HasBytecode != iter->hasBytecode()) {
           continue;
         }
         DoScriptCallback(cx, data, iter.get(), scriptCallback, nogc);
@@ -176,12 +168,12 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
 
 void js::IterateScripts(JSContext* cx, Realm* realm, void* data,
                         IterateScriptCallback scriptCallback) {
-  IterateScriptsImpl</* MatchLazy = */ false>(cx, realm, data, scriptCallback);
+  IterateScriptsImpl</*HasBytecode = */ true>(cx, realm, data, scriptCallback);
 }
 
 void js::IterateLazyScripts(JSContext* cx, Realm* realm, void* data,
                             IterateScriptCallback scriptCallback) {
-  IterateScriptsImpl</* MatchLazy = */ true>(cx, realm, data, scriptCallback);
+  IterateScriptsImpl</*HasBytecode = */ false>(cx, realm, data, scriptCallback);
 }
 
 static void IterateGrayObjects(Zone* zone, GCThingCallback cellCallback,
