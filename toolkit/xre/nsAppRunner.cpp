@@ -110,6 +110,10 @@
 #    include "mozilla/LauncherRegistryInfo.h"
 #  endif
 
+#  if defined(MOZ_DEFAULT_BROWSER_AGENT)
+#    include "nsIWindowsRegKey.h"
+#  endif
+
 #  ifndef PROCESS_DEP_ENABLE
 #    define PROCESS_DEP_ENABLE 0x1
 #  endif
@@ -244,10 +248,15 @@ extern void InstallSignalHandlers(const char* ProgramName);
 #define FILE_INVALIDATE_CACHES NS_LITERAL_CSTRING(".purgecaches")
 #define FILE_STARTUP_INCOMPLETE NS_LITERAL_STRING(".startup-incomplete")
 
-#if defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS)
+#if defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS) || \
+    defined(MOZ_DEFAULT_BROWSER_AGENT)
 static const char kPrefHealthReportUploadEnabled[] =
     "datareporting.healthreport.uploadEnabled";
 #endif  // defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS)
+        // || defined(MOZ_DEFAULT_BROWSER_AGENT)
+#if defined(MOZ_DEFAULT_BROWSER_AGENT)
+static const char kPrefDefaultAgentEnabled[] = "default-browser-agent.enabled";
+#endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 
 int gArgc;
 char** gArgv;
@@ -1540,6 +1549,50 @@ static void SetupLauncherProcessPref() {
 }
 
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
+
+#  if defined(MOZ_DEFAULT_BROWSER_AGENT)
+static void OnDefaultAgentTelemetryPrefChanged(const char* aPref, void* aData) {
+  bool prefVal = Preferences::GetBool(aPref, true);
+
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsAutoString keyName;
+  keyName.AppendLiteral("SOFTWARE\\" MOZ_APP_VENDOR "\\" MOZ_APP_NAME
+                        "\\Default Browser Agent");
+
+  nsCOMPtr<nsIFile> binaryPath;
+  rv = XRE_GetBinaryPath(getter_AddRefs(binaryPath));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIFile> binaryDir;
+  rv = binaryPath->GetParent(getter_AddRefs(binaryDir));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsAutoString valueName;
+  rv = binaryDir->GetPath(valueName);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (strcmp(aPref, kPrefHealthReportUploadEnabled) == 0) {
+    valueName.AppendLiteral("|DisableTelemetry");
+  } else if (strcmp(aPref, kPrefDefaultAgentEnabled) == 0) {
+    valueName.AppendLiteral("|DisableDefaultBrowserAgent");
+  } else {
+    return;
+  }
+
+  rv = regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, keyName,
+                      nsIWindowsRegKey::ACCESS_WRITE);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  // We're recording whether the pref is *disabled*, so invert the value.
+  rv = regKey->WriteIntValue(valueName, prefVal ? 0 : 1);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+#  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 
 #endif  // XP_WIN
 
@@ -4442,6 +4495,12 @@ nsresult XREMain::XRE_mainRun() {
 #  if defined(MOZ_LAUNCHER_PROCESS)
     SetupLauncherProcessPref();
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
+#  if defined(MOZ_DEFAULT_BROWSER_AGENT)
+    Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
+                                         kPrefHealthReportUploadEnabled);
+    Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
+                                         kPrefDefaultAgentEnabled);
+#  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 #endif
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK)
