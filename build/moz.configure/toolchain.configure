@@ -2249,20 +2249,6 @@ js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN',
                              depends_if('--enable-clang-plugin')(lambda _: True))
 
-js_option('--enable-clang-plugin-alpha', env='ENABLE_CLANG_PLUGIN_ALPHA',
-            help='Enable static analysis with clang-plugin alpha checks.')
-
-@depends('--enable-clang-plugin', '--enable-clang-plugin-alpha')
-def check_clang_plugin_alpha(enable_clang_plugin, enable_clang_plugin_alpha):
-    if enable_clang_plugin_alpha:
-        if enable_clang_plugin:
-            return True
-        die("Cannot enable clang-plugin alpha checkers without --enable-clang-plugin.")
-    return False
-
-add_old_configure_assignment('ENABLE_CLANG_PLUGIN_ALPHA', check_clang_plugin_alpha)
-set_define('MOZ_CLANG_PLUGIN_ALPHA', check_clang_plugin_alpha)
-
 js_option('--enable-mozsearch-plugin', env='ENABLE_MOZSEARCH_PLUGIN',
           help="Enable building with the mozsearch indexer plugin")
 
