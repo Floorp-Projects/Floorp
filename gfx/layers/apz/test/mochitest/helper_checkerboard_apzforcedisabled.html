@@ -15,7 +15,7 @@ function* test(testDriver) {
   var subframe = document.getElementById('subframe');
 
   // layerize subframe
-  yield synthesizeNativeClick(subframe, 10, 10, testDriver);
+  yield synthesizeNativeClickAndWaitForClickEvent(subframe, 10, 10, testDriver);
 
   // verify layerization
   yield waitForAllPaints(() => setTimeout(testDriver, 0));
