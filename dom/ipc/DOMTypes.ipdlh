@@ -309,7 +309,6 @@ struct TimedChannelInfo
 
 struct ReplacementChannelConfigInit
 {
-  uint32_t loadFlags;
   uint32_t redirectFlags;
   uint32_t classOfService;
   bool? privateBrowsing;
