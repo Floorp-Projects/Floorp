@@ -395,6 +395,9 @@
   overflow: hidden;
 }
 
+.network-monitor #response-panel .properties-view {
+  height: 100%;
+}
 
 .network-monitor #response-panel .accordion-item {
   position: relative;
