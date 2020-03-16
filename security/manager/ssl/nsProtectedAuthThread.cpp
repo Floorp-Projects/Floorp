@@ -36,7 +36,7 @@ nsProtectedAuthThread::nsProtectedAuthThread()
       mSlot(0),
       mLoginResult(SECFailure) {}
 
-nsProtectedAuthThread::~nsProtectedAuthThread() {}
+nsProtectedAuthThread::~nsProtectedAuthThread() = default;
 
 NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver* aObserver) {
   NS_ENSURE_ARG(aObserver);

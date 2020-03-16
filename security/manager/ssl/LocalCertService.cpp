@@ -345,9 +345,9 @@ class LocalCertRemoveTask final : public LocalCertTask {
 
 NS_IMPL_ISUPPORTS(LocalCertService, nsILocalCertService)
 
-LocalCertService::LocalCertService() {}
+LocalCertService::LocalCertService() = default;
 
-LocalCertService::~LocalCertService() {}
+LocalCertService::~LocalCertService() = default;
 
 nsresult LocalCertService::LoginToKeySlot() {
   nsresult rv;
