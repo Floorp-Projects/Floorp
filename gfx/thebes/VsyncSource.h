@@ -50,15 +50,11 @@ class VsyncSource {
 
     RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
 
-    void RegisterCompositorVsyncDispatcher(
+    void AddCompositorVsyncDispatcher(
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void DeregisterCompositorVsyncDispatcher(
+    void RemoveCompositorVsyncDispatcher(
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void EnableCompositorVsyncDispatcher(
-        CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void DisableCompositorVsyncDispatcher(
-        CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
+    void MoveListenersToNewSource(VsyncSource::Display& aNewDisplay);
     void NotifyRefreshTimerVsyncStatus(bool aEnable);
     virtual TimeDuration GetVsyncRate();
 
@@ -73,22 +69,17 @@ class VsyncSource {
 
     Mutex mDispatcherLock;
     bool mRefreshTimerNeedsVsync;
-    nsTArray<CompositorVsyncDispatcher*> mEnabledCompositorVsyncDispatchers;
-    nsTArray<CompositorVsyncDispatcher*> mRegisteredCompositorVsyncDispatchers;
+    nsTArray<RefPtr<CompositorVsyncDispatcher>> mCompositorVsyncDispatchers;
     RefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
     VsyncId mVsyncId;
   };
 
-  void EnableCompositorVsyncDispatcher(
+  void AddCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void DisableCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void RegisterCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void DeregisterCompositorVsyncDispatcher(
+  void RemoveCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
 
-  void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
+  void MoveListenersToNewSource(VsyncSource* aNewSource);
 
   RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
   virtual Display& GetGlobalDisplay() = 0;  // Works across all displays
