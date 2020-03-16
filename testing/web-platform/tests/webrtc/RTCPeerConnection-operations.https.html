@@ -141,15 +141,10 @@ promise_test(async t => {
 // Helper builds on above tests to check if operations queue is empty or not.
 //
 // Meaning of "empty": Because this helper uses the sloppy promiseStateFinal,
-// it purposely only detects operations on the chain that block the current run
-// of the event loop. In other words, it won't detect operations on the chain
-// that resolve on the emptying of the microtask queue at the end of this run
-// of the event loop.
-//
-// Specifically: It does not detect the negotiationneeded event which is now
-// fired from a chained synchronous function in the spec. It returns true
-// in that case if nothing else is on the chain. Tests below rely on
-// this behavior.
+// it may not detect operations on the chain unless they block the current run
+// of the event loop. In other words, it may not detect operations on the chain
+// that resolve on the emptying of the microtask queue at the end of this run of
+// the event loop.
 
 async function isOperationsChainEmpty(pc) {
   let p, error;
@@ -253,7 +248,20 @@ promise_test(async t => {
   t.add_cleanup(() => pc.close());
   const transceiver = pc.addTransceiver("audio");
   await new Promise(r => pc.onnegotiationneeded = r);
-  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  assert_false(await isOperationsChainEmpty(pc), "Empty chain");
+  await new Promise(r => t.step_timeout(r, 0));
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
+}, "Firing of negotiationneeded uses operations chain");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+  const transceiver = pc.addTransceiver("audio");
+  await new Promise(r => pc.onnegotiationneeded = r);
+  // Note: since the negotiationneeded event is fired from a chained synchronous
+  // function in the spec, queue a task before doing our precheck.
+  await new Promise(r => t.step_timeout(r, 0));
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
   const p = transceiver.sender.replaceTrack(null);
   assert_false(await isOperationsChainEmpty(pc), "Non-empty chain");
   await p;
@@ -264,7 +272,8 @@ promise_test(async t => {
   t.add_cleanup(() => pc.close());
   const transceiver = pc.addTransceiver("audio");
   await new Promise(r => pc.onnegotiationneeded = r);
-  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  await new Promise(r => t.step_timeout(r, 0));
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
   const parameters = transceiver.sender.getParameters();
   const p = transceiver.sender.setParameters(parameters);
   const haveState = promiseStateFinal(p);
@@ -288,7 +297,8 @@ promise_test(async t => {
   t.add_cleanup(() => pc.close());
   const {sender} = pc.addTransceiver("audio");
   await new Promise(r => pc.onnegotiationneeded = r);
-  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  await new Promise(r => t.step_timeout(r, 0));
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
   const p = sender.getStats();
   const haveState = promiseStateFinal(p);
   assert_true(await isOperationsChainEmpty(pc), "Empty chain");
@@ -301,7 +311,8 @@ promise_test(async t => {
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver("audio");
   await new Promise(r => pc.onnegotiationneeded = r);
-  assert_true(await isOperationsChainEmpty(pc), "Emptyish chain after ONN");
+  await new Promise(r => t.step_timeout(r, 0));
+  assert_true(await isOperationsChainEmpty(pc), "Empty chain");
   const p = receiver.getStats();
   const haveState = promiseStateFinal(p);
   assert_true(await isOperationsChainEmpty(pc), "Empty chain");
@@ -329,6 +340,21 @@ promise_test(async t => {
   await pc2.addIceCandidate(candidate);
   await p;
 }, "addIceCandidate chains onto SRD, fails before");
+
+promise_test(async t => {
+  const pc = new RTCPeerConnection();
+  t.add_cleanup(() => pc.close());
+
+  const offer = await pc.createOffer();
+  pc.addTransceiver("video");
+  await new Promise(r => pc.onnegotiationneeded = r);
+  const p = (async () => {
+    await pc.setLocalDescription();
+  })();
+  await new Promise(r => t.step_timeout(r, 0));
+  await pc.setRemoteDescription(offer);
+  await p;
+}, "Operations queue not vulnerable to recursion by chained negotiationneeded");
 
 promise_test(async t => {
   const pc1 = new RTCPeerConnection();
