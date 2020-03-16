@@ -178,7 +178,6 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `createContentText - notification content must adapt to the amount of valid permissions`() {
-
         val updater = DefaultAddonUpdater(testContext)
         val validPermissions = listOf("privacy", "management")
 
@@ -190,7 +189,7 @@ class DefaultAddonUpdaterTest {
         val validAndInvalidPermissions = listOf("privacy", "invalid")
         content = updater.createContentText(validAndInvalidPermissions).split("\n")
 
-        assertEquals("A new permissions is required:", content[0].trim())
+        assertEquals("A new permission is required:", content[0].trim())
         assertEquals("1-Read and modify privacy settings", content[1].trim())
     }
 
