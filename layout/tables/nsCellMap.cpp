@@ -2466,7 +2466,7 @@ nsTableCellFrame* nsCellMapColumnIterator::GetNextFrame(int32_t* aRow,
     return nullptr;
   }
 
-  while (1) {
+  while (true) {
     NS_ASSERTION(mCurMapRow < mCurMapRelevantRowCount, "Bogus mOrigCells?");
     // Safe to just get the row (which is faster than calling GetDataAt(), but
     // there may not be that many cells in it, so have to use SafeElementAt for
