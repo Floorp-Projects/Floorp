@@ -1079,15 +1079,11 @@ mod test_glyph_rasterizer {
                   IdNamespace, ColorU};
         use api::units::{Au, DevicePoint};
         use crate::render_backend::FrameId;
-        use thread_profiler::register_thread_with_profiler;
         use std::sync::Arc;
         use crate::glyph_rasterizer::{FORMAT, FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};
 
         let worker = ThreadPoolBuilder::new()
             .thread_name(|idx|{ format!("WRWorker#{}", idx) })
-            .start_handler(move |idx| {
-                register_thread_with_profiler(format!("WRWorker#{}", idx));
-            })
             .build();
         let workers = Arc::new(worker.unwrap());
         let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();

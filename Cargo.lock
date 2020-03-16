@@ -4310,12 +4310,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "thread_profiler"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf947d192a9be60ef5131cc7a4648886ba89d712f16700ebbf80c8a69d05d48f"
-
-[[package]]
 name = "threadbound"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4534,6 +4528,12 @@ checksum = "a7540f4ffc193e0d3c94121edb19b055670d369f77d5804db11ae053a45b6e7e"
 dependencies = [
  "serde",
 ]
+
+[[package]]
+name = "tracy-rs"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3aa118469b61af5fead107a4882dc4661a05591b6653bbc546c1c8bbc181047"
 
 [[package]]
 name = "try-lock"
@@ -4847,8 +4847,8 @@ dependencies = [
  "serde_json",
  "smallvec 0.6.10",
  "svg_fmt",
- "thread_profiler",
  "time",
+ "tracy-rs",
  "webrender_api",
  "webrender_build",
  "wr_malloc_size_of",
@@ -4895,7 +4895,7 @@ dependencies = [
  "rayon",
  "swgl",
  "thin-vec",
- "thread_profiler",
+ "tracy-rs",
  "uuid",
  "webrender",
  "winapi 0.3.7",

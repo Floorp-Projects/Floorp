@@ -320,6 +320,8 @@ impl SceneBuilderThread {
         }
 
         loop {
+            tracy_begin_frame!("scene_builder_thread");
+
             match self.rx.recv() {
                 Ok(SceneBuilderRequest::WakeUp) => {}
                 Ok(SceneBuilderRequest::Flush(tx)) => {
@@ -379,6 +381,8 @@ impl SceneBuilderThread {
             if let Some(ref hooks) = self.hooks {
                 hooks.poke();
             }
+
+            tracy_end_frame!("scene_builder_thread");
         }
 
         if let Some(ref hooks) = self.hooks {
