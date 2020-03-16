@@ -670,7 +670,9 @@ L10nRegistry.loadSync = function(uri) {
           charset: "UTF-8",
         });
       } catch (e) {
-        Cu.reportError(e);
+        if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
+          Cu.reportError(e);
+        }
       }
     } else if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
       Cu.reportError(e);
