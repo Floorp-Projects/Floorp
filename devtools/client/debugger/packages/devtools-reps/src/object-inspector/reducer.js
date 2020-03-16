@@ -7,7 +7,6 @@ function initialState(overrides) {
     expandedPaths: new Set(),
     loadedProperties: new Map(),
     evaluations: new Map(),
-    actors: new Set(),
     watchpoints: new Map(),
     ...overrides,
   };
@@ -60,18 +59,11 @@ function reducer(state = initialState(), action = {}) {
 
   if (type === "NODE_PROPERTIES_LOADED") {
     return cloneState({
-      actors: data.actor
-        ? new Set(state.actors || []).add(data.actor)
-        : state.actors,
       loadedProperties: new Map(state.loadedProperties).set(
         data.node.path,
         action.data.properties
       ),
     });
-  }
-
-  if (type === "RELEASED_ACTORS") {
-    return onReleasedActorsAction(state, action);
   }
 
   if (type === "ROOTS_CHANGED") {
@@ -80,9 +72,6 @@ function reducer(state = initialState(), action = {}) {
 
   if (type === "GETTER_INVOKED") {
     return cloneState({
-      actors: data.actor
-        ? new Set(state.actors || []).add(data.result.from)
-        : state.actors,
       evaluations: new Map(state.evaluations).set(data.node.path, {
         getterValue:
           data.result &&
@@ -99,26 +88,6 @@ function reducer(state = initialState(), action = {}) {
   }
 
   return state;
-}
-
-/**
- * Reducer function for the "RELEASED_ACTORS" action.
- */
-function onReleasedActorsAction(state, action) {
-  const { data } = action;
-
-  if (state.actors && state.actors.size > 0 && data.actors.length > 0) {
-    return state;
-  }
-
-  for (const actor of data.actors) {
-    state.actors.delete(actor);
-  }
-
-  return {
-    ...state,
-    actors: new Set(state.actors || []),
-  };
 }
 
 function updateObject(obj, property, watchpoint) {
@@ -146,10 +115,6 @@ function getExpandedPathKeys(state) {
   return [...getExpandedPaths(state).keys()];
 }
 
-function getActors(state) {
-  return getObjectInspectorState(state).actors;
-}
-
 function getWatchpoints(state) {
   return getObjectInspectorState(state).watchpoints;
 }
@@ -167,7 +132,6 @@ function getEvaluations(state) {
 }
 
 const selectors = {
-  getActors,
   getWatchpoints,
   getEvaluations,
   getExpandedPathKeys,
