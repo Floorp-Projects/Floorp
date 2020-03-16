@@ -4946,8 +4946,10 @@ dependencies = [
  "peek-poke 0.2.0 (git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075)",
  "rendy-descriptor",
  "rendy-memory",
+ "serde",
  "smallvec 1.2.0",
  "vec_map",
+ "wgpu-types",
 ]
 
 [[package]]
@@ -4957,6 +4959,16 @@ dependencies = [
  "log",
  "parking_lot",
  "wgpu-core",
+ "wgpu-types",
+]
+
+[[package]]
+name = "wgpu-types"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "peek-poke 0.2.0 (git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075)",
+ "serde",
 ]
 
 [[package]]
