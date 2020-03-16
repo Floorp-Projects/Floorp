@@ -38,12 +38,8 @@ add_task(async function test_add_interesting_window() {
     content.location = newPage;
   });
 
-  if (Services.prefs.getBoolPref("fission.sessionHistoryInParent", false)) {
-    let tab = newWin.gBrowser.selectedTab;
-    await promiseOnHistoryReplaceEntry(tab);
-  } else {
-    await promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
-  }
+  await promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
+
   // Clear out the userTypedValue so that the new window looks like
   // it's really not worth restoring.
   browser.userTypedValue = null;
