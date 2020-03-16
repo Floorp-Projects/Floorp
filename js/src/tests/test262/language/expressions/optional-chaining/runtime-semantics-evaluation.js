@@ -1,4 +1,3 @@
-// |reftest| skip -- optional-chaining is not supported
 // Copyright 2019 Google, Inc.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

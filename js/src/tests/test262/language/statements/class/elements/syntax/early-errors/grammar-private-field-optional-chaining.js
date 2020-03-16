@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-private,optional-chaining is not supported
+// |reftest| skip error:SyntaxError -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-private-field-optional-chaining.case
 // - src/class-elements/syntax/invalid/cls-decl-elements-invalid-syntax.template
