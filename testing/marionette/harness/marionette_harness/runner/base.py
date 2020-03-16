@@ -662,9 +662,9 @@ class BaseMarionetteTestRunner(object):
                     with open(path) as f:
                         data.append(json.loads(f.read()))
                 except ValueError as e:
-                    exc, val, tb = sys.exc_info()
                     msg = "JSON file ({0}) is not properly formatted: {1}"
-                    reraise(exc, msg.format(os.path.abspath(path), e.message), tb)
+                    reraise(ValueError, ValueError(msg.format(
+                        os.path.abspath(path), e)), sys.exc_info()[2])
         return data
 
     @property
@@ -774,9 +774,9 @@ class BaseMarionetteTestRunner(object):
                     connection.connect((host, int(port)))
                     connection.close()
                 except Exception as e:
-                    exc, val, tb = sys.exc_info()
+                    exc_cls, _, tb = sys.exc_info()
                     msg = "Connection attempt to {0}:{1} failed with error: {2}"
-                    reraise(exc, msg.format(host, port, e), tb)
+                    reraise(exc_cls, exc_cls(msg.format(host, port, e)), tb)
         if self.workspace:
             kwargs['workspace'] = self.workspace_path
         if self.headless:
