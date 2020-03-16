@@ -44,6 +44,7 @@ class MultiButtonDialogFragmentTest {
                 "title",
                 "message",
                 true,
+                false,
                 "positiveButton",
                 "negativeButton",
                 "neutralButton"
@@ -86,6 +87,7 @@ class MultiButtonDialogFragmentTest {
                 "title",
                 "message",
                 false,
+                false,
                 "positiveButton",
                 "negativeButton",
                 "neutralButton"
@@ -111,6 +113,7 @@ class MultiButtonDialogFragmentTest {
                 "sessionId",
                 "title",
                 "message",
+                false,
                 false,
                 "positiveButton"
             )
@@ -138,6 +141,7 @@ class MultiButtonDialogFragmentTest {
                 "title",
                 "message",
                 false,
+                false,
                 negativeButton = "negative"
             )
         )
@@ -163,6 +167,7 @@ class MultiButtonDialogFragmentTest {
                 "sessionId",
                 "title",
                 "message",
+                false,
                 false,
                 neutralButton = "neutral"
             )
@@ -190,6 +195,7 @@ class MultiButtonDialogFragmentTest {
                 "title",
                 "message",
                 true,
+                false,
                 positiveButton = "positive"
             )
         )
@@ -219,6 +225,7 @@ class MultiButtonDialogFragmentTest {
                 "title",
                 "message",
                 true,
+                false,
                 positiveButton = "positive"
             )
         )

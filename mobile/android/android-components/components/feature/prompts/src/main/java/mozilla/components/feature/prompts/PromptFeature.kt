@@ -533,6 +533,7 @@ class PromptFeature private constructor(
                         title,
                         message,
                         promptAbuserDetector.areDialogsBeingAbused(),
+                        false,
                         positiveButton,
                         negativeButton,
                         neutralButtonTitle
