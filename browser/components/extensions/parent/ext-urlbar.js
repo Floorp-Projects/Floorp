@@ -33,7 +33,7 @@ this.urlbar = class extends ExtensionAPI {
         focus(select = false) {
           let window = windowTracker.getTopNormalWindow(context);
           if (select) {
-            window.focusAndSelectUrlBar();
+            window.gURLBar.select();
           } else {
             window.gURLBar.focus();
           }

@@ -322,10 +322,46 @@ XPCOMUtils.defineLazyGetter(this, "gNavToolbox", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
-  return new UrlbarInput({
+  let urlbar = new UrlbarInput({
     textbox: document.getElementById("urlbar"),
     eventTelemetryCategory: "urlbar",
   });
+
+  let beforeFocusOrSelect = event => {
+    // In customize mode, the url bar is disabled. If a new tab is opened or the
+    // user switches to a different tab, this function gets called before we've
+    // finished leaving customize mode, and the url bar will still be disabled.
+    // We can't focus it when it's disabled, so we need to re-run ourselves when
+    // we've finished leaving customize mode.
+    if (
+      CustomizationHandler.isCustomizing() ||
+      CustomizationHandler.isExitingCustomizeMode
+    ) {
+      gNavToolbox.addEventListener(
+        "aftercustomization",
+        () => {
+          if (event.type == "beforeselect") {
+            gURLBar.select();
+          } else {
+            gURLBar.focus();
+          }
+        },
+        {
+          once: true,
+        }
+      );
+      event.preventDefault();
+      return;
+    }
+
+    if (window.fullScreen) {
+      FullScreen.showNavToolbox();
+    }
+  };
+  urlbar.addEventListener("beforefocus", beforeFocusOrSelect);
+  urlbar.addEventListener("beforeselect", beforeFocusOrSelect);
+
+  return urlbar;
 });
 
 XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
@@ -2100,7 +2136,7 @@ var gBrowserInit = {
     let shouldRemoveFocusedAttribute = true;
     this._callWithURIToLoad(uriToLoad => {
       if (isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") {
-        focusAndSelectUrlBar();
+        gURLBar.select();
         shouldRemoveFocusedAttribute = false;
         return;
       }
@@ -2823,7 +2859,7 @@ function BrowserHome(aEvent) {
         null
       );
       if (isBlankPageURL(homePage)) {
-        focusAndSelectUrlBar();
+        gURLBar.select();
       } else {
         gBrowser.selectedBrowser.focus();
       }
@@ -2886,35 +2922,9 @@ function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {
   } catch (e) {}
 }
 
-/**
- * Focuses and expands the location bar input field and selects its contents.
- */
-function focusAndSelectUrlBar() {
-  // In customize mode, the url bar is disabled. If a new tab is opened or the
-  // user switches to a different tab, this function gets called before we've
-  // finished leaving customize mode, and the url bar will still be disabled.
-  // We can't focus it when it's disabled, so we need to re-run ourselves when
-  // we've finished leaving customize mode.
-  if (
-    CustomizationHandler.isCustomizing() ||
-    CustomizationHandler.isExitingCustomizeMode
-  ) {
-    gNavToolbox.addEventListener("aftercustomization", focusAndSelectUrlBar, {
-      once: true,
-    });
-    return;
-  }
-
-  if (window.fullScreen) {
-    FullScreen.showNavToolbox();
-  }
-
-  gURLBar.select();
-}
-
 function openLocation(event) {
   if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
-    focusAndSelectUrlBar();
+    gURLBar.select();
     gURLBar.view.autoOpen({ event });
     return;
   }
