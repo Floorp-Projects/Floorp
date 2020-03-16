@@ -29,7 +29,6 @@ import type {
 import type {
   Target,
   DevToolsClient,
-  TargetList,
   Grip,
   ThreadFront,
   ObjectFront,
@@ -46,7 +45,6 @@ let targets: { [string]: Target };
 let currentThreadFront: ThreadFront;
 let currentTarget: Target;
 let devToolsClient: DevToolsClient;
-let targetList: TargetList;
 let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
 let eventBreakpoints: ?EventListenerActiveList;
@@ -55,12 +53,10 @@ const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
   devToolsClient: DevToolsClient,
-  targetList: TargetList,
 };
 
 function setupCommands(dependencies: Dependencies) {
   devToolsClient = dependencies.devToolsClient;
-  targetList = dependencies.targetList;
   targets = {};
   sourceActors = {};
   breakpoints = {};
@@ -130,8 +126,8 @@ function lookupThreadFront(thread: string) {
 }
 
 function listThreadFronts() {
-  const list = (Object.values(getTargetsMap()): any);
-  return list.map(target => target.threadFront).filter(t => !!t);
+  const targetList = (Object.values(getTargetsMap()): any);
+  return targetList.map(target => target.threadFront).filter(t => !!t);
 }
 
 function forEachThread(iteratee) {
@@ -461,7 +457,6 @@ async function fetchThreads() {
     devToolsClient,
     targets,
     options,
-    targetList,
   });
 
   // eslint-disable-next-line

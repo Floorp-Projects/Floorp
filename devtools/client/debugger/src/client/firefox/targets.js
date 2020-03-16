@@ -7,7 +7,7 @@
 import { addThreadEventListeners, attachAllTargets } from "./events";
 import { features } from "../../utils/prefs";
 import { sameOrigin } from "../../utils/url";
-import type { DevToolsClient, TargetList, Target } from "./types";
+import type { DevToolsClient, Target } from "./types";
 
 // $FlowIgnore
 const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
@@ -17,7 +17,6 @@ type Args = {
   devToolsClient: DevToolsClient,
   targets: { [string]: Target },
   options: Object,
-  targetList: TargetList,
 };
 
 async function attachTargets(targetLists, args) {
@@ -49,7 +48,7 @@ async function attachTargets(targetLists, args) {
       // But workers targets are still only managed by the debugger codebase
       // and so we have to attach their thread actor
       if (!threadFront) {
-        threadFront = await targetFront.attachThread({
+        [, threadFront] = await targetFront.attachThread({
           ...defaultThreadOptions(),
           ...args.options,
         });
@@ -98,26 +97,6 @@ async function listWorkerTargets(args: Args) {
       serviceWorkerRegistrations = registrations.filter(front =>
         sameOrigin(front.url, currentTarget.url)
       );
-
-      // Service workers associated with our target's origin need to pause until
-      // we attach, regardless of which process they are running in.
-      const origin = new URL(currentTarget.url).origin;
-      // Still call RootFront.listProcesses instead of using the TargetList
-      // as the TargetList doesn't iterate over processes in the content toolbox.
-      const processes = await devToolsClient.mainRoot.listProcesses();
-      const targets = await Promise.all(
-        processes
-          .filter(descriptor => !descriptor.isParent)
-          .map(descriptor => descriptor.getTarget())
-      );
-      try {
-        await Promise.all(
-          targets.map(t => t.pauseMatchingServiceWorkers({ origin }))
-        );
-      } catch (e) {
-        // Old servers without pauseMatchingServiceWorkers will throw.
-        // @backward-compatibility: remove in Firefox 75
-      }
     }
   }
 
@@ -154,14 +133,37 @@ async function listWorkerTargets(args: Args) {
   return workers;
 }
 
+async function getAllProcessTargets(args) {
+  const { devToolsClient } = args;
+  const processes = await devToolsClient.mainRoot.listProcesses();
+  return Promise.all(
+    processes
+      .filter(descriptor => !descriptor.isParent)
+      .map(descriptor => descriptor.getTarget())
+  );
+}
+
 async function listProcessTargets(args: Args) {
-  const { targetList } = args;
-  // First note that the TargetList will only fetch processes following the same
-  // rules as attachAllTargets. Only if we are attached to the ParentProcessTarget
-  // and if the browser toolbox fission pref is turned on.
-  // Also note that the ParentProcessTarget actor is considered to be a FRAME and not a PROCESS.
-  // But this is ok, as we expect to return only content processes here.
-  return targetList.getAllTargets(targetList.TYPES.PROCESS);
+  const { currentTarget } = args;
+  if (!attachAllTargets(currentTarget)) {
+    if (currentTarget.url && features.windowlessServiceWorkers) {
+      // Service workers associated with our target's origin need to pause until
+      // we attach, regardless of which process they are running in.
+      const origin = new URL(currentTarget.url).origin;
+      const targets = await getAllProcessTargets(args);
+      try {
+        await Promise.all(
+          targets.map(t => t.pauseMatchingServiceWorkers({ origin }))
+        );
+      } catch (e) {
+        // Old servers without pauseMatchingServiceWorkers will throw.
+        // @backward-compatibility: remove in Firefox 75
+      }
+    }
+    return [];
+  }
+
+  return getAllProcessTargets(args);
 }
 
 export async function updateTargets(args: Args) {
