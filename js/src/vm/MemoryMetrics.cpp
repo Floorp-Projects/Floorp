@@ -382,7 +382,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       realmStats.scriptsGCHeap += thingSize;
       realmStats.scriptsMallocHeapData +=
           base->sizeOfExcludingThis(rtStats->mallocSizeOf_);
-      if (!base->isLazyScript()) {
+      if (base->hasJitScript()) {
         JSScript* script = static_cast<JSScript*>(base);
         script->addSizeOfJitScript(rtStats->mallocSizeOf_,
                                    &realmStats.jitScripts,

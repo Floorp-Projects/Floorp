@@ -2694,11 +2694,8 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
 
   RootedScript script(cx);
   for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-    if (base->isLazyScript()) {
-      continue;
-    }
-    script = base->asJSScript();
-    if (JitScript* jitScript = script->maybeJitScript()) {
+    if (JitScript* jitScript = base->maybeJitScript()) {
+      script = base->asJSScript();
       jitScript->printTypes(cx, script);
     }
   }

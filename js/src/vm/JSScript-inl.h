@@ -85,7 +85,7 @@ inline JSPrincipals* BaseScript::principals() const {
 }
 
 inline JSScript* BaseScript::asJSScript() {
-  MOZ_ASSERT(!isLazyScript());
+  MOZ_ASSERT(hasBytecode());
   return static_cast<JSScript*>(this);
 }
 
@@ -170,11 +170,11 @@ inline bool JSScript::isDebuggee() const {
   return realm()->debuggerObservesAllExecution() || hasDebugScript();
 }
 
-inline bool JSScript::hasBaselineScript() const {
+inline bool js::BaseScript::hasBaselineScript() const {
   return hasJitScript() && jitScript()->hasBaselineScript();
 }
 
-inline bool JSScript::hasIonScript() const {
+inline bool js::BaseScript::hasIonScript() const {
   return hasJitScript() && jitScript()->hasIonScript();
 }
 

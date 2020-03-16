@@ -2660,7 +2660,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
 
   for (auto base = cx->zone()->cellIter<BaseScript>();
        !base.done() && !nameMissing; base.next()) {
-    if (base->isLazyScript()) {
+    if (!base->hasBytecode()) {
       continue;
     }
     JSScript* script = base->asJSScript();
