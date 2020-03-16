@@ -217,10 +217,10 @@ def fixStackTraces(inputFilename, isZipped, opener):
     bpsyms = os.environ.get('BREAKPAD_SYMBOLS_PATH', None)
     sysname = platform.system()
     if bpsyms and os.path.exists(bpsyms):
-        import fix_stack_using_bpsyms as fixModule
+        import fix_stacks as fixModule
 
         def fix(line):
-            return fixModule.fixSymbols(line, bpsyms, jsonEscape=True)
+            return fixModule.fixSymbols(line, jsonMode=True, breakpadSymsDir=bpsyms)
 
     elif sysname in ('Linux', 'Darwin', 'Windows'):
         import fix_stacks as fixModule
@@ -345,10 +345,10 @@ def getDigestFromFile(args, inputFile):
             # `#02: TestFull(char const*, int, char const*, int) (../dmd/test/SmokeDMD.cpp:165)`
             #
             # Mac opt, with native stack fixing:
-            # `#03: RunTests() (../build/tests/bin/SmokeDMD +0x21f9)`
+            # `#03: RunTests() (../build/tests/bin/SmokeDMD + 0x21f9)`
             #
             # Windows opt, with native stack fixing failing due to a missing PDB:
-            # `#04: ??? (..\\build\\tests\\bin\\SmokeDMD.exe +0x1c58)`
+            # `#04: ??? (..\\build\\tests\\bin\\SmokeDMD.exe + 0x1c58)`
             #
             # If we see three such frames, we replace the entire stack trace
             # with a single, predictable frame. This imprecise matching will at
