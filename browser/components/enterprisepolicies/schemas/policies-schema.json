@@ -228,6 +228,10 @@
       }
     },
 
+    "DisableDefaultBrowserAgent": {
+      "type": "boolean"
+    },
+
     "DisableDeveloperTools": {
       "type": "boolean"
     },
