@@ -91,6 +91,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
     this.manage(this);
   }
 }
+protocol.registerFront(RootFront);
 
 add_task(async function run_test() {
   DevToolsServer.createRootActor = RootActor;
@@ -100,7 +101,7 @@ add_task(async function run_test() {
   const client = new DevToolsClient(trace);
   await client.connect();
 
-  const rootFront = new RootFront(client);
+  const rootFront = client.mainRoot;
 
   const fronts = [];
   const listener = front => {

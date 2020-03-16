@@ -29,10 +29,11 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(
   this,
-  "RootFront",
-  "devtools/shared/fronts/root",
+  "createRootFront",
+  "devtools/shared/protocol",
   true
 );
+
 loader.lazyRequireGetter(
   this,
   "ObjectFront",
@@ -69,11 +70,7 @@ function DevToolsClient(transport) {
       return;
     }
 
-    this.mainRoot = new RootFront(this, packet);
-
-    // Root Front is a special case, managing itself as it doesn't have any parent.
-    // It will register itself to DevToolsClient as a Pool via Front._poolMap.
-    this.mainRoot.manage(this.mainRoot);
+    this.mainRoot = createRootFront(this, packet);
 
     this.emit("connected", packet.applicationType, packet.traits);
   });

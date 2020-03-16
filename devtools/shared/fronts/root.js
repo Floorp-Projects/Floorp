@@ -31,16 +31,8 @@ loader.lazyRequireGetter(
 );
 
 class RootFront extends FrontClassWithSpec(rootSpec) {
-  constructor(client, form) {
-    super(client);
-
-    // Root Front is a special Front. It is the only one to set its actor ID manually
-    // out of the form object returned by RootActor.sayHello which is called when calling
-    // DevToolsClient.connect().
-    this.actorID = form.from;
-
-    this.applicationType = form.applicationType;
-    this.traits = form.traits;
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     // Cache root form as this will always be the same value.
     Object.defineProperty(this, "rootForm", {
@@ -57,6 +49,16 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     this.fronts = new Map();
 
     this._client = client;
+  }
+
+  form(form) {
+    // Root Front is a special Front. It is the only one to set its actor ID manually
+    // out of the form object returned by RootActor.sayHello which is called when calling
+    // DevToolsClient.connect().
+    this.actorID = form.from;
+
+    this.applicationType = form.applicationType;
+    this.traits = form.traits;
   }
 
   /**

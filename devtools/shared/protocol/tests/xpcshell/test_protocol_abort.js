@@ -54,37 +54,28 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
     this.manage(this);
   }
 }
+protocol.registerFront(RootFront);
 
-function run_test() {
+add_task(async function() {
   DevToolsServer.createRootActor = RootActor;
   DevToolsServer.init();
 
   const trace = connectPipeTracing();
   const client = new DevToolsClient(trace);
-  let rootFront;
+  await client.connect();
 
-  client.connect().then(([applicationType, traits]) => {
-    rootFront = new RootFront(client);
+  const rootFront = client.mainRoot;
 
-    rootFront.simpleReturn().then(
-      () => {
-        ok(false, "Connection was aborted, request shouldn't resolve");
-        do_test_finished();
-      },
-      e => {
-        const error = e.toString();
-        ok(true, "Connection was aborted, request rejected correctly");
-        ok(error.includes("Request stack:"), "Error includes request stack");
-        ok(
-          error.includes("test_protocol_abort.js"),
-          "Stack includes this test"
-        );
-        do_test_finished();
-      }
-    );
+  const onSimpleReturn = rootFront.simpleReturn();
+  trace.close();
 
-    trace.close();
-  });
-
-  do_test_pending();
-}
+  try {
+    await onSimpleReturn;
+    ok(false, "Connection was aborted, request shouldn't resolve");
+  } catch (e) {
+    const error = e.toString();
+    ok(true, "Connection was aborted, request rejected correctly");
+    ok(error.includes("Request stack:"), "Error includes request stack");
+    ok(error.includes("test_protocol_abort.js"), "Stack includes this test");
+  }
+});
