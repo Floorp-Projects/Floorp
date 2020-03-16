@@ -30,10 +30,6 @@ add_task(async function test_show_logins() {
 });
 
 add_task(async function test_login_item() {
-  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    return;
-  }
-
   async function test_discard_dialog(login, exitPointSelector) {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
