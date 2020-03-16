@@ -19,7 +19,8 @@ use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSourc
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex, PrimitiveVisibilityMask};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
-use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT, SpaceMapper};
+use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveVisibilityFlags};
+use crate::prim_store::{VECS_PER_SEGMENT, SpaceMapper};
 use crate::prim_store::image::ImageSource;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
@@ -193,6 +194,16 @@ impl AlphaBatchList {
         }
     }
 
+    /// Clear all current batches in this list. This is typically used
+    /// when a primitive is encountered that occludes all previous
+    /// content in this batch list.
+    fn clear(&mut self) {
+        self.current_batch_index = usize::MAX;
+        self.current_z_id = ZBufferId::invalid();
+        self.batches.clear();
+        self.item_rects.clear();
+    }
+
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
@@ -288,6 +299,14 @@ impl OpaqueBatchList {
             current_batch_index: usize::MAX,
             lookback_count,
         }
+    }
+
+    /// Clear all current batches in this list. This is typically used
+    /// when a primitive is encountered that occludes all previous
+    /// content in this batch list.
+    fn clear(&mut self) {
+        self.current_batch_index = usize::MAX;
+        self.batches.clear();
     }
 
     pub fn set_params_and_get_batch(
@@ -502,6 +521,14 @@ impl AlphaBatchBuilder {
         }
     }
 
+    /// Clear all current batches in this builder. This is typically used
+    /// when a primitive is encountered that occludes all previous
+    /// content in this batch list.
+    fn clear(&mut self) {
+        self.alpha_batch_list.clear();
+        self.opaque_batch_list.clear();
+    }
+
     pub fn build(
         mut self,
         batch_containers: &mut Vec<AlphaBatchContainer>,
@@ -653,6 +680,14 @@ impl BatchBuilder {
         }
     }
 
+    /// Clear all current batchers. This is typically used when a primitive
+    /// is encountered that occludes all previous content in this batch list.
+    fn clear_batches(&mut self) {
+        for batcher in &mut self.batchers {
+            batcher.clear();
+        }
+    }
+
     /// Add a picture to a given batch builder.
     pub fn add_pic_to_batch(
         &mut self,
@@ -730,6 +765,16 @@ impl BatchBuilder {
         let transform_kind = transform_id.transform_kind();
         let prim_info = &ctx.scratch.prim_info[prim_instance.visibility_info.0 as usize];
         let bounding_rect = &prim_info.clip_chain.pic_clip_rect;
+
+        // If this primitive is a backdrop, that means that it is known to cover
+        // the entire picture cache background. In that case, the renderer will
+        // use the backdrop color as a clear color, and so we can drop this
+        // primitive and any prior primitives from the batch lists for this
+        // picture cache slice.
+        if prim_info.flags.contains(PrimitiveVisibilityFlags::IS_BACKDROP) {
+            self.clear_batches();
+            return;
+        }
 
         let z_id = z_generator.next();
 
