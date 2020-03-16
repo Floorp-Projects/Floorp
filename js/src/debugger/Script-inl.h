@@ -17,7 +17,7 @@
 #include "jstypes.h"            // for JS_PUBLIC_API
 #include "debugger/Debugger.h"  // for DebuggerScriptReferent
 #include "gc/Cell.h"            // for Cell
-#include "vm/JSScript.h"        // for BaseScript, JSScript, LazyScript
+#include "vm/JSScript.h"        // for BaseScript, JSScript
 #include "vm/NativeObject.h"    // for NativeObject
 #include "wasm/WasmJS.h"        // for WasmInstanceObject
 
