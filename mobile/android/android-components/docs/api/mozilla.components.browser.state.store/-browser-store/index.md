@@ -2,7 +2,7 @@
 
 # BrowserStore
 
-`class BrowserStore : `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/store/BrowserStore.kt#L20)
+`class BrowserStore : `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/store/BrowserStore.kt#L21)
 
 The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree).
 
@@ -12,7 +12,7 @@ The only way to change the [BrowserState](../../mozilla.components.browser.state
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)` = BrowserState())`<br>The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree). |
+| [&lt;init&gt;](-init-.md) | `BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)` = BrowserState(), middleware: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>> = emptyList())`<br>The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree). |
 
 ### Inherited Properties
 
