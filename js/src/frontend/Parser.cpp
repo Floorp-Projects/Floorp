@@ -1730,9 +1730,9 @@ bool LazyScriptCreationData::create(JSContext* cx,
                                     FunctionBox* funbox,
                                     HandleScriptSourceObject sourceObject) {
   MOZ_ASSERT(function);
-  BaseScript* lazy = LazyScript::Create(cx, compilationInfo, function,
-                                        sourceObject, closedOverBindings,
-                                        innerFunctionIndexes, funbox->extent);
+  BaseScript* lazy = BaseScript::CreateLazy(
+      cx, compilationInfo, function, sourceObject, closedOverBindings,
+      innerFunctionIndexes, funbox->extent);
   if (!lazy) {
     return false;
   }

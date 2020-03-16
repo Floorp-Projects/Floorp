@@ -1326,7 +1326,8 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     MOZ_TRY(xdr->codeUint32(&ngcthings));
 
     if (mode == XDR_DECODE) {
-      lazy.set(LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent));
+      lazy.set(
+          BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject, extent));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -5451,10 +5452,10 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
 }
 
 /* static */
-LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
-                                  HandleFunction fun,
-                                  HandleScriptSourceObject sourceObject,
-                                  const SourceExtent& extent) {
+BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
+                                      HandleFunction fun,
+                                      HandleScriptSourceObject sourceObject,
+                                      const SourceExtent& extent) {
   cx->check(fun);
 
   void* res = Allocate<BaseScript>(cx);
@@ -5468,7 +5469,7 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  LazyScript* lazy = new (res) LazyScript(stubEntry, fun, sourceObject, extent);
+  BaseScript* lazy = new (res) BaseScript(stubEntry, fun, sourceObject, extent);
   if (!lazy) {
     return nullptr;
   }
@@ -5493,7 +5494,7 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
 }
 
 /* static */
-LazyScript* LazyScript::Create(
+BaseScript* BaseScript::CreateLazy(
     JSContext* cx, const frontend::CompilationInfo& compilationInfo,
     HandleFunction fun, HandleScriptSourceObject sourceObject,
     const frontend::AtomVector& closedOverBindings,
@@ -5502,8 +5503,8 @@ LazyScript* LazyScript::Create(
   uint32_t ngcthings =
       innerFunctionIndexes.length() + closedOverBindings.length();
 
-  LazyScript* lazy =
-      LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent);
+  BaseScript* lazy =
+      BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject, extent);
   if (!lazy) {
     return nullptr;
   }
