@@ -978,11 +978,11 @@ impl<'a> Iterator for TimeOffsetIterator<'a> {
                 self.cur_sample_range = match iter.next() {
                     Some(v) => {
                         offset_version = v.time_offset;
-                        (0 .. v.sample_count)
+                        0 .. v.sample_count
                     },
                     _ => {
                         offset_version = mp4parse::TimeOffsetVersion::Version0(0);
-                        (0 .. 0)
+                        0 .. 0
                     },
                 };
 
@@ -1029,9 +1029,9 @@ impl<'a> Iterator for TimeToSampleIterator<'a> {
                 self.cur_sample_count = match self.stts_iter.next() {
                     Some(v) => {
                         self.cur_sample_delta = v.sample_delta;
-                        (0 .. v.sample_count)
+                        0 .. v.sample_count
                     },
-                    _ => (0 .. 0),
+                    _ => 0 .. 0,
                 };
 
                 self.cur_sample_count.next()
