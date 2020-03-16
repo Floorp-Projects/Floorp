@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import mozilla.components.service.fxa.ServerConfig.Server
 import mozilla.components.service.fxa.ServerConfig
 
 /**
@@ -20,6 +21,6 @@ object FxaServer {
 
     @Suppress("UNUSED_PARAMETER")
     fun config(context: Context): ServerConfig {
-        return ServerConfig.dev(CLIENT_ID, REDIRECT_URL)
+        return ServerConfig(Server.DEV, CLIENT_ID, REDIRECT_URL)
     }
 }

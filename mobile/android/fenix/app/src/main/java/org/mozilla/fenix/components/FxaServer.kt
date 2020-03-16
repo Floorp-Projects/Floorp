@@ -5,6 +5,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.ServerConfig.Server
 import org.mozilla.fenix.FeatureFlags
 
 /**
@@ -23,6 +24,6 @@ object FxaServer {
     }
 
     fun config(context: Context): ServerConfig {
-        return ServerConfig.release(CLIENT_ID, redirectUrl(context))
+        return ServerConfig(Server.RELEASE, CLIENT_ID, redirectUrl(context))
     }
 }
