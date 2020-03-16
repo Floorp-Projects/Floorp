@@ -53,6 +53,8 @@ class CompositorVsyncDispatcher final {
   // Called on the vsync thread when a hardware vsync occurs
   void NotifyVsync(const VsyncEvent& aVsync);
 
+  void MoveToSource(const RefPtr<gfx::VsyncSource>& aVsyncSource);
+
   // Compositor vsync observers must be added/removed on the compositor thread
   void SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
   void Shutdown();
@@ -99,7 +101,6 @@ class RefreshTimerVsyncDispatcher final {
   // it of our vsync requirement. The display holds a RefPtr to us, so we can't
   // hold a RefPtr back without causing a cyclic dependency.
   gfx::VsyncSource::Display* mDisplay;
-  Mutex mDisplayLock;
   Mutex mRefreshTimersLock;
   RefPtr<VsyncObserver> mParentRefreshTimer;
   nsTArray<RefPtr<VsyncObserver>> mChildRefreshTimers;
