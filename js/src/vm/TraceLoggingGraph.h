@@ -186,7 +186,7 @@ class TraceLoggerGraph {
   };
 
  public:
-  TraceLoggerGraph() {}
+  TraceLoggerGraph() = default;
   ~TraceLoggerGraph();
 
   bool init(uint64_t timestamp, bool graphFileEnabled);

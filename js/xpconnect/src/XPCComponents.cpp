@@ -161,7 +161,7 @@ nsXPCComponents_Interfaces::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_Interfaces::nsXPCComponents_Interfaces() {}
+nsXPCComponents_Interfaces::nsXPCComponents_Interfaces() = default;
 
 nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces() {
   // empty
@@ -314,7 +314,7 @@ nsXPCComponents_Classes::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_Classes::nsXPCComponents_Classes() {}
+nsXPCComponents_Classes::nsXPCComponents_Classes() = default;
 
 nsXPCComponents_Classes::~nsXPCComponents_Classes() {
   // empty
@@ -456,7 +456,7 @@ nsXPCComponents_Results::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_Results::nsXPCComponents_Results() {}
+nsXPCComponents_Results::nsXPCComponents_Results() = default;
 
 nsXPCComponents_Results::~nsXPCComponents_Results() {
   // empty
@@ -597,7 +597,7 @@ nsXPCComponents_ID::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_ID::nsXPCComponents_ID() {}
+nsXPCComponents_ID::nsXPCComponents_ID() = default;
 
 nsXPCComponents_ID::~nsXPCComponents_ID() {
   // empty
@@ -748,7 +748,7 @@ nsXPCComponents_Exception::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_Exception::nsXPCComponents_Exception() {}
+nsXPCComponents_Exception::nsXPCComponents_Exception() = default;
 
 nsXPCComponents_Exception::~nsXPCComponents_Exception() {
   // empty
@@ -1042,7 +1042,7 @@ nsXPCComponents_Constructor::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_Constructor::nsXPCComponents_Constructor() {}
+nsXPCComponents_Constructor::nsXPCComponents_Constructor() = default;
 
 nsXPCComponents_Constructor::~nsXPCComponents_Constructor() {
   // empty
@@ -1290,10 +1290,10 @@ class nsXPCComponents_Utils final : public nsIXPCComponents_Utils,
   NS_DECL_NSIXPCCOMPONENTS_UTILS
 
  public:
-  nsXPCComponents_Utils() {}
+  nsXPCComponents_Utils() = default;
 
  private:
-  virtual ~nsXPCComponents_Utils() {}
+  virtual ~nsXPCComponents_Utils() = default;
   nsCOMPtr<nsIXPCComponents_utils_Sandbox> mSandbox;
 };
 
@@ -2262,12 +2262,12 @@ nsXPCComponents_Utils::GetIncumbentGlobal(HandleValue aCallback, JSContext* aCx,
 
 class WrappedJSHolder : public nsISupports {
   NS_DECL_ISUPPORTS
-  WrappedJSHolder() {}
+  WrappedJSHolder() = default;
 
   RefPtr<nsXPCWrappedJS> mWrappedJS;
 
  private:
-  virtual ~WrappedJSHolder() {}
+  virtual ~WrappedJSHolder() = default;
 };
 
 NS_IMPL_ADDREF(WrappedJSHolder)
@@ -2557,7 +2557,7 @@ nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
   MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
-nsXPCComponents::~nsXPCComponents() {}
+nsXPCComponents::~nsXPCComponents() = default;
 
 void nsXPCComponents::ClearMembers() {
   mInterfaces = nullptr;

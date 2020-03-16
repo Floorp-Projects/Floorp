@@ -50,7 +50,7 @@ enum XrayType {
 
 class XrayTraits {
  public:
-  constexpr XrayTraits() {}
+  constexpr XrayTraits() = default;
 
   static JSObject* getTargetObject(JSObject* wrapper) {
     JSObject* target =

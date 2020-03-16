@@ -21,7 +21,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base {
   using Answer = WrapperAnswer;
 
  public:
-  virtual ~JavaScriptBase() {}
+  virtual ~JavaScriptBase() = default;
 
   virtual void ActorDestroy(WrapperOwner::ActorDestroyReason why) override {
     WrapperOwner::ActorDestroy(why);

@@ -5073,7 +5073,7 @@ void JSErrorBase::freeMessage() {
 
 JSErrorNotes::JSErrorNotes() : notes_() {}
 
-JSErrorNotes::~JSErrorNotes() {}
+JSErrorNotes::~JSErrorNotes() = default;
 
 static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
     JSContext* cx, const char* filename, unsigned sourceId, unsigned lineno,

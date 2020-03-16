@@ -187,7 +187,7 @@ struct WellKnownSymbols {
     return get(size_t(code));
   }
 
-  WellKnownSymbols() {}
+  WellKnownSymbols() = default;
   WellKnownSymbols(const WellKnownSymbols&) = delete;
   WellKnownSymbols& operator=(const WellKnownSymbols&) = delete;
 };

@@ -387,7 +387,7 @@ JS_FRIEND_API void SetProfilingThreadCallbacks(
 //
 class JS_FRIEND_API ProfilingStack final {
  public:
-  ProfilingStack() : stackPointer(0) {}
+  ProfilingStack() = default;
 
   ~ProfilingStack();
 
@@ -495,7 +495,7 @@ class JS_FRIEND_API ProfilingStack final {
   // This is an atomic variable that uses ReleaseAcquire memory ordering.
   // See the "Concurrency considerations" paragraph at the top of this file
   // for more details.
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stackPointer;
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stackPointer{0};
 };
 
 namespace js {

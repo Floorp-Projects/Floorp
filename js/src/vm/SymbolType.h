@@ -139,7 +139,7 @@ class SymbolRegistry
     : public GCHashSet<WeakHeapPtrSymbol, HashSymbolsByDescription,
                        SystemAllocPolicy> {
  public:
-  SymbolRegistry() {}
+  SymbolRegistry() = default;
 };
 
 // ES6 rev 27 (2014 Aug 24) 19.4.3.3
