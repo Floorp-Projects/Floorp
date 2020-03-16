@@ -53,7 +53,7 @@ class Variant_base : public nsIVariant {
   NS_DECLARE_STATIC_IID_ACCESSOR(VARIANT_BASE_IID)
 
  protected:
-  virtual ~Variant_base() {}
+  virtual ~Variant_base() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Variant_base, VARIANT_BASE_IID)
