@@ -47,10 +47,6 @@
         }
       ]
     },
-    "delay": {
-      "type": "number",
-      "description": "Should the message be shown immediately or after a fixed duration"
-    },
     "active_color": {
       "type": "string",
       "description": "Background color of the button"
