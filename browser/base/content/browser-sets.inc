@@ -363,7 +363,6 @@
     <!-- These are used to build the Application menu -->
     <key id="key_preferencesCmdMac"
          data-l10n-id="preferences-shortcut"
-         reserved="true"
          modifiers="accel"/>
     <key id="key_hideThisAppCmdMac"
          data-l10n-id="hide-app-shortcut"
