@@ -1,4 +1,3 @@
-// |reftest| skip -- optional-chaining is not supported
 // Copyright 2019 Google, Inc.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -23,7 +22,7 @@ const obj = {
 }
 assert.sameValue(33, fn()?.a);
 assert.sameValue(undefined, fn()?.b);
-assert.sameValue(44, obj.fn());
+assert.sameValue(44, obj?.fn());
 
 // CallExpression SuperCall
 class A {}

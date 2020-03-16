@@ -1,4 +1,3 @@
-// |reftest| skip -- optional-chaining is not supported
 // Copyright (C) 2019 Sony Interactive Entertainment Inc. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
