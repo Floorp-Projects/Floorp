@@ -11,18 +11,21 @@
 #include "nsIOutputStream.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
+#include "nsIMultiPartChannel.h"
 
 namespace mozilla {
 namespace net {
 
 class nsStreamListenerTee : public nsIStreamListenerTee,
-                            public nsIThreadRetargetableStreamListener {
+                            public nsIThreadRetargetableStreamListener,
+                            public nsIMultiPartChannelListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSISTREAMLISTENERTEE
+  NS_DECL_NSIMULTIPARTCHANNELLISTENER
 
   nsStreamListenerTee() = default;
 
@@ -34,6 +37,7 @@ class nsStreamListenerTee : public nsIStreamListenerTee,
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIRequestObserver> mObserver;
   nsCOMPtr<nsIEventTarget> mEventTarget;
+  bool mIsMultiPart = false;
 };
 
 }  // namespace net
