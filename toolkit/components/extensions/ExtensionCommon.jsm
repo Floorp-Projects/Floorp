@@ -2535,9 +2535,6 @@ class EventManager {
     if (!this.unregister.has(callback)) {
       return;
     }
-    this.context.logActivity("api_call", `${this.name}.removeListener`, {
-      args: [],
-    });
 
     let unregister = this.unregister.get(callback);
     this.unregister.delete(callback);
