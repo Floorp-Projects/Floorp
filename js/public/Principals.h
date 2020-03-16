@@ -20,14 +20,14 @@ struct JSStructuredCloneWriter;
 
 struct JSPrincipals {
   /* Don't call "destroy"; use reference counting macros below. */
-  mozilla::Atomic<int32_t, mozilla::SequentiallyConsistent> refcount{0};
+  mozilla::Atomic<int32_t, mozilla::SequentiallyConsistent> refcount;
 
 #ifdef JS_DEBUG
   /* A helper to facilitate principals debugging. */
   uint32_t debugToken;
 #endif
 
-  JSPrincipals() = default;
+  JSPrincipals() : refcount(0) {}
 
   void setDebugToken(uint32_t token) {
 #ifdef JS_DEBUG

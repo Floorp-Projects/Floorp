@@ -350,7 +350,7 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod {
         toStringStart(0),
         srcStart(0),
         strict(false) {}
-  ~AsmJSMetadata() override = default;
+  ~AsmJSMetadata() override {}
 
   const AsmJSExport& lookupAsmJSExport(uint32_t funcIndex) const {
     // The AsmJSExportVector isn't stored in sorted order so do a linear

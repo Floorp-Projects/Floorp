@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS(PuppetBidiKeyboard, nsIBidiKeyboard)
 PuppetBidiKeyboard::PuppetBidiKeyboard()
     : nsIBidiKeyboard(), mIsLangRTL(false), mHaveBidiKeyboards(false) {}
 
-PuppetBidiKeyboard::~PuppetBidiKeyboard() = default;
+PuppetBidiKeyboard::~PuppetBidiKeyboard() {}
 
 NS_IMETHODIMP
 PuppetBidiKeyboard::Reset() { return NS_OK; }

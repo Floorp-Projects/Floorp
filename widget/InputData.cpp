@@ -20,7 +20,7 @@ namespace mozilla {
 
 using namespace dom;
 
-InputData::~InputData() = default;
+InputData::~InputData() {}
 
 InputData::InputData(InputType aInputType)
     : mInputType(aInputType),

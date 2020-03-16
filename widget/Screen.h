@@ -35,7 +35,7 @@ class Screen final : public nsIScreen {
   mozilla::dom::ScreenDetails ToScreenDetails();
 
  private:
-  virtual ~Screen() = default;
+  virtual ~Screen() {}
 
   LayoutDeviceIntRect mRect;
   LayoutDeviceIntRect mAvailRect;

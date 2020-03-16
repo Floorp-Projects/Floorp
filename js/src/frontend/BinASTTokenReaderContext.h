@@ -313,7 +313,7 @@ class SingleEntryHuffmanTable {
 // An implementation of Huffman Tables for two-entry table.
 class TwoEntriesHuffmanTable {
  public:
-  TwoEntriesHuffmanTable() = default;
+  TwoEntriesHuffmanTable() {}
   TwoEntriesHuffmanTable(TwoEntriesHuffmanTable&& other) noexcept = default;
 
   // Initialize a Huffman table containing `numberOfSymbols`.
@@ -921,7 +921,7 @@ class TemporaryStorageItem {
     // The actual size is defined in TemporaryStorage::alloc.
     T entries_[1];
 
-    Chunk() = default;
+    Chunk() {}
   };
 
   // The total number of used items in this storage.
@@ -931,7 +931,7 @@ class TemporaryStorageItem {
   Chunk* head_ = nullptr;
 
  public:
-  TemporaryStorageItem() = default;
+  TemporaryStorageItem() {}
 
   ~TemporaryStorageItem() {
     Chunk* chunk = head_;
@@ -968,7 +968,7 @@ class TemporaryStorage {
   TemporaryStorageItem<TwoLookupsHuffmanTable> twoTables_;
 
  public:
-  TemporaryStorage() = default;
+  TemporaryStorage() {}
 
   // Allocate `count` number of `T` items and returns the span to point the
   // allocated items.
@@ -1303,7 +1303,7 @@ class HuffmanDictionary {
   };
 
  public:
-  HuffmanDictionary() = default;
+  HuffmanDictionary() {}
   ~HuffmanDictionary();
 
   bool isUnreachable(TableIdentity i) const {

@@ -39,7 +39,7 @@ class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
   NS_DECL_NSISECUREBROWSERUI
 
  protected:
-  virtual ~nsSecureBrowserUIImpl() = default;
+  virtual ~nsSecureBrowserUIImpl(){};
 
   already_AddRefed<mozilla::dom::Document> PrepareForContentChecks();
   // Do mixed content checks. May update mState.

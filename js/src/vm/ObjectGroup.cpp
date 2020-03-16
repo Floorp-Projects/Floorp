@@ -1323,7 +1323,11 @@ struct ObjectGroupRealm::AllocationSiteKey {
     MOZ_ASSERT(offset_ < OFFSET_LIMIT);
   }
 
-  AllocationSiteKey(const AllocationSiteKey& key) = default;
+  AllocationSiteKey(const AllocationSiteKey& key)
+      : script(key.script),
+        offset(key.offset),
+        kind(key.kind),
+        proto(key.proto) {}
 
   AllocationSiteKey(AllocationSiteKey&& key)
       : script(std::move(key.script)),

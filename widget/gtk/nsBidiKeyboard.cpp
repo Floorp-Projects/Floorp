@@ -29,7 +29,7 @@ nsBidiKeyboard::Reset() {
   return NS_OK;
 }
 
-nsBidiKeyboard::~nsBidiKeyboard() = default;
+nsBidiKeyboard::~nsBidiKeyboard() {}
 
 NS_IMETHODIMP
 nsBidiKeyboard::IsLangRTL(bool* aIsRTL) {

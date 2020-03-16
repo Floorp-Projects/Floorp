@@ -34,7 +34,7 @@ class nsKeyObject final : public nsIKeyObject {
   NS_DECL_NSIKEYOBJECT
 
  private:
-  ~nsKeyObject() = default;
+  ~nsKeyObject() {}
 
   // Disallow copy constructor
   nsKeyObject(nsKeyObject&);
@@ -44,13 +44,13 @@ class nsKeyObject final : public nsIKeyObject {
 
 class nsKeyObjectFactory final : public nsIKeyObjectFactory {
  public:
-  nsKeyObjectFactory() = default;
+  nsKeyObjectFactory() {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIKEYOBJECTFACTORY
 
  private:
-  ~nsKeyObjectFactory() = default;
+  ~nsKeyObjectFactory() {}
 
   // Disallow copy constructor
   nsKeyObjectFactory(nsKeyObjectFactory&);

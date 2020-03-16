@@ -3159,7 +3159,7 @@ static void debug_SetCachedBoolPref(const char* aPrefName, bool aValue) {
 
 //////////////////////////////////////////////////////////////
 class Debug_PrefObserver final : public nsIObserver {
-  ~Debug_PrefObserver() = default;
+  ~Debug_PrefObserver() {}
 
  public:
   NS_DECL_ISUPPORTS

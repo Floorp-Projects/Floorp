@@ -58,7 +58,7 @@ nsPrintSettings::nsPrintSettings()
 
 nsPrintSettings::nsPrintSettings(const nsPrintSettings& aPS) { *this = aPS; }
 
-nsPrintSettings::~nsPrintSettings() = default;
+nsPrintSettings::~nsPrintSettings() {}
 
 NS_IMETHODIMP nsPrintSettings::GetPrintSession(
     nsIPrintSession** aPrintSession) {

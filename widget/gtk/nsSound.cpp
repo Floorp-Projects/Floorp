@@ -144,7 +144,7 @@ NS_IMPL_ISUPPORTS(nsSound, nsISound, nsIStreamLoaderObserver)
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound() { mInited = false; }
 
-nsSound::~nsSound() = default;
+nsSound::~nsSound() {}
 
 NS_IMETHODIMP
 nsSound::Init() {

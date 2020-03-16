@@ -33,7 +33,7 @@ class nsNSSCertificateDB final : public nsIX509CertDB
       nsTArray<RefPtr<nsIX509Cert>>& aCertListOut);
 
  protected:
-  virtual ~nsNSSCertificateDB() = default;
+  virtual ~nsNSSCertificateDB() {}
 
  private:
   // Use this function to generate a default nickname for a user

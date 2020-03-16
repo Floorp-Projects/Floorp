@@ -207,7 +207,7 @@ class InlineTable : private AllocPolicy {
           isInlinePtr_(false) {}
 
    public:
-    AddPtr() = default;
+    AddPtr() {}
 
     bool found() const {
       return isInlinePtr_ ? inlPtrFound_ : tableAddPtr_.found();

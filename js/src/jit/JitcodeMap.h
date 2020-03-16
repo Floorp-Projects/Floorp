@@ -767,7 +767,7 @@ class JitcodeGlobalTable {
       freeTowers_[i] = nullptr;
     }
   }
-  ~JitcodeGlobalTable() = default;
+  ~JitcodeGlobalTable() {}
 
   bool empty() const { return skiplistSize_ == 0; }
 

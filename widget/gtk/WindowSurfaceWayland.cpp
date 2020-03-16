@@ -444,7 +444,7 @@ WindowBackBufferDMABuf::WindowBackBufferDMABuf(
        (void*)this, aWidth, aHeight));
 }
 
-WindowBackBufferDMABuf::~WindowBackBufferDMABuf() = default;
+WindowBackBufferDMABuf::~WindowBackBufferDMABuf() {}
 
 already_AddRefed<gfx::DrawTarget> WindowBackBufferDMABuf::Lock() {
   LOGWAYLAND(

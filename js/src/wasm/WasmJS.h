@@ -237,7 +237,7 @@ class WasmGlobalObject : public NativeObject {
     double f64;
     wasm::AnyRef ref;
     Cell() : i64(0) {}
-    ~Cell() = default;
+    ~Cell() {}
   };
 
   static const unsigned RESERVED_SLOTS = 3;

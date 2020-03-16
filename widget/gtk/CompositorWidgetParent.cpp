@@ -18,7 +18,7 @@ CompositorWidgetParent::CompositorWidgetParent(
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 }
 
-CompositorWidgetParent::~CompositorWidgetParent() = default;
+CompositorWidgetParent::~CompositorWidgetParent() {}
 
 void CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver) {
   if (aObserver) {

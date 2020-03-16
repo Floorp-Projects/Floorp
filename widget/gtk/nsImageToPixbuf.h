@@ -33,7 +33,7 @@ class nsImageToPixbuf final : public nsIImageToPixbuf {
                                           int32_t aWidth, int32_t aHeight);
 
  private:
-  ~nsImageToPixbuf() = default;
+  ~nsImageToPixbuf() {}
 };
 
 // fc2389b8-c650-4093-9e42-b05e5f0685b7
