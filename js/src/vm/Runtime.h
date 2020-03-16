@@ -290,6 +290,7 @@ struct JSRuntime {
  public:
   JSContext* mainContextFromAnyThread() const { return mainContext_; }
   const void* addressOfMainContext() { return &mainContext_; }
+  js::Fprinter parserWatcherFile;
 
   inline JSContext* mainContextFromOwnThread();
 

@@ -10149,6 +10149,14 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   if (op->getBoolOption("smoosh")) {
     JS::ContextOptionsRef(cx).setTrySmoosh(true);
   }
+
+  if (const char* filename = op->getStringOption("not-implemented-watchfile")) {
+    FILE* out = fopen(filename, "a");
+    MOZ_RELEASE_ASSERT(out);
+    setbuf(out, nullptr);  // Make unbuffered
+    cx->runtime()->parserWatcherFile.init(out);
+    JS::ContextOptionsRef(cx).setTrackNotImplemented(true);
+  }
 #endif
 
   /* |scriptArgs| gets bound on the global before any code is run. */
@@ -11351,6 +11359,8 @@ int main(int argc, char** argv, char** envp) {
                         "Suppress crash minidumps") ||
 #ifdef JS_ENABLE_SMOOSH
       !op.addBoolOption('\0', "smoosh", "Use SmooshMonkey") ||
+      !op.addStringOption('\0', "not-implemented-watchfile", "[filename]",
+                          "Track NotImplemented errors in the new frontend") ||
 #else
       !op.addBoolOption('\0', "smoosh", "No-op") ||
 #endif
