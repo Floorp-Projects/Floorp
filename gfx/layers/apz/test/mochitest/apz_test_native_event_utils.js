@@ -541,6 +541,23 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
+function synthesizeNativeClickAndWaitForClickEvent(
+  aElement,
+  aX,
+  aY,
+  aCallback
+) {
+  var targetWindow = windowForTarget(aElement);
+  targetWindow.addEventListener(
+    "click",
+    function(e) {
+      setTimeout(aCallback, 0);
+    },
+    { capture: true, once: true }
+  );
+  return synthesizeNativeClick(aElement, aX, aY);
+}
+
 // Move the mouse to (dx, dy) relative to |target|, and scroll the wheel
 // at that location.
 // Moving the mouse is necessary to avoid wheel events from two consecutive
