@@ -2,7 +2,7 @@
 
 # DefaultAddonUpdater
 
-`class DefaultAddonUpdater : `[`AddonUpdater`](../-addon-updater/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L136)
+`class DefaultAddonUpdater : `[`AddonUpdater`](../-addon-updater/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L141)
 
 An implementation of [AddonUpdater](../-addon-updater/index.md) that uses the work manager api for scheduling new updates.
 
@@ -25,7 +25,7 @@ An implementation of [AddonUpdater](../-addon-updater/index.md) that uses the wo
 
 | Name | Summary |
 |---|---|
-| [registerForFutureUpdates](../-addon-updater/register-for-future-updates.md) | `open fun registerForFutureUpdates(extensions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers the given [extensions](../-addon-updater/register-for-future-updates.md#mozilla.components.feature.addons.update.AddonUpdater$registerForFutureUpdates(kotlin.collections.List((mozilla.components.concept.engine.webextension.WebExtension)))/extensions) for periodic updates. |
+| [registerForFutureUpdates](../-addon-updater/register-for-future-updates.md) | `open fun registerForFutureUpdates(extensions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers the [extensions](../-addon-updater/register-for-future-updates.md#mozilla.components.feature.addons.update.AddonUpdater$registerForFutureUpdates(kotlin.collections.List((mozilla.components.concept.engine.webextension.WebExtension)))/extensions) for periodic updates, if applicable. Built-in and unsupported extensions will not update automatically. |
 
 ### Extension Functions
 

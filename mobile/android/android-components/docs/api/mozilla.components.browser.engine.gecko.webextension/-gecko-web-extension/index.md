@@ -69,4 +69,5 @@ extension object provided by GeckoView.
 
 | Name | Summary |
 |---|---|
+| [isUnsupported](../../mozilla.components.concept.engine.webextension/is-unsupported.md) | `fun `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`.isUnsupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not the extension is disabled because it is unsupported. |
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
