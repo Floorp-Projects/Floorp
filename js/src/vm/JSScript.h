@@ -3147,9 +3147,6 @@ class LazyScript : public BaseScript {
   // | enclosing Scope |<-------------+
   // +-----------------+
 
-  static const uint32_t NumClosedOverBindingsBits = 20;
-  static const uint32_t NumInnerFunctionsBits = 20;
-
   using BaseScript::BaseScript;
 
   // Create a LazyScript without initializing the closedOverBindings and the
@@ -3161,10 +3158,6 @@ class LazyScript : public BaseScript {
                                const SourceExtent& extent);
 
  public:
-  static const uint32_t NumClosedOverBindingsLimit =
-      1 << NumClosedOverBindingsBits;
-  static const uint32_t NumInnerFunctionsLimit = 1 << NumInnerFunctionsBits;
-
   // Create a LazyScript and initialize closedOverBindings and innerFunctions
   // with the provided vectors.
   static LazyScript* Create(
