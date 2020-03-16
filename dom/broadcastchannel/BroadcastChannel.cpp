@@ -450,6 +450,11 @@ void BroadcastChannel::MessageReceived(const MessageData& aData) {
     return;
   }
 
+  // Let's ignore messages after a close/shutdown.
+  if (mState != StateActive) {
+    return;
+  }
+
   nsCOMPtr<nsIGlobalObject> globalObject;
 
   if (NS_IsMainThread()) {
