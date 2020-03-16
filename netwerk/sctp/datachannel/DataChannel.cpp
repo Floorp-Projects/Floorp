@@ -1206,10 +1206,10 @@ int DataChannelConnection::SendOpenRequestMessage(
   // careful - request struct include one char for the label
   const int req_size = sizeof(struct rtcweb_datachannel_open_request) - 1 +
                        label_len + proto_len;
-  struct rtcweb_datachannel_open_request* req =
-      (struct rtcweb_datachannel_open_request*)moz_xmalloc(req_size);
+  UniqueFreePtr<struct rtcweb_datachannel_open_request> req(
+      (struct rtcweb_datachannel_open_request*)moz_xmalloc(req_size));
 
-  memset(req, 0, req_size);
+  memset(req.get(), 0, req_size);
   req->msg_type = DATA_CHANNEL_OPEN_REQUEST;
   switch (prPolicy) {
     case SCTP_PR_SCTP_NONE:
@@ -1222,7 +1222,6 @@ int DataChannelConnection::SendOpenRequestMessage(
       req->channel_type = DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT;
       break;
     default:
-      free(req);
       return EINVAL;
   }
   if (unordered) {
@@ -1239,9 +1238,7 @@ int DataChannelConnection::SendOpenRequestMessage(
   memcpy(&req->label[label_len], PromiseFlatCString(protocol).get(), proto_len);
 
   // TODO: req_size is an int... that looks hairy
-  int error = SendControlMessage((const uint8_t*)req, req_size, stream);
-
-  free(req);
+  int error = SendControlMessage((const uint8_t*)req.get(), req_size, stream);
   return error;
 }
 
