@@ -73,7 +73,7 @@ const threadSpec = generateActorSpec({
       request: {
         options: Arg(0, "json"),
       },
-      response: {},
+      response: RetVal("nullable:json"),
     },
     detach: {
       request: {},
