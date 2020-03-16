@@ -226,15 +226,18 @@ function terminalInputChanged(expression) {
       return;
     }
 
-    const originalExpression = expression;
     dispatch({
       type: SET_TERMINAL_INPUT,
       expression: expression.trim(),
     });
 
     // There's no need to evaluate an empty string.
-    if (!expression.trim()) {
-      return;
+    if (!expression || !expression.trim()) {
+      return dispatch({
+        type: SET_TERMINAL_EAGER_RESULT,
+        expression,
+        result: null,
+      });
     }
 
     let mapped;
@@ -254,7 +257,6 @@ function terminalInputChanged(expression) {
     // eslint-disable-next-line consistent-return
     return dispatch({
       type: SET_TERMINAL_EAGER_RESULT,
-      expression: originalExpression,
       result: getEagerEvaluationResult(response),
     });
   };
