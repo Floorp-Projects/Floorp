@@ -39,7 +39,7 @@ async function testChromeTab() {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
 
-  const [, threadFront] = await target.attachThread();
+  const threadFront = await target.attachThread();
   await threadFront.resume();
 
   const { sources } = await threadFront.getSources();
@@ -108,7 +108,7 @@ async function testMainProcess() {
   const target = await targetDescriptor.getTarget();
   await target.attach();
 
-  const [, threadFront] = await target.attachThread();
+  const threadFront = await target.attachThread();
   await threadFront.resume();
   const { sources } = await threadFront.getSources();
   ok(
