@@ -240,7 +240,7 @@ class MochaOutputHandler(object):
         if missing:
             self.has_unexpected = True
             for test_name in missing:
-                self.logger.error("TEST-MISSING %s" % (test_name,))
+                self.logger.error("TEST-UNEXPECTED-MISSING %s" % (test_name,))
         self.logger.suite_end()
 
 
