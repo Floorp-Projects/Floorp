@@ -2,15 +2,15 @@
 
 const token = {};
 let iterated;
-const finalizationGroup = new FinalizationGroup(items => {
+const finalizationRegistry = new FinalizationRegistry(items => {
     iterated = items.next().value;
 });
 {
     let object = {};
-    finalizationGroup.register(object, token, token);
+    finalizationRegistry.register(object, token, token);
     object = undefined;
 }
 gc();
-finalizationGroup.cleanupSome();
+finalizationRegistry.cleanupSome();
 assertEq(iterated, token);
-assertEq(finalizationGroup.unregister(token), false);
+assertEq(finalizationRegistry.unregister(token), false);
