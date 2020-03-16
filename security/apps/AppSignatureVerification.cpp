@@ -806,7 +806,7 @@ class CoseVerificationContext {
  public:
   explicit CoseVerificationContext(AppTrustedRoot aTrustedRoot)
       : mTrustedRoot(aTrustedRoot), mCertDER(nullptr), mCertDERLen(0) {}
-  ~CoseVerificationContext() {}
+  ~CoseVerificationContext() = default;
 
   AppTrustedRoot GetTrustedRoot() { return mTrustedRoot; }
   nsresult SetCert(SECItem* aCertDER) {
@@ -1041,7 +1041,7 @@ class SignaturePolicy {
       mSHA256Allowed = true;
     }
   }
-  ~SignaturePolicy() {}
+  ~SignaturePolicy() = default;
   bool ProcessCOSE() { return mProcessCose; }
   bool COSERequired() { return mCoseRequired; }
   bool PK7Required() { return mPK7Required; }

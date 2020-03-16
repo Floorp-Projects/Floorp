@@ -13,9 +13,9 @@
 
 NS_IMPL_ISUPPORTS(nsNSSVersion, nsINSSVersion)
 
-nsNSSVersion::nsNSSVersion() {}
+nsNSSVersion::nsNSSVersion() = default;
 
-nsNSSVersion::~nsNSSVersion() {}
+nsNSSVersion::~nsNSSVersion() = default;
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSPR_Version(nsAString& v) {

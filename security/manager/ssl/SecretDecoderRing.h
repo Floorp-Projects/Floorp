@@ -24,10 +24,10 @@ class SecretDecoderRing : public nsISecretDecoderRing {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISECRETDECODERRING
 
-  SecretDecoderRing() {}
+  SecretDecoderRing() = default;
 
  protected:
-  virtual ~SecretDecoderRing() {}
+  virtual ~SecretDecoderRing() = default;
 
  private:
   nsresult Encrypt(const nsACString& data, /*out*/ nsACString& result);

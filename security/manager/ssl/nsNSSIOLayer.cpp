@@ -138,7 +138,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
   mTLSVersionRange.max = 0;
 }
 
-nsNSSSocketInfo::~nsNSSSocketInfo() {}
+nsNSSSocketInfo::~nsNSSSocketInfo() = default;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNSSSocketInfo, TransportSecurityInfo,
                             nsISSLSocketControl)
@@ -1360,7 +1360,7 @@ class PrefObserver : public nsIObserver {
   explicit PrefObserver(nsSSLIOLayerHelpers* aOwner) : mOwner(aOwner) {}
 
  protected:
-  virtual ~PrefObserver() {}
+  virtual ~PrefObserver() = default;
 
  private:
   nsSSLIOLayerHelpers* mOwner;

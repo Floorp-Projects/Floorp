@@ -95,7 +95,7 @@ class PrivateBrowsingObserver : public nsIObserver {
   explicit PrivateBrowsingObserver(SharedSSLState* aOwner) : mOwner(aOwner) {}
 
  protected:
-  virtual ~PrivateBrowsingObserver() {}
+  virtual ~PrivateBrowsingObserver() = default;
 
  private:
   SharedSSLState* mOwner;
@@ -126,7 +126,7 @@ SharedSSLState::SharedSSLState(uint32_t aTlsFlags)
   mIOLayerHelpers.Init();
 }
 
-SharedSSLState::~SharedSSLState() {}
+SharedSSLState::~SharedSSLState() = default;
 
 void SharedSSLState::NotePrivateBrowsingStatus() {
   MOZ_ASSERT(NS_IsMainThread(), "Not on main thread");

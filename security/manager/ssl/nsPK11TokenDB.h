@@ -24,7 +24,7 @@ class nsPK11Token : public nsIPK11Token {
   explicit nsPK11Token(PK11SlotInfo* slot);
 
  protected:
-  virtual ~nsPK11Token() {}
+  virtual ~nsPK11Token() = default;
 
  private:
   friend class nsPK11TokenDB;
@@ -51,10 +51,10 @@ class nsPK11TokenDB : public nsIPK11TokenDB {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPK11TOKENDB
 
-  nsPK11TokenDB() {}
+  nsPK11TokenDB() = default;
 
  protected:
-  virtual ~nsPK11TokenDB() {}
+  virtual ~nsPK11TokenDB() = default;
 };
 
 #define NS_PK11TOKENDB_CID                           \
