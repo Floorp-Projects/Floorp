@@ -21,6 +21,12 @@ namespace utils {
  */
 NSString* LocalizedString(const nsString& aString);
 
+/**
+ * Gets an accessible atttribute from the mozAccessible's associated
+ * accessible wrapper or proxy, and returns the value as an NSString.
+ * nil if no attribute is found.
+ */
+NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName);
 }
 }
 }
