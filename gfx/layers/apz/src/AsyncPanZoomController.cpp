@@ -577,7 +577,9 @@ class MOZ_STACK_CLASS StateChangeNotificationBlocker final {
  */
 class MOZ_RAII AutoApplyAsyncTestAttributes final {
  public:
-  explicit AutoApplyAsyncTestAttributes(const AsyncPanZoomController*);
+  explicit AutoApplyAsyncTestAttributes(
+      const AsyncPanZoomController*,
+      const RecursiveMutexAutoLock& aProofOfLock);
   ~AutoApplyAsyncTestAttributes();
 
  private:
@@ -586,14 +588,15 @@ class MOZ_RAII AutoApplyAsyncTestAttributes final {
 };
 
 AutoApplyAsyncTestAttributes::AutoApplyAsyncTestAttributes(
-    const AsyncPanZoomController* aApzc)
+    const AsyncPanZoomController* aApzc,
+    const RecursiveMutexAutoLock& aProofOfLock)
     // Having to use const_cast here seems less ugly than the alternatives
     // of making several members of AsyncPanZoomController that
     // ApplyAsyncTestAttributes() modifies |mutable|, or several methods that
     // query the async transforms non-const.
     : mApzc(const_cast<AsyncPanZoomController*>(aApzc)),
       mPrevFrameMetrics(aApzc->Metrics()) {
-  mApzc->ApplyAsyncTestAttributes();
+  mApzc->ApplyAsyncTestAttributes(aProofOfLock);
 }
 
 AutoApplyAsyncTestAttributes::~AutoApplyAsyncTestAttributes() {
@@ -4125,7 +4128,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime) {
 CSSRect AsyncPanZoomController::GetCurrentAsyncLayoutViewport(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
   MOZ_ASSERT(Metrics().IsRootContent(),
              "Only the root content APZC has a layout viewport");
   return GetEffectiveLayoutViewport(aMode);
@@ -4134,7 +4137,7 @@ CSSRect AsyncPanZoomController::GetCurrentAsyncLayoutViewport(
 ParentLayerPoint AsyncPanZoomController::GetCurrentAsyncScrollOffset(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
   return GetEffectiveScrollOffset(aMode) * GetEffectiveZoom(aMode);
 }
@@ -4142,7 +4145,7 @@ ParentLayerPoint AsyncPanZoomController::GetCurrentAsyncScrollOffset(
 CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
   return GetEffectiveScrollOffset(aMode);
 }
@@ -4150,7 +4153,7 @@ CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
   CSSToParentLayerScale2D effectiveZoom;
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
@@ -4204,7 +4207,7 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
 LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
   CSSToParentLayerScale2D scale = GetEffectiveZoom(aMode);
   // Note that in general the zoom might have different x- and y-scales.
   // However, this function in particular is only used on the WebRender codepath
@@ -4262,8 +4265,8 @@ bool AsyncPanZoomController::SampleCompositedAsyncTransform() {
   return false;
 }
 
-void AsyncPanZoomController::ApplyAsyncTestAttributes() {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
+void AsyncPanZoomController::ApplyAsyncTestAttributes(
+    const RecursiveMutexAutoLock& aProofOfLock) {
   if (mTestAttributeAppliers == 0) {
     if (mTestAsyncScrollOffset != CSSPoint() ||
         mTestAsyncZoom != LayerToParentLayerScale()) {
@@ -4277,7 +4280,10 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes() {
 
 void AsyncPanZoomController::UnapplyAsyncTestAttributes(
     const FrameMetrics& aPrevFrameMetrics) {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  // The constructor had a RecursiveMutexAutoLock in scope, so
+  // this destructor must as well (because it's a stack-based RAII class).
+  mRecursiveMutex.AssertCurrentThreadIn();
+
   MOZ_ASSERT(mTestAttributeAppliers >= 1);
   --mTestAttributeAppliers;
   if (mTestAttributeAppliers == 0) {
@@ -4314,7 +4320,7 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
 
 CSSRect AsyncPanZoomController::GetVisibleRect(
     const RecursiveMutexAutoLock& aProofOfLock) const {
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, aProofOfLock);
   CSSPoint currentScrollOffset =
       GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing);
   CSSRect visible = CSSRect(currentScrollOffset,
