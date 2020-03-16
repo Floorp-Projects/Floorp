@@ -5663,6 +5663,13 @@ end:
               StrCpy $InstallMaintenanceService "1"
             ${EndIf}
 
+            ReadINIStr $R8 $R7 "Install" "RegisterDefaultAgent"
+            ${If} $R8 == "false"
+              StrCpy $RegisterDefaultAgent "0"
+            ${Else}
+              StrCpy $RegisterDefaultAgent "1"
+            ${EndIf}
+
             !ifdef MOZ_OPTIONAL_EXTENSIONS
               ReadINIStr $R8 $R7 "Install" "OptionalExtensions"
               ${If} $R8 == "false"
@@ -5708,6 +5715,7 @@ end:
         ${InstallGetOption} $R8 "StartMenuShortcut" $AddStartMenuSC
         ${InstallGetOption} $R8 "TaskbarShortcut" $AddTaskbarSC
         ${InstallGetOption} $R8 "MaintenanceService" $InstallMaintenanceService
+        ${InstallGetOption} $R8 "RegisterDefaultAgent" $RegisterDefaultAgent
         !ifdef MOZ_OPTIONAL_EXTENSIONS
           ${InstallGetOption} $R8 "OptionalExtensions" $InstallOptionalExtensions
         !endif
