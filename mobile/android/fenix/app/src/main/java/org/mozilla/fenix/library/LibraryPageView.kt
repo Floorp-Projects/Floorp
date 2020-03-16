@@ -40,7 +40,7 @@ open class LibraryPageView(
         updateToolbar(
             title = title,
             foregroundColor = ContextCompat.getColor(context, R.color.white_color),
-            backgroundColor = context.getColorFromAttr(R.attr.accentHighContrast)
+            backgroundColor = context.getColorFromAttr(R.attr.accent)
         )
         libraryItemsList.adapter?.notifyDataSetChanged()
     }
