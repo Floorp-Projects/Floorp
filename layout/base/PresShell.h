@@ -558,12 +558,6 @@ class PresShell final : public nsStubDocumentObserver,
 
   void ClearFrameRefs(nsIFrame* aFrame);
 
-  // Clears the selection of the older focused frame selection if any.
-  void FrameSelectionWillTakeFocus(nsFrameSelection&);
-
-  // Clears and repaint mFocusedFrameSelection if it matches the argument.
-  void FrameSelectionWillLoseFocus(nsFrameSelection&);
-
   /**
    * Get a reference rendering context. This is a context that should not
    * be rendered to, but is suitable for measuring text and performing
@@ -629,10 +623,22 @@ class PresShell final : public nsStubDocumentObserver,
   dom::Selection* GetCurrentSelection(SelectionType aSelectionType);
 
   /**
-   * Gets the last selection that took focus in this document. This is basically
-   * the frame selection that's visible to the user.
+   * Gets a selection controller for the focused content in the DOM window
+   * for mDocument.
+   *
+   * @param aFocusedContent     If there is focused content in the DOM window,
+   *                            the focused content will be returned.  This may
+   *                            be nullptr if it's not necessary.
+   * @return                    A selection controller for focused content.
+   *                            E.g., if an <input> element has focus, returns
+   *                            the independent selection controller of it.
+   *                            If the DOM window does not have focused content
+   *                            (similar to Document.activeElement), returns
+   *                            nullptr.
    */
-  nsFrameSelection* GetLastFocusedFrameSelection();
+  already_AddRefed<nsISelectionController>
+  GetSelectionControllerForFocusedContent(
+      nsIContent** aFocusedContent = nullptr);
 
   /**
    * Interface to dispatch events via the presshell
@@ -1266,8 +1272,6 @@ class PresShell final : public nsStubDocumentObserver,
                                      SelectionRegion aRegion,
                                      int16_t aFlags) override;
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
-  void SelectionWillTakeFocus() override;
-  void SelectionWillLoseFocus() override;
 
   /**
    * Set a "resolution" for the document, which if not 1.0 will
@@ -2828,10 +2832,6 @@ class PresShell final : public nsStubDocumentObserver,
   UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
   nsViewManager* mViewManager;  // [WEAK] docViewer owns it so I don't have to
   RefPtr<nsFrameSelection> mSelection;
-  // The frame selection that last took focus on this shell, which we need to
-  // hide if we focus another selection. May or may not be the same as
-  // `mSelection`.
-  RefPtr<nsFrameSelection> mFocusedFrameSelection;
   RefPtr<nsCaret> mCaret;
   RefPtr<nsCaret> mOriginalCaret;
   RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;

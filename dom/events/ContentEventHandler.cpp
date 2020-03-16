@@ -317,15 +317,16 @@ nsresult ContentEventHandler::InitCommon(SelectionType aSelectionType,
   nsresult rv = InitBasic(aRequireFlush);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsFrameSelection> frameSel;
+  nsCOMPtr<nsISelectionController> selectionController;
   if (PresShell* presShell = mDocument->GetPresShell()) {
-    frameSel = presShell->GetLastFocusedFrameSelection();
+    selectionController = presShell->GetSelectionControllerForFocusedContent();
   }
-  if (NS_WARN_IF(!frameSel)) {
+  if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mSelection = frameSel->GetSelection(aSelectionType);
+  mSelection =
+      selectionController->GetSelection(ToRawSelectionType(aSelectionType));
   if (NS_WARN_IF(!mSelection)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -334,7 +335,8 @@ nsresult ContentEventHandler::InitCommon(SelectionType aSelectionType,
   if (mSelection->Type() == SelectionType::eNormal) {
     normalSelection = mSelection;
   } else {
-    normalSelection = frameSel->GetSelection(SelectionType::eNormal);
+    normalSelection = selectionController->GetSelection(
+        nsISelectionController::SELECTION_NORMAL);
     if (NS_WARN_IF(!normalSelection)) {
       return NS_ERROR_NOT_AVAILABLE;
     }

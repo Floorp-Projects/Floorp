@@ -2629,7 +2629,7 @@ NS_IMETHODIMP nsDocumentViewer::GetContents(const char* mimeType,
   // Now we have the selection.  Make sure it's nonzero:
   RefPtr<Selection> sel;
   if (selectionOnly) {
-    sel = nsCopySupport::GetSelectionForCopy(mDocument);
+    nsCopySupport::GetSelectionForCopy(mDocument, getter_AddRefs(sel));
     NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
 
     if (sel->IsCollapsed()) {

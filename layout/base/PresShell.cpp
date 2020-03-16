@@ -1281,8 +1281,6 @@ void PresShell::Destroy() {
     mCaret = nullptr;
   }
 
-  mFocusedFrameSelection = nullptr;
-
   if (mSelection) {
     RefPtr<nsFrameSelection> frameSelection = mSelection;
     frameSelection->DisconnectFromPresShell();
@@ -1544,60 +1542,6 @@ void PresShell::AddAuthorSheet(StyleSheet* aSheet) {
   mDocument->ApplicableStylesChanged();
 }
 
-void PresShell::SelectionWillTakeFocus() {
-  if (mSelection) {
-    FrameSelectionWillTakeFocus(*mSelection);
-  }
-}
-
-void PresShell::SelectionWillLoseFocus() {
-  // Do nothing, the main selection is the default focused selection.
-}
-
-void PresShell::FrameSelectionWillLoseFocus(nsFrameSelection& aFrameSelection) {
-  if (mFocusedFrameSelection != &aFrameSelection) {
-    return;
-  }
-
-  // Do nothing, the main selection is the default focused selection.
-  if (&aFrameSelection == mSelection) {
-    return;
-  }
-
-  RefPtr<nsFrameSelection> old = std::move(mFocusedFrameSelection);
-  MOZ_ASSERT(!mFocusedFrameSelection);
-
-  if (old->GetDisplaySelection() != nsISelectionController::SELECTION_HIDDEN) {
-    old->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
-    old->RepaintSelection(SelectionType::eNormal);
-  }
-
-  if (mSelection) {
-    FrameSelectionWillTakeFocus(*mSelection);
-  }
-}
-
-void PresShell::FrameSelectionWillTakeFocus(nsFrameSelection& aFrameSelection) {
-  if (mFocusedFrameSelection == &aFrameSelection) {
-    return;
-  }
-
-  RefPtr<nsFrameSelection> old = std::move(mFocusedFrameSelection);
-  mFocusedFrameSelection = &aFrameSelection;
-
-  if (old &&
-      old->GetDisplaySelection() != nsISelectionController::SELECTION_HIDDEN) {
-    old->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
-    old->RepaintSelection(SelectionType::eNormal);
-  }
-
-  if (aFrameSelection.GetDisplaySelection() !=
-      nsISelectionController::SELECTION_ON) {
-    aFrameSelection.SetDisplaySelection(nsISelectionController::SELECTION_ON);
-    aFrameSelection.RepaintSelection(SelectionType::eNormal);
-  }
-}
-
 NS_IMETHODIMP
 PresShell::SetDisplaySelection(int16_t aToggle) {
   RefPtr<nsFrameSelection> frameSelection = mSelection;
@@ -1639,16 +1583,41 @@ Selection* PresShell::GetSelection(RawSelectionType aRawSelectionType) {
 }
 
 Selection* PresShell::GetCurrentSelection(SelectionType aSelectionType) {
-  if (!mSelection) {
-    return nullptr;
-  }
+  if (!mSelection) return nullptr;
 
   RefPtr<nsFrameSelection> frameSelection = mSelection;
   return frameSelection->GetSelection(aSelectionType);
 }
 
-nsFrameSelection* PresShell::GetLastFocusedFrameSelection() {
-  return mFocusedFrameSelection ? mFocusedFrameSelection : mSelection;
+already_AddRefed<nsISelectionController>
+PresShell::GetSelectionControllerForFocusedContent(
+    nsIContent** aFocusedContent) {
+  if (aFocusedContent) {
+    *aFocusedContent = nullptr;
+  }
+
+  if (mDocument) {
+    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+    nsCOMPtr<nsIContent> focusedContent = nsFocusManager::GetFocusedDescendant(
+        mDocument->GetWindow(), nsFocusManager::eOnlyCurrentWindow,
+        getter_AddRefs(focusedWindow));
+    if (focusedContent) {
+      nsIFrame* frame = focusedContent->GetPrimaryFrame();
+      if (frame) {
+        nsCOMPtr<nsISelectionController> selectionController;
+        frame->GetSelectionController(mPresContext,
+                                      getter_AddRefs(selectionController));
+        if (selectionController) {
+          if (aFocusedContent) {
+            focusedContent.forget(aFocusedContent);
+          }
+          return selectionController.forget();
+        }
+      }
+    }
+  }
+  nsCOMPtr<nsISelectionController> self(this);
+  return self.forget();
 }
 
 NS_IMETHODIMP
