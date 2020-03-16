@@ -223,7 +223,6 @@ function mountObjectInspector({ props, client, initialState = {} }) {
     initialState.objectInspector = {
       expandedPaths: new Set(),
       loadedProperties: new Map(),
-      actors: new Set(),
       ...initialState.objectInspector,
     };
   }

@@ -13,8 +13,9 @@ const {
   getParentGripValue,
   getValue,
   nodeIsBucket,
+  getFront,
 } = require("./utils/node");
-const { getLoadedProperties, getActors, getWatchpoints } = require("./reducer");
+const { getLoadedProperties, getWatchpoints } = require("./reducer");
 
 type Dispatch = ReduxAction => void;
 
@@ -140,9 +141,17 @@ function removeWatchpoint(item) {
   };
 }
 
-function closeObjectInspector() {
-  return ({ dispatch, getState, client }: ThunkArg) =>
-    releaseActors(getState(), client, dispatch);
+function getActorIDs(roots) {
+  return (roots || []).reduce((ids, root) => {
+    const front = getFront(root);
+    return front ? ids.concat(front.actorID) : ids;
+  }, []);
+}
+
+function closeObjectInspector(roots) {
+  return ({ dispatch, getState, client }: ThunkArg) => {
+    releaseActors(roots, client, dispatch);
+  };
 }
 
 /*
@@ -153,33 +162,23 @@ function closeObjectInspector() {
  * It takes a props argument which reflects what is passed by the upper-level
  * consumer.
  */
-function rootsChanged(props: Props) {
+function rootsChanged(roots) {
   return ({ dispatch, client, getState }: ThunkArg) => {
-    releaseActors(getState(), client, dispatch);
+    releaseActors(roots, client, dispatch);
     dispatch({
       type: "ROOTS_CHANGED",
-      data: props,
+      data: roots,
     });
   };
 }
 
-async function releaseActors(state, client, dispatch) {
-  const actors = getActors(state);
-  if (!client || !client.releaseActor || actors.size === 0) {
+async function releaseActors(roots, client, dispatch) {
+  if (!client || !client.releaseActor) {
     return;
   }
 
-  let promises = [];
-  for (const actor of actors) {
-    promises.push(client.releaseActor(actor));
-  }
-
-  await Promise.all(promises);
-
-  dispatch({
-    type: "RELEASED_ACTORS",
-    data: { actors },
-  });
+  const actors = getActorIDs(roots);
+  await Promise.all(actors.map(client.releaseActor));
 }
 
 function invokeGetter(node: Node, receiverId: string | null) {
