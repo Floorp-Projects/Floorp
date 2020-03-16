@@ -139,7 +139,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'public/BlocksRingBufferGeckoExtensions.h',
+    'public/ProfileBufferEntrySerializationGeckoExtensions.h',
     # vm/GeckoProfiler.h needs to include this and doesn't like #include "ProfilerCounts.h"
     'public/ProfilerCounts.h',
 ]

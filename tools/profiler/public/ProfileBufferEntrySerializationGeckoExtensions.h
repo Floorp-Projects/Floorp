@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BlocksRingBufferGeckoExtensions_h
-#define BlocksRingBufferGeckoExtensions_h
+#ifndef ProfileBufferEntrySerializationGeckoExtensions_h
+#define ProfileBufferEntrySerializationGeckoExtensions_h
 
-#include "mozilla/BlocksRingBuffer.h"
+#include "mozilla/ProfileBufferEntrySerialization.h"
 
 #include "js/AllocPolicy.h"
 #include "js/Utility.h"
@@ -160,4 +160,4 @@ struct ProfileBufferEntryReader::Deserializer<JS::UniqueChars> {
 
 }  // namespace mozilla
 
-#endif  // BlocksRingBufferGeckoExtensions_h
+#endif  // ProfileBufferEntrySerializationGeckoExtensions_h

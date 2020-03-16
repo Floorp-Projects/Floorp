@@ -20,7 +20,8 @@
 #include "jsapi.h"
 #include "json/json.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/BlocksRingBufferGeckoExtensions.h"
+#include "mozilla/BlocksRingBuffer.h"
+#include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
@@ -549,8 +550,10 @@ int GTestMarkerPayload::sNumDeserialized = 0;
 int GTestMarkerPayload::sNumStreamed = 0;
 int GTestMarkerPayload::sNumDestroyed = 0;
 
-BlocksRingBuffer::Length GTestMarkerPayload::TagAndSerializationBytes() const {
-  return CommonPropsTagAndSerializationBytes() + BlocksRingBuffer::SumBytes(mN);
+ProfileBufferEntryWriter::Length GTestMarkerPayload::TagAndSerializationBytes()
+    const {
+  return CommonPropsTagAndSerializationBytes() +
+         ProfileBufferEntryWriter::SumBytes(mN);
 }
 
 void GTestMarkerPayload::SerializeTagAndPayload(

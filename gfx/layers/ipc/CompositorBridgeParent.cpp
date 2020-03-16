@@ -2765,7 +2765,7 @@ int32_t RecordContentFrameTime(
       ContentFramePayload(const mozilla::TimeStamp& aStartTime,
                           const mozilla::TimeStamp& aEndTime)
           : ProfilerMarkerPayload(aStartTime, aEndTime) {}
-      mozilla::BlocksRingBuffer::Length TagAndSerializationBytes()
+      mozilla::ProfileBufferEntryWriter::Length TagAndSerializationBytes()
           const override {
         return CommonPropsTagAndSerializationBytes();
       }

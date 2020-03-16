@@ -15,8 +15,8 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -50,7 +50,7 @@ class ProfilerMarkerPayload {
 
   // Compute the number of bytes needed to serialize the `DeserializerTag` and
   // payload, including in the no-payload (nullptr) case.
-  static BlocksRingBuffer::Length TagAndSerializationBytes(
+  static ProfileBufferEntryWriter::Length TagAndSerializationBytes(
       const ProfilerMarkerPayload* aPayload) {
     if (!aPayload) {
       return sizeof(DeserializerTag);
@@ -133,7 +133,8 @@ class ProfilerMarkerPayload {
       : mCommonProps(std::move(aCommonProps)) {}
 
   // Serialization/deserialization of common props in ProfilerMarkerPayload.
-  MFBT_API BlocksRingBuffer::Length CommonPropsTagAndSerializationBytes() const;
+  MFBT_API ProfileBufferEntryWriter::Length
+  CommonPropsTagAndSerializationBytes() const;
   MFBT_API void SerializeTagAndCommonProps(
       DeserializerTag aDeserializerTag,
       ProfileBufferEntryWriter& aEntryWriter) const;
@@ -151,7 +152,7 @@ class ProfilerMarkerPayload {
  private:
   // Compute the number of bytes needed to serialize the `DeserializerTag` and
   // payload in `SerializeTagAndPayload` below.
-  virtual BlocksRingBuffer::Length TagAndSerializationBytes() const = 0;
+  virtual ProfileBufferEntryWriter::Length TagAndSerializationBytes() const = 0;
 
   // Serialize the `DeserializerTag` and payload into an EntryWriter.
   // Must be of the exact size given by `TagAndSerializationBytes()`.
@@ -168,7 +169,8 @@ class ProfilerMarkerPayload {
       ::mozilla::baseprofiler::UniqueStacks& aUniqueStacks) const override;    \
   static UniquePtr<ProfilerMarkerPayload> Deserialize(                         \
       ProfileBufferEntryReader& aEntryReader);                                 \
-  MFBT_API BlocksRingBuffer::Length TagAndSerializationBytes() const override; \
+  MFBT_API ProfileBufferEntryWriter::Length TagAndSerializationBytes()         \
+      const override;                                                          \
   MFBT_API void SerializeTagAndPayload(ProfileBufferEntryWriter& aEntryWriter) \
       const override;
 
