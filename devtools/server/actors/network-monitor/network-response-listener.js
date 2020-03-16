@@ -215,6 +215,7 @@ NetworkResponseListener.prototype = {
    * @param nsISupports context
    */
   onStartRequest: function(request) {
+    request = request.QueryInterface(Ci.nsIChannel);
     // Converter will call this again, we should just ignore that.
     if (this.request) {
       return;
