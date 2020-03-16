@@ -192,7 +192,7 @@ LazyActor.prototype = {
   /**
    * Return the parent pool for this lazy actor.
    */
-  parent: function() {
+  getParent: function() {
     return this.conn && this.conn.poolFor(this.actorID);
   },
 
@@ -203,7 +203,7 @@ LazyActor.prototype = {
    * actor
    */
   destroy() {
-    const parent = this.parent();
+    const parent = this.getParent();
     if (parent) {
       parent.unmanage(this);
     }
