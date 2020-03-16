@@ -1670,16 +1670,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     }
   }
 
-  // There are too many bindings or inner functions to be saved into the
-  // LazyScript. Do a full parse.
-  if (pc_->closedOverBindingsForLazy().length() >=
-          LazyScript::NumClosedOverBindingsLimit ||
-      pc_->innerFunctionIndexesForLazy.length() >=
-          LazyScript::NumInnerFunctionsLimit) {
-    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
-    return false;
-  }
-
   FunctionBox* funbox = pc_->functionBox();
   funbox->synchronizeArgCount();
 
