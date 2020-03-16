@@ -236,7 +236,6 @@ function terminalInputChanged(expression, force = false) {
       return null;
     }
 
-    const originalExpression = expression;
     dispatch({
       type: SET_TERMINAL_INPUT,
       expression: expression.trim(),
@@ -246,7 +245,7 @@ function terminalInputChanged(expression, force = false) {
     if (!expression || !expression.trim()) {
       return dispatch({
         type: SET_TERMINAL_EAGER_RESULT,
-        expression: originalExpression,
+        expression,
         result: null,
       });
     }
@@ -267,7 +266,6 @@ function terminalInputChanged(expression, force = false) {
 
     return dispatch({
       type: SET_TERMINAL_EAGER_RESULT,
-      expression: originalExpression,
       result: getEagerEvaluationResult(response),
     });
   };
