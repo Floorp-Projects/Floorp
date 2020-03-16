@@ -49,10 +49,6 @@ skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/
 # Skip intl402 tests when Intl isn't available.
 skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list
 
-# Skip Intl.Locale tests when the addIntlExtras helper isn't available.
-skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/Locale/jstests.list
-skip-if(!this.hasOwnProperty('addIntlExtras')) script test262/intl402/Intl/getCanonicalLocales/Locale-object.js
-
 # Skip Intl.ListFormat tests when the addIntlExtras helper isn't available.
 skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/ListFormat/jstests.list
 
@@ -141,6 +137,7 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/notify/jstests.list
 skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 
+
 ##################################################
 # Test262 tests skipped due to SpiderMonkey bugs #
 ##################################################
@@ -156,6 +153,7 @@ skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-ma
 skip script test262/built-ins/TypedArray/prototype/findIndex/predicate-may-detach-buffer.js
 skip script test262/built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/includes/detached-buffer-tointeger.js
 skip script test262/built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-detachbuffer.js
@@ -369,15 +367,6 @@ skip script test262/annexB/language/function-code/block-decl-func-skip-arguments
 skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1558971
-skip script test262/language/expressions/await/await-monkey-patched-promise.js
-skip script test262/language/expressions/await/async-await-interleaved.js
-skip script test262/language/expressions/await/for-await-of-interleaved.js
-skip script test262/language/expressions/await/async-generator-interleaved.js
-skip script test262/language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js
-skip script test262/language/statements/for-await-of/ticks-with-async-iter-resolved-promise-and-constructor-lookup-two.js
-skip script test262/language/statements/for-await-of/ticks-with-sync-iter-resolved-promise-and-constructor-lookup.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
 skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js
 
@@ -451,9 +440,8 @@ skip script test262/intl402/ListFormat/constructor/constructor/options-type-vali
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1591099
 skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-realm.js
-skip script test262/intl402/Locale/proto-from-ctor-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
 skip script test262/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1610512
@@ -489,9 +477,6 @@ skip script test262/intl402/DateTimeFormat/constructor-options-fractionalSecondD
 # <https://github.com/tc39/proposal-unified-intl-numberformat/issues/63>.
 skip script test262/intl402/NumberFormat/constructor-unit.js
 
-# The `intrinsicDefaultProto` for AggregateError is AggregateError.prototype.
-skip script test262/built-ins/AggregateError/newtarget-proto-fallback.js
-
 # The test exposes a potential spec issue in InitializeDateTimeFormat:
 # Let's assume the locale is "en", adding likely subtags results in "en-Latn-US".
 # Consulting CLDR's supplementalData.xml shows for the "US" region:
@@ -499,12 +484,8 @@ skip script test262/built-ins/AggregateError/newtarget-proto-fallback.js
 # So preferred is "h" (= hour-cycle "h12") and additionally allowed is "H" (=hc "h23").
 # But InitializeDateTimeFormat defaults for hour12=false and hcDefault="h12" the
 # hour-cycle to "h24", which isn't allowed per the above CLDR data.
+# https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
-
-# https://github.com/tc39/test262/pull/2464 only added a new test, but didn't
-# update the existing tests.
-skip script test262/language/statements/class/subclass/class-definition-null-proto-super.js
-skip script test262/language/expressions/super/call-proto-not-ctor.js
 
 # Tests expects RangeError, but should instead expect TypeError.
 skip script test262/intl402/NumberFormat/constructor-order.js
@@ -514,5 +495,6 @@ skip script test262/intl402/Locale/constructor-non-iana-canon.js
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
 
-# DST issues, bug 1620825.
-skip script test262/built-ins/Date/parse/without-utc-offset.js
+# See discussion in https://github.com/tc39/test262/pull/2480
+skip script test262/intl402/DateTimeFormat/invalid-numbering-system-calendar-options.js
+skip script test262/intl402/NumberFormat/invalid-numbering-system-options.js
