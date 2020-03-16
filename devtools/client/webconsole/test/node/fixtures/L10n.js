@@ -23,7 +23,6 @@ const strings = {
   "webconsole.filteredMessagesByText.label": "#1 hidden;#1 hidden",
   "webconsole.filteredMessagesByText.tooltip":
     "#1 item hidden by text filter;#1 items hidden by text filter",
-  "webconsole.group.contentBlocked": "Content blocked messages",
   cdFunctionInvalidArgument:
     "Cannot cd() to the given window. Invalid argument.",
 };
