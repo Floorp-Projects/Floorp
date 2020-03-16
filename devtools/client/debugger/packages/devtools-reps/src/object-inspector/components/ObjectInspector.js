@@ -99,7 +99,7 @@ class ObjectInspector extends Component<Props> {
       this.focusedItem = nextProps.focusedItem;
       this.activeItem = nextProps.activeItem;
       if (this.props.rootsChanged) {
-        this.props.rootsChanged();
+        this.props.rootsChanged(this.roots);
       }
     }
   }
@@ -157,7 +157,7 @@ class ObjectInspector extends Component<Props> {
   }
 
   componentWillUnmount() {
-    this.props.closeObjectInspector();
+    this.props.closeObjectInspector(this.props.roots);
   }
 
   props: Props;
@@ -176,10 +176,7 @@ class ObjectInspector extends Component<Props> {
   }
 
   getRoots(): Array<Node> {
-    const {
-      evaluations,
-      roots
-    } = this.props;
+    const { evaluations, roots } = this.props;
     const length = roots.length;
 
     for (let i = 0; i < length; i++) {

@@ -16,7 +16,7 @@ const {
   waitForDispatch,
 } = require("../test-utils");
 const { createNode, NODE_TYPES } = require("../../utils/node");
-const { getActors, getExpandedPaths } = require("../../reducer");
+const { getExpandedPaths } = require("../../reducer");
 
 const protoStub = {
   prototype: {
@@ -163,12 +163,6 @@ describe("ObjectInspector - state", () => {
     wrapper.update();
 
     expect(storeHasLoadedProperty(store, "root-1")).toBeTruthy();
-    // We don't want to track root actors.
-    expect(
-      getActors(store.getState()).has(
-        gripRepStubs.get("testMoreThanMaxProps").actor
-      )
-    ).toBeFalsy();
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
 
     nodes = wrapper.find(".node");
@@ -183,10 +177,6 @@ describe("ObjectInspector - state", () => {
     // should have the expected values.
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
     expect(storeHasLoadedProperty(store, "root-1◦<prototype>")).toBeTruthy();
-
-    expect(
-      getActors(store.getState()).has(protoStub.prototype.actor)
-    ).toBeTruthy();
   });
 
   it("does not handle actors when client does not have releaseActor function", async () => {
@@ -205,12 +195,6 @@ describe("ObjectInspector - state", () => {
     wrapper.update();
 
     expect(storeHasLoadedProperty(store, "root-1")).toBeTruthy();
-    // We don't want to track root actors.
-    expect(
-      getActors(store.getState()).has(
-        gripRepStubs.get("testMoreThanMaxProps").actor
-      )
-    ).toBeFalsy();
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
 
     nodes = wrapper.find(".node");
@@ -225,8 +209,6 @@ describe("ObjectInspector - state", () => {
     // should have the expected values.
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
     expect(storeHasLoadedProperty(store, "root-1◦<prototype>")).toBeTruthy();
-
-    expect(getActors(store.getState()).size).toBe(0);
   });
 
   it.skip("has the expected state when expanding a proxy node", async () => {
@@ -245,11 +227,6 @@ describe("ObjectInspector - state", () => {
     // Once the properties are loaded, actors and loadedProperties should have
     // the expected values.
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
-
-    // We don't want to track root actors.
-    expect(
-      getActors(store.getState()).has(gripRepStubs.get("testProxy").actor)
-    ).toBeFalsy();
 
     nodes = wrapper.find(".node");
     const handlerNode = nodes.at(3);
