@@ -568,15 +568,15 @@ void Gecko_SetJemallocThreadLocalArena(bool enabled);
 #undef CSS_PSEUDO_ELEMENT
 
 bool Gecko_ErrorReportingEnabled(const mozilla::StyleSheet* sheet,
-                                 const mozilla::css::Loader* loader);
+                                 const mozilla::css::Loader* loader,
+                                 uint64_t* aOutWindowId);
 
 void Gecko_ReportUnexpectedCSSError(
-    const mozilla::StyleSheet* sheet, const mozilla::css::Loader* loader,
-    nsIURI* uri, const char* message, const char* param, uint32_t paramLen,
-    const char* prefix, const char* prefixParam, uint32_t prefixParamLen,
-    const char* suffix, const char* source, uint32_t sourceLen,
-    const char* selectors, uint32_t selectorsLen, uint32_t lineNumber,
-    uint32_t colNumber);
+    uint64_t windowId, nsIURI* uri, const char* message, const char* param,
+    uint32_t paramLen, const char* prefix, const char* prefixParam,
+    uint32_t prefixParamLen, const char* suffix, const char* source,
+    uint32_t sourceLen, const char* selectors, uint32_t selectorsLen,
+    uint32_t lineNumber, uint32_t colNumber);
 
 // DOM APIs.
 void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
