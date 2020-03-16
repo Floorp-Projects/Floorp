@@ -2860,11 +2860,10 @@ Selection::ScrollSelectionIntoViewEvent::Run() {
 
   int32_t flags = Selection::SCROLL_DO_FLUSH | Selection::SCROLL_SYNCHRONOUS;
 
-  Selection* sel = mSelection;  // workaround to satisfy static analysis
-  RefPtr<Selection> kungFuDeathGrip(sel);
-  mSelection->mScrollEvent.Forget();
-  mSelection->ScrollIntoView(mRegion, mVerticalScroll, mHorizontalScroll,
-                             mFlags | flags);
+  const RefPtr<Selection> selection{mSelection};
+  selection->mScrollEvent.Forget();
+  selection->ScrollIntoView(mRegion, mVerticalScroll, mHorizontalScroll,
+                            mFlags | flags);
   return NS_OK;
 }
 
