@@ -62,6 +62,14 @@ void GPUVideoTextureHost::Unlock() {
   EnsureWrappedTextureHost()->Unlock();
 }
 
+void GPUVideoTextureHost::PrepareTextureSource(
+    CompositableTextureSourceRef& aTexture) {
+  if (!EnsureWrappedTextureHost()) {
+    return;
+  }
+  EnsureWrappedTextureHost()->PrepareTextureSource(aTexture);
+}
+
 bool GPUVideoTextureHost::BindTextureSource(
     CompositableTextureSourceRef& aTexture) {
   if (!EnsureWrappedTextureHost()) {
@@ -120,6 +128,13 @@ bool GPUVideoTextureHost::HasIntermediateBuffer() const {
   }
 
   return mWrappedTextureHost->HasIntermediateBuffer();
+}
+
+void GPUVideoTextureHost::UpdatedInternal(const nsIntRegion* Region) {
+  if (!EnsureWrappedTextureHost()) {
+    return;
+  }
+  EnsureWrappedTextureHost()->UpdatedInternal(Region);
 }
 
 void GPUVideoTextureHost::CreateRenderTexture(
