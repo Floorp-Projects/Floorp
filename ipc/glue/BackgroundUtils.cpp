@@ -580,7 +580,6 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetDocumentHasLoaded(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       cspNonce, aLoadInfo->GetSkipContentSniffing(),
-      aLoadInfo->GetHttpsOnlyNoUpgrade(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo));
 
@@ -778,8 +777,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.documentHasLoaded(),
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.httpsOnlyNoUpgrade(), loadInfoArgs.requestBlockingReason(),
-      loadingContext);
+      loadInfoArgs.requestBlockingReason(), loadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -795,7 +793,6 @@ void LoadInfoToParentLoadInfoForwarder(
     *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
         false, false, Nothing(), nsILoadInfo::TAINTING_BASIC,
         false,  // SkipContentSniffing
-        false,  // HttpsOnlyNoUpgrade
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
@@ -830,7 +827,7 @@ void LoadInfoToParentLoadInfoForwarder(
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(),
       aLoadInfo->GetBypassCORSChecks(), ipcController, tainting,
-      aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyNoUpgrade(),
+      aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -867,9 +864,6 @@ nsresult MergeParentLoadInfoForwarder(
   }
 
   rv = aLoadInfo->SetSkipContentSniffing(aForwarderArgs.skipContentSniffing());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aLoadInfo->SetHttpsOnlyNoUpgrade(aForwarderArgs.httpsOnlyNoUpgrade());
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(
