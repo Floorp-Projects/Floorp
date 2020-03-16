@@ -738,13 +738,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   virtual void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData);
 
-  /**
-   * Returns the contents of the file containing the output color profile.
-   * The result may change if gfx.color_management.display_profile is changed
-   * or the platform-specific default is changed
-   */
-  nsTArray<uint8_t> GetCMSOutputProfileData();
-
   bool HasVariationFontSupport() const { return mHasVariationFontSupport; }
 
   bool HasNativeColrFontSupport() const { return mHasNativeColrFontSupport; }
@@ -886,6 +879,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void InitOpenGLConfig();
   static void CreateCMSOutputProfile();
 
+  static nsTArray<uint8_t> GetCMSOutputProfileData();
+
   friend void RecordingPrefChanged(const char* aPrefName, void* aClosure);
 
   virtual nsTArray<uint8_t> GetPlatformCMSOutputProfileData();
@@ -952,9 +947,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   // Total number of screen pixels across all monitors.
   int64_t mScreenPixels;
-
-  // Cached contents of the output color profile file
-  nsTArray<uint8_t> mCachedOutputColorProfile;
 
   // An instance of gfxSkipChars which is empty. It is used as the
   // basis for error-case iterators.
