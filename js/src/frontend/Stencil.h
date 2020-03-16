@@ -8,6 +8,7 @@
 #define frontend_Stencil_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_RELEASE_ASSERT
+#include "mozilla/CheckedInt.h"  // CheckedUint32
 #include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
 #include "mozilla/Range.h"       // mozilla::Range
 #include "mozilla/Span.h"        // mozilla::Span
@@ -88,6 +89,15 @@ struct LazyScriptCreationData {
   bool init(JSContext* cx, const frontend::AtomVector& COB,
             Vector<FunctionIndex>&& innerIndexes, bool isForceStrict,
             bool isStrict) {
+    // Check if we will overflow the `ngcthings` field later.
+    mozilla::CheckedUint32 ngcthings =
+        mozilla::CheckedUint32(COB.length()) +
+        mozilla::CheckedUint32(innerIndexes.length());
+    if (!ngcthings.isValid()) {
+      ReportAllocationOverflow(cx);
+      return false;
+    }
+
     forceStrict = isForceStrict;
     strict = isStrict;
     innerFunctionIndexes = std::move(innerIndexes);
