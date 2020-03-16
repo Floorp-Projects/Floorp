@@ -171,8 +171,7 @@ class UntrustedModulesData final {
       : mProcessType(XRE_GetProcessType()),
         mPid(::GetCurrentProcessId()),
         mSanitizationFailures(0),
-        mTrustTestFailures(0),
-        mIsDiagnosticsAssertEnabled(IsDiagnosticsAssertEnabled()) {}
+        mTrustTestFailures(0) {}
 
   UntrustedModulesData(UntrustedModulesData&&) = default;
   UntrustedModulesData& operator=(UntrustedModulesData&&) = default;
@@ -191,9 +190,6 @@ class UntrustedModulesData final {
 
   void Swap(UntrustedModulesData& aOther);
 
-  void VerifyConsistency() const;
-  static bool IsDiagnosticsAssertEnabled();
-
   GeckoProcessType mProcessType;
   DWORD mPid;
   TimeDuration mElapsed;
@@ -203,10 +199,6 @@ class UntrustedModulesData final {
   Maybe<double> mXULLoadDurationMS;
   uint32_t mSanitizationFailures;
   uint32_t mTrustTestFailures;
-
-  // This is not serialized.
-  // Cannot be const as we have the default move ctor.
-  bool mIsDiagnosticsAssertEnabled;
 };
 
 class ModulesMapResult final {
@@ -434,8 +426,6 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
   typedef mozilla::UntrustedModulesData paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    aParam.VerifyConsistency();
-
     aMsg->WriteUInt32(aParam.mProcessType);
     aMsg->WriteULong(aParam.mPid);
     WriteParam(aMsg, aParam.mElapsed);
@@ -485,7 +475,7 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
 
     for (uint32_t curEventIdx = 0; curEventIdx < eventsLen; ++curEventIdx) {
       if (!ReadEvent(aMsg, aIter, &(aResult->mEvents[curEventIdx]),
-                     aResult->mModules, aResult->mIsDiagnosticsAssertEnabled)) {
+                     aResult->mModules)) {
         return false;
       }
     }
@@ -533,8 +523,7 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
   // specialization.
   static bool ReadEvent(const Message* aMsg, PickleIterator* aIter,
                         mozilla::ProcessedModuleLoadEvent* aResult,
-                        const mozilla::ModulesMap& aModulesMap,
-                        bool aIsDiagnosticsAssertEnabled) {
+                        const mozilla::ModulesMap& aModulesMap) {
     if (!aMsg->ReadUInt64(aIter, &aResult->mProcessUptimeMS)) {
       return false;
     }
@@ -569,11 +558,6 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     // rather than an IPC error. The error is detected and dealt with in
     // telemetry.
     aResult->mModule = aModulesMap.Get(resolvedNtName);
-    if (!aResult->mModule && aIsDiagnosticsAssertEnabled) {
-      MOZ_DIAGNOSTIC_ASSERT(aModulesMap.Count() > 0, "Empty module list");
-      MOZ_DIAGNOSTIC_ASSERT(!resolvedNtName.IsEmpty(), "Empty resolvedNtName");
-      MOZ_DIAGNOSTIC_ASSERT(false, "Something else");
-    }
 
     return true;
   }
