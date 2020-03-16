@@ -24,8 +24,7 @@ pub type ErrorKind<'i> = ParseErrorKind<'i, StyleParseErrorKind<'i>>;
 
 /// An error reporter with all the data we need to report errors.
 pub struct ErrorReporter {
-    sheet: *const DomStyleSheet,
-    loader: *const Loader,
+    window_id: u64,
     uri: *mut nsIURI,
 }
 
@@ -37,7 +36,13 @@ impl ErrorReporter {
         loader: *mut Loader,
         extra_data: *mut RawUrlExtraData,
     ) -> Option<Self> {
-        if !Self::reporting_enabled(sheet, loader) {
+        let mut window_id = 0;
+
+        let enabled = unsafe {
+            bindings::Gecko_ErrorReportingEnabled(sheet, loader, &mut window_id)
+        };
+
+        if !enabled {
             return None;
         }
 
@@ -48,7 +53,7 @@ impl ErrorReporter {
                 .unwrap_or(ptr::null_mut())
         };
 
-        Some(ErrorReporter { sheet, loader, uri })
+        Some(ErrorReporter { window_id, uri })
     }
 }
 
@@ -414,13 +419,7 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
 }
 
 impl ErrorReporter {
-    fn reporting_enabled(sheet: *const DomStyleSheet, loader: *const Loader) -> bool {
-        unsafe { bindings::Gecko_ErrorReportingEnabled(sheet, loader) }
-    }
-
     pub fn report(&self, location: SourceLocation, error: ContextualParseError) {
-        debug_assert!(Self::reporting_enabled(self.sheet, self.loader));
-
         let (pre, name, action) = error.to_gecko_message();
         let suffix = match action {
             Action::Nothing => ptr::null(),
@@ -440,8 +439,7 @@ impl ErrorReporter {
         let source = "";
         unsafe {
             bindings::Gecko_ReportUnexpectedCSSError(
-                self.sheet,
-                self.loader,
+                self.window_id,
                 self.uri,
                 name.as_ptr() as *const _,
                 param_ptr as *const _,
