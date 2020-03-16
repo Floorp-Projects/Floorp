@@ -391,6 +391,7 @@ class ResponsiveUI {
         [this.targetList.TYPES.FRAME],
         this.onTargetAvailable
       );
+      this.targetList.stopListening();
     }
 
     this.tab.removeEventListener("TabClose", this);
@@ -484,6 +485,7 @@ class ResponsiveUI {
 
     const targetFront = await this.client.mainRoot.getTab();
     this.targetList = new TargetList(this.client.mainRoot, targetFront);
+    this.targetList.startListening();
     await this.targetList.watchTargets(
       [this.targetList.TYPES.FRAME],
       this.onTargetAvailable
@@ -1177,9 +1179,11 @@ class ResponsiveUI {
     return this.browserWindow;
   }
 
-  async onTargetAvailable({ targetFront }) {
-    this.responsiveFront = await targetFront.getFront("responsive");
-    await this.restoreActorState();
+  async onTargetAvailable({ isTopLevel, targetFront }) {
+    if (isTopLevel) {
+      this.responsiveFront = await targetFront.getFront("responsive");
+      await this.restoreActorState();
+    }
   }
 
   async onRemotenessChange(event) {
