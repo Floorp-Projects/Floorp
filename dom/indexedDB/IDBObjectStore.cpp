@@ -652,8 +652,7 @@ class ValueDeserializationHelper {
        * real-looking Blob/File instance because the index's key path can
        * reference their properties.  Rather than create a fake-looking object,
        * create a real Blob. */
-      const nsCOMPtr<nsIFile> file =
-          FileInfo::GetFileForFileInfo(aFile.FileInfo());
+      const nsCOMPtr<nsIFile> file = aFile.FileInfo().GetFileForFileInfo();
       if (!file) {
         return nullptr;
       }
