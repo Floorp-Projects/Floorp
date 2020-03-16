@@ -120,7 +120,7 @@ use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PointKey, Primitiv
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, RectangleKey};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
-use crate::prim_store::{ColorBindingStorage, ColorBindingIndex};
+use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveVisibilityFlags};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
@@ -1252,7 +1252,7 @@ impl Tile {
         let clipped_rect = self.current_descriptor.local_valid_rect
             .intersection(&ctx.local_clip_rect)
             .unwrap_or_else(PictureRect::zero);
-        let mut is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
+        let mut is_opaque = ctx.backdrop.opaque_rect.contains_rect(&clipped_rect);
 
         if self.has_compositor_surface {
             // If we found primitive(s) that are ordered _after_ the first compositor
@@ -1338,7 +1338,7 @@ impl Tile {
         //           color tiles. We can definitely support this in DC, so this
         //           should be added as a follow up.
         let is_simple_prim =
-            ctx.backdrop.kind.can_be_promoted_to_compositor_surface() &&
+            ctx.backdrop.kind.is_some() &&
             self.current_descriptor.prims.len() == 1 &&
             self.is_opaque &&
             supports_simple_prims;
@@ -1349,15 +1349,15 @@ impl Tile {
             // surface unconditionally (this will drop any previously used
             // texture cache backing surface).
             match ctx.backdrop.kind {
-                BackdropKind::Color { color } => {
+                Some(BackdropKind::Color { color }) => {
                     TileSurface::Color {
                         color,
                     }
                 }
-                BackdropKind::Clear => {
+                Some(BackdropKind::Clear) => {
                     TileSurface::Clear
                 }
-                BackdropKind::Image => {
+                None => {
                     // This should be prevented by the is_simple_prim check above.
                     unreachable!();
                 }
@@ -1807,42 +1807,29 @@ impl ::std::fmt::Debug for RecordedDirtyRegion {
 }
 
 #[derive(Debug, Copy, Clone)]
-enum BackdropKind {
+pub enum BackdropKind {
     Color {
         color: ColorF,
     },
     Clear,
-    Image,
-}
-
-impl BackdropKind {
-    /// Returns true if the compositor can directly draw this backdrop.
-    fn can_be_promoted_to_compositor_surface(&self) -> bool {
-        match self {
-            BackdropKind::Color { .. } | BackdropKind::Clear => true,
-            BackdropKind::Image => false,
-        }
-    }
 }
 
 /// Stores information about the calculated opaque backdrop of this slice.
 #[derive(Debug, Copy, Clone)]
-struct BackdropInfo {
+pub struct BackdropInfo {
     /// The picture space rectangle that is known to be opaque. This is used
     /// to determine where subpixel AA can be used, and where alpha blending
     /// can be disabled.
-    rect: PictureRect,
+    pub opaque_rect: PictureRect,
     /// Kind of the backdrop
-    kind: BackdropKind,
+    pub kind: Option<BackdropKind>,
 }
 
 impl BackdropInfo {
     fn empty() -> Self {
         BackdropInfo {
-            rect: PictureRect::zero(),
-            kind: BackdropKind::Color {
-                color: ColorF::BLACK,
-            },
+            opaque_rect: PictureRect::zero(),
+            kind: None,
         }
     }
 }
@@ -2215,7 +2202,7 @@ pub struct TileCacheInstance {
     /// fine to clear the tiles to this and allow subpixel text on the first slice.
     pub background_color: Option<ColorF>,
     /// Information about the calculated backdrop content of this cache.
-    backdrop: BackdropInfo,
+    pub backdrop: BackdropInfo,
     /// The allowed subpixel mode for this surface, which depends on the detected
     /// opacity of the background.
     pub subpixel_mode: SubpixelMode,
@@ -2830,7 +2817,7 @@ impl TileCacheInstance {
         image_instances: &ImageInstanceStorage,
         surface_stack: &[SurfaceIndex],
         composite_state: &mut CompositeState,
-    ) -> bool {
+    ) -> Option<PrimitiveVisibilityFlags> {
         // This primitive exists on the last element on the current surface stack.
         let prim_surface_index = *surface_stack.last().unwrap();
 
@@ -2838,7 +2825,7 @@ impl TileCacheInstance {
         // is no need to add it to any primitive dependencies.
         let prim_clip_chain = match prim_clip_chain {
             Some(prim_clip_chain) => prim_clip_chain,
-            None => return false,
+            None => return None,
         };
 
         self.map_local_to_surface.set_target_spatial_node(
@@ -2849,12 +2836,12 @@ impl TileCacheInstance {
         // Map the primitive local rect into picture space.
         let prim_rect = match self.map_local_to_surface.map(&local_prim_rect) {
             Some(rect) => rect,
-            None => return false,
+            None => return None,
         };
 
         // If the rect is invalid, no need to create dependencies.
         if prim_rect.size.is_empty_or_negative() {
-            return false;
+            return None;
         }
 
         // If the primitive is directly drawn onto this picture cache surface, then
@@ -2894,7 +2881,7 @@ impl TileCacheInstance {
                         rect.inflate(surface.inflation_factor, surface.inflation_factor)
                     }
                     None => {
-                        return false;
+                        return None;
                     }
                 };
 
@@ -2910,7 +2897,7 @@ impl TileCacheInstance {
         // If the primitive is outside the tiling rects, it's known to not
         // be visible.
         if p0.x == p1.x || p0.y == p1.y {
-            return false;
+            return None;
         }
 
         // Build the list of resources that this primitive has dependencies on.
@@ -2975,7 +2962,10 @@ impl TileCacheInstance {
                         _ => unreachable!(),
                     };
                     if color.a >= 1.0 {
-                        backdrop_candidate = Some(BackdropKind::Color { color });
+                        backdrop_candidate = Some(BackdropInfo {
+                            opaque_rect: pic_clip_rect,
+                            kind: Some(BackdropKind::Color { color }),
+                        });
                     }
                 } else {
                     let opacity_binding = &opacity_binding_store[opacity_binding_index];
@@ -2997,9 +2987,17 @@ impl TileCacheInstance {
 
                 if opacity_binding_index == OpacityBindingIndex::INVALID {
                     if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
-                        // If this image is opaque, it can be considered as a possible opaque backdrop
-                        if image_properties.descriptor.is_opaque() {
-                            backdrop_candidate = Some(BackdropKind::Image);
+                        // For an image to be a possible opaque backdrop, it must:
+                        // - Have a valid, opaque image descriptor
+                        // - Not use tiling (since they can fail to draw)
+                        // - Not having any spacing / padding
+                        if image_properties.descriptor.is_opaque() &&
+                           image_properties.tiling.is_none() &&
+                           image_data.tile_spacing == LayoutSize::zero() {
+                            backdrop_candidate = Some(BackdropInfo {
+                                opaque_rect: pic_clip_rect,
+                                kind: None,
+                            });
                         }
                     }
                 } else {
@@ -3209,7 +3207,7 @@ impl TileCacheInstance {
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain => {
                 // Early exit to ensure this doesn't get added as a dependency on the tile.
-                return false;
+                return None;
             }
             PrimitiveInstanceKind::TextRun { data_handle, .. } => {
                 // Only do these checks if we haven't already disabled subpx
@@ -3229,13 +3227,16 @@ impl TileCacheInstance {
                     // correctly determined as we recurse through pictures in take_context.
                     if on_picture_surface
                         && subpx_requested
-                        && !self.backdrop.rect.contains_rect(&pic_clip_rect) {
+                        && !self.backdrop.opaque_rect.contains_rect(&pic_clip_rect) {
                         self.subpixel_mode = SubpixelMode::Deny;
                     }
                 }
             }
             PrimitiveInstanceKind::Clear { .. } => {
-                backdrop_candidate = Some(BackdropKind::Clear);
+                backdrop_candidate = Some(BackdropInfo {
+                    opaque_rect: pic_clip_rect,
+                    kind: Some(BackdropKind::Clear),
+                });
             }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
@@ -3249,16 +3250,18 @@ impl TileCacheInstance {
 
         // If this primitive considers itself a backdrop candidate, apply further
         // checks to see if it matches all conditions to be a backdrop.
+        let mut vis_flags = PrimitiveVisibilityFlags::empty();
+
         if let Some(backdrop_candidate) = backdrop_candidate {
-            let is_suitable_backdrop = match backdrop_candidate {
-                BackdropKind::Clear => {
+            let is_suitable_backdrop = match backdrop_candidate.kind {
+                Some(BackdropKind::Clear) => {
                     // Clear prims are special - they always end up in their own slice,
                     // and always set the backdrop. In future, we hope to completely
                     // remove clear prims, since they don't integrate with the compositing
                     // system cleanly.
                     true
                 }
-                BackdropKind::Image | BackdropKind::Color { .. } => {
+                Some(BackdropKind::Color { .. }) | None => {
                     // Check a number of conditions to see if we can consider this
                     // primitive as an opaque backdrop rect. Several of these are conservative
                     // checks and could be relaxed in future. However, these checks
@@ -3281,12 +3284,25 @@ impl TileCacheInstance {
             };
 
             if is_suitable_backdrop
-                && !prim_clip_chain.needs_mask
-                && pic_clip_rect.contains_rect(&self.backdrop.rect) {
-                self.backdrop = BackdropInfo {
-                    rect: pic_clip_rect,
-                    kind: backdrop_candidate,
-                };
+                && self.external_surfaces.is_empty()
+                && !prim_clip_chain.needs_mask {
+
+                if backdrop_candidate.opaque_rect.contains_rect(&self.backdrop.opaque_rect) {
+                    self.backdrop.opaque_rect = backdrop_candidate.opaque_rect;
+                }
+
+                if let Some(kind) = backdrop_candidate.kind {
+                    if backdrop_candidate.opaque_rect.contains_rect(&self.local_rect) {
+                        // If we have a color backdrop, mark the visibility flags
+                        // of the primitive so it is skipped during batching (and
+                        // also clears any previous primitives).
+                        if let BackdropKind::Color { .. } = kind {
+                            vis_flags |= PrimitiveVisibilityFlags::IS_BACKDROP;
+                        }
+
+                        self.backdrop.kind = Some(kind);
+                    }
+                }
             }
         }
 
@@ -3312,7 +3328,7 @@ impl TileCacheInstance {
             }
         }
 
-        true
+        Some(vis_flags)
     }
 
     /// Print debug information about this picture cache to a tree printer.
@@ -3380,8 +3396,8 @@ impl TileCacheInstance {
 
         // Register the opaque region of this tile cache as an occluder, which
         // is used later in the frame to occlude other tiles.
-        if self.backdrop.rect.is_well_formed_and_nonempty() {
-            let backdrop_rect = self.backdrop.rect
+        if self.backdrop.opaque_rect.is_well_formed_and_nonempty() {
+            let backdrop_rect = self.backdrop.opaque_rect
                 .intersection(&self.local_rect)
                 .and_then(|r| {
                     r.intersection(&self.local_clip_rect)
