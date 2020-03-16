@@ -225,7 +225,7 @@ class ResponsePanel extends Component {
         },
         header: sectionName,
         id: "jsonpScopeName",
-        opened: !!targetSearchResult,
+        opened: !!targetSearchResult || filterText,
         shouldOpen: item => {
           const { currentOpen } = this.state;
           if (typeof currentOpen == "undefined" && item.id === items[0].id) {
@@ -294,7 +294,7 @@ class ResponsePanel extends Component {
         ),
       },
       header: RESPONSE_PAYLOAD,
-      id: "paramsPostPayload",
+      id: "responsePayload",
       opened: !!targetSearchResult,
       shouldOpen: item => {
         const { currentOpen } = this.state;
@@ -330,6 +330,7 @@ class ResponsePanel extends Component {
             type: "filter",
             onChange: filter => this.setState({ filterText: filter }),
             placeholder: JSON_FILTER_TEXT,
+            value: filterText,
           })
         ),
       Accordion({ items })
