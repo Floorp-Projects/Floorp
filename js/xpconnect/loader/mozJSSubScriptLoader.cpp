@@ -71,9 +71,9 @@ class MOZ_STACK_CLASS LoadSubScriptOptions : public OptionsBase {
 #define LOAD_ERROR_NOSPEC "Failed to get URI spec.  This is bad."
 #define LOAD_ERROR_CONTENTTOOBIG "ContentLength is too large"
 
-mozJSSubScriptLoader::mozJSSubScriptLoader() {}
+mozJSSubScriptLoader::mozJSSubScriptLoader() = default;
 
-mozJSSubScriptLoader::~mozJSSubScriptLoader() {}
+mozJSSubScriptLoader::~mozJSSubScriptLoader() = default;
 
 NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 

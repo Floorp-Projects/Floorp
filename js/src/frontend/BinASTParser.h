@@ -69,7 +69,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
                Handle<BaseScript*> lazyScript = nullptr)
       : BinASTParserPerTokenizer<Tok>(cx, compilationInfo, options,
                                       sourceObject, lazyScript) {}
-  ~BinASTParser() {}
+  ~BinASTParser() = default;
 
  protected:
   // BinASTParserBase fields.

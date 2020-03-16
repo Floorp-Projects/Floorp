@@ -62,7 +62,7 @@ class AtomicRefCounted {
   static const MozRefCountType DEAD = ~MozRefCountType(0xffff) | 0xdead;
 
  protected:
-  AtomicRefCounted() : mRefCnt(0) {}
+  AtomicRefCounted() = default;
   ~AtomicRefCounted() { MOZ_ASSERT(mRefCnt == DEAD); }
 
  public:
@@ -83,7 +83,7 @@ class AtomicRefCounted {
   }
 
  private:
-  mutable mozilla::Atomic<MozRefCountType> mRefCnt;
+  mutable mozilla::Atomic<MozRefCountType> mRefCnt{0};
 };
 
 }  // namespace js

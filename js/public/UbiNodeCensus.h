@@ -94,8 +94,8 @@ using CountBasePtr = js::UniquePtr<CountBase, CountDeleter>;
 
 // Abstract base class for CountType nodes.
 struct CountType {
-  explicit CountType() {}
-  virtual ~CountType() {}
+  explicit CountType() = default;
+  virtual ~CountType() = default;
 
   // Destruct a count tree node that this type instance constructed.
   virtual void destructCount(CountBase& count) = 0;
@@ -130,7 +130,7 @@ class CountBase {
   CountType& type;
 
  protected:
-  ~CountBase() {}
+  ~CountBase() = default;
 
  public:
   explicit CountBase(CountType& type)

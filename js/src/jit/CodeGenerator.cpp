@@ -390,7 +390,7 @@ class ArgSeq;
 template <>
 class ArgSeq<> {
  public:
-  ArgSeq() {}
+  ArgSeq() = default;
 
   inline void generate(CodeGenerator* codegen) const {}
 
@@ -1227,7 +1227,7 @@ class OutOfLineTestObjectWithLabels : public OutOfLineTestObject {
   Label label2_;
 
  public:
-  OutOfLineTestObjectWithLabels() {}
+  OutOfLineTestObjectWithLabels() = default;
 
   Label* label1() { return &label1_; }
   Label* label2() { return &label2_; }

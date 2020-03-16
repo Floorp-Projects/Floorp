@@ -44,7 +44,7 @@ class BackstagePass : public nsIGlobalObject,
       : mPrincipal(prin), mWrapper(nullptr) {}
 
  private:
-  virtual ~BackstagePass() {}
+  virtual ~BackstagePass() = default;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   XPCWrappedNative* mWrapper;
