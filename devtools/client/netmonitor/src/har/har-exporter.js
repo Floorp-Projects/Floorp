@@ -193,9 +193,7 @@ const HarExporter = {
   buildHarData: async function(options) {
     const { connector } = options;
     const { getTabTarget } = connector;
-    const {
-      form: { title, url },
-    } = getTabTarget();
+    const { title, url } = getTabTarget();
 
     // Disconnect from redux actions/store.
     connector.enableActions(false);
