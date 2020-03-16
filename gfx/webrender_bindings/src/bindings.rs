@@ -32,7 +32,7 @@ use num_cpus;
 use program_cache::{remove_disk_cache, WrProgramCache};
 use rayon;
 use swgl_bindings::SwCompositor;
-use thread_profiler::register_thread_with_profiler;
+use tracy_rs::register_thread_with_profiler;
 use webrender::{
     api::units::*, api::*, set_profiler_hooks, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
     BinaryRecorder, Compositor, CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap,

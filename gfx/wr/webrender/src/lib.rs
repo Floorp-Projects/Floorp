@@ -70,7 +70,7 @@ extern crate malloc_size_of_derive;
 #[macro_use]
 extern crate serde;
 #[macro_use]
-extern crate thread_profiler;
+extern crate tracy_rs;
 
 extern crate malloc_size_of;
 extern crate svg_fmt;

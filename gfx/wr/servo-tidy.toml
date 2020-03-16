@@ -9,7 +9,6 @@ packages = [
     "core-graphics",
     "core-text",
     "gl_generator",
-    "lazy_static",
     "percent-encoding",
     "rand",
     "rand_core",

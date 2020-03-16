@@ -112,7 +112,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::cell::RefCell;
-use thread_profiler::{register_thread_with_profiler, write_profile};
+use tracy_rs::register_thread_with_profiler;
 use time::precise_time_ns;
 
 cfg_if! {
@@ -2033,6 +2033,16 @@ impl Renderer {
         start_size: DeviceIntSize,
     ) -> Result<(Self, RenderApiSender), RendererError> {
         if !wr_has_been_initialized() {
+            // If the profiler feature is enabled, try to load the profiler shared library
+            // if the path was provided.
+            #[cfg(feature = "profiler")]
+            unsafe {
+                if let Ok(ref tracy_path) = std::env::var("WR_TRACY_PATH") {
+                    let ok = tracy_rs::load(tracy_path);
+                    println!("Load tracy from {} -> {}", tracy_path, ok);
+                }
+            }
+
             register_thread_with_profiler("Compositor".to_owned());
         }
 
@@ -3050,6 +3060,8 @@ impl Renderer {
         // just clear them and they will autimatically fire the Checkpoint::TransactionDropped
         // event. Otherwise they would just pile up in this vector forever.
         self.notifications.clear();
+
+        tracy_frame_marker!();
 
         result
     }
@@ -5936,10 +5948,6 @@ impl Renderer {
         }
 
         self.debug_flags = flags;
-    }
-
-    pub fn save_cpu_profile(&self, filename: &str) {
-        write_profile(filename);
     }
 
     fn draw_frame_debug_items(&mut self, items: &[DebugItem]) {
