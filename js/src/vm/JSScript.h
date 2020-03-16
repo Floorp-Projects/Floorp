@@ -2384,6 +2384,12 @@ setterLevel:                                                                  \
 
   inline JSScript* asJSScript();
 
+  template <XDRMode mode>
+  static XDRResult XDRLazyScriptData(XDRState<mode>* xdr,
+                                     HandleScriptSourceObject sourceObject,
+                                     Handle<BaseScript*> lazy,
+                                     bool hasFieldInitializer);
+
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
@@ -2420,7 +2426,7 @@ XDRResult XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 template <XDRMode mode>
 XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
                         HandleScriptSourceObject sourceObject,
-                        HandleFunction fun, MutableHandle<LazyScript*> lazy);
+                        HandleFunction fun, MutableHandle<BaseScript*> lazy);
 
 /*
  * Code any constant value.
@@ -3168,12 +3174,6 @@ class LazyScript : public BaseScript {
       const frontend::AtomVector& closedOverBindings,
       const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
       const SourceExtent& extent);
-
-  template <XDRMode mode>
-  static XDRResult XDRScriptData(XDRState<mode>* xdr,
-                                 HandleScriptSourceObject sourceObject,
-                                 Handle<LazyScript*> lazy,
-                                 bool hasFieldInitializer);
 };
 
 struct ScriptAndCounts {

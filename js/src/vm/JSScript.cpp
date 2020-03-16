@@ -243,10 +243,10 @@ template XDRResult js::XDRScriptConst(XDRState<XDR_DECODE>*,
 // Code LazyScript's closed over bindings.
 template <XDRMode mode>
 /* static */
-XDRResult LazyScript::XDRScriptData(XDRState<mode>* xdr,
-                                    HandleScriptSourceObject sourceObject,
-                                    Handle<LazyScript*> lazy,
-                                    bool hasFieldInitializers) {
+XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
+                                        HandleScriptSourceObject sourceObject,
+                                        Handle<BaseScript*> lazy,
+                                        bool hasFieldInitializers) {
   JSContext* cx = xdr->cx();
 
   RootedAtom atom(cx);
@@ -1297,7 +1297,7 @@ template <XDRMode mode>
 XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
                             HandleScriptSourceObject sourceObject,
                             HandleFunction fun,
-                            MutableHandle<LazyScript*> lazy) {
+                            MutableHandle<BaseScript*> lazy) {
   MOZ_ASSERT_IF(mode == XDR_DECODE, sourceObject);
 
   JSContext* cx = xdr->cx();
@@ -1348,19 +1348,19 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 
   bool hasFieldInitializers = fun->isClassConstructor();
 
-  MOZ_TRY(
-      LazyScript::XDRScriptData(xdr, sourceObject, lazy, hasFieldInitializers));
+  MOZ_TRY(BaseScript::XDRLazyScriptData(xdr, sourceObject, lazy,
+                                        hasFieldInitializers));
 
   return Ok();
 }
 
 template XDRResult js::XDRLazyScript(XDRState<XDR_ENCODE>*, HandleScope,
                                      HandleScriptSourceObject, HandleFunction,
-                                     MutableHandle<LazyScript*>);
+                                     MutableHandle<BaseScript*>);
 
 template XDRResult js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope,
                                      HandleScriptSourceObject, HandleFunction,
-                                     MutableHandle<LazyScript*>);
+                                     MutableHandle<BaseScript*>);
 
 void JSScript::setDefaultClassConstructorSpan(
     js::ScriptSourceObject* sourceObject, uint32_t start, uint32_t end,

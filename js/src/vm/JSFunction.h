@@ -743,12 +743,6 @@ class JSFunction : public js::NativeObject {
     return static_cast<JSScript*>(u.scripted.s.script_);
   }
 
-  js::LazyScript* lazyScript() const {
-    MOZ_ASSERT(hasBaseScript());
-    MOZ_ASSERT(u.scripted.s.script_);
-    return static_cast<js::LazyScript*>(u.scripted.s.script_);
-  }
-
   js::SelfHostedLazyScript* selfHostedLazyScript() const {
     MOZ_ASSERT(hasSelfHostedLazyScript());
     MOZ_ASSERT(u.scripted.s.selfHostedLazy_);
@@ -810,7 +804,7 @@ class JSFunction : public js::NativeObject {
 
   // Release the lazyScript() pointer while triggering barriers.
   void clearLazyScript() {
-    js::BaseScript::writeBarrierPre(lazyScript());
+    js::BaseScript::writeBarrierPre(baseScript());
     u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
   }
