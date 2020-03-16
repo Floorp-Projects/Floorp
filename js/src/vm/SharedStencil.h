@@ -244,9 +244,6 @@ enum class MutableScriptFlagsEnum : uint32_t {
 
   // Set if the script has opted into spew
   SpewEnabled = 1 << 27,
-
-  // Set if this is a lazy script.
-  IsLazyScript = 1 << 28,
 };
 
 class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
