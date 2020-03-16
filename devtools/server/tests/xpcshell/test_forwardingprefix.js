@@ -177,20 +177,25 @@ function TestForwardPrefix12OnlyRoot() {
 // the reply-sending code attaches the replying actor's name to the packet,
 // so simply matching the 'from' field in the reply ensures that we heard
 // from the right actor.
-function EchoActor(connection) {
-  this.conn = connection;
+const { Actor } = require("devtools/shared/protocol/Actor");
+class EchoActor extends Actor {
+  constructor(conn) {
+    super(conn);
+
+    this.typeName = "EchoActor";
+    this.requestTypes = {
+      echo: EchoActor.prototype.onEcho,
+    };
+  }
+
+  onEcho(request) {
+    /*
+     * Request packets are frozen. Copy request, so that
+     * DevToolsServerConnection.onPacket can attach a 'from' property.
+     */
+    return JSON.parse(JSON.stringify(request));
+  }
 }
-EchoActor.prototype.actorPrefix = "EchoActor";
-EchoActor.prototype.onEcho = function(request) {
-  /*
-   * Request packets are frozen. Copy request, so that
-   * DevToolsServerConnection.onPacket can attach a 'from' property.
-   */
-  return JSON.parse(JSON.stringify(request));
-};
-EchoActor.prototype.requestTypes = {
-  echo: EchoActor.prototype.onEcho,
-};
 
 function TestForwardPrefix12WithActor1() {
   const actor = new EchoActor(gSubconnection1);
