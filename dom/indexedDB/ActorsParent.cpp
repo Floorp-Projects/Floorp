@@ -19656,8 +19656,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   const StructuredCloneFile& file = files[index];
   MOZ_ASSERT(file.Type() == StructuredCloneFile::eStructuredClone);
 
-  const nsCOMPtr<nsIFile> nativeFile =
-      FileInfo::GetFileForFileInfo(file.FileInfo());
+  const nsCOMPtr<nsIFile> nativeFile = file.FileInfo().GetFileForFileInfo();
   if (NS_WARN_IF(!nativeFile)) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -23672,7 +23671,7 @@ CreateFileOp::CreateFileOp(Database* aDatabase,
 }
 
 nsresult CreateFileOp::CreateMutableFile(RefPtr<MutableFile>* aMutableFile) {
-  nsCOMPtr<nsIFile> file = FileInfo::GetFileForFileInfo(**mFileInfo);
+  nsCOMPtr<nsIFile> file = (*mFileInfo)->GetFileForFileInfo();
   if (NS_WARN_IF(!file)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
