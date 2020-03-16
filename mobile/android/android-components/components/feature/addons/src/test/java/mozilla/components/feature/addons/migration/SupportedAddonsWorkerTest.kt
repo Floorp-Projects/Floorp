@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
+import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.addons.migration.SupportedAddonsWorker.Companion.NOTIFICATION_TAG
@@ -27,10 +28,12 @@ import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class SupportedAddonsWorkerTest {
@@ -89,6 +92,26 @@ class SupportedAddonsWorkerTest {
 
             assertEquals(ListenableWorker.Result.success(), result)
             assertTrue(crashWasReported)
+        }
+    }
+
+    @Test
+    fun `doWork - will NOT pass any IOExceptions to the crashReporter`() {
+        val addonManager = mock<AddonManager>()
+        val worker = TestListenableWorkerBuilder<SupportedAddonsWorker>(testContext).build()
+        var crashWasReported = false
+        val crashReporter: ((Throwable) -> Unit) = { _ ->
+            crashWasReported = true
+        }
+
+        GlobalAddonDependencyProvider.initialize(addonManager, mock(), crashReporter)
+
+        runBlocking {
+            whenever(addonManager.getAddons()).thenThrow(AddonManagerException(IOException()))
+            val result = worker.startWork().await()
+
+            assertEquals(ListenableWorker.Result.success(), result)
+            assertFalse(crashWasReported)
         }
     }
 
