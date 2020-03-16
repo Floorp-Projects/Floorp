@@ -208,6 +208,8 @@ class ParamsPanel extends Component {
       error = REQUEST_TRUNCATED;
     }
 
+    let openPayload = true;
+
     if (formDataSections && formDataSections.length === 0 && postData) {
       if (!error) {
         const json = this.parseJSON(postData);
@@ -224,6 +226,9 @@ class ParamsPanel extends Component {
             id: "jsonScopeName",
             opened: true,
           });
+          // Keep the payload closed by default for perf reasons
+          // since the json is avaliable
+          openPayload = false;
         }
       }
     }
@@ -242,7 +247,8 @@ class ParamsPanel extends Component {
         },
         header: PARAMS_POST_PAYLOAD,
         id: "paramsPostPayload",
-        opened: true,
+        opened: openPayload,
+        shouldOpen: () => openPayload,
       });
     }
 
