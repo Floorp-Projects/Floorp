@@ -68,7 +68,7 @@ class ReftestRunner(MozbuildObject):
         }
 
         args.extraProfileFiles.append(os.path.join(self.topobjdir, "dist", "plugins"))
-        args.symbolsPath = os.path.join(self.topobjdir, "crashreporter-symbols")
+        args.symbolsPath = os.path.join(self.topobjdir, "dist", "crashreporter-symbols")
         args.sandboxReadWhitelist.extend([self.topsrcdir, self.topobjdir])
 
         if not args.tests:
