@@ -161,8 +161,8 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
 });
 
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this.before("event1", this.onEvent1.bind(this));
     this.before("event2", this.onEvent2a.bind(this));
@@ -339,8 +339,8 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
 });
 
 class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this.actorID = "root";
     // Root actor owns itself.
     this.manage(this);
@@ -352,7 +352,11 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 
   getTemporaryChild(id) {
     if (!this._temporaryHolder) {
-      this._temporaryHolder = new protocol.Front(this.conn);
+      this._temporaryHolder = new protocol.Front(
+        this.conn,
+        this.targetFront,
+        this
+      );
       this._temporaryHolder.actorID = this.actorID + "_temp";
       this.manage(this._temporaryHolder);
     }
@@ -377,6 +381,7 @@ function expectRootChildren(size) {
     Assert.equal(childFront._poolMap.size, 0);
   }
 }
+protocol.registerFront(RootFront);
 
 function childrenOfType(pool, type) {
   const children = [...rootFront.poolChildren()];
@@ -399,7 +404,7 @@ add_task(async function() {
   });
   Assert.equal(applicationType, "xpcshell-tests");
 
-  rootFront = new RootFront(client);
+  rootFront = client.mainRoot;
 
   await testSimpleChildren(trace);
   await testDetail(trace);

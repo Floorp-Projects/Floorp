@@ -11,6 +11,7 @@ var {
   registeredTypes,
   registerFront,
   getFront,
+  createRootFront,
 } = require("devtools/shared/protocol/types");
 var { method } = require("devtools/shared/protocol/utils");
 var { Front } = require("devtools/shared/protocol/Front");
@@ -35,6 +36,7 @@ exports.Option = Option;
 exports.RetVal = RetVal;
 exports.registerFront = registerFront;
 exports.getFront = getFront;
+exports.createRootFront = createRootFront;
 exports.method = method;
 
 exports.dumpActorSpec = function(type) {

@@ -55,6 +55,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
     this.manage(this);
   }
 }
+protocol.registerFront(RootFront);
 
 function run_test() {
   if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
@@ -70,7 +71,7 @@ function run_test() {
   let rootFront;
 
   client.connect().then(function onConnect() {
-    rootFront = new RootFront(client);
+    rootFront = client.mainRoot;
 
     rootFront
       .simpleReturn()
