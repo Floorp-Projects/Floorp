@@ -7,24 +7,27 @@
 
 var gClient, gActorId;
 
-function TestActor(conn) {
-  this.conn = conn;
-}
-TestActor.prototype = {
-  actorPrefix: "test",
+const { Actor } = require("devtools/shared/protocol/Actor");
 
-  hello: function() {
+class TestActor extends Actor {
+  constructor(conn) {
+    super(conn);
+
+    this.typeName = "test";
+    this.requestTypes = {
+      hello: this.hello,
+      error: this.error,
+    };
+  }
+
+  hello() {
     return { hello: "world" };
-  },
+  }
 
-  error: function() {
+  error() {
     return { error: "code", message: "human message" };
-  },
-};
-TestActor.prototype.requestTypes = {
-  hello: TestActor.prototype.hello,
-  error: TestActor.prototype.error,
-};
+  }
+}
 
 function run_test() {
   ActorRegistry.addGlobalActor(

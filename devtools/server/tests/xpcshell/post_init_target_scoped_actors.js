@@ -3,19 +3,21 @@
 
 "use strict";
 
-// Uses the same scope as test_add_actors.js
-/* import-globals-from head_dbg.js */
+const { Actor } = require("devtools/shared/protocol/Actor");
 
-function PostInitTargetScopedActor(connection) {}
+class PostInitTargetScopedActor extends Actor {
+  constructor(conn) {
+    super(conn);
 
-PostInitTargetScopedActor.prototype = {
-  actorPostfix: "postInitTargetScoped",
-  onPing(request) {
+    this.typeName = "postInitTargetScoped";
+    this.requestTypes = {
+      ping: this.onPing,
+    };
+  }
+
+  onPing() {
     return { message: "pong" };
-  },
-};
+  }
+}
 
-PostInitTargetScopedActor.prototype.requestTypes = {
-  ping: PostInitTargetScopedActor.prototype.onPing,
-};
 exports.PostInitTargetScopedActor = PostInitTargetScopedActor;

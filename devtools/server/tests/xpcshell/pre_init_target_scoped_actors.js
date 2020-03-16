@@ -3,19 +3,21 @@
 
 "use strict";
 
-// Uses the same scope as test_add_actors.js
-/* import-globals-from head_dbg.js */
+const { Actor } = require("devtools/shared/protocol/Actor");
 
-function PreInitTargetScopedActor(connection) {}
+class PreInitTargetScopedActor extends Actor {
+  constructor(conn) {
+    super(conn);
 
-PreInitTargetScopedActor.prototype = {
-  actorPrefix: "preInitTargetScoped",
-  onPing(request) {
+    this.typeName = "preInitTargetScoped";
+    this.requestTypes = {
+      ping: this.onPing,
+    };
+  }
+
+  onPing() {
     return { message: "pong" };
-  },
-};
+  }
+}
 
-PreInitTargetScopedActor.prototype.requestTypes = {
-  ping: PreInitTargetScopedActor.prototype.onPing,
-};
 exports.PreInitTargetScopedActor = PreInitTargetScopedActor;

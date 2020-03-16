@@ -17,24 +17,25 @@ function run_test() {
 }
 
 /** * Sample Bulk Actor ***/
+const { Actor } = require("devtools/shared/protocol/Actor");
+class TestBulkActor extends Actor {
+  constructor(conn) {
+    super(conn);
 
-function TestBulkActor() {}
+    this.typeName = "testBulk";
+    this.requestTypes = {
+      jsonReply: this.jsonReply,
+    };
+  }
 
-TestBulkActor.prototype = {
-  actorPrefix: "testBulk",
-
-  jsonReply: function({ length, reader, reply, done }) {
+  jsonReply({ length, reader, reply, done }) {
     Assert.equal(length, really_long().length);
 
     return {
       allDone: true,
     };
-  },
-};
-
-TestBulkActor.prototype.requestTypes = {
-  jsonReply: TestBulkActor.prototype.jsonReply,
-};
+  }
+}
 
 function add_test_bulk_actor() {
   ActorRegistry.addGlobalActor(

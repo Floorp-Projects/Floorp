@@ -37,22 +37,25 @@ add_task(async function() {
 
         DevToolsServer.init();
 
-        function TestActor() {
-          dump("instantiate test actor\n");
-        }
-        TestActor.prototype = {
-          actorPrefix: "test",
-
-          destroy: function() {
-            sendAsyncMessage("test-actor-destroyed", null);
-          },
-          hello: function() {
+        const { Actor } = require("devtools/shared/protocol/Actor");
+        class TestActor extends Actor {
+          constructor(conn, tab) {
+            super(conn);
+            dump("instantiate test actor\n");
+            this.typeName = "test";
+            this.requestTypes = {
+              hello: this.hello,
+            };
+          }
+          hello() {
             return { msg: "world" };
-          },
-        };
-        TestActor.prototype.requestTypes = {
-          hello: TestActor.prototype.hello,
-        };
+          }
+
+          destroy() {
+            sendAsyncMessage("test-actor-destroyed", null);
+          }
+        }
+
         ActorRegistry.addTargetScopedActor(
           {
             constructorName: "TestActor",

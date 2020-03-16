@@ -3,24 +3,26 @@
 
 "use strict";
 
-function TestActor1(connection, tab) {
-  this.conn = connection;
-  this.tab = tab;
+const { Actor } = require("devtools/shared/protocol/Actor");
+
+class TestActor1 extends Actor {
+  constructor(conn, tab) {
+    super(conn);
+    this.tab = tab;
+
+    this.typeName = "testOne";
+    this.requestTypes = {
+      ping: TestActor1.prototype.onPing,
+    };
+  }
+
+  grip() {
+    return { actor: this.actorID, test: "TestActor1" };
+  }
+
+  onPing() {
+    return { pong: "pong" };
+  }
 }
 
-TestActor1.prototype = {
-  actorPrefix: "testOne",
-
-  grip: function TA1_grip() {
-    return { actor: this.actorID, test: "TestActor1" };
-  },
-
-  onPing: function TA1_onPing() {
-    return { pong: "pong" };
-  },
-};
-
-TestActor1.prototype.requestTypes = {
-  ping: TestActor1.prototype.onPing,
-};
 exports.TestActor1 = TestActor1;
