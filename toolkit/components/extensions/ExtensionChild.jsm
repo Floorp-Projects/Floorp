@@ -1064,11 +1064,13 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
    *     `name` member. This may contain dots, e.g. "storage.local".
    * @param {string} name The name of the method or property.
    * @param {ChildAPIManager} childApiManager The owner of this implementation.
+   * @param {boolean} alreadyLogged Whether the child already logged the event.
    */
-  constructor(namespace, name, childApiManager) {
+  constructor(namespace, name, childApiManager, alreadyLogged = false) {
     super();
     this.path = `${namespace}.${name}`;
     this.childApiManager = childApiManager;
+    this.alreadyLogged = alreadyLogged;
   }
 
   revoke() {
@@ -1098,7 +1100,8 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     return this.childApiManager.callParentAsyncFunction(
       this.path,
       args,
-      callback
+      callback,
+      { alreadyLogged: this.alreadyLogged }
     );
   }
 
@@ -1120,6 +1123,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
       listenerId: id,
       path: this.path,
       args,
+      alreadyLogged: this.alreadyLogged,
     });
   }
 
@@ -1139,6 +1143,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
       childId: this.childApiManager.id,
       listenerId: id,
       path: this.path,
+      alreadyLogged: this.alreadyLogged,
     });
   }
 
@@ -1353,7 +1358,7 @@ class ChildAPIManager {
     let name = path.pop();
     let namespace = path.join(".");
 
-    let impl = new ProxyAPIImplementation(namespace, name, this);
+    let impl = new ProxyAPIImplementation(namespace, name, this, true);
     return {
       addListener: (listener, ...args) => impl.addListener(listener, args),
       removeListener: listener => impl.removeListener(listener),
