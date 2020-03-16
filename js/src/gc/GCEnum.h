@@ -138,9 +138,9 @@ enum class ZealMode {
   _(DebuggerOnPopHandler)                  \
   _(RealmInstrumentation)                  \
   _(ICUObject)                             \
-  _(FinalizationGroupRecordVector)         \
-  _(FinalizationGroupRecordSet)            \
-  _(FinalizationGroupRegistrations)        \
+  _(FinalizationRegistryRecordVector)      \
+  _(FinalizationRegistryRecordSet)         \
+  _(FinalizationRegistryRegistrations)     \
   _(FinalizationRecordVector)              \
   _(ZoneAllocPolicy)                       \
   _(SharedArrayRawBuffer)                  \

@@ -3139,11 +3139,11 @@ extern JS_PUBLIC_API bool IsMaybeWrappedSavedFrame(JSObject* obj);
 extern JS_PUBLIC_API bool IsUnwrappedSavedFrame(JSObject* obj);
 
 /**
- * Clean up a finalization group in response to the engine calling the
- * HostCleanupFinalizationGroup callback.
+ * Clean up a finalization registry in response to the engine calling the
+ * HostCleanupFinalizationRegistry callback.
  */
-extern JS_PUBLIC_API bool CleanupQueuedFinalizationGroup(JSContext* cx,
-                                                         HandleObject group);
+extern JS_PUBLIC_API bool CleanupQueuedFinalizationRegistry(
+    JSContext* cx, HandleObject registry);
 
 } /* namespace JS */
 

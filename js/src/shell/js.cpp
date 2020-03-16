@@ -651,7 +651,7 @@ ShellContext::ShellContext(JSContext* cx)
       errFilePtr(nullptr),
       outFilePtr(nullptr),
       offThreadMonitor(mutexid::ShellOffThreadState),
-      finalizationGroupsToCleanUp(cx) {}
+      finalizationRegistriesToCleanUp(cx) {}
 
 ShellContext::~ShellContext() { MOZ_ASSERT(offThreadJobs.empty()); }
 
@@ -1028,35 +1028,36 @@ static MOZ_MUST_USE bool RunModule(JSContext* cx, const char* filename,
   return JS_CallFunction(cx, nullptr, importFun, args, &value);
 }
 
-static void ShellCleanupFinalizationGroupCallback(JSObject* group, void* data) {
+static void ShellCleanupFinalizationRegistryCallback(JSObject* registry,
+                                                     void* data) {
   // In the browser this queues a task. Shell jobs correspond to microtasks so
   // we arrange for cleanup to happen after all jobs/microtasks have run.
   auto sc = static_cast<ShellContext*>(data);
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!sc->finalizationGroupsToCleanUp.append(group)) {
-    oomUnsafe.crash("ShellCleanupFinalizationGroupCallback");
+  if (!sc->finalizationRegistriesToCleanUp.append(registry)) {
+    oomUnsafe.crash("ShellCleanupFinalizationRegistryCallback");
   }
 }
 
-// Run any FinalizationGroup cleanup tasks and return whether any ran.
-static bool MaybeRunFinalizationGroupCleanupTasks(JSContext* cx) {
+// Run any FinalizationRegistry cleanup tasks and return whether any ran.
+static bool MaybeRunFinalizationRegistryCleanupTasks(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   MOZ_ASSERT(!sc->quitting);
 
-  Rooted<ShellContext::ObjectVector> groups(cx);
-  std::swap(groups.get(), sc->finalizationGroupsToCleanUp.get());
+  Rooted<ShellContext::ObjectVector> registries(cx);
+  std::swap(registries.get(), sc->finalizationRegistriesToCleanUp.get());
 
   bool ranTasks = false;
 
-  RootedObject group(cx);
-  for (const auto& g : groups) {
-    group = g;
+  RootedObject registry(cx);
+  for (const auto& r : registries) {
+    registry = r;
 
-    AutoRealm ar(cx, group);
+    AutoRealm ar(cx, registry);
 
     {
       AutoReportException are(cx);
-      mozilla::Unused << JS::CleanupQueuedFinalizationGroup(cx, group);
+      mozilla::Unused << JS::CleanupQueuedFinalizationRegistry(cx, registry);
     }
 
     ranTasks = true;
@@ -1096,8 +1097,8 @@ static void RunShellJobs(JSContext* cx) {
       return;
     }
 
-    // Run tasks (only finalization group clean tasks are possible).
-    bool ranTasks = MaybeRunFinalizationGroupCleanupTasks(cx);
+    // Run tasks (only finalization registry clean tasks are possible).
+    bool ranTasks = MaybeRunFinalizationRegistryCleanupTasks(cx);
     if (!ranTasks) {
       break;
     }
@@ -4121,8 +4122,8 @@ static void WorkerMain(WorkerInput* input) {
 
   js::UseInternalJobQueues(cx);
 
-  JS::SetHostCleanupFinalizationGroupCallback(
-      cx, ShellCleanupFinalizationGroupCallback, sc);
+  JS::SetHostCleanupFinalizationRegistryCallback(
+      cx, ShellCleanupFinalizationRegistryCallback, sc);
 
   if (!JS::InitSelfHostedCode(cx)) {
     return;
@@ -11535,8 +11536,8 @@ int main(int argc, char** argv, char** envp) {
 
   js::UseInternalJobQueues(cx);
 
-  JS::SetHostCleanupFinalizationGroupCallback(
-      cx, ShellCleanupFinalizationGroupCallback, sc.get());
+  JS::SetHostCleanupFinalizationRegistryCallback(
+      cx, ShellCleanupFinalizationRegistryCallback, sc.get());
 
   auto shutdownShellThreads = MakeScopeExit([cx] {
     KillWatchdog(cx);

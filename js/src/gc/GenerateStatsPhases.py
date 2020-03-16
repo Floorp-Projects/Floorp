@@ -142,7 +142,7 @@ PhaseKindGraphRoots = [
             PhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
             PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
             PhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
-            PhaseKind("SWEEP_FINALIZATION_GROUPS", "Sweep FinalizationGroups", 74, [
+            PhaseKind("SWEEP_FINALIZATION_REGISTRIES", "Sweep FinalizationRegistries", 74, [
                 UnmarkGrayPhaseKind
             ]),
             PhaseKind("SWEEP_WEAKREFS", "Sweep WeakRefs", 75),
