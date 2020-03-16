@@ -10668,12 +10668,12 @@ FileHandleThreadPool* GetFileHandleThreadPool() {
   return gFileHandleThreadPool;
 }
 
-nsresult AsyncDeleteFile(FileManager* aFileManager, int64_t aFileId) {
+nsresult FileManager::AsyncDeleteFile(int64_t aFileId) {
   AssertIsOnBackgroundThread();
 
   QuotaClient* quotaClient = QuotaClient::GetInstance();
   if (quotaClient) {
-    nsresult rv = quotaClient->AsyncDeleteFile(aFileManager, aFileId);
+    nsresult rv = quotaClient->AsyncDeleteFile(this, aFileId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

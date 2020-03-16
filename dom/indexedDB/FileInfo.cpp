@@ -121,7 +121,7 @@ void FileInfo::Cleanup() {
 
   int64_t id = Id();
 
-  if (NS_FAILED(AsyncDeleteFile(mFileManager, id))) {
+  if (NS_FAILED(mFileManager->AsyncDeleteFile(id))) {
     NS_WARNING("Failed to delete file asynchronously!");
   }
 }
