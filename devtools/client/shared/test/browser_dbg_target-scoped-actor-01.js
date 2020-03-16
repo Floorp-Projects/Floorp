@@ -33,7 +33,7 @@ async function testTargetScopedActor(client, form) {
   ok(form.testOneActor, "Found the test target-scoped actor.");
   ok(
     form.testOneActor.includes("testOne"),
-    "testOneActor's actorPrefix should be used."
+    "testOneActor's typeName should be used."
   );
 
   const response = await client.request({
