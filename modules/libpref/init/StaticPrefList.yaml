@@ -4429,7 +4429,7 @@
 
 #ifdef NIGHTLY_BUILD
   # Experimental support for weak references in JavaScript (WeakRef and
-  # FinalizationGroup).
+  # FinalizationRegistry).
 - name: javascript.options.experimental.weakrefs
   type: RelaxedAtomicBool
   value: false

@@ -395,14 +395,14 @@ typedef void (*JSWeakPointerCompartmentCallback)(JSContext* cx,
                                                  void* data);
 
 /*
- * This is called to tell the embedding that the FinalizationGroup object
- * |group| has cleanup work, and that then engine should be called back at an
+ * This is called to tell the embedding that the FinalizationRegistry object
+ * |registry| has cleanup work, and that then engine should be called back at an
  * appropriate later time to perform this cleanup.
  *
  * This callback must not do anything that could cause GC.
  */
-using JSHostCleanupFinalizationGroupCallback = void (*)(JSObject* group,
-                                                        void* data);
+using JSHostCleanupFinalizationRegistryCallback = void (*)(JSObject* registry,
+                                                           void* data);
 
 /**
  * Each external string has a pointer to JSExternalStringCallbacks. Embedders
@@ -1105,8 +1105,8 @@ extern JS_PUBLIC_API bool IsIdleGCTaskNeeded(JSRuntime* rt);
 
 extern JS_PUBLIC_API void RunIdleTimeGCTask(JSRuntime* rt);
 
-extern JS_PUBLIC_API void SetHostCleanupFinalizationGroupCallback(
-    JSContext* cx, JSHostCleanupFinalizationGroupCallback cb, void* data);
+extern JS_PUBLIC_API void SetHostCleanupFinalizationRegistryCallback(
+    JSContext* cx, JSHostCleanupFinalizationRegistryCallback cb, void* data);
 
 /**
  * Clear kept alive objects in JS WeakRef.

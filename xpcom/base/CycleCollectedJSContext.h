@@ -262,8 +262,9 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   class SavedMicroTaskQueue;
   js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext*) override;
 
-  static void CleanupFinalizationGroupCallback(JSObject* aGroup, void* aData);
-  void QueueFinalizationGroupForCleanup(JSObject* aGroup);
+  static void CleanupFinalizationRegistryCallback(JSObject* aRegistry,
+                                                  void* aData);
+  void QueueFinalizationRegistryForCleanup(JSObject* aRegistry);
 
  private:
   CycleCollectedJSRuntime* mRuntime;
@@ -339,14 +340,14 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
     PromiseArray mUnhandledRejections;
   };
 
-  // Support for JS FinalizationGroup objects.
+  // Support for JS FinalizationRegistry objects.
   //
   // These allow a JS callback to be registered that is called when an object
   // dies. The browser part of the implementation keeps a vector of
-  // FinalizationGroups with pending callbacks here.
-  friend class CleanupFinalizationGroupsRunnable;
+  // FinalizationRegistries with pending callbacks here.
+  friend class CleanupFinalizationRegistriesRunnable;
   using ObjectVector = JS::GCVector<JSObject*, 0, InfallibleAllocPolicy>;
-  JS::PersistentRooted<ObjectVector> mFinalizationGroupsToCleanUp;
+  JS::PersistentRooted<ObjectVector> mFinalizationRegistriesToCleanUp;
 };
 
 class MOZ_STACK_CLASS nsAutoMicroTask {

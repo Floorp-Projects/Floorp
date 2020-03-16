@@ -24,7 +24,7 @@
 #  include "builtin/intl/PluralRules.h"
 #  include "builtin/intl/RelativeTimeFormat.h"
 #endif
-#include "builtin/FinalizationGroupObject.h"
+#include "builtin/FinalizationRegistryObject.h"
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
@@ -205,7 +205,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
       return !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
 
     case JSProto_WeakRef:
-    case JSProto_FinalizationGroup:
+    case JSProto_FinalizationRegistry:
       return !cx->realm()->creationOptions().getWeakRefsEnabled();
 
     case JSProto_AggregateError:

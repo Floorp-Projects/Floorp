@@ -319,9 +319,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
       js::Vector<js::AccessorShape*, 0, js::SystemAllocPolicy>;
   js::ZoneData<NurseryShapeVector> nurseryShapes_;
 
-  // A map from finalization group targets to a list of finalization records
-  // representing groups that the target is registered with and their associated
-  // held values.
+  // A map from finalization registry targets to a list of finalization records
+  // representing registries that the target is registered with and their
+  // associated held values.
   using FinalizationRecordMap =
       GCHashMap<js::HeapPtrObject, js::gc::FinalizationRecordVector,
                 js::MovableCellHasher<js::HeapPtrObject>, js::ZoneAllocPolicy>;

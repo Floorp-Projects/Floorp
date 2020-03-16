@@ -846,7 +846,7 @@ class GlobalObject : public NativeObject {
   static bool initTypedObjectModule(JSContext* cx,
                                     Handle<GlobalObject*> global);
 
-  // Implemented in builtin/FinalizationGroup.cpp
+  // Implemented in builtin/FinalizationRegistry.cpp
   static bool initFinalizationIteratorProto(JSContext* cx,
                                             Handle<GlobalObject*> global);
 

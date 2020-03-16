@@ -285,7 +285,7 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
         trc, Compartment::NonGrayEdges);
   }
 
-  markFinalizationGroupRoots(trc);
+  markFinalizationRegistryRoots(trc);
 
   traceRuntimeCommon(trc, MarkRuntime);
 }
