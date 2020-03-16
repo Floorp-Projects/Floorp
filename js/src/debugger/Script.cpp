@@ -48,7 +48,6 @@
 #include "vm/BytecodeUtil-inl.h"      // for BytecodeRangeWithPosition
 #include "vm/JSAtom-inl.h"            // for ValueToId
 #include "vm/JSObject-inl.h"          // for NewBuiltinClassInstance
-#include "vm/JSScript-inl.h"          // for LazyScript::functionDelazifying
 #include "vm/ObjectOperations-inl.h"  // for GetProperty
 #include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
 
