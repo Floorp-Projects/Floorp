@@ -9,7 +9,6 @@ include protocol PBrowser;
 include protocol PCompositorManager;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
-include protocol PPSMContentDownloader;
 include protocol PExternalHelperApp;
 include protocol PHandlerService;
 include protocol PFileDescriptorSet;
@@ -360,7 +359,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PBrowser;
     manages PContentPermissionRequest;
     manages PCycleCollectWithLogs;
-    manages PPSMContentDownloader;
     manages PExternalHelperApp;
     manages PFileDescriptorSet;
     manages PHal;
@@ -979,8 +977,6 @@ parent:
     // overhauled to directly process the notification click/close and directly
     // translate that to a ServiceWorker event.
     async NotificationEvent(nsString type, NotificationEventData data);
-
-    async PPSMContentDownloader(uint32_t aCertType);
 
     // Creates a helper for forwarding data from an nsExternalAppHandler
     // running in the content process, to one running in the parent

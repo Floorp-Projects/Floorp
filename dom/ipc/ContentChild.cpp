@@ -66,7 +66,6 @@
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
@@ -298,7 +297,6 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::net;
 using namespace mozilla::jsipc;
-using namespace mozilla::psm;
 using namespace mozilla::widget;
 using mozilla::loader::PScriptCacheChild;
 
@@ -2173,20 +2171,6 @@ PParentToChildStreamChild* ContentChild::AllocPParentToChildStreamChild() {
 bool ContentChild::DeallocPParentToChildStreamChild(
     PParentToChildStreamChild* aActor) {
   delete aActor;
-  return true;
-}
-
-PPSMContentDownloaderChild* ContentChild::AllocPPSMContentDownloaderChild(
-    const uint32_t& aCertType) {
-  // NB: We don't need aCertType in the child actor.
-  RefPtr<PSMContentDownloaderChild> child = new PSMContentDownloaderChild();
-  return child.forget().take();
-}
-
-bool ContentChild::DeallocPPSMContentDownloaderChild(
-    PPSMContentDownloaderChild* aListener) {
-  auto* listener = static_cast<PSMContentDownloaderChild*>(aListener);
-  RefPtr<PSMContentDownloaderChild> child = dont_AddRef(listener);
   return true;
 }
 

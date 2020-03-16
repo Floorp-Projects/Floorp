@@ -260,12 +260,6 @@ class ContentChild final
   PParentToChildStreamChild* AllocPParentToChildStreamChild();
   bool DeallocPParentToChildStreamChild(PParentToChildStreamChild*);
 
-  PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
-      const uint32_t& aCertType);
-
-  bool DeallocPPSMContentDownloaderChild(
-      PPSMContentDownloaderChild* aDownloader);
-
   PMediaChild* AllocPMediaChild();
 
   bool DeallocPMediaChild(PMediaChild* aActor);

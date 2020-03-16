@@ -918,12 +918,6 @@ class ContentParent final
 
   bool DeallocPNeckoParent(PNeckoParent* necko);
 
-  PPSMContentDownloaderParent* AllocPPSMContentDownloaderParent(
-      const uint32_t& aCertType);
-
-  bool DeallocPPSMContentDownloaderParent(
-      PPSMContentDownloaderParent* aDownloader);
-
   already_AddRefed<PExternalHelperAppParent> AllocPExternalHelperAppParent(
       const Maybe<URIParams>& aUri,
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,

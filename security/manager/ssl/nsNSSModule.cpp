@@ -14,7 +14,6 @@
 #include "OSKeyStore.h"
 #include "OSReauthenticator.h"
 #include "PKCS11ModuleDB.h"
-#include "PSMContentListener.h"
 #include "SecretDecoderRing.h"
 #include "TransportSecurityInfo.h"
 #include "mozilla/MacroArgs.h"
