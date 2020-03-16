@@ -1205,8 +1205,7 @@ class PictureInPictureChild extends JSWindowActorChild {
     // containing window
     playerVideo.style.height = "100vh";
     playerVideo.style.width = "100vw";
-    playerVideo.style.backgroundImage =
-      'url("chrome://global/skin/media/imagedoc-darknoise.png")';
+    playerVideo.style.backgroundColor = "#000";
 
     doc.body.appendChild(playerVideo);
 

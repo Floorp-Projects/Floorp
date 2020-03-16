@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
+  --player-bg-color: #000;
   --btn-bg-color: rgba(50,50,50,0.55);
   --close-btn-bg-color: rgb(211,216,220);
   --resize-margin: 5px;
@@ -14,6 +15,7 @@ button::-moz-focus-inner {
 
 body {
   margin: 0;
+  background-color: var(--player-bg-color);
 }
 
 .player-holder {
