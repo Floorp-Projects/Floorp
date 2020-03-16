@@ -136,7 +136,7 @@ add_task(async function() {
           let container = PanelUI.multiView.querySelector(
             ".panel-viewcontainer"
           );
-          await BrowserTestUtils.waitForCondition(() => {
+          await TestUtils.waitForCondition(() => {
             return !container.hasAttribute("width");
           });
 
@@ -150,7 +150,7 @@ add_task(async function() {
           await promiseViewShown;
 
           // Workaround until bug 1363756 is fixed, then this can be removed.
-          await BrowserTestUtils.waitForCondition(() => {
+          await TestUtils.waitForCondition(() => {
             return !container.hasAttribute("width");
           });
         }
