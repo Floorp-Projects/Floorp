@@ -32,7 +32,7 @@ class EventStates;
 
 class nsNativeTheme : public nsITimerCallback, public nsINamed {
  protected:
-  virtual ~nsNativeTheme() {}
+  virtual ~nsNativeTheme() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK

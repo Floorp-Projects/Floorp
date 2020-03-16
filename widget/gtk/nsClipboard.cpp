@@ -74,7 +74,7 @@ int GetGeckoClipboardType(GtkClipboard* aGtkClipboard) {
     return -1;  // THAT AIN'T NO CLIPBOARD I EVER HEARD OF
 }
 
-nsClipboard::nsClipboard() {}
+nsClipboard::nsClipboard() = default;
 
 nsClipboard::~nsClipboard() {
   // We have to clear clipboard before gdk_display_close() call.

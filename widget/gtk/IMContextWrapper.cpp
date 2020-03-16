@@ -131,7 +131,7 @@ class GetWritingModeName : public nsAutoCString {
     }
     AssignLiteral("Vertical (RTL)");
   }
-  virtual ~GetWritingModeName() {}
+  virtual ~GetWritingModeName() = default;
 };
 
 class GetTextRangeStyleText final : public nsAutoCString {
@@ -201,7 +201,7 @@ class GetTextRangeStyleText final : public nsAutoCString {
     AppendPrintf("{ R=0x%02X, G=0x%02X, B=0x%02X, A=0x%02X }", NS_GET_R(aColor),
                  NS_GET_G(aColor), NS_GET_B(aColor), NS_GET_A(aColor));
   }
-  virtual ~GetTextRangeStyleText(){};
+  virtual ~GetTextRangeStyleText() = default;
 };
 
 const static bool kUseSimpleContextDefault = false;

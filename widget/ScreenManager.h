@@ -28,7 +28,7 @@ class ScreenManager final : public nsIScreenManager {
  public:
   class Helper {
    public:
-    virtual ~Helper() {}
+    virtual ~Helper() = default;
   };
 
  public:

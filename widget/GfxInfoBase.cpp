@@ -47,10 +47,10 @@ bool GfxInfoBase::sShutdownOccurred;
 
 // Observes for shutdown so that the child GfxDriverInfo list is freed.
 class ShutdownObserver : public nsIObserver {
-  virtual ~ShutdownObserver() {}
+  virtual ~ShutdownObserver() = default;
 
  public:
-  ShutdownObserver() {}
+  ShutdownObserver() = default;
 
   NS_DECL_ISUPPORTS
 
@@ -629,7 +629,7 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
 
 GfxInfoBase::GfxInfoBase() : mScreenPixels(INT64_MAX), mMutex("GfxInfoBase") {}
 
-GfxInfoBase::~GfxInfoBase() {}
+GfxInfoBase::~GfxInfoBase() = default;
 
 nsresult GfxInfoBase::Init() {
   InitGfxDriverInfoShutdownObserver();

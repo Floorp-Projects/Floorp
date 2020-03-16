@@ -184,7 +184,7 @@ struct TextRange {
 class TextRangeArray final : public AutoTArray<TextRange, 10> {
   friend class WidgetCompositionEvent;
 
-  ~TextRangeArray() {}
+  ~TextRangeArray() = default;
 
   NS_INLINE_DECL_REFCOUNTING(TextRangeArray)
 
