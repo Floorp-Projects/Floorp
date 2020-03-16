@@ -549,6 +549,30 @@ exports.registerFront = function(cls) {
 };
 
 /**
+ * Instantiate a front of the given type.
+ *
+ * @param DevToolsClient client
+ *    The DevToolsClient instance to use.
+ * @param string typeName
+ *    The type name of the front to instantiate. This is defined in its specifiation.
+ * @returns Front
+ *    The created front.
+ */
+function createFront(client, typeName, target = null) {
+  const type = types.getType(typeName);
+  if (!type) {
+    throw new Error(`No spec for front type '${typeName}'.`);
+  } else if (!type.frontClass) {
+    lazyLoadFront(typeName);
+  }
+
+  // Use intermediate Class variable to please eslint requiring
+  // a capital letter for all constructors.
+  const Class = type.frontClass;
+  return new Class(client, target, target);
+}
+
+/**
  * Instantiate a global (preference, device) or target-scoped (webconsole, inspector)
  * front of the given type by picking its actor ID out of either the target or root
  * front's form.
@@ -565,24 +589,14 @@ exports.registerFront = function(cls) {
  *    Target instance, otherwise this is null.
  */
 async function getFront(client, typeName, form, target = null) {
-  const type = types.getType(typeName);
-  if (!type) {
-    throw new Error(`No spec for front type '${typeName}'.`);
-  } else if (!type.frontClass) {
-    lazyLoadFront(typeName);
-  }
-
-  // Use intermediate Class variable to please eslint requiring
-  // a capital letter for all constructors.
-  const Class = type.frontClass;
-  const instance = new Class(client, target, target);
-  const { formAttributeName } = instance;
+  const front = createFront(client, typeName, target);
+  const { formAttributeName } = front;
   if (!formAttributeName) {
     throw new Error(`Can't find the form attribute name for ${typeName}`);
   }
   // Retrive the actor ID from root or target actor's form
-  instance.actorID = form[formAttributeName];
-  if (!instance.actorID) {
+  front.actorID = form[formAttributeName];
+  if (!front.actorID) {
     throw new Error(
       `Can't find the actor ID for ${typeName} from root or target` +
         ` actor's form.`
@@ -590,11 +604,31 @@ async function getFront(client, typeName, form, target = null) {
   }
 
   if (!target) {
-    await instance.manage(instance);
+    await front.manage(front);
   } else {
-    await target.manage(instance);
+    await target.manage(front);
   }
 
-  return instance;
+  return front;
 }
 exports.getFront = getFront;
+
+/**
+ * Create a RootFront.
+ *
+ * @param DevToolsClient client
+ *    The DevToolsClient instance to use.
+ * @param Object packet
+ * @returns RootFront
+ */
+function createRootFront(client, packet) {
+  const rootFront = createFront(client, "root");
+  rootFront.form(packet);
+
+  // Root Front is a special case, managing itself as it doesn't have any parent.
+  // It will register itself to DevToolsClient as a Pool via Front._poolMap.
+  rootFront.manage(rootFront);
+
+  return rootFront;
+}
+exports.createRootFront = createRootFront;

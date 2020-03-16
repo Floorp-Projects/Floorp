@@ -158,6 +158,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
     this.manage(this);
   }
 }
+protocol.registerFront(RootFront);
 
 add_task(async function() {
   DevToolsServer.createRootActor = conn => {
@@ -199,7 +200,7 @@ add_task(async function() {
   });
   Assert.equal(applicationType, "xpcshell-tests");
 
-  const rootFront = new RootFront(client);
+  const rootFront = client.mainRoot;
 
   let ret = await rootFront.simpleReturn();
   trace.expectSend({ type: "simpleReturn", to: "<actorid>" });
