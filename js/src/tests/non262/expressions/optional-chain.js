@@ -219,8 +219,6 @@ shouldBe(({a : {b: () => undefined}}).a.b?.()?.(), undefined);
 shouldThrowTypeError(() => delete ({a : {b: undefined}}).a?.b.b.c, '(intermediate value).a.b is undefined');
 shouldBe(delete ({a : {b: undefined}}).a?.["b"]?.["b"], true);
 shouldThrowTypeError(() => (({a : {b: () => undefined}}).a.b?.())(), 'undefined is not a function');
-shouldThrowTypeError(() => (delete[1]?.r[delete[1]?.r1]), "can't access property \"true\", [...].r is undefined");
-shouldThrowTypeError(() => (delete[1]?.r[[1]?.r1]), "can't access property \"undefined\", [...].r is undefined");
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);
