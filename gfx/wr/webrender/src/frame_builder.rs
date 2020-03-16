@@ -15,7 +15,7 @@ use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
 use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
 use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
-use crate::picture::{TileCacheLogger};
+use crate::picture::{BackdropKind, TileCacheLogger};
 use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
 use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
@@ -883,13 +883,18 @@ pub fn build_render_pass(
                     Some(color) => color.a >= 1.0,
                     None => false,
                 };
-                // TODO(gw): Once we have multiple slices enabled, take advantage of
-                //           option to skip clears if the slice is opaque.
-                let clear_color = if forced_opaque {
+                let mut clear_color = if forced_opaque {
                     Some(ColorF::WHITE)
                 } else {
                     Some(ColorF::TRANSPARENT)
                 };
+
+                // If this picture cache has a valid color backdrop, we will use
+                // that as the clear color, skipping the draw of the backdrop
+                // primitive (and anything prior to it) during batching.
+                if let Some(BackdropKind::Color { color }) = tile_cache.backdrop.kind {
+                    clear_color = Some(color);
+                }
 
                 // Create an alpha batcher for each of the tasks of this picture.
                 let mut batchers = Vec::new();
