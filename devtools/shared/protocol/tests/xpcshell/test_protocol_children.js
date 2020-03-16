@@ -94,7 +94,7 @@ const childSpec = protocol.generateActorSpec({
 var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   // Actors returned by this actor should be owned by the root actor.
   marshallPool() {
-    return this.parent();
+    return this.getParent();
   },
 
   toString() {
@@ -145,7 +145,7 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   },
 
   getSibling(id) {
-    return this.parent().getChild(id);
+    return this.getParent().getChild(id);
   },
 
   emitEvents() {
@@ -175,7 +175,7 @@ class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
   }
 
   marshallPool() {
-    return this.parent();
+    return this.getParent();
   }
 
   toString() {

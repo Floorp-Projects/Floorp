@@ -455,7 +455,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get _hasEventListeners() {
     // We need to pass a debugger instance from this compartment because
     // otherwise we can't make use of it inside the event-collector module.
-    const dbg = this.parent().targetActor.makeDebugger();
+    const dbg = this.getParent().targetActor.makeDebugger();
     return this._eventCollector.hasEventListeners(this.rawNode, dbg);
   },
 
@@ -519,7 +519,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // Create debugger object for the customElement function.
     const global = Cu.getGlobalForObject(customElement);
 
-    const dbg = this.parent().targetActor.makeDebugger();
+    const dbg = this.getParent().targetActor.makeDebugger();
 
     // If we hit a <browser> element of Firefox, its global will be the chrome window
     // which is system principal and will be in the same compartment as the debuggee.

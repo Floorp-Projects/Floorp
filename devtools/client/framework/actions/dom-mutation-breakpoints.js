@@ -33,7 +33,7 @@ function createDOMMutationBreakpoint(nodeFront, mutationType) {
   assert(typeof mutationType === "string");
 
   return async function(dispatch) {
-    const walker = nodeFront.parent();
+    const walker = nodeFront.getParent();
 
     dispatch({
       type: "ADD_DOM_MUTATION_BREAKPOINT",
@@ -53,7 +53,7 @@ function deleteDOMMutationBreakpoint(nodeFront, mutationType) {
   assert(typeof mutationType === "string");
 
   return async function(dispatch) {
-    const walker = nodeFront.parent();
+    const walker = nodeFront.getParent();
     await walker.setMutationBreakpoints(nodeFront, {
       [mutationType]: false,
     });
@@ -132,7 +132,7 @@ function toggleDOMMutationBreakpointState(id, enabled) {
       throw new Error(`No DOM mutation BP with ID ${id}`);
     }
 
-    const walker = bp.nodeFront.parent();
+    const walker = bp.nodeFront.getParent();
     await walker.setMutationBreakpoints(bp.nodeFront, {
       [bp.mutationType]: enabled,
     });
