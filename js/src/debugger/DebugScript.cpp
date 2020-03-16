@@ -161,12 +161,9 @@ void DebugScript::clearBreakpointsIn(JSFreeOp* fop, Realm* realm, Debugger* dbg,
                                      JSObject* handler) {
   for (auto base = realm->zone()->cellIter<BaseScript>(); !base.done();
        base.next()) {
-    if (base->isLazyScript()) {
-      continue;
-    }
-    JSScript* script = base->asJSScript();
-    if (script->realm() == realm && script->hasDebugScript()) {
-      clearBreakpointsIn(fop, script, dbg, handler);
+    MOZ_ASSERT_IF(base->hasDebugScript(), base->hasBytecode());
+    if (base->realm() == realm && base->hasDebugScript()) {
+      clearBreakpointsIn(fop, base->asJSScript(), dbg, handler);
     }
   }
 }

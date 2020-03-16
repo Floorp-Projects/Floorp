@@ -976,7 +976,7 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
 
   for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
     for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-      if (base->isLazyScript()) {
+      if (!base->hasJitScript()) {
         continue;
       }
       JSScript* script = base->asJSScript();
@@ -998,13 +998,10 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
 void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
     for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-      if (base->isLazyScript()) {
+      if (!base->hasBaselineScript()) {
         continue;
       }
       JSScript* script = base->asJSScript();
-      if (!script->hasBaselineScript()) {
-        continue;
-      }
       script->baselineScript()->toggleTraceLoggerScripts(script, enable);
     }
   }
@@ -1013,13 +1010,10 @@ void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
 void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
     for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-      if (base->isLazyScript()) {
+      if (!base->hasBaselineScript()) {
         continue;
       }
       JSScript* script = base->asJSScript();
-      if (!script->hasBaselineScript()) {
-        continue;
-      }
       script->baselineScript()->toggleTraceLoggerEngine(enable);
     }
   }

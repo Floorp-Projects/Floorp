@@ -2347,13 +2347,16 @@ setterLevel:                                                                  \
   Scope* releaseEnclosingScope();
 
   bool hasJitScript() const { return warmUpData_.isJitScript(); }
-  js::jit::JitScript* jitScript() const {
+  jit::JitScript* jitScript() const {
     MOZ_ASSERT(hasJitScript());
     return warmUpData_.toJitScript();
   }
-  js::jit::JitScript* maybeJitScript() const {
+  jit::JitScript* maybeJitScript() const {
     return hasJitScript() ? jitScript() : nullptr;
   }
+
+  inline bool hasBaselineScript() const;
+  inline bool hasIonScript() const;
 
   bool hasPrivateScriptData() const { return data_ != nullptr; }
 
@@ -2784,9 +2787,6 @@ class JSScript : public js::BaseScript {
   void maybeReleaseJitScript(JSFreeOp* fop);
   void releaseJitScript(JSFreeOp* fop);
   void releaseJitScriptOnFinalize(JSFreeOp* fop);
-
-  inline bool hasBaselineScript() const;
-  inline bool hasIonScript() const;
 
   inline js::jit::BaselineScript* baselineScript() const;
   inline js::jit::IonScript* ionScript() const;

@@ -187,15 +187,12 @@ bool js::DumpRealmPCCounts(JSContext* cx) {
   Rooted<GCVector<JSScript*>> scripts(cx, GCVector<JSScript*>(cx));
   for (auto base = cx->zone()->cellIter<BaseScript>(); !base.done();
        base.next()) {
-    if (base->isLazyScript()) {
+    if (base->realm() != cx->realm()) {
       continue;
     }
-    JSScript* script = base->asJSScript();
-    if (script->realm() != cx->realm()) {
-      continue;
-    }
-    if (script->hasScriptCounts()) {
-      if (!scripts.append(script)) {
+    MOZ_ASSERT_IF(base->hasScriptCounts(), base->hasBytecode());
+    if (base->hasScriptCounts()) {
+      if (!scripts.append(base->asJSScript())) {
         return false;
       }
     }
@@ -2596,12 +2593,8 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
 
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
     for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-      if (base->isLazyScript()) {
-        continue;
-      }
-      JSScript* script = base->asJSScript();
-      if (script->hasScriptCounts() && script->hasJitScript()) {
-        if (!vec->append(script)) {
+      if (base->hasScriptCounts() && base->hasJitScript()) {
+        if (!vec->append(base->asJSScript())) {
           return;
         }
       }
