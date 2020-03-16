@@ -113,7 +113,7 @@ CompositionTransaction::DoTransaction() {
       return error.StealNSResult();
     }
     DebugOnly<nsresult> rvIgnored =
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(*textNode, mOffset,
                                                        mReplaceLength);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
@@ -136,7 +136,7 @@ CompositionTransaction::DoTransaction() {
         NS_WARNING_ASSERTION(!ignoredError.Failed(),
                              "EditorBase::DoDeleteText() failed, but ignored");
         ignoredError.SuppressException();
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, 0,
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(*textNode, 0,
                                                        remainLength);
         remainLength -= textLength;
         node = node->GetNextSibling();
