@@ -163,6 +163,8 @@ class FunctionFlags {
 
   uint16_t toRaw() const { return flags_; }
 
+  uint16_t stableAcrossClones() const { return flags_ & STABLE_ACROSS_CLONES; }
+
   // For flag combinations the type is int.
   bool hasFlags(uint16_t flags) const { return flags_ & flags; }
   void setFlags(uint16_t flags) { flags_ |= flags; }

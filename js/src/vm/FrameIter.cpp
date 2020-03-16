@@ -808,33 +808,32 @@ JSFunction* FrameIter::callee(JSContext* cx) const {
 }
 
 bool FrameIter::matchCallee(JSContext* cx, JS::Handle<JSFunction*> fun) const {
+  // Use the calleeTemplate to rule out a match without needing to invalidate to
+  // find the actual callee. The real callee my be a clone of the template which
+  // should *not* be considered a match.
   Rooted<JSFunction*> currentCallee(cx, calleeTemplate());
 
-  // The more bizarre cases should already be excluded by an earlier check of
-  // IsSloppyNormalFunction.
-  MOZ_ASSERT(fun->hasBaseScript());
-
-  // As we do not know if the calleeTemplate is the real function, or the
-  // template from which it would be cloned, we compare properties which are
-  // stable across the cloning of JSFunctions.
-  if (((currentCallee->flags().toRaw() ^ fun->flags().toRaw()) &
-       FunctionFlags::STABLE_ACROSS_CLONES) != 0 ||
-      currentCallee->nargs() != fun->nargs()) {
+  if (currentCallee->nargs() != fun->nargs()) {
     return false;
   }
 
-  // Use the same condition as |js::CloneFunctionObject|, to know if we should
-  // expect both functions to have the same JSScript. If so, and if they are
-  // different, then they cannot be equal.
-  Rooted<JSObject*> global(cx, &fun->global());
-  bool useSameScript =
-      CanReuseScriptForClone(fun->realm(), currentCallee, global);
-  if (useSameScript && (currentCallee->baseScript() != fun->baseScript())) {
+  if (currentCallee->flags().stableAcrossClones() !=
+      fun->flags().stableAcrossClones()) {
     return false;
   }
 
-  // If none of the previous filters worked, then take the risk of
-  // invalidating the frame to identify the JSFunction.
+  // The calleeTemplate for a callee will always have the same BaseScript. If
+  // the script clones do not use the same script, they also have a different
+  // group and Ion will not inline them interchangeably.
+  //
+  // See: js::jit::InlineFrameIterator::findNextFrame(),
+  //      js::CloneFunctionAndScript()
+  if (currentCallee->hasBaseScript()) {
+    if (currentCallee->baseScript() != fun->baseScript()) {
+      return false;
+    }
+  }
+
   return callee(cx) == fun;
 }
 
