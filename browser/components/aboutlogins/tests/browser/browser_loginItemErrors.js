@@ -25,16 +25,16 @@ add_task(async function test_showLoginItemErrors() {
   );
   LOGIN_TO_UPDATE = Services.logins.addLogin(LOGIN_TO_UPDATE);
   EXPECTED_ERROR_MESSAGE = "This login already exists.";
+  const LOGIN_UPDATES = {
+    origin: "https://example.com",
+    password: "my1GoodPassword",
+    username: "user1",
+  };
 
   await SpecialPowers.spawn(
     browser,
-    [
-      [
-        LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE),
-        OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
-      ],
-    ],
-    async ([loginToUpdate, canTestOSKeyStoreLogin]) => {
+    [[LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE), LOGIN_UPDATES]],
+    async ([loginToUpdate, loginUpdates]) => {
       const loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -47,12 +47,6 @@ add_task(async function test_showLoginItemErrors() {
 
       const createButton = loginList._createLoginButton;
       createButton.click();
-
-      const loginUpdates = {
-        origin: "https://example.com",
-        password: "my1GoodPassword",
-        username: "user1",
-      };
 
       const event = Cu.cloneInto(
         {
@@ -108,12 +102,20 @@ add_task(async function test_showLoginItemErrors() {
         loginItemErrorMessage.hidden,
         "The error message should no longer be visible."
       );
-
-      if (!canTestOSKeyStoreLogin) {
-        // The rest of the test uses Edit mode which causes an OS prompt in opt builds.
-        return;
-      }
-
+    }
+  );
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    // The rest of the test uses Edit mode which causes an OS prompt in official builds.
+    return;
+  }
+  let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  await SpecialPowers.spawn(
+    browser,
+    [[LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE), LOGIN_UPDATES]],
+    async ([loginToUpdate, loginUpdates]) => {
+      const loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
       const editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
 
@@ -130,6 +132,9 @@ add_task(async function test_showLoginItemErrors() {
         new content.CustomEvent("AboutLoginsUpdateLogin", updateEvent)
       );
 
+      const loginItemErrorMessage = Cu.waiveXrays(
+        loginItem.shadowRoot.querySelector(".error-message")
+      );
       const loginAlreadyExistsErrorShownAfterUpdate = await ContentTaskUtils.waitForCondition(
         () => {
           return !loginItemErrorMessage.hidden;
@@ -142,5 +147,8 @@ add_task(async function test_showLoginItemErrors() {
       );
     }
   );
+  info("making sure os auth dialog is shown");
+  await reauthObserved;
+  info("saw os auth dialog");
   EXPECTED_ERROR_MESSAGE = null;
 });

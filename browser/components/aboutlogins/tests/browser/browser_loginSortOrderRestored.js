@@ -25,8 +25,8 @@ add_task(async function test_sort_order_persisted() {
     async function(browser) {
       await ContentTask.spawn(
         browser,
-        [TEST_LOGIN1, TEST_LOGIN2],
-        async function([testLogin1, testLogin2]) {
+        [TEST_LOGIN1.guid, TEST_LOGIN2.guid],
+        async function([testLogin1Guid, testLogin2Guid]) {
           let loginList = Cu.waiveXrays(
             content.document.querySelector("login-list")
           );
@@ -39,7 +39,7 @@ add_task(async function test_sort_order_persisted() {
             loginList._list.querySelector(
               ".login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
-            testLogin2.guid,
+            testLogin2Guid,
             "the first login should be TEST_LOGIN2 since they are sorted by origin"
           );
 
@@ -51,7 +51,7 @@ add_task(async function test_sort_order_persisted() {
             loginList._list.querySelector(
               ".login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
-            testLogin1.guid,
+            testLogin1Guid,
             "the first login should be TEST_LOGIN1 since it has the most recent timePasswordChanged value"
           );
         }
@@ -65,7 +65,9 @@ add_task(async function test_sort_order_persisted() {
       url: "about:logins",
     },
     async function(browser) {
-      await ContentTask.spawn(browser, TEST_LOGIN1, async function(testLogin1) {
+      await ContentTask.spawn(browser, TEST_LOGIN1.guid, async function(
+        testLogin1Guid
+      ) {
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
         );
@@ -78,7 +80,7 @@ add_task(async function test_sort_order_persisted() {
           loginList._list.querySelector(
             ".login-list-item[data-guid]:not([hidden])"
           ).dataset.guid,
-          testLogin1.guid,
+          testLogin1Guid,
           "the first login should still be TEST_LOGIN1 since it has the most recent timePasswordChanged value"
         );
       });
