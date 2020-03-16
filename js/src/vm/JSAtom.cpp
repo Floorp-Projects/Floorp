@@ -1039,34 +1039,39 @@ template <typename CharsT>
 JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
                                size_t utf8ByteLength) {
   {
+    // Permanent atoms,|JSRuntime::atoms_|, and  static strings are disjoint
+    // sets.  |AtomizeAndCopyCharsFromLookup| only consults the first two sets,
+    // so we must map any static strings ourselves.  See bug 1575947.
     StaticStrings& statics = cx->staticStrings();
 
-    // Permanent atoms, static strings, and |JSRuntime::atoms_| are separate
-    // records.  |AtomizeAndCopyCharsFromLookup| will consult all but static
-    // strings, so we must properly map UTF-8 text that is static strings
-    // ourselves.  See bug 1575947.
-
-    // First handle pure-ASCII UTF-8 static strings.
+    // Handle all pure-ASCII UTF-8 static strings.
     if (JSAtom* s = statics.lookup(utf8Chars, utf8ByteLength)) {
       return s;
     }
 
-    // Some unit static strings are non-ASCII and so will be represented in two
-    // UTF-8 code units.  Determine the code point represented by two-code-unit,
-    // single-code-point strings and return the corresponding static string if
-    // one exists.
-    if (utf8ByteLength == 2 && !mozilla::IsAscii(utf8Chars[0])) {
-      MOZ_ASSERT(
-          (static_cast<uint8_t>(utf8Chars[0]) & 0b1110'0000) == 0b1100'0000,
-          "expected length-2 leading UTF-8 unit");
-      MOZ_ASSERT(mozilla::IsTrailingUnit(mozilla::Utf8Unit(utf8Chars[1])),
-                 "expected UTF-8 trailing unit");
-      char16_t unit =
-          ((static_cast<uint8_t>(utf8Chars[0]) & 0b0001'1111) << 6) |
-          (static_cast<uint8_t>(utf8Chars[1]) & 0b0011'1111);
-      if (StaticStrings::hasUnit(unit)) {
-        return statics.getUnit(unit);
+    // The only non-ASCII static strings are the single-code point strings
+    // U+0080 through U+00FF, encoded as
+    //
+    //   0b1100'00xx 0b10xx'xxxx
+    //
+    // where the encoded code point is the concatenation of the 'x' bits -- and
+    // where the highest 'x' bit is necessarily 1 (because U+0080 through U+00FF
+    // all contain an 0x80 bit).
+    if (utf8ByteLength == 2) {
+      auto first = static_cast<uint8_t>(utf8Chars[0]);
+      if ((first & 0b1111'1110) == 0b1100'0010) {
+        auto second = static_cast<uint8_t>(utf8Chars[1]);
+        if (mozilla::IsTrailingUnit(mozilla::Utf8Unit(second))) {
+          uint8_t unit =
+              static_cast<uint8_t>(first << 6) | (second & 0b0011'1111);
+
+          MOZ_ASSERT(StaticStrings::hasUnit(unit));
+          return statics.getUnit(unit);
+        }
       }
+
+      // Fallthrough code handles the cases where the two units aren't a Latin-1
+      // code point or are invalid.
     }
   }
 
