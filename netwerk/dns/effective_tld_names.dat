@@ -7090,7 +7090,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-03-10T18:08:44Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-03-15T18:10:34Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -10172,9 +10172,6 @@ visa
 
 // vision : 2013-12-05 Binky Moon, LLC
 vision
-
-// vistaprint : 2014-09-18 Vistaprint Limited
-vistaprint
 
 // viva : 2014-11-07 Saudi Telecom Company
 viva
