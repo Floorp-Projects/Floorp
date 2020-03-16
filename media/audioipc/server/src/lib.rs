@@ -17,7 +17,6 @@ use audioipc::{MessageStream, PlatformHandle, PlatformHandleType};
 use futures::sync::oneshot;
 use futures::Future;
 use once_cell::sync::Lazy;
-use std::error::Error;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::ptr;
@@ -79,7 +78,7 @@ fn run() -> Result<ServerWrapper> {
     .or_else(|e| {
         debug!(
             "Failed to start cubeb audio callback event loop thread: {:?}",
-            e.description()
+            e
         );
         Err(e)
     })?;
@@ -88,7 +87,7 @@ fn run() -> Result<ServerWrapper> {
         core::spawn_thread("AudioIPC Server RPC", move || Ok(()), || {}).or_else(|e| {
             debug!(
                 "Failed to cubeb audio core event loop thread: {:?}",
-                e.description()
+                e
             );
             Err(e)
         })?;
