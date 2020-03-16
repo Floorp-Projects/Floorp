@@ -50,8 +50,6 @@ type SecKeyCreateSignatureType =
 type SecKeyCopyAttributesType = unsafe extern "C" fn(SecKeyRef) -> CFDictionaryRef;
 type SecKeyCopyExternalRepresentationType =
     unsafe extern "C" fn(SecKeyRef, *mut CFErrorRef) -> CFDataRef;
-type SecCertificateCopySerialNumberDataType =
-    unsafe extern "C" fn(SecCertificateRef, *mut CFErrorRef) -> CFDataRef;
 type SecCertificateCopyNormalizedIssuerSequenceType =
     unsafe extern "C" fn(SecCertificateRef) -> CFDataRef;
 type SecCertificateCopyNormalizedSubjectSequenceType =
@@ -80,7 +78,6 @@ pub struct SecurityFrameworkFunctions<'a> {
     sec_key_create_signature: Symbol<'a, SecKeyCreateSignatureType>,
     sec_key_copy_attributes: Symbol<'a, SecKeyCopyAttributesType>,
     sec_key_copy_external_representation: Symbol<'a, SecKeyCopyExternalRepresentationType>,
-    sec_certificate_copy_serial_number_data: Symbol<'a, SecCertificateCopySerialNumberDataType>,
     sec_certificate_copy_normalized_issuer_sequence:
         Symbol<'a, SecCertificateCopyNormalizedIssuerSequenceType>,
     sec_certificate_copy_normalized_subject_sequence:
@@ -129,11 +126,6 @@ impl SecurityFramework {
                 let sec_key_copy_external_representation = library
                     .get::<SecKeyCopyExternalRepresentationType>(
                         b"SecKeyCopyExternalRepresentation\0",
-                    )
-                    .map_err(|_| ())?;
-                let sec_certificate_copy_serial_number_data = library
-                    .get::<SecCertificateCopySerialNumberDataType>(
-                        b"SecCertificateCopySerialNumberData\0",
                     )
                     .map_err(|_| ())?;
                 let sec_certificate_copy_normalized_issuer_sequence = library
@@ -203,7 +195,6 @@ impl SecurityFramework {
                     sec_key_create_signature,
                     sec_key_copy_attributes,
                     sec_key_copy_external_representation,
-                    sec_certificate_copy_serial_number_data,
                     sec_certificate_copy_normalized_issuer_sequence,
                     sec_certificate_copy_normalized_subject_sequence,
                     sec_certificate_copy_key,
@@ -272,29 +263,6 @@ impl SecurityFramework {
                 if result.is_null() {
                     let error = CFError::wrap_under_create_rule(error);
                     error!("SecKeyCopyExternalRepresentation failed: {}", error);
-                    return Err(());
-                }
-                Ok(CFData::wrap_under_create_rule(result))
-            }),
-            None => Err(()),
-        }
-    }
-
-    /// SecCertificateCopySerialNumberData is available in macOS 10.13
-    fn sec_certificate_copy_serial_number_data(
-        &self,
-        certificate: &SecCertificate,
-    ) -> Result<CFData, ()> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
-                let mut error = std::ptr::null_mut();
-                let result = (framework.sec_certificate_copy_serial_number_data)(
-                    certificate.as_concrete_TypeRef(),
-                    &mut error,
-                );
-                if result.is_null() {
-                    let error = CFError::wrap_under_create_rule(error);
-                    error!("SecCertificateCopySerialNumberData failed: {}", error);
                     return Err(());
                 }
                 Ok(CFData::wrap_under_create_rule(result))
@@ -442,11 +410,11 @@ impl Cert {
         let certificate = sec_identity_copy_certificate(identity)?;
         let label = sec_certificate_copy_subject_summary(&certificate)?;
         let der = sec_certificate_copy_data(&certificate)?;
-        let id = Sha256::digest(der.bytes()).to_vec();
+        let der = der.bytes().to_vec();
+        let id = Sha256::digest(&der).to_vec();
         let issuer =
             SECURITY_FRAMEWORK.sec_certificate_copy_normalized_issuer_sequence(&certificate)?;
-        let serial_number =
-            SECURITY_FRAMEWORK.sec_certificate_copy_serial_number_data(&certificate)?;
+        let serial_number = read_encoded_serial_number(&der)?;
         let subject =
             SECURITY_FRAMEWORK.sec_certificate_copy_normalized_subject_sequence(&certificate)?;
         Ok(Cert {
@@ -454,9 +422,9 @@ impl Cert {
             token: serialize_uint(CK_TRUE)?,
             id,
             label: label.to_string().into_bytes(),
-            value: der.bytes().to_vec(),
+            value: der,
             issuer: issuer.bytes().to_vec(),
-            serial_number: serial_number.bytes().to_vec(),
+            serial_number,
             subject: subject.bytes().to_vec(),
         })
     }
