@@ -256,25 +256,13 @@ nsIContent* DocumentOrShadowRoot::Retarget(nsIContent* aContent) const {
 }
 
 Element* DocumentOrShadowRoot::GetRetargetedFocusedElement() {
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = AsNode().OwnerDoc()->GetWindow()) {
-    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-    nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
-        window, nsFocusManager::eOnlyCurrentWindow,
-        getter_AddRefs(focusedWindow));
-    // be safe and make sure the element is from this document
-    if (focusedContent && focusedContent->OwnerDoc() == AsNode().OwnerDoc()) {
-      if (focusedContent->ChromeOnlyAccess()) {
-        focusedContent = focusedContent->FindFirstNonChromeOnlyAccessContent();
-      }
-
-      if (focusedContent) {
-        if (nsIContent* retarget = Retarget(focusedContent)) {
-          return retarget->AsElement();
-        }
-      }
-    }
+  auto* content = AsNode().OwnerDoc()->GetUnretargetedFocusedContent();
+  if (!content) {
+    return nullptr;
   }
-
+  if (nsIContent* retarget = Retarget(content)) {
+    return retarget->AsElement();
+  }
   return nullptr;
 }
 
