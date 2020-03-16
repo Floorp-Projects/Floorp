@@ -115,7 +115,7 @@ static inline void DoScriptCallback(JSContext* cx, void* data,
                                     IterateScriptCallback callback,
                                     const JS::AutoRequireNoGC& nogc) {
   if (script->isLazyScript()) {
-    // We call the callback only for the LazyScript that:
+    // We call the callback only for the lazy script that:
     //   (a) its enclosing script has ever been fully compiled and
     //       itself is delazifyable (handled in this function)
     //   (b) it is contained in the (a)'s inner function tree

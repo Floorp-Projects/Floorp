@@ -146,7 +146,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
       const FieldContext&);
 
   /**
-   * Register LazyScript for later modification.
+   * Register lazy script for later modification.
    * Not used in multipart format.
    */
   MOZ_MUST_USE JS::Result<Ok> registerLazyScript(BaseScript* lazy) {

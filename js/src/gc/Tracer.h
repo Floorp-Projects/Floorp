@@ -114,9 +114,7 @@ inline void AssertRootMarkingPhase(JSTracer* trc) {}
 // Note that weak edges are handled separately. GC things with weak edges must
 // not trace those edges during marking tracing (which would keep the referent
 // alive) but instead arrange for the edge to be swept by calling
-// js::gc::IsAboutToBeFinalized or TraceWeakEdge during sweeping. For example,
-// see the treatment of the script_ edge in LazyScript::traceChildren and
-// GCRuntime::sweepLazyScripts.
+// js::gc::IsAboutToBeFinalized or TraceWeakEdge during sweeping.
 //
 // GC things that are weakly held in containers can use WeakMap or a container
 // wrapped in the WeakCache<> template to perform the appropriate sweeping.

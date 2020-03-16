@@ -306,7 +306,7 @@ template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
     const size_t start, const FunctionSyntaxKind syntaxKind,
     FunctionBox* funbox) {
-  // LazyScript compilation requires basically none of the fields filled out.
+  // Lazy script compilation requires basically none of the fields filled out.
   TokenPos pos = tokenizer_->pos(start);
 
   BINJS_TRY_DECL(result, handler_.newFunction(syntaxKind, pos));

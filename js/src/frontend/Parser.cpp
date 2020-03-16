@@ -807,7 +807,7 @@ bool PerHandlerParser<ParseHandler>::
   }
 
   if (handler_.canSkipLazyClosedOverBindings()) {
-    // Scopes are nullptr-delimited in the LazyScript closed over bindings
+    // Scopes are nullptr-delimited in the BaseScript closed over bindings
     // array.
     while (JSAtom* name = handler_.nextLazyClosedOverBinding()) {
       scope.lookupDeclaredName(name)->value()->setClosedOver();
@@ -1652,7 +1652,7 @@ template <>
 bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     bool isStandaloneFunction /* = false */,
     IsFieldInitializer isFieldInitializer /* = IsFieldInitializer::Yes */) {
-  // The LazyScript for a lazily parsed function needs to know its set of
+  // The BaseScript for a lazily parsed function needs to know its set of
   // free variables and inner functions so that when it is fully parsed, we
   // can skip over any already syntax parsed inner functions and still
   // retain correct scope information.
@@ -2696,9 +2696,9 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   // definition for consistency between lazy and full parsing.
   pc_->sc()->setHasInnerFunctions();
 
-  // When fully parsing a LazyScript, we do not fully reparse its inner
-  // functions, which are also lazy. Instead, their free variables and
-  // source extents are recorded and may be skipped.
+  // When fully parsing a lazy script, we do not fully reparse its inner
+  // functions, which are also lazy. Instead, their free variables and source
+  // extents are recorded and may be skipped.
   if (handler_.canSkipLazyInnerFunctions()) {
     if (!skipLazyInnerFunction(funNode, toStringStart, kind, tryAnnexB)) {
       return null();

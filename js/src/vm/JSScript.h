@@ -2145,11 +2145,10 @@ class BaseScript : public gc::TenuredCell {
 #if defined(JS_BUILD_BINAST)
   // Set the position of the function in the source code.
   //
-  // BinAST file format can put lazy functions after the entire tree,
-  // and in that case LazyScript::Create will be called with
-  // dummy values for those positions, and then once it reaches to the lazy
-  // function part, this function is called to set those positions to
-  // correct value.
+  // BinAST file format can put lazy functions after the entire tree, and in
+  // that case BaseScript::CreateLazy will be called with dummy values for those
+  // positions, and then once it reaches to the lazy function part, this
+  // function is called to set those positions to correct value.
   void setPositions(uint32_t sourceStart, uint32_t sourceEnd,
                     uint32_t toStringStart, uint32_t toStringEnd) {
     MOZ_ASSERT(toStringStart <= sourceStart);
@@ -3163,8 +3162,6 @@ JSScript* CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
 
 } /* namespace js */
 
-// JS::ubi::Nodes can point to js::LazyScripts; they're js::gc::Cell instances
-// with no associated compartment.
 namespace JS {
 namespace ubi {
 
