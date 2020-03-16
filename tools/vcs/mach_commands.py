@@ -23,7 +23,6 @@ import mozpack.path as mozpath
 
 import json
 
-
 GITHUB_ROOT = 'https://github.com/'
 PR_REPOSITORIES = {
     'webrender': {
@@ -108,7 +107,7 @@ class PullRequestImporter(MachCommandBase):
                      'Processing commit [{commit_summary}] by [{author}] at [{date}]')
             patch_cmd = subprocess.Popen(['patch', '-p1', '-s'], stdin=subprocess.PIPE,
                                          cwd=target_dir)
-            patch_cmd.stdin.write(patch['diff'])
+            patch_cmd.stdin.write(patch['diff'].encode('utf-8'))
             patch_cmd.stdin.close()
             patch_cmd.wait()
             if patch_cmd.returncode != 0:
@@ -139,65 +138,67 @@ class PullRequestImporter(MachCommandBase):
 
     def _split_patches(self, patchfile, bug_number, pull_request, reviewer):
         INITIAL = 0
-        COMMIT_MESSAGE_SUMMARY = 1
-        COMMIT_MESSAGE_BODY = 2
-        COMMIT_DIFF = 3
+        HEADERS = 1
+        STAT_AND_DIFF = 2
 
+        patch = b''
         state = INITIAL
         for line in patchfile.splitlines():
             if state == INITIAL:
-                if line.startswith('From: '):
-                    author = line[6:]
-                elif line.startswith('Date: '):
-                    date = line[6:]
-                elif line.startswith('Subject: '):
-                    line = line[9:]
-                    bug_prefix = ''
-                    if bug_number is not None:
-                        bug_prefix = 'Bug %s - ' % bug_number
-                    commit_msg = re.sub(r'^\[PATCH[0-9 /]*\] ', bug_prefix, line)
-                    state = COMMIT_MESSAGE_SUMMARY
-            elif state == COMMIT_MESSAGE_SUMMARY:
-                if len(line) > 0 and line[0] == ' ':
-                    # Subject line has wrapped
-                    commit_msg += line
+                if line.startswith(b'From '):
+                    state = HEADERS
+            elif state == HEADERS:
+                patch += line + b'\n'
+                if line == b'---':
+                    state = STAT_AND_DIFF
+            elif state == STAT_AND_DIFF:
+                if line.startswith(b'From '):
+                    yield self._parse_patch(patch, bug_number, pull_request, reviewer)
+                    patch = b''
+                    state = HEADERS
                 else:
-                    if reviewer is not None:
-                        commit_msg += ' r=' + reviewer
-                    commit_summary = commit_msg
-                    commit_msg += '\n' + line + '\n'
-                    state = COMMIT_MESSAGE_BODY
-            elif state == COMMIT_MESSAGE_BODY:
-                if line == '---':
-                    commit_msg += '[import_pr] From ' + pull_request + '\n'
-                    state = COMMIT_DIFF
-                    diff = ''
-                else:
-                    commit_msg += line + '\n'
-            elif state == COMMIT_DIFF:
-                if line.startswith('From '):
-                    patch = {
-                        'author': author,
-                        'date': date,
-                        'commit_summary': commit_summary,
-                        'commit_msg': commit_msg,
-                        'diff': diff,
-                    }
-                    yield patch
-                    state = INITIAL
-                else:
-                    diff += line + '\n'
+                    patch += line + b'\n'
+        if len(patch) > 0:
+            yield self._parse_patch(patch, bug_number, pull_request, reviewer)
+        return
 
-        if state != COMMIT_DIFF:
-            self.log(logging.ERROR, 'unexpected_eof', {},
-                     'Unexpected EOF found while importing patchfile')
-            sys.exit(1)
+    def _parse_patch(self, patch, bug_number, pull_request, reviewer):
+        import email
+        from email import (
+            header,
+            policy,
+        )
 
-        patch = {
+        parse_policy = policy.compat32.clone(max_line_length=None)
+        parsed_mail = email.message_from_bytes(patch, policy=parse_policy)
+
+        def header_as_unicode(key):
+            decoded = header.decode_header(parsed_mail[key])
+            return str(header.make_header(decoded))
+
+        author = header_as_unicode('From')
+        date = header_as_unicode('Date')
+        commit_summary = header_as_unicode('Subject')
+        email_body = parsed_mail.get_payload(decode=True).decode('utf-8')
+        (commit_body, diff) = ('\n' + email_body).rsplit('\n---\n', 1)
+
+        bug_prefix = ''
+        if bug_number is not None:
+            bug_prefix = 'Bug %s - ' % bug_number
+        commit_summary = re.sub(r'^\[PATCH[0-9 /]*\] ', bug_prefix, commit_summary)
+        if reviewer is not None:
+            commit_summary += ' r=' + reviewer
+
+        commit_msg = commit_summary + '\n'
+        if len(commit_body) > 0:
+            commit_msg += commit_body + '\n'
+        commit_msg += '\n[import_pr] From ' + pull_request + '\n'
+
+        patch_obj = {
             'author': author,
             'date': date,
             'commit_summary': commit_summary,
             'commit_msg': commit_msg,
             'diff': diff,
         }
-        yield patch
+        return patch_obj
