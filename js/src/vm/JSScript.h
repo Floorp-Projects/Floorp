@@ -2379,6 +2379,8 @@ setterLevel:                                                                  \
   RuntimeScriptData* sharedData() const { return sharedData_; }
   void freeSharedData() { sharedData_ = nullptr; }
 
+  // NOTE: Script only has bytecode if JSScript::fullyInitFromStencil completes
+  // successfully.
   bool hasBytecode() const {
     if (sharedData_) {
       MOZ_ASSERT(data_);
@@ -2567,12 +2569,6 @@ class JSScript : public js::BaseScript {
   }
 
   js::BytecodeLocation location() { return js::BytecodeLocation(this, code()); }
-
-  bool isUncompleted() const {
-    // code() becomes non-null only if this script is complete.
-    // See the comment in JSScript::fullyInitFromStencil.
-    return !code();
-  }
 
   size_t length() const {
     MOZ_ASSERT(sharedData_);

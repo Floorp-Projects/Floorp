@@ -593,7 +593,7 @@ void LCovRuntime::writeLCovResult(LCovRealm& realm) {
 
 bool InitScriptCoverage(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(IsLCovEnabled());
-  MOZ_ASSERT(!script->isUncompleted(),
+  MOZ_ASSERT(script->hasBytecode(),
              "Only initialize coverage data for fully initialized scripts.");
 
   // Don't allocate LCovSource if we on helper thread since we will have our
@@ -667,7 +667,7 @@ bool CollectScriptCoverage(JSScript* script, bool finalizing) {
   const char* scriptName;
   mozilla::Tie(source, scriptName) = p->value();
 
-  if (!script->isUncompleted()) {
+  if (script->hasBytecode()) {
     source->writeScript(script, scriptName);
   }
 
