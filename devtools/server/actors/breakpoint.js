@@ -180,10 +180,9 @@ BreakpointActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const location = this.threadActor.sources.getFrameLocation(frame);
-    const { sourceActor, line, column } = location;
 
     if (
-      this.threadActor.sources.isBlackBoxed(sourceActor.url, line, column) ||
+      this.threadActor.sources.isFrameBlackBoxed(frame) ||
       this.threadActor.skipBreakpoints
     ) {
       return undefined;
@@ -194,8 +193,8 @@ BreakpointActor.prototype = {
     const locationAtFinish = frame.onPop && frame.onPop.location;
     if (
       locationAtFinish &&
-      locationAtFinish.line === line &&
-      locationAtFinish.column === column
+      locationAtFinish.line === location.line &&
+      locationAtFinish.column === location.column
     ) {
       return undefined;
     }
