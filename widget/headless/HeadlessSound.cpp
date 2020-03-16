@@ -11,9 +11,9 @@ namespace widget {
 
 NS_IMPL_ISUPPORTS(HeadlessSound, nsISound, nsIStreamLoaderObserver)
 
-HeadlessSound::HeadlessSound() {}
+HeadlessSound::HeadlessSound() = default;
 
-HeadlessSound::~HeadlessSound() {}
+HeadlessSound::~HeadlessSound() = default;
 
 NS_IMETHODIMP
 HeadlessSound::Init() { return NS_OK; }

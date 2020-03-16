@@ -29,7 +29,7 @@ class DataOffer {
   char* GetData(wl_display* aDisplay, const char* aMimeType,
                 uint32_t* aContentLength);
 
-  virtual ~DataOffer(){};
+  virtual ~DataOffer() = default;
 
  private:
   virtual bool RequestDataTransfer(const char* aMimeType, int fd) = 0;
@@ -98,7 +98,7 @@ class nsWaylandDragContext : public nsISupports {
   char* GetData(const char* aMimeType, uint32_t* aContentLength);
 
  private:
-  virtual ~nsWaylandDragContext(){};
+  virtual ~nsWaylandDragContext() = default;
 
   nsAutoPtr<WaylandDataOffer> mDataOffer;
   wl_display* mDisplay;

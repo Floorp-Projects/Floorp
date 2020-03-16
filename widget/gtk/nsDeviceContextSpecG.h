@@ -62,7 +62,7 @@ class nsDeviceContextSpecGTK : public nsIDeviceContextSpec {
 // Printer Enumerator
 //-------------------------------------------------------------------------
 class nsPrinterEnumeratorGTK final : public nsIPrinterEnumerator {
-  ~nsPrinterEnumeratorGTK() {}
+  ~nsPrinterEnumeratorGTK() = default;
 
  public:
   nsPrinterEnumeratorGTK();

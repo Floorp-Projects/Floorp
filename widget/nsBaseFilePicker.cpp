@@ -144,7 +144,7 @@ class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
 nsBaseFilePicker::nsBaseFilePicker()
     : mAddToRecentDocs(true), mMode(nsIFilePicker::modeOpen) {}
 
-nsBaseFilePicker::~nsBaseFilePicker() {}
+nsBaseFilePicker::~nsBaseFilePicker() = default;
 
 NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
                                      const nsAString& aTitle, int16_t aMode) {

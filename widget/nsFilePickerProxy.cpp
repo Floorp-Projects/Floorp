@@ -20,7 +20,7 @@ NS_IMPL_ISUPPORTS(nsFilePickerProxy, nsIFilePicker)
 nsFilePickerProxy::nsFilePickerProxy()
     : mSelectedType(0), mCapture(captureNone), mIPCActive(false) {}
 
-nsFilePickerProxy::~nsFilePickerProxy() {}
+nsFilePickerProxy::~nsFilePickerProxy() = default;
 
 NS_IMETHODIMP
 nsFilePickerProxy::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
