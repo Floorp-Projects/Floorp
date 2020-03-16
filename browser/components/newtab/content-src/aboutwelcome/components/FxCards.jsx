@@ -75,12 +75,12 @@ export class FxCards extends React.PureComponent {
     const { props } = this;
     return (
       <React.Fragment>
-        <div className={`trailheadCardGrid show`}>
+        <div className={`welcomeCardGrid show`}>
           {props.cards.map(card => (
             <OnboardingCard
               key={card.id}
               message={card}
-              className="trailheadCard"
+              className="welcomeCard"
               sendUserActionTelemetry={props.sendTelemetry}
               onAction={this.onCardAction}
               UISurface="ABOUT_WELCOME"
