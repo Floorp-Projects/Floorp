@@ -16,7 +16,8 @@ namespace indexedDB {
 class FileManager;
 
 class FileInfo final {
-  friend class FileManager;
+  template <typename FileManager, typename IndexedDatabaseManager>
+  friend class FileManagerBase;
 
   const int64_t mFileId;
 
