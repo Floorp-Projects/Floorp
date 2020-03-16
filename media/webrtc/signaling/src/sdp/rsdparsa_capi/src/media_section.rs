@@ -198,7 +198,7 @@ pub unsafe extern "C" fn sdp_media_add_codec(
         codec_name: match codec_name.try_into() {
             Ok(x) => x,
             Err(boxed_error) => {
-                println!("Error while parsing string, description: {}", boxed_error);
+                error!("Error while parsing string, description: {}", boxed_error);
                 return NS_ERROR_INVALID_ARG;
             }
         },
