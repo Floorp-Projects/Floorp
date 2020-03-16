@@ -21,6 +21,8 @@ CompositorVsyncDispatcher::CompositorVsyncDispatcher()
       mDidShutdown(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+
+  mVsyncSource->RegisterCompositorVsyncDispatcher(this);
 }
 
 CompositorVsyncDispatcher::CompositorVsyncDispatcher(
@@ -30,6 +32,8 @@ CompositorVsyncDispatcher::CompositorVsyncDispatcher(
       mDidShutdown(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+
+  mVsyncSource->RegisterCompositorVsyncDispatcher(this);
 }
 
 CompositorVsyncDispatcher::~CompositorVsyncDispatcher() {
@@ -48,6 +52,13 @@ void CompositorVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   }
 }
 
+void CompositorVsyncDispatcher::MoveToSource(
+    const RefPtr<gfx::VsyncSource>& aVsyncSource) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(XRE_IsParentProcess());
+  mVsyncSource = aVsyncSource;
+}
+
 void CompositorVsyncDispatcher::ObserveVsync(bool aEnable) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -56,9 +67,9 @@ void CompositorVsyncDispatcher::ObserveVsync(bool aEnable) {
   }
 
   if (aEnable) {
-    mVsyncSource->AddCompositorVsyncDispatcher(this);
+    mVsyncSource->EnableCompositorVsyncDispatcher(this);
   } else {
-    mVsyncSource->RemoveCompositorVsyncDispatcher(this);
+    mVsyncSource->DisableCompositorVsyncDispatcher(this);
   }
 }
 
@@ -88,12 +99,15 @@ void CompositorVsyncDispatcher::Shutdown() {
   // the nsBaseWidget shuts down and the CompositorBridgeParent shuts down.
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mDidShutdown);
   ObserveVsync(false);
   mDidShutdown = true;
   {  // scope lock
     MutexAutoLock lock(mCompositorObserverLock);
     mCompositorVsyncObserver = nullptr;
   }
+  mVsyncSource->DeregisterCompositorVsyncDispatcher(this);
+  mVsyncSource = nullptr;
 }
 
 RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher(
