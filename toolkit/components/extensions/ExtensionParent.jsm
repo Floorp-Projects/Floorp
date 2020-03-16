@@ -1142,7 +1142,7 @@ ParentAPIManager = {
       throw new Error("Got message on unexpected message manager");
     }
 
-    let { childId, alreadyLogged = false } = data;
+    let { childId } = data;
     let handlingUserInput = false;
 
     let listener = async (...listenerArgs) => {
@@ -1187,15 +1187,13 @@ ParentAPIManager = {
       handlingUserInput = true;
     }
     handler.addListener(listener, ...args);
-    if (!alreadyLogged) {
-      ExtensionActivityLog.log(
-        context.extension.id,
-        context.viewType,
-        "api_call",
-        `${data.path}.addListener`,
-        { args }
-      );
-    }
+    ExtensionActivityLog.log(
+      context.extension.id,
+      context.viewType,
+      "api_call",
+      `${data.path}.addListener`,
+      { args }
+    );
   },
 
   async recvRemoveListener(data) {
@@ -1204,17 +1202,6 @@ ParentAPIManager = {
 
     let handler = await context.apiCan.asyncFindAPIPath(data.path);
     handler.removeListener(listener);
-
-    let { alreadyLogged = false } = data;
-    if (!alreadyLogged) {
-      ExtensionActivityLog.log(
-        context.extension.id,
-        context.viewType,
-        "api_call",
-        `${data.path}.removeListener`,
-        { args: [] }
-      );
-    }
   },
 
   getContextById(childId) {
