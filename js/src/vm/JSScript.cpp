@@ -4097,7 +4097,7 @@ void JSScript::relazify(JSRuntime* rt) {
   warmUpData_.resetWarmUpCount(0);
   warmUpData_.initEnclosingScope(scope);
 
-  setIsLazyScript();
+  MOZ_ASSERT(isReadyForDelazification());
 }
 
 // Takes ownership of the script's scriptData_ and either adds it into the
@@ -4392,8 +4392,6 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
     lazyEnclosingScope = script->releaseEnclosingScope();
     script->swapData(lazyData.get());
     MOZ_ASSERT(script->sharedData_ == nullptr);
-
-    script->clearIsLazyScript();
   }
 
   // Restore the script to lazy state on failure. If this was a fresh script, we
@@ -5471,9 +5469,6 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   if (!lazy) {
     return nullptr;
   }
-
-  // Flag this script as a lazy BaseScript.
-  lazy->setIsLazyScript();
 
   // Allocate a PrivateScriptData if it will not be empty. Lazy class
   // constructors also need PrivateScriptData for field lists.
