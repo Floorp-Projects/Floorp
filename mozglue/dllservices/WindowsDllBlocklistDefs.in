@@ -250,6 +250,10 @@ BROWSER_PROCESS += [
 
     # SolidWorks Windows Explorer integration causes crashes, bug 1566109
     DllBlocklistEntry("Database.dll", (27, 3, 0, 59)),
+
+    # NXP Semiconductors (formerly Athena) PKCS11 module causes crashes,
+    # bug 1560052
+    DllBlocklistEntry("asepkcs.dll", (6, 5, 0, 5)),
 ]
 
 CHILD_PROCESSES += [
