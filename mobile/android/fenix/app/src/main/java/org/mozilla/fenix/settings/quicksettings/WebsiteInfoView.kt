@@ -12,6 +12,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.quicksettings_website_info.view.*
 import org.mozilla.fenix.R
@@ -52,6 +53,7 @@ class WebsiteInfoView(
     private fun bindCertificateName(cert: String) {
         val certificateLabel = view.context.getString(R.string.certificate_info_verified_by, cert)
         view.certificateInfo.text = certificateLabel
+        view.certificateInfo.isVisible = cert.isNotEmpty()
     }
 
     private fun bindSecurityInfo(
