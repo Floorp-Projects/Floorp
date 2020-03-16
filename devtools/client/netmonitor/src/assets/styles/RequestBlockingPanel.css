@@ -102,7 +102,6 @@
      DevTools shows that "the item was clamped to its minimum size" and the shrink
      part is thus ignored. So we're reserving 20px for the delete button. */
   max-width: calc(100% - 20px);
-  font-family: var(--monospace-font-family);
 }
 
 .request-blocking-remove-button {
