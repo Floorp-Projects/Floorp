@@ -2063,7 +2063,7 @@ function PauseActor(pool) {
 }
 
 PauseActor.prototype = {
-  actorPrefix: "pause",
+  typeName: "pause",
 };
 
 // Utility functions.

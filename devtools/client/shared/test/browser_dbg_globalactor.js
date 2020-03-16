@@ -33,7 +33,7 @@ add_task(async function() {
   ok(globalActor, "Found the test global actor.");
   ok(
     globalActor.includes("testOne"),
-    "testGlobalActor1's actorPrefix should be used."
+    "testGlobalActor1's typeName should be used."
   );
 
   response = await client.request({ to: globalActor, type: "ping" });
@@ -49,10 +49,10 @@ add_task(async function() {
     DevToolsServer._connections
   )) {
     const conn = DevToolsServer._connections[connID];
-    const actorPrefix = conn._prefix + "testOne";
+    const computedPrefix = conn._prefix + "testOne";
     for (const pool of conn._extraPools) {
       for (const actor of pool.poolChildren()) {
-        if (actor.actorID.startsWith(actorPrefix)) {
+        if (actor.actorID.startsWith(computedPrefix)) {
           count++;
         }
       }
