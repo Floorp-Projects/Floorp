@@ -11374,12 +11374,17 @@ void nsDocShell::SwapHistoryEntries(nsISHEntry* aOldEntry,
 
 void nsDocShell::SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
                                             const Maybe<nsISHEntry*>& aOSHE) {
+  // We want to hold on to the reference in mLSHE before we update it.
+  // Otherwise, SetHistoryEntry could release the last reference to
+  // the entry while aOSHE is pointing to it.
+  nsCOMPtr<nsISHEntry> deathGripOldLSHE;
   if (aLSHE.isSome()) {
-    SetHistoryEntry(&mLSHE, aLSHE.value());
+    deathGripOldLSHE = SetHistoryEntry(&mLSHE, aLSHE.value());
     MOZ_ASSERT(mLSHE.get() == aLSHE.value());
   }
+  nsCOMPtr<nsISHEntry> deathGripOldOSHE;
   if (aOSHE.isSome()) {
-    SetHistoryEntry(&mOSHE, aOSHE.value());
+    deathGripOldOSHE = SetHistoryEntry(&mOSHE, aOSHE.value());
     MOZ_ASSERT(mOSHE.get() == aOSHE.value());
   }
 
@@ -11401,8 +11406,8 @@ void nsDocShell::SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
   }
 }
 
-void nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr,
-                                 nsISHEntry* aEntry) {
+already_AddRefed<nsISHEntry> nsDocShell::SetHistoryEntry(
+    nsCOMPtr<nsISHEntry>* aPtr, nsISHEntry* aEntry) {
   // We need to sync up the docshell and session history trees for
   // subframe navigation.  If the load was in a subframe, we forward up to
   // the root docshell, which will then recursively sync up all docshells
@@ -11418,8 +11423,9 @@ void nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr,
   if (topBC && *aPtr) {
     (*aPtr)->SyncTreesForSubframeNavigation(aEntry, topBC, currBC);
   }
-
-  *aPtr = aEntry;
+  nsCOMPtr<nsISHEntry> entry(aEntry);
+  entry.swap(*aPtr);
+  return entry.forget();
 }
 
 already_AddRefed<ChildSHistory> nsDocShell::GetRootSessionHistory() {

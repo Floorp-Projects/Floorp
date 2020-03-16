@@ -663,7 +663,9 @@ class nsDocShell final : public nsDocLoader,
   // Call this method to swap in a new history entry to m[OL]SHE, rather than
   // setting it directly. This completes the navigation in all docshells
   // in the case of a subframe navigation.
-  void SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr, nsISHEntry* aEntry);
+  // Returns old mOSHE/mLSHE.
+  already_AddRefed<nsISHEntry> SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr,
+                                               nsISHEntry* aEntry);
 
   // This method calls SetHistoryEntry and updates mOSHE and mLSHE in BC to be
   // the same as in docshell
