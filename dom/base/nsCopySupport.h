@@ -69,8 +69,8 @@ class nsCopySupport {
    * and this focused content node returned. Otherwise, aSelection will be
    * set to the document's selection and null will be returned.
    */
-  static nsIContent* GetSelectionForCopy(mozilla::dom::Document* aDocument,
-                                         mozilla::dom::Selection** aSelection);
+  static already_AddRefed<mozilla::dom::Selection> GetSelectionForCopy(
+      mozilla::dom::Document* aDocument);
 
   /**
    * Returns true if a copy operation is currently permitted based on the
