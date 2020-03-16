@@ -480,6 +480,7 @@ CssRuleView.prototype = {
     if (event) {
       this.copySelection(event.target);
       event.preventDefault();
+      event.stopPropagation();
     }
   },
 
