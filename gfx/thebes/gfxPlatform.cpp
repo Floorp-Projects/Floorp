@@ -2191,25 +2191,39 @@ nsTArray<uint8_t> gfxPlatform::GetPlatformCMSOutputProfileData() {
 }
 
 nsTArray<uint8_t> gfxPlatform::GetCMSOutputProfileData() {
+  if (XRE_IsContentProcess()) {
+    mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+    nsTArray<uint8_t> result;
+    Unused << cc->SendGetOutputColorProfileData(&result);
+    return result;
+  }
+
+  if (!mCachedOutputColorProfile.IsEmpty()) {
+    return nsTArray<uint8_t>(mCachedOutputColorProfile);
+  }
+
   nsAutoCString fname;
   Preferences::GetCString("gfx.color_management.display_profile", fname);
 
   if (fname.IsEmpty()) {
-    return gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
+    mCachedOutputColorProfile = GetPlatformCMSOutputProfileData();
+    return nsTArray<uint8_t>(mCachedOutputColorProfile);
   }
 
   void* mem = nullptr;
   size_t size = 0;
   qcms_data_from_path(fname.get(), &mem, &size);
   if (mem == nullptr) {
-    return gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
+    mCachedOutputColorProfile = GetPlatformCMSOutputProfileData();
+    return nsTArray<uint8_t>(mCachedOutputColorProfile);
   }
 
-  nsTArray<uint8_t> result;
-  result.AppendElements(static_cast<uint8_t*>(mem), size);
+  MOZ_ASSERT(mCachedOutputColorProfile.IsEmpty());
+
+  mCachedOutputColorProfile.AppendElements(static_cast<uint8_t*>(mem), size);
   free(mem);
 
-  return result;
+  return nsTArray<uint8_t>(mCachedOutputColorProfile);
 }
 
 void gfxPlatform::CreateCMSOutputProfile() {
@@ -2226,7 +2240,8 @@ void gfxPlatform::CreateCMSOutputProfile() {
     }
 
     if (!gCMSOutputProfile) {
-      nsTArray<uint8_t> outputProfileData = GetCMSOutputProfileData();
+      nsTArray<uint8_t> outputProfileData =
+          gfxPlatform::GetPlatform()->GetCMSOutputProfileData();
       if (!outputProfileData.IsEmpty()) {
         gCMSOutputProfile = qcms_profile_from_memory(
             outputProfileData.Elements(), outputProfileData.Length());
@@ -3400,7 +3415,8 @@ void gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj) {
 }
 
 void gfxPlatform::GetCMSSupportInfo(mozilla::widget::InfoObject& aObj) {
-  nsTArray<uint8_t> outputProfileData = GetCMSOutputProfileData();
+  nsTArray<uint8_t> outputProfileData =
+      gfxPlatform::GetPlatform()->GetCMSOutputProfileData();
   if (outputProfileData.IsEmpty()) {
     nsPrintfCString msg("Empty profile data");
     aObj.DefineProperty("CMSOutputProfile", msg.get());
