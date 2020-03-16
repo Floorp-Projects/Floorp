@@ -25,6 +25,10 @@ add_task(async function() {
   is(har.log.entries.length, 1, "There must be one request");
 
   const page = har.log.pages[0];
+  ok(
+    page.title.endsWith("html_simple-test-page.html"),
+    "There must be some page title"
+  );
   ok("onContentLoad" in page.pageTimings, "There must be onContentLoad time");
   ok("onLoad" in page.pageTimings, "There must be onLoad time");
 

@@ -64,6 +64,10 @@ add_task(async () => {
   // Explicit tests
   is(har2.log.entries.length, 3, "There must be expected number of requests");
   ok(
+    har2.log.pages[0].title.endsWith("Network Monitor Test Page"),
+    "There must be some page title"
+  );
+  ok(
     har2.log.entries[0].request.headers.length > 0,
     "There must be some request headers"
   );

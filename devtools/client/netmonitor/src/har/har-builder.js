@@ -515,20 +515,28 @@ HarBuilder.prototype = {
 /**
  * Find specified keys within an object.
  * Searches object for keys passed in, returns first value returned,
- * Will return false if none found.
+ * or an empty string.
  *
  * @param obj (object)
  * @param keys (array)
- * @returns {boolean}
+ * @returns {string}
  */
 function findKeys(obj, keys) {
   if (!keys) {
-    return false;
+    return "";
   }
 
-  const keyFound = keys.filter(key => obj.key);
+  const keyFound = keys.filter(key => obj[key]);
+  if (!keys.length) {
+    return "";
+  }
 
-  return keyFound.length !== 0 ? keyFound[0] : false;
+  const value = obj[keyFound[0]];
+  if (typeof value === "undefined" || typeof value === "object") {
+    return "";
+  }
+
+  return String(value);
 }
 
 /**
