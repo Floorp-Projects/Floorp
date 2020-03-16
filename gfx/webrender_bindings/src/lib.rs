@@ -14,7 +14,7 @@ extern crate num_cpus;
 extern crate rayon;
 extern crate swgl;
 extern crate thin_vec;
-extern crate thread_profiler;
+extern crate tracy_rs;
 extern crate uuid;
 extern crate webrender;
 

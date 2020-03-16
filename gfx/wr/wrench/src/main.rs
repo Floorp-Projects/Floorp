@@ -764,7 +764,6 @@ fn render<'a>(
 
     let mut show_help = false;
     let mut do_loop = false;
-    let mut cpu_profile_index = 0;
     let mut cursor_position = WorldPoint::zero();
 
     window.update(wrench);
@@ -896,11 +895,6 @@ fn render<'a>(
                         VirtualKeyCode::H => {
                             show_help = !show_help;
                             do_render = true;
-                        }
-                        VirtualKeyCode::T => {
-                            let file_name = format!("profile-{}.json", cpu_profile_index);
-                            wrench.renderer.save_cpu_profile(&file_name);
-                            cpu_profile_index += 1;
                         }
                         VirtualKeyCode::C => {
                             let path = PathBuf::from("../captures/wrench");
