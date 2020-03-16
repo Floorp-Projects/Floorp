@@ -147,4 +147,24 @@ export const ctLogNames = {
     "WoSign 2",
   "9e4ff73dc3ce220b69217c899e468076abf8d78636d5ccfc85a31a75628ba88b":
     "WoSign CT #1",
+  "659b3350f43b12cc5ea5ab4ec765d3fde6c88243777778e72003f9eb2b8c3129":
+    "Let's Encrypt Oak 2019",
+  e712f2b0377e1a62fb8ec90c6184f1ea7b37cb561d11265bf3e0f34bf241546e:
+    "Let's Encrypt Oak 2020",
+  "9420bc1e8ed58d6c88731f828b222c0dd1da4d5e6c4f943d61db4e2f584da2c2":
+    "Let's Encrypt Oak 2021",
+  dfa55eab68824f1f6cadeeb85f4e3e5aeacda212a46a5e8e3b12c020445c2a73:
+    "Let's Encrypt Oak 2022",
+  b73efb24df9c4dba75f239c5ba58f46c5dfc42cf7a9f35c49e1d098125edb499:
+    "Let's Encrypt Oak 2023",
+  "849f5f7f58d2bf7b54ecbd74611cea45c49c98f1d6481bc6f69e8c174f24f3cf":
+    "Let's Encrypt Testflume 2019",
+  c63f2218c37d56a6aa06b596da8e53d4d7156d1e9bac8e44d2202de64d69d9dc:
+    "Let's Encrypt Testflume 2020",
+  "03edf1da9776b6f38c341e39ed9d707a7570369cf9844f327fe9e14138361b60":
+    "Let's Encrypt Testflume 2021",
+  "2327efda352510dbc019ef491ae3ff1cc5a479bce37878360ee318cffb64f8c8":
+    "Let's Encrypt Testflume 2022",
+  "5534b7ab5a6ac3a7cbeba65487b2a2d71b48f650fa17c5197c97a0cb2076f3c6":
+    "Let's Encrypt Testflume 2023",
 };
