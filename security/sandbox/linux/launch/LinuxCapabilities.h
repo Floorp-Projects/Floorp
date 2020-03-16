@@ -40,7 +40,7 @@ class LinuxCapabilities final {
     __u32 mMask;
     friend class LinuxCapabilities;
     BitRef(__u32& aWord, uint32_t aMask) : mWord(aWord), mMask(aMask) {}
-    BitRef(const BitRef& aBit) : mWord(aBit.mWord), mMask(aBit.mMask) {}
+    BitRef(const BitRef& aBit) = default;
 
    public:
     MOZ_IMPLICIT operator bool() const { return mWord & mMask; }

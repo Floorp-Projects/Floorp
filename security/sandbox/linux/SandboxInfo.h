@@ -17,7 +17,7 @@ namespace mozilla {
 class SandboxInfo {
  public:
   // No need to prevent copying; this is essentially just a const int.
-  SandboxInfo(const SandboxInfo& aOther) : mFlags(aOther.mFlags) {}
+  SandboxInfo(const SandboxInfo& aOther) = default;
 
   // Flags are checked at initializer time; this returns them.
   static const SandboxInfo& Get() { return sSingleton; }

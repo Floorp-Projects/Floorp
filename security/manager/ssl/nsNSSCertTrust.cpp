@@ -37,7 +37,7 @@ nsNSSCertTrust::nsNSSCertTrust(CERTCertTrust* t) {
     memset(&mTrust, 0, sizeof(CERTCertTrust));
 }
 
-nsNSSCertTrust::~nsNSSCertTrust() {}
+nsNSSCertTrust::~nsNSSCertTrust() = default;
 
 void nsNSSCertTrust::SetSSLTrust(bool peer, bool tPeer, bool ca, bool tCA,
                                  bool tClientCA, bool user, bool warn) {
