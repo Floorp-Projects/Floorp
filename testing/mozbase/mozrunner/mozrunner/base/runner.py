@@ -131,9 +131,11 @@ class BaseRunner(object):
                 process.run(self.timeout, self.output_timeout)
 
                 self.process_handler = process
-            except Exception:
-                _, value, tb = sys.exc_info()
-                reraise(RunnerNotStartedError, "Failed to start the process: %s" % value, tb)
+            except Exception as e:
+                reraise(RunnerNotStartedError,
+                        RunnerNotStartedError(
+                            "Failed to start the process: {}".format(e)),
+                        sys.exc_info()[2])
 
         self.crashed = 0
         return self.process_handler.pid
