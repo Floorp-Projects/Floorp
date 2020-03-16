@@ -58,7 +58,7 @@ parser.add_argument('--platform', '-p', type=str, metavar='PLATFORM',
                     'by buildbot to override the variant\'s "debug" setting. The platform can be '
                     'used to specify 32 vs 64 bits.')
 parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
-                    default=10800,
+                    default=12600,
                     help='kill job after TIMEOUT seconds')
 parser.add_argument('--objdir', type=str, metavar='DIR',
                     default=env.get('OBJDIR', os.path.join(DIR.source, 'obj-spider')),
