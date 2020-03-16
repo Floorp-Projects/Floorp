@@ -1245,11 +1245,11 @@ class CipherSuiteChangeObserver : public nsIObserver {
   static nsresult StartObserve();
 
  protected:
-  virtual ~CipherSuiteChangeObserver() {}
+  virtual ~CipherSuiteChangeObserver() = default;
 
  private:
   static StaticRefPtr<CipherSuiteChangeObserver> sObserver;
-  CipherSuiteChangeObserver() {}
+  CipherSuiteChangeObserver() = default;
 };
 
 NS_IMPL_ISUPPORTS(CipherSuiteChangeObserver, nsIObserver)
@@ -2307,7 +2307,7 @@ nsNSSComponent::IssuerMatchesMitmCanary(const char* aCertIssuer) {
   return NS_ERROR_FAILURE;
 }
 
-SharedCertVerifier::~SharedCertVerifier() {}
+SharedCertVerifier::~SharedCertVerifier() = default;
 
 NS_IMETHODIMP
 nsNSSComponent::GetDefaultCertVerifier(SharedCertVerifier** result) {
@@ -2441,9 +2441,9 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys() {
 
 NS_IMPL_ISUPPORTS(PipUIContext, nsIInterfaceRequestor)
 
-PipUIContext::PipUIContext() {}
+PipUIContext::PipUIContext() = default;
 
-PipUIContext::~PipUIContext() {}
+PipUIContext::~PipUIContext() = default;
 
 NS_IMETHODIMP
 PipUIContext::GetInterface(const nsIID& uuid, void** result) {

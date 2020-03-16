@@ -33,7 +33,7 @@ static bool IsPSMError(PRErrorCode error) {
 
 NS_IMPL_ISUPPORTS(NSSErrorsService, nsINSSErrorsService)
 
-NSSErrorsService::~NSSErrorsService() {}
+NSSErrorsService::~NSSErrorsService() = default;
 
 nsresult NSSErrorsService::Init() {
   nsresult rv;

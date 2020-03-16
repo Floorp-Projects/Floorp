@@ -97,7 +97,7 @@ int64_t ComputeContentLength(nsIRequest* request) {
 PSMContentStreamListener::PSMContentStreamListener(uint32_t type)
     : mType(type) {}
 
-PSMContentStreamListener::~PSMContentStreamListener() {}
+PSMContentStreamListener::~PSMContentStreamListener() = default;
 
 NS_IMPL_ISUPPORTS(PSMContentStreamListener, nsIStreamListener,
                   nsIRequestObserver)
@@ -197,7 +197,7 @@ void PSMContentStreamListener::ImportCertificate() {
 PSMContentDownloaderParent::PSMContentDownloaderParent(uint32_t type)
     : PSMContentStreamListener(type), mIPCOpen(true) {}
 
-PSMContentDownloaderParent::~PSMContentDownloaderParent() {}
+PSMContentDownloaderParent::~PSMContentDownloaderParent() = default;
 
 mozilla::ipc::IPCResult PSMContentDownloaderParent::RecvOnStartRequest(
     const uint32_t& contentLength) {
@@ -256,9 +256,9 @@ void PSMContentDownloaderParent::ActorDestroy(ActorDestroyReason why) {
 
 NS_IMPL_ISUPPORTS(PSMContentDownloaderChild, nsIStreamListener)
 
-PSMContentDownloaderChild::PSMContentDownloaderChild() {}
+PSMContentDownloaderChild::PSMContentDownloaderChild() = default;
 
-PSMContentDownloaderChild::~PSMContentDownloaderChild() {}
+PSMContentDownloaderChild::~PSMContentDownloaderChild() = default;
 
 NS_IMETHODIMP
 PSMContentDownloaderChild::OnStartRequest(nsIRequest* request) {
@@ -317,7 +317,7 @@ PSMContentListener::PSMContentListener() {
   mParentContentListener = nullptr;
 }
 
-PSMContentListener::~PSMContentListener() {}
+PSMContentListener::~PSMContentListener() = default;
 
 nsresult PSMContentListener::init() { return NS_OK; }
 
