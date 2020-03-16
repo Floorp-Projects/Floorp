@@ -1646,20 +1646,24 @@ void Gecko_SetJemallocThreadLocalArena(bool enabled) {
 #undef STYLE_STRUCT
 
 bool Gecko_ErrorReportingEnabled(const StyleSheet* aSheet,
-                                 const Loader* aLoader) {
-  return ErrorReporter::ShouldReportErrors(aSheet, aLoader);
+                                 const Loader* aLoader,
+                                 uint64_t* aOutWindowId) {
+  if (!ErrorReporter::ShouldReportErrors(aSheet, aLoader)) {
+    return false;
+  }
+  *aOutWindowId = ErrorReporter::FindInnerWindowId(aSheet, aLoader);
+  return true;
 }
 
 void Gecko_ReportUnexpectedCSSError(
-    const StyleSheet* aSheet, const Loader* aLoader, nsIURI* aURI,
-    const char* message, const char* param, uint32_t paramLen,
-    const char* prefix, const char* prefixParam, uint32_t prefixParamLen,
-    const char* suffix, const char* source, uint32_t sourceLen,
-    const char* selectors, uint32_t selectorsLen, uint32_t lineNumber,
-    uint32_t colNumber) {
+    const uint64_t aWindowId, nsIURI* aURI, const char* message,
+    const char* param, uint32_t paramLen, const char* prefix,
+    const char* prefixParam, uint32_t prefixParamLen, const char* suffix,
+    const char* source, uint32_t sourceLen, const char* selectors,
+    uint32_t selectorsLen, uint32_t lineNumber, uint32_t colNumber) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  ErrorReporter reporter(aSheet, aLoader, aURI);
+  ErrorReporter reporter(aWindowId);
 
   if (prefix) {
     if (prefixParam) {
@@ -1686,7 +1690,8 @@ void Gecko_ReportUnexpectedCSSError(
   }
   nsDependentCSubstring sourceValue(source, sourceLen);
   nsDependentCSubstring selectorsValue(selectors, selectorsLen);
-  reporter.OutputError(lineNumber, colNumber, sourceValue, selectorsValue);
+  reporter.OutputError(sourceValue, selectorsValue, lineNumber, colNumber,
+                       aURI);
 }
 
 void Gecko_ContentList_AppendAll(nsSimpleContentList* aList,
