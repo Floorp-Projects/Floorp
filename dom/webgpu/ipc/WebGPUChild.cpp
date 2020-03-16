@@ -193,19 +193,8 @@ void WebGPUChild::DestroyTextureView(RawId aId) {
 
 RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
                                        const dom::GPUSamplerDescriptor& aDesc) {
-  ffi::WGPUSamplerDescriptor desc = {};
-  desc.address_mode_u = ffi::WGPUAddressMode(aDesc.mAddressModeU);
-  desc.address_mode_v = ffi::WGPUAddressMode(aDesc.mAddressModeV);
-  desc.address_mode_w = ffi::WGPUAddressMode(aDesc.mAddressModeW);
-  desc.mag_filter = ffi::WGPUFilterMode(aDesc.mMagFilter);
-  desc.min_filter = ffi::WGPUFilterMode(aDesc.mMinFilter);
-  desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
-  desc.lod_min_clamp = aDesc.mLodMinClamp;
-  desc.lod_max_clamp = aDesc.mLodMaxClamp;
-  desc.compare_function = ffi::WGPUCompareFunction(aDesc.mCompare);
-
   RawId id = ffi::wgpu_client_make_sampler_id(mClient, aSelfId);
-  if (!SendDeviceCreateSampler(aSelfId, desc, id)) {
+  if (!SendDeviceCreateSampler(aSelfId, aDesc, id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -249,20 +238,24 @@ void WebGPUChild::DestroyCommandBuffer(RawId aId) {
 RawId WebGPUChild::DeviceCreateBindGroupLayout(
     RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_bind_group_layout_id(mClient, aSelfId);
-  nsTArray<ffi::WGPUBindGroupLayoutBinding> bindings(aDesc.mBindings.Length());
-  for (const auto& binding : aDesc.mBindings) {
-    ffi::WGPUBindGroupLayoutBinding b = {};
-    b.binding = binding.mBinding;
-    b.visibility = binding.mVisibility;
-    b.ty = ffi::WGPUBindingType(binding.mType);
-    Unused << binding.mTextureComponentType;  // TODO
-    b.texture_dimension =
-        ffi::WGPUTextureViewDimension(binding.mTextureDimension);
-    b.multisampled = binding.mMultisampled;
-    b.dynamic = binding.mDynamic;
-    bindings.AppendElement(b);
+  nsTArray<ffi::WGPUBindGroupLayoutEntry> entries(aDesc.mEntries.Length());
+  for (const auto& entry : aDesc.mEntries) {
+    ffi::WGPUBindGroupLayoutEntry e = {};
+    e.binding = entry.mBinding;
+    e.visibility = entry.mVisibility;
+    e.ty = ffi::WGPUBindingType(entry.mType);
+    e.multisampled = entry.mMultisampled;
+    e.has_dynamic_offset = entry.mHasDynamicOffset;
+    e.view_dimension = ffi::WGPUTextureViewDimension(entry.mViewDimension);
+    e.texture_component_type =
+        ffi::WGPUTextureComponentType(entry.mTextureComponentType);
+    e.storage_texture_format =
+        entry.mStorageTextureFormat.WasPassed()
+            ? ffi::WGPUTextureFormat(entry.mStorageTextureFormat.Value())
+            : ffi::WGPUTextureFormat(0);
+    entries.AppendElement(e);
   }
-  SerialBindGroupLayoutDescriptor desc = {std::move(bindings)};
+  SerialBindGroupLayoutDescriptor desc = {std::move(entries)};
   if (!SendDeviceCreateBindGroupLayout(aSelfId, desc, id)) {
     MOZ_CRASH("IPC failure");
   }
@@ -297,26 +290,26 @@ RawId WebGPUChild::DeviceCreateBindGroup(
   RawId id = ffi::wgpu_client_make_bind_group_id(mClient, aSelfId);
   SerialBindGroupDescriptor desc = {};
   desc.mLayout = aDesc.mLayout->mId;
-  for (const auto& binding : aDesc.mBindings) {
-    SerialBindGroupBinding bd = {};
-    bd.mBinding = binding.mBinding;
-    if (binding.mResource.IsGPUBufferBinding()) {
-      bd.mType = SerialBindGroupBindingType::Buffer;
-      const auto& bufBinding = binding.mResource.GetAsGPUBufferBinding();
+  for (const auto& entry : aDesc.mEntries) {
+    SerialBindGroupEntry bd = {};
+    bd.mBinding = entry.mBinding;
+    if (entry.mResource.IsGPUBufferBinding()) {
+      bd.mType = SerialBindGroupEntryType::Buffer;
+      const auto& bufBinding = entry.mResource.GetAsGPUBufferBinding();
       bd.mValue = bufBinding.mBuffer->mId;
       bd.mBufferOffset = bufBinding.mOffset;
       bd.mBufferSize =
           bufBinding.mSize.WasPassed() ? bufBinding.mSize.Value() : 0;
     }
-    if (binding.mResource.IsGPUTextureView()) {
-      bd.mType = SerialBindGroupBindingType::Texture;
-      bd.mValue = binding.mResource.GetAsGPUTextureView()->mId;
+    if (entry.mResource.IsGPUTextureView()) {
+      bd.mType = SerialBindGroupEntryType::Texture;
+      bd.mValue = entry.mResource.GetAsGPUTextureView()->mId;
     }
-    if (binding.mResource.IsGPUSampler()) {
-      bd.mType = SerialBindGroupBindingType::Sampler;
-      bd.mValue = binding.mResource.GetAsGPUSampler()->mId;
+    if (entry.mResource.IsGPUSampler()) {
+      bd.mType = SerialBindGroupEntryType::Sampler;
+      bd.mValue = entry.mResource.GetAsGPUSampler()->mId;
     }
-    desc.mBindings.AppendElement(bd);
+    desc.mEntries.AppendElement(bd);
   }
   if (!SendDeviceCreateBindGroup(aSelfId, desc, id)) {
     MOZ_CRASH("IPC failure");
@@ -445,13 +438,13 @@ static ffi::WGPUVertexAttributeDescriptor ConvertVertexAttributeDescriptor(
   return desc;
 }
 
-static SerialVertexBufferDescriptor ConvertVertexBufferDescriptor(
-    const dom::GPUVertexBufferDescriptor& aDesc) {
-  SerialVertexBufferDescriptor desc = {};
-  desc.mStride = aDesc.mStride;
+static SerialVertexBufferLayoutDescriptor ConvertVertexBufferLayoutDescriptor(
+    const dom::GPUVertexBufferLayoutDescriptor& aDesc) {
+  SerialVertexBufferLayoutDescriptor desc = {};
+  desc.mArrayStride = aDesc.mArrayStride;
   desc.mStepMode = ffi::WGPUInputStepMode(aDesc.mStepMode);
   for (const auto& vat : aDesc.mAttributeSet) {
-    desc.mAttributes.AppendElement(ConvertVertexAttributeDescriptor(vat));
+    desc.mAttributeSet.AppendElement(ConvertVertexAttributeDescriptor(vat));
   }
   return desc;
 }
@@ -479,14 +472,14 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     desc.mDepthStencilState =
         Some(ConvertDepthStencilDescriptor(aDesc.mDepthStencilState.Value()));
   }
-  desc.mVertexInput.mIndexFormat =
-      ffi::WGPUIndexFormat(aDesc.mVertexInput.mIndexFormat);
-  for (const auto& vertex_desc : aDesc.mVertexInput.mVertexBuffers) {
-    SerialVertexBufferDescriptor vb_desc = {};
+  desc.mVertexState.mIndexFormat =
+      ffi::WGPUIndexFormat(aDesc.mVertexState.mIndexFormat);
+  for (const auto& vertex_desc : aDesc.mVertexState.mVertexBuffers) {
+    SerialVertexBufferLayoutDescriptor vb_desc = {};
     if (!vertex_desc.IsNull()) {
-      vb_desc = ConvertVertexBufferDescriptor(vertex_desc.Value());
+      vb_desc = ConvertVertexBufferLayoutDescriptor(vertex_desc.Value());
     }
-    desc.mVertexInput.mVertexBuffers.AppendElement(vb_desc);
+    desc.mVertexState.mVertexBuffers.AppendElement(vb_desc);
   }
   desc.mSampleCount = aDesc.mSampleCount;
   desc.mSampleMask = aDesc.mSampleMask;

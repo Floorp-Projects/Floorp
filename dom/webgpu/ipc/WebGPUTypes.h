@@ -18,23 +18,23 @@ typedef uint64_t RawId;
 typedef uint64_t BufferAddress;
 
 struct SerialBindGroupLayoutDescriptor {
-  nsTArray<ffi::WGPUBindGroupLayoutBinding> mBindings;
+  nsTArray<ffi::WGPUBindGroupLayoutEntry> mEntries;
 };
 
 struct SerialPipelineLayoutDescriptor {
   nsTArray<RawId> mBindGroupLayouts;
 };
 
-enum class SerialBindGroupBindingType : uint8_t {
+enum class SerialBindGroupEntryType : uint8_t {
   Buffer,
   Texture,
   Sampler,
   EndGuard_
 };
 
-struct SerialBindGroupBinding {
+struct SerialBindGroupEntry {
   uint32_t mBinding;
-  SerialBindGroupBindingType mType;
+  SerialBindGroupEntryType mType;
   RawId mValue;
   BufferAddress mBufferOffset;
   BufferAddress mBufferSize;
@@ -42,7 +42,7 @@ struct SerialBindGroupBinding {
 
 struct SerialBindGroupDescriptor {
   RawId mLayout;
-  nsTArray<SerialBindGroupBinding> mBindings;
+  nsTArray<SerialBindGroupEntry> mEntries;
 };
 
 struct SerialProgrammableStageDescriptor {
@@ -55,15 +55,15 @@ struct SerialComputePipelineDescriptor {
   SerialProgrammableStageDescriptor mComputeStage;
 };
 
-struct SerialVertexBufferDescriptor {
-  ffi::WGPUBufferAddress mStride;
+struct SerialVertexBufferLayoutDescriptor {
+  ffi::WGPUBufferAddress mArrayStride;
   ffi::WGPUInputStepMode mStepMode;
-  nsTArray<ffi::WGPUVertexAttributeDescriptor> mAttributes;
+  nsTArray<ffi::WGPUVertexAttributeDescriptor> mAttributeSet;
 };
 
-struct SerialVertexInputDescriptor {
+struct SerialVertexStateDescriptor {
   ffi::WGPUIndexFormat mIndexFormat;
-  nsTArray<SerialVertexBufferDescriptor> mVertexBuffers;
+  nsTArray<SerialVertexBufferLayoutDescriptor> mVertexBuffers;
 };
 
 struct SerialRenderPipelineDescriptor {
@@ -74,7 +74,7 @@ struct SerialRenderPipelineDescriptor {
   Maybe<ffi::WGPURasterizationStateDescriptor> mRasterizationState;
   nsTArray<ffi::WGPUColorStateDescriptor> mColorStates;
   Maybe<ffi::WGPUDepthStencilStateDescriptor> mDepthStencilState;
-  SerialVertexInputDescriptor mVertexInput;
+  SerialVertexStateDescriptor mVertexState;
   uint32_t mSampleCount;
   uint32_t mSampleMask;
   bool mAlphaToCoverageEnabled;

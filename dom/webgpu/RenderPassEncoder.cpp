@@ -152,21 +152,20 @@ void RenderPassEncoder::SetPipeline(const RenderPipeline& aPipeline) {
   }
 }
 
-void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
-                                       uint64_t aOffset) {
+void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer, uint64_t aOffset,
+                                       uint64_t aSize) {
   if (mValid) {
     mUsedBuffers.push_back(&aBuffer);
-    ffi::wgpu_render_pass_set_index_buffer(&mRaw, aBuffer.mId, aOffset);
+    ffi::wgpu_render_pass_set_index_buffer(&mRaw, aBuffer.mId, aOffset, aSize);
   }
 }
 
 void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
-                                        uint64_t aOffset) {
+                                        uint64_t aOffset, uint64_t aSize) {
   if (mValid) {
     mUsedBuffers.push_back(&aBuffer);
-    // TODO: change the Rust API to use a single vertex buffer?
-    ffi::wgpu_render_pass_set_vertex_buffers(&mRaw, aSlot, &aBuffer.mId,
-                                             &aOffset, 1);
+    ffi::wgpu_render_pass_set_vertex_buffer(&mRaw, aSlot, aBuffer.mId, aOffset,
+                                            aSize);
   }
 }
 
