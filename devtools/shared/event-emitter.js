@@ -346,11 +346,22 @@ let loggingEnabled = false;
 
 if (!isWorker) {
   loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
-  Services.prefs.addObserver("devtools.dump.emit", {
+  const observer = {
     observe: () => {
       loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
     },
-  });
+  };
+  Services.prefs.addObserver("devtools.dump.emit", observer);
+
+  // Also listen for Loader unload to unregister the pref observer and
+  // prevent leaking
+  const unloadObserver = function(subject) {
+    if (subject.wrappedJSObject == require("@loader/unload")) {
+      Services.prefs.removeObserver("devtools.dump.emit", observer);
+      Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");
+    }
+  };
+  Services.obs.addObserver(unloadObserver, "devtools:loader:destroy");
 }
 
 function serialize(target) {
