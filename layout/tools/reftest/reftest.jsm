@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "OS", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "PDFJS", function() {
-    const { require } = Cu.import("resource://gre/modules/commonjs/toolkit/require.js", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     return {
         main: require('resource://pdf.js/build/pdf.js'),
         worker: require('resource://pdf.js/build/pdf.worker.js')
@@ -1765,10 +1765,11 @@ function readPdf(path, callback) {
                 let fakePort = new PDFJS.main.LoopbackPort(true);
                 PDFJS.worker.WorkerMessageHandler.initializeFromPort(fakePort);
                 let myWorker = new PDFJS.main.PDFWorker("worker", fakePort);
-                PDFJS.main.PDFJS.getDocument({
+                PDFJS.main.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
+                PDFJS.main.getDocument({
                     worker: myWorker,
                     data: data
-                }).then(function (pdf) {
+                }).promise.then(function (pdf) {
                     callback(null, pdf);
                 }, function () {
                     callback(new Error("Couldn't parse " + path));
