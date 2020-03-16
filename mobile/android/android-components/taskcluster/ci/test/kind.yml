@@ -8,38 +8,57 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-jobs:
-    ui:
-        attributes:
-            build-type: debug
-            code-review: true
-        description: Test Reference Browser
-        run:
-            # TODO Generate APKs in a build task instead
-            gradlew: ['clean', 'assembleGeckoNightly', 'assembleAndroidTest']
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'browser', 'arm', '1']
-            secrets:
-                - name: project/mobile/android-components/firebase
-                  key: firebaseToken
-                  path: .firebase_token.json
-                  json: true
-            using: gradlew
-            use-caches: false
-        run-on-tasks-for: [github-push]
-        treeherder:
+job-defaults:
+    attributes:
+        build-type: debug
+        code-review: true
+    run:
+        # TODO Generate APKs in a build task instead
+        gradlew: ['clean', 'assembleGeckoNightly', 'assembleAndroidTest', 'assembleDebug']
+        secrets:
+            - name: project/mobile/android-components/firebase
+              key: firebaseToken                  
+              path: .firebase_token.json
+              json: true
+        using: gradlew
+        use-caches: false
+    run-on-tasks-for: [github-push]
+    treeherder:
             kind: test
             platform: 'ui-test/opt'
-            symbol: ui
             tier: 2
-        worker-type: b-android
-        worker:
-            artifacts:
-                - name: public
-                  path: /build/android-components/results
-                  type: directory
-            docker-image: {in-tree: ui-tests}
-            env:
-                GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
-                GOOGLE_PROJECT: moz-android-components-230120
-            max-run-time: 7200
+    worker-type: b-android
+    worker:
+        artifacts:
+            - name: public
+              path: /build/android-components/results
+              type: directory
+        docker-image: {in-tree: ui-tests}
+        env:
+            GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
+            GOOGLE_PROJECT: moz-android-components-230120
+        max-run-time: 7200
+
+jobs:
+    ui:
+        description: 'Run ui tests for browser component'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'browser', 'arm', '1']
+        treeherder:
+            symbol: 'ui-components'
+        #run-on-tasks-for: [github-push]
+    ui-browser:
+        description: 'Run ui tests for browser component'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-browser', 'arm', '1']
+        treeherder:
+            symbol: 'ui-samples-browser'
+    ui-glean:
+        description: 'Run ui tests for browser component'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-glean', 'arm', '1']
+        treeherder:
+            symbol: 'ui-samples-glean'

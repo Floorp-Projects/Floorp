@@ -16,7 +16,7 @@
 
 
 # If a command fails then do not proceed and fail this script too.
-set -e
+set -ex
 
 #########################
 # The command line help #
@@ -30,6 +30,9 @@ display_help() {
     echo
     echo "To run component/feature tests on X86 device (on 3 shards)"
     echo "$ execute-firebase-test.sh feature x86 3"
+    echo
+    echo "To run UI samples/sampleName tests"
+    echo "$ execute-firebase-test.sh sample-sampleName arm 1"
     echo
 }
 
@@ -74,19 +77,48 @@ else
     flank_template="$FLANK_CONF_ARM"
 fi
 
-APK_APP="./samples/${component}/build/outputs/apk/geckoNightly/debug/samples-browser-geckoNightly-debug.apk"
-APK_TEST="./components/${component}/engine-gecko-nightly/build/outputs/apk/androidTest/debug/browser-engine-gecko-nightly-debug-androidTest.apk"
+# Remove samples- from the component for each APK path
+samples=${component//samples-}
 
+# If tests are for components, the path is different than for samples
+if [[ "${component}" != samples-* ]]
+then
+    # Tests for any component, NOT sample and NOT real UI tests
+    APK_APP="./samples/${component}/build/outputs/apk/geckoNightly/debug/samples-${component}-geckoNightly-debug.apk"
+    APK_TEST="./components/${component}/engine-gecko-nightly/build/outputs/apk/androidTest/debug/browser-engine-gecko-nightly-debug-androidTest.apk"
+elif [[ "${component}" == "samples-browser" ]]
+then
+    # Tests for browser sample, the only sample with geckoNightly
+    APK_APP="./samples/${samples}/build/outputs/apk/geckoNightly/debug/samples-${samples}-geckoNightly-debug.apk"
+    APK_TEST="./samples/${samples}/build/outputs/apk/androidTest/geckoNightly/debug/samples-{$samples}-geckoNightly-debug-androidTest.apk"
+else
+    # Tests for samples different than browser, like samples-glean
+    APK_APP="./samples/${samples}/build/outputs/apk/debug/samples-${samples}-debug.apk"
+    APK_TEST="./samples/${samples}/build/outputs/apk/androidTest/debug/samples-${samples}-debug-androidTest.apk"
+fi
 
 # function to exit script with exit code from test run.
 # (Only 0 if all test executions passed)
 function failure_check() {
+    echo
+    echo
     if [[ $exitcode -ne 0 ]]; then
-        echo
-        echo
-	echo "ERROR: UI test run failed, please check above URL"
+        echo "ERROR: UI test run failed, please check above URL"
+    else
+    echo "All UI test(s) have passed!"
     fi
-    exit $exitcode
+
+    echo
+    echo "COPY ARTIFACTS"
+    echo
+    cp -r ./results /builds/worker/artifacts
+
+    echo
+    echo "RESULTS"
+    echo
+    ls -la ./results
+    echo
+    echo
 }
 
 echo
@@ -95,30 +127,5 @@ echo
 $JAVA_BIN -jar $FLANK_BIN android run --config=$flank_template --max-test-shards=$num_shards --app=$APK_APP --test=$APK_TEST --project=$GOOGLE_PROJECT
 exitcode=$?
 
-echo
-echo
-echo "COPY ARTIFACTS"
-echo
-cp -r "./results" "./test_artifacts"
-exitcode=$?
 failure_check
-echo
-echo
-
-echo
-echo "RESULTS"
-echo
-ls -la ./results
-echo 
-echo
-
-echo
-echo "RESULTS"
-echo
-ls -la ./test_results
-
-echo "All UI test(s) have passed!"
-echo
-echo
-
-
+exit $exitcode
