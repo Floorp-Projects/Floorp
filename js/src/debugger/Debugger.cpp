@@ -3110,7 +3110,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
     } else {
       for (auto base = zone->cellIter<BaseScript>(); !base.done();
            base.next()) {
-        if (base->isLazyScript()) {
+        if (!base->hasJitScript()) {
           continue;
         }
         JSScript* script = base->asJSScript();

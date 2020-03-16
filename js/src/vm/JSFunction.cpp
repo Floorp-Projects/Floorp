@@ -1546,7 +1546,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               HandleFunction fun) {
   Rooted<BaseScript*> lazy(cx, fun->baseScript());
 
-  MOZ_ASSERT(lazy->isLazyScript(), "Script is already compiled!");
+  MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
 
   ScriptSource* ss = lazy->scriptSource();
@@ -1653,8 +1653,6 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
     MOZ_ASSERT(fun->hasBytecode());
     return true;
   }
-
-  MOZ_ASSERT(lazy->isLazyScript());
 
   // Finally, compile the script if it really doesn't exist.
   return DelazifyCanonicalScriptedFunction(cx, fun);

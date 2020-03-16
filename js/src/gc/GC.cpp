@@ -2124,12 +2124,10 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
   for (auto base = zone->cellIterUnsafe<BaseScript>(); !base.done();
        base.next()) {
-    if (base->isLazyScript()) {
+    if (!base->hasJitScript()) {
       continue;
     }
-    JSScript* script = base->asJSScript();
-
-    AutoSweepJitScript sweep(script);
+    AutoSweepJitScript sweep(base->asJSScript());
   }
   for (auto group = zone->cellIterUnsafe<ObjectGroup>(); !group.done();
        group.next()) {
