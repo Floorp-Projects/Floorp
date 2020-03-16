@@ -2995,7 +2995,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
    public:
     explicit AutoProfilerCallInstrumentation(
         MacroAssembler& masm MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoProfilerCallInstrumentation() {}
+    ~AutoProfilerCallInstrumentation() = default;
   };
   friend class AutoProfilerCallInstrumentation;
 

@@ -83,7 +83,7 @@ class MacroAssemblerX86Shared : public Assembler {
  public:
   using Assembler::call;
 
-  MacroAssemblerX86Shared() {}
+  MacroAssemblerX86Shared() = default;
 
   bool appendRawCode(const uint8_t* code, size_t numBytes) {
     return masm.appendRawCode(code, numBytes);

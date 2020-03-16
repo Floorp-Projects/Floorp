@@ -84,7 +84,7 @@ class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
   friend void AutoGCRooter::trace(JSTracer* trc);
 
  protected:
-  virtual ~CustomAutoRooter() {}
+  virtual ~CustomAutoRooter() = default;
 
   /** Supplied by derived class to trace roots. */
   virtual void trace(JSTracer* trc) = 0;
@@ -1890,7 +1890,7 @@ using UniqueOptimizedEncodingBytes = js::UniquePtr<OptimizedEncodingBytes>;
 
 class OptimizedEncodingListener {
  protected:
-  virtual ~OptimizedEncodingListener() {}
+  virtual ~OptimizedEncodingListener() = default;
 
  public:
   // SpiderMonkey will hold an outstanding reference count as long as it holds
@@ -2926,7 +2926,7 @@ namespace JS {
  */
 
 struct WasmModule : js::AtomicRefCounted<WasmModule> {
-  virtual ~WasmModule() {}
+  virtual ~WasmModule() = default;
   virtual JSObject* createObject(JSContext* cx) = 0;
 };
 

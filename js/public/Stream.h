@@ -78,7 +78,7 @@ namespace JS {
  */
 class JS_PUBLIC_API ReadableStreamUnderlyingSource {
  public:
-  virtual ~ReadableStreamUnderlyingSource() {}
+  virtual ~ReadableStreamUnderlyingSource() = default;
 
   /**
    * Invoked whenever a reader desires more data from this source.
@@ -487,7 +487,7 @@ extern JS_PUBLIC_API JSObject* ReadableStreamDefaultReaderRead(
 
 class JS_PUBLIC_API WritableStreamUnderlyingSink {
  public:
-  virtual ~WritableStreamUnderlyingSink() {}
+  virtual ~WritableStreamUnderlyingSink() = default;
 
   /**
    * Invoked when the associated WritableStream object is finalized. The

@@ -74,7 +74,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   using MacroAssemblerX86Shared::store16;
   using MacroAssemblerX86Shared::store32;
 
-  MacroAssemblerX64() {}
+  MacroAssemblerX64() = default;
 
   // The buffer is about to be linked, make sure any constant pools or excess
   // bookkeeping has been flushed to the instruction stream.

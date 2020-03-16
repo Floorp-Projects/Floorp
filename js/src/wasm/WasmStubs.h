@@ -64,7 +64,7 @@ class ABIResult {
   }
 
   friend class ABIResultIter;
-  ABIResult(){};
+  ABIResult() {}
 
  public:
   // Sizes of items in the stack area.

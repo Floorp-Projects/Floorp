@@ -1438,7 +1438,7 @@ class MOZ_STACK_CLASS ScopeIter {
 
   explicit ScopeIter(JSScript* script);
 
-  explicit ScopeIter(const ScopeIter& si) : scope_(si.scope_) {}
+  explicit ScopeIter(const ScopeIter& si) = default;
 
   bool done() const { return !scope_; }
 
