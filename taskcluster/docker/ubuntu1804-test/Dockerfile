@@ -100,6 +100,8 @@ RUN     chmod +x /bin/taskcluster-interactive-shell
 # "Operation not permitted". Luckily it doesn't actually require the capability.
 RUN     setcap -r /usr/bin/gnome-keyring-daemon
 
+COPY custom.conf /etc/gdm3/custom.conf
+
 # Ubuntu 18.04 (or any other GNOME3 based systems) needs dbus to have various
 # test function as expected. Use entrypoint to initialize dbus as root.
 COPY dbus.sh /usr/local/bin/dbus.sh
