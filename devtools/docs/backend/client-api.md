@@ -113,7 +113,7 @@ Once the application is attached to a tab, it can attach to its thread in order 
 // Assuming the application is already attached to the tab, and response is the first
 // argument of the attachTarget callback.
 
-client.attachThread(response.threadActor).then(function([response, threadFront]) {
+client.attachThread(response.threadActor).then(function(threadFront) {
   if (!threadFront) {
     return;
   }
@@ -178,7 +178,7 @@ function debugTab() {
     // Attach to the tab.
     targetFront.attach().then(() => {
       // Attach to the thread (context).
-      targetFront.attachThread().then(([response, threadFront]) => {
+      targetFront.attachThread().then((threadFront) => {
         // Attach listeners for thread events.
         threadFront.on("paused", onPause);
         threadFront.on("resumed", fooListener);
