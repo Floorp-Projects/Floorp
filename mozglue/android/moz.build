@@ -15,7 +15,6 @@ SOURCES += [
     'Ashmem.cpp',
     'NativeCrypto.cpp',
     'nsGeckoUtils.cpp',
-    'NSSBridge.cpp',
     'pbkdf2_sha256.c',
     'SharedMemNatives.cpp',
     'SQLiteBridge.cpp',
