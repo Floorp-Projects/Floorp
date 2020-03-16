@@ -1241,7 +1241,7 @@ class AsyncPanZoomController {
    * that the GetCurrentAsync* functions consider the test offset and zoom in
    * their computations.
    */
-  void ApplyAsyncTestAttributes(const RecursiveMutexAutoLock& aProofOfLock);
+  void ApplyAsyncTestAttributes();
 
   /**
    * Sets this AsyncPanZoomController's FrameMetrics to |aPrevFrameMetrics| and
