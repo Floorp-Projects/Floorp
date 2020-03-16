@@ -230,12 +230,20 @@ JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
 #ifdef JS_ENABLE_SMOOSH
   if (compilationInfo.cx->options().trySmoosh()) {
     bool unimplemented = false;
+    JSContext* cx = compilationInfo.cx;
+    JSRuntime* rt = cx->runtime();
     auto script =
         Smoosh::compileGlobalScript(compilationInfo, srcBuf, &unimplemented);
     if (!unimplemented) {
+      if (compilationInfo.cx->options().trackNotImplemented()) {
+        rt->parserWatcherFile.put("1");
+      }
       return script;
     }
 
+    if (compilationInfo.cx->options().trackNotImplemented()) {
+      rt->parserWatcherFile.put("0");
+    }
     fprintf(stderr, "Falling back!\n");
   }
 #endif  // JS_ENABLE_SMOOSH
