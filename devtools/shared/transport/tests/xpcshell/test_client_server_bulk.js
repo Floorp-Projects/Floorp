@@ -24,15 +24,20 @@ function run_test() {
 }
 
 /** * Sample Bulk Actor ***/
+const { Actor } = require("devtools/shared/protocol/Actor");
+class TestBulkActor extends Actor {
+  constructor(conn) {
+    super(conn);
 
-function TestBulkActor(conn) {
-  this.conn = conn;
-}
+    this.typeName = "testBulk";
+    this.requestTypes = {
+      bulkEcho: this.bulkEcho,
+      bulkReply: this.bulkReply,
+      jsonReply: this.jsonReply,
+    };
+  }
 
-TestBulkActor.prototype = {
-  actorPrefix: "testBulk",
-
-  bulkEcho: function({ actor, type, length, copyTo }) {
+  bulkEcho({ actor, type, length, copyTo }) {
     Assert.equal(length, really_long().length);
     this.conn
       .startBulkSend({
@@ -50,9 +55,9 @@ TestBulkActor.prototype = {
           pipe.inputStream.close();
         });
       });
-  },
+  }
 
-  bulkReply: function({ to, type }) {
+  bulkReply({ to, type }) {
     this.conn
       .startBulkSend({
         actor: to,
@@ -72,9 +77,9 @@ TestBulkActor.prototype = {
           }
         );
       });
-  },
+  }
 
-  jsonReply: function({ length, copyTo }) {
+  jsonReply({ length, copyTo }) {
     Assert.equal(length, really_long().length);
 
     const outputFile = getTestTempFile("bulk-output", true);
@@ -90,14 +95,8 @@ TestBulkActor.prototype = {
       .then(() => {
         return { allDone: true };
       }, do_throw);
-  },
-};
-
-TestBulkActor.prototype.requestTypes = {
-  bulkEcho: TestBulkActor.prototype.bulkEcho,
-  bulkReply: TestBulkActor.prototype.bulkReply,
-  jsonReply: TestBulkActor.prototype.jsonReply,
-};
+  }
+}
 
 function add_test_bulk_actor() {
   ActorRegistry.addGlobalActor(
