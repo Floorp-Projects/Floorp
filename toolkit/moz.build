@@ -26,6 +26,9 @@ DIRS += [
     'themes',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEFAULT_BROWSER_AGENT']:
+    DIRS += ['mozapps/defaultagent']
+
 if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['mozapps/update']
 

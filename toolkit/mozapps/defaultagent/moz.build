@@ -1,0 +1,59 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program("default-browser-agent")
+
+SPHINX_TREES['default-browser-agent'] = "docs"
+
+UNIFIED_SOURCES += [
+    "EventLog.cpp",
+    "main.cpp",
+    "Policy.cpp",
+    "ScheduledTask.cpp",
+    "Telemetry.cpp",
+]
+
+USE_LIBS += [
+    "jsoncpp",
+]
+
+LOCAL_INCLUDES += [
+    '/toolkit/components/jsoncpp/include',
+    '/xpcom/build',
+]
+
+OS_LIBS += [
+    "ole32",
+    "oleaut32",
+    "rpcrt4",
+    "shell32",
+    "shlwapi",
+    "taskschd",
+]
+
+DEFINES["NS_NO_XPCOM"] = True
+
+DEFINES['UNICODE'] = True
+DEFINES['_UNICODE'] = True
+
+for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+RCINCLUDE = "DefaultBrowserAgent.rc"
+
+# We need STL headers that aren't allowed when wrapping is on (at least
+# <filesystem>, and possibly others).
+DisableStlWrapping()
+
+# We need this to be able to use wmain as the entry point on MinGW;
+# otherwise it will try to use WinMain.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+else:
+    WIN32_EXE_LDFLAGS += ['-municode']
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Installer")
