@@ -11636,70 +11636,6 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
   MOZ_ASSERT(!mSavepointEntriesIndex.Count());
   MOZ_ASSERT(!mInSavepoint);
 
-  class MOZ_STACK_CLASS CustomCleanupCallback final
-      : public FileInfo::CustomCleanupCallback {
-    nsCOMPtr<nsIFile> mDirectory;
-    nsCOMPtr<nsIFile> mJournalDirectory;
-
-   public:
-    nsresult Cleanup(FileManager* aFileManager, int64_t aId) override {
-      if (!mDirectory) {
-        MOZ_ASSERT(!mJournalDirectory);
-
-        mDirectory = aFileManager->GetDirectory();
-        if (NS_WARN_IF(!mDirectory)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        mJournalDirectory = aFileManager->GetJournalDirectory();
-        if (NS_WARN_IF(!mJournalDirectory)) {
-          return NS_ERROR_FAILURE;
-        }
-      }
-
-      nsCOMPtr<nsIFile> file = FileManager::GetFileForId(mDirectory, aId);
-      if (NS_WARN_IF(!file)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsresult rv;
-      int64_t fileSize;
-
-      if (aFileManager->EnforcingQuota()) {
-        rv = file->GetFileSize(&fileSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
-
-      rv = file->Remove(false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (aFileManager->EnforcingQuota()) {
-        QuotaManager* const quotaManager = QuotaManager::Get();
-        MOZ_ASSERT(quotaManager);
-
-        quotaManager->DecreaseUsageForOrigin(
-            aFileManager->Type(), aFileManager->Group(), aFileManager->Origin(),
-            Client::IDB, fileSize);
-      }
-
-      file = FileManager::GetFileForId(mJournalDirectory, aId);
-      if (NS_WARN_IF(!file)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      rv = file->Remove(false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      return NS_OK;
-    }
-  };
-
   mJournalsToCreateBeforeCommit.Clear();
   mJournalsToRemoveAfterCommit.Clear();
   mJournalsToRemoveAfterAbort.Clear();
@@ -11712,12 +11648,11 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
     MOZ_ASSERT(value);
 
     // We need to move mFileInfo into a raw pointer in order to release it
-    // explicitly with CustomCleanupCallback.
+    // explicitly with aSyncDeleteFile == true.
     FileInfo* const fileInfo = value->ReleaseFileInfo().forget().take();
     MOZ_ASSERT(fileInfo);
 
-    CustomCleanupCallback customCleanupCallback;
-    fileInfo->Release(&customCleanupCallback);
+    fileInfo->Release(/* aSyncDeleteFile */ true);
   }
 
   mFileInfoEntries.Clear();
@@ -17041,6 +16976,58 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t& aUsage) {
   }
 
   aUsage = usage.valueOr(0);
+  return NS_OK;
+}
+
+nsresult FileManager::SyncDeleteFile(const int64_t aId) {
+  const auto directory = GetDirectory();
+  if (NS_WARN_IF(!directory)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const auto journalDirectory = GetJournalDirectory();
+  if (NS_WARN_IF(!journalDirectory)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIFile> file = GetFileForId(directory, aId);
+  if (NS_WARN_IF(!file)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  int64_t fileSize;
+
+  if (EnforcingQuota()) {
+    rv = file->GetFileSize(&fileSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = file->Remove(false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (EnforcingQuota()) {
+    QuotaManager* const quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    quotaManager->DecreaseUsageForOrigin(Type(), Group(), Origin(), Client::IDB,
+                                         fileSize);
+  }
+
+  file = GetFileForId(journalDirectory, aId);
+  if (NS_WARN_IF(!file)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = file->Remove(false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   return NS_OK;
 }
 

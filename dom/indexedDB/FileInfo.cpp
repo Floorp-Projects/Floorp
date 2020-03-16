@@ -44,7 +44,7 @@ void FileInfo::GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt,
 }
 
 void FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,
-                                CustomCleanupCallback* aCustomCleanupCallback) {
+                                bool aSyncDeleteFile) {
   // XXX This can go away once DOM objects no longer hold FileInfo objects...
   //     Looking at you, BlobImplBase...
   //     BlobImplBase is being addressed in bug 1068975.
@@ -82,10 +82,10 @@ void FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,
   }
 
   if (needsCleanup) {
-    if (aCustomCleanupCallback) {
-      nsresult rv = aCustomCleanupCallback->Cleanup(mFileManager, Id());
+    if (aSyncDeleteFile) {
+      nsresult rv = mFileManager->SyncDeleteFile(Id());
       if (NS_FAILED(rv)) {
-        NS_WARNING("Custom cleanup failed!");
+        NS_WARNING("FileManager cleanup failed!");
       }
     } else {
       Cleanup();
