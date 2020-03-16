@@ -344,6 +344,20 @@ void gfxWindowsPlatform::InitAcceleration() {
 
 void gfxWindowsPlatform::InitWebRenderConfig() {
   gfxPlatform::InitWebRenderConfig();
+  if (XRE_IsParentProcess()) {
+    bool prev =
+        Preferences::GetBool("sanity-test.webrender.force-disabled", false);
+    bool current = Preferences::GetBool("gfx.webrender.force-disabled", false);
+    // When "gfx.webrender.force-disabled" pref is changed from false to true,
+    // set "layers.mlgpu.sanity-test-failed" pref to false.
+    // "layers.mlgpu.sanity-test-failed" pref is re-tested by SanityTest.jsm.
+    bool doRetest = !prev && current;
+    if (doRetest) {
+      Preferences::SetBool("layers.mlgpu.sanity-test-failed", false);
+    }
+    // Need to be called after gfxPlatform::InitWebRenderConfig().
+    InitializeAdvancedLayersConfig();
+  }
 
   if (gfxVars::UseWebRender()) {
     UpdateBackendPrefs();
@@ -1266,8 +1280,6 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
                                         &message, failureId)) {
     d3d11.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
-
-  InitializeAdvancedLayersConfig();
 }
 
 /* static */
@@ -1298,6 +1310,10 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_ADVANCED_LAYERS, &message,
                            failureId)) {
     al.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+  } else if (gfxVars::UseWebRender()) {
+    al.Disable(FeatureStatus::Blocked,
+               "Blocked from fallback candidate by WebRender usage",
+               NS_LITERAL_CSTRING("FEATURE_BLOCKED_BY_WEBRENDER_USAGE"));
   } else if (Preferences::GetBool("layers.mlgpu.sanity-test-failed", false)) {
     al.Disable(FeatureStatus::Broken, "Failed to render sanity test",
                NS_LITERAL_CSTRING("FEATURE_FAILURE_FAILED_TO_RENDER"));
