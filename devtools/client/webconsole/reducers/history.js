@@ -69,7 +69,7 @@ function history(state = getInitialState(), action, prefsState) {
     case SET_TERMINAL_INPUT:
       return setTerminalInput(state, action.expression);
     case SET_TERMINAL_EAGER_RESULT:
-      return setTerminalEagerResult(state, action.expression, action.result);
+      return setTerminalEagerResult(state, action.result);
   }
   return state;
 }
@@ -234,14 +234,11 @@ function setTerminalInput(state, expression) {
   };
 }
 
-function setTerminalEagerResult(state, expression, result) {
-  if (state.terminalInput == expression) {
-    return {
-      ...state,
-      terminalEagerResult: result,
-    };
-  }
-  return state;
+function setTerminalEagerResult(state, result) {
+  return {
+    ...state,
+    terminalEagerResult: result,
+  };
 }
 
 exports.history = history;
