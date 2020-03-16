@@ -53,13 +53,6 @@ DIRECT_CALL_OVERRIDES = {
         "PresentationRequestParent", "mozilla/dom/PresentationParent.h"
     ),
 
-    ("PPSMContentDownloader", "child"): (
-        "PSMContentDownloaderChild", "mozilla/psm/PSMContentListener.h"
-    ),
-    ("PPSMContentDownloader", "parent"): (
-        "PSMContentDownloaderParent", "mozilla/psm/PSMContentListener.h"
-    ),
-
     ("PRemoteSpellcheckEngine", "child"): (
         "RemoteSpellcheckEngineChild", "mozilla/RemoteSpellCheckEngineChild.h"
     ),
