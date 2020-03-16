@@ -7,13 +7,9 @@
 #ifndef mozilla_dom_indexeddb_filemanager_h__
 #define mozilla_dom_indexeddb_filemanager_h__
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/dom/quota/PersistenceType.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "nsISupportsImpl.h"
-#include "FlippedOnce.h"
+#include "FileManagerBase.h"
+#include "IndexedDatabaseManager.h"
 #include "InitializedOnce.h"
 
 class nsIFile;
@@ -23,10 +19,9 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class FileInfo;
-
 // Implemented in ActorsParent.cpp.
-class FileManager final {
+class FileManager final
+    : public FileManagerBase<FileManager, dom::IndexedDatabaseManager> {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   const PersistenceType mPersistenceType;
@@ -37,13 +32,7 @@ class FileManager final {
   InitializedOnce<const nsString, LazyInit::Allow> mDirectoryPath;
   InitializedOnce<const nsString, LazyInit::Allow> mJournalDirectoryPath;
 
-  int64_t mLastFileId;
-
-  // Protected by IndexedDatabaseManager::FileMutex()
-  nsDataHashtable<nsUint64HashKey, FileInfo*> mFileInfos;
-
   const bool mEnforcingQuota;
-  FlippedOnce<false> mInvalidated;
 
  public:
   static MOZ_MUST_USE nsCOMPtr<nsIFile> GetFileForId(nsIFile* aDirectory,
@@ -74,11 +63,7 @@ class FileManager final {
 
   bool EnforcingQuota() const { return mEnforcingQuota; }
 
-  bool Invalidated() const { return mInvalidated; }
-
   nsresult Init(nsIFile* aDirectory, mozIStorageConnection* aConnection);
-
-  nsresult Invalidate();
 
   MOZ_MUST_USE nsCOMPtr<nsIFile> GetDirectory();
 
@@ -87,12 +72,6 @@ class FileManager final {
   MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalDirectory();
 
   MOZ_MUST_USE nsCOMPtr<nsIFile> EnsureJournalDirectory();
-
-  MOZ_MUST_USE RefPtr<FileInfo> GetFileInfo(int64_t aId) const;
-
-  MOZ_MUST_USE RefPtr<FileInfo> CreateFileInfo();
-
-  void RemoveFileInfo(int64_t aId, const MutexAutoLock& aFilesMutexLock);
 
   MOZ_MUST_USE nsresult SyncDeleteFile(int64_t aId);
 

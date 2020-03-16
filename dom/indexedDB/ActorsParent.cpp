@@ -16465,7 +16465,6 @@ FileManager::FileManager(PersistenceType aPersistenceType,
       mGroup(aGroup),
       mOrigin(aOrigin),
       mDatabaseName(aDatabaseName),
-      mLastFileId(0),
       mEnforcingQuota(aEnforcingQuota) {}
 
 nsresult FileManager::Init(nsIFile* aDirectory,
@@ -16581,26 +16580,6 @@ nsresult FileManager::Init(nsIFile* aDirectory,
   return NS_OK;
 }
 
-nsresult FileManager::Invalidate() {
-  if (IndexedDatabaseManager::IsClosed()) {
-    MOZ_ASSERT(false, "Shouldn't be called after shutdown!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
-
-  mInvalidated.Flip();
-
-  mFileInfos.RemoveIf([](const auto& iter) {
-    FileInfo* info = iter.Data();
-    MOZ_ASSERT(info);
-
-    return !info->LockedClearDBRefs();
-  });
-
-  return NS_OK;
-}
-
 nsCOMPtr<nsIFile> FileManager::GetDirectory() {
   return GetFileForPath(*mDirectoryPath);
 }
@@ -16659,46 +16638,6 @@ nsCOMPtr<nsIFile> FileManager::EnsureJournalDirectory() {
   }
 
   return journalDirectory;
-}
-
-RefPtr<FileInfo> FileManager::GetFileInfo(int64_t aId) const {
-  if (IndexedDatabaseManager::IsClosed()) {
-    MOZ_ASSERT(false, "Shouldn't be called after shutdown!");
-    return nullptr;
-  }
-
-  // TODO: We cannot simply change this to RefPtr<FileInfo>, because
-  // FileInfo::AddRef also acquires the IndexedDatabaseManager::FileMutex. This
-  // looks quirky at least.
-  FileInfo* fileInfo;
-  {
-    MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
-    fileInfo = mFileInfos.Get(aId);
-  }
-
-  return fileInfo;
-}
-
-RefPtr<FileInfo> FileManager::CreateFileInfo() {
-  MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
-
-  // TODO: We cannot simply change this to RefPtr<FileInfo>, because
-  // FileInfo::AddRef also acquires the IndexedDatabaseManager::FileMutex. This
-  // looks quirky at least.
-  FileInfo* fileInfo;
-  {
-    MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
-
-    int64_t id = mLastFileId + 1;
-
-    fileInfo = new FileInfo(this, id);
-
-    mFileInfos.Put(id, fileInfo);
-
-    mLastFileId = id;
-  }
-
-  return fileInfo;
 }
 
 // static
@@ -17029,14 +16968,6 @@ nsresult FileManager::SyncDeleteFile(const int64_t aId) {
   }
 
   return NS_OK;
-}
-
-void FileManager::RemoveFileInfo(const int64_t aId,
-                                 const MutexAutoLock& aFilesMutexLock) {
-#ifdef DEBUG
-  aFilesMutexLock.AssertOwns(IndexedDatabaseManager::FileMutex());
-#endif
-  mFileInfos.Remove(aId);
 }
 
 /*******************************************************************************
