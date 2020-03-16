@@ -121,12 +121,7 @@ class UrlbarInput {
       "removeAttribute",
       "toggleAttribute",
     ];
-    const INPUT_METHODS = [
-      "addEventListener",
-      "blur",
-      "focus",
-      "removeEventListener",
-    ];
+    const INPUT_METHODS = ["addEventListener", "blur", "removeEventListener"];
     const READ_WRITE_PROPERTIES = [
       "placeholder",
       "readOnly",
@@ -245,7 +240,29 @@ class UrlbarInput {
     }
   }
 
+  focus() {
+    let beforeFocus = new CustomEvent("beforefocus", {
+      bubbles: true,
+      cancelable: true,
+    });
+    this.inputField.dispatchEvent(beforeFocus);
+    if (beforeFocus.defaultPrevented) {
+      return;
+    }
+
+    this.inputField.focus();
+  }
+
   select() {
+    let beforeSelect = new CustomEvent("beforeselect", {
+      bubbles: true,
+      cancelable: true,
+    });
+    this.inputField.dispatchEvent(beforeSelect);
+    if (beforeSelect.defaultPrevented) {
+      return;
+    }
+
     // See _on_select().  HTMLInputElement.select() dispatches a "select"
     // event but does not set the primary selection.
     this._suppressPrimaryAdjustment = true;
@@ -942,7 +959,7 @@ class UrlbarInput {
    */
   search(value, { focus = true } = {}) {
     if (focus) {
-      this.window.focusAndSelectUrlBar();
+      this.focus();
     }
 
     // If the value is a restricted token, append a space.

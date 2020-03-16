@@ -786,7 +786,7 @@ this.tabs = class extends ExtensionAPI {
             if (active) {
               window.gBrowser.selectedTab = nativeTab;
               if (!createProperties.url) {
-                window.focusAndSelectUrlBar();
+                window.gURLBar.select();
               }
             }
 
