@@ -122,6 +122,10 @@
 !define MOZ_BITS_DOWNLOAD
 #endif
 
+#ifdef MOZ_DEFAULT_BROWSER_AGENT
+!define MOZ_DEFAULT_BROWSER_AGENT
+#endif
+
 !if "@AB_CD@" == "en-US"
 !define MOZ_OPTIONAL_EXTENSIONS
 !else if "@AB_CD@" == "zh-CN"

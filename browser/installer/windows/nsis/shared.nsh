@@ -163,6 +163,22 @@
   ${ResetLauncherProcessDefaults}
 !endif
 
+; Make sure the scheduled task registration for the default browser agent gets
+; updated, but only if we're not the instance of PostUpdate that was started
+; by the service, because this needs to run as the actual user. Also, don't do
+; that if the installer was told not to register the agent task at all.
+!ifdef MOZ_DEFAULT_BROWSER_AGENT
+${If} $TmpVal == "HKCU"
+  ClearErrors
+  ReadRegDWORD HKCU "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
+                    "DidRegisterDefaultBrowserAgent" $0
+  ${If} $0 != 0
+  ${OrIf} ${Errors}
+    Exec '"$INSTDIR\default-browser-agent.exe" update-task $AppUserModelID'
+  ${EndIf}
+${EndIf}
+!endif
+
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
@@ -1374,6 +1390,7 @@
   Push "mozsqlite3.dll"
   Push "xpcom.dll"
   Push "crashreporter.exe"
+  Push "default-browser-agent.exe"
   Push "minidump-analyzer.exe"
   Push "pingsender.exe"
   Push "updater.exe"
