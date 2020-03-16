@@ -1559,7 +1559,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
     if (!frontend::CompileLazyBinASTFunction(
             cx, lazy, ss->binASTSource() + sourceStart, sourceLength)) {
       MOZ_ASSERT(fun->baseScript() == lazy);
-      MOZ_ASSERT(lazy->isLazyScript());
+      MOZ_ASSERT(lazy->isReadyForDelazification());
       return false;
     }
 #else
@@ -1583,7 +1583,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->baseScript() == lazy);
-        MOZ_ASSERT(lazy->isLazyScript());
+        MOZ_ASSERT(lazy->isReadyForDelazification());
         return false;
       }
     } else {
@@ -1600,7 +1600,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->baseScript() == lazy);
-        MOZ_ASSERT(lazy->isLazyScript());
+        MOZ_ASSERT(lazy->isReadyForDelazification());
         return false;
       }
     }
