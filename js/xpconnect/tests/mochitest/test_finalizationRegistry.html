@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Test FinalizationGroup works in the browser</title>
+    <title>Test FinalizationRegistry works in the browser</title>
     <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript">
       let object4 = {};
@@ -10,38 +10,38 @@
       function go() {
         SimpleTest.waitForExplicitFinish();
 
-        // Group with no registered objects.
+        // Registry with no registered objects.
         let holdings1 = [];
-        let group1 = new FinalizationGroup(i => holdings1 = [...i]);
+        let registry1 = new FinalizationRegistry(i => holdings1 = [...i]);
 
-        // Group with three registered objects.
+        // Registry with three registered objects.
         let holdings2 = [];
-        let group2 = new FinalizationGroup(i => holdings2 = [...i]);
-        group2.register({}, 1);
-        group2.register({}, 2);
-        group2.register({}, 3);
+        let registry2 = new FinalizationRegistry(i => holdings2 = [...i]);
+        registry2.register({}, 1);
+        registry2.register({}, 2);
+        registry2.register({}, 3);
 
-        // Group with registered object that is then unregistered.
+        // Registry with registered object that is then unregistered.
         let holdings3 = [];
-        let group3 = new FinalizationGroup(i => holdings3 = [...i]);
+        let registry3 = new FinalizationRegistry(i => holdings3 = [...i]);
         let token3 = {}
-        group3.register({}, 1, token3);
-        group3.unregister(token3);
+        registry3.register({}, 1, token3);
+        registry3.unregister(token3);
 
-        // Group with registered object that doesn't die.
+        // Registry with registered object that doesn't die.
         let holdings4 = [];
-        let group4 = new FinalizationGroup(i => holdings4 = [...i]);
-        group4.register(object4, 1);
+        let registry4 = new FinalizationRegistry(i => holdings4 = [...i]);
+        registry4.register(object4, 1);
 
-        // Group observing cyclic JS data structure.
+        // Registry observing cyclic JS data structure.
         let holdings5 = [];
-        let group5 = new FinalizationGroup(i => holdings5 = [...i]);
-        group5.register(makeJSCycle(4), 5);
+        let registry5 = new FinalizationRegistry(i => holdings5 = [...i]);
+        registry5.register(makeJSCycle(4), 5);
 
-        // Group observing cyclic DOM/JS data structure.
+        // Registry observing cyclic DOM/JS data structure.
         let holdings6 = [];
-        let group6 = new FinalizationGroup(i => holdings6 = [...i]);
-        group6.register(makeDOMCycle(4), 6);
+        let registry6 = new FinalizationRegistry(i => holdings6 = [...i]);
+        registry6.register(makeDOMCycle(4), 6);
 
         // Need to run full GC/CC/GC cycle to collect cyclic garbage through DOM
         // and JS heaps.

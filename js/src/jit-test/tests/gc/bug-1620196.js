@@ -2,8 +2,8 @@
 
 gczeal(4);
 let heldValues = [];
-group = new FinalizationGroup(iterator => {
+registry = new FinalizationRegistry(iterator => {
     heldValues.push(...iterator);
 });
-group.register({}, 42);
+registry.register({}, 42);
 gc();
