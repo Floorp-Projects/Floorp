@@ -117,6 +117,8 @@ class TrackingProtectionExceptionFileStorageTest {
         val mockGeckoSession = mock<GeckoSession>()
         val mockExceptionList =
             listOf(ContentBlockingException.fromJson(JSONObject("{\"principal\":\"eyIxIjp7IjAiOiJodHRwczovL3d3dy5jbm4uY29tLyJ9fQ==\",\"uri\":\"https:\\/\\/www.cnn.com\\/\"}")))
+        val engineSession: EngineSession = mock()
+        val activeSessions: List<EngineSession?> = listOf(engineSession)
 
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
@@ -136,9 +138,10 @@ class TrackingProtectionExceptionFileStorageTest {
         assertNotNull(storage.getFile(context).readAndDeserialize { })
 
         // Removing exceptions
-        storage.removeAll()
+        storage.removeAll(activeSessions)
         verify(mockContentBlocking).clearExceptionList()
         assertNull(storage.getFile(context).readAndDeserialize { })
+        verify(engineSession).notifyObservers(any())
     }
 
     @Test

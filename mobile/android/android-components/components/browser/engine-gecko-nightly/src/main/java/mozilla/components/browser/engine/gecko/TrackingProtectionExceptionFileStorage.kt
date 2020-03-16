@@ -103,8 +103,13 @@ internal class TrackingProtectionExceptionFileStorage(
         persist()
     }
 
-    override fun removeAll() {
+    override fun removeAll(activeSessions: List<EngineSession?>?) {
         runtime.contentBlockingController.clearExceptionList()
+        activeSessions?.forEach {
+            it?.notifyObservers {
+                onExcludedOnTrackingProtectionChange(false)
+            }
+        }
         removeFileFromDisk(context)
     }
 

@@ -15,6 +15,9 @@ permalink: /changelog/
 * **lib-state**, **browser-state**
   * Added the ability to add `Middleware` instances to a `Store`. A `Middleware` can rewrite or intercept an `Action`, as well as dispatch additional `Action`s or perform side-effects when an `Action` gets dispatched.
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * Updated `removeAll()` from `TrackingProtectionExceptionFileStorage` to notify active sessions when all exceptions are removed.
+
 # 36.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v35.0.0...v36.0.0)
