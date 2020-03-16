@@ -276,11 +276,14 @@ static bool AncestorChainCrossesShadowBoundary(nsIContent* aDescendant,
  * test for it separately, e.g. with DoesNotAffectDirectionOfAncestors.
  * It *does* include textarea, because even if a textarea has dir=auto, it has
  * unicode-bidi: plaintext and is handled automatically in bidi resolution.
+ * It also includes `input`, because it takes the `dir` value from its value
+ * attribute, instead of the child nodes.
  */
 static bool DoesNotParticipateInAutoDirection(const nsIContent* aContent) {
   mozilla::dom::NodeInfo* nodeInfo = aContent->NodeInfo();
   return ((!aContent->IsHTMLElement() || nodeInfo->Equals(nsGkAtoms::script) ||
            nodeInfo->Equals(nsGkAtoms::style) ||
+           nodeInfo->Equals(nsGkAtoms::input) ||
            nodeInfo->Equals(nsGkAtoms::textarea) ||
            aContent->IsInAnonymousSubtree())) &&
          !aContent->IsShadowRoot();
