@@ -113,6 +113,11 @@ interface FrameLoader {
   void requestEpochUpdate(unsigned long aEpoch);
 
   /**
+   * Request a session history update in native sessionStoreListeners.
+   */
+  void requestSHistoryUpdate(boolean aImmediately);
+
+  /**
    * Print the current document.
    *
    * @param aOuterWindowID the ID of the outer window to print
