@@ -191,12 +191,13 @@ class DefaultAddonUpdater(
     ) {
         logger.info("onUpdatePermissionRequest $current")
 
-        val wasPreviouslyAllowed =
-            updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id)
+        val shouldGrantWithoutPrompt = Addon.localizePermissions(newPermissions).isEmpty()
+        val shouldShowNotification =
+                updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id) || shouldGrantWithoutPrompt
 
-        onPermissionsGranted(wasPreviouslyAllowed)
+        onPermissionsGranted(shouldShowNotification)
 
-        if (!wasPreviouslyAllowed) {
+        if (!shouldShowNotification) {
             createNotification(updated, newPermissions)
         } else {
             updateStatusStorage.markAsUnallowed(applicationContext, updated.id)
@@ -287,13 +288,19 @@ class DefaultAddonUpdater(
         )
     }
 
-    private fun createContentText(newPermissions: List<String>): String {
-        val contentText = applicationContext.getString(
-            R.string.mozac_feature_addons_updater_notification_content, newPermissions.size
-        )
+    @VisibleForTesting
+    internal fun createContentText(newPermissions: List<String>): String {
+        val validNewPermissions = Addon.localizePermissions(newPermissions)
+
+        val string = if (validNewPermissions.size == 1) {
+            R.string.mozac_feature_addons_updater_notification_content_singular
+        } else {
+            R.string.mozac_feature_addons_updater_notification_content
+        }
+        val contentText = applicationContext.getString(string, validNewPermissions.size)
         var permissionIndex = 1
         val permissionsText =
-            Addon.localizePermissions(newPermissions).joinToString(separator = "\n") {
+                validNewPermissions.joinToString(separator = "\n") {
                 "${permissionIndex++}-${applicationContext.getString(it)}"
             }
         return "$contentText:\n $permissionsText"
