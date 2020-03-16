@@ -30,6 +30,8 @@ class GPUVideoTextureHost : public TextureHost {
 
   gfx::SurfaceFormat GetFormat() const override;
 
+  void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
+
   bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
   bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
 
@@ -69,6 +71,8 @@ class GPUVideoTextureHost : public TextureHost {
                       const SurfaceDescriptorGPUVideo& aDescriptor);
 
   TextureHost* EnsureWrappedTextureHost();
+
+  void UpdatedInternal(const nsIntRegion* Region) override;
 
   RefPtr<TextureHost> mWrappedTextureHost;
   SurfaceDescriptorGPUVideo mDescriptor;
