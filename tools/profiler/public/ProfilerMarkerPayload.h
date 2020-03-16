@@ -9,15 +9,15 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/BlocksRingBuffer.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/net/TimingStruct.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/net/TimingStruct.h"
 
 #include "nsString.h"
 #include "nsCRTGlue.h"
@@ -61,7 +61,7 @@ class ProfilerMarkerPayload {
 
   // Compute the number of bytes needed to serialize the `DeserializerTag` and
   // payload, including in the no-payload (nullptr) case.
-  static mozilla::BlocksRingBuffer::Length TagAndSerializationBytes(
+  static mozilla::ProfileBufferEntryWriter::Length TagAndSerializationBytes(
       const ProfilerMarkerPayload* aPayload) {
     if (!aPayload) {
       return sizeof(DeserializerTag);
@@ -144,7 +144,8 @@ class ProfilerMarkerPayload {
       : mCommonProps(std::move(aCommonProps)) {}
 
   // Serialization/deserialization of common props in ProfilerMarkerPayload.
-  mozilla::BlocksRingBuffer::Length CommonPropsTagAndSerializationBytes() const;
+  mozilla::ProfileBufferEntryWriter::Length
+  CommonPropsTagAndSerializationBytes() const;
   void SerializeTagAndCommonProps(
       DeserializerTag aDeserializerTag,
       mozilla::ProfileBufferEntryWriter& aEntryWriter) const;
@@ -160,7 +161,7 @@ class ProfilerMarkerPayload {
  private:
   // Compute the number of bytes needed to serialize payload in
   // `SerializeTagAndPayload` below.
-  virtual mozilla::BlocksRingBuffer::Length TagAndSerializationBytes()
+  virtual mozilla::ProfileBufferEntryWriter::Length TagAndSerializationBytes()
       const = 0;
 
   // Serialize the payload into an EntryWriter.
@@ -177,7 +178,8 @@ class ProfilerMarkerPayload {
                      UniqueStacks& aUniqueStacks) const override;              \
   static mozilla::UniquePtr<ProfilerMarkerPayload> Deserialize(                \
       mozilla::ProfileBufferEntryReader& aEntryReader);                        \
-  mozilla::BlocksRingBuffer::Length TagAndSerializationBytes() const override; \
+  mozilla::ProfileBufferEntryWriter::Length TagAndSerializationBytes()         \
+      const override;                                                          \
   void SerializeTagAndPayload(mozilla::ProfileBufferEntryWriter& aEntryWriter) \
       const override;
 

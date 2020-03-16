@@ -1574,7 +1574,7 @@ class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
   // Exploded DECL_BASE_STREAM_PAYLOAD, but without `MFBT_API`s.
   static UniquePtr<ProfilerMarkerPayload> Deserialize(
       ProfileBufferEntryReader& aEntryReader);
-  BlocksRingBuffer::Length TagAndSerializationBytes() const override;
+  ProfileBufferEntryWriter::Length TagAndSerializationBytes() const override;
   void SerializeTagAndPayload(
       ProfileBufferEntryWriter& aEntryWriter) const override;
   void StreamPayload(
@@ -1598,8 +1598,8 @@ BaseTestMarkerPayload::Deserialize(ProfileBufferEntryReader& aEntryReader) {
       new BaseTestMarkerPayload(std::move(props), data));
 }
 
-BlocksRingBuffer::Length BaseTestMarkerPayload::TagAndSerializationBytes()
-    const {
+ProfileBufferEntryWriter::Length
+BaseTestMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() + sizeof(int);
 }
 
