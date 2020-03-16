@@ -36,22 +36,22 @@ body {
   --newtab-button-primary-color: #0060DF;
   --newtab-card-background-color: #FFF;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
-  --trailhead-header-text-color: #2B2156;
-  --trailhead-cards-background-color: #EDEDF0;
-  --trailhead-card-button-background-color: rgba(12, 12, 13, 0.1);
-  --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
-  --trailhead-card-button-background-active-color: rgba(12, 12, 13, 0.3);
+  --welcome-header-text-color: #2B2156;
+  --welcome-cards-background-color: #EDEDF0;
+  --welcome-card-button-background-color: rgba(12, 12, 13, 0.1);
+  --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
+  --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.3);
   --welcome-button-box-shadow-color: rgba(10, 132, 255, 0.3);
   --welcome-button-box-shadow-inset-color: #0A84FF;
   --welcome-button-text-color: #FFF;
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
-  background-color: var(--trailhead-cards-background-color);
+  background-color: var(--welcome-cards-background-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   position: relative; }
 
-.trailheadCardGrid {
+.welcomeCardGrid {
   margin: 0;
   margin-top: 32px;
   display: grid;
@@ -60,49 +60,49 @@ body {
   transition: opacity 0.4s;
   transition-delay: 0.1s;
   grid-auto-rows: 1fr; }
-  .trailheadCardGrid.show {
+  .welcomeCardGrid.show {
     opacity: 1; }
   @media (min-width: 610px) {
-    .trailheadCardGrid {
+    .welcomeCardGrid {
       grid-template-columns: repeat(auto-fit, 224px); } }
   @media (min-width: 1122px) {
-    .trailheadCardGrid {
+    .welcomeCardGrid {
       grid-template-columns: repeat(auto-fit, 309px); } }
 
-.trailheadCards {
+.welcomeContainer {
   text-align: center; }
   @media (min-width: 610px) {
-    .trailheadCards {
+    .welcomeContainer {
       max-height: 1000px; } }
-  .trailheadCards h1 {
+  .welcomeContainer h1 {
     font-size: 36px;
     font-weight: 200;
     margin: 0 0 40px;
-    color: var(--trailhead-header-text-color); }
-  .trailheadCards .welcome-title {
+    color: var(--welcome-header-text-color); }
+  .welcomeContainer .welcome-title {
     margin-bottom: 5px;
     line-height: 52px; }
-  .trailheadCards .welcome-subtitle {
+  .welcomeContainer .welcome-subtitle {
     font-size: 28px;
     font-weight: 200;
     margin: 6px 0 0;
     color: var(--grey-subtitle);
     line-height: 42px; }
 
-.trailheadCardsInner {
+.welcomeContainerInner {
   margin: auto;
   padding: 40px 25px; }
   @media (min-width: 610px) {
-    .trailheadCardsInner {
+    .welcomeContainerInner {
       width: 530px; } }
   @media (min-width: 866px) {
-    .trailheadCardsInner {
+    .welcomeContainerInner {
       width: 786px; } }
   @media (min-width: 1122px) {
-    .trailheadCardsInner {
+    .welcomeContainerInner {
       width: 1042px; } }
 
-.trailheadCard {
+.welcomeCard {
   position: relative;
   background: var(--newtab-card-background-color);
   border-radius: 4px;
@@ -110,30 +110,30 @@ body {
   font-size: 13px;
   padding: 20px 40px 60px; }
   @media (max-width: 866px) {
-    .trailheadCard {
+    .welcomeCard {
       padding: 20px 40px; } }
   @media (min-width: 1122px) {
-    .trailheadCard {
+    .welcomeCard {
       font-size: 15px; } }
 
-.trailheadCard .onboardingTitle {
+.welcomeCard .onboardingTitle {
   font-weight: normal;
   color: var(--newtab-text-primary-color);
   margin: 10px 0 4px;
   font-size: 15px; }
   @media (min-width: 1122px) {
-    .trailheadCard .onboardingTitle {
+    .welcomeCard .onboardingTitle {
       font-size: 18px; } }
 
-.trailheadCard .onboardingText {
+.welcomeCard .onboardingText {
   margin: 0 0 60px;
   color: var(--newtab-text-conditional-color);
   line-height: 1.5;
   font-weight: 200; }
 
-.trailheadCard .onboardingButton {
+.welcomeCard .onboardingButton {
   color: var(--newtab-text-conditional-color);
-  background: var(--trailhead-card-button-background-color);
+  background: var(--welcome-card-button-background-color);
   border: 0;
   border-radius: 4px;
   margin: 14px;
@@ -141,15 +141,15 @@ body {
   padding: 6px 14px;
   white-space: pre-wrap;
   cursor: pointer; }
-  .trailheadCard .onboardingButton:focus, .trailheadCard .onboardingButton:hover {
+  .welcomeCard .onboardingButton:focus, .welcomeCard .onboardingButton:hover {
     box-shadow: none;
-    background: var(--trailhead-card-button-background-hover-color); }
-  .trailheadCard .onboardingButton:focus {
+    background: var(--welcome-card-button-background-hover-color); }
+  .welcomeCard .onboardingButton:focus {
     outline: dotted 1px; }
-  .trailheadCard .onboardingButton:active {
-    background: var(--trailhead-card-button-background-active-color); }
+  .welcomeCard .onboardingButton:active {
+    background: var(--welcome-card-button-background-active-color); }
 
-.trailheadCard .onboardingButtonContainer {
+.welcomeCard .onboardingButtonContainer {
   position: absolute;
   bottom: 16px;
   left: 0;
