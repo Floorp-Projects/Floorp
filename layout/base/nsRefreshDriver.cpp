@@ -467,6 +467,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     mVsyncRate = mVsyncChild->GetVsyncRate();
   }
 
+  // Constructor for when we have a local vsync source. As it is local, we do
+  // not have to worry about it being re-inited by gfxPlatform on frame rate
+  // change on the global source.
   explicit VsyncRefreshDriverTimer(const RefPtr<gfx::VsyncSource>& aVsyncSource)
       : mVsyncChild(nullptr) {
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -825,8 +828,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     Tick(aId, aTimeStamp);
   }
 
-  // Used to hold external vsync sources alive. Must be destroyed *after*
-  // mVsyncDispatcher.
+  // When using local vsync source, we keep a strong ref to it here to ensure
+  // that the weak ref in the vsync dispatcher does not end up dangling.
+  // As this is a local vsync source, it is not affected by gfxPlatform vsync
+  // source reinit.
   RefPtr<gfx::VsyncSource> mVsyncSource;
   RefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
   // Used for parent process.
