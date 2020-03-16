@@ -114,11 +114,11 @@ namespace jit {
   _(DefFunOperation, js::DefFunOperation)                                      \
   _(DefLexicalOperation, js::DefLexicalOperation)                              \
   _(DefVarOperation, js::DefVarOperation)                                      \
-  _(DeleteElementNonStrict, js::DeleteElementJit<false>)                       \
-  _(DeleteElementStrict, js::DeleteElementJit<true>)                           \
+  _(DelElemOperationNonStrict, js::DelElemOperation<false>)                    \
+  _(DelElemOperationStrict, js::DelElemOperation<true>)                        \
+  _(DelPropOperationNonStrict, js::DelPropOperation<false>)                    \
+  _(DelPropOperationStrict, js::DelPropOperation<true>)                        \
   _(DeleteNameOperation, js::DeleteNameOperation)                              \
-  _(DeletePropertyNonStrict, js::DeletePropertyJit<false>)                     \
-  _(DeletePropertyStrict, js::DeletePropertyJit<true>)                         \
   _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
   _(DivValues, js::DivValues)                                                  \
   _(DoCallFallback, js::jit::DoCallFallback)                                   \
