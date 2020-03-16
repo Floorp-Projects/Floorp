@@ -551,12 +551,12 @@ bool UrshValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
 bool AtomicIsLockFree(JSContext* cx, HandleValue in, int* out);
 
 template <bool strict>
-bool DeletePropertyJit(JSContext* ctx, HandleValue val, HandlePropertyName name,
-                       bool* bv);
+bool DelPropOperation(JSContext* cx, HandleValue val, HandlePropertyName name,
+                      bool* res);
 
 template <bool strict>
-bool DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index,
-                      bool* bv);
+bool DelElemOperation(JSContext* cx, HandleValue val, HandleValue index,
+                      bool* res);
 
 JSObject* BindVarOperation(JSContext* cx, JSObject* envChain);
 

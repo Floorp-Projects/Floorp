@@ -1347,13 +1347,6 @@ again:
 #define POP_COPY_TO(v) (v) = *--REGS.sp
 #define POP_RETURN_VALUE() REGS.fp()->setReturnValue(*--REGS.sp)
 
-#define FETCH_OBJECT(cx, n, obj, key)                                \
-  JS_BEGIN_MACRO                                                     \
-    HandleValue val = REGS.stackHandleAt(n);                         \
-    obj = ToObjectFromStackForPropertyAccess((cx), (val), n, (key)); \
-    if (!(obj)) goto error;                                          \
-  JS_END_MACRO
-
 /*
  * Same for JSOp::SetName and JSOp::SetProp, which differ only slightly but
  * remain distinct for the decompiler.
@@ -2586,20 +2579,19 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(StrictDelProp) {
       static_assert(JSOpLength_DelProp == JSOpLength_StrictDelProp,
                     "delprop and strictdelprop must be the same size");
-      ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
-      ReservedRooted<JSObject*> obj(&rootObject0);
-      FETCH_OBJECT(cx, -1, obj, id);
-
-      ObjectOpResult result;
-      if (!DeleteProperty(cx, obj, id, result)) {
-        goto error;
+      HandleValue val = REGS.stackHandleAt(-1);
+      ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+      bool res = false;
+      if (JSOp(*REGS.pc) == JSOp::StrictDelProp) {
+        if (!DelPropOperation<true>(cx, val, name, &res)) {
+          goto error;
+        }
+      } else {
+        if (!DelPropOperation<false>(cx, val, name, &res)) {
+          goto error;
+        }
       }
-      if (!result && JSOp(*REGS.pc) == JSOp::StrictDelProp) {
-        result.reportError(cx, obj, id);
-        goto error;
-      }
-      MutableHandleValue res = REGS.stackHandleAt(-1);
-      res.setBoolean(result.ok());
+      REGS.sp[-1].setBoolean(res);
     }
     END_CASE(DelProp)
 
@@ -2607,27 +2599,19 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(StrictDelElem) {
       static_assert(JSOpLength_DelElem == JSOpLength_StrictDelElem,
                     "delelem and strictdelelem must be the same size");
-      /* Fetch the left part and resolve it to a non-null object. */
-      ReservedRooted<JSObject*> obj(&rootObject0);
-
-      ReservedRooted<Value> propval(&rootValue0, REGS.sp[-1]);
-      FETCH_OBJECT(cx, -2, obj, propval);
-
-      ObjectOpResult result;
-      ReservedRooted<jsid> id(&rootId0);
-      if (!ToPropertyKey(cx, propval, &id)) {
-        goto error;
+      HandleValue val = REGS.stackHandleAt(-2);
+      HandleValue propval = REGS.stackHandleAt(-1);
+      bool res = false;
+      if (JSOp(*REGS.pc) == JSOp::StrictDelElem) {
+        if (!DelElemOperation<true>(cx, val, propval, &res)) {
+          goto error;
+        }
+      } else {
+        if (!DelElemOperation<false>(cx, val, propval, &res)) {
+          goto error;
+        }
       }
-      if (!DeleteProperty(cx, obj, id, result)) {
-        goto error;
-      }
-      if (!result && JSOp(*REGS.pc) == JSOp::StrictDelElem) {
-        result.reportError(cx, obj, id);
-        goto error;
-      }
-
-      MutableHandleValue res = REGS.stackHandleAt(-2);
-      res.setBoolean(result.ok());
+      REGS.sp[-2].setBoolean(res);
       REGS.sp--;
     }
     END_CASE(DelElem)
@@ -4691,10 +4675,11 @@ bool js::GetAndClearException(JSContext* cx, MutableHandleValue res) {
 }
 
 template <bool strict>
-bool js::DeletePropertyJit(JSContext* cx, HandleValue v,
-                           HandlePropertyName name, bool* bp) {
-  RootedObject obj(
-      cx, ToObjectFromStackForPropertyAccess(cx, v, JSDVG_SEARCH_STACK, name));
+bool js::DelPropOperation(JSContext* cx, HandleValue val,
+                          HandlePropertyName name, bool* res) {
+  const int valIndex = -1;
+  RootedObject obj(cx,
+                   ToObjectFromStackForPropertyAccess(cx, val, valIndex, name));
   if (!obj) {
     return false;
   }
@@ -4709,23 +4694,24 @@ bool js::DeletePropertyJit(JSContext* cx, HandleValue v,
     if (!result) {
       return result.reportError(cx, obj, id);
     }
-    *bp = true;
+    *res = true;
   } else {
-    *bp = result.ok();
+    *res = result.ok();
   }
   return true;
 }
 
-template bool js::DeletePropertyJit<true>(JSContext* cx, HandleValue val,
-                                          HandlePropertyName name, bool* bp);
-template bool js::DeletePropertyJit<false>(JSContext* cx, HandleValue val,
-                                           HandlePropertyName name, bool* bp);
+template bool js::DelPropOperation<true>(JSContext* cx, HandleValue val,
+                                         HandlePropertyName name, bool* res);
+template bool js::DelPropOperation<false>(JSContext* cx, HandleValue val,
+                                          HandlePropertyName name, bool* res);
 
 template <bool strict>
-bool js::DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index,
-                          bool* bp) {
-  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(
-                           cx, val, JSDVG_SEARCH_STACK, index));
+bool js::DelElemOperation(JSContext* cx, HandleValue val, HandleValue index,
+                          bool* res) {
+  const int valIndex = -2;
+  RootedObject obj(
+      cx, ToObjectFromStackForPropertyAccess(cx, val, valIndex, index));
   if (!obj) {
     return false;
   }
@@ -4743,17 +4729,17 @@ bool js::DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index,
     if (!result) {
       return result.reportError(cx, obj, id);
     }
-    *bp = true;
+    *res = true;
   } else {
-    *bp = result.ok();
+    *res = result.ok();
   }
   return true;
 }
 
-template bool js::DeleteElementJit<true>(JSContext*, HandleValue, HandleValue,
-                                         bool* succeeded);
-template bool js::DeleteElementJit<false>(JSContext*, HandleValue, HandleValue,
-                                          bool* succeeded);
+template bool js::DelElemOperation<true>(JSContext*, HandleValue, HandleValue,
+                                         bool*);
+template bool js::DelElemOperation<false>(JSContext*, HandleValue, HandleValue,
+                                          bool*);
 
 bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
                           HandleValue value, bool strict) {

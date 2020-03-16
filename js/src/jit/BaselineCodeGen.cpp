@@ -3258,11 +3258,11 @@ bool BaselineCodeGen<Handler>::emitDelElem(bool strict) {
 
   using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
   if (strict) {
-    if (!callVM<Fn, DeleteElementJit<true>>()) {
+    if (!callVM<Fn, DelElemOperation<true>>()) {
       return false;
     }
   } else {
-    if (!callVM<Fn, DeleteElementJit<false>>()) {
+    if (!callVM<Fn, DelElemOperation<false>>()) {
       return false;
     }
   }
@@ -3567,11 +3567,11 @@ bool BaselineCodeGen<Handler>::emitDelProp(bool strict) {
 
   using Fn = bool (*)(JSContext*, HandleValue, HandlePropertyName, bool*);
   if (strict) {
-    if (!callVM<Fn, DeletePropertyJit<true>>()) {
+    if (!callVM<Fn, DelPropOperation<true>>()) {
       return false;
     }
   } else {
-    if (!callVM<Fn, DeletePropertyJit<false>>()) {
+    if (!callVM<Fn, DelPropOperation<false>>()) {
       return false;
     }
   }

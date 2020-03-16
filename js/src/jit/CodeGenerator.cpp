@@ -11335,9 +11335,9 @@ void CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir) {
 
   using Fn = bool (*)(JSContext*, HandleValue, HandlePropertyName, bool*);
   if (lir->mir()->strict()) {
-    callVM<Fn, DeletePropertyJit<true>>(lir);
+    callVM<Fn, DelPropOperation<true>>(lir);
   } else {
-    callVM<Fn, DeletePropertyJit<false>>(lir);
+    callVM<Fn, DelPropOperation<false>>(lir);
   }
 }
 
@@ -11347,9 +11347,9 @@ void CodeGenerator::visitCallDeleteElement(LCallDeleteElement* lir) {
 
   using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
   if (lir->mir()->strict()) {
-    callVM<Fn, DeleteElementJit<true>>(lir);
+    callVM<Fn, DelElemOperation<true>>(lir);
   } else {
-    callVM<Fn, DeleteElementJit<false>>(lir);
+    callVM<Fn, DelElemOperation<false>>(lir);
   }
 }
 
