@@ -303,9 +303,21 @@ function switchPerformancePanel() {
 }
 switchPerformancePanel();
 
-Services.prefs.addObserver("devtools.performance.new-panel-enabled", {
-  observe: switchPerformancePanel,
-});
+const prefObserver = { observe: switchPerformancePanel };
+Services.prefs.addObserver(
+  "devtools.performance.new-panel-enabled",
+  prefObserver
+);
+const unloadObserver = function(subject) {
+  if (subject.wrappedJSObject == require("@loader/unload")) {
+    Services.prefs.removeObserver(
+      "devtools.performance.new-panel-enabled",
+      prefObserver
+    );
+    Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");
+  }
+};
+Services.obs.addObserver(unloadObserver, "devtools:loader:destroy");
 
 Tools.memory = {
   id: "memory",
