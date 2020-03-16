@@ -25,6 +25,7 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
@@ -56,7 +57,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private val accountManager by lazy {
         FxaAccountManager(
                 applicationContext,
-                ServerConfig.release(CLIENT_ID, REDIRECT_URL),
+                ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
                 DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
                 SyncConfig(setOf(SyncEngine.Passwords))
         )

@@ -180,6 +180,10 @@ class FirefoxAccount internal constructor(
         return inner.getTokenServerEndpointURL()
     }
 
+    override fun getPairingAuthorityURL(): String {
+        return inner.getPairingAuthorityURL()
+    }
+
     /**
      * Fetches the connection success url.
      */

@@ -167,6 +167,13 @@ interface OAuthAccount : AutoCloseable {
     fun getTokenServerEndpointURL(): String
 
     /**
+     * Get the pairing URL to navigate to on the Authority side (typically a computer).
+     *
+     * @return The URL to show the pairing user
+     */
+    fun getPairingAuthorityURL(): String
+
+    /**
      * Registers a callback for when the account state gets persisted
      *
      * @param callback the account state persistence callback
