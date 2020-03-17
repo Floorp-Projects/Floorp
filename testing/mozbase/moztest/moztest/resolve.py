@@ -290,7 +290,6 @@ _test_flavors = {
 
 _test_subsuites = {
     ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
-    ('browser-chrome', 'gpu'): 'mochitest-browser-chrome-gpu',
     ('browser-chrome', 'remote'): 'mochitest-remote',
     ('browser-chrome', 'screenshots'): 'mochitest-browser-chrome-screenshots',
     ('chrome', 'gpu'): 'mochitest-chrome-gpu',
