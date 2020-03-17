@@ -129,7 +129,7 @@ add_task(
     await clientWithDump.maybeSync(timestamp);
 
     const list = await clientWithDump.get();
-    ok(list.length > 20, "The dump was loaded");
+    ok(list.length > 20, `The dump was loaded (${list.length} records)`);
     equal(received.created[0].id, "xx", "Record from the sync come first.");
 
     const createdById = received.created.reduce((acc, r) => {
