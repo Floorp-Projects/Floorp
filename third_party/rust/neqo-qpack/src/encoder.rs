@@ -4,9 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::huffman::encode_huffman;
-use crate::qpack_helper::read_prefixed_encoded_int_with_connection;
+use crate::decoder_instructions::{DecoderInstruction, DecoderInstructionReader};
+use crate::encoder_instructions::EncoderInstruction;
+use crate::header_block::HeaderEncoder;
 use crate::qpack_send_buf::QPData;
+use crate::reader::ReceiverConnWrapper;
 use crate::table::{HeaderTable, LookupResult};
 use crate::Header;
 use crate::{Error, Res};
@@ -18,30 +20,11 @@ use std::convert::TryInto;
 pub const QPACK_UNI_STREAM_TYPE_ENCODER: u64 = 0x2;
 
 #[derive(Debug)]
-enum DecoderInstructions {
-    InsertCountIncrement,
-    HeaderAck,
-    StreamCancellation,
-}
-
-fn get_instruction(b: u8) -> DecoderInstructions {
-    if (b & 0xc0) == 0 {
-        DecoderInstructions::InsertCountIncrement
-    } else if (b & 0x80) != 0 {
-        DecoderInstructions::HeaderAck
-    } else {
-        DecoderInstructions::StreamCancellation
-    }
-}
-
-#[derive(Debug)]
 pub struct QPackEncoder {
     table: HeaderTable,
     send_buf: QPData,
     max_entries: u64,
-    instruction_reader_current_inst: Option<DecoderInstructions>,
-    instruction_reader_value: u64, // this is instruction dependent value.
-    instruction_reader_cnt: u8, // this is helper variable for reading a prefixed integer encoded value
+    instruction_reader: DecoderInstructionReader,
     local_stream_id: Option<u64>,
     remote_stream_id: Option<u64>,
     max_blocked_streams: u16,
@@ -60,9 +43,7 @@ impl QPackEncoder {
             table: HeaderTable::new(true),
             send_buf: QPData::default(),
             max_entries: 0,
-            instruction_reader_current_inst: None,
-            instruction_reader_value: 0,
-            instruction_reader_cnt: 0,
+            instruction_reader: DecoderInstructionReader::new(),
             local_stream_id: None,
             remote_stream_id: None,
             max_blocked_streams: 0,
@@ -107,69 +88,10 @@ impl QPackEncoder {
     fn read_instructions(&mut self, conn: &mut Connection, stream_id: u64) -> Res<()> {
         qdebug!([self], "read a new instraction");
         loop {
-            match self.instruction_reader_current_inst {
-                None => {
-                    // get new instruction
-                    let mut b = [0];
-                    match conn.stream_recv(stream_id, &mut b) {
-                        Err(_) => break Err(Error::EncoderStreamError),
-                        Ok((amount, fin)) => {
-                            if fin {
-                                break Err(Error::ClosedCriticalStream);
-                            }
-                            if amount != 1 {
-                                // wait for more data.
-                                break Ok(());
-                            }
-                        }
-                    }
-                    self.instruction_reader_current_inst = Some(get_instruction(b[0]));
-
-                    // try to read data
-                    let prefix_len = if (b[0] & 0x80) != 0 { 1 } else { 2 };
-                    match read_prefixed_encoded_int_with_connection(
-                        conn,
-                        stream_id,
-                        &mut self.instruction_reader_value,
-                        &mut self.instruction_reader_cnt,
-                        prefix_len,
-                        b[0],
-                        true,
-                    ) {
-                        Ok(done) => {
-                            if done {
-                                self.call_instruction()?;
-                            } else {
-                                // wait for more data.
-                                break Ok(());
-                            }
-                        }
-                        Err(Error::ClosedCriticalStream) => break Err(Error::ClosedCriticalStream),
-                        Err(_) => break Err(Error::EncoderStreamError),
-                    }
-                }
-                Some(_) => {
-                    match read_prefixed_encoded_int_with_connection(
-                        conn,
-                        stream_id,
-                        &mut self.instruction_reader_value,
-                        &mut self.instruction_reader_cnt,
-                        0,
-                        0x0,
-                        false,
-                    ) {
-                        Ok(done) => {
-                            if done {
-                                self.call_instruction()?;
-                            } else {
-                                // wait for more data.
-                                break Ok(());
-                            }
-                        }
-                        Err(Error::ClosedCriticalStream) => break Err(Error::ClosedCriticalStream),
-                        Err(_) => break Err(Error::EncoderStreamError),
-                    }
-                }
+            let mut recv = ReceiverConnWrapper::new(conn, stream_id);
+            match self.instruction_reader.read_instructions(&mut recv)? {
+                None => break Ok(()),
+                Some(instruction) => self.call_instruction(instruction)?,
             }
         }
     }
@@ -237,37 +159,30 @@ impl QPackEncoder {
         Ok(())
     }
 
-    fn call_instruction(&mut self) -> Res<()> {
-        if let Some(inst) = &self.instruction_reader_current_inst {
-            qdebug!([self], "call intruction {:?}", inst);
-            match inst {
-                DecoderInstructions::InsertCountIncrement => {
-                    self.insert_count_instruction(self.instruction_reader_value)?
-                }
-                DecoderInstructions::HeaderAck => self.header_ack(self.instruction_reader_value)?,
-                DecoderInstructions::StreamCancellation => {
-                    self.stream_cancellation(self.instruction_reader_value)?
-                }
-            };
-            self.instruction_reader_current_inst = None;
-            self.instruction_reader_value = 0;
-            self.instruction_reader_cnt = 0;
-        } else {
-            panic!("We must have a instruction decoded beforewe call call_instruction");
+    fn call_instruction(&mut self, instruction: DecoderInstruction) -> Res<()> {
+        qdebug!([self], "call intruction {:?}", instruction);
+        match instruction {
+            DecoderInstruction::InsertCountIncrement { increment } => {
+                self.insert_count_instruction(increment)
+            }
+            DecoderInstruction::HeaderAck { stream_id } => self.header_ack(stream_id),
+            DecoderInstruction::StreamCancellation { stream_id } => {
+                self.stream_cancellation(stream_id)
+            }
+            _ => Ok(()),
         }
-        Ok(())
     }
 
     pub fn insert_with_name_ref(
         &mut self,
         name_static_table: bool,
-        name_index: u64,
+        index: u64,
         value: &[u8],
     ) -> Res<()> {
         qdebug!(
             [self],
             "insert with name reference {} from {} value={:x?}.",
-            name_index,
+            index,
             if name_static_table {
                 "static table"
             } else {
@@ -276,13 +191,22 @@ impl QPackEncoder {
             value
         );
         self.table
-            .insert_with_name_ref(name_static_table, name_index, value)?;
+            .insert_with_name_ref(name_static_table, index, value)?;
 
         // write instruction
-        let instr = 0x80 | (if name_static_table { 0x40 } else { 0x00 });
-        self.send_buf
-            .encode_prefixed_encoded_int(instr, 2, name_index);
-        encode_literal(self.use_huffman, &mut self.send_buf, 0x0, 0, value);
+        if name_static_table {
+            EncoderInstruction::InsertWithNameRefStatic {
+                index,
+                value: value.to_vec(),
+            }
+            .marshal(&mut self.send_buf, self.use_huffman);
+        } else {
+            EncoderInstruction::InsertWithNameRefDynamic {
+                index,
+                value: value.to_vec(),
+            }
+            .marshal(&mut self.send_buf, self.use_huffman);
+        }
         Ok(())
     }
 
@@ -292,8 +216,11 @@ impl QPackEncoder {
         let index = self.table.insert(name, value)?;
 
         // encode instruction.
-        encode_literal(self.use_huffman, &mut self.send_buf, 0x40, 2, name);
-        encode_literal(self.use_huffman, &mut self.send_buf, 0x0, 0, value);
+        EncoderInstruction::InsertWithNameLiteral {
+            name: name.to_vec(),
+            value: value.to_vec(),
+        }
+        .marshal(&mut self.send_buf, self.use_huffman);
 
         Ok(index)
     }
@@ -301,14 +228,14 @@ impl QPackEncoder {
     pub fn duplicate(&mut self, index: u64) -> Res<()> {
         qdebug!([self], "duplicate entry {}.", index);
         self.table.duplicate(index)?;
-        self.send_buf.encode_prefixed_encoded_int(0x00, 3, index);
+        EncoderInstruction::Duplicate { index }.marshal(&mut self.send_buf, self.use_huffman);
         Ok(())
     }
 
-    pub fn change_capacity(&mut self, cap: u64) -> Res<()> {
-        qdebug!([self], "change capacity: {}", cap);
-        self.table.set_capacity(cap)?;
-        self.send_buf.encode_prefixed_encoded_int(0x20, 3, cap);
+    pub fn change_capacity(&mut self, value: u64) -> Res<()> {
+        qdebug!([self], "change capacity: {}", value);
+        self.table.set_capacity(value)?;
+        EncoderInstruction::Capacity { value }.marshal(&mut self.send_buf, self.use_huffman);
         Ok(())
     }
 
@@ -341,11 +268,10 @@ impl QPackEncoder {
         }
     }
 
-    pub fn encode_header_block(&mut self, h: &[Header], stream_id: u64) -> QPData {
+    pub fn encode_header_block(&mut self, h: &[Header], stream_id: u64) -> HeaderEncoder {
         qdebug!([self], "encoding headers.");
-        let mut encoded_h = QPData::default();
-        let base = self.table.base();
-        self.encode_header_block_prefix(&mut encoded_h, false, 0, base, true);
+        let mut encoded_h =
+            HeaderEncoder::new(self.table.base(), self.use_huffman, self.max_entries);
 
         let stream_is_blocker = self.is_stream_blocker(stream_id);
         let can_block = self.blocked_stream_cnt < self.max_blocked_streams || stream_is_blocker;
@@ -369,59 +295,46 @@ impl QPackEncoder {
                     if static_table { "static" } else { "dynamic" },
                     value_matches
                 );
-                if static_table {
-                    if value_matches {
-                        self.encode_indexed(&mut encoded_h, true, index);
+                if value_matches {
+                    if static_table {
+                        encoded_h.encode_indexed_static(index);
                     } else {
-                        self.encode_literal_with_name_ref(&mut encoded_h, true, index, &value);
+                        encoded_h.encode_indexed_dynamic(index);
                     }
                 } else {
-                    if value_matches {
-                        if index < base {
-                            self.encode_indexed(&mut encoded_h, false, base - index - 1);
-                        } else {
-                            self.encode_post_base_index(&mut encoded_h, index - base);
-                        }
-                    } else if index < base {
-                        self.encode_literal_with_name_ref(
-                            &mut encoded_h,
-                            false,
-                            base - index - 1,
-                            &value,
-                        );
-                    } else {
-                        self.encode_literal_with_post_based_name_ref(
-                            &mut encoded_h,
-                            index - base,
-                            &value,
-                        );
-                    }
+                    encoded_h.encode_literal_with_name_ref(static_table, index, &value);
+                }
+                if !static_table {
                     ref_entries.insert(index);
                 }
             } else if !can_block {
-                self.encode_literal_with_name_literal(&mut encoded_h, &name, &value);
+                encoded_h.encode_literal_with_name_literal(&name, &value);
             } else {
                 match self.insert_with_name_literal(&name, &value) {
                     Ok(index) => {
-                        self.encode_post_base_index(&mut encoded_h, index - base);
+                        encoded_h.encode_indexed_dynamic(index);
                         ref_entries.insert(index);
                     }
                     Err(_) => {
-                        self.encode_literal_with_name_literal(&mut encoded_h, &name, &value);
+                        encoded_h.encode_literal_with_name_literal(&name, &value);
                     }
                 }
             }
         }
+
+        encoded_h.fix_header_block_prefix();
+
         for iter in &ref_entries {
             self.table.add_ref(*iter);
         }
 
-        if let Some(max_ref) = ref_entries.iter().max() {
-            self.fix_header_block_prefix(&mut encoded_h, base, *max_ref + 1);
-            // Check if it is already blocking
-            if !stream_is_blocker && *max_ref >= self.table.get_acked_inserts_cnt() {
-                debug_assert!(self.blocked_stream_cnt < self.max_blocked_streams);
-                self.blocked_stream_cnt += 1;
+        if !stream_is_blocker {
+            // The streams was not a blocker, check if the stream is a blocker now.
+            if let Some(max_ref) = ref_entries.iter().max() {
+                if *max_ref >= self.table.get_acked_inserts_cnt() {
+                    debug_assert!(self.blocked_stream_cnt < self.max_blocked_streams);
+                    self.blocked_stream_cnt += 1;
+                }
             }
         }
 
@@ -432,116 +345,6 @@ impl QPackEncoder {
                 .push_front(ref_entries);
         }
         encoded_h
-    }
-
-    fn encode_header_block_prefix(
-        &self,
-        buf: &mut QPData,
-        fix: bool,
-        req_insert_cnt: u64,
-        delta: u64,
-        positive: bool,
-    ) {
-        qdebug!(
-            [self],
-            "encode header block prefix req_insert_cnt={} delta={} (fix={}).",
-            req_insert_cnt,
-            delta,
-            fix
-        );
-        let enc_insert_cnt = if req_insert_cnt != 0 {
-            (req_insert_cnt % (2 * self.max_entries)) + 1
-        } else {
-            0
-        };
-
-        let mut offset = 0; // this is for fixing header_block only.
-        if !fix {
-            buf.encode_prefixed_encoded_int(0x0, 0, enc_insert_cnt);
-        } else {
-            // TODO fix for case when there is no enough space!!!
-            offset = buf.encode_prefixed_encoded_int_fix(0, 0x0, 0, enc_insert_cnt);
-        }
-        let prefix = if positive { 0x00 } else { 0x80 };
-        if !fix {
-            buf.encode_prefixed_encoded_int(prefix, 1, delta);
-        } else {
-            let _ = buf.encode_prefixed_encoded_int_fix(offset, prefix, 1, delta);
-        }
-    }
-
-    fn fix_header_block_prefix(&self, buf: &mut QPData, base: u64, req_insert_cnt: u64) {
-        if req_insert_cnt > 0 {
-            if req_insert_cnt <= base {
-                self.encode_header_block_prefix(
-                    buf,
-                    true,
-                    req_insert_cnt,
-                    base - req_insert_cnt,
-                    true,
-                );
-            } else {
-                self.encode_header_block_prefix(
-                    buf,
-                    true,
-                    req_insert_cnt,
-                    req_insert_cnt - base - 1,
-                    false,
-                );
-            }
-        }
-    }
-
-    fn encode_indexed(&self, buf: &mut QPData, is_static: bool, index: u64) {
-        qdebug!([self], "encode index {} (static={}).", index, is_static);
-        let prefix = if is_static { 0xc0 } else { 0x80 };
-        buf.encode_prefixed_encoded_int(prefix, 2, index);
-    }
-
-    fn encode_literal_with_name_ref(
-        &self,
-        buf: &mut QPData,
-        is_static: bool,
-        index: u64,
-        value: &[u8],
-    ) {
-        qdebug!(
-            [self],
-            "encode literal with name ref - index={}, static={}, value={:x?}",
-            index,
-            is_static,
-            value
-        );
-        let prefix = if is_static { 0x50 } else { 0x40 };
-        buf.encode_prefixed_encoded_int(prefix, 4, index);
-        encode_literal(self.use_huffman, buf, 0x0, 0, value);
-    }
-
-    fn encode_post_base_index(&self, buf: &mut QPData, index: u64) {
-        qdebug!([self], "encode post base index {}.", index);
-        buf.encode_prefixed_encoded_int(0x10, 4, index);
-    }
-
-    fn encode_literal_with_post_based_name_ref(&self, buf: &mut QPData, index: u64, value: &[u8]) {
-        qdebug!(
-            [self],
-            "encode literal with post base index - index={}, value={:x?}.",
-            index,
-            value
-        );
-        buf.encode_prefixed_encoded_int(0x00, 5, index);
-        encode_literal(self.use_huffman, buf, 0x0, 0, value);
-    }
-
-    fn encode_literal_with_name_literal(&self, buf: &mut QPData, name: &[u8], value: &[u8]) {
-        qdebug!(
-            [self],
-            "encode literal with name literal - name={:x?}, value={:x?}.",
-            name,
-            value
-        );
-        encode_literal(self.use_huffman, buf, 0x20, 4, name);
-        encode_literal(self.use_huffman, buf, 0x0, 0, value);
     }
 
     pub fn add_send_stream(&mut self, stream_id: u64) {
@@ -566,21 +369,6 @@ impl QPackEncoder {
     #[cfg(test)]
     pub fn blocked_stream_cnt(&self) -> u16 {
         self.blocked_stream_cnt
-    }
-}
-
-fn encode_literal(use_huffman: bool, buf: &mut QPData, prefix: u8, prefix_len: u8, value: &[u8]) {
-    if use_huffman {
-        let encoded = encode_huffman(value);
-        buf.encode_prefixed_encoded_int(
-            prefix | (0x80 >> prefix_len),
-            prefix_len + 1,
-            encoded.len() as u64,
-        );
-        buf.write_bytes(&encoded);
-    } else {
-        buf.encode_prefixed_encoded_int(prefix, prefix_len + 1, value.len() as u64);
-        buf.write_bytes(&value);
     }
 }
 

@@ -21,7 +21,7 @@ use neqo_crypto::{
 };
 
 use crate::connection::Role;
-use crate::frame::{Frame, TxMode};
+use crate::frame::Frame;
 use crate::packet::PacketNumber;
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
@@ -183,9 +183,11 @@ impl Crypto {
         self.streams.lost(token);
     }
 
-    pub fn discard(&mut self, space: PNSpace) {
-        self.states.discard(space);
+    /// Discard state for a packet number space and return true
+    /// if something was discarded.
+    pub fn discard(&mut self, space: PNSpace) -> bool {
         self.streams.discard(space);
+        self.states.discard(space)
     }
 }
 
@@ -588,10 +590,11 @@ impl CryptoStates {
         self.zero_rtt = Some(CryptoDxState::new(dir, TLS_EPOCH_ZERO_RTT, secret, cipher));
     }
 
-    pub fn discard(&mut self, space: PNSpace) {
+    /// Discard keys and return true if that happened.
+    pub fn discard(&mut self, space: PNSpace) -> bool {
         match space {
-            PNSpace::Initial => self.initial = None,
-            PNSpace::Handshake => self.handshake = None,
+            PNSpace::Initial => self.initial.take().is_some(),
+            PNSpace::Handshake => self.handshake.take().is_some(),
             PNSpace::ApplicationData => panic!("Can't drop application data keys"),
         }
     }
@@ -885,23 +888,14 @@ impl CryptoStreams {
             .mark_as_lost(token.offset, token.length)
     }
 
-    pub fn sent(&mut self, space: PNSpace, offset: u64, length: usize) {
-        self[space].tx.mark_as_sent(offset, length)
-    }
-
-    pub fn next_bytes(&self, space: PNSpace, mode: TxMode) -> Option<(u64, &[u8])> {
-        self[space].tx.next_bytes(mode)
-    }
-
     pub fn get_frame(
         &mut self,
         space: PNSpace,
-        mode: TxMode,
         remaining: usize,
     ) -> Option<(Frame, Option<RecoveryToken>)> {
-        if let Some((offset, data)) = self.next_bytes(space, mode) {
+        if let Some((offset, data)) = self[space].tx.next_bytes() {
             let (frame, length) = Frame::new_crypto(offset, data, remaining);
-            self.sent(space, offset, length);
+            self[space].tx.mark_as_sent(offset, length);
 
             qdebug!(
                 "Emitting crypto frame space={}, offset={}, len={}",

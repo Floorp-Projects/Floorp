@@ -206,7 +206,7 @@ impl<T> Timer<T> {
         // First, the whole buckets.
         for i in 0..delta {
             let idx = self.bucket(i);
-            buckets.push(mem::replace(&mut self.items[idx], Vec::default()));
+            buckets.push(mem::take(&mut self.items[idx]));
         }
         self.tick(delta);
 

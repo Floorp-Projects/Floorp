@@ -93,7 +93,7 @@ pub enum Error {
 impl Error {
     pub fn code(&self) -> TransportError {
         match self {
-            Self::NoError => 0,
+            Self::NoError | Self::IdleTimeout => 0,
             Self::ServerBusy => 2,
             Self::FlowControlError => 3,
             Self::StreamLimitError => 4,

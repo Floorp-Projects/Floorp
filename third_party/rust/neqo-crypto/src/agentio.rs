@@ -99,6 +99,7 @@ impl RecordList {
         self.records.retain(|rec| rec.epoch != 1);
     }
 
+    #[allow(clippy::unused_self)]
     unsafe extern "C" fn ingest(
         _fd: *mut ssl::PRFileDesc,
         epoch: ssl::PRUint16,
