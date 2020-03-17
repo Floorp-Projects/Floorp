@@ -125,6 +125,37 @@ CanonicalBrowsingContext* BrowsingContext::Canonical() {
   return CanonicalBrowsingContext::Cast(this);
 }
 
+static bool OpenerAndOpenerTopAreSameOrigin(BrowsingContext* aOpener) {
+  // The initial about:blank document inherits its principal from our opener.
+  // If the toplevel Browsing Context of our opener is not same-process to us,
+  // it is cross-origin, so we don't want to inherit its CrossOriginOpenerPolicy
+  if (!aOpener->Top()->IsInProcess()) {
+    return false;
+  }
+
+  nsIDocShell* openerDocShell = aOpener->GetDocShell();
+  if (!openerDocShell) {
+    return false;
+  }
+  Document* openerDoc = openerDocShell->GetDocument();
+  if (!openerDoc) {
+    return false;
+  }
+  nsIPrincipal* openerPrincipal = openerDoc->NodePrincipal();
+
+  nsIDocShell* topDocShell = aOpener->Top()->GetDocShell();
+  if (!topDocShell) {
+    return false;
+  }
+  Document* topDoc = topDocShell->GetDocument();
+  if (!topDoc) {
+    return false;
+  }
+  nsIPrincipal* openerTopPrincipal = topDoc->NodePrincipal();
+
+  return openerPrincipal->Equals(openerTopPrincipal);
+}
+
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
@@ -169,10 +200,21 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
 
+  if (aOpener && OpenerAndOpenerTopAreSameOrigin(aOpener)) {
+    // We inherit the opener policy if there is a creator and if the creator's
+    // origin is same origin with the creator's top-level origin.
+    context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
+        aOpener->Top()->GetOpenerPolicy());
+  } else if (aOpener) {
+    // They are not same origin
+    auto topPolicy = aOpener->Top()->GetOpenerPolicy();
+    MOZ_RELEASE_ASSERT(topPolicy == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE ||
+                       topPolicy ==
+                           nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS);
+  }
+
   BrowsingContext* inherit = aParent ? aParent : aOpener;
   if (inherit) {
-    context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
-        inherit->Top()->GetOpenerPolicy());
     // CORPP 3.1.3 https://mikewest.github.io/corpp/#integration-html
     context->mFields.SetWithoutSyncing<IDX_EmbedderPolicy>(
         inherit->GetEmbedderPolicy());
