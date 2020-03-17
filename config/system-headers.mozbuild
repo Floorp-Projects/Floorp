@@ -1297,7 +1297,9 @@ if CONFIG['MOZ_SYSTEM_LIBVPX']:
 
 if CONFIG['MOZ_SYSTEM_ICU']:
     system_headers += [
+        'unicode/datefmt.h',
         'unicode/locid.h',
+        'unicode/numberformatter.h',
         'unicode/numsys.h',
         'unicode/plurrule.h',
         'unicode/putil.h',
