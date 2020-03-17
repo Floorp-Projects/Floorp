@@ -216,7 +216,7 @@ nsresult EventTokenBucket::SubmitEvent(ATokenBucketEvent* event,
   // When this function exits the cancelEvent needs 2 references, one for the
   // mEvents queue and one for the caller of SubmitEvent()
 
-  NS_ADDREF(*cancelable = cancelEvent.get());
+  *cancelable = do_AddRef(cancelEvent).take();
 
   if (mPaused || !TryImmediateDispatch(cancelEvent.get())) {
     // queue it

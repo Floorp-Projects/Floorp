@@ -1037,10 +1037,8 @@ nsresult nsMultiMixedConv::ProcessHeader() {
 
 nsresult NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv) {
   MOZ_ASSERT(aMultiMixedConv != nullptr, "null ptr");
-  if (!aMultiMixedConv) return NS_ERROR_NULL_POINTER;
 
-  *aMultiMixedConv = new nsMultiMixedConv();
-
-  NS_ADDREF(*aMultiMixedConv);
+  RefPtr<nsMultiMixedConv> conv = new nsMultiMixedConv();
+  conv.forget(aMultiMixedConv);
   return NS_OK;
 }

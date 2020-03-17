@@ -1251,10 +1251,8 @@ nsresult MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** aConv) {
   MOZ_ASSERT(aConv != nullptr, "null ptr");
   if (!aConv) return NS_ERROR_NULL_POINTER;
 
-  *aConv = new mozTXTToHTMLConv();
-  if (!*aConv) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aConv);
+  RefPtr<mozTXTToHTMLConv> conv = new mozTXTToHTMLConv();
+  conv.forget(aConv);
   //    return (*aConv)->Init();
   return NS_OK;
 }

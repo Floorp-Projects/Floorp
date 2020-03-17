@@ -119,8 +119,8 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport* transport,
 nsresult net_NewTransportEventSinkProxy(nsITransportEventSink** result,
                                         nsITransportEventSink* sink,
                                         nsIEventTarget* target) {
-  *result = new nsTransportEventSinkProxy(sink, target);
-  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*result);
+  RefPtr<nsTransportEventSinkProxy> res =
+      new nsTransportEventSinkProxy(sink, target);
+  res.forget(result);
   return NS_OK;
 }

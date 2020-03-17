@@ -2854,8 +2854,8 @@ nsSocketTransport::GetScriptablePeerAddr(nsINetAddr** addr) {
   rv = GetPeerAddr(&rawAddr);
   if (NS_FAILED(rv)) return rv;
 
-  NS_ADDREF(*addr = new nsNetAddr(&rawAddr));
-
+  RefPtr<nsNetAddr> netaddr = new nsNetAddr(&rawAddr);
+  netaddr.forget(addr);
   return NS_OK;
 }
 
@@ -2867,7 +2867,8 @@ nsSocketTransport::GetScriptableSelfAddr(nsINetAddr** addr) {
   rv = GetSelfAddr(&rawAddr);
   if (NS_FAILED(rv)) return rv;
 
-  NS_ADDREF(*addr = new nsNetAddr(&rawAddr));
+  RefPtr<nsNetAddr> netaddr = new nsNetAddr(&rawAddr);
+  netaddr.forget(addr);
 
   return NS_OK;
 }

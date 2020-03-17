@@ -217,9 +217,8 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
       if (!*sessionState) {
         // Remember the fact that we cannot use the "sys-ntlm" module,
         // so we don't ever bother trying again for this auth domain.
-        *sessionState = new nsNTLMSessionState();
-        if (!*sessionState) return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(*sessionState);
+        RefPtr<nsNTLMSessionState> state = new nsNTLMSessionState();
+        state.forget(sessionState);
       }
 
       // Use our internal NTLM implementation. Note, this is less secure,

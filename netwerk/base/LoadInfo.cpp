@@ -720,7 +720,7 @@ nsIPrincipal* LoadInfo::LoadingPrincipal() { return mLoadingPrincipal; }
 
 NS_IMETHODIMP
 LoadInfo::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal) {
-  NS_ADDREF(*aTriggeringPrincipal = mTriggeringPrincipal);
+  *aTriggeringPrincipal = do_AddRef(mTriggeringPrincipal).take();
   return NS_OK;
 }
 

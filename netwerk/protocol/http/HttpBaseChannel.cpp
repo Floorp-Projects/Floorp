@@ -514,8 +514,7 @@ HttpBaseChannel::SetDocshellUserAgentOverride() {
 NS_IMETHODIMP
 HttpBaseChannel::GetOriginalURI(nsIURI** aOriginalURI) {
   NS_ENSURE_ARG_POINTER(aOriginalURI);
-  *aOriginalURI = mOriginalURI;
-  NS_ADDREF(*aOriginalURI);
+  *aOriginalURI = do_AddRef(mOriginalURI).take();
   return NS_OK;
 }
 
@@ -531,8 +530,7 @@ HttpBaseChannel::SetOriginalURI(nsIURI* aOriginalURI) {
 NS_IMETHODIMP
 HttpBaseChannel::GetURI(nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
-  *aURI = mURI;
-  NS_ADDREF(*aURI);
+  *aURI = do_AddRef(mURI).take();
   return NS_OK;
 }
 
@@ -1269,8 +1267,9 @@ HttpBaseChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings) {
     *aEncodings = nullptr;
     return NS_OK;
   }
-  nsContentEncodings* enumerator = new nsContentEncodings(this, encoding.get());
-  NS_ADDREF(*aEncodings = enumerator);
+  RefPtr<nsContentEncodings> enumerator =
+      new nsContentEncodings(this, encoding.get());
+  enumerator.forget(aEncodings);
   return NS_OK;
 }
 
