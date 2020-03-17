@@ -1972,7 +1972,7 @@ nsStyleImageLayers::Layer::Layer()
       mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
       mMaskMode(StyleMaskMode::MatchSource) {}
 
-nsStyleImageLayers::Layer::~Layer() {}
+nsStyleImageLayers::Layer::~Layer() = default;
 
 void nsStyleImageLayers::Layer::Initialize(
     nsStyleImageLayers::LayerType aType) {
@@ -2146,12 +2146,7 @@ bool nsStyleBackground::IsTransparent(mozilla::ComputedStyle* aStyle) const {
          NS_GET_A(BackgroundColor(aStyle)) == 0;
 }
 
-StyleTransition::StyleTransition(const StyleTransition& aCopy)
-    : mTimingFunction(aCopy.mTimingFunction),
-      mDuration(aCopy.mDuration),
-      mDelay(aCopy.mDelay),
-      mProperty(aCopy.mProperty),
-      mUnknownProperty(aCopy.mUnknownProperty) {}
+StyleTransition::StyleTransition(const StyleTransition& aCopy) = default;
 
 void StyleTransition::SetInitialValues() {
   mTimingFunction = nsTimingFunction(StyleTimingKeyword::Ease);
@@ -2168,15 +2163,7 @@ bool StyleTransition::operator==(const StyleTransition& aOther) const {
           mUnknownProperty == aOther.mUnknownProperty);
 }
 
-StyleAnimation::StyleAnimation(const StyleAnimation& aCopy)
-    : mTimingFunction(aCopy.mTimingFunction),
-      mDuration(aCopy.mDuration),
-      mDelay(aCopy.mDelay),
-      mName(aCopy.mName),
-      mDirection(aCopy.mDirection),
-      mFillMode(aCopy.mFillMode),
-      mPlayState(aCopy.mPlayState),
-      mIterationCount(aCopy.mIterationCount) {}
+StyleAnimation::StyleAnimation(const StyleAnimation& aCopy) = default;
 
 void StyleAnimation::SetInitialValues() {
   mTimingFunction = nsTimingFunction(StyleTimingKeyword::Ease);

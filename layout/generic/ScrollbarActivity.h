@@ -97,7 +97,7 @@ class ScrollbarActivity final : public nsIDOMEventListener,
   }
 
  protected:
-  virtual ~ScrollbarActivity() {}
+  virtual ~ScrollbarActivity() = default;
 
   bool IsActivityOngoing() { return mNestedActivityCounter > 0; }
   bool IsStillFading(TimeStamp aTime);

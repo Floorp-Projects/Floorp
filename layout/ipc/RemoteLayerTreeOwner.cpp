@@ -49,7 +49,7 @@ RemoteLayerTreeOwner::RemoteLayerTreeOwner()
       mInitialized(false),
       mLayersConnected(false) {}
 
-RemoteLayerTreeOwner::~RemoteLayerTreeOwner() {}
+RemoteLayerTreeOwner::~RemoteLayerTreeOwner() = default;
 
 bool RemoteLayerTreeOwner::Initialize(BrowserParent* aBrowserParent) {
   if (mInitialized || !aBrowserParent) {

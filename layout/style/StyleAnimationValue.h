@@ -49,22 +49,11 @@ struct AnimationValue {
       : mServo(aValue) {}
   AnimationValue() = default;
 
-  AnimationValue(const AnimationValue& aOther) : mServo(aOther.mServo) {}
-  AnimationValue(AnimationValue&& aOther) : mServo(std::move(aOther.mServo)) {}
+  AnimationValue(const AnimationValue& aOther) = default;
+  AnimationValue(AnimationValue&& aOther) = default;
 
-  AnimationValue& operator=(const AnimationValue& aOther) {
-    if (this != &aOther) {
-      mServo = aOther.mServo;
-    }
-    return *this;
-  }
-  AnimationValue& operator=(AnimationValue&& aOther) {
-    MOZ_ASSERT(this != &aOther, "Do not move itself");
-    if (this != &aOther) {
-      mServo = std::move(aOther.mServo);
-    }
-    return *this;
-  }
+  AnimationValue& operator=(const AnimationValue& aOther) = default;
+  AnimationValue& operator=(AnimationValue&& aOther) = default;
 
   bool operator==(const AnimationValue& aOther) const;
   bool operator!=(const AnimationValue& aOther) const;

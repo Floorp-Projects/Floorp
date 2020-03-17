@@ -20,7 +20,7 @@
 
 nsGridRowLayout::nsGridRowLayout() : nsSprocketLayout() {}
 
-nsGridRowLayout::~nsGridRowLayout() {}
+nsGridRowLayout::~nsGridRowLayout() = default;
 
 void nsGridRowLayout::ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                        nsIFrame* aPrevBox,

@@ -85,7 +85,7 @@ static const nsGlyphCode kNullGlyph = {{{0, 0}}, 0};
 
 class nsGlyphTable {
  public:
-  virtual ~nsGlyphTable() {}
+  virtual ~nsGlyphTable() = default;
 
   virtual const FontFamilyName& FontNameFor(
       const nsGlyphCode& aGlyphCode) const = 0;
@@ -560,7 +560,7 @@ class nsGlyphTableList final : public nsIObserver {
   nsGlyphTable* GetGlyphTableFor(const nsACString& aFamily);
 
  private:
-  ~nsGlyphTableList() {}
+  ~nsGlyphTableList() = default;
 
   nsPropertiesTable* PropertiesTableAt(int32_t aIndex) {
     return &mPropertiesTableList.ElementAt(aIndex);

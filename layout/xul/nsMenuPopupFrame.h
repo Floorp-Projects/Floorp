@@ -157,7 +157,7 @@ class nsXULPopupShownEvent final : public mozilla::Runnable,
   void CancelListener();
 
  protected:
-  virtual ~nsXULPopupShownEvent() {}
+  virtual ~nsXULPopupShownEvent() = default;
 
  private:
   nsCOMPtr<nsIContent> mPopup;

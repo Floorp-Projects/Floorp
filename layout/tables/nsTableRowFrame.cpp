@@ -139,7 +139,7 @@ nsTableRowFrame::nsTableRowFrame(ComputedStyle* aStyle,
   ResetBSize(0);
 }
 
-nsTableRowFrame::~nsTableRowFrame() {}
+nsTableRowFrame::~nsTableRowFrame() = default;
 
 void nsTableRowFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                            nsIFrame* aPrevInFlow) {

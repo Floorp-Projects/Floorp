@@ -58,7 +58,7 @@ class nsButtonBoxFrame : public nsBoxFrame {
 
    private:
     friend class nsButtonBoxFrame;
-    virtual ~nsButtonBoxListener() {}
+    virtual ~nsButtonBoxListener() = default;
     nsButtonBoxFrame* mButtonBoxFrame;
   };
 

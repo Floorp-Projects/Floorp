@@ -333,7 +333,7 @@ class IndiReflowCounter {
         mMgr(aMgr),
         mCounter(aMgr),
         mHasBeenOutput(false) {}
-  virtual ~IndiReflowCounter() {}
+  virtual ~IndiReflowCounter() = default;
 
   nsAutoString mName;
   nsIFrame* mFrame;  // weak reference (don't delete)
@@ -10078,7 +10078,7 @@ ReflowCounter::ReflowCounter(ReflowCountMgr* aMgr) : mMgr(aMgr) {
 }
 
 //------------------------------------------------------------------
-ReflowCounter::~ReflowCounter() {}
+ReflowCounter::~ReflowCounter() = default;
 
 //------------------------------------------------------------------
 void ReflowCounter::ClearTotals() { mTotal = 0; }
@@ -10154,7 +10154,7 @@ ReflowCountMgr::ReflowCountMgr() : mCounts(10), mIndiFrameCounts(10) {
 }
 
 //------------------------------------------------------------------
-ReflowCountMgr::~ReflowCountMgr() {}
+ReflowCountMgr::~ReflowCountMgr() = default;
 
 //------------------------------------------------------------------
 ReflowCounter* ReflowCountMgr::LookUp(const char* aName) {

@@ -191,7 +191,7 @@ class AccessibleCaret {
     }
 
    private:
-    virtual ~DummyTouchListener(){};
+    virtual ~DummyTouchListener() = default;
   };
 
   // Member variables

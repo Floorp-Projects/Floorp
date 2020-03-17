@@ -182,7 +182,7 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame(ComputedStyle* aStyle,
   mEdgeColors.Set(NO_COLOR);
 }
 
-nsHTMLFramesetFrame::~nsHTMLFramesetFrame() {}
+nsHTMLFramesetFrame::~nsHTMLFramesetFrame() = default;
 
 NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
   NS_QUERYFRAME_ENTRY(nsHTMLFramesetFrame)

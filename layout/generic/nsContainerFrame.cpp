@@ -43,7 +43,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
-nsContainerFrame::~nsContainerFrame() {}
+nsContainerFrame::~nsContainerFrame() = default;
 
 NS_QUERYFRAME_HEAD(nsContainerFrame)
   NS_QUERYFRAME_ENTRY(nsContainerFrame)

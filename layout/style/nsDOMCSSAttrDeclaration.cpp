@@ -30,7 +30,7 @@ nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(Element* aElement,
   NS_ASSERTION(aElement, "Inline style for a NULL element?");
 }
 
-nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration() {}
+nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration() = default;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCSSAttributeDeclaration, mElement)
 

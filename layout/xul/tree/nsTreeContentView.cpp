@@ -37,7 +37,7 @@ class Row {
         mSubtreeSize(0),
         mFlags(0) {}
 
-  ~Row() {}
+  ~Row() = default;
 
   void SetContainer(bool aContainer) {
     aContainer ? mFlags |= ROW_FLAG_CONTAINER : mFlags &= ~ROW_FLAG_CONTAINER;

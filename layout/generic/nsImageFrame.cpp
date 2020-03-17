@@ -224,7 +224,7 @@ nsImageFrame::nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
   EnableVisibilityTracking();
 }
 
-nsImageFrame::~nsImageFrame() {}
+nsImageFrame::~nsImageFrame() = default;
 
 NS_QUERYFRAME_HEAD(nsImageFrame)
   NS_QUERYFRAME_ENTRY(nsImageFrame)

@@ -603,7 +603,7 @@ class UACacheReporter final : public nsIMemoryReporter {
   NS_DECL_NSIMEMORYREPORTER
 
  private:
-  ~UACacheReporter() {}
+  ~UACacheReporter() = default;
 };
 
 }  // namespace mozilla

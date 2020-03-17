@@ -33,7 +33,7 @@ namespace mozilla {
 DetailsFrame::DetailsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
     : nsBlockFrame(aStyle, aPresContext, kClassID) {}
 
-DetailsFrame::~DetailsFrame() {}
+DetailsFrame::~DetailsFrame() = default;
 
 void DetailsFrame::SetInitialChildList(ChildListID aListID,
                                        nsFrameList& aChildList) {

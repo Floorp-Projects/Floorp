@@ -37,7 +37,7 @@ class CSSValue : public RefCounted<CSSValue> {
   virtual void GetCssText(nsString& aText, ErrorResult& aRv) = 0;
   virtual uint16_t CssValueType() const = 0;
 
-  virtual ~CSSValue(){};
+  virtual ~CSSValue() = default;
 
   // Downcasting
 

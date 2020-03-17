@@ -405,7 +405,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
     }
 
    private:
-    ~IconLoad() {}
+    ~IconLoad() = default;
 
     void GetPrefs();
     nsTObserverArray<nsImageFrame*> mIconObservers;

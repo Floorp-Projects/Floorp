@@ -25,7 +25,7 @@ struct nsRect;
  */
 class nsILineIterator {
  protected:
-  ~nsILineIterator() {}
+  ~nsILineIterator() = default;
 
  public:
   virtual void DisposeLineIterator() = 0;

@@ -149,7 +149,7 @@ class nsBidiPresUtils {
    */
   class BidiProcessor {
    public:
-    virtual ~BidiProcessor() {}
+    virtual ~BidiProcessor() = default;
 
     /**
      * Sets the current text with the given length and the given direction.

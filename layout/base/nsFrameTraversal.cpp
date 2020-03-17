@@ -34,7 +34,7 @@ class nsFrameIterator : public nsIFrameEnumerator {
                   bool aSkipPopupChecks);
 
  protected:
-  virtual ~nsFrameIterator() {}
+  virtual ~nsFrameIterator() = default;
 
   void setCurrent(nsIFrame* aFrame) { mCurrent = aFrame; }
   nsIFrame* getCurrent() { return mCurrent; }
@@ -156,9 +156,9 @@ nsresult NS_NewFrameTraversal(nsIFrameEnumerator** aEnumerator,
   return NS_OK;
 }
 
-nsFrameTraversal::nsFrameTraversal() {}
+nsFrameTraversal::nsFrameTraversal() = default;
 
-nsFrameTraversal::~nsFrameTraversal() {}
+nsFrameTraversal::~nsFrameTraversal() = default;
 
 NS_IMPL_ISUPPORTS(nsFrameTraversal, nsIFrameTraversal)
 

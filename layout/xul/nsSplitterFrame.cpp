@@ -147,7 +147,7 @@ nsSplitterFrameInner::ResizeType nsSplitterFrameInner::GetResizeBefore() {
   return Closest;
 }
 
-nsSplitterFrameInner::~nsSplitterFrameInner() {}
+nsSplitterFrameInner::~nsSplitterFrameInner() = default;
 
 nsSplitterFrameInner::ResizeType nsSplitterFrameInner::GetResizeAfter() {
   static Element::AttrValuesArray strings[] = {

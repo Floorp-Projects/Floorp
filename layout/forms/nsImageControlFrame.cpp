@@ -58,7 +58,7 @@ nsImageControlFrame::nsImageControlFrame(ComputedStyle* aStyle,
                                          nsPresContext* aPresContext)
     : nsImageFrame(aStyle, aPresContext, kClassID) {}
 
-nsImageControlFrame::~nsImageControlFrame() {}
+nsImageControlFrame::~nsImageControlFrame() = default;
 
 void nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                       PostDestroyData& aPostDestroyData) {

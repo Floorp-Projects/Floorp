@@ -74,7 +74,7 @@ class nsListEventListener final : public nsIDOMEventListener {
   NS_IMETHOD HandleEvent(Event* aEvent) override;
 
  private:
-  ~nsListEventListener() {}
+  ~nsListEventListener() = default;
 
   nsListControlFrame* mFrame;
 };

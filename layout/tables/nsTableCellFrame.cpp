@@ -79,7 +79,7 @@ nsTableCellFrame::nsTableCellFrame(ComputedStyle* aStyle,
   SetContentEmpty(false);
 }
 
-nsTableCellFrame::~nsTableCellFrame() {}
+nsTableCellFrame::~nsTableCellFrame() = default;
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableCellFrame)
 
@@ -1030,7 +1030,7 @@ nsBCTableCellFrame::nsBCTableCellFrame(ComputedStyle* aStyle,
   mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
 }
 
-nsBCTableCellFrame::~nsBCTableCellFrame() {}
+nsBCTableCellFrame::~nsBCTableCellFrame() = default;
 
 /* virtual */
 nsMargin nsBCTableCellFrame::GetUsedBorder() const {
