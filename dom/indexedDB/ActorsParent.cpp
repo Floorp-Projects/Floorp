@@ -13489,9 +13489,7 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   MOZ_ASSERT(commonParams);
 
   const DatabaseMetadata& metadata = commonParams->metadata();
-  if (NS_WARN_IF(metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT &&
-                 metadata.persistenceType() != PERSISTENCE_TYPE_TEMPORARY &&
-                 metadata.persistenceType() != PERSISTENCE_TYPE_DEFAULT)) {
+  if (NS_WARN_IF(!IsValidPersistenceType(metadata.persistenceType()))) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
@@ -27659,9 +27657,7 @@ mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (NS_WARN_IF(aPersistenceType != quota::PERSISTENCE_TYPE_PERSISTENT &&
-                 aPersistenceType != quota::PERSISTENCE_TYPE_TEMPORARY &&
-                 aPersistenceType != quota::PERSISTENCE_TYPE_DEFAULT)) {
+  if (NS_WARN_IF(!IsValidPersistenceType(aPersistenceType))) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }

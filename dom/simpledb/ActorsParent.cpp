@@ -497,7 +497,7 @@ PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
     return nullptr;
   }
 
-  if (NS_WARN_IF(aPersistenceType == PERSISTENCE_TYPE_INVALID)) {
+  if (NS_WARN_IF(!IsValidPersistenceType(aPersistenceType))) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
