@@ -2,7 +2,7 @@
 
 # Passwords
 
-`object Passwords : `[`SyncEngine`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L81)
+`object Passwords : `[`SyncEngine`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L82)
 
 A 'logins/passwords' engine.
 

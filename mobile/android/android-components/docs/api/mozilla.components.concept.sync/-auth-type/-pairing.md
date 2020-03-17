@@ -2,7 +2,7 @@
 
 # Pairing
 
-`object Pairing : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L276)
+`object Pairing : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L283)
 
 Account created via pairing (similar to sign-in, but without requiring credentials).
 

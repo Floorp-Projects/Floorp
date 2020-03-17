@@ -2,7 +2,7 @@
 
 # CrashHandlerService
 
-`class CrashHandlerService : JobIntentService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/handler/CrashHandlerService.kt#L15)
+`class CrashHandlerService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/handler/CrashHandlerService.kt#L17)
 
 Service receiving native code crashes (from GeckoView).
 
@@ -16,8 +16,7 @@ Service receiving native code crashes (from GeckoView).
 
 | Name | Summary |
 |---|---|
-| [onHandleWork](on-handle-work.md) | `fun onHandleWork(intent: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onStartCommand](on-start-command.md) | `fun onStartCommand(intent: <ERROR CLASS>?, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, startId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [onHandleIntent](on-handle-intent.md) | `fun onHandleIntent(intent: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 

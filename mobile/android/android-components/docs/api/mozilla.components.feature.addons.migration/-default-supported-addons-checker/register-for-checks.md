@@ -2,7 +2,7 @@
 
 # registerForChecks
 
-`fun registerForChecks(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L80)
+`fun registerForChecks(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L81)
 
 Overrides [SupportedAddonsChecker.registerForChecks](../-supported-addons-checker/register-for-checks.md)
 

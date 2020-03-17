@@ -2,7 +2,7 @@
 
 # SyncConfig
 
-`data class SyncConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L50)
+`data class SyncConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L51)
 
 Configuration for sync.
 

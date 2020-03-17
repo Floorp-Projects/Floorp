@@ -594,6 +594,7 @@
 | [mozilla.components.feature.accounts.push.SendTabUseCases](../mozilla.components.feature.accounts.push/-send-tab-use-cases/index.md) | Contains use cases for sending tabs to devices related to the firefox-accounts. |
 | [mozilla.components.lib.crash.service.SentryService](../mozilla.components.lib.crash.service/-sentry-service/index.md) | A [CrashReporterService](../mozilla.components.lib.crash.service/-crash-reporter-service/index.md) implementation that uploads crash reports to a Sentry server. |
 | [org.mozilla.telemetry.measurement.SequenceMeasurement](../org.mozilla.telemetry.measurement/-sequence-measurement/index.md) |  |
+| [mozilla.components.service.fxa.Server](../mozilla.components.service.fxa/-server.md) |  |
 | [mozilla.components.service.fxa.ServerConfig](../mozilla.components.service.fxa/-server-config.md) |  |
 | [mozilla.appservices.logins.ServerPassword](../mozilla.components.service.sync.logins/mozilla.appservices.logins.-server-password/index.md) (extensions in package mozilla.components.service.sync.logins) |  |
 | [mozilla.components.service.sync.logins.ServerPassword](../mozilla.components.service.sync.logins/-server-password.md) | Raw password data that is stored by the storage implementation. |
