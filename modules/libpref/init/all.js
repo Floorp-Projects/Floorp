@@ -4829,7 +4829,13 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
 
   // The maximum number of immediate resyncs to trigger for changes made during
   // a sync.
-  pref("services.sync.maxResyncs", 5);
+  pref("services.sync.maxResyncs", 1);
+
+  // The URL of the Firefox Accounts auth server backend
+  pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
+
+  // Percentage chance we skip an extension storage sync (kinto life support).
+  pref("services.sync.extension-storage.skipPercentageChance", 20);
 #endif // MOZ_SERVICES_SYNC
 
 // Marionette is the remote protocol that lets OOP programs communicate with,
