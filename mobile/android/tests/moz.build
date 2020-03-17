@@ -6,7 +6,7 @@
 
 # catch all for new files
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Testing')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 TEST_DIRS += [
     'browser',

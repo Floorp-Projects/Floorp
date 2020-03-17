@@ -5,9 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Testing')
-
-with Files('chrome/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Testing')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']

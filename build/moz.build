@@ -6,8 +6,6 @@
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
-with Files("mobile/**"):
-    BUG_COMPONENT = ("Firefox for Android", "Testing")
 
 # This cannot be named "build" because of bug 922191.
 SPHINX_TREES['buildsystem'] = 'docs'
