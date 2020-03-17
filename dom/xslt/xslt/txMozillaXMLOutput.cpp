@@ -175,7 +175,7 @@ nsresult txMozillaXMLOutput::comment(const nsString& aData) {
 
   TX_ENSURE_CURRENTNODE;
 
-  RefPtr<Comment> comment = new Comment(mNodeInfoManager);
+  RefPtr<Comment> comment = new (mNodeInfoManager) Comment(mNodeInfoManager);
 
   rv = comment->SetText(aData, false);
   NS_ENSURE_SUCCESS(rv, rv);

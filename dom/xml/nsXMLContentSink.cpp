@@ -1084,7 +1084,7 @@ NS_IMETHODIMP
 nsXMLContentSink::HandleComment(const char16_t* aName) {
   FlushText();
 
-  RefPtr<Comment> comment = new Comment(mNodeInfoManager);
+  RefPtr<Comment> comment = new (mNodeInfoManager) Comment(mNodeInfoManager);
   comment->SetText(nsDependentString(aName), false);
   nsresult rv = AddContentAsLeaf(comment);
   DidAddContent();

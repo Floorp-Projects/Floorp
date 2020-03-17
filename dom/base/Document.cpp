@@ -7778,7 +7778,8 @@ already_AddRefed<DocumentFragment> Document::CreateDocumentFragment() const {
 // Unfortunately, bareword "Comment" is ambiguous with some Mac system headers.
 already_AddRefed<dom::Comment> Document::CreateComment(
     const nsAString& aData) const {
-  RefPtr<dom::Comment> comment = new dom::Comment(mNodeInfoManager);
+  RefPtr<dom::Comment> comment =
+      new (mNodeInfoManager) dom::Comment(mNodeInfoManager);
 
   // Don't notify; this node is still being created.
   comment->SetText(aData, false);
