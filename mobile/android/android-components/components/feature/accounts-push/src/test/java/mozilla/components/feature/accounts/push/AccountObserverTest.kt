@@ -11,6 +11,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
+import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -28,6 +29,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.stubbing.OngoingStubbing
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -149,6 +151,23 @@ class AccountObserverTest {
     }
 
     @Test
+    fun `notify account of new subscriptions`() {
+        val observer = AccountObserver(
+            testContext,
+            pushFeature,
+            pushScope,
+            mock(),
+            false
+        )
+
+        whenSubscribe()
+
+        observer.onAuthenticated(account, AuthType.Signin)
+
+        verify(constellation).setDevicePushSubscriptionAsync(any())
+    }
+
+    @Test
     fun `feature and service invoked on logout`() {
         val observer = AccountObserver(
             testContext,
@@ -179,5 +198,22 @@ class AccountObserverTest {
         observer.onProfileUpdated(mock())
 
         verifyNoMoreInteractions(pushFeature)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun whenSubscribe(): OngoingStubbing<Unit>? {
+        return `when`(pushFeature.subscribe(any(), nullable(), any(), any())).thenAnswer {
+
+            // Invoke the `onSubscribe` lambda with a fake subscription.
+            (it.arguments[3] as ((AutoPushSubscription) -> Unit)).invoke(
+                AutoPushSubscription(
+                    scope = "test",
+                    endpoint = "https://foo",
+                    publicKey = "p256dh",
+                    authKey = "auth",
+                    appServerKey = null
+                )
+            )
+        }
     }
 }
