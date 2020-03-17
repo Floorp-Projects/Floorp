@@ -2133,11 +2133,7 @@ pref("devtools.webconsole.input.context", false);
 
 // Set to true to eagerly show the results of webconsole terminal evaluations
 // when they don't have side effects.
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-  pref("devtools.webconsole.input.eagerEvaluation", true);
-#else
-  pref("devtools.webconsole.input.eagerEvaluation", false);
-#endif
+pref("devtools.webconsole.input.eagerEvaluation", true);
 
 // Browser console filters
 pref("devtools.browserconsole.filter.error", true);
