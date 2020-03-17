@@ -535,6 +535,11 @@ bool FinalizationRegistryObject::register_(JSContext* cx, unsigned argc,
     return false;
   }
 
+  if (JS_IsDeadWrapper(wrappedRecord)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return false;
+  }
+
   // Register the record with the target.
   gc::GCRuntime* gc = &cx->runtime()->gc;
   if (!gc->registerWithFinalizationRegistry(cx, unwrappedTarget,
