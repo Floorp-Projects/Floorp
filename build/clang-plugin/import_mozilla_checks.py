@@ -34,9 +34,13 @@ def copy_dir_contents(src, dest):
                 raise Exception('Directory not copied. Error: %s' % e)
 
 
-def write_cmake(module_path):
+def write_cmake(module_path, import_alpha):
     names = ['  ' + os.path.basename(f) for f in glob.glob("%s/*.cpp" % module_path)]
     names += ['  ' + os.path.basename(f) for f in glob.glob("%s/external/*.cpp" % module_path)]
+    if import_alpha:
+        alpha_names = ['  ' + os.path.join("alpha", os.path.basename(f))
+                       for f in glob.glob("%s/alpha/*.cpp" % module_path)]
+        names += alpha_names
     with open(os.path.join(module_path, 'CMakeLists.txt'), 'w') as f:
         f.write("""set(LLVM_LINK_COMPONENTS support)
 
@@ -114,7 +118,7 @@ def generate_thread_allows(mozilla_path, module_path):
         f.write(ThreadAllows.generate_allows({files, names}))
 
 
-def do_import(mozilla_path, clang_tidy_path):
+def do_import(mozilla_path, clang_tidy_path, import_alpha):
     module = 'mozilla'
     module_path = os.path.join(clang_tidy_path, module)
     try:
@@ -126,7 +130,7 @@ def do_import(mozilla_path, clang_tidy_path):
     copy_dir_contents(mozilla_path, module_path)
     write_third_party_paths(mozilla_path, module_path)
     generate_thread_allows(mozilla_path, module_path)
-    write_cmake(module_path)
+    write_cmake(module_path, import_alpha)
     add_item_to_cmake_section(os.path.join(module_path, '..', 'plugin',
                                            'CMakeLists.txt'),
                               'LINK_LIBS', 'clangTidyMozillaModule')
@@ -145,10 +149,11 @@ static int LLVM_ATTRIBUTE_UNUSED MozillaModuleAnchorDestination =
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
         print("""\
-Usage: import_mozilla_checks.py <mozilla-clang-plugin-path> <clang-tidy-path>
+Usage: import_mozilla_checks.py <mozilla-clang-plugin-path> <clang-tidy-path> [import_alpha]
 Imports the Mozilla static analysis checks into a clang-tidy source tree.
+If `import_alpha` is specified then in-tree alpha checkers will be also imported.
 """)
 
         return
@@ -161,7 +166,12 @@ Imports the Mozilla static analysis checks into a clang-tidy source tree.
     if not os.path.isdir(mozilla_path):
         print("Invalid path to clang-tidy source directory")
 
-    do_import(mozilla_path, clang_tidy_path)
+    import_alpha = False
+
+    if len(sys.argv) == 4 and sys.argv[3] == 'import_alpha':
+        import_alpha = True
+
+    do_import(mozilla_path, clang_tidy_path, import_alpha)
 
 
 if __name__ == '__main__':

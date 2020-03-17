@@ -87,14 +87,14 @@ def patch(patch, srcdir):
                '-s'])
 
 
-def import_clang_tidy(source_dir):
+def import_clang_tidy(source_dir, build_clang_tidy_alpha):
     clang_plugin_path = os.path.join(os.path.dirname(sys.argv[0]),
                                      '..', 'clang-plugin')
     clang_tidy_path = os.path.join(source_dir,
                                    'clang-tools-extra/clang-tidy')
     sys.path.append(clang_plugin_path)
     from import_mozilla_checks import do_import
-    do_import(clang_plugin_path, clang_tidy_path)
+    do_import(clang_plugin_path, clang_tidy_path, build_clang_tidy_alpha)
 
 
 def build_package(package_build_dir, cmake_args):
@@ -614,6 +614,12 @@ if __name__ == "__main__":
         build_clang_tidy = config["build_clang_tidy"]
         if build_clang_tidy not in (True, False):
             raise ValueError("Only boolean values are accepted for build_clang_tidy.")
+    build_clang_tidy_alpha = False
+    # check for build_clang_tidy_alpha only if build_clang_tidy is true
+    if build_clang_tidy and "build_clang_tidy_alpha" in config:
+        build_clang_tidy_alpha = config["build_clang_tidy_alpha"]
+        if build_clang_tidy_alpha not in (True, False):
+            raise ValueError("Only boolean values are accepted for build_clang_tidy_alpha.")
     osx_cross_compile = False
     if "osx_cross_compile" in config:
         osx_cross_compile = config["osx_cross_compile"]
@@ -693,7 +699,7 @@ if __name__ == "__main__":
     package_name = "clang"
     if build_clang_tidy:
         package_name = "clang-tidy"
-        import_clang_tidy(source_dir)
+        import_clang_tidy(source_dir, build_clang_tidy_alpha)
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
