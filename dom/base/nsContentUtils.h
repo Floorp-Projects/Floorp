@@ -1678,6 +1678,12 @@ class nsContentUtils {
   static mozilla::EventListenerManager* GetExistingListenerManagerForNode(
       const nsINode* aNode);
 
+  static void AddEntryToDOMArenaTable(nsINode* aNode,
+                                      mozilla::dom::DOMArena* aDOMArena);
+
+  static already_AddRefed<mozilla::dom::DOMArena> TakeEntryFromDOMArenaTable(
+      const nsINode* aNode);
+
   static void UnmarkGrayJSListenersInCCGenerationDocuments();
 
   /**
