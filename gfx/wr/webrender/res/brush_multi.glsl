@@ -7,7 +7,7 @@
 // This type of uber-shader comes at a cost so the goal for this is to
 // provide opportunities for aggressive batching when the number of draw
 // calls so high that reducing the number of draw calls is worth the
-// cost of this "über-shader".
+// cost of this "uber-shader".
 
 
 #define WR_FEATURE_MULTI_BRUSH
@@ -26,7 +26,29 @@
 
 int vecs_per_brush(int brush_kind);
 
+
+#ifdef WR_FEATURE_TEXT_BRUSH
+// Before including the brush source, if we need support for text we override
+// the vertex shader's main entry point with one that can call into the text
+// shader or the regular brush shaders.
+
+// Foward-declare the new entry point.
+void multi_brush_main_vs(
+    Instance instance,
+    PrimitiveHeader ph,
+    Transform transform,
+    PictureTask pic_task,
+    ClipArea clip_area
+);
+
+// Override the default entry point.
+#define WR_VERTEX_SHADER_MAIN_FUNCTION multi_brush_main_vs
+
+#endif
+
+
 #include shared,prim_shared,brush
+
 
 #ifdef WR_FEATURE_IMAGE_BRUSH
 #include brush_image
@@ -86,6 +108,30 @@ int vecs_per_brush(int brush_kind);
 
 #ifdef WR_FEATURE_OPACITY_BRUSH
 #include brush_opacity
+#endif
+
+#undef VECS_PER_SPECIFIC_BRUSH
+#undef WR_BRUSH_VS_FUNCTION
+#undef WR_BRUSH_FS_FUNCTION
+
+#ifdef WR_FEATURE_TEXT_BRUSH
+#include ps_text_run
+
+// Special entry point when text support is needed.
+void multi_brush_main_vs(
+    Instance instance,
+    PrimitiveHeader ph,
+    Transform transform,
+    PictureTask pic_task,
+    ClipArea clip_area
+) {
+    if (instance.brush_kind == BRUSH_SHADER_KIND_TEXT) {
+        text_shader_main(instance, ph, transform, task, clip_area);
+    } else {
+        brush_shader_main(instance, ph, transform, task, clip_area);
+    }
+}
+
 #endif
 
 int vecs_per_brush(int brush_kind) {
@@ -239,6 +285,10 @@ Fragment multi_brush_fs(int brush_kind) {
 
         #ifdef WR_FEATURE_OPACITY_BRUSH
         case BRUSH_KIND_OPACITY: return opacity_brush_fs();
+        #endif
+
+        #ifdef WR_FEATURE_TEXT_BRUSH
+        case BRUSH_KIND_TEXT: return text_brush_fs();
         #endif
     }
 }
