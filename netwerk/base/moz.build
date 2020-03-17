@@ -251,6 +251,7 @@ UNIFIED_SOURCES += [
     'ThrottleQueue.cpp',
     'Tickler.cpp',
     'TLSServerSocket.cpp',
+    'TRRLoadInfo.cpp',
 ]
 
 if CONFIG['FUZZING']:
