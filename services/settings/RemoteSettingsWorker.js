@@ -23,18 +23,16 @@ const IDB_TIMESTAMPS_STORE = "timestamps";
 
 const Agent = {
   /**
-   * Return the canonical JSON serialization of the changes
-   * applied to the local records.
+   * Return the canonical JSON serialization of the specified records.
    * It has to match what is done on the server (See Kinto/kinto-signer).
    *
-   * @param {Array<Object>} localRecords
-   * @param {Array<Object>} remoteRecords
+   * @param {Array<Object>} records
    * @param {String} timestamp
    * @returns {String}
    */
-  async canonicalStringify(localRecords, remoteRecords, timestamp) {
+  async canonicalStringify(records, timestamp) {
     // Sort list by record id.
-    let allRecords = localRecords.concat(remoteRecords).sort((a, b) => {
+    let allRecords = records.sort((a, b) => {
       if (a.id < b.id) {
         return -1;
       }
