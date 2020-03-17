@@ -54,7 +54,7 @@
         android:elevation="1dp"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
-        app:layout_constraintLeft_toLeftOf="@+id/theme_light_image"
+        app:layout_constraintStart_toStartOf="@+id/theme_light_image"
         app:layout_constraintTop_toTopOf="@+id/theme_light_image"
         app:onboardingKey="@string/pref_key_light_theme" />
 
@@ -80,7 +80,7 @@
         android:elevation="1dp"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
-        app:layout_constraintLeft_toLeftOf="@+id/theme_dark_image"
+        app:layout_constraintStart_toStartOf="@+id/theme_dark_image"
         app:layout_constraintTop_toTopOf="@+id/theme_dark_image"
         app:onboardingKey="@string/pref_key_dark_theme" />
 
