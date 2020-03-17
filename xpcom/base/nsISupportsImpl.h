@@ -864,6 +864,30 @@ class ThreadSafeAutoRefCnt {
   }                                                                          \
   NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void) { delete this; }
 
+// This macro is same as NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE
+// except it doesn't have DeleteCycleCollectable.
+#define NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE_AND_DESTROY(      \
+    _class, _last, _destroy)                                                 \
+  NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void) {            \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                         \
+    NS_ASSERT_OWNINGTHREAD(_class);                                          \
+    bool shouldDelete = false;                                               \
+    nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this); \
+    nsrefcnt count = mRefCnt.decr(base, &shouldDelete);                      \
+    NS_LOG_RELEASE(this, count, #_class);                                    \
+    if (count == 0) {                                                        \
+      mRefCnt.incr(base);                                                    \
+      _last;                                                                 \
+      mRefCnt.decr(base);                                                    \
+      if (shouldDelete) {                                                    \
+        mRefCnt.stabilizeForDeletion();                                      \
+        DeleteCycleCollectable();                                            \
+      }                                                                      \
+    }                                                                        \
+    return count;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void) { _destroy; }
+
 #define NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE(_class)              \
   NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void) {              \
     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                           \

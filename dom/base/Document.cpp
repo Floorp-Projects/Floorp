@@ -7851,7 +7851,8 @@ already_AddRefed<Attr> Document::CreateAttribute(const nsAString& aName,
     return nullptr;
   }
 
-  RefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(), EmptyString());
+  RefPtr<Attr> attribute =
+      new (mNodeInfoManager) Attr(nullptr, nodeInfo.forget(), EmptyString());
   return attribute.forget();
 }
 
@@ -7866,7 +7867,8 @@ already_AddRefed<Attr> Document::CreateAttributeNS(
     return nullptr;
   }
 
-  RefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(), EmptyString());
+  RefPtr<Attr> attribute =
+      new (mNodeInfoManager) Attr(nullptr, nodeInfo.forget(), EmptyString());
   return attribute.forget();
 }
 

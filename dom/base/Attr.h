@@ -34,7 +34,9 @@ class Attr final : public nsINode {
   Attr(nsDOMAttributeMap* aAttrMap, already_AddRefed<dom::NodeInfo>&& aNodeInfo,
        const nsAString& aValue);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL_DELETECYCLECOLLECTABLE
+
+  NS_DECL_DOMARENA_DESTROY
 
   NS_IMPL_FROMNODE_HELPER(Attr, IsAttr())
 
