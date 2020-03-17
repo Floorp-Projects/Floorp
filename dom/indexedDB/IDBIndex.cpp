@@ -6,7 +6,6 @@
 
 #include "IDBIndex.h"
 
-#include "FileInfo.h"
 #include "IDBCursorType.h"
 #include "IDBEvents.h"
 #include "IDBKeyRange.h"

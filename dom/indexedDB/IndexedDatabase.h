@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "InitializedOnce.h"
+#include "FileInfoFwd.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +23,6 @@ class IDBMutableFile;
 
 namespace indexedDB {
 
-class FileInfo;
 class SerializedStructuredCloneReadInfo;
 
 struct StructuredCloneFile {
