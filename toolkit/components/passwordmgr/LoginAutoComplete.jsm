@@ -455,12 +455,15 @@ LoginAutoComplete.prototype = {
     //   reasons it's better to not load LMC at all for these sandboxed frames. Also, if the top-
     //   document is sandboxing a document, it probably doesn't want that sandboxed document to be
     //   able to affect the identity icon in the address bar by adding a password field.
+    let form = LoginFormFactory.createFromField(aElement);
     if (isSecure) {
-      let form = LoginFormFactory.createFromField(aElement);
       isSecure = InsecurePasswordUtils.isFormSecure(form);
     }
     let isPasswordField = aElement.type == "password";
     let hostname = aElement.ownerDocument.documentURIObject.host;
+    let formOrigin = LoginHelper.getLoginOrigin(
+      aElement.ownerDocument.documentURI
+    );
 
     let loginManagerActor = LoginManagerChild.forWindow(aElement.ownerGlobal);
 
@@ -483,9 +486,6 @@ LoginAutoComplete.prototype = {
         return;
       }
 
-      let formOrigin = LoginHelper.getLoginOrigin(
-        aElement.ownerDocument.documentURI
-      );
       this._autoCompleteLookupPromise = null;
       let results = new LoginAutoCompleteResult(
         aSearchString,
@@ -540,11 +540,14 @@ LoginAutoComplete.prototype = {
       previousResult = null;
     }
 
-    let acLookupPromise = this._requestAutoCompleteResultsFromParent(
-      aSearchString,
+    let acLookupPromise = this._requestAutoCompleteResultsFromParent({
+      searchString: aSearchString,
       previousResult,
-      aElement
-    );
+      inputElement: aElement,
+      form,
+      formOrigin,
+      isPasswordField,
+    });
     completeSearch(acLookupPromise).catch(log.error.bind(log));
   },
 
@@ -552,24 +555,24 @@ LoginAutoComplete.prototype = {
     this._autoCompleteLookupPromise = null;
   },
 
-  async _requestAutoCompleteResultsFromParent(
-    aSearchString,
-    aPreviousResult,
-    aElement
-  ) {
-    let doc = aElement.ownerDocument;
-    let form = LoginFormFactory.createFromField(aElement);
-
-    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
+  async _requestAutoCompleteResultsFromParent({
+    searchString,
+    previousResult,
+    inputElement,
+    form,
+    formOrigin,
+    isPasswordField,
+  }) {
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
-    let autocompleteInfo = aElement.getAutocompleteInfo();
+    let autocompleteInfo = inputElement.getAutocompleteInfo();
 
-    let loginManagerActor = LoginManagerChild.forWindow(aElement.ownerGlobal);
-    let isPasswordField = aElement.type == "password";
+    let loginManagerActor = LoginManagerChild.forWindow(
+      inputElement.ownerGlobal
+    );
     let forcePasswordGeneration = false;
     if (isPasswordField) {
       forcePasswordGeneration = loginManagerActor.isPasswordGenerationForcedOn(
-        aElement
+        inputElement
       );
     }
 
@@ -577,8 +580,8 @@ LoginAutoComplete.prototype = {
       autocompleteInfo,
       formOrigin,
       actionOrigin,
-      searchString: aSearchString,
-      previousResult: aPreviousResult,
+      searchString,
+      previousResult,
       forcePasswordGeneration,
       isSecure: InsecurePasswordUtils.isFormSecure(form),
       isPasswordField,
