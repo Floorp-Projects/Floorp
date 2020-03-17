@@ -30,8 +30,8 @@
 
 #if defined(MOZ_LINKER)
 #  include "AutoObjectMapper.h"
-#  include "Linker.h"  // dl_phdr_info
-#elif defined(GP_OS_linux) || defined(GP_OS_android)
+#endif
+#if defined(GP_OS_linux) || defined(GP_OS_android)
 #  include <link.h>  // dl_phdr_info
 #else
 #  error "Unexpected configuration"
