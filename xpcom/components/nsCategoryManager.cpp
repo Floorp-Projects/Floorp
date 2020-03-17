@@ -21,6 +21,7 @@
 #include "nsIObserverService.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsPrintfCString.h"
 #include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
 #include "nsThreadUtils.h"
@@ -29,6 +30,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/SimpleEnumerator.h"
 
+#include "GeckoProfiler.h"
 #include "ManifestParser.h"
 #include "nsSimpleEnumerator.h"
 
@@ -672,6 +674,16 @@ void NS_CreateServicesFromCategory(const char* aCategory, nsISupports* aOrigin,
       // try an observer, if it implements it.
       nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance);
       if (observer) {
+#ifdef MOZ_GECKO_PROFILER
+        nsPrintfCString profilerStr("%s (%s)", aObserverTopic,
+                                    entryString.get());
+        AUTO_PROFILER_TEXT_MARKER_CAUSE("Category observer notification",
+                                        profilerStr, OTHER, Nothing(),
+                                        profiler_get_backtrace());
+        AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
+            "Category observer notification -", OTHER, profilerStr);
+#endif
+
         observer->Observe(aOrigin, aObserverTopic,
                           aObserverData ? aObserverData : u"");
       } else {
