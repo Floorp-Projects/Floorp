@@ -27,6 +27,8 @@ async function enableServiceWorkerDebugging() {
 
   // Enable service workers in the debugger
   await pushPref("devtools.debugger.features.windowless-service-workers", true);
+  // Disable randomly spawning processes during tests
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
   // Wait for dom.ipc.processCount to be updated before releasing processes.
   Services.ppmm.releaseCachedProcesses();
@@ -64,7 +66,7 @@ async function openNewTabAndApplicationPanel(url) {
   return { panel, tab, target, toolbox };
 }
 
-async function unregisterAllWorkers(client) {
+async function unregisterAllWorkers(client, doc) {
   info("Wait until all workers have a valid registrationFront");
   let workers;
   await asyncWaitUntil(async function() {
@@ -79,6 +81,9 @@ async function unregisterAllWorkers(client) {
   for (const worker of workers.service) {
     await worker.registrationFront.unregister();
   }
+
+  // wait for service workers to disappear from the UI
+  waitUntil(() => getWorkerContainers(doc).length === 0);
 }
 
 async function waitForWorkerRegistration(swTab) {

@@ -37,6 +37,7 @@ add_task(async function() {
   info("Select service worker page");
   selectPage(panel, "service-workers");
   await waitUntil(() => doc.querySelector(".js-service-workers-page") !== null);
+  await unregisterAllWorkers(target.client, doc);
 
   info("Select manifest page in the sidebar");
   const link = doc.querySelector(".js-sidebar-manifest");
@@ -44,8 +45,6 @@ add_task(async function() {
 
   await waitUntil(() => doc.querySelector(".js-manifest-page") !== null);
   ok(true, "Manifest page was selected.");
-
-  await unregisterAllWorkers(target.client);
 
   // close the tab
   info("Closing the tab.");

@@ -57,4 +57,8 @@ add_task(async function() {
 
   info("Wait until the service worker is removed from the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 0);
+
+  // close the tab
+  info("Closing the tab.");
+  await BrowserTestUtils.removeTab(tab);
 });
