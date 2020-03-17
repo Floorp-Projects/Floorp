@@ -35,9 +35,9 @@
 
 #  if defined(MOZ_LINKER)
 #    include "AutoObjectMapper.h"
-#    include "Linker.h"  // dl_phdr_info
-#  elif defined(GP_OS_linux) || defined(GP_OS_android)
-#    include <link.h>  // dl_phdr_info
+#  endif
+#  if defined(GP_OS_linux) || defined(GP_OS_android)
+#    include <link.h>  // dl_phdr_info, ElfW()
 #  else
 #    error "Unexpected configuration"
 #  endif
@@ -669,7 +669,7 @@ static std::string getId(const char* bin_name) {
   identifier.reserve(kDefaultBuildIdSize);
 
 #  if defined(MOZ_LINKER)
-  if (nsDependentCString(bin_name).Find("!/") != kNotFound) {
+  if (std::string(bin_name).find(std::string("!/")) != std::string::npos) {
     AutoObjectMapperFaultyLib mapper(outputMapperLog);
     void* image = nullptr;
     size_t size = 0;
