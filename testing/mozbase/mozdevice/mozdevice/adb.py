@@ -980,27 +980,40 @@ class ADBDevice(ADBCommand):
         self.shell_output("sync", timeout=timeout)
 
     @staticmethod
-    def _escape_command_line(cmd):
-        """Utility function to return escaped and quoted version of command
-        line.
-        """
-        re_quotable_chars = re.compile(r"[ ()\"&'\]]")
+    def _should_quote(arg):
+        """Utility function if command argument should be quoted."""
+        if not arg:
+            return False
+        if arg[0] == "'" and arg[-1] == "'" or arg[0] == '"' and arg[-1] == '"':
+            # Already quoted
+            return False
+        re_quotable_chars = re.compile(r"[ ()\"&'\];]")
+        return re_quotable_chars.search(arg)
 
-        def is_quoted(s, delim):
-            if not s:
-                return False
-            return s[0] == delim and s[-1] == delim
-
-        quoted_cmd = []
-
-        for arg in cmd:
-            if not is_quoted(arg, "'") and not is_quoted(arg, '"') and \
-               re_quotable_chars.search(arg):
+    @staticmethod
+    def _quote(arg):
+        """Utility function to return quoted version of command argument."""
+        if ADBDevice._should_quote(arg):
+            if "'" not in arg and '"' not in arg:
+                arg = '"%s"' % arg
+            elif "'" in arg and '"' not in arg:
+                arg = '"%s"' % arg
+            elif '"' in arg and "'" not in arg:
+                arg = "'%s'" % arg
+            else:
                 arg = '"%s"' % arg.replace(r'"', r'\"')
 
-            quoted_cmd.append(arg)
+        return arg
 
-        return " ".join(quoted_cmd)
+    @staticmethod
+    def _escape_command_line(cmds):
+        """Utility function which takes a list of command arguments and returns
+        escaped and quoted version of the command as a string.
+        """
+        assert isinstance(cmds, list)
+        quoted_cmd = " ".join([ADBDevice._quote(arg) for arg in cmds])
+
+        return quoted_cmd
 
     @staticmethod
     def _get_exitcode(file_obj):
@@ -1462,7 +1475,7 @@ class ADBDevice(ADBCommand):
             if self._have_android_su:
                 cmd = "su 0 %s" % cmd
             elif self._have_su:
-                cmd = "su -c \"%s\"" % cmd
+                cmd = "su -c %s" % ADBDevice._quote(cmd)
             else:
                 raise ADBRootError('Can not run command %s as root!' % cmd)
 
