@@ -66,15 +66,19 @@ void PlaybackController::Pause() {
 }
 
 void PlaybackController::SeekBackward() {
-  // TODO : use media session's action handler if it exists. MediaSessionAction
-  // doesn't support `seekbackward` yet.
-  return;
+  const MediaSessionAction action = MediaSessionAction::Seekbackward;
+  if (RefPtr<MediaSession> session = GetMediaSession();
+      session && session->IsSupportedAction(action)) {
+    session->NotifyHandler(action);
+  }
 }
 
 void PlaybackController::SeekForward() {
-  // TODO : use media session's action handler if it exists. MediaSessionAction
-  // doesn't support `seekforward` yet.
-  return;
+  const MediaSessionAction action = MediaSessionAction::Seekforward;
+  if (RefPtr<MediaSession> session = GetMediaSession();
+      session && session->IsSupportedAction(action)) {
+    session->NotifyHandler(action);
+  }
 }
 
 void PlaybackController::PreviousTrack() {
