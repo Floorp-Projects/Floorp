@@ -407,7 +407,6 @@ interface nsILoadInfo : nsISupports
    */
   [infallible] readonly attribute unsigned long securityMode;
 
-
   /**
    * This flag is used for any browsing context where we should not sniff
    * the content type. E.g if an iframe has the XCTO nosniff header, then
@@ -415,6 +414,12 @@ interface nsILoadInfo : nsISupports
    * context.
    */
   [infallible] attribute boolean skipContentSniffing;
+
+  /**
+   * If httpsOnlyNoUpgrade is true, the request won't get upgraded by the
+   * HTTPS-Only Mode.
+   */
+  [infallible] attribute boolean httpsOnlyNoUpgrade;
 
   /**
    * True if this request is embedded in a context that can't be third-party
