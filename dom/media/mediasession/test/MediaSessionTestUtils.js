@@ -1,8 +1,6 @@
 const gMediaSessionActions = [
   "play",
   "pause",
-  "seekbackward",
-  "seekforward",
   "previoustrack",
   "nexttrack",
   "stop",

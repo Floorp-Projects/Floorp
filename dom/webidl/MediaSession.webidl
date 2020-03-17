@@ -13,12 +13,10 @@ enum MediaSessionPlaybackState {
   "playing"
 };
 
-// TODO: Implement the missing seekto (bug 1621403) and skipad (bug 1582569) actions
+// TODO: Implement the missing seek* (bug 1580623) and skipad (bug 1582569) actions
 enum MediaSessionAction {
   "play",
   "pause",
-  "seekbackward",
-  "seekforward",
   "previoustrack",
   "nexttrack",
   "stop",
@@ -70,9 +68,6 @@ dictionary MediaImage {
 
 dictionary MediaSessionActionDetails {
   required MediaSessionAction action;
-  // Merge MediaSessionSeekActionDetails here:
-  // https://github.com/w3c/mediasession/issues/234
-  double seekOffset;
 };
 
 // TODO: Implement MediaPositionState (bug 1582509)
