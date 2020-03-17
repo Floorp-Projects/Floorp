@@ -8,15 +8,6 @@ with Files('**'):
     BUG_COMPONENT = ('GeckoView', 'General')
     SCHEDULES.exclusive = ['android']
 
-with Files('geckoview/src/main/aidl/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
-
-with Files('geckoview/src/main/java/org/mozilla/gecko/mozglue/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
-
-with Files('themes/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Theme and Visual Design')
-
 CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
 DIRS += [
