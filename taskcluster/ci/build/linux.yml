@@ -121,6 +121,10 @@ linux64-fuzzing/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
     optimization:
         fuzzing-builds:
             - linux
@@ -164,6 +168,10 @@ linux64/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux64-plain/debug:
     description: "Linux64 Debug Plain"
@@ -327,6 +335,10 @@ linux64-base-toolchains/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux64-base-toolchains-clang/opt:
     description: "Linux64 base toolchains clang Opt"
@@ -401,6 +413,10 @@ linux64-base-toolchains-clang/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux/opt:
     description: "Linux32 Opt"
@@ -480,6 +496,10 @@ linux/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux-rusttests/opt:
     description: "Linux32 Rust Tests Opt"
@@ -1121,6 +1141,10 @@ linux64-noopt/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux64-rusttests/opt:
     description: "Linux64 Rust Tests Opt"
