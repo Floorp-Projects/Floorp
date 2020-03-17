@@ -23,7 +23,8 @@ bool CDATASection::IsNodeOfType(uint32_t aFlags) const { return false; }
 already_AddRefed<CharacterData> CDATASection::CloneDataNode(
     mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  RefPtr<CDATASection> it = new CDATASection(ni.forget());
+  auto* nim = ni->NodeInfoManager();
+  RefPtr<CDATASection> it = new (nim) CDATASection(ni.forget());
   if (aCloneText) {
     it->mText = mText;
   }
