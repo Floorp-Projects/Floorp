@@ -27,10 +27,8 @@ class FileInfoT final {
   void Release(const bool aSyncDeleteFile = false);
 
   void UpdateDBRefs(int32_t aDelta);
-  void UpdateSliceRefs(int32_t aDelta);
 
-  void GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt,
-                     int32_t* aSliceRefCnt);
+  void GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt);
 
   FileManager* Manager() const;
 
@@ -50,7 +48,6 @@ class FileInfoT final {
 
   ThreadSafeAutoRefCnt mRefCnt;
   ThreadSafeAutoRefCnt mDBRefCnt;
-  ThreadSafeAutoRefCnt mSliceRefCnt;
 
   const RefPtr<FileManager> mFileManager;
 };
