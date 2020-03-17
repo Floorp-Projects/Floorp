@@ -26,8 +26,8 @@ add_task(async function testDefaultPlaybackStateBeforeAnyMediaStart() {
   info(`open media page`);
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
-  info(`before media starts, playback state should be 'none'`);
-  await isActualPlaybackStateEqualTo(tab, "none");
+  info(`before media starts, playback state should be 'stopped'`);
+  await isActualPlaybackStateEqualTo(tab, "stopped");
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -89,7 +89,7 @@ function setGuessedPlaybackState(tab, state) {
   } else if (state == "paused") {
     return pauseMedia(tab);
   }
-  // We won't set the state `none`, which would only happen if no any media
+  // We won't set the state `stopped`, which would only happen if no any media
   // has ever been started in the page.
   ok(false, `should only set 'playing' or 'paused' state`);
   return Promise.resolve();

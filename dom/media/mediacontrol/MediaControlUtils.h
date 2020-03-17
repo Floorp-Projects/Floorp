@@ -74,7 +74,7 @@ inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
       return MediaSessionPlaybackTestState::Paused;
     default:
       MOZ_ASSERT(aState == MediaSessionPlaybackState::None);
-      return MediaSessionPlaybackTestState::None;
+      return MediaSessionPlaybackTestState::Stopped;
   }
 }
 
