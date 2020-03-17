@@ -8590,6 +8590,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
         return false;
       }
 
+      if (params.clientTypeIsExplicit()) {
+        if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+      }
+
       break;
     }
 
@@ -8610,6 +8617,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
         }
       }
 
+      if (params.clientTypeIsExplicit()) {
+        if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+      }
+
       break;
     }
 
@@ -8625,6 +8639,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (params.persistenceTypeIsExplicit()) {
         if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+      }
+
+      if (params.clientTypeIsExplicit()) {
+        if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
           ASSERT_UNLESS_FUZZING();
           return false;
         }
@@ -9533,8 +9554,6 @@ void InitStorageAndOriginOp::Init(Quota* aQuota) {
   mPersistenceType.SetValue(mParams.persistenceType());
 
   if (mParams.clientTypeIsExplicit()) {
-    MOZ_ASSERT(mParams.clientType() != Client::TYPE_MAX);
-
     mClientType.SetValue(mParams.clientType());
   }
 
@@ -9866,8 +9885,6 @@ void ClearOriginOp::Init(Quota* aQuota) {
   }
 
   if (mParams.clientTypeIsExplicit()) {
-    MOZ_ASSERT(mParams.clientType() != Client::TYPE_MAX);
-
     mClientType.SetValue(mParams.clientType());
   }
 }
