@@ -816,7 +816,7 @@ class RemoteSettingsClient extends EventEmitter {
       await this.db.clear();
     } else {
       // Otherwise delete local records for each tombstone.
-      await this.db.deleteAll(toDelete);
+      await this.db.deleteBulk(toDelete);
     }
     // Overwrite all other data.
     await this.db.importBulk(toInsert);
