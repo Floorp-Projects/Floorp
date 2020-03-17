@@ -186,7 +186,6 @@ var gTestPage =
 const kBasePage =
   "http://mochi.test:8888/browser/browser/base/content/test/general/dummy_page.html";
 var gNextTest;
-var gUsingDocumentChannel;
 
 function setExpectationForCrossDomainFrontBrowserLoad() {
   // In fission, we swap remoteness for this load, and we'll get sent a
@@ -196,7 +195,6 @@ function setExpectationForCrossDomainFrontBrowserLoad() {
     gFrontNotifications = [
       "onStateChange",
       "onSecurityChange",
-      "onStateChange",
       "onLocationChange",
       "onSecurityChange",
       "onStateChange",
@@ -215,22 +213,12 @@ async function test() {
   gForegroundBrowser = gBrowser.getBrowserForTab(gForegroundTab);
   gBrowser.selectedTab = gForegroundTab;
 
-  gUsingDocumentChannel = Services.prefs.getBoolPref(
-    "browser.tabs.documentchannel"
-  );
-
   gAllNotifications = [
     "onStateChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
   ];
-
-  // DocumentChannel issues an extra onStateChange at the
-  // start, when it switches over to the real channel
-  if (gUsingDocumentChannel) {
-    gAllNotifications.unshift("onStateChange");
-  }
 
   // We must wait until a page has completed loading before
   // starting tests or we get notifications from that

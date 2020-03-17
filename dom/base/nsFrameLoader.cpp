@@ -1807,7 +1807,9 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   if (auto* browserParent = GetBrowserParent()) {
     browserParent->RemoveWindowListeners();
     if (aForProcessSwitch) {
-      browserParent->SetDestroyingForProcessSwitch();
+      // This should suspend all future progress events from this BrowserParent,
+      // since we're going to tear it down after stopping the docshell in it.
+      browserParent->SuspendProgressEventsUntilAfterNextLoadStarts();
     }
   }
 
@@ -2657,6 +2659,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   if (!mRemoteBrowser) {
     return false;
   }
+
   // If we were given a remote tab ID, we may be attaching to an existing remote
   // browser, which already has its own BrowsingContext. If so, we need to
   // detach our original BC and take ownership of the one from the remote

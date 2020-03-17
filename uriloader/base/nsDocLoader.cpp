@@ -1356,8 +1356,8 @@ void nsDocLoader::FireOnLocationChange(nsIWebProgress* aWebProgress,
   NOTIFY_LISTENERS(
       nsIWebProgress::NOTIFY_LOCATION,
       MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
-              ("DocLoader [%p] calling %p->OnLocationChange", this,
-               listener.get()));
+              ("DocLoader [%p] calling %p->OnLocationChange to %s %x", this,
+               listener.get(), aUri->GetSpecOrDefault().get(), aFlags));
       listener->OnLocationChange(aWebProgress, aRequest, aUri, aFlags););
 
   // Pass the notification up to the parent...

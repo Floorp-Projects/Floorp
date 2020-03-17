@@ -1872,6 +1872,7 @@
       let listener = this._tabListeners.get(tab);
       aBrowser.webProgress.removeProgressListener(filter);
       filter.removeProgressListener(listener);
+      let stateFlags = listener.mStateFlags;
 
       // We'll be creating a new listener, so destroy the old one.
       listener.destroy();
@@ -1925,6 +1926,7 @@
         aBrowser.removeAttribute("remoteType");
       }
 
+      let switchingInProgressLoad = !!redirectLoadSwitchId;
       if (!rebuildFrameLoaders) {
         parent.appendChild(aBrowser);
       } else {
@@ -1934,7 +1936,7 @@
         aBrowser.changeRemoteness({
           remoteType,
           replaceBrowsingContext,
-          switchingInProgressLoad: redirectLoadSwitchId != null,
+          switchingInProgressLoad,
         });
         // Once we have new frameloaders, this call sets the browser back up.
         //
@@ -1956,10 +1958,24 @@
       // browser window is minimized.
       aBrowser.docShellIsActive = this.shouldActivateDocShell(aBrowser);
 
+      // If we're switching an in-progress load, then we shouldn't expect
+      // notification for a new initial about:blank and we should preserve
+      // the existing stateFlags on the TabProgressListener.
+      let expectInitialAboutBlank = !switchingInProgressLoad;
+      if (expectInitialAboutBlank) {
+        stateFlags = 0;
+      }
+
       // Create a new tab progress listener for the new browser we just injected,
       // since tab progress listeners have logic for handling the initial about:blank
       // load
-      listener = new TabProgressListener(tab, aBrowser, true, false);
+      listener = new TabProgressListener(
+        tab,
+        aBrowser,
+        expectInitialAboutBlank,
+        false,
+        stateFlags
+      );
       this._tabListeners.set(tab, listener);
       filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
 
