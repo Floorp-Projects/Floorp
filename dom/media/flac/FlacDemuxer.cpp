@@ -109,6 +109,7 @@ class FrameHeader {
     // A frame is made of Blocksize sample.
     mIndex = mVariableBlockSize ? frame_or_sample_num
                                 : frame_or_sample_num * mBlocksize;
+    mFrameOrSampleNum = frame_or_sample_num;
 
     // Sample rate.
     if (sr_code < 12) {
@@ -154,6 +155,11 @@ class FrameHeader {
     FLAC_CHMODE_MID_SIDE,
   };
   AudioInfo mInfo;
+  // mFrameOrSampleNum is either:
+  // 1- coded sample number if blocksize is variable or
+  // 2- coded frame number if blocksize is fixed.
+  // A frame is made of Blocksize sample.
+  uint64_t mFrameOrSampleNum = 0;
   // Index in samples from start;
   int64_t mIndex = 0;
   bool mVariableBlockSize = false;
@@ -306,6 +312,17 @@ class Frame {
     }
   }
 
+  void ResetStartTimeIfNeeded(const Frame& aReferenceFrame) {
+    if (Header().mVariableBlockSize ||
+        aReferenceFrame.Header().mVariableBlockSize ||
+        aReferenceFrame.Header().mBlocksize <= Header().mBlocksize) {
+      // Not a fixed size frame, or nothing to adjust.
+      return;
+    }
+    mHeader.mIndex =
+        Header().mFrameOrSampleNum * aReferenceFrame.Header().mBlocksize;
+  }
+
   uint32_t Size() const { return mSize; }
 
   TimeUnit Time() const {
@@ -384,6 +401,13 @@ class FrameParser {
     if (mFrame.IsValid()) {
       if (mNextFrame.EOS()) {
         mFrame.SetEndOffset(aResource.Tell());
+        // If the blocksize is fixed, the frame's starting sample number will be
+        // the frame number times the blocksize. However, the last block may
+        // have been incorrectly set as shorter than the stream blocksize.
+        // We recalculate the start time of this last sample using the first
+        // frame blocksize.
+        // TODO: should we use an overall counter of frames instead?
+        mFrame.ResetStartTimeIfNeeded(mFirstFrame);
       } else if (mNextFrame.IsValid()) {
         mFrame.SetEndOffset(mNextFrame.Offset());
         mFrame.SetEndTime(mNextFrame.Header().Index());
