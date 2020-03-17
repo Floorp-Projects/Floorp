@@ -3,12 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use error::KeyValueError;
-use nsstring::nsString;
+use nsstring::{nsCString, nsString};
 use rkv::OwnedValue;
-use storage_variant::{
-    GetDataType, VariantType, DATA_TYPE_BOOL, DATA_TYPE_DOUBLE, DATA_TYPE_EMPTY, DATA_TYPE_INT32,
-    DATA_TYPE_VOID, DATA_TYPE_WSTRING,
-};
+use std::convert::TryInto;
+use storage_variant::{DataType, NsIVariantExt, VariantType};
 use xpcom::{interfaces::nsIVariant, RefPtr};
 
 pub fn owned_to_variant(owned: OwnedValue) -> Result<RefPtr<nsIVariant>, KeyValueError> {
@@ -32,29 +30,43 @@ pub fn owned_to_variant(owned: OwnedValue) -> Result<RefPtr<nsIVariant>, KeyValu
 pub fn variant_to_owned(variant: &nsIVariant) -> Result<Option<OwnedValue>, KeyValueError> {
     let data_type = variant.get_data_type();
 
-    match data_type {
-        DATA_TYPE_INT32 => {
+    match data_type.try_into() {
+        Ok(DataType::Int32) => {
             let mut val: i32 = 0;
             unsafe { variant.GetAsInt32(&mut val) }.to_result()?;
             Ok(Some(OwnedValue::I64(val.into())))
         }
-        DATA_TYPE_DOUBLE => {
+        Ok(DataType::Int64) => {
+            let mut val: i64 = 0;
+            unsafe { variant.GetAsInt64(&mut val) }.to_result()?;
+            Ok(Some(OwnedValue::I64(val)))
+        }
+        Ok(DataType::Double) => {
             let mut val: f64 = 0.0;
             unsafe { variant.GetAsDouble(&mut val) }.to_result()?;
             Ok(Some(OwnedValue::F64(val)))
         }
-        DATA_TYPE_WSTRING => {
+        Ok(DataType::CString)
+        | Ok(DataType::CharStr)
+        | Ok(DataType::StringSizeIs)
+        | Ok(DataType::Utf8String) => {
+            let mut val: nsCString = nsCString::new();
+            unsafe { variant.GetAsAUTF8String(&mut *val) }.to_result()?;
+            let s = std::str::from_utf8(&*val)?;
+            Ok(Some(OwnedValue::Str(s.into())))
+        }
+        Ok(DataType::AString) | Ok(DataType::WCharStr) | Ok(DataType::WStringSizeIs) => {
             let mut val: nsString = nsString::new();
             unsafe { variant.GetAsAString(&mut *val) }.to_result()?;
             let str = String::from_utf16(&val)?;
             Ok(Some(OwnedValue::Str(str)))
         }
-        DATA_TYPE_BOOL => {
+        Ok(DataType::Bool) => {
             let mut val: bool = false;
             unsafe { variant.GetAsBool(&mut val) }.to_result()?;
             Ok(Some(OwnedValue::Bool(val)))
         }
-        DATA_TYPE_EMPTY | DATA_TYPE_VOID => Ok(None),
-        unsupported_type => Err(KeyValueError::UnsupportedVariant(unsupported_type)),
+        Ok(DataType::Void) | Ok(DataType::EmptyArray) | Ok(DataType::Empty) => Ok(None),
+        Err(_) => Err(KeyValueError::UnsupportedVariant(data_type)),
     }
 }

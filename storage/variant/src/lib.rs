@@ -9,10 +9,13 @@ extern crate xpcom;
 
 mod bag;
 
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    convert::{TryFrom, TryInto},
+};
 
 use libc::c_double;
-use nserror::{nsresult, NS_OK};
+use nserror::{nsresult, NS_ERROR_CANNOT_CONVERT_DATA, NS_OK};
 use nsstring::{nsACString, nsAString, nsCString, nsString};
 use xpcom::{getter_addrefs, interfaces::nsIVariant, RefPtr};
 
@@ -32,42 +35,83 @@ extern "C" {
 // which nsIVariant.idl reflects into the nsIDataType struct class and uses
 // to constrain the values of nsIVariant::dataType.
 #[repr(u16)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub enum DataType {
-    INT32 = 2,
-    DOUBLE = 9,
-    BOOL = 10,
-    VOID = 13,
-    WSTRING = 21,
-    EMPTY = 255,
+    Int32 = 2,
+    Int64 = 3,
+    Double = 9,
+    Bool = 10,
+    Void = 13,
+    CharStr = 15,
+    WCharStr = 16,
+    StringSizeIs = 20,
+    WStringSizeIs = 21,
+    Utf8String = 24,
+    CString = 25,
+    AString = 26,
+    EmptyArray = 254,
+    Empty = 255,
 }
 
-// Per https://github.com/rust-lang/rust/issues/44266, casts aren't allowed
-// in match arms, so it isn't possible to cast DataType variants to u16
-// in order to match them against the value of nsIVariant::dataType.
-// Instead we have to reflect each variant into a constant and then match
-// against the values of the constants.
-//
-// (Alternatively, we could use the enum_primitive crate to convert primitive
-// values of nsIVariant::dataType to their enum equivalents.  Or perhaps
-// bindgen would convert the nsXPTTypeTag enum in xptinfo.h into something else
-// we could use.  Since we currently only accept a small subset of values,
-// and since that enum is unlikely to change frequently, this workaround
-// seems sufficient.)
-//
-pub const DATA_TYPE_INT32: u16 = DataType::INT32 as u16;
-pub const DATA_TYPE_DOUBLE: u16 = DataType::DOUBLE as u16;
-pub const DATA_TYPE_BOOL: u16 = DataType::BOOL as u16;
-pub const DATA_TYPE_VOID: u16 = DataType::VOID as u16;
-pub const DATA_TYPE_WSTRING: u16 = DataType::WSTRING as u16;
-pub const DATA_TYPE_EMPTY: u16 = DataType::EMPTY as u16;
+impl TryFrom<u16> for DataType {
+    type Error = nsresult;
 
-pub trait GetDataType {
+    /// Converts a raw type tag for an `nsIVariant` into a `DataType` variant.
+    /// Returns `NS_ERROR_CANNOT_CONVERT_DATA` if the type isn't one that we
+    /// support.
+    fn try_from(raw: u16) -> Result<Self, Self::Error> {
+        Ok(match raw {
+            2 => DataType::Int32,
+            3 => DataType::Int64,
+            9 => DataType::Double,
+            10 => DataType::Bool,
+            13 => DataType::Void,
+            15 => DataType::CharStr,
+            16 => DataType::WCharStr,
+            20 => DataType::StringSizeIs,
+            21 => DataType::WStringSizeIs,
+            24 => DataType::Utf8String,
+            25 => DataType::CString,
+            26 => DataType::AString,
+            254 => DataType::EmptyArray,
+            255 => DataType::Empty,
+            _ => Err(NS_ERROR_CANNOT_CONVERT_DATA)?,
+        })
+    }
+}
+
+/// Extension methods implemented on `nsIVariant` types, to make them easier
+/// to work with.
+pub trait NsIVariantExt {
+    /// Returns the raw type tag for this variant. Call
+    /// `DataType::try_from()` on this tag to turn it into a `DataType`.
     fn get_data_type(&self) -> u16;
+
+    /// Tries to clone this variant, failing with `NS_ERROR_CANNOT_CONVERT_DATA`
+    /// if its type is unsupported.
+    fn try_clone(&self) -> Result<RefPtr<nsIVariant>, nsresult>;
 }
 
-impl GetDataType for nsIVariant {
+impl NsIVariantExt for nsIVariant {
     fn get_data_type(&self) -> u16 {
         unsafe { NS_GetDataType(self) }
+    }
+
+    fn try_clone(&self) -> Result<RefPtr<nsIVariant>, nsresult> {
+        Ok(match self.get_data_type().try_into()? {
+            DataType::Bool => bool::from_variant(self)?.into_variant(),
+            DataType::Int32 => i32::from_variant(self)?.into_variant(),
+            DataType::Int64 => i64::from_variant(self)?.into_variant(),
+            DataType::Double => f64::from_variant(self)?.into_variant(),
+            DataType::AString | DataType::WCharStr | DataType::WStringSizeIs => {
+                nsString::from_variant(self)?.into_variant()
+            }
+            DataType::CString
+            | DataType::CharStr
+            | DataType::StringSizeIs
+            | DataType::Utf8String => nsCString::from_variant(self)?.into_variant(),
+            DataType::Void | DataType::EmptyArray | DataType::Empty => ().into_variant(),
+        })
     }
 }
 
@@ -171,10 +215,10 @@ where
         }
     }
     fn from_variant(variant: &nsIVariant) -> Result<Self, nsresult> {
-        match variant.get_data_type() {
-            DATA_TYPE_EMPTY => Ok(None),
-            _ => Ok(Some(VariantType::from_variant(variant)?)),
-        }
+        Ok(match variant.get_data_type().try_into() {
+            Ok(DataType::Void) | Ok(DataType::EmptyArray) | Ok(DataType::Empty) => None,
+            _ => Some(VariantType::from_variant(variant)?),
+        })
     }
 }
 
@@ -183,4 +227,4 @@ variant!(i32, NS_NewStorageIntegerVariant, GetAsInt32);
 variant!(i64, NS_NewStorageIntegerVariant, GetAsInt64);
 variant!(f64, NS_NewStorageFloatVariant, GetAsDouble);
 variant!(*nsString, NS_NewStorageTextVariant, GetAsAString);
-variant!(*nsCString, NS_NewStorageUTF8TextVariant, GetAsACString);
+variant!(*nsCString, NS_NewStorageUTF8TextVariant, GetAsAUTF8String);
