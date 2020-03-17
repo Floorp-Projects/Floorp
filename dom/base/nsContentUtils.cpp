@@ -4709,8 +4709,8 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
   bool isHTML = document->IsHTMLDocument();
 
   if (isHTML) {
-    RefPtr<DocumentFragment> frag =
-        new DocumentFragment(document->NodeInfoManager());
+    RefPtr<DocumentFragment> frag = new (document->NodeInfoManager())
+        DocumentFragment(document->NodeInfoManager());
 
     Element* element = aContextNode->GetAsElementOrParentElement();
     if (element && !element->IsHTMLElement(nsGkAtoms::html)) {
@@ -4888,8 +4888,8 @@ nsresult nsContentUtils::ParseFragmentHTML(
                         nodePrincipal->SchemeIs("about") || aFlags >= 0;
   if (shouldSanitize) {
     if (!AllowsUnsanitizedContentForAboutNewTab(nodePrincipal)) {
-      fragment =
-          new DocumentFragment(aTargetNode->OwnerDoc()->NodeInfoManager());
+      fragment = new (aTargetNode->OwnerDoc()->NodeInfoManager())
+          DocumentFragment(aTargetNode->OwnerDoc()->NodeInfoManager());
       target = fragment;
     }
   }

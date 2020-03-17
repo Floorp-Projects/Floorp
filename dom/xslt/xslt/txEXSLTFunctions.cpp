@@ -62,7 +62,7 @@ static nsresult convertRtfToNode(txIEvalContext* aContext,
   }
 
   RefPtr<DocumentFragment> domFragment =
-      new DocumentFragment(doc->NodeInfoManager());
+      new (doc->NodeInfoManager()) DocumentFragment(doc->NodeInfoManager());
 
   txOutputFormat format;
   txMozillaXMLOutput mozHandler(&format, domFragment, true);
@@ -440,8 +440,8 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
       Document* sourceDoc = getSourceDocument(aContext);
       NS_ENSURE_STATE(sourceDoc);
 
-      RefPtr<DocumentFragment> docFrag =
-          new DocumentFragment(sourceDoc->NodeInfoManager());
+      RefPtr<DocumentFragment> docFrag = new (sourceDoc->NodeInfoManager())
+          DocumentFragment(sourceDoc->NodeInfoManager());
 
       RefPtr<txNodeSet> resultSet;
       rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));

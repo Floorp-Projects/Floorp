@@ -2693,8 +2693,8 @@ nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
                                    bool aTrustedInput) {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
-  RefPtr<DocumentFragment> fragment =
-      new DocumentFragment(aTargetDocument->NodeInfoManager());
+  RefPtr<DocumentFragment> fragment = new (aTargetDocument->NodeInfoManager())
+      DocumentFragment(aTargetDocument->NodeInfoManager());
   nsresult rv = nsContentUtils::ParseFragmentHTML(
       aFragStr, fragment,
       aContextLocalName ? aContextLocalName : nsGkAtoms::body,
