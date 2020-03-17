@@ -40,7 +40,14 @@ async function testSteps() {
 
   setGlobalLimit(globalLimitKB);
 
-  let request = initTemporaryStorage();
+  info("Initializing");
+
+  let request = init();
+  await requestFinished(request);
+
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
   await requestFinished(request);
 
   info("Persisting and filling an origin");
@@ -97,7 +104,14 @@ async function testSteps() {
   request = reset();
   await requestFinished(request);
 
+  info("Initializing");
+
+  request = init();
+  await requestFinished(request);
+
   promiseStoragePressure = awaitStoragePressure();
+
+  info("Initializing temporary storage");
 
   request = initTemporaryStorage();
   await requestFinished(request);

@@ -17,12 +17,18 @@ interface nsIQuotaManagerService : nsISupports
 {
   /**
    * Check if storage is initialized.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
    */
   [must_use] nsIQuotaRequest
   storageInitialized();
 
   /**
    * Check if temporary storage is initialized.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
    */
   [must_use] nsIQuotaRequest
   temporaryStorageInitialized();
