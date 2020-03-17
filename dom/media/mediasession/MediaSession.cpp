@@ -96,21 +96,19 @@ void MediaSession::DispatchNotifyHandler(
              const MediaSessionActionDetails& aDetails)
         : mozilla::Runnable("MediaSession::DispatchNotifyHandler"),
           mSession(aSession),
-          mAction(aDetails.mAction) {}
+          mDetails(aDetails) {}
 
     MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
       if (RefPtr<MediaSessionActionHandler> handler =
-              mSession->GetActionHandler(mAction)) {
-        MediaSessionActionDetails details;
-        details.mAction = mAction;
-        handler->Call(details);
+              mSession->GetActionHandler(mDetails.mAction)) {
+        handler->Call(mDetails);
       }
       return NS_OK;
     }
 
    private:
     RefPtr<const MediaSession> mSession;
-    MediaSessionAction mAction;
+    MediaSessionActionDetails mDetails;
   };
 
   RefPtr<nsIRunnable> runnable = new Runnable(this, aDetails);
