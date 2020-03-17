@@ -276,3 +276,7 @@ async function withFakeChannel(channel, f) {
     module.Policy = oldPolicy;
   }
 }
+
+function arrayEqual(a, b) {
+  return JSON.stringify(a) == JSON.stringify(b);
+}

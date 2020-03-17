@@ -601,7 +601,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   // - collection: [RECORD2, RECORD3] -> [RECORD2, RECORD3]
   // - timestamp: 4000 -> 5000
   //
-  // Check that a tempered local DB will be overwritten and
+  // Check that a tampered local DB will be overwritten and
   // sync event contain the appropriate data.
 
   const badLocalContentGoodSigResponses = {
@@ -641,7 +641,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   await client.maybeSync(5000);
 
   // Local data was replaced. But we use records IDs to determine
-  // what was created and deleted. So fake local data will appaer
+  // what was created and deleted. So fake local data will appear
   // in the sync event.
   equal(syncData.current.length, 2);
   equal(syncData.created.length, 1);
@@ -654,11 +654,28 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   //
   // 8.
-  // - collection: [RECORD2, RECORD3] -> [RECORD2, RECORD3]
-  // - timestamp: 4000 -> 5000
+  // - collection: [RECORD2, RECORD3] -> [RECORD2, RECORD3] (unchanged because of error)
+  // - timestamp: 4000 -> 6000
   //
-  // Check that a failing signature throws after retry.
+  // Check that a failing signature throws after retry, and that sync changes
+  // are not applied.
 
+  const RESPONSE_ONLY_RECORD4 = {
+    comment: "Delete RECORD3, create RECORD4",
+    sampleHeaders: [
+      "Content-Type: application/json; charset=UTF-8",
+      'ETag: "6000"',
+    ],
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({
+      data: [
+        {
+          id: "f765df30-b2f1-42f6-9803-7bd5a07b5098",
+          last_modified: 6000,
+        },
+      ],
+    }),
+  };
   const allBadSigResponses = {
     // In this test, we deliberately serve only a bad signature.
     "GET:/v1/buckets/main/collections/signed?_expected=6000": [
@@ -670,10 +687,9 @@ add_task(async function test_check_synchronization_with_signatures() {
     "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=-last_modified&_since=4000": [
       RESPONSE_EMPTY_NO_UPDATE,
     ],
-    // The next request is for the full collection sorted by id. This will be
-    // checked against the valid signature - so the sync should succeed.
+    // The next request is for the full collection.
     "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=-last_modified": [
-      RESPONSE_COMPLETE_INITIAL,
+      RESPONSE_ONLY_RECORD4,
     ],
   };
 
@@ -683,7 +699,7 @@ add_task(async function test_check_synchronization_with_signatures() {
     await client.maybeSync(6000);
     do_throw("Sync should fail (the signature is intentionally bad)");
   } catch (e) {
-    equal((await client.get()).length, 2);
+    ok(true, "Sync failed as expected (bad signature after retry)");
   }
 
   // Ensure that the failure is reflected in the accumulated telemetry:
@@ -691,12 +707,46 @@ add_task(async function test_check_synchronization_with_signatures() {
   expectedIncrements = { [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 
+  // When signature fails after retry, the local data present before sync
+  // should be maintained.
+  ok(
+    arrayEqual(
+      (await client.get()).map(r => r.id),
+      [RECORD3.id, RECORD2.id]
+    ),
+    "Remote changes were not changed"
+  );
+  // And local data should still be valid.
+  await client.get({ verifySignature: true }); // Not raising.
+
   //
   // 9.
-  // - collection: [RECORD2, RECORD3] -> [RECORD2, RECORD3]
-  // - timestamp: 5000 -> 6000
+  // - collection: [RECORD2, RECORD3] -> [] (cleared)
+  // - timestamp: 4000 -> 6000
   //
-  // Check that sync throws if metadata has no signature.
+  // Check that local data is cleared during sync if signature is not valid.
+
+  await client.db.create({
+    id: "c6b19c67-2e0e-4a82-b7f7-1777b05f3e81",
+    last_modified: 42,
+    tampered: true,
+  });
+
+  try {
+    await client.maybeSync(6000);
+    do_throw("Sync should fail (the signature is intentionally bad)");
+  } catch (e) {
+    ok(true, "Sync failed as expected (bad signature after retry)");
+  }
+  // Since local data was tampered, it was cleared.
+  equal((await client.get()).length, 0, "Local database is now empty.");
+
+  //
+  // 11.
+  // - collection: [] -> []
+  // - timestamp: 4000 -> 6000
+  //
+  // Check that we don't apply changes when signature is missing in remote.
 
   const RESPONSE_META_NO_SIG = {
     sampleHeaders: [
@@ -719,13 +769,16 @@ add_task(async function test_check_synchronization_with_signatures() {
     ],
   };
 
+  // Local data was empty after last test.
+  equal((await client.get()).length, 0);
+
   startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
   registerHandlers(missingSigResponses);
   try {
     await client.maybeSync(6000);
     do_throw("Sync should fail (the signature is missing)");
   } catch (e) {
-    equal((await client.get()).length, 2);
+    equal((await client.get()).length, 0, "Local remains empty");
   }
 
   // Ensure that the failure is reflected in the accumulated telemetry:
