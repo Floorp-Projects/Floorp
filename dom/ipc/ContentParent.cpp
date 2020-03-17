@@ -5448,11 +5448,11 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
 nsresult ContentParent::TransmitPermissionsForPrincipal(
     nsIPrincipal* aPrincipal) {
   // Create the key, and send it down to the content process.
-  nsTArray<Pair<nsCString, nsCString>> pairs =
+  nsTArray<std::pair<nsCString, nsCString>> pairs =
       nsPermissionManager::GetAllKeysForPrincipal(aPrincipal);
   MOZ_ASSERT(pairs.Length() >= 1);
   for (auto& pair : pairs) {
-    EnsurePermissionsByKey(pair.first(), pair.second());
+    EnsurePermissionsByKey(pair.first, pair.second);
   }
 
   return NS_OK;

@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <tuple>
+#include <utility>
 #include <vector>
 #include "mozilla/ipc/SharedMemoryBasic.h"
 #include "mozilla/Assertions.h"
@@ -1984,23 +1985,23 @@ struct PcqParamTraits<Maybe<Variant<T, Ts...>>> {
 // ---------------------------------------------------------------
 
 template <typename TypeA, typename TypeB>
-struct PcqParamTraits<Pair<TypeA, TypeB>> {
-  using ParamType = Pair<TypeA, TypeB>;
+struct PcqParamTraits<std::pair<TypeA, TypeB>> {
+  using ParamType = std::pair<TypeA, TypeB>;
 
   static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
-    aProducerView.WriteParam(aArg.first());
-    return aProducerView.WriteParam(aArg.second());
+    aProducerView.WriteParam(aArg.first);
+    return aProducerView.WriteParam(aArg.second);
   }
 
   static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
-    aConsumerView.ReadParam(aArg ? (&aArg->first()) : nullptr);
-    return aConsumerView.ReadParam(aArg ? (&aArg->second()) : nullptr);
+    aConsumerView.ReadParam(aArg ? (&aArg->first) : nullptr);
+    return aConsumerView.ReadParam(aArg ? (&aArg->second) : nullptr);
   }
 
   template <typename View>
   static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.MinSizeParam(aArg ? aArg->first() : nullptr) +
-           aView.MinSizeParam(aArg ? aArg->second() : nullptr);
+    return aView.MinSizeParam(aArg ? aArg->first : nullptr) +
+           aView.MinSizeParam(aArg ? aArg->second : nullptr);
   }
 };
 

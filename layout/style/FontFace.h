@@ -10,7 +10,6 @@
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Pair.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "gfxUserFontSet.h"
 #include "nsCSSPropertyID.h"

@@ -525,10 +525,10 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
   FilenameTypeAndDetails fileNameTypeAndDetails =
       FilenameToFilenameType(aFileNameA, false);
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
-  if (fileNameTypeAndDetails.second().isSome()) {
+  if (fileNameTypeAndDetails.second.isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
         NS_LITERAL_CSTRING("fileinfo"),
-        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second().value())}});
+        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value())}});
   } else {
     extra = Nothing();
   }
@@ -536,8 +536,8 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
     sTelemetryEventEnabled = true;
     Telemetry::SetEventRecordingEnabled(NS_LITERAL_CSTRING("security"), true);
   }
-  Telemetry::RecordEvent(eventType,
-                         mozilla::Some(fileNameTypeAndDetails.first()), extra);
+  Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
+                         extra);
 
   // Report an error to console
   nsCOMPtr<nsIConsoleService> console(
@@ -833,10 +833,10 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
       Telemetry::EventID::Security_Javascriptload_Parentprocess;
 
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
-  if (fileNameTypeAndDetails.second().isSome()) {
+  if (fileNameTypeAndDetails.second.isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
         NS_LITERAL_CSTRING("fileinfo"),
-        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second().value())}});
+        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value())}});
   } else {
     extra = Nothing();
   }
@@ -845,8 +845,8 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     sTelemetryEventEnabled = true;
     Telemetry::SetEventRecordingEnabled(NS_LITERAL_CSTRING("security"), true);
   }
-  Telemetry::RecordEvent(eventType,
-                         mozilla::Some(fileNameTypeAndDetails.first()), extra);
+  Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
+                         extra);
 
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug
