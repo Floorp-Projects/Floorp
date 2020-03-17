@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Unused.h"
 
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineIC.h"
@@ -4610,6 +4611,9 @@ void InstanceOfIRGenerator::trackAttached(const char* name) {
     sp.valueProperty("lhs", lhsVal_);
     sp.valueProperty("rhs", ObjectValue(*rhsObj_));
   }
+#else
+  // Silence Clang -Wunused-private-field warning.
+  mozilla::Unused << lhsVal_;
 #endif
 }
 
