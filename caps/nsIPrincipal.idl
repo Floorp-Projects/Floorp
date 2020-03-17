@@ -462,6 +462,13 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute boolean isScriptAllowedByPolicy;
 
+
+     /*
+     * Returns true if the Principal can acess l10n 
+     * features for the Provided DocumentURI
+     */
+    boolean isL10nAllowed(in nsIURI aDocumentURI);
+     
     /**
      * Returns if the principal is for an IP address.
      */

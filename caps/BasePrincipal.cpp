@@ -488,6 +488,51 @@ BasePrincipal::IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin, bool* aRes) {
       ssm->CheckSameOriginURI(prinURI, aURI, false, aIsPrivateWin));
   return NS_OK;
 }
+
+NS_IMETHODIMP
+BasePrincipal::IsL10nAllowed(nsIURI* aURI, bool* aRes) {
+  *aRes = false;
+
+  if (nsContentUtils::IsErrorPage(aURI)) {
+    *aRes = true;
+    return NS_OK;
+  }
+
+  // The system principal is always allowed.
+  if (IsSystemPrincipal()) {
+    *aRes = true;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  bool hasFlags;
+
+  // Allow access to uris that cannot be loaded by web content.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
+                           &hasFlags);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (hasFlags) {
+    *aRes = true;
+    return NS_OK;
+  }
+
+  // UI resources also get access.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                           &hasFlags);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (hasFlags) {
+    *aRes = true;
+    return NS_OK;
+  }
+
+  auto policy = AddonPolicy();
+  *aRes = (policy && policy->IsPrivileged());
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 BasePrincipal::AllowsRelaxStrictFileOriginPolicy(nsIURI* aURI, bool* aRes) {
   *aRes = false;
