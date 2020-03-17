@@ -8,4 +8,10 @@
     position the user is at. The first argument is the position, the second argument is the total. -->
     <string name="mozac_feature_findindpage_result">%1$d/%2$d</string>
 
+    <!-- String to be read by the accessibility service when focusing the next result button. -->
+    <string name="mozac_feature_findindpage_next_result">Trobar lo resultat seguent</string>
+
+    <!-- String to be read by the accessibility service when focusing the previous result button. -->
+    <string name="mozac_feature_findindpage_previous_result">Trobar lo resultat precedent</string>
+
     </resources>

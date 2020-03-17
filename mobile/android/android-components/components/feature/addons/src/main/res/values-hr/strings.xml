@@ -69,7 +69,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Aktivirano</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled">Dektivirano</string>
+    <string name="mozac_feature_addons_disabled">Deaktivirano</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Instalirano</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -77,7 +77,7 @@
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Još nije podržano</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
-    <string name="mozac_feature_addons_disabled_section">Dektivirano</string>
+    <string name="mozac_feature_addons_disabled_section">Deaktivirano</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Detalji</string>
     <!-- Displays a page with all the permissions of an add-on. -->
@@ -110,6 +110,18 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Potrebne su %1$d nove dozvole</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Aktualiziranja dodatka</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Provjeritelj dostupnih dodataka</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">Novi dodatak je dostupan</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Novi dodaci su dostupni</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">Dodaj %1$s u %2$s</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">Dodaj %1$s i %2$s u %3$s</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Dodaj ih u %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Tehnologija Firefoxovih dodataka se modernizira. Ovi dodaci koriste okvire koji nisu kompatibilni s Firefoxom 75 i novijim.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
@@ -136,7 +148,7 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">Dodatak %1$s je uspješno uklonjen</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Neuspjelo uklanjanje dodatka %1$s</string>
-    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Ovaj je dodatak preuzet iz prethodne %1$s verzije</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 dodatak</string>

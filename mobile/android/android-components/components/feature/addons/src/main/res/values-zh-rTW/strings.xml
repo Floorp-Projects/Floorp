@@ -63,9 +63,9 @@
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">設定</string>
     <!-- Indicates the add-on is enabled. -->
-    <string name="mozac_feature_addons_settings_on">開</string>
+    <string name="mozac_feature_addons_settings_on">開啟</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">關</string>
+    <string name="mozac_feature_addons_settings_off">關閉</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">啟用</string>
     <!-- Indicates the add-on is disabled. -->
@@ -108,8 +108,22 @@
     <string name="mozac_feature_addons_updater_notification_title">%1$s 有更新</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">需要 %1$d 組新權限</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">需要一組新權限</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">附加元件更新</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">檢查支援的附加元件</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">有新的附加元件可以使用</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">有新的附加元件可以使用</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">將 %1$s 安裝到 %2$s</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">將 %1$s 與 %2$s 安裝到 %3$s</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">將它們安裝到 %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox 的附加元件技術正在現代化。這些附加元件使用與 Firefox 75 或更新版本不相容的技術框架。</string>
     <!-- This is the caption for the add-on installation progress overlay -->
@@ -136,7 +150,7 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s 移除成功</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s 移除失敗</string>
-    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">此附加元件是從舊版 %1$s 轉移而來</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 套附加元件</string>

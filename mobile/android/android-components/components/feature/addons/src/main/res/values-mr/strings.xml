@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">गोपनीयता सेटिंग वाचा व बदला</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">सर्व संकेतस्थळांची आपली माहिती पहा</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">ब्राउझरचे टॅब पहा</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">क्लायंट कडे अमर्यादित माहिती ठेवा</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">संचारण सुरु असताना ब्राउझर कार्य पहा</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">वाचनखूणा वाचा आणि बदला</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">ब्राउझर सेटिंग वाचा आणि बदला</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">अलीकडील ब्राउझिंग इतिहास, कुकीज आणि संबंधित डेटा नष्ट करा</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">क्लिपबोर्ड वरील माहिती घ्या</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">क्लिपबोर्ड वर माहिती भरा</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">फाईल डाउनलोड करा आणि ब्राउझरचा डाउनलोड इतिहास वाचून बदल करा</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">आपल्या डिव्हाइसवर डाउनलोड केलेल्या फाईल उघडा</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">सर्व उघडलेल्या टॅबचे मजकूर वाचा</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">आपले ठिकाण पहा</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ब्राऊझिंग इतिहास पहा</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">एक्स्टेंशनचा वापर मॉनिटर करा व थीम व्यवस्थापित करा</string>
+    </resources>

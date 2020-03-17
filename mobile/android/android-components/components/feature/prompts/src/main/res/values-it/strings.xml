@@ -30,7 +30,7 @@
     <string name="mozac_feature_prompt_logins_save_message">Salvare queste credenziali su %s?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
-    <string name="mozac_feature_prompts_content_description_input_label">Etichetta per l’inserimento di testo in un campo</string>
+    <string name="mozac_feature_prompts_content_description_input_label">Etichetta associata a un campo per l’inserimento di testo</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Scegli un colore</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->

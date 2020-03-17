@@ -26,8 +26,17 @@
     <string name="mozac_feature_prompt_error_empty_password">पासवर्ड क्षेत्र रिक्त नहीं होनी चाहिए</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">लॉगिन जानकारी सजेहने में असफल</string>
+    <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="mozac_feature_prompt_logins_save_message">आप चाहते है %s इस लॉगिन को सहेजें?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">पाठ इनपुट क्षेत्र दर्ज करने के लिए लेबल</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">एक रंग चुनें</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">अनुमति दें</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">अस्वीकार करें</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">एक महीना चुनें</string>
     <!-- January (short description), used on the month chooser dialog. -->

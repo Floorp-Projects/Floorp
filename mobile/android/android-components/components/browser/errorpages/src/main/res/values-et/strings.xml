@@ -178,4 +178,63 @@ ja sa võid hiljem uuesti proovida.</li>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Tundmatu protokoll</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Soovitud aadress määratleb protokolli (nt <q>wxyz://</q>), mida veebilehitseja ei tunne, seega pole veebilehitsejal võimalik korralikult selle saidiga ühenduda.</p>
+      <ul>
+        <li>Kas üritad avada multimeedia- või muud teenust, mis pole teksti kujul? Kontrolli veebilehe lisanõudeid.</li>
+        <li>Mõned protokollid võivad nõuda kolmanda osapoole tarkvara või pluginaid, enne kui veebilehitseja suudab nad tuvastada.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Faili ei leitud</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Kas soovitud objekt võib olla ümber nimetatud, kustutatud või mujale paigutatud?</li>
+        <li>Kas aadressis võib olla sisestusviga või probleeme suurtähtedega?</li>
+        <li>Kas sul on objektile ligipääsemiseks piisavalt õigusi?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Ligipääs failile keelati</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Fail võib olla kustutatud, mujale liigutatud või on sellele seatud ligipääsu piiravad õigused.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Puhverserver keeldus ühendusest</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Brauser on häälestatud kasutama puhverserverit, aga puhverserver keeldub ühendusest.</p>
+      <ul>
+        <li>Kas brauseri puhverserveri sätted on korrektsed? Kontrolli sätteid ja proovi uuesti.</li>
+        <li>Kas puhverserver lubab ühendusi sellest võrgust?</li>
+        <li>Endiselt probleemid? Konsulteeri oma võrguadministraatori või interneti teenusepakkujaga.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Puhverserverit ei leitud</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Brauser on häälestatud kasutama puhverserverit, aga puhverserverit ei leitud.</p>
+      <ul>
+        <li>Kas brauseri puhverserveri sätted on korrektsed? Kontrolli sätteid ja proovi uuesti.</li>
+        <li>Kas seade on ühendatud töötavasse võrku?</li>
+        <li>Endiselt probleemid? Konsulteeri oma võrguadministraatori või interneti teenusepakkujaga.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Pahavara saidi probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht on teadete kohaselt ründav leht ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Soovimatu saidi probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht levitab teadete kohaselt soovimatut tarkvara ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Kahjuliku saidi probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht on teadete kohaselt potentsiaalselt kahjulik ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Veebivõltsingu probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht on teadete kohaselt veebivõltsingut sisaldav leht ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+</resources>

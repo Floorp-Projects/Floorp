@@ -49,6 +49,13 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Pe jeike ojejokóma</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Pe kundahára oike hekopete, hákatu osẽ ñandutígui ombahasakuévo marandu. Eha’ãjey.</p>
+      <ul>
+        <li>Pe tenda ikatu ndoikói sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</p>
+        <li>Ndaikatúiramo emyanyhẽ kuatiarogue, ehecha oikópa nde wifi térã mba’ekuaarã ne pumbyry pegua.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Pe jeike ndoikovéima</string>
 
@@ -89,6 +96,12 @@
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Tetepy imarãpyréva jejavy</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Pe kuatiarogue ehechasevahína ndaikatúi ojechauka oiko rupi jejavy mba’ekuaarã ohasakuévo.</p>
+      <ul>
+        <li>Eñe’ẽ umi ñanduti renda jára ndine ha emomarandu chupekuéra ko apañuãi.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Tetepy jokopyre</string>
@@ -140,6 +153,9 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Apañuãi malware rendápe</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Tenda %1$s-pe ojehechakuaa ha’eha tenda ivaíva ha upévare ojejokóma, ohechakuaávo ne nekorosã erohoryvéva.</p>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Apañuãi tenda eipota’ỹvape</string>
 
@@ -154,4 +170,6 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Apañuãi tenda ijapúvape</string>
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Ko ñanduti renda %1$s ojehechakuaa ha’eha tenda ivaíva ha upévare ojejokóma, ohechakuaávo ne nekorosã erohoryvéva.</p>]]></string>
+</resources>

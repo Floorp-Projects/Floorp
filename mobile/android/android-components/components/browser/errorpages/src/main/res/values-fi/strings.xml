@@ -107,6 +107,11 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Sisällön koodausvirhe</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Avattavaa sivua ei voida näyttää, koska se käyttää virheellistä tai ei-tuettua pakkaustapaa.</p>
+      <ul>
+        <li>Ilmoitathan ongelmasta sivuston omistajalle.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Osoitetta ei löytynyt</string>
 

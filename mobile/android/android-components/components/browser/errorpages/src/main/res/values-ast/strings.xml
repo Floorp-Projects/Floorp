@@ -103,6 +103,9 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Torgóse un puertu por seguranza</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>La direición solicitada especificaba un puertu (por exemplu, <q>softastur.org:80</q> pal puertu 80 en softastur.org) que davezu tien otru propósitu <em>distintu</em> al de restolar la web. El restolador encaboxó la solicitú pa la to proteición y seguranza.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Reanicióse la conexón</string>
 
@@ -117,7 +120,7 @@
     <string name="mozac_browser_errorpages_unsafe_content_type_title">La triba del ficheru ye insegura</string>
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
-        <li>Contauta colos dueños del sitiu web pa informa-yos d\'esti problema.</li>
+        <li>Contauta colos dueños del sitiu web pa informa-yos d\'esti problema, por favor.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
@@ -141,14 +144,14 @@
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>La páxina que tas tentando de ver nun pue amosase porque usa una forma de compresión que nun ye válida o nun se sofita.</p>
       <ul>
-        <li>Contauta colos dueños del sitiu pa informa-yos d\'esti problema, por favor.</li>
+        <li>Contauta colos dueños del sitiu web pa informa-yos d\'esti problema, por favor.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Nun s\'alcontró la direición</string>
 
     <!-- In the example, the two URLs in markup do not need to be translated. -->
-    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>El restolador nun pudo alcontrar el sirvidor del agospiu de la direición apurrida.</p>
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>El restolador nun pudo alcontrar el sirvidor agospiador de la direición apurrida.</p>
       <ul>
         <li>Comprueba que nun s\'introduxeren fallos al teclexar la direición:
           <strong>ww</strong>.softastur.org en cuentes de
@@ -170,6 +173,12 @@
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>La direición apurrida nun ta nun formatu reconocíu. Compruébala na barra de direiciones, corríxila y volvi tentalo.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">La direición nun ye válida</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Les direiciones web suelen escribise asina <strong>https://www.softastur.org/</strong></li>
+        <li>Asegúrate de que tas usando barres inclinaes a la drecha (ye dicir, <strong>/</strong>).</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Desconozse\'l protocolu</string>

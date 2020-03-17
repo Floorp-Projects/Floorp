@@ -69,6 +69,11 @@
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">غیر محفوظ فائل قسم</string>
 
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>ویب سائٹ کے مالکین کو اس مسلے کا بتانے کے لیے رابطہ کریں۔</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">خراب مواد نقص</string>
 
@@ -83,13 +88,22 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">کوئی انٹرنیٹ کنکشن نہیں</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">اپنے نیٹ ورک کنکشن کی پڑتال کریں یا چند لمحات بعد دوبارہ لوڈ کرنے کی کوشش کریں۔</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">پھر لوڈ کریں</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ناجائز پتہ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>مہیا کیا گیا پتہ ایک پہچان کردہ وضع میں نہیں ہے۔ برائے مہربانى غلطیوں کے لئے محل وقوع بار کی پڑتال کریں اور دوبارہ کوشش کریں۔</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">پتہ جائز نہیں ہے</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ویب پتے عمومی طور پر ایسے ہی <strong>http://www.example.com/</strong> لکھے جاتے ہیں </li>
+        <li>یقینی بنائیں کہ آپ فارورڈ سلیشیز (جیسے <strong>/</strong>) کا استعمال کر رہے ہیں۔</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">نامعلوم پروٹوکول</string>

@@ -23,7 +23,14 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">تازہ کاری کریں</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">پاسورڈ فیلڈ خالی نہیں ہونا چاہئے</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">لاگ ان کو محفوظ کرنے سے قاصر</string>
+    <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="mozac_feature_prompt_logins_save_message">کیا آپ چاہتے ہیں کہ %s اس لاگ ان کو محفوظ کرے؟</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">ایک متنی انپُٹ فیلڈ داخل کرنے کے لئے لیبل</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">رنگ کا انتخاب کریں</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
