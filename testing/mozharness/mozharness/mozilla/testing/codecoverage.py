@@ -109,8 +109,8 @@ class CodeCoverageMixin(SingleTestMixin):
 
     def _setup_cpp_js_coverage_tools(self):
         if mozinfo.os == 'linux' or mozinfo.os == 'mac':
-            self.prefix = '/builds/worker/workspace/build/src/'
-            strip_count = self.prefix.count('/')
+            self.prefix = '/builds/worker/checkouts/gecko'
+            strip_count = len(filter(None, self.prefix.split('/')))
         elif mozinfo.os == 'win':
             self.prefix = 'z:/build/build/src/'
             # Add 1 as on Windows the path where the compiler tries to write the
