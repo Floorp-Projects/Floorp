@@ -225,7 +225,7 @@ class ResponsePanel extends Component {
         },
         header: sectionName,
         id: "jsonpScopeName",
-        opened: !!targetSearchResult || filterText,
+        opened: true,
         shouldOpen: item => {
           const { currentOpen } = this.state;
           if (typeof currentOpen == "undefined" && item.id === items[0].id) {
