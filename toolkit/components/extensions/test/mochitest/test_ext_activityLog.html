@@ -12,9 +12,9 @@
 <script type="text/javascript">
 "use strict";
 
-
 add_task(async function test_api() {
-  let URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+  let URL =
+    "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
 
   // Test that an unspecified extension is not logged by the watcher extension.
   let unlogged = ExtensionTestUtils.loadExtension({
@@ -40,7 +40,14 @@ add_task(async function test_api() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: { gecko: { id: "watched@tests.mozilla.org" } },
-      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+      permissions: [
+        "tabs",
+        "tabHide",
+        "storage",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
       content_scripts: [
         {
           matches: ["http://mochi.test/*/file_sample.html"],
@@ -58,6 +65,7 @@ add_task(async function test_api() {
       },
     },
     async background() {
+      let listen = () => {};
       async function runTest() {
         // Test activity for a child function call.
         browser.test.assertEq(
@@ -67,13 +75,16 @@ add_task(async function test_api() {
         );
 
         // Test a child event manager.
-        browser.test.onMessage.addListener(async msg => {});
+        browser.storage.onChanged.addListener(listen);
+        browser.storage.onChanged.removeListener(listen);
 
         // Test a parent event manager.
+        let webRequestListener = details => {
+          browser.webRequest.onBeforeRequest.removeListener(webRequestListener);
+          return { cancel: false };
+        };
         browser.webRequest.onBeforeRequest.addListener(
-          details => {
-            return { cancel: false };
-          },
+          webRequestListener,
           { urls: ["http://mochi.test/*/file_sample.html"] },
           ["blocking"]
         );
@@ -87,13 +98,16 @@ add_task(async function test_api() {
         });
         browser.test.sendMessage("ready");
       }
-      browser.test.onMessage.addListener(msg => {
+      browser.test.onMessage.addListener((msg, data) => {
         // Logging has started here so this listener is logged, but the
         // call adding it was not.  We do an additional onMessage.addListener
         // call in the test function to validate child based event managers.
         if (msg == "runtest") {
           browser.test.assertTrue(true, msg);
           runTest();
+        }
+        if (msg == "hideTab") {
+          browser.tabs.hide(data);
         }
       });
       browser.test.sendMessage("url", browser.extension.getURL(""));
@@ -120,7 +134,14 @@ add_task(async function test_api() {
       // Test child addListener calls.
       {
         type: "api_call",
-        name: "test.onMessage.addListener",
+        name: "storage.onChanged.addListener",
+        data: {
+          args: [],
+        },
+      },
+      {
+        type: "api_call",
+        name: "storage.onChanged.removeListener",
         data: {
           args: [],
         },
@@ -177,7 +198,24 @@ add_task(async function test_api() {
         name: "test.sendMessage",
         data: { args: ["ready"] },
       },
+      {
+        type: "api_call",
+        name: "tabs.hide",
+        data: { args: ["__TAB_ID"] },
+      },
+      {
+        type: "api_event",
+        name: "test.onMessage",
+        data: { args: ["hideTab", "__TAB_ID"] },
+      },
       // Test parent api_event calls.
+      {
+        type: "api_call",
+        name: "webRequest.onBeforeRequest.removeListener",
+        data: {
+          args: [],
+        },
+      },
       {
         type: "api_event",
         name: "webRequest.onBeforeRequest",
@@ -229,17 +267,23 @@ add_task(async function test_api() {
     browser.test.assertTrue(browser.activityLog, "activityLog is privileged");
 
     let tab;
-    browser.activityLog.onExtensionActivity.addListener(async details => {
+    let handler = async details => {
       browser.test.log(`onExtensionActivity ${JSON.stringify(details)}`);
       let test = expecting.shift();
       if (!test) {
         browser.test.notifyFail(`no test for ${details.name}`);
       }
       delete details.timeStamp;
-      // On multiple runs, tabId will be different.  Get the current tabId and
-      // use that.
+
+      // On multiple runs, tabId will be different.  Set the current
+      // tabId where we need it.
       if (test.data.tabId !== undefined) {
         test.data.tabId = tab.id;
+      }
+      if (test.data.args !== undefined) {
+        test.data.args = test.data.args.map(value =>
+          value === "__TAB_ID" ? tab.id : value
+        );
       }
 
       // hack for webRequest test
@@ -272,11 +316,22 @@ add_task(async function test_api() {
         await browser.tabs.remove(tab.id);
         browser.test.notifyPass("activity");
       }
-    }, "watched@tests.mozilla.org");
+    };
+    browser.activityLog.onExtensionActivity.addListener(
+      handler,
+      "watched@tests.mozilla.org"
+    );
 
     browser.test.onMessage.addListener(async msg => {
       if (msg === "opentab") {
-        tab = await browser.tabs.create({url: expectedUrl});
+        tab = await browser.tabs.create({ url: expectedUrl });
+        browser.test.sendMessage("tabid", tab.id);
+      }
+      if (msg === "done") {
+        browser.activityLog.onExtensionActivity.removeListener(
+          handler,
+          "watched@tests.mozilla.org"
+        );
       }
     });
   }
@@ -296,6 +351,8 @@ add_task(async function test_api() {
   extension.sendMessage("runtest");
   await extension.awaitMessage("ready");
   logger.sendMessage("opentab");
+  let id = await logger.awaitMessage("tabid");
+  extension.sendMessage("hideTab", id);
 
   await Promise.all([
     extension.awaitMessage("content_script"),
@@ -303,12 +360,14 @@ add_task(async function test_api() {
     logger.awaitFinish("activity"),
   ]);
 
+  // Stop watching because we get extra calls on extension shutdown
+  // such as listener removal.
+  logger.sendMessage("done");
+
   await extension.unload();
   await unlogged.unload();
   await logger.unload();
 });
-
-
 </script>
 
 </body>
