@@ -10,7 +10,6 @@
 #include <numeric>
 #include <stdint.h>  // UINTPTR_MAX, uintptr_t
 #include <utility>
-#include "FileInfo.h"
 #include "FileManager.h"
 #include "IDBCursorType.h"
 #include "IDBObjectStore.h"
@@ -16456,6 +16455,8 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
  * FileManager
  ******************************************************************************/
 
+FileManager::MutexType FileManager::sMutex;
+
 FileManager::FileManager(PersistenceType aPersistenceType,
                          const nsACString& aGroup, const nsACString& aOrigin,
                          const nsAString& aDatabaseName, bool aEnforcingQuota)
@@ -16566,7 +16567,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     // 0, but the dbRefCnt is non-zero, which will keep the FileInfo object
     // alive.
     MOZ_ASSERT(dbRefCnt > 0);
-    mFileInfos.Put(id, new FileInfo(this, id, static_cast<nsrefcnt>(dbRefCnt)));
+    mFileInfos.Put(id, new FileInfo(FileManagerGuard{}, this, id,
+                                    static_cast<nsrefcnt>(dbRefCnt)));
 
     mLastFileId = std::max(id, mLastFileId);
   }

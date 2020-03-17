@@ -11,7 +11,6 @@
 #  error Must include IndexedDatabase.h first
 #endif
 
-#include "FileInfo.h"
 #include "FileManager.h"
 #include "IDBMutableFile.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"

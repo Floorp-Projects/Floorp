@@ -215,9 +215,7 @@ auto DatabaseNameMatchPredicate(const nsAString* const aName) {
 
 }  // namespace
 
-IndexedDatabaseManager::IndexedDatabaseManager()
-    : mFileMutex("IndexedDatabaseManager.mFileMutex"),
-      mBackgroundActor(nullptr) {
+IndexedDatabaseManager::IndexedDatabaseManager() : mBackgroundActor(nullptr) {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 

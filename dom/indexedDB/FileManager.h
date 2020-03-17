@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "FileManagerBase.h"
-#include "IndexedDatabaseManager.h"
 #include "InitializedOnce.h"
 
 class nsIFile;
@@ -20,9 +19,9 @@ namespace dom {
 namespace indexedDB {
 
 // Implemented in ActorsParent.cpp.
-class FileManager final
-    : public FileManagerBase<FileManager, dom::IndexedDatabaseManager> {
-  typedef mozilla::dom::quota::PersistenceType PersistenceType;
+class FileManager final : public FileManagerBase<FileManager> {
+  using PersistenceType = mozilla::dom::quota::PersistenceType;
+  using FileManagerBase<FileManager>::MutexType;
 
   const PersistenceType mPersistenceType;
   const nsCString mGroup;
@@ -33,6 +32,11 @@ class FileManager final
   InitializedOnce<const nsString, LazyInit::Allow> mJournalDirectoryPath;
 
   const bool mEnforcingQuota;
+
+  // Lock protecting FileManager.mFileInfos.
+  // It's s also used to atomically update FileInfo.mRefCnt and
+  // FileInfo.mDBRefCnt
+  static MutexType sMutex;
 
  public:
   static MOZ_MUST_USE nsCOMPtr<nsIFile> GetFileForId(nsIFile* aDirectory,
@@ -78,6 +82,8 @@ class FileManager final
   MOZ_MUST_USE nsresult AsyncDeleteFile(int64_t aFileId);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileManager)
+
+  static StaticMutex& Mutex() { return sMutex; }
 
  private:
   ~FileManager() = default;

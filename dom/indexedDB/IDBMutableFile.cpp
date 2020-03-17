@@ -7,7 +7,6 @@
 #include "IDBMutableFile.h"
 
 #include "ActorsChild.h"
-#include "FileInfo.h"
 #include "IDBDatabase.h"
 #include "IDBFactory.h"
 #include "IDBFileHandle.h"
