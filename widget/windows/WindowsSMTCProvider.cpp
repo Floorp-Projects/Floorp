@@ -210,7 +210,7 @@ bool WindowsSMTCProvider::Open() {
   if (mInitialized) {
     bool controlAttribs =
         SetControlAttributes(SMTCControlAttributes::EnableAll());
-    SetPlaybackState(mozilla::dom::PlaybackState::eStopped);
+    SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
     bool metadata = SetMusicMetadata(Nothing(), L"Mozilla Firefox", Nothing());
     bool update = Update();
     LOG("Initialization - Enabling All Control Attributes: %s, Setting "
@@ -230,7 +230,7 @@ bool WindowsSMTCProvider::IsOpened() const { return mInitialized; }
 void WindowsSMTCProvider::Close() {
   MediaControlKeysEventSource::Close();
   if (mInitialized) {  // Prevent calling Set methods when init failed
-    SetPlaybackState(mozilla::dom::PlaybackState::eStopped);
+    SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
     SetControlAttributes(SMTCControlAttributes::DisableAll());
     mInitialized = false;
   }
@@ -238,7 +238,8 @@ void WindowsSMTCProvider::Close() {
   UnregisterEvents();
 }
 
-void WindowsSMTCProvider::SetPlaybackState(mozilla::dom::PlaybackState aState) {
+void WindowsSMTCProvider::SetPlaybackState(
+    mozilla::dom::MediaSessionPlaybackState aState) {
   MOZ_ASSERT(mInitialized);
   MediaControlKeysEventSource::SetPlaybackState(aState);
 
@@ -247,15 +248,15 @@ void WindowsSMTCProvider::SetPlaybackState(mozilla::dom::PlaybackState aState) {
   // Note: we can't return the status of put_PlaybackStatus, but we can at least
   // assert it.
   switch (aState) {
-    case mozilla::dom::PlaybackState::ePaused:
+    case mozilla::dom::MediaSessionPlaybackState::Paused:
       hr = mControls->put_PlaybackStatus(
           ABI::Windows::Media::MediaPlaybackStatus_Paused);
       break;
-    case mozilla::dom::PlaybackState::ePlaying:
+    case mozilla::dom::MediaSessionPlaybackState::Playing:
       hr = mControls->put_PlaybackStatus(
           ABI::Windows::Media::MediaPlaybackStatus_Playing);
       break;
-    case mozilla::dom::PlaybackState::eStopped:
+    case mozilla::dom::MediaSessionPlaybackState::None:
       hr = mControls->put_PlaybackStatus(
           ABI::Windows::Media::MediaPlaybackStatus_Stopped);
       break;

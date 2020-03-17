@@ -19,16 +19,6 @@ namespace dom {
 class BrowsingContext;
 enum class MediaControlKeysEvent : uint32_t;
 
-// This is used to indicate current media playback state for media controller.
-// For those platforms which have virtual control interface, we have to update
-// the playback state correctly in order to show the correct control icon on the
-// interface.
-enum class PlaybackState : uint8_t {
-  ePlaying,
-  ePaused,
-  eStopped,
-};
-
 /**
  * MediaController is a class, which is used to control all media within a tab.
  * It can only be used in Chrome process and the controlled media are usually
@@ -73,9 +63,9 @@ class MediaController final : public MediaSessionController {
 
   bool IsAudible() const;
   uint64_t ControlledMediaNum() const;
-  PlaybackState GetState() const;
+  MediaSessionPlaybackState GetState() const;
 
-  MediaEventSource<PlaybackState>& PlaybackStateChangedEvent() {
+  MediaEventSource<MediaSessionPlaybackState>& PlaybackStateChangedEvent() {
     return mPlaybackStateChangedEvent;
   }
 
@@ -97,7 +87,7 @@ class MediaController final : public MediaSessionController {
   void Activate();
   void Deactivate();
 
-  void SetGuessedPlayState(PlaybackState aState);
+  void SetGuessedPlayState(MediaSessionPlaybackState aState);
 
   bool mAudible = false;
   bool mIsRegisteredToService = false;
@@ -112,8 +102,9 @@ class MediaController final : public MediaSessionController {
   // We don't support web audio and plugin and not consider audible state of
   // media.
   // [1] https://w3c.github.io/mediasession/#guessed-playback-state
-  PlaybackState mGuessedPlaybackState = PlaybackState::eStopped;
-  MediaEventProducer<PlaybackState> mPlaybackStateChangedEvent;
+  MediaSessionPlaybackState mGuessedPlaybackState =
+      MediaSessionPlaybackState::None;
+  MediaEventProducer<MediaSessionPlaybackState> mPlaybackStateChangedEvent;
 };
 
 }  // namespace dom

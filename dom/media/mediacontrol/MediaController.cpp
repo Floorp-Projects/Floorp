@@ -10,6 +10,7 @@
 #include "MediaControlUtils.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/MediaSessionUtils.h"
 
 // avoid redefined macro in unified build
 #undef LOG
@@ -37,14 +38,14 @@ MediaController::~MediaController() {
 
 void MediaController::Play() {
   LOG("Play");
-  SetGuessedPlayState(PlaybackState::ePlaying);
+  SetGuessedPlayState(MediaSessionPlaybackState::Playing);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePlay);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
-  SetGuessedPlayState(PlaybackState::ePaused);
+  SetGuessedPlayState(MediaSessionPlaybackState::Paused);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePause);
 }
@@ -75,7 +76,7 @@ void MediaController::SeekForward() {
 
 void MediaController::Stop() {
   LOG("Stop");
-  SetGuessedPlayState(PlaybackState::eStopped);
+  SetGuessedPlayState(MediaSessionPlaybackState::None);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::eStop);
 }
@@ -102,7 +103,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 
 void MediaController::Shutdown() {
   MOZ_ASSERT(!mShutdown, "Do not call shutdown twice!");
-  SetGuessedPlayState(PlaybackState::eStopped);
+  SetGuessedPlayState(MediaSessionPlaybackState::None);
   // The media controller would be removed from the service when we receive a
   // notification from the content process about all controlled media has been
   // stoppped. However, if controlled media is stopped after detaching
@@ -175,7 +176,7 @@ void MediaController::IncreasePlayingControlledMediaNum() {
              "The number of playing media should not exceed the number of "
              "controlled media!");
   if (mPlayingControlledMediaNum == 1) {
-    SetGuessedPlayState(PlaybackState::ePlaying);
+    SetGuessedPlayState(MediaSessionPlaybackState::Playing);
   }
 }
 
@@ -186,7 +187,7 @@ void MediaController::DecreasePlayingControlledMediaNum() {
       mPlayingControlledMediaNum);
   MOZ_ASSERT(mPlayingControlledMediaNum >= 0);
   if (mPlayingControlledMediaNum == 0) {
-    SetGuessedPlayState(PlaybackState::ePaused);
+    SetGuessedPlayState(MediaSessionPlaybackState::Paused);
   }
 }
 
@@ -212,21 +213,22 @@ void MediaController::Deactivate() {
   }
 }
 
-void MediaController::SetGuessedPlayState(PlaybackState aState) {
+void MediaController::SetGuessedPlayState(MediaSessionPlaybackState aState) {
   if (mShutdown || mGuessedPlaybackState == aState) {
     return;
   }
-  LOG("SetGuessedPlayState : '%s'", ToPlaybackStateEventStr(aState));
+  LOG("SetGuessedPlayState : '%s'", ToMediaSessionPlaybackStateStr(aState));
   mGuessedPlaybackState = aState;
   mPlaybackStateChangedEvent.Notify(mGuessedPlaybackState);
 }
 
-PlaybackState MediaController::GetState() const {
+MediaSessionPlaybackState MediaController::GetState() const {
   return mGuessedPlaybackState;
 }
 
 bool MediaController::IsAudible() const {
-  return mGuessedPlaybackState == PlaybackState::ePlaying && mAudible;
+  return mGuessedPlaybackState == MediaSessionPlaybackState::Playing &&
+         mAudible;
 }
 
 uint64_t MediaController::ControlledMediaNum() const {

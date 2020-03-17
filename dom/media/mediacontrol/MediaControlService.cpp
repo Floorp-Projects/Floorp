@@ -187,7 +187,7 @@ void MediaControlService::ControllerManager::Shutdown() {
 }
 
 void MediaControlService::ControllerManager::ControllerPlaybackStateChanged(
-    PlaybackState aState) {
+    MediaSessionPlaybackState aState) {
   MOZ_ASSERT(NS_IsMainThread());
   mSource->SetPlaybackState(aState);
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
@@ -215,7 +215,7 @@ void MediaControlService::ControllerManager::UpdateMainController(
 
   if (!mMainController) {
     LOG_MAINCONTROLLER("Clear main controller");
-    mSource->SetPlaybackState(PlaybackState::eStopped);
+    mSource->SetPlaybackState(MediaSessionPlaybackState::None);
   } else {
     LOG_MAINCONTROLLER("Set controller %" PRId64 " as main controller",
                        mMainController->Id());

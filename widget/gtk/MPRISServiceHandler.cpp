@@ -563,7 +563,8 @@ bool MPRISServiceHandler::SetRate(double aRate) {
   return true;
 }
 
-void MPRISServiceHandler::SetPlaybackState(dom::PlaybackState aState) {
+void MPRISServiceHandler::SetPlaybackState(
+    dom::MediaSessionPlaybackState aState) {
   LOG("SetPlaybackState");
   if (mPlaybackState == aState) {
     return;
@@ -593,11 +594,11 @@ void MPRISServiceHandler::SetPlaybackState(dom::PlaybackState aState) {
 
 GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
   switch (GetPlaybackState()) {
-    case dom::PlaybackState::ePlaying:
+    case dom::MediaSessionPlaybackState::Playing:
       return g_variant_new_string("Playing");
-    case dom::PlaybackState::ePaused:
+    case dom::MediaSessionPlaybackState::Paused:
       return g_variant_new_string("Paused");
-    case dom::PlaybackState::eStopped:
+    case dom::MediaSessionPlaybackState::None:
       return g_variant_new_string("Stopped");
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid Playback State");

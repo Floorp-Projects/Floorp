@@ -61,7 +61,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   bool IsOpened() const override;
 
   // From the EventSource.
-  void SetPlaybackState(dom::PlaybackState aState) override;
+  void SetPlaybackState(dom::MediaSessionPlaybackState aState) override;
 
   // GetPlaybackState returns dom::PlaybackState. GetPlaybackStatus returns this
   // state converted into d-bus variants.
