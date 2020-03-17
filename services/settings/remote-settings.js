@@ -422,7 +422,8 @@ function remoteSettingsFunction() {
         // Delete all potential attachments.
         await client.attachments.deleteAll();
         // Delete local data.
-        await client.clear();
+        await client.db.clear();
+        await client.db.close();
         // Remove status pref.
         Services.prefs.clearUserPref(client.lastCheckTimePref);
       })

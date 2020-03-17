@@ -35,13 +35,11 @@ async function clear_state() {
   clientWithDump.verifySignature = false;
 
   // Clear local DB.
-  const collection = await client.openCollection();
-  await collection.clear();
+  await client.db.clear();
   // Reset event listeners.
   client._listeners.set("sync", []);
 
-  const collectionWithDump = await clientWithDump.openCollection();
-  await collectionWithDump.clear();
+  await clientWithDump.db.clear();
 
   Services.prefs.clearUserPref("services.settings.default_bucket");
 
@@ -211,8 +209,7 @@ add_task(async function test_records_can_have_local_fields() {
 
   await c.maybeSync(2000);
 
-  const col = await c.openCollection();
-  await col.update({
+  await c.db.update({
     id: "c74279ce-fb0a-42a6-ae11-386b567a6119",
     accepted: true,
   });
@@ -223,8 +220,7 @@ add_task(clear_state);
 add_task(
   async function test_records_changes_are_overwritten_by_server_changes() {
     // Create some local conflicting data, and make sure it syncs without error.
-    const collection = await client.openCollection();
-    await collection.create(
+    await client.db.create(
       {
         website: "",
         id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
@@ -326,8 +322,7 @@ add_task(async function test_get_can_verify_signature() {
   ok(calledSignature.endsWith("abcdef"));
 
   // It throws when signature does not verify.
-  const col = await client.openCollection();
-  await col.delete("9d500963-d80e-3a91-6e74-66f3811b99cc", { virtual: false });
+  await client.db.delete("9d500963-d80e-3a91-6e74-66f3811b99cc");
   error = null;
   try {
     await client.get({ verifySignature: true });
@@ -373,7 +368,7 @@ add_task(async function test_get_does_not_verify_signature_if_load_dump() {
 
   // If metadata is missing locally, it is fetched by default (`syncIfEmpty: true`)
   await clientWithDump.get({ verifySignature: true });
-  const metadata = await (await clientWithDump.openCollection()).metadata();
+  const metadata = await clientWithDump.db.getMetadata();
   ok(Object.keys(metadata).length > 0, "metadata was fetched");
   ok(called, "signature was verified for the data that was in dump");
 });
@@ -419,7 +414,7 @@ add_task(
     // Signature verification is disabled (see `clear_state()`), so we don't bother with
     // fetching metadata.
     await clientWithDump.maybeSync(42);
-    let metadata = await (await clientWithDump.openCollection()).metadata();
+    let metadata = await clientWithDump.db.getMetadata();
     ok(!metadata, "metadata was not fetched");
 
     // Synchronize again the collection (up-to-date, since collection last modified still > 42)
@@ -427,7 +422,7 @@ add_task(
     await clientWithDump.maybeSync(42);
 
     // With signature verification, metadata was fetched.
-    metadata = await (await clientWithDump.openCollection()).metadata();
+    metadata = await clientWithDump.db.getMetadata();
     ok(Object.keys(metadata).length > 0, "metadata was fetched");
     ok(called, "signature was verified for the data that was in dump");
 
@@ -645,8 +640,7 @@ add_task(async function test_telemetry_reports_if_application_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_if_sync_fails() {
-  const collection = await client.openCollection();
-  await collection.db.saveLastModified(9999);
+  await client.db.saveLastModified(9999);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
@@ -661,8 +655,7 @@ add_task(async function test_telemetry_reports_if_sync_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_if_parsing_fails() {
-  const collection = await client.openCollection();
-  await collection.db.saveLastModified(10000);
+  await client.db.saveLastModified(10000);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
@@ -677,8 +670,7 @@ add_task(async function test_telemetry_reports_if_parsing_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_if_fetching_signature_fails() {
-  const collection = await client.openCollection();
-  await collection.db.saveLastModified(11000);
+  await client.db.saveLastModified(11000);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
