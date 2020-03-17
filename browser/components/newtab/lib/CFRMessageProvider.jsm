@@ -814,7 +814,6 @@ const CFR_MESSAGES = [
     id: "HEARTBEAT_TACTIC_2",
     template: "cfr_urlbar_chiclet",
     content: {
-      delay: 5000,
       layout: "chiclet_open_url",
       category: "cfrHeartbeat",
       bucket_id: "HEARTBEAT_TACTIC_2",
