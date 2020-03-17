@@ -2864,11 +2864,15 @@ nscoord ReflowInput::CalcLineHeight(nsIContent* aContent,
   HTMLInputElement* input = HTMLInputElement::FromNodeOrNull(aContent);
   if (input && input->IsSingleLineTextControl()) {
     // For Web-compatibility, single-line text input elements cannot
-    // have a line-height smaller than one.
-    nscoord lineHeightOne =
-        aFontSizeInflation * aComputedStyle->StyleFont()->mFont.size;
-    if (lineHeight < lineHeightOne) {
-      lineHeight = lineHeightOne;
+    // have a line-height smaller than 'normal'.
+    const StyleLineHeight& lh = aComputedStyle->StyleText()->mLineHeight;
+    if (!lh.IsNormal()) {
+      RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
+          aComputedStyle, aPresContext, aFontSizeInflation);
+      nscoord normal = GetNormalLineHeight(fm);
+      if (lineHeight < normal) {
+        lineHeight = normal;
+      }
     }
   }
 
