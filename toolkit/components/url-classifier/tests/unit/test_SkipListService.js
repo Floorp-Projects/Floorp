@@ -52,9 +52,9 @@ add_task(async function test_list_changes() {
   ];
 
   // Add some initial data.
-  let collection = await RemoteSettings(COLLECTION_NAME).openCollection();
-  await collection.create(records[0], { synced: true });
-  await collection.db.saveLastModified(42);
+  let db = await RemoteSettings(COLLECTION_NAME).db;
+  await db.create(records[0]);
+  await db.saveLastModified(42);
 
   let promise = waitForEvent(updateEvent, "update");
 
@@ -131,5 +131,5 @@ add_task(async function test_list_changes() {
 
   skipListService.unregisterSkipListObserver(FEATURE_NAME, obs);
 
-  await collection.clear();
+  await db.clear();
 });

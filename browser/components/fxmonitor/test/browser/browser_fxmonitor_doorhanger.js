@@ -54,10 +54,10 @@ add_task(async function test_main_flow() {
   info("Test that we show the first alert correctly for a recent breach.");
 
   // Pre-populate the Remote Settings collection with a breach.
-  let collection = await RemoteSettings(kRemoteSettingsKey).openCollection();
+  let db = await RemoteSettings(kRemoteSettingsKey).db;
   let BreachDate = new Date();
   let AddedDate = new Date();
-  await collection.create({
+  await db.create({
     Domain: "example.com",
     Name: "Example Site",
     BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
@@ -66,7 +66,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await collection.db.saveLastModified(1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -102,8 +102,8 @@ add_task(async function test_main_flow() {
   await fxmonitorNotificationGone();
 
   // Reset state.
-  await collection.clear();
-  await collection.db.saveLastModified(1234567);
+  await db.clear();
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
   await SpecialPowers.pushPrefEnv({
     clear: [["extensions.fxmonitor.firstAlertShown"]],
@@ -132,8 +132,8 @@ add_task(async function test_main_flow() {
   await fxmonitorNotificationGone();
 
   // Reset state (but not firstAlertShown).
-  await collection.clear();
-  await collection.db.saveLastModified(1234567);
+  await db.clear();
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
 
   info(
@@ -142,7 +142,7 @@ add_task(async function test_main_flow() {
 
   // Add a new "old" breach - added over 2 months ago.
   AddedDate.setMonth(AddedDate.getMonth() - 3);
-  await collection.create({
+  await db.create({
     Domain: "example.com",
     Name: "Example Site",
     BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
@@ -151,7 +151,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await collection.db.saveLastModified(1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -168,14 +168,14 @@ add_task(async function test_main_flow() {
 
   // Reset state (but not firstAlertShown).
   AddedDate.setMonth(AddedDate.getMonth() + 3);
-  await collection.clear();
-  await collection.db.saveLastModified(1234567);
+  await db.clear();
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
 
   info("Test that we do show the second alert for a recent breach.");
 
   // Add a new "recent" breach.
-  await collection.create({
+  await db.create({
     Domain: "example.com",
     Name: "Example Site",
     BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
@@ -184,7 +184,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await collection.db.saveLastModified(1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -200,8 +200,8 @@ add_task(async function test_main_flow() {
   await fxmonitorNotificationShown();
 
   // Reset state (including firstAlertShown)
-  await collection.clear();
-  await collection.db.saveLastModified(1234567);
+  await db.clear();
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
   await SpecialPowers.pushPrefEnv({
     clear: [["extensions.fxmonitor.firstAlertShown"]],
@@ -213,7 +213,7 @@ add_task(async function test_main_flow() {
 
   // Add a new "old" breach - added over a year ago.
   AddedDate.setFullYear(AddedDate.getFullYear() - 2);
-  await collection.create({
+  await db.create({
     Domain: "example.com",
     Name: "Example Site",
     BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
@@ -222,7 +222,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await collection.db.saveLastModified(1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -239,8 +239,8 @@ add_task(async function test_main_flow() {
 
   // Clean up.
   BrowserTestUtils.removeTab(tab);
-  await collection.clear();
-  await collection.db.saveLastModified(1234567);
+  await db.clear();
+  await db.saveLastModified(1234567);
   // Trigger a sync to clear.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
     data: {

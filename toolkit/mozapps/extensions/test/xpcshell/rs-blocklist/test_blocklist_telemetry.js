@@ -73,8 +73,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   }
 
   async function fakeRemoteSettingsSync(rsClient, lastModified) {
-    let coll = await rsClient.openCollection();
-    await coll.db.saveLastModified(lastModified);
+    await rsClient.db.saveLastModified(lastModified);
     await rsClient.emit("sync");
   }
 

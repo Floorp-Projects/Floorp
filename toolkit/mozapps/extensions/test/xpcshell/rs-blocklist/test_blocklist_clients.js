@@ -16,8 +16,7 @@ async function clear_state() {
     Services.prefs.clearUserPref(client.lastCheckTimePref);
 
     // Clear local DB.
-    const collection = await client.openCollection();
-    await collection.clear();
+    await client.db.clear();
   }
 }
 
@@ -135,12 +134,11 @@ add_task(async function test_data_is_filtered_for_target() {
 
   for (let { client } of gBlocklistClients) {
     // Initialize the collection with some data
-    const collection = await client.openCollection();
     for (const record of records) {
-      await collection.create(record);
+      await client.db.create(record);
     }
 
-    const { data: internalData } = await collection.list();
+    const internalData = await client.db.list();
     Assert.equal(internalData.length, records.length);
     let filtered = await client.get({ syncIfEmpty: false });
     Assert.equal(filtered.length, 2); // only two matches.
@@ -208,11 +206,10 @@ add_task(
       },
     ];
     for (let { client } of gBlocklistClients) {
-      const collection = await client.openCollection();
       for (const record of records) {
-        await collection.create(record);
+        await client.db.create(record);
       }
-      await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
+      await client.db.saveLastModified(42); // Prevent from loading JSON dump.
       const list = await client.get({ syncIfEmpty: false });
       equal(list.length, 4);
       ok(list.every(e => e.willMatch));

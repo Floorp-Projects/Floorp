@@ -26,16 +26,14 @@ add_task(async function test_with_rs_messages() {
   );
   const initialMessageCount = ASRouter.state.messages.length;
   const client = RemoteSettings("whats-new-panel");
-  const collection = await client.openCollection();
-  await collection.clear();
+  await client.db.clear();
   for (const record of msgs) {
-    await collection.create(
+    await client.db.create(
       // Modify targeting to ensure the messages always show up
-      { ...record, targeting: "true" },
-      { useRecordId: true }
+      { ...record, targeting: "true" }
     );
   }
-  await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
+  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
 
   const whatsNewBtn = document.getElementById("appMenu-whatsnew-button");
   Assert.equal(whatsNewBtn.hidden, true, "What's New btn doesn't exist");
@@ -82,7 +80,7 @@ add_task(async function test_with_rs_messages() {
   UITour.hideMenu(window, "appMenu");
   // Clean up and remove messages
   ToolbarPanelHub.disableAppmenuButton();
-  await collection.clear();
+  await client.db.clear();
   // Wait to reset the WNPanel messages from state
   const previousMessageCount = ASRouter.state.messages.length;
   await BrowserTestUtils.waitForCondition(async () => {
