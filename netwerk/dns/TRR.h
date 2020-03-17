@@ -12,6 +12,7 @@
 #include "nsIHttpPushListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
+#include "nsHostResolver.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
@@ -33,6 +34,7 @@ class DOHaddr : public LinkedListElement<DOHaddr> {
 };
 
 class TRRService;
+class TRRServiceChannel;
 extern TRRService* gTRRService;
 
 class DOHresp {
@@ -166,6 +168,10 @@ class TRR : public Runnable,
   bool UseDefaultServer();
 
   nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
+
+  friend class TRRServiceChannel;
+  static nsresult SetupTRRServiceChannelInternal(nsIHttpChannel* aChannel,
+                                                 bool aUseGet);
 
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
