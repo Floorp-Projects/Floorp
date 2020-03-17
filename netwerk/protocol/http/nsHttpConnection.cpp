@@ -40,6 +40,7 @@
 #include "nsProxyRelease.h"
 #include "nsSocketTransport2.h"
 #include "nsStringStream.h"
+#include "nsITransportSecurityInfo.h"
 #include "mozpkix/pkixnss.h"
 #include "sslt.h"
 #include "NSSErrorsService.h"

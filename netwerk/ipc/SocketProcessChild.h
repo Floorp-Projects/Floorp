@@ -81,6 +81,9 @@ class SocketProcessChild final
   AllocPInputChannelThrottleQueueChild(const uint32_t& aMeanBytesPerSecond,
                                        const uint32_t& aMaxBytesPerSecond);
 
+  already_AddRefed<PAltSvcTransactionChild> AllocPAltSvcTransactionChild(
+      const HttpConnectionInfoCloneArgs& aConnInfo, const uint32_t& aCaps);
+
   bool IsShuttingDown() { return mShuttingDown; }
 
  protected:

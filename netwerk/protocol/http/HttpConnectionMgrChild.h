@@ -42,7 +42,8 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
   mozilla::ipc::IPCResult RecvClearConnectionHistory();
   mozilla::ipc::IPCResult RecvSpeculativeConnect(
       HttpConnectionInfoCloneArgs aConnInfo,
-      Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps);
+      Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
+      Maybe<PAltSvcTransactionChild*> aTrans);
 
  private:
   virtual ~HttpConnectionMgrChild();

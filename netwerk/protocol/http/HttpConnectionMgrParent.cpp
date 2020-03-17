@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "HttpConnectionMgrParent.h"
+#include "AltSvcTransactionParent.h"
 #include "mozilla/net/HttpTransactionParent.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsISpeculativeConnect.h"
@@ -185,7 +186,7 @@ nsresult HttpConnectionMgrParent::GetSocketThreadTarget(nsIEventTarget**) {
 
 nsresult HttpConnectionMgrParent::SpeculativeConnect(
     nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
-    uint32_t aCaps, NullHttpTransaction*) {
+    uint32_t aCaps, NullHttpTransaction* aTransaction) {
   NS_ENSURE_ARG_POINTER(aConnInfo);
 
   if (!CanSend()) {
@@ -206,7 +207,14 @@ nsresult HttpConnectionMgrParent::SpeculativeConnect(
 
   HttpConnectionInfoCloneArgs connInfo;
   nsHttpConnectionInfo::SerializeHttpConnectionInfo(aConnInfo, connInfo);
-  Unused << SendSpeculativeConnect(connInfo, overriderArgs, aCaps);
+
+  Maybe<AltSvcTransactionParent*> maybeTrans;
+  RefPtr<AltSvcTransactionParent> trans = do_QueryObject(aTransaction);
+  if (trans) {
+    maybeTrans.emplace(trans.get());
+  }
+
+  Unused << SendSpeculativeConnect(connInfo, overriderArgs, aCaps, maybeTrans);
   return NS_OK;
 }
 
