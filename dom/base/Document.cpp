@@ -7757,13 +7757,13 @@ already_AddRefed<Element> Document::CreateXULElement(
 }
 
 already_AddRefed<nsTextNode> Document::CreateEmptyTextNode() const {
-  RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
+  RefPtr<nsTextNode> text = new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
   return text.forget();
 }
 
 already_AddRefed<nsTextNode> Document::CreateTextNode(
     const nsAString& aData) const {
-  RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
+  RefPtr<nsTextNode> text = new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
   // Don't notify; this node is still being created.
   text->SetText(aData, false);
   return text.forget();

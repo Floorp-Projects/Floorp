@@ -62,7 +62,8 @@ nsresult txMozillaTextOutput::comment(const nsString& aData) { return NS_OK; }
 nsresult txMozillaTextOutput::endDocument(nsresult aResult) {
   NS_ENSURE_TRUE(mDocument && mTextParent, NS_ERROR_FAILURE);
 
-  RefPtr<nsTextNode> text = new nsTextNode(mDocument->NodeInfoManager());
+  RefPtr<nsTextNode> text = new (mDocument->NodeInfoManager())
+      nsTextNode(mDocument->NodeInfoManager());
 
   text->SetText(mText, false);
   nsresult rv = mTextParent->AppendChildTo(text, true);

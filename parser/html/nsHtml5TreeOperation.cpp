@@ -233,7 +233,7 @@ nsresult nsHtml5TreeOperation::AppendText(const char16_t* aBuffer,
   }
 
   nsNodeInfoManager* nodeInfoManager = aParent->OwnerDoc()->NodeInfoManager();
-  RefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
+  RefPtr<nsTextNode> text = new (nodeInfoManager) nsTextNode(nodeInfoManager);
   NS_ASSERTION(text, "Infallible malloc failed?");
   rv = text->SetText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -652,7 +652,7 @@ nsresult nsHtml5TreeOperation::FosterParentText(
 
     nsNodeInfoManager* nodeInfoManager =
         aStackParent->OwnerDoc()->NodeInfoManager();
-    RefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
+    RefPtr<nsTextNode> text = new (nodeInfoManager) nsTextNode(nodeInfoManager);
     NS_ASSERTION(text, "Infallible malloc failed?");
     rv = text->SetText(aBuffer, aLength, false);
     NS_ENSURE_SUCCESS(rv, rv);

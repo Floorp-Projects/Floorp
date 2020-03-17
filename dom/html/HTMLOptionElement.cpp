@@ -312,8 +312,8 @@ already_AddRefed<HTMLOptionElement> HTMLOptionElement::Option(
 
   if (!aText.IsEmpty()) {
     // Create a new text node and append it to the option
-    RefPtr<nsTextNode> textContent =
-        new nsTextNode(option->NodeInfo()->NodeInfoManager());
+    RefPtr<nsTextNode> textContent = new (option->NodeInfo()->NodeInfoManager())
+        nsTextNode(option->NodeInfo()->NodeInfoManager());
 
     textContent->SetText(aText, false);
 

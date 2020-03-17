@@ -394,8 +394,8 @@ nsTextControlFrame::CreateEmptyAnonymousDivWithTextNode(
   RefPtr<Element> divElement = CreateEmptyAnonymousDiv(aAnonymousDivType);
 
   // Create the text node for the anonymous <div> element.
-  RefPtr<nsTextNode> textNode =
-      new nsTextNode(divElement->OwnerDoc()->NodeInfoManager());
+  RefPtr<nsTextNode> textNode = new (divElement->OwnerDoc()->NodeInfoManager())
+      nsTextNode(divElement->OwnerDoc()->NodeInfoManager());
   // If the anonymous div element is not for the placeholder, we should
   // mark the text node as "maybe modified frequently" for avoiding ASCII
   // range checks at every input.
@@ -1257,8 +1257,8 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   Text* textContent;
   if (!childContent) {
     // Set up a textnode with our value
-    RefPtr<nsTextNode> textNode =
-        new nsTextNode(mContent->NodeInfo()->NodeInfoManager());
+    RefPtr<nsTextNode> textNode = new (mContent->NodeInfo()->NodeInfoManager())
+        nsTextNode(mContent->NodeInfo()->NodeInfoManager());
     textNode->MarkAsMaybeModifiedFrequently();
     if (IsPasswordTextControl()) {
       textNode->MarkAsMaybeMasked();

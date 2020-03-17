@@ -220,8 +220,8 @@ static already_AddRefed<Element> MakeAnonButton(Document* aDoc,
 
   // Set the browse button text. It's a bit of a pain to do because we want to
   // make sure we are not notifying.
-  RefPtr<nsTextNode> textContent =
-      new nsTextNode(button->NodeInfo()->NodeInfoManager());
+  RefPtr<nsTextNode> textContent = new (button->NodeInfo()->NodeInfoManager())
+      nsTextNode(button->NodeInfo()->NodeInfoManager());
 
   textContent->SetText(buttonTxt, false);
 
@@ -267,7 +267,8 @@ nsresult nsFileControlFrame::CreateAnonymousContent(
   // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
   // attribute.
   mTextContent->SetIsNativeAnonymousRoot();
-  RefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
+  RefPtr<nsTextNode> text =
+      new (doc->NodeInfoManager()) nsTextNode(doc->NodeInfoManager());
   mTextContent->AppendChildTo(text, false);
 
   // Update the displayed text to reflect the current element's value.
