@@ -18,7 +18,9 @@ const EMPTY_URL = (URL_ROOT + "resources/service-workers/empty.html").replace(
 add_task(async function() {
   await enableApplicationPanel();
 
-  const { panel, toolbox } = await openNewTabAndApplicationPanel(SIMPLE_URL);
+  const { panel, toolbox, tab } = await openNewTabAndApplicationPanel(
+    SIMPLE_URL
+  );
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -58,5 +60,9 @@ add_task(async function() {
     "Second service worker registration is displayed for the correct domain"
   );
 
-  await unregisterAllWorkers(toolbox.target.client);
+  await unregisterAllWorkers(toolbox.target.client, doc);
+
+  // close the tab
+  info("Closing the tab.");
+  await BrowserTestUtils.removeTab(tab);
 });

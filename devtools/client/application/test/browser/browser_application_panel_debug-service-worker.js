@@ -61,5 +61,9 @@ add_task(async function() {
   const workerScript = findSource(debuggerContext, "debug-sw.js");
   await removeBreakpoint(debuggerContext, workerScript.id, 11);
 
-  await unregisterAllWorkers(target.client);
+  await unregisterAllWorkers(target.client, doc);
+
+  // close the tab
+  info("Closing the tab.");
+  await BrowserTestUtils.removeTab(tab);
 });

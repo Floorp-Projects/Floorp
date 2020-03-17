@@ -43,5 +43,9 @@ add_task(async function() {
     "Start button is disabled"
   );
 
-  await unregisterAllWorkers(target.client);
+  await unregisterAllWorkers(target.client, doc);
+
+  // close the tab
+  info("Closing the tab.");
+  await BrowserTestUtils.removeTab(tab);
 });

@@ -14,7 +14,9 @@ const OTHER_SCOPE_URL = URL_ROOT + "resources/service-workers/scope-page.html";
 add_task(async function() {
   await enableApplicationPanel();
 
-  const { panel, toolbox } = await openNewTabAndApplicationPanel(SIMPLE_URL);
+  const { panel, toolbox, tab } = await openNewTabAndApplicationPanel(
+    SIMPLE_URL
+  );
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -44,5 +46,9 @@ add_task(async function() {
 
   ok(true, "Second service worker registration is displayed");
 
-  await unregisterAllWorkers(toolbox.target.client);
+  await unregisterAllWorkers(toolbox.target.client, doc);
+
+  // close the tab
+  info("Closing the tab.");
+  await BrowserTestUtils.removeTab(tab);
 });

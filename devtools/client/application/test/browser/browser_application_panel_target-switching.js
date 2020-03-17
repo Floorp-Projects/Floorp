@@ -37,7 +37,7 @@ add_task(async function() {
 
   // close the tab
   info("Closing the tab.");
-  await unregisterAllWorkers(toolbox.target.client);
+  await unregisterAllWorkers(toolbox.target.client, doc);
   await BrowserTestUtils.removeTab(tab);
 });
 

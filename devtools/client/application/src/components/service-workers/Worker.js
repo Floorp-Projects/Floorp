@@ -30,6 +30,7 @@ const {
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
+const { l10n } = require("devtools/client/application/src/modules/l10n");
 
 const {
   services,
@@ -97,19 +98,19 @@ class Worker extends PureComponent {
   }
 
   isActive() {
-    return this.props.worker.active;
+    return this.props.worker.isActive;
   }
 
-  getServiceWorkerStatus() {
+  getLocalizedStatus() {
     if (this.isActive() && this.isRunning()) {
-      return "running";
+      return l10n.getString("serviceworker-worker-status-running");
     } else if (this.isActive()) {
-      return "stopped";
+      return l10n.getString("serviceworker-worker-status-stopped");
     }
-    // We cannot get service worker registrations unless the registration is in
-    // ACTIVE state. Unable to know the actual state ("installing", "waiting"), we
-    // display a custom state "registering" for now. See Bug 1153292.
-    return "registering";
+
+    // NOTE: this is already localized by the service worker front
+    // (strings are in debugger.properties)
+    return this.props.worker.stateText;
   }
 
   formatScope(scope) {
@@ -171,7 +172,7 @@ class Worker extends PureComponent {
 
   render() {
     const { worker } = this.props;
-    const status = this.getServiceWorkerStatus();
+    const statusText = this.getLocalizedStatus();
 
     const unregisterButton = this.isActive()
       ? Localized(
@@ -235,10 +236,7 @@ class Worker extends PureComponent {
         ),
         dd(
           {},
-          Localized(
-            { id: "serviceworker-worker-status-" + status },
-            span({ className: "js-worker-status" })
-          ),
+          span({ className: "js-worker-status worker__status" }, statusText),
           " ",
           !this.isRunning() ? this.renderStartButton() : null
         )
