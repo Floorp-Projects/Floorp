@@ -633,10 +633,6 @@ static const char* sObserverTopics[] = {
     NS_NETWORK_LINK_TYPE_TOPIC,
 };
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-bool ContentParent::sEarlySandboxInit = false;
-#endif
-
 // PreallocateProcess is called by the PreallocatedProcessManager.
 // ContentParent then takes this process back within GetNewOrUsedBrowserProcess.
 /*static*/ RefPtr<ContentParent::LaunchPromise>
@@ -2110,11 +2106,8 @@ bool ContentParent::BeginSubprocessLaunch(bool aIsSync,
   }
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  bool sandboxEnabled = IsContentSandboxEnabled();
-  if (sandboxEnabled && sEarlySandboxInit) {
+  if (IsContentSandboxEnabled()) {
     AppendSandboxParams(extraArgs);
-  }
-  if (sandboxEnabled) {
     mSubprocess->DisableOSActivityMode();
   }
 #endif
@@ -2293,17 +2286,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
   mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
-
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // sEarlySandboxInit is statically initialized to false.
-  // Once we've set it to true due to the pref, avoid checking the
-  // pref on subsequent calls. As a result, changing the earlyinit
-  // pref requires restarting the browser to take effect.
-  if (!ContentParent::sEarlySandboxInit) {
-    ContentParent::sEarlySandboxInit =
-        Preferences::GetBool("security.sandbox.content.mac.earlyinit");
-  }
-#endif
 }
 
 ContentParent::~ContentParent() {

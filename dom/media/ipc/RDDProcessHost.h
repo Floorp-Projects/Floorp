@@ -96,11 +96,6 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void KillProcess();
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // To allow filling a MacSandboxInfo from the child
-  // process without an instance of RDDProcessHost.
-  // Only needed for late-start sandbox enabling.
-  static bool StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
-
   // Return the sandbox type to be used with this process type.
   static MacSandboxType GetMacSandboxType();
 #endif

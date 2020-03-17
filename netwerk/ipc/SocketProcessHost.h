@@ -78,8 +78,6 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void OnChannelError() override;
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  static bool StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
-
   // Return the sandbox type to be used with this process type.
   static MacSandboxType GetMacSandboxType();
 #endif
