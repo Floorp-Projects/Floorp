@@ -69,11 +69,6 @@ ChromeUtils.defineModuleGetter(
   "ContentDOMReference",
   "resource://gre/modules/ContentDOMReference.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AutoCompleteChild",
-  "resource://gre/actors/AutoCompleteChild.jsm"
-);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -383,73 +378,6 @@ const observer = {
 // Add this observer once for the process.
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
-let gAutoCompleteListener = {
-  // Input element on which enter keydown event was fired.
-  keyDownEnterForInput: null,
-
-  added: false,
-
-  init() {
-    if (!this.added) {
-      AutoCompleteChild.addPopupStateListener(this);
-      this.added = true;
-    }
-  },
-
-  popupStateChanged(messageName, data, target) {
-    switch (messageName) {
-      case "FormAutoComplete:PopupOpened": {
-        let { chromeEventHandler } = target.docShell;
-        chromeEventHandler.addEventListener("keydown", this, true);
-        break;
-      }
-
-      case "FormAutoComplete:PopupClosed": {
-        this.onPopupClosed(data.selectedRowStyle, target);
-        let { chromeEventHandler } = target.docShell;
-        chromeEventHandler.removeEventListener("keydown", this, true);
-        break;
-      }
-    }
-  },
-
-  handleEvent(event) {
-    if (event.type != "keydown") {
-      return;
-    }
-
-    let focusedElement = gFormFillService.focusedInput;
-    if (
-      event.keyCode != event.DOM_VK_RETURN ||
-      focusedElement != event.target
-    ) {
-      this.keyDownEnterForInput = null;
-      return;
-    }
-    this.keyDownEnterForInput = focusedElement;
-  },
-
-  onPopupClosed(selectedRowStyle, window) {
-    let focusedElement = gFormFillService.focusedInput;
-    let eventTarget = this.keyDownEnterForInput;
-    if (
-      !eventTarget ||
-      eventTarget !== focusedElement ||
-      selectedRowStyle != "loginsFooter"
-    ) {
-      this.keyDownEnterForInput = null;
-      return;
-    }
-
-    let loginManager = window.windowGlobalChild.getActor("LoginManager");
-    let hostname = eventTarget.ownerDocument.documentURIObject.host;
-    loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
-      hostname,
-      entryPoint: "autocomplete",
-    });
-  },
-};
-
 this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   constructor() {
     super();
@@ -677,47 +605,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         recipes: result.recipes,
       };
     });
-  }
-
-  async _autoCompleteSearchAsync(aSearchString, aPreviousResult, aElement) {
-    let doc = aElement.ownerDocument;
-    let form = LoginFormFactory.createFromField(aElement);
-
-    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    let actionOrigin = LoginHelper.getFormActionOrigin(form);
-    let autocompleteInfo = aElement.getAutocompleteInfo();
-
-    let isPasswordField = aElement.type == "password";
-    let forcePasswordGeneration = false;
-    if (isPasswordField) {
-      forcePasswordGeneration = this.isPasswordGenerationForcedOn(aElement);
-    }
-
-    let messageData = {
-      autocompleteInfo,
-      formOrigin,
-      actionOrigin,
-      searchString: aSearchString,
-      previousResult: aPreviousResult,
-      forcePasswordGeneration,
-      isSecure: InsecurePasswordUtils.isFormSecure(form),
-      isPasswordField,
-    };
-
-    if (LoginHelper.showAutoCompleteFooter) {
-      gAutoCompleteListener.init();
-    }
-
-    let result = await this.sendQuery(
-      "PasswordManager:autoCompleteLogins",
-      messageData
-    );
-
-    return {
-      generatedPassword: result.generatedPassword,
-      logins: LoginHelper.vanillaObjectsToLogins(result.logins),
-      willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
-    };
   }
 
   setupProgressListener(window) {
