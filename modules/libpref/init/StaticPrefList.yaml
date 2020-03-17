@@ -4076,7 +4076,11 @@
 
 - name: gfx.webrender.max-partial-present-rects
   type: uint32_t
+#if defined(XP_WIN)
+  value: 1
+#else
   value: 0
+#endif
   mirror: once
 
 - name: gfx.webrender.enable-gpu-markers
