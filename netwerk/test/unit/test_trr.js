@@ -1686,6 +1686,32 @@ add_task(async function test_content_encoding_gzip() {
   await new DNSListener("bar.example.com", "2.2.2.2");
 });
 
+add_task(async function test_redirect_get() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?redirect=4.4.4.4{&dns}`
+  );
+  Services.prefs.clearUserPref("network.trr.allow-rfc1918");
+  Services.prefs.setBoolPref("network.trr.useGET", true);
+  Services.prefs.setBoolPref("network.trr.disable-ECS", true);
+  await new DNSListener("ecs.example.com", "4.4.4.4");
+});
+
+// test redirect
+add_task(async function test_redirect_post() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setBoolPref("network.trr.useGET", false);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?redirect=4.4.4.4`
+  );
+
+  await new DNSListener("bar.example.com", "4.4.4.4");
+});
+
 // confirmationNS set without confirmed NS yet
 // checks that we properly fall back to DNS is confirmation is not ready yet
 add_task(async function test_resolve_not_confirmed() {

@@ -7,7 +7,6 @@
 #include "DNS.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
-#include "nsHostResolver.h"
 #include "nsHttpHandler.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -24,6 +23,7 @@
 #include "nsURLHelper.h"
 #include "TRR.h"
 #include "TRRService.h"
+#include "TRRLoadInfo.h"
 
 #include "mozilla/Base64.h"
 #include "mozilla/DebugOnly.h"
@@ -219,11 +219,13 @@ nsresult TRR::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  RefPtr<TRRLoadInfo> loadInfo =
+      new TRRLoadInfo(aUri, nsIContentPolicy::TYPE_OTHER);
   return gHttpHandler->CreateTRRServiceChannel(aUri,
-                                               nullptr,  // givenProxyInfo
-                                               0,        // proxyResolveFlags
-                                               nullptr,  // proxyURI
-                                               nullptr,  // aLoadInfo
+                                               nullptr,   // givenProxyInfo
+                                               0,         // proxyResolveFlags
+                                               nullptr,   // proxyURI
+                                               loadInfo,  // aLoadInfo
                                                aResult);
 }
 
@@ -299,7 +301,7 @@ nsresult TRR::SendHTTPRequest() {
 
     if (query.IsEmpty()) {
       query.Assign(NS_LITERAL_CSTRING("?dns="));
-  } else {
+    } else {
       query.Append(NS_LITERAL_CSTRING("&dns="));
     }
     query.Append(body);
@@ -323,21 +325,22 @@ nsresult TRR::SendHTTPRequest() {
     return rv;
   }
 
-  rv = CreateChannelHelper(dnsURI, getter_AddRefs(mChannel));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIChannel> channel;
+  rv = CreateChannelHelper(dnsURI, getter_AddRefs(channel));
+  if (NS_FAILED(rv) || !channel) {
     LOG(("TRR:SendHTTPRequest: NewChannel failed!\n"));
     return rv;
   }
 
-  mChannel->SetLoadFlags(
+  channel->SetLoadFlags(
       nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
       nsIRequest::LOAD_BYPASS_CACHE | nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mChannel->SetNotificationCallbacks(this);
+  rv = channel->SetNotificationCallbacks(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
   if (!httpChannel) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -361,8 +364,7 @@ nsresult TRR::SendHTTPRequest() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIHttpChannelInternal> internalChannel =
-      do_QueryInterface(mChannel);
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(channel);
   if (!internalChannel) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -380,9 +382,6 @@ nsresult TRR::SendHTTPRequest() {
     rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                                       NS_LITERAL_CSTRING("no-store"), false);
-    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
     if (!uploadChannel) {
       return NS_ERROR_UNEXPECTED;
@@ -396,6 +395,37 @@ nsresult TRR::SendHTTPRequest() {
     rv = uploadChannel->ExplicitSetUploadStream(
         uploadStream, NS_LITERAL_CSTRING("application/dns-message"),
         streamLength, NS_LITERAL_CSTRING("POST"), false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = SetupTRRServiceChannelInternal(httpChannel, useGet);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = httpChannel->AsyncOpen(this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_NewTimerWithCallback(getter_AddRefs(mTimeout), this,
+                          gTRRService->GetRequestTimeout(),
+                          nsITimer::TYPE_ONE_SHOT);
+
+  mChannel = channel;
+  return NS_OK;
+}
+
+// static
+nsresult TRR::SetupTRRServiceChannelInternal(nsIHttpChannel* aChannel,
+                                             bool aUseGet) {
+  nsCOMPtr<nsIHttpChannel> httpChannel = aChannel;
+  MOZ_ASSERT(httpChannel);
+
+  nsresult rv = NS_OK;
+  if (!aUseGet) {
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                       NS_LITERAL_CSTRING("no-store"), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -423,20 +453,15 @@ nsresult TRR::SendHTTPRequest() {
   // set the *default* response content type
   if (NS_FAILED(httpChannel->SetContentType(
           NS_LITERAL_CSTRING("application/dns-message")))) {
-    LOG(("TRR::SendHTTPRequest: couldn't set content-type!\n"));
+    LOG(("TRR::SetupTRRServiceChannelInternal: couldn't set content-type!\n"));
   }
 
   nsCOMPtr<nsITimedChannel> timedChan(do_QueryInterface(httpChannel));
-  timedChan->SetTimingEnabled(true);
-
-  if (NS_SUCCEEDED(httpChannel->AsyncOpen(this))) {
-    NS_NewTimerWithCallback(getter_AddRefs(mTimeout), this,
-                            gTRRService->GetRequestTimeout(),
-                            nsITimer::TYPE_ONE_SHOT);
-    return NS_OK;
+  if (timedChan) {
+    timedChan->SetTimingEnabled(true);
   }
-  mChannel = nullptr;
-  return NS_ERROR_UNEXPECTED;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
