@@ -58,12 +58,14 @@ class MediaControlService final : public nsIObserver {
     return mMediaControllerAmountChangedEvent;
   }
 
-  // This is used for testing only, to generate fake media control keys events.
+  /**
+   * These following functions are used for testing only. We use them to
+   * generate fake media control key events, get the media metadata and playback
+   * state from the main controller.
+   */
   void GenerateMediaControlKeysTestEvent(MediaControlKeysEvent aEvent);
-
-  // Return the media metadata from the main controller, and it's used for test
-  // only.
   MediaMetadataBase GetMainControllerMediaMetadata() const;
+  MediaSessionPlaybackState GetMainControllerPlaybackState() const;
 
  private:
   MediaControlService();
