@@ -24,9 +24,6 @@ use rsdparsa::error::SdpParserError;
 use rsdparsa::media_type::{SdpMediaValue, SdpProtocolValue};
 use rsdparsa::{SdpBandwidth, SdpSession, SdpTiming};
 
-#[macro_use]
-extern crate log;
-
 pub mod attribute;
 pub mod media_section;
 pub mod network;
@@ -42,13 +39,13 @@ pub unsafe extern "C" fn parse_sdp(
     sdp: StringView,
     fail_on_warning: bool,
     session: *mut *const SdpSession,
-    parser_error: *mut *const SdpParserError,
+    error: *mut *const SdpParserError,
 ) -> nsresult {
     let sdp_str: String = match sdp.try_into() {
         Ok(string) => string,
         Err(boxed_error) => {
             *session = ptr::null();
-            *parser_error = Box::into_raw(Box::new(SdpParserError::Sequence {
+            *error = Box::into_raw(Box::new(SdpParserError::Sequence {
                 message: format!("{}", boxed_error),
                 line_number: 0,
             }));
@@ -59,7 +56,7 @@ pub unsafe extern "C" fn parse_sdp(
     let parser_result = rsdparsa::parse_sdp(&sdp_str, fail_on_warning);
     match parser_result {
         Ok(mut parsed) => {
-            *parser_error = match parsed.warnings.len() {
+            *error = match parsed.warnings.len() {
                 0 => ptr::null(),
                 _ => Box::into_raw(Box::new(parsed.warnings.remove(0))),
             };
@@ -68,8 +65,8 @@ pub unsafe extern "C" fn parse_sdp(
         }
         Err(e) => {
             *session = ptr::null();
-            error!("Error parsing SDP in rust: {}", e);
-            *parser_error = Box::into_raw(Box::new(e));
+            println!("Error parsing SDP in rust: {}", e);
+            *error = Box::into_raw(Box::new(e));
             NS_ERROR_INVALID_ARG
         }
     }
@@ -99,8 +96,8 @@ pub unsafe extern "C" fn sdp_new_reference(session: *mut SdpSession) -> *const S
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_error_line_num(parser_error: *mut SdpParserError) -> size_t {
-    match *parser_error {
+pub unsafe extern "C" fn sdp_get_error_line_num(error: *mut SdpParserError) -> size_t {
+    match *error {
         SdpParserError::Line { line_number, .. }
         | SdpParserError::Unsupported { line_number, .. }
         | SdpParserError::Sequence { line_number, .. } => line_number,
@@ -109,7 +106,7 @@ pub unsafe extern "C" fn sdp_get_error_line_num(parser_error: *mut SdpParserErro
 
 #[no_mangle]
 // Callee must check that a nullptr is not returned
-pub unsafe extern "C" fn sdp_get_error_message(parser_error: *mut SdpParserError) -> *mut c_char {
+pub unsafe extern "C" fn sdp_get_error_message(error: *mut SdpParserError) -> *mut c_char {
     let message = format!("{}", *error);
     return match CString::new(message.as_str()) {
         Ok(c_char_ptr) => c_char_ptr.into_raw(),
@@ -125,7 +122,7 @@ pub unsafe extern "C" fn sdp_free_error_message(message: *mut c_char) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_free_error(parser_error: *mut SdpParserError) {
+pub unsafe extern "C" fn sdp_free_error(error: *mut SdpParserError) {
     let e = Box::from_raw(error);
     drop(e);
 }
@@ -183,7 +180,7 @@ pub unsafe extern "C" fn sdp_add_media_section(
     let address_string: String = match address.try_into() {
         Ok(x) => x,
         Err(boxed_error) => {
-            error!("Error while parsing string, description: {}", boxed_error);
+            println!("Error while parsing string, description: {}", boxed_error);
             return NS_ERROR_INVALID_ARG;
         }
     };
