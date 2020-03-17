@@ -687,13 +687,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
     let autocompleteInfo = aElement.getAutocompleteInfo();
 
-    let previousResult = aPreviousResult
-      ? {
-          searchString: aPreviousResult.searchString,
-          logins: LoginHelper.loginsToVanillaObjects(aPreviousResult.logins),
-        }
-      : null;
-
     let isPasswordField = aElement.type == "password";
     let forcePasswordGeneration = false;
     if (isPasswordField) {
@@ -705,7 +698,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       formOrigin,
       actionOrigin,
       searchString: aSearchString,
-      previousResult,
+      previousResult: aPreviousResult,
       forcePasswordGeneration,
       isSecure: InsecurePasswordUtils.isFormSecure(form),
       isPasswordField,
