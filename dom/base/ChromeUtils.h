@@ -206,6 +206,10 @@ class ChromeUtils {
   // This function would only be used for testing.
   static void GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
                                             MediaMetadataInit& aMetadata);
+
+  // This function would only be used for testing.
+  static MediaSessionPlaybackTestState GetCurrentMediaSessionPlaybackState(
+      GlobalObject& aGlobal);
 };
 
 }  // namespace dom

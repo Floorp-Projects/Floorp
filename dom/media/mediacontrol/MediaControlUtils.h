@@ -65,6 +65,19 @@ ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
   }
 }
 
+inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
+    MediaSessionPlaybackState aState) {
+  switch (aState) {
+    case MediaSessionPlaybackState::Playing:
+      return MediaSessionPlaybackTestState::Playing;
+    case MediaSessionPlaybackState::Paused:
+      return MediaSessionPlaybackTestState::Paused;
+    default:
+      MOZ_ASSERT(aState == MediaSessionPlaybackState::None);
+      return MediaSessionPlaybackTestState::None;
+  }
+}
+
 inline const char* ToControlledMediaStateStr(ControlledMediaState aState) {
   switch (aState) {
     case ControlledMediaState::eStarted:

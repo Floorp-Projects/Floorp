@@ -151,6 +151,15 @@ MediaMetadataBase MediaControlService::GetMainControllerMediaMetadata() const {
                              : metadata;
 }
 
+MediaSessionPlaybackState MediaControlService::GetMainControllerPlaybackState()
+    const {
+  if (!StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    return MediaSessionPlaybackState::None;
+  }
+  return GetMainController() ? GetMainController()->GetState()
+                             : MediaSessionPlaybackState::None;
+}
+
 // Following functions belong to ControllerManager
 MediaControlService::ControllerManager::ControllerManager(
     MediaControlService* aService)
