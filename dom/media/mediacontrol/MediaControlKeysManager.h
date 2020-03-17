@@ -30,8 +30,8 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   bool Open() override;
   bool IsOpened() const override;
 
-  void SetPlaybackState(PlaybackState aState) override;
-  PlaybackState GetPlaybackState() const override;
+  void SetPlaybackState(MediaSessionPlaybackState aState) override;
+  MediaSessionPlaybackState GetPlaybackState() const override;
 
   // MediaControlKeysEventListener methods
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;

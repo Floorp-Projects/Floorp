@@ -150,14 +150,15 @@ void MediaHardwareKeysEventSourceMacMediaCenter::HandleEvent(MediaControlKeysEve
   }
 }
 
-void MediaHardwareKeysEventSourceMacMediaCenter::SetPlaybackState(PlaybackState aState) {
+void MediaHardwareKeysEventSourceMacMediaCenter::SetPlaybackState(
+    MediaSessionPlaybackState aState) {
   MPNowPlayingInfoCenter* center =
       (MPNowPlayingInfoCenter*)[mpNowPlayingInfoCenterClass defaultCenter];
-  if (aState == PlaybackState::ePlaying) {
+  if (aState == MediaSessionPlaybackState::Playing) {
     center.playbackState = MPNowPlayingPlaybackStatePlaying;
-  } else if (aState == PlaybackState::ePaused) {
+  } else if (aState == MediaSessionPlaybackState::Paused) {
     center.playbackState = MPNowPlayingPlaybackStatePaused;
-  } else if (aState == PlaybackState::eStopped) {
+  } else if (aState == MediaSessionPlaybackState::None) {
     center.playbackState = MPNowPlayingPlaybackStateStopped;
   }
   MediaControlKeysEventSource::SetPlaybackState(aState);

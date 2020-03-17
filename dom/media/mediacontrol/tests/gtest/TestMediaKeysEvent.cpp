@@ -38,14 +38,14 @@ TEST(MediaControlKeysEvent, SetSourcePlaybackState)
 {
   RefPtr<MediaControlKeysEventSource> source =
       new MediaControlKeysEventSourceTestImpl();
-  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::eStopped);
+  ASSERT_TRUE(source->GetPlaybackState() == MediaSessionPlaybackState::None);
 
-  source->SetPlaybackState(PlaybackState::ePlaying);
-  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePlaying);
+  source->SetPlaybackState(MediaSessionPlaybackState::Playing);
+  ASSERT_TRUE(source->GetPlaybackState() == MediaSessionPlaybackState::Playing);
 
-  source->SetPlaybackState(PlaybackState::ePaused);
-  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePaused);
+  source->SetPlaybackState(MediaSessionPlaybackState::Paused);
+  ASSERT_TRUE(source->GetPlaybackState() == MediaSessionPlaybackState::Paused);
 
-  source->SetPlaybackState(PlaybackState::eStopped);
-  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::eStopped);
+  source->SetPlaybackState(MediaSessionPlaybackState::None);
+  ASSERT_TRUE(source->GetPlaybackState() == MediaSessionPlaybackState::None);
 }
