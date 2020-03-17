@@ -33,6 +33,7 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
+import mozilla.components.feature.prompts.ext.onDone
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.view.toScope
 import kotlin.reflect.KProperty
@@ -50,7 +51,7 @@ private const val KEY_LOGIN_HTTP_REALM = "KEY_LOGIN_HTTP_REALM"
  * [android.support.v4.app.DialogFragment] implementation to display a
  * dialog that allows users to save/update usernames and passwords for a given domain.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal class LoginDialogFragment : PromptDialogFragment() {
 
     private inner class SafeArgString(private val key: String) {
@@ -162,6 +163,12 @@ internal class LoginDialogFragment : PromptDialogFragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) =
                 Unit
         })
+
+        with(usernameEditText) {
+            onDone(false) {
+                clearFocus()
+            }
+        }
     }
 
     private fun bindPassword(view: View) {
@@ -192,6 +199,12 @@ internal class LoginDialogFragment : PromptDialogFragment() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
         })
+
+        with(passwordEditText) {
+            onDone(false) {
+                clearFocus()
+            }
+        }
     }
 
     /**
