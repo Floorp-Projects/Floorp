@@ -25,3 +25,10 @@
 @interface mozPaneAccessible : mozAccessible
 
 @end
+
+/**
+ * Accessible for a slider
+ */
+@interface mozSliderAccessible : mozAccessible
+
+@end

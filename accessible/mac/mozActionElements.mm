@@ -220,3 +220,72 @@ enum CheckboxValue {
 }
 
 @end
+
+@implementation mozSliderAccessible
+
+- (NSArray*)accessibilityActionNames {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NSArray* actions = [super accessibilityActionNames];
+
+  static NSArray* sliderAttrs = nil;
+  if (!sliderAttrs) {
+    NSMutableArray* tempArray = [NSMutableArray new];
+    [tempArray addObject:NSAccessibilityIncrementAction];
+    [tempArray addObject:NSAccessibilityDecrementAction];
+    sliderAttrs = [[NSArray alloc] initWithArray:tempArray];
+    [tempArray release];
+  }
+
+  return [actions arrayByAddingObjectsFromArray:sliderAttrs];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (void)accessibilityPerformAction:(NSString*)action {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([action isEqualToString:NSAccessibilityIncrementAction]) {
+    [self changeValueBySteps:1];
+  } else if ([action isEqualToString:NSAccessibilityDecrementAction]) {
+    [self changeValueBySteps:-1];
+  } else {
+    [super accessibilityPerformAction:action];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+/*
+ * Updates the accessible's current value by (factor * step).
+ * If incrementing factor should be positive, if decrementing
+ * factor should be negative.
+ */
+
+- (void)changeValueBySteps:(int)factor {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    double newVal = accWrap->CurValue() + (accWrap->Step() * factor);
+    if (newVal >= accWrap->MinValue() && newVal <= accWrap->MaxValue()) {
+      accWrap->SetCurValue(newVal);
+    }
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    double newVal = proxy->CurValue() + (proxy->Step() * factor);
+    if (newVal >= proxy->MinValue() && newVal <= proxy->MaxValue()) {
+      proxy->SetCurValue(newVal);
+    }
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)valueDidChange {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
+                                  NSAccessibilityValueChangedNotification);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+@end
