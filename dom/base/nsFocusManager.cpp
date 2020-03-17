@@ -2607,21 +2607,16 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
   }
 
   if (sTestMode) {
-    // In test mode, emulate the existing window being lowered and the new
-    // window being raised. This happens in a separate runnable to avoid
-    // touching multiple windows in the current runnable.
+    // In test mode, emulate raising the window. WindowRaised takes
+    // care of lowering the present active window. This happens in
+    // a separate runnable to avoid touching multiple windows in
+    // the current runnable.
 
-    // TODO mActiveWindow in content process
-    nsCOMPtr<nsPIDOMWindowOuter> active(mActiveWindow);
     nsCOMPtr<nsPIDOMWindowOuter> window(aWindow);
     RefPtr<nsFocusManager> self(this);
     NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "nsFocusManager::RaiseWindow", [self, active, window]() -> void {
-          if (active) {
-            self->WindowLowered(active);
-          }
-          self->WindowRaised(window);
-        }));
+        "nsFocusManager::RaiseWindow",
+        [self, window]() -> void { self->WindowRaised(window); }));
     return;
   }
 
