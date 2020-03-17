@@ -151,7 +151,9 @@ XMLStylesheetProcessingInstruction::CloneDataNode(
   nsAutoString data;
   GetData(data);
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  return do_AddRef(new XMLStylesheetProcessingInstruction(ni.forget(), data));
+  auto* nim = ni->NodeInfoManager();
+  return do_AddRef(new (nim)
+                       XMLStylesheetProcessingInstruction(ni.forget(), data));
 }
 
 }  // namespace dom
