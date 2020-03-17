@@ -10,6 +10,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 
 typealias ServerConfig = mozilla.appservices.fxaclient.Config
+typealias Server = mozilla.appservices.fxaclient.Config.Server
 
 /**
  * Configuration for the current device.

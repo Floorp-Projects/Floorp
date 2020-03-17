@@ -26,6 +26,7 @@ import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.Server
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.mockito.Mockito.never
@@ -223,7 +224,7 @@ class FirefoxAccountsAuthFeatureTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig.release("dummyId", "bad://url"),
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             setOf("test-scope")
         ) {
             mockAccount
@@ -249,7 +250,7 @@ class FirefoxAccountsAuthFeatureTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig.release("dummyId", "bad://url"),
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             setOf("test-scope")
         ) {
             mockAccount

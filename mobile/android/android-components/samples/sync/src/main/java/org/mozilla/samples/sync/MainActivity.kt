@@ -42,6 +42,7 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.support.base.log.Log
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.toAuthType
@@ -82,7 +83,7 @@ class MainActivity :
     private val accountManager by lazy {
         FxaAccountManager(
                 this,
-                ServerConfig.release(CLIENT_ID, REDIRECT_URL),
+                ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
                 DeviceConfig(
                     name = "A-C Sync Sample - ${System.currentTimeMillis()}",
                     type = DeviceType.MOBILE,

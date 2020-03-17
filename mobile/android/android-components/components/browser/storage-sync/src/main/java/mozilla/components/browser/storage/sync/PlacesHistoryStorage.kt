@@ -154,7 +154,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      */
     override suspend fun deleteVisitsFor(url: String) {
         withContext(scope.coroutineContext) {
-            places.writer().deletePlace(url)
+            places.writer().deleteVisitsFor(url)
         }
     }
 
