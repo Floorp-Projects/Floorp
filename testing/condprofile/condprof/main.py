@@ -16,8 +16,6 @@ from condprof.check_install import check  # NOQA
 if "MANUAL_MACH_RUN" not in os.environ:
     check()
 
-from condprof.runner import run  # NOQA
-
 
 def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Profile Creator")
@@ -57,6 +55,9 @@ def main(args=sys.argv[1:]):
     )
 
     args = parser.parse_args(args=args)
+    os.environ["CONDPROF_RUNNER"] = "1"
+
+    from condprof.runner import run  # NOQA
 
     run(
         args.archive,
