@@ -123,6 +123,12 @@ namespace jit {
   _(CallIter)               \
   _(New)                    \
   _(SuperCall)              \
+  _(FunctionThis)           \
+  _(GlobalThis)             \
+  _(GetName)                \
+  _(GetGName)               \
+  _(BindName)               \
+  _(BindGName)              \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -134,7 +140,7 @@ class WarpSnapshot;
 // WarpBuilder builds a MIR graph from WarpSnapshot. Unlike WarpOracle,
 // WarpBuilder can run off-thread.
 class MOZ_STACK_CLASS WarpBuilder {
-  WarpSnapshot& input_;
+  WarpSnapshot& snapshot_;
   MIRGenerator& mirGen_;
   MIRGraph& graph_;
   TempAllocator& alloc_;
@@ -158,7 +164,7 @@ class MOZ_STACK_CLASS WarpBuilder {
   TempAllocator& alloc() { return alloc_; }
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
-  WarpSnapshot& input() const { return input_; }
+  WarpSnapshot& snapshot() const { return snapshot_; }
 
   BytecodeSite* newBytecodeSite(BytecodeLocation loc);
 
@@ -201,12 +207,17 @@ class MOZ_STACK_CLASS WarpBuilder {
   MInstruction* buildCallObject(MDefinition* callee, MDefinition* env,
                                 CallObject* templateObj);
 
+  MConstant* globalLexicalEnvConstant();
+
   MOZ_MUST_USE bool buildUnaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildBinaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildTestOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildDefLexicalOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCallOp(BytecodeLocation loc);
+
+  MOZ_MUST_USE bool buildGetNameOp(BytecodeLocation loc, MDefinition* env);
+  MOZ_MUST_USE bool buildBindNameOp(BytecodeLocation loc, MDefinition* env);
 
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
@@ -216,7 +227,7 @@ class MOZ_STACK_CLASS WarpBuilder {
 #undef BUILD_OP
 
  public:
-  WarpBuilder(WarpSnapshot& input, MIRGenerator& mirGen);
+  WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen);
 
   MOZ_MUST_USE bool build();
 };

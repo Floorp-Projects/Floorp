@@ -1101,6 +1101,10 @@ Value LexicalEnvironmentObject::thisValue() const {
   // have set this to the WindowProxy.
   MOZ_ASSERT_IF(v.isObject(), !IsWindow(&v.toObject()));
 
+  // WarpBuilder relies on the return value not being nursery-allocated for the
+  // global lexical environment.
+  MOZ_ASSERT_IF(isGlobal() && v.isGCThing(), v.toGCThing()->isTenured());
+
   return v;
 }
 
