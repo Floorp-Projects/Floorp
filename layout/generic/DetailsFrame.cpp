@@ -95,7 +95,7 @@ nsresult DetailsFrame::CreateAnonymousContent(
 
   RefPtr<NodeInfo> nodeInfo = nodeInfoManager->GetNodeInfo(
       nsGkAtoms::summary, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
-  mDefaultSummary = new HTMLSummaryElement(nodeInfo.forget());
+  mDefaultSummary = new (nodeInfoManager) HTMLSummaryElement(nodeInfo.forget());
 
   nsAutoString defaultSummaryText;
   nsContentUtils::GetMaybeLocalizedString(

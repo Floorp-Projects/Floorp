@@ -1066,8 +1066,8 @@ nsresult HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
   *aResult = nullptr;
 
-  RefPtr<HTMLInputElement> it = new HTMLInputElement(
-      do_AddRef(aNodeInfo), NOT_FROM_PARSER, FromClone::yes);
+  RefPtr<HTMLInputElement> it = new (aNodeInfo->NodeInfoManager())
+      HTMLInputElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER, FromClone::yes);
 
   nsresult rv = const_cast<HTMLInputElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);

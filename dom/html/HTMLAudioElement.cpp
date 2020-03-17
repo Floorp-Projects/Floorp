@@ -23,8 +23,10 @@
 nsGenericHTMLElement* NS_NewHTMLAudioElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
+  auto* nim = nodeInfo->NodeInfoManager();
   mozilla::dom::HTMLAudioElement* element =
-      new mozilla::dom::HTMLAudioElement(std::move(aNodeInfo));
+      new (nim) mozilla::dom::HTMLAudioElement(nodeInfo.forget());
   element->Init();
   return element;
 }
@@ -36,7 +38,8 @@ nsresult HTMLAudioElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
   *aResult = nullptr;
   RefPtr<mozilla::dom::NodeInfo> ni(aNodeInfo);
-  HTMLAudioElement* it = new HTMLAudioElement(ni.forget());
+  auto* nim = ni->NodeInfoManager();
+  HTMLAudioElement* it = new (nim) HTMLAudioElement(ni.forget());
   it->Init();
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv = const_cast<HTMLAudioElement*>(this)->CopyInnerTo(it);
