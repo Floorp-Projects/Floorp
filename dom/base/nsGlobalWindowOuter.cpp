@@ -7027,7 +7027,22 @@ nsresult nsGlobalWindowOuter::OpenInternal(
     AppendUTF16toUTF8(nextTok, options);
   }
 
-  bool windowExists = WindowExists(aName, forceNoOpener, !aCalledNoScript);
+  // If current's top-level browsing context's active document's
+  // cross-origin-opener-policy is "same-origin" or "same-origin + COEP" then
+  // if currentDoc's origin is not same origin with currentDoc's top-level
+  // origin, then set noopener to true and name to "_blank".
+  nsAutoString windowName(aName);
+  auto topPolicy = mBrowsingContext->Top()->GetOpenerPolicy();
+  if ((topPolicy == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN ||
+       topPolicy ==
+           nsILoadInfo::
+               OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) &&
+      !mBrowsingContext->SameOriginWithTop()) {
+    forceNoOpener = true;
+    windowName = NS_LITERAL_STRING("_blank");
+  }
+
+  bool windowExists = WindowExists(windowName, forceNoOpener, !aCalledNoScript);
 
   // XXXbz When this gets fixed to not use LegacyIsCallerNativeCode()
   // (indirectly) maybe we can nix the AutoJSAPI usage OnLinkClickEvent::Run.
@@ -7084,7 +7099,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
         }
       }
 
-      FireAbuseEvents(aUrl, aName, aOptions);
+      FireAbuseEvents(aUrl, windowName, aOptions);
       return aDoJSFixups ? NS_OK : NS_ERROR_FAILURE;
     }
   }
@@ -7095,10 +7110,10 @@ nsresult nsGlobalWindowOuter::OpenInternal(
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   NS_ENSURE_TRUE(wwatch, rv);
 
-  NS_ConvertUTF16toUTF8 name(aName);
+  NS_ConvertUTF16toUTF8 name(windowName);
 
   const char* options_ptr = options.IsEmpty() ? nullptr : options.get();
-  const char* name_ptr = aName.IsEmpty() ? nullptr : name.get();
+  const char* name_ptr = windowName.IsEmpty() ? nullptr : name.get();
 
   nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
   NS_ENSURE_STATE(pwwatch);
