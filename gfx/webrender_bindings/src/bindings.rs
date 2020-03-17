@@ -189,22 +189,35 @@ unsafe fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
 pub struct DocumentHandle {
     api: RenderApi,
     document_id: DocumentId,
+    // One of the two options below is Some and the other None at all times.
+    // It would be nice to model with an enum, however it is tricky to express moving
+    // a variant's content into another variant without movign the containing enum.
+    hit_tester_request: Option<HitTesterRequest>,
+    hit_tester: Option<Arc<dyn ApiHitTester>>,
 }
 
 impl DocumentHandle {
-    pub fn new(api: RenderApi, size: DeviceIntSize, layer: i8) -> DocumentHandle {
-        let doc = api.add_document(size, layer);
+    pub fn new(api: RenderApi, hit_tester: Option<Arc<dyn ApiHitTester>>, size: DeviceIntSize, layer: i8, id: u32) -> DocumentHandle {
+        let doc = api.add_document_with_id(size, layer, id);
+        let hit_tester_request = if hit_tester.is_none() {
+            // Request the hit tester early to reduce the likelihood of blocking on the
+            // first hit testing query.
+            Some(api.request_hit_tester(doc))
+        } else {
+            None
+        };
+
         DocumentHandle {
             api: api,
             document_id: doc,
+            hit_tester_request,
+            hit_tester,
         }
     }
 
-    pub fn new_with_id(api: RenderApi, size: DeviceIntSize, layer: i8, id: u32) -> DocumentHandle {
-        let doc = api.add_document_with_id(size, layer, id);
-        DocumentHandle {
-            api: api,
-            document_id: doc,
+    fn ensure_hit_tester(&mut self) {
+        if self.hit_tester.is_none() {
+            self.hit_tester = Some(self.hit_tester_request.take().unwrap().resolve());
         }
     }
 }
@@ -979,58 +992,6 @@ impl AsyncPropertySampler for SamplerCallback {
     }
 }
 
-// cbindgen's parser currently does not handle the dyn keyword.
-// We work around it by wrapping the referece counted pointer into
-// a struct and boxing it.
-//
-// See https://github.com/eqrion/cbindgen/issues/385
-//
-// Once this is fixed we should be able to pass `*mut dyn ApiHitTester`
-// and avoid the extra indirection.
-pub struct WrHitTester {
-    ptr: Arc<dyn ApiHitTester>,
-}
-
-#[no_mangle]
-pub extern "C" fn wr_api_request_hit_tester(dh: &DocumentHandle) -> *mut WrHitTester {
-    let hit_tester = dh.api.request_hit_tester(dh.document_id);
-    Box::into_raw(Box::new(WrHitTester { ptr: hit_tester }))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_hit_tester_clone(hit_tester: *mut WrHitTester) -> *mut WrHitTester {
-    let new_ref = Arc::clone(&(*hit_tester).ptr);
-    Box::into_raw(Box::new(WrHitTester { ptr: new_ref }))
-}
-
-#[no_mangle]
-pub extern "C" fn wr_hit_tester_hit_test(
-    hit_tester: &WrHitTester,
-    point: WorldPoint,
-    out_pipeline_id: &mut WrPipelineId,
-    out_scroll_id: &mut u64,
-    out_hit_info: &mut u16,
-) -> bool {
-    let result = hit_tester.ptr.hit_test(None, point, HitTestFlags::empty());
-
-    for item in &result.items {
-        // For now we should never be getting results back for which the tag is
-        // 0 (== CompositorHitTestInvisibleToHit). In the future if we allow this,
-        // we'll want to |continue| on the loop in this scenario.
-        debug_assert!(item.tag.1 != 0);
-        *out_pipeline_id = item.pipeline;
-        *out_scroll_id = item.tag.0;
-        *out_hit_info = item.tag.1;
-        return true;
-    }
-    return false;
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_hit_tester_delete(hit_tester: *mut WrHitTester) {
-    let _ = Box::from_raw(hit_tester);
-}
-
 extern "C" {
     fn gecko_profiler_register_thread(name: *const ::std::os::raw::c_char);
     fn gecko_profiler_unregister_thread();
@@ -1502,8 +1463,9 @@ pub extern "C" fn wr_window_new(
         *out_max_texture_size = renderer.get_max_texture_size();
     }
     let layer = 0;
-    *out_handle = Box::into_raw(Box::new(DocumentHandle::new_with_id(
+    *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
         sender.create_api_by_client(next_namespace_id()),
+        None,
         window_size,
         layer,
         document_id,
@@ -1523,8 +1485,11 @@ pub extern "C" fn wr_api_create_document(
 ) {
     assert!(unsafe { is_in_compositor_thread() });
 
-    *out_handle = Box::into_raw(Box::new(DocumentHandle::new_with_id(
+    root_dh.ensure_hit_tester();
+
+    *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
         root_dh.api.clone_sender().create_api_by_client(next_namespace_id()),
+        root_dh.hit_tester.clone(),
         doc_size,
         layer,
         document_id,
@@ -1540,9 +1505,13 @@ pub unsafe extern "C" fn wr_api_delete_document(dh: &mut DocumentHandle) {
 pub extern "C" fn wr_api_clone(dh: &mut DocumentHandle, out_handle: &mut *mut DocumentHandle) {
     assert!(unsafe { is_in_compositor_thread() });
 
+    dh.ensure_hit_tester();
+
     let handle = DocumentHandle {
         api: dh.api.clone_sender().create_api_by_client(next_namespace_id()),
         document_id: dh.document_id,
+        hit_tester: dh.hit_tester.clone(),
+        hit_tester_request: None,
     };
     *out_handle = Box::into_raw(Box::new(handle));
 }
@@ -3669,7 +3638,14 @@ pub extern "C" fn wr_api_hit_test(
     out_scroll_id: &mut u64,
     out_hit_info: &mut u16,
 ) -> bool {
-    let result = dh.api.hit_test(dh.document_id, None, point, HitTestFlags::empty());
+    dh.ensure_hit_tester();
+
+    let result = dh.hit_tester.as_ref().unwrap().hit_test(
+        None,
+        point,
+        HitTestFlags::empty()
+    );
+
     for item in &result.items {
         // For now we should never be getting results back for which the tag is
         // 0 (== CompositorHitTestInvisibleToHit). In the future if we allow this,
@@ -3680,7 +3656,8 @@ pub extern "C" fn wr_api_hit_test(
         *out_hit_info = item.tag.1;
         return true;
     }
-    return false;
+
+    false
 }
 
 pub type VecU8 = Vec<u8>;
