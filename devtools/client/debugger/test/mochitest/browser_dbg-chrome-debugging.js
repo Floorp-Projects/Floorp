@@ -25,8 +25,8 @@ function initDevToolsClient() {
 }
 
 function onNewSource(packet) {
-  if (packet.source.url.startsWith("chrome:")) {
-    ok(true, "Received a new chrome source: " + packet.source.url);
+  if (packet.source.url == "http://foo.com") {
+    ok(true, "Received the custom script source: " + packet.source.url);
     gThreadFront.off("newSource", onNewSource);
     gNewChromeSource.resolve();
   }
@@ -61,6 +61,14 @@ add_task(async function() {
 
   // listen for a new source and global
   gThreadFront.on("newSource", onNewSource);
+
+  // Force the creation of a new privileged source
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+      Ci.nsIPrincipal
+    );
+  const sandbox = Cu.Sandbox(systemPrincipal);
+  Cu.evalInSandbox("function foo() {}", sandbox, null, "http://foo.com");
+
   await gNewChromeSource.promise;
 
   await resumeAndCloseConnection();
