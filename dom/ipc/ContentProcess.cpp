@@ -182,8 +182,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 #if (defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
   mContent.SetProfileDir(profileDir);
 #  if defined(DEBUG)
-  if (IsContentSandboxEnabled() &&
-      Preferences::GetBool("security.sandbox.content.mac.earlyinit")) {
+  if (IsContentSandboxEnabled()) {
     AssertMacSandboxEnabled();
   }
 #  endif /* DEBUG */

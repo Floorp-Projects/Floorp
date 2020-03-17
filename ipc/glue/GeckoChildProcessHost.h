@@ -153,11 +153,6 @@ class GeckoChildProcessHost : public ChildProcessHost,
   void SetAlreadyDead();
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // To allow filling a MacSandboxInfo from the child
-  // process without an instance of RDDProcessHost.
-  // Only needed for late-start sandbox enabling.
-  static bool StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
-
   // Start the sandbox from the child process.
   static bool StartMacSandbox(int aArgc, char** aArgv,
                               std::string& aErrorMessage);
