@@ -679,7 +679,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     });
   }
 
-  _autoCompleteSearchAsync(aSearchString, aPreviousResult, aElement) {
+  async _autoCompleteSearchAsync(aSearchString, aPreviousResult, aElement) {
     let doc = aElement.ownerDocument;
     let form = LoginFormFactory.createFromField(aElement);
 
@@ -715,18 +715,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       gAutoCompleteListener.init();
     }
 
-    let resultPromise = this.sendQuery(
+    let result = await this.sendQuery(
       "PasswordManager:autoCompleteLogins",
       messageData
     );
 
-    return resultPromise.then(result => {
-      return {
-        generatedPassword: result.generatedPassword,
-        logins: LoginHelper.vanillaObjectsToLogins(result.logins),
-        willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
-      };
-    });
+    return {
+      generatedPassword: result.generatedPassword,
+      logins: LoginHelper.vanillaObjectsToLogins(result.logins),
+      willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
+    };
   }
 
   setupProgressListener(window) {
