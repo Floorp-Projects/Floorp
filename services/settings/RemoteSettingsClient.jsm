@@ -450,9 +450,11 @@ class RemoteSettingsClient extends EventEmitter {
         metadata = await this.httpClient().getData();
         await this.db.saveMetadata(metadata);
       }
-      await this._validateCollectionSignature([], timestamp, metadata, {
+      await this._validateCollectionSignature(
         localRecords,
-      });
+        timestamp,
+        metadata
+      );
     }
 
     await this.db.close();
@@ -527,6 +529,7 @@ class RemoteSettingsClient extends EventEmitter {
       // Read last timestamp and local data before sync.
       let collectionLastModified = await this.db.getLastModified();
       const allData = await this.db.list();
+      // Local data can contain local fields, strip them.
       let localRecords = allData.map(r => this._cleanLocalFields(r));
 
       // If there is no data currently in the collection, attempt to import
@@ -542,10 +545,11 @@ class RemoteSettingsClient extends EventEmitter {
               `${this.identifier} ${imported} records loaded from JSON dump`
             );
             importedFromDump = await this.db.list();
+            // Local data is the data loaded from dump. We will need this later
+            // to compute the sync result.
+            localRecords = importedFromDump;
           }
           collectionLastModified = await this.db.getLastModified();
-          const afterDump = await this.db.list();
-          localRecords = afterDump.map(r => this._cleanLocalFields(r));
         } catch (e) {
           // Report but go-on.
           Cu.reportError(e);
@@ -577,10 +581,9 @@ class RemoteSettingsClient extends EventEmitter {
                 `${this.identifier} verify signature of local data`
               );
               await this._validateCollectionSignature(
-                [],
+                localRecords,
                 collectionLastModified,
-                metadata,
-                { localRecords }
+                metadata
               );
             }
           }
@@ -600,10 +603,11 @@ class RemoteSettingsClient extends EventEmitter {
           // Local data is outdated.
           // Fetch changes from server, and make sure we overwrite local data.
           const startSyncDB = Cu.now() * 1000;
-          syncResult = await this._importChanges(expectedTimestamp, {
-            localTimestamp: collectionLastModified,
+          syncResult = await this._importChanges(
             localRecords,
-          });
+            collectionLastModified,
+            expectedTimestamp
+          );
           if (gTimingEnabled) {
             const endSyncDB = Cu.now() * 1000;
             PerformanceCounters.storeExecutionTime(
@@ -643,11 +647,12 @@ class RemoteSettingsClient extends EventEmitter {
             console.warn(
               `Signature verified failed for ${this.identifier}. Retry from scratch`
             );
-            syncResult = await this._importChanges(expectedTimestamp, {
-              clear: true,
-              localTimestamp: collectionLastModified,
+            syncResult = await this._importChanges(
               localRecords,
-            });
+              collectionLastModified,
+              expectedTimestamp,
+              { clear: true }
+            );
           } catch (e) {
             // If the signature fails again, or if an error occured during wiping out the
             // local data, then we report it as a *signature retry* error.
@@ -795,20 +800,12 @@ class RemoteSettingsClient extends EventEmitter {
    * Fetch the signature info from the collection metadata and verifies that the
    * local set of records has the same.
    *
-   * @param {Array<Object>} remoteRecords   The list of changes to apply to the local database.
-   * @param {int} timestamp                 The timestamp associated with the list of remote records.
-   * @param {Object} metadata               The collection metadata, that contains the signature payload.
-   * @param {Object} options
-   * @param {Array<Object>} options.localRecords List of additional local records to take into account (default: `[]`).
+   * @param {Array<Object>} records The list of records to validate.
+   * @param {int} timestamp         The timestamp associated with the list of remote records.
+   * @param {Object} metadata       The collection metadata, that contains the signature payload.
    * @returns {Promise}
    */
-  async _validateCollectionSignature(
-    remoteRecords,
-    timestamp,
-    metadata,
-    options = {}
-  ) {
-    const { localRecords = [] } = options;
+  async _validateCollectionSignature(records, timestamp, metadata) {
     const start = Cu.now() * 1000;
 
     if (!metadata || !metadata.signature) {
@@ -828,8 +825,7 @@ class RemoteSettingsClient extends EventEmitter {
     const certChain = await (await fetch(x5u)).text();
     // Merge remote records with local ones and serialize as canonical JSON.
     const serialized = await RemoteSettingsWorker.canonicalStringify(
-      localRecords,
-      remoteRecords,
+      records,
       timestamp
     );
     if (
@@ -854,16 +850,27 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   /**
-   * Fetch the whole list of records from the server, verify the signature again
-   * and then compute a synchronization result as if the diff-based sync happened.
-   * And eventually, wipe out the local data.
+   * This method is in charge of fetching data from server, applying the diff-based
+   * changes to the local DB, validating the signature, and computing a synchronization
+   * result with the list of creation, updates, and deletions.
    *
-   * @param {int}        expectedTimestamp  Cache busting of collection metadata
+   * @param {Array<Object>} localRecords      Current list of records in local DB.
+   * @param {int}           localTimestamp    Current timestamp in local DB.
+   * @param {Object}        localMetadata     Current metadata in local DB.
+   * @param {int}           expectedTimestamp Cache busting of collection metadata
+   * @param {Object}        options
+   * @param {bool}          options.retry     Whether this method is called in the
+   *                                          retry situation.
    *
    * @returns {Promise<Object>} the computed sync result.
    */
-  async _importChanges(expectedTimestamp, options = {}) {
-    const { clear = false, localRecords, localTimestamp } = options;
+  async _importChanges(
+    localRecords,
+    localTimestamp,
+    expectedTimestamp,
+    options = {}
+  ) {
+    const { clear = false } = options;
 
     // Fetch collection metadata from server.
     const client = this.httpClient();
@@ -882,8 +889,13 @@ class RemoteSettingsClient extends EventEmitter {
       since: clear || !localTimestamp ? undefined : `${localTimestamp}`,
     });
 
-    // We build a sync result as if a diff-based sync was performed.
-    const syncResult = { created: [], updated: [], deleted: [] };
+    // We build a sync result, based on remote changes.
+    const syncResult = {
+      current: localRecords,
+      created: [],
+      updated: [],
+      deleted: [],
+    };
     // If data wasn't changed, return empty sync result.
     // This can happen when we update the signature but not the data.
     console.debug(
@@ -893,9 +905,9 @@ class RemoteSettingsClient extends EventEmitter {
       return syncResult;
     }
 
+    // Separate tombstones from creations/updates.
     const toDelete = remoteRecords.filter(r => r.deleted);
     const toInsert = remoteRecords.filter(r => !r.deleted);
-
     console.debug(
       `${this.identifier} ${toDelete.length} to delete, ${toInsert.length} to insert`
     );
@@ -924,20 +936,22 @@ class RemoteSettingsClient extends EventEmitter {
       );
     }
 
-    // Read new local data, after updating.
+    // Read the new local data, after updating.
     const newLocal = await this.db.list();
     let newRecords = newLocal.map(r => this._cleanLocalFields(r));
-
-    // Verify this new local DB.
+    // And verify the signature on what is now stored.
     if (this.verifySignature) {
-      await this._validateCollectionSignature([], remoteTimestamp, metadata, {
-        localRecords: newRecords,
-      });
+      await this._validateCollectionSignature(
+        newRecords,
+        remoteTimestamp,
+        metadata
+      );
     } else {
       console.warn(`${this.identifier} has signature disabled`);
     }
 
     // Compute the changes, comparing records before and after.
+    syncResult.current = newRecords;
     const oldById = new Map(localRecords.map(e => [e.id, e]));
     for (const r of newRecords) {
       const old = oldById.get(r.id);
@@ -976,6 +990,7 @@ class RemoteSettingsClient extends EventEmitter {
     // Handle the obtained records (ie. apply locally through events).
     // Build the event data list. It should be filtered (ie. by application target)
     const {
+      current: allData,
       created: allCreated,
       updated: allUpdated,
       deleted: allDeleted,
@@ -995,7 +1010,6 @@ class RemoteSettingsClient extends EventEmitter {
       return null;
     }
     // Read local collection of records (also filtered).
-    const allData = await this.db.list();
     const current = await this._filterEntries(allData);
     return { created, updated, deleted, current };
   }
