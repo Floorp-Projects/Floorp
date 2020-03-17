@@ -1202,11 +1202,13 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       form
     );
     if (fieldOverrideRecipe) {
+      log("Has fieldOverrideRecipe", fieldOverrideRecipe);
       let pwOverrideField = LoginRecipesContent.queryLoginField(
         form,
         fieldOverrideRecipe.passwordSelector
       );
       if (pwOverrideField) {
+        log("Has pwOverrideField", pwOverrideField);
         // The field from the password override may be in a different LoginForm.
         let formLike = LoginFormFactory.createFromField(pwOverrideField);
         pwFields = [

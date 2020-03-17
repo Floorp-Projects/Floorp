@@ -219,6 +219,7 @@ this.LoginRecipesContent = {
   _recipeCache: new WeakMap(),
 
   _clearRecipeCache() {
+    log.debug("_clearRecipeCache");
     this._recipeCache = new WeakMap();
   },
 
@@ -309,7 +310,7 @@ this.LoginRecipesContent = {
    */
   getFieldOverrides(aRecipes, aForm) {
     let recipes = this._filterRecipesForForm(aRecipes, aForm);
-    log.debug("getFieldOverrides: filtered recipes:", recipes);
+    log.debug("getFieldOverrides: filtered recipes:", recipes.size, recipes);
     if (!recipes.size) {
       return null;
     }
