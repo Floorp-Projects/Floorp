@@ -995,7 +995,7 @@ add_task(async function avoid_url_suggestions() {
   await cleanUpSuggestions();
 });
 
-add_task(async function avoid_http_url_suggestions() {
+add_task(async function avoid_url_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
@@ -1027,6 +1027,17 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("ftp", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "ftped",
+          searchQuery: "ftp",
+          searchSuggestion: "ftped",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
     ],
   });
 
@@ -1035,6 +1046,25 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("http", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "httped",
+          searchQuery: "http",
+          searchSuggestion: "httped",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "http:",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("http:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 
@@ -1043,6 +1073,25 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("https", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "httpsed",
+          searchQuery: "https",
+          searchSuggestion: "httpsed",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "https:",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("https:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 
@@ -1062,22 +1111,6 @@ add_task(async function avoid_http_url_suggestions() {
         style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
-    ],
-  });
-
-  await check_autocomplete({
-    search: "http:",
-    searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch("http:", { engineName: ENGINE_NAME, heuristic: true }),
-    ],
-  });
-
-  await check_autocomplete({
-    search: "https:",
-    searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch("https:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 
@@ -1272,6 +1305,112 @@ add_task(async function avoid_http_url_suggestions() {
         style: ["action", "visiturl", "heuristic"],
         title: "http://www.test/",
       },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "http://www.test.com",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", {
+          url: "http://www.test.com/",
+          input: "http://www.test.com",
+        }),
+        style: ["action", "visiturl", "heuristic"],
+        title: "http://www.test.com/",
+      },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "file",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("file", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "fileed",
+          searchQuery: "file",
+          searchSuggestion: "fileed",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "file:",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("file:", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  await check_autocomplete({
+    search: "file:///Users",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", {
+          url: "file:///Users",
+          input: "file:///Users",
+        }),
+        style: ["action", "visiturl", "heuristic"],
+        title: "file:///Users",
+      },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "moz-test://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("moz-test://", {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
+    ],
+  });
+
+  await check_autocomplete({
+    search: "moz+test://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("moz+test://", {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
+    ],
+  });
+
+  await check_autocomplete({
+    search: "about",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("about", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "abouted",
+          searchQuery: "about",
+          searchSuggestion: "abouted",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
+  });
+
+  await check_autocomplete({
+    search: "about:",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("about:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 
