@@ -18,8 +18,11 @@ import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.sync.AccountObserver
@@ -43,7 +46,7 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
 import org.mozilla.fenix.settings.account.AccountPreference
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat() {
 
     private val accountObserver = object : AccountObserver {
@@ -114,6 +117,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.settings_title))
 
         update()
+
+        view!!.findViewById<RecyclerView>(R.id.recycler_view)?.hideInitialScrollBar(lifecycleScope)
     }
 
     private fun update() {
@@ -165,6 +170,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     @Suppress("ComplexMethod", "LongMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        // Hide the scrollbar so the animation looks smoother
+        val recyclerView = view!!.findViewById<RecyclerView>(R.id.recycler_view)
+        recyclerView.isVerticalScrollBarEnabled = false
+
         val directions: NavDirections? = when (preference.key) {
             resources.getString(R.string.pref_key_search_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
@@ -301,6 +310,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    // Extension function for hiding the scroll bar on initial loading. We must do this so the
+    // animation to the next screen doesn't animate the initial scroll bar (it ignores
+    // isVerticalScrollBarEnabled being set to false).
+    private fun RecyclerView.hideInitialScrollBar(scope: CoroutineScope) {
+        scope.launch {
+            val originalSize = scrollBarSize
+            scrollBarSize = 0
+            delay(SCROLL_INDICATOR_DELAY)
+            scrollBarSize = originalSize
+        }
+    }
+
     /**
      * Updates the UI to reflect current account state.
      * Possible conditions are logged-in without problems, logged-out, and logged-in but needs to re-authenticate.
@@ -365,5 +386,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceFirefoxAccountAuthError?.isVisible = false
             accountPreferenceCategory?.isVisible = false
         }
+    }
+
+    companion object {
+        private const val SCROLL_INDICATOR_DELAY = 10L
     }
 }

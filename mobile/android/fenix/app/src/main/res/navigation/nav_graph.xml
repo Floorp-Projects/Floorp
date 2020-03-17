@@ -62,7 +62,6 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
-        app:enterAnim="@anim/zoom_out_fade"
         tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_homeFragment_to_turnOnSyncFragment"
@@ -91,6 +90,10 @@
             app:destination="@id/historyFragment" />
         <action
             android:id="@+id/action_homeFragment_to_settingsFragment"
+            app:enterAnim="@anim/fade_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popExitAnim="@anim/fade_out_down"
+            app:popEnterAnim="@anim/fade_in"
             app:destination="@id/settingsFragment" />
         <action
             android:id="@+id/action_homeFragment_to_createCollectionFragment"
@@ -385,55 +388,123 @@
             app:popUpTo="@+id/settingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_dataChoicesFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/dataChoicesFragment"
             app:popUpTo="@+id/settingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_sitePermissionsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/sitePermissionsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_loginsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/loginsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_accessibilityFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/accessibilityFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_accountSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/accountSettingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_searchEngineFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/searchEngineFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_turnOnSyncFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/turnOnSyncFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_aboutFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/aboutFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_customizationFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/customizationFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_privateBrowsingFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/privateBrowsingFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/trackingProtectionFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_deleteBrowsingDataFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/deleteBrowsingDataFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_accountProblemFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/accountProblemFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_deleteBrowsingDataOnQuitFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/deleteBrowsingDataOnQuitFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_defaultBrowserSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/defaultBrowserSettingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/localeSettingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_addonsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/addonsManagementFragment" />
     </fragment>
     <fragment

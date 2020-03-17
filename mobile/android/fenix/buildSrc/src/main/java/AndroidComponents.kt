@@ -5,4 +5,3 @@
 object AndroidComponents {
     const val VERSION = "37.0.20200317130045"
 }
-
