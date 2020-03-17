@@ -527,7 +527,9 @@ LoginAutoComplete.prototype = {
     if (aPreviousResult) {
       previousResult = {
         searchString: aPreviousResult.searchString,
-        logins: aPreviousResult.wrappedJSObject.logins,
+        logins: LoginHelper.loginsToVanillaObjects(
+          aPreviousResult.wrappedJSObject.logins
+        ),
       };
     } else {
       previousResult = null;
