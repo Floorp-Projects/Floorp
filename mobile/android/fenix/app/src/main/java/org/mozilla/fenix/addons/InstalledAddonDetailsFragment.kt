@@ -27,6 +27,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.utils.Settings
 
 /**
  * An activity to show the details of a installed add-on.
@@ -166,12 +167,28 @@ class InstalledAddonDetailsFragment : Fragment() {
 
     private fun bindSettings(view: View) {
         view.settings.apply {
-            isVisible = !addon.installedState?.optionsPageUrl.isNullOrEmpty()
+            val optionsPageUrl = addon.installedState?.optionsPageUrl
+            isVisible = !optionsPageUrl.isNullOrEmpty()
             setOnClickListener {
-                val directions =
-                    InstalledAddonDetailsFragmentDirections.actionInstalledAddonFragmentToAddonInternalSettingsFragment(
-                        addon
-                    )
+                val directions = if (addon.installedState?.openOptionsPageInTab == true) {
+                    val components = it.context.components
+                    val shouldCreatePrivateSession =
+                        components.core.sessionManager.selectedSession?.private
+                            ?: Settings.instance?.openLinksInAPrivateTab
+                            ?: false
+
+                    if (shouldCreatePrivateSession) {
+                        components.tabsUseCases.addPrivateTab(optionsPageUrl as String)
+                    } else {
+                        components.tabsUseCases.addTab(optionsPageUrl as String)
+                    }
+
+                    InstalledAddonDetailsFragmentDirections
+                        .actionGlobalBrowser(null, false)
+                } else {
+                    InstalledAddonDetailsFragmentDirections
+                        .actionInstalledAddonFragmentToAddonInternalSettingsFragment(addon)
+                }
                 Navigation.findNavController(this).navigate(directions)
             }
         }
