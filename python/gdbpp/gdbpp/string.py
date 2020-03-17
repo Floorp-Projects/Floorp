@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from gdbpp import GeckoPrettyPrinter
 
 
-@GeckoPrettyPrinter('nsString', '^ns.*String$')
+@GeckoPrettyPrinter('nsString', '^nsTString<.*>$')
 class string_printer(object):
     def __init__(self, value):
         self.value = value
