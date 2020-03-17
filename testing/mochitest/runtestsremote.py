@@ -13,10 +13,9 @@ sys.path.insert(
         os.path.realpath(
             os.path.dirname(__file__))))
 
-from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import MochitestDesktop, MessageLogger
-from mochitest_options import MochitestArgumentParser
+from mochitest_options import MochitestArgumentParser, build_obj
 from mozdevice import ADBDevice, ADBTimeoutError
 from mozscreenshot import dump_screen, dump_device_screen
 import mozinfo
@@ -147,11 +146,11 @@ class MochiRemote(MochitestDesktop):
         remoteProfilePath = options.profilePath
         remoteUtilityPath = options.utilityPath
 
-        localAutomation = Automation()
         paths = [
             options.xrePath,
-            localAutomation.DIST_BIN,
         ]
+        if build_obj:
+            paths.append(os.path.join(build_obj.topobjdir, "dist", "bin"))
         options.xrePath = self.findPath(paths)
         if options.xrePath is None:
             self.log.error(
@@ -309,14 +308,14 @@ class MochiRemote(MochitestDesktop):
         return browserEnv
 
     def runApp(self, *args, **kwargs):
-        """front-end automation.py's `runApp` functionality until FennecRunner is written"""
+        """front-end automation's `runApp` functionality until FennecRunner is written"""
 
-        # automation.py/remoteautomation `runApp` takes the profile path,
+        # remoteautomation `runApp` takes the profile path,
         # whereas runtest.py's `runApp` takes a mozprofile object.
         if 'profileDir' not in kwargs and 'profile' in kwargs:
             kwargs['profileDir'] = kwargs.pop('profile').profile
 
-        # remove args not supported by automation.py
+        # remove args not supported by automation
         kwargs.pop('marionette_args', None)
 
         ret, _ = self.automation.runApp(*args, **kwargs)
