@@ -17,6 +17,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
+  "AutoCompleteChild",
+  "resource://gre/actors/AutoCompleteChild.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
@@ -535,7 +540,7 @@ LoginAutoComplete.prototype = {
       previousResult = null;
     }
 
-    let acLookupPromise = loginManagerActor._autoCompleteSearchAsync(
+    let acLookupPromise = this._requestAutoCompleteResultsFromParent(
       aSearchString,
       previousResult,
       aElement
@@ -545,5 +550,120 @@ LoginAutoComplete.prototype = {
 
   stopSearch() {
     this._autoCompleteLookupPromise = null;
+  },
+
+  async _requestAutoCompleteResultsFromParent(
+    aSearchString,
+    aPreviousResult,
+    aElement
+  ) {
+    let doc = aElement.ownerDocument;
+    let form = LoginFormFactory.createFromField(aElement);
+
+    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
+    let actionOrigin = LoginHelper.getFormActionOrigin(form);
+    let autocompleteInfo = aElement.getAutocompleteInfo();
+
+    let loginManagerActor = LoginManagerChild.forWindow(aElement.ownerGlobal);
+    let isPasswordField = aElement.type == "password";
+    let forcePasswordGeneration = false;
+    if (isPasswordField) {
+      forcePasswordGeneration = loginManagerActor.isPasswordGenerationForcedOn(
+        aElement
+      );
+    }
+
+    let messageData = {
+      autocompleteInfo,
+      formOrigin,
+      actionOrigin,
+      searchString: aSearchString,
+      previousResult: aPreviousResult,
+      forcePasswordGeneration,
+      isSecure: InsecurePasswordUtils.isFormSecure(form),
+      isPasswordField,
+    };
+
+    if (LoginHelper.showAutoCompleteFooter) {
+      gAutoCompleteListener.init();
+    }
+
+    let result = await loginManagerActor.sendQuery(
+      "PasswordManager:autoCompleteLogins",
+      messageData
+    );
+
+    return {
+      generatedPassword: result.generatedPassword,
+      logins: LoginHelper.vanillaObjectsToLogins(result.logins),
+      willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
+    };
+  },
+};
+
+let gAutoCompleteListener = {
+  // Input element on which enter keydown event was fired.
+  keyDownEnterForInput: null,
+
+  added: false,
+
+  init() {
+    if (!this.added) {
+      AutoCompleteChild.addPopupStateListener(this);
+      this.added = true;
+    }
+  },
+
+  popupStateChanged(messageName, data, target) {
+    switch (messageName) {
+      case "FormAutoComplete:PopupOpened": {
+        let { chromeEventHandler } = target.docShell;
+        chromeEventHandler.addEventListener("keydown", this, true);
+        break;
+      }
+
+      case "FormAutoComplete:PopupClosed": {
+        this.onPopupClosed(data.selectedRowStyle, target);
+        let { chromeEventHandler } = target.docShell;
+        chromeEventHandler.removeEventListener("keydown", this, true);
+        break;
+      }
+    }
+  },
+
+  handleEvent(event) {
+    if (event.type != "keydown") {
+      return;
+    }
+
+    let focusedElement = formFillController.focusedInput;
+    if (
+      event.keyCode != event.DOM_VK_RETURN ||
+      focusedElement != event.target
+    ) {
+      this.keyDownEnterForInput = null;
+      return;
+    }
+    this.keyDownEnterForInput = focusedElement;
+  },
+
+  onPopupClosed(selectedRowStyle, window) {
+    let focusedElement = formFillController.focusedInput;
+    let eventTarget = this.keyDownEnterForInput;
+    if (
+      !eventTarget ||
+      eventTarget !== focusedElement ||
+      selectedRowStyle != "loginsFooter"
+    ) {
+      this.keyDownEnterForInput = null;
+      return;
+    }
+
+    let loginManager = window.windowGlobalChild.getActor("LoginManager");
+    let hostname = eventTarget.ownerDocument.documentURIObject.host;
+    loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
+      hostname,
+      entryPoint: "autocomplete",
+    });
   },
 };
