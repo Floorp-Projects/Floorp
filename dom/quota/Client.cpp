@@ -149,6 +149,25 @@ void BadType() { MOZ_CRASH("Bad client type value!"); }
 }  // namespace
 
 // static
+bool Client::IsValidType(Type aType) {
+  switch (aType) {
+    case Client::IDB:
+    case Client::DOMCACHE:
+    case Client::SDB:
+      return true;
+
+    case Client::LS:
+      if (CachedNextGenLocalStorageEnabled()) {
+        return true;
+      }
+      [[fallthrough]];
+
+    default:
+      return false;
+  }
+}
+
+// static
 bool Client::TypeToText(Type aType, nsAString& aText, const fallible_t&) {
   nsString text;
   if (!TypeTo_impl(aType, text)) {
