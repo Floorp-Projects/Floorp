@@ -50,8 +50,8 @@ nsresult SVGScriptElement::Clone(dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
   *aResult = nullptr;
 
-  SVGScriptElement* it =
-      new SVGScriptElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER);
+  SVGScriptElement* it = new (aNodeInfo->NodeInfoManager())
+      SVGScriptElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv1 = it->Init();
