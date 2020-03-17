@@ -7770,7 +7770,8 @@ already_AddRefed<nsTextNode> Document::CreateTextNode(
 }
 
 already_AddRefed<DocumentFragment> Document::CreateDocumentFragment() const {
-  RefPtr<DocumentFragment> frag = new DocumentFragment(mNodeInfoManager);
+  RefPtr<DocumentFragment> frag =
+      new (mNodeInfoManager) DocumentFragment(mNodeInfoManager);
   return frag.forget();
 }
 

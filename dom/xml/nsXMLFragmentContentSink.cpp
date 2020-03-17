@@ -147,7 +147,7 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode) {
 
   NS_ASSERTION(mTargetDocument, "Need a document!");
 
-  mRoot = new DocumentFragment(mNodeInfoManager);
+  mRoot = new (mNodeInfoManager) DocumentFragment(mNodeInfoManager);
 
   return NS_OK;
 }
