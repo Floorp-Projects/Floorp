@@ -1195,24 +1195,22 @@ async function mockGfxBlocklistItems(items) {
     Services.prefs.getCharPref("services.blocklist.gfx.collection"),
     { bucketNamePref: "services.blocklist.bucket" }
   );
-  const collection = await client.openCollection();
-  await collection.clear();
-  await collection.loadDump(
-    items.map(item => {
-      if (item.id && item.last_modified) {
-        return item;
-      }
-      return Object.assign(
-        {
-          id: generateUUID()
-            .toString()
-            .replace(/[{}]/g, ""),
-          last_modified: Date.now(),
-        },
-        item
-      );
-    })
-  );
+  await client.db.clear();
+  const records = items.map(item => {
+    if (item.id && item.last_modified) {
+      return item;
+    }
+    return {
+      id: generateUUID()
+        .toString()
+        .replace(/[{}]/g, ""),
+      last_modified: Date.now(),
+      ...item,
+    };
+  });
+  const collectionTimestamp = Math.max(...records.map(r => r.last_modified));
+  await client.db.importBulk(records);
+  await client.db.saveLastModified(collectionTimestamp);
   let rv = await bsPass.GfxBlocklistRS.checkForEntries();
   return rv;
 }

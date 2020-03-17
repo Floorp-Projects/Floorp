@@ -915,9 +915,13 @@ var AddonTestUtils = {
         }
       }
       blocklistObj.ensureInitialized();
-      let collection = await blocklistObj._client.openCollection();
-      await collection.clear();
-      await collection.loadDump(newData);
+      let db = await blocklistObj._client.db;
+      await db.clear();
+      const collectionTimestamp = Math.max(
+        ...newData.map(r => r.last_modified)
+      );
+      await db.saveLastModified(collectionTimestamp);
+      await db.importBulk(newData);
       // We manually call _onUpdate... which is evil, but at the moment kinto doesn't have
       // a better abstraction unless you want to mock your own http server to do the update.
       await blocklistObj._onUpdate();

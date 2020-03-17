@@ -57,7 +57,7 @@ function getHash(aStr) {
  *                    records.
  */
 async function syncAndDownload(filters) {
-  const localDB = await CRLiteFiltersClient.client.openCollection();
+  const localDB = await CRLiteFiltersClient.client.db;
   await localDB.clear();
 
   for (let filter of filters) {

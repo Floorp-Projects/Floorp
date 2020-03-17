@@ -22,12 +22,10 @@ const IGNORELIST_TEST_DATA = [
   {
     id: "load-paths",
     matches: ["[other]addEngineWithDetails:searchignore@mozilla.com"],
-    _status: "synced",
   },
   {
     id: "submission-urls",
     matches: ["ignore=true"],
-    _status: "synced",
   },
 ];
 
@@ -162,18 +160,15 @@ add_task(async function test_ignoreList_updates() {
 
 add_task(async function test_ignoreList_db_modification() {
   // Fill the database with some values that we can use to test that it is cleared.
-  const collection = await RemoteSettings(IGNORELIST_KEY).openCollection();
-  await collection.clear();
+  const db = await RemoteSettings(IGNORELIST_KEY).db;
+  await db.clear();
   for (const data of IGNORELIST_TEST_DATA) {
-    await collection.create(
-      {
-        id: data.id,
-        matches: data.matches,
-      },
-      { synced: data._status == "synced" }
-    );
+    await db.create({
+      id: data.id,
+      matches: data.matches,
+    });
   }
-  await collection.db.saveLastModified(42);
+  await db.saveLastModified(42);
 
   // Stub the get() so that the first call simulates a signature error, and
   // the second simulates success reading from the dump.
@@ -190,12 +185,8 @@ add_task(async function test_ignoreList_db_modification() {
     "Should have called the get() function twice."
   );
 
-  const databaseEntries = await collection.list();
-  Assert.equal(
-    databaseEntries.data.length,
-    0,
-    "Should have cleared the database."
-  );
+  const databaseEntries = await db.list();
+  Assert.equal(databaseEntries.length, 0, "Should have cleared the database.");
 
   Assert.deepEqual(
     result,
@@ -206,18 +197,15 @@ add_task(async function test_ignoreList_db_modification() {
 
 add_task(async function test_ignoreList_db_modification_never_succeeds() {
   // Fill the database with some values that we can use to test that it is cleared.
-  const collection = await RemoteSettings(IGNORELIST_KEY).openCollection();
-  await collection.clear();
+  const db = await RemoteSettings(IGNORELIST_KEY).db;
+  await db.clear();
   for (const data of IGNORELIST_TEST_DATA) {
-    await collection.create(
-      {
-        id: data.id,
-        matches: data.matches,
-      },
-      { synced: data._status == "synced" }
-    );
+    await db.create({
+      id: data.id,
+      matches: data.matches,
+    });
   }
-  await collection.db.saveLastModified(42);
+  await db.saveLastModified(42);
 
   // Now simulate the condition where for some reason we never get a
   // valid result.
@@ -231,12 +219,8 @@ add_task(async function test_ignoreList_db_modification_never_succeeds() {
     "Should have called the get() function twice."
   );
 
-  const databaseEntries = await collection.list();
-  Assert.equal(
-    databaseEntries.data.length,
-    0,
-    "Should have cleared the database."
-  );
+  const databaseEntries = await db.list();
+  Assert.equal(databaseEntries.length, 0, "Should have cleared the database.");
 
   Assert.deepEqual(result, [], "Should have returned an empty result.");
 });

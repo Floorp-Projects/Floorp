@@ -94,7 +94,7 @@ async function syncAndDownload(filenames, options = {}) {
     clear = true,
   } = options;
 
-  const localDB = await IntermediatePreloadsClient.client.openCollection();
+  const localDB = await IntermediatePreloadsClient.client.db;
   if (clear) {
     await localDB.clear();
   }
@@ -437,8 +437,8 @@ add_task(
       certificateUsageSSLServer
     );
 
-    let localDB = await IntermediatePreloadsClient.client.openCollection();
-    let { data } = await localDB.list();
+    let localDB = await IntermediatePreloadsClient.client.db;
+    let data = await localDB.list();
     ok(data.length > 0, "should have some entries");
     // simulate a sync (syncAndDownload doesn't actually... sync.)
     await IntermediatePreloadsClient.client.emit("sync", {
@@ -551,8 +551,8 @@ add_task(
       "There should have been 2 downloads"
     );
 
-    let localDB = await IntermediatePreloadsClient.client.openCollection();
-    let { data } = await localDB.list();
+    let localDB = await IntermediatePreloadsClient.client.db;
+    let data = await localDB.list();
     ok(data.length > 0, "should have some entries");
     let subject = data[0].subjectDN;
     let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(

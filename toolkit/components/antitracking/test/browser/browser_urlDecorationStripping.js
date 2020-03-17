@@ -53,9 +53,9 @@ add_task(async _ => {
       data: { current: records },
     });
   }
-  let collection = await RemoteSettings(COLLECTION_NAME).openCollection();
-  await collection.create(records[0], { useRecordId: true });
-  await collection.db.saveLastModified(42);
+  let db = await RemoteSettings(COLLECTION_NAME).db;
+  await db.create(records[0]);
+  await db.saveLastModified(42);
   await emitSync();
 
   await uds.ensureUpdated();
@@ -120,7 +120,7 @@ add_task(async _ => {
 
   registerCleanupFunction(async _ => {
     records = [];
-    await collection.clear();
+    await db.clear();
     await emitSync();
   });
 });
