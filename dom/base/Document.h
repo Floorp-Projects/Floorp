@@ -3582,6 +3582,8 @@ class Document : public nsINode,
     return mDocGroup;
   }
 
+  DocGroup* GetDocGroupOrCreate();
+
   /**
    * If we're a sub-document, the parent document's layout can affect our style
    * and layout (due to the viewport size, viewport units, media queries...).

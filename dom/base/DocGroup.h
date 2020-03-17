@@ -58,6 +58,9 @@ class DocGroup final {
   RefPtr<PerformanceInfoPromise> ReportPerformanceInfo();
 
   TabGroup* GetTabGroup() { return mTabGroup; }
+
+  mozilla::dom::DOMArena* ArenaAllocator() { return mArena; }
+
   mozilla::dom::CustomElementReactionsStack* CustomElementReactionsStack() {
     MOZ_ASSERT(NS_IsMainThread());
     if (!mReactionsStack) {
@@ -129,6 +132,8 @@ class DocGroup final {
 
   // Each DocGroup has a persisted agent cluster ID.
   const nsID mAgentClusterId;
+
+  RefPtr<mozilla::dom::DOMArena> mArena;
 };
 
 }  // namespace dom
