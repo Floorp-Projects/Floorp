@@ -24,7 +24,9 @@ already_AddRefed<GeneratedImageContent> GeneratedImageContent::Create(
       nsGkAtoms::mozgeneratedcontentimage, nullptr, kNameSpaceID_XHTML,
       nsINode::ELEMENT_NODE);
 
-  auto image = MakeRefPtr<GeneratedImageContent>(nodeInfo.forget());
+  auto* nim = nodeInfo->NodeInfoManager();
+  RefPtr<GeneratedImageContent> image =
+      new (nim) GeneratedImageContent(nodeInfo.forget());
   image->mIndex = aContentIndex;
   return image.forget();
 }
