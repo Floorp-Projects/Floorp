@@ -15,17 +15,20 @@ import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.toSyncEngines
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.isSameOriginAs
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.ClassCastException
+import java.net.URL
 
 /**
  * Configurable FxA capabilities.
@@ -53,6 +56,7 @@ class FxaWebChannelFeature(
     private val engine: Engine,
     private val sessionManager: SessionManager,
     private val accountManager: FxaAccountManager,
+    private val serverConfig: ServerConfig,
     private val fxaCapabilities: Set<FxaCapability> = emptySet()
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
@@ -98,9 +102,16 @@ class FxaWebChannelFeature(
      */
     private class WebChannelViewContentMessageHandler(
         private val accountManager: FxaAccountManager,
+        private val serverConfig: ServerConfig,
         private val fxaCapabilities: Set<FxaCapability>
     ) : MessageHandler {
+        @SuppressWarnings("ComplexMethod")
         override fun onPortMessage(message: Any, port: Port) {
+            if (!isCommunicationAllowed(serverConfig, port)) {
+                logger.error("Communication disallowed, ignoring WebChannel message.")
+                return
+            }
+
             val json = try {
                 message as JSONObject
             } catch (e: ClassCastException) {
@@ -141,7 +152,7 @@ class FxaWebChannelFeature(
 
     private fun registerFxaContentMessageHandler(session: Session) {
         val engineSession = sessionManager.getOrCreateEngineSession(session)
-        val messageHandler = WebChannelViewContentMessageHandler(accountManager, fxaCapabilities)
+        val messageHandler = WebChannelViewContentMessageHandler(accountManager, serverConfig, fxaCapabilities)
         extensionController.registerContentMessageHandler(engineSession, messageHandler)
     }
 
@@ -298,6 +309,35 @@ class FxaWebChannelFeature(
                     null
                 }
             }
+        }
+
+        private fun isCommunicationAllowed(serverConfig: ServerConfig, port: Port): Boolean {
+            val senderOrigin = port.senderUrl()
+            val expectedOrigin = serverConfig.contentUrl
+            return isCommunicationAllowed(senderOrigin, expectedOrigin)
+        }
+
+        @VisibleForTesting
+        internal fun isCommunicationAllowed(senderOrigin: String, expectedOrigin: String): Boolean {
+            if (!isSafeUrl(senderOrigin)) {
+                logger.error("$senderOrigin looks unsafe, aborting.")
+                return false
+            }
+
+            if (!senderOrigin.isSameOriginAs(expectedOrigin)) {
+                logger.error("Host mismatch for WebChannel message. Expected: $expectedOrigin, got: $senderOrigin.")
+                return false
+            }
+            return true
+        }
+
+        /**
+         * Rejects URLs that are deemed "unsafe" (not expected).
+         */
+        private fun isSafeUrl(urlStr: String): Boolean {
+            val url = URL(urlStr)
+            return url.userInfo.isNullOrEmpty() &&
+                (url.protocol == "https" || url.host == "localhost" || url.host == "127.0.0.1")
         }
     }
 }

@@ -53,6 +53,10 @@ class WebExtensionTest {
 
             override fun disconnect() {}
 
+            override fun senderUrl(): String {
+                return "https://foo.bar"
+            }
+
             override fun postMessage(message: JSONObject) { }
         }
 

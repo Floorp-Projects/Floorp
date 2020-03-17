@@ -30,6 +30,7 @@ dependencies {
     implementation project(":browser-session")
     implementation project(':feature-tabs')
     implementation project(':service-firefox-accounts')
+    implementation project(':support-ktx')
     implementation project(':support-webextensions')
 
     testImplementation Dependencies.androidx_test_junit

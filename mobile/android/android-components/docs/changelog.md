@@ -17,6 +17,12 @@ permalink: /changelog/
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Updated `removeAll()` from `TrackingProtectionExceptionFileStorage` to notify active sessions when all exceptions are removed.
+  * Added `GeckoPort.senderUrl` which returns the associated content URL.
+
+* **feature-accounts**
+  * It should now be possible to log-in on stable, stage and china FxA servers using a WebChannel flow.
+  *  ⚠️ **This is a breaking change**: `FxaWebChannelFeature` takes a `ServerConfig` as 4th parameter to ensure incoming WebChannel messages
+     are sent by the expected FxA host.
 
 # 36.0.0
 

@@ -306,6 +306,11 @@ abstract class Port(val engineSession: EngineSession? = null) {
     abstract fun name(): String
 
     /**
+     * Returns the URL of the port sender.
+     */
+    abstract fun senderUrl(): String
+
+    /**
      * Disconnects this port.
      */
     abstract fun disconnect()

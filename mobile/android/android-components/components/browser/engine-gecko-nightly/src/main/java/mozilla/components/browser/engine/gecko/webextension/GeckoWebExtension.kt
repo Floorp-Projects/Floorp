@@ -382,6 +382,10 @@ class GeckoPort(
         return nativePort.name
     }
 
+    override fun senderUrl(): String {
+        return nativePort.sender.url
+    }
+
     override fun disconnect() {
         nativePort.disconnect()
     }

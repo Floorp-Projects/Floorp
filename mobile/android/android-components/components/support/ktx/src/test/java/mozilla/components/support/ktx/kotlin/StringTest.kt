@@ -154,4 +154,25 @@ class StringTest {
         val new = urlTest.tryGetHostFromUrl()
         assertEquals(new, "notarealurl")
     }
+
+    @Test
+    fun isSameOriginAs() {
+        // Host mismatch.
+        assertFalse("https://foo.bar".isSameOriginAs("https://foo.baz"))
+        // Scheme mismatch.
+        assertFalse("http://127.0.0.1".isSameOriginAs("https://127.0.0.1"))
+        // Port mismatch (implicit + explicit).
+        assertFalse("https://foo.bar:444".isSameOriginAs("https://foo.bar"))
+        // Port mismatch (explicit).
+        assertFalse("https://foo.bar:444".isSameOriginAs("https://foo.bar:555"))
+        // Port OK but scheme different.
+        assertFalse("https://foo.bar".isSameOriginAs("http://foo.bar:443"))
+        // Port OK (explicit) but scheme different.
+        assertFalse("https://foo.bar:443".isSameOriginAs("ftp://foo.bar:443"))
+
+        assertTrue("https://foo.bar".isSameOriginAs("https://foo.bar"))
+        assertTrue("https://foo.bar/bobo".isSameOriginAs("https://foo.bar/obob"))
+        assertTrue("https://foo.bar".isSameOriginAs("https://foo.bar:443"))
+        assertTrue("https://foo.bar:333".isSameOriginAs("https://foo.bar:333"))
+    }
 }
