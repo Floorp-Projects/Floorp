@@ -115,10 +115,7 @@ class DefaultToolbarIntegration(
                 context.settings().shouldUseTrackingProtection
 
             toolbar.display.icons = toolbar.display.icons.copy(
-                emptyIcon = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.ic_bookmark_filled
-                )!!,
+                emptyIcon = null,
                 trackingProtectionTrackersBlocked = lottieDrawable,
                 trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                     context,
