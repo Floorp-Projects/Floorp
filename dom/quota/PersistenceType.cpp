@@ -146,6 +146,18 @@ void BadPersistenceType() { MOZ_CRASH("Bad persistence type value!"); }
 
 }  // namespace
 
+bool IsValidPersistenceType(const PersistenceType aPersistenceType) {
+  switch (aPersistenceType) {
+    case PERSISTENCE_TYPE_PERSISTENT:
+    case PERSISTENCE_TYPE_TEMPORARY:
+    case PERSISTENCE_TYPE_DEFAULT:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
 nsLiteralCString PersistenceTypeToString(
     const PersistenceType aPersistenceType) {
   const auto maybeString = TypeTo_impl<nsLiteralCString>(aPersistenceType);

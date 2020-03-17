@@ -29,6 +29,8 @@ static const PersistenceType kAllPersistenceTypes[] = {
     PERSISTENCE_TYPE_PERSISTENT, PERSISTENCE_TYPE_TEMPORARY,
     PERSISTENCE_TYPE_DEFAULT};
 
+bool IsValidPersistenceType(PersistenceType aPersistenceType);
+
 nsLiteralCString PersistenceTypeToString(PersistenceType aPersistenceType);
 
 Maybe<PersistenceType> PersistenceTypeFromString(const nsACString& aString,
