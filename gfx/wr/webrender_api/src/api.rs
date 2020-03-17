@@ -6,7 +6,7 @@
 
 extern crate serde_bytes;
 
-use crate::channel::{self, MsgSender, Payload, PayloadSender};
+use crate::channel::{self, MsgReceiver, MsgSender, Payload, PayloadSender};
 use peek_poke::PeekPoke;
 use std::cell::Cell;
 use std::fmt;
@@ -1684,13 +1684,14 @@ impl RenderApi {
     }
 
     /// Synchronously request an object that can perform fast hit testing queries.
-    pub fn request_hit_tester(&self, document_id: DocumentId) -> Arc<dyn ApiHitTester> {
+    pub fn request_hit_tester(&self, document_id: DocumentId) -> HitTesterRequest {
         let (tx, rx) = channel::msg_channel().unwrap();
         self.send_frame_msg(
             document_id,
             FrameMsg::RequestHitTester(tx)
         );
-        rx.recv().unwrap()
+
+        HitTesterRequest { rx }
     }
 
     /// Setup the output region in the framebuffer for a given document.
@@ -1778,6 +1779,20 @@ impl Drop for RenderApi {
     fn drop(&mut self) {
         let msg = ApiMsg::ClearNamespace(self.namespace_id);
         let _ = self.api_sender.send(msg);
+    }
+}
+
+/// A hit tester requested to the render backend thread but not necessarily ready yet.
+///
+/// The request should be resolved as late as possible to reduce the likelihood of blocking.
+pub struct HitTesterRequest {
+    rx: MsgReceiver<Arc<dyn ApiHitTester>>,
+}
+
+impl HitTesterRequest {
+    /// Block until the hit tester is available and return it, consuming teh request.
+    pub fn resolve(self) -> Arc<dyn ApiHitTester> {
+        self.rx.recv().unwrap()
     }
 }
 

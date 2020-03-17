@@ -2771,9 +2771,8 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
   SideBits sideBits = SideBits::eNone;
   APZCTM_LOG("Hit-testing point %s with WR\n",
              Stringify(aHitTestPoint).c_str());
-  bool hitSomething = wr->FastHitTest(
-    wr::ToWorldPoint(aHitTestPoint), pipelineId,
-    scrollId, hitInfo, sideBits);
+  bool hitSomething = wr->HitTest(wr::ToWorldPoint(aHitTestPoint), pipelineId,
+                                  scrollId, hitInfo, sideBits);
   if (!hitSomething) {
     return hit;
   }
