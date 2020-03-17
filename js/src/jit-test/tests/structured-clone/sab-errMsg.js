@@ -1,5 +1,4 @@
-// |jit-test| skip-if: !this.sharedMemoryEnabled
-// Need this testing function to continue.
+// |jit-test| skip-if: !sharedMemoryEnabled()
 
 // Check the error mssage when the prefs for COOP/COEP are both enable or not.
 var g = newGlobal();
