@@ -769,8 +769,7 @@ nsresult nsHttpHandler::GetStreamConverterService(
     mStreamConvSvc = new nsMainThreadPtrHolder<nsIStreamConverterService>(
         "nsHttpHandler::mStreamConvSvc", service);
   }
-  *result = mStreamConvSvc;
-  NS_ADDREF(*result);
+  *result = do_AddRef(mStreamConvSvc.get()).take();
   return NS_OK;
 }
 
@@ -797,7 +796,7 @@ nsICookieService* nsHttpHandler::GetCookieService() {
 nsresult nsHttpHandler::GetIOService(nsIIOService** result) {
   NS_ENSURE_ARG_POINTER(result);
 
-  NS_ADDREF(*result = mIOService);
+  *result = do_AddRef(mIOService.get()).take();
   return NS_OK;
 }
 

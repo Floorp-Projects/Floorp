@@ -16,11 +16,11 @@ namespace net {
     }                                                \
   }
 
-#define ASSIGN_AND_ADDREF_THIS(ptrToMutator) \
-  do {                                       \
-    if (ptrToMutator) {                      \
-      NS_ADDREF(*ptrToMutator = this);       \
-    }                                        \
+#define ASSIGN_AND_ADDREF_THIS(ptrToMutator)    \
+  do {                                          \
+    if (ptrToMutator) {                         \
+      *(ptrToMutator) = do_AddRef(this).take(); \
+    }                                           \
   } while (0)
 
 static NS_DEFINE_CID(kDefaultURICID, NS_DEFAULTURI_CID);
@@ -30,9 +30,9 @@ NS_IMPL_RELEASE(DefaultURI)
 NS_INTERFACE_TABLE_HEAD(DefaultURI)
   NS_INTERFACE_TABLE(DefaultURI, nsIURI, nsISerializable, nsIClassInfo)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  if (aIID.Equals(kDefaultURICID))
+  if (aIID.Equals(kDefaultURICID)) {
     foundInterface = static_cast<nsIURI*>(this);
-  else
+  } else
     NS_INTERFACE_MAP_ENTRY(nsISizeOf)
 NS_INTERFACE_MAP_END
 

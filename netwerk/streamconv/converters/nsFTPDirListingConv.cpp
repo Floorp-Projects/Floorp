@@ -335,9 +335,7 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** aFTPDirListingConv) {
   MOZ_ASSERT(aFTPDirListingConv != nullptr, "null ptr");
   if (!aFTPDirListingConv) return NS_ERROR_NULL_POINTER;
 
-  *aFTPDirListingConv = new nsFTPDirListingConv();
-  if (!*aFTPDirListingConv) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aFTPDirListingConv);
+  RefPtr<nsFTPDirListingConv> conv = new nsFTPDirListingConv();
+  conv.forget(aFTPDirListingConv);
   return NS_OK;
 }

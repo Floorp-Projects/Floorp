@@ -180,7 +180,7 @@ nsresult HttpTransactionParent::AsyncRead(nsIStreamListener* listener,
                                           nsIRequest** pump) {
   MOZ_ASSERT(pump);
 
-  NS_ADDREF(*pump = this);
+  *pump = do_AddRef(this).take();
   mChannel = listener;
   return NS_OK;
 }

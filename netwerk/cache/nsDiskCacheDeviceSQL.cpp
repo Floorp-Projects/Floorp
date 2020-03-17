@@ -682,11 +682,7 @@ nsApplicationCache::GetClientID(nsACString& out) {
 
 NS_IMETHODIMP
 nsApplicationCache::GetProfileDirectory(nsIFile** out) {
-  if (mDevice->BaseDirectory())
-    NS_ADDREF(*out = mDevice->BaseDirectory());
-  else
-    *out = nullptr;
-
+  *out = do_AddRef(mDevice->BaseDirectory()).take();
   return NS_OK;
 }
 

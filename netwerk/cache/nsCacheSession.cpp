@@ -52,11 +52,7 @@ NS_IMETHODIMP nsCacheSession::SetProfileDirectory(nsIFile* profileDir) {
 }
 
 NS_IMETHODIMP nsCacheSession::GetProfileDirectory(nsIFile** profileDir) {
-  if (mProfileDir)
-    NS_ADDREF(*profileDir = mProfileDir);
-  else
-    *profileDir = nullptr;
-
+  *profileDir = do_AddRef(mProfileDir).take();
   return NS_OK;
 }
 
