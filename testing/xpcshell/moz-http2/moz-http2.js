@@ -580,30 +580,6 @@ function handleRequest(req, res) {
       responseIP = "5.5.5.5";
     }
 
-    let redirect = u.query.redirect;
-    if (redirect) {
-      responseIP = redirect;
-      if (u.query.dns) {
-        res.setHeader(
-          "Location",
-          "https://localhost:" +
-            serverPort +
-            "/doh?responseIP=" +
-            responseIP +
-            "&dns=" +
-            u.query.dns
-        );
-      } else {
-        res.setHeader(
-          "Location",
-          "https://localhost:" + serverPort + "/doh?responseIP=" + responseIP
-        );
-      }
-      res.writeHead(307);
-      res.end("");
-      return;
-    }
-
     if (u.query.auth) {
       // There's a Set-Cookie: header in the response for "/dns" , which this
       // request subsequently would include if the http channel wasn't
@@ -782,10 +758,7 @@ function handleRequest(req, res) {
       payload = Buffer.concat([payload, chunk]);
     });
     req.on("end", function finishedData() {
-      // parload is empty when we send redirect response.
-      if (payload.length) {
-        emitResponse(res, payload);
-      }
+      emitResponse(res, payload);
     });
     return;
   } else if (u.pathname === "/dns-cname-a") {
