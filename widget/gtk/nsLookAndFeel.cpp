@@ -433,6 +433,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mMozScrollbar;
       break;
 
+    case ColorID::Threedlightshadow:
+      // 3-D highlighted inner edge color
+      // always same as background in GTK code
     case ColorID::Threedface:
     case ColorID::Buttonface:
       // 3-D face color
@@ -458,11 +461,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mFrameInnerDarkBorder;
       break;
 
-    case ColorID::Threedlightshadow:
-      aColor = NS_RGB(0xE0, 0xE0, 0xE0);
-      break;
     case ColorID::Threeddarkshadow:
-      aColor = NS_RGB(0xDC, 0xDC, 0xDC);
+      // Hardcode to black
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
 
     case ColorID::MozEventreerow:
