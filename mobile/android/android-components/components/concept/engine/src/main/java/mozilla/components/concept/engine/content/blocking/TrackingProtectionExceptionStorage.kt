@@ -47,8 +47,10 @@ interface TrackingProtectionExceptionStorage {
 
     /**
      * Removes all domains from the exception list.
+     * @param activeSessions A list of all active sessions (including CustomTab
+     * sessions) to be notified.
      */
-    fun removeAll()
+    fun removeAll(activeSessions: List<EngineSession?>? = null)
 
     /**
      * Restore all domains stored in the storage.

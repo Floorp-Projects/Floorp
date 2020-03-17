@@ -133,7 +133,7 @@ class TrackingProtectionUseCasesTest {
     @Test
     fun `removeAll exceptions`() {
         useCases.removeAllExceptions()
-        verify(mockStore).removeAll()
+        verify(mockStore).removeAll(any())
     }
 
     @Test
