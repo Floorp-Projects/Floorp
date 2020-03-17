@@ -14,6 +14,15 @@ async function testSteps() {
   const originDirPath = "storage/default/https+++foo.example.com";
   const metadataFileName = ".metadata-v2";
 
+  info("Initializing");
+
+  let request = init();
+  await requestFinished(request);
+
+  info("Verifying initialization status");
+
+  await verifyInitializationStatus(true, false);
+
   info("Creating an empty directory");
 
   let originDir = getRelativeFile(originDirPath);
@@ -21,7 +30,7 @@ async function testSteps() {
 
   info("Initializing the temporary storage");
 
-  let request = initTemporaryStorage();
+  request = initTemporaryStorage();
   await requestFinished(request);
 
   info(
