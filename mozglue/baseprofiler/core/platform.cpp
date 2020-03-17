@@ -1811,7 +1811,7 @@ static char FeatureCategory(uint32_t aFeature) {
 }
 
 static void PrintUsageThenExit(int aExitCode) {
-  printf(
+  PrintToConsole(
       "\n"
       "Profiler environment variable usage:\n"
       "\n"
@@ -1869,16 +1869,16 @@ static void PrintUsageThenExit(int aExitCode) {
       unsigned(BASE_PROFILER_DEFAULT_ENTRIES.Value() * 8),
       unsigned(BASE_PROFILER_DEFAULT_STARTUP_ENTRIES.Value() * 8));
 
-#  define PRINT_FEATURE(n_, str_, Name_, desc_)                             \
-    printf("    %c %5u: \"%s\" (%s)\n",                                     \
-           FeatureCategory(ProfilerFeature::Name_), ProfilerFeature::Name_, \
-           str_, desc_);
+#  define PRINT_FEATURE(n_, str_, Name_, desc_)             \
+    PrintToConsole("    %c %5u: \"%s\" (%s)\n",             \
+                   FeatureCategory(ProfilerFeature::Name_), \
+                   ProfilerFeature::Name_, str_, desc_);
 
   BASE_PROFILER_FOR_EACH_FEATURE(PRINT_FEATURE)
 
 #  undef PRINT_FEATURE
 
-  printf(
+  PrintToConsole(
       "    -        \"default\" (All above D+S defaults)\n"
       "\n"
       "  MOZ_BASE_PROFILER_STARTUP_FILTERS=<Filters>\n"
@@ -2264,7 +2264,7 @@ static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
 
 #  undef PARSE_FEATURE_BIT
 
-  printf("\nUnrecognized feature \"%s\".\n\n", aFeature);
+  PrintToConsole("\nUnrecognized feature \"%s\".\n\n", aFeature);
   PrintUsageThenExit(1);
   return 0;
 }
@@ -2424,7 +2424,8 @@ void profiler_init(void* aStackTop) {
         LOG("- MOZ_BASE_PROFILER_STARTUP_ENTRIES = %u",
             unsigned(capacity.Value()));
       } else {
-        LOG("- MOZ_BASE_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
             startupCapacity);
         PrintUsageThenExit(1);
       }
@@ -2442,7 +2443,8 @@ void profiler_init(void* aStackTop) {
         }
         LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION = %f", *durationVal);
       } else {
-        LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
             startupDuration);
         PrintUsageThenExit(1);
       }
@@ -2458,7 +2460,8 @@ void profiler_init(void* aStackTop) {
         interval = *intervalValue;
         LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL = %f", interval);
       } else {
-        LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
             startupInterval);
         PrintUsageThenExit(1);
       }
@@ -2474,9 +2477,9 @@ void profiler_init(void* aStackTop) {
       if (errno == 0 && features != 0) {
         LOG("- MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
       } else {
-        LOG("- MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD not a valid "
-            "integer: "
-            "%s",
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD not a valid "
+            "integer: %s",
             startupFeaturesBitfield);
         PrintUsageThenExit(1);
       }
