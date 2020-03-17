@@ -2011,7 +2011,11 @@ pref("network.stricttransportsecurity.preloadlist", true);
 pref("network.mdns.use_js_fallback", false);
 
 // Cache SSL resumption tokens in necko
-pref("network.ssl_tokens_cache_enabled", false);
+#ifdef NIGHTLY_BUILD
+  pref("network.ssl_tokens_cache_enabled", true);
+#else
+  pref("network.ssl_tokens_cache_enabled", false);
+#endif
 // Capacity of the cache in kilobytes
 pref("network.ssl_tokens_cache_capacity", 2048);
 
