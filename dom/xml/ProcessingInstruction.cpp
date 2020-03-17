@@ -25,8 +25,8 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager* aNodeInfoManager,
   MOZ_ASSERT(target);
 
   if (target == nsGkAtoms::xml_stylesheet) {
-    RefPtr<XMLStylesheetProcessingInstruction> pi =
-        new XMLStylesheetProcessingInstruction(aNodeInfoManager, aData);
+    RefPtr<XMLStylesheetProcessingInstruction> pi = new (aNodeInfoManager)
+        XMLStylesheetProcessingInstruction(aNodeInfoManager, aData);
     return pi.forget();
   }
 
@@ -36,7 +36,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager* aNodeInfoManager,
       nsINode::PROCESSING_INSTRUCTION_NODE, target);
 
   RefPtr<ProcessingInstruction> instance =
-      new ProcessingInstruction(ni.forget(), aData);
+      new (aNodeInfoManager) ProcessingInstruction(ni.forget(), aData);
 
   return instance.forget();
 }
@@ -78,7 +78,8 @@ already_AddRefed<CharacterData> ProcessingInstruction::CloneDataNode(
   nsAutoString data;
   GetData(data);
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  return do_AddRef(new ProcessingInstruction(ni.forget(), data));
+  auto* nim = ni->NodeInfoManager();
+  return do_AddRef(new (nim) ProcessingInstruction(ni.forget(), data));
 }
 
 Maybe<nsStyleLinkElement::SheetInfo>
