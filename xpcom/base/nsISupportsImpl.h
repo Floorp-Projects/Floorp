@@ -936,6 +936,31 @@ class ThreadSafeAutoRefCnt {
   }                                                                                        \
   NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void) { delete this; }
 
+// _LAST_RELEASE can be useful when certain resources should be released
+// as soon as we know the object will be deleted.
+#define NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE_AND_DESTROY( \
+    _class, _last, _destroy)                                                             \
+  NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void) {                        \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                                     \
+    NS_ASSERT_OWNINGTHREAD(_class);                                                      \
+    bool shouldDelete = false;                                                           \
+    nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);             \
+    nsrefcnt count = mRefCnt.decr<NS_CycleCollectorSuspectUsingNursery>(                 \
+        base, &shouldDelete);                                                            \
+    NS_LOG_RELEASE(this, count, #_class);                                                \
+    if (count == 0) {                                                                    \
+      mRefCnt.incr<NS_CycleCollectorSuspectUsingNursery>(base);                          \
+      _last;                                                                             \
+      mRefCnt.decr<NS_CycleCollectorSuspectUsingNursery>(base);                          \
+      if (shouldDelete) {                                                                \
+        mRefCnt.stabilizeForDeletion();                                                  \
+        DeleteCycleCollectable();                                                        \
+      }                                                                                  \
+    }                                                                                    \
+    return count;                                                                        \
+  }                                                                                      \
+  NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void) { _destroy; }
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
