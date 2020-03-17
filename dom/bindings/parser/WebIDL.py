@@ -3480,7 +3480,7 @@ class IDLBuiltinType(IDLType):
                                       [self.location, attribute.location])
                 assert not self.nullable()
                 if not attribute.hasValue():
-                    raise WebIDLError("[TreatNullAs] must take an identifier argument"
+                    raise WebIDLError("[TreatNullAs] must take an identifier argument",
                                       [attribute.location])
                 value = attribute.value()
                 if value != 'EmptyString':
@@ -5469,7 +5469,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                                   [attr.location])
             if identifier == "CrossOriginCallable" and self.isStatic():
                 raise WebIDLError("[CrossOriginCallable] is only allowed on non-static "
-                                  "attributes"
+                                  "attributes",
                                   [attr.location, self.location])
         elif identifier == "Pure":
             if not attr.noArguments():
