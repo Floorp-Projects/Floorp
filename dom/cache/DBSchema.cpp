@@ -334,7 +334,9 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
                   nsIContentPolicy::TYPE_INTERNAL_MODULE == 45 &&
                   nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD == 46 &&
                   nsIContentPolicy::TYPE_INTERNAL_DTD == 47 &&
-                  nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD == 48,
+                  nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD == 48 &&
+                  nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET == 49 &&
+                  nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET == 50,
               "nsContentPolicyType values are as expected");
 
 namespace {
