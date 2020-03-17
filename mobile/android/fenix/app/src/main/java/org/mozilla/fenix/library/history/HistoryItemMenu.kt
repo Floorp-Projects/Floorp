@@ -16,13 +16,29 @@ class HistoryItemMenu(
     private val onItemTapped: (Item) -> Unit = {}
 ) : LibraryItemMenu {
     sealed class Item {
+        object Copy : Item()
+        object Share : Item()
+        object OpenInNewTab : Item()
+        object OpenInPrivateTab : Item()
         object Delete : Item()
     }
 
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {
-        listOf(
+        listOfNotNull(
+            SimpleBrowserMenuItem(context.getString(R.string.history_menu_copy_button)) {
+                onItemTapped.invoke(Item.Copy)
+            },
+            SimpleBrowserMenuItem(context.getString(R.string.history_menu_share_button)) {
+                onItemTapped.invoke(Item.Share)
+            },
+            SimpleBrowserMenuItem(context.getString(R.string.history_menu_open_in_new_tab_button)) {
+                onItemTapped.invoke(Item.OpenInNewTab)
+            },
+            SimpleBrowserMenuItem(context.getString(R.string.history_menu_open_in_private_tab_button)) {
+                onItemTapped.invoke(Item.OpenInPrivateTab)
+            },
             SimpleBrowserMenuItem(
                 context.getString(R.string.history_delete_item),
                 textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)

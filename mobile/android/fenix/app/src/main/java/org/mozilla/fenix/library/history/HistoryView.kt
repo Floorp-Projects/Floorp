@@ -34,6 +34,34 @@ interface HistoryViewInteractor : SelectionInteractor<HistoryItem> {
     fun onModeSwitched()
 
     /**
+     * Copies the URL of a history item to the copy-paste buffer.
+     *
+     * @param item the history item to copy the URL from
+     */
+    fun onCopyPressed(item: HistoryItem)
+
+    /**
+     * Opens the share sheet for a history item.
+     *
+     * @param item the history item to share
+     */
+    fun onSharePressed(item: HistoryItem)
+
+    /**
+     * Opens a history item in a new tab.
+     *
+     * @param item the history item to open in a new tab
+     */
+    fun onOpenInNormalTab(item: HistoryItem)
+
+    /**
+     * Opens a history item in a private tab.
+     *
+     * @param item the history item to open in a private tab
+     */
+    fun onOpenInPrivateTab(item: HistoryItem)
+
+    /**
      * Called when delete all is tapped
      */
     fun onDeleteAll()

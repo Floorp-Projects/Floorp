@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.library.history
 
+import android.content.ClipboardManager
+import android.content.Context.CLIPBOARD_SERVICE
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,6 +17,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,6 +30,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.history.createSynchronousPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.Event
@@ -58,6 +62,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
         }
         val historyController: HistoryController = DefaultHistoryController(
             historyStore,
+            findNavController(),
+            resources,
+            FenixSnackbar.make(view, FenixSnackbar.LENGTH_LONG),
+            activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager,
             ::openItem,
             ::displayDeleteAllDialog,
             ::invalidateOptionsMenu,
@@ -183,8 +191,11 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
     override fun onBackPressed(): Boolean = historyView.onBackPressed()
 
-    private fun openItem(item: HistoryItem) {
+    private fun openItem(item: HistoryItem, mode: BrowsingMode? = null) {
         requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
+
+        mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
+
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,
             newTab = true,

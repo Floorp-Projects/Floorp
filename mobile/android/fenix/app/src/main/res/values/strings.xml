@@ -454,6 +454,14 @@
     <string name="history_delete_all_dialog">Are you sure you want to clear your history?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Clear</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Copy</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Share</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Open in new tab</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Delete</string>
     <!-- History multi select title in app bar

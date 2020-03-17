@@ -6,25 +6,40 @@
 
 package org.mozilla.fenix.library.history
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.res.Resources
+import androidx.navigation.NavController
+import mozilla.components.concept.engine.prompt.ShareData
+import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.FenixSnackbar
+
 interface HistoryController {
-    fun handleOpen(item: HistoryItem)
+    fun handleOpen(item: HistoryItem, mode: BrowsingMode? = null)
     fun handleSelect(item: HistoryItem)
     fun handleDeselect(item: HistoryItem)
     fun handleBackPressed(): Boolean
     fun handleModeSwitched()
     fun handleDeleteAll()
     fun handleDeleteSome(items: Set<HistoryItem>)
+    fun handleCopyUrl(item: HistoryItem)
+    fun handleShare(item: HistoryItem)
 }
 
 class DefaultHistoryController(
     private val store: HistoryFragmentStore,
-    private val openToBrowser: (item: HistoryItem) -> Unit,
+    private val navController: NavController,
+    private val resources: Resources,
+    private val snackbar: FenixSnackbar,
+    private val clipboardManager: ClipboardManager,
+    private val openToBrowser: (item: HistoryItem, mode: BrowsingMode?) -> Unit,
     private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit
 ) : HistoryController {
-    override fun handleOpen(item: HistoryItem) {
-        openToBrowser(item)
+    override fun handleOpen(item: HistoryItem, mode: BrowsingMode?) {
+        openToBrowser(item, mode)
     }
 
     override fun handleSelect(item: HistoryItem) {
@@ -54,5 +69,22 @@ class DefaultHistoryController(
 
     override fun handleDeleteSome(items: Set<HistoryItem>) {
         deleteHistoryItems.invoke(items)
+    }
+
+    override fun handleCopyUrl(item: HistoryItem) {
+        val urlClipData = ClipData.newPlainText(item.url, item.url)
+        clipboardManager.primaryClip = urlClipData
+        with(snackbar) {
+            setText(resources.getString(R.string.url_copied))
+            show()
+        }
+    }
+
+    override fun handleShare(item: HistoryItem) {
+        navController.navigate(
+            HistoryFragmentDirections.actionHistoryFragmentToShareFragment(
+                data = arrayOf(ShareData(url = item.url, title = item.title))
+            )
+        )
     }
 }
