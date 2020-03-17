@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use nserror::{nsresult, NS_OK};
+use nserror::{nsresult, NS_ERROR_CANNOT_CONVERT_DATA, NS_OK};
 use nsstring::nsString;
-use xpcom::{getter_addrefs, interfaces::nsIWritablePropertyBag, RefPtr};
+use xpcom::{
+    getter_addrefs,
+    interfaces::{nsIProperty, nsIPropertyBag, nsIWritablePropertyBag},
+    RefPtr, XpCom,
+};
 
-use crate::VariantType;
+use crate::{NsIVariantExt, VariantType};
 
 extern "C" {
     fn NS_NewHashPropertyBag(bag: *mut *const nsIWritablePropertyBag) -> libc::c_void;
@@ -14,6 +18,13 @@ extern "C" {
 
 /// A hash property bag backed by storage variant values.
 pub struct HashPropertyBag(RefPtr<nsIWritablePropertyBag>);
+
+// This is safe as long as our `nsIWritablePropertyBag` is an instance of
+// `mozilla::nsHashPropertyBag`, which is atomically reference counted, and
+// all properties are backed by `Storage*Variant`s, all of which are
+// thread-safe.
+unsafe impl Send for HashPropertyBag {}
+unsafe impl Sync for HashPropertyBag {}
 
 impl Default for HashPropertyBag {
     fn default() -> HashPropertyBag {
@@ -30,8 +41,37 @@ impl Default for HashPropertyBag {
 impl HashPropertyBag {
     /// Creates an empty property bag.
     #[inline]
-    pub fn new() -> HashPropertyBag {
-        HashPropertyBag::default()
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Creates a property bag from an instance of `nsIPropertyBag`, cloning its
+    /// contents. The `source` bag can only contain primitive values for which
+    /// the `VariantType` trait is implemented. Attempting to clone a bag with
+    /// unsupported types, such as arrays, interface pointers, and `jsval`s,
+    /// fails with `NS_ERROR_CANNOT_CONVERT_DATA`.
+    ///
+    /// `clone_from_bag` can be used to clone a thread-unsafe `nsIPropertyBag`,
+    /// like one passed from JavaScript via XPConnect, into one that can be
+    /// shared across threads.
+    pub fn clone_from_bag(source: &nsIPropertyBag) -> Result<Self, nsresult> {
+        let enumerator = getter_addrefs(|p| unsafe { source.GetEnumerator(p) })?;
+        let b = HashPropertyBag::new();
+        while {
+            let mut has_more = false;
+            unsafe { enumerator.HasMoreElements(&mut has_more) }.to_result()?;
+            has_more
+        } {
+            let element = getter_addrefs(|p| unsafe { enumerator.GetNext(p) })?;
+            let property = element
+                .query_interface::<nsIProperty>()
+                .ok_or(NS_ERROR_CANNOT_CONVERT_DATA)?;
+            let mut name = nsString::new();
+            unsafe { property.GetName(&mut *name) }.to_result()?;
+            let value = getter_addrefs(|p| unsafe { property.GetValue(p) })?;
+            unsafe { b.0.SetProperty(&*name, value.try_clone()?.coerce()) }.to_result()?;
+        }
+        Ok(b)
     }
 
     /// Returns the value for a property name. Fails with `NS_ERROR_FAILURE`
