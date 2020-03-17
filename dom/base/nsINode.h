@@ -310,6 +310,10 @@ class nsINode : public mozilla::dom::EventTarget {
   static const auto NOTATION_NODE = mozilla::dom::Node_Binding::NOTATION_NODE;
   static const auto MAX_NODE_TYPE = NOTATION_NODE;
 
+  void* operator new(size_t aSize, nsNodeInfoManager* aManager);
+  void* operator new(size_t aSize) = delete;
+  void operator delete(void* aPtr);
+
   template <class T>
   using Sequence = mozilla::dom::Sequence<T>;
 
