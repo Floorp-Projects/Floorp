@@ -3340,6 +3340,13 @@ void nsINode::Adopt(nsNodeInfoManager* aNewNodeInfoManager,
         return aError.ThrowSecurityError(
             "Adopting nodes across docgroups in chrome documents "
             "is unsupported");
+      } else {
+        if (StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {
+          if (DOMArena* arena =
+                  NodeInfo()->NodeInfoManager()->GetArenaAllocator()) {
+            nsContentUtils::AddEntryToDOMArenaTable(this, arena);
+          }
+        }
       }
     }
   }

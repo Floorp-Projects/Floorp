@@ -466,6 +466,11 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable* sEventListenerManagersHash;
 
+// A global hashtable to for keeping the arena alive for cross docGroup node
+// adoption.
+static nsRefPtrHashtable<nsPtrHashKey<const nsINode>, mozilla::dom::DOMArena>*
+    sDOMArenaHashtable;
+
 class DOMEventListenerManagersHashReporter final : public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
@@ -1818,6 +1823,13 @@ void nsContentUtils::Shutdown() {
       delete sEventListenerManagersHash;
       sEventListenerManagersHash = nullptr;
     }
+  }
+
+  if (sDOMArenaHashtable) {
+    MOZ_ASSERT(sDOMArenaHashtable->Count() == 0);
+    MOZ_ASSERT(StaticPrefs::dom_arena_allocator_enabled_AtStartup());
+    delete sDOMArenaHashtable;
+    sDOMArenaHashtable = nullptr;
   }
 
   NS_ASSERTION(!sBlockedScriptRunners || sBlockedScriptRunners->Length() == 0,
@@ -4610,6 +4622,26 @@ EventListenerManager* nsContentUtils::GetExistingListenerManagerForNode(
   }
 
   return nullptr;
+}
+
+void nsContentUtils::AddEntryToDOMArenaTable(nsINode* aNode,
+                                             DOMArena* aDOMArena) {
+  MOZ_ASSERT(StaticPrefs::dom_arena_allocator_enabled_AtStartup());
+  if (!sDOMArenaHashtable) {
+    sDOMArenaHashtable =
+        new nsRefPtrHashtable<nsPtrHashKey<const nsINode>, dom::DOMArena>();
+  }
+  aNode->SetFlags(NODE_KEEPS_DOMARENA);
+  sDOMArenaHashtable->Put(aNode, RefPtr<DOMArena>(aDOMArena));
+}
+
+already_AddRefed<DOMArena> nsContentUtils::TakeEntryFromDOMArenaTable(
+    const nsINode* aNode) {
+  MOZ_ASSERT(sDOMArenaHashtable->Contains(aNode));
+  MOZ_ASSERT(StaticPrefs::dom_arena_allocator_enabled_AtStartup());
+  RefPtr<DOMArena> arena;
+  sDOMArenaHashtable->Remove(aNode, getter_AddRefs(arena));
+  return arena.forget();
 }
 
 /* static */
