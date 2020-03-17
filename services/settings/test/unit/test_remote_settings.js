@@ -693,8 +693,8 @@ add_task(async function test_telemetry_reports_if_fetching_signature_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_unknown_errors() {
-  const backup = client.openCollection;
-  client.openCollection = () => {
+  const backup = client.db.list;
+  client.db.list = () => {
     throw new Error("Internal");
   };
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
@@ -703,7 +703,7 @@ add_task(async function test_telemetry_reports_unknown_errors() {
     await client.maybeSync(2000);
   } catch (e) {}
 
-  client.openCollection = backup;
+  client.db.list = backup;
   const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
   const expectedIncrements = { [UptakeTelemetry.STATUS.UNKNOWN_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
@@ -711,10 +711,10 @@ add_task(async function test_telemetry_reports_unknown_errors() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
-  const backup = client.openCollection;
+  const backup = client.db.getLastModified;
   const msg =
     "IndexedDB getLastModified() The operation failed for reasons unrelated to the database itself";
-  client.openCollection = () => {
+  client.db.getLastModified = () => {
     throw new Error(msg);
   };
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
@@ -723,7 +723,7 @@ add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
     await client.maybeSync(2000);
   } catch (e) {}
 
-  client.openCollection = backup;
+  client.db.getLastModified = backup;
   const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
   const expectedIncrements = { [UptakeTelemetry.STATUS.CUSTOM_1_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
@@ -731,8 +731,8 @@ add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
-  const backup = client.openCollection;
-  client.openCollection = () => {
+  const backup = client.db.list;
+  client.db.list = () => {
     const e = new Error("Some unknown error");
     e.name = "ThrownError";
     throw e;
@@ -759,7 +759,7 @@ add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
     ]);
   });
 
-  client.openCollection = backup;
+  client.db.list = backup;
 });
 add_task(clear_state);
 
