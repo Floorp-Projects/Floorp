@@ -166,6 +166,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   }
   context->mFields.SetWithoutSyncing<IDX_EmbedderPolicy>(
       nsILoadInfo::EMBEDDER_POLICY_NULL);
+  context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
+      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
 
   BrowsingContext* inherit = aParent ? aParent : aOpener;
   if (inherit) {

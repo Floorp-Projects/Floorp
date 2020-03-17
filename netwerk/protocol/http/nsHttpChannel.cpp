@@ -7424,14 +7424,12 @@ static bool CompareCrossOriginOpenerPolicies(
     return true;
   }
 
-  if (documentPolicy != resultPolicy) {
+  if (documentPolicy == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE ||
+      resultPolicy == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE) {
     return false;
   }
-  // For the next checks the document and result will have matching policies.
 
-  // We either check if they are same origin or same site.
-  if ((documentPolicy & nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) &&
-      documentOrigin->Equals(resultOrigin)) {
+  if (documentPolicy == resultPolicy && documentOrigin->Equals(resultOrigin)) {
     return true;
   }
 
