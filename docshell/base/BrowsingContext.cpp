@@ -125,25 +125,24 @@ CanonicalBrowsingContext* BrowsingContext::Canonical() {
   return CanonicalBrowsingContext::Cast(this);
 }
 
-static bool OpenerAndOpenerTopAreSameOrigin(BrowsingContext* aOpener) {
-  // The initial about:blank document inherits its principal from our opener.
-  // If the toplevel Browsing Context of our opener is not same-process to us,
-  // it is cross-origin, so we don't want to inherit its CrossOriginOpenerPolicy
-  if (!aOpener->Top()->IsInProcess()) {
+bool BrowsingContext::SameOriginWithTop() {
+  MOZ_ASSERT(IsInProcess());
+  // If the top BrowsingContext is not same-process to us, it is cross-origin
+  if (!Top()->IsInProcess()) {
     return false;
   }
 
-  nsIDocShell* openerDocShell = aOpener->GetDocShell();
-  if (!openerDocShell) {
+  nsIDocShell* docShell = GetDocShell();
+  if (!docShell) {
     return false;
   }
-  Document* openerDoc = openerDocShell->GetDocument();
-  if (!openerDoc) {
+  Document* doc = docShell->GetDocument();
+  if (!doc) {
     return false;
   }
-  nsIPrincipal* openerPrincipal = openerDoc->NodePrincipal();
+  nsIPrincipal* principal = doc->NodePrincipal();
 
-  nsIDocShell* topDocShell = aOpener->Top()->GetDocShell();
+  nsIDocShell* topDocShell = Top()->GetDocShell();
   if (!topDocShell) {
     return false;
   }
@@ -151,9 +150,9 @@ static bool OpenerAndOpenerTopAreSameOrigin(BrowsingContext* aOpener) {
   if (!topDoc) {
     return false;
   }
-  nsIPrincipal* openerTopPrincipal = topDoc->NodePrincipal();
+  nsIPrincipal* topPrincipal = topDoc->NodePrincipal();
 
-  return openerPrincipal->Equals(openerTopPrincipal);
+  return principal->Equals(topPrincipal);
 }
 
 /* static */
@@ -200,9 +199,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
 
-  if (aOpener && OpenerAndOpenerTopAreSameOrigin(aOpener)) {
+  if (aOpener && aOpener->SameOriginWithTop()) {
     // We inherit the opener policy if there is a creator and if the creator's
     // origin is same origin with the creator's top-level origin.
+    // If it is cross origin we should not inherit the CrossOriginOpenerPolicy
     context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
         aOpener->Top()->GetOpenerPolicy());
   } else if (aOpener) {
