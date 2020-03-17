@@ -28,11 +28,19 @@ function mock(options) {
   return ret;
 }
 
+function setSkipChance(v) {
+  Services.prefs.setIntPref(
+    "services.sync.extension-storage.skipPercentageChance",
+    v
+  );
+}
+
 add_task(async function setup() {
   await Service.engineManager.register(ExtensionStorageEngine);
   engine = Service.engineManager.get("extension-storage");
   do_get_profile(); // so we can use FxAccounts
   loadWebExtensionTestFunctions();
+  setSkipChance(0);
 });
 
 add_task(async function test_calling_sync_calls__sync() {
@@ -49,6 +57,39 @@ add_task(async function test_calling_sync_calls__sync() {
     ExtensionStorageEngine.prototype._sync = oldSync;
   }
   equal(syncMock.calls.length, 1);
+});
+
+add_task(async function test_sync_skip() {
+  try {
+    // Do a few times to ensure we aren't getting "lucky" WRT Math.random()
+    for (let i = 0; i < 10; ++i) {
+      setSkipChance(100);
+      engine._tracker._score = 0;
+      ok(
+        !engine.shouldSkipSync("user"),
+        "Should allow explicitly requested syncs"
+      );
+      ok(!engine.shouldSkipSync("startup"), "Should allow startup syncs");
+      ok(
+        engine.shouldSkipSync("schedule"),
+        "Should skip scheduled syncs if skipProbability is 100"
+      );
+      engine._tracker._score = MULTI_DEVICE_THRESHOLD;
+      ok(
+        !engine.shouldSkipSync("schedule"),
+        "should allow scheduled syncs if tracker score is high"
+      );
+      engine._tracker._score = 0;
+      setSkipChance(0);
+      ok(
+        !engine.shouldSkipSync("schedule"),
+        "Should allow scheduled syncs if probability is 0"
+      );
+    }
+  } finally {
+    engine._tracker._score = 0;
+    setSkipChance(0);
+  }
 });
 
 add_task(async function test_calling_wipeClient_calls_clearAll() {

@@ -977,6 +977,17 @@ SyncEngine.prototype = {
     return this.ensureCurrentSyncID(Utils.makeGUID());
   },
 
+  /**
+   * Allows overriding scheduler logic -- added to help reduce kinto server
+   * getting hammered because our scheduler never got tuned for it.
+   *
+   * Note: Overriding engines must take resyncs into account -- score will not
+   * be cleared.
+   */
+  shouldSkipSync(syncReason) {
+    return false;
+  },
+
   /*
    * lastSync is a timestamp in server time.
    */

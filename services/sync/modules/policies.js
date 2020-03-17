@@ -361,14 +361,19 @@ SyncScheduler.prototype = {
         }
 
         let sync_interval;
+        let nextSyncReason = "schedule";
         this.updateGlobalScore();
-        if (this.globalScore > 0 && Status.service == STATUS_OK) {
-          // The global score should be 0 after a sync. If it's not, items were
-          // changed during the last sync, and we should schedule an immediate
-          // follow-up sync.
+        if (
+          this.globalScore > this.syncThreshold &&
+          Status.service == STATUS_OK
+        ) {
+          // The global score should be 0 after a sync. If it's not, either
+          // items were changed during the last sync (and we should schedule an
+          // immediate follow-up sync), or an engine skipped
           this._resyncs++;
           if (this._resyncs <= this.maxResyncs) {
             sync_interval = 0;
+            nextSyncReason = "resync";
           } else {
             this._log.warn(
               `Resync attempt ${this._resyncs} exceeded ` +
@@ -388,7 +393,7 @@ SyncScheduler.prototype = {
           this._log.trace("Scheduling a sync at interval NO_SYNC_NODE_FOUND.");
           sync_interval = NO_SYNC_NODE_INTERVAL;
         }
-        this.scheduleNextSync(sync_interval, { why: "schedule" });
+        this.scheduleNextSync(sync_interval, { why: nextSyncReason });
         break;
       case "weave:engine:sync:finish":
         if (data == "clients") {
