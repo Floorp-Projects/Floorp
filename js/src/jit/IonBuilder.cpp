@@ -8358,10 +8358,7 @@ JSObject* IonBuilder::testGlobalLexicalBinding(PropertyName* name) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_getgname(PropertyName* name) {
-  // Optimize undefined/NaN/Infinity first. We must ensure we handle these
-  // cases *exactly* like Baseline, because it's invalid to add an Ion IC or
-  // VM call (that might trigger invalidation) if there's no Baseline IC for
-  // this op.
+  // Optimize undefined/NaN/Infinity first.
   if (name == names().undefined) {
     pushConstant(UndefinedValue());
     return Ok();
@@ -8474,8 +8471,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_bindname(PropertyName* name) {
     envChain = current->environmentChain();
   }
 
-  MBindNameCache* ins =
-      MBindNameCache::New(alloc(), envChain, name, script(), pc);
+  MBindNameCache* ins = MBindNameCache::New(alloc(), envChain);
   current->add(ins);
   current->push(ins);
 

@@ -18,15 +18,15 @@
 using namespace js;
 using namespace js::jit;
 
-WarpBuilder::WarpBuilder(WarpSnapshot& input, MIRGenerator& mirGen)
-    : input_(input),
+WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen)
+    : snapshot_(snapshot),
       mirGen_(mirGen),
       graph_(mirGen.graph()),
       alloc_(mirGen.alloc()),
       info_(mirGen.outerInfo()),
-      script_(input.script()->script()),
+      script_(snapshot.script()->script()),
       loopStack_(alloc_) {
-  opSnapshotIter_ = input.script()->opSnapshots().getFirst();
+  opSnapshotIter_ = snapshot.script()->opSnapshots().getFirst();
 }
 
 MConstant* WarpBuilder::constant(const Value& v) {
@@ -232,7 +232,7 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
 }
 
 bool WarpBuilder::buildEnvironmentChain() {
-  const WarpEnvironment& env = input_.script()->environment();
+  const WarpEnvironment& env = snapshot_.script()->environment();
 
   MInstruction* envDef = nullptr;
   switch (env.kind()) {
@@ -1453,4 +1453,93 @@ bool WarpBuilder::build_New(BytecodeLocation loc) { return buildCallOp(loc); }
 
 bool WarpBuilder::build_SuperCall(BytecodeLocation loc) {
   return buildCallOp(loc);
+}
+
+bool WarpBuilder::build_FunctionThis(BytecodeLocation loc) {
+  MOZ_ASSERT(info().funMaybeLazy());
+
+  if (script_->strict()) {
+    // No need to wrap primitive |this| in strict mode.
+    current->pushSlot(info().thisSlot());
+    return true;
+  }
+
+  MOZ_ASSERT(!script_->hasNonSyntacticScope(),
+             "WarpOracle should have aborted compilation");
+
+  // TODO: Add fast path to MComputeThis for null/undefined => globalThis.
+  MDefinition* def = current->getSlot(info().thisSlot());
+  MComputeThis* thisObj = MComputeThis::New(alloc(), def);
+  current->add(thisObj);
+  current->push(thisObj);
+
+  return resumeAfter(thisObj, loc);
+}
+
+bool WarpBuilder::build_GlobalThis(BytecodeLocation loc) {
+  MOZ_ASSERT(!script_->hasNonSyntacticScope(),
+             "WarpOracle should have aborted compilation");
+  Value v = snapshot_.globalLexicalEnvThis();
+  pushConstant(v);
+  return true;
+}
+
+MConstant* WarpBuilder::globalLexicalEnvConstant() {
+  JSObject* globalLexical = snapshot_.globalLexicalEnv();
+  return constant(ObjectValue(*globalLexical));
+}
+
+bool WarpBuilder::buildGetNameOp(BytecodeLocation loc, MDefinition* env) {
+  MGetNameCache* ins = MGetNameCache::New(alloc(), env);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_GetName(BytecodeLocation loc) {
+  return buildGetNameOp(loc, current->environmentChain());
+}
+
+bool WarpBuilder::build_GetGName(BytecodeLocation loc) {
+  if (script_->hasNonSyntacticScope()) {
+    return build_GetName(loc);
+  }
+
+  // Try to optimize undefined/NaN/Infinity.
+  PropertyName* name = loc.getPropertyName(script_);
+  const JSAtomState& names = mirGen_.runtime->names();
+
+  if (name == names.undefined) {
+    pushConstant(UndefinedValue());
+    return true;
+  }
+  if (name == names.NaN) {
+    pushConstant(JS::NaNValue());
+    return true;
+  }
+  if (name == names.Infinity) {
+    pushConstant(JS::InfinityValue());
+    return true;
+  }
+
+  return buildGetNameOp(loc, globalLexicalEnvConstant());
+}
+
+bool WarpBuilder::buildBindNameOp(BytecodeLocation loc, MDefinition* env) {
+  MBindNameCache* ins = MBindNameCache::New(alloc(), env);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_BindName(BytecodeLocation loc) {
+  return buildBindNameOp(loc, current->environmentChain());
+}
+
+bool WarpBuilder::build_BindGName(BytecodeLocation loc) {
+  if (script_->hasNonSyntacticScope()) {
+    return build_BindName(loc);
+  }
+
+  return buildBindNameOp(loc, globalLexicalEnvConstant());
 }
