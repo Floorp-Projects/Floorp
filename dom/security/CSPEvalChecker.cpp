@@ -10,6 +10,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
+#include "nsIParentChannel.h"
 #include "nsGlobalWindowInner.h"
 #include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
