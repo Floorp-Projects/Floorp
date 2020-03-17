@@ -15,6 +15,10 @@
   void class ::Destroy(void) {                                       \
     if (StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {      \
       RefPtr<nsNodeInfoManager> nim = OwnerDoc()->NodeInfoManager(); \
+      RefPtr<DOMArena> arena =                                       \
+          HasFlag(NODE_KEEPS_DOMARENA)                               \
+              ? nsContentUtils::TakeEntryFromDOMArenaTable(this)     \
+              : nullptr;                                             \
       this->~class();                                                \
       MOZ_ASSERT(nim, "nsNodeInfoManager needs to be initialized");  \
       nim->Free(this);                                               \
