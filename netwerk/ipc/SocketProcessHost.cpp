@@ -294,17 +294,12 @@ void SocketProcessHost::DestroyProcess() {
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-/* static */
-bool SocketProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
-  GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
+bool SocketProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
+  GeckoChildProcessHost::FillMacSandboxInfo(aInfo);
   if (!aInfo.shouldLog && PR_GetEnv("MOZ_SANDBOX_SOCKET_PROCESS_LOGGING")) {
     aInfo.shouldLog = true;
   }
   return true;
-}
-
-bool SocketProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
-  return SocketProcessHost::StaticFillMacSandboxInfo(aInfo);
 }
 
 /* static */

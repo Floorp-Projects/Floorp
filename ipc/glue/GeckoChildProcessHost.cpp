@@ -1663,8 +1663,7 @@ bool GeckoChildProcessHost::AppendMacSandboxParams(StringVector& aArgs) {
 }
 
 // Fill |aInfo| with the flags needed to launch the utility sandbox
-/* static */
-bool GeckoChildProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
+bool GeckoChildProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
   aInfo.type = GetDefaultMacSandboxType();
   aInfo.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                     PR_GetEnv("MOZ_SANDBOX_LOGGING");
@@ -1675,10 +1674,6 @@ bool GeckoChildProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
   }
   aInfo.appPath.assign(appPath.get());
   return true;
-}
-
-bool GeckoChildProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
-  return GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
 }
 
 void GeckoChildProcessHost::DisableOSActivityMode() {
