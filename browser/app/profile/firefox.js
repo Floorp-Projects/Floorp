@@ -1320,6 +1320,9 @@ pref("trailhead.firstrun.branches", "");
 
 // Separate about welcome
 pref("browser.aboutwelcome.enabled", false);
+// Temporary utility to unblock testing on about:welcome experiment variations
+pref("browser.aboutwelcome.temp.testExperiment.slug", "");
+pref("browser.aboutwelcome.temp.testExperiment.branch", "control");
 // See Console.jsm LOG_LEVELS for all possible values
 pref("browser.aboutwelcome.log", "warn");
 

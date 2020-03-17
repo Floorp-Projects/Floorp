@@ -10,6 +10,11 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExperimentAPI:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeExperimentAPI.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   const { AboutWelcomeLog } = ChromeUtils.import(
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeLog.jsm"
@@ -69,7 +74,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
    */
   AWGetStartupData() {
     // TODO: Fetch this from Experiments
-    const experimentData = {};
+    const experimentData = ExperimentAPI.getValue({ category: "aboutwelcome" });
     return Cu.cloneInto(experimentData, this.contentWindow);
   }
 
