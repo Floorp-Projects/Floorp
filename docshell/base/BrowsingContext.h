@@ -305,6 +305,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   bool HadOriginalOpener() const { return GetHadOriginalOpener(); }
 
+  // Returns true if the browsing context and top context are same origin
+  bool SameOriginWithTop();
+
   /**
    * When a new browsing context is opened by a sandboxed document, it needs to
    * keep track of the browsing context that opened it, so that it can be
