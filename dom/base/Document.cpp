@@ -6743,6 +6743,22 @@ nsIGlobalObject* Document::GetScopeObject() const {
   return scope;
 }
 
+DocGroup* Document::GetDocGroupOrCreate() {
+  if (!mDocGroup) {
+    nsAutoCString docGroupKey;
+    nsresult rv = mozilla::dom::DocGroup::GetKey(NodePrincipal(), docGroupKey);
+    if (NS_SUCCEEDED(rv)) {
+      if (mDocumentContainer) {
+        TabGroup* tabgroup = mDocumentContainer->GetWindow()->MaybeTabGroup();
+        if (tabgroup) {
+          mDocGroup = tabgroup->AddDocument(docGroupKey, this);
+        }
+      }
+    }
+  }
+  return mDocGroup;
+}
+
 void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
   mScopeObject = do_GetWeakReference(aGlobal);
   if (aGlobal) {
@@ -6767,6 +6783,10 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
         mDocGroup = tabgroup->AddDocument(docGroupKey, this);
         MOZ_ASSERT(mDocGroup);
       }
+
+      MOZ_ASSERT_IF(
+          mNodeInfoManager->GetArenaAllocator(),
+          mNodeInfoManager->GetArenaAllocator() == mDocGroup->ArenaAllocator());
     }
   }
 }

@@ -36,6 +36,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
 

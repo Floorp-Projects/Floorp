@@ -3233,6 +3233,19 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
         }
       }
     }
+
+    // At this point, a new node is added to the document, and this
+    // node isn't allocated by the NodeInfoManager of this document,
+    // so we need to do this SetArenaAllocator logic to bypass
+    // the !HasChildren() check in NodeInfoManager::Allocate.
+    if (mozilla::StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {
+      if (!newDoc->NodeInfoManager()->HasAllocated()) {
+        if (DocGroup* docGroup = newDoc->GetDocGroup()) {
+          newDoc->NodeInfoManager()->SetArenaAllocator(
+              docGroup->ArenaAllocator());
+        }
+      }
+    }
   }
 
   if (aDeep && (!aClone || !aNode->IsAttr())) {
