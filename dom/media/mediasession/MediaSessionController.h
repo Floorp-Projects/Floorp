@@ -14,6 +14,29 @@
 namespace mozilla {
 namespace dom {
 
+class MediaSessionInfo {
+ public:
+  MediaSessionInfo() = default;
+
+  explicit MediaSessionInfo(MediaMetadataBase& aMetadata) {
+    mMetadata.emplace(aMetadata);
+  }
+
+  MediaSessionInfo(MediaMetadataBase& aMetadata,
+                   MediaSessionPlaybackState& aState) {
+    mMetadata.emplace(aMetadata);
+    mDeclaredPlaybackState = aState;
+  }
+
+  static MediaSessionInfo EmptyInfo() { return MediaSessionInfo(); }
+
+  // These attributes are all propagated from the media session in the content
+  // process.
+  Maybe<MediaMetadataBase> mMetadata;
+  MediaSessionPlaybackState mDeclaredPlaybackState =
+      MediaSessionPlaybackState::None;
+};
+
 /**
  * MediaSessionController is used to track all alive media sessions within a tab
  * and store their metadata which could be used to show on the virtual media
@@ -73,7 +96,7 @@ class MediaSessionController {
 
   void UpdateActiveMediaSessionContextId();
 
-  nsDataHashtable<nsUint64HashKey, Maybe<MediaMetadataBase>> mMetadataMap;
+  nsDataHashtable<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
 };
 
