@@ -26,7 +26,7 @@ import mozlog
 from condprof import progress
 
 
-TASK_CLUSTER = "TASKCLUSTER_WORKER_TYPE" in os.environ.keys()
+TASK_CLUSTER = "TASK_ID" in os.environ.keys()
 DOWNLOAD_TIMEOUT = 30
 
 
@@ -389,7 +389,7 @@ _DEFAULT_SERVER = "https://firefox-ci-tc.services.mozilla.com"
 
 
 def get_tc_secret():
-    if "TASK_ID" not in os.environ:
+    if not TASK_CLUSTER:
         raise OSError("Not running in Taskcluster")
     session = requests.Session()
     retry = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
@@ -401,7 +401,7 @@ def get_tc_secret():
         "%2F",
         os.environ.get("MOZ_SCM_LEVEL", "1"),
     )
-    res = session.get(secrets_url)
+    res = session.get(secrets_url, timeout=DOWNLOAD_TIMEOUT)
     res.raise_for_status()
     return res.json()["secret"]
 
@@ -410,6 +410,8 @@ _CACHED = {}
 
 
 def obfuscate(text):
+    if "CONDPROF_RUNNER" not in os.environ:
+        return True, text
     username, password = get_credentials()
     if username is None:
         return False, text
@@ -421,6 +423,8 @@ def obfuscate(text):
 
 
 def obfuscate_file(path):
+    if "CONDPROF_RUNNER" not in os.environ:
+        return
     with open(path) as f:
         data = f.read()
     hit, data = obfuscate(data)
@@ -436,12 +440,9 @@ def get_credentials():
     password = os.environ.get("FXA_PASSWORD")
     username = os.environ.get("FXA_USERNAME")
     if username is None or password is None:
-        if "TASK_ID" not in os.environ:
+        if not TASK_CLUSTER:
             return None, None
-        try:
-            secret = get_tc_secret()
-        except Exception:
-            return None, None
+        secret = get_tc_secret()
         password = secret["password"]
         username = secret["username"]
     _CACHED["creds"] = username, password
