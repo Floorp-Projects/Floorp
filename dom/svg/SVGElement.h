@@ -631,42 +631,46 @@ class SVGElement : public SVGElementBase  // nsIContent
 /**
  * A macro to implement the NS_NewSVGXXXElement() functions.
  */
-#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                            \
-  nsresult NS_NewSVG##_elementName##Element(                                \
-      nsIContent** aResult,                                                 \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {               \
-    RefPtr<mozilla::dom::SVG##_elementName##Element> it =                   \
-        new mozilla::dom::SVG##_elementName##Element(std::move(aNodeInfo)); \
-                                                                            \
-    nsresult rv = it->Init();                                               \
-                                                                            \
-    if (NS_FAILED(rv)) {                                                    \
-      return rv;                                                            \
-    }                                                                       \
-                                                                            \
-    it.forget(aResult);                                                     \
-                                                                            \
-    return rv;                                                              \
+#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                               \
+  nsresult NS_NewSVG##_elementName##Element(                                   \
+      nsIContent** aResult,                                                    \
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {                  \
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);                        \
+    auto* nim = nodeInfo->NodeInfoManager();                                   \
+    RefPtr<mozilla::dom::SVG##_elementName##Element> it =                      \
+        new (nim) mozilla::dom::SVG##_elementName##Element(nodeInfo.forget()); \
+                                                                               \
+    nsresult rv = it->Init();                                                  \
+                                                                               \
+    if (NS_FAILED(rv)) {                                                       \
+      return rv;                                                               \
+    }                                                                          \
+                                                                               \
+    it.forget(aResult);                                                        \
+                                                                               \
+    return rv;                                                                 \
   }
 
-#define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)              \
-  nsresult NS_NewSVG##_elementName##Element(                               \
-      nsIContent** aResult,                                                \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                \
-      mozilla::dom::FromParser aFromParser) {                              \
-    RefPtr<mozilla::dom::SVG##_elementName##Element> it =                  \
-        new mozilla::dom::SVG##_elementName##Element(std::move(aNodeInfo), \
-                                                     aFromParser);         \
-                                                                           \
-    nsresult rv = it->Init();                                              \
-                                                                           \
-    if (NS_FAILED(rv)) {                                                   \
-      return rv;                                                           \
-    }                                                                      \
-                                                                           \
-    it.forget(aResult);                                                    \
-                                                                           \
-    return rv;                                                             \
+#define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                 \
+  nsresult NS_NewSVG##_elementName##Element(                                  \
+      nsIContent** aResult,                                                   \
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                   \
+      mozilla::dom::FromParser aFromParser) {                                 \
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);                       \
+    auto* nim = nodeInfo->NodeInfoManager();                                  \
+    RefPtr<mozilla::dom::SVG##_elementName##Element> it =                     \
+        new (nim) mozilla::dom::SVG##_elementName##Element(nodeInfo.forget(), \
+                                                           aFromParser);      \
+                                                                              \
+    nsresult rv = it->Init();                                                 \
+                                                                              \
+    if (NS_FAILED(rv)) {                                                      \
+      return rv;                                                              \
+    }                                                                         \
+                                                                              \
+    it.forget(aResult);                                                       \
+                                                                              \
+    return rv;                                                                \
   }
 
 // No unlinking, we'd need to null out the value pointer (the object it

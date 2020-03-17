@@ -132,7 +132,8 @@ nsresult SVGUseElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
 nsresult SVGUseElement::Clone(dom::NodeInfo* aNodeInfo,
                               nsINode** aResult) const {
   *aResult = nullptr;
-  SVGUseElement* it = new SVGUseElement(do_AddRef(aNodeInfo));
+  SVGUseElement* it =
+      new (aNodeInfo->NodeInfoManager()) SVGUseElement(do_AddRef(aNodeInfo));
 
   nsCOMPtr<nsINode> kungFuDeathGrip(it);
   nsresult rv1 = it->Init();
