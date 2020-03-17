@@ -15,6 +15,7 @@ include protocol PParentToChildStream;
 include protocol PInputChannelThrottleQueue;
 include protocol PBackground;
 include protocol PAltService;
+include protocol PAltSvcTransaction;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
@@ -46,6 +47,7 @@ protocol PSocketProcess
   manages PParentToChildStream;
   manages PInputChannelThrottleQueue;
   manages PAltService;
+  manages PAltSvcTransaction;
 
 parent:
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
@@ -93,6 +95,8 @@ child:
   async OnHttpActivityDistributorActivated(bool aIsActivated);
   async PInputChannelThrottleQueue(uint32_t meanBytesPerSecond,
                                    uint32_t maxBytesPerSecond);
+  async PAltSvcTransaction(HttpConnectionInfoCloneArgs aConnInfo,
+                           uint32_t aCaps);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);

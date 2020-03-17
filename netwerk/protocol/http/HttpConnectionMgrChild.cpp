@@ -9,6 +9,7 @@
 
 #include "HttpConnectionMgrChild.h"
 #include "HttpTransactionChild.h"
+#include "AltSvcTransactionChild.h"
 #include "EventTokenBucket.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpConnectionMgr.h"
@@ -193,14 +194,20 @@ SpeculativeConnectionOverrider::GetAllow1918(bool* aAllow) {
 
 mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvSpeculativeConnect(
     HttpConnectionInfoCloneArgs aConnInfo,
-    Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps) {
+    Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
+    Maybe<PAltSvcTransactionChild*> aTrans) {
   RefPtr<nsHttpConnectionInfo> cinfo =
       nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(aConnInfo);
   nsCOMPtr<nsIInterfaceRequestor> overrider =
       aOverriderArgs
           ? new SpeculativeConnectionOverrider(std::move(aOverriderArgs.ref()))
           : nullptr;
-  Unused << mConnMgr->SpeculativeConnect(cinfo, overrider, aCaps, nullptr);
+  RefPtr<NullHttpTransaction> trans;
+  if (aTrans) {
+    trans = static_cast<AltSvcTransactionChild*>(*aTrans)->CreateTransaction();
+  }
+
+  Unused << mConnMgr->SpeculativeConnect(cinfo, overrider, aCaps, trans);
   return IPC_OK();
 }
 
