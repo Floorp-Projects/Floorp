@@ -24,7 +24,8 @@ Comment::~Comment() = default;
 already_AddRefed<CharacterData> Comment::CloneDataNode(
     mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  RefPtr<Comment> it = new Comment(ni.forget());
+  auto* nim = ni->NodeInfoManager();
+  RefPtr<Comment> it = new (nim) Comment(ni.forget());
   if (aCloneText) {
     it->mText = mText;
   }
