@@ -600,13 +600,14 @@ NS_IMETHODIMP AppWindow::Create() {
 }
 
 NS_IMETHODIMP AppWindow::Destroy() {
+  nsCOMPtr<nsIAppWindow> kungFuDeathGrip(this);
+
   nsresult rv;
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell, &rv));
   if (webProgress) {
     webProgress->RemoveProgressListener(this);
   }
 
-  nsCOMPtr<nsIAppWindow> kungFuDeathGrip(this);
   {
     MutexAutoLock lock(mSPTimerLock);
     if (mSPTimer) {
@@ -632,16 +633,6 @@ NS_IMETHODIMP AppWindow::Destroy() {
 
   nsCOMPtr<nsIAppWindow> parentWindow(do_QueryReferent(mParentWindow));
   if (parentWindow) parentWindow->RemoveChildWindow(this);
-
-  // let's make sure the window doesn't get deleted out from under us
-  // while we are trying to close....this can happen if the docshell
-  // we close ends up being the last owning reference to this AppWindow
-
-  // XXXTAB This shouldn't be an issue anymore because the ownership model
-  // only goes in one direction.  When webshell container is fully removed
-  // try removing this...
-
-  nsCOMPtr<nsIAppWindow> placeHolder = this;
 
   // Remove modality (if any) and hide while destroying. More than
   // a convenience, the hide prevents user interaction with the partially
