@@ -133,6 +133,11 @@ class LoginManagerParent extends JSWindowActorParent {
     gListenerForTests = listener;
   }
 
+  // Used by tests to clean up recipes only when they were actually used.
+  static get _recipeManager() {
+    return gRecipeManager;
+  }
+
   // Some unit tests need to access this.
   static getGeneratedPasswordsByPrincipalOrigin() {
     return gGeneratedPasswordsByPrincipalOrigin;
