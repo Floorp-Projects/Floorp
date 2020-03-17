@@ -13,6 +13,8 @@ using namespace mozilla::dom;
 // MathML Element Factory (declared in nsContentCreatorFunctions.h)
 nsresult NS_NewMathMLElement(
     Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
-  NS_ADDREF(*aResult = new MathMLElement(aNodeInfo));
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
+  auto* nim = nodeInfo->NodeInfoManager();
+  NS_ADDREF(*aResult = new (nim) MathMLElement(nodeInfo.forget()));
   return NS_OK;
 }
