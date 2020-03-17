@@ -5,8 +5,13 @@
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
 #endif
-.global ICU_DATA_SYMBOL
+#ifdef PREFIX
+#  define DATA_SYMBOL _##ICU_DATA_SYMBOL
+#else
+#  define DATA_SYMBOL ICU_DATA_SYMBOL
+#endif
+.global DATA_SYMBOL
 .data
 .balign 16
-ICU_DATA_SYMBOL:
+DATA_SYMBOL:
         .incbin ICU_DATA_FILE
