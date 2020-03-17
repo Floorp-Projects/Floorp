@@ -9,7 +9,6 @@
 #include <numeric>
 #include <utility>
 
-#include "FileInfo.h"
 #include "IDBCursorType.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"

@@ -6,7 +6,6 @@
 
 #include "IDBDatabase.h"
 
-#include "FileInfo.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBIndex.h"
