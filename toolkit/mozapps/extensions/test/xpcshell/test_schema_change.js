@@ -3,11 +3,22 @@
  */
 
 const PREF_DB_SCHEMA = "extensions.databaseSchema";
+const PREF_IS_EMBEDDED = "extensions.isembedded";
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref(PREF_DISABLE_SECURITY);
+  Services.prefs.clearUserPref(PREF_IS_EMBEDDED);
+});
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
+
+add_task(async function test_setup() {
+  Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
+  await promiseStartupManager();
+});
 
 add_task(async function run_tests() {
   // Fake installTelemetryInfo used in the addon installation,
@@ -78,8 +89,6 @@ add_task(async function run_tests() {
     },
   ];
 
-  await promiseStartupManager();
-
   for (let test of TESTS) {
     info(test.what);
     await promiseInstallFile(xpi1, false, fakeInstallTelemetryInfo);
@@ -121,4 +130,37 @@ add_task(async function run_tests() {
 
     await addon.uninstall();
   }
+});
+
+add_task(async function embedder_disabled_stays_disabled() {
+  Services.prefs.setBoolPref(PREF_IS_EMBEDDED, true);
+
+  const ID = "embedder-disabled@tests.mozilla.org";
+
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Add-on",
+      version: "1.0",
+      applications: { gecko: { id: ID } },
+    },
+  });
+
+  let addon = await promiseAddonByID(ID);
+
+  equal(addon.embedderDisabled, false);
+
+  await addon.setEmbedderDisabled(true);
+  equal(addon.embedderDisabled, true);
+
+  await promiseShutdownManager();
+
+  // Change db schema to force reload
+  Services.prefs.setIntPref(PREF_DB_SCHEMA, 0);
+
+  await promiseStartupManager();
+
+  addon = await promiseAddonByID(ID);
+  equal(addon.embedderDisabled, true);
+
+  await addon.uninstall();
 });
