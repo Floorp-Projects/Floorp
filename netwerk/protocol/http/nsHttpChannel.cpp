@@ -2581,8 +2581,6 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     return NS_OK;
   }
 
-  AssertNotDocumentChannel();
-
   // Check if request was cancelled during http-on-examine-response.
   if (mCanceled) {
     return CallOnStartRequest();
@@ -2647,61 +2645,6 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
 
   // No process switch needed, continue as normal.
   return ContinueProcessResponse2(rv);
-}
-
-void nsHttpChannel::AssertNotDocumentChannel() {
-  if (!IsDocument()) {
-    return;
-  }
-
-#ifndef DEBUG
-  if (!StaticPrefs::fission_autostart()) {
-    // This assertion is firing in the wild (Bug 1593545) and its not clear
-    // why. Disable the assertion in non-fission non-debug configurations to
-    // avoid crashing user's browsers until we're done dogfooding fission.
-    return;
-  }
-#endif
-
-  nsCOMPtr<nsIParentChannel> parentChannel;
-  NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<DocumentLoadListener> documentChannelParent =
-      do_QueryObject(parentChannel);
-  if (documentChannelParent) {
-    // The load is using document channel.
-    return;
-  }
-
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
-  if (!httpParent) {
-    // The load was initiated in the parent and doesn't need document
-    // channel.
-    return;
-  }
-
-  auto contentPolicy = mLoadInfo->GetExternalContentPolicyType();
-  if (contentPolicy != nsIContentPolicy::TYPE_DOCUMENT &&
-      contentPolicy != nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    return;
-  }
-
-  RefPtr<BrowsingContext> bc;
-  MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
-  MOZ_ASSERT(bc);  // It shouldn't be possible.
-  if (!bc) {
-    return;
-  }
-
-  if (mLoadInfo->LoadingPrincipal() &&
-      mLoadInfo->LoadingPrincipal()->IsSystemPrincipal()) {
-    // Loads with the system principal can skip document channel
-    return;
-  }
-
-  // The load was supposed to use document channel but didn't.
-  MOZ_DIAGNOSTIC_ASSERT(
-      !StaticPrefs::browser_tabs_documentchannel(),
-      "DocumentChannel is enabled but this load was done without it");
 }
 
 nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
@@ -7882,8 +7825,6 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     HandleAsyncAbort();
     return NS_OK;
   }
-
-  AssertNotDocumentChannel();
 
   // No process change is needed, so continue on to ContinueOnStartRequest1.
   return ContinueOnStartRequest1(rv);
