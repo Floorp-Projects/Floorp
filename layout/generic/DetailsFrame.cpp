@@ -101,7 +101,8 @@ nsresult DetailsFrame::CreateAnonymousContent(
   nsContentUtils::GetMaybeLocalizedString(
       nsContentUtils::eFORMS_PROPERTIES, "DefaultSummary",
       GetContent()->OwnerDoc(), defaultSummaryText);
-  RefPtr<nsTextNode> description = new nsTextNode(nodeInfoManager);
+  RefPtr<nsTextNode> description =
+      new (nodeInfoManager) nsTextNode(nodeInfoManager);
   description->SetText(defaultSummaryText, false);
   mDefaultSummary->AppendChildTo(description, false);
 

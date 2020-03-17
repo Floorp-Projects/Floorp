@@ -160,7 +160,8 @@ nsresult DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
     rv = head->AppendChildTo(title, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RefPtr<nsTextNode> titleText = new nsTextNode(doc->NodeInfoManager());
+    RefPtr<nsTextNode> titleText =
+        new (doc->NodeInfoManager()) nsTextNode(doc->NodeInfoManager());
     rv = titleText->SetText(aTitle, false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = title->AppendChildTo(titleText, false);

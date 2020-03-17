@@ -90,7 +90,8 @@ static nsresult createTextNode(txIEvalContext* aContext, nsString& aValue,
     return NS_ERROR_UNEXPECTED;
   }
 
-  RefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
+  RefPtr<nsTextNode> text =
+      new (doc->NodeInfoManager()) nsTextNode(doc->NodeInfoManager());
 
   nsresult rv = text->SetText(aValue, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -109,7 +110,8 @@ static nsresult createAndAddToResult(nsAtom* aName, const nsAString& aValue,
       doc->CreateElem(nsDependentAtomString(aName), nullptr, kNameSpaceID_None);
   NS_ENSURE_TRUE(elem, NS_ERROR_NULL_POINTER);
 
-  RefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
+  RefPtr<nsTextNode> text =
+      new (doc->NodeInfoManager()) nsTextNode(doc->NodeInfoManager());
 
   nsresult rv = text->SetText(aValue, false);
   NS_ENSURE_SUCCESS(rv, rv);

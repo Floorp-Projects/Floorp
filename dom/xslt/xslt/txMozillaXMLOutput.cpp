@@ -548,7 +548,8 @@ nsresult txMozillaXMLOutput::closePrevious(bool aFlushText) {
       rv = createTxWrapper();
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
+    RefPtr<nsTextNode> text =
+        new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
 
     rv = text->SetText(mText, false);
     NS_ENSURE_SUCCESS(rv, rv);
