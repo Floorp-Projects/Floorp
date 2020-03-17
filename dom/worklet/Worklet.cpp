@@ -12,6 +12,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -70,10 +71,9 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static already_AddRefed<Promise> Fetch(Worklet* aWorklet,
+  static already_AddRefed<Promise> Fetch(Worklet* aWorklet, JSContext* aCx,
                                          const nsAString& aModuleURL,
                                          const WorkletOptions& aOptions,
-                                         CallerType aCallerType,
                                          ErrorResult& aRv) {
     MOZ_ASSERT(aWorklet);
     MOZ_ASSERT(NS_IsMainThread());
@@ -121,14 +121,25 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
       }
     }
 
-    RequestOrUSVString request;
-    request.SetAsUSVString().ShareOrDependUpon(aModuleURL);
+    RequestOrUSVString requestInput;
+    requestInput.SetAsUSVString().ShareOrDependUpon(aModuleURL);
 
-    RequestInit init;
-    init.mCredentials.Construct(aOptions.mCredentials);
+    RequestInit requestInit;
+    requestInit.mCredentials.Construct(aOptions.mCredentials);
 
-    RefPtr<Promise> fetchPromise =
-        FetchRequest(global, request, init, aCallerType, aRv);
+    RefPtr<Request> request =
+        Request::Constructor(global, aCx, requestInput, requestInit, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+
+    request->OverrideContentPolicyType(aWorklet->Impl()->ContentPolicyType());
+
+    RequestOrUSVString finalRequestInput;
+    finalRequestInput.SetAsRequest() = request;
+
+    RefPtr<Promise> fetchPromise = FetchRequest(
+        global, finalRequestInput, requestInit, CallerType::System, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       // OK to just return null, since caller will ignore return value
       // anyway if aRv is a failure.
@@ -453,13 +464,13 @@ JSObject* Worklet::WrapObject(JSContext* aCx,
   return mImpl->WrapWorklet(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise> Worklet::AddModule(const nsAString& aModuleURL,
+already_AddRefed<Promise> Worklet::AddModule(JSContext* aCx,
+                                             const nsAString& aModuleURL,
                                              const WorkletOptions& aOptions,
                                              CallerType aCallerType,
                                              ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  return WorkletFetchHandler::Fetch(this, aModuleURL, aOptions, aCallerType,
-                                    aRv);
+  return WorkletFetchHandler::Fetch(this, aCx, aModuleURL, aOptions, aRv);
 }
 
 WorkletFetchHandler* Worklet::GetImportFetchHandler(const nsACString& aURI) {

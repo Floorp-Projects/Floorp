@@ -104,6 +104,12 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
                                                const RequestInit& aInit,
                                                ErrorResult& rv);
 
+  static already_AddRefed<Request> Constructor(nsIGlobalObject* aGlobal,
+                                               JSContext* aCx,
+                                               const RequestOrUSVString& aInput,
+                                               const RequestInit& aInit,
+                                               ErrorResult& rv);
+
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   already_AddRefed<Request> Clone(ErrorResult& aRv);

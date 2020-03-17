@@ -42,7 +42,8 @@ class Worklet final : public nsISupports, public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  already_AddRefed<Promise> AddModule(const nsAString& aModuleURL,
+  already_AddRefed<Promise> AddModule(JSContext* aCx,
+                                      const nsAString& aModuleURL,
                                       const WorkletOptions& aOptions,
                                       CallerType aCallerType, ErrorResult& aRv);
 

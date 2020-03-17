@@ -18,6 +18,10 @@ class PaintWorkletImpl final : public WorkletImpl {
   static already_AddRefed<dom::Worklet> CreateWorklet(
       nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 
+  nsContentPolicyType ContentPolicyType() const override {
+    return nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET;
+  }
+
  protected:
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() override;
