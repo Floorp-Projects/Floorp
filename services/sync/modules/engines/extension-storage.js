@@ -6,13 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
 
-const { SCORE_INCREMENT_MEDIUM } = ChromeUtils.import(
+const { SCORE_INCREMENT_MEDIUM, MULTI_DEVICE_THRESHOLD } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
 const { SyncEngine, Tracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
 const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "extensionStorageSync",
@@ -29,6 +32,12 @@ ChromeUtils.defineModuleGetter(
  */
 function ExtensionStorageEngine(service) {
   SyncEngine.call(this, "Extension-Storage", service);
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this,
+    "_skipPercentageChance",
+    "services.sync.extension-storage.skipPercentageChance",
+    0
+  );
 }
 ExtensionStorageEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -63,6 +72,33 @@ ExtensionStorageEngine.prototype = {
 
   _wipeClient() {
     return extensionStorageSync.clearAll();
+  },
+
+  shouldSkipSync(syncReason) {
+    if (syncReason == "user" || syncReason == "startup") {
+      this._log.info(
+        `Not skipping extension storage sync: reason == ${syncReason}`
+      );
+      // Always sync if a user clicks the button, or if we're starting up.
+      return false;
+    }
+    // Ensure this wouldn't cause a resync...
+    if (this._tracker.score >= MULTI_DEVICE_THRESHOLD) {
+      this._log.info(
+        "Not skipping extension storage sync: Would trigger resync anyway"
+      );
+      return false;
+    }
+
+    let probability = this._skipPercentageChance / 100.0;
+    // Math.random() returns a value in the interval [0, 1), so `>` is correct:
+    // if `probability` is 1 skip every time, and if it's 0, never skip.
+    let shouldSkip = probability > Math.random();
+
+    this._log.info(
+      `Skipping extension-storage sync with a chance of ${probability}: ${shouldSkip}`
+    );
+    return shouldSkip;
   },
 };
 
