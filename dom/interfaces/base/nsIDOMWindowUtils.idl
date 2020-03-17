@@ -1568,8 +1568,7 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean getFileReferences(in AString aDatabaseName, in long long aId,
                             [optional] in jsval aOptions,
                             [optional] out long aRefCnt,
-                            [optional] out long aDBRefCnt,
-                            [optional] out long aSliceRefCnt);
+                            [optional] out long aDBRefCnt);
 
   void flushPendingFileDeletions();
 

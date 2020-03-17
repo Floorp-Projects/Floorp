@@ -44,14 +44,8 @@ void FileInfoT<FileManager>::UpdateDBRefs(int32_t aDelta) {
 }
 
 template <typename FileManager>
-void FileInfoT<FileManager>::UpdateSliceRefs(int32_t aDelta) {
-  UpdateReferences(mSliceRefCnt, aDelta);
-}
-
-template <typename FileManager>
 void FileInfoT<FileManager>::GetReferences(int32_t* const aRefCnt,
-                                           int32_t* const aDBRefCnt,
-                                           int32_t* const aSliceRefCnt) {
+                                           int32_t* const aDBRefCnt) {
   AutoLock lock(FileManager::Mutex());
 
   if (aRefCnt) {
@@ -60,10 +54,6 @@ void FileInfoT<FileManager>::GetReferences(int32_t* const aRefCnt,
 
   if (aDBRefCnt) {
     *aDBRefCnt = mDBRefCnt;
-  }
-
-  if (aSliceRefCnt) {
-    *aSliceRefCnt = mSliceRefCnt;
   }
 }
 
@@ -87,7 +77,7 @@ void FileInfoT<FileManager>::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
 
     aRefCount = aRefCount + aDelta;
 
-    if (mRefCnt + mDBRefCnt + mSliceRefCnt > 0) {
+    if (mRefCnt + mDBRefCnt > 0) {
       return;
     }
 
@@ -117,7 +107,7 @@ bool FileInfoT<FileManager>::LockedClearDBRefs(
 
   mDBRefCnt = 0;
 
-  if (mRefCnt || mSliceRefCnt) {
+  if (mRefCnt) {
     return true;
   }
 

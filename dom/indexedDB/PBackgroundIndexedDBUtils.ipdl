@@ -25,8 +25,7 @@ parent:
                          nsCString origin,
                          nsString databaseName,
                          int64_t fileId)
-    returns (int32_t refCnt, int32_t dBRefCnt, int32_t sliceRefCnt,
-             bool result);
+    returns (int32_t refCnt, int32_t dBRefCnt, bool result);
 
 child:
   async __delete__();

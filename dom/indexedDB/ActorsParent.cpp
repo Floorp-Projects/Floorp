@@ -8440,7 +8440,7 @@ class Utils final : public PBackgroundIndexedDBUtilsParent {
   mozilla::ipc::IPCResult RecvGetFileReferences(
       const PersistenceType& aPersistenceType, const nsCString& aOrigin,
       const nsString& aDatabaseName, const int64_t& aFileId, int32_t* aRefCnt,
-      int32_t* aDBRefCnt, int32_t* aSliceRefCnt, bool* aResult) override;
+      int32_t* aDBRefCnt, bool* aResult) override;
 };
 
 /*******************************************************************************
@@ -10190,18 +10190,15 @@ struct PopulateResponseHelper<IDBCursorType::IndexKey>
 nsresult DispatchAndReturnFileReferences(
     PersistenceType aPersistenceType, const nsACString& aOrigin,
     const nsAString& aDatabaseName, const int64_t aFileId,
-    int32_t* const aMemRefCnt, int32_t* const aDBRefCnt,
-    int32_t* const aSliceRefCnt, bool* const aResult) {
+    int32_t* const aMemRefCnt, int32_t* const aDBRefCnt, bool* const aResult) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aMemRefCnt);
   MOZ_ASSERT(aDBRefCnt);
-  MOZ_ASSERT(aSliceRefCnt);
   MOZ_ASSERT(aResult);
 
   *aResult = false;
   *aMemRefCnt = -1;
   *aDBRefCnt = -1;
-  *aSliceRefCnt = -1;
 
   mozilla::Monitor monitor(__func__);
   bool waiting = true;
@@ -10220,7 +10217,7 @@ nsresult DispatchAndReturnFileReferences(
         const RefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(aFileId);
 
         if (fileInfo) {
-          fileInfo->GetReferences(aMemRefCnt, aDBRefCnt, aSliceRefCnt);
+          fileInfo->GetReferences(aMemRefCnt, aDBRefCnt);
 
           if (*aMemRefCnt != -1) {
             // We added an extra temp ref, so account for that accordingly.
@@ -27641,11 +27638,10 @@ mozilla::ipc::IPCResult Utils::RecvDeleteMe() {
 mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
     const PersistenceType& aPersistenceType, const nsCString& aOrigin,
     const nsString& aDatabaseName, const int64_t& aFileId, int32_t* aRefCnt,
-    int32_t* aDBRefCnt, int32_t* aSliceRefCnt, bool* aResult) {
+    int32_t* aDBRefCnt, bool* aResult) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aRefCnt);
   MOZ_ASSERT(aDBRefCnt);
-  MOZ_ASSERT(aSliceRefCnt);
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mActorDestroyed);
 
@@ -27679,9 +27675,9 @@ mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsresult rv = DispatchAndReturnFileReferences(
-      aPersistenceType, aOrigin, aDatabaseName, aFileId, aRefCnt, aDBRefCnt,
-      aSliceRefCnt, aResult);
+  nsresult rv =
+      DispatchAndReturnFileReferences(aPersistenceType, aOrigin, aDatabaseName,
+                                      aFileId, aRefCnt, aDBRefCnt, aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }

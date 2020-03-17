@@ -2929,8 +2929,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
                                     JS::Handle<JS::Value> aOptions,
                                     int32_t* aRefCnt, int32_t* aDBRefCnt,
-                                    int32_t* aSliceRefCnt, JSContext* aCx,
-                                    bool* aResult) {
+                                    JSContext* aCx, bool* aResult) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
@@ -2954,11 +2953,10 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
 
   if (mgr) {
     rv = mgr->BlockAndGetFileReferences(persistenceType, origin, aDatabaseName,
-                                        aId, aRefCnt, aDBRefCnt, aSliceRefCnt,
-                                        aResult);
+                                        aId, aRefCnt, aDBRefCnt, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
+    *aRefCnt = *aDBRefCnt = -1;
     *aResult = false;
   }
 
