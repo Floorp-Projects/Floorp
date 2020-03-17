@@ -755,7 +755,7 @@ void IndexedDatabaseManager::InvalidateFileManager(
 nsresult IndexedDatabaseManager::BlockAndGetFileReferences(
     PersistenceType aPersistenceType, const nsACString& aOrigin,
     const nsAString& aDatabaseName, int64_t aFileId, int32_t* aRefCnt,
-    int32_t* aDBRefCnt, int32_t* aSliceRefCnt, bool* aResult) {
+    int32_t* aDBRefCnt, bool* aResult) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_WARN_IF(!InTestingMode())) {
@@ -786,7 +786,7 @@ nsresult IndexedDatabaseManager::BlockAndGetFileReferences(
 
   if (!mBackgroundActor->SendGetFileReferences(
           aPersistenceType, nsCString(aOrigin), nsString(aDatabaseName),
-          aFileId, aRefCnt, aDBRefCnt, aSliceRefCnt, aResult)) {
+          aFileId, aRefCnt, aDBRefCnt, aResult)) {
     return NS_ERROR_FAILURE;
   }
 
