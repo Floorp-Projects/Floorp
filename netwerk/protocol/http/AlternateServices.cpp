@@ -1037,8 +1037,8 @@ void AltSvcCache::UpdateAltServiceMapping(
     nsCOMPtr<nsIInterfaceRequestor> callbacks = new AltSvcOverride(aCallbacks);
     RefPtr<AltSvcTransaction> nullTransaction =
         new AltSvcTransaction(map, ci, aCallbacks, caps);
-    nsresult rv = gHttpHandler->ConnMgr()->SpeculativeConnect(
-        ci, callbacks, caps, nullTransaction);
+    nsresult rv =
+        gHttpHandler->SpeculativeConnect(ci, callbacks, caps, nullTransaction);
     if (NS_FAILED(rv)) {
       LOG(
           ("AltSvcCache::UpdateAltServiceMapping %p "

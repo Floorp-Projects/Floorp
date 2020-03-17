@@ -10,6 +10,7 @@
 #include "HttpConnectionMgrParent.h"
 #include "mozilla/net/HttpTransactionParent.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsISpeculativeConnect.h"
 
 namespace mozilla {
 namespace net {
@@ -182,12 +183,31 @@ nsresult HttpConnectionMgrParent::GetSocketThreadTarget(nsIEventTarget**) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult HttpConnectionMgrParent::SpeculativeConnect(nsHttpConnectionInfo*,
-                                                     nsIInterfaceRequestor*,
-                                                     uint32_t caps,
-                                                     NullHttpTransaction*) {
-  // TODO: fix this in bug 1527384
-  return NS_ERROR_NOT_IMPLEMENTED;
+nsresult HttpConnectionMgrParent::SpeculativeConnect(
+    nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
+    uint32_t aCaps, NullHttpTransaction*) {
+  NS_ENSURE_ARG_POINTER(aConnInfo);
+
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
+      do_GetInterface(aCallbacks);
+  Maybe<SpeculativeConnectionOverriderArgs> overriderArgs;
+  if (overrider) {
+    overriderArgs.emplace();
+    overriderArgs->parallelSpeculativeConnectLimit() =
+        overrider->GetParallelSpeculativeConnectLimit();
+    overriderArgs->ignoreIdle() = overrider->GetIgnoreIdle();
+    overriderArgs->isFromPredictor() = overrider->GetIsFromPredictor();
+    overriderArgs->allow1918() = overrider->GetAllow1918();
+  }
+
+  HttpConnectionInfoCloneArgs connInfo;
+  nsHttpConnectionInfo::SerializeHttpConnectionInfo(aConnInfo, connInfo);
+  Unused << SendSpeculativeConnect(connInfo, overriderArgs, aCaps);
+  return NS_OK;
 }
 
 nsresult HttpConnectionMgrParent::VerifyTraffic() {

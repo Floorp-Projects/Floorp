@@ -331,6 +331,14 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     return mConnMgr->SpeculativeConnect(clone, callbacks, caps);
   }
 
+  MOZ_MUST_USE nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
+                                           nsIInterfaceRequestor* callbacks,
+                                           uint32_t caps,
+                                           NullHttpTransaction* aTrans) {
+    RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
+    return mConnMgr->SpeculativeConnect(clone, callbacks, caps, aTrans);
+  }
+
   // Alternate Services Maps are main thread only
   void UpdateAltServiceMapping(AltSvcMapping* map, nsProxyInfo* proxyInfo,
                                nsIInterfaceRequestor* callbacks, uint32_t caps,

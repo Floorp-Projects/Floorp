@@ -33,6 +33,9 @@ child:
   async CancelTransaction(PHttpTransaction aTrans, nsresult aReason);
   async VerifyTraffic();
   async ClearConnectionHistory();
+  async SpeculativeConnect(HttpConnectionInfoCloneArgs aConnInfo,
+                           SpeculativeConnectionOverriderArgs? aOverriderArgs,
+                           uint32_t aCaps);
 };
 
 } // namespace net

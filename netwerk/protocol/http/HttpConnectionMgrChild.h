@@ -40,6 +40,9 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
                                                 const nsresult& aReason);
   mozilla::ipc::IPCResult RecvVerifyTraffic();
   mozilla::ipc::IPCResult RecvClearConnectionHistory();
+  mozilla::ipc::IPCResult RecvSpeculativeConnect(
+      HttpConnectionInfoCloneArgs aConnInfo,
+      Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps);
 
  private:
   virtual ~HttpConnectionMgrChild();
