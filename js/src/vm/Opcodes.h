@@ -1336,7 +1336,7 @@
     MACRO(IsNoIter, is_no_iter, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * No-op instruction to hint to IonBuilder that the value on top of the
-     * stack is the (likely string) key in a for-in loop.
+     * stack is the string key in a for-in loop.
      *
      *   Category: Objects
      *   Type: Enumeration

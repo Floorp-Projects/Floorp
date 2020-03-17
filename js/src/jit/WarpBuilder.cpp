@@ -1332,3 +1332,47 @@ bool WarpBuilder::build_EnvCallee(BytecodeLocation loc) {
   current->push(callee);
   return true;
 }
+
+bool WarpBuilder::build_Iter(BytecodeLocation loc) {
+  MDefinition* obj = current->pop();
+  MInstruction* ins = MGetIteratorCache::New(alloc(), obj);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_IterNext(BytecodeLocation) {
+  // TODO: IterNext was added as hint to prevent IonBuilder/TI loop restarts.
+  // Once IonBuilder is gone this op should probably just be removed.
+  MDefinition* def = current->pop();
+  MInstruction* unbox =
+      MUnbox::New(alloc(), def, MIRType::String, MUnbox::Infallible);
+  current->add(unbox);
+  current->push(unbox);
+  return true;
+}
+
+bool WarpBuilder::build_MoreIter(BytecodeLocation loc) {
+  MDefinition* iter = current->peek(-1);
+  MInstruction* ins = MIteratorMore::New(alloc(), iter);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_EndIter(BytecodeLocation loc) {
+  current->pop();  // Iterator value is not used.
+  MDefinition* iter = current->pop();
+  MInstruction* ins = MIteratorEnd::New(alloc(), iter);
+  current->add(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_IsNoIter(BytecodeLocation) {
+  MDefinition* def = current->peek(-1);
+  MOZ_ASSERT(def->isIteratorMore());
+  MInstruction* ins = MIsNoIter::New(alloc(), def);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
