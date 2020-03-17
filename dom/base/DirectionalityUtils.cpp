@@ -224,13 +224,13 @@
 namespace mozilla {
 
 using mozilla::dom::Element;
+using mozilla::dom::HTMLInputElement;
 using mozilla::dom::HTMLSlotElement;
 using mozilla::dom::ShadowRoot;
 
 static nsIContent* GetParentOrHostOrSlot(
     nsIContent* aContent, bool* aCrossedShadowBoundary = nullptr) {
-  mozilla::dom::HTMLSlotElement* slot = aContent->GetAssignedSlot();
-  if (slot) {
+  if (HTMLSlotElement* slot = aContent->GetAssignedSlot()) {
     if (aCrossedShadowBoundary) {
       *aCrossedShadowBoundary = true;
     }
@@ -402,9 +402,7 @@ static nsTextNode* WalkDescendantsAndGetDirectionFromText(
       continue;
     }
 
-    mozilla::dom::HTMLSlotElement* slot =
-        mozilla::dom::HTMLSlotElement::FromNode(child);
-    if (slot) {
+    if (auto* slot = HTMLSlotElement::FromNode(child)) {
       const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
       for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
         nsIContent* assignedNode = assignedNodes[i]->AsContent();
@@ -729,9 +727,7 @@ static void SetDirectionalityOnDescendantsInternal(nsINode* aNode,
       SetDirectionalityOnDescendantsInternal(shadow, aDir, aNotify);
     }
 
-    mozilla::dom::HTMLSlotElement* slot =
-        mozilla::dom::HTMLSlotElement::FromNode(child);
-    if (slot) {
+    if (auto* slot = HTMLSlotElement::FromNode(child)) {
       const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
       for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
         nsINode* node = assignedNodes[i];
@@ -822,7 +818,7 @@ void WalkAncestorsResetAutoDirection(Element* aElement, bool aNotify) {
   }
 }
 
-void SlotStateChanged(mozilla::dom::HTMLSlotElement* aSlot) {
+void SlotStateChanged(HTMLSlotElement* aSlot) {
   if (!aSlot) {
     return;
   }
@@ -895,9 +891,7 @@ static void SetAncestorHasDirAutoOnDescendants(nsINode* aRoot) {
     if (!child->GetAssignedSlot()) {
       MaybeSetAncestorHasDirAutoOnShadowDOM(child);
       child->SetAncestorHasDirAuto();
-      mozilla::dom::HTMLSlotElement* slot =
-          mozilla::dom::HTMLSlotElement::FromNode(child);
-      if (slot) {
+      if (auto* slot = HTMLSlotElement::FromNode(child)) {
         const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
         for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
           assignedNodes[i]->SetAncestorHasDirAuto();
@@ -949,9 +943,7 @@ void WalkDescendantsClearAncestorDirAuto(nsIContent* aContent) {
         continue;
       }
 
-      mozilla::dom::HTMLSlotElement* slot =
-          mozilla::dom::HTMLSlotElement::FromNode(child);
-      if (slot) {
+      if (auto* slot = HTMLSlotElement::FromNode(child)) {
         const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
         for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
           if (assignedNodes[i]->IsElement()) {
