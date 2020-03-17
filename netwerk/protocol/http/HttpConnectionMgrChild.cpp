@@ -13,6 +13,7 @@
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpHandler.h"
+#include "nsISpeculativeConnect.h"
 
 namespace mozilla {
 namespace net {
@@ -129,6 +130,77 @@ mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvVerifyTraffic() {
 
 mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvClearConnectionHistory() {
   Unused << mConnMgr->ClearConnectionHistory();
+  return IPC_OK();
+}
+
+namespace {
+
+class SpeculativeConnectionOverrider final
+    : public nsIInterfaceRequestor,
+      public nsISpeculativeConnectionOverrider {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSISPECULATIVECONNECTIONOVERRIDER
+
+  explicit SpeculativeConnectionOverrider(
+      SpeculativeConnectionOverriderArgs&& aArgs)
+      : mArgs(std::move(aArgs)) {}
+
+ private:
+  virtual ~SpeculativeConnectionOverrider() = default;
+
+  SpeculativeConnectionOverriderArgs mArgs;
+};
+
+NS_IMPL_ISUPPORTS(SpeculativeConnectionOverrider, nsIInterfaceRequestor,
+                  nsISpeculativeConnectionOverrider)
+
+NS_IMETHODIMP
+SpeculativeConnectionOverrider::GetInterface(const nsIID& iid, void** result) {
+  if (NS_SUCCEEDED(QueryInterface(iid, result)) && *result) {
+    return NS_OK;
+  }
+  return NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+SpeculativeConnectionOverrider::GetIgnoreIdle(bool* aIgnoreIdle) {
+  *aIgnoreIdle = mArgs.ignoreIdle();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeculativeConnectionOverrider::GetParallelSpeculativeConnectLimit(
+    uint32_t* aParallelSpeculativeConnectLimit) {
+  *aParallelSpeculativeConnectLimit = mArgs.parallelSpeculativeConnectLimit();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeculativeConnectionOverrider::GetIsFromPredictor(bool* aIsFromPredictor) {
+  *aIsFromPredictor = mArgs.isFromPredictor();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeculativeConnectionOverrider::GetAllow1918(bool* aAllow) {
+  *aAllow = mArgs.allow1918();
+  return NS_OK;
+}
+
+}  // anonymous namespace
+
+mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvSpeculativeConnect(
+    HttpConnectionInfoCloneArgs aConnInfo,
+    Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps) {
+  RefPtr<nsHttpConnectionInfo> cinfo =
+      nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(aConnInfo);
+  nsCOMPtr<nsIInterfaceRequestor> overrider =
+      aOverriderArgs
+          ? new SpeculativeConnectionOverrider(std::move(aOverriderArgs.ref()))
+          : nullptr;
+  Unused << mConnMgr->SpeculativeConnect(cinfo, overrider, aCaps, nullptr);
   return IPC_OK();
 }
 
