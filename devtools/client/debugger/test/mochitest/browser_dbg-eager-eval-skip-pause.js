@@ -7,8 +7,6 @@
 // Test that eager evaluation skips breakpoints and debugger statements
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.input.eagerEvaluation", true);
-
   const dbg = await initDebugger("doc-strict.html");
   const { hud } = await getDebuggerSplitConsole(dbg);
 
