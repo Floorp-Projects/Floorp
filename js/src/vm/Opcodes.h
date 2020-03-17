@@ -3307,6 +3307,10 @@
      * `".this"`, which is initialized using this instruction in the function
      * prologue.
      *
+     * In non-strict functions, `this` is always an object. Undefined/null
+     * `this` is converted into the global `this` value. Other primitive values
+     * are boxed. See `js::BoxNonStrictThis`.
+     *
      *   Category: Variables and scopes
      *   Type: Function environment setup
      *   Operands:
