@@ -12,7 +12,7 @@ def test_escape_command_line(mock_adb_object, redirect_stdout_and_assert):
         'adb shell ls -l': ['adb', 'shell', 'ls', '-l'],
         'adb shell "ls -l"': ['adb', 'shell', 'ls -l'],
         '-e "if (true)"': ['-e', 'if (true)'],
-        '-e "if (x === \\"hello\\")"': ['-e', 'if (x === "hello")'],
+        '-e \'if (x === "hello")\'': ['-e', 'if (x === "hello")'],
         '-e "if (x === \'hello\')"': ['-e', "if (x === 'hello')"],
     }
     for expected, input in cases.items():
