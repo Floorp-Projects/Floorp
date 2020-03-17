@@ -85,6 +85,9 @@ permalink: /changelog/
 * **browser-engine-system**
   * Updated tracking protection lists for more details see [#6163](https://github.com/mozilla-mobile/android-components/issues/6163).
 
+* **concent-engine**, **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**, **browser-engine-system**
+  * Add additional HTTP header support for `EngineSession.loadUrl()`.
+
 # 34.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v33.0.0...v34.0.0)

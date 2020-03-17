@@ -734,7 +734,12 @@ open class DummyEngineSession : EngineSession() {
 
     override fun saveState(): EngineSessionState { return mock() }
 
-    override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {}
+    override fun loadUrl(
+        url: String,
+        parent: EngineSession?,
+        flags: LoadUrlFlags,
+        additionalHeaders: Map<String, String>?
+    ) {}
 
     override fun loadData(data: String, mimeType: String, encoding: String) {}
 

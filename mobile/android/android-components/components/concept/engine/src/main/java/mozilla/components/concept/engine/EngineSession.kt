@@ -400,8 +400,14 @@ abstract class EngineSession(
      * @param parent the parent (referring) [EngineSession] i.e. the session that
      * triggered creating this one.
      * @param flags the [LoadUrlFlags] to use when loading the provider url.
+     * @param additionalHeaders the extra headers to use when loading the provided url.
      */
-    abstract fun loadUrl(url: String, parent: EngineSession? = null, flags: LoadUrlFlags = LoadUrlFlags.none())
+    abstract fun loadUrl(
+        url: String,
+        parent: EngineSession? = null,
+        flags: LoadUrlFlags = LoadUrlFlags.none(),
+        additionalHeaders: Map<String, String>? = null
+    )
 
     /**
      * Loads the data with the given mimeType.
