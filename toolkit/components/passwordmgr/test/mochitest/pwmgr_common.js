@@ -570,7 +570,9 @@ SimpleTest.registerCleanupFunction(() => {
     );
     authMgr.clearAll();
 
-    if (LoginManagerParent._recipeManager) {
+    // Check that it's not null, instead of truthy to catch it becoming undefined
+    // in a refactoring.
+    if (LoginManagerParent._recipeManager !== null) {
       LoginManagerParent._recipeManager.reset();
     }
 
