@@ -65,20 +65,6 @@ ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
   }
 }
 
-inline const char* ToPlaybackStateEventStr(PlaybackState aState) {
-  switch (aState) {
-    case PlaybackState::ePlaying:
-      return "Playing";
-    case PlaybackState::ePaused:
-      return "Paused";
-    case PlaybackState::eStopped:
-      return "Stopped";
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid playback state.");
-      return "Unknown";
-  }
-}
-
 inline const char* ToControlledMediaStateStr(ControlledMediaState aState) {
   switch (aState) {
     case ControlledMediaState::eStarted:

@@ -87,7 +87,8 @@ void MediaControlKeysManager::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
   }
 }
 
-void MediaControlKeysManager::SetPlaybackState(PlaybackState aState) {
+void MediaControlKeysManager::SetPlaybackState(
+    MediaSessionPlaybackState aState) {
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetPlaybackState(aState);
   } else {
@@ -97,7 +98,7 @@ void MediaControlKeysManager::SetPlaybackState(PlaybackState aState) {
   }
 }
 
-PlaybackState MediaControlKeysManager::GetPlaybackState() const {
+MediaSessionPlaybackState MediaControlKeysManager::GetPlaybackState() const {
   return (mEventSource && mEventSource->IsOpened())
              ? mEventSource->GetPlaybackState()
              : mPlaybackState;

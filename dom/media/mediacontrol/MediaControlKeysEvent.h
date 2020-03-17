@@ -6,6 +6,7 @@
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYSEVENT_H_
 
 #include "mozilla/dom/MediaMetadata.h"
+#include "mozilla/dom/MediaSessionBinding.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -61,8 +62,6 @@ class MediaControlKeysHandler final : public MediaControlKeysEventListener {
   virtual ~MediaControlKeysHandler() = default;
 };
 
-enum class PlaybackState : uint8_t;
-
 /**
  * MediaControlKeysEventSource is an abstract class which is used to implement
  * transporting media control keys event to all its listeners when media keys
@@ -83,8 +82,8 @@ class MediaControlKeysEventSource {
   virtual void Close();
   virtual bool IsOpened() const = 0;
 
-  virtual void SetPlaybackState(PlaybackState aState);
-  virtual PlaybackState GetPlaybackState() const;
+  virtual void SetPlaybackState(MediaSessionPlaybackState aState);
+  virtual MediaSessionPlaybackState GetPlaybackState() const;
 
   // Override this method if the event source needs to handle the metadata.
   virtual void SetMediaMetadata(const MediaMetadataBase& aMetadata) {}
@@ -92,7 +91,7 @@ class MediaControlKeysEventSource {
  protected:
   virtual ~MediaControlKeysEventSource() = default;
   nsTArray<RefPtr<MediaControlKeysEventListener>> mListeners;
-  PlaybackState mPlaybackState;
+  MediaSessionPlaybackState mPlaybackState;
 };
 
 }  // namespace dom
