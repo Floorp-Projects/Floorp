@@ -1376,3 +1376,81 @@ bool WarpBuilder::build_IsNoIter(BytecodeLocation) {
   current->push(ins);
   return true;
 }
+
+bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
+  uint32_t argc = loc.getCallArgc();
+  JSOp op = loc.getOp();
+  bool constructing = IsConstructOp(op);
+  bool ignoresReturnValue = (op == JSOp::CallIgnoresRv);
+
+  CallInfo callInfo(alloc(), loc.toRawBytecode(), constructing,
+                    ignoresReturnValue);
+  if (!callInfo.init(current, argc)) {
+    return false;
+  }
+
+  // TODO: consider adding a Call IC like Baseline has.
+
+  bool needsThisCheck = false;
+  if (callInfo.constructing()) {
+    // Inline the this-object allocation on the caller-side.
+    MDefinition* callee = callInfo.fun();
+    MDefinition* newTarget = callInfo.getNewTarget();
+    MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
+    current->add(createThis);
+    callInfo.setThis(createThis);
+    needsThisCheck = true;
+  }
+
+  // TODO: specialize for known target. Pad missing arguments. Set MCall flags
+  // based on this known target.
+  JSFunction* target = nullptr;
+  uint32_t targetArgs = callInfo.argc();
+  bool isDOMCall = false;
+  DOMObjectKind objKind = DOMObjectKind::Unknown;
+
+  MCall* call =
+      MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
+                 callInfo.argc(), callInfo.constructing(),
+                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
+  if (!call) {
+    return false;
+  }
+
+  if (callInfo.constructing()) {
+    if (needsThisCheck) {
+      call->setNeedsThisCheck();
+    }
+    call->addArg(targetArgs + 1, callInfo.getNewTarget());
+  }
+
+  // Add explicit arguments.
+  // Skip addArg(0) because it is reserved for |this|.
+  for (int32_t i = callInfo.argc() - 1; i >= 0; i--) {
+    call->addArg(i + 1, callInfo.getArg(i));
+  }
+
+  // Pass |this| and function.
+  call->addArg(0, callInfo.thisArg());
+  call->initFunction(callInfo.fun());
+
+  current->add(call);
+  current->push(call);
+  return resumeAfter(call, loc);
+}
+
+bool WarpBuilder::build_Call(BytecodeLocation loc) { return buildCallOp(loc); }
+
+bool WarpBuilder::build_CallIgnoresRv(BytecodeLocation loc) {
+  return buildCallOp(loc);
+}
+
+bool WarpBuilder::build_CallIter(BytecodeLocation loc) {
+  return buildCallOp(loc);
+}
+
+bool WarpBuilder::build_New(BytecodeLocation loc) { return buildCallOp(loc); }
+
+bool WarpBuilder::build_SuperCall(BytecodeLocation loc) {
+  return buildCallOp(loc);
+}

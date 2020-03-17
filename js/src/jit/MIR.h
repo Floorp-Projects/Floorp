@@ -6340,7 +6340,7 @@ class MUnaryCache : public MUnaryInstruction, public BoxPolicy<0>::Data {
 
 // Check the current frame for over-recursion past the global stack limit.
 class MCheckOverRecursed : public MNullaryInstruction {
-  MCheckOverRecursed() : MNullaryInstruction(classOpcode) {}
+  MCheckOverRecursed() : MNullaryInstruction(classOpcode) { setGuard(); }
 
  public:
   INSTRUCTION_HEADER(CheckOverRecursed)

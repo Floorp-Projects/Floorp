@@ -118,6 +118,11 @@ namespace jit {
   _(MoreIter)               \
   _(EndIter)                \
   _(IsNoIter)               \
+  _(Call)                   \
+  _(CallIgnoresRv)          \
+  _(CallIter)               \
+  _(New)                    \
+  _(SuperCall)              \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -201,6 +206,7 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildTestOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildDefLexicalOp(BytecodeLocation loc);
+  MOZ_MUST_USE bool buildCallOp(BytecodeLocation loc);
 
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
