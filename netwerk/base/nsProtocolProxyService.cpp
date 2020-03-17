@@ -1193,7 +1193,7 @@ const char* nsProtocolProxyService::ExtractProxyInfo(const char* start,
   const char* type = nullptr;
   switch (len) {
     case 4:
-      if (PL_strncasecmp(start, kProxyType_HTTP, 5) == 0) {
+      if (PL_strncasecmp(start, kProxyType_HTTP, 4) == 0) {
         type = kProxyType_HTTP;
       }
       break;
