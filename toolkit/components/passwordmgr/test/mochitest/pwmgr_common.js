@@ -76,23 +76,27 @@ function recreateTree(element) {
  * *labels* are being shown correctly as items in the popup.
  */
 function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
-  if (hostname !== null) {
-    isnot(
-      actualValues.length,
-      0,
-      "There should be items in the autocomplete popup: " +
-        JSON.stringify(actualValues)
-    );
-
-    // Check the footer first.
-    let footerResult = actualValues[actualValues.length - 1];
-    is(footerResult, "View Saved Logins", "the footer text is shown correctly");
-  }
-
   if (hostname === null) {
     checkArrayValues(actualValues, expectedValues, msg);
     return;
   }
+
+  is(
+    typeof hostname,
+    "string",
+    "checkAutoCompleteResults: hostname must be a string"
+  );
+
+  isnot(
+    actualValues.length,
+    0,
+    "There should be items in the autocomplete popup: " +
+      JSON.stringify(actualValues)
+  );
+
+  // Check the footer first.
+  let footerResult = actualValues[actualValues.length - 1];
+  is(footerResult, "View Saved Logins", "the footer text is shown correctly");
 
   if (actualValues.length == 1) {
     is(
