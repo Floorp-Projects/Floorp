@@ -206,8 +206,8 @@ mochitest-devtools-chrome:
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
 
-mochitest-gpu:
-    description: "Mochitest GPU run"
+mochitest-plain-gpu:
+    description: "Mochitest plain GPU run"
     suite:
         name: mochitest-plain-gpu
     treeherder-symbol: M(gpu)
@@ -225,7 +225,27 @@ mochitest-gpu:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-gpu
                 default:
-                    - --mochitest-suite=mochitest-plain-gpu,mochitest-chrome-gpu,mochitest-browser-chrome-gpu
+                    - --mochitest-suite=mochitest-plain-gpu
+
+mochitest-chrome-gpu:
+    description: "Mochitest chrome GPU run"
+    suite:
+        name: mochitest-chrome-gpu
+    treeherder-symbol: M(gpu-c)
+    loopback-video: true
+    fission-run-on-projects: []
+    fission-tier: 2
+    tier: default
+    virtualization: virtual-with-gpu
+    e10s: true
+    run-on-projects:
+        by-test-platform:
+            android.*/.*: []
+            default: built-projects
+    mozharness:
+        mochitest-flavor: chrome
+        extra-options:
+            - --mochitest-suite=mochitest-chrome-gpu
 
 mochitest-media:
     description: "Mochitest media run"
