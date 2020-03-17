@@ -8585,6 +8585,11 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
         return false;
       }
 
+      if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
       break;
     }
 
@@ -8598,6 +8603,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
         return false;
       }
 
+      if (params.persistenceTypeIsExplicit()) {
+        if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+      }
+
       break;
     }
 
@@ -8609,6 +8621,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
+      }
+
+      if (params.persistenceTypeIsExplicit()) {
+        if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
       }
 
       break;
@@ -9511,8 +9530,6 @@ void InitStorageAndOriginOp::Init(Quota* aQuota) {
 
   QuotaRequestBase::Init(aQuota);
 
-  MOZ_ASSERT(mParams.persistenceType() != PERSISTENCE_TYPE_INVALID);
-
   mPersistenceType.SetValue(mParams.persistenceType());
 
   if (mParams.clientTypeIsExplicit()) {
@@ -9834,8 +9851,6 @@ void ClearOriginOp::Init(Quota* aQuota) {
   QuotaRequestBase::Init(aQuota);
 
   if (mParams.persistenceTypeIsExplicit()) {
-    MOZ_ASSERT(mParams.persistenceType() != PERSISTENCE_TYPE_INVALID);
-
     mPersistenceType.SetValue(mParams.persistenceType());
   }
 
