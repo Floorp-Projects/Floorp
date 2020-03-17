@@ -53,6 +53,8 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -933,6 +935,30 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdateProgressAction(tabId, 100)).joinBlocking()
 
         verify(fragment, times(0)).dismiss()
+    }
+
+    @Test
+    fun `confirm dialogs will not be automatically dismissed`() {
+        val feature = spy(PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = mock()) { })
+        feature.start()
+
+        val promptRequest = PromptRequest.Confirm(
+            "title",
+            "message",
+            false,
+            "positive",
+            "negative",
+            "neutral",
+            { },
+            { },
+            { },
+            { }
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+
+        val prompt = feature.activePrompt?.get()
+        assertNotNull(prompt)
+        assertFalse(prompt!!.shouldDismissOnLoad())
     }
 
     private fun mockFragmentManager(): FragmentManager {
