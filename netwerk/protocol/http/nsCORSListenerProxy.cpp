@@ -563,7 +563,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
     MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(mOriginHeaderPrincipal));
     nsAutoCString origin;
-    mOriginHeaderPrincipal->GetAsciiOrigin(origin);
+    nsContentUtils::GetASCIIOrigin(mOriginHeaderPrincipal, origin);
 
     if (!allowedOriginHeader.Equals(origin)) {
       LogBlockedRequest(
