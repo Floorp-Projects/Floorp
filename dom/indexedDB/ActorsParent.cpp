@@ -16578,6 +16578,10 @@ nsresult FileManager::Init(nsIFile* aDirectory,
 }
 
 nsCOMPtr<nsIFile> FileManager::GetDirectory() {
+  if (!this->AssertValid()) {
+    return nullptr;
+  }
+
   return GetFileForPath(*mDirectoryPath);
 }
 
@@ -16599,6 +16603,10 @@ nsCOMPtr<nsIFile> FileManager::GetCheckedDirectory() {
 }
 
 nsCOMPtr<nsIFile> FileManager::GetJournalDirectory() {
+  if (!this->AssertValid()) {
+    return nullptr;
+  }
+
   return GetFileForPath(*mJournalDirectoryPath);
 }
 
@@ -16916,6 +16924,10 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t& aUsage) {
 }
 
 nsresult FileManager::SyncDeleteFile(const int64_t aId) {
+  if (!this->AssertValid()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   const auto directory = GetDirectory();
   if (NS_WARN_IF(!directory)) {
     return NS_ERROR_FAILURE;
