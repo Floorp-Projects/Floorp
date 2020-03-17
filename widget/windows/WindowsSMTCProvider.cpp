@@ -393,6 +393,13 @@ bool WindowsSMTCProvider::SetMusicMetadata(
   return true;
 }
 
+void WindowsSMTCProvider::SetMediaMetadata(
+    const mozilla::dom::MediaMetadataBase& aMetadata) {
+  SetMusicMetadata(Some(aMetadata.mArtist.get()), aMetadata.mTitle.get(),
+                   Some(aMetadata.mAlbum.get()));
+  Update();
+}
+
 void WindowsSMTCProvider::OnButtonPressed(
     mozilla::dom::MediaControlKeysEvent aEvent) {
   for (auto& listener : mListeners) {

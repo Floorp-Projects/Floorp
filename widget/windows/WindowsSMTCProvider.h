@@ -64,6 +64,9 @@ class WindowsSMTCProvider final
                         const wchar_t* aTitle,
                         mozilla::Maybe<const wchar_t*> aAlbumArtist);
 
+  void SetMediaMetadata(
+      const mozilla::dom::MediaMetadataBase& aMetadata) override;
+
  private:
   ~WindowsSMTCProvider();
   void UnregisterEvents();
