@@ -330,6 +330,12 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     case nsIContentPolicy::TYPE_SPECULATIVE:
       destination = RequestDestination::_empty;
       break;
+    case nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET:
+      destination = RequestDestination::Audioworklet;
+      break;
+    case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
+      destination = RequestDestination::Paintworklet;
+      break;
     default:
       MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
       break;
