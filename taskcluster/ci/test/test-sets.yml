@@ -336,13 +336,14 @@ linux1804-tests:
     - jittest
     - jsreftest
     - marionette
-    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
+    - mochitest-chrome-gpu
     - mochitest-devtools-chrome
-    - mochitest-gpu
     - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -363,11 +364,12 @@ linux1804-qr-tests:
     - gtest
     - jittest
     - jsreftest
-    - mochitest-plain
     - mochitest-a11y
     - mochitest-chrome
-    - mochitest-gpu
+    - mochitest-chrome-gpu
     - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
     - mochitest-webgpu
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -387,9 +389,10 @@ linux-talos-flex:
 
 windows-qr-tests:
     - crashtest
-    - mochitest-plain
+    - mochitest-chrome-gpu
     - mochitest-browser-chrome
-    - mochitest-gpu
+    - mochitest-plain
+    - mochitest-plain-gpu
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl2-core
@@ -408,13 +411,14 @@ windows-tests:
     - jittest
     - jsreftest
     - marionette
-    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
+    - mochitest-chrome-gpu
     - mochitest-devtools-chrome
-    - mochitest-gpu
     - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -434,7 +438,8 @@ mingwclang-tests-debug:
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - mochitest-a11y
-    - mochitest-gpu
+    - mochitest-chrome-gpu
+    - mochitest-plain-gpu
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
@@ -445,7 +450,8 @@ mingwclang-tests-debug:
 
 mingwclang-tests-opt:
     - cppunit
-    - mochitest-gpu
+    - mochitest-chrome-gpu
+    - mochitest-plain-gpu
 
 windows-aarch64-tests:
     - crashtest
@@ -483,12 +489,13 @@ macosx1014-64-tests:
     - jittest
     - jsreftest
     - marionette
-    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
+    - mochitest-chrome-gpu
     - mochitest-devtools-chrome
-    - mochitest-gpu
+    - mochitest-plain
+    - mochitest-plain-gpu
     - mochitest-media
     - mochitest-remote
     - mochitest-webgl1-core
@@ -537,9 +544,10 @@ android-x86_64-tests:
     - crashtest
     - geckoview-junit
     - gtest
-    - mochitest-plain
-    - mochitest-gpu
+    - mochitest-chrome-gpu
     - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
     # - mochitest-webgl1-core # Harness issues?
     # - mochitest-webgl1-ext
     # - mochitest-webgl2-core # Emulator not creating ES3?
