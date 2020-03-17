@@ -489,6 +489,10 @@ class Document : public nsINode,
   typedef dom::ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef dom::ReferrerPolicy ReferrerPolicyEnum;
 
+  // nsINode overrides the new operator for DOM Arena allocation.
+  // to use the default one, we need to bring it back again
+  void* operator new(size_t aSize) { return ::operator new(aSize); }
+
   /**
    * Called when XPCOM shutdown.
    */
