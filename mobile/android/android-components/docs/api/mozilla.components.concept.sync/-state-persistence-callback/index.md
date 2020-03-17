@@ -2,7 +2,7 @@
 
 # StatePersistenceCallback
 
-`interface StatePersistenceCallback` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L250)
+`interface StatePersistenceCallback` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L257)
 
 Describes a delegate object that is used by [OAuthAccount](../-o-auth-account/index.md) to persist its internal state as it changes.
 

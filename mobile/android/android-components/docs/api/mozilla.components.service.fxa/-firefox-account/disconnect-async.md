@@ -2,7 +2,7 @@
 
 # disconnectAsync
 
-`fun disconnectAsync(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L229)
+`fun disconnectAsync(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L233)
 
 Overrides [OAuthAccount.disconnectAsync](../../mozilla.components.concept.sync/-o-auth-account/disconnect-async.md)
 

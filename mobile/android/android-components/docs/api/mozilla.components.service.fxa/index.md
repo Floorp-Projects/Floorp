@@ -25,6 +25,7 @@
 | [FxaUnauthorizedException](-fxa-unauthorized-exception.md) | `typealias FxaUnauthorizedException = Unauthorized`<br>Thrown when the operation requires additional authorization. |
 | [FxaUnspecifiedException](-fxa-unspecified-exception.md) | `typealias FxaUnspecifiedException = Unspecified`<br>Thrown when the Rust library hits an unexpected error that isn't a panic. This may indicate library misuse, network errors, etc. |
 | [PersistCallback](-persist-callback.md) | `typealias PersistCallback = PersistCallback` |
+| [Server](-server.md) | `typealias Server = Server` |
 | [ServerConfig](-server-config.md) | `typealias ServerConfig = Config` |
 
 ### Extensions for External Classes

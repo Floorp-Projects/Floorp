@@ -2,7 +2,7 @@
 
 # SupportedAddonsChecker
 
-`interface SupportedAddonsChecker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L38)
+`interface SupportedAddonsChecker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L39)
 
 Contract to define the behavior for a periodic checker for newly supported add-ons.
 

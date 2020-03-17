@@ -2,7 +2,7 @@
 
 # DefaultSupportedAddonsChecker
 
-`class DefaultSupportedAddonsChecker : `[`SupportedAddonsChecker`](../-supported-addons-checker/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L66)
+`class DefaultSupportedAddonsChecker : `[`SupportedAddonsChecker`](../-supported-addons-checker/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L67)
 
 An implementation of [SupportedAddonsChecker](../-supported-addons-checker/index.md) that uses the work manager api for scheduling checks.
 
