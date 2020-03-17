@@ -50,6 +50,11 @@ diff_description_schema = Schema({
     # Fail the task when differences are detected.
     Optional('fail-on-diff'): bool,
 
+    # What artifact to check the differences of. Defaults to target.tar.bz2
+    # for Linux, target.dmg for Mac, target.zip for Windows, target.apk for
+    # Android.
+    Optional('artifact'): text_type,
+
     # Whether to unpack first. Diffoscope can normally work without unpacking,
     # but when one needs to --exclude some contents, that doesn't work out well
     # if said content is packed (e.g. in omni.ja).
@@ -76,6 +81,7 @@ def fill_template(config, tasks):
         deps = {}
         urls = {}
         previous_artifact = None
+        artifact = task.get('artifact')
         for k in ('original', 'new'):
             value = task[k]
             if isinstance(value, text_type):
@@ -100,7 +106,9 @@ def fill_template(config, tasks):
                 deps[index] = 'index-search-' + index
                 dep_name = index
                 os_hint = index.split('.')[-1]
-            if 'linux' in os_hint:
+            if artifact:
+                pass
+            elif 'linux' in os_hint:
                 artifact = 'target.tar.bz2'
             elif 'macosx' in os_hint:
                 artifact = 'target.dmg'
@@ -139,8 +147,6 @@ def fill_template(config, tasks):
                 } for f in (
                     'diff.html',
                     'diff.txt',
-                    'generated-files.diff.html',
-                    'generated-files.diff.txt',
                 )],
                 'env': {
                     'ORIG_URL': urls['original'],
