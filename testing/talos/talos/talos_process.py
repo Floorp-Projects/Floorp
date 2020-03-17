@@ -146,7 +146,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
                 if proc.wait(1) is not None:
                     break
             if proc.poll() is None:
-                LOG.info(
+                raise TalosError(
                     "Browser shutdown timed out after {0} seconds, terminating"
                     " process.".format(wait_for_quit_timeout)
                 )
