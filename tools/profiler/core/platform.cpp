@@ -2617,7 +2617,7 @@ static void PrintUsageThenExit(int aExitCode) {
       PROFILER_MAX_INTERVAL);
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
-  printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
+  printf("    %c %6u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
          ProfilerFeature::Name_, str_, desc_);
 
   PROFILER_FOR_EACH_FEATURE(PRINT_FEATURE)
