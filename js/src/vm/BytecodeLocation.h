@@ -235,6 +235,11 @@ class BytecodeLocation {
     return EnvironmentCoordinate(rawBytecode_);
   }
 
+  uint32_t getCallArgc() const {
+    MOZ_ASSERT(JOF_OPTYPE(getOp()) == JOF_ARGC);
+    return GET_ARGC(rawBytecode_);
+  }
+
   int8_t getInt8() const {
     MOZ_ASSERT(is(JSOp::Int8));
     return GET_INT8(rawBytecode_);
