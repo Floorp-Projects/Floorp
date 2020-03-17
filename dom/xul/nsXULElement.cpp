@@ -123,7 +123,9 @@ void nsXULElement::MaybeUpdatePrivateLifetime() {
 /* static */
 nsXULElement* NS_NewBasicXULElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
-  return new nsXULElement(std::move(aNodeInfo));
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(std::move(aNodeInfo));
+  auto* nim = nodeInfo->NodeInfoManager();
+  return new (nim) nsXULElement(nodeInfo.forget());
 }
 
 /* static */
@@ -132,7 +134,8 @@ nsXULElement* nsXULElement::Construct(
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
   if (nodeInfo->Equals(nsGkAtoms::label) ||
       nodeInfo->Equals(nsGkAtoms::description)) {
-    return new XULTextElement(nodeInfo.forget());
+    auto* nim = nodeInfo->NodeInfoManager();
+    return new (nim) XULTextElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::menupopup) ||
@@ -148,16 +151,19 @@ nsXULElement* nsXULElement::Construct(
   if (nodeInfo->Equals(nsGkAtoms::iframe) ||
       nodeInfo->Equals(nsGkAtoms::browser) ||
       nodeInfo->Equals(nsGkAtoms::editor)) {
-    return new XULFrameElement(nodeInfo.forget());
+    auto* nim = nodeInfo->NodeInfoManager();
+    return new (nim) XULFrameElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::menu) ||
       nodeInfo->Equals(nsGkAtoms::menulist)) {
-    return new XULMenuElement(nodeInfo.forget());
+    auto* nim = nodeInfo->NodeInfoManager();
+    return new (nim) XULMenuElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::tree)) {
-    return new XULTreeElement(nodeInfo.forget());
+    auto* nim = nodeInfo->NodeInfoManager();
+    return new (nim) XULTreeElement(nodeInfo.forget());
   }
 
   return NS_NewBasicXULElement(nodeInfo.forget());
