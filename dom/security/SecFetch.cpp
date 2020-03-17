@@ -31,6 +31,10 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
       return NS_LITERAL_CSTRING("sharedworker");
     case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
       return NS_LITERAL_CSTRING("serviceworker");
+    case nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET:
+      return NS_LITERAL_CSTRING("audioworklet");
+    case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
+      return NS_LITERAL_CSTRING("paintworklet");
     case nsIContentPolicy::TYPE_IMAGESET:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:

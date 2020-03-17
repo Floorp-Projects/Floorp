@@ -376,6 +376,24 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_FORCE_ALLOWED_DTD = 48;
 
+  /**
+   * Indicates an internal constant for scripts loaded through an
+   * audioWorklet.
+   *
+   * This will be mapped to TYPE_SCRIPT before being passed to content policy
+   * implementations.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_AUDIOWORKLET = 49;
+
+  /**
+   * Indicates an internal constant for scripts loaded through an
+   * paintWorklet.
+   *
+   * This will be mapped to TYPE_SCRIPT before being passed to content policy
+   * implementations.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_PAINTWORKLET = 50;
+
   /* When adding new content types, please update
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
    * DoContentSecurityChecks, all nsIContentPolicy implementations, the
