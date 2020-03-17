@@ -8,12 +8,16 @@
 #![warn(clippy::use_self)]
 
 pub mod decoder;
+mod decoder_instructions;
 pub mod encoder;
+mod encoder_instructions;
+mod header_block;
 pub mod huffman;
 mod huffman_decode_helper;
 pub mod huffman_table;
-pub mod qpack_helper;
+mod prefix;
 mod qpack_send_buf;
+pub mod reader;
 mod static_table;
 mod table;
 
@@ -45,6 +49,7 @@ pub enum Error {
     IntegerOverflow,
     WrongStreamCount,
     InternalError,
+    DecodingError, // this will be translated into Encoder/DecoderStreamError or DecompressionFailed depending on the caller
 
     TransportError(neqo_transport::Error),
 }

@@ -444,9 +444,7 @@ impl Server {
     /// This lists the connections that have received new events
     /// as a result of calling `process()`.
     pub fn active_connections(&mut self) -> Vec<ActiveConnectionRef> {
-        mem::replace(&mut self.active, Default::default())
-            .into_iter()
-            .collect()
+        mem::take(&mut self.active).into_iter().collect()
     }
 
     pub fn add_to_waiting(&mut self, c: ActiveConnectionRef) {
