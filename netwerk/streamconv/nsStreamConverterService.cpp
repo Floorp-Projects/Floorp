@@ -542,8 +542,8 @@ nsresult NS_NewStreamConv(nsStreamConverterService** aStreamConv) {
   MOZ_ASSERT(aStreamConv != nullptr, "null ptr");
   if (!aStreamConv) return NS_ERROR_NULL_POINTER;
 
-  *aStreamConv = new nsStreamConverterService();
-  NS_ADDREF(*aStreamConv);
+  RefPtr<nsStreamConverterService> conv = new nsStreamConverterService();
+  conv.forget(aStreamConv);
 
   return NS_OK;
 }

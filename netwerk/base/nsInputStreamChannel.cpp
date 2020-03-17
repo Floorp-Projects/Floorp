@@ -33,7 +33,7 @@ nsresult nsInputStreamChannel::OpenContentStream(bool async,
 
   EnableSynthesizedProgressEvents(true);
 
-  NS_ADDREF(*result = mContentStream);
+  *result = do_AddRef(mContentStream).take();
   return NS_OK;
 }
 

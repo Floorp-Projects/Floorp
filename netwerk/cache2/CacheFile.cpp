@@ -746,7 +746,7 @@ nsresult CacheFile::OpenInputStream(nsICacheEntry* aEntryHandle,
   NS_ADDREF(input);
 
   mDataAccessed = true;
-  NS_ADDREF(*_retval = input);
+  *_retval = do_AddRef(input).take();
   return NS_OK;
 }
 
@@ -814,7 +814,8 @@ nsresult CacheFile::OpenAlternativeInputStream(nsICacheEntry* aEntryHandle,
   NS_ADDREF(input);
 
   mDataAccessed = true;
-  NS_ADDREF(*_retval = input);
+  *_retval = do_AddRef(input).take();
+
   return NS_OK;
 }
 
@@ -889,7 +890,7 @@ nsresult CacheFile::OpenOutputStream(CacheOutputCloseListener* aCloseListener,
        mOutput, this));
 
   mDataAccessed = true;
-  NS_ADDREF(*_retval = mOutput);
+  *_retval = do_AddRef(mOutput).take();
   return NS_OK;
 }
 
@@ -979,7 +980,7 @@ nsresult CacheFile::OpenAlternativeOutputStream(
 
   mDataAccessed = true;
   mAltDataType = aAltDataType;
-  NS_ADDREF(*_retval = mOutput);
+  *_retval = do_AddRef(mOutput).take();
   return NS_OK;
 }
 

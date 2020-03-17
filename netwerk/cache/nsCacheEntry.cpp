@@ -162,7 +162,7 @@ nsresult nsCacheEntry::CreateDescriptor(nsCacheRequest* request,
   CACHE_LOG_DEBUG(("  descriptor %p created for request %p on entry %p\n",
                    descriptor, request, this));
 
-  NS_ADDREF(*result = descriptor);
+  *result = do_AddRef(descriptor).take();
   return NS_OK;
 }
 

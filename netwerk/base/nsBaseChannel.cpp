@@ -466,8 +466,8 @@ nsBaseChannel::SetLoadGroup(nsILoadGroup* aLoadGroup) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetOriginalURI(nsIURI** aURI) {
-  *aURI = OriginalURI();
-  NS_ADDREF(*aURI);
+  RefPtr<nsIURI> uri = OriginalURI();
+  uri.forget(aURI);
   return NS_OK;
 }
 

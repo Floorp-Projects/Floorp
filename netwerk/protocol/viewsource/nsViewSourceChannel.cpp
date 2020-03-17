@@ -271,9 +271,7 @@ nsViewSourceChannel::Resume(void) {
 
 NS_IMETHODIMP
 nsViewSourceChannel::GetOriginalURI(nsIURI** aURI) {
-  NS_ASSERTION(aURI, "Null out param!");
-  *aURI = mOriginalURI;
-  NS_ADDREF(*aURI);
+  *aURI = do_AddRef(mOriginalURI).take();
   return NS_OK;
 }
 

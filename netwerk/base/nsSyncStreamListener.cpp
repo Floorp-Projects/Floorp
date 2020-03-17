@@ -50,7 +50,7 @@ NS_IMPL_ISUPPORTS(nsSyncStreamListener, nsIStreamListener, nsIRequestObserver,
 
 NS_IMETHODIMP
 nsSyncStreamListener::GetInputStream(nsIInputStream** result) {
-  NS_ADDREF(*result = this);
+  *result = do_AddRef(this).take();
   return NS_OK;
 }
 

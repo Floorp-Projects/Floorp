@@ -119,7 +119,8 @@ ChildDNSRecord::GetScriptableNextAddr(uint16_t port, nsINetAddr** result) {
   nsresult rv = GetNextAddr(port, &addr);
   if (NS_FAILED(rv)) return rv;
 
-  NS_ADDREF(*result = new nsNetAddr(&addr));
+  RefPtr<nsNetAddr> netaddr = new nsNetAddr(&addr);
+  netaddr.forget(result);
 
   return NS_OK;
 }
