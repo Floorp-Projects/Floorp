@@ -13,14 +13,6 @@ webidl Document;
 typedef unsigned long PredictorPredictReason;
 typedef unsigned long PredictorLearnReason;
 
-%{C++
-namespace mozilla {
-
-class OriginAttributes;
-
-}
-%}
-
 [ref] native OriginAttributes(const mozilla::OriginAttributes);
 
 /**
@@ -159,9 +151,6 @@ class nsILoadGroup;
 class nsINetworkPredictorVerifier;
 
 namespace mozilla {
-
-class OriginAttributes;
-
 namespace net {
 
 nsresult PredictorPredict(nsIURI *targetURI,
