@@ -33,7 +33,7 @@ BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame* aTableFrame)
 }
 
 /* virtual */
-BasicTableLayoutStrategy::~BasicTableLayoutStrategy() {}
+BasicTableLayoutStrategy::~BasicTableLayoutStrategy() = default;
 
 /* virtual */
 nscoord BasicTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {

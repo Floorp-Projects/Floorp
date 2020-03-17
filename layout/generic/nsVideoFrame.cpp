@@ -76,7 +76,7 @@ nsVideoFrame::nsVideoFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
   EnableVisibilityTracking();
 }
 
-nsVideoFrame::~nsVideoFrame() {}
+nsVideoFrame::~nsVideoFrame() = default;
 
 NS_QUERYFRAME_HEAD(nsVideoFrame)
   NS_QUERYFRAME_ENTRY(nsVideoFrame)

@@ -503,7 +503,7 @@ bool nsFloatManager::ClearContinues(StyleClear aBreakType) const {
 //
 class nsFloatManager::ShapeInfo {
  public:
-  virtual ~ShapeInfo() {}
+  virtual ~ShapeInfo() = default;
 
   virtual nscoord LineLeft(const nscoord aBStart,
                            const nscoord aBEnd) const = 0;

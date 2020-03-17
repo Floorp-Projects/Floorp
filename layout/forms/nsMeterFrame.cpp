@@ -36,7 +36,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMeterFrame)
 nsMeterFrame::nsMeterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID), mBarDiv(nullptr) {}
 
-nsMeterFrame::~nsMeterFrame() {}
+nsMeterFrame::~nsMeterFrame() = default;
 
 void nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                PostDestroyData& aPostDestroyData) {

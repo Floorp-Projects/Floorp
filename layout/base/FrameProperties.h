@@ -137,7 +137,7 @@ class FrameProperties {
   template <typename T>
   using PropertyType = typename detail::FramePropertyTypeHelper<T>::Type;
 
-  explicit FrameProperties() {}
+  explicit FrameProperties() = default;
 
   ~FrameProperties() {
     MOZ_ASSERT(mProperties.Length() == 0, "forgot to delete properties");

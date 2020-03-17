@@ -21,7 +21,7 @@ nsIFrame* NS_NewMathMLTokenFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLTokenFrame)
 
-nsMathMLTokenFrame::~nsMathMLTokenFrame() {}
+nsMathMLTokenFrame::~nsMathMLTokenFrame() = default;
 
 NS_IMETHODIMP
 nsMathMLTokenFrame::InheritAutomaticData(nsIFrame* aParent) {

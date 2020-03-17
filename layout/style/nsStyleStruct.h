@@ -181,7 +181,7 @@ struct nsStyleImageLayers {
     mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
 
     // Initialize nothing
-    Repeat() {}
+    Repeat() = default;
 
     bool IsInitialValue() const {
       return mXRepeat == mozilla::StyleImageLayerRepeat::Repeat &&
@@ -1952,9 +1952,11 @@ class nsTArray_Simple {
   T* mBuffer;
 
  public:
-  // The existence of a destructor here prevents bindgen from deriving the Clone
-  // trait via a simple memory copy.
-  ~nsTArray_Simple(){};
+  ~nsTArray_Simple() {
+    // The existence of a user-provided, and therefore non-trivial, destructor
+    // here prevents bindgen from deriving the Clone trait via a simple memory
+    // copy.
+  }
 };
 
 STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<nsStyleImageLayers::Layer>,

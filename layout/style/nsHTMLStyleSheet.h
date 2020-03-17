@@ -66,7 +66,7 @@ class nsHTMLStyleSheet final {
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) = delete;
   nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) = delete;
 
-  ~nsHTMLStyleSheet() {}
+  ~nsHTMLStyleSheet() = default;
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor
   nsresult ImplLinkColorSetter(RefPtr<RawServoDeclarationBlock>& aDecl,

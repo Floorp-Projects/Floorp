@@ -11233,7 +11233,7 @@ void nsIFrame::DoAppendOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) {
 
 nsIFrame::CaretPosition::CaretPosition() : mContentOffset(0) {}
 
-nsIFrame::CaretPosition::~CaretPosition() {}
+nsIFrame::CaretPosition::~CaretPosition() = default;
 
 bool nsFrame::HasCSSAnimations() {
   auto collection =

@@ -435,7 +435,7 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
     // Bug 1301881: Do we still need to set NS_BLOCK_FLOAT_MGR?
     // AddStateBits(NS_BLOCK_FLOAT_MGR);
   }
-  virtual ~nsMathMLmathBlockFrame() {}
+  virtual ~nsMathMLmathBlockFrame() = default;
 };
 
 // --------------
@@ -498,7 +498,7 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
                                    nsPresContext* aPresContext)
       : nsInlineFrame(aStyle, aPresContext, kClassID) {}
 
-  virtual ~nsMathMLmathInlineFrame() {}
+  virtual ~nsMathMLmathInlineFrame() = default;
 };
 
 #endif /* nsMathMLContainerFrame_h___ */

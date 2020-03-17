@@ -42,7 +42,7 @@ nsresult NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout) {
 /*static*/
 void nsStackLayout::Shutdown() { NS_IF_RELEASE(gInstance); }
 
-nsStackLayout::nsStackLayout() {}
+nsStackLayout::nsStackLayout() = default;
 
 /*
  * Sizing: we are as wide as the widest child plus its left offset

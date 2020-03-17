@@ -892,7 +892,7 @@ class DependentBuiltinCounterStyle final : public BuiltinCounterStyle {
   }
 
  private:
-  ~DependentBuiltinCounterStyle() {}
+  ~DependentBuiltinCounterStyle() = default;
 
   CounterStyleManager* mManager;
 };
@@ -987,7 +987,7 @@ class CustomCounterStyle final : public CounterStyle {
   }
 
  private:
-  ~CustomCounterStyle() {}
+  ~CustomCounterStyle() = default;
 
   Span<const nsString> GetSymbols();
   Span<const AdditiveSymbol> GetAdditiveSymbols();

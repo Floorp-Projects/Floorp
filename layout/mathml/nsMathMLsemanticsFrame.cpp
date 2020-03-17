@@ -24,7 +24,7 @@ nsIFrame* NS_NewMathMLsemanticsFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLsemanticsFrame)
 
-nsMathMLsemanticsFrame::~nsMathMLsemanticsFrame() {}
+nsMathMLsemanticsFrame::~nsMathMLsemanticsFrame() = default;
 
 nsIFrame* nsMathMLsemanticsFrame::GetSelectedFrame() {
   // By default, we will display the first child of the <semantics> element.

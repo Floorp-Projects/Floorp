@@ -26,7 +26,7 @@ nsMathMLmsqrtFrame::nsMathMLmsqrtFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)
     : nsMathMLmencloseFrame(aStyle, aPresContext, kClassID) {}
 
-nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame() {}
+nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame() = default;
 
 void nsMathMLmsqrtFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                               nsIFrame* aPrevInFlow) {

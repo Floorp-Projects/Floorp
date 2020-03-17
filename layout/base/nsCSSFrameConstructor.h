@@ -872,8 +872,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      public:
       explicit Iterator(FrameConstructionItemList& aList)
           : mCurrent(aList.mItems.getFirst()), mList(aList) {}
-      Iterator(const Iterator& aOther)
-          : mCurrent(aOther.mCurrent), mList(aOther.mList) {}
+      Iterator(const Iterator& aOther) = default;
 
       bool operator==(const Iterator& aOther) const {
         MOZ_ASSERT(&mList == &aOther.mList, "Iterators for different lists?");

@@ -59,7 +59,7 @@ struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
     return false;
   }
 
-  virtual ~nsGenConNode() {}  // XXX Avoid, perhaps?
+  virtual ~nsGenConNode() = default;  // XXX Avoid, perhaps?
 
  protected:
   void CheckFrameAssertions() {

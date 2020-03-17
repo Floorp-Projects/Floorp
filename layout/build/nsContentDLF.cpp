@@ -72,9 +72,9 @@ nsresult NS_NewContentDocumentLoaderFactory(
   return NS_OK;
 }
 
-nsContentDLF::nsContentDLF() {}
+nsContentDLF::nsContentDLF() = default;
 
-nsContentDLF::~nsContentDLF() {}
+nsContentDLF::~nsContentDLF() = default;
 
 NS_IMPL_ISUPPORTS(nsContentDLF, nsIDocumentLoaderFactory)
 

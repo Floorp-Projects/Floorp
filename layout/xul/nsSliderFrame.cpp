@@ -895,7 +895,7 @@ class AsyncScrollbarDragStarter final : public nsAPostRefreshObserver {
   AsyncScrollbarDragStarter(mozilla::PresShell* aPresShell, nsIWidget* aWidget,
                             const AsyncDragMetrics& aDragMetrics)
       : mPresShell(aPresShell), mWidget(aWidget), mDragMetrics(aDragMetrics) {}
-  virtual ~AsyncScrollbarDragStarter() {}
+  virtual ~AsyncScrollbarDragStarter() = default;
 
   void DidRefresh() override {
     if (!mPresShell) {

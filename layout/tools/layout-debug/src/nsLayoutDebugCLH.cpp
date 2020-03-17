@@ -16,9 +16,9 @@
 #include "nsIURI.h"
 #include "nsServiceManagerUtils.h"
 
-nsLayoutDebugCLH::nsLayoutDebugCLH() {}
+nsLayoutDebugCLH::nsLayoutDebugCLH() = default;
 
-nsLayoutDebugCLH::~nsLayoutDebugCLH() {}
+nsLayoutDebugCLH::~nsLayoutDebugCLH() = default;
 
 NS_IMPL_ISUPPORTS(nsLayoutDebugCLH, ICOMMANDLINEHANDLER)
 

@@ -27,7 +27,7 @@ class nsLayoutHistoryState final : public nsILayoutHistoryState,
   NS_DECL_NSILAYOUTHISTORYSTATE
 
  private:
-  ~nsLayoutHistoryState() {}
+  ~nsLayoutHistoryState() = default;
   bool mScrollPositionOnly;
 
   nsDataHashtable<nsCStringHashKey, UniquePtr<PresState>> mStates;

@@ -34,7 +34,7 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(ComputedStyle* aStyle,
                                                    nsIFrame::ClassID aID)
     : nsContainerFrame(aStyle, aPresContext, aID) {}
 
-nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame() {}
+nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame() = default;
 
 void nsHTMLButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                            PostDestroyData& aPostDestroyData) {

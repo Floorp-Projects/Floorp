@@ -407,7 +407,7 @@ nsBlockFrame* NS_NewBlockFormattingContext(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBlockFrame)
 
-nsBlockFrame::~nsBlockFrame() {}
+nsBlockFrame::~nsBlockFrame() = default;
 
 void nsBlockFrame::AddSizeOfExcludingThisForTree(
     nsWindowSizes& aWindowSizes) const {

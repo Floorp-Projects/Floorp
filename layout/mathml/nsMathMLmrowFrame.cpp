@@ -22,7 +22,7 @@ nsIFrame* NS_NewMathMLmrowFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmrowFrame)
 
-nsMathMLmrowFrame::~nsMathMLmrowFrame() {}
+nsMathMLmrowFrame::~nsMathMLmrowFrame() = default;
 
 NS_IMETHODIMP
 nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent) {

@@ -973,7 +973,7 @@ void nsXULPopupManager::HidePopup(nsIContent* aPopup, bool aHideChain,
 // This is used to hide the popup after a transition finishes.
 class TransitionEnder final : public nsIDOMEventListener {
  protected:
-  virtual ~TransitionEnder() {}
+  virtual ~TransitionEnder() = default;
 
  public:
   nsCOMPtr<nsIContent> mContent;

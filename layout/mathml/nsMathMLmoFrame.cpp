@@ -28,7 +28,7 @@ nsIFrame* NS_NewMathMLmoFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmoFrame)
 
-nsMathMLmoFrame::~nsMathMLmoFrame() {}
+nsMathMLmoFrame::~nsMathMLmoFrame() = default;
 
 static const char16_t kApplyFunction = char16_t(0x2061);
 static const char16_t kInvisibleTimes = char16_t(0x2062);

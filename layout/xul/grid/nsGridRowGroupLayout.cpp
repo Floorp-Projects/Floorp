@@ -32,7 +32,7 @@ already_AddRefed<nsBoxLayout> NS_NewGridRowGroupLayout() {
 nsGridRowGroupLayout::nsGridRowGroupLayout()
     : nsGridRowLayout(), mRowCount(0) {}
 
-nsGridRowGroupLayout::~nsGridRowGroupLayout() {}
+nsGridRowGroupLayout::~nsGridRowGroupLayout() = default;
 
 void nsGridRowGroupLayout::ChildAddedOrRemoved(nsIFrame* aBox,
                                                nsBoxLayoutState& aState) {

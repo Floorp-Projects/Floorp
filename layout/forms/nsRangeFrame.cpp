@@ -48,7 +48,7 @@ nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 nsRangeFrame::nsRangeFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
-nsRangeFrame::~nsRangeFrame() {}
+nsRangeFrame::~nsRangeFrame() = default;
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRangeFrame)
 

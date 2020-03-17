@@ -91,7 +91,7 @@ class CSSStyleRule final : public BindingStyleRule,
 #endif
 
  private:
-  ~CSSStyleRule() {}
+  ~CSSStyleRule() = default;
 
   // For computing the offset of mDecls.
   friend class CSSStyleRuleDeclaration;

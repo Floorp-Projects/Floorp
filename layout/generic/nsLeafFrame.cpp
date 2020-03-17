@@ -11,7 +11,7 @@
 
 using namespace mozilla;
 
-nsLeafFrame::~nsLeafFrame() {}
+nsLeafFrame::~nsLeafFrame() = default;
 
 /* virtual */
 nscoord nsLeafFrame::GetMinISize(gfxContext* aRenderingContext) {

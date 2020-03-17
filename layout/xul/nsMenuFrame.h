@@ -240,7 +240,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   // This method can destroy the frame
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
-  virtual ~nsMenuFrame() {}
+  virtual ~nsMenuFrame() = default;
 
   bool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
 

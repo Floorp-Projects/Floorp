@@ -1909,7 +1909,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   class DelayedEvent {
    public:
-    virtual ~DelayedEvent() {}
+    virtual ~DelayedEvent() = default;
     virtual void Dispatch() {}
     virtual bool IsKeyPressEvent() { return false; }
   };

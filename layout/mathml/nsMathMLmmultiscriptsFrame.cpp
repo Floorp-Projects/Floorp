@@ -30,7 +30,7 @@ nsIFrame* NS_NewMathMLmmultiscriptsFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
 
-nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame() {}
+nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame() = default;
 
 uint8_t nsMathMLmmultiscriptsFrame::ScriptIncrement(nsIFrame* aFrame) {
   if (!aFrame) return 0;

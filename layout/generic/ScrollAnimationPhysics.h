@@ -29,7 +29,7 @@ class ScrollAnimationPhysics {
 
   virtual bool IsFinished(const TimeStamp& aTime) = 0;
 
-  virtual ~ScrollAnimationPhysics() {}
+  virtual ~ScrollAnimationPhysics() = default;
 };
 
 // Helper for accelerated wheel deltas. This can be called from the main thread

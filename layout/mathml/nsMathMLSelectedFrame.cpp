@@ -9,7 +9,7 @@
 
 using namespace mozilla;
 
-nsMathMLSelectedFrame::~nsMathMLSelectedFrame() {}
+nsMathMLSelectedFrame::~nsMathMLSelectedFrame() = default;
 
 NS_IMETHODIMP
 nsMathMLSelectedFrame::TransmitAutomaticData() {

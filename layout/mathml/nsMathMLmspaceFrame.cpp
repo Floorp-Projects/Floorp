@@ -24,7 +24,7 @@ nsIFrame* NS_NewMathMLmspaceFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmspaceFrame)
 
-nsMathMLmspaceFrame::~nsMathMLmspaceFrame() {}
+nsMathMLmspaceFrame::~nsMathMLmspaceFrame() = default;
 
 void nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext) {
   nsAutoString value;

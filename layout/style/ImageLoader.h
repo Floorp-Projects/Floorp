@@ -111,7 +111,7 @@ class ImageLoader final {
     void ReflowCallbackCanceled() override;
   };
 
-  ~ImageLoader() {}
+  ~ImageLoader() = default;
 
   // We need to be able to look up the frames associated with a request (for
   // delivering notifications) and the requests associated with a frame (when

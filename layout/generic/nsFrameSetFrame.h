@@ -34,7 +34,7 @@ struct nsBorderColor {
   nscolor mBottom;
 
   nsBorderColor() { Set(NO_COLOR); }
-  ~nsBorderColor() {}
+  ~nsBorderColor() = default;
   void Set(nscolor aColor) { mLeft = mRight = mTop = mBottom = aColor; }
 };
 

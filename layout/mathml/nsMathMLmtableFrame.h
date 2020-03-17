@@ -285,7 +285,7 @@ class nsMathMLmtdInnerFrame final : public nsBlockFrame, public nsMathMLFrame {
  protected:
   explicit nsMathMLmtdInnerFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext);
-  virtual ~nsMathMLmtdInnerFrame() {}
+  virtual ~nsMathMLmtdInnerFrame() = default;
 
   mozilla::UniquePtr<nsStyleText> mUniqueStyleText;
 

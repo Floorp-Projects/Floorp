@@ -42,7 +42,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 nsPageFrame::nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
-nsPageFrame::~nsPageFrame() {}
+nsPageFrame::~nsPageFrame() = default;
 
 void nsPageFrame::Reflow(nsPresContext* aPresContext,
                          ReflowOutput& aDesiredSize,
@@ -657,7 +657,7 @@ nsPageBreakFrame::nsPageBreakFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext)
     : nsLeafFrame(aStyle, aPresContext, kClassID), mHaveReflowed(false) {}
 
-nsPageBreakFrame::~nsPageBreakFrame() {}
+nsPageBreakFrame::~nsPageBreakFrame() = default;
 
 nscoord nsPageBreakFrame::GetIntrinsicISize() {
   return nsPresContext::CSSPixelsToAppUnits(1);

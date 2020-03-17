@@ -51,7 +51,7 @@ nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle,
                                          ClassID aID)
     : nsContainerFrame(aStyle, aPresContext, aID) {}
 
-nsTableWrapperFrame::~nsTableWrapperFrame() {}
+nsTableWrapperFrame::~nsTableWrapperFrame() = default;
 
 NS_QUERYFRAME_HEAD(nsTableWrapperFrame)
   NS_QUERYFRAME_ENTRY(nsTableWrapperFrame)
