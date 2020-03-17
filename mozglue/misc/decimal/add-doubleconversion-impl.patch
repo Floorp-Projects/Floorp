@@ -1,0 +1,42 @@
+diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
+--- a/mozglue/misc/decimal/Decimal.cpp
++++ b/mozglue/misc/decimal/Decimal.cpp
+@@ -25,16 +25,17 @@
+  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+ #include "Decimal.h"
+ #include "moz-decimal-utils.h"
++#include "DoubleConversion.h"
+ 
+ using namespace moz_decimal_utils;
+ 
+ #include <algorithm>
+ #include <float.h>
+ 
+ namespace blink {
+ 
+@@ -1043,8 +1044,20 @@ bool Decimal::toString(char* strBuf, siz
+ }
+ 
+ Decimal Decimal::zero(Sign sign)
+ {
+     return Decimal(EncodedData(sign, EncodedData::ClassZero));
+ }
+ 
+ } // namespace blink
++
++// Implementation of DoubleConversion.h:
++
++namespace mozilla {
++
++Maybe<double> StringToDouble(Span<const char> aStringSpan) {
++    bool valid = false;
++    double result = mozToDouble(aStringSpan, &valid);
++    return valid ? Some(result) : Nothing();
++}
++
++}

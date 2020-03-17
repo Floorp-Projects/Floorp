@@ -30,6 +30,7 @@
 
 #include "Decimal.h"
 #include "moz-decimal-utils.h"
+#include "DoubleConversion.h"
 
 using namespace moz_decimal_utils;
 
@@ -1048,3 +1049,15 @@ Decimal Decimal::zero(Sign sign)
 }
 
 } // namespace blink
+
+// Implementation of DoubleConversion.h:
+
+namespace mozilla {
+
+Maybe<double> StringToDouble(Span<const char> aStringSpan) {
+    bool valid = false;
+    double result = mozToDouble(aStringSpan, &valid);
+    return valid ? Some(result) : Nothing();
+}
+
+}

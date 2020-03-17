@@ -35,6 +35,7 @@ if [ $# -eq 1 ]; then
     cp "$P" .
   done
 else
+  #LATEST_SHA=$(cat UPSTREAM-GIT-SHA)
   LATEST_SHA=$(git ls-remote https://chromium.googlesource.com/chromium/src.git/ | awk "/refs\/heads\/master/ {print \$1}")
   REPO_PATH="https://chromium.googlesource.com/chromium/src.git/+/$LATEST_SHA/third_party/WebKit/Source/platform"
   #REPO_PATH="https://github.com/WebKit/webkit/tree/master/Source/WebCore/platform"
@@ -49,10 +50,11 @@ fi
 
 # Apply patches:
 
-patch -p3 < zero-serialization.patch
-patch -p3 < comparison-with-nan.patch
-patch -p3 < mfbt-abi-markers.patch
-patch -p3 < to-moz-dependencies.patch
+patch -p4 < zero-serialization.patch
+patch -p4 < comparison-with-nan.patch
+patch -p4 < mfbt-abi-markers.patch
+patch -p4 < to-moz-dependencies.patch
+patch -p4 < add-doubleconversion-impl.patch
 # The following is disabled. See
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1208357#c7
-#patch -p3 < fix-wshadow-warnings.patch
+#patch -p4 < fix-wshadow-warnings.patch

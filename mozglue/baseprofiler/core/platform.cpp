@@ -47,8 +47,10 @@
 #  include "mozilla/Atomics.h"
 #  include "mozilla/AutoProfilerLabel.h"
 #  include "mozilla/BaseProfilerDetail.h"
+#  include "mozilla/DoubleConversion.h"
 #  include "mozilla/Printf.h"
 #  include "mozilla/Services.h"
+#  include "mozilla/Span.h"
 #  include "mozilla/StackWalk.h"
 #  include "mozilla/StaticPtr.h"
 #  include "mozilla/ThreadLocal.h"
@@ -2422,35 +2424,36 @@ void profiler_init(void* aStackTop) {
 
     const char* startupDuration = getenv("MOZ_BASE_PROFILER_STARTUP_DURATION");
     if (startupDuration && startupDuration[0] != '\0') {
-      // TODO implement if needed
-      MOZ_CRASH("MOZ_BASE_PROFILER_STARTUP_DURATION unsupported");
-      // errno = 0;
-      // double durationVal = PR_strtod(startupDuration, nullptr);
-      // if (errno == 0 && durationVal >= 0.0) {
-      //   if (durationVal > 0.0) {
-      //     duration = Some(durationVal);
-      //   }
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION = %f", durationVal);
-      // } else {
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
-      //       startupDuration);
-      //   PrintUsageThenExit(1);
-      // }
+      // The duration is a floating point number. Use StringToDouble rather than
+      // strtod, so that "." is used as the decimal separator regardless of OS
+      // locale.
+      auto durationVal = StringToDouble(std::string(startupDuration));
+      if (durationVal && *durationVal >= 0.0) {
+        if (*durationVal > 0.0) {
+          duration = Some(*durationVal);
+        }
+        LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION = %f", *durationVal);
+      } else {
+        LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
+            startupDuration);
+        PrintUsageThenExit(1);
+      }
     }
 
     const char* startupInterval = getenv("MOZ_BASE_PROFILER_STARTUP_INTERVAL");
     if (startupInterval && startupInterval[0] != '\0') {
-      // TODO implement if needed
-      MOZ_CRASH("MOZ_BASE_PROFILER_STARTUP_INTERVAL unsupported");
-      // errno = 0;
-      // interval = PR_strtod(startupInterval, nullptr);
-      // if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL = %f", interval);
-      // } else {
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
-      //       startupInterval);
-      //   PrintUsageThenExit(1);
-      // }
+      // The interval is a floating point number. Use StringToDouble rather than
+      // strtod, so that "." is used as the decimal separator regardless of OS
+      // locale.
+      auto intervalValue = StringToDouble(MakeStringSpan(startupInterval));
+      if (intervalValue && *intervalValue > 0.0 && *intervalValue <= 1000.0) {
+        interval = *intervalValue;
+        LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL = %f", interval);
+      } else {
+        LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+            startupInterval);
+        PrintUsageThenExit(1);
+      }
     }
 
     features |= StartupExtraDefaultFeatures() & AvailableFeatures();
