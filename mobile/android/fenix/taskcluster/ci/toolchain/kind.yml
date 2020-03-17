@@ -10,6 +10,27 @@ job-defaults:
         using: index-search
 
 jobs:
+    browsertime:
+        description: "Browsertime toolchain"
+        attributes:
+            toolchain-artifact: public/build/browsertime.tar.bz2
+        run:
+            index-search:
+                - gecko.cache.level-3.toolchains.v3.browsertime.latest
+    linux64-ffmpeg-4.1.4:
+        description: "FFMPEG fetch"
+        attributes:
+            toolchain-artifact: 'public/ffmpeg-4.1.4-i686-static.tar.xz'
+        run:
+            index-search:
+                - gecko.cache.level-3.content.v1.linux64-ffmpeg-4.1.4.latest
+    linux64-geckodriver:
+        description: "Geckodriver toolchain"
+        attributes:
+            toolchain-artifact: public/build/geckodriver.tar.xz
+        run:
+            index-search:
+                - gecko.cache.level-3.toolchains.v3.linux64-geckodriver.latest
     linux64-minidump-stackwalk:
         description: "minidump_stackwalk toolchain"
         attributes:
@@ -17,3 +38,17 @@ jobs:
         run:
             index-search:
                 - gecko.cache.level-3.toolchains.v3.linux64-minidump-stackwalk.latest
+    linux64-node:
+        description: "Node.js toolchain"
+        attributes:
+            toolchain-artifact: public/build/node.tar.xz
+        run:
+            index-search:
+                - gecko.cache.level-3.toolchains.v3.linux64-node-10.latest
+    visual-metrics:
+        description: "Browsertime visual metrics analsyis script"
+        attributes:
+            toolchain-artifact: public/visualmetrics.py
+        run:
+            index-search:
+                - gecko.cache.level-3.content.v1.visual-metrics.latest

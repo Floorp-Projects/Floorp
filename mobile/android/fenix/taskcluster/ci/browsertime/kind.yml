@@ -1,0 +1,231 @@
+---
+loader: taskgraph.loader.transform:loader
+transforms:
+    - fenix_taskgraph.transforms.browsertime:transforms
+    - fenix_taskgraph.transforms.notify:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+    - toolchain
+
+primary-dependency: signing
+
+only-for-build-types:
+    - performance-test
+
+only-for-abis:
+    - armeabi-v7a
+    - arm64-v8a
+
+job-defaults:
+    dependencies:
+        geckoview-nightly: geckoview-nightly
+    notify:
+        by-level:
+            '3':
+                email:
+                    content: This calls for an action of the Performance team. Use the link to view it on Treeherder.
+                    link:
+                        text: Treeherder Job
+                        href: 'https://treeherder.mozilla.org/#/jobs?repo={product_name}&revision={head_rev}&searchStr={task_name}'
+                    on-reasons: [failed]
+                    subject: '[{product_name}] Raptor-Browsertime job "{task_name}" failed'
+                    to-addresses: [perftest-alerts@mozilla.com]
+            default: {}
+    run-on-tasks-for: []
+    treeherder:
+        kind: test
+        tier: 2
+        platform:
+            by-abi:
+                arm64-v8a: android-hw-p2-8-0-android-aarch64/opt
+                armeabi-v7a: android-hw-g5-7-0-arm7-api-16/opt
+    worker-type:
+        by-abi:
+            armeabi-v7a: t-bitbar-gw-perf-g5
+            arm64-v8a: t-bitbar-gw-perf-p2
+    worker:
+        max-run-time: 3600
+        env:
+            GECKO_HEAD_REPOSITORY: "https://hg.mozilla.org/mozilla-central"
+            MOZ_AUTOMATION: "1"
+            MOZ_HIDE_RESULTS_TABLE: "1"
+            MOZ_NO_REMOTE: "1"
+            MOZ_NODE_PATH: "/usr/local/bin/node"
+            MOZHARNESS_CONFIG: "raptor/android_hw_config.py"
+            MOZHARNESS_SCRIPT: "raptor_script.py"
+            NEED_XVFB: "false"
+            NO_FAIL_ON_TEST_ERRORS: "1"
+            XPCOM_DEBUG_BREAK: "warn"
+        artifacts:
+            - name: public/logs/
+              path: workspace/logs
+              type: directory
+
+            - name: public/test_info/
+              path: workspace/build/blobber_upload_dir
+              type: directory
+    run-visual-metrics: True
+    run:
+        using: run-task
+        checkout: false
+        run-as-root: true
+        command:
+            - 'bash'
+            - './test-linux.sh'
+            - '--cfg=mozharness/configs/raptor/android_hw_config.py'
+            - '--app=fenix'
+            - '--browsertime'
+            - '--cold'
+            - '--binary=org.mozilla.fenix.performancetest'
+            - '--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity'
+            - '--download-symbols=ondemand'
+            - '--browsertime-node=$MOZ_FETCHES_DIR/node/bin/node'
+            - '--browsertime-geckodriver=$MOZ_FETCHES_DIR/geckodriver'
+            - '--browsertime-ffmpeg=$MOZ_FETCHES_DIR/ffmpeg-4.1.4-i686-static/bin/ffmpeg'
+            - '--browsertime-browsertimejs=$MOZ_FETCHES_DIR/browsertime/node_modules/browsertime/bin/browsertime.js'
+    fetches:
+        toolchain:
+            - browsertime
+            - linux64-ffmpeg-4.1.4
+            - linux64-geckodriver
+            - linux64-minidump-stackwalk
+            - linux64-node
+
+jobs:
+    tp6m-1-cold:
+        test-name: amazon
+        treeherder:
+            symbol: 'Btime(tp6m-1-c)'
+
+    tp6m-2-cold:
+        test-name: google
+        treeherder:
+            symbol: 'Btime(tp6m-2-c)'
+
+    tp6m-3-cold:
+        test-name: instagram
+        treeherder:
+            symbol: 'Btime(tp6m-3-c)'
+
+    tp6m-4-cold:
+        test-name: bing-search-restaurants
+        treeherder:
+            symbol: 'Btime(tp6m-4-c)'
+
+    tp6m-5-cold:
+        test-name: ebay-kleinanzeigen-search
+        treeherder:
+            symbol: 'Btime(tp6m-5-c)'
+
+    tp6m-6-cold:
+        test-name: amazon-search
+        treeherder:
+            symbol: 'Btime(tp6m-6-c)'
+
+    tp6m-7-cold:
+        test-name: wikipedia
+        treeherder:
+            symbol: 'Btime(tp6m-7-c)'
+
+    tp6m-8-cold:
+        test-name: booking
+        treeherder:
+            symbol: 'Btime(tp6m-8-c)'
+
+    tp6m-9-cold:
+        test-name: cnn-ampstories
+        treeherder:
+            symbol: 'Btime(tp6m-9-c)'
+
+    tp6m-10-cold:
+        test-name: bbc
+        treeherder:
+            symbol: 'Btime(tp6m-10-c)'
+
+    tp6m-11-cold:
+        test-name: microsoft-support
+        treeherder:
+            symbol: 'Btime(tp6m-11-c)'
+
+    tp6m-12-cold:
+        test-name: imdb
+        treeherder:
+            symbol: 'Btime(tp6m-12-c)'
+
+    tp6m-13-cold:
+        test-name: espn
+        treeherder:
+            symbol: 'Btime(tp6m-13-c)'
+
+    tp6m-14-cold:
+        test-name: facebook-cristiano
+        treeherder:
+            symbol: 'Btime(tp6m-14-c)'
+
+    tp6m-15-cold:
+        test-name: facebook
+        treeherder:
+            symbol: 'Btime(tp6m-15-c)'
+
+    tp6m-16-cold:
+        test-name: youtube
+        treeherder:
+            symbol: 'Btime(tp6m-16-c)'
+
+    tp6m-17-cold:
+        test-name: bing
+        treeherder:
+            symbol: 'Btime(tp6m-17-c)'
+
+    tp6m-18-cold:
+        test-name: ebay-kleinanzeigen
+        treeherder:
+            symbol: 'Btime(tp6m-18-c)'
+
+    tp6m-19-cold:
+        test-name: google-maps
+        treeherder:
+            symbol: 'Btime(tp6m-19-c)'
+
+    tp6m-20-cold:
+        test-name: youtube-watch
+        treeherder:
+            symbol: 'Btime(tp6m-20-c)'
+
+    tp6m-21-cold:
+        test-name: reddit
+        treeherder:
+            symbol: 'Btime(tp6m-21-c)'
+
+    tp6m-22-cold:
+        test-name: stackoverflow
+        treeherder:
+            symbol: 'Btime(tp6m-22-c)'
+
+    tp6m-23-cold:
+        test-name: jianshu
+        treeherder:
+            symbol: 'Btime(tp6m-23-c)'
+
+    tp6m-24-cold:
+        test-name: allrecipes
+        treeherder:
+            symbol: 'Btime(tp6m-24-c)'
+
+    tp6m-25-cold:
+        test-name: web-de
+        treeherder:
+            symbol: 'Btime(tp6m-25-c)'
+
+    tp6m-26-cold:
+        test-name: aframe
+        treeherder:
+            symbol: 'Btime(tp6m-26-c)'
+
+    tp6m-27-cold:
+        test-name: cnn
+        treeherder:
+            symbol: 'Btime(tp6m-27-c)'

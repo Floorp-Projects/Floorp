@@ -24,3 +24,9 @@ jobs:
           treeherder-symbol: raptor-D
           target-tasks-method: raptor
       when: [{hour: 1, minute: 0}]
+    - name: browsertime
+      job:
+          type: decision-task
+          treeherder-symbol: btime-D
+          target-tasks-method: browsertime
+      when: [{hour: 1, minute: 0}]

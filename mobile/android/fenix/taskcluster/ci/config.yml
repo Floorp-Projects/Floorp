@@ -13,6 +13,7 @@ treeherder:
         'productionFennec': 'Production-related tasks with same APK configuration as Fennec'
         'Rap': 'Raptor tests'
         'Rap-P': 'Raptor power tests'
+        'Btime': 'Raptor-Browsertime tests'
 
 task-priority: highest
 

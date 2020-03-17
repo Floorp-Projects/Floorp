@@ -52,3 +52,10 @@ def target_tasks_raptor(full_task_graph, parameters, graph_config):
         return task.kind == 'raptor'
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+@_target_task('browsertime')
+def target_tasks_raptor(full_task_graph, parameters, graph_config):
+    def filter(task, parameters):
+        return task.kind == 'browsertime'
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
