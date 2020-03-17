@@ -1587,11 +1587,7 @@ class ResetOrClearOp final : public QuotaRequestBase {
 
 class ClearRequestBase : public QuotaRequestBase {
  protected:
-  const bool mClear;
-
- protected:
-  ClearRequestBase(bool aExclusive, bool aClear)
-      : QuotaRequestBase(aExclusive), mClear(aClear) {
+  explicit ClearRequestBase(bool aExclusive) : QuotaRequestBase(aExclusive) {
     AssertIsOnOwningThread();
   }
 
@@ -1625,6 +1621,20 @@ class ClearDataOp final : public ClearRequestBase {
 
  private:
   ~ClearDataOp() = default;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
+class ResetOriginOp final : public QuotaRequestBase {
+ public:
+  explicit ResetOriginOp(const RequestParams& aParams);
+
+  void Init(Quota* aQuota) override;
+
+ private:
+  ~ResetOriginOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   void GetResponse(RequestResponse& aResponse) override;
 };
@@ -8833,8 +8843,11 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
       break;
 
     case RequestParams::TClearOriginParams:
-    case RequestParams::TResetOriginParams:
       actor = new ClearOriginOp(aParams);
+      break;
+
+    case RequestParams::TResetOriginParams:
+      actor = new ResetOriginOp(aParams);
       break;
 
     case RequestParams::TClearDataParams:
@@ -9838,29 +9851,21 @@ nsresult ClearRequestBase::DoDirectoryWork(QuotaManager* aQuotaManager) {
 
   AUTO_PROFILER_LABEL("ClearRequestBase::DoDirectoryWork", OTHER);
 
-  if (mClear) {
-    if (mPersistenceType.IsNull()) {
-      for (const PersistenceType type : kAllPersistenceTypes) {
-        DeleteFiles(aQuotaManager, type);
-      }
-    } else {
-      DeleteFiles(aQuotaManager, mPersistenceType.Value());
+  if (mPersistenceType.IsNull()) {
+    for (const PersistenceType type : kAllPersistenceTypes) {
+      DeleteFiles(aQuotaManager, type);
     }
+  } else {
+    DeleteFiles(aQuotaManager, mPersistenceType.Value());
   }
 
   return NS_OK;
 }
 
 ClearOriginOp::ClearOriginOp(const RequestParams& aParams)
-    : ClearRequestBase(/* aExclusive */ true,
-                       aParams.type() == RequestParams::TClearOriginParams),
-      mParams(aParams.type() == RequestParams::TClearOriginParams
-                  ? aParams.get_ClearOriginParams().commonParams()
-                  : aParams.get_ResetOriginParams().commonParams())
-
-{
-  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams ||
-             aParams.type() == RequestParams::TResetOriginParams);
+    : ClearRequestBase(/* aExclusive */ true),
+      mParams(aParams.get_ClearOriginParams().commonParams()) {
+  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams);
 }
 
 void ClearOriginOp::Init(Quota* aQuota) {
@@ -9892,17 +9897,11 @@ void ClearOriginOp::Init(Quota* aQuota) {
 void ClearOriginOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
-  if (mClear) {
-    aResponse = ClearOriginResponse();
-  } else {
-    aResponse = ResetOriginResponse();
-  }
+  aResponse = ClearOriginResponse();
 }
 
 ClearDataOp::ClearDataOp(const RequestParams& aParams)
-    : ClearRequestBase(/* aExclusive */ true,
-                       /* aClear */ true),
-      mParams(aParams) {
+    : ClearRequestBase(/* aExclusive */ true), mParams(aParams) {
   MOZ_ASSERT(aParams.type() == RequestParams::TClearDataParams);
 }
 
@@ -9919,6 +9918,61 @@ void ClearDataOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = ClearDataResponse();
+}
+
+ResetOriginOp::ResetOriginOp(const RequestParams& aParams)
+    : QuotaRequestBase(/* aExclusive */ true) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == RequestParams::TResetOriginParams);
+
+  const ClearResetOriginParams& params =
+      aParams.get_ResetOriginParams().commonParams();
+
+  nsCString origin;
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(params.principalInfo(),
+                                                  nullptr, nullptr, &origin);
+
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = true;
+
+  // Overwrite NormalOriginOperationBase default values.
+  if (params.persistenceTypeIsExplicit()) {
+    mPersistenceType.SetValue(params.persistenceType());
+  }
+
+  if (params.matchAll()) {
+    mOriginScope.SetFromPrefix(origin);
+  } else {
+    mOriginScope.SetFromOrigin(origin);
+  }
+
+  if (params.clientTypeIsExplicit()) {
+    mClientType.SetValue(params.clientType());
+  }
+}
+
+void ResetOriginOp::Init(Quota* aQuota) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+}
+
+nsresult ResetOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("ResetOriginOp::DoDirectoryWork", OTHER);
+
+  // All the work is handled by NormalOriginOperationBase parent class. In this
+  // particular case, we just needed to acquire an exclusive directory lock and
+  // that's it.
+
+  return NS_OK;
+}
+
+void ResetOriginOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  aResponse = ResetOriginResponse();
 }
 
 PersistRequestBase::PersistRequestBase(const PrincipalInfo& aPrincipalInfo)
