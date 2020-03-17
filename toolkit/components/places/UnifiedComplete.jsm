@@ -59,10 +59,6 @@ const QUERYINDEX_PLACEID = 8;
 const QUERYINDEX_SWITCHTAB = 9;
 const QUERYINDEX_FRECENCY = 10;
 
-// If a URL starts with one of these prefixes, then we don't provide search
-// suggestions for it.
-const DISALLOWED_URLLIKE_PREFIXES = ["http", "https", "ftp"];
-
 // This SQL query fragment provides the following:
 //   - whether the entry is bookmarked (QUERYINDEX_BOOKMARKED)
 //   - the bookmark title, if it is a bookmark (QUERYINDEX_BOOKMARKTITLE)
@@ -1587,6 +1583,15 @@ Search.prototype = {
       .catch(Cu.reportError);
   },
 
+  /**
+   * Prohibit search suggestions for some search strings. Note that the
+   * tokenizer also prohibits suggestions for any strings containing "/", "@",
+   * ":", or ".". See bug 1551049 for discussion and TODOs.
+   * @param {string} searchString
+   *   The search string that might recieve search suggestions.
+   * @returns {boolean}
+   *   False if no search suggestions should be fetched.
+   */
   _prohibitSearchSuggestionsFor(searchString) {
     if (this._prohibitSearchSuggestions) {
       return true;
@@ -1611,19 +1616,6 @@ Search.prototype = {
       this._searchTokens.length == 1 &&
       this._searchTokens[0].type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN &&
       Services.uriFixup.isDomainWhitelisted(this._searchTokens[0].value, -1)
-    ) {
-      return true;
-    }
-
-    // Disallow fetching search suggestions for strings that start off looking
-    // like urls.
-    if (
-      DISALLOWED_URLLIKE_PREFIXES.some(
-        prefix => this._trimmedOriginalSearchString == prefix
-      ) ||
-      DISALLOWED_URLLIKE_PREFIXES.some(prefix =>
-        this._trimmedOriginalSearchString.startsWith(prefix + ":")
-      )
     ) {
       return true;
     }
