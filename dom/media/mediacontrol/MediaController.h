@@ -69,6 +69,9 @@ class MediaController final : public MediaSessionController {
     return mPlaybackStateChangedEvent;
   }
 
+  void SetDeclaredPlaybackState(uint64_t aSessionContextId,
+                                MediaSessionPlaybackState aState) override;
+
   // These methods are only being used to notify the state changes of controlled
   // media in ContentParent or MediaControlUtils.
   void NotifyMediaStateChanged(ControlledMediaState aState);
@@ -89,6 +92,11 @@ class MediaController final : public MediaSessionController {
 
   void SetGuessedPlayState(MediaSessionPlaybackState aState);
 
+  // Whenever the declared playback state (from media session controller) or the
+  // guessed playback state changes, we should recompute actual playback state
+  // to know if we need to update the virtual control interface.
+  void UpdateActualPlaybackState();
+
   bool mAudible = false;
   bool mIsRegisteredToService = false;
   int64_t mControlledMediaNum = 0;
@@ -104,6 +112,13 @@ class MediaController final : public MediaSessionController {
   // [1] https://w3c.github.io/mediasession/#guessed-playback-state
   MediaSessionPlaybackState mGuessedPlaybackState =
       MediaSessionPlaybackState::None;
+
+  // This playback state would be the final playback which can be used to know
+  // if the controller is playing or not.
+  // https://w3c.github.io/mediasession/#actual-playback-state
+  MediaSessionPlaybackState mActualPlaybackState =
+      MediaSessionPlaybackState::None;
+
   MediaEventProducer<MediaSessionPlaybackState> mPlaybackStateChangedEvent;
 };
 
