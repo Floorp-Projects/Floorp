@@ -12,7 +12,7 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-CSSNamespaceRule::~CSSNamespaceRule() {}
+CSSNamespaceRule::~CSSNamespaceRule() = default;
 
 #ifdef DEBUG
 void CSSNamespaceRule::List(FILE* out, int32_t aIndent) const {

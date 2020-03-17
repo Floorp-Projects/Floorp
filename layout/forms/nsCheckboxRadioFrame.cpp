@@ -32,7 +32,7 @@ nsCheckboxRadioFrame::nsCheckboxRadioFrame(ComputedStyle* aStyle,
                                            nsPresContext* aPresContext)
     : nsAtomicContainerFrame(aStyle, aPresContext, kClassID) {}
 
-nsCheckboxRadioFrame::~nsCheckboxRadioFrame() {}
+nsCheckboxRadioFrame::~nsCheckboxRadioFrame() = default;
 
 void nsCheckboxRadioFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                        PostDestroyData& aPostDestroyData) {

@@ -4571,7 +4571,7 @@ nsIFrame* NS_NewContinuingTextFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
 
-nsTextFrame::~nsTextFrame() {}
+nsTextFrame::~nsTextFrame() = default;
 
 Maybe<nsIFrame::Cursor> nsTextFrame::GetCursor(const nsPoint& aPoint) {
   StyleCursorKind kind = StyleUI()->mCursor.keyword;

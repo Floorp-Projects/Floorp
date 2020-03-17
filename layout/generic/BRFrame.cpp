@@ -86,7 +86,7 @@ nsIFrame* NS_NewBRFrame(mozilla::PresShell* aPresShell, ComputedStyle* aStyle) {
 
 NS_IMPL_FRAMEARENA_HELPERS(BRFrame)
 
-BRFrame::~BRFrame() {}
+BRFrame::~BRFrame() = default;
 
 void BRFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                      const ReflowInput& aReflowInput, nsReflowStatus& aStatus) {

@@ -62,7 +62,7 @@ static already_AddRefed<Document> document(nsIDocShell* aDocShell) {
 
 nsLayoutDebuggingTools::nsLayoutDebuggingTools() { ForceRefresh(); }
 
-nsLayoutDebuggingTools::~nsLayoutDebuggingTools() {}
+nsLayoutDebuggingTools::~nsLayoutDebuggingTools() = default;
 
 NS_IMPL_ISUPPORTS(nsLayoutDebuggingTools, nsILayoutDebuggingTools)
 

@@ -25,7 +25,7 @@ class nsPopupSetFrame final : public nsBoxFrame {
   explicit nsPopupSetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsBoxFrame(aStyle, aPresContext, kClassID) {}
 
-  ~nsPopupSetFrame() {}
+  ~nsPopupSetFrame() = default;
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;

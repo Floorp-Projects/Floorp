@@ -67,7 +67,7 @@ NS_QUERYFRAME_HEAD(nsBulletFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 #endif
 
-nsBulletFrame::~nsBulletFrame() {}
+nsBulletFrame::~nsBulletFrame() = default;
 
 CounterStyle* nsBulletFrame::ResolveCounterStyle() {
   return PresContext()->CounterStyleManager()->ResolveCounterStyle(
@@ -1319,7 +1319,7 @@ NS_IMPL_ISUPPORTS(nsBulletListener, imgINotificationObserver)
 
 nsBulletListener::nsBulletListener() : mFrame(nullptr) {}
 
-nsBulletListener::~nsBulletListener() {}
+nsBulletListener::~nsBulletListener() = default;
 
 void nsBulletListener::Notify(imgIRequest* aRequest, int32_t aType,
                               const nsIntRect* aData) {

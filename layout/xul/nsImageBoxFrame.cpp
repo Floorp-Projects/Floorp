@@ -157,7 +157,7 @@ nsImageBoxFrame::nsImageBoxFrame(ComputedStyle* aStyle,
   MarkIntrinsicISizesDirty();
 }
 
-nsImageBoxFrame::~nsImageBoxFrame() {}
+nsImageBoxFrame::~nsImageBoxFrame() = default;
 
 /* virtual */
 void nsImageBoxFrame::MarkIntrinsicISizesDirty() {
@@ -852,7 +852,7 @@ NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver)
 nsImageBoxListener::nsImageBoxListener(nsImageBoxFrame* frame)
     : mFrame(frame) {}
 
-nsImageBoxListener::~nsImageBoxListener() {}
+nsImageBoxListener::~nsImageBoxListener() = default;
 
 void nsImageBoxListener::Notify(imgIRequest* request, int32_t aType,
                                 const nsIntRect* aData) {

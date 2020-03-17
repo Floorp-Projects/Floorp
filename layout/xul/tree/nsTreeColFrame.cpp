@@ -34,7 +34,7 @@ nsIFrame* NS_NewTreeColFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 NS_IMPL_FRAMEARENA_HELPERS(nsTreeColFrame)
 
 // Destructor
-nsTreeColFrame::~nsTreeColFrame() {}
+nsTreeColFrame::~nsTreeColFrame() = default;
 
 void nsTreeColFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                           nsIFrame* aPrevInFlow) {

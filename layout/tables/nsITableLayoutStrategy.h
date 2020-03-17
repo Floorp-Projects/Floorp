@@ -24,7 +24,7 @@ class nsITableLayoutStrategy {
  public:
   using ReflowInput = mozilla::ReflowInput;
 
-  virtual ~nsITableLayoutStrategy() {}
+  virtual ~nsITableLayoutStrategy() = default;
 
   /** Implement nsIFrame::GetMinISize for the table */
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) = 0;

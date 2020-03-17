@@ -271,7 +271,7 @@ void nsHTMLCanvasFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   ActiveLayerTracker::NotifyContentChange(this);
 }
 
-nsHTMLCanvasFrame::~nsHTMLCanvasFrame() {}
+nsHTMLCanvasFrame::~nsHTMLCanvasFrame() = default;
 
 nsIntSize nsHTMLCanvasFrame::GetCanvasSize() {
   nsIntSize size(0, 0);

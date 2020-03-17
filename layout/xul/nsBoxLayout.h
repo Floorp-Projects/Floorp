@@ -27,10 +27,10 @@ class nsIGridPart;
 
 class nsBoxLayout : public nsISupports {
  protected:
-  virtual ~nsBoxLayout() {}
+  virtual ~nsBoxLayout() = default;
 
  public:
-  nsBoxLayout() {}
+  nsBoxLayout() = default;
 
   NS_DECL_ISUPPORTS
 

@@ -42,7 +42,7 @@ using namespace mozilla::layers;
 ZoomConstraintsClient::ZoomConstraintsClient()
     : mDocument(nullptr), mPresShell(nullptr) {}
 
-ZoomConstraintsClient::~ZoomConstraintsClient() {}
+ZoomConstraintsClient::~ZoomConstraintsClient() = default;
 
 static nsIWidget* GetWidget(PresShell* aPresShell) {
   if (!aPresShell) {

@@ -1287,7 +1287,7 @@ nsMenuTimerMediator::nsMenuTimerMediator(nsMenuFrame* aFrame) : mFrame(aFrame) {
   NS_ASSERTION(mFrame, "Must have frame");
 }
 
-nsMenuTimerMediator::~nsMenuTimerMediator() {}
+nsMenuTimerMediator::~nsMenuTimerMediator() = default;
 
 /**
  * Delegates the notification to the contained frame if it has not been

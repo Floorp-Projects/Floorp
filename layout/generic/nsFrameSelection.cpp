@@ -366,7 +366,7 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
   }
 }
 
-nsFrameSelection::~nsFrameSelection() {}
+nsFrameSelection::~nsFrameSelection() = default;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
 

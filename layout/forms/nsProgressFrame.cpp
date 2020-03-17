@@ -35,7 +35,7 @@ nsProgressFrame::nsProgressFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID), mBarDiv(nullptr) {}
 
-nsProgressFrame::~nsProgressFrame() {}
+nsProgressFrame::~nsProgressFrame() = default;
 
 void nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                   PostDestroyData& aPostDestroyData) {

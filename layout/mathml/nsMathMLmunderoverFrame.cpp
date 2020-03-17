@@ -32,7 +32,7 @@ nsIFrame* NS_NewMathMLmunderoverFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmunderoverFrame)
 
-nsMathMLmunderoverFrame::~nsMathMLmunderoverFrame() {}
+nsMathMLmunderoverFrame::~nsMathMLmunderoverFrame() = default;
 
 nsresult nsMathMLmunderoverFrame::AttributeChanged(int32_t aNameSpaceID,
                                                    nsAtom* aAttribute,

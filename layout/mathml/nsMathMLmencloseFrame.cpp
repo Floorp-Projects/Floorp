@@ -59,7 +59,7 @@ nsMathMLmencloseFrame::nsMathMLmencloseFrame(ComputedStyle* aStyle,
       mRadicalCharIndex(-1),
       mContentWidth(0) {}
 
-nsMathMLmencloseFrame::~nsMathMLmencloseFrame() {}
+nsMathMLmencloseFrame::~nsMathMLmencloseFrame() = default;
 
 nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask) {
   // Is the char already allocated?

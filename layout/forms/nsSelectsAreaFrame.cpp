@@ -76,7 +76,7 @@ void nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
 
 class nsOptionEventGrabberWrapper : public nsDisplayWrapper {
  public:
-  nsOptionEventGrabberWrapper() {}
+  nsOptionEventGrabberWrapper() = default;
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame,
                                   nsDisplayList* aList) override {

@@ -48,7 +48,7 @@ struct TableRowGroupReflowInput {
         availSize(aReflowInput.AvailableSize()),
         bCoord(0) {}
 
-  ~TableRowGroupReflowInput() {}
+  ~TableRowGroupReflowInput() = default;
 };
 
 }  // namespace mozilla
@@ -59,7 +59,7 @@ nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle,
   SetRepeatable(false);
 }
 
-nsTableRowGroupFrame::~nsTableRowGroupFrame() {}
+nsTableRowGroupFrame::~nsTableRowGroupFrame() = default;
 
 void nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                        PostDestroyData& aPostDestroyData) {

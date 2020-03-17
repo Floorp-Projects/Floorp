@@ -37,7 +37,7 @@ nsIFrame* NS_NewMathMLmpaddedFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmpaddedFrame)
 
-nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame() {}
+nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame() = default;
 
 NS_IMETHODIMP
 nsMathMLmpaddedFrame::InheritAutomaticData(nsIFrame* aParent) {

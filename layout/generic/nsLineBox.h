@@ -1578,9 +1578,7 @@ class nsLineList {
 #endif /* !NS_LINELIST_DEBUG_PASS_END */
 
 inline nsLineList_iterator& nsLineList_iterator::operator=(
-    const nsLineList_iterator& aOther) {
-  ASSIGN_FROM(aOther)
-}
+    const nsLineList_iterator& aOther) = default;
 
 inline nsLineList_iterator& nsLineList_iterator::operator=(
     const nsLineList_reverse_iterator& aOther) {
@@ -1593,9 +1591,7 @@ inline nsLineList_reverse_iterator& nsLineList_reverse_iterator::operator=(
 }
 
 inline nsLineList_reverse_iterator& nsLineList_reverse_iterator::operator=(
-    const nsLineList_reverse_iterator& aOther) {
-  ASSIGN_FROM(aOther)
-}
+    const nsLineList_reverse_iterator& aOther) = default;
 
 inline nsLineList_const_iterator& nsLineList_const_iterator::operator=(
     const nsLineList_iterator& aOther) {
@@ -1608,9 +1604,7 @@ inline nsLineList_const_iterator& nsLineList_const_iterator::operator=(
 }
 
 inline nsLineList_const_iterator& nsLineList_const_iterator::operator=(
-    const nsLineList_const_iterator& aOther) {
-  ASSIGN_FROM(aOther)
-}
+    const nsLineList_const_iterator& aOther) = default;
 
 inline nsLineList_const_iterator& nsLineList_const_iterator::operator=(
     const nsLineList_const_reverse_iterator& aOther) {
@@ -1637,9 +1631,7 @@ nsLineList_const_reverse_iterator::operator=(
 
 inline nsLineList_const_reverse_iterator&
 nsLineList_const_reverse_iterator::operator=(
-    const nsLineList_const_reverse_iterator& aOther) {
-  ASSIGN_FROM(aOther)
-}
+    const nsLineList_const_reverse_iterator& aOther) = default;
 
 //----------------------------------------------------------------------
 

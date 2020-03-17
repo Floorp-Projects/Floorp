@@ -21,7 +21,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet() {}
+nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet() = default;
 
 nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet() {
   // We may go away before all of our cached style attributes do,

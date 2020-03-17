@@ -1704,7 +1704,7 @@ class CounterStyleCleaner final : public nsAPostRefreshObserver {
                       CounterStyleManager* aCounterStyleManager)
       : mRefreshDriver(aRefreshDriver),
         mCounterStyleManager(aCounterStyleManager) {}
-  virtual ~CounterStyleCleaner() {}
+  virtual ~CounterStyleCleaner() = default;
 
   void DidRefresh() final {
     mRefreshDriver->RemovePostRefreshObserver(this);

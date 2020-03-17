@@ -34,7 +34,7 @@ inDeepTreeWalker::inDeepTreeWalker()
       mCurrentIndex(-1),
       mWhatToShow(mozilla::dom::NodeFilter_Binding::SHOW_ALL) {}
 
-inDeepTreeWalker::~inDeepTreeWalker() {}
+inDeepTreeWalker::~inDeepTreeWalker() = default;
 
 NS_IMPL_ISUPPORTS(inDeepTreeWalker, inIDeepTreeWalker)
 

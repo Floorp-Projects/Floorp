@@ -124,7 +124,7 @@ nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
   SetXULLayoutManager(layout);
 }
 
-nsBoxFrame::~nsBoxFrame() {}
+nsBoxFrame::~nsBoxFrame() = default;
 
 void nsBoxFrame::SetInitialChildList(ChildListID aListID,
                                      nsFrameList& aChildList) {

@@ -187,7 +187,7 @@ class nsRangeFrame final : public nsContainerFrame,
 
   class DummyTouchListener final : public nsIDOMEventListener {
    private:
-    ~DummyTouchListener() {}
+    ~DummyTouchListener() = default;
 
    public:
     NS_DECL_ISUPPORTS

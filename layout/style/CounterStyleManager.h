@@ -121,7 +121,7 @@ class AnonymousCounterStyle final : public CounterStyle {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousCounterStyle)
 
  private:
-  ~AnonymousCounterStyle() {}
+  ~AnonymousCounterStyle() = default;
 
   bool mSingleString;
   StyleSymbolsType mSymbolsType;

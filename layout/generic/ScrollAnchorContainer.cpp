@@ -46,7 +46,7 @@ ScrollAnchorContainer::ScrollAnchorContainer(ScrollFrameHelper* aScrollFrame)
       mApplyingAnchorAdjustment(false),
       mSuppressAnchorAdjustment(false) {}
 
-ScrollAnchorContainer::~ScrollAnchorContainer() {}
+ScrollAnchorContainer::~ScrollAnchorContainer() = default;
 
 ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
   aFrame = aFrame->GetParent();

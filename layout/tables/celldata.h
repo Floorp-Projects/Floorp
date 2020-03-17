@@ -351,7 +351,7 @@ inline BCData::BCData() {
   mCornerBevel = false;
 }
 
-inline BCData::~BCData() {}
+inline BCData::~BCData() = default;
 
 inline nscoord BCData::GetIStartEdge(BCBorderOwner& aOwner,
                                      bool& aStart) const {

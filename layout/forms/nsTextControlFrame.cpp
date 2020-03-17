@@ -103,7 +103,7 @@ class nsTextControlFrame::nsAnonDivObserver final
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
  private:
-  ~nsAnonDivObserver() {}
+  ~nsAnonDivObserver() = default;
   nsTextControlFrame& mFrame;
 };
 
@@ -122,7 +122,7 @@ nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle,
   ClearCachedValue();
 }
 
-nsTextControlFrame::~nsTextControlFrame() {}
+nsTextControlFrame::~nsTextControlFrame() = default;
 
 nsIScrollableFrame* nsTextControlFrame::GetScrollTargetFrame() {
   if (!mRootNode) {

@@ -23,7 +23,7 @@ struct StackBlock {
   StackBlock* mNext;
 
   StackBlock() : mNext(nullptr) {}
-  ~StackBlock() {}
+  ~StackBlock() = default;
 };
 
 static_assert(sizeof(StackBlock) == 4096, "StackBlock must be 4096 bytes");

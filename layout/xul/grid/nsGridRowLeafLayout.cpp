@@ -28,7 +28,7 @@ already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout() {
 
 nsGridRowLeafLayout::nsGridRowLeafLayout() : nsGridRowLayout() {}
 
-nsGridRowLeafLayout::~nsGridRowLeafLayout() {}
+nsGridRowLeafLayout::~nsGridRowLeafLayout() = default;
 
 nsSize nsGridRowLeafLayout::GetXULPrefSize(nsIFrame* aBox,
                                            nsBoxLayoutState& aState) {
