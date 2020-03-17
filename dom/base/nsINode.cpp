@@ -115,6 +115,15 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+void* nsINode::operator new(size_t aSize, nsNodeInfoManager* aManager) {
+  if (StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {
+    MOZ_ASSERT(aManager, "nsNodeInfoManager needs to be initialized");
+    return aManager->Allocate(aSize);
+  }
+  return ::operator new(aSize);
+}
+void nsINode::operator delete(void* aPtr) { free_impl(aPtr); }
+
 bool nsINode::IsInclusiveDescendantOf(const nsINode* aNode) const {
   MOZ_ASSERT(aNode, "The node is nullptr.");
 
