@@ -6,7 +6,7 @@
 #ifndef IDNBlocklistUtils_h__
 #define IDNBlocklistUtils_h__
 
-#include "mozilla/Pair.h"
+#include <utility>
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -14,21 +14,21 @@ namespace net {
 
 // A blocklist range is defined as all of the characters between:
 // { firstCharacterInRange, lastCharacterInRange }
-typedef mozilla::Pair<char16_t, char16_t> BlocklistRange;
+typedef std::pair<char16_t, char16_t> BlocklistRange;
 
 // Used to perform a binary search of the needle in the sorted array of pairs
 class BlocklistPairToCharComparator {
  public:
   bool Equals(const BlocklistRange& pair, char16_t needle) const {
-    // If the needle is between pair.first() and pair.second() it
+    // If the needle is between pair.first and pair.second it
     // is part of the range.
-    return pair.first() <= needle && needle <= pair.second();
+    return pair.first <= needle && needle <= pair.second;
   }
 
   bool LessThan(const BlocklistRange& pair, char16_t needle) const {
     // The needle has to be larger than the second value,
     // otherwise it may be equal.
-    return pair.second() < needle;
+    return pair.second < needle;
   }
 };
 
@@ -36,11 +36,11 @@ class BlocklistPairToCharComparator {
 class BlocklistEntryComparator {
  public:
   bool Equals(const BlocklistRange& a, const BlocklistRange& b) const {
-    return a.first() == b.first() && a.second() == b.second();
+    return a.first == b.first && a.second == b.second;
   }
 
   bool LessThan(const BlocklistRange& a, const BlocklistRange& b) const {
-    return a.first() < b.first();
+    return a.first < b.first;
   }
 };
 

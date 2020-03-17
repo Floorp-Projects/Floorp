@@ -10,7 +10,6 @@
 #include "gfxTypes.h"
 #include "ImageTypes.h"
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
-#include "mozilla/Pair.h"        // for Pair
 #include "mozilla/RefPtr.h"      // for RefPtr
 #include "mozilla/gfx/Matrix.h"  // for Matrix4x4
 #include "mozilla/gfx/Rect.h"    // for Rect

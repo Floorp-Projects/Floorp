@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/PlacesObserversBinding.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Pair.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {

@@ -569,7 +569,7 @@ class WinUtils {
 
   static const size_t kMaxWhitelistedItems = 3;
   using WhitelistVec =
-      Vector<Pair<nsString, nsDependentString>, kMaxWhitelistedItems>;
+      Vector<std::pair<nsString, nsDependentString>, kMaxWhitelistedItems>;
 
   static const WhitelistVec& GetWhitelistedPaths();
 

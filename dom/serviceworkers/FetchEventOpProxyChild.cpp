@@ -43,9 +43,9 @@ nsresult GetIPCSynthesizeResponseArgs(
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  aArgs.first()->ToIPC(&aIPCArgs->internalResponse(), bgChild, aAutoBodyStream,
-                       aAutoAlternativeBodyStream);
-  aIPCArgs->closure() = std::move(aArgs.second());
+  aArgs.first->ToIPC(&aIPCArgs->internalResponse(), bgChild, aAutoBodyStream,
+                     aAutoAlternativeBodyStream);
+  aIPCArgs->closure() = std::move(aArgs.second);
 
   return NS_OK;
 }
