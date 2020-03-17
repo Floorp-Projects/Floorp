@@ -3593,7 +3593,8 @@ void Preferences::DeserializePreferences(char* aStr, size_t aPrefsLen) {
 // Forward declarations.
 namespace StaticPrefs {
 
-static void InitAll(bool aIsStartup);
+static void InitAll();
+static void StartObservingAlwaysPrefs();
 static void InitOncePrefs();
 static void InitStaticPrefsFromShared();
 static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder);
@@ -4432,14 +4433,17 @@ struct Internals {
 nsresult Preferences::InitInitialObjects(bool aIsStartup) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Initialize static prefs before prefs from data files so that the latter
-  // will override the former.
-  StaticPrefs::InitAll(aIsStartup);
-
   if (!XRE_IsParentProcess()) {
     MOZ_DIAGNOSTIC_ASSERT(gSharedMap);
+    if (aIsStartup) {
+      StaticPrefs::StartObservingAlwaysPrefs();
+    }
     return NS_OK;
   }
+
+  // Initialize static prefs before prefs from data files so that the latter
+  // will override the former.
+  StaticPrefs::InitAll();
 
   // In the omni.jar case, we load the following prefs:
   // - jar:$gre/omni.jar!/greprefs.js
@@ -4610,6 +4614,14 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
 
   if (XRE_IsParentProcess()) {
     SetupTelemetryPref();
+  }
+
+  if (aIsStartup) {
+    // Now that all prefs have their initial values, install the callbacks for
+    // `always`-mirrored static prefs. We do this now rather than in
+    // StaticPrefs::InitAll() so that the callbacks don't need to be traversed
+    // while we load prefs from data files.
+    StaticPrefs::StartObservingAlwaysPrefs();
   }
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nullptr,
@@ -5269,22 +5281,12 @@ static void InitPref(const char* aName, float aDefaultValue) {
 
 template <typename T>
 static void InitAlwaysPref(const nsCString& aName, T* aCache,
-                           StripAtomic<T> aDefaultValue, bool aIsStartup,
-                           bool aIsParent) {
-  // In the parent process, set/reset the pref value and the `always` mirror (if
-  // there is one) to the default value.
-  // - `once` mirrors will be initialized lazily in InitOncePrefs().
-  // - In child processes, the parent sends the correct initial values via
-  //   shared memory, so we do not re-initialize them here.
-  if (aIsParent) {
-    InitPref(aName.get(), aDefaultValue);
-    *aCache = aDefaultValue;
-  }
-
-  // At startup, setup the callback for the `always` mirror (if there is one).
-  if (MOZ_LIKELY(aIsStartup)) {
-    AddMirrorCallback(aCache, aName);
-  }
+                           StripAtomic<T> aDefaultValue) {
+  // Only called in the parent process. Set/reset the pref value and the
+  // `always` mirror to the default value.
+  // `once` mirrors will be initialized lazily in InitOncePrefs().
+  InitPref(aName.get(), aDefaultValue);
+  *aCache = aDefaultValue;
 }
 
 static Atomic<bool> sOncePrefRead(false);
@@ -5322,10 +5324,9 @@ void MaybeInitOncePrefs() {
 #undef ALWAYS_PREF
 #undef ONCE_PREF
 
-static void InitAll(bool aIsStartup) {
+static void InitAll() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  bool isParent = XRE_IsParentProcess();
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   // For all prefs we generate some initialization code.
   //
@@ -5333,23 +5334,27 @@ static void InitAll(bool aIsStartup) {
   // prefs having int32_t and float default values. That suffix is not needed
   // for the InitAlwaysPref() functions because they take a pointer parameter,
   // which prevents automatic int-to-float coercion.
-  //
-  // In content processes, we rely on the parent to send us the correct initial
-  // values via shared memory, so we do not re-initialize them here.
-  if (isParent) {
 #define NEVER_PREF(name, cpp_type, value) InitPref_##cpp_type(name, value);
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
+  InitAlwaysPref(NS_LITERAL_CSTRING(name), &sMirror_##full_id, value);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
   InitPref_##cpp_type(name, value);
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
 #undef ALWAYS_PREF
 #undef ONCE_PREF
-  }
+}
+
+static void StartObservingAlwaysPrefs() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Call AddMirror so that our mirrors for `always` prefs will stay updated.
+  // The call to AddMirror re-reads the current pref value into the mirror, so
+  // our mirror will now be up-to-date even if some of the prefs have changed
+  // since the call to InitAll().
 #define NEVER_PREF(name, cpp_type, value)
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)          \
-  InitAlwaysPref(NS_LITERAL_CSTRING(name), &sMirror_##full_id, value, \
-                 aIsStartup, isParent);
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
+  AddMirror(&sMirror_##full_id, NS_LITERAL_CSTRING(name), sMirror_##full_id);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value)
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
