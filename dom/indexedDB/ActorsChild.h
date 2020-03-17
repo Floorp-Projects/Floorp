@@ -675,6 +675,7 @@ template <IDBCursorType CursorType>
 class BackgroundCursorChild final : public BackgroundCursorChildBase {
  public:
   using SourceType = CursorSourceType<CursorType>;
+  using ResponseType = typename CursorTypeTraits<CursorType>::ResponseType;
 
  private:
   friend class BackgroundTransactionChild;
@@ -717,16 +718,10 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
 
   void HandleResponse(const void_t& aResponse);
 
-  void HandleResponse(nsTArray<ObjectStoreCursorResponse>&& aResponses);
+  void HandleResponse(nsTArray<ResponseType>&& aResponses);
 
-  void HandleResponse(nsTArray<ObjectStoreKeyCursorResponse>&& aResponses);
-
-  void HandleResponse(nsTArray<IndexCursorResponse>&& aResponses);
-
-  void HandleResponse(nsTArray<IndexKeyCursorResponse>&& aResponses);
-
-  template <typename T, typename Func>
-  void HandleMultipleCursorResponses(nsTArray<T>&& aResponses,
+  template <typename Func>
+  void HandleMultipleCursorResponses(nsTArray<ResponseType>&& aResponses,
                                      const Func& aHandleRecord);
 
   template <typename... Args>

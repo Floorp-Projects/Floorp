@@ -101,8 +101,6 @@ namespace {
 
 NS_DEFINE_IID(kIDBPrivateRequestIID, PRIVATE_IDBREQUEST_IID);
 
-const uint32_t kDeleteTimeoutMs = 1000;
-
 // The threshold we use for structured clone data storing.
 // Anything smaller than the threshold is compressed and stored in the database.
 // Anything larger is compressed and stored outside the database.
