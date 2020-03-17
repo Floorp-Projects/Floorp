@@ -22,7 +22,7 @@ configurations.all { config ->
                     def group = dependency.requested.group
                     if (group == 'org.mozilla.components') {
                         def name = dependency.requested.module
-                        dependency.useTarget([group: group, name: name, version: '+'])
+                        dependency.useTarget([group: group, name: name, version: '0.0.1-+'])
                     }
                 }
             }
