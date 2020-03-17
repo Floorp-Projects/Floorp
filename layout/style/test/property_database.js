@@ -5269,6 +5269,10 @@ var gCSSProperties = {
       "hsl(0rad, 0%, 0%)",
       "hsl(0turn, 0%, 0%)",
       "hsl(1turn, 0%, 0%)",
+      /* CSS4 System Colors */
+      "canvastext",
+      /* Preserve previously available specially prefixed colors */
+      "-moz-default-color",
     ],
     other_values: [
       "green",
@@ -5292,6 +5296,21 @@ var gCSSProperties = {
       "hsl(33rad 100% 90% / 4)",
       "hsl(0.33turn, 40%, 40%, 10%)",
       "hsl(63e292, 41%, 34%)",
+      /* CSS4 System Colors */
+      "canvas",
+      "linktext",
+      "visitedtext",
+      "activetext",
+      "buttonface",
+      "field",
+      "highlight",
+      "highlighttext",
+      "graytext",
+      /* Preserve previously available specially prefixed colors */
+      "-moz-activehyperlinktext",
+      "-moz-default-background-color",
+      "-moz-hyperlinktext",
+      "-moz-visitedhyperlinktext",
     ],
     invalid_values: [
       "#f",
