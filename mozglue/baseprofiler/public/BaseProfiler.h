@@ -24,9 +24,8 @@
 
 #ifdef MOZ_GECKO_PROFILER
 // Enable Base Profiler on Windows, Mac and Non-Android Linux, which are
-// supported.
-// (Android not implemented yet, mingw not supported.)
-#  if defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(ANDROID)) || \
+// supported. Mingw is not supported.
+#  if defined(XP_MACOSX) || defined(XP_LINUX) || \
       (defined(XP_WIN) && !defined(__MINGW32__))
 #    define MOZ_BASE_PROFILER
 #  else
