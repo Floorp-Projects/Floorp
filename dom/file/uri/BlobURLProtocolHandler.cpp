@@ -669,7 +669,7 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
 
   if (aPrincipal) {
     nsAutoCString origin;
-    rv = aPrincipal->GetAsciiOrigin(origin);
+    rv = nsContentUtils::GetASCIIOrigin(aPrincipal, origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
