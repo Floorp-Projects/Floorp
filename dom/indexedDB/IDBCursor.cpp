@@ -863,5 +863,10 @@ bool IDBTypedCursor<CursorType>::IsLocaleAware() const {
   }
 }
 
+template class IDBTypedCursor<IDBCursorType::ObjectStore>;
+template class IDBTypedCursor<IDBCursorType::ObjectStoreKey>;
+template class IDBTypedCursor<IDBCursorType::Index>;
+template class IDBTypedCursor<IDBCursorType::IndexKey>;
+
 }  // namespace dom
 }  // namespace mozilla

@@ -15,6 +15,7 @@
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
 #include "IDBFactory.h"
+#include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventDispatcher.h"
