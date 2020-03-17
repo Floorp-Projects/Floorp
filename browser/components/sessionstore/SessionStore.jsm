@@ -2540,8 +2540,8 @@ var SessionStoreInternal = {
     aSwitchId,
     aReplaceBrowsingContext
   ) {
-    log().info(
-      `[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`
+    E10SUtils.log().info(
+      `performing switch from ${aBrowser.remoteType} to ${aRemoteType}`
     );
 
     // Don't try to switch tabs before delayed startup is completed.
@@ -2575,7 +2575,7 @@ var SessionStoreInternal = {
 
     // Tell our caller to redirect the load into this newly created process.
     let remoteTab = aBrowser.frameLoader.remoteTab;
-    log().debug(`[process-switch]: new tabID: ${remoteTab.tabId}`);
+    E10SUtils.log().debug(`new tabID: ${remoteTab.tabId}`);
     return remoteTab.contentProcessId;
   },
 
@@ -2621,9 +2621,7 @@ var SessionStoreInternal = {
     try {
       switchRequestor = aRequestor.QueryInterface(Ci.nsIProcessSwitchRequestor);
     } catch (e) {
-      log().warn(
-        `[process-switch]: object not compatible with process switching `
-      );
+      E10SUtils.log().warn(`object not compatible with process switching `);
       return;
     }
 
@@ -2639,21 +2637,21 @@ var SessionStoreInternal = {
       Ci.nsIContentPolicy.TYPE_DOCUMENT;
 
     if (!browsingContext) {
-      log().debug(`[process-switch]: no BrowsingContext - ignoring`);
+      E10SUtils.log().debug(`no BrowsingContext - ignoring`);
       return;
     }
 
     // Determine if remote subframes should be used for this load.
     let topBC = browsingContext.top;
     if (!topBC.embedderElement) {
-      log().debug(`[process-switch]: no embedder for top - ignoring`);
+      E10SUtils.log().debug(`no embedder for top - ignoring`);
       return;
     }
 
     let topDocShell = topBC.embedderElement.ownerGlobal.docShell;
     let { useRemoteSubframes } = topDocShell.QueryInterface(Ci.nsILoadContext);
     if (!useRemoteSubframes && isSubframe) {
-      log().debug(`[process-switch]: remote subframes disabled - ignoring`);
+      E10SUtils.log().debug(`remote subframes disabled - ignoring`);
       return;
     }
 
@@ -2669,22 +2667,22 @@ var SessionStoreInternal = {
     if (browsingContext.embedderElement) {
       let tabbrowser = browsingContext.embedderElement.getTabBrowser();
       if (!tabbrowser) {
-        log().debug(
-          `[process-switch]: cannot find tabbrowser for loading tab - ignoring`
+        E10SUtils.log().debug(
+          `cannot find tabbrowser for loading tab - ignoring`
         );
         return;
       }
 
       let tab = tabbrowser.getTabForBrowser(browsingContext.embedderElement);
       if (!tab) {
-        log().debug(
-          `[process-switch]: not a normal tab, so cannot swap processes - ignoring`
+        E10SUtils.log().debug(
+          `not a normal tab, so cannot swap processes - ignoring`
         );
         return;
       }
     } else if (!browsingContext.parent) {
-      log().debug(
-        `[process-switch] no parent or in-process embedder element - ignoring`
+      E10SUtils.log().debug(
+        `no parent or in-process embedder element - ignoring`
       );
       return;
     }
@@ -2692,7 +2690,7 @@ var SessionStoreInternal = {
     // Get the current remote type for the BrowsingContext.
     let currentRemoteType = browsingContext.currentRemoteType;
     if (currentRemoteType == E10SUtils.NOT_REMOTE) {
-      log().debug(`[process-switch]: currently not remote - ignoring`);
+      E10SUtils.log().debug(`currently not remote - ignoring`);
       return;
     }
 
@@ -2721,8 +2719,8 @@ var SessionStoreInternal = {
       // to a default remoteType
       preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
     }
-    log().info(
-      `[process-switch]: currentRemoteType (${currentRemoteType}) preferredRemoteType: ${preferredRemoteType}`
+    E10SUtils.log().info(
+      `currentRemoteType (${currentRemoteType}) preferredRemoteType: ${preferredRemoteType}`
     );
 
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(
@@ -2734,14 +2732,12 @@ var SessionStoreInternal = {
       isSubframe
     );
 
-    log().debug(
-      `[process-switch]: ${currentRemoteType}, ${remoteType}, ${isCOOPSwitch}`
+    E10SUtils.log().debug(
+      `${currentRemoteType}, ${remoteType}, ${isCOOPSwitch}`
     );
 
     if (currentRemoteType == remoteType && !isCOOPSwitch) {
-      log().debug(
-        `[process-switch]: type (${remoteType}) is compatible - ignoring`
-      );
+      E10SUtils.log().debug(`type (${remoteType}) is compatible - ignoring`);
       return;
     }
 
@@ -2749,7 +2745,7 @@ var SessionStoreInternal = {
       remoteType == E10SUtils.NOT_REMOTE ||
       currentRemoteType == E10SUtils.NOT_REMOTE
     ) {
-      log().debug(`[process-switch]: non-remote source/target - ignoring`);
+      E10SUtils.log().debug(`non-remote source/target - ignoring`);
       return;
     }
 
