@@ -13,6 +13,7 @@
 
 #include "mozilla/Attributes.h"  // for final
 #include "mozilla/dom/NodeInfo.h"
+#include "mozilla/dom/DOMArena.h"
 #include "mozilla/MruCache.h"
 #include "nsCOMPtr.h"                      // for member
 #include "nsCycleCollectionParticipant.h"  // for NS_DECL_CYCLE_*
@@ -28,7 +29,7 @@ struct already_AddRefed;
 namespace mozilla {
 namespace dom {
 class Document;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 class nsNodeInfoManager final {
@@ -109,6 +110,17 @@ class nsNodeInfoManager final {
     return mMathMLEnabled.valueOr(InternalMathMLEnabled());
   }
 
+  mozilla::dom::DOMArena* GetArenaAllocator() { return mArena; }
+  void SetArenaAllocator(mozilla::dom::DOMArena* aArena);
+
+  void* Allocate(size_t aSize);
+
+  void Free(void* aPtr) { free(aPtr); }
+
+  bool HasAllocated() {
+    return mHasAllocated;
+  }
+
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
  protected:
@@ -161,6 +173,10 @@ class nsNodeInfoManager final {
   NodeInfoCache mRecentlyUsedNodeInfos;
   mozilla::Maybe<bool> mSVGEnabled;     // Lazily initialized.
   mozilla::Maybe<bool> mMathMLEnabled;  // Lazily initialized.
+
+  // For dom_arena_allocator_enabled
+  RefPtr<mozilla::dom::DOMArena> mArena;
+  bool mHasAllocated = false;
 };
 
 #endif /* nsNodeInfoManager_h___ */
