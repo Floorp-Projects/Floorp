@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "HttpTransactionParent.h"
+#include "HttpTrafficAnalyzer.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/InputChannelThrottleQueueParent.h"
 #include "mozilla/net/ChannelEventQueue.h"

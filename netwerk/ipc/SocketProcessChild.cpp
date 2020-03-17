@@ -17,6 +17,7 @@
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/net/AltSvcTransactionChild.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
@@ -339,6 +340,16 @@ SocketProcessChild::AllocPInputChannelThrottleQueueChild(
       new InputChannelThrottleQueueChild();
   p->Init(aMeanBytesPerSecond, aMaxBytesPerSecond);
   return p.forget();
+}
+
+already_AddRefed<PAltSvcTransactionChild>
+SocketProcessChild::AllocPAltSvcTransactionChild(
+    const HttpConnectionInfoCloneArgs& aConnInfo, const uint32_t& aCaps) {
+  RefPtr<nsHttpConnectionInfo> cinfo =
+      nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(aConnInfo);
+  RefPtr<AltSvcTransactionChild> child =
+      new AltSvcTransactionChild(cinfo, aCaps);
+  return child.forget();
 }
 
 }  // namespace net
