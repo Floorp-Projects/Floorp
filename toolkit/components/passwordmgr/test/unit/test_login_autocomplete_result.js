@@ -1,5 +1,5 @@
 const { LoginAutoCompleteResult } = ChromeUtils.import(
-  "resource://gre/modules/LoginAutoCompleteResult.jsm"
+  "resource://gre/modules/LoginAutoComplete.jsm"
 );
 let nsLoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
