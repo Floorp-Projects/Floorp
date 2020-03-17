@@ -92,6 +92,17 @@ FWD_DECLARE_VS_FUNCTION(radial_gradient_brush_vs)
 FWD_DECLARE_VS_FUNCTION(conic_gradient_brush_vs)
 FWD_DECLARE_VS_FUNCTION(yuv_brush_vs)
 FWD_DECLARE_VS_FUNCTION(opacity_brush_vs)
+FWD_DECLARE_VS_FUNCTION(text_brush_vs)
+
+// Forward-declare the text vertex shader entry point which is currently
+// different from other brushes.
+void text_shader_main(
+    Instance instance,
+    PrimitiveHeader ph,
+    Transform transform,
+    PictureTask task,
+    ClipArea clip_area
+);
 
 void multi_brush_vs(
     VertexInfo vi,
@@ -120,12 +131,15 @@ void multi_brush_vs(
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
-void main(void) {
-    // Load the brush instance from vertex attributes.
-    Instance instance = decode_instance_attributes();
+void brush_shader_main_vs(
+    Instance instance,
+    PrimitiveHeader ph,
+    Transform transform,
+    PictureTask pic_task,
+    ClipArea clip_area
+) {
     int edge_flags = instance.flags & 0xff;
     int brush_flags = (instance.flags >> 8) & 0xff;
-    PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
 
     // Fetch the segment of this brush primitive we are drawing.
     vec4 segment_data;
@@ -155,12 +169,6 @@ void main(void) {
     }
 
     VertexInfo vi;
-
-    // Fetch the dynamic picture that we are drawing on.
-    PictureTask pic_task = fetch_picture_task(instance.picture_task_address);
-    ClipArea clip_area = fetch_clip_area(instance.clip_address);
-
-    Transform transform = fetch_transform(ph.transform_id);
 
     // Write the normal vertex information out.
     if (transform.is_axis_aligned) {
@@ -245,7 +253,24 @@ void main(void) {
 
 }
 
+#ifndef WR_VERTEX_SHADER_MAIN_FUNCTION
+// If the entry-point was not overridden before including the brush shader,
+// use the default one.
+#define WR_VERTEX_SHADER_MAIN_FUNCTION brush_shader_main_vs
 #endif
+
+void main(void) {
+
+    Instance instance = decode_instance_attributes();
+    PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
+    Transform transform = fetch_transform(ph.transform_id);
+    PictureTask task = fetch_picture_task(instance.picture_task_address);
+    ClipArea clip_area = fetch_clip_area(instance.clip_address);
+
+    WR_VERTEX_SHADER_MAIN_FUNCTION(instance, ph, transform, task, clip_area);
+}
+
+#endif // WR_VERTEX_SHADER
 
 #ifdef WR_FRAGMENT_SHADER
 
