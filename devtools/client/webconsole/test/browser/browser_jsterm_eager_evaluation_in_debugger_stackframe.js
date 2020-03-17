@@ -18,10 +18,7 @@ function pauseInDebugger(param) {
 </script>
 `;
 
-const EAGER_EVALUATION_PREF = "devtools.webconsole.input.eagerEvaluation";
-
 add_task(async function() {
-  await pushPref(EAGER_EVALUATION_PREF, true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const target = await TargetFactory.forTab(gBrowser.selectedTab);

@@ -6,7 +6,6 @@
 
 const TEST_URI = `data:text/html;charset=utf-8,Test that eager evaluation can't log warnings in the output`;
 add_task(async function() {
-  await pushPref("devtools.webconsole.input.eagerEvaluation", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   setInputValue(hud, `document.getElementById("")`);
