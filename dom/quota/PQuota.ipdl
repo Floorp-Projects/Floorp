@@ -74,12 +74,12 @@ struct ClearResetOriginParams
   bool persistenceTypeIsExplicit;
   Type clientType;
   bool clientTypeIsExplicit;
-  bool matchAll;
 };
 
 struct ClearOriginParams
 {
   ClearResetOriginParams commonParams;
+  bool matchAll;
 };
 
 struct ResetOriginParams

@@ -1599,6 +1599,7 @@ class ClearRequestBase : public QuotaRequestBase {
 
 class ClearOriginOp final : public ClearRequestBase {
   const ClearResetOriginParams mParams;
+  const bool mMatchAll;
 
  public:
   explicit ClearOriginOp(const RequestParams& aParams);
@@ -9864,7 +9865,8 @@ nsresult ClearRequestBase::DoDirectoryWork(QuotaManager* aQuotaManager) {
 
 ClearOriginOp::ClearOriginOp(const RequestParams& aParams)
     : ClearRequestBase(/* aExclusive */ true),
-      mParams(aParams.get_ClearOriginParams().commonParams()) {
+      mParams(aParams.get_ClearOriginParams().commonParams()),
+      mMatchAll(aParams.get_ClearOriginParams().matchAll()) {
   MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams);
 }
 
@@ -9883,7 +9885,7 @@ void ClearOriginOp::Init(Quota* aQuota) {
   QuotaManager::GetInfoFromValidatedPrincipalInfo(mParams.principalInfo(),
                                                   nullptr, nullptr, &origin);
 
-  if (mParams.matchAll()) {
+  if (mMatchAll) {
     mOriginScope.SetFromPrefix(origin);
   } else {
     mOriginScope.SetFromOrigin(origin);
@@ -9941,11 +9943,7 @@ ResetOriginOp::ResetOriginOp(const RequestParams& aParams)
     mPersistenceType.SetValue(params.persistenceType());
   }
 
-  if (params.matchAll()) {
-    mOriginScope.SetFromPrefix(origin);
-  } else {
-    mOriginScope.SetFromOrigin(origin);
-  }
+  mOriginScope.SetFromOrigin(origin);
 
   if (params.clientTypeIsExplicit()) {
     mClientType.SetValue(params.clientType());

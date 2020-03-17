@@ -67,7 +67,7 @@ nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
 
 nsresult GetClearResetOriginParams(nsIPrincipal* aPrincipal,
                                    const nsACString& aPersistenceType,
-                                   const nsAString& aClientType, bool aMatchAll,
+                                   const nsAString& aClientType,
                                    ClearResetOriginParams& aParams) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
@@ -103,8 +103,6 @@ nsresult GetClearResetOriginParams(nsIPrincipal* aPrincipal,
     aParams.clientType() = clientType;
     aParams.clientTypeIsExplicit() = true;
   }
-
-  aParams.matchAll() = aMatchAll;
 
   return NS_OK;
 }
@@ -658,13 +656,14 @@ QuotaManagerService::ClearStoragesForPrincipal(
   ClearResetOriginParams commonParams;
 
   nsresult rv = GetClearResetOriginParams(aPrincipal, aPersistenceType,
-                                          aClientType, aClearAll, commonParams);
+                                          aClientType, commonParams);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  RequestParams params;
-  params = ClearOriginParams(commonParams);
+  ClearOriginParams params;
+  params.commonParams() = std::move(commonParams);
+  params.matchAll() = aClearAll;
 
   RequestInfo info(request, params);
 
@@ -703,7 +702,7 @@ QuotaManagerService::Reset(nsIQuotaRequest** _retval) {
 NS_IMETHODIMP
 QuotaManagerService::ResetStoragesForPrincipal(
     nsIPrincipal* aPrincipal, const nsACString& aPersistenceType,
-    const nsAString& aClientType, bool aResetAll, nsIQuotaRequest** _retval) {
+    const nsAString& aClientType, nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
@@ -711,21 +710,12 @@ QuotaManagerService::ResetStoragesForPrincipal(
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCString suffix;
-  aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
-
-  if (NS_WARN_IF(aResetAll && !suffix.IsEmpty())) {
-    // The originAttributes should be default originAttributes when the
-    // aClearAll flag is set.
-    return NS_ERROR_INVALID_ARG;
-  }
-
   RefPtr<Request> request = new Request(aPrincipal);
 
   ClearResetOriginParams commonParams;
 
   nsresult rv = GetClearResetOriginParams(aPrincipal, aPersistenceType,
-                                          aClientType, aResetAll, commonParams);
+                                          aClientType, commonParams);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
