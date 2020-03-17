@@ -155,6 +155,18 @@ JSObject* StructuredCloneReadCallback(
       static_cast<StructuredCloneReadInfo*>(aClosure), database);
 }
 
+template <typename T>
+bool WrapAsJSObject(JSContext* const aCx, T& aBaseObject,
+                    JS::MutableHandle<JSObject*> aResult) {
+  JS::Rooted<JS::Value> wrappedValue(aCx);
+  if (!ToJSValue(aCx, aBaseObject, &wrappedValue)) {
+    return false;
+  }
+
+  aResult.set(&wrappedValue.toObject());
+  return true;
+}
+
 }  // namespace indexedDB
 }  // namespace dom
 }  // namespace mozilla
