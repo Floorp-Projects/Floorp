@@ -4319,9 +4319,9 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
 
 CSSRect AsyncPanZoomController::GetVisibleRect(
     const RecursiveMutexAutoLock& aProofOfLock) const {
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, aProofOfLock);
   CSSPoint currentScrollOffset =
-      GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing) +
-      mTestAsyncScrollOffset;
+      GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing);
   CSSRect visible = CSSRect(currentScrollOffset,
                             Metrics().CalculateCompositedSizeInCssPixels());
   return visible;
