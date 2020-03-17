@@ -422,9 +422,7 @@ function remoteSettingsFunction() {
         // Delete all potential attachments.
         await client.attachments.deleteAll();
         // Delete local data.
-        const kintoCollection = await client.openCollection();
-        await kintoCollection.clear();
-        await kintoCollection.db.close();
+        await client.clear();
         // Remove status pref.
         Services.prefs.clearUserPref(client.lastCheckTimePref);
       })
