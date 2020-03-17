@@ -370,110 +370,98 @@ class CompileInfo {
     return needsBodyEnvironmentObject_;
   }
 
+  enum class SlotObservableKind {
+    // This slot must be preserved because it's observable outside SSA uses.
+    // It can't be recovered before or during bailout.
+    ObservableNotRecoverable,
+
+    // This slot must be preserved because it's observable, but it can be
+    // recovered.
+    ObservableRecoverable,
+
+    // This slot is not observable outside SSA uses.
+    NotObservable,
+  };
+
+  inline SlotObservableKind getSlotObservableKind(uint32_t slot) const {
+    // Locals and expression stack slots.
+    if (slot >= firstLocalSlot()) {
+      // The |this| slot for a derived class constructor is a local slot.
+      // It should never be optimized out, as a Debugger might need to perform
+      // TDZ checks on it via, e.g., an exceptionUnwind handler. The TDZ check
+      // is required for correctness if the handler decides to continue
+      // execution.
+      if (thisSlotForDerivedClassConstructor_ &&
+          *thisSlotForDerivedClassConstructor_ == slot) {
+        return SlotObservableKind::ObservableNotRecoverable;
+      }
+      return SlotObservableKind::NotObservable;
+    }
+
+    // Formal argument slots.
+    if (slot >= firstArgSlot()) {
+      MOZ_ASSERT(funMaybeLazy());
+      MOZ_ASSERT(slot - firstArgSlot() < nargs());
+
+      // Function.arguments can be used to access all arguments in non-strict
+      // scripts, so we can't optimize out any arguments.
+      if (!hasArguments() && script()->strict()) {
+        return SlotObservableKind::NotObservable;
+      }
+      if (needsArgsObj()) {
+        return SlotObservableKind::ObservableNotRecoverable;
+      }
+      return SlotObservableKind::ObservableRecoverable;
+    }
+
+    // |this| slot is observable but it can be recovered.
+    if (funMaybeLazy() && slot == thisSlot()) {
+      return SlotObservableKind::ObservableRecoverable;
+    }
+
+    // Environment chain slot.
+    if (slot == environmentChainSlot()) {
+      // If environments can be added in the body (after the prologue) we need
+      // to preserve the environment chain slot. It can't be recovered.
+      if (needsBodyEnvironmentObject()) {
+        return SlotObservableKind::ObservableNotRecoverable;
+      }
+      // If the function may need an arguments object, also preserve the
+      // environment chain because it may be needed to reconstruct the arguments
+      // object during bailout.
+      if (funNeedsSomeEnvironmentObject_ || hasArguments()) {
+        return SlotObservableKind::ObservableRecoverable;
+      }
+      return SlotObservableKind::NotObservable;
+    }
+
+    // The arguments object is observable and not recoverable.
+    if (hasArguments() && slot == argsObjSlot()) {
+      MOZ_ASSERT(funMaybeLazy());
+      return SlotObservableKind::ObservableNotRecoverable;
+    }
+
+    MOZ_ASSERT(slot == returnValueSlot());
+    return SlotObservableKind::NotObservable;
+  }
+
   // Returns true if a slot can be observed out-side the current frame while
   // the frame is active on the stack.  This implies that these definitions
   // would have to be executed and that they cannot be removed even if they
   // are unused.
   inline bool isObservableSlot(uint32_t slot) const {
-    if (slot >= firstLocalSlot()) {
-      // The |this| slot for a derived class constructor is a local slot.
-      if (thisSlotForDerivedClassConstructor_) {
-        return *thisSlotForDerivedClassConstructor_ == slot;
-      }
-      return false;
-    }
-
-    if (slot < firstArgSlot()) {
-      return isObservableFrameSlot(slot);
-    }
-
-    return isObservableArgumentSlot(slot);
-  }
-
-  bool isObservableFrameSlot(uint32_t slot) const {
-    // The |envChain| value must be preserved if environments are added
-    // after the prologue.
-    if (needsBodyEnvironmentObject() && slot == environmentChainSlot()) {
-      return true;
-    }
-
-    if (!funMaybeLazy()) {
-      return false;
-    }
-
-    // The |this| value must always be observable.
-    if (slot == thisSlot()) {
-      return true;
-    }
-
-    // The |this| frame slot in derived class constructors should never be
-    // optimized out, as a Debugger might need to perform TDZ checks on it
-    // via, e.g., an exceptionUnwind handler. The TDZ check is required
-    // for correctness if the handler decides to continue execution.
-    if (thisSlotForDerivedClassConstructor_ &&
-        *thisSlotForDerivedClassConstructor_ == slot) {
-      return true;
-    }
-
-    if (funNeedsSomeEnvironmentObject_ && slot == environmentChainSlot()) {
-      return true;
-    }
-
-    // If the function may need an arguments object, then make sure to
-    // preserve the env chain, because it may be needed to construct the
-    // arguments object during bailout. If we've already created an
-    // arguments object (or got one via OSR), preserve that as well.
-    if (hasArguments() &&
-        (slot == environmentChainSlot() || slot == argsObjSlot())) {
-      return true;
-    }
-
-    return false;
-  }
-
-  bool isObservableArgumentSlot(uint32_t slot) const {
-    if (!funMaybeLazy()) {
-      return false;
-    }
-
-    // Function.arguments can be used to access all arguments in non-strict
-    // scripts, so we can't optimize out any arguments.
-    if ((hasArguments() || !script()->strict()) && firstArgSlot() <= slot &&
-        slot - firstArgSlot() < nargs()) {
-      return true;
-    }
-
-    return false;
+    SlotObservableKind kind = getSlotObservableKind(slot);
+    return (kind == SlotObservableKind::ObservableNotRecoverable ||
+            kind == SlotObservableKind::ObservableRecoverable);
   }
 
   // Returns true if a slot can be recovered before or during a bailout.  A
   // definition which can be observed and recovered, implies that this
   // definition can be optimized away as long as we can compute its values.
   bool isRecoverableOperand(uint32_t slot) const {
-    // The |envChain| value cannot be recovered if environments can be
-    // added in body (after the prologue).
-    if (needsBodyEnvironmentObject() && slot == environmentChainSlot()) {
-      return false;
-    }
-
-    if (!funMaybeLazy()) {
-      return true;
-    }
-
-    // The |this| and the |envChain| values can be recovered.
-    if (slot == thisSlot() || slot == environmentChainSlot()) {
-      return true;
-    }
-
-    if (isObservableFrameSlot(slot)) {
-      return false;
-    }
-
-    if (needsArgsObj() && isObservableArgumentSlot(slot)) {
-      return false;
-    }
-
-    return true;
+    SlotObservableKind kind = getSlotObservableKind(slot);
+    return (kind == SlotObservableKind::ObservableRecoverable ||
+            kind == SlotObservableKind::NotObservable);
   }
 
   // Check previous bailout states to prevent doing the same bailout in the
