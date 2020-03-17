@@ -543,7 +543,7 @@ const PWMGR_COMMON_PARENT = runInParent(
 );
 
 SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.popPrefEnv();
+  SpecialPowers.flushPrefEnv();
 
   PWMGR_COMMON_PARENT.sendAsyncMessage("cleanup");
 
