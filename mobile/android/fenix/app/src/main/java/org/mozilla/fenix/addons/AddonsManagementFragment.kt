@@ -17,7 +17,6 @@ import kotlinx.android.synthetic.main.fragment_add_ons_management.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -57,7 +56,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         showToolbar(getString(R.string.preferences_addons))
     }
 
-    @UseExperimental(ExperimentalCoroutinesApi::class)
     override fun onStart() {
         super.onStart()
         findPreviousDialogFragment()?.let { dialog ->

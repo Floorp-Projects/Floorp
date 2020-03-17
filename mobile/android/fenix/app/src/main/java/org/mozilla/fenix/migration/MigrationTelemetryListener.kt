@@ -4,7 +4,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
@@ -17,7 +16,6 @@ class MigrationTelemetryListener(
     private val metrics: MetricController,
     private val store: MigrationStore
 ) {
-    @UseExperimental(ExperimentalCoroutinesApi::class)
     fun start() {
         // Observe for migration completed.
         store.flowScoped { flow ->

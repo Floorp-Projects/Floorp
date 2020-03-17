@@ -15,7 +15,6 @@ import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -51,7 +50,6 @@ class InstalledAddonDetailsFragment : Fragment() {
         }
     }
 
-    @UseExperimental(ExperimentalCoroutinesApi::class)
     override fun onStart() {
         super.onStart()
         scope = requireContext().components.core.store.flowScoped { flow ->
