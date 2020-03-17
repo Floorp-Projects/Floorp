@@ -2423,6 +2423,18 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
   nsPresContext* mPresContext;
 };
 
+// The filter might reference an SVG filter that is declared inside this
+// document. Flush frames so that we'll have an nsSVGFilterFrame to work
+// with.
+static bool FiltersNeedFrameFlush(Span<const StyleFilter> aFilters) {
+  for (const auto& filter : aFilters) {
+    if (filter.IsUrl()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void CanvasRenderingContext2D::UpdateFilter() {
   RefPtr<PresShell> presShell = GetPresShell();
   if (!presShell || presShell->IsDestroying()) {
@@ -2430,21 +2442,21 @@ void CanvasRenderingContext2D::UpdateFilter() {
     // reflect the current "taint" status of the canvas
     CurrentState().filter = FilterDescription();
     CurrentState().filterSourceGraphicTainted =
-        (mCanvasElement && mCanvasElement->IsWriteOnly());
+        mCanvasElement && mCanvasElement->IsWriteOnly();
     return;
   }
 
-  // The filter might reference an SVG filter that is declared inside this
-  // document. Flush frames so that we'll have an nsSVGFilterFrame to work
-  // with.
-  presShell->FlushPendingNotifications(FlushType::Frames);
+  if (FiltersNeedFrameFlush(CurrentState().filterChain.AsSpan())) {
+    presShell->FlushPendingNotifications(FlushType::Frames);
+  }
+
   MOZ_RELEASE_ASSERT(!mStyleStack.IsEmpty());
   if (MOZ_UNLIKELY(presShell->IsDestroying())) {
     return;
   }
 
-  bool sourceGraphicIsTainted =
-      (mCanvasElement && mCanvasElement->IsWriteOnly());
+  const bool sourceGraphicIsTainted =
+      mCanvasElement && mCanvasElement->IsWriteOnly();
 
   CurrentState().filter = nsFilterInstance::GetFilterDescription(
       mCanvasElement, CurrentState().filterChain.AsSpan(),
