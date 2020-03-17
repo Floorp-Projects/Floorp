@@ -3,8 +3,12 @@
 
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Fosc</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Jòc de colors foscas</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">Sèpia</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">Clar</string>
-    </resources>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Jòc de color claras</string>
+</resources>

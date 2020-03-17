@@ -113,15 +113,103 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">सुरक्षा कारणों से पोर्ट प्रतिबंधित है</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p> अनुरोधित पते ने एक पोर्ट (उदाहरण के लिए, <q> mozilla.org:80 </ q> पोर्ट 80 के लिए mozilla.org पर) निर्दिष्ट किया गया है, जो सामान्य रूप से वेब ब्राउजिंग के अलावा <em> अन्य </ em> उद्देश्यों के लिए उपयोग किया जाता है। ब्राउज़र ने आपकी सुरक्षा और सुरक्षा के लिए अनुरोध को रद्द कर दिया है।</ p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">कनेक्शन रिसेट किया गया था</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p> कनैक्शन स्थापित करते समय नेटवर्क लिंक बाधित हो गयी थी। कृपया पुनः प्रयास करें। </ p>
+      <Ul>
+
+        <li> साइट अस्थायी रूप से अनुपलब्ध या बहुत व्यस्त हो सकती है। कुछ समय बाद पुनः प्रयास करें। </ li>                               
+        <li> यदि आप कोई पेज लोड नहीं कर पा रहे हैं, तो अपने डिवाइस का डेटा या वाई-फाई कनेक्शन जांचें। </ li>
+      </ Ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">असुरक्षित फाइल प्रकार</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>कृपया वेबसाइट मालिक से उन्हें इस समस्या के बारे में बताने के लिए संपर्क करें।</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">अनुपयोगी सामग्री त्रुटि</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>पेज जिसे आप देखने की कोशिश कर रहे हैं नहीं दिखाया जा सकता है क्योंकि डेटा संचारण में त्रुटि पाया गया।</p>
+      <ul>
+        <li>कृपया वेबसाइट मालिक को इस समस्या के बारे में सूचित करने के लिए संपर्क करें।</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">सामग्री क्रैश</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>पेज जिसे आप देखने की कोशिश कर रहे हैं नहीं दिखाया जा सकता है क्योंकि डेटा संचारण में त्रुटि पाया गया।</p>
+      <ul>
+        <li>कृपया वेबसाइट मालिक को इस समस्या के बारे में सूचित करने के लिए संपर्क करें।</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">सामग्री एंकोडिंग त्रुटि</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>पेज जिसे आप देखने की कोशिश कर रहे हैं नहीं दिखाया जा सकता है क्योंकि यह संकुचन का अवैध या असमर्थित प्रारूप का प्रयोग करता है।</p>
+      <ul>
+        <li>कृपया वेबसाइट मालिक को इस समस्या के बारे में सूचित करने के लिए संपर्क करें।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">पता नहीं पाया गया</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">इंटरनेट कनेक्शन नही</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">अपना नेटवर्क कनेक्शन जांचें या पेज कुछ ही क्षणों में पुनः लोड करने का प्रयास करें।</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">फिर से लोड करें</string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">अमान्य पता</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">पता मान्य नहीं है</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>वेब पता प्रायः इस तरह लिखा जाता है <strong>http://www.example.com/</strong></li>
+        <li>सुनिश्चित करें कि आप फॉरवर्ड स्लैश का प्रयोग कर रहे हैं (यानी <strong>/</strong>)।</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">अज्ञात प्रोटोकॉल</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">फ़ाइल नहीं पाया गया</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">प्रॉक्सी सर्वर का कनेक्शन अस्वीकार किया गया</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">प्रॉक्सी सर्वर नहीं मिला</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">मैलवेयर साइट समस्या</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>%1$s पर साइट को एक हमला साइट के रूप में रिपोट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">अवांछित साइट समस्या</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s पर साइट को एक अवांछित सॉफ्टवेयर की सेवा के रूप में रिपोट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">हानिकारक साइट मुद्दा</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>%1$s पर साइट एक संभावित हानिकारक साइट के रूप में रिपोर्ट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">धोखादायक साइट समस्या</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s पर यह वेबपेज एक धोखादायक साइट के रूप में रिपोट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
+</resources>

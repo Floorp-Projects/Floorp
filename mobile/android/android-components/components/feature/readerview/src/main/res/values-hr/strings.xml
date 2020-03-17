@@ -23,7 +23,7 @@
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_sepia_color_scheme_desc">Smeđa shema boja</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_light">Svjetla</string>
+    <string name="mozac_feature_readerview_light">Svijetla</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_light_color_scheme_desc">Svjetla shema boja</string>
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Svijetla shema boja</string>
 </resources>

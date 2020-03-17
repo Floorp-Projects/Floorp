@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">Citirea și modificarea setărilor de confidențialitate</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">Să citească și să modifice setările de confidențialitate</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Acces la datele pentru toate site-urile web</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Să îți acceseze datele pentru toate site-urile web</string>
     <!-- Description for tabs add-on permission. -->
-    <string name="mozac_feature_addons_permissions_tabs_description">Acces la filele browserului</string>
+    <string name="mozac_feature_addons_permissions_tabs_description">Să acceseze filele browserului</string>
     <!-- Description for unlimited_storage permission. -->
-    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Stocarea unei cantități nelimitate de date pe partea clientului</string>
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Să stocheze un volum nelimitat de date pe partea de client</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">Acces la activitatea browserului în timpul navigării</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Să acceseze activitatea browserului în timpul navigării</string>
     <!-- Description for bookmarks permission. -->
-    <string name="mozac_feature_addons_permissions_bookmarks_description">Citirea și modificarea marcajelor</string>
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Să citească și să modifice marcaje</string>
     <!-- Description for browser_setting permission. -->
-    <string name="mozac_feature_addons_permissions_browser_setting_description">Citirea și modificarea setărilor din browse</string>
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Să citească și să modifice setările browserului</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">Eliminarea istoricului recent de navigare, a cookie-urilor și datelor aferente</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">Să șteargă istoricul recent de navigare, cookie-urile și datele asociate</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">Citirea datelor din clipboard</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Să obțină date din clipboard</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">Introducerea datelor din clipboard</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Să introducă date în clipboard</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">Descărcare fișiere, citirea și modificarea istoricului de descărcări din browser</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">Să descarce fișiere și să citească sau să modifice istoricul descărcărilor din browser</string>
     <!-- Description for downloads_open permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_open_description">Deschiderea fișierelor descărcate pe dispozitiv</string>
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Să deschidă fișiere descărcate pe dispozitiv</string>
     <!-- Description for find permission. -->
-    <string name="mozac_feature_addons_permissions_find_description">Citirea textului din toate filele deschise</string>
+    <string name="mozac_feature_addons_permissions_find_description">Să citească textul din toate filele deschise</string>
     <!-- Description for geolocation permission. -->
-    <string name="mozac_feature_addons_permissions_geolocation_description">Acces la locație</string>
+    <string name="mozac_feature_addons_permissions_geolocation_description">Să îți acceseze locația</string>
     <!-- Description for history permission. -->
-    <string name="mozac_feature_addons_permissions_history_description">Acces la istoricul de navigare</string>
+    <string name="mozac_feature_addons_permissions_history_description">Să acceseze istoricul de navigare</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Monitorizarea utilizării extensiilor și gestionarea temelor</string>
+    <string name="mozac_feature_addons_permissions_management_description">Să monitorizeze utilizarea de extensii și să gestioneze teme</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">Schimb de mesaje cu alte aplicații decât aceasta</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Să facă schimb de mesaje cu alte aplicații în afară de aceasta</string>
     <!-- Description for notifications permission. -->
-    <string name="mozac_feature_addons_permissions_notifications_description">Afișarea de notificări</string>
+    <string name="mozac_feature_addons_permissions_notifications_description">Să îți afișeze notificări</string>
     <!-- Description for pkcs11 permission. -->
-    <string name="mozac_feature_addons_permissions_pkcs11_description">Furnizarea de servicii de autentificare criptografică</string>
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Să furnizeze servicii de autentificare criptografică</string>
     <!-- Description for proxy permission. -->
-    <string name="mozac_feature_addons_permissions_proxy_description">Controlarea setărilor de proxy din browser</string>
+    <string name="mozac_feature_addons_permissions_proxy_description">Să controleze setările proxy ale browserului</string>
     <!-- Description for sessions permission. -->
-    <string name="mozac_feature_addons_permissions_sessions_description">Acces la file închise recent</string>
+    <string name="mozac_feature_addons_permissions_sessions_description">Să acceseze filele închise recent</string>
     <!-- Description for tab_hide permission. -->
-    <string name="mozac_feature_addons_permissions_tab_hide_description">Ascunderea și afișarea filelor din browser</string>
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Să ascundă și să afișeze filele browserului</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">Acces la istoricul de navigare</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">Să acceseze istoricul de navigare</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Unelte extinse pentru dezvoltatori pentru acces la datele tale din filele deschise</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Să extindă uneltele de dezvoltare pentru a-ți accesa datele în filele deschise</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versiune</string>
     <!-- The authors of an add-on. -->
@@ -87,7 +87,7 @@
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Adaugi %1$s?</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-    <string name="mozac_feature_addons_permissions_dialog_subtitle">Are nevoie de permisiune pentru:</string>
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Îți cere permisiunea:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Adaugă</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -110,6 +110,18 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">sunt solicitate %1$d permisiuni noi</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Actualizările suplimentului</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Verificator de suplimente acceptat</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">Supliment nou disponibil</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Suplimente noi disponibile</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">Adaugă %1$s la %2$s</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">Adaugă %1$s și %2$s la %3$s</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Adaugă-le la %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Tehnologia suplimentelor Firefox se modernizează. Aceste suplimente folosesc cadre necompatibile cu Firefox 75 și versiunile superioare.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
@@ -136,7 +148,7 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s a fost eliminat cu succes</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s nu a fost eliminat</string>
-    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Acest supliment a migrat de la o versiune anterioară %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 supliment</string>

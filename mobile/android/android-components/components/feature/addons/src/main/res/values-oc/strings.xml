@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_updater_notification_allow_button">Autorizar</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">Refusar</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s a una novèla mesa a jorn</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Mesas a jorn des moduls</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->

@@ -14,6 +14,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Kopiraj mesto slike</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Shrani sliko</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">Shrani datoteko na napravo</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Odprt nov zavihek</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
@@ -22,9 +24,12 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Povezava kopirana v odložišče</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Preklopi</string>
+    <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Odpri povezavo v zunanji aplikaciji</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">Iskanje %s</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
     <string name="mozac_selection_context_menu_search_privately">Zasebno iskanje %s</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">Deli</string>
 </resources>

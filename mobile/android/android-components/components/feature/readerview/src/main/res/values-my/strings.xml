@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Sans serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Sans Serif ဖောင့်</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">serif ဖောင့်</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">စာလုံးအရွယ်အစားလျှေ့ာပါ</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">စာလုံးအရွယ်အစားတိုးပါ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">အမှောင်</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">မှောင်မိုက်အရောင်အစီအစဉ်</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">နီညိုရောင်</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">နီညိုရောင် ပြသမှု</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">အလင်း</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">အလင်းအရောင်အစီအစဉ်</string>
+</resources>

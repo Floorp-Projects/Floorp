@@ -10,10 +10,10 @@
     <string name="mozac_feature_readerview_serif_font_desc">Font Serif </string>
 
     <!-- Accessible description for decreasing the font size -->
-    <string name="mozac_feature_readerview_font_size_decrease_desc">Micșorare font</string>
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Scăderea dimensiunii fontului</string>
 
     <!-- Accessible description for increasing the font size -->
-    <string name="mozac_feature_readerview_font_size_increase_desc">Mărire font</string>
+    <string name="mozac_feature_readerview_font_size_increase_desc">Creșterea dimensiunii fontului</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Întunecat</string>
     <!-- Accessible description for the color option -->

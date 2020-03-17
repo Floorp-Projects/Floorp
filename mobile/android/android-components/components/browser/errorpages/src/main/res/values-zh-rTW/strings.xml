@@ -71,7 +71,7 @@
     <string name="mozac_browser_errorpages_connection_failure_title">連線失敗</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-		<li>可能是網站暫停服務貨忙碌中？請稍候重試。</li>
+		<li>可能是網站暫停服務或忙碌中？請稍候重試。</li>
 		<li>若您無法載入任何頁面，請檢查裝置的數據或 Wi-Fi 連線。</li>
 	</ul>]]></string>
 
