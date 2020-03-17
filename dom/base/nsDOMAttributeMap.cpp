@@ -123,7 +123,8 @@ Attr* nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo) {
   if (!node) {
     // Newly inserted entry!
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    entryValue = new Attr(this, ni.forget(), EmptyString());
+    auto* nim = ni->NodeInfoManager();
+    entryValue = new (nim) Attr(this, ni.forget(), EmptyString());
     node = entryValue;
   }
 
