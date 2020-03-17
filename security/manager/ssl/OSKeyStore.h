@@ -11,9 +11,7 @@
 #define OSKeyStore_h
 
 #include "nsCOMPtr.h"
-#include "nsIObserver.h"
 #include "nsIOSKeyStore.h"
-#include "nsIThread.h"
 #include "nsString.h"
 #include "ScopedNSSTypes.h"
 
@@ -74,10 +72,9 @@ class AbstractOSKeyStore {
 nsresult GetPromise(JSContext* aCx,
                     /* out */ RefPtr<mozilla::dom::Promise>& aPromise);
 
-class OSKeyStore final : public nsIOSKeyStore, public nsIObserver {
+class OSKeyStore final : public nsIOSKeyStore {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSIOSKEYSTORE
 
   OSKeyStore();
@@ -101,20 +98,7 @@ class OSKeyStore final : public nsIOSKeyStore, public nsIObserver {
  private:
   ~OSKeyStore() = default;
 
-  // Thread safety for OSKeyStore:
-  // * mKsThread is only accessed on the main thread
-  // * mKsThread is shut down on the main thread when OSKeyStore receives the
-  //   "xpcom-shutdown" notification
-  // * mKs is created and destroyed on the main thread, but is only accessed on
-  //   mKsThread
-  // * XPCOM notifies "xpcom-shutdown" before shutting down the component
-  //   manager, so mKsThread is shut down before mKs is destroyed
-  // Essentially, the lifetime of mKsThread is contained by the lifetime of mKs.
-  // Since the value of mKs never changes while mKsThread is alive and any uses
-  // of it are serial, there shouldn't be any memory safety issues.
   std::unique_ptr<AbstractOSKeyStore> mKs;
-  nsCOMPtr<nsIThread> mKsThread;
-
   bool mKsIsNSSKeyStore;
   const nsCString mLabelPrefix =
       NS_LITERAL_CSTRING("org.mozilla.nss.keystore.");
