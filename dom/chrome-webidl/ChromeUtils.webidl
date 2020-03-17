@@ -450,6 +450,11 @@ partial namespace ChromeUtils {
   // testing.
   [ChromeOnly]
   MediaMetadataInit getCurrentActiveMediaMetadata();
+
+  // This is used to get the actual media playback state from the current main
+  // controller in testing.
+  [ChromeOnly]
+  MediaSessionPlaybackTestState getCurrentMediaSessionPlaybackState();
 };
 
 /*
@@ -695,4 +700,16 @@ enum MediaControlKeysTestEvent {
   "seekbackward",
   "seekforward",
   "stop",
+};
+
+// Keep this in sync with MediaSessionPlaybackState in MediaSession.webidl!
+// The reason we create an new enum MediaSessionPlaybackTestState is because of
+// building issue. If we use MediaSessionPlaybackState directly, then the
+// codegen would automatically add an header include of MediaSessionBinding.h
+// in the ChromeUtilsBinding.h, which would cause the complier complaining about
+// lots of undeclared identifier.
+enum MediaSessionPlaybackTestState {
+  "none",
+  "paused",
+  "playing",
 };

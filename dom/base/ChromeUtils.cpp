@@ -1208,5 +1208,23 @@ void ChromeUtils::GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
   }
 }
 
+/* static */
+MediaSessionPlaybackTestState ChromeUtils::GetCurrentMediaSessionPlaybackState(
+    GlobalObject& aGlobal) {
+  static_assert(int(MediaSessionPlaybackState::None) ==
+                    int(MediaSessionPlaybackTestState::None) &&
+                int(MediaSessionPlaybackState::Paused) ==
+                    int(MediaSessionPlaybackTestState::Paused) &&
+                int(MediaSessionPlaybackState::Playing) ==
+                    int(MediaSessionPlaybackTestState::Playing) &&
+                MediaSessionPlaybackStateValues::Count ==
+                    MediaSessionPlaybackTestStateValues::Count);
+  if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
+    return ConvertToMediaSessionPlaybackTestState(
+        service->GetMainControllerPlaybackState());
+  }
+  return MediaSessionPlaybackTestState::None;
+}
+
 }  // namespace dom
 }  // namespace mozilla
