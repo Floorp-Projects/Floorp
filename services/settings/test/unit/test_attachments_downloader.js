@@ -16,6 +16,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const RECORD = {
+  id: "1f3a0802-648d-11ea-bd79-876a8b69c377",
   attachment: {
     hash: "f41ed47d0f43325c9f089d03415c972ce1d3f1ecab6e4d6260665baf3db3ccee",
     size: 1597,
@@ -202,8 +203,7 @@ add_task(clear_state);
 
 add_task(async function test_delete_all() {
   const client = RemoteSettings("some-collection");
-  const kintoCol = await client.openCollection();
-  await kintoCol.create(RECORD);
+  await client.db.create(RECORD);
   const fileURL = await downloader.download(RECORD);
   const localFilePath = pathFromURL(fileURL);
   Assert.ok(await OS.File.exists(localFilePath));
