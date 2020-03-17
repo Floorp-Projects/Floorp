@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import pprint
 import signal
+import sys
 import time
 import traceback
 import subprocess
@@ -23,9 +24,10 @@ class ProcessContext(object):
     """
     Store useful results of the browser execution.
     """
-    def __init__(self):
+    def __init__(self, is_launcher=False):
         self.output = None
         self.process = None
+        self.is_launcher = is_launcher
 
     @property
     def pid(self):
@@ -36,23 +38,32 @@ class ProcessContext(object):
         Kill the process, returning the exit code or None if the process
         is already finished.
         """
-        if self.process and self.process.is_running():
-            LOG.debug("Terminating %s" % self.process)
+        parentProc = self.process
+        # If we're using a launcher process, terminate that instead of us:
+        kids = parentProc and parentProc.is_running() and parentProc.children()
+        if self.is_launcher and kids and len(kids) == 1 and kids[0].is_running():
+            LOG.debug(("Launcher process {} detected. Terminating parent"
+                       " process {} instead.").format(parentProc, kids[0]))
+            parentProc = kids[0]
+
+        if parentProc and parentProc.is_running():
+            LOG.debug("Terminating %s" % parentProc)
             try:
-                self.process.terminate()
+                parentProc.terminate()
             except psutil.NoSuchProcess:
-                procs = self.process.children()
+                procs = parentProc.children()
                 for p in procs:
                     c = ProcessContext()
                     c.process = p
                     c.kill_process()
-                return self.process.returncode
+                return parentProc.returncode
             try:
-                return self.process.wait(3)
+                return parentProc.wait(3)
             except psutil.TimeoutExpired:
-                self.process.kill()
+                LOG.debug("Killing %s" % parentProc)
+                parentProc.kill()
                 # will raise TimeoutExpired if unable to kill
-                return self.process.wait(3)
+                return parentProc.wait(3)
 
 
 class Reader(object):
@@ -114,7 +125,8 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
         return run_in_debug_mode(command, debugger_info,
                                  on_started=on_started, env=kwargs.get('env'))
 
-    context = ProcessContext()
+    is_launcher = sys.platform.startswith('win') and '-wait-for-browser' in command
+    context = ProcessContext(is_launcher)
     first_time = int(time.time()) * 1000
     wait_for_quit_timeout = 5
     event = Event()
@@ -139,7 +151,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
         if not event.wait(timeout):
             LOG.info("Timeout waiting for test completion; killing browser...")
             # try to extract the minidump stack if the browser hangs
-            mozcrash.kill_and_get_minidump(proc.pid, minidump_dir)
+            kill_and_get_minidump(context, minidump_dir)
             raise TalosError("timeout")
         if reader.got_end_timestamp:
             for i in range(1, wait_for_quit_timeout):
@@ -150,6 +162,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
                     "Browser shutdown timed out after {0} seconds, terminating"
                     " process.".format(wait_for_quit_timeout)
                 )
+                kill_and_get_minidump(context, minidump_dir)
         elif reader.got_timeout:
             raise TalosError('TIMEOUT: %s' % reader.timeout_message)
         elif reader.got_error:
@@ -221,3 +234,15 @@ def run_in_debug_mode(command, debugger_info, on_started=None, env=None):
         LOG.debug("Unable to detect exit code of the process %s." % ttest_process.pid)
 
     return context
+
+
+def kill_and_get_minidump(context, minidump_dir):
+    proc = context.process
+    if context.is_launcher:
+        kids = context.process.children()
+        if len(kids) == 1:
+            LOG.debug(("Launcher process {} detected. Killing parent"
+                       " process {} instead.").format(proc, kids[0]))
+            proc = kids[0]
+    LOG.debug("Killing %s and writing a minidump file" % proc)
+    mozcrash.kill_and_get_minidump(proc.pid, minidump_dir)
