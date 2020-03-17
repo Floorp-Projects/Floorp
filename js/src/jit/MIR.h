@@ -8811,16 +8811,8 @@ class MFunctionDispatch : public MDispatchInstruction {
 
 class MBindNameCache : public MUnaryInstruction,
                        public SingleObjectPolicy::Data {
-  CompilerPropertyName name_;
-  CompilerScript script_;
-  jsbytecode* pc_;
-
-  MBindNameCache(MDefinition* envChain, PropertyName* name, JSScript* script,
-                 jsbytecode* pc)
-      : MUnaryInstruction(classOpcode, envChain),
-        name_(name),
-        script_(script),
-        pc_(pc) {
+  explicit MBindNameCache(MDefinition* envChain)
+      : MUnaryInstruction(classOpcode, envChain) {
     setResultType(MIRType::Object);
   }
 
@@ -8828,14 +8820,6 @@ class MBindNameCache : public MUnaryInstruction,
   INSTRUCTION_HEADER(BindNameCache)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, environmentChain))
-
-  PropertyName* name() const { return name_; }
-  JSScript* script() const { return script_; }
-  jsbytecode* pc() const { return pc_; }
-  bool appendRoots(MRootList& roots) const override {
-    // Don't append the script, all scripts are added anyway.
-    return roots.append(name_);
-  }
 };
 
 class MCallBindVar : public MUnaryInstruction, public SingleObjectPolicy::Data {

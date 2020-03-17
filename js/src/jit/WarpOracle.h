@@ -174,10 +174,21 @@ class WarpSnapshot : public TempObject {
   // The script to compile.
   WarpScriptSnapshot* script_;
 
+  // The global lexical environment and its thisValue(). We don't inline
+  // cross-realm calls so this can be stored once per snapshot.
+  // TODO: trace these values.
+  LexicalEnvironmentObject* globalLexicalEnv_;
+  Value globalLexicalEnvThis_;
+
  public:
-  explicit WarpSnapshot(WarpScriptSnapshot* script) : script_(script) {}
+  explicit WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script);
 
   WarpScriptSnapshot* script() const { return script_; }
+
+  LexicalEnvironmentObject* globalLexicalEnv() const {
+    return globalLexicalEnv_;
+  }
+  Value globalLexicalEnvThis() const { return globalLexicalEnvThis_; }
 };
 
 // WarpOracle creates a WarpSnapshot data structure that's used by WarpBuilder

@@ -45,13 +45,18 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   WarpScriptSnapshot* scriptSnapshot;
   MOZ_TRY_VAR(scriptSnapshot, createScriptSnapshot(script_));
 
-  auto* snapshot = new (alloc_.fallible()) WarpSnapshot(scriptSnapshot);
+  auto* snapshot = new (alloc_.fallible()) WarpSnapshot(cx_, scriptSnapshot);
   if (!snapshot) {
     return abort(AbortReason::Alloc);
   }
 
   return snapshot;
 }
+
+WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script)
+    : script_(script),
+      globalLexicalEnv_(&cx->global()->lexicalEnvironment()),
+      globalLexicalEnvThis_(globalLexicalEnv_->thisValue()) {}
 
 template <typename T, typename... Args>
 static MOZ_MUST_USE bool AddOpSnapshot(TempAllocator& alloc,
@@ -182,6 +187,26 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         }
         break;
       }
+
+      case JSOp::FunctionThis:
+        if (!script->strict() && script->hasNonSyntacticScope()) {
+          // Abort because MComputeThis doesn't support non-syntactic scopes
+          // (a deprecated SpiderMonkey mechanism). If this becomes an issue we
+          // could support it by refactoring GetFunctionThis to not take a frame
+          // pointer and then call that.
+          return abort(AbortReason::Disable,
+                       "JSOp::FunctionThis with non-syntactic scope");
+        }
+        break;
+
+      case JSOp::GlobalThis:
+        if (script->hasNonSyntacticScope()) {
+          // We don't compile global scripts with a non-syntactic scope, but
+          // we can end up here when we're compiling an arrow function.
+          return abort(AbortReason::Disable,
+                       "JSOp::GlobalThis with non-syntactic scope");
+        }
+        break;
 
       default:
         break;
