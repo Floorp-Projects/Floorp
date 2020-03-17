@@ -7,10 +7,11 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const worker = {
-  active: PropTypes.bool,
-  name: PropTypes.string.isRequired,
-  scope: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
+  isActive: PropTypes.bool.isRequired,
   lastUpdateTime: PropTypes.number,
+  scope: PropTypes.string.isRequired,
+  stateText: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   // registrationFront can be missing in e10s.
   registrationFront: PropTypes.object,

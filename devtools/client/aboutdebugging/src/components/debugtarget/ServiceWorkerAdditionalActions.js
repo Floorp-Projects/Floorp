@@ -132,6 +132,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
       className: "default-button default-button--micro qa-unregister-button",
       key: "service-worker-unregister-button",
       labelId: "about-debugging-worker-action-unregister",
+      disabled: false,
       onClick: this.unregister.bind(this),
     });
   }
