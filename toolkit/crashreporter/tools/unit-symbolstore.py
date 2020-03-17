@@ -40,6 +40,9 @@ def write_dll(filename):
 def target_platform():
     return buildconfig.substs['OS_TARGET']
 
+def host_platform():
+    return buildconfig.substs['HOST_OS_ARCH']
+
 writer = {'WINNT': write_dll,
           'Linux': write_elf,
           'Sunos5': write_elf,
@@ -254,7 +257,7 @@ class TestGeneratedFilePath(HelperMixin, unittest.TestCase):
         self.assertEqual(expected, symbolstore.get_generated_file_s3_path(g, rel_path, 'bucket'))
 
 
-if target_platform() == 'WINNT':
+if host_platform() == 'WINNT':
     class TestRealpath(HelperMixin, unittest.TestCase):
         def test_realpath(self):
             # self.test_dir is going to be 8.3 paths...
@@ -278,9 +281,11 @@ if target_platform() == 'WINNT':
                 fixed_path = os.path.relpath(fixed_path, fixed_dir)
                 self.assertEqual(rel_path, fixed_path)
 
+if target_platform() == 'WINNT':
     class TestSourceServer(HelperMixin, unittest.TestCase):
         @patch("subprocess.call")
         @patch("subprocess.Popen")
+        @patch.dict('buildconfig.substs._dict', {'PDBSTR': 'pdbstr'})
         def test_HGSERVER(self, mock_Popen, mock_call):
             """
             Test that HGSERVER gets set correctly in the source server index.
@@ -292,8 +297,6 @@ if target_platform() == 'WINNT':
             sourcefile = os.path.join(srcdir, "foo.c")
             test_files = add_extension(["foo"])
             self.add_test_files(test_files)
-            # srcsrv needs PDBSTR_PATH set
-            os.environ["PDBSTR_PATH"] = "pdbstr"
             # mock calls to `dump_syms`, `hg parent` and
             # `hg showconfig paths.default`
             mock_Popen.return_value.stdout = iter([
@@ -477,16 +480,17 @@ class TestFunctional(HelperMixin, unittest.TestCase):
                                         'crashreporter', 'tools',
                                         'symbolstore.py')
         if target_platform() == 'WINNT':
-            fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
-            self.dump_syms = os.path.join(fetches_dir, 'dump_syms',
-                                          'dump_syms.exe')
-            self.target_bin = os.path.join(buildconfig.topobjdir,
-                                           'dist', 'bin',
-                                           'firefox.exe')
+            self.dump_syms = buildconfig.substs['DUMP_SYMS']
         else:
             self.dump_syms = os.path.join(buildconfig.topobjdir,
                                           'dist', 'host', 'bin',
                                           'dump_syms')
+
+        if target_platform() == 'WINNT':
+            self.target_bin = os.path.join(buildconfig.topobjdir,
+                                           'dist', 'bin',
+                                           'firefox.exe')
+        else:
             self.target_bin = os.path.join(buildconfig.topobjdir,
                                            'dist', 'bin', 'firefox-bin')
 
