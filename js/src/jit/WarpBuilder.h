@@ -113,6 +113,11 @@ namespace jit {
   _(GetAliasedVar)          \
   _(SetAliasedVar)          \
   _(EnvCallee)              \
+  _(Iter)                   \
+  _(IterNext)               \
+  _(MoreIter)               \
+  _(EndIter)                \
+  _(IsNoIter)               \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
