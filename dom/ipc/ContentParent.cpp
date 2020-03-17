@@ -5876,6 +5876,20 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyUpdateMediaMetadata(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvNotifyMediaSessionPlaybackStateChanged(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    MediaSessionPlaybackState aPlaybackState) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  if (RefPtr<MediaController> controller =
+          aContext.get_canonical()->GetMediaController()) {
+    controller->SetDeclaredPlaybackState(aContext.ContextId(), aPlaybackState);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
     ModulePaths&& aModPaths, bool aRunAtNormalPriority,
     GetModulesTrustResolver&& aResolver) {

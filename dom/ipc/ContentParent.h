@@ -10,6 +10,7 @@
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
@@ -1248,6 +1249,10 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotifyUpdateMediaMetadata(
       const MaybeDiscarded<BrowsingContext>& aContext,
       const Maybe<MediaMetadataBase>& aMetadata);
+
+  mozilla::ipc::IPCResult RecvNotifyMediaSessionPlaybackStateChanged(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      MediaSessionPlaybackState aPlaybackState);
 
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,

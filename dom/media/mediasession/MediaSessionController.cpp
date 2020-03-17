@@ -199,6 +199,26 @@ nsString MediaSessionController::GetDefaultFaviconURL() const {
   return EmptyString();
 }
 
+void MediaSessionController::SetDeclaredPlaybackState(
+    uint64_t aSessionContextId, MediaSessionPlaybackState aState) {
+  MOZ_ASSERT(mMediaSessionInfoMap.Contains(aSessionContextId),
+             "Update declared state for unknown media session!");
+  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aSessionContextId);
+  LOG("SetDeclaredPlaybackState from %s to %s",
+      ToMediaSessionPlaybackStateStr(info->mDeclaredPlaybackState),
+      ToMediaSessionPlaybackStateStr(aState));
+  info->mDeclaredPlaybackState = aState;
+}
+
+MediaSessionPlaybackState
+MediaSessionController::GetCurrentDeclaredPlaybackState() const {
+  if (!mActiveMediaSessionContextId) {
+    return MediaSessionPlaybackState::None;
+  }
+  return mMediaSessionInfoMap.Get(*mActiveMediaSessionContextId)
+      .mDeclaredPlaybackState;
+}
+
 MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
   // If we don't have active media session, active media session doesn't have
   // media metadata, or we're in private browsing mode, then we should create a
