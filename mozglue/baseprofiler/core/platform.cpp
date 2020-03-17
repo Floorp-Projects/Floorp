@@ -150,7 +150,7 @@ namespace baseprofiler {
 
 using detail::RacyFeatures;
 
-bool BaseProfilerLogTest(int aLevelToTest) {
+bool LogTest(int aLevelToTest) {
   static const int maxLevel =
       getenv("MOZ_BASE_PROFILER_VERBOSE_LOGGING")
           ? 5
@@ -158,6 +158,17 @@ bool BaseProfilerLogTest(int aLevelToTest) {
                 ? 4
                 : getenv("MOZ_BASE_PROFILER_LOGGING") ? 3 : 0;
   return aLevelToTest <= maxLevel;
+}
+
+void PrintToConsole(const char* aFmt, ...) {
+  va_list args;
+  va_start(args, aFmt);
+#  if defined(ANDROID)
+  __android_log_vprint(ANDROID_LOG_INFO, "Gecko", aFmt, args);
+#  else
+  vfprintf(stderr, aFmt, args);
+#  endif
+  va_end(args);
 }
 
 // Return all features that are available on this platform.
