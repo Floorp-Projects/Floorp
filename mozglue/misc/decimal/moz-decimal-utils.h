@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Span.h"
 
 #include <cmath>
 #include <cstring>
@@ -42,16 +43,20 @@
 
 typedef std::string String;
 
-double mozToDouble(const String &aStr, bool *valid) {
+double mozToDouble(mozilla::Span<const char> aStr, bool *valid) {
   double_conversion::StringToDoubleConverter converter(
     double_conversion::StringToDoubleConverter::NO_FLAGS,
     mozilla::UnspecifiedNaN<double>(), mozilla::UnspecifiedNaN<double>(), nullptr, nullptr);
-  const char* str = aStr.c_str();
-  int length = mozilla::AssertedCast<int>(strlen(str));
+  const char* str = aStr.Elements();
+  int length = mozilla::AssertedCast<int>(aStr.Length());
   int processed_char_count; // unused - NO_FLAGS requires the whole string to parse
   double result = converter.StringToDouble(str, length, &processed_char_count);
   *valid = mozilla::IsFinite(result);
   return result;
+}
+
+double mozToDouble(const String &aStr, bool *valid) {
+  return mozToDouble(mozilla::MakeStringSpan(aStr.c_str()), valid);
 }
 
 String mozToString(double aNum) {
