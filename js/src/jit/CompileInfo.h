@@ -403,15 +403,13 @@ class CompileInfo {
       MOZ_ASSERT(funMaybeLazy());
       MOZ_ASSERT(slot - firstArgSlot() < nargs());
 
-      // Function.arguments can be used to access all arguments in non-strict
-      // scripts, so we can't optimize out any arguments.
-      if (!hasArguments() && script()->strict()) {
-        return SlotObservableKind::NotObservable;
+      // Preserve formal arguments if they might be read when creating a rest or
+      // arguments object. In non-strict scripts, Function.arguments can create
+      // an arguments object dynamically so we always preserve the arguments.
+      if (mayReadFrameArgsDirectly_ || !script()->strict()) {
+        return SlotObservableKind::ObservableRecoverable;
       }
-      if (needsArgsObj()) {
-        return SlotObservableKind::ObservableNotRecoverable;
-      }
-      return SlotObservableKind::ObservableRecoverable;
+      return SlotObservableKind::NotObservable;
     }
 
     // |this| slot is observable but it can be recovered.
