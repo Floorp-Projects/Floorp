@@ -1996,6 +1996,9 @@ check_prog('DUMP_SYMS', ['dump_syms'], allow_missing=True, paths=toolchain_searc
            when=compile_environment & target_is_windows)
 
 
+check_prog('PDBSTR', ['pdbstr.exe'], allow_missing=True, paths=toolchain_search_path,
+           when=compile_environment & target_is_windows)
+
 # Fork server
 @depends(target, build_project)
 def forkserver_default(target, build_project):
