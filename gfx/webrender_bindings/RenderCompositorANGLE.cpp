@@ -887,8 +887,10 @@ void RenderCompositorANGLE::EnableNativeCompositor(bool aEnable) {
 }
 
 void RenderCompositorANGLE::InitializeUsePartialPresent() {
-  if (UseCompositor() || !mSwapChain1 ||
-      mWidget->AsWindows()->HasFxrOutputHandler() ||
+  // Even when mSwapChain1 is null, we could enable WR partial present, since
+  // when mSwapChain1 is null, SwapChain is blit model swap chain with one
+  // buffer.
+  if (UseCompositor() || mWidget->AsWindows()->HasFxrOutputHandler() ||
       gfx::gfxVars::WebRenderMaxPartialPresentRects() <= 0) {
     mUsePartialPresent = false;
   } else {
