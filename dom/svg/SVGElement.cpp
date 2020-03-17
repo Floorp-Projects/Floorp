@@ -69,8 +69,10 @@ static_assert(sizeof(void*) == sizeof(nullptr),
 
 nsresult NS_NewSVGElement(
     Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
+  auto* nim = nodeInfo->NodeInfoManager();
   RefPtr<mozilla::dom::SVGElement> it =
-      new mozilla::dom::SVGElement(std::move(aNodeInfo));
+      new (nim) mozilla::dom::SVGElement(nodeInfo.forget());
   nsresult rv = it->Init();
 
   if (NS_FAILED(rv)) {
