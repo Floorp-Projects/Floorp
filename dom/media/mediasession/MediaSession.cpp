@@ -45,8 +45,22 @@ void MediaSession::SetPlaybackState(
     return;
   }
   mDeclaredPlaybackState = aPlaybackState;
-  // TODO : propagate declared state to the media controller in chrome process
-  // in order to call `media session actions update algorithm`.
+
+  RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
+  MOZ_ASSERT(currentBC,
+             "Update session playback state after context destroyed!");
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaSessionPlaybackStateChanged(
+        currentBC, mDeclaredPlaybackState);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<MediaController> controller =
+          currentBC->Canonical()->GetMediaController()) {
+    controller->SetDeclaredPlaybackState(currentBC->Id(),
+                                         mDeclaredPlaybackState);
+  }
 }
 
 MediaSessionPlaybackState MediaSession::PlaybackState() const {

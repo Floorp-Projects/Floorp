@@ -82,6 +82,15 @@ class MediaSessionController {
     return mMetadataChangedEvent;
   }
 
+  // This method is used to update the declared playback state for the specific
+  // media session.
+  virtual void SetDeclaredPlaybackState(uint64_t aSessionContextId,
+                                        MediaSessionPlaybackState aState);
+
+  // Return the active media session's declared playback state. If we don't have
+  // active media session, we would return 'None'.
+  MediaSessionPlaybackState GetCurrentDeclaredPlaybackState() const;
+
  protected:
   ~MediaSessionController() = default;
   uint64_t mTopLevelBCId;
