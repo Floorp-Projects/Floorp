@@ -735,7 +735,8 @@ class RemoteSettingsClient extends EventEmitter {
   async _importChanges(
     kintoCollection,
     collectionLastModified,
-    expectedTimestamp
+    expectedTimestamp,
+    { headers } = {}
   ) {
     const syncResult = {
       add(type, entries) {
@@ -747,14 +748,23 @@ class RemoteSettingsClient extends EventEmitter {
       updated: [],
       deleted: [],
     };
+    const httpClient = this.httpClient();
     // Fetch collection metadata.
+    const query = expectedTimestamp
+      ? { query: { _expected: expectedTimestamp } }
+      : undefined;
+    const metadata = await httpClient.getData({
+      ...query,
+      headers,
+    });
+    await kintoCollection.db.saveMetadata(metadata);
+
     const options = {
       lastModified: collectionLastModified,
       strategy: Kinto.syncStrategy.PULL_ONLY,
       expectedTimestamp,
     };
-    const httpClient = this.httpClient();
-    await kintoCollection.pullMetadata(httpClient, options);
+
     // Fetch last changes from the server.
     await kintoCollection.pullChanges(httpClient, syncResult, options);
     const { lastModified } = syncResult;
