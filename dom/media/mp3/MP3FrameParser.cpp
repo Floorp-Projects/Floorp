@@ -11,7 +11,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Pair.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "VideoUtils.h"
@@ -445,9 +444,9 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
 }
 
 bool FrameParser::VBRHeader::Parse(BufferReader* aReader) {
-  auto res = MakePair(ParseVBRI(aReader), ParseXing(aReader));
-  const bool rv = (res.first().isOk() && res.first().unwrap()) ||
-                  (res.second().isOk() && res.second().unwrap());
+  auto res = std::make_pair(ParseVBRI(aReader), ParseXing(aReader));
+  const bool rv = (res.first.isOk() && res.first.unwrap()) ||
+                  (res.second.isOk() && res.second.unwrap());
   if (rv) {
     MP3LOG(
         "VBRHeader::Parse found valid VBR/CBR header: type=%s"

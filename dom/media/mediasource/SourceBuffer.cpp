@@ -597,7 +597,7 @@ void SourceBuffer::AppendDataCompletedWithSuccess(
   mPendingAppend.Complete();
   DDLOG(DDLogCategory::API, "AppendBuffer-completed", NS_OK);
 
-  if (aResult.first()) {
+  if (aResult.first) {
     if (!mActive) {
       mActive = true;
       MSE_DEBUG("Init segment received");
@@ -618,7 +618,7 @@ void SourceBuffer::AppendDataCompletedWithSuccess(
     mMediaSource->GetDecoder()->NotifyDataArrived();
   }
 
-  mCurrentAttributes = aResult.second();
+  mCurrentAttributes = aResult.second;
 
   CheckEndTime();
 

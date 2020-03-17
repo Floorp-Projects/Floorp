@@ -1899,9 +1899,9 @@ nsresult nsPluginHost::LoadPlugins() {
   // (yet) aware of flash being present), and then again after we've actually
   // looked for it on disk.
   nsresult rv = mPendingFinder->DoFullSearch(
-      [self](
-          bool aPluginsChanged, RefPtr<nsPluginTag> aPlugins,
-          const nsTArray<Pair<bool, RefPtr<nsPluginTag>>>& aBlocklistRequests) {
+      [self](bool aPluginsChanged, RefPtr<nsPluginTag> aPlugins,
+             const nsTArray<std::pair<bool, RefPtr<nsPluginTag>>>&
+                 aBlocklistRequests) {
         MOZ_ASSERT(NS_IsMainThread(),
                    "Callback should only be called on the main thread.");
         self->mPluginsLoaded = true;
@@ -1918,8 +1918,8 @@ nsresult nsPluginHost::LoadPlugins() {
 
         // Do blocklist queries immediately after.
         for (auto pair : aBlocklistRequests) {
-          RefPtr<nsPluginTag> pluginTag = pair.second();
-          bool shouldSoftblock = pair.first();
+          RefPtr<nsPluginTag> pluginTag = pair.second;
+          bool shouldSoftblock = pair.first;
           self->UpdatePluginBlocklistState(pluginTag, shouldSoftblock);
         }
 

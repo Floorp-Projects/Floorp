@@ -15,7 +15,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Pair.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Vector.h"
@@ -468,17 +467,17 @@ void RegisteredProxy::DeleteFromRegistry(RegisteredProxy* aProxy) {
 
 #if defined(MOZILLA_INTERNAL_API)
 
-static StaticAutoPtr<Vector<Pair<const ArrayData*, size_t>>> sArrayData;
+static StaticAutoPtr<Vector<std::pair<const ArrayData*, size_t>>> sArrayData;
 
 void RegisterArrayData(const ArrayData* aArrayData, size_t aLength) {
   AutoCriticalSection lock(GetMutex());
 
   if (!sArrayData) {
-    sArrayData = new Vector<Pair<const ArrayData*, size_t>>();
+    sArrayData = new Vector<std::pair<const ArrayData*, size_t>>();
     ClearOnShutdown(&sArrayData, ShutdownPhase::ShutdownThreads);
   }
 
-  MOZ_ALWAYS_TRUE(sArrayData->emplaceBack(MakePair(aArrayData, aLength)));
+  MOZ_ALWAYS_TRUE(sArrayData->emplaceBack(std::make_pair(aArrayData, aLength)));
 }
 
 const ArrayData* FindArrayData(REFIID aIid, ULONG aMethodIndex) {
@@ -489,9 +488,9 @@ const ArrayData* FindArrayData(REFIID aIid, ULONG aMethodIndex) {
   }
 
   for (auto&& data : *sArrayData) {
-    for (size_t innerIdx = 0, innerLen = data.second(); innerIdx < innerLen;
+    for (size_t innerIdx = 0, innerLen = data.second; innerIdx < innerLen;
          ++innerIdx) {
-      const ArrayData* array = data.first();
+      const ArrayData* array = data.first;
       if (aMethodIndex == array[innerIdx].mMethodIndex &&
           IsInterfaceEqualToOrInheritedFrom(aIid, array[innerIdx].mIid,
                                             aMethodIndex)) {

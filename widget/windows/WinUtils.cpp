@@ -2050,15 +2050,15 @@ bool WinUtils::UnexpandEnvVars(nsAString& aPath) {
 WinUtils::WhitelistVec WinUtils::BuildWhitelist() {
   WhitelistVec result;
 
-  Unused << result.emplaceBack(mozilla::MakePair(
+  Unused << result.emplaceBack(std::make_pair(
       nsString(NS_LITERAL_STRING("%ProgramFiles%")), nsDependentString()));
 
   // When no substitution is required, set the void flag
-  result.back().second().SetIsVoid(true);
+  result.back().second.SetIsVoid(true);
 
-  Unused << result.emplaceBack(mozilla::MakePair(
+  Unused << result.emplaceBack(std::make_pair(
       nsString(NS_LITERAL_STRING("%SystemRoot%")), nsDependentString()));
-  result.back().second().SetIsVoid(true);
+  result.back().second.SetIsVoid(true);
 
   wchar_t tmpPath[MAX_PATH + 1] = {};
   if (GetTempPath(MAX_PATH, tmpPath)) {
@@ -2071,7 +2071,7 @@ WinUtils::WhitelistVec WinUtils::BuildWhitelist() {
     nsAutoString cleanTmpPath(tmpPath);
     if (UnexpandEnvVars(cleanTmpPath)) {
       NS_NAMED_LITERAL_STRING(tempVar, "%TEMP%");
-      Unused << result.emplaceBack(mozilla::MakePair(
+      Unused << result.emplaceBack(std::make_pair(
           nsString(cleanTmpPath), nsDependentString(tempVar, 0)));
     }
   }
@@ -2204,8 +2204,8 @@ bool WinUtils::PreparePathForTelemetry(nsAString& aPath,
   const WhitelistVec& whitelistedPaths = GetWhitelistedPaths();
 
   for (uint32_t i = 0; i < whitelistedPaths.length(); ++i) {
-    const nsString& testPath = whitelistedPaths[i].first();
-    const nsDependentString& substitution = whitelistedPaths[i].second();
+    const nsString& testPath = whitelistedPaths[i].first;
+    const nsDependentString& substitution = whitelistedPaths[i].second;
     if (StringBeginsWith(aPath, testPath,
                          nsCaseInsensitiveStringComparator())) {
       if (!substitution.IsVoid()) {

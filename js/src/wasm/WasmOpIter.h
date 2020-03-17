@@ -19,7 +19,7 @@
 #ifndef wasm_op_iter_h
 #define wasm_op_iter_h
 
-#include "mozilla/Pair.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/Poison.h"
 
 #include "jit/AtomicOp.h"
@@ -491,8 +491,8 @@ struct LinearMemoryAddress {
 
 template <typename ControlItem>
 class ControlStackEntry {
-  // Use a Pair to optimize away empty ControlItem.
-  mozilla::Pair<BlockType, ControlItem> typeAndItem_;
+  // Use a pair to optimize away empty ControlItem.
+  mozilla::CompactPair<BlockType, ControlItem> typeAndItem_;
 
   // The "base" of a control stack entry is valueStack_.length() minus
   // type().params().length(), i.e., the size of the value stack "below"
@@ -532,7 +532,7 @@ class ControlStackEntry {
 template <typename Value>
 class TypeAndValueT {
   // Use a Pair to optimize away empty Value.
-  mozilla::Pair<StackType, Value> tv_;
+  mozilla::CompactPair<StackType, Value> tv_;
 
  public:
   TypeAndValueT() : tv_(StackType::bottom(), Value()) {}
