@@ -46,39 +46,41 @@ MediaSessionController::MediaSessionController(uint64_t aContextId)
 }
 
 void MediaSessionController::NotifySessionCreated(uint64_t aSessionContextId) {
-  if (mMetadataMap.Contains(aSessionContextId)) {
+  if (mMediaSessionInfoMap.Contains(aSessionContextId)) {
     return;
   }
-  Maybe<MediaMetadataBase> empty;
+
   LOG("Session %" PRId64 " has been created", aSessionContextId);
-  mMetadataMap.Put(aSessionContextId, empty);
+  mMediaSessionInfoMap.Put(aSessionContextId, MediaSessionInfo::EmptyInfo());
   UpdateActiveMediaSessionContextId();
 }
 
 void MediaSessionController::NotifySessionDestroyed(
     uint64_t aSessionContextId) {
-  if (!mMetadataMap.Contains(aSessionContextId)) {
+  if (!mMediaSessionInfoMap.Contains(aSessionContextId)) {
     return;
   }
   LOG("Session %" PRId64 " has been destroyed", aSessionContextId);
-  mMetadataMap.Remove(aSessionContextId);
+  mMediaSessionInfoMap.Remove(aSessionContextId);
   UpdateActiveMediaSessionContextId();
 }
 
 void MediaSessionController::UpdateMetadata(
     uint64_t aSessionContextId, const Maybe<MediaMetadataBase>& aMetadata) {
-  if (!mMetadataMap.Contains(aSessionContextId)) {
+  if (!mMediaSessionInfoMap.Contains(aSessionContextId)) {
     return;
   }
+
+  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aSessionContextId);
   if (IsMetadataEmpty(aMetadata)) {
     LOG("Reset metadata for session %" PRId64, aSessionContextId);
-    mMetadataMap.GetValue(aSessionContextId)->reset();
+    info->mMetadata.reset();
   } else {
     LOG("Update metadata for session %" PRId64 " title=%s artist=%s album=%s",
         aSessionContextId, NS_ConvertUTF16toUTF8((*aMetadata).mTitle).get(),
         NS_ConvertUTF16toUTF8(aMetadata->mArtist).get(),
         NS_ConvertUTF16toUTF8(aMetadata->mAlbum).get());
-    mMetadataMap.Put(aSessionContextId, aMetadata);
+    info->mMetadata = aMetadata;
   }
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
@@ -97,11 +99,12 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
   // arbitrary one as an active session.
   uint64_t candidateId = 0;
   if (mActiveMediaSessionContextId &&
-      mMetadataMap.Contains(*mActiveMediaSessionContextId)) {
+      mMediaSessionInfoMap.Contains(*mActiveMediaSessionContextId)) {
     candidateId = *mActiveMediaSessionContextId;
   }
 
-  for (auto iter = mMetadataMap.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mMediaSessionInfoMap.ConstIter(); !iter.Done();
+       iter.Next()) {
     if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(iter.Key());
         bc->IsTopContent()) {
       candidateId = iter.Key();
@@ -202,13 +205,14 @@ MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
   // default metadata which is using website's title and favicon as title and
   // artwork.
   if (mActiveMediaSessionContextId && !IsInPrivateBrowsing()) {
-    Maybe<MediaMetadataBase> metadata =
-        mMetadataMap.Get(*mActiveMediaSessionContextId);
-    if (!metadata) {
+    MediaSessionInfo info =
+        mMediaSessionInfoMap.Get(*mActiveMediaSessionContextId);
+    if (!info.mMetadata) {
       return CreateDefaultMetadata();
     }
-    FillMissingTitleAndArtworkIfNeeded(*metadata);
-    return *metadata;
+    MediaMetadataBase& metadata = *(info.mMetadata);
+    FillMissingTitleAndArtworkIfNeeded(metadata);
+    return metadata;
   }
   return CreateDefaultMetadata();
 }
