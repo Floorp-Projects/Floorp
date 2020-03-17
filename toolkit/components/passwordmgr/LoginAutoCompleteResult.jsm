@@ -432,6 +432,7 @@ LoginAutoComplete.prototype = {
     let { isNullPrincipal } = aElement.nodePrincipal;
     if (aElement.nodePrincipal.schemeIs("about")) {
       // Don't show autocomplete results for about: pages.
+      // XXX: Don't we need to call the callback here?
       return;
     }
 
@@ -458,15 +459,22 @@ LoginAutoComplete.prototype = {
 
     let loginManagerActor = LoginManagerChild.forWindow(aElement.ownerGlobal);
 
-    let completeSearch = (
-      autoCompleteLookupPromise,
-      { generatedPassword, logins, willAutoSaveGeneratedPassword }
-    ) => {
+    let completeSearch = async autoCompleteLookupPromise => {
+      let {
+        generatedPassword,
+        logins,
+        willAutoSaveGeneratedPassword,
+      } = await autoCompleteLookupPromise;
+
       // If the search was canceled before we got our
       // results, don't bother reporting them.
+      // N.B. This check must occur after the `await` above for it to be
+      // effective.
       if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
+        log.info("ignoring result from previous search");
         return;
       }
+
       let formOrigin = LoginHelper.getLoginOrigin(
         aElement.ownerDocument.documentURI
       );
@@ -493,7 +501,7 @@ LoginAutoComplete.prototype = {
       let acLookupPromise = (this._autoCompleteLookupPromise = Promise.resolve({
         logins: [],
       }));
-      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
+      completeSearch(acLookupPromise);
       return;
     }
 
@@ -507,7 +515,7 @@ LoginAutoComplete.prototype = {
       let acLookupPromise = (this._autoCompleteLookupPromise = Promise.resolve({
         logins: [],
       }));
-      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
+      completeSearch(acLookupPromise);
       return;
     }
 
@@ -515,7 +523,7 @@ LoginAutoComplete.prototype = {
       let acLookupPromise = (this._autoCompleteLookupPromise = Promise.resolve({
         logins: [],
       }));
-      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
+      completeSearch(acLookupPromise);
       return;
     }
 
@@ -536,9 +544,7 @@ LoginAutoComplete.prototype = {
       previousResult,
       aElement
     ));
-    acLookupPromise
-      .then(completeSearch.bind(this, acLookupPromise))
-      .catch(log.error);
+    completeSearch(acLookupPromise).catch(log.error.bind(log));
   },
 
   stopSearch() {
