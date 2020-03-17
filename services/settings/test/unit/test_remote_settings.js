@@ -327,7 +327,8 @@ add_task(async function test_get_can_verify_signature() {
 
   // It throws when signature does not verify.
   const col = await client.openCollection();
-  await col.delete("9d500963-d80e-3a91-6e74-66f3811b99cc");
+  await col.delete("9d500963-d80e-3a91-6e74-66f3811b99cc", { virtual: false });
+  error = null;
   try {
     await client.get({ verifySignature: true });
   } catch (e) {

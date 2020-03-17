@@ -142,13 +142,6 @@ class UnknownCollectionError extends Error {
   }
 }
 
-class SyncConflictError extends Error {
-  constructor() {
-    super("Unable to overwrite local data");
-    this.name = "SyncConflictError";
-  }
-}
-
 class AttachmentDownloader extends Downloader {
   constructor(client) {
     super(client.bucketName, client.collectionName);
@@ -188,7 +181,7 @@ class AttachmentDownloader extends Downloader {
    */
   async deleteAll() {
     const kintoCol = await this._client.openCollection();
-    const { data: allRecords } = await kintoCol.list();
+    const allRecords = await kintoCol.db.list();
     await kintoCol.db.close();
     return Promise.all(
       allRecords.filter(r => !!r.attachment).map(r => this.delete(r))
@@ -355,22 +348,25 @@ class RemoteSettingsClient extends EventEmitter {
 
     // Read from the local DB.
     const kintoCollection = await this.openCollection();
-    const { data } = await kintoCollection.list({ filters, order });
+    const data = await kintoCollection.db.list({ filters, order });
 
     if (verifySignature) {
-      console.debug(`${this.identifier} verify signature of local data`);
-      const { data: allData } = await kintoCollection.list({ order: "" });
-      const localRecords = allData.map(r =>
-        kintoCollection.cleanLocalFields(r)
+      console.debug(
+        `${this.identifier} verify signature of local data on read`
       );
+      const allData = ObjectUtils.isEmpty(filters)
+        ? data
+        : await kintoCollection.db.list();
+      const localRecords = allData.map(r => this._cleanLocalFields(r));
       const timestamp = await kintoCollection.db.getLastModified();
-      let metadata = await kintoCollection.metadata();
+      let metadata = await kintoCollection.db.getMetadata();
       if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
         // No sync occured yet, may have records from dump but no metadata.
         console.debug(
           `Required metadata for ${this.identifier}, fetching from server.`
         );
-        metadata = await kintoCollection.pullMetadata(this.httpClient());
+        metadata = await this.httpClient().getData();
+        await kintoCollection.db.saveMetadata(metadata);
       }
       await this._validateCollectionSignature([], timestamp, metadata, {
         localRecords,
@@ -450,10 +446,8 @@ class RemoteSettingsClient extends EventEmitter {
       // Synchronize remote data into a local DB using Kinto.
       kintoCollection = await this.openCollection();
       let collectionLastModified = await kintoCollection.db.getLastModified();
-      const { data: allData } = await kintoCollection.list({
-        order: "",
-      });
-      let localRecords = allData.map(r => kintoCollection.cleanLocalFields(r));
+      const allData = await kintoCollection.db.list();
+      let localRecords = allData.map(r => this._cleanLocalFields(r));
 
       // If there is no data currently in the collection, attempt to import
       // initial data from the application defaults.
@@ -472,10 +466,8 @@ class RemoteSettingsClient extends EventEmitter {
             }));
           }
           collectionLastModified = await kintoCollection.db.getLastModified();
-          const { data: afterDump } = await kintoCollection.list({ order: "" });
-          localRecords = afterDump.map(r =>
-            kintoCollection.cleanLocalFields(r)
-          );
+          const afterDump = await kintoCollection.db.list();
+          localRecords = afterDump.map(r => this._cleanLocalFields(r));
         } catch (e) {
           // Report but go-on.
           Cu.reportError(e);
@@ -493,12 +485,13 @@ class RemoteSettingsClient extends EventEmitter {
           // we fetch them and validate the signature immediately.
           if (
             this.verifySignature &&
-            ObjectUtils.isEmpty(await kintoCollection.metadata())
+            ObjectUtils.isEmpty(await kintoCollection.db.getMetadata())
           ) {
             console.debug(`${this.identifier} pull collection metadata`);
-            const metadata = await kintoCollection.pullMetadata(
-              this.httpClient()
-            );
+            const metadata = await this.httpClient().getData({
+              query: { _expected: expectedTimestamp },
+            });
+            await kintoCollection.db.saveMetadata(metadata);
             // We don't bother validating the signature if the dump was just loaded. We do
             // if the dump was loaded at some other point (eg. from .get()).
             if (this.verifySignature && importedFromDump.length == 0) {
@@ -542,10 +535,6 @@ class RemoteSettingsClient extends EventEmitter {
               endSyncDB - startSyncDB,
               "duration"
             );
-          }
-          if (!syncResult.ok) {
-            // With PULL_ONLY, there cannot be any conflicts, but don't silent it anyway.
-            throw new SyncConflictError();
           }
           // The records imported from the dump should be considered as "created" for the
           // listeners.
@@ -691,8 +680,6 @@ class RemoteSettingsClient extends EventEmitter {
     } else if (e instanceof RemoteSettingsClient.MissingSignatureError) {
       // Collection metadata has no signature info, no need to retry.
       reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
-    } else if (e instanceof SyncConflictError) {
-      reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
     } else if (/unparseable/.test(e.message)) {
       reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
     } else if (/NetworkError/.test(e.message)) {
@@ -829,7 +816,7 @@ class RemoteSettingsClient extends EventEmitter {
     });
 
     // We build a sync result as if a diff-based sync was performed.
-    const syncResult = { ok: true, created: [], updated: [], deleted: [] };
+    const syncResult = { created: [], updated: [], deleted: [] };
     // If data wasn't changed, return empty sync result.
     // This can happen when we update the signature but not the data.
     console.debug(
@@ -838,9 +825,6 @@ class RemoteSettingsClient extends EventEmitter {
     if (localTimestamp && remoteTimestamp < localTimestamp) {
       return syncResult;
     }
-
-    // Read current local data.
-    const oldRecords = localRecords; // oldLocal.map(r => kintoCollection.cleanLocalFields(r));
 
     const toDelete = remoteRecords.filter(r => r.deleted);
     const toInsert = remoteRecords
@@ -882,22 +866,20 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Read new local data, after updating.
-    const { data: newLocal } = await kintoCollection.list({ order: "" }); // no need to sort.
-    let newRecords = newLocal.map(r => kintoCollection.cleanLocalFields(r));
+    const newLocal = await kintoCollection.db.list();
+    let newRecords = newLocal.map(r => this._cleanLocalFields(r));
 
     // Verify this new local DB.
     if (this.verifySignature) {
-      await this._validateCollectionSignature(
-        newRecords,
-        remoteTimestamp,
-        metadata
-      );
+      await this._validateCollectionSignature([], remoteTimestamp, metadata, {
+        localRecords: newRecords,
+      });
     } else {
       console.warn(`${this.identifier} has signature disabled`);
     }
 
     // Compute the changes, comparing records before and after.
-    const oldById = new Map(oldRecords.map(e => [e.id, e]));
+    const oldById = new Map(localRecords.map(e => [e.id, e]));
     for (const r of newRecords) {
       const old = oldById.get(r.id);
       if (old) {
@@ -955,7 +937,7 @@ class RemoteSettingsClient extends EventEmitter {
       return null;
     }
     // Read local collection of records (also filtered).
-    const { data: allData } = await kintoCollection.list({ order: "" }); // no need to sort.
+    const allData = await kintoCollection.db.list();
     const current = await this._filterEntries(allData);
     return { created, updated, deleted, current };
   }
@@ -984,5 +966,20 @@ class RemoteSettingsClient extends EventEmitter {
       );
     }
     return results.filter(Boolean);
+  }
+
+  /**
+   * Remove the fields from the specified record
+   * that are not present on server.
+   *
+   * @param {Object} record
+   */
+  _cleanLocalFields(record) {
+    const keys = ["_status"].concat(this.localFields);
+    const result = { ...record };
+    for (const key of keys) {
+      delete result[key];
+    }
+    return result;
   }
 }
