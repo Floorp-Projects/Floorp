@@ -12,11 +12,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CommonUtils: "resource://services-common/utils.js",
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
+  Database: "resource://services-settings/Database.jsm",
   Downloader: "resource://services-settings/Attachments.jsm",
-  Kinto: "resource://services-common/kinto-offline-client.js",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
@@ -26,9 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
-// IndexedDB name.
-const DB_NAME = "remote-settings";
 
 const TELEMETRY_COMPONENT = "remotesettings";
 
@@ -189,87 +185,6 @@ class AttachmentDownloader extends Downloader {
   }
 }
 
-/**
- * Database is a tiny wrapper with the objective
- * of providing major kinto-offline-client collection API.
- * (with the objective of getting rid of kinto-offline-client)
- */
-class Database {
-  constructor(identifier) {
-    this._idb = new Kinto.adapters.IDB(identifier, {
-      dbName: DB_NAME,
-      migrateOldData: false,
-    });
-  }
-
-  async list(options) {
-    return this._idb.list(options);
-  }
-
-  async importBulk(toInsert) {
-    return this._idb.importBulk(toInsert);
-  }
-
-  async deleteAll(toDelete) {
-    return this._idb.execute(transaction => {
-      toDelete.forEach(r => {
-        transaction.delete(r.id);
-      });
-    });
-  }
-
-  async getLastModified() {
-    return this._idb.getLastModified();
-  }
-
-  async saveLastModified(remoteTimestamp) {
-    return this._idb.saveLastModified(remoteTimestamp);
-  }
-
-  async getMetadata() {
-    return this._idb.getMetadata();
-  }
-
-  async saveMetadata(metadata) {
-    return this._idb.saveMetadata(metadata);
-  }
-
-  async clear() {
-    await this._idb.clear();
-    await this._idb.saveLastModified(null);
-    await this._idb.saveMetadata(null);
-  }
-
-  async close() {
-    return this._idb.close();
-  }
-
-  /*
-   * Methods used by unit tests.
-   */
-
-  async create(record) {
-    if (!("id" in record)) {
-      record = { ...record, id: CommonUtils.generateUUID() };
-    }
-    return this._idb.execute(transaction => {
-      transaction.create(record);
-    });
-  }
-
-  async update(record) {
-    return this._idb.execute(transaction => {
-      transaction.update(record);
-    });
-  }
-
-  async delete(recordId) {
-    return this._idb.execute(transaction => {
-      transaction.delete(recordId);
-    });
-  }
-}
-
 class RemoteSettingsClient extends EventEmitter {
   static get NetworkOfflineError() {
     return NetworkOfflineError;
@@ -366,25 +281,6 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     return timestamp;
-  }
-
-  /**
-   * Open the underlying Kinto collection, using the appropriate adapter and options.
-   */
-  async openCollection() {
-    // This is inefficient, and not DRY, but one step towards removal of kinto.js.
-    // So far, only «foreign» unit tests use `.openCollection()`.
-    console.warn("RemoteSettingsClient.openCollection() is deprecated");
-    const kinto = new Kinto({
-      bucket: this.bucketName,
-      adapter: Kinto.adapters.IDB,
-      adapterOptions: { dbName: DB_NAME, migrateOldData: false },
-    });
-    const options = {
-      localFields: this.localFields,
-      bucket: this.bucketName,
-    };
-    return kinto.collection(this.collectionName, options);
   }
 
   /**
@@ -765,7 +661,7 @@ class RemoteSettingsClient extends EventEmitter {
       reportStatus = UptakeTelemetry.STATUS.BACKOFF;
     } else if (
       // Errors from kinto.js IDB adapter.
-      e instanceof Kinto.adapters.IDB.IDBError ||
+      e instanceof Database.IDBError ||
       // Other IndexedDB errors (eg. RemoteSettingsWorker).
       /IndexedDB/.test(e.message)
     ) {
