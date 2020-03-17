@@ -490,7 +490,10 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           default=False,
                           help="Skip the installation of the APK.")
 
-    def validate_remote(self, options, automation):
+    def validate_remote(self, options):
+        DEFAULT_HTTP_PORT = 8888
+        DEFAULT_SSL_PORT = 4443
+
         if options.remoteWebServer is None:
             options.remoteWebServer = self.get_ip()
 
@@ -500,10 +503,10 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                        "Please provide the local ip in --remote-webserver")
 
         if not options.httpPort:
-            options.httpPort = automation.DEFAULT_HTTP_PORT
+            options.httpPort = DEFAULT_HTTP_PORT
 
         if not options.sslPort:
-            options.sslPort = automation.DEFAULT_SSL_PORT
+            options.sslPort = DEFAULT_SSL_PORT
 
         if options.xrePath is None:
             self.error(

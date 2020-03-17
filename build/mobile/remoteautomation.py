@@ -3,20 +3,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
+import logging
 import os
 import re
 import posixpath
 import shutil
+import sys
 import tempfile
 import time
 
 import six
 
-from automation import Automation
 from mozdevice import ADBTimeoutError
 from mozlog import get_default_logger
 from mozscreenshot import dump_screen, dump_device_screen
 import mozcrash
+
+
+def resetGlobalLog(log):
+    while _log.handlers:
+        _log.removeHandler(_log.handlers[0])
+    handler = logging.StreamHandler(log)
+    _log.setLevel(logging.INFO)
+    _log.addHandler(handler)
+
+
+# We use the logging system here primarily because it'll handle multiple
+# threads, which is needed to process the output of the server and application
+# processes simultaneously.
+_log = logging.getLogger()
+resetGlobalLog(sys.stdout)
 
 # signatures for logcat messages that we don't care about much
 fennecLogcatFilters = ["The character encoding of the HTML document was not declared",
@@ -24,7 +40,7 @@ fennecLogcatFilters = ["The character encoding of the HTML document was not decl
                        "Unexpected value from nativeGetEnabledTags: 0"]
 
 
-class RemoteAutomation(Automation):
+class RemoteAutomation(object):
 
     def __init__(self, device, appName='', remoteProfile=None, remoteLog=None,
                  processArgs=None):
@@ -35,6 +51,7 @@ class RemoteAutomation(Automation):
         self.remoteLog = remoteLog
         self.processArgs = processArgs or {}
         self.lastTestSeen = "remoteautomation.py"
+        self.log = _log
 
     def runApp(self, testURL, env, app, profileDir, extraArgs,
                utilityPath=None, xrePath=None, debuggerInfo=None, symbolsPath=None,
@@ -48,10 +65,6 @@ class RemoteAutomation(Automation):
             self.device.rm(self.remoteLog, root=True)
             self.log.info("remoteautomation.py | runApp deleted %s" % self.remoteLog)
 
-        if utilityPath is None:
-            utilityPath = self.DIST_BIN
-        if xrePath is None:
-            xrePath = self.DIST_BIN
         if timeout == -1:
             timeout = self.DEFAULT_TIMEOUT
         self.utilityPath = utilityPath
@@ -64,10 +77,10 @@ class RemoteAutomation(Automation):
                        env=self.environment(env=env, crashreporter=not debuggerInfo),
                        e10s=e10s, **self.processArgs)
 
-        self.log.info("remoteautomation.py | Application pid: %d", self.pid)
+        self.log.info("remoteautomation.py | Application pid: %d" % self.pid)
 
         status = self.waitForFinish(timeout, maxTime)
-        self.log.info("remoteautomation.py | Application ran for: %s",
+        self.log.info("remoteautomation.py | Application ran for: %s" %
                       str(datetime.datetime.now() - startTime))
 
         crashed = self.checkForCrashes(symbolsPath)
@@ -139,11 +152,6 @@ class RemoteAutomation(Automation):
         return status
 
     def checkForCrashes(self, symbolsPath):
-        # If crash reporting is disabled (MOZ_CRASHREPORTER!=1), we can't say
-        # anything.
-        if not self.CRASHREPORTER:
-            return False
-
         try:
             dumpDir = tempfile.mkdtemp()
             remoteCrashDir = posixpath.join(self.remoteProfile, 'minidumps')
@@ -213,7 +221,7 @@ class RemoteAutomation(Automation):
             cmd = ' '.join(cmd)
             self.procName = self.appName
             if not self.device.shell_bool(cmd):
-                print("remote_automation.py failed to launch %s" % cmd)
+                print("remoteautomation.py failed to launch %s" % cmd)
         else:
             self.procName = cmd[0].split(posixpath.sep)[-1]
             args = cmd

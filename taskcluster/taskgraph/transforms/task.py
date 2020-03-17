@@ -1461,7 +1461,7 @@ def set_defaults(config, tasks):
         if worker['implementation'] in ('docker-worker',):
             worker.setdefault('chain-of-trust', False)
             worker.setdefault('taskcluster-proxy', False)
-            worker.setdefault('allow-ptrace', False)
+            worker.setdefault('allow-ptrace', True)
             worker.setdefault('loopback-video', False)
             worker.setdefault('loopback-audio', False)
             worker.setdefault('docker-in-docker', False)

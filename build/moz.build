@@ -100,18 +100,6 @@ if CONFIG['MOZ_APP_BASENAME']:
     GeneratedFile('application.ini.h', script='appini_header.py',
                   inputs=['!application.ini'])
 
-if CONFIG['ENABLE_TESTS']:
-    GeneratedFile('automation.py', script='gen_automation.py',
-                  inputs=['automation.py.in'])
-
-    TEST_HARNESS_FILES.reftest += [
-        '!automation.py',
-    ]
-
-    TEST_HARNESS_FILES.testing.mochitest += [
-        '!automation.py',
-    ]
-
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
 OBJDIR_FILES += ['/.gdbinit']
 
