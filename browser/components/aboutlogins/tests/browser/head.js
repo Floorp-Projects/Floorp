@@ -67,15 +67,13 @@ async function addLogin(login) {
 let EXPECTED_BREACH = null;
 let EXPECTED_ERROR_MESSAGE = null;
 add_task(async function setup() {
-  const collection = await RemoteSettings(
-    LoginBreaches.REMOTE_SETTINGS_COLLECTION
-  ).openCollection();
+  const db = await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
   if (EXPECTED_BREACH) {
-    await collection.create(EXPECTED_BREACH, {
+    await db.create(EXPECTED_BREACH, {
       useRecordId: true,
     });
   }
-  await collection.db.saveLastModified(42);
+  await db.saveLastModified(42);
   if (EXPECTED_BREACH) {
     await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).emit(
       "sync",
@@ -133,7 +131,7 @@ add_task(async function setup() {
 
   registerCleanupFunction(async () => {
     EXPECTED_ERROR_MESSAGE = null;
-    await collection.clear();
+    await db.clear();
     SpecialPowers.postConsoleSentinel();
   });
 });

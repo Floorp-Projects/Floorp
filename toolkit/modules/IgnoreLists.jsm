@@ -81,9 +81,8 @@ class IgnoreListsManager {
         firstTime
       ) {
         // The local database is invalid, try and reset it.
-        const collection = await this._ignoreListSettings.openCollection();
-        await collection.clear();
-        await collection.db.close();
+        await this._ignoreListSettings.db.clear();
+        await this._ignoreListSettings.db.close();
         // Now call this again.
         return this._getIgnoreListSettings(false);
       }
