@@ -85,9 +85,32 @@ class JSZoneParticipant : public nsCycleCollectionParticipant {
 
 class IncrementalFinalizeRunnable;
 
-struct JSHolderInfo {
-  void* mHolder;
-  nsScriptObjectTracer* mTracer;
+// A map from JS holders to tracer objects, where the values are stored in a
+// SegmentedVector to speed up iteration.
+class JSHolderMap {
+ public:
+  JSHolderMap();
+
+  template <typename F>
+  void ForEach(F&& f);
+
+  bool Has(void* aHolder) const;
+  nsScriptObjectTracer* Get(void* aHolder) const;
+  nsScriptObjectTracer* GetAndRemove(void* aHolder);
+  void Put(void* aHolder, nsScriptObjectTracer* aTracer);
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
+ private:
+  struct Entry {
+    void* mHolder;
+    nsScriptObjectTracer* mTracer;
+  };
+
+  using EntryVector = SegmentedVector<Entry, 1024, InfallibleAllocPolicy>;
+
+  EntryVector mJSHolders;
+  nsDataHashtable<nsPtrHashKey<void>, Entry*> mJSHolderMap;
 };
 
 class CycleCollectedJSRuntime {
@@ -310,8 +333,7 @@ class CycleCollectedJSRuntime {
 
   mozilla::TimeStamp mLatestNurseryCollectionStart;
 
-  SegmentedVector<JSHolderInfo, 1024, InfallibleAllocPolicy> mJSHolders;
-  nsDataHashtable<nsPtrHashKey<void>, JSHolderInfo*> mJSHolderMap;
+  JSHolderMap mJSHolders;
 
   typedef nsDataHashtable<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
       DeferredFinalizerTable;
