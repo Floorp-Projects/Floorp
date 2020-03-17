@@ -213,17 +213,39 @@ void MediaController::Deactivate() {
   }
 }
 
+void MediaController::SetDeclaredPlaybackState(
+    uint64_t aSessionContextId, MediaSessionPlaybackState aState) {
+  MediaSessionController::SetDeclaredPlaybackState(aSessionContextId, aState);
+  UpdateActualPlaybackState();
+}
+
 void MediaController::SetGuessedPlayState(MediaSessionPlaybackState aState) {
   if (mShutdown || mGuessedPlaybackState == aState) {
     return;
   }
   LOG("SetGuessedPlayState : '%s'", ToMediaSessionPlaybackStateStr(aState));
   mGuessedPlaybackState = aState;
-  mPlaybackStateChangedEvent.Notify(mGuessedPlaybackState);
+  UpdateActualPlaybackState();
+}
+
+void MediaController::UpdateActualPlaybackState() {
+  // The way to compute the actual playback state is based on the spec.
+  // https://w3c.github.io/mediasession/#actual-playback-state
+  MediaSessionPlaybackState newState =
+      GetCurrentDeclaredPlaybackState() == MediaSessionPlaybackState::Playing
+          ? MediaSessionPlaybackState::Playing
+          : mGuessedPlaybackState;
+  if (mActualPlaybackState == newState) {
+    return;
+  }
+  mActualPlaybackState = newState;
+  LOG("UpdateActualPlaybackState : '%s'",
+      ToMediaSessionPlaybackStateStr(mActualPlaybackState));
+  mPlaybackStateChangedEvent.Notify(mActualPlaybackState);
 }
 
 MediaSessionPlaybackState MediaController::GetState() const {
-  return mGuessedPlaybackState;
+  return mActualPlaybackState;
 }
 
 bool MediaController::IsAudible() const {
