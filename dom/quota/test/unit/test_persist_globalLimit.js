@@ -22,6 +22,11 @@ async function testSteps() {
 
   for (let initializeStorageBeforePersist of [false, true]) {
     if (initializeStorageBeforePersist) {
+      info("Initializing");
+
+      request = init();
+      await requestFinished(request);
+
       info("Initializing the temporary storage");
 
       request = initTemporaryStorage();
