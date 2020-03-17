@@ -39,28 +39,28 @@ logger = logging.getLogger(__name__)
                 'maxLength': 255,
                 'default': '',
                 'title': 'Path name',
-                'description': 'Path of test to retrigger'
+                'description': 'Path of test(s) to retrigger'
             },
             'logLevel': {
                 'type': 'string',
                 'enum': ['debug', 'info', 'warning', 'error', 'critical'],
-                'default': 'debug',
+                'default': 'info',
                 'title': 'Log level',
-                'description': 'Log level for output (default is DEBUG, which is highest)'
+                'description': 'Log level for output (INFO is normal, DEBUG gives more detail)'
             },
             'runUntilFail': {
                 'type': 'boolean',
-                'default': True,
+                'default': False,
                 'title': 'Run until failure',
                 'description': ('Runs the specified set of tests repeatedly '
-                                'until failure (or 30 times)')
+                                'until failure (up to REPEAT times)')
             },
             'repeat': {
                 'type': 'integer',
-                'default': 30,
+                'default': 1,
                 'minimum': 1,
-                'title': 'Run tests N times',
-                'description': ('Run tests repeatedly (usually used in '
+                'title': 'Repeat test(s) N times',
+                'description': ('Run test(s) repeatedly (usually used in '
                                 'conjunction with runUntilFail)')
             },
             'environment': {
@@ -72,7 +72,7 @@ logger = logging.getLogger(__name__)
             },
             'preferences': {
                 'type': 'object',
-                'default': {'mygeckopreferences.pref': 'myvalue2'},
+                'default': {'marionette.log.level': 'Info'},
                 'title': 'Extra gecko (about:config) preferences',
                 'description': 'Extra gecko (about:config) preferences to use for this run',
                 'additionalProperties': {'type': 'string'}
