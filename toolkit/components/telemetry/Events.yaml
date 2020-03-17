@@ -574,16 +574,14 @@ normandy:
 
 pwmgr:
   open_management:
-    objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences"]
+    objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences", "snippet"]
     methods: ["open_management"]
     description: >
       Sent when opening the password management UI.
-    bug_numbers: [1543499, 1454733, 1545172, 1550631]
+    bug_numbers: [1543499, 1454733, 1545172, 1550631, 1622971]
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "sfoster@mozilla.com"]
     products:
       - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: [main, content]
     release_channel_collection: opt-out
     expiry_version: never
