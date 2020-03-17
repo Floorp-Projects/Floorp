@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -88,7 +87,7 @@ class PageAction {
 
     this._popupStateChange = this._popupStateChange.bind(this);
     this._collapse = this._collapse.bind(this);
-    this._showPopupOnClick = this._showPopupOnClick.bind(this);
+    this._cfrUrlbarButtonClick = this._cfrUrlbarButtonClick.bind(this);
     this._executeNotifierAction = this._executeNotifierAction.bind(this);
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
@@ -169,11 +168,7 @@ class PageAction {
     );
     this.urlbarinput.style.setProperty("--cfr-label-width", `${width}px`);
 
-    if (this.shouldShowDoorhanger(recommendation)) {
-      this.container.addEventListener("click", this._showPopupOnClick);
-    } else {
-      this.container.addEventListener("click", this._executeNotifierAction);
-    }
+    this.container.addEventListener("click", this._cfrUrlbarButtonClick);
     // Collapse the recommendation on url bar focus in order to free up more
     // space to display and edit the url
     this.urlbar.addEventListener("focus", this._collapse);
@@ -199,8 +194,7 @@ class PageAction {
     this.container.hidden = true;
     this._clearScheduledStateChanges();
     this.urlbarinput.removeAttribute("cfr-recommendation-state");
-    this.container.removeEventListener("click", this._showPopupOnClick);
-    this.container.removeEventListener("click", this._executeNotifierAction);
+    this.container.removeEventListener("click", this._cfrUrlbarButtonClick);
     this.urlbar.removeEventListener("focus", this._collapse);
     if (this.currentNotification) {
       this.window.PopupNotifications.remove(this.currentNotification);
@@ -872,13 +866,7 @@ class PageAction {
     );
   }
 
-  _executeNotifierAction(event) {
-    const browser = this.window.gBrowser.selectedBrowser;
-    if (!RecommendationMap.has(browser)) {
-      return;
-    }
-    const message = RecommendationMap.get(browser);
-
+  _executeNotifierAction(browser, message) {
     switch (message.content.layout) {
       case "chiclet_open_url":
         this._dispatchToASRouter(
@@ -897,15 +885,16 @@ class PageAction {
         break;
     }
 
+    this._blockMessage(message.id);
     this.hideAddressBarNotifier();
     RecommendationMap.delete(browser);
   }
 
   /**
    * Respond to a user click on the recommendation by showing a doorhanger/
-   * popup notification
+   * popup notification or running the action defined in the message
    */
-  async _showPopupOnClick(event) {
+  async _cfrUrlbarButtonClick(event) {
     const browser = this.window.gBrowser.selectedBrowser;
     if (!RecommendationMap.has(browser)) {
       // There's no recommendation for this browser, so the user shouldn't have
@@ -914,23 +903,7 @@ class PageAction {
       return;
     }
     const message = RecommendationMap.get(browser);
-
-    // The recommendation should remain either collapsed or expanded while the
-    // doorhanger is showing
-    this._clearScheduledStateChanges(browser, message);
-
-    await this.showPopup();
-  }
-
-  async showPopup() {
-    const browser = this.window.gBrowser.selectedBrowser;
-    const message = RecommendationMap.get(browser);
     const { id, content, modelVersion } = message;
-
-    // A hacky way of setting the popup anchor outside the usual url bar icon box
-    // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
-    browser.cfrpopupnotificationanchor =
-      this.window.document.getElementById(content.anchor_id) || this.container;
 
     this._sendTelemetry({
       message_id: id,
@@ -938,6 +911,27 @@ class PageAction {
       event: "CLICK_DOORHANGER",
       ...(modelVersion ? { event_context: { modelVersion } } : {}),
     });
+
+    if (this.shouldShowDoorhanger(message)) {
+      // The recommendation should remain either collapsed or expanded while the
+      // doorhanger is showing
+      this._clearScheduledStateChanges(browser, message);
+      await this.showPopup();
+    } else {
+      await this._executeNotifierAction(browser, message);
+    }
+  }
+
+  async showPopup() {
+    const browser = this.window.gBrowser.selectedBrowser;
+    const message = RecommendationMap.get(browser);
+    const { content } = message;
+
+    // A hacky way of setting the popup anchor outside the usual url bar icon box
+    // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
+    browser.cfrpopupnotificationanchor =
+      this.window.document.getElementById(content.anchor_id) || this.container;
+
     await this._renderPopup(message, browser);
   }
 
@@ -1140,15 +1134,7 @@ const CFRPageActions = {
       await PageActionMap.get(win).showPopup();
       PageActionMap.get(win).addImpression(recommendation);
     } else {
-      const pageAction = PageActionMap.get(win);
-      if (content.delay) {
-        setTimeout(
-          () => pageAction.showAddressBarNotifier(recommendation, true),
-          content.delay
-        );
-      } else {
-        await pageAction.showAddressBarNotifier(recommendation, true);
-      }
+      await PageActionMap.get(win).showAddressBarNotifier(recommendation, true);
     }
     return true;
   },
