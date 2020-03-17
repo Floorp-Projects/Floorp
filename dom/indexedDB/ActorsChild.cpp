@@ -3545,9 +3545,9 @@ BackgroundCursorChild<CursorType>::HandleIndividualCursorResponse(
 }
 
 template <IDBCursorType CursorType>
-template <typename T, typename Func>
+template <typename Func>
 void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
-    nsTArray<T>&& aResponses, const Func& aHandleRecord) {
+    nsTArray<ResponseType>&& aResponses, const Func& aHandleRecord) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mTransaction);
@@ -3603,68 +3603,56 @@ void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
 
 template <IDBCursorType CursorType>
 void BackgroundCursorChild<CursorType>::HandleResponse(
-    nsTArray<ObjectStoreCursorResponse>&& aResponses) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mTransaction);
-
-  HandleMultipleCursorResponses(
-      std::move(aResponses), [this](const bool useAsCurrentResult,
-                                    ObjectStoreCursorResponse&& response) {
-        // TODO: Maybe move the deserialization of the clone-read-info into
-        // the cursor, so that it is only done for records actually accessed,
-        // which might not be the case for all cached records.
-        return HandleIndividualCursorResponse(
-            useAsCurrentResult, std::move(response.key()),
-            DeserializeStructuredCloneReadInfo(std::move(response.cloneInfo()),
-                                               mTransaction->Database(),
-                                               PreprocessingNotSupported));
-      });
-}
-
-template <IDBCursorType CursorType>
-void BackgroundCursorChild<CursorType>::HandleResponse(
-    nsTArray<ObjectStoreKeyCursorResponse>&& aResponses) {
+    nsTArray<ResponseType>&& aResponses) {
   AssertIsOnOwningThread();
 
-  HandleMultipleCursorResponses(
-      std::move(aResponses), [this](const bool useAsCurrentResult,
-                                    ObjectStoreKeyCursorResponse&& response) {
-        return HandleIndividualCursorResponse(useAsCurrentResult,
-                                              std::move(response.key()));
-      });
-}
+  if constexpr (CursorType == IDBCursorType::ObjectStore) {
+    MOZ_ASSERT(mTransaction);
 
-template <IDBCursorType CursorType>
-void BackgroundCursorChild<CursorType>::HandleResponse(
-    nsTArray<IndexCursorResponse>&& aResponses) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mTransaction);
+    HandleMultipleCursorResponses(
+        std::move(aResponses), [this](const bool useAsCurrentResult,
+                                      ObjectStoreCursorResponse&& response) {
+          // TODO: Maybe move the deserialization of the clone-read-info into
+          // the cursor, so that it is only done for records actually accessed,
+          // which might not be the case for all cached records.
+          return HandleIndividualCursorResponse(
+              useAsCurrentResult, std::move(response.key()),
+              DeserializeStructuredCloneReadInfo(
+                  std::move(response.cloneInfo()), mTransaction->Database(),
+                  PreprocessingNotSupported));
+        });
+  }
+  if constexpr (CursorType == IDBCursorType::ObjectStoreKey) {
+    HandleMultipleCursorResponses(
+        std::move(aResponses), [this](const bool useAsCurrentResult,
+                                      ObjectStoreKeyCursorResponse&& response) {
+          return HandleIndividualCursorResponse(useAsCurrentResult,
+                                                std::move(response.key()));
+        });
+  }
+  if constexpr (CursorType == IDBCursorType::Index) {
+    MOZ_ASSERT(mTransaction);
 
-  HandleMultipleCursorResponses(
-      std::move(aResponses),
-      [this](const bool useAsCurrentResult, IndexCursorResponse&& response) {
-        return HandleIndividualCursorResponse(
-            useAsCurrentResult, std::move(response.key()),
-            std::move(response.sortKey()), std::move(response.objectKey()),
-            DeserializeStructuredCloneReadInfo(std::move(response.cloneInfo()),
-                                               mTransaction->Database(),
-                                               PreprocessingNotSupported));
-      });
-}
-
-template <IDBCursorType CursorType>
-void BackgroundCursorChild<CursorType>::HandleResponse(
-    nsTArray<IndexKeyCursorResponse>&& aResponses) {
-  AssertIsOnOwningThread();
-  static_assert(!CursorTypeTraits<CursorType>::IsObjectStoreCursor);
-
-  HandleMultipleCursorResponses(
-      std::move(aResponses),
-      [this](const bool useAsCurrentResult, IndexKeyCursorResponse&& response) {
-        return HandleIndividualCursorResponse(
-            useAsCurrentResult, std::move(response.key()),
-            std::move(response.sortKey()), std::move(response.objectKey()));
-      });
+    HandleMultipleCursorResponses(
+        std::move(aResponses),
+        [this](const bool useAsCurrentResult, IndexCursorResponse&& response) {
+          return HandleIndividualCursorResponse(
+              useAsCurrentResult, std::move(response.key()),
+              std::move(response.sortKey()), std::move(response.objectKey()),
+              DeserializeStructuredCloneReadInfo(
+                  std::move(response.cloneInfo()), mTransaction->Database(),
+                  PreprocessingNotSupported));
+        });
+  }
+  if constexpr (CursorType == IDBCursorType::IndexKey) {
+    HandleMultipleCursorResponses(
+        std::move(aResponses), [this](const bool useAsCurrentResult,
+                                      IndexKeyCursorResponse&& response) {
+          return HandleIndividualCursorResponse(
+              useAsCurrentResult, std::move(response.key()),
+              std::move(response.sortKey()), std::move(response.objectKey()));
+        });
+  }
 }
 
 template <IDBCursorType CursorType>
@@ -3765,6 +3753,11 @@ mozilla::ipc::IPCResult BackgroundCursorChild<CursorType>::RecvResponse(
 
   return IPC_OK();
 }
+
+template class BackgroundCursorChild<IDBCursorType::ObjectStore>;
+template class BackgroundCursorChild<IDBCursorType::ObjectStoreKey>;
+template class BackgroundCursorChild<IDBCursorType::Index>;
+template class BackgroundCursorChild<IDBCursorType::IndexKey>;
 
 template <typename T>
 NS_IMETHODIMP DelayedActionRunnable<T>::Run() {
