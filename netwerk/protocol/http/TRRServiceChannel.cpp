@@ -18,7 +18,9 @@
 #include "nsIOService.h"
 #include "nsISeekableStream.h"
 #include "nsURLHelper.h"
+#include "TRRLoadInfo.h"
 #include "ReferrerInfo.h"
+#include "TRR.h"
 
 namespace mozilla {
 namespace net {
@@ -675,9 +677,11 @@ nsresult TRRServiceChannel::OnPush(uint32_t aPushedStreamId,
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsILoadInfo> loadInfo =
+      static_cast<TRRLoadInfo*>(mLoadInfo.get())->Clone();
   nsCOMPtr<nsIChannel> pushHttpChannel;
   rv = gHttpHandler->CreateTRRServiceChannel(pushResource, nullptr, 0, nullptr,
-                                             nullptr,
+                                             loadInfo,
                                              getter_AddRefs(pushHttpChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -945,6 +949,18 @@ TRRServiceChannel::OnStartRequest(nsIRequest* request) {
       if ((httpStatus < 500) && (httpStatus != 421) && (httpStatus != 407)) {
         ProcessAltService();
       }
+
+      if (httpStatus == 300 || httpStatus == 301 || httpStatus == 302 ||
+          httpStatus == 303 || httpStatus == 307 || httpStatus == 308) {
+        nsresult rv = SyncProcessRedirection(httpStatus);
+        if (NS_SUCCEEDED(rv)) {
+          return rv;
+        }
+
+        mStatus = rv;
+        DoNotifyListener();
+        return rv;
+      }
     } else {
       NS_WARNING("No response head in OnStartRequest");
     }
@@ -957,6 +973,124 @@ TRRServiceChannel::OnStartRequest(nsIRequest* request) {
   }
 
   return CallOnStartRequest();
+}
+
+nsresult TRRServiceChannel::SyncProcessRedirection(uint32_t aHttpStatus) {
+  nsAutoCString location;
+
+  // if a location header was not given, then we can't perform the redirect,
+  // so just carry on as though this were a normal response.
+  if (NS_FAILED(mResponseHead->GetHeader(nsHttp::Location, location))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // make sure non-ASCII characters in the location header are escaped.
+  nsAutoCString locationBuf;
+  if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII | esc_Spaces,
+                   locationBuf)) {
+    location = locationBuf;
+  }
+
+  LOG(("redirecting to: %s [redirection-limit=%u]\n", location.get(),
+       uint32_t(mRedirectionLimit)));
+
+  nsCOMPtr<nsIURI> redirectURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(redirectURI), location);
+
+  if (NS_FAILED(rv)) {
+    LOG(("Invalid URI for redirect: Location: %s\n", location.get()));
+    return NS_ERROR_CORRUPTED_CONTENT;
+  }
+
+  // move the reference of the old location to the new one if the new
+  // one has none.
+  PropagateReferenceIfNeeded(mURI, redirectURI);
+
+  bool rewriteToGET =
+      ShouldRewriteRedirectToGET(aHttpStatus, mRequestHead.ParsedMethod());
+
+  // Let's not rewrite the method to GET for TRR requests.
+  if (rewriteToGET) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If the method is not safe (such as POST, PUT, DELETE, ...)
+  if (!mRequestHead.IsSafeMethod()) {
+    LOG(("TRRServiceChannel: unsafe redirect to:%s\n", location.get()));
+  }
+
+  uint32_t redirectFlags;
+  if (nsHttp::IsPermanentRedirect(aHttpStatus)) {
+    redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
+  } else {
+    redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
+  }
+
+  nsCOMPtr<nsIChannel> newChannel;
+  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
+      static_cast<TRRLoadInfo*>(mLoadInfo.get())->Clone();
+  rv = gHttpHandler->CreateTRRServiceChannel(redirectURI, nullptr, 0, nullptr,
+                                             redirectLoadInfo,
+                                             getter_AddRefs(newChannel));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = SetupReplacementChannel(redirectURI, newChannel, !rewriteToGET,
+                               redirectFlags);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Make sure to do this after we received redirect veto answer,
+  // i.e. after all sinks had been notified
+  newChannel->SetOriginalURI(mOriginalURI);
+
+  rv = newChannel->AsyncOpen(mListener);
+  LOG(("  new channel AsyncOpen returned %" PRIX32, static_cast<uint32_t>(rv)));
+
+  // close down this channel
+  Cancel(NS_BINDING_REDIRECTED);
+
+  ReleaseListeners();
+
+  return NS_OK;
+}
+
+nsresult TRRServiceChannel::SetupReplacementChannel(nsIURI* aNewURI,
+                                                    nsIChannel* aNewChannel,
+                                                    bool aPreserveMethod,
+                                                    uint32_t aRedirectFlags) {
+  LOG(
+      ("TRRServiceChannel::SetupReplacementChannel "
+       "[this=%p newChannel=%p preserveMethod=%d]",
+       this, aNewChannel, aPreserveMethod));
+
+  nsresult rv = HttpBaseChannel::SetupReplacementChannel(
+      aNewURI, aNewChannel, aPreserveMethod, aRedirectFlags);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = CheckRedirectLimit(aRedirectFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
+  if (!httpChannel) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  // convey the mApplyConversion flag (bug 91862)
+  nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
+  if (encodedChannel) {
+    encodedChannel->SetApplyConversion(mApplyConversion);
+  }
+
+  // Apply TRR specific settings.
+  return TRR::SetupTRRServiceChannelInternal(
+      httpChannel,
+      mRequestHead.ParsedMethod() == nsHttpRequestHead::kMethod_Get);
 }
 
 NS_IMETHODIMP
@@ -1303,6 +1437,17 @@ TRRServiceChannel::GetResponseEnd(TimeStamp* _retval) {
     *_retval = mTransaction->GetResponseEnd();
   else
     *_retval = mTransactionTimings.responseEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP TRRServiceChannel::SetLoadGroup(nsILoadGroup* aLoadGroup) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TRRServiceChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = true;
   return NS_OK;
 }
 
