@@ -769,22 +769,23 @@ class RemoteSettingsClient extends EventEmitter {
   ) {
     const { retry = false } = options;
 
-    // Fetch collection metadata from server.
+    // Fetch collection metadata and list of changes from server
+    // (or all records on retry).
     const client = this.httpClient();
-    const metadata = await client.getData({
-      query: { _expected: expectedTimestamp },
-    });
-
-    // Fetch list of changes from server (or all records on retry)
-    const {
-      data: remoteRecords,
-      last_modified: remoteTimestamp,
-    } = await client.listRecords({
-      filters: {
-        _expected: expectedTimestamp,
-      },
-      since: retry || !localTimestamp ? undefined : `${localTimestamp}`,
-    });
+    const [
+      metadata,
+      { data: remoteRecords, last_modified: remoteTimestamp },
+    ] = await Promise.all([
+      client.getData({
+        query: { _expected: expectedTimestamp },
+      }),
+      client.listRecords({
+        filters: {
+          _expected: expectedTimestamp,
+        },
+        since: retry || !localTimestamp ? undefined : `${localTimestamp}`,
+      }),
+    ]);
 
     // We build a sync result, based on remote changes.
     const syncResult = {
