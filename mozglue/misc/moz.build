@@ -9,6 +9,7 @@ FINAL_LIBRARY = 'mozglue'
 EXPORTS.mozilla += [
     'AutoProfilerLabel.h',
     'decimal/Decimal.h',
+    'decimal/DoubleConversion.h',
     'PlatformConditionVariable.h',
     'PlatformMutex.h',
     'Printf.h',
