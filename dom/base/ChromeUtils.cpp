@@ -1212,7 +1212,7 @@ void ChromeUtils::GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
 MediaSessionPlaybackTestState ChromeUtils::GetCurrentMediaSessionPlaybackState(
     GlobalObject& aGlobal) {
   static_assert(int(MediaSessionPlaybackState::None) ==
-                    int(MediaSessionPlaybackTestState::None) &&
+                    int(MediaSessionPlaybackTestState::Stopped) &&
                 int(MediaSessionPlaybackState::Paused) ==
                     int(MediaSessionPlaybackTestState::Paused) &&
                 int(MediaSessionPlaybackState::Playing) ==
@@ -1223,7 +1223,7 @@ MediaSessionPlaybackTestState ChromeUtils::GetCurrentMediaSessionPlaybackState(
     return ConvertToMediaSessionPlaybackTestState(
         service->GetMainControllerPlaybackState());
   }
-  return MediaSessionPlaybackTestState::None;
+  return MediaSessionPlaybackTestState::Stopped;
 }
 
 }  // namespace dom
