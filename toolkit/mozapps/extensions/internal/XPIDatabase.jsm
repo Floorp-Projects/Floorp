@@ -3011,6 +3011,7 @@ this.XPIDatabaseReconcile = {
         "visible",
         "active",
         "userDisabled",
+        "embedderDisabled",
         "applyBackgroundUpdates",
         "sourceURI",
         "releaseNotesURI",
