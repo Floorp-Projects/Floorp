@@ -421,16 +421,20 @@ impl TextShader {
         features: &[&'static str],
         precache_flags: ShaderPrecacheFlags,
     ) -> Result<Self, ShaderError> {
+        let mut simple_features = features.to_vec();
+        simple_features.push("ALPHA_PASS");
+
         let simple = LazilyCompiledShader::new(
             ShaderKind::Text,
             name,
-            features,
+            &simple_features,
             device,
             precache_flags,
         )?;
 
         let mut glyph_transform_features = features.to_vec();
         glyph_transform_features.push("GLYPH_TRANSFORM");
+        glyph_transform_features.push("ALPHA_PASS");
 
         let glyph_transform = LazilyCompiledShader::new(
             ShaderKind::Text,
