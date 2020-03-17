@@ -738,7 +738,13 @@ class BrowserParent final : public PBrowserParent,
                           uint32_t aPresShellId);
   void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
 
-  void SetDestroyingForProcessSwitch() { mIsDestroyingForProcessSwitch = true; }
+  // Suspend nsIWebProgressListener events until after the next STATE_START
+  // onStateChange. This is used to block STATE_STOP events from the old process
+  // when process switching away, as well as the initial about:blank and
+  // STATE_START from the new process.
+  void SuspendProgressEventsUntilAfterNextLoadStarts() {
+    mSuspendedProgressEvents = true;
+  }
 
  protected:
   friend BrowserBridgeParent;
@@ -1001,10 +1007,11 @@ class BrowserParent final : public PBrowserParent,
   // mouse event and the BrowserChild is ready.
   bool mIsMouseEnterIntoWidgetEventSuppressed : 1;
 
-  // Set to true if we're currently in the middle of replacing this
-  // BrowserParent with a new one connected to a different process, and we
-  // should ignore nsIWebProgressListener stop requests.
-  bool mIsDestroyingForProcessSwitch : 1;
+  // Set to true if we're currently suspending nsIWebProgress events.
+  // We keep suspending until we get a STATE_START onStateChange event
+  // (for something that isn't the initial about:blank) and then start
+  // allowing future events.
+  bool mSuspendedProgressEvents : 1;
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
