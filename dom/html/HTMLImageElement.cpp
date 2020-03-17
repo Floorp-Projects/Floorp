@@ -674,7 +674,8 @@ already_AddRefed<HTMLImageElement> HTMLImageElement::Image(
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
       nsGkAtoms::img, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
 
-  RefPtr<HTMLImageElement> img = new HTMLImageElement(nodeInfo.forget());
+  auto* nim = nodeInfo->NodeInfoManager();
+  RefPtr<HTMLImageElement> img = new (nim) HTMLImageElement(nodeInfo.forget());
 
   if (aWidth.WasPassed()) {
     img->SetWidth(aWidth.Value(), aError);

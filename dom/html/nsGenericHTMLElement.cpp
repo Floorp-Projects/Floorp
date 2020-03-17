@@ -2826,7 +2826,8 @@ void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
       RefPtr<mozilla::dom::NodeInfo> ni =
           NodeInfo()->NodeInfoManager()->GetNodeInfo(
               nsGkAtoms::br, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
-      RefPtr<HTMLBRElement> br = new HTMLBRElement(ni.forget());
+      auto* nim = ni->NodeInfoManager();
+      RefPtr<HTMLBRElement> br = new (nim) HTMLBRElement(ni.forget());
       AppendChildTo(br, true);
     } else {
       str.Append(*s);

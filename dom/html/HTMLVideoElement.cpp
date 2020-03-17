@@ -38,8 +38,10 @@
 nsGenericHTMLElement* NS_NewHTMLVideoElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
+  auto* nim = nodeInfo->NodeInfoManager();
   mozilla::dom::HTMLVideoElement* element =
-      new mozilla::dom::HTMLVideoElement(std::move(aNodeInfo));
+      new (nim) mozilla::dom::HTMLVideoElement(nodeInfo.forget());
   element->Init();
   return element;
 }
@@ -80,7 +82,8 @@ nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
   *aResult = nullptr;
   RefPtr<mozilla::dom::NodeInfo> ni(aNodeInfo);
-  HTMLVideoElement* it = new HTMLVideoElement(ni.forget());
+  auto* nim = ni->NodeInfoManager();
+  HTMLVideoElement* it = new (nim) HTMLVideoElement(ni.forget());
   it->Init();
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv = const_cast<HTMLVideoElement*>(this)->CopyInnerTo(it);
