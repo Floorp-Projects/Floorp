@@ -67,6 +67,8 @@ pub struct SentPacket {
     pub tokens: Vec<RecoveryToken>,
 
     pub time_declared_lost: Option<Instant>,
+    /// After a PTO, the packet has been released.
+    pto: bool,
 
     pub in_flight: bool,
     pub size: usize,
@@ -85,8 +87,20 @@ impl SentPacket {
             ack_eliciting,
             tokens,
             time_declared_lost: None,
+            pto: false,
             size,
             in_flight,
+        }
+    }
+
+    /// On PTO, we need to get the recovery tokens so that we can ensure that
+    /// the frames we sent can be sent again in the PTO packet(s).  Do that just once.
+    pub fn pto(&mut self) -> bool {
+        if self.pto {
+            false
+        } else {
+            self.pto = true;
+            true
         }
     }
 }

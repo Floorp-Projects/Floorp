@@ -73,7 +73,11 @@ pub struct HeaderTable {
 
 impl ::std::fmt::Display for HeaderTable {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "HeaderTable for {}", self.qpack_side)
+        write!(
+            f,
+            "HeaderTable for {} (base={} acked_inserts_cnt={} capacity={})",
+            self.qpack_side, self.base, self.acked_inserts_cnt, self.capacity
+        )
     }
 }
 
