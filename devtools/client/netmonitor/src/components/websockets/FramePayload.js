@@ -94,6 +94,7 @@ class FramePayload extends Component {
 
   updateFramePayload() {
     const { selectedFrame, connector } = this.props;
+
     getFramePayload(selectedFrame.payload, connector.getLongString).then(
       async payload => {
         const { formattedData, formattedDataTitle } = await this.parsePayload(
@@ -110,7 +111,19 @@ class FramePayload extends Component {
   }
 
   async parsePayload(payload) {
-    const { connector, request } = this.props;
+    const { connector, selectedFrame, request } = this.props;
+
+    // Don't apply formatting to control frames
+    // Control frame check can be done using opCode as specified here:
+    // https://tools.ietf.org/html/rfc6455
+    const controlFrames = [0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf];
+    const isControlFrame = controlFrames.includes(selectedFrame.opCode);
+    if (isControlFrame) {
+      return {
+        formattedData: null,
+        formattedDataTitle: "",
+      };
+    }
 
     // Make sure that request headers are fetched from the backend before
     // looking for `Sec-WebSocket-Protocol` header.
