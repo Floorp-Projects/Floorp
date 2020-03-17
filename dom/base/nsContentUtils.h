@@ -236,6 +236,7 @@ class nsContentUtils {
 #else
       ;
 #endif
+  static bool IsErrorPage(nsIURI* aURI);
 
   static bool IsCallerChromeOrFuzzingEnabled(JSContext* aCx, JSObject*) {
     return ThreadsafeIsSystemCaller(aCx) || IsFuzzingEnabled();
