@@ -365,13 +365,37 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
         # Guard against intermittent failures to retrieve abi property;
         # without an abi, xpcshell cannot find greprefs.js and crashes.
+        abilistprop = None
         abi = None
         retries = 0
-        while ((not abi) or len(abi) == 0) and retries < 3:
+        while not abi and retries < 3:
             abi = self.device.get_prop("ro.product.cpu.abi")
             retries += 1
-        if ((not abi) or len(abi) == 0):
+        if not abi:
             raise Exception("failed to get ro.product.cpu.abi from device")
+        self.log.info("ro.product.cpu.abi %s" % abi)
+        abilist = [abi]
+        retries = 0
+        while not abilistprop and retries < 3:
+            abilistprop = self.device.get_prop("ro.product.cpu.abilist")
+            retries += 1
+        self.log.info('ro.product.cpu.abilist %s' % abilistprop)
+        abi_found = False
+        names = [n for n in self.localAPKContents.namelist() if n.startswith('lib/')]
+        self.log.debug("apk names: %s" % names)
+        if abilistprop and len(abilistprop) > 0:
+            abilist.extend(abilistprop.split(','))
+        for abicand in abilist:
+            abi_found = len([n for n in names if n.startswith('lib/%s' % abicand)]) > 0
+            if abi_found:
+                abi = abicand
+                break
+        if not abi_found:
+            self.log.info("failed to get matching abi from apk.")
+            if len(names) > 0:
+                self.log.info("device cpu abi not found in apk. Using abi from apk.")
+                abi = names[0].split('/')[1]
+        self.log.info("Using abi %s." % abi)
         self.env["MOZ_ANDROID_CPU_ABI"] = abi
 
     def setAppRoot(self):
