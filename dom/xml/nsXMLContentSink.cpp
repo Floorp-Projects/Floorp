@@ -749,7 +749,8 @@ nsresult nsXMLContentSink::FlushText(bool aReleaseTextNode) {
 
       mTextLength = 0;
     } else {
-      RefPtr<nsTextNode> textContent = new nsTextNode(mNodeInfoManager);
+      RefPtr<nsTextNode> textContent =
+          new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
 
       mLastTextNode = textContent;
 

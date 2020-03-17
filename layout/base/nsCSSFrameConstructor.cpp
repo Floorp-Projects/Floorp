@@ -1473,7 +1473,8 @@ struct nsGenConInitializer {
 already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
     nsFrameConstructorState& aState, const nsString& aString,
     UniquePtr<nsGenConInitializer> aInitializer) {
-  RefPtr<nsTextNode> content = new nsTextNode(mDocument->NodeInfoManager());
+  RefPtr<nsTextNode> content = new (mDocument->NodeInfoManager())
+      nsTextNode(mDocument->NodeInfoManager());
   content->SetText(aString, false);
   if (aInitializer) {
     aInitializer->mNode->mText = content;

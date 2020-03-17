@@ -47,7 +47,8 @@ nsresult nsGfxButtonControlFrame::CreateAnonymousContent(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add a child text content node for the label
-  mTextContent = new nsTextNode(mContent->NodeInfo()->NodeInfoManager());
+  mTextContent = new (mContent->NodeInfo()->NodeInfoManager())
+      nsTextNode(mContent->NodeInfo()->NodeInfoManager());
 
   // set the value of the text node and add it to the child list
   mTextContent->SetText(label, false);
