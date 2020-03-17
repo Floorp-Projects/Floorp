@@ -974,6 +974,8 @@ add_task(async function test_heartbeat_tactic_2() {
       id: `HEARTBEAT_MOCHITEST_${Date.now()}`,
       groups: ["mochitest-group"],
       targeting: true,
+      // Disable delays in tests
+      content: { ...msg.content, delay: 0 },
     },
     // Use the real AS dispatch method to trigger real notifications
     ASRouter.dispatch
@@ -995,4 +997,4 @@ add_task(async function test_heartbeat_tactic_2() {
     false,
     Services.urlFormatter.formatURL(msg.content.action.url)
   );
-});
+}).only();
