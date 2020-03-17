@@ -357,17 +357,17 @@ You can forge a ``payload`` that contains the events attributes as described abo
 Manipulate local data
 ---------------------
 
-A handle on the local collection can be obtained with ``openCollection()``.
+A handle on the underlying database can be obtained through the ``.db`` attribute.
 
 .. code-block:: js
 
-    const collection = await RemoteSettings("a-key").openCollection();
+    const db = await RemoteSettings("a-key").db;
 
 And records can be created manually (as if they were synchronized from the server):
 
 .. code-block:: js
 
-    const record = await collection.create({
+    const record = await db.create({
       id: "a-custom-string-or-uuid",
       domain: "website.com",
       usernameSelector: "#login-account",
@@ -378,13 +378,13 @@ If no timestamp is set, any call to ``.get()`` will trigger the load of initial 
 
 .. code-block:: js
 
-    await collection.db.saveLastModified(42);
+    await db.saveLastModified(42);
 
 In order to bypass the potential target filtering of ``RemoteSettings("key").get()``, the low-level listing of records can be obtained with ``collection.list()``:
 
 .. code-block:: js
 
-    const { data: subset } = await collection.list({
+    const { data: subset } = await db.list({
       filters: {
         "property": "value"
       }
@@ -394,9 +394,7 @@ The local data can be flushed with ``clear()``:
 
 .. code-block:: js
 
-    await collection.clear()
-
-For further documentation in collection API, checkout the `kinto.js library <https://kintojs.readthedocs.io/>`_, which is in charge of the IndexedDB interactions behind-the-scenes.
+    await db.clear()
 
 
 Misc

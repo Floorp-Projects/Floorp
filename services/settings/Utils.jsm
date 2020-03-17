@@ -95,8 +95,7 @@ var Utils = {
    * @return {bool} Whether it exists or not.
    */
   async hasLocalData(client) {
-    const kintoCol = await client.openCollection();
-    const timestamp = await kintoCol.db.getLastModified();
+    const timestamp = await client.db.getLastModified();
     return timestamp !== null;
   },
 
