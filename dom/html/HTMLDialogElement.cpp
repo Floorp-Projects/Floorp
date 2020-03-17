@@ -13,11 +13,13 @@
 nsGenericHTMLElement* NS_NewHTMLDialogElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
+  auto* nim = nodeInfo->NodeInfoManager();
   if (!mozilla::dom::HTMLDialogElement::IsDialogEnabled()) {
-    return new mozilla::dom::HTMLUnknownElement(std::move(aNodeInfo));
+    return new (nim) mozilla::dom::HTMLUnknownElement(nodeInfo.forget());
   }
 
-  return new mozilla::dom::HTMLDialogElement(std::move(aNodeInfo));
+  return new (nim) mozilla::dom::HTMLDialogElement(nodeInfo.forget());
 }
 
 namespace mozilla {

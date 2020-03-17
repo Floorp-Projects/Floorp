@@ -160,8 +160,8 @@ HTMLMenuItemElement::~HTMLMenuItemElement() = default;
 nsresult HTMLMenuItemElement::Clone(dom::NodeInfo* aNodeInfo,
                                     nsINode** aResult) const {
   *aResult = nullptr;
-  RefPtr<HTMLMenuItemElement> it =
-      new HTMLMenuItemElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER);
+  RefPtr<HTMLMenuItemElement> it = new (aNodeInfo->NodeInfoManager())
+      HTMLMenuItemElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER);
   nsresult rv = const_cast<HTMLMenuItemElement*>(this)->CopyInnerTo(it);
   if (NS_SUCCEEDED(rv)) {
     switch (mType) {
