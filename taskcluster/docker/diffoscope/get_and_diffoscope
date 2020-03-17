@@ -34,6 +34,10 @@ case "$ORIG_URL" in
 		$MOZ_FETCHES_DIR/dmg/hfsplus $i.hfs extractall / $i
 	done
 	;;
+*)
+	ARTIFACT=$(basename "${ORIG_URL}")
+	curl -L "$ORIG_URL" > "a/${ARTIFACT}"
+	curl -L "$NEW_URL" > "b/${ARTIFACT}"
 esac
 
 case "$ORIG_URL" in
@@ -124,26 +128,6 @@ then
 	# Ok
 	:
 else
-	# The builds differ, let's check the generated files.
-	if curl -L -f "${ORIG_URL%/*}/target.generated-files.tar.gz" > a.generated-files.tar.gz && \
-	   curl -L -f "${NEW_URL%/*}/target.generated-files.tar.gz" > b.generated-files.tar.gz
-	then
-		HAVE_GENERATED_FILES=1
-	else
-		HAVE_GENERATED_FILES=
-	fi
-
-	if test -z "$HAVE_GENERATED_FILES" || diffoscope \
-		--html generated-files.diff.html \
-		--text generated-files.diff.txt \
-		--progress \
-		--output-empty \
-		a.generated-files.tar.gz b.generated-files.tar.gz
-	then
-		report_error diff
-	else
-		report_error generated-files.diff
-	fi
-
+	report_error diff
 	$POST
 fi
