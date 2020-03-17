@@ -30,6 +30,10 @@ class AudioWorkletImpl final : public WorkletImpl {
 
   nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable) override;
 
+  nsContentPolicyType ContentPolicyType() const override {
+    return nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET;
+  }
+
   // Execution thread only.
   dom::AudioWorkletGlobalScope* GetGlobalScope() {
     return static_cast<dom::AudioWorkletGlobalScope*>(

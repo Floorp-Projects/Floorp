@@ -64,6 +64,8 @@ class WorkletImpl {
 
   void NotifyWorkletFinished();
 
+  virtual nsContentPolicyType ContentPolicyType() const = 0;
+
   // Execution thread only.
   dom::WorkletGlobalScope* GetGlobalScope();
 
