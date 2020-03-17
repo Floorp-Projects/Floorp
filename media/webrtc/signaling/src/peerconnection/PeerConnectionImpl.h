@@ -620,8 +620,6 @@ class PeerConnectionImpl final
   // The following are used for Telemetry:
   // Start time of ICE.
   mozilla::TimeStamp mIceStartTime;
-  // Flag if we have transitioned from checking to connected or failed.
-  bool mIceFinished = false;
   // Hold PeerConnectionAutoTimer instances for each window.
   static std::map<std::string, PeerConnectionAutoTimer> mAutoTimers;
 
