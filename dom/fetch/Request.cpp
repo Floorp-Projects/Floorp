@@ -183,7 +183,7 @@ void GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
     return;
   }
 }
-already_AddRefed<URL> ParseURLFromWorker(const GlobalObject& aGlobal,
+already_AddRefed<URL> ParseURLFromWorker(nsIGlobalObject* aGlobal,
                                          const nsAString& aInput,
                                          ErrorResult& aRv) {
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
@@ -191,16 +191,15 @@ already_AddRefed<URL> ParseURLFromWorker(const GlobalObject& aGlobal,
   worker->AssertIsOnWorkerThread();
 
   NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-  RefPtr<URL> url =
-      URL::Constructor(aGlobal.GetAsSupports(), aInput, baseURL, aRv);
+  RefPtr<URL> url = URL::Constructor(aGlobal, aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(NS_ConvertUTF16toUTF8(aInput));
   }
   return url.forget();
 }
-void GetRequestURLFromWorker(const GlobalObject& aGlobal,
-                             const nsAString& aInput, nsAString& aRequestURL,
-                             nsACString& aURLfragment, ErrorResult& aRv) {
+void GetRequestURLFromWorker(nsIGlobalObject* aGlobal, const nsAString& aInput,
+                             nsAString& aRequestURL, nsACString& aURLfragment,
+                             ErrorResult& aRv) {
   RefPtr<URL> url = ParseURLFromWorker(aGlobal, aInput, aRv);
   if (aRv.Failed()) {
     return;
@@ -266,10 +265,18 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
                                                const RequestOrUSVString& aInput,
                                                const RequestInit& aInit,
                                                ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  return Constructor(global, aGlobal.Context(), aInput, aInit, aRv);
+}
+
+/*static*/
+already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
+                                               JSContext* aCx,
+                                               const RequestOrUSVString& aInput,
+                                               const RequestInit& aInit,
+                                               ErrorResult& aRv) {
   bool hasCopiedBody = false;
   RefPtr<InternalRequest> request;
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<AbortSignal> signal;
 
@@ -301,7 +308,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     nsAutoString requestURL;
     nsCString fragment;
     if (NS_IsMainThread()) {
-      nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(global));
+      nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(aGlobal));
       Document* doc = inner ? inner->GetExtantDoc() : nullptr;
       if (doc) {
         GetRequestURLFromDocument(doc, input, requestURL, fragment, aRv);
@@ -317,7 +324,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     }
     request = new InternalRequest(NS_ConvertUTF16toUTF8(requestURL), fragment);
   }
-  request = request->GetRequestConstructorCopy(global, aRv);
+  request = request->GetRequestConstructorCopy(aGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -355,7 +362,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     } else {
       nsAutoString referrerURL;
       if (NS_IsMainThread()) {
-        nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(global));
+        nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(aGlobal));
         Document* doc = inner ? inner->GetExtantDoc() : nullptr;
         nsCOMPtr<nsIURI> uri;
         if (doc) {
@@ -374,7 +381,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
         uri->GetSpec(spec);
         CopyUTF8toUTF16(spec, referrerURL);
         if (!referrerURL.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
-          nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
+          nsCOMPtr<nsIPrincipal> principal = aGlobal->PrincipalOrNull();
           if (principal) {
             nsresult rv =
                 principal->CheckMayLoad(uri,
@@ -424,7 +431,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
   UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo;
 
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     if (window) {
       nsCOMPtr<Document> doc;
       doc = window->GetExtantDoc();
@@ -506,8 +513,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
 
   RefPtr<InternalHeaders> headers;
   if (aInit.mHeaders.WasPassed()) {
-    RefPtr<Headers> h =
-        Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
+    RefPtr<Headers> h = Headers::Create(aGlobal, aInit.mHeaders.Value(), aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -587,7 +593,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     }
   }
 
-  RefPtr<Request> domRequest = new Request(global, request, signal);
+  RefPtr<Request> domRequest = new Request(aGlobal, request, signal);
   domRequest->SetMimeType();
 
   if (aInput.IsRequest()) {
@@ -596,7 +602,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
       inputReq->SetBody(nullptr, 0);
-      inputReq->SetBodyUsed(aGlobal.Context(), aRv);
+      inputReq->SetBodyUsed(aCx, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
