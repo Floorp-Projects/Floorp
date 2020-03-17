@@ -33,7 +33,7 @@ XPIDL_MODULE = 'loginmgr'
 EXTRA_JS_MODULES += [
     'crypto-SDR.js',
     'InsecurePasswordUtils.jsm',
-    'LoginAutoCompleteResult.jsm',
+    'LoginAutoComplete.jsm',
     'LoginFormFactory.jsm',
     'LoginHelper.jsm',
     'LoginInfo.jsm',
