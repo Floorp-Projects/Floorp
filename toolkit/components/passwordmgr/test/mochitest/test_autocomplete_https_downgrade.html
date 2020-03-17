@@ -83,7 +83,7 @@ async function setup(formUrl) {
 
   await promiseFormsProcessed();
 
-  hostname = SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+  hostname = await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     return this.content.document.documentURIObject.host;
   });
 }
