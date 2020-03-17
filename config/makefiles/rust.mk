@@ -188,6 +188,13 @@ $(target_rust_nonltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) 
 
 TARGET_RECIPES := $(target_rust_ltoable) $(target_rust_nonltoable)
 
+# If this is a release build we want rustc to generate one codegen unit per
+# crate. This results in better optimization and less code duplication at the
+# cost of longer compile times.
+ifndef DEVELOPER_OPTIONS
+$(TARGET_RECIPES): RUSTFLAGS += -C codegen-units=1
+endif
+
 HOST_RECIPES := \
   $(foreach a,library program,$(foreach b,build check,force-cargo-host-$(a)-$(b)))
 
