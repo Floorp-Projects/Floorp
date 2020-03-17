@@ -209,15 +209,11 @@ interface nsIQuotaManagerService : nsISupports
    *        from Client.h, then only that client's storage will be cleared.
    *        If you want to clear multiple client types (but not all), then you
    *        must call this method multiple times.
-   * @param aResetAll
-   *        An optional boolean to indicate resetting all storages under the
-   *        given origin.
    */
   [must_use] nsIQuotaRequest
   resetStoragesForPrincipal(in nsIPrincipal aPrincipal,
                             [optional] in ACString aPersistenceType,
-                            [optional] in AString aClientType,
-                            [optional] in boolean aResetAll);
+                            [optional] in AString aClientType);
 
   /**
    * Check if given origin is persisted.
