@@ -40,7 +40,6 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
   this.startup = startup;
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
-  this.onTargetAvailable = this.onTargetAvailable.bind(this);
   this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
   this.onNewAccessibleFrontSelected = this.onNewAccessibleFrontSelected.bind(
     this
@@ -74,6 +73,7 @@ AccessibilityPanel.prototype = {
     this._telemetry = new Telemetry();
     this.panelWin.gTelemetry = this._telemetry;
 
+    this.target.on("navigate", this.onTabNavigated);
     this._toolbox.on("select", this.onPanelVisibilityChange);
 
     this.panelWin.EVENTS = EVENTS;
@@ -90,12 +90,7 @@ AccessibilityPanel.prototype = {
     this.shouldRefresh = true;
 
     await this.startup.initAccessibility();
-
-    await this._toolbox.targetList.watchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable
-    );
-
+    await this.accessibilityProxy.ensureReady();
     this.picker = new Picker(this);
     this.fluentBundles = await this.createFluentBundles();
 
@@ -150,17 +145,6 @@ AccessibilityPanel.prototype = {
   onTabNavigated() {
     this.shouldRefresh = true;
     this._opening.then(() => this.refresh());
-  },
-
-  async onTargetAvailable({ targetFront, isTopLevel, isTargetSwitching }) {
-    if (isTopLevel) {
-      await this.accessibilityProxy.initializeProxyForPanel(targetFront);
-      this.accessibilityProxy.currentTarget.on("navigate", this.onTabNavigated);
-    }
-
-    if (isTargetSwitching) {
-      this.onTabNavigated();
-    }
   },
 
   /**
@@ -282,20 +266,19 @@ AccessibilityPanel.prototype = {
     return this._toolbox.currentToolId === "accessibility";
   },
 
+  get target() {
+    return this._toolbox.target;
+  },
+
   destroy() {
     if (this._destroyed) {
       return;
     }
     this._destroyed = true;
 
-    this._toolbox.targetList.unwatchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable
-    );
-
     this.postContentMessage("destroy");
 
-    this.accessibilityProxy.currentTarget.off("navigate", this.onTabNavigated);
+    this.target.off("navigate", this.onTabNavigated);
     this._toolbox.off("select", this.onPanelVisibilityChange);
 
     this.panelWin.off(
