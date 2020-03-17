@@ -253,6 +253,7 @@ module.exports = {
         "dom/security/test/cors/**",
         "dom/security/test/csp/**",
         "dom/security/test/general/**",
+        "dom/security/test/https-only/**",
         "dom/security/test/mixedcontentblocker/**",
         "dom/security/test/sri/**",
         "dom/security/test/referrer-policy/**",

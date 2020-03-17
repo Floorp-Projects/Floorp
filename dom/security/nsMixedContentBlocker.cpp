@@ -19,6 +19,8 @@
 #include "nsIParentChannel.h"
 #include "mozilla/Preferences.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIProtocolHandler.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIWebNavigation.h"
 #include "nsLoadGroup.h"
@@ -40,6 +42,7 @@
 #include "mozilla/net/DNS.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 enum nsMixedContentBlockerMessageType { eBlocked = 0x00, eUserOverride = 0x01 };
 
@@ -808,6 +811,12 @@ nsresult nsMixedContentBlocker::ShouldLoad(
 
   bool isHttpScheme = innerContentLocation->SchemeIs("http");
   if (isHttpScheme && IsPotentiallyTrustworthyOrigin(innerContentLocation)) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
+  // If https-only mode is enabled we'll upgrade this later anyway
+  if (StaticPrefs::dom_security_https_only_mode()) {
     *aDecision = ACCEPT;
     return NS_OK;
   }

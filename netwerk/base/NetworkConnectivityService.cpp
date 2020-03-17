@@ -206,6 +206,12 @@ static inline already_AddRefed<nsIChannel> SetupIPCheckChannel(bool ipv4) {
 
   channel->SetTRRMode(nsIRequest::TRR_DISABLED_MODE);
 
+  {
+    // Prevent HTTPS-Only Mode from upgrading the OCSP request.
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    loadInfo->SetHttpsOnlyNoUpgrade(true);
+  }
+
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(channel);
