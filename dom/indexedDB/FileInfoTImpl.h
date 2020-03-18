@@ -83,10 +83,6 @@ void FileInfoT<FileManager>::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
 
     mFileManager->RemoveFileInfo(Id(), lock);
 
-    // If the file manager was already invalidated, we don't need to do any
-    // cleanup anymore. In that case, the entire origin directory has already
-    // been deleted by the quota manager, and we don't need to delete individual
-    // files.
     needsCleanup = !mFileManager->Invalidated();
   }
 
