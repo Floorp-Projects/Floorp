@@ -338,7 +338,8 @@ bool EmitterScope::internEmptyGlobalScopeAsBody(BytecodeEmitter* bce) {
   hasEnvironment_ = scope->hasEnvironment();
 
   bce->bodyScopeIndex = bce->perScriptData().gcThingList().length();
-  return bce->perScriptData().gcThingList().append(scope, &scopeIndex_);
+  return bce->perScriptData().gcThingList().appendEmptyGlobalScope(
+      &scopeIndex_);
 }
 
 template <typename ScopeCreator>
