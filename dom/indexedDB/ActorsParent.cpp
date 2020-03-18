@@ -10666,6 +10666,7 @@ FileHandleThreadPool* GetFileHandleThreadPool() {
 
 nsresult FileManager::AsyncDeleteFile(int64_t aFileId) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mFileInfos.Contains(aFileId));
 
   QuotaClient* quotaClient = QuotaClient::GetInstance();
   if (quotaClient) {
@@ -16924,6 +16925,8 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t& aUsage) {
 }
 
 nsresult FileManager::SyncDeleteFile(const int64_t aId) {
+  MOZ_ASSERT(!mFileInfos.Contains(aId));
+
   if (!this->AssertValid()) {
     return NS_ERROR_UNEXPECTED;
   }
