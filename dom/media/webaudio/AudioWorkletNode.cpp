@@ -187,8 +187,8 @@ void WorkletNodeEngine::ConstructProcessor(
   }
   JSContext* cx = api.cx();
   mProcessor.init(cx);
-  if (!global->ConstructProcessor(aName, aSerializedOptions, aPortIdentifier,
-                                  &mProcessor) ||
+  if (!global->ConstructProcessor(cx, aName, aSerializedOptions,
+                                  aPortIdentifier, &mProcessor) ||
       // mInputs and mOutputs outer arrays are fixed length and so much of the
       // initialization need only be performed once (i.e. here).
       NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
