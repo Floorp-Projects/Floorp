@@ -1719,8 +1719,8 @@ bool nsContentUtils::OfflineAppAllowed(nsIPrincipal* aPrincipal) {
   nsresult rv = updateService->OfflineAppAllowed(aPrincipal, &allowed);
   return NS_SUCCEEDED(rv) && allowed;
 }
-
-static bool IsErrorPage(nsIURI* aURI) {
+// Static
+bool nsContentUtils::IsErrorPage(nsIURI* aURI) {
   if (!aURI) {
     return false;
   }
@@ -1735,45 +1735,6 @@ static bool IsErrorPage(nsIURI* aURI) {
 
   return name.EqualsLiteral("certerror") || name.EqualsLiteral("neterror") ||
          name.EqualsLiteral("blocked");
-}
-
-/* static */
-bool nsContentUtils::PrincipalAllowsL10n(nsIPrincipal& aPrincipal,
-                                         nsIURI* aDocumentURI) {
-  if (IsErrorPage(aDocumentURI)) {
-    return true;
-  }
-
-  // The system principal is always allowed.
-  if (aPrincipal.IsSystemPrincipal()) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal.GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool hasFlags;
-
-  // Allow access to uris that cannot be loaded by web content.
-  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
-                           &hasFlags);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (hasFlags) {
-    return true;
-  }
-
-  // UI resources also get access.
-  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                           &hasFlags);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (hasFlags) {
-    return true;
-  }
-
-  auto& principal = BasePrincipal::Cast(aPrincipal);
-  auto policy = principal.AddonPolicy();
-  return (policy && policy->IsPrivileged());
 }
 
 // static
