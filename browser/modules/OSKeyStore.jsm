@@ -20,6 +20,11 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "nativeOSKeyStore",
@@ -171,7 +176,11 @@ var OSKeyStore = {
 
     let unlockPromise;
     if (typeof reauth == "string") {
-      if (AppConstants.DEBUG && this._testReauth) {
+      // Only allow for local builds
+      if (
+        UpdateUtils.getUpdateChannel(false) == "default" &&
+        this._testReauth
+      ) {
         unlockPromise = this._reauthInTests();
       } else if (
         AppConstants.platform == "win" ||
