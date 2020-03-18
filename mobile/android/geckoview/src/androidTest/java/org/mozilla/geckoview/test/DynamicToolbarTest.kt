@@ -27,15 +27,18 @@ private const val SCREEN_HEIGHT = 200
 class DynamicToolbarTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
+    // Makes sure we can load a page when the dynamic toolbar is bigger than the whole content
     fun outOfRangeValue() {
-        try {
-            sessionRule.display?.run { setDynamicToolbarMaxHeight(SCREEN_HEIGHT + 1) }
-            fail("Request should have failed")
-        } catch (e: AssertionError) {
-            assertThat("Throws an exception when setting values greater than the client height",
-                       e.toString(), containsString("maximum height of the dynamic toolbar"))
-        }
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT + 1
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
     }
+
 
     private fun assertScreenshotResult(result: GeckoResult<Bitmap>, comparisonImage: Bitmap) {
         sessionRule.waitForResult(result).let {
