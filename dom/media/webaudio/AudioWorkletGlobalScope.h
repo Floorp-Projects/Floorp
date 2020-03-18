@@ -49,7 +49,7 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
   // If successful, returns true and sets aRetProcessor, which will be in the
   // compartment for the realm of this global.  Returns false on failure.
   MOZ_CAN_RUN_SCRIPT
-  bool ConstructProcessor(const nsAString& aName,
+  bool ConstructProcessor(JSContext* aCx, const nsAString& aName,
                           NotNull<StructuredCloneHolder*> aSerializedOptions,
                           UniqueMessagePortId& aPortIdentifier,
                           JS::MutableHandle<JSObject*> aRetProcessor);

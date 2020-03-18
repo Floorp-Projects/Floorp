@@ -275,18 +275,14 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 }
 
 bool AudioWorkletGlobalScope::ConstructProcessor(
-    const nsAString& aName, NotNull<StructuredCloneHolder*> aSerializedOptions,
+    JSContext* aCx, const nsAString& aName,
+    NotNull<StructuredCloneHolder*> aSerializedOptions,
     UniqueMessagePortId& aPortIdentifier,
     JS::MutableHandle<JSObject*> aRetProcessor) {
   /**
    * See
    * https://webaudio.github.io/web-audio-api/#AudioWorkletProcessor-instantiation
    */
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(this))) {
-    return false;
-  }
-  JSContext* cx = jsapi.cx();
   ErrorResult rv;
   /**
    * 4. Let deserializedPort be the result of
@@ -294,7 +290,7 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
    */
   RefPtr<MessagePort> deserializedPort =
       MessagePort::Create(this, aPortIdentifier, rv);
-  if (NS_WARN_IF(rv.MaybeSetPendingException(cx))) {
+  if (NS_WARN_IF(rv.MaybeSetPendingException(aCx))) {
     return false;
   }
   /**
@@ -305,9 +301,10 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
   cloneDataPolicy.allowIntraClusterClonableSharedObjects();
   cloneDataPolicy.allowSharedMemoryObjects();
 
-  JS::Rooted<JS::Value> deserializedOptions(cx);
-  aSerializedOptions->Read(this, cx, &deserializedOptions, cloneDataPolicy, rv);
-  if (rv.MaybeSetPendingException(cx)) {
+  JS::Rooted<JS::Value> deserializedOptions(aCx);
+  aSerializedOptions->Read(this, aCx, &deserializedOptions, cloneDataPolicy,
+                           rv);
+  if (rv.MaybeSetPendingException(aCx)) {
     return false;
   }
   /**
@@ -333,7 +330,7 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
    */
   // The options were an object before serialization and so will be an object
   // if deserialization succeeded above.  toObject() asserts.
-  JS::Rooted<JSObject*> options(cx, &deserializedOptions.toObject());
+  JS::Rooted<JSObject*> options(aCx, &deserializedOptions.toObject());
   RefPtr<AudioWorkletProcessor> processor = processorCtor->Construct(
       options, rv, "AudioWorkletProcessor construction",
       CallbackFunction::eReportExceptions);
@@ -343,8 +340,8 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
     rv.SuppressException();  // already reported
     return false;
   }
-  JS::Rooted<JS::Value> processorVal(cx);
-  if (NS_WARN_IF(!ToJSValue(cx, processor, &processorVal))) {
+  JS::Rooted<JS::Value> processorVal(aCx);
+  if (NS_WARN_IF(!ToJSValue(aCx, processor, &processorVal))) {
     return false;
   }
   MOZ_ASSERT(processorVal.isObject());
