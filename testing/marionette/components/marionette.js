@@ -306,22 +306,11 @@ class MarionetteParentProcess {
     this.alteredPrefs = new Set();
 
     if (env.exists(ENV_ENABLED)) {
-      MarionettePrefs.enabled = true;
+      this.enabled = true;
+    } else {
+      this.enabled = MarionettePrefs.enabled;
     }
 
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "enabled",
-      "marionette.enabled",
-      false,
-      (aPreference, previousValue, newValue) => {
-        if (newValue) {
-          this.init(false);
-        } else {
-          this.uninit();
-        }
-      }
-    );
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
   }
 
@@ -362,7 +351,7 @@ class MarionetteParentProcess {
         Services.obs.removeObserver(this, topic);
 
         if (!this.enabled && subject.handleFlag("marionette", false)) {
-          MarionettePrefs.enabled = true;
+          this.enabled = true;
         }
 
         // We want to suppress the modal dialog that's shown
