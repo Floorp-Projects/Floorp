@@ -121,7 +121,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id: space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         }
     }
 
@@ -137,7 +136,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         }
     }
 
@@ -327,7 +325,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         };
 
         // setup some malicious image size parameters
@@ -416,7 +413,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         };
 
         builder.push_repeating_image(
@@ -514,7 +510,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         };
 
         builder.push_repeating_image(
@@ -562,7 +557,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         };
 
         builder.push_repeating_image(
@@ -612,7 +606,6 @@ impl<'a> RawtestHarness<'a> {
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
             hit_info: None,
-            item_key: None,
         };
 
         builder.push_repeating_image(
@@ -1131,7 +1124,6 @@ impl<'a> RawtestHarness<'a> {
                     spatial_id,
                     flags: PrimitiveFlags::default(),
                     hit_info: None,
-                    item_key: None,
                 };
                 builder.push_line(
                     &info,
@@ -1382,7 +1374,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_rect(
             &CommonItemProperties {
                 hit_info: Some((0, 4)),
-                item_key: None,
                 clip_rect: rect,
                 clip_id: temp_clip_id,
                 spatial_id: space_and_clip.spatial_id,
@@ -1403,7 +1394,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_rect(
             &CommonItemProperties {
                 hit_info: Some((0, 5)),
-                item_key: None,
                 clip_rect: rect,
                 clip_id: ClipId::ClipChain(clip_chain_id),
                 spatial_id: space_and_clip.spatial_id,
