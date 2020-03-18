@@ -7,6 +7,9 @@
 /**
  * Bug 1441183 - Verify that the debugger advances to a new location
  * when encountering debugger statements and brakpoints
+ *
+ * Bug 1613165 - Verify that debugger statement is not disabled by
+ *  adding/removing a breakpoint
  */
 add_task(
   threadFrontTest(async props => {
@@ -14,6 +17,8 @@ add_task(
     await testBreakpoints(props);
     await testBreakpointsAndDebuggerStatements(props);
     await testLoops(props);
+    await testRemovingBreakpoint(props);
+    await testAddingBreakpoint(props);
   })
 );
 
@@ -168,6 +173,78 @@ async function testLoops({ threadFront, targetFront }) {
       "resume",
     ],
   ]);
+}
+
+// Bug 1613165 - ensure that if you pause on a breakpoint on a line with
+// debugger statement, remove the breakpoint, and try to pause on the
+// debugger statement before pausing anywhere else, debugger pauses instead of
+// skipping debugger statement.
+async function testRemovingBreakpoint({ threadFront, targetFront }) {
+  const consoleFront = await targetFront.getFront("console");
+  consoleFront.evaluateJSAsync(
+    `function foo(stop) {
+      debugger;
+    }
+    foo();
+    foo();
+    //# sourceURL=http://example.com/testRemovingBreakpoint.js`
+  );
+
+  const location = {
+    sourceUrl: "http://example.com/testRemovingBreakpoint.js",
+    line: 2,
+    column: 6,
+  };
+
+  threadFront.setBreakpoint(location, {});
+
+  info("paused at the breakpoint at the first debugger statement");
+  const packet = await waitForEvent(threadFront, "paused");
+  Assert.equal(packet.frame.where.line, 2);
+  Assert.equal(packet.why.type, "breakpoint");
+  threadFront.removeBreakpoint(location);
+  await threadFront.resume();
+
+  info("paused at the first debugger statement");
+  const packet2 = await waitForEvent(threadFront, "paused");
+  Assert.equal(packet2.frame.where.line, 2);
+  Assert.equal(packet2.why.type, "debuggerStatement");
+  await threadFront.resume();
+}
+
+// Bug 1613165 - ensure if you pause on a debugger statement, add a
+// breakpoint on the same line, and try to pause on the breakpoint
+// before pausing anywhere else, debugger pauses on that line instead of
+// skipping breakpoint.
+async function testAddingBreakpoint({ threadFront, targetFront }) {
+  const consoleFront = await targetFront.getFront("console");
+  consoleFront.evaluateJSAsync(
+    `function foo(stop) {
+      debugger;
+    }
+    foo();
+    foo();
+    //# sourceURL=http://example.com/testAddingBreakpoint.js`
+  );
+
+  const location = {
+    sourceUrl: "http://example.com/testAddingBreakpoint.js",
+    line: 2,
+    column: 6,
+  };
+
+  info("paused at the first debugger statement");
+  const packet = await waitForEvent(threadFront, "paused");
+  Assert.equal(packet.frame.where.line, 2);
+  Assert.equal(packet.why.type, "debuggerStatement");
+  threadFront.setBreakpoint(location, {});
+  await threadFront.resume();
+
+  info("paused at the breakpoint at the first debugger statement");
+  const packet2 = await waitForEvent(threadFront, "paused");
+  Assert.equal(packet2.frame.where.line, 2);
+  Assert.equal(packet2.why.type, "breakpoint");
+  await threadFront.resume();
 }
 
 async function performActions(threadFront, actions) {
