@@ -9,6 +9,7 @@ job-defaults:
     fetches:
         toolchain:
             - win64-dump-syms
+            - win64-pdbstr
 
 win32/debug:
     description: "Win32 Debug"
