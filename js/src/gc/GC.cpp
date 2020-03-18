@@ -5651,6 +5651,7 @@ IncrementalProgress GCRuntime::sweepWeakCaches(JSFreeOp* fop,
     AutoRunParallelWork runWork(this, IncrementalSweepWeakCache,
                                 gcstats::PhaseKind::SWEEP_WEAK_CACHES, work,
                                 WeakCacheSweepTaskCount(), budget, lock);
+    AutoUnlockHelperThreadState unlock(lock);
   }
 
   if (work.done()) {
