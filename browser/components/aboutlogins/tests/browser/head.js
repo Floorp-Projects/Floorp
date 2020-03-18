@@ -7,12 +7,6 @@ let { LoginBreaches } = ChromeUtils.import(
 let { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-let { _AboutLogins } = ChromeUtils.import(
-  "resource:///actors/AboutLoginsParent.jsm"
-);
-let { OSKeyStoreTestUtils } = ChromeUtils.import(
-  "resource://testing-common/OSKeyStoreTestUtils.jsm"
-);
 
 let nsLoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
@@ -141,17 +135,3 @@ add_task(async function setup() {
     SpecialPowers.postConsoleSentinel();
   });
 });
-
-/**
- * Allows for tests to reset the OS auth expiration and
- * return a promise that will resolve after the OS auth dialog has
- * been presented.
- *
- * @param {bool} loginResult True if the auth prompt should pass, otherwise false will fail
- * @returns {Promise} Resolves after the OS auth dialog has been presented
- */
-function forceAuthTimeoutAndWaitForOSKeyStoreLogin({ loginResult }) {
-  const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes (duplicated from AboutLoginsParent.jsm)
-  _AboutLogins._authExpirationTime -= AUTH_TIMEOUT_MS + 1;
-  return OSKeyStoreTestUtils.waitForOSKeyStoreLogin(loginResult);
-}

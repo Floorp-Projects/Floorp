@@ -701,7 +701,6 @@ const listeners = {
     "AboutLogins:Subscribe": ["AboutLoginsParent"],
     "AboutLogins:SyncEnable": ["AboutLoginsParent"],
     "AboutLogins:SyncOptions": ["AboutLoginsParent"],
-    "AboutLogins:TestOnlyResetOSAuth": ["AboutLoginsParent"],
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
     ContentSearch: ["ContentSearch"],
     "Reader:FaviconRequest": ["ReaderParent"],

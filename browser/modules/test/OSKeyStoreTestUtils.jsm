@@ -9,11 +9,6 @@ ChromeUtils.import("resource:///modules/OSKeyStore.jsm", this);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
@@ -44,10 +39,7 @@ var OSKeyStoreTestUtils = {
    */
   canTestOSKeyStoreLogin() {
     // Skip on Linux due to bug 1527745.
-    return (
-      UpdateUtils.getUpdateChannel(false) == "default" &&
-      AppConstants.platform != "linux"
-    );
+    return AppConstants.DEBUG && AppConstants.platform != "linux";
   },
 
   // Wait for the observer message that simulates login success of failure.
