@@ -498,7 +498,7 @@ var BrowserUtils = {
    * @return {nsIDOMWindow}
    */
   getRootWindow(docShell) {
-    return docShell.sameTypeRootTreeItem.domWindow;
+    return docShell.browsingContext.top.window;
   },
 
   /**
