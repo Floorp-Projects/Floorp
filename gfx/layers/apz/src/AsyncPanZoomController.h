@@ -251,7 +251,8 @@ class AsyncPanZoomController {
    */
   bool AdvanceAnimations(const TimeStamp& aSampleTime);
 
-  bool UpdateAnimation(const TimeStamp& aSampleTime,
+  bool UpdateAnimation(const RecursiveMutexAutoLock& aProofOfLock,
+                       const TimeStamp& aSampleTime,
                        nsTArray<RefPtr<Runnable>>* aOutDeferredTasks);
 
   // --------------------------------------------------------------------------
@@ -1195,7 +1196,8 @@ class AsyncPanZoomController {
    * true. Otherwise, GetCurrentAsyncTransform() always reflects what's stored
    * in |Metrics()| immediately, without any delay.)
    */
-  bool SampleCompositedAsyncTransform();
+  bool SampleCompositedAsyncTransform(
+      const RecursiveMutexAutoLock& aProofOfLock);
 
   /*
    * Helper functions to query the async layout viewport, scroll offset, and
@@ -1241,14 +1243,15 @@ class AsyncPanZoomController {
    * that the GetCurrentAsync* functions consider the test offset and zoom in
    * their computations.
    */
-  void ApplyAsyncTestAttributes();
+  void ApplyAsyncTestAttributes(const RecursiveMutexAutoLock& aProofOfLock);
 
   /**
    * Sets this AsyncPanZoomController's FrameMetrics to |aPrevFrameMetrics| and
    * calls |SampleCompositedAsyncTransform| to unapply any test values applied
    * by |ApplyAsyncTestAttributes|.
    */
-  void UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
+  void UnapplyAsyncTestAttributes(const RecursiveMutexAutoLock& aProofOfLock,
+                                  const FrameMetrics& aPrevFrameMetrics);
 
   /* ===================================================================
    * The functions and members in this section are used to manage
