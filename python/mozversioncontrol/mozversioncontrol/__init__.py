@@ -13,9 +13,7 @@ import subprocess
 import sys
 
 from mozbuild.util import ensure_subprocess_env
-
-from distutils.spawn import find_executable
-from distutils.version import LooseVersion
+from mozfile import which
 
 
 class MissingVCSTool(Exception):
@@ -57,7 +55,7 @@ def get_tool_path(tool):
     if os.path.isabs(tool) and os.path.exists(tool):
         return tool
 
-    path = find_executable(tool)
+    path = which(tool)
     if not path:
         raise MissingVCSTool('Unable to obtain %s path. Try running '
                              '|mach bootstrap| to ensure your environment is up to '
@@ -122,7 +120,7 @@ class Repository(object):
 
     @property
     def tool_version(self):
-        '''Return the version of the VCS tool in use as a `LooseVersion`.'''
+        '''Return the version of the VCS tool in use as a string.'''
         if self._version:
             return self._version
         info = self._run('--version').strip()
@@ -130,7 +128,7 @@ class Repository(object):
         if not match:
             raise Exception('Unable to identify tool version.')
 
-        self.version = LooseVersion(match.group(1))
+        self.version = match.group(1)
         return self.version
 
     @property
@@ -367,7 +365,9 @@ class HgRepository(Repository):
 
     def add_remove_files(self, path):
         args = ['addremove', path]
-        if self.tool_version >= str('3.9'):
+        m = re.search(r'\d+\.\d+', self.tool_version)
+        simplified_version = float(m.group(0)) if m else 0
+        if simplified_version >= 3.9:
             args = ['--config', 'extensions.automv='] + args
         self._run(*args)
 
