@@ -35,7 +35,7 @@ add_task(async function testTempPermissionOnReload() {
     );
 
     await reloaded;
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return !reloadButton.disabled;
     });
 
