@@ -3519,8 +3519,8 @@ pub extern "C" fn wr_dp_push_box_shadow(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_start_item_group(state: &mut WrState, key: ItemKey) {
-    state.frame_builder.dl_builder.start_item_group(key);
+pub extern "C" fn wr_dp_start_item_group(state: &mut WrState) {
+    state.frame_builder.dl_builder.start_item_group();
 }
 
 #[no_mangle]
@@ -3529,7 +3529,10 @@ pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_finish_item_group(state: &mut WrState, key: ItemKey) -> bool {
+pub extern "C" fn wr_dp_finish_item_group(
+    state: &mut WrState,
+    key: ItemKey
+) -> bool {
     state.frame_builder.dl_builder.finish_item_group(key)
 }
 
