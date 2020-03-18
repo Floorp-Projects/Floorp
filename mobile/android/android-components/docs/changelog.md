@@ -33,6 +33,10 @@ permalink: /changelog/
 * **feature-session**
   * ⚠️ **This is a breaking change**: `HistoryDelegate` constructor changed to take `Lazy<HistoryStorage>` instead of `HistoryStorage`, to facilitate late initialization.
 
+* **browser-menu**
+  * Added `canPropagate` param to all `BrowserMenuHighlight`s, making it optional to be displayed in other components
+  * Changed `BrowserMenuItem.getHighlight` to filter the highlights which should not propagate.
+
 # 36.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v35.0.0...v36.0.0)
