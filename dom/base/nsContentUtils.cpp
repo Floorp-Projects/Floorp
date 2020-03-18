@@ -3764,18 +3764,19 @@ nsresult nsContentUtils::FormatLocalizedString(
 
 /* static */
 void nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
-                                           const char* classification,
+                                           const char* aCategory,
                                            bool aFromPrivateWindow,
-                                           bool aFromChromeContext) {
+                                           bool aFromChromeContext,
+                                           uint32_t aErrorFlags) {
   nsCOMPtr<nsIScriptError> scriptError =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   if (scriptError) {
     nsCOMPtr<nsIConsoleService> console =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (console && NS_SUCCEEDED(scriptError->Init(
-                       aErrorText, EmptyString(), EmptyString(), 0, 0,
-                       nsIScriptError::errorFlag, classification,
-                       aFromPrivateWindow, aFromChromeContext))) {
+    if (console &&
+        NS_SUCCEEDED(scriptError->Init(
+            aErrorText, EmptyString(), EmptyString(), 0, 0, aErrorFlags,
+            aCategory, aFromPrivateWindow, aFromChromeContext))) {
       console->LogMessage(scriptError);
     }
   }

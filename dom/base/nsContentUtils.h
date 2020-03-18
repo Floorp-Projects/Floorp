@@ -44,6 +44,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "nsIContentPolicy.h"
+#include "nsIScriptError.h"
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsRFPService.h"
@@ -1037,12 +1038,15 @@ class nsContentUtils {
   /**
    * Report simple error message to the browser console
    *   @param aErrorText the error message
-   *   @param classification Name of the module reporting error
+   *   @param aCategory Name of the module reporting error
+   *   @param aFromPrivateWindow Whether from private window or not
+   *   @param aFromChromeContext Whether from chrome context or not
+   *   @param [aErrorFlags] See nsIScriptError.
    */
-  static void LogSimpleConsoleError(const nsAString& aErrorText,
-                                    const char* classification,
-                                    bool aFromPrivateWindow,
-                                    bool aFromChromeContext);
+  static void LogSimpleConsoleError(
+      const nsAString& aErrorText, const char* aCategory,
+      bool aFromPrivateWindow, bool aFromChromeContext,
+      uint32_t aErrorFlags = nsIScriptError::errorFlag);
 
   /**
    * Report a non-localized error message to the error console.
