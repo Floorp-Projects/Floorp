@@ -779,7 +779,7 @@ Section "-InstallEndCleanup"
   Call AddFirewallEntries
 
   ; Refresh desktop icons
-  System::Call "shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_DWORDFLUSH}, i 0, i 0)"
+  ${RefreshShellIcons}
 
   ${InstallEndCleanupCommon}
 
@@ -793,7 +793,7 @@ Section "-InstallEndCleanup"
     ; user is an admin.
     UAC::IsAdmin
     ${If} "$0" == "1"
-      ; When a reboot is required give SHChangeNotify time to finish the
+      ; When a reboot is required give RefreshShellIcons time to finish the
       ; refreshing the icons so the OS doesn't display the icons from helper.exe
       Sleep 10000
       ${LogHeader} "Reboot Required To Finish Installation"

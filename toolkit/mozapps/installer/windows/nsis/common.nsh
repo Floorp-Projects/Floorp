@@ -5937,7 +5937,7 @@ end:
 
       finish:
       ${UnloadUAC}
-      System::Call "shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i 0, i 0, i 0)"
+      ${RefreshShellIcons}
       Quit ; Nothing initialized so no need to call OnEndCommon
 
       continue:

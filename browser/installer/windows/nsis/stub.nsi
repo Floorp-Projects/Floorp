@@ -1642,7 +1642,7 @@ Function CheckInstall
     CopyFiles /SILENT "$INSTDIR\install.log" "$INSTDIR\install.tmp"
 
     ; The unfocus and refocus that happens approximately here is caused by the
-    ; installer calling SHChangeNotify to refresh the shortcut icons.
+    ; installer calling RefreshShellIcons to refresh the shortcut icons.
 
     ; When the full installer completes the installation the install.log will no
     ; longer be in use.
