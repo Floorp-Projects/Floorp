@@ -16,6 +16,12 @@ var gPopupShownListener;
 var gLastAutoCompleteResults;
 var gChromeScript;
 
+const TelemetryFilterPropsAC = Object.freeze({
+  category: "form_autocomplete",
+  method: "show",
+  object: "logins",
+});
+
 /*
  * Returns the element with the specified |name| attribute.
  */
@@ -274,6 +280,21 @@ function promiseACShown() {
       resolve(results);
     };
   });
+}
+
+function checkACTelemetryEvent(actualEvent, input, augmentedExtra) {
+  ok(
+    parseInt(actualEvent[4], 10) > 0,
+    "elapsed time is a positive integer after converting from a string"
+  );
+  let expectedExtra = {
+    acFieldName: SpecialPowers.wrap(input).getAutocompleteInfo().fieldName,
+    typeWasPassword: SpecialPowers.wrap(input).hasBeenTypePassword ? "1" : "0",
+    fieldType: input.type,
+    stringLength: input.value.length + "",
+    ...augmentedExtra,
+  };
+  isDeeply(actualEvent[5], expectedExtra, "Check event extra object");
 }
 
 function satchelCommonSetup() {
