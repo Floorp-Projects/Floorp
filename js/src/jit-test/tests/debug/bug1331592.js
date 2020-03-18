@@ -5,7 +5,7 @@ if (!wasmDebuggingIsSupported())
 
 var module = new WebAssembly.Module(wasmTextToBinary(`
     (module
-        (import "global" "func" (result i32))
+        (import "global" "func" (func (result i32)))
         (func (export "func_0") (result i32)
          call 0 ;; calls the import, which is func #0
         )
