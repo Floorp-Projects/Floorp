@@ -42,6 +42,9 @@ typedef int VAStatus;
 #  define VA_STATUS_SUCCESS 0x00000000
 #endif
 
+// Use some extra HW frames for potential rendering lags.
+#define EXTRA_HW_FRAMES 6
+
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
@@ -135,10 +138,6 @@ VAAPIFrameHolder::~VAAPIFrameHolder() {
 }
 
 AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
-  if (mCodecID != AV_CODEC_ID_H264) {
-    return nullptr;
-  }
-
   AVCodec* decoder = mLib->avcodec_find_decoder(mCodecID);
   for (int i = 0;; i++) {
     const AVCodecHWConfig* config = mLib->avcodec_get_hw_config(decoder, i);
@@ -172,7 +171,6 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
 
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
-  MOZ_ASSERT(mCodecID == AV_CODEC_ID_H264);
 
   if (!mLib->IsVAAPIAvailable()) {
     FFMPEG_LOG("libva library is missing");
@@ -282,11 +280,9 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   MediaResult rv;
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-  if (mCodecID == AV_CODEC_ID_H264) {
-    rv = InitVAAPIDecoder();
-    if (NS_SUCCEEDED(rv)) {
-      return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
-    }
+  rv = InitVAAPIDecoder();
+  if (NS_SUCCEEDED(rv)) {
+    return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 #endif
 
@@ -338,7 +334,12 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
   mCodecContext->height = mInfo.mImage.height;
   mCodecContext->thread_count = 1;
   mCodecContext->get_format = ChooseVAAPIPixelFormat;
-  mCodecContext->extra_hw_frames = H264::ComputeMaxRefFrames(mInfo.mExtraData);
+  if (mCodecID == AV_CODEC_ID_H264) {
+    mCodecContext->extra_hw_frames =
+        H264::ComputeMaxRefFrames(mInfo.mExtraData);
+  } else {
+    mCodecContext->extra_hw_frames = EXTRA_HW_FRAMES;
+  }
 }
 #endif
 
@@ -696,5 +697,12 @@ void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
 #endif
   FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown();
 }
+
+#ifdef MOZ_WAYLAND_USE_VAAPI
+bool FFmpegVideoDecoder<LIBAV_VER>::IsHardwareAccelerated(
+    nsACString& aFailureReason) const {
+  return !!mVAAPIDeviceContext;
+}
+#endif
 
 }  // namespace mozilla
