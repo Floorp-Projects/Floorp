@@ -523,9 +523,6 @@ bool nsWaylandDisplay::IsDMABufVAAPIEnabled() {
   return IsDMABufEnabled() &&
          StaticPrefs::widget_wayland_dmabuf_vaapi_enabled();
 }
-int nsWaylandDisplay::GetRenderingCacheModePref() {
-  return StaticPrefs::widget_wayland_cache_mode();
-}
 
 void* nsGbmLib::sGbmLibHandle = nullptr;
 void* nsGbmLib::sXf86DrmLibHandle = nullptr;
