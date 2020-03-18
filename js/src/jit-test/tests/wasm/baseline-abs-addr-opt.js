@@ -16,7 +16,7 @@ function gen(base, offset) {
 			(data (i32.const 65528) "aaaaaaaa")
 			(func (result i32)
 			 (i32.load offset=${offset} (i32.const ${base})))
-			(export "f" 0))`).exports["f"];
+			(export "f" (func 0)))`).exports["f"];
 }
 
 // Memory is two pages but minimum memory is one page, so accesses across
@@ -33,7 +33,7 @@ function gen2(base, offset) {
 			 (i32.store (i32.const 80000) (i32.const 0x61616161))
 			 (i32.store (i32.const 120000) (i32.const 0x61616161))
 			 (i32.load offset=${offset} (i32.const ${base})))
-			(export "f" 0))`).exports["f"];
+			(export "f" (func 0)))`).exports["f"];
 }
 
 // Access the first page.

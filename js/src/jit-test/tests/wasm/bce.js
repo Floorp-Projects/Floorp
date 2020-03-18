@@ -74,7 +74,7 @@ function loadTwiceModule(type, ext, offset, align) {
           ${align != 0 ? 'align=' + align : ''}
           (local.get 1)
          )
-       ) (export "" 0))`
+       ) (export "" (func 0)))`
     ).exports[""];
 }
 
@@ -96,7 +96,7 @@ function loadTwiceSameBasePlusConstModule(type, ext, offset, align, addConst) {
           ${align != 0 ? 'align=' + align : ''}
           (i32.add (local.get 0) (i32.const ${addConst}))
          )
-       ) (export "" 0))`
+       ) (export "" (func 0)))`
     ).exports[""];
 }
 
@@ -118,7 +118,7 @@ function loadTwiceSameBasePlusNonConstModule(type, ext, offset, align) {
           ${align != 0 ? 'align=' + align : ''}
           (i32.add (local.get 0) (local.get 1))
          )
-       ) (export "" 0))`
+       ) (export "" (func 0)))`
     ).exports[""];
 }
 

@@ -33,6 +33,6 @@ for (let body of bodies) {
                 br $top
             end
         )
-        (export "run" $f)
+        (export "run" (func $f))
     )`, 42, {}, 42);
 }
