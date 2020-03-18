@@ -1190,10 +1190,47 @@ struct nsGridContainerFrame::TrackSizingFunctions {
                              int32_t(mExplicitGridOffset));
     }
     uint32_t index = aTrackIndex - mExplicitGridOffset;
+    MOZ_ASSERT(mRepeatAutoStart <= mRepeatAutoEnd);
+
     if (index >= mRepeatAutoStart) {
       if (index < mRepeatAutoEnd) {
-        index = mRepeatAutoStart;
+        // Expand the repeat tracks.
+        const auto& indices = mExpandedTracks[mRepeatAutoStart];
+        const TrackListValue& value = mTrackListValues[indices.first];
+
+        // We expect the default to be used for all track repeats.
+        MOZ_ASSERT(indices.second == 0);
+
+        const auto& repeatTracks = value.AsTrackRepeat().track_sizes.AsSpan();
+
+        // Find the repeat track to use, skipping over any collapsed tracks.
+        const uint32_t finalRepeatIndex = (index - mRepeatAutoStart);
+        uint32_t repeatWithCollapsed = 0;
+        // NOTE: We need SizingFor before the final collapsed tracks are known.
+        // We know that it's invalid to have empty mRemovedRepeatTracks when
+        // there are any repeat tracks, so we can detect that situation here.
+        if (mRemovedRepeatTracks.IsEmpty()) {
+          repeatWithCollapsed = finalRepeatIndex;
+        } else {
+          // Count up through the repeat tracks, until we have seen
+          // finalRepeatIndex number of non-collapsed tracks.
+          for (uint32_t repeatNoCollapsed = 0;
+               repeatNoCollapsed < finalRepeatIndex; repeatWithCollapsed++) {
+            if (!mRemovedRepeatTracks[repeatWithCollapsed]) {
+              repeatNoCollapsed++;
+            }
+          }
+          // If we stopped iterating on a collapsed track, continue to the next
+          // non-collapsed track.
+          while (mRemovedRepeatTracks[repeatWithCollapsed]) {
+            repeatWithCollapsed++;
+          }
+        }
+        return repeatTracks[repeatWithCollapsed % repeatTracks.Length()];
       } else {
+        // The index is after the repeat auto range, adjust it to skip over the
+        // repeat value. This will have no effect if there is no auto repeat,
+        // since then RepeatEndDelta will return zero.
         index -= RepeatEndDelta();
       }
     }
