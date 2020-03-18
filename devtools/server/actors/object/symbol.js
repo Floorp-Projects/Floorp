@@ -16,12 +16,12 @@ loader.lazyRequireGetter(
 /**
  * Creates an actor for the specified symbol.
  *
- * @param symbol Symbol
- *        The symbol.
+ * @param {DevToolsServerConnection} conn: The connection to the client.
+ * @param {Symbol} symbol: The symbol we want to create an actor for.
  */
 const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
-  initialize(symbol) {
-    protocol.Actor.prototype.initialize.call(this);
+  initialize(conn, symbol) {
+    protocol.Actor.prototype.initialize.call(this, conn);
     this.symbol = symbol;
   },
 
@@ -47,7 +47,7 @@ const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
     const name = getSymbolName(this.symbol);
     if (name !== undefined) {
       // Create a grip for the name because it might be a longString.
-      form.name = createValueGrip(name, this.registeredPool);
+      form.name = createValueGrip(name, this.getParent());
     }
     return form;
   },
@@ -56,17 +56,18 @@ const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
    * Handle a request to release this SymbolActor instance.
    */
   release: function() {
-    // TODO: also check if registeredPool === threadActor.threadLifetimePool
+    // TODO: also check if this.getParent() === threadActor.threadLifetimePool
     // when the web console moves away from manually releasing pause-scoped
     // actors.
     this._releaseActor();
-    this.registeredPool.removeActor(this);
+    this.destroy();
     return {};
   },
 
   _releaseActor: function() {
-    if (this.registeredPool && this.registeredPool.symbolActors) {
-      delete this.registeredPool.symbolActors[this.symbol];
+    const parent = this.getParent();
+    if (parent && parent.symbolActors) {
+      delete parent.symbolActors[this.symbol];
     }
   },
 });
@@ -83,7 +84,7 @@ function getSymbolName(symbol) {
  *
  * @param sym Symbol
  *        The symbol we are creating a grip for.
- * @param pool ActorPool
+ * @param pool Pool
  *        The actor pool where the new actor will be added.
  */
 function symbolGrip(sym, pool) {
@@ -95,8 +96,8 @@ function symbolGrip(sym, pool) {
     return pool.symbolActors[sym].form();
   }
 
-  const actor = new SymbolActor(sym);
-  pool.addActor(actor);
+  const actor = new SymbolActor(pool.conn, sym);
+  pool.manage(actor);
   pool.symbolActors[sym] = actor;
   return actor.form();
 }

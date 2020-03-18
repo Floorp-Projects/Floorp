@@ -90,8 +90,12 @@ function unwrapDebuggeeValue(value) {
 }
 
 /**
- * Create a grip for the given debuggee value.  If the value is an
- * object, will create an actor with the given lifetime.
+ * Create a grip for the given debuggee value. If the value is an object or a long string,
+ * it will create an actor and add it to the pool
+ * @param {any} value: The debuggee value.
+ * @param {Pool} pool: The pool where the created actor will be added.
+ * @param {Function} makeObjectGrip: Function that will be called to create the grip for
+ *                                   non-primitive values.
  */
 function createValueGrip(value, pool, makeObjectGrip) {
   switch (typeof value) {
@@ -107,7 +111,7 @@ function createValueGrip(value, pool, makeObjectGrip) {
         }
 
         const actor = new LongStringActor(pool.conn, value);
-        pool.addActor(actor);
+        pool.manage(actor);
         return actor.form();
       }
       return value;

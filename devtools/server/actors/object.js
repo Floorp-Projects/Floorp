@@ -838,7 +838,7 @@ const proto = {
     const { createEnvironmentActor } = this.hooks;
     const envActor = createEnvironmentActor(
       this.obj.environment,
-      this.registeredPool
+      this.getParent()
     );
 
     if (!envActor) {
