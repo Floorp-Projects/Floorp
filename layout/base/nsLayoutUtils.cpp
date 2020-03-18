@@ -8480,7 +8480,6 @@ bool nsLayoutUtils::GetContentViewerSize(nsPresContext* aPresContext,
 
   if (aPresContext->HasDynamicToolbar() && !bounds.IsEmpty()) {
     MOZ_ASSERT(aPresContext->IsRootContentDocumentCrossProcess());
-    MOZ_ASSERT(bounds.height > aPresContext->GetDynamicToolbarMaxHeight());
     bounds.height -= aPresContext->GetDynamicToolbarMaxHeight();
     // Collapse the size in the case the dynamic toolbar max height is greater
     // than the content bound height so that hopefully embedders of GeckoView

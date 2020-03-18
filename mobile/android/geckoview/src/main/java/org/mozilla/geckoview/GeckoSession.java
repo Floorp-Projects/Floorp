@@ -5515,10 +5515,11 @@ public class GeckoSession implements Parcelable {
         }
 
         if (mHeight != 0 && height != 0 && mHeight < height) {
-            throw new AssertionError("The maximum height of the dynamic toolbar (" +
-                                     height +
-                                     ") should be smaller than GeckoView height (" +
-                                     mHeight + ")");
+            Log.w(LOGTAG, new AssertionError(
+                    "The maximum height of the dynamic toolbar (" +
+                    height +
+                    ") should be smaller than GeckoView height (" +
+                    mHeight + ")"));
         }
 
         mDynamicToolbarMaxHeight = height;
@@ -5714,10 +5715,10 @@ public class GeckoSession implements Parcelable {
 
         if (mHeight != 0 && mDynamicToolbarMaxHeight != 0 &&
             mHeight < mDynamicToolbarMaxHeight) {
-            throw new AssertionError("The maximum height of the dynamic toolbar (" +
-                                     mDynamicToolbarMaxHeight +
-                                     ") should be smaller than GeckoView height (" +
-                                     mHeight + ")");
+            Log.w(LOGTAG, new AssertionError( "The maximum height of the dynamic toolbar (" +
+                          mDynamicToolbarMaxHeight +
+                          ") should be smaller than GeckoView height (" +
+                          mHeight + ")"));
         }
 
         final int toolbarHeight;
@@ -5728,7 +5729,9 @@ public class GeckoSession implements Parcelable {
         }
 
         mClientTop = mTop + toolbarHeight;
-        mClientHeight = mHeight - toolbarHeight;
+        // If the view is not tall enough to even fix the toolbar we just
+        // default the client height to 0
+        mClientHeight = Math.max(mHeight - toolbarHeight, 0);
 
         if (mAttachedCompositor) {
             mCompositor.onBoundsChanged(mLeft, mClientTop, mWidth, mClientHeight);
