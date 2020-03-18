@@ -106,8 +106,18 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">လုံခြုံရေး ကိစ္စများကြောင့်တားမြစ်ထားတဲ့ Port</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>တောင်းဆိုထားသော လိပ်စာသည် ပုံမှန်အားဖြင့် ဝက်ဆိုက်ကြည့်ရှုရန် မဟုတ်သည့် အပေါက် ( ဥပမာ <q>mozilla.org:80</q> တွင် 80 သည် အပေါက်နံပတ်ဖြစ်သည်) တစ်ခုအား ညွှန်ထားသည် ။ သင့်အား ကာကွယ်ရန် ဘ‌ယောက်ဆာမှ တောင်းဆိုမှုအား မလုပ်တော့ပါ ။</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">ဆက်သွယ်မှုကို ပြန်လည်သတ်မှတ်သည်</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>စတင်ခေါ်ဆိုနေစဥ် နက်ဝက် ချိတ်ဆက်မှု ပြတ်တောက်သွားသည်။ ကျေးဇူးပြုပြီး ထပ်ကြိုးစားပါ။</p>
+      <ul>
+        <li>ဝက်ဆိုက် အလုပ်အရမ်းများနေတာလည်း ဖြစ်နိုင်သည် ။ တစ်ခဏနေ မှ ထပ်ကြိုးစားသင့်သည်။ </li>
+        <li>သင် အခြား ဝက်စာမျက်နှာများပါဖွင့် မရပါက သင့် စက်၏ အချက်အလက် ချိတ်ဆက်မှု သို့ ဝိုင်ဖိုင် အား စစ်ပါ</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">မလုံခြုံသောဖိုင်အမျိုးအစား</string>
