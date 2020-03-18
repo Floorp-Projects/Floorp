@@ -482,57 +482,57 @@ inline void JSHolderMap::ForEach(F&& f) {
   }
 }
 
-inline bool JSHolderMap::Has(void* aHolder) const { return Get(aHolder); }
+inline bool JSHolderMap::Has(void* aHolder) const {
+  return mJSHolderMap.has(aHolder);
+}
 
 inline nsScriptObjectTracer* JSHolderMap::Get(void* aHolder) const {
-  Entry* info = nullptr;
-  if (!mJSHolderMap.Get(aHolder, &info)) {
+  auto ptr = mJSHolderMap.lookup(aHolder);
+  if (!ptr) {
     return nullptr;
   }
 
+  Entry* info = ptr->value();
   MOZ_ASSERT(info->mHolder == aHolder);
   return info->mTracer;
 }
 
 inline nsScriptObjectTracer* JSHolderMap::GetAndRemove(void* aHolder) {
-  auto entry = mJSHolderMap.Lookup(aHolder);
-  if (!entry) {
+  auto ptr = mJSHolderMap.lookup(aHolder);
+  if (!ptr) {
     return nullptr;
   }
 
-  Entry* info = entry.Data();
+  Entry* info = ptr->value();
   MOZ_ASSERT(info->mHolder == aHolder);
   nsScriptObjectTracer* tracer = info->mTracer;
 
   Entry* lastInfo = &mJSHolders.GetLast();
-  bool updateLast = (info != lastInfo);
-  if (updateLast) {
+  if (info != lastInfo) {
+    // Swap the mJSHolders element we want to remove with the last one and
+    // update the hash table.
     *info = *lastInfo;
+    MOZ_ASSERT(mJSHolderMap.has(info->mHolder));
+    MOZ_ALWAYS_TRUE(mJSHolderMap.put(info->mHolder, info));
   }
 
   mJSHolders.PopLast();
-  entry.Remove();
-
-  if (updateLast) {
-    // We have to do this after removing the entry above to ensure that we don't
-    // trip over the hashtable generation number assertion.
-    mJSHolderMap.Put(info->mHolder, info);
-  }
+  mJSHolderMap.remove(ptr);
 
   return tracer;
 }
 
 inline void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer) {
-  auto entry = mJSHolderMap.LookupForAdd(aHolder);
-  if (entry) {
-    Entry* info = entry.Data();
+  auto ptr = mJSHolderMap.lookupForAdd(aHolder);
+  if (ptr) {
+    Entry* info = ptr->value();
     MOZ_ASSERT(info->mHolder == aHolder);
     info->mTracer = aTracer;
     return;
   }
 
   mJSHolders.InfallibleAppend(Entry{aHolder, aTracer});
-  entry.OrInsert([&] { return &mJSHolders.GetLast(); });
+  MOZ_ALWAYS_TRUE(mJSHolderMap.add(ptr, aHolder, &mJSHolders.GetLast()));
 }
 
 size_t JSHolderMap::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -541,7 +541,7 @@ size_t JSHolderMap::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // We're deliberately not measuring anything hanging off the entries in
   // mJSHolders.
   n += mJSHolders.SizeOfExcludingThis(aMallocSizeOf);
-  n += mJSHolderMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mJSHolderMap.shallowSizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }
