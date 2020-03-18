@@ -236,8 +236,6 @@ DebuggerFrame* DebuggerFrame::create(
     JSContext* cx, HandleObject proto, HandleNativeObject debugger,
     const FrameIter* maybeIter,
     Handle<AbstractGeneratorObject*> maybeGenerator) {
-  MOZ_ASSERT(maybeIter || maybeGenerator);
-
   DebuggerFrame* frame = NewObjectWithGivenProto<DebuggerFrame>(cx, proto);
   if (!frame) {
     return nullptr;

@@ -502,6 +502,12 @@ If `value` is a primitive value, return it unchanged. If `value` is a
 other kind of object, and hence not a proper debuggee value, throw a
 TypeError instead.
 
+### `adoptFrame(frame)`
+Given `frame` of type `Debugger.Frame` which is owned by an arbitrary
+`Debugger`, return an equivalent `Debugger.Frame` owned by this `Debugger`.
+If the `frame` is associated with a debuggee that is _not_ a debuggee of
+the adopting debugger, this method will throw.
+
 ### `adoptSource(source)`
 Given `source` of type `Debugger.Source` which is owned by an arbitrary
 `Debugger`, return an equivalent `Debugger.Source` owned by this `Debugger`.
