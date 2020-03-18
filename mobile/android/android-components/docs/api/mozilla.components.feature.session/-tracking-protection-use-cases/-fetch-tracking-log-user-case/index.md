@@ -2,7 +2,7 @@
 
 # FetchTrackingLogUserCase
 
-`class FetchTrackingLogUserCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L135)
+`class FetchTrackingLogUserCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L143)
 
 Use case for fetching all the tracking protection logged information.
 

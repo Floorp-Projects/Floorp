@@ -2,4 +2,4 @@
 
 # containsException
 
-`val containsException: `[`ContainsExceptionUseCase`](-contains-exception-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L167)
+`val containsException: `[`ContainsExceptionUseCase`](-contains-exception-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L175)
