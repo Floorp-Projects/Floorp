@@ -3216,9 +3216,13 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
         if (join && aSelectionWasCollapsed == SelectionWasCollapsed::Yes) {
           if (Text* text = content->GetAsText()) {
             join = !IsInVisibleTextFrames(*text);
-          } else {
-            join = content->IsHTMLElement(nsGkAtoms::br) &&
-                   !IsVisibleBRElement(content);
+          } else if (content->IsElement()) {
+            if (IsEmptyNode(*content->AsElement())) {
+              join = true;
+            } else {
+              join = content->IsHTMLElement(nsGkAtoms::br) &&
+                     !IsVisibleBRElement(content);
+            }
           }
         }
       }
