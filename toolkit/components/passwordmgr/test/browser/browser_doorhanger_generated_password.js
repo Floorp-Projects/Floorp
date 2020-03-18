@@ -351,7 +351,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
@@ -414,7 +414,7 @@ add_task(async function autocomplete_generated_password_saved_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: {
         selector: usernameInputSelector,
@@ -508,7 +508,7 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: {
         selector: usernameInputSelector,
@@ -582,7 +582,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
@@ -649,7 +649,7 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
@@ -754,7 +754,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: {
         selector: usernameInputSelector,
@@ -1139,7 +1139,7 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
-        expectedMessage: "",
+        expectedMessage: "PasswordEditedOrGenerated",
       },
       username: {
         selector: usernameInputSelector,
@@ -1323,10 +1323,6 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
   // * the metadata for the matching login should be updated
   // * the by-origin cache for the password should point at the autosaved login
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["signon.passwordEditCapture.enabled", true]],
-  });
-
   await setup_withOneLogin("user1", "xyzpassword");
   await openFormInNewTab(
     TEST_ORIGIN + FORM_PAGE_PATH,
@@ -1438,6 +1434,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       hintPromiseShown.then(() => (hintDidShow = true));
 
       info("Entering username and password for the previously saved login");
+
       await changeContentFormValues(browser, {
         [passwordInputSelector]: user1LoginSnapshot.password,
         [usernameInputSelector]: user1LoginSnapshot.username,
@@ -1518,5 +1515,4 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       );
     }
   );
-  await SpecialPowers.popPrefEnv();
 });
