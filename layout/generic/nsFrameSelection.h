@@ -759,11 +759,6 @@ class nsFrameSelection final {
   friend class mozilla::dom::Selection;
   friend class mozilla::SelectionChangeEventDispatcher;
   friend struct mozilla::AutoPrepareFocusRange;
-#ifdef DEBUG
-  void printSelection();  // for debugging
-#endif                    /* DEBUG */
-
-  void ResizeBuffer(uint32_t aNewBufSize);
 
   /*HELPER METHODS*/
   // Whether MoveCaret should use logical or visual movement,
