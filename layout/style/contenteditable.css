@@ -17,11 +17,6 @@
   cursor: text;
 }
 
-input:-moz-read-write > .anonymous-div:-moz-read-only,
-textarea:-moz-read-write > .anonymous-div:-moz-read-only {
-  user-select: text;
-}
-
 /* Use default arrow over objects with size that
    are selected when clicked on.
    Override the browser's pointer cursor over links

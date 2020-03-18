@@ -3651,6 +3651,23 @@ float Element::FontSizeInflation() {
   return 1.0;
 }
 
+void Element::GetImplementedPseudoElement(nsAString& aPseudo) const {
+  PseudoStyleType pseudoType = GetPseudoElementType();
+  if (pseudoType == PseudoStyleType::NotPseudo) {
+    return SetDOMStringToNull(aPseudo);
+  }
+  nsDependentAtomString pseudo(nsCSSPseudoElements::GetPseudoAtom(pseudoType));
+
+  // We want to use the modern syntax (::placeholder, etc), but the atoms only
+  // contain one semi-colon.
+  MOZ_ASSERT(pseudo.Length() > 2 && pseudo[0] == ':' && pseudo[1] != ':');
+
+  aPseudo.Truncate();
+  aPseudo.SetCapacity(pseudo.Length() + 1);
+  aPseudo.Append(':');
+  aPseudo.Append(pseudo);
+}
+
 ReferrerPolicy Element::GetReferrerPolicyAsEnum() {
   if (IsHTMLElement()) {
     const nsAttrValue* referrerValue = GetParsedAttr(nsGkAtoms::referrerpolicy);
