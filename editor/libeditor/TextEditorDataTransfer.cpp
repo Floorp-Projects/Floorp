@@ -47,21 +47,39 @@ namespace mozilla {
 
 using namespace dom;
 
-nsresult TextEditor::PrepareTransferable(nsITransferable** transferable) {
+nsresult TextEditor::PrepareTransferable(nsITransferable** aOutTransferable) {
+  MOZ_ASSERT(aOutTransferable);
+  MOZ_ASSERT(!*aOutTransferable);
+
   // Create generic Transferable for getting the data
-  nsresult rv =
-      CallCreateInstance("@mozilla.org/widget/transferable;1", transferable);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  nsCOMPtr<nsITransferable> transferable =
+      do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("do_CreateInstance() failed to create nsITransferable instance");
+    return rv;
+  }
 
-  // Get the nsITransferable interface for getting the data from the clipboard
-  if (transferable) {
-    RefPtr<Document> destdoc = GetDocument();
-    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
-    (*transferable)->Init(loadContext);
+  if (!transferable) {
+    NS_WARNING("do_CreateInstance() returned nullptr, but ignored");
+    return NS_OK;
+  }
 
-    (*transferable)->AddDataFlavor(kUnicodeMime);
-    (*transferable)->AddDataFlavor(kMozTextInternal);
-  };
+  RefPtr<Document> document = GetDocument();
+  nsILoadContext* loadContext = document ? document->GetLoadContext() : nullptr;
+  DebugOnly<nsresult> rvIgnored = transferable->Init(loadContext);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "nsITransferable::Init() failed, but ignored");
+
+  rvIgnored = transferable->AddDataFlavor(kUnicodeMime);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
+  rvIgnored = transferable->AddDataFlavor(kMozTextInternal);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "nsITransferable::AddDataFlavor(kMozTextInternal) failed, but ignored");
+  transferable.forget(aOutTransferable);
   return NS_OK;
 }
 
@@ -75,21 +93,20 @@ nsresult TextEditor::PrepareToInsertContent(
   if (aDoDeleteSelection) {
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return rv;
     }
   }
 
-  ErrorResult error;
+  IgnoredErrorResult error;
   SelectionRefPtr()->Collapse(pointToInsert, error);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  return NS_OK;
+  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+  return error.StealNSResult();
 }
 
 nsresult TextEditor::InsertTextAt(const nsAString& aStringToInsert,
@@ -100,15 +117,15 @@ nsresult TextEditor::InsertTextAt(const nsAString& aStringToInsert,
   MOZ_ASSERT(aPointToInsert.IsSet());
 
   nsresult rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("TextEditor::PrepareToInsertContent() failed");
     return rv;
   }
 
   rv = InsertTextAsSubAction(aStringToInsert);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::InsertTextAsSubAction() failed");
+  return rv;
 }
 
 nsresult TextEditor::InsertTextFromTransferable(
@@ -118,10 +135,13 @@ nsresult TextEditor::InsertTextFromTransferable(
 
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
-  if (NS_SUCCEEDED(aTransferable->GetAnyTransferData(
-          bestFlavor, getter_AddRefs(genericDataObj))) &&
-      (bestFlavor.EqualsLiteral(kUnicodeMime) ||
-       bestFlavor.EqualsLiteral(kMozTextInternal))) {
+  nsresult rv = aTransferable->GetAnyTransferData(
+      bestFlavor, getter_AddRefs(genericDataObj));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "nsITransferable::GetAnyDataTransferData() failed, but ignored");
+  if (NS_SUCCEEDED(rv) && (bestFlavor.EqualsLiteral(kUnicodeMime) ||
+                           bestFlavor.EqualsLiteral(kMozTextInternal))) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     nsAutoString stuffToPaste;
@@ -135,7 +155,10 @@ nsresult TextEditor::InsertTextFromTransferable(
     UpdateEditActionData(stuffToPaste);
 
     nsresult rv = MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING_ASSERTION(
+          rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+          "EditorBase::MaybeDispatchBeforeInputEvent() failed");
       return rv;
     }
 
@@ -145,16 +168,17 @@ nsresult TextEditor::InsertTextFromTransferable(
 
       AutoPlaceholderBatch treatAsOneTransaction(*this);
       nsresult rv = InsertTextAsSubAction(stuffToPaste);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::InsertTextAsSubAction() failed");
         return rv;
       }
     }
   }
 
   // Try to scroll the selection into view if the paste/drop succeeded
-  nsresult rv = ScrollSelectionFocusIntoView();
+  rv = ScrollSelectionFocusIntoView();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "ScrollSelectionFocusIntoView() failed");
+                       "EditorBase::ScrollSelectionFocusIntoView() failed");
   return rv;
 }
 
@@ -163,7 +187,9 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  CommitComposition();
+  DebugOnly<nsresult> rvIgnored = CommitComposition();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "EditorBase::CommitComposition() failed, but ignored");
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eDrop);
   // We need to initialize data or dataTransfer later.  Therefore, we cannot
@@ -232,10 +258,10 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
         // don't bail yet, iterate through them all
         continue;
       }
-      IgnoredErrorResult errorIgnored;
+      IgnoredErrorResult ignoredError;
       if (range->IsPointInRange(*droppedAt.GetContainer(), droppedAt.Offset(),
-                                errorIgnored) &&
-          !errorIgnored.Failed()) {
+                                ignoredError) &&
+          !ignoredError.Failed()) {
         // If source document and destination document is same and dropping
         // into one of selected ranges, we don't need to do nothing.
         // XXX If the source comes from outside of this editor, this check
@@ -338,7 +364,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       rv = NS_OK;
     }
     // Don't cancel "insertFromDrop" even if "deleteByDrag" is canceled.
-    if (rv != NS_ERROR_EDITOR_ACTION_CANCELED && NS_WARN_IF(NS_FAILED(rv))) {
+    if (rv != NS_ERROR_EDITOR_ACTION_CANCELED && NS_FAILED(rv)) {
+      NS_WARNING("TextEditor::DeleteSelectionByDragAsAction() failed");
       editActionData.Abort();
       return EditorBase::ToGenericNSResult(rv);
     }
@@ -375,7 +402,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   MOZ_KnownLive(SelectionRefPtr())
       ->SetStartAndEnd(droppedAt.ToRawRangeBoundary(),
                        droppedAt.ToRawRangeBoundary(), error);
-  if (NS_WARN_IF(error.Failed())) {
+  if (error.Failed()) {
+    NS_WARNING("Selection::SetStartAndEnd() failed");
     editActionData.Abort();
     return error.StealNSResult();
   }
@@ -450,7 +478,9 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     editActionData.SetData(data);
 
     nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                           "MaybeDispatchBeforeInputEvent() failed");
       return EditorBase::ToGenericNSResult(rv);
     }
 
@@ -458,10 +488,12 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     // anymore because nobody should listen to mutation events of anonymous
     // text node in <input>/<textarea>.
     nsContentUtils::PlatformToDOMLineBreaks(data);
-    InsertTextAt(data, droppedAt, false);
+    DebugOnly<nsresult> rvIgnored = InsertTextAt(data, droppedAt, false);
     if (NS_WARN_IF(Destroyed())) {
       return NS_OK;
     }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "TextEditor::InsertTextAt() failed, but ignored");
   } else {
     editActionData.InitializeDataTransfer(dataTransfer);
     RefPtr<StaticRange> targetRange = StaticRange::Create(
@@ -474,22 +506,27 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       editActionData.AppendTargetRange(*targetRange);
     }
     nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                           "MaybeDispatchBeforeInputEvent() failed");
       return EditorBase::ToGenericNSResult(rv);
     }
     RefPtr<HTMLEditor> htmlEditor(AsHTMLEditor());
     for (uint32_t i = 0; i < numItems; ++i) {
-      htmlEditor->InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt,
-                                         false);
+      DebugOnly<nsresult> rvIgnored = htmlEditor->InsertFromDataTransfer(
+          dataTransfer, i, srcdoc, droppedAt, false);
       if (NS_WARN_IF(Destroyed())) {
         return NS_OK;
       }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "HTMLEditor::InsertFromDataTransfer() failed, but ignored");
     }
   }
 
   nsresult rv = ScrollSelectionFocusIntoView();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "ScrollSelectionFocusIntoView() failed");
+                       "EditorBase::ScrollSelectionFocusIntoView() failed");
   return rv;
 }
 
@@ -503,7 +540,9 @@ nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eDeleteByDrag);
   MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return rv;
   }
   // But keep using placeholder transaction for "insertFromDrop" if there is.
@@ -516,7 +555,8 @@ nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("TextEditor::DeleteSelectionAsSubAction() failed");
     return rv;
   }
 
@@ -547,7 +587,10 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     editActionData.InitializeDataTransferWithClipboard(
         SettingDataTransfer::eWithFormat, aClipboardType);
     nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING_ASSERTION(
+          rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+          "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
       return EditorBase::ToGenericNSResult(rv);
     }
     rv = MOZ_KnownLive(AsHTMLEditor())->PasteInternal(aClipboardType);
@@ -563,22 +606,27 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard =
       do_GetService("@mozilla.org/widget/clipboard;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get nsIClipboard service");
     return rv;
   }
 
   // Get the nsITransferable interface for getting the data from the clipboard
   nsCOMPtr<nsITransferable> transferable;
   rv = PrepareTransferable(getter_AddRefs(transferable));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("TextEditor::PrepareTransferable() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
   if (NS_WARN_IF(!transferable)) {
+    NS_WARNING(
+        "TextEditor::PrepareTransferable() returned nullptr, but ignored");
     return NS_OK;  // XXX Why?
   }
   // Get the Data from the clipboard.
   rv = clipboard->GetData(transferable, aClipboardType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("nsIClipboard::GetData() failed, but ignored");
     return NS_OK;  // XXX Why?
   }
   // XXX Why don't we check this first?
@@ -586,10 +634,9 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     return NS_OK;
   }
   rv = InsertTextFromTransferable(transferable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "TextEditor::InsertTextFromTransferable() failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
@@ -614,10 +661,9 @@ nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
   }
 
   nsresult rv = InsertTextFromTransferable(aTransferable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "TextEditor::InsertTextFromTransferable() failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 bool TextEditor::CanPaste(int32_t aClipboardType) const {
@@ -636,7 +682,8 @@ bool TextEditor::CanPaste(int32_t aClipboardType) const {
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(
       do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get nsIClipboard service");
     return false;
   }
 
@@ -647,10 +694,9 @@ bool TextEditor::CanPaste(int32_t aClipboardType) const {
   bool haveFlavors;
   rv = clipboard->HasDataMatchingFlavors(textEditorFlavors, aClipboardType,
                                          &haveFlavors);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-  return haveFlavors;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "nsIClipboard::HasDataMatchingFlavors() failed");
+  return NS_SUCCEEDED(rv) && haveFlavors;
 }
 
 bool TextEditor::CanPasteTransferable(nsITransferable* aTransferable) {
@@ -667,11 +713,9 @@ bool TextEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   nsCOMPtr<nsISupports> data;
   nsresult rv =
       aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(data));
-  if (NS_SUCCEEDED(rv) && data) {
-    return true;
-  }
-
-  return false;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "nsITransferable::GetTransferData(kUnicodeMime) failed");
+  return NS_SUCCEEDED(rv) && data;
 }
 
 bool TextEditor::IsSafeToInsertData(Document* aSourceDoc) {
@@ -696,7 +740,10 @@ bool TextEditor::IsSafeToInsertData(Document* aSourceDoc) {
     nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
     NS_ASSERTION(srcPrincipal && destPrincipal,
                  "How come we don't have a principal?");
-    srcPrincipal->Subsumes(destPrincipal, &isSafe);
+    DebugOnly<nsresult> rvIgnored =
+        srcPrincipal->Subsumes(destPrincipal, &isSafe);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "nsIPrincipal::Subsumes() failed, but ignored");
   }
 
   return isSafe;

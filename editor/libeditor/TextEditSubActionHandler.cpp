@@ -49,7 +49,9 @@ nsresult TextEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() failed");
     return rv;
   }
 
@@ -60,14 +62,17 @@ nsresult TextEditor::InitEditorContentAndSelection() {
   //     it may cause multiple selection ranges.
   if (!SelectionRefPtr()->RangeCount()) {
     nsresult rv = CollapseSelectionToEnd();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionToEnd() failed");
       return rv;
     }
   }
 
   if (IsPlaintextEditor() && !IsSingleLineEditor()) {
     nsresult rv = EnsurePaddingBRElementInMultilineEditor();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "TextEditor::EnsurePaddingBRElementInMultilineEditor() failed");
       return rv;
     }
   }
@@ -94,7 +99,7 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
     return;
   }
 
-  if (!mInitSucceeded) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return;
   }
 
@@ -112,6 +117,9 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
     // after inserting text.
     EditorRawDOMPoint point = FindBetterInsertionPoint(
         EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
+    NS_WARNING_ASSERTION(
+        point.IsSet(),
+        "EditorBase::FindBetterInsertionPoint() failed, but ignored");
     if (point.IsSet()) {
       SetSpellCheckRestartPoint(point);
       return;
@@ -137,16 +145,20 @@ nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
     // XXX Probably, we should spellcheck again after edit action (not top-level
     //     sub-action) is handled because the ranges can be referred only by
     //     users.
-    if (NS_WARN_IF(NS_FAILED(rv = HandleInlineSpellCheckAfterEdit()))) {
+    if (NS_FAILED(rv = HandleInlineSpellCheckAfterEdit())) {
+      NS_WARNING("TextEditor::HandleInlineSpellCheckAfterEdit() failed");
       break;
     }
 
-    if (NS_WARN_IF(NS_FAILED(rv = EnsurePaddingBRElementForEmptyEditor()))) {
+    if (NS_FAILED(rv = EnsurePaddingBRElementForEmptyEditor())) {
+      NS_WARNING("TextEditor::EnsurePaddingBRElementForEmptyEditor() failed");
       break;
     }
 
     if (!IsSingleLineEditor() &&
-        NS_WARN_IF(NS_FAILED(rv = EnsurePaddingBRElementInMultilineEditor()))) {
+        NS_FAILED(rv = EnsurePaddingBRElementInMultilineEditor())) {
+      NS_WARNING(
+          "TextEditor::EnsurePaddingBRElementInMultilineEditor() failed");
       break;
     }
 
@@ -154,12 +166,17 @@ nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       break;
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EnsureCaretNotAtEndOfTextNode() failed, but ignored");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "TextEditor::EnsureCaretNotAtEndOfTextNode() failed, but ignored");
     rv = NS_OK;
     break;
   }
-  EditorBase::OnEndHandlingTopLevelEditSubAction();
+  DebugOnly<nsresult> rvIgnored =
+      EditorBase::OnEndHandlingTopLevelEditSubAction();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "EditorBase::OnEndHandlingTopLevelEditSubAction() failed, but ignored");
   MOZ_ASSERT(!GetTopLevelEditSubAction());
   MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
   return rv;
@@ -178,7 +195,8 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
     nsAutoString insertionString(NS_LITERAL_STRING("\n"));
     EditActionResult result =
         TruncateInsertionStringForMaxLength(insertionString);
-    if (NS_WARN_IF(result.Failed())) {
+    if (result.Failed()) {
+      NS_WARNING("TextEditor::TruncateInsertionStringForMaxLength() failed");
       return result;
     }
     if (result.Handled()) {
@@ -191,13 +209,16 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return EditActionIgnored(rv);
     }
   }
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::EnsureNoPaddingBRElementForEmptyEditor() failed");
     return EditActionIgnored(rv);
   }
 
@@ -216,6 +237,7 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   // Don't put text in places that can't have it.
   if (!pointToInsert.IsInTextNode() &&
       !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
+    NS_WARNING("Insertion point couldn't have text nodes");
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
@@ -231,10 +253,14 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   EditorRawDOMPoint pointAfterInsertedLineFeed;
   rv = InsertTextWithTransaction(*document, NS_LITERAL_STRING("\n"),
                                  pointToInsert, &pointAfterInsertedLineFeed);
-  if (NS_WARN_IF(!pointAfterInsertedLineFeed.IsSet())) {
+  if (!pointAfterInsertedLineFeed.IsSet()) {
+    NS_WARNING(
+        "EditorBase::InsertTextWithTransaction(\\n) didn't return position of "
+        "inserted linefeed");
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("TextEditor::InsertTextWithTransaction(\\n) failed");
     return EditActionIgnored(rv);
   }
 
@@ -244,7 +270,8 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
       "After inserting text into a text node, pointAfterInsertedLineFeed."
       "GetChild() should be nullptr");
   rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineFeed);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Selection::Collapse() failed");
     return EditActionIgnored(rv);
   }
 
@@ -257,7 +284,11 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
     // content on the "right".  We want the caret to stick to whatever is
     // past the break.  This is because the break is on the same line we
     // were on, but the next content will be on the following line.
-    SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
+    IgnoredErrorResult ignoredError;
+    SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
+    NS_WARNING_ASSERTION(
+        !ignoredError.Failed(),
+        "Selection::SetInterlinePosition(true) failed, but ignored");
   }
 
   return EditActionHandled();
@@ -272,10 +303,13 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
   // if the editor is reframed, this may be called by
   // OnEndHandlingTopLevelEditSubAction().
   if (!SelectionRefPtr()->RangeCount()) {
-    CollapseSelectionToEnd();
+    DebugOnly<nsresult> rvIgnored = CollapseSelectionToEnd();
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "EditorBase::CollapseSelectionToEnd() failed, but ignored");
   }
 
   // If we are at the end of the <textarea> element, we need to set the
@@ -307,18 +341,18 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
     return NS_OK;
   }
 
-  EditorRawDOMPoint afterStartContainer(selectionStartPoint.GetContainer());
-  if (NS_WARN_IF(!afterStartContainer.AdvanceOffset())) {
+  EditorRawDOMPoint afterStartContainer(
+      EditorRawDOMPoint::After(*selectionStartPoint.GetContainer()));
+  if (NS_WARN_IF(!afterStartContainer.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  ErrorResult error;
-  SelectionRefPtr()->Collapse(afterStartContainer, error);
+  IgnoredErrorResult ignoredError;
+  SelectionRefPtr()->Collapse(afterStartContainer, ignoredError);
   if (NS_WARN_IF(Destroyed())) {
-    error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
-  return error.StealNSResult();
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "Selection::Collapse() failed");
+  return ignoredError.StealNSResult();
 }
 
 void TextEditor::HandleNewLinesInStringForSingleLineEditor(
@@ -418,7 +452,8 @@ EditActionResult TextEditor::HandleInsertText(
   if (mMaxTextLength >= 0) {
     EditActionResult result =
         TruncateInsertionStringForMaxLength(insertionString);
-    if (NS_WARN_IF(result.Failed())) {
+    if (result.Failed()) {
+      NS_WARNING("TextEditor::TruncateInsertionStringForMaxLength() failed");
       return result.MarkAsHandled();
     }
     // If we're exceeding the maxlength when composing IME, we need to clean up
@@ -444,7 +479,9 @@ EditActionResult TextEditor::HandleInsertText(
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return EditActionHandled(rv);
     }
   }
@@ -455,7 +492,8 @@ EditActionResult TextEditor::HandleInsertText(
   MaybeDoAutoPasswordMasking();
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::EnsureNoPaddingBRElementForEmptyEditor() failed");
     return EditActionHandled(rv);
   }
 
@@ -497,6 +535,7 @@ EditActionResult TextEditor::HandleInsertText(
   if (!atStartOfSelection.IsInTextNode() &&
       !CanContainTag(*atStartOfSelection.GetContainer(),
                      *nsGkAtoms::textTagName)) {
+    NS_WARNING("Selection start container couldn't have text nodes");
     return EditActionHandled(NS_ERROR_FAILURE);
   }
 
@@ -509,13 +548,17 @@ EditActionResult TextEditor::HandleInsertText(
     EditorRawDOMPoint compositionStartPoint = GetCompositionStartPoint();
     if (!compositionStartPoint.IsSet()) {
       compositionStartPoint = FindBetterInsertionPoint(atStartOfSelection);
+      NS_WARNING_ASSERTION(
+          compositionStartPoint.IsSet(),
+          "EditorBase::FindBetterInsertionPoint() failed, but ignored");
     }
     nsresult rv = InsertTextWithTransaction(*document, insertionString,
                                             compositionStartPoint);
     if (NS_WARN_IF(Destroyed())) {
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::InsertTextWithTransaction() failed");
       return EditActionHandled(rv);
     }
   } else {
@@ -531,7 +574,8 @@ EditActionResult TextEditor::HandleInsertText(
     if (NS_WARN_IF(Destroyed())) {
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::InsertTextWithTransaction() failed");
       return EditActionHandled(rv);
     }
 
@@ -564,7 +608,8 @@ EditActionResult TextEditor::HandleInsertText(
   if (IsPasswordEditor() && IsMaskingPassword() && CanEchoPasswordNow()) {
     nsresult rv = SetUnmaskRangeAndNotify(start, insertionString.Length(),
                                           LookAndFeel::GetPasswordMaskDelay());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetUnmaskRangeAndNotify() failed");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "TextEditor::SetUnmaskRangeAndNotify() failed");
     return EditActionHandled(rv);
   }
 
@@ -590,7 +635,8 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
   MaybeDoAutoPasswordMasking();
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::EnsureNoPaddingBRElementForEmptyEditor() failed");
     return EditActionResult(rv);
   }
 
@@ -645,7 +691,8 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
       return EditActionIgnored();
     }
     RefPtr<nsTextNode> newTextNode = CreateTextNode(sanitizedValue);
-    if (NS_WARN_IF(!newTextNode)) {
+    if (!newTextNode) {
+      NS_WARNING("EditorBase::CreateTextNode() failed");
       return EditActionIgnored();
     }
     nsresult rv = InsertNodeWithTransaction(
@@ -653,7 +700,8 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     if (NS_WARN_IF(Destroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
       return EditActionResult(rv);
     }
     return EditActionHandled();
@@ -661,11 +709,13 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
 
   // TODO: If new value is empty string, we should only remove it.
   RefPtr<Text> textNode = firstChild->GetAsText();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!textNode))) {
+  if (MOZ_UNLIKELY(!textNode)) {
+    NS_WARNING("The first child was not a text node");
     return EditActionIgnored();
   }
   rv = SetTextNodeWithoutTransaction(sanitizedValue, *textNode);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::SetTextNodeWithoutTransaction() failed");
     return EditActionResult(rv);
   }
 
@@ -676,15 +726,16 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "DeleteNodeWithTransaction() failed, but ignored");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
     // XXX I don't think this is necessary because the anonymous `<div>`
     //     element has now only padding `<br>` element even if there are
     //     something.
     IgnoredErrorResult ignoredError;
     SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "Selection::SetInterlinePoisition() failed");
+                         "Selection::SetInterlinePoisition(true) failed");
   }
 
   return EditActionHandled();
@@ -712,7 +763,7 @@ EditActionResult TextEditor::HandleDeleteSelection(
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HandleDeleteSelectionInternal() failed");
+                       "TextEditor::HandleDeleteSelectionInternal() failed");
   return result;
 }
 
@@ -744,21 +795,25 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     if (!SelectionRefPtr()->IsCollapsed()) {
       nsresult rv =
           DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "DeleteSelectionWithTransaction() failed");
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "TextEditor::DeleteSelectionWithTransaction() failed");
       return EditActionHandled(rv);
     }
 
     // Test for distance between caret and text that will be deleted
     EditActionResult result =
         SetCaretBidiLevelForDeletion(selectionStartPoint, aDirectionAndAmount);
-    if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    if (result.Failed() || result.Canceled()) {
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "EditorBase::SetCaretBidiLevelForDeletion() failed");
       return result;
     }
   }
 
   nsresult rv = ExtendSelectionForDelete(&aDirectionAndAmount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING("TextEditor::ExtendSelectionForDelete() failed");
     return EditActionResult(rv);
   }
 
@@ -767,7 +822,7 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteSelectionWithTransaction() failed");
+                       "TextEditor::DeleteSelectionWithTransaction() failed");
   return EditActionHandled(rv);
 }
 
@@ -873,7 +928,8 @@ nsresult TextEditor::EnsurePaddingBRElementInMultilineEditor() {
             endOfAnonymousDiv);
     NS_WARNING_ASSERTION(
         createPaddingBRResult.Succeeded(),
-        "InsertPaddingBRElementForEmptyLastLineWithTransaction() failed");
+        "EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
+        "failed");
     return createPaddingBRResult.Rv();
   }
 
@@ -903,6 +959,7 @@ EditActionResult TextEditor::TruncateInsertionStringForMaxLength(
   int32_t currentLength = INT32_MAX;
   nsresult rv = GetTextLength(&currentLength);
   if (NS_FAILED(rv)) {
+    NS_WARNING("TextEditor::GetTextLength() failed");
     return EditActionResult(rv);
   }
 
