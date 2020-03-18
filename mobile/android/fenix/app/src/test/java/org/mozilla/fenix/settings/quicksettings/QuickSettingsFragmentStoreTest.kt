@@ -38,7 +38,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@UseExperimental(kotlinx.coroutines.ObsoleteCoroutinesApi::class)
 @Config(application = TestApplication::class)
 class QuickSettingsFragmentStoreTest {
     private val context = spyk(testContext)

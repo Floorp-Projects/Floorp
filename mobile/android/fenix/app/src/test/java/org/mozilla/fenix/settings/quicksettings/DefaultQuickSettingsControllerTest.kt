@@ -21,7 +21,6 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.Session
@@ -43,7 +42,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
-@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class DefaultQuickSettingsControllerTest {

@@ -11,7 +11,6 @@ import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -25,7 +24,6 @@ import org.mozilla.fenix.ext.isOnline
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class AppRequestInterceptorTest {

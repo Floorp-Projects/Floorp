@@ -20,7 +20,6 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -62,7 +61,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
-@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class DefaultBrowserToolbarControllerTest {

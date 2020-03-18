@@ -13,7 +13,6 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -36,7 +35,6 @@ import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 @ExperimentalCoroutinesApi
-@UseExperimental(ObsoleteCoroutinesApi::class)
 class DefaultSessionControlControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
