@@ -287,6 +287,7 @@ def expand_exclusions(paths, config, root):
                 continue
 
             yield path
+            continue
 
         ignore = [e[len(path):].lstrip('/') for e in exclude
                   if mozpath.commonprefix((path, e)) == path]
