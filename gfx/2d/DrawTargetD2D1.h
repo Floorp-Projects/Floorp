@@ -244,7 +244,7 @@ class DrawTargetD2D1 : public DrawTarget {
 
   // This function is used to determine if the mDC is still valid; if it is
   // stale, we should avoid using it to execute any draw commands.
-  bool IsDeviceContextValid();
+  bool IsDeviceContextValid() const;
 
   IntSize mSize;
 
