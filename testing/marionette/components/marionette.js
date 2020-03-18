@@ -311,6 +311,10 @@ class MarionetteParentProcess {
       this.enabled = MarionettePrefs.enabled;
     }
 
+    if (this.enabled) {
+      log.trace(`Marionette enabled`);
+    }
+
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
   }
 
@@ -330,13 +334,13 @@ class MarionetteParentProcess {
   }
 
   observe(subject, topic) {
-    log.trace(`Received observer notification ${topic}`);
+    if (this.enabled) {
+      log.trace(`Received observer notification ${topic}`);
+    }
 
     switch (topic) {
       case "profile-after-change":
         Services.obs.addObserver(this, "command-line-startup");
-        Services.obs.addObserver(this, "toplevel-window-ready");
-        Services.obs.addObserver(this, "marionette-startup-requested");
         break;
 
       // In safe mode the command line handlers are getting parsed after the
@@ -347,10 +351,14 @@ class MarionetteParentProcess {
         Services.obs.removeObserver(this, topic);
 
         if (!this.enabled && subject.handleFlag("marionette", false)) {
+          log.trace(`Marionette enabled`);
           this.enabled = true;
         }
 
         if (this.enabled) {
+          Services.obs.addObserver(this, "toplevel-window-ready");
+          Services.obs.addObserver(this, "marionette-startup-requested");
+
           // Only set preferences to preserve in a new profile
           // when Marionette is enabled.
           for (let [pref, value] of EnvironmentPrefs.from(ENV_PRESERVE_PREFS)) {
