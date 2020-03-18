@@ -472,6 +472,20 @@ class EditorDOMPointBase final {
     MOZ_ASSERT(aContainer.get());
     return After(*aContainer.get());
   }
+  template <typename PT, typename CT>
+  MOZ_NEVER_INLINE_DEBUG static SelfType After(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
+    MOZ_ASSERT(aPoint.IsSet());
+    if (aPoint.mChild) {
+      return After(*aPoint.mChild);
+    }
+    if (NS_WARN_IF(aPoint.IsEndOfContainer())) {
+      return SelfType();
+    }
+    SelfType point(aPoint);
+    MOZ_ALWAYS_TRUE(point.AdvanceOffset());
+    return point;
+  }
 
   /**
    * NextPoint() and PreviousPoint() returns next/previous DOM point in
