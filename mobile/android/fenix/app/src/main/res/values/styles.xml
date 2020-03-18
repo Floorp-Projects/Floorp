@@ -10,7 +10,7 @@
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
-        <item name="android:statusBarColor">@color/foundation_normal_theme</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/foundation_normal_theme</item>
         <item name="android:colorEdgeEffect">@color/accent_normal_theme</item>
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
@@ -106,7 +106,7 @@
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
-        <item name="android:statusBarColor">@color/foundation_private_theme</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/foundation_private_theme</item>
         <item name="android:colorEdgeEffect">@color/accent_private_theme</item>
         <item name="android:colorAccent">@color/primary_text_private_theme</item>

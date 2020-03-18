@@ -7,7 +7,6 @@
         <!-- Style the status bar -->
         <!-- We have to pull in the changes from v23/styles.xml to make
             sure we also get them in 27+ -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">@bool/theme_is_light</item>
 
         <!-- Style the navigation bar -->
@@ -19,7 +18,6 @@
         <!-- Style the status bar -->
         <!-- We have to pull in the changes from v23/styles.xml to make
             sure we also get them in 27+ -->
-        <item name="android:statusBarColor">@color/foundation_private_theme</item>
         <item name="android:windowLightStatusBar">false</item>
 
         <!-- Style the navigation bar -->

@@ -8,6 +8,7 @@ import android.animation.Animator
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -41,8 +42,19 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_home.*
-import kotlinx.android.synthetic.main.fragment_home.view.*
+import kotlinx.android.synthetic.main.fragment_home.homeAppBar
+import kotlinx.android.synthetic.main.fragment_home.privateBrowsingButton
+import kotlinx.android.synthetic.main.fragment_home.search_engine_icon
+import kotlinx.android.synthetic.main.fragment_home.toolbarLayout
+import kotlinx.android.synthetic.main.fragment_home.view.add_tab_button
+import kotlinx.android.synthetic.main.fragment_home.view.bottomBarShadow
+import kotlinx.android.synthetic.main.fragment_home.view.bottom_bar
+import kotlinx.android.synthetic.main.fragment_home.view.homeAppBar
+import kotlinx.android.synthetic.main.fragment_home.view.menuButton
+import kotlinx.android.synthetic.main.fragment_home.view.sessionControlRecyclerView
+import kotlinx.android.synthetic.main.fragment_home.view.toolbar
+import kotlinx.android.synthetic.main.fragment_home.view.toolbarLayout
+import kotlinx.android.synthetic.main.fragment_home.view.toolbar_wrapper
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -486,11 +498,24 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        if (browsingModeManager.mode == BrowsingMode.Private) {
+            activity?.window?.setBackgroundDrawableResource(R.drawable.private_home_background_gradient)
+        }
         hideToolbar()
     }
 
     override fun onPause() {
         super.onPause()
+        if (browsingModeManager.mode == BrowsingMode.Private) {
+            activity?.window?.setBackgroundDrawable(
+                ColorDrawable(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.foundation_private_theme
+                    )
+                )
+            )
+        }
         calculateNewOffset()
     }
 
