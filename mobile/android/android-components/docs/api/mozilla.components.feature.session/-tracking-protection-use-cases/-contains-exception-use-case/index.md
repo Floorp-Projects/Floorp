@@ -2,7 +2,7 @@
 
 # ContainsExceptionUseCase
 
-`class ContainsExceptionUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L95)
+`class ContainsExceptionUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L103)
 
 Use case for verifying if a [Session](../../../mozilla.components.browser.session/-session/index.md) is in the exception list.
 
