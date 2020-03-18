@@ -767,7 +767,7 @@ class GCRuntime {
                                    Arena*& relocatedListOut,
                                    SliceBudget& sliceBudget);
   void updateTypeDescrObjects(MovingTracer* trc, Zone* zone);
-  void updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount);
+  void updateCellPointers(Zone* zone, AllocKinds kinds);
   void updateAllCellPointers(MovingTracer* trc, Zone* zone);
   void updateZonePointersToRelocatedCells(Zone* zone);
   void updateRuntimePointersToRelocatedCells(AutoGCSession& session);

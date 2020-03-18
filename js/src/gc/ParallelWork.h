@@ -86,6 +86,8 @@ class ParallelWorker : public GCParallelTask {
 
 static constexpr size_t MaxParallelWorkers = 8;
 
+extern size_t ParallelWorkerCount();
+
 // An RAII class that starts a number of ParallelWorkers and waits for them to
 // finish.
 template <typename WorkItem, typename WorkItemIterator>
@@ -96,9 +98,10 @@ class MOZ_RAII AutoRunParallelWork {
 
   AutoRunParallelWork(GCRuntime* gc, WorkFunc func,
                       gcstats::PhaseKind phaseKind, WorkItemIterator& work,
-                      size_t workerCount, const SliceBudget& budget,
+                      const SliceBudget& budget,
                       AutoLockHelperThreadState& lock)
       : gc(gc), phaseKind(phaseKind), lock(lock), tasksStarted(0) {
+    size_t workerCount = ParallelWorkerCount();
     MOZ_ASSERT(workerCount <= MaxParallelWorkers);
     MOZ_ASSERT_IF(workerCount == 0, work.done());
 
