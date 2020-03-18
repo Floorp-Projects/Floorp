@@ -67,16 +67,6 @@ struct MOZ_STACK_CLASS GCThingList {
     }
     return true;
   }
-  MOZ_MUST_USE bool append(Scope* scope, uint32_t* index) {
-    *index = vector.length();
-    if (!vector.append(mozilla::AsVariant(JS::GCCellPtr(scope)))) {
-      return false;
-    }
-    if (!firstScopeIndex) {
-      firstScopeIndex.emplace(*index);
-    }
-    return true;
-  }
   MOZ_MUST_USE bool append(BigIntLiteral* literal, uint32_t* index) {
     *index = vector.length();
     return vector.append(mozilla::AsVariant(literal->index()));
@@ -91,19 +81,25 @@ struct MOZ_STACK_CLASS GCThingList {
   }
   MOZ_MUST_USE bool append(FunctionBox* funbox, uint32_t* index);
 
+  MOZ_MUST_USE bool appendEmptyGlobalScope(uint32_t* index) {
+    *index = vector.length();
+    EmptyGlobalScopeType emptyGlobalScope;
+    if (!vector.append(mozilla::AsVariant(emptyGlobalScope))) {
+      return false;
+    }
+    if (!firstScopeIndex) {
+      firstScopeIndex.emplace(*index);
+    }
+    return true;
+  }
+
   uint32_t length() const { return vector.length(); }
 
   const ScriptThingsVector& objects() { return vector; }
 
   void finishInnerFunctions();
 
-  AbstractScopePtr getScope(size_t index) const {
-    auto& elem = vector[index].get();
-    if (elem.is<JS::GCCellPtr>()) {
-      return AbstractScopePtr(&elem.as<JS::GCCellPtr>().as<Scope>());
-    }
-    return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
-  }
+  AbstractScopePtr getScope(size_t index) const;
 
   AbstractScopePtr firstScope() const {
     MOZ_ASSERT(firstScopeIndex.isSome());
