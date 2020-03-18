@@ -126,7 +126,10 @@ add_task(async function() {
     const conn = transport._serverConnection;
     const client = new DevToolsClient(transport);
     const actor = await connectToFrame(conn, browser);
-    ok(actor.connectToFrameTestActor, "Got a test actor for the second connection");
+    ok(
+      actor.connectToFrameTestActor,
+      "Got a test actor for the second connection"
+    );
     isnot(
       actor.connectToFrameTestActor,
       firstActor,
