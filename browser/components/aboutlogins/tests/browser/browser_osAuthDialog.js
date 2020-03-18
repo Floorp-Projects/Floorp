@@ -16,6 +16,18 @@ add_task(async function test() {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 
+  info(
+    `updatechannel: ${UpdateUtils.getUpdateChannel(false)}; platform: ${
+      AppConstants.platform
+    }`
+  );
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    ok(
+      true,
+      `skipping test since oskeystore cannot be automated in this environment`
+    );
+  }
+
   // Show OS auth dialog when Reveal Password checkbox is checked if not on a new login
   let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
