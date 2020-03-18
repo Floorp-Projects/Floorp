@@ -88,6 +88,26 @@ static nsresult ReauthenticateUserWindows(const nsACString& aMessageText,
                                           /* out */ bool& reauthenticated) {
   reauthenticated = false;
 
+  // Check if the user has a blank password before proceeding
+  DWORD usernameLength = CREDUI_MAX_USERNAME_LENGTH + 1;
+  WCHAR username[CREDUI_MAX_USERNAME_LENGTH + 1] = {0};
+  if (GetUserName(username, &usernameLength)) {
+    HANDLE logonUserHandle = nullptr;
+    bool result = LogonUser(username, L".", L"", LOGON32_LOGON_INTERACTIVE,
+                            LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
+    // ERROR_ACCOUNT_RESTRICTION: Indicates a referenced user name and
+    // authentication information are valid, but some user account restriction
+    // has prevented successful authentication (such as time-of-day
+    // restrictions).
+    if (result || GetLastError() == ERROR_ACCOUNT_RESTRICTION) {
+      if (logonUserHandle && logonUserHandle != INVALID_HANDLE_VALUE) {
+        CloseHandle(logonUserHandle);
+      }
+      reauthenticated = true;
+      return NS_OK;
+    }
+  }
+
   // Is used in next iteration if the previous login failed.
   DWORD err = 0;
   uint8_t numAttempts = 3;
