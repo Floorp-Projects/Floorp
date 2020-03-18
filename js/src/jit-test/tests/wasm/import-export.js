@@ -272,7 +272,7 @@ var text = `(module
     (export "f2" $f)
     (export "tbl2" table)
     (export "f3" $h)
-    (func (export "run") (result i32) (call_indirect 0 (i32.const 2)))
+    (func (export "run") (result i32) (call_indirect (type 0) (i32.const 2)))
 )`;
 wasmFullPass(text, 2);
 var e = new Instance(new Module(wasmTextToBinary(text))).exports;
@@ -664,7 +664,7 @@ var i2 = new Instance(new Module(wasmTextToBinary(`(module
     (elem (i32.const 0) $imp $def)
     (func $def (result i32) (i32.load (i32.const 0)))
     (type $v2i (func (result i32)))
-    (func $call (param i32) (result i32) (call_indirect $v2i (local.get 0)))
+    (func $call (param i32) (result i32) (call_indirect (type $v2i) (local.get 0)))
     (export "call" $call)
 )`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.call(0), 0x42);
