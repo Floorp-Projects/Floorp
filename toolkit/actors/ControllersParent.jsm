@@ -16,6 +16,16 @@ class ControllersParent extends JSWindowActorParent {
     this.supportedCommands = {};
   }
 
+  get browser() {
+    let browser = this.browsingContext.top.embedderElement;
+    if (browser) {
+      if (browser.outerBrowser) {
+        browser = browser.outerBrowser; // handle RDM
+      }
+    }
+    return browser;
+  }
+
   // Update the set of enabled and disabled commands.
   enableDisableCommands(aAction, aEnabledCommands, aDisabledCommands) {
     // Clear the list first
@@ -29,12 +39,8 @@ class ControllersParent extends JSWindowActorParent {
       this.supportedCommands[command] = false;
     }
 
-    let browser = this.browsingContext.top.embedderElement;
+    let browser = this.browser;
     if (browser) {
-      if (browser.outerBrowser) {
-        browser = browser.outerBrowser; // handle RDM
-      }
-
       browser.ownerGlobal.updateCommands(aAction);
     }
   }
@@ -64,8 +70,9 @@ class ControllersParent extends JSWindowActorParent {
       // Although getBoundingClientRect of the element is logical pixel, but
       // x and y parameter of cmd_lookUpDictionary are device pixel.
       // So we need calculate child process's coordinate using correct unit.
-      let rect = this._browser.getBoundingClientRect();
-      let scale = this._browser.ownerGlobal.devicePixelRatio;
+      let browser = this.browser;
+      let rect = browser.getBoundingClientRect();
+      let scale = browser.ownerGlobal.devicePixelRatio;
       cmd.params = {
         x: {
           type: "long",
