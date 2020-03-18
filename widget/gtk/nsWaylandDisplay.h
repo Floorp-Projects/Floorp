@@ -93,7 +93,6 @@ class nsWaylandDisplay {
   static bool IsDMABufTexturesEnabled();
   static bool IsDMABufWebGLEnabled();
   static bool IsDMABufVAAPIEnabled();
-  static int GetRenderingCacheModePref();
 
  private:
   bool ConfigureGbm();

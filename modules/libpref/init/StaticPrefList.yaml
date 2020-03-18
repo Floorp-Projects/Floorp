@@ -8615,15 +8615,6 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
-
-# Wayland basic (non-accelerated) compositor cache mode.
-# 0 = Default (everything is cached).
-# 1 = Cache only missing drawing.
-# 2 = No cache
-- name: widget.wayland-cache-mode
-  type: RelaxedAtomicInt32
-  value: 0
-  mirror: always
 #endif
 
 #---------------------------------------------------------------------------
