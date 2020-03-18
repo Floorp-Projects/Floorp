@@ -442,6 +442,22 @@ DistributionCustomizer.prototype = {
       }
     }
 
+    if (this._ini.getString("Global", "id") == "yandex") {
+      // All yandex distributions have the same distribution ID,
+      // so we're using an internal preference to name them correctly.
+      // This is needed for search to work properly.
+      try {
+        defaults.set(
+          "distribution.id",
+          defaults
+            .get("extensions.yasearch@yandex.ru.clids.vendor")
+            .replace("firefox", "yandex")
+        );
+      } catch (e) {
+        // Just use the default distribution ID.
+      }
+    }
+
     let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
       Ci.nsIPrefLocalizedString
     );
