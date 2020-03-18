@@ -194,7 +194,8 @@ function makeModule(id) {
             return ((val << (pos * VALSHIFT)) + 0x100000000).toString(16).substring(1);
         }
 
-        let tag = bits < 32 ? bits + '_u' : '';
+        let width = bits < 32 ? '' + bits : '';
+        let view = bits < 32 ? '_u' : '';
         let prefix = bits == 64 ? 'i64' : 'i32';
         return `
  (func ${name} (param $barrierValue i32) (result i32)
@@ -205,7 +206,7 @@ function makeModule(id) {
     (if (local.get $n)
         (block
          ${isMaster ? `;; Init
-(${prefix}.atomic.store${tag} ${loc} (${prefix}.const ${distribute(initial)}))` : ``}
+(${prefix}.atomic.store${width} ${loc} (${prefix}.const ${distribute(initial)}))` : ``}
          ${barrier}
 
 ${(() => {
@@ -216,7 +217,7 @@ ${(() => {
         // we would avoid fences in that case.
         if (op.match(/cmpxchg/)) {
             s += `(loop $doit
-                   (local.set $tmp (${prefix}.atomic.load${tag} ${loc}))
+                   (local.set $tmp (${prefix}.atomic.load${width}${view} ${loc}))
                    (br_if $doit (i32.eqz
                                  (${prefix}.eq
                                   (local.get $tmp)
@@ -230,7 +231,7 @@ ${(() => {
     return s
 })()}
          (loop $wait_done
-          (br_if $wait_done (${prefix}.ne (${prefix}.atomic.load${tag} ${loc}) (${prefix}.const ${distribute(expected)}))))
+          (br_if $wait_done (${prefix}.ne (${prefix}.atomic.load${width}${view} ${loc}) (${prefix}.const ${distribute(expected)}))))
          ${barrier}
          (local.set $n (i32.sub (local.get $n) (i32.const 1)))
          (br $outer))))
@@ -270,21 +271,21 @@ ${(() => {
     return `
 (module
  (import "" "memory" (memory 1 1 shared))
- (import $print "" "print" (param i32))
+ (import "" "print" (func $print (param i32)))
 
- ${makeLoop(8, "$test_add8", "i32.atomic.rmw8_u.add", ADDLOC, ADDINIT, ADDVAL[id], ADDRESULT)}
- ${makeLoop(8, "$test_sub8", "i32.atomic.rmw8_u.sub", SUBLOC, SUBINIT, SUBVAL[id], SUBRESULT)}
- ${makeLoop(8, "$test_and8", "i32.atomic.rmw8_u.and", ANDLOC, ANDINIT, ANDVAL[id], ANDRESULT)}
- ${makeLoop(8, "$test_or8", "i32.atomic.rmw8_u.or",   ORLOC, ORINIT, ORVAL[id], ORRESULT)}
- ${makeLoop(8, "$test_xor8", "i32.atomic.rmw8_u.xor", XORLOC, XORINIT, XORVAL[id], XORRESULT)}
- ${makeLoop(8, "$test_cmpxchg8", "i32.atomic.rmw8_u.cmpxchg", CMPXCHGLOC, CMPXCHGINIT, CMPXCHGVAL[id], CMPXCHGRESULT)}
+ ${makeLoop(8, "$test_add8", "i32.atomic.rmw8.add_u", ADDLOC, ADDINIT, ADDVAL[id], ADDRESULT)}
+ ${makeLoop(8, "$test_sub8", "i32.atomic.rmw8.sub_u", SUBLOC, SUBINIT, SUBVAL[id], SUBRESULT)}
+ ${makeLoop(8, "$test_and8", "i32.atomic.rmw8.and_u", ANDLOC, ANDINIT, ANDVAL[id], ANDRESULT)}
+ ${makeLoop(8, "$test_or8", "i32.atomic.rmw8.or_u",   ORLOC, ORINIT, ORVAL[id], ORRESULT)}
+ ${makeLoop(8, "$test_xor8", "i32.atomic.rmw8.xor_u", XORLOC, XORINIT, XORVAL[id], XORRESULT)}
+ ${makeLoop(8, "$test_cmpxchg8", "i32.atomic.rmw8.cmpxchg_u", CMPXCHGLOC, CMPXCHGINIT, CMPXCHGVAL[id], CMPXCHGRESULT)}
 
- ${makeLoop(16, "$test_add16", "i32.atomic.rmw16_u.add", ADDLOC, ADDINIT, ADDVAL[id], ADDRESULT)}
- ${makeLoop(16, "$test_sub16", "i32.atomic.rmw16_u.sub", SUBLOC, SUBINIT, SUBVAL[id], SUBRESULT)}
- ${makeLoop(16, "$test_and16", "i32.atomic.rmw16_u.and", ANDLOC, ANDINIT, ANDVAL[id], ANDRESULT)}
- ${makeLoop(16, "$test_or16", "i32.atomic.rmw16_u.or",   ORLOC, ORINIT, ORVAL[id], ORRESULT)}
- ${makeLoop(16, "$test_xor16", "i32.atomic.rmw16_u.xor", XORLOC, XORINIT, XORVAL[id], XORRESULT)}
- ${makeLoop(16, "$test_cmpxchg16", "i32.atomic.rmw16_u.cmpxchg", CMPXCHGLOC, CMPXCHGINIT, CMPXCHGVAL[id], CMPXCHGRESULT)}
+ ${makeLoop(16, "$test_add16", "i32.atomic.rmw16.add_u", ADDLOC, ADDINIT, ADDVAL[id], ADDRESULT)}
+ ${makeLoop(16, "$test_sub16", "i32.atomic.rmw16.sub_u", SUBLOC, SUBINIT, SUBVAL[id], SUBRESULT)}
+ ${makeLoop(16, "$test_and16", "i32.atomic.rmw16.and_u", ANDLOC, ANDINIT, ANDVAL[id], ANDRESULT)}
+ ${makeLoop(16, "$test_or16", "i32.atomic.rmw16.or_u",   ORLOC, ORINIT, ORVAL[id], ORRESULT)}
+ ${makeLoop(16, "$test_xor16", "i32.atomic.rmw16.xor_u", XORLOC, XORINIT, XORVAL[id], XORRESULT)}
+ ${makeLoop(16, "$test_cmpxchg16", "i32.atomic.rmw16.cmpxchg_u", CMPXCHGLOC, CMPXCHGINIT, CMPXCHGVAL[id], CMPXCHGRESULT)}
 
  ${makeLoop(32, "$test_add", "i32.atomic.rmw.add", ADDLOC, ADDINIT, ADDVAL[id], ADDRESULT)}
  ${makeLoop(32, "$test_sub", "i32.atomic.rmw.sub", SUBLOC, SUBINIT, SUBVAL[id], SUBRESULT)}
