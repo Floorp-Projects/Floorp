@@ -37,7 +37,7 @@ const cols = {
   scheme: false,
   remoteip: false,
   cause: true,
-  initiator: false,
+  initiator: true,
   type: true,
   cookies: false,
   setCookies: false,
