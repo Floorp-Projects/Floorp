@@ -159,7 +159,7 @@ nsresult ChannelFromScriptURL(
 
   bool isData = uri->SchemeIs("data");
   bool isURIUniqueOrigin =
-      net::nsIOService::IsDataURIUniqueOpaqueOrigin() && isData;
+      StaticPrefs::security_data_uri_unique_opaque_origin() && isData;
   if (inheritAttrs && !isURIUniqueOrigin) {
     secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
