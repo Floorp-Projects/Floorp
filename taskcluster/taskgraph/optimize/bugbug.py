@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
+import time
 
 import requests
 from mozbuild.util import memoize, memoized_property
@@ -20,24 +21,30 @@ logger = logging.getLogger(__name__)
 @register_strategy("bugbug-push-schedules")
 class BugBugPushSchedules(OptimizationStrategy):
     BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
+    RETRY_TIMEOUT = 4 * 60  # seconds
+    RETRY_INTERVAL = 5      # seconds
 
     @memoized_property
     def session(self):
         s = requests.Session()
         s.headers.update({'X-API-KEY': 'gecko-taskgraph'})
-
-        return requests_retry_session(
-            retries=10,
-            backoff_factor=0.9,
-            status_forcelist=(202,),
-            session=s,
-        )
+        return requests_retry_session(retries=5, session=s)
 
     @memoize
     def run_query(self, query, data=None):
         url = self.BUGBUG_BASE_URL + query
-        r = self.session.get(url)
-        r.raise_for_status()
+
+        attempts = self.RETRY_TIMEOUT / self.RETRY_INTERVAL
+        i = 0
+        while i < attempts:
+            r = self.session.get(url)
+            r.raise_for_status()
+
+            if r.status_code != 202:
+                break
+
+            time.sleep(self.RETRY_INTERVAL)
+
         data = r.json()
         logger.debug("Bugbug scheduler service returns:\n{}".format(
                      json.dumps(data, indent=2)))
