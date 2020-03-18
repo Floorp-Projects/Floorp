@@ -1186,7 +1186,7 @@ void BacktrackingAllocator::allocateStackDefinition(VirtualRegister& reg) {
     const LUse* use = ins->getOperand(0)->toUse();
     VirtualRegister& area = vregs[use->virtualRegister()];
     const LStackArea* areaAlloc = area.def()->output()->toStackArea();
-    reg.def()->setOutput(areaAlloc->resultAlloc(ins));
+    reg.def()->setOutput(areaAlloc->resultAlloc(ins, reg.def()));
   }
 }
 

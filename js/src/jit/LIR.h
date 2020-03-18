@@ -35,6 +35,7 @@ class LStackArea;
 class LArgument;
 class LConstantIndex;
 class LInstruction;
+class LDefinition;
 class MBasicBlock;
 class MIRGenerator;
 
@@ -408,7 +409,7 @@ class LStackArea : public LAllocation {
 
   ResultIterator results() const { return ResultIterator(*this); }
 
-  inline LStackSlot resultAlloc(LInstruction* lir) const;
+  inline LStackSlot resultAlloc(LInstruction* lir, LDefinition* def) const;
 };
 
 // Arguments are reverse indices into the stack. The indices are byte indices.
