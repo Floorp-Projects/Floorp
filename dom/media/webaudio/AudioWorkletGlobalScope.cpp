@@ -336,8 +336,7 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
       CallbackFunction::eReportExceptions);
   // https://github.com/WebAudio/web-audio-api/issues/2096
   mPortForProcessor = nullptr;
-  if (rv.Failed()) {
-    rv.SuppressException();  // already reported
+  if (rv.MaybeSetPendingException(aCx)) {
     return false;
   }
   JS::Rooted<JS::Value> processorVal(aCx);
