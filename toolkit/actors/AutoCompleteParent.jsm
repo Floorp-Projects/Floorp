@@ -254,14 +254,73 @@ class AutoCompleteParent extends JSWindowActorParent {
       false
     );
     this.openedPopup.invalidate();
-    this._maybeRecordPasswordGenerationShownTelemetryEvent(results);
+    this._maybeRecordTelemetryEvents(results);
   }
 
-  _maybeRecordPasswordGenerationShownTelemetryEvent(results) {
+  /**
+   * @param {object[]} results - Non-empty array of autocomplete results.
+   */
+  _maybeRecordTelemetryEvents(results) {
     let actor = this.browsingContext.currentWindowGlobal.getActor(
       "LoginManager"
     );
     actor.maybeRecordPasswordGenerationShownTelemetryEvent(results);
+
+    // Assume the result with the start time (loginsFooter) is last.
+    let lastResult = results[results.length - 1];
+    if (lastResult.style != "loginsFooter") {
+      return;
+    }
+
+    // The comment field of `loginsFooter` results have many additional pieces of
+    // information for telemetry purposes. After bug 1555209, this information
+    // can be passed to the parent process outside of nsIAutoCompleteResult APIs
+    // so we won't need this hack.
+    let rawExtraData = JSON.parse(lastResult.comment);
+    if (!rawExtraData.searchStartTimeMS) {
+      throw new Error("Invalid autocomplete search start time");
+    }
+
+    if (rawExtraData.stringLength > 1) {
+      // To reduce event volume, only record for lengths 0 and 1.
+      return;
+    }
+
+    let duration =
+      Services.telemetry.msSystemNow() - rawExtraData.searchStartTimeMS;
+    delete rawExtraData.searchStartTimeMS;
+
+    delete rawExtraData.formHostname;
+
+    // Add counts by result style to rawExtraData.
+    results.reduce((accumulated, r) => {
+      // Keys can be a maximum of 15 characters and values must be strings.
+      let truncatedStyle = r.style.substring(0, 15);
+      accumulated[truncatedStyle] = (accumulated[truncatedStyle] || 0) + 1;
+      return accumulated;
+    }, rawExtraData);
+
+    // Convert extra values to strings since recordEvent requires that.
+    let extraStrings = Object.fromEntries(
+      Object.entries(rawExtraData).map(([key, val]) => {
+        let stringVal = "";
+        if (typeof val == "boolean") {
+          stringVal += val ? "1" : "0";
+        } else {
+          stringVal += val;
+        }
+        return [key, stringVal];
+      })
+    );
+
+    Services.telemetry.recordEvent(
+      "form_autocomplete",
+      "show",
+      "logins",
+      // Convert to a string
+      duration + "",
+      extraStrings
+    );
   }
 
   invalidate(results) {
@@ -274,7 +333,7 @@ class AutoCompleteParent extends JSWindowActorParent {
     } else {
       AutoCompleteResultView.setResults(this, results);
       this.openedPopup.invalidate();
-      this._maybeRecordPasswordGenerationShownTelemetryEvent(results);
+      this._maybeRecordTelemetryEvents(results);
     }
   }
 
