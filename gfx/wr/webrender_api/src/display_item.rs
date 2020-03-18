@@ -78,8 +78,6 @@ pub struct CommonItemProperties {
     pub hit_info: Option<ItemTag>,
     /// Various flags describing properties of this primitive.
     pub flags: PrimitiveFlags,
-    /// The unique id of this display item.
-    pub item_key: Option<ItemKey>
 }
 
 impl CommonItemProperties {
@@ -94,7 +92,6 @@ impl CommonItemProperties {
             clip_id: space_and_clip.clip_id,
             hit_info: None,
             flags: PrimitiveFlags::default(),
-            item_key: None,
         }
     }
 }
