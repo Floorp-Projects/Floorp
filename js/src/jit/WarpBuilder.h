@@ -129,6 +129,32 @@ namespace jit {
   _(GetGName)               \
   _(BindName)               \
   _(BindGName)              \
+  _(GetProp)                \
+  _(CallProp)               \
+  _(Length)                 \
+  _(GetElem)                \
+  _(CallElem)               \
+  _(SetProp)                \
+  _(StrictSetProp)          \
+  _(SetName)                \
+  _(StrictSetName)          \
+  _(SetElem)                \
+  _(StrictSetElem)          \
+  _(DelProp)                \
+  _(StrictDelProp)          \
+  _(DelElem)                \
+  _(StrictDelElem)          \
+  _(SetFunName)             \
+  _(PushLexicalEnv)         \
+  _(PopLexicalEnv)          \
+  _(FreshenLexicalEnv)      \
+  _(RecreateLexicalEnv)     \
+  _(ImplicitThis)           \
+  _(GImplicitThis)          \
+  _(CheckClassHeritage)     \
+  _(CheckThis)              \
+  _(CheckThisReinit)        \
+  _(CheckReturn)            \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -218,6 +244,12 @@ class MOZ_STACK_CLASS WarpBuilder {
 
   MOZ_MUST_USE bool buildGetNameOp(BytecodeLocation loc, MDefinition* env);
   MOZ_MUST_USE bool buildBindNameOp(BytecodeLocation loc, MDefinition* env);
+  MOZ_MUST_USE bool buildGetPropOp(BytecodeLocation loc, MDefinition* val,
+                                   MDefinition* id);
+  MOZ_MUST_USE bool buildSetPropOp(BytecodeLocation loc, MDefinition* obj,
+                                   MDefinition* id, MDefinition* val);
+
+  void buildCopyLexicalEnvOp(bool copySlots);
 
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
