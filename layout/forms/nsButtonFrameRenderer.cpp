@@ -232,7 +232,6 @@ bool nsDisplayButtonBorder::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   // This is really a combination of paint box shadow inner +
   // paint border.
-  aBuilder.StartGroup(this);
   const nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
   bool snap;
   nsRegion visible = GetBounds(aDisplayListBuilder, &snap);
@@ -245,17 +244,11 @@ bool nsDisplayButtonBorder::CreateWebRenderCommands(
       nsRect(ToReferenceFrame(), mFrame->GetSize()), mFrame->Style(),
       &borderIsEmpty, mFrame->GetSkipSides());
   if (!br) {
-    if (borderIsEmpty) {
-      aBuilder.FinishGroup();
-    } else {
-      aBuilder.CancelGroup();
-    }
-
     return borderIsEmpty;
   }
 
   br->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
-  aBuilder.FinishGroup();
+
   return true;
 }
 
@@ -380,10 +373,7 @@ bool nsDisplayButtonForeground::CreateWebRenderCommands(
     return borderIsEmpty;
   }
 
-  aBuilder.StartGroup(this);
   br->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
-  aBuilder.FinishGroup();
-
   return true;
 }
 

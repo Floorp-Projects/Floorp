@@ -2308,12 +2308,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
 
   void SetCantBeReused() { mItemFlags += ItemBaseFlag::CantBeReused; }
 
-  bool CanBeCached() const {
-    return !mItemFlags.contains(ItemBaseFlag::CantBeCached);
-  }
-
-  void SetCantBeCached() { mItemFlags += ItemBaseFlag::CantBeCached; }
-
   bool IsOldItem() const { return !!mOldList; }
 
   /**
@@ -2415,7 +2409,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
  private:
   enum class ItemBaseFlag : uint8_t {
     CantBeReused,
-    CantBeCached,
     DeletedFrame,
     ModifiedFrame,
     ReusedItem,
