@@ -233,6 +233,7 @@ function terminalInputChanged(expression) {
 
     // There's no need to evaluate an empty string.
     if (!expression || !expression.trim()) {
+    // eslint-disable-next-line consistent-return
       return dispatch({
         type: SET_TERMINAL_EAGER_RESULT,
         expression,
