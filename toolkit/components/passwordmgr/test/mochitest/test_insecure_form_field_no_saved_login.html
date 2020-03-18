@@ -83,6 +83,14 @@ add_task(async function test_form1_warning_entry() {
   is(popupState.open, true, "Check popup is opened");
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
+  let acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
+  is(acEvents.length, 1, "One autocomplete event");
+  checkACTelemetryEvent(acEvents[0], uname, {
+    "hadPrevious": "0",
+    "insecureWarning": "1",
+    "loginsFooter": "1"
+  });
+
   synthesizeKey("KEY_ArrowDown"); // select insecure warning
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");

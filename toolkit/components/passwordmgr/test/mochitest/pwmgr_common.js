@@ -587,6 +587,9 @@ SimpleTest.registerCleanupFunction(() => {
         note.remove();
       }
     }
+
+    // Clear events last in case the above cleanup records events.
+    Services.telemetry.clearEvents();
   });
 });
 
