@@ -46,7 +46,7 @@ const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope, SyncStatusObserver {
     private lateinit var keyStorage: SecureAbove22Preferences
 
-    private val loginsStorage by lazy {
+    private val loginsStorage = lazy {
         SyncableLoginsStorage(this, keyStorage.getString(SyncEngine.Passwords.nativeName)!!)
     }
 
@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         Toast.makeText(this@MainActivity, "Logins sync success", Toast.LENGTH_SHORT).show()
 
         launch {
-            val syncedLogins = loginsStorage.list()
+            val syncedLogins = loginsStorage.value.list()
             adapter.addAll(syncedLogins.map { "Login: " + it.origin })
             adapter.notifyDataSetChanged()
         }

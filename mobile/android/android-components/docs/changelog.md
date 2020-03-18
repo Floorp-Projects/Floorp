@@ -24,6 +24,15 @@ permalink: /changelog/
   *  ⚠️ **This is a breaking change**: `FxaWebChannelFeature` takes a `ServerConfig` as 4th parameter to ensure incoming WebChannel messages
      are sent by the expected FxA host.
 
+* **service-sync-logins**
+  * ⚠️ **This is a breaking change**: `DefaultLoginValidationDelegate`, `GeckoLoginStorageDelegate` constructors changed to take `Lazy<LoginsStorage>` instead of `LoginsStorage`, to facilitate late initialization.
+
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**: `GlobalSyncableStoreProvider#configureStore` changed to take `Lazy<SyncableStore>` instead of `SyncableStore`, to facilitate late initialization.
+
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `HistoryDelegate` constructor changed to take `Lazy<HistoryStorage>` instead of `HistoryStorage`, to facilitate late initialization.
+
 # 36.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v35.0.0...v36.0.0)

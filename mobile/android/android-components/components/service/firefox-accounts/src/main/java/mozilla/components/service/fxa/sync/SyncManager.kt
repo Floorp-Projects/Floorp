@@ -76,18 +76,18 @@ interface SyncStatusObserver {
  * available instances of stores within an application.
  */
 object GlobalSyncableStoreProvider {
-    private val stores: MutableMap<String, SyncableStore> = mutableMapOf()
+    private val stores: MutableMap<String, Lazy<SyncableStore>> = mutableMapOf()
 
     /**
      * Configure an instance of [SyncableStore] for a [SyncEngine] enum.
      * @param storePair A pair associating [SyncableStore] with a [SyncEngine].
      */
-    fun configureStore(storePair: Pair<SyncEngine, SyncableStore>) {
+    fun configureStore(storePair: Pair<SyncEngine, Lazy<SyncableStore>>) {
         stores[storePair.first.nativeName] = storePair.second
     }
 
     internal fun getStore(name: String): SyncableStore? {
-        return stores[name]
+        return stores[name]?.value
     }
 }
 
