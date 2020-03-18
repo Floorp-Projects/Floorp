@@ -43,6 +43,7 @@ this.LoginHelper = {
     Services.prefs.addObserver("signon.", () => this.updateSignonPrefs());
     this.updateSignonPrefs();
     Services.telemetry.setEventRecordingEnabled("pwmgr", true);
+    Services.telemetry.setEventRecordingEnabled("form_autocomplete", true);
   },
 
   updateSignonPrefs() {

@@ -172,6 +172,14 @@ add_task(async function test_form1_menuitems() {
                            "zzzuser4"];
   checkAutoCompleteResults(results, expectedMenuItems, "example.com", "Check all menuitems are displayed correctly.");
 
+  let acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
+  is(acEvents.length, 1, "One autocomplete event");
+  checkACTelemetryEvent(acEvents[0], uname, {
+    "hadPrevious": "0",
+    "loginWithOrigin": expectedMenuItems.length + "",
+    "loginsFooter": "1"
+  });
+
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by opening
   synthesizeKey("KEY_Escape");
   await promiseACPopupClosed();
