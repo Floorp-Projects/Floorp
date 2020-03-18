@@ -212,7 +212,8 @@ class DefaultToolbarMenu(
             primaryTextColor(),
         highlight = BrowserMenuHighlight.HighPriority(
             endImageResource = R.drawable.ic_sync_disconnected,
-            backgroundTint = context.getColorFromAttr(R.attr.syncDisconnectedBackground)
+            backgroundTint = context.getColorFromAttr(R.attr.syncDisconnectedBackground),
+            canPropagate = false
         ),
         isHighlighted = { hasAccountProblem }
     ) {
