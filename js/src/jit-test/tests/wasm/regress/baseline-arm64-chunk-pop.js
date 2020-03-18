@@ -11,7 +11,7 @@ var bin = wasmTextToBinary(
          local.get 0
          local.get 0
          local.get 0
-         if i32
+         if (result i32)
            local.get 0
          else
            local.get 0
