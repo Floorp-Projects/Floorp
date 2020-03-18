@@ -97,6 +97,13 @@ interface Element : Node {
   [ChromeOnly]
   readonly attribute float fontSizeInflation;
 
+  /**
+   * Returns the pseudo-element string if this element represents a
+   * pseudo-element, or null otherwise.
+   */
+  [ChromeOnly]
+  readonly attribute DOMString? implementedPseudoElement;
+
   // Selectors API
   /**
    * Returns whether this element would be selected by the given selector

@@ -342,15 +342,10 @@ class nsTextControlFrame : public nsContainerFrame,
   nsresult CreateRootNode();
   void CreatePlaceholderIfNeeded();
   void CreatePreviewIfNeeded();
-  enum class AnonymousDivType {
-    Root,
-    Placeholder,
-    Preview,
-  };
   already_AddRefed<mozilla::dom::Element> CreateEmptyAnonymousDiv(
-      AnonymousDivType) const;
+      mozilla::PseudoStyleType) const;
   already_AddRefed<mozilla::dom::Element> CreateEmptyAnonymousDivWithTextNode(
-      AnonymousDivType) const;
+      mozilla::PseudoStyleType) const;
 
   bool ShouldInitializeEagerly() const;
   void InitializeEagerlyIfNeeded();

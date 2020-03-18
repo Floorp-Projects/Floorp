@@ -1551,6 +1551,8 @@ class Element : public FragmentOrElement {
    */
   float FontSizeInflation();
 
+  void GetImplementedPseudoElement(nsAString&) const;
+
   ReferrerPolicy GetReferrerPolicyAsEnum();
   ReferrerPolicy ReferrerPolicyFromAttr(const nsAttrValue* aValue);
 

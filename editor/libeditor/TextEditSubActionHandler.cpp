@@ -858,12 +858,12 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
   }
 
   // If it's an <input type="text"> element, the DOM tree should be:
-  // <div class="anonymous-div">
+  // <div (::-moz-text-control-editing-root)>
   //   #text
   // </div>
   //
   // If it's a <textarea> element, the DOM tree should be:
-  // <div class="anonymous-div">
+  // <div (::-moz-text-control-editing-root)>
   //   #text (if there is)
   //   <br type="_moz">
   //   <scrollbar orient="horizontal">
