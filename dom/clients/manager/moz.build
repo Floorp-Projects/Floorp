@@ -36,7 +36,6 @@ UNIFIED_SOURCES += [
   'ClientNavigateOpChild.cpp',
   'ClientNavigateOpParent.cpp',
   'ClientOpenWindowUtils.cpp',
-  'ClientPrefs.cpp',
   'ClientPrincipalUtils.cpp',
   'ClientSource.cpp',
   'ClientSourceChild.cpp',
