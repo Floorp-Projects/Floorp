@@ -53,7 +53,7 @@ enum class Operation { CREATE, UPDATE }
  *     - If [CREATE], [loginStorage] generates a new guid for it
  */
 class GeckoLoginStorageDelegate(
-    private val loginStorage: LoginsStorage,
+    private val loginStorage: Lazy<LoginsStorage>,
     private val isAutofillEnabled: () -> Boolean = { false },
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : LoginStorageDelegate {
@@ -65,30 +65,30 @@ class GeckoLoginStorageDelegate(
         // If the guid is null, we have no way of associating the login with any record in the DB
         if (guid == null || guid.isEmpty()) return
         scope.launch {
-            loginStorage.touch(guid)
+            loginStorage.value.touch(guid)
         }
     }
 
     override fun onLoginFetch(domain: String): Deferred<List<Login>> {
         if (!isAutofillEnabled()) return CompletableDeferred(listOf())
         return scope.async {
-            loginStorage.getByBaseDomain(domain)
+            loginStorage.value.getByBaseDomain(domain)
         }
     }
 
     @Synchronized
     override fun onLoginSave(login: Login) {
         scope.launch {
-            val existingLogin = login.guid?.let { loginStorage.get(it) }
+            val existingLogin = login.guid?.let { loginStorage.value.get(it) }
 
             when (getPersistenceOperation(login, existingLogin)) {
                 Operation.UPDATE -> {
-                    existingLogin?.let { loginStorage.update(it.mergeWithLogin(login)) }
+                    existingLogin?.let { loginStorage.value.update(it.mergeWithLogin(login)) }
                 }
                 Operation.CREATE -> {
                     // If an existing Login was autofilled, we want to clear its guid to
                     // avoid updating its record
-                    loginStorage.add(login.copy(guid = null))
+                    loginStorage.value.add(login.copy(guid = null))
                 }
             }
         }

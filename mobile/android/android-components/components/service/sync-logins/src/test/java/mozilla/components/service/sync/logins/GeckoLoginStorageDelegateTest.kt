@@ -33,7 +33,7 @@ class GeckoLoginStorageDelegateTest {
     fun before() {
         loginsStorage = mockLoginsStorage()
         scope = TestCoroutineScope()
-        delegate = GeckoLoginStorageDelegate(loginsStorage, { false }, scope)
+        delegate = GeckoLoginStorageDelegate(lazy { loginsStorage }, { false }, scope)
     }
 
     @Test
@@ -48,7 +48,7 @@ class GeckoLoginStorageDelegateTest {
     @Test
     @Config(sdk = [21])
     fun `WHEN passed true for shouldAutofill onLoginsFetch does not return early`() {
-        delegate = GeckoLoginStorageDelegate(loginsStorage, { true }, scope)
+        delegate = GeckoLoginStorageDelegate(lazy { loginsStorage }, { true }, scope)
 
         scope.launch {
             delegate.onLoginFetch("login")

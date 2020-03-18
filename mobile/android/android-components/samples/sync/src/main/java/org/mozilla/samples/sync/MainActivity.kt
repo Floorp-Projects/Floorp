@@ -61,11 +61,11 @@ class MainActivity :
         LoginFragment.OnLoginCompleteListener,
         DeviceFragment.OnDeviceListInteractionListener,
         CoroutineScope {
-    private val historyStorage by lazy {
+    private val historyStorage = lazy {
         PlacesHistoryStorage(this)
     }
 
-    private val bookmarksStorage by lazy {
+    private val bookmarksStorage = lazy {
         PlacesBookmarksStorage(this)
     }
 
@@ -78,7 +78,7 @@ class MainActivity :
             }
     }
 
-    private val passwordsStorage by lazy { SyncableLoginsStorage(this, passwordsEncryptionKey) }
+    private val passwordsStorage = lazy { SyncableLoginsStorage(this, passwordsEncryptionKey) }
 
     private val accountManager by lazy {
         FxaAccountManager(
@@ -378,7 +378,7 @@ class MainActivity :
                 syncStatus?.text = getString(R.string.sync_idle)
 
                 val historyResultTextView: TextView = findViewById(R.id.historySyncResult)
-                val visitedCount = historyStorage.getVisited().size
+                val visitedCount = historyStorage.value.getVisited().size
                 // visitedCount is passed twice: to get the correct plural form, and then as
                 // an argument for string formatting.
                 historyResultTextView.text = resources.getQuantityString(
@@ -386,7 +386,7 @@ class MainActivity :
                 )
 
                 val bookmarksResultTextView: TextView = findViewById(R.id.bookmarksSyncResult)
-                val bookmarksRoot = bookmarksStorage.getTree("root________", recursive = true)
+                val bookmarksRoot = bookmarksStorage.value.getTree("root________", recursive = true)
                 if (bookmarksRoot == null) {
                     bookmarksResultTextView.text = getString(R.string.no_bookmarks_root)
                 } else {

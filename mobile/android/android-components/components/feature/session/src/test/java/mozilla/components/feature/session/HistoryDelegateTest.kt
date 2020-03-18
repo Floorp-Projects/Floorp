@@ -29,8 +29,8 @@ class HistoryDelegateTest {
 
     @Test
     fun `history delegate passes through onVisited calls`() = runBlocking {
-        val storage: HistoryStorage = mock()
-        val delegate = HistoryDelegate(storage)
+        val storage = mock<HistoryStorage>()
+        val delegate = HistoryDelegate(lazy { storage })
 
         delegate.onVisited("about:blank", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         verify(storage, never()).recordVisit("about:blank", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
@@ -47,8 +47,8 @@ class HistoryDelegateTest {
 
     @Test
     fun `history delegate passes through onTitleChanged calls`() = runBlocking {
-        val storage: HistoryStorage = mock()
-        val delegate = HistoryDelegate(storage)
+        val storage = mock<HistoryStorage>()
+        val delegate = HistoryDelegate(lazy { storage })
 
         delegate.onTitleChanged("http://www.mozilla.org", "Mozilla")
         verify(storage).recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
@@ -135,7 +135,7 @@ class HistoryDelegateTest {
             }
         }
         val storage = TestHistoryStorage()
-        val delegate = HistoryDelegate(storage)
+        val delegate = HistoryDelegate(lazy { storage })
 
         assertFalse(storage.getVisitedPlainCalled)
         assertFalse(storage.getVisitedListCalled)

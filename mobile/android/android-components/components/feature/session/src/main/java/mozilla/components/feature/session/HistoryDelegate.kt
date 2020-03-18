@@ -13,28 +13,28 @@ import mozilla.components.concept.storage.PageVisit
 /**
  * Implementation of the [HistoryTrackingDelegate] which delegates work to an instance of [HistoryStorage].
  */
-class HistoryDelegate(private val historyStorage: HistoryStorage) : HistoryTrackingDelegate {
+class HistoryDelegate(private val historyStorage: Lazy<HistoryStorage>) : HistoryTrackingDelegate {
     override suspend fun onVisited(uri: String, visit: PageVisit) {
         // While we expect engine implementations to check URIs against `shouldStoreUri`, we don't
         // depend on them to actually do this check.
         if (shouldStoreUri(uri)) {
-            historyStorage.recordVisit(uri, visit)
+            historyStorage.value.recordVisit(uri, visit)
         }
     }
 
     override suspend fun onTitleChanged(uri: String, title: String) {
         // Ignore title changes for URIs which we're ignoring.
         if (shouldStoreUri(uri)) {
-            historyStorage.recordObservation(uri, PageObservation(title = title))
+            historyStorage.value.recordObservation(uri, PageObservation(title = title))
         }
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
-        return historyStorage.getVisited(uris)
+        return historyStorage.value.getVisited(uris)
     }
 
     override suspend fun getVisited(): List<String> {
-        return historyStorage.getVisited()
+        return historyStorage.value.getVisited()
     }
 
     /**
