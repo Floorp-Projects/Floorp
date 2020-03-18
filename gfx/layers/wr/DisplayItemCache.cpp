@@ -85,7 +85,7 @@ Maybe<uint16_t> DisplayItemCache::AssignSlot(nsPaintedDisplayItem* aItem) {
     return Nothing();
   }
 
-  if (!aItem->CanBeReused()) {
+  if (!aItem->CanBeReused() || !aItem->CanBeCached()) {
     // Do not try to cache items that cannot be reused.
     return Nothing();
   }
@@ -129,14 +129,16 @@ Maybe<uint16_t> DisplayItemCache::CanReuseItem(
     return Nothing();
   }
 
-  // Spatial id and clip id can change between display lists.
   if (!(aSpaceAndClip == slot.mSpaceAndClip)) {
-    // Mark the cache slot inactive and recache the item.
+    // Spatial id and clip id can change between display lists, if items that
+    // generate them change their order.
     slot.mOccupied = false;
-    return Nothing();
+    aItem->SetCantBeCached();
+    slotIndex = Nothing();
+  } else {
+    slot.mUsed = true;
   }
 
-  slot.mUsed = true;
   return slotIndex;
 }
 

@@ -204,6 +204,8 @@ pub struct BuiltDisplayListIter<'a> {
     list: &'a BuiltDisplayList,
     data: &'a [u8],
     cache: Option<&'a DisplayItemCache>,
+    pending_items: std::slice::Iter<'a, CachedDisplayItem>,
+    cur_cached_item: Option<&'a CachedDisplayItem>,
     cur_item: di::DisplayItem,
     cur_stops: ItemRange<'a, di::GradientStop>,
     cur_glyphs: ItemRange<'a, GlyphInstance>,
@@ -284,29 +286,21 @@ pub struct ItemStats {
 
 pub struct DisplayItemRef<'a: 'b, 'b> {
     iter: &'b BuiltDisplayListIter<'a>,
-    cached_item: Option<&'a CachedDisplayItem>,
 }
 
 // Some of these might just become ItemRanges
 impl<'a, 'b> DisplayItemRef<'a, 'b> {
-    fn cached_or_iter_data<T>(
-        &self,
-        data: ItemRange<'a, T>
-    ) -> ItemRange<'a, T> {
-        self.cached_item.map_or(data, |i| i.data_as_item_range())
-    }
-
     pub fn display_list(&self) -> &BuiltDisplayList {
         self.iter.display_list()
     }
 
     // Creates a new iterator where this element's iterator is, to hack around borrowck.
     pub fn sub_iter(&self) -> BuiltDisplayListIter<'a> {
-        BuiltDisplayListIter::new(self.iter.list, self.iter.data, self.iter.cache)
+        self.iter.sub_iter()
     }
 
     pub fn item(&self) -> &di::DisplayItem {
-        self.cached_item.map_or(&self.iter.cur_item, |i| i.item())
+       self.iter.current_item()
     }
 
     pub fn clip_chain_items(&self) -> ItemRange<di::ClipId> {
@@ -318,11 +312,11 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     }
 
     pub fn glyphs(&self) -> ItemRange<GlyphInstance> {
-        self.cached_or_iter_data(self.iter.cur_glyphs)
+        self.iter.glyphs()
     }
 
     pub fn gradient_stops(&self) -> ItemRange<di::GradientStop> {
-        self.cached_or_iter_data(self.iter.cur_stops)
+        self.iter.gradient_stops()
     }
 
     pub fn filters(&self) -> ItemRange<di::FilterOp> {
@@ -493,7 +487,8 @@ impl BuiltDisplayList {
                 Real::PopReferenceFrame => Debug::PopReferenceFrame,
                 Real::PopStackingContext => Debug::PopStackingContext,
                 Real::PopAllShadows => Debug::PopAllShadows,
-                Real::ReuseItem(_) => unreachable!("Unexpected item"),
+                Real::ReuseItems(_) |
+                Real::RetainedItems(_) => unreachable!("Unexpected item"),
             };
             seq.serialize_element(&serial_di)?
         }
@@ -526,6 +521,8 @@ impl<'a> BuiltDisplayListIter<'a> {
             list,
             data,
             cache,
+            pending_items: [].iter(),
+            cur_cached_item: None,
             cur_item: di::DisplayItem::PopStackingContext,
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
@@ -538,12 +535,50 @@ impl<'a> BuiltDisplayListIter<'a> {
             debug_stats: DebugStats {
                 last_addr: data.as_ptr() as usize,
                 stats: HashMap::default(),
-            }
+            },
         }
+    }
+
+    pub fn sub_iter(&self) -> Self {
+        let mut iter = BuiltDisplayListIter::new(
+            self.list, self.data, self.cache
+        );
+        iter.pending_items = self.pending_items.clone();
+        iter
     }
 
     pub fn display_list(&self) -> &'a BuiltDisplayList {
         self.list
+    }
+
+    pub fn current_item(&self) -> &di::DisplayItem {
+        match self.cur_cached_item {
+            Some(cached_item) => cached_item.display_item(),
+            None => &self.cur_item
+        }
+    }
+
+    fn cached_item_range_or<T>(
+        &self,
+        data: ItemRange<'a, T>
+    ) -> ItemRange<'a, T> {
+        match self.cur_cached_item {
+            Some(cached_item) => cached_item.data_as_item_range(),
+            None => data,
+        }
+    }
+
+    pub fn glyphs(&self) -> ItemRange<GlyphInstance> {
+        self.cached_item_range_or(self.cur_glyphs)
+    }
+
+    pub fn gradient_stops(&self) -> ItemRange<di::GradientStop> {
+        self.cached_item_range_or(self.cur_stops)
+    }
+
+    fn advance_pending_items(&mut self) -> bool {
+        self.cur_cached_item = self.pending_items.next();
+        self.cur_cached_item.is_some()
     }
 
     pub fn next<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
@@ -592,6 +627,10 @@ impl<'a> BuiltDisplayListIter<'a> {
     /// for some reason you ask).
     pub fn next_raw<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
         use crate::DisplayItem::*;
+
+        if self.advance_pending_items() {
+            return Some(self.as_ref());
+        }
 
         // A "red zone" of DisplayItem::max_size() bytes has been added to the
         // end of the serialized display list. If this amount, or less, is
@@ -649,6 +688,17 @@ impl<'a> BuiltDisplayListIter<'a> {
                 self.cur_glyphs = skip_slice::<GlyphInstance>(&mut self.data);
                 self.debug_stats.log_slice("text.glyphs", &self.cur_glyphs);
             }
+            ReuseItems(key) => {
+                match self.cache {
+                    Some(cache) => {
+                        self.pending_items = cache.get_items(key).iter();
+                        self.advance_pending_items();
+                    }
+                    None => {
+                        unreachable!("Cache marker without cache!");
+                    }
+                }
+            }
             _ => { /* do nothing */ }
         }
 
@@ -656,17 +706,8 @@ impl<'a> BuiltDisplayListIter<'a> {
     }
 
     pub fn as_ref<'b>(&'b self) -> DisplayItemRef<'a, 'b> {
-        let cached_item = match self.cur_item {
-            di::DisplayItem::ReuseItem(key) => {
-                let cache = self.cache.expect("Cache marker without cache!");
-                cache.get_item(key)
-            }
-            _ => None
-        };
-
         DisplayItemRef {
             iter: self,
-            cached_item
         }
     }
 
@@ -869,7 +910,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::PopStackingContext => Real::PopStackingContext,
                 Debug::PopReferenceFrame => Real::PopReferenceFrame,
                 Debug::PopAllShadows => Real::PopAllShadows,
-                Debug::ReuseItem(_) => unreachable!("Unexpected item"),
             };
             poke_into_vec(&item, &mut data);
             // the aux data is serialized after the item, hence the temporary
@@ -905,14 +945,25 @@ pub struct SaveState {
     next_clip_chain_id: u64,
 }
 
+/// DisplayListSection determines the target buffer for the display items.
+pub enum DisplayListSection {
+    /// The main/default buffer: contains item data and item group markers.
+    Data,
+    /// Auxiliary buffer: contains the item data for item groups.
+    ExtraData,
+    /// Temporary buffer: contains the data for pending item group. Flushed to
+    /// one of the buffers above, after item grouping finishes.
+    Chunk,
+}
+
 #[derive(Clone)]
 pub struct DisplayListBuilder {
     pub data: Vec<u8>,
     pub pipeline_id: PipelineId,
 
     extra_data: Vec<u8>,
-    extra_data_chunk_start: usize,
-    writing_extra_data_chunk: bool,
+    pending_chunk: Vec<u8>,
+    writing_to_chunk: bool,
 
     next_clip_index: usize,
     next_spatial_index: usize,
@@ -945,8 +996,8 @@ impl DisplayListBuilder {
             pipeline_id,
 
             extra_data: Vec::new(),
-            extra_data_chunk_start: 0,
-            writing_extra_data_chunk: false,
+            pending_chunk: Vec::new(),
+            writing_to_chunk: false,
 
             next_clip_index: FIRST_CLIP_NODE_INDEX,
             next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
@@ -1035,17 +1086,47 @@ impl DisplayListBuilder {
         index
     }
 
-    fn active_buffer(&mut self) -> &mut Vec<u8> {
-        if self.writing_extra_data_chunk {
-            &mut self.extra_data
-        } else {
-            &mut self.data
-        }
-    }
-
     /// Print the display items in the list to stdout.
     pub fn dump_serialized_display_list(&mut self) {
         self.serialized_content_buffer = Some(String::new());
+    }
+
+    fn add_to_display_list_dump<T: std::fmt::Debug>(&mut self, item: T) {
+        if let Some(ref mut content) = self.serialized_content_buffer {
+            use std::fmt::Write;
+            write!(content, "{:?}\n", item).expect("DL dump write failed.");
+        }
+    }
+
+    /// Returns the default section that DisplayListBuilder will write to,
+    /// if no section is specified explicitly.
+    fn default_section(&self) -> DisplayListSection {
+        if self.writing_to_chunk {
+            DisplayListSection::Chunk
+        } else {
+            DisplayListSection::Data
+        }
+    }
+
+    fn buffer_from_section(
+        &mut self,
+        section: DisplayListSection
+    ) -> &mut Vec<u8> {
+        match section {
+            DisplayListSection::Data => &mut self.data,
+            DisplayListSection::ExtraData => &mut self.extra_data,
+            DisplayListSection::Chunk => &mut self.pending_chunk,
+        }
+    }
+
+    #[inline]
+    pub fn push_item_to_section(
+        &mut self,
+        item: &di::DisplayItem,
+        section: DisplayListSection,
+    ) {
+        poke_into_vec(item, self.buffer_from_section(section));
+        self.add_to_display_list_dump(item);
     }
 
     /// Add an item to the display list.
@@ -1055,12 +1136,7 @@ impl DisplayListBuilder {
     /// result in WebRender panicking or behaving in unexpected ways.
     #[inline]
     pub fn push_item(&mut self, item: &di::DisplayItem) {
-        poke_into_vec(item, self.active_buffer());
-
-        if let Some(ref mut content) = self.serialized_content_buffer {
-            use std::fmt::Write;
-            write!(content, "{:?}\n", item).expect("DL dump write failed.");
-        }
+        self.push_item_to_section(item, self.default_section());
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
@@ -1106,7 +1182,8 @@ impl DisplayListBuilder {
         I::IntoIter: ExactSizeIterator,
         I::Item: Poke,
     {
-        Self::push_iter_impl(self.active_buffer(), iter);
+        let mut buffer = self.buffer_from_section(self.default_section());
+        Self::push_iter_impl(&mut buffer, iter);
     }
 
     pub fn push_rect(
@@ -1744,35 +1821,57 @@ impl DisplayListBuilder {
         self.push_item(&di::DisplayItem::PopAllShadows);
     }
 
-    fn truncate_extra_data_chunk(&mut self) {
-        self.extra_data.truncate(self.extra_data_chunk_start)
+    pub fn start_item_group(&mut self) {
+        debug_assert!(!self.writing_to_chunk);
+        debug_assert!(self.pending_chunk.is_empty());
+
+        self.writing_to_chunk = true;
     }
 
-    pub fn start_item_group(&mut self, _key: di::ItemKey) {
-        self.writing_extra_data_chunk = true;
-        self.extra_data_chunk_start = self.extra_data.len();
+    fn flush_pending_item_group(&mut self, key: di::ItemKey) {
+        // Push RetainedItems-marker to extra_data section.
+        self.push_retained_items(key);
+
+        // Push pending chunk to extra_data section.
+        self.extra_data.append(&mut self.pending_chunk);
+
+        // Push ReuseItems-marker to data section.
+        self.push_reuse_items(key);
     }
 
     pub fn finish_item_group(&mut self, key: di::ItemKey) -> bool {
-        self.writing_extra_data_chunk = false;
+        debug_assert!(self.writing_to_chunk);
+        self.writing_to_chunk = false;
 
-        let chunk_size = self.extra_data.len() - self.extra_data_chunk_start;
-        if chunk_size > 0 {
-            self.push_reuse_items(key);
-            return true
+        if self.pending_chunk.len() > 0 {
+            self.flush_pending_item_group(key);
+            true
+        } else {
+            debug_assert!(self.pending_chunk.is_empty());
+            false
         }
-
-        false
     }
 
     pub fn cancel_item_group(&mut self) {
-        debug_assert!(self.writing_extra_data_chunk);
-        self.writing_extra_data_chunk = false;
-        self.truncate_extra_data_chunk();
+        debug_assert!(self.writing_to_chunk);
+        self.writing_to_chunk = false;
+
+        // Push pending chunk to data section.
+        self.data.append(&mut self.pending_chunk);
     }
 
     pub fn push_reuse_items(&mut self, key: di::ItemKey) {
-        self.push_item(&di::DisplayItem::ReuseItem(key));
+        self.push_item_to_section(
+            &di::DisplayItem::ReuseItems(key),
+            DisplayListSection::Data
+        );
+    }
+
+    fn push_retained_items(&mut self, key: di::ItemKey) {
+        self.push_item_to_section(
+            &di::DisplayItem::RetainedItems(key),
+            DisplayListSection::ExtraData
+        );
     }
 
     pub fn set_cache_size(&mut self, cache_size: usize) {
