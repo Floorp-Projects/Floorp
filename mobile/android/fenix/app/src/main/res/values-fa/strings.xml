@@ -594,10 +594,18 @@
     <string name="tracking_protection_on">روشن</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">خاموش</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">فیلم و صدا مسدود شده</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">فیلم و صدا اجازه داده شده</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">اجازه دادن صوت و ویدئو</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">اجازه دادن صوت و ویدئو فقط روی وای‌فای</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">مسدود کردن صوت</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">مسدود کردن ویدئو و صوت</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">روشن</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1253,4 +1261,8 @@
     <string name="certificate_info_verified_by">تایید شده توسط:%1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">حذف</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">آیا مطمئنید که می‌خواهید این ورود را حذف کنید؟</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">حذف</string>
 </resources>

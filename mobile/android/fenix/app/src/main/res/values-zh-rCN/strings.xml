@@ -617,9 +617,9 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">例外</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">开</string>
+    <string name="tracking_protection_on">开启</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
-    <string name="tracking_protection_off">关</string>
+    <string name="tracking_protection_off">关闭</string>
 
     <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">已阻止视频和音频</string>
@@ -635,9 +635,9 @@
     <!-- Label that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked2">阻止视频和音频</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
-    <string name="delete_browsing_data_quit_on">开</string>
+    <string name="delete_browsing_data_quit_on">开启</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
-    <string name="delete_browsing_data_quit_off">关</string>
+    <string name="delete_browsing_data_quit_off">关闭</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->

@@ -22,8 +22,21 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Esate privačiojo naršymo seanse</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">„%1$s“ išvalo jūsų paieškos ir naršymo žurnalą kai išjungiate programą arba užveriate visas privačiąsias korteles. Nors šie dalykai ir nesuteikia jums anonimiškumo internete, tai leidžia išlaikyti jūsų privatumą nuo kitų šį įrenginį naudojančių asmenų.</string>
+    <string name="private_browsing_common_myths">Dažni mitai apie privatųjį naršymą</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ištrinti seansą</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Pridėję leistuką galėsite atverti privačias korteles iš pradžios ekrano.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Pridėti leistuką</string>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Ačiū, ne</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -58,6 +71,10 @@
     <string name="browser_menu_settings">Nuostatos</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Jūsų archyvas</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Komp. svetainė</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Įtraukti į pradžios ekraną</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Įdiegti</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -68,7 +85,9 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Nauja kortelė</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Įrašyti į rinkinį</string>
+    <string name="browser_menu_save_to_collection">Įtraukti į rinkinį</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Pranešti apie svetainės problemą</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Dalintis</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -76,6 +95,12 @@
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Atverti naudojant „%1$s“</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">Veikia su „%1$s“</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Veikia su „%1$s“</string>
     <!-- Browser menu button to put the the current page in reader mode -->
     <string name="browser_menu_read">Skaitymo rodinys</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -83,9 +108,212 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Išvaizda</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Pasirinkta kalba</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Paieška</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Naudoti įrenginio kalbą</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Ieškoti kalbos</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Nuskaityti</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Leistukai</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Ieškyklės nuostatos</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Ieškoti per</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Šįkart ieškoti su:</string>
+
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Atverti saitą iš iškarpinės</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Leisti</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Neleisti</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Leisti paieškos siūlymus privačiojo naršymo seansuose?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">„%s“ perduos jūsų numatytajai ieškyklei viską, ką rašote adreso lauke.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Sužinoti daugiau</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Ieškoti</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Ieškokite saityne</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Nuostatos</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Pagrindai</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Bendrosios</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Apie</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Numatytoji ieškyklė</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Paieška</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Adreso juosta</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Žinynas</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Įvertinti per „Google Play“</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Palikti atsiliepimą</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Apie „%1$s“</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Jūsų teisės</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Slaptažodžiai</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Banko kortelės ir adresai</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Skirti numatytąja naršykle</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Kitkas</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Privatumas</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Privatumas ir saugumas</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Svetainių leidimai</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Privatusis naršymas</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Atverti saitus privačiojoje kortelėje</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Pridėti privačiojo naršymo leistuką</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Pritaikymas neįgaliesiems</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Paskyra</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Prisijungti</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Priemonių juosta</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Grafinis apvalkalas</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Tinkinimas</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Sinchronizuokite adresyną, žurnalą, ir daugiau naudodami „Firefox“ paskyrą</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">„Firefox“ paskyra</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Prisijunkite, norėdami tęsti sinchronizavimą</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Kalba</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Duomenų siuntimas</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Duomenų rinkimas</string>
 
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Privatumo nuostatai</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Programuotojo priemonės</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Nuotolinis derinimas per USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Rodyti paieškos leistukus</string>
+
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Rodyti paieškos siūlymus</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Rodyti naršant privačiai</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Rodyti iškarpinės siūlymus</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Ieškoti naršymo žurnale</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Ieškoti adresyne</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Paskyros nuostatos</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Atverti saitus programose</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Priedai</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Sinchronizuoti dabar</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Pasirinkite, ką sinchronizuosite</string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Žurnalas</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Adresynas</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Prisijungimai</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Atsijungti</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Įrenginio pavadinimas</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Įrenginio pavadinimas negali būti tuščias.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Sinchronizuojama…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Sinchronizavimas nepavyko. Paskiausiai pavykę: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Sinchronizavimas nepavyko. Paskiausiai sinchronizuota: niekada</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Paskiausiai sinchronizuota: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Paskiausiai sinchronizuota: niekada</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">„%s“ iš „%s %s“</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Gautos kortelės</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Pranešimai apie korteles, gautas iš kitų „Firefox“ įrenginių.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Gauta kortelė</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Gautos kortelės</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Kortelė iš %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Apsauga nuo stebėjimo</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Apsauga nuo stebėjimo</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Blokuoti turinį ir scenarijus, kurie seka jūsų naršymą</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Išimtys</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Apsauga nuo stebėjimo šiose svetainėse išjungta</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Įjungti visoms svetainėms</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Išimtys leidžia išjungti apsaugą nuo stebėjimo pasirinktose svetainėse.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Sužinoti daugiau</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Išjungta globaliai, eikite į „Nuostatas“, norėdami įjungti.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetrija</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Naudojimo ir techniniai duomenys</string>
 
@@ -95,13 +323,123 @@
     <string name="preferences_marketing_data">Rinkodaros duomenys</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Duomenys apie jūsų naudojamas „%1$s“ funkcijas bus perduodami „Leanplum“, mūsų mobiliosios rinkodaros pardavėjui.</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Eksperimentai</string>
     <!-- Summary for experiments preferences -->
     <string name="preference_experiments_summary">Leidžia „Mozillai“ įdiegti ir rinkti duomenis apie eksperimentines funkcijas</string>
 
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Strigčių pranešiklis</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">„Mozillos“ buvimo vietos nustatymo paslauga</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">„%s“ techninės būklės ataskaita</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Įjungti „Sync“</string>
+
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Nuskaityti susiejimo kodą per kompiuterio „Firefox“</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Prisijungti</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Prisijungti iš naujo</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Pašalinti paskyrą</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Aplankę <b>firefox.com/pair</b> per „Firefox“ savo kompiuteryje, gausite QR kodą.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Atverti kamerą</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Atsisakyti</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Viršuje</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Apačioje</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Šviesus</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Tamsus</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Parinkti pagal baterijos lygį</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Naudoti įrenginio grafinį apvalkalą</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Seansai</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Ekrano nuotraukos</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Atsiuntimai</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Adresynas</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Kompiuterio adresynas</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Adresyno meniu</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Adresyno juosta</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Kiti adresai</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Žurnalas</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Skaitinių sąrašas</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Ieškoti</string>
+    <!-- Library Page Title -->
+    <string name="library_title">Archyvas</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Nuostatos</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Žurnalo įrašų meniu</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Užverti</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Atvertos kortelės</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Privatusis seansas</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Privačios kortelės</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Pridėti kortelę</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Užverti kortelę</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Užverti kortelę „%s“</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Atvertų kortelių meniu</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Užverti visas korteles</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Dalintis kortelėmis</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Įrašyti į rinkinį</string>
+    <string name="tabs_menu_save_to_collection">Įtraukti į rinkinį</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Kortelės meniu</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Dalintis kortele</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Pašalinti</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Įrašyti</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Dalintis</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Šio seanso paveikslas</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Įrašyti į rinkinį</string>
+    <string name="save_to_collection">Įtraukti į rinkinį</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Pašalinti rinkinį</string>
     <!-- Text for the menu button to rename a collection -->
@@ -109,9 +447,183 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Atverti korteles</string>
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Pašalinti</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Išvalyti žurnalą</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Ar tikrai norite išvalyti naršymo žurnalą?</string>
+
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Išvalyti</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Pašalinti</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Pasirinkta: %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Pašalinti įrašus (%1$d)</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Paskiausios 24 valandos</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Paskiausios 7 dienos</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Paskiausios 30 dienų</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Seniau</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Žurnalų įrašų nėra</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Atsiprašome. „%1$s“ nepavyko įkelti šio tinklalapio.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Galite bandyti atkurti arba užverti šia kortelę žemiau.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Pranešti apie strigtį „Mozillai“</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Užverti kortelę</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Atkurti kortelę</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Seanso parinktys</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Dalintis seansu</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Adresyno meniu</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Redaguoti adresyno įrašą</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Pasirinkite aplanką</string>
+
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Įtraukti aplanką</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Adresyno įrašas sukurtas.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Adresyno įrašas išsaugotas!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">Redaguoti</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Redaguoti</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Pasirinkti</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Kopijuoti</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Dalintis</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Atverti naujoje kortelėje</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Atverti privačiojoje kortelėje</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Pašalinti</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Įrašyti</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Pasirinkta: %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Redaguoti adresyno įrašą</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Redaguoti aplanką</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Prisijunkite, norėdami pamatyti adresyno įrašus iš kitų įrenginių</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">Aplankas</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">Pavadinimas</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Įtraukti aplanką</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Pasirinkite aplanką</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Būtinas pavadinimas</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Neteisingas URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Adresyno įrašų nėra</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Pašalintas %1$s</string>
+
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Šalinami pasirinkti įrašai</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">Atšaukti</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Leidimai</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Eiti į nuostatas</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Greitųjų nuostatų aprašas</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Rekomenduojama</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Tvarkyti svetainės leidimus</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Išvalyti leidimus</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Išvalyti leidimą</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Išvalyti visų svetainių leidimus</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Automatinis grojimas</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofonas</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Vieta</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Pranešimas</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Prašyti leidimo</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blokuojama</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Leidžiama</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blokuoja „Android“</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Išimtys</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Įjungta</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Išjungta</string>
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Vaizdas ir garsas blokuojami</string>
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Vaizdas ir garsas leidžiami</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Leisti garsą ir vaizdą</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Leisti garsą ir vaizdą tik per „Wi-Fi“</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Blokuoti garsą</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Blokuoti vaizdą ir garsą</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Įjungta</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Išjungta</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Išsaugokite jums svarbius dalykus. Norėdami pradėti, įrašykite atvertas korteles į naują rinkinį.</string>
+    <string name="collections_description">Išsaugokite jums svarbius dalykus. Norėdami pradėti, įtraukite atvertas korteles į naują rinkinį.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Rinkiniai</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -172,5 +684,8 @@
 
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Neleidžia rinkti jūsų įrenginį identifikuojančių duomenų, kurie gali būti naudojami stebėjimo tikslams.</string>
+
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Leistuko pavadinimas</string>
 
     </resources>

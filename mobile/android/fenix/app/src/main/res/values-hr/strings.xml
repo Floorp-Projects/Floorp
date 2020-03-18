@@ -192,7 +192,7 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Otvori poveznice u privatnoj kartici</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Dodaj prečac za privatno pregledavanjae</string>
+    <string name="preferences_add_private_browsing_shortcut">Dodaj prečac za privatno pregledavanje</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Pristupačnost</string>
     <!-- Preference category for account information -->
@@ -605,10 +605,18 @@
     <string name="tracking_protection_on">Uključeno</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Isključeno</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Video i audio su blokirani</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video i audio su dozvoljeni</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Dopusti zvuk i video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Dopusti zvuk i video samo na Wi-Fi vezi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Blokiraj zvuk</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Blokiraj video i zvuk</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Uključeno</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1272,4 +1280,8 @@
     <string name="certificate_info_verified_by">Potvrđeno od: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Izbriši</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Sigurno izbrisati ovu prijavu?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Izbriši</string>
 </resources>

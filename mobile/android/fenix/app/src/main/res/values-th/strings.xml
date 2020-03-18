@@ -598,10 +598,18 @@
     <string name="tracking_protection_on">เปิด</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ปิด</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">ปิดกั้นวิดีโอและเสียง</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">อนุญาตวิดีโอและเสียง</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">อนุญาตเสียงและวิดีโอ</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">อนุญาตเสียงและวิดีโอผ่าน Wi-Fi เท่านั้น</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">ปิดกั้นเสียง</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">ปิดกั้นเสียงและวิดีโอ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">เปิด</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1213,6 +1221,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">ยินดีต้อนรับสู่ %s โฉมใหม่</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">เบราว์เซอร์ที่ปรับปรุงใหม่หมดจดกำลังคอยการปรับปรุงคุณสมบัติและประสิทธิภาพเพื่อช่วยให้คุณออนไลน์ได้มากขึ้น\n\nโปรดรอในขณะที่เราอัปเดต %s</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">กำลังอัปเดต %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1254,4 +1264,8 @@
     <string name="certificate_info_verified_by">ยืนยันโดย: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">ลบ</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">คุณแน่ใจหรือไม่ที่ต้องการจะลบการเข้าสู่ระบบนี้?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">ลบ</string>
 </resources>

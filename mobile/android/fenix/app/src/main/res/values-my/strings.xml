@@ -192,6 +192,8 @@
     <string name="preferences_private_browsing_options">လုံခြုံစွာ ကြည့်ရှုခြင်း</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">လင်ခ့်ကို ကိုယ်ပိုင်သီးသန့်သုံးတပ်ဗ်တွင်ဖွင့်ပါ</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">သီးသန့်ရှာဖွေမှုဖြတ်လမ်းပေါင်းထည့်ပါ။</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">အသုံးပြုခွင့်</string>
     <!-- Preference category for account information -->
@@ -204,6 +206,8 @@
     <string name="preferences_theme">အခင်းအကျင်းများ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">စိတ်ကြိုက်လုပ်ပါ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">စာမှတ်များ၊မှတ်တမ်းများနှင့်အခြားအရာများကို Firefox အကောင့်ဖြင့် တပ်တူပြုပါ။</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox အကောင့်</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -227,6 +231,8 @@
     <string name="preferences_show_search_suggestions">ရှာဖွေရေး အကြံပြုချက်များကို ဖေါ်ပြပါ</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">ကိုယ်ပိုင်သီးသန့်အပိုင်းများတွင်ပြပါ</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">ကလစ်ဘုတ်မှ အကြံပြုချက်များပြပါ။</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">ကြည့်ရှုမှတ်တမ်းကို ရှာပါ</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -287,12 +293,21 @@
     <string name="preferences_tracking_protection_settings">ခြေရာခံ ကာကွယ်မှု</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">ခြေရာခံ ကာကွယ်မှု</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">သင့်ကိုအွန်လိုင်းမှခြေရာခံစေသောအကြောင်းအရာများနှင့် script များကိုပိတ်ဆို့ပါ</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">ခြွင်းချက်များ</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">ဤဝဘ်ဆိုက်များအတွက် ခြေရာခံစနစ်ပိတ်ထားသည်။</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ဆိုဒ်များအားလုံးကိုဖွင့်ပါ</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">ရွေးချယ်ထားသောဆိုက်များအတွက် ခြေရာခံကာကွယ်ခြင်းကို ခြွင်းချက်များက ပိတ်ဆို့လိမ့်မည်။</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ပိုမိုလေ့လာရန်</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">ပြင်ပသို့ ပိတ်ထားသည်။ အပြင်အဆင်သို့သွား၍ဖွင့်ပါ။</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">ကြေးနန်း</string>
@@ -312,6 +327,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">ထပ်တူပြုခြင်းကိုဖွင့်ပါ</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">desktop Firefox တွင် တွဲဆက်ကုဒ်ကိုစစ်ပါ။</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">၀င်ပါ</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -445,6 +462,9 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">မှတ်တမ်းများ ဒီမှာ မရှိပါ</string>
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">တောင်းပန်ပါတယ်။ ဒီစာမျက်နှာကို %1$s မှမတင်နိုင်ပါ။</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Mozillaသို့ ပျက်စီးမှုအစီရင်ခံစာပို့ပါ</string>
     <!-- Close tab button text on the tab crash page -->
@@ -496,6 +516,8 @@
     <string name="edit_bookmark_fragment_title">စာမှတ်ကို ပြင်ရန်</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">ဖိုင်ပြင်ဆင်ပါ</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">ထပ်တူပြုထားသည့်စာမှတ်များကိုကြည့်ရန်ဆိုင်းအင်လုပ်ပါ</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -561,10 +583,18 @@
     <string name="tracking_protection_on">ဖွင့်ပါ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ပိတ်ပါ</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">ဗွီဒီယိုနှင့်အသံပိတ်ဆို့ခြင်း</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">ဗီဒီယိုနှင့်အသံခွင့်ပြုသည်</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">အသံနှင့်ဗီဒီယိုကိုခွင့်ပြုပါ။</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">ဝိုင်ဖိုင်တွင်သာ အသံနှင့်ဗီဒီယိုကိုခွင့်ပြုပါ။</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">အသံပိတ်ပါ။</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">ဗီဒီယိုနှင့်အသံကိုပိတ်ပါ။</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ဖွင့်ပါ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -599,6 +629,10 @@
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tab_selected">% d tabs ကိုရွေးချယ်ထားပါသည်</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">တဗ်များကိုသိမ်းထားပြီး</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">တဗ်ကိုသိမ်းထားပြီး</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">ပိတ်ပါ</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
@@ -689,6 +723,9 @@
     <string name="a11y_dialog_deleted_undo">မလုပ်တော့ပါ</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">အတည်ပြုပါ</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%2$s ကိုဖွင့်ရန် %1$s ကိုခွင့်ပြုပါ။</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">ခွင့်ပြုပါ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -731,6 +768,8 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">ကွတ်ကီးများ</string>
 
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">အများစုဆိုက်များကို သင်ထွက်သွားပါလိမ့်မည်။</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">ခေတ္တသိုလှောင်ရုပ်ပုံနှင့်ဖိုင်များ</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -759,10 +798,16 @@
     <string name="onboarding_header">%s မှကြိုဆိုပါတယ်</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">အကောင့် ရှိပြီးသားလား။</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s ကိုရယူပါ</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">အသစ်တွေကြည့်ရန်</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ဤနေရာတွင်အဖြေများရယူပါ</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s မှအများဆုံးရယူပါ။</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ဟုတ်ကဲ့၊ ဆိုင်းအင်လုပ်ပါ</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -775,9 +820,14 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">ဝင်ရောက်ရန်မအောင်မြင်ပါ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">သင့်ကိုယ်သင်ကာကွယ်ပါ</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">သင့်ကိုအွန်လိုင်းပေါ်တွင် ခြေရာခံခြင်းမှ %s မှ ဆိုက်များကိုရပ်ဆိုင်းပြီးကူညီလိမ့်မည်။</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">စံ</string>
 
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">တင်းကြပ်စွာ (အကြံပြုသည်)</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -790,6 +840,9 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">သင့်အတွက်သီးသန့်လုံခြုံမှု</string>
 
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">ကျွန်ုပ်တို့သီးသန့်ထားရှိမှု သတိပေးချက်များကိုဖတ်ပါ။</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ရှာဖွေမှုစမည်</string>
 
@@ -798,6 +851,8 @@
     <string name="onboarding_theme_picker_header">အခင်းအကျင်းရွေးပါ</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">အလိုအလျောက်</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">သင့်ကိရိယာနှင့် အပြင်အဆင်ကိုညှိနှိုင်းပါ</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">အမှောင်အခင်းအကျင်း</string>
     <!-- Theme setting for light mode -->
@@ -825,6 +880,9 @@
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">မဆောင်ရွက်တော့ပါ</string>
 
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">စံပုံစံဖိုင်တွဲများကိုမပြင်ဆင်နိုင်ပါ။</string>
+
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">ကာကွယ်မှုဆိုင်ရာ အပြင်အဆင်များ</string>
@@ -834,20 +892,36 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ပိုမိုလေ့လာရန်</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_option">စံ</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">စံ (အကြံပြုချက်)</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">တင်းကျပ်ပါ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">တင်းကျပ်ရန် (ပုံမှန်)</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">တင်းကြပ်စွာ (အကြံပြုသည်)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">စိတ်ကြိုက်</string>
 
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">ပိတ်ဆို့ရန် ခြေရာခံသူများနှင့် scriptsများကို ရွေးချယ်ပါ။</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">ကွတ်ကီးများ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">မလည်ပတ်သောဆိုက်များမှ ကွတ်ကီးများ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">အခြားပြင်ပကွတ်ကီးအားလုံး (ဆိုက်များကိုဖျက်ဆီးနိုင်သည်)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ကွတ်ကီးအားလုံး (ဝဘ်ဆိုက်များကိုဖျက်ဆီးစေနိုင်သည်)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">နောက်ယောင်ခံသည့် အရာများ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">တဗ်များအားလုံးတွင်</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">သီးသန့်တဗ်များတွင်သာ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">စိတ်ကြိုက်တဗ်များတွင်သာ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -866,6 +940,10 @@
 
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">နောက်ယောင်ခံသည့် အရာများ</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">ဤဆိုက်အတွက် ကာကွယ်မှုဖွင့်ထားသည်။</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">ဤဆိုက်အတွက် ကာကွယ်မှုပိတ်ထားသည်။</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">သင့်လုပ်ပိုင်ခွင့်များ</string>
 
@@ -900,6 +978,9 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">ပွားပါ</string>
 
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">ကလစ်ဘုတ်သို့ URL ကူးထားပြီး</string>
+
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">ပင်မစာမျက်နှာသို့ ထည့်ပါ</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
@@ -909,6 +990,10 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ဖြတ်လမ်းနာမည်</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">ဝင်ရောက်မှုများနှင့်စကားဝှက်များ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">ဝင်ရောက်မှုများနှင့်စကားဝှက်များကို သိမ်းထားပြီး</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">သိမ်းဆည်းရန်တောင်းပါ</string>
 
@@ -928,10 +1013,18 @@
     <string name="preferences_passwords_sync_logins_sign_in">တစ်ပြေးညီဖြစ်စေရန် ဝင်ရောက်ပါ</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">သိမ်းထားသော ဝင်ရောက်မှုများ</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">%s သို့ ထပ်တူပြုသို့မဟုတ်သိမ်းထားသောဝင်ရောက်မှုများကို ဤတွင်ပြလိမ့်မည်။</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ထပ်တူပြုခြင်းအကြောင်းပိုမိုလေ့လာပါ။</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ခြွင်းချက်များ</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">မသိမ်းထားသောဝင်ရောက်မှုနှင့်စကားဝှက်များကို ဤတွင်ပြလိမ့်မည်။</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">ယင်းဝဘ်ဆိုက်များအတွက် ဝင်ရောက်မှုများနှင့် စကားဝှက်များကိုမသိမ်းပါ</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">ဝင်ရောက်မှုများရှာဖွေပါ</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">အက္ခရာစဉ်အရ</string>
     <!-- Option to sort logins list by most recently used -->
@@ -944,8 +1037,14 @@
     <string name="preferences_passwords_saved_logins_password">စကားဝှက်</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">သင်၏ပင်နံပါတ်ကိုပြန်လည်ထည့်ပါ</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">သင့်သိမ်းထားသောဝင်ရောက်မှုများကြည့်ရန်ဖွင့်ပါ</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">ကွန်ရက်လုံခြုံမှုမရှိပါ။ ဒီမှာဝင်ရောက်ခြင်းက ထိခိုက်ခံရနိုင်ချေရှိသည်။</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">ပိုမိုလေ့လာရန်</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">ဤဝင်ရောက်မှုကိုသိမ်းရန် %s ကိုလိုလားပါသလား။</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">သိမ်းပါ</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -954,6 +1053,8 @@
     <string name="logins_password_copied">စကားဝှက်ကို clipboard သို့ကူးယူထားသည်</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">အသုံးပြုသူအမည် clipboard သို့ကူးယူခဲ့သည်</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">ကလစ်ဘုတ်သို့ ဆိုက်ကိုကူးယူထားပြီး</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">စကားဝှက်ကို ကူးယူပါ</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
@@ -964,6 +1065,10 @@
     <string name="saved_login_reveal_password">စကားဝှက်ကို ပြပါ</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">စကားဝှက်ကိုဖျောက်ထားပါ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">သိမ်းထားသောဝင်ရောက်မှုများကိုကြည့်ရန်ဖွင့်ပါ။</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">သင့်ဝင်ရောက်မှုများနှင့်စကားဝှက်များကိုလုံခြုံပါစေ။</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">နောက်မှ</string>
 
@@ -971,6 +1076,9 @@
     <string name="logins_warning_dialog_set_up_now">ယခုတပ်ဆင်ပါ</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">သင့်ကိရိယာကိုသော့ဖွင့်ပါ</string>
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">ဝဘ်ဆိုက်အားလုံးကိုချဲ့ကြည့်ပါ။</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ရှာဖွေရေး အင်ဂျင်ကို ထပ်ထည့်ပါ</string>
@@ -990,11 +1098,25 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">နာမည်</string>
 
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">အသုံးပြုရန် စာကြောင်းရှာဖွေပါ။</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">စုံစမ်းမှုကို “%s” ဖြင့်အစားထိုးပါ။ ဥပမာ။ \n https://www.google.com/search?q= %s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ပိုမိုလေ့လာရန်</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">ရှာဖွေအင်ဂျင်အသေးစိတ်ကိုစိတ်ကြိုက်ပြင်ဆင်ပါ။</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">link ကိုလေ့လာပါ</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">ရှာဖွေအင်ဂျင်နာမည်ဝင်ပါ။</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” အမည်ဖြင့်ရှာဖွေရေးအင်ဂျင်ရှိပြီးသားဖြစ်သည်။</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ရှာဖွေစာကြောင်းကိုရိုက်ပါ</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” ချိတ်ဆက်မှုအမှားအယွင်း</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s ဖန်တီးထားသည်</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1002,6 +1124,8 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s ဖျက်ပြီးပါပြီ</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">%s အသစ်ကို ကြိုဆိုပါ။</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s မွမ်းမံနေသည် ...</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1017,10 +1141,22 @@
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Android ပြင်ဆင်မှုများသို့သွားပါ</string>
 
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b> ခွင့်ပြုချက်များ </b> ကိုနှိပ်ပါ။]]></string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b> %1$s </b> ကိုဖွင့်ပါ]]></string>
+
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">လုံခြုံသော ချိတ်ဆက်မှု</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">မလုံခြုံသော ချိတ်ဆက်မှု</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">ဆိုဒ်အားလုံးရှိခွင့်ပြုချက်အားလုံးကိုရှင်းပစ်ရန်သေချာပါသလား။</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">ဒီဆိုဒ်အတွက်ခွင့်ပြုချက်အားလုံးကိုရှင်းပစ်ရန်သေချာပါသလား။</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">ဤဆိုက်အတွက်ခွင့်ပြုချက်များဖျက်ရန်သေချာပါသလား။</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">site ချွင်းချက်မရှိပါ</string>
     <!-- Label for the Pocket default top site -->
@@ -1034,4 +1170,8 @@
     <string name="certificate_info_verified_by">%1$s မှစစ်ဆေးပြီး။</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">ဖျက်ပါ</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">ဤဝင်ရောက်မှုကိုဖျက်မှာသေချာပါသလား။</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">ဖျက်ပါ</string>
 </resources>

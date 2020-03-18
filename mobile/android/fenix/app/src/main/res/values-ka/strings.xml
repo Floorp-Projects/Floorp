@@ -114,7 +114,7 @@
     <!-- Text for default locale item -->
     <string name="default_locale_text">მოწყობილობის ენის მიხედვით</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="locale_search_hint">ძიების ენა</string>
+    <string name="locale_search_hint">ენის ძიება</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -1163,7 +1163,7 @@
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">გახსენით შენახული ანგარიშების სანახავად</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">დაიცავით თქვენი ანგარიშების მონაცემები</string>
+    <string name="logins_warning_dialog_title">დაიცავით თქვენი ანგარიშები</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">დააყენეთ მოწყობილობის ჩასაკეტად მოსახაზი, PIN-კოდი ან პაროლი, თქვენი შენახული ანგარიშების მონაცემებთან, უცხო პირების წვდომის აღსაკვეთათ.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1244,7 +1244,7 @@
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. შეეხეთ <b>ნებართვებს</b>]]></string>
 
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
-    <string name="phone_feature_blocked_step_feature"><![CDATA[3. გადართეთ <b>%1$s</b> ჩართულზე]]></string>
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. გახადეთ <b>%1$s</b> დაშვებული]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">დაცული კავშირი</string>

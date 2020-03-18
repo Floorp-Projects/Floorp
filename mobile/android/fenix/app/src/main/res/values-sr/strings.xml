@@ -1,6 +1,574 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Приватни Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (приватно)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Више опција</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Омогући приватно прегледање</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Онемогући приватно прегледање</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Претражи или унеси адресу</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Нема отворених језичака</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Ваши отворени језичци биће приказани овде.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">У приватној сесији сте</string>
+    <string name="private_browsing_common_myths">Чести митови о приватном прегледању</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Обриши сесију</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Додајте пречицу за отварање приватних језичака са вашег почетног екрана.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Додај пречицу</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Не, хвала</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Нови језичак</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Нови приватни језичак</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Отворени језичци</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Назад</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Напред</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Освежи</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Заустави</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Забелешка</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Уреди забелешку</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Управљач додацима</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Овде нема додатака</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Помоћ</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Шта је ново</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Подешавања</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Ваша библиотека</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Страница за рачунаре</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Додај на почетни екран</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Инсталирај</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Нађи на страници</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Приватни језичак</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Нови језичак</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Сачувај у збирку</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Пријави проблем на страници</string>
+
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Подели</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Дели са…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Отвори у %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">ПОКРЕЋЕ %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Покреће %1$s</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Приказ читача</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Отвори у апликацији</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Изглед</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Изабери језик</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Претрага</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Прати језик уређаја</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Претражи језике</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Скенирај</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Пречице</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Подешавања претраживача</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Претражи са</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Овај пут потражи користећи:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Убаци везу из оставе</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Дозволи</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Не дозволи</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Сазнајте више</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Претрага</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Претражи веб</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Подешавања</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Основно</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Опште</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">О програму</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Подразумевани претраживач</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Претрага</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Адресна трака</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Помоћ</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Оцените на Google Play продавници</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Пошаљи повратне информације</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">О %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Ваша права</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Лозинке</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Кредитне картице и адресе</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Постави као подразумевани прегледач</string>
+
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Приватност</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Приватност и безбедност</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Дозволе на страници</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Приватно прегледање</string>
+
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Отвара везе у приватном језичку</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Додајте пречицу за приватно прегледање</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Приступачност</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Налог</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Пријава</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Алатна трака</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Тема</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Прилагоди</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Синхронизујте забелешке, историјат и још много тога са својим Firefox налогом</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox налог</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Поново се повежите за наставак синхронизовања</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Језик</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Избор података</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Прикупљање података</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Обавештење о приватности</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Алати за програмере</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Удаљено отклањање грешака преко USB-а</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Пречице за претрагу</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Предлози претраге</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Прикажи у приватним сесијама</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Претражи историјат прегледања</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Претражи забелешке</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Подешавања налога</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Отвори везе у апликацијама</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Додаци</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Синхронизуј сада</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Изаберите шта синхронизовати</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Историјат</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Забелешке</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Пријаве</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Одјава</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Назив уређаја</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Назив уређаја не може бити празан.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Синхронизујем…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Синхронизација није успела. Последња успешна: %s</string>
+
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Синхронизација није успела. Последња успешна: никада</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Последња синхронизација: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Последња синхронизација: никада</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s на уређају %s %s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Примљени језичци</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Обавештења за језичке примљене са других Firefox уређаја.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Примљен језичак</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Примљени језичци</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Језичак са уређаја %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Заштита од праћења</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Заштита од праћења</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Изузеци</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Заштита од праћења је искључена за ове веб странице</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Укључи за све странице</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Сазнајте више</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Телеметрија</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Употреба и технички подаци</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Маркетиншки подаци</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Експерименти</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Извештавач о рушењу</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Укључите Sync</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Пријава</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Уклони налог</string>
+
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Откажи</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Врх</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Дно</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Светла</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Тамна</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Прати тему уређаја</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Сесије</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Снимци екрана</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Преузимања</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Забелешке</string>
+
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Забелешке радне површине</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Мени са забелешкама</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Трака са забелешкама</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Остале забелешке</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Историјат</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Списак за читање</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Претрага</string>
+    <!-- Library Page Title -->
+    <string name="library_title">Библиотека</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Подешавања</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Затвори</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Отворени језичци</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Приватна сесија</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Приватни језичци</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Додај језичак</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Затвори језичак</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Затвори језичак %s</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Затвори све језичке</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Сачувај у збирку</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Обриши</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Сачувај</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Подели</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Сачувај у збирку</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Обриши збирку</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Преименуј збирку</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Отворени језичци</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Уклони</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Обриши историјат</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Да ли сте сигурни да желите да обришете историјат?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Очисти</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Обриши</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Изабрано %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Обрисано %1$d ставки</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">последњих 24 сата</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Последњих 7 дана</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Последњих 30 дана</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Старије</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Овде нема историјата</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Нажалост, %1$s не може учитати ту страницу.</string>
+
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Шаљи Mozilla-и извештаје о рушењу</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Затвори језичак</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Обнови језичак</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Опције сесије</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Подели сесију</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Мени са забелешкама</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Уреди забелешку</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Изабери фасциклу</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Додај фасциклу</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Забелешка је направљена.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Забелешка је сачувана!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">УРЕДИ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Уреди</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Изабери</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Копирај</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Подели</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Отвори у новом језичку</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Отвори у приватном језичку</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Обриши</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Сачувај</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Изабрано %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Уреди забелешку</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Уреди фасциклу</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Пријавите се да бисте видели синхронизоване забелешке</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">Адреса</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">ФАСЦИКЛА</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">НАЗИВ</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Додај фасциклу</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Изабери фасциклу</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Мора садржати наслов</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Неисправна адреса</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Нема забелешки овде</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Обрисано %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Бришем изабране забелешке</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">ОПОЗОВИ</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Дозволе</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Иди у подешавања</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Лист брзих подешавања</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Препоручено</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Управљај дозволама странице</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Управљај дозволама</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Укини дозволу</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Укини дозволе на свим страницама</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Самостално покретање</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Камера</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Микрофон</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Локација</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Обавештење</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Упитај за дозволу</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Блокирано</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Дозвољено</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Блокирао Андроид</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Изузеци</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Укљ.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Иск.</string>
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Видео и звук блокирани</string>
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Видео и звук дозвољени</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Дозволи звук и видео</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Дозволи звук и видео само на бежичној мрежи</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Блокирај звук</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Блокирај видео и звук</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Укљ.</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Иск.</string>
+
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Збирке</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Мени са збиркама</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">Нема збирки</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">Ваше збирке биће приказане овде.</string>
+
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Тамна тема</string>
     <!-- Theme setting for light mode -->

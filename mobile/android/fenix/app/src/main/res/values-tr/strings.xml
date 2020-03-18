@@ -610,6 +610,8 @@
 
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Ses ve videoya izin ver</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Ses ve videoya yalnızca kablosuz ağda izin ver</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio">Sesi engelle</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->

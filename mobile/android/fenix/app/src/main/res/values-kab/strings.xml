@@ -608,10 +608,18 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tracking_protection_on">Irmed</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Insa</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Tividyutin d imeslawen waḥlen</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Tavidyut akked umeslaw yettwasiregen</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Sireg ameslaw d uvidyu</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Siref imesli d uvidyu s Wi-Fi kan</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Sewḥel imesli</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Sewḥel ameslaw d uvidyu</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Irmed</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1270,4 +1278,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="certificate_info_verified_by">Isenqed-it: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Kkes</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Tebɣiḍ ad tekseḍ anekcum-agi?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Kkes</string>
 </resources>

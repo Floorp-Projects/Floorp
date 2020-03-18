@@ -8,6 +8,10 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Más opciones</string>
 
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Activar el restolar en privao</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Desactivar el restolar en privao</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Gueta o introduz una direición</string>
     <!-- No Open Tabs Message Header -->
@@ -19,6 +23,10 @@
     <!-- Title for private session option -->
     <string name="private_browsing_title">Tas nuna sesión privada</string>
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s llimpia los historiales cuando coles de l\'aplicación o zarres toles llingüetes privaes. Magar qu\'esto nun t\'anonimiza n\'internet, fai que la to actividá en llinia seya fácil d\'anubrir
+        a otros usuarios qu\'usen el preséu.</string>
     <string name="private_browsing_common_myths">Mitos comunes tocante al restolar en privao</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Desaniciar la sesión</string>
@@ -147,6 +155,8 @@
     <string name="preferences_category_privacy">Privacidá</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Privacidá y seguranza</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Permisos de sitios</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Restolar en privao</string>
     <!-- Preference for opening links in a private tab-->
@@ -237,6 +247,8 @@
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Esceiciones</string>
 
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">La proteición escontra\'l rastrexu ta desactivada pa estos sitios web</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Activar en tolos sitios</string>
     <!-- Text displayed when there are no exceptions -->
@@ -255,10 +267,16 @@
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Informador de casques</string>
 
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Informe de salú de %s</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activación de Sync</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Visita <b>firefox.com/pair</b> con Firefox nel ordenador pa consiguir el códigu QR.]]></string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Encaboxar</string>
 
@@ -288,6 +306,8 @@
     <string name="library_bookmarks">Marcadores</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
     <string name="library_desktop_bookmarks_root">Marcadores del escritoriu</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Otros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
     <!-- Library Page Title -->
@@ -410,6 +430,10 @@
     <string name="preference_phone_feature_notification">Avisos</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Entrugar pa permitir</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blóquiase</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blóquiase por Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Esceiciones</string>
 
@@ -561,6 +585,8 @@
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Imáxenes y ficheros na caché</string>
 
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Llibera espaciu d\'almacenamientu</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permisos de sitios</string>
     <!-- Text for the button to delete browsing data -->
@@ -577,6 +603,8 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Colar</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Esto va desaniciar tolos datos de restolar.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Encaboxar</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -594,9 +622,16 @@
     <string name="onboarding_header">¡Afáyate en %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">¿Yá tienes una cuenta?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Conoz %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Novedaes</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
     <string name="onboarding_whats_new_description">¿Tienes entrugues tocante al rediseñu de %s?¿Quies saber qué camudó?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Consigui rempuestes equí</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
@@ -605,19 +640,39 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Fallu al aniciar sesión</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protéxite</string>
+    <string name="onboarding_tracking_protection_header">Proteición</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s ayuda a impidir que los sitios web te rastrexen en llinia.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Estándar</string>
 
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Bloquia dellos rastrexadores pero permite que les páxines carguen normalmente</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (aconséyase)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Bloquia más rastrexadores pa más proteición y rindimientu pero podría causar que dalgunos sitios nun funcionen afayadizamente</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Restolar en privao</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Abrir los axustes</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">La to privacidá</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_privacy_notice_description">Diseñemos %s pa date\'l control sobre lo que compartes
         en llinia y con nós.</string>
 
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Lleer el nuesu avisu de privacidá</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Apenzar a restolar</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Escoyeta d\'un estilu</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description1">Aforra daqué de batería y curia los güeyos activando\'l mou escuru.</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -636,6 +691,10 @@
 
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Escanéu d\'un códigu</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Nun ordenador abri Firefox y vete a <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Escaniar</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar una direición de corréu</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -650,6 +709,8 @@
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Axustes de la proteición</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Proteición ameyorada escontra\'l rastrexu</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Restola ensin que te sigan</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -660,14 +721,24 @@
     <string name="preference_enhanced_tracking_protection_standard">Estándar (aconséyase)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">Les páxines van cargar de forma nomal pero blóquiense dellos rastrexadores.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Qué se bloquia coles proteición estándar escontra\'l rastrexu</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Estricta (por defeutu)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_default_description">La proteición ye mayor y el rindimientu ameyora pero dalgunos sitios quiciabes nun carguen afayadizamente.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Estricta (aconséyase)</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Lo que la proteición estricta escontra\'l rastrexu bloquia</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Personalizar</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description">Escueyes los rastrexadores y scripts a bloquiar</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Lo que la proteición personalizada escontra\'l rastrexu bloquia</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
@@ -703,17 +774,31 @@
 
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Conteníu que rastrexa</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Para la carga d\'anuncios, vídeos y otru conteníu esternu que contenga códigu que rastrexe. Quiciabes afeute a la funcionalidá de dalgunos sitios web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">%s bloquia los rastrexadores d\'esti sitiu cuando l\'escudu ta moráu. Tócalu pa ver qué se bloquia.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">La proteición ta ACTIVADA nesti sitiu</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">La proteición ta DESACTIVADA nesti sitiu</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">La proteición ameyorada escontra\'l rastrexu ta desactivada pa estos sitios web</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Los tos drechos</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Les biblioteques de códigu abiertu qu\'usamos</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Novedaes de %s</string>
 
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Biblioteques OSS</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Sofitu</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Conoz los tos drechos</string>
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Información del llicenciamientu</string>
     <!-- About page link text to open a screen with libraries that are used -->
@@ -753,6 +838,16 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Entrugar</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nun guardar</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sincronización d\'anicios de sesión</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Sí</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Non</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Calca equí pa reconeutar</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Anicia sesión en Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Anicios de sesión guardaos</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -770,6 +865,10 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Contraseña</string>
 
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Desbloquia pa ver los anicios de sesión guardaos</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Esta conexón nun ye segura. Los anicios de sesión introducíos equí podríen tar en riesgu.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Deprender más</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
@@ -796,8 +895,16 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Anubrir la contraseña</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Desbloquia pa ver los anicios de sesión guardaos</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Configura un patrón de bloquéu, PIN o una contraseña pa protexer los anicios de sesión guardaos y contraseñes, y evitar qu\'otros usuarios accedan a ellos.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Dempués</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Configurar agora</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Desbloquéu del preséu</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Facer zoom en tolos sitios web</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
@@ -828,8 +935,13 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Deprender más</string>
 
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Enllaz Deprender más</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Introduz el nome d\'un motor de gueta</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Yá esiste\'l motor de gueta col nome «%s».</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Introduz una cadena de gueta</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
@@ -849,6 +961,8 @@
     <string name="migration_updating_app_button_text">Anovando %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Aniciar %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Completóse la migración</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Contraseñes</string>
 
@@ -863,6 +977,10 @@
     <string name="quick_settings_sheet_secure_connection">Conexón segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Conexón insegura</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Nun hai</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Artículos destacaos</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">¿De xuru que quies desaniciar esti marcador?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -870,4 +988,8 @@
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Cola verificación de: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Desaniciar</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">¿De xuru que quies desaniciar esti aniciu de sesión?</string>
     </resources>

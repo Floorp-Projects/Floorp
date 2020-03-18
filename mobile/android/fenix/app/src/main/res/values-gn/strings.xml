@@ -612,10 +612,18 @@
     <string name="tracking_protection_on">Hendypyre</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Mboguepyre</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Ta’ãngamýi ha ñe’ẽatãha jokopyre</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Ta’ãngamýi ha ñe’ẽatãha moneĩmbyre</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Emoneĩ mba’epu ha ta’ãngamýi</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Emoneĩ mba’epu ha ta’ãngamýi Wi-Fi ndive</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Ejoko mba’epu</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Ejoko ta’ãngamýi ha mba’epu</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Hendypyre</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -903,6 +911,10 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ne ñemigua</string>
 
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Romoha’ãngáma %s eñangareko hag̃ua umi emoherakuãva rehe
+        ñandutípe ha emoherakuã orendive.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Emoñe’ẽ ore marandu’i ñemigua</string>
 
@@ -1037,6 +1049,8 @@
     <string name="etp_fingerprinters_description">Emboyke ani oñembyaty ne mba’ekuaarã ojehechakuaáva ne mba’e’oka rehegua ikatúva ojepuru ejehapykuehokuaa hag̃ua.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Tapykueho retepy</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Ejoko ñemurã ñemyanyhẽ okayguáva, ta’ãngamýi ha tetepy oguerekóva ayvu rapykuehoha. Ikatu ombyai ñanduti renda rembiapoite.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">Ta’ãnga pytãũvo %s ojokohína tapykuehoha ko tendápe. Eiporavo ehecha hag̃ua mba’etépa ojoko.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -1173,6 +1187,8 @@
     <string name="logins_biometric_prompt_message">Emyandyjey ehecha hag̃ua ne rembiapo ñepyrũ ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Erekokuaa nde puruhára ha ñe’ẽñemi</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Emboheko pe patrõ jokoháva mba’e’oka pegua, PIN térã ñe’ẽñemi emo’ã hag̃ua nde puruhára ha ñe’ẽñemi ñongatupyrépe jeike ambue orekórõ ne mba’e’oka.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Upéi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1234,6 +1250,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Eg̃uahẽporãite peteĩ %s ipyahuetévape</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Nera’arõ kundahára ipyahuetéva, oikóva ha hembiapoite porãvéva ne pytyvõ hag̃ua emba’apove hag̃ua ñandutípe.\n\nEha’arõ hekopyahu aja %s nde</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Hekopyahuhína %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1277,4 +1295,8 @@
     <string name="certificate_info_verified_by">Ohechapyréma: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Mboguete</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">¿Emboguese añetehápe ko tembiapo ñepyrũ?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Mboguete</string>
 </resources>

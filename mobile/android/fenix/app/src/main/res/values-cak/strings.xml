@@ -618,10 +618,18 @@
     <string name="tracking_protection_on">Titzij</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Tichup</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Xeq’at silowäch chuqa’ k’oxom</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Silowäch chuqa\' taq k\'oxom ya\'on q\'ij chi ke</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Tiya\' q\'ij k\'oxom chuqa\' silowäch</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Tiya\' q\'ij k\'oxom chuqa\' silowäch xa xe pa Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Tiq\'at k\'oxom</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Tiq\'at silowäch chuqa\' k\'oxom</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Titzij</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1296,4 +1304,8 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="certificate_info_verified_by">Jikib\'an Ruma: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Tiyuj</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">¿La kan nawajo\' chi niyuj el re tikirib\'äl molojri\'ïl re\'?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Tiyuj</string>
 </resources>

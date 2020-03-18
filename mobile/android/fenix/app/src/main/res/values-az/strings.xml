@@ -16,6 +16,9 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Sessiyanı sil</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Ana ekranınızdan məxfi vərəqləri açmaq üçün qısayol əlavə edin.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Qısayol əlavə et</string>
     <!-- Text for the negative button -->
@@ -195,4 +198,195 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Məlumat seçimi</string>
 
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Axtarış qısayollarını göstər</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Əlfəcinlərdə axtar</string>
+
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Hesab tənzimləmələri</string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Tarixçə</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Əlfəcinlər</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Alınan vərəqlər</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Digər Firefox cihazlarından alınan vərəqlər üçün bildirişlər.</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">İzlənmə Qoruması</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Qlobal olaraq söndürülüb, açmaq üçün Tənzimləmələrə gedin.</string>
+
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Əlfəcinlər</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Masaüstü əlfəcinləri</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Əlfəcinlər menyusu</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Əlfəcin alət sətri</string>
+
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Digər əlfəcinlər</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Tarixçə</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Tənzimləmələr</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Tarixçə elementi menyusu</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Qapat</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Açıq vərəqlər</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Vərəq əlavə et</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Açıq vərəqlər menyusunu aç</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Bütün vərəqləri qapat</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Vərəqləri paylaş</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Kolleksiyaya saxla</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Vərəqləri aç</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Tərixçəni sil</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Tarixçəni təmizləmək istədiyinizə əminsiniz?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Təmizlə</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Sil</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d seçilib</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d elementi sil</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Son 24 saat</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Son 7 gün</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Son 30 gün</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Daha əvvəl</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Burda tarixçə yoxdur</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Əlfəcin menyusu</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Əlfəcini düzəlt</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Qovluq seç</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Qovluq əlavə et</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Yeni vərəqdə aç</string>
+
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d seçilib</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Sinxronlaşdırılmış əlfəcinlərinizi görmək üçün daxil olun</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Əlfəcinlər yoxdur</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Seçilən əlfəcinlər silinir</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Tənzimləmələrə gedin</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Sayt icazələrini idarə et</string>
+
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">Kolleksiya yoxdur</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">Kolleksiyalarınız burada göstəriləcəklər.</string>
+
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Vərəqləri göndərmək haqqında öyrənin…</string>
+
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Mühərrik:</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Açıq Vərəqlər</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d vərəq</string>
+
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Səyahət tarixçəsi və sayt məlumatları</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ünvan</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Tarixçə</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d səhifə</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Səyahət tarixçəsi</string>
+
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Tənzimləmələri aç</string>
+
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">İzləmə məzmunları</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Bütün vərəqlərdə</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Ancaq məxfi vərəqlərdə</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Ancaq fərdi vərəqlərdə</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptomaynerlər</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Barmaq izi toplayıcıları</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">İcazə verilənlər</string>
+
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d vərəq</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Giriş və parollar</string>
+
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Adı</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">İstifadə ediləcək axtarış sətri</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Fərdi axtarış mühərriyi məlumatları</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Axtarış mühərriyi adını daxil edin</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Axtarış mətnini daxil edin</string>
+
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Parollar</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Təhlükəsiz Əlaqə</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Təhlükəli Əlaqə</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">İstisna sayt yoxdur</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Məşhur Məqalələr</string>
     </resources>

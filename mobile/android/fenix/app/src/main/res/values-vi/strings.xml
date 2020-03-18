@@ -600,10 +600,18 @@
     <string name="tracking_protection_on">Bật</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Tắt</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Video và âm thanh bị chặn</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
+    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video và âm thanh được phép</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Cho phép âm thanh và video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
+    <string name="preference_option_autoplay_allowed_wifi_only">Chỉ cho phép âm thanh và video trên Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio">Chặn âm thanh</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Chặn âm thanh và video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Bật</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1253,4 +1261,8 @@
     <string name="certificate_info_verified_by">Được xác minh bởi: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Xóa</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Bạn có chắc chắn muốn xóa thông tin đăng nhập này không?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Xóa</string>
 </resources>

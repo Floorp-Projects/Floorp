@@ -246,6 +246,10 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinhronizacija …</string>
 
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Sinhronizacija ni uspela. Nazadnje sinhronizirano: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Sinhronizacija ni uspela. Nazadnje sinhronizirano: nikoli</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Zadnja sinhronizacija: %s</string>
     <!-- Label summary showing never synced -->
@@ -508,6 +512,8 @@
     <string name="collections_description">Zbirajte stvari, ki so pomembne. Za začetek shranite odprte zavihke v novo zbirko.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zbirke</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Meni zbirk</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Ni zbirk</string>
     <!-- No Open Tabs Message Description -->
@@ -524,10 +530,17 @@
     <string name="create_collection_select_all">Izberi vse</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Počisti izbiro</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Zavihki shranjeni!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Zavihek shranjen!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Zapri</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Shrani</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Zbirka %d</string>
 
     <!-- Share screen header -->
     <string name="share_header_2">Deli</string>
@@ -656,6 +669,10 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Kar najbolje izkoristite %s.</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Da, prijavi me</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Prijavljanje …</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Zaščitite se</string>
     <!-- text for the private browsing onboarding card header -->
@@ -725,12 +742,23 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Vaše pravice</string>
 
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Kaj je novega v %su</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Knjižnice OSS</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Podpora</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Obvestilo o zasebnosti</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Spoznajte svoje pravice</string>
+
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Podatki o dovoljenjih</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Knjižnice, ki jih uporabljamo</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -782,10 +810,18 @@
     <string name="logins_doorhanger_save_confirmation">Shrani</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Ne shrani</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Geslo kopirano v odložišče</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Uporabniško ime kopirano v odložišče</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Spletno mesto kopirano v odložišče</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiraj geslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopiraj uporabniško ime</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Kopiraj spletno mesto</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Prikaži geslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -828,6 +864,8 @@
     <string name="quick_settings_sheet_secure_connection">Varna povezava</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Nevarna povezava</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Ali ste prepričani, da želite izbrisati ta zaznamek?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Dodaj med glavne strani</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
@@ -835,4 +873,8 @@
     <string name="certificate_info_verified_by">Overil: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Izbriši</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Ali ste prepričani, da želite izbrisati to prijavo?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Izbriši</string>
 </resources>
