@@ -506,7 +506,7 @@ follows the [invocation function conventions][inv fr].
 If the referent is a global object, evaluate <i>code</i> in that global
 environment, and return a [completion value][cv] describing how it completed.
 <i>Code</i> is a string. All extant handler methods, breakpoints,
-and so on remain active during the call. This function
+and so on remain active during the call (pending note below). This function
 follows the [invocation function conventions][inv fr].
 If the referent is not a global object, throw a `TypeError` exception.
 
@@ -519,6 +519,10 @@ mode code, variable declarations in <i>code</i> affect the referent global
 object.
 
 The <i>options</i> argument is as for [`Debugger.Frame.prototype.eval`][fr eval].
+
+Note: If this method is called on an object whose owner
+[Debugger object][debugger-object] has an onNativeCall handler, only hooks
+on objects associated with that debugger will be called during the evaluation.
 
 ### `executeInGlobalWithBindings(code, bindings, [options])`
 Like `executeInGlobal`, but evaluate <i>code</i> using the referent as the
@@ -544,6 +548,10 @@ specification, the `VariableEnvironment` of the execution context for
 declarative environment, which is the eval code's `LexicalEnvironment`.)
 
 The <i>options</i> argument is as for [`Debugger.Frame.prototype.eval`][fr eval].
+
+Note: If this method is called on an object whose owner
+[Debugger object][debugger-object] has an onNativeCall handler, only hooks
+on objects associated with that debugger will be called during the evaluation.
 
 ### `createSource(options)`
 If the referent is a global object, return a new JavaScript source in the

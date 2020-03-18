@@ -156,21 +156,29 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
 
   updateConsoleInputEvaluation(dbg, dbgWindow, webConsole);
 
-  let sideEffectData = null;
+  let noSideEffectDebugger = null;
   if (options.eager) {
-    sideEffectData = preventSideEffects(dbg);
+    noSideEffectDebugger = makeSideeffectFreeDebugger();
   }
 
-  const result = getEvalResult(
-    evalString,
-    evalOptions,
-    bindings,
-    frame,
-    dbgWindow
-  );
-
-  if (options.eager) {
-    allowSideEffects(sideEffectData);
+  let result;
+  try {
+    result = getEvalResult(
+      dbg,
+      evalString,
+      evalOptions,
+      bindings,
+      frame,
+      dbgWindow,
+      noSideEffectDebugger
+    );
+  } finally {
+    // We need to be absolutely sure that the sideeffect-free debugger's
+    // debuggees are removed because otherwise we risk them terminating
+    // execution of later code in the case of unexpected exceptions.
+    if (noSideEffectDebugger) {
+      noSideEffectDebugger.removeAllDebuggees();
+    }
   }
 
   // Attempt to initialize any declarations found in the evaluated string
@@ -197,11 +205,48 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   };
 };
 
-function getEvalResult(string, evalOptions, bindings, frame, dbgWindow) {
-  if (frame) {
-    return frame.evalWithBindings(string, bindings, evalOptions);
+function getEvalResult(
+  dbg,
+  string,
+  evalOptions,
+  bindings,
+  frame,
+  dbgWindow,
+  noSideEffectDebugger
+) {
+  if (noSideEffectDebugger) {
+    // When a sideeffect-free debugger has been created, we need to eval
+    // in the context of that debugger in order for the side-effect tracking
+    // to apply.
+    frame = frame ? noSideEffectDebugger.adoptFrame(frame) : null;
+    dbgWindow = noSideEffectDebugger.adoptDebuggeeValue(dbgWindow);
+    if (bindings) {
+      bindings = Object.keys(bindings).reduce((acc, key) => {
+        acc[key] = noSideEffectDebugger.adoptDebuggeeValue(bindings[key]);
+        return acc;
+      }, {});
+    }
   }
-  return dbgWindow.executeInGlobalWithBindings(string, bindings, evalOptions);
+
+  let result;
+  if (frame) {
+    result = frame.evalWithBindings(string, bindings, evalOptions);
+  } else {
+    result = dbgWindow.executeInGlobalWithBindings(
+      string,
+      bindings,
+      evalOptions
+    );
+  }
+  if (noSideEffectDebugger && result) {
+    if ("return" in result) {
+      result.return = dbg.adoptDebuggeeValue(result.return);
+    }
+    if ("throw" in result) {
+      result.throw = dbg.adoptDebuggeeValue(result.throw);
+    }
+  }
+  return result;
 }
 
 function parseErrorOutput(dbgWindow, string) {
@@ -271,11 +316,7 @@ function parseErrorOutput(dbgWindow, string) {
   }
 }
 
-function preventSideEffects(dbg) {
-  if (dbg.onEnterFrame || dbg.onNativeCall) {
-    throw new Error("Debugger has hook installed");
-  }
-
+function makeSideeffectFreeDebugger() {
   // We ensure that the metadata for native functions is loaded before we
   // initialize sideeffect-prevention because the data is lazy-loaded, and this
   // logic can run inside of debuggee compartments because the
@@ -290,8 +331,8 @@ function preventSideEffects(dbg) {
   // this debuggee tracking logic with a separate Debugger instance.
   // Bug 1617666 arises otherwise if we set an onEnterFrame hook on the
   // existing debugger object and then later clear it.
-  const newDbg = new Debugger();
-  newDbg.addAllGlobalsAsDebuggees();
+  const dbg = new Debugger();
+  dbg.addAllGlobalsAsDebuggees();
 
   const timeoutDuration = 100;
   const endTime = Date.now() + timeoutDuration;
@@ -307,8 +348,7 @@ function preventSideEffects(dbg) {
   const handler = {
     hit: () => null,
   };
-
-  newDbg.onEnterFrame = frame => {
+  dbg.onEnterFrame = frame => {
     if (shouldCancel()) {
       return null;
     }
@@ -358,15 +398,7 @@ function preventSideEffects(dbg) {
     return null;
   };
 
-  return {
-    dbg,
-    newDbg,
-  };
-}
-
-function allowSideEffects(data) {
-  data.dbg.onNativeCall = undefined;
-  data.newDbg.removeAllDebuggees();
+  return dbg;
 }
 
 // Native functions which are considered to be side effect free.

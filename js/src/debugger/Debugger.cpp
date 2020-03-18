@@ -779,7 +779,7 @@ bool DebuggerList<HookIsEnabledFun>::init(JSContext* cx) {
   Handle<GlobalObject*> global = cx->global();
   for (Realm::DebuggerVectorEntry& entry : global->getDebuggers()) {
     Debugger* dbg = entry.dbg;
-    if (hookIsEnabled(dbg)) {
+    if (dbg->isHookCallAllowed(cx) && hookIsEnabled(dbg)) {
       if (!debuggers.append(ObjectValue(*dbg->toJSObject()))) {
         return false;
       }
@@ -918,9 +918,18 @@ bool DebugAPI::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame) {
 NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
                                                 const CallArgs& args,
                                                 CallReason reason) {
-  DebuggerList debuggerList(cx, [cx](Debugger* dbg) -> bool {
-    return dbg == cx->insideDebuggerEvaluationWithOnNativeCallHook &&
-           dbg->getHook(Debugger::OnNativeCall);
+  // "onNativeCall" only works consistently in the context of an explicit eval
+  // that has set the "insideDebuggerEvaluationWithOnNativeCallHook" state
+  // on the JSContext, so we fast-path this hook to bail right away if that is
+  // not currently set. If this flag is set to a _different_ debugger, the
+  // standard "isHookCallAllowed" debugger logic will apply and only hooks on
+  // that debugger will be callable.
+  if (!cx->insideDebuggerEvaluationWithOnNativeCallHook) {
+    return NativeResumeMode::Continue;
+  }
+
+  DebuggerList debuggerList(cx, [](Debugger* dbg) -> bool {
+    return dbg->getHook(Debugger::OnNativeCall);
   });
 
   if (!debuggerList.init(cx)) {
