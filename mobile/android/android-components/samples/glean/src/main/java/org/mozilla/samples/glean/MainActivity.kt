@@ -72,6 +72,11 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(experimentUpdateReceiver)
+    }
+
     /**
      * This function will be called by the ExperimentUpdateListener interface when the experiments
      * are updated.  This is not relevant to the Glean SDK, but to the experiments library.

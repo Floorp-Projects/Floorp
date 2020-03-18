@@ -9,7 +9,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import org.junit.Assert.assertEquals
 
 import org.junit.Rule
 import org.junit.Test
@@ -71,8 +70,6 @@ class BaselinePingTest {
 
         // Validate the received data.
         val baselinePing = waitForPingContent("baseline")!!
-        assertEquals("baseline", baselinePing.getJSONObject("ping_info")["ping_type"])
-
         val metrics = baselinePing.getJSONObject("metrics")
 
         // Make sure we have a 'duration' field with a reasonable value: it should be >= 1, since
