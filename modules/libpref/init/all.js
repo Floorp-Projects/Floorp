@@ -4688,9 +4688,6 @@ pref("dom.noopener.newprocess.enabled", true);
 // loops with faulty converters involved.
 pref("general.document_open_conversion_depth_limit", 20);
 
-// Should only be enabled in tests
-pref("dom.events.testing.asyncClipboard", false);
-
 // Disable moz* APIs in DataTransfer
 pref("dom.datatransfer.mozAtAPIs", false);
 
