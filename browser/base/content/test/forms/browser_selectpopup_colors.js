@@ -278,7 +278,7 @@ async function testSelectColors(select, itemCount, options) {
   if (options.waitForComputedStyle) {
     let property = options.waitForComputedStyle.property;
     let value = options.waitForComputedStyle.value;
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       info(
         `<select> has ${property}: ${getComputedStyle(selectPopup)[property]}`
       );
