@@ -462,6 +462,26 @@ TEST(TArray, MakeBackInserter)
   ASSERT_EQ(expected, dst);
 }
 
+TEST(TArray, MakeBackInserter_Move)
+{
+  uint32_t destructionCounter = 0;
+
+  {
+    std::vector<Movable> src(1);
+    src[0].mDestructionCounter = &destructionCounter;
+
+    nsTArray<Movable> dst;
+
+    std::copy(std::make_move_iterator(src.begin()),
+              std::make_move_iterator(src.end()), MakeBackInserter(dst));
+
+    ASSERT_EQ(1u, dst.Length());
+    ASSERT_EQ(0u, destructionCounter);
+  }
+
+  ASSERT_EQ(1u, destructionCounter);
+}
+
 // This should compile:
 struct RefCounted;
 
