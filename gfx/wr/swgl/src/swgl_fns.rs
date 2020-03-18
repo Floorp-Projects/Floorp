@@ -577,7 +577,7 @@ impl Gl for Context {
         format: GLenum,
         pixel_type: GLenum,
     ) {
-        panic!();
+        ReadPixels(x, y, width, height, format, pixel_type, ptr::null_mut());
     }
 
     fn sample_coverage(&self, value: GLclampf, invert: bool) {
