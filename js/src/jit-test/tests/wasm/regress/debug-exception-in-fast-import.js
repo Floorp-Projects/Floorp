@@ -8,7 +8,7 @@ g.eval("(" + function() {
 o = {};
 
 let { exports } = wasmEvalText(`
-  (module (import $imp "" "inc") (func) (func $start (call $imp)) (start $start) (export "" (func $start)))
+  (module (import "" "inc" (func $imp)) (func) (func $start (call $imp)) (start $start) (export "" (func $start)))
 `, {
     "": {
         inc: function() { o = o.p; }

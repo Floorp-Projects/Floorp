@@ -20,7 +20,7 @@ function f(a,b,c,d,e,f,g,h,i,j) {
 
 var bin = wasmTextToBinary(
     `(module
-       (import $f "m" "f" (func (param i32) (param i32) (param i32) (param i32) (param i32)
+       (import "m" "f" (func $f (param i32) (param i32) (param i32) (param i32) (param i32)
                                 (param i32) (param i32) (param i32) (param i32) (param i32)))
        (func (export "test") (param $a i32) (param $b i32) (param $c i32) (param $d i32) (param $e i32)
                              (param $f i32) (param $g i32) (param $h i32) (param $i i32) (param $j i32)

@@ -1,5 +1,5 @@
 wasmFailValidateText(`(module
-   (func (result i32) (param i32)
+   (func (param i32) (result i32)
      (loop (if (i32.const 0) (br 0)) (local.get 0)))
    (export "" (func 0))
 )`, /unused values not explicitly dropped by end of block/);
@@ -11,13 +11,13 @@ wasmFailValidateText(`(module
 )`, /unused values not explicitly dropped by end of block/);
 
 wasmFailValidateText(`(module
-   (func (result i32) (param i32)
+   (func (param i32) (result i32)
      (loop (if (i32.const 0) (br 0)) (drop (local.get 0))))
    (export "" (func 0))
 )`, emptyStackError);
 
 assertEq(wasmEvalText(`(module
-   (func (result i32) (param i32)
+   (func (param i32) (result i32)
      (loop (if (i32.const 0) (br 0))) (local.get 0))
    (export "" (func 0))
 )`).exports[""](42), 42);
@@ -28,7 +28,7 @@ wasmEvalText(`(module (func $func$0
 )`);
 
 wasmEvalText(`(module (func
-      (loop $out $in (br_table $out $out $in (i32.const 0)))
+      (block $out (loop $in (br_table $out $out $in (i32.const 0))))
   )
 )`);
 
@@ -52,7 +52,7 @@ wasmEvalText(`(module (func (result i32)
 `);
 
 wasmEvalText(`(module
-  (func (result i32) (param i32) (param i32) (i32.const 0))
+  (func (param i32) (param i32) (result i32) (i32.const 0))
   (func (result i32)
    (call 0 (i32.const 1) (call 0 (i32.const 2) (i32.const 3)))
    (call 0 (unreachable) (i32.const 4))
@@ -83,8 +83,8 @@ wasmEvalText(`
 
 wasmEvalText(`
 (module
-    (import "check" "one" (param i32))
-    (import "check" "two" (param i32) (param i32))
+    (import "check" "one" (func (param i32)))
+    (import "check" "two" (func (param i32) (param i32)))
     (func (param i32) (call 0 (local.get 0)))
     (func (param i32) (param i32) (call 1 (local.get 0) (local.get 1)))
     (func
@@ -132,26 +132,28 @@ wasmEvalText(`(module (func (result i32)
 wasmEvalText(`(module (func
  (block $return
   (block $beforeReturn
-   (loop $out $in
-    (block $otherTable
-      (br_table
-       $return
-       $return
-       $otherTable
-       $beforeReturn
-       (i32.const 0)
+    (block $out
+      (loop $in
+       (block $otherTable
+         (br_table
+          $return
+          $return
+          $otherTable
+          $beforeReturn
+          (i32.const 0)
+         )
+       )
+       (block $backTop
+        (br_table
+         $backTop
+         $backTop
+         $beforeReturn
+         (i32.const 0)
+        )
+       )
+       (br $in)
       )
     )
-    (block $backTop
-     (br_table
-      $backTop
-      $backTop
-      $beforeReturn
-      (i32.const 0)
-     )
-    )
-    (br $in)
-   )
   )
  )
 ))`);
