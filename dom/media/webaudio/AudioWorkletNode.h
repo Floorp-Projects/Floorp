@@ -16,6 +16,7 @@ class AudioParamMap;
 struct AudioWorkletNodeOptions;
 class MessagePort;
 struct NamedAudioParamTimeline;
+struct ProcessorErrorDetails;
 
 class AudioWorkletNode : public AudioNode {
  public:
@@ -40,6 +41,7 @@ class AudioWorkletNode : public AudioNode {
   uint16_t NumberOfInputs() const override { return mInputCount; }
   uint16_t NumberOfOutputs() const override { return mOutputCount; }
   const char* NodeType() const override { return "AudioWorkletNode"; }
+  void DispatchProcessorErrorEvent(const ProcessorErrorDetails& aDetails);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
