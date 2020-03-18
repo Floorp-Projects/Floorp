@@ -952,6 +952,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   JSObject* getHook(Hook hook) const;
   bool hasAnyLiveHooks() const;
+  inline bool isHookCallAllowed(JSContext* cx) const;
 
   static void slowPathPromiseHook(JSContext* cx, Hook hook,
                                   Handle<PromiseObject*> promise);
@@ -968,6 +969,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   template <typename RunImpl /* bool () */>
   MOZ_MUST_USE bool enterDebuggerHook(JSContext* cx, RunImpl runImpl) {
+    if (!isHookCallAllowed(cx)) {
+      return true;
+    }
+
     AutoRealm ar(cx, object);
 
     if (!runImpl()) {
