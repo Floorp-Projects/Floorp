@@ -167,7 +167,7 @@ for (let type of ['f32', 'f64']) {
         (func $bar (result i32) (i32.const 13))
         (table 10 funcref)
         (elem (i32.const 0) $foo $bar)
-        (export "tbl" table)
+        (export "tbl" (table 0))
     )`).exports;
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(0)(), 42);
