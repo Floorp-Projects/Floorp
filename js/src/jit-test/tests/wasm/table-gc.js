@@ -7,7 +7,7 @@ const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 const RuntimeError = WebAssembly.RuntimeError;
 
-var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (local.get $i))) (export "call" $call)`
+var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i))) (export "call" $call)`
 var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 // A table should not hold exported functions alive and exported functions
@@ -207,7 +207,7 @@ var m = new Module(wasmTextToBinary(`(module
         (local.set $i (i32.sub (local.get $i) (i32.const 1)))
         (i32.add
             (i32.const 1)
-            (call_indirect $i2i (local.get $i) (local.get $i))))
+            (call_indirect (type $i2i) (local.get $i) (local.get $i))))
     (export "f" $f)
 )`));
 for (var i = 1; i < N; i++) {
