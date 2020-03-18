@@ -74,11 +74,6 @@ class AnimationUtils {
   static Document* GetDocumentFromGlobal(JSObject* aGlobalObject);
 
   /**
-   * Checks if offscreen animation throttling is enabled.
-   */
-  static bool IsOffscreenThrottlingEnabled();
-
-  /**
    * Returns true if the given frame has an animated scale.
    */
   static bool FrameHasAnimatedScale(const nsIFrame* aFrame);
