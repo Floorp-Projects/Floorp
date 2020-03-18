@@ -201,7 +201,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   InitVAAPICodecContext();
 
   if (!CreateVAAPIDeviceContext()) {
-    mLib->av_freep(mCodecContext);
+    mLib->av_freep(&mCodecContext);
     FFMPEG_LOG("Failed to create VA-API device context");
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
@@ -209,13 +209,13 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   MediaResult ret = AllocateExtraData();
   if (NS_FAILED(ret)) {
     mLib->av_buffer_unref(&mVAAPIDeviceContext);
-    mLib->av_freep(mCodecContext);
+    mLib->av_freep(&mCodecContext);
     return ret;
   }
 
   if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     mLib->av_buffer_unref(&mVAAPIDeviceContext);
-    mLib->av_freep(mCodecContext);
+    mLib->av_freep(&mCodecContext);
     FFMPEG_LOG("Couldn't initialise VA-API decoder");
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
