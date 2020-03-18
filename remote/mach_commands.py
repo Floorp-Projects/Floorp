@@ -235,12 +235,13 @@ class MochaOutputHandler(object):
                     new_expected[test_name] = [status]
         return new_expected
 
-    def after_end(self):
-        missing = set(self.expected) - set(self.test_results)
-        if missing:
-            self.has_unexpected = True
-            for test_name in missing:
-                self.logger.error("TEST-UNEXPECTED-MISSING %s" % (test_name,))
+    def after_end(self, subset=False):
+        if not subset:
+            missing = set(self.expected) - set(self.test_results)
+            if missing:
+                self.has_unexpected = True
+                for test_name in missing:
+                    self.logger.error("TEST-UNEXPECTED-MISSING %s" % (test_name,))
         self.logger.suite_end()
 
 
@@ -294,6 +295,9 @@ class PuppeteerRunner(MozbuildObject):
           before invoking npm.  Overrides default preferences.
         `write_results`:
           Path to write the results json file
+        `subset`
+          Indicates only a subset of tests are being run, so we should
+          skip the check for missing results
         """
         setup()
 
@@ -340,7 +344,7 @@ class PuppeteerRunner(MozbuildObject):
 
         wait_proc(proc, "npm", exit_on_fail=False)
 
-        output_handler.after_end()
+        output_handler.after_end(params.get("subset", False))
 
         # Non-zero return codes are non-fatal for now since we have some
         # issues with unresolved promises that shouldn't otherwise block
@@ -402,6 +406,11 @@ def create_parser_puppeteer():
                    help="Path to write updated results to (defaults to the "
                         "expectations file if the argument is provided but "
                         "no path is passed)")
+    p.add_argument("--subset",
+                   action="store_true",
+                   default=False,
+                   help="Indicate that only a subset of the tests are running, "
+                        "so checks for missing tests should be skipped")
     p.add_argument("tests", nargs="*")
     mozlog.commandline.add_logging_group(p)
     return p
@@ -414,7 +423,8 @@ class PuppeteerTest(MachCommandBase):
              parser=create_parser_puppeteer)
     def puppeteer_test(self, binary=None, enable_fission=False, headless=False,
                        extra_prefs=None, extra_options=None, jobs=1, verbosity=0,
-                       tests=None, product="firefox", write_results=None, **kwargs):
+                       tests=None, product="firefox", write_results=None,
+                       subset=False, **kwargs):
 
         logger = mozlog.commandline.setup_logging("puppeteer-test",
                                                   kwargs,
@@ -470,7 +480,8 @@ class PuppeteerTest(MachCommandBase):
                   "product": product,
                   "jobs": jobs,
                   "extra_launcher_options": options,
-                  "write_results": write_results}
+                  "write_results": write_results,
+                  "subset": subset}
         puppeteer = self._spawn(PuppeteerRunner)
         try:
             return puppeteer.run_test(logger, *tests, **params)
