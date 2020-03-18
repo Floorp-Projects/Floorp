@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["BrowserGlue", "ContentPermissionPrompt"];
+var EXPORTED_SYMBOLS = [
+  "BrowserGlue",
+  "ContentPermissionPrompt",
+  "DefaultBrowserCheck",
+];
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -2151,7 +2155,7 @@ BrowserGlue.prototype = {
 
       {
         task: () => {
-          this._checkForDefaultBrowser();
+          this._maybeShowDefaultBrowserPrompt();
         },
       },
 
@@ -3418,96 +3422,15 @@ BrowserGlue.prototype = {
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
 
-  _checkForDefaultBrowser() {
-    // Perform default browser checking.
-    if (!ShellService) {
+  _maybeShowDefaultBrowserPrompt() {
+    const willPrompt = DefaultBrowserCheck.willCheckDefaultBrowser(
+      /* isStartupCheck */ true
+    );
+    if (!willPrompt) {
       return;
     }
 
-    let shouldCheck =
-      !AppConstants.DEBUG && ShellService.shouldCheckDefaultBrowser;
-
-    const skipDefaultBrowserCheck =
-      Services.prefs.getBoolPref(
-        "browser.shell.skipDefaultBrowserCheckOnFirstRun"
-      ) &&
-      !Services.prefs.getBoolPref(
-        "browser.shell.didSkipDefaultBrowserCheckOnFirstRun"
-      );
-
-    const usePromptLimit = !AppConstants.RELEASE_OR_BETA;
-    let promptCount = usePromptLimit
-      ? Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount")
-      : 0;
-
-    let willRecoverSession =
-      SessionStartup.sessionType == SessionStartup.RECOVER_SESSION;
-
-    // startup check, check all assoc
-    let isDefault = false;
-    let isDefaultError = false;
-    try {
-      isDefault = ShellService.isDefaultBrowser(true, false);
-    } catch (ex) {
-      isDefaultError = true;
-    }
-
-    if (isDefault) {
-      let now = Math.floor(Date.now() / 1000).toString();
-      Services.prefs.setCharPref(
-        "browser.shell.mostRecentDateSetAsDefault",
-        now
-      );
-    }
-
-    let willPrompt = shouldCheck && !isDefault && !willRecoverSession;
-
-    // Skip the "Set Default Browser" check during first-run or after the
-    // browser has been run a few times.
-    if (willPrompt) {
-      if (skipDefaultBrowserCheck) {
-        Services.prefs.setBoolPref(
-          "browser.shell.didSkipDefaultBrowserCheckOnFirstRun",
-          true
-        );
-        willPrompt = false;
-      } else {
-        promptCount++;
-      }
-      if (usePromptLimit && promptCount > 3) {
-        willPrompt = false;
-      }
-    }
-
-    if (usePromptLimit && willPrompt) {
-      Services.prefs.setIntPref(
-        "browser.shell.defaultBrowserCheckCount",
-        promptCount
-      );
-    }
-
-    try {
-      // Report default browser status on startup to telemetry
-      // so we can track whether we are the default.
-      Services.telemetry
-        .getHistogramById("BROWSER_IS_USER_DEFAULT")
-        .add(isDefault);
-      Services.telemetry
-        .getHistogramById("BROWSER_IS_USER_DEFAULT_ERROR")
-        .add(isDefaultError);
-      Services.telemetry
-        .getHistogramById("BROWSER_SET_DEFAULT_ALWAYS_CHECK")
-        .add(shouldCheck);
-      Services.telemetry
-        .getHistogramById("BROWSER_SET_DEFAULT_DIALOG_PROMPT_RAWCOUNT")
-        .add(promptCount);
-    } catch (ex) {
-      /* Don't break the default prompt if telemetry is broken. */
-    }
-
-    if (willPrompt) {
-      DefaultBrowserCheck.prompt(BrowserWindowTracker.getTopWindow());
-    }
+    DefaultBrowserCheck.prompt(BrowserWindowTracker.getTopWindow());
   },
 
   async _migrateMatchBucketsPrefForUI66() {
@@ -4489,6 +4412,113 @@ var DefaultBrowserCheck = {
       popup.remove();
       delete this._notification;
     }
+  },
+
+  /**
+   * Checks if the default browser check prompt will be shown.
+   * @param {boolean} isStartupCheck
+   *   If true, prefs will be set and telemetry will be recorded.
+   * @returns {boolean} True if the default browser check prompt will be shown.
+   */
+  willCheckDefaultBrowser(isStartupCheck) {
+    // Perform default browser checking.
+    if (!ShellService) {
+      return false;
+    }
+
+    let shouldCheck =
+      !AppConstants.DEBUG && ShellService.shouldCheckDefaultBrowser;
+
+    // Even if we shouldn't check the default browser, we still continue when
+    // isStartupCheck = true to set prefs and telemetry.
+    if (!shouldCheck && !isStartupCheck) {
+      return false;
+    }
+
+    // Skip the "Set Default Browser" check during first-run or after the
+    // browser has been run a few times.
+    const skipDefaultBrowserCheck =
+      Services.prefs.getBoolPref(
+        "browser.shell.skipDefaultBrowserCheckOnFirstRun"
+      ) &&
+      !Services.prefs.getBoolPref(
+        "browser.shell.didSkipDefaultBrowserCheckOnFirstRun"
+      );
+
+    const usePromptLimit = !AppConstants.RELEASE_OR_BETA;
+    let promptCount = usePromptLimit
+      ? Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount")
+      : 0;
+
+    let willRecoverSession =
+      SessionStartup.sessionType == SessionStartup.RECOVER_SESSION;
+
+    // Don't show the prompt if we're already the default browser.
+    let isDefault = false;
+    let isDefaultError = false;
+    try {
+      isDefault = ShellService.isDefaultBrowser(isStartupCheck, false);
+    } catch (ex) {
+      isDefaultError = true;
+    }
+
+    if (isDefault && isStartupCheck) {
+      let now = Math.floor(Date.now() / 1000).toString();
+      Services.prefs.setCharPref(
+        "browser.shell.mostRecentDateSetAsDefault",
+        now
+      );
+    }
+
+    let willPrompt = shouldCheck && !isDefault && !willRecoverSession;
+
+    if (willPrompt) {
+      if (skipDefaultBrowserCheck) {
+        if (isStartupCheck) {
+          Services.prefs.setBoolPref(
+            "browser.shell.didSkipDefaultBrowserCheckOnFirstRun",
+            true
+          );
+        }
+        willPrompt = false;
+      }
+
+      if (usePromptLimit) {
+        promptCount++;
+        if (isStartupCheck) {
+          Services.prefs.setIntPref(
+            "browser.shell.defaultBrowserCheckCount",
+            promptCount
+          );
+        }
+        if (promptCount > 3) {
+          willPrompt = false;
+        }
+      }
+    }
+
+    if (isStartupCheck) {
+      try {
+        // Report default browser status on startup to telemetry
+        // so we can track whether we are the default.
+        Services.telemetry
+          .getHistogramById("BROWSER_IS_USER_DEFAULT")
+          .add(isDefault);
+        Services.telemetry
+          .getHistogramById("BROWSER_IS_USER_DEFAULT_ERROR")
+          .add(isDefaultError);
+        Services.telemetry
+          .getHistogramById("BROWSER_SET_DEFAULT_ALWAYS_CHECK")
+          .add(shouldCheck);
+        Services.telemetry
+          .getHistogramById("BROWSER_SET_DEFAULT_DIALOG_PROMPT_RAWCOUNT")
+          .add(promptCount);
+      } catch (ex) {
+        /* Don't break the default prompt if telemetry is broken. */
+      }
+    }
+
+    return willPrompt;
   },
 };
 
