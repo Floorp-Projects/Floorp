@@ -258,14 +258,15 @@ def generate_test_source_files(spec_directory, test_helper_filenames,
     test_expansion_schema = spec_json['test_expansion_schema']
     specification = spec_json['specification']
 
-    spec_json_js_template = util.get_template('spec_json.js.template')
-    util.write_file(
-        os.path.join(spec_directory, "generic", "spec_json.js"),
-        spec_json_js_template % {'spec_json': json.dumps(spec_json)})
-
-    util.write_file(
-        os.path.join(spec_directory, "generic", "debug-output.spec.src.json"),
-        json.dumps(spec_json, indent=2, separators=(',', ': ')))
+    if target == "debug":
+        spec_json_js_template = util.get_template('spec_json.js.template')
+        util.write_file(
+            os.path.join(spec_directory, "generic", "spec_json.js"),
+            spec_json_js_template % {'spec_json': json.dumps(spec_json)})
+        util.write_file(
+            os.path.join(spec_directory, "generic",
+                         "debug-output.spec.src.json"),
+            json.dumps(spec_json, indent=2, separators=(',', ': ')))
 
     # Choose a debug/release template depending on the target.
     html_template = "test.%s.html.template" % target
