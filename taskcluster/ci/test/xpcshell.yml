@@ -56,10 +56,6 @@ xpcshell:
             .*-tsan/opt: 8
             windows(7-32|10-64)(-shippable|-devedition|-asan|.*-qr)?/.*: 2
             default: 5
-    instance-size:
-        by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
-            default: default
     max-run-time:
         by-test-platform:
             macosx.*(?!-ccov)...../.*: 5400
