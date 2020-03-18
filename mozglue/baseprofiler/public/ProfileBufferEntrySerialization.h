@@ -1088,60 +1088,19 @@ struct ProfileBufferEntryReader::Deserializer<Maybe<T>> {
 // as ULEB128), and the recursively-serialized object.
 template <typename... Ts>
 struct ProfileBufferEntryWriter::Serializer<Variant<Ts...>> {
- private:
-  // Called from the fold expression in `VariantBytes()`, only the selected
-  // variant will write into `aOutBytes`.
-  template <size_t I>
-  static void VariantIBytes(const Variant<Ts...>& aVariantTs,
-                            Length& aOutBytes) {
-    if (aVariantTs.template is<I>()) {
-      aOutBytes = ProfileBufferEntryWriter::ULEB128Size(I) +
-                  SumBytes(aVariantTs.template as<I>());
-    }
-  }
-
-  // Go through all variant tags, and let the selected one write the correct
-  // number of bytes.
-  template <size_t... Is>
-  static Length VariantBytes(const Variant<Ts...>& aVariantTs,
-                             std::index_sequence<Is...>) {
-    Length bytes = 0;
-    (VariantIBytes<Is>(aVariantTs, bytes), ...);
-    MOZ_ASSERT(bytes != 0);
-    return bytes;
-  }
-
-  // Called from the fold expression in `VariantWrite()`, only the selected
-  // variant will serialize the tag and object.
-  template <size_t I>
-  static void VariantIWrite(ProfileBufferEntryWriter& aEW,
-                            const Variant<Ts...>& aVariantTs) {
-    if (aVariantTs.template is<I>()) {
-      aEW.WriteULEB128(I);
-      // Use the Serializer for the contained type.
-      aEW.WriteObject(aVariantTs.template as<I>());
-    }
-  }
-
-  // Go through all variant tags, and let the selected one serialize the correct
-  // tag and object.
-  template <size_t... Is>
-  static void VariantWrite(ProfileBufferEntryWriter& aEW,
-                           const Variant<Ts...>& aVariantTs,
-                           std::index_sequence<Is...>) {
-    (VariantIWrite<Is>(aEW, aVariantTs), ...);
-  }
-
  public:
   static Length Bytes(const Variant<Ts...>& aVariantTs) {
-    // Generate a 0..N-1 index pack, the selected variant will return its size.
-    return VariantBytes(aVariantTs, std::index_sequence_for<Ts...>());
+    return aVariantTs.match([](auto aIndex, const auto& aAlternative) {
+      return ULEB128Size(aIndex) + SumBytes(aAlternative);
+    });
   }
 
   static void Write(ProfileBufferEntryWriter& aEW,
                     const Variant<Ts...>& aVariantTs) {
-    // Generate a 0..N-1 index pack, the selected variant will serialize itself.
-    VariantWrite(aEW, aVariantTs, std::index_sequence_for<Ts...>());
+    aVariantTs.match([&aEW](auto aIndex, const auto& aAlternative) {
+      aEW.WriteULEB128(aIndex);
+      aEW.WriteObject(aAlternative);
+    });
   }
 };
 
