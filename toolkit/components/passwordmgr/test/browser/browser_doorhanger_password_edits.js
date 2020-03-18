@@ -110,10 +110,21 @@ add_task(async function test_edit_password() {
           "#form-basic-password": "",
         });
 
+        let passwordEditedPromise = listenForTestNotification(
+          "PasswordEditedOrGenerated"
+        );
         info("Editing the form");
         await changeContentFormValues(browser, {
           "#form-basic-password": testCase.passwordInPage,
         });
+        info("Waiting for passwordEditedPromise");
+        await passwordEditedPromise;
+
+        // reset doorhanger/notifications, we're only interested in the submit outcome
+        await cleanupDoorhanger();
+        await cleanupPasswordNotifications();
+        // reset message cache, we're only interested in the submit outcome
+        await clearMessageCache(browser);
 
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
