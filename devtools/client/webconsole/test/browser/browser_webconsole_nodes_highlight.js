@@ -31,7 +31,6 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = hud.toolbox;
 
-  await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {

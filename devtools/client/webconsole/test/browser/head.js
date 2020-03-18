@@ -6,7 +6,7 @@
 "use strict";
 
 // Import helpers registering the test-actor in remote targets
-/* globals registerTestActor, getTestActor, Task, openToolboxForTab, gBrowser */
+/* globals getTestActor, Task, openToolboxForTab, gBrowser */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
   this
