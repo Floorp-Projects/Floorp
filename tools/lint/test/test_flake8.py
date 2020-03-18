@@ -76,6 +76,7 @@ def test_lint_excluded_file(lint, paths, config):
     os.chdir(cwd)
 
     results = lint(paths('subdir/exclude'))
+    print(results)
     assert len(results) == 0
 
 
@@ -91,6 +92,12 @@ def test_lint_excluded_file_with_glob(lint, paths, config):
     results = lint(files, config)
     print(results)
     assert len(results) == 0
+
+
+def test_lint_excluded_file_with_no_filter(lint, paths, config):
+    results = lint(paths('subdir/exclude'), use_filters=False)
+    print(results)
+    assert len(results) == 2
 
 
 def test_lint_uses_custom_extensions(lint, paths):

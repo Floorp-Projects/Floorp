@@ -117,7 +117,10 @@ def lint(paths, config, **lintargs):
         `exclude` rules specified in the root .flake8 with the ones added by
         tools/lint/mach_commands.py.
         """
-        config.setdefault('exclude', []).extend(self.options.exclude)
+        # Ignore exclude rules if `--no-filter` was passed in.
+        if lintargs.get('use_filters', True):
+            config.setdefault('exclude', []).extend(self.options.exclude)
+
         self.options.exclude = None
         self.args = self.args + list(expand_exclusions(paths, config, root))
 
