@@ -402,6 +402,12 @@ class LinkedList {
     Type mCurrent;
 
    public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     explicit Iterator(Type aCurrent) : mCurrent(aCurrent) {}
 
     Type operator*() const { return mCurrent; }
@@ -488,6 +494,13 @@ class LinkedList {
    */
   bool isEmpty() const { return !sentinel.isInList(); }
 
+  /**
+   * Returns whether the given element is in the list.
+   */
+  bool contains(ConstRawType aElm) const {
+    return std::find(begin(), end(), aElm) != end();
+  }
+
   /*
    * Remove all the elements from the list.
    *
@@ -497,6 +510,19 @@ class LinkedList {
   void clear() {
     while (popFirst()) {
     }
+  }
+
+  /**
+   * Return the length of elements in the list.
+   */
+  size_t length() const {
+    size_t length = 0;
+    ConstRawType element = getFirst();
+    while (element) {
+      length++;
+      element = element->getNext();
+    }
+    return length;
   }
 
   /*
