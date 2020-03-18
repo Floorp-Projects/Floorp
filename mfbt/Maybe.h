@@ -638,6 +638,9 @@ Maybe<typename RemoveCV<typename RemoveReference<T>::Type>::Type> ToMaybe(
  */
 template <typename T>
 bool operator==(const Maybe<T>& aLHS, const Maybe<T>& aRHS) {
+  static_assert(!std::is_reference_v<T>,
+                "operator== is not defined for Maybe<T&>, compare values or "
+                "addresses explicitly instead");
   if (aLHS.isNothing() != aRHS.isNothing()) {
     return false;
   }
