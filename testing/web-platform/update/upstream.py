@@ -3,13 +3,12 @@ import re
 import subprocess
 import sys
 import tempfile
-import urlparse
+from six.moves.urllib import parse as urlparse
 
 from wptrunner.update.tree import get_unique_name
 from wptrunner.update.base import Step, StepRunner, exit_clean, exit_unclean
 
 from .tree import Commit, GitTree, Patch
-import github
 from .github import GitHub
 
 
