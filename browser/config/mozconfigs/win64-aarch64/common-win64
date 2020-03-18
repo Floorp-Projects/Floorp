@@ -30,3 +30,10 @@ mk_add_options "export WINEPATH=${VSPATH}/VC/bin/Hostx64/x64"
 unset VC_PATH
 
 fi
+
+export PDBSTR="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"
+if [ -f "${PDBSTR}" ]; then
+    chmod +x "${PDBSTR}"
+else
+    unset PDBSTR
+fi
