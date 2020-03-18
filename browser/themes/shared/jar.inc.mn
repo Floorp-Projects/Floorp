@@ -65,9 +65,12 @@
   skin/classic/browser/info.svg                                (../shared/info.svg)
   skin/classic/browser/newInstall.css                          (../shared/newInstall.css)
   skin/classic/browser/newInstallPage.css                      (../shared/newInstallPage.css)
-
-  skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
-
+  skin/classic/browser/illustrations/blue-berror.svg                        (../shared/illustrations/blue-berror.svg)
+  skin/classic/browser/illustrations/error-connection-failure.svg           (../shared/illustrations/error-connection-failure.svg)
+  skin/classic/browser/illustrations/error-malformed-url.svg                (../shared/illustrations/error-malformed-url.svg)
+  skin/classic/browser/illustrations/error-server-not-found.svg             (../shared/illustrations/error-server-not-found.svg)
+  skin/classic/browser/illustrations/error-session-restore.svg              (../shared/illustrations/error-session-restore.svg)
+  skin/classic/browser/illustrations/under-construction.svg                 (../shared/illustrations/under-construction.svg)
   skin/classic/browser/notification-icons/autoplay-media.svg                (../shared/notification-icons/autoplay-media.svg)
   skin/classic/browser/notification-icons/autoplay-media-detailed.svg       (../shared/notification-icons/autoplay-media-detailed.svg)
   skin/classic/browser/notification-icons/autoplay-media-blocked.svg        (../shared/notification-icons/autoplay-media-blocked.svg)
