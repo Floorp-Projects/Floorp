@@ -1,6 +1,6 @@
 var module = new WebAssembly.Module(wasmTextToBinary(`
     (module
-        (import "global" "func")
+        (import "global" "func" (func))
         (func (export "f")
          call 0
         )
