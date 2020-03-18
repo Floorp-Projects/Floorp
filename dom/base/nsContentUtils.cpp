@@ -10422,6 +10422,11 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
   //
   ScreenIntMargin windowSafeAreaInsets;
 
+  if (windowSafeAreaInsets == aSafeAreaInsets) {
+    // no safe area insets.
+    return windowSafeAreaInsets;
+  }
+
   int32_t screenLeft, screenTop, screenWidth, screenHeight;
   nsresult rv =
       aScreen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
@@ -10437,16 +10442,22 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
   // window's rect of safe area
   safeAreaRect = safeAreaRect.Intersect(aWindowRect);
 
-  windowSafeAreaInsets.top = std::max(safeAreaRect.y - aWindowRect.y, 0);
-  windowSafeAreaInsets.left = std::max(safeAreaRect.x - aWindowRect.x, 0);
+  windowSafeAreaInsets.top =
+      aSafeAreaInsets.top ? std::max(safeAreaRect.y - aWindowRect.y, 0) : 0;
+  windowSafeAreaInsets.left =
+      aSafeAreaInsets.left ? std::max(safeAreaRect.x - aWindowRect.x, 0) : 0;
   windowSafeAreaInsets.right =
-      std::max((aWindowRect.x + aWindowRect.width) -
-                   (safeAreaRect.x + safeAreaRect.width),
-               0);
+      aSafeAreaInsets.right
+          ? std::max((aWindowRect.x + aWindowRect.width) -
+                         (safeAreaRect.x + safeAreaRect.width),
+                     0)
+          : 0;
   windowSafeAreaInsets.bottom =
-      std::max(aWindowRect.y + aWindowRect.height -
-                   (safeAreaRect.y + safeAreaRect.height),
-               0);
+      aSafeAreaInsets.bottom
+          ? std::max(aWindowRect.y + aWindowRect.height -
+                         (safeAreaRect.y + safeAreaRect.height),
+                     0)
+          : 0;
 
   return windowSafeAreaInsets;
 }
