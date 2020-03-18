@@ -4950,7 +4950,9 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
   if (!aRect.IsFinite()) {
     NS_WARNING("ZoomToRect got called with a non-finite rect; ignoring...");
     return;
-  } else if (aRect.IsEmpty() && (aFlags & DISABLE_ZOOM_OUT)) {
+  }
+
+  if (aRect.IsEmpty() && (aFlags & DISABLE_ZOOM_OUT)) {
     // Double-tap-to-zooming uses an empty rect to mean "zoom out".
     // If zooming out is disabled, an empty rect is nonsensical
     // and will produce undesirable scrolling.
@@ -4997,6 +4999,9 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
       targetZoom = CSSToParentLayerScale(
           std::min(compositionBounds.Width() / aRect.Width(),
                    compositionBounds.Height() / aRect.Height()));
+      if (aFlags & DISABLE_ZOOM_OUT) {
+        targetZoom = std::max(targetZoom, currentZoom);
+      }
     }
 
     // 1. If the rect is empty, the content-side logic for handling a double-tap
