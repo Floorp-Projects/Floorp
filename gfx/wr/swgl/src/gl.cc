@@ -2009,6 +2009,74 @@ void CopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                    xoffset, yoffset, 0, width, height, 1);
 }
 
+} // extern "C"
+
+template <typename P>
+static void scale_row(P* dst, int dstWidth, const P* src, int srcWidth) {
+    int frac = 0;
+    for (int x = 0; x < dstWidth; x++) {
+        *dst = *src;
+        dst++;
+        frac += srcWidth;
+        while (frac >= dstWidth) {
+            frac -= dstWidth;
+            src++;
+        }
+    }
+}
+
+static void scale_blit(GLuint srcName, GLint srcX, GLint srcY, GLint srcZ,
+                       GLsizei srcWidth, GLsizei srcHeight,
+                       GLuint dstName, GLint dstX, GLint dstY, GLint dstZ,
+                       GLsizei dstWidth, GLsizei dstHeight) {
+  Texture& srctex = ctx->textures[srcName];
+  if (!srctex.buf) return;
+  prepare_texture(srctex);
+  Texture& dsttex = ctx->textures[dstName];
+  if (!dsttex.buf) return;
+  IntRect skip = {dstX, dstY, dstWidth, abs(dstHeight)};
+  prepare_texture(dsttex, &skip);
+  assert(srctex.internal_format == dsttex.internal_format);
+  assert(srcX + srcWidth <= srctex.width);
+  assert(srcY + srcHeight <= srctex.height);
+  assert(srcZ < max(srctex.depth, 1));
+  assert(dstX + dstWidth <= dsttex.width);
+  assert(max(dstY, dstY + dstHeight) <= dsttex.height);
+  assert(dstZ < max(dsttex.depth, 1));
+  int bpp = srctex.bpp();
+  int srcStride = srctex.stride(bpp);
+  int destStride = dsttex.stride(bpp);
+  char* dest = dsttex.buf + (dsttex.height * dstZ + dstY) * destStride +
+               dstX * bpp;
+  char* src = srctex.buf + (srctex.height * srcZ + srcY) * srcStride +
+              srcX * bpp;
+  if (dstHeight < 0) {
+    dest -= destStride;
+    destStride = -destStride;
+    dstHeight = -dstHeight;
+  }
+  int frac = 0;
+  for (int y = 0; y < dstHeight; y++) {
+    if (srcWidth == dstWidth) {
+      memcpy(dest, src, srcWidth * bpp);
+    } else {
+      switch (bpp) {
+        case 1: scale_row((uint8_t*)dest, dstWidth, (uint8_t*)src, srcWidth); break;
+        case 2: scale_row((uint16_t*)dest, dstWidth, (uint16_t*)src, srcWidth); break;
+        case 4: scale_row((uint32_t*)dest, dstWidth, (uint32_t*)src, srcWidth); break;
+      }
+    }
+    dest += destStride;
+    frac += srcHeight;
+    while (frac >= dstHeight) {
+      frac -= dstHeight;
+      src += srcStride;
+    }
+  }
+}
+
+extern "C" {
+
 void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                      GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                      GLbitfield mask, GLenum filter) {
@@ -2017,13 +2085,11 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   if (!srcfb) return;
   Framebuffer* dstfb = get_framebuffer(GL_DRAW_FRAMEBUFFER);
   if (!dstfb) return;
-  int dstWidth = dstX1 - dstX0;
-  int dstHeight = dstY1 - dstY0;
-  assert(srcX1 - srcX0 == dstWidth && srcY1 - srcY0 == abs(dstHeight));
-  CopyImageSubData(srcfb->color_attachment, GL_TEXTURE_2D_ARRAY, 0, srcX0,
-                   srcY0, srcfb->layer, dstfb->color_attachment,
-                   GL_TEXTURE_2D_ARRAY, 0, dstX0, dstY0, dstfb->layer, dstWidth,
-                   dstHeight, 1);
+  // TODO: support linear filtering
+  scale_blit(srcfb->color_attachment, srcX0, srcY0, srcfb->layer,
+             srcX1 - srcX0, srcY1 - srcY0,
+             dstfb->color_attachment, dstX0, dstY0, dstfb->layer,
+             dstX1 - dstX0, dstY1 - dstY0);
 }
 
 }  // extern "C"
