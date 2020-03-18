@@ -2258,7 +2258,6 @@ def check_clang_plugin_alpha(enable_clang_plugin, enable_clang_plugin_alpha):
         if enable_clang_plugin:
             return True
         die("Cannot enable clang-plugin alpha checkers without --enable-clang-plugin.")
-    return False
 
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN_ALPHA', check_clang_plugin_alpha)
 set_define('MOZ_CLANG_PLUGIN_ALPHA', check_clang_plugin_alpha)
