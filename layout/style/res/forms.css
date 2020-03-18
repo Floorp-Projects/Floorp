@@ -102,7 +102,7 @@ input {
   overflow-clip-box: padding-box content-box;
 }
 
-input .anonymous-div,
+input::-moz-text-control-editing-root,
 input::placeholder {
   word-wrap: normal;
   /* Make the line-height equal to the available height */
@@ -144,12 +144,12 @@ textarea > scrollbar {
   cursor: default;
 }
 
-textarea .anonymous-div,
-input .anonymous-div,
+textarea::-moz-text-control-editing-root,
+input::-moz-text-control-editing-root,
 input::placeholder,
 textarea::placeholder,
-input .preview-div,
-textarea .preview-div {
+input::-moz-text-control-preview,
+textarea::-moz-text-control-preview {
   overflow: auto;
   border: 0px;
   padding: inherit;
@@ -163,14 +163,14 @@ textarea .preview-div {
   overflow-clip-box: inherit;
 }
 
-input .anonymous-div,
+input::-moz-text-control-editing-root,
 input::placeholder,
-input .preview-div {
+input::-moz-text-control-preview {
   white-space: pre;
 }
 
-input[type=password] .anonymous-div,
-input[type=password] .preview-div {
+input[type=password]::-moz-text-control-editing-root,
+input[type=password]::-moz-text-control-preview {
   /*
    * In password fields, any character should be put same direction.  Otherwise,
    * caret position at typing tells everybody whether the character is an RTL
@@ -180,19 +180,17 @@ input[type=password] .preview-div {
   unicode-bidi: bidi-override;
 }
 
-textarea > .anonymous-div {
+textarea::-moz-text-control-editing-root {
   scroll-behavior: inherit;
   overscroll-behavior: inherit;
-}
-
-textarea > .anonymous-div.inherit-overflow {
+  /* StyleAdjuster makes sure that the overflow value ends up being scrollable */
   overflow: inherit;
 }
 
 input::placeholder,
 textarea::placeholder,
-input .preview-div,
-textarea .preview-div {
+input::-moz-text-control-preview,
+textarea::-moz-text-control-preview {
   /*
    * Changing display to inline can leads to broken behaviour and will assert.
    */
@@ -218,7 +216,7 @@ textarea::placeholder {
 }
 
 textarea::placeholder,
-textarea .preview-div {
+textarea::-moz-text-control-preview {
   white-space: pre-wrap !important;
 }
 
@@ -771,8 +769,8 @@ input[type="submit"]:disabled {
   *  their various anonymous descendants and pseudo-elements:
   *
   * <textarea> and <input type="text">:
-  *  inherit into the XULScroll frame with class 'anonymous-div' which is a
-  *  child of the text control.
+  *  inherit into the scroll frame with pseudo ::-moz-text-control-editing-root
+  *  which is a (direct or indirect) child of the text control.
   *
   * Buttons (either <button>, <input type="submit">, <input type="button">
   *          or <input type="reset">)
@@ -784,8 +782,8 @@ input[type="submit"]:disabled {
   *  the <optgroup> gets displayed. The <option>s don't use anonymous boxes,
   *  so they need no special rules.
   */
-textarea .anonymous-div,
-input .anonymous-div,
+textarea::-moz-text-control-editing-root,
+input::-moz-text-control-editing-root,
 input::placeholder,
 textarea::placeholder,
 *|*::-moz-button-content,
@@ -989,12 +987,15 @@ input[type=number]::-moz-number-wrapper {
   block-size: 100%;
 }
 
-input[type=number] .anonymous-div {
+input[type=number]::-moz-text-control-editing-root {
   display: block; /* Flex items must be block-level. Normally we do fixup in
                      the style system to ensure this, but that fixup is disabled
                      inside of form controls. So, we hardcode display here. */
   flex: 1;
   min-inline-size: 0;
+  align-self: center;
+  /* This prevents double-applying the padding */
+  padding-inline: 0;
 }
 
 input[type=number]::-moz-number-spin-box {

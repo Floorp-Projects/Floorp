@@ -101,7 +101,6 @@ STATIC_ATOMS = [
     Atom("animations", "animations"),
     Atom("anonid", "anonid"),
     Atom("anonlocation", "anonlocation"),
-    Atom("anonymousDiv", "anonymous-div"),
     Atom("any", "any"),
     Atom("any_hover", "any-hover"),
     Atom("any_pointer", "any-pointer"),
@@ -2471,6 +2470,8 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozMeterBar", ":-moz-meter-bar"),
     PseudoElementAtom("PseudoElement_placeholder", ":placeholder"),
     PseudoElementAtom("PseudoElement_mozColorSwatch", ":-moz-color-swatch"),
+    PseudoElementAtom("PseudoElement_mozTextControlEditingRoot", ":-moz-text-control-editing-root"),
+    PseudoElementAtom("PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"),
 
     # CSS anonymous boxes -- these must appear in the same order as
     # in nsCSSAnonBoxList.h

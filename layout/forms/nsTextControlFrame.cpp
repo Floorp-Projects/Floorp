@@ -337,61 +337,24 @@ nsresult nsTextControlFrame::EnsureEditorInitialized() {
 }
 
 already_AddRefed<Element> nsTextControlFrame::CreateEmptyAnonymousDiv(
-    AnonymousDivType aAnonymousDivType) const {
+    PseudoStyleType aPseudoType) const {
+  MOZ_ASSERT(aPseudoType != PseudoStyleType::NotPseudo);
   Document* doc = PresContext()->Document();
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
+  RefPtr<NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
       nsGkAtoms::div, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
-
-  RefPtr<Element> divElement = NS_NewHTMLDivElement(nodeInfo.forget());
-  switch (aAnonymousDivType) {
-    case AnonymousDivType::Root: {
-      // Make our root node editable
-      divElement->SetFlags(NODE_IS_EDITABLE);
-
-      // Set the necessary classes on the text control. We use class values
-      // instead of a 'style' attribute so that the style comes from a
-      // user-agent style sheet and is still applied even if author styles are
-      // disabled.
-      nsAutoString classValue;
-      classValue.AppendLiteral("anonymous-div");
-
-      if (!IsSingleLineTextControl()) {
-        // We can't just inherit the overflow because setting visible overflow
-        // will crash when the number of lines exceeds the height of the
-        // textarea and setting -moz-hidden-unscrollable overflow doesn't paint
-        // the caret for some reason.
-        const nsStyleDisplay* disp = StyleDisplay();
-        if (disp->mOverflowX != StyleOverflow::Visible &&
-            disp->mOverflowX != StyleOverflow::MozHiddenUnscrollable) {
-          classValue.AppendLiteral(" inherit-overflow");
-        }
-      }
-      nsresult rv = divElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                        classValue, false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
-      break;
-    }
-    case AnonymousDivType::Placeholder:
-      // Associate ::placeholder pseudo-element with the placeholder node.
-      divElement->SetPseudoElementType(PseudoStyleType::placeholder);
-      break;
-    case AnonymousDivType::Preview:
-      divElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                          NS_LITERAL_STRING("preview-div"), false);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown anonymous div creation request");
-      break;
+  RefPtr<Element> div = NS_NewHTMLDivElement(nodeInfo.forget());
+  div->SetPseudoElementType(aPseudoType);
+  if (aPseudoType == PseudoStyleType::mozTextControlEditingRoot) {
+    // Make our root node editable
+    div->SetFlags(NODE_IS_EDITABLE);
   }
-  return divElement.forget();
+  return div.forget();
 }
 
 already_AddRefed<Element>
 nsTextControlFrame::CreateEmptyAnonymousDivWithTextNode(
-    AnonymousDivType aAnonymousDivType) const {
-  RefPtr<Element> divElement = CreateEmptyAnonymousDiv(aAnonymousDivType);
+    PseudoStyleType aPseudoType) const {
+  RefPtr<Element> divElement = CreateEmptyAnonymousDiv(aPseudoType);
 
   // Create the text node for the anonymous <div> element.
   RefPtr<nsTextNode> textNode = new (divElement->OwnerDoc()->NodeInfoManager())
@@ -399,7 +362,7 @@ nsTextControlFrame::CreateEmptyAnonymousDivWithTextNode(
   // If the anonymous div element is not for the placeholder, we should
   // mark the text node as "maybe modified frequently" for avoiding ASCII
   // range checks at every input.
-  if (aAnonymousDivType != AnonymousDivType::Placeholder) {
+  if (aPseudoType != PseudoStyleType::placeholder) {
     textNode->MarkAsMaybeModifiedFrequently();
     // Additionally, this is a password field, the text node needs to be
     // marked as "maybe masked" unless it's in placeholder.
@@ -421,7 +384,8 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   RefPtr<TextControlElement> textControlElement =
       TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
-  mRootNode = CreateEmptyAnonymousDiv(AnonymousDivType::Root);
+  mRootNode =
+      CreateEmptyAnonymousDiv(PseudoStyleType::mozTextControlEditingRoot);
   if (NS_WARN_IF(!mRootNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -520,7 +484,7 @@ void nsTextControlFrame::CreatePlaceholderIfNeeded() {
   }
 
   mPlaceholderDiv =
-      CreateEmptyAnonymousDivWithTextNode(AnonymousDivType::Placeholder);
+      CreateEmptyAnonymousDivWithTextNode(PseudoStyleType::placeholder);
   mPlaceholderDiv->GetFirstChild()->AsText()->SetText(placeholderTxt, false);
 }
 
@@ -532,7 +496,8 @@ void nsTextControlFrame::CreatePreviewIfNeeded() {
     return;
   }
 
-  mPreviewDiv = CreateEmptyAnonymousDivWithTextNode(AnonymousDivType::Preview);
+  mPreviewDiv = CreateEmptyAnonymousDivWithTextNode(
+      PseudoStyleType::mozTextControlPreview);
 }
 
 void nsTextControlFrame::AppendAnonymousContentTo(
@@ -681,7 +646,7 @@ void nsTextControlFrame::ReflowTextControlChild(
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKid, availSize,
                              Nothing(), ReflowInput::CALLER_WILL_INIT);
   // Override padding with our computed padding in case we got it from theming
-  // or percentage
+  // or percentage.
   kidReflowInput.Init(aPresContext, Nothing(), nullptr,
                       &aReflowInput.ComputedPhysicalPadding());
 
