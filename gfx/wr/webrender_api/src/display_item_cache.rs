@@ -4,6 +4,8 @@
 
 use crate::display_item::*;
 use crate::display_list::*;
+#[cfg(debug_assertions)]
+use std::collections::HashSet;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct CachedDisplayItem {
@@ -12,7 +14,7 @@ pub struct CachedDisplayItem {
 }
 
 impl CachedDisplayItem {
-    pub fn display_item(&self) -> &DisplayItem {
+    pub fn item(&self) -> &DisplayItem {
         &self.item
     }
 
@@ -38,71 +40,92 @@ impl From<DisplayItemRef<'_, '_>> for CachedDisplayItem {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-struct CacheEntry {
-    items: Vec<CachedDisplayItem>,
-    occupied: bool,
+fn key_from_item(item: &DisplayItem) -> ItemKey {
+    let key = match item {
+        DisplayItem::Rectangle(ref info) => info.common.item_key,
+        DisplayItem::ClearRectangle(ref info) => info.common.item_key,
+        DisplayItem::HitTest(ref info) => info.common.item_key,
+        DisplayItem::Text(ref info) => info.common.item_key,
+        DisplayItem::Image(ref info) => info.common.item_key,
+        _ => unimplemented!("Unexpected item: {:?}", item)
+    };
+
+    key.expect("Cached item without a key")
 }
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct DisplayItemCache {
-    entries: Vec<CacheEntry>,
+    items: Vec<Option<CachedDisplayItem>>,
+
+    #[cfg(debug_assertions)]
+    keys: HashSet<ItemKey>,
 }
 
 impl DisplayItemCache {
-    fn add_item(&mut self, key: ItemKey, item: CachedDisplayItem) {
-        let mut entry = &mut self.entries[key as usize];
-        entry.items.push(item);
-        entry.occupied = true;
-    }
-
-    fn clear_entry(&mut self, key: ItemKey) {
-        let mut entry = &mut self.entries[key as usize];
-        entry.items.clear();
-        entry.occupied = false;
-    }
-
-    fn grow_if_needed(&mut self, capacity: usize) {
-        if capacity > self.entries.len() {
-            self.entries.resize_with(capacity, || CacheEntry {
-                items: Vec::new(),
-                occupied: false,
-            });
+    fn grow_if_needed(
+        &mut self,
+        capacity: usize
+    ) {
+        if capacity > self.items.len() {
+            self.items.resize_with(capacity, || None::<CachedDisplayItem>);
+            // println!("Current cache size: {:?} elements, {:?} bytes",
+            //     capacity, std::mem::size_of::<CachedDisplayItem>() * capacity);
         }
     }
 
-    pub fn get_items(&self, key: ItemKey) -> &[CachedDisplayItem] {
-        let entry = &self.entries[key as usize];
-        debug_assert!(entry.occupied);
-        entry.items.as_slice()
+    fn add_item(
+        &mut self,
+        item: CachedDisplayItem,
+        key: ItemKey,
+    ) {
+        self.items[key as usize] = Some(item);
+    }
+
+    pub fn get_item(
+        &self,
+        key: ItemKey
+    ) -> Option<&CachedDisplayItem> {
+        self.items[key as usize].as_ref()
     }
 
     pub fn new() -> Self {
         Self {
-            entries: Vec::new(),
+            items: Vec::new(),
+
+            #[cfg(debug_assertions)]
+            /// Used to check that there is only one item per key.
+            keys: HashSet::new(),
         }
     }
 
-    pub fn update(&mut self, display_list: &BuiltDisplayList) {
+    pub fn update(
+        &mut self,
+        display_list: &BuiltDisplayList
+    ) {
         self.grow_if_needed(display_list.cache_size());
 
         let mut iter = display_list.extra_data_iter();
-        let mut current_key: Option<ItemKey> = None;
+
+        #[cfg(debug_assertions)]
+        {
+            self.keys.clear();
+        }
+
         loop {
             let item = match iter.next() {
                 Some(item) => item,
                 None => break,
             };
 
-            if let DisplayItem::RetainedItems(key) = item.item() {
-                current_key = Some(*key);
-                self.clear_entry(*key);
-                continue;
+            let item_key = key_from_item(item.item());
+            let cached_item = CachedDisplayItem::from(item);
+
+            #[cfg(debug_assertions)]
+            {
+                debug_assert!(self.keys.insert(item_key));
             }
 
-            let key = current_key.expect("Missing RetainedItems marker");
-            let cached_item = CachedDisplayItem::from(item);
-            self.add_item(key, cached_item);
+            self.add_item(cached_item, item_key);
         }
     }
 }
