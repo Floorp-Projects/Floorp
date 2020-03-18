@@ -373,75 +373,81 @@ NS_INTERFACE_MAP_END
 }  // namespace
 
 nsresult FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
-                                  uint32_t aBufferSize, uint32_t* aRead) {
+                                  uint32_t aBufferSize,
+                                  uint32_t* aTotalBytesRead) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT(aRead);
-
-  // Let's try to read, directly.
-  nsresult rv = aStream->Read(aBuffer, aBufferSize, aRead);
-
-  // Nothing else to read.
-  if (rv == NS_BASE_STREAM_CLOSED || (NS_SUCCEEDED(rv) && *aRead == 0)) {
-    return NS_OK;
-  }
-
-  // An error.
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-    return rv;
-  }
-
-  // All good.
-  if (NS_SUCCEEDED(rv)) {
-    // Not enough data, let's read recursively.
-    if (*aRead != aBufferSize) {
-      uint32_t byteRead = 0;
-      rv = SyncRead(aStream, aBuffer + *aRead, aBufferSize - *aRead, &byteRead);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      *aRead += byteRead;
-    }
-
-    return NS_OK;
-  }
-
-  // We need to proceed async.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
-  if (!asyncStream) {
-    return rv;
-  }
+  MOZ_ASSERT(aTotalBytesRead);
 
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  AutoSyncLoopHolder syncLoop(workerPrivate, Canceling);
+  *aTotalBytesRead = 0;
 
-  nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
-  if (!syncLoopTarget) {
-    // SyncLoop creation can fail if the worker is shutting down.
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  nsCOMPtr<nsIAsyncInputStream> asyncStream;
+  nsCOMPtr<nsIEventTarget> target;
+
+  while (*aTotalBytesRead < aBufferSize) {
+    uint32_t currentBytesRead = 0;
+
+    // Let's read something.
+    nsresult rv =
+        aStream->Read(aBuffer + *aTotalBytesRead,
+                      aBufferSize - *aTotalBytesRead, &currentBytesRead);
+
+    // Nothing else to read.
+    if (rv == NS_BASE_STREAM_CLOSED ||
+        (NS_SUCCEEDED(rv) && currentBytesRead == 0)) {
+      return NS_OK;
+    }
+
+    // An error.
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+      return rv;
+    }
+
+    // All good.
+    if (NS_SUCCEEDED(rv)) {
+      *aTotalBytesRead += currentBytesRead;
+      continue;
+    }
+
+    // We need to proceed async.
+    if (!asyncStream) {
+      asyncStream = do_QueryInterface(aStream);
+      if (!asyncStream) {
+        return rv;
+      }
+    }
+
+    AutoSyncLoopHolder syncLoop(workerPrivate, Canceling);
+
+    nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
+    if (!syncLoopTarget) {
+      // SyncLoop creation can fail if the worker is shutting down.
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+
+    RefPtr<ReadCallback> callback =
+        new ReadCallback(workerPrivate, syncLoopTarget);
+
+    if (!target) {
+      target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+      MOZ_ASSERT(target);
+    }
+
+    rv = asyncStream->AsyncWait(callback, 0, aBufferSize - *aTotalBytesRead,
+                                target);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!syncLoop.Run()) {
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
   }
 
-  RefPtr<ReadCallback> callback =
-      new ReadCallback(workerPrivate, syncLoopTarget);
-
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(target);
-
-  rv = asyncStream->AsyncWait(callback, 0, aBufferSize, target);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!syncLoop.Run()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  // Now, we can try to read again.
-  return SyncRead(aStream, aBuffer, aBufferSize, aRead);
+  return NS_OK;
 }
 
 nsresult FileReaderSync::ConvertAsyncToSyncStream(
