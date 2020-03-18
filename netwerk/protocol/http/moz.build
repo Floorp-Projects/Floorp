@@ -161,6 +161,7 @@ LOCAL_INCLUDES += [
     '/extensions/auth',
     '/netwerk/base',
     '/netwerk/cookie',
+    '/netwerk/dns',
     '/netwerk/ipc',
     '/netwerk/socket/neqo_glue',
     '/netwerk/url-classifier',

@@ -101,6 +101,8 @@ class TRRServiceChannel : public HttpBaseChannel,
   NS_IMETHOD GetRequestStart(mozilla::TimeStamp* aRequestStart) override;
   NS_IMETHOD GetResponseStart(mozilla::TimeStamp* aResponseStart) override;
   NS_IMETHOD GetResponseEnd(mozilla::TimeStamp* aResponseEnd) override;
+  NS_IMETHOD SetLoadGroup(nsILoadGroup* aLoadGroup) override;
+  NS_IMETHOD TimingAllowCheck(nsIPrincipal* aOrigin, bool* aResult) override;
 
  protected:
   TRRServiceChannel();
@@ -125,6 +127,10 @@ class TRRServiceChannel : public HttpBaseChannel,
   nsresult ResolveProxy();
   void AfterApplyContentConversions(nsresult aResult,
                                     nsIStreamListener* aListener);
+  nsresult SyncProcessRedirection(uint32_t aHttpStatus);
+  virtual MOZ_MUST_USE nsresult SetupReplacementChannel(
+      nsIURI* aNewURI, nsIChannel* aNewChannel, bool aPreserveMethod,
+      uint32_t aRedirectFlags) override;
 
   // True only when we have computed the value of the top window origin.
   bool mTopWindowOriginComputed;
