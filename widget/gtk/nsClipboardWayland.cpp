@@ -446,7 +446,7 @@ void nsRetrievalContextWayland::SetClipboardDataOffer(
     NS_ASSERTION(dataOffer, "We're missing stored clipboard data offer!");
     if (dataOffer) {
       g_hash_table_remove(mActiveOffers, aWaylandDataOffer);
-      mClipboardOffer = dataOffer;
+      mClipboardOffer = WrapUnique(dataOffer);
     }
   }
 }
@@ -464,7 +464,7 @@ void nsRetrievalContextWayland::SetPrimaryDataOffer(
     NS_ASSERTION(dataOffer, "We're missing primary data offer!");
     if (dataOffer) {
       g_hash_table_remove(mActiveOffers, aPrimaryDataOffer);
-      mPrimaryOffer = dataOffer;
+      mPrimaryOffer = WrapUnique(dataOffer);
     }
   }
 }
@@ -758,7 +758,7 @@ const char* nsRetrievalContextWayland::GetClipboardData(
         wayland_clipboard_contents_received,
         new FastTrackClipboard(mClipboardRequestNumber, this));
   } else {
-    DataOffer* dataOffer =
+    const auto& dataOffer =
         (selection == GDK_SELECTION_PRIMARY) ? mPrimaryOffer : mClipboardOffer;
     if (!dataOffer) {
       // Something went wrong. We're requested to provide clipboard data
@@ -781,7 +781,7 @@ const char* nsRetrievalContextWayland::GetClipboardText(
   LOGCLIP(("nsRetrievalContextWayland::GetClipboardText\n"));
 
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
-  DataOffer* dataOffer =
+  const auto& dataOffer =
       (selection == GDK_SELECTION_PRIMARY) ? mPrimaryOffer : mClipboardOffer;
   if (!dataOffer) return nullptr;
 
