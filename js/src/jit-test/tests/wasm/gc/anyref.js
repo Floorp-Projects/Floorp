@@ -174,10 +174,10 @@ function assertJoin(body) {
 }
 
 assertJoin("(block (result anyref) local.get $ref)");
-assertJoin("(block $out anyref local.get $ref br $out)");
+assertJoin("(block $out (result anyref) local.get $ref br $out)");
 assertJoin("(loop (result anyref) local.get $ref)");
 
-assertJoin(`(block $out anyref (loop $top (result anyref)
+assertJoin(`(block $out (result anyref) (loop $top (result anyref)
     local.get $i
     i32.const 1
     i32.add
@@ -207,7 +207,7 @@ assertJoin(`(block $out (loop $top
     )) unreachable
 `);
 
-assertJoin(`(block $out anyref (loop $top
+assertJoin(`(block $out (result anyref) (loop $top
     local.get $ref
     local.get $i
     i32.const 1
@@ -220,7 +220,7 @@ assertJoin(`(block $out anyref (loop $top
     ) unreachable)
 `);
 
-assertJoin(`(block $out anyref (block $unreachable anyref (loop $top
+assertJoin(`(block $out (result anyref) (block $unreachable (result anyref) (loop $top
     local.get $ref
     local.get $i
     i32.const 1
