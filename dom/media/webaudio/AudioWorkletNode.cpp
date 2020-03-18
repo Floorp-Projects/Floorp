@@ -50,7 +50,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
                           const nsAString& aName,
                           NotNull<StructuredCloneHolder*> aSerializedOptions,
-                          UniqueMessagePortId& aPortIdentifier);
+                          UniqueMessagePortId& aPortIdentifier,
+                          AudioNodeTrack* aTrack);
 
   void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
@@ -104,7 +105,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
 
  private:
   size_t ParameterCount() { return mParamTimelines.Length(); }
-  void SendProcessorError();
+  void SendProcessorError(AudioNodeTrack* aTrack, JSContext* aCx);
   bool CallProcess(AudioNodeTrack* aTrack, JSContext* aCx,
                    JS::Handle<JS::Value> aCallable);
   void ProduceSilence(AudioNodeTrack* aTrack, Span<AudioBlock> aOutput);
@@ -158,14 +159,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   bool mKeepEngineActive = true;
 };
 
-void WorkletNodeEngine::SendProcessorError() {
-  /**
-   * https://webaudio.github.io/web-audio-api/#dom-audioworkletnode-onprocessorerror
-   * TODO: bug 1558124
-   * queue a task on the control thread to fire onprocessorerror event
-   * to the node.
-   */
-
+void WorkletNodeEngine::SendProcessorError(AudioNodeTrack* aTrack,
+                                           JSContext* aCx) {
   /**
    * Note that once an exception is thrown, the processor will output silence
    * throughout its lifetime.
@@ -176,13 +171,13 @@ void WorkletNodeEngine::SendProcessorError() {
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
     NotNull<StructuredCloneHolder*> aSerializedOptions,
-    UniqueMessagePortId& aPortIdentifier) {
+    UniqueMessagePortId& aPortIdentifier, AudioNodeTrack* aTrack) {
   MOZ_ASSERT(mInputs.mPorts.empty() && mOutputs.mPorts.empty());
   RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(global);  // global has already been used to register processor
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(global))) {
-    SendProcessorError();
+    SendProcessorError(aTrack, nullptr);
     return;
   }
   JSContext* cx = api.cx();
@@ -193,7 +188,7 @@ void WorkletNodeEngine::ConstructProcessor(
       // initialization need only be performed once (i.e. here).
       NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
       NS_WARN_IF(!mOutputs.mPorts.growBy(OutputCount()))) {
-    SendProcessorError();
+    SendProcessorError(aTrack, cx);
     return;
   }
   mGlobal = std::move(global);
@@ -207,13 +202,13 @@ void WorkletNodeEngine::ConstructProcessor(
   }
   JSObject* object = JS_NewPlainObject(cx);
   if (NS_WARN_IF(!object)) {
-    SendProcessorError();
+    SendProcessorError(aTrack, cx);
     return;
   }
 
   mParameters.mJSObject.init(cx, object);
   if (NS_WARN_IF(!mParameters.mFloat32Arrays.growBy(ParameterCount()))) {
-    SendProcessorError();
+    SendProcessorError(aTrack, cx);
     return;
   }
   for (size_t i = 0; i < mParamTimelines.Length(); i++) {
@@ -221,7 +216,7 @@ void WorkletNodeEngine::ConstructProcessor(
     float32ArraysRef[i].init(cx);
     JSObject* array = JS_NewFloat32Array(cx, WEBAUDIO_BLOCK_SIZE);
     if (NS_WARN_IF(!array)) {
-      SendProcessorError();
+      SendProcessorError(aTrack, cx);
       return;
     }
 
@@ -230,12 +225,12 @@ void WorkletNodeEngine::ConstructProcessor(
             cx, mParameters.mJSObject, mParamTimelines[i].mName.get(),
             mParamTimelines[i].mName.Length(), float32ArraysRef[i],
             JSPROP_ENUMERATE))) {
-      SendProcessorError();
+      SendProcessorError(aTrack, cx);
       return;
     }
   }
   if (NS_WARN_IF(!JS_FreezeObject(cx, mParameters.mJSObject))) {
-    SendProcessorError();
+    SendProcessorError(aTrack, cx);
     return;
   }
 }
@@ -431,7 +426,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
       !PrepareBufferArrays(cx, aInput, &mInputs, ArrayElementInit::None) ||
       !PrepareBufferArrays(cx, aOutput, &mOutputs, ArrayElementInit::Zero)) {
     // process() not callable or OOM.
-    SendProcessorError();
+    SendProcessorError(aTrack, cx);
     ProduceSilence(aTrack, aOutput);
     return;
   }
@@ -468,7 +463,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
     // https://github.com/WebAudio/web-audio-api/issues/1933 and
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1619486
     if (length != WEBAUDIO_BLOCK_SIZE) {
-      SendProcessorError();
+      SendProcessorError(aTrack, cx);
       ProduceSilence(aTrack, aOutput);
       return;
     }
@@ -488,7 +483,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
 
   if (!CallProcess(aTrack, cx, process)) {
     // An exception occurred.
-    SendProcessorError();
+    SendProcessorError(aTrack, cx);
     /**
      * https://webaudio.github.io/web-audio-api/#dom-audioworkletnode-onprocessorerror
      * Note that once an exception is thrown, the processor will output silence
@@ -744,8 +739,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
        portId = std::move(processorPortId)]()
           MOZ_CAN_RUN_SCRIPT_BOUNDARY mutable {
             auto engine = static_cast<WorkletNodeEngine*>(track->Engine());
-            engine->ConstructProcessor(workletImpl, name,
-                                       WrapNotNull(options.get()), portId);
+            engine->ConstructProcessor(
+                workletImpl, name, WrapNotNull(options.get()), portId, track);
           }));
 
   // [[active source]] is initially true and so at least the first process()
