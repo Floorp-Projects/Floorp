@@ -784,6 +784,10 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
   }
   WeakEntryVector& markables = p->value;
 
+  // markedThing might be a key in a debugger weakmap, which can end up marking
+  // values that are in a different compartment.
+  AutoClearTracingSource acts(this);
+
   markEphemeronValues(markedThing, markables);
   markables.clear();  // If key address is reused, it should do nothing
 }
