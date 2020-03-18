@@ -2742,9 +2742,13 @@ class nsTArrayBackInserter
  public:
   explicit nsTArrayBackInserter(nsTArray<T>& aArray) : mArray{&aArray} {}
 
-  template <typename O>
-  nsTArrayBackInserter& operator=(O&& aValue) {
-    mArray->EmplaceBack(std::forward<O>(aValue));
+  nsTArrayBackInserter& operator=(const T& aValue) {
+    mArray->AppendElement(aValue);
+    return *this;
+  }
+
+  nsTArrayBackInserter& operator=(T&& aValue) {
+    mArray->AppendElement(std::move(aValue));
     return *this;
   }
 
