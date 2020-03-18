@@ -118,11 +118,19 @@ def lint(paths, config, **lintargs):
         tools/lint/mach_commands.py.
         """
         # Ignore exclude rules if `--no-filter` was passed in.
+        config.setdefault('exclude', [])
         if lintargs.get('use_filters', True):
-            config.setdefault('exclude', []).extend(self.options.exclude)
+            config['exclude'].extend(self.options.exclude)
+
+        # Since we use the root .flake8 file to store exclusions, we haven't
+        # properly filtered the paths through mozlint's `filterpaths` function
+        # yet. This mimics that though there could be other edge cases that are
+        # different. Maybe we should call `filterpaths` directly, though for
+        # now that doesn't appear to be necessary.
+        filtered = [p for p in paths if not any(p.startswith(e) for e in config['exclude'])]
 
         self.options.exclude = None
-        self.args = self.args + list(expand_exclusions(paths, config, root))
+        self.args = self.args + list(expand_exclusions(filtered, config, root))
 
         if not self.args:
             raise NothingToLint
