@@ -401,6 +401,7 @@ add_task(async function ensure_fullscreen_cursor() {
   // Wiggle the mouse a bit
   synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { type: "mousemove" });
 
+  await SimpleTest.promiseWaitForCondition(() => !controlsSpacer.hasAttribute("hideCursor"), "Waiting for hideCursor attribute to disappear");
   is(controlsSpacer.hasAttribute("hideCursor"), false, "Cursor is shown");
 
   // Restore
