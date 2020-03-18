@@ -1046,20 +1046,6 @@ static bool TestReference() {
   }
 
   {
-    // Comparison has value semantics.
-
-    int foo = 42;
-    int bar = 42;
-    Maybe<int&> someFoo = SomeRef(foo);
-    Maybe<int&> someBar = SomeRef(bar);
-
-    MOZ_RELEASE_ASSERT(someFoo == someBar);
-
-    ++bar;
-    MOZ_RELEASE_ASSERT(someFoo != someBar);
-  }
-
-  {
     Maybe<int&> defaultConstructed;
     defaultConstructed.reset();
 
