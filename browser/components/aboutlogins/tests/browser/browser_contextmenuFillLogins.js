@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+let { OSKeyStoreTestUtils } = ChromeUtils.import(
+  "resource://testing-common/OSKeyStoreTestUtils.jsm"
+);
 
 add_task(async function setup() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
