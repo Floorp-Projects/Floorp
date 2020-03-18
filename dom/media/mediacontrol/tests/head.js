@@ -1,11 +1,33 @@
 /* eslint-disable no-undef */
 
+/**
+ * Create a new tab and load the content from a given window (optional), if
+ * caller doesn't provide any window, then we would create tab in the current
+ * window.
+ *
+ * @param {string} url
+ *        The URL that tab is going to load
+ * @param {window} inputWindow [optional]
+ *        The window that uses to create a tab
+ * @return {tab}
+ *         Return a loaded tab created from the given window
+ */
 async function createTabAndLoad(url, inputWindow = null) {
   const browser = inputWindow ? inputWindow.gBrowser : window.gBrowser;
   let tab = await BrowserTestUtils.openNewForegroundTab(browser, url);
   return tab;
 }
 
+/**
+ * Returns a promise that resolves when the specific media starts playing.
+ *
+ * @param {tab} tab
+ *        The tab that contains the media which we would check
+ * @param {string} elementId
+ *        The element Id of the media which we would check
+ * @return {Promise}
+ *         Resolve when the media has been starting playing.
+ */
 function checkOrWaitUntilMediaStartedPlaying(tab, elementId) {
   return SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
     return new Promise(resolve => {
@@ -28,6 +50,16 @@ function checkOrWaitUntilMediaStartedPlaying(tab, elementId) {
   });
 }
 
+/**
+ * Returns a promise that resolves when the specific media stops playing.
+ *
+ * @param {tab} tab
+ *        The tab that contains the media which we would check
+ * @param {string} elementId
+ *        The element Id of the media which we would check
+ * @return {Promise}
+ *         Resolve when the media has been stopped playing.
+ */
 function checkOrWaitUntilMediaStoppedPlaying(tab, elementId) {
   return SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
     return new Promise(resolve => {
@@ -50,6 +82,9 @@ function checkOrWaitUntilMediaStoppedPlaying(tab, elementId) {
   });
 }
 
+/**
+ * Check if the active metadata is empty.
+ */
 function isCurrentMetadataEmpty() {
   const current = ChromeUtils.getCurrentActiveMediaMetadata();
   is(current.title, "", `current title should be empty`);
@@ -58,6 +93,12 @@ function isCurrentMetadataEmpty() {
   is(current.artwork.length, 0, `current artwork should be empty`);
 }
 
+/**
+ * Check if the active metadata is equal to the given metadata.artwork
+ *
+ * @param {object} metadata
+ *        The metadata that would be compared with the active metadata
+ */
 function isCurrentMetadataEqualTo(metadata) {
   const current = ChromeUtils.getCurrentActiveMediaMetadata();
   is(
@@ -101,14 +142,37 @@ function isCurrentMetadataEqualTo(metadata) {
   }
 }
 
+/**
+ * Wait until the main media controller changes its playback state, we would
+ * observe that by listening for `main-media-controller-playback-changed`
+ * notification.
+ *
+ * @return {Promise}
+ *         Resolve when observing `main-media-controller-playback-changed`
+ */
 function waitUntilMainMediaControllerPlaybackChanged() {
   return BrowserUtils.promiseObserved("main-media-controller-playback-changed");
 }
 
+/**
+ * Wait until the main media controller has been changed, we would observe that
+ * by listening for the `main-media-controller-changed` notification.
+ *
+ * @return {Promise}
+ *         Resolve when observing `main-media-controller-changed`
+ */
 function waitUntilMainMediaControllerChanged() {
   return BrowserUtils.promiseObserved("main-media-controller-changed");
 }
 
+/**
+ * Wait until the main session controller changes its metadata, we would observe
+ * that by listening for `media-session-controller-metadata-changed`
+ * notification.
+ *
+ * @return {Promise}
+ *         Resolve when observing `media-session-controller-metadata-changed`
+ */
 function waitUntilControllerMetadataChanged() {
   return BrowserUtils.promiseObserved(
     "media-session-controller-metadata-changed"
