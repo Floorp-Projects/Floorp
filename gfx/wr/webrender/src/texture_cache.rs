@@ -280,17 +280,20 @@ impl SharedTextures {
             array_alpha8_linear: TextureArray::new(
                 TextureFormatPair::from(ImageFormat::R8),
                 TextureFilter::Linear,
+                1,
             ),
             // Used for experimental hdr yuv texture support, but not used in
             // production Firefox.
             array_alpha16_linear: TextureArray::new(
                 TextureFormatPair::from(ImageFormat::R16),
                 TextureFilter::Linear,
+                1,
             ),
             // The primary cache for images, glyphs, etc.
             array_color8_linear: TextureArray::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
+                4,
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be
@@ -298,6 +301,7 @@ impl SharedTextures {
             array_color8_nearest: TextureArray::new(
                 color_formats,
                 TextureFilter::Nearest,
+                1,
             ),
         }
     }
@@ -1252,17 +1256,26 @@ impl TextureCache {
             .position(|unit| unit.regions.len() < max_texture_layers)
         {
             let unit = &mut texture_array.units[index];
-            info.layer_count += unit.regions.len() as i32;
+
+            unit.push_regions(texture_array.layers_per_allocation);
+
+            info.layer_count = unit.regions.len() as i32;
             self.pending_updates.push_realloc(unit.texture_id, info);
-            unit.push_region();
+
             index
         } else {
             let index = texture_array.units.len();
             texture_array.units.push(TextureArrayUnit {
                 texture_id: self.next_id,
-                regions: vec![TextureRegion::new(0)],
-                empty_regions: 1,
+                regions: Vec::new(),
+                empty_regions: 0,
             });
+
+            let unit = &mut texture_array.units[index];
+
+            unit.push_regions(texture_array.layers_per_allocation);
+
+            info.layer_count = unit.regions.len() as i32;
             self.pending_updates.push_alloc(self.next_id, info);
             self.next_id.0 += 1;
             index
@@ -1615,11 +1628,13 @@ struct TextureArrayUnit {
 
 impl TextureArrayUnit {
     /// Adds a new empty region to the array.
-    fn push_region(&mut self) {
-        let index = self.regions.len();
-        self.regions.push(TextureRegion::new(index));
-        self.empty_regions += 1;
+    fn push_regions(&mut self, count: i32) {
         assert!(self.empty_regions <= self.regions.len());
+        for _ in 0..count {
+            let index = self.regions.len();
+            self.regions.push(TextureRegion::new(index));
+            self.empty_regions += 1;
+        }
     }
 
     /// Returns true if we can allocate the given entry.
@@ -1638,17 +1653,20 @@ struct TextureArray {
     filter: TextureFilter,
     formats: TextureFormatPair<ImageFormat>,
     units: SmallVec<[TextureArrayUnit; 1]>,
+    layers_per_allocation: i32,
 }
 
 impl TextureArray {
     fn new(
         formats: TextureFormatPair<ImageFormat>,
         filter: TextureFilter,
+        layers_per_allocation: i32,
     ) -> Self {
         TextureArray {
             formats,
             filter,
             units: SmallVec::new(),
+            layers_per_allocation,
         }
     }
 
