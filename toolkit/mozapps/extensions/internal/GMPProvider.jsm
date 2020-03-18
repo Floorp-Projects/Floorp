@@ -48,6 +48,8 @@ const NS_GRE_DIR = "GreD";
 const CLEARKEY_PLUGIN_ID = "gmp-clearkey";
 const CLEARKEY_VERSION = "0.1";
 
+const FIRST_CONTENT_PROCESS_TOPIC = "ipc:first-content-process-created";
+
 const GMP_LICENSE_INFO = "gmp_license_info";
 const GMP_PRIVACY_INFO = "gmp_privacy_info";
 const GMP_LEARN_MORE = "learn_more_label";
@@ -880,15 +882,26 @@ var GMPProvider = {
       }
     }
   },
+
+  observe(subject, topic, data) {
+    if (topic == FIRST_CONTENT_PROCESS_TOPIC) {
+      AddonManagerPrivate.registerProvider(GMPProvider, [
+        new AddonManagerPrivate.AddonType(
+          "plugin",
+          URI_EXTENSION_STRINGS,
+          "type.plugin.name",
+          AddonManager.VIEW_TYPE_LIST,
+          6000,
+          AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE
+        ),
+      ]);
+      Services.obs.removeObserver(this, FIRST_CONTENT_PROCESS_TOPIC);
+    }
+  },
+
+  addObserver() {
+    Services.obs.addObserver(this, FIRST_CONTENT_PROCESS_TOPIC);
+  },
 };
 
-AddonManagerPrivate.registerProvider(GMPProvider, [
-  new AddonManagerPrivate.AddonType(
-    "plugin",
-    URI_EXTENSION_STRINGS,
-    "type.plugin.name",
-    AddonManager.VIEW_TYPE_LIST,
-    6000,
-    AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE
-  ),
-]);
+GMPProvider.addObserver();
