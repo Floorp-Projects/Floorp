@@ -58,6 +58,11 @@ MockGMPInstallManager.prototype = {
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+
+  // The GMPProvider does not register until the first content process
+  // is launched, so we simulate that by firing this notification.
+  Services.obs.notifyObservers(null, "ipc:first-content-process-created");
+
   await promiseStartupManager();
 
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP, true);
