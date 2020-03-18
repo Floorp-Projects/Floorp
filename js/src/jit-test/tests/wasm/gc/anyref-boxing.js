@@ -59,7 +59,7 @@ for (let v of VALUES)
     let g = new WebAssembly.Global({value: "anyref"}, v);
     let ins = wasmEvalText(
         `(module
-           (import $glob "m" "g" (global anyref))
+           (import "m" "g" (global $glob anyref))
            (func (export "f") (result anyref)
              (global.get $glob)))`,
         {m:{g}});
@@ -73,7 +73,7 @@ for (let v of VALUES)
     let g = new WebAssembly.Global({value: "anyref", mutable: true});
     let ins = wasmEvalText(
         `(module
-           (import $glob "m" "g" (global (mut anyref)))
+           (import "m" "g" (global $glob (mut anyref)))
            (func (export "f") (param $v anyref)
              (global.set $glob (local.get $v))))`,
         {m:{g}});
@@ -111,7 +111,7 @@ for (let v of VALUES)
     let t = new WebAssembly.Table({element: "anyref", initial: 10});
     let ins = wasmEvalText(
         `(module
-           (import $t "m" "t" (table 10 anyref))
+           (import "m" "t" (table $t 10 anyref))
            (func (export "f") (param $v anyref)
              (table.set $t (i32.const 3) (local.get $v))))`,
         {m:{t}});
@@ -126,7 +126,7 @@ for (let v of VALUES)
     let t = new WebAssembly.Table({element: "anyref", initial: 10});
     let ins = wasmEvalText(
         `(module
-           (import $t "m" "t" (table 10 anyref))
+           (import "m" "t" (table $t 10 anyref))
            (func (export "f") (result anyref)
              (table.get $t (i32.const 3))))`,
         {m:{t}});
@@ -143,8 +143,8 @@ for (let v of VALUES)
     let receiver = function (w) { assertEq(w, v); };
     let ins = wasmEvalText(
         `(module
-           (import $returner "m" "returner" (func (result anyref)))
-           (import $receiver "m" "receiver" (func (param anyref)))
+           (import "m" "returner" (func $returner (result anyref)))
+           (import "m" "receiver" (func $receiver (param anyref)))
            (func (export "test_returner") (result anyref)
              (call $returner))
            (func (export "test_receiver") (param $v anyref)

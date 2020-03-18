@@ -24,9 +24,9 @@ function checkInvalid(body, errorMessage) {
         `(module
           (gc_feature_opt_in 3)
 
-          (import $print_lp "" "print_lp" (func))
-          (import $print_rp "" "print_rp" (func))
-          (import $print_int "" "print_int" (func (param i32)))
+          (import "" "print_lp" (func $print_lp))
+          (import "" "print_rp" (func $print_rp))
+          (import "" "print_int" (func $print_int (param i32)))
 
           (type $wabbit (struct
                          (field $x (mut i32))
@@ -44,9 +44,9 @@ function checkInvalid(body, errorMessage) {
                 (local $tmp i32)
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
-                (if (ref $wabbit) (i32.le_s (local.get $n) (i32.const 2))
+                (if (result (ref $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
                     (struct.new $wabbit (local.get $tmp) (ref.null) (ref.null))
-                    (block (ref $wabbit)
+                    (block (result (ref $wabbit))
                       (struct.new $wabbit
                                   (local.get $tmp)
                                   (call $make (i32.sub (local.get $n) (i32.const 1)))
@@ -400,8 +400,8 @@ assertErrorMessage(() => wasmEvalText(
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node)) (result anyref)
        (struct.narrow i32 anyref (local.get 0))))`),
-                   SyntaxError,
-                   /struct.narrow requires ref type/);
+                   WebAssembly.CompileError,
+                   /invalid reference type/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -409,8 +409,8 @@ assertErrorMessage(() => wasmEvalText(
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node)) (result anyref)
        (struct.narrow anyref i32 (local.get 0))))`),
-                   SyntaxError,
-                   /struct.narrow requires ref type/);
+                   WebAssembly.CompileError,
+                   /invalid reference type/);
 
 // source and target types must be ref types: binary format
 
