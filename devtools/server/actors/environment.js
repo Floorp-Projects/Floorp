@@ -5,7 +5,7 @@
 
 /* global Debugger */
 
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { environmentSpec } = require("devtools/shared/specs/environment");
 
@@ -21,6 +21,8 @@ const { environmentSpec } = require("devtools/shared/specs/environment");
  */
 const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
   initialize: function(environment, threadActor) {
+    Actor.prototype.initialize.call(this, threadActor.conn);
+
     this.obj = environment;
     this.threadActor = threadActor;
   },
@@ -52,7 +54,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     // Does this environment have a parent?
     if (this.obj.parent) {
       form.parent = this.threadActor
-        .createEnvironmentActor(this.obj.parent, this.registeredPool)
+        .createEnvironmentActor(this.obj.parent, this.getParent())
         .form();
     }
 
@@ -60,7 +62,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     if (this.obj.type == "object" || this.obj.type == "with") {
       form.object = createValueGrip(
         this.obj.object,
-        this.registeredPool,
+        this.getParent(),
         this.threadActor.objectGrip
       );
     }
@@ -69,7 +71,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     if (this.obj.callee) {
       form.function = createValueGrip(
         this.obj.callee,
-        this.registeredPool,
+        this.getParent(),
         this.threadActor.objectGrip
       );
     }
@@ -159,19 +161,19 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
       if ("value" in desc) {
         descForm.value = createValueGrip(
           desc.value,
-          this.registeredPool,
+          this.getParent(),
           this.threadActor.objectGrip
         );
         descForm.writable = desc.writable;
       } else {
         descForm.get = createValueGrip(
           desc.get,
-          this.registeredPool,
+          this.getParent(),
           this.threadActor.objectGrip
         );
         descForm.set = createValueGrip(
           desc.set,
-          this.registeredPool,
+          this.getParent(),
           this.threadActor.objectGrip
         );
       }
@@ -210,19 +212,19 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
       if ("value" in desc) {
         descForm.value = createValueGrip(
           desc.value,
-          this.registeredPool,
+          this.getParent(),
           this.threadActor.objectGrip
         );
         descForm.writable = desc.writable;
       } else {
         descForm.get = createValueGrip(
           desc.get || undefined,
-          this.registeredPool,
+          this.getParent(),
           this.threadActor.objectGrip
         );
         descForm.set = createValueGrip(
           desc.set || undefined,
-          this.registeredPool,
+          this.getParent(),
           this.threadActor.objectGrip
         );
       }

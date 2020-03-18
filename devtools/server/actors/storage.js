@@ -3405,7 +3405,6 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     this.childWindowPool = null;
     this.parentActor = null;
     this.boundUpdate = null;
-    this.registeredPool = null;
     this._pendingResponse = null;
 
     protocol.Actor.prototype.destroy.call(this);

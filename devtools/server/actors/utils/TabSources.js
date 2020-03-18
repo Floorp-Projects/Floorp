@@ -139,7 +139,7 @@ TabSources.prototype = {
       contentType,
     });
 
-    this._thread.threadLifetimePool.addActor(actor);
+    this._thread.threadLifetimePool.manage(actor);
 
     if (
       this._autoBlackBox &&

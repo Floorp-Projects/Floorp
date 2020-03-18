@@ -7,9 +7,9 @@
 const { Cu } = require("chrome");
 const Debugger = require("Debugger");
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { ActorPool } = require("devtools/server/actors/common");
+const { Pool } = require("devtools/shared/protocol/Pool");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { frameSpec } = require("devtools/shared/specs/frame");
 
 function formatDisplayName(frame) {
@@ -77,6 +77,8 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
    *        The parent thread actor for this frame.
    */
   initialize: function(frame, threadActor, depth) {
+    Actor.prototype.initialize.call(this, threadActor.conn);
+
     this.frame = frame;
     this.threadActor = threadActor;
     this.depth = depth;
@@ -88,8 +90,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
   _frameLifetimePool: null,
   get frameLifetimePool() {
     if (!this._frameLifetimePool) {
-      this._frameLifetimePool = new ActorPool(this.conn, "frame");
-      this.conn.addActorPool(this._frameLifetimePool);
+      this._frameLifetimePool = new Pool(this.conn, "frame");
     }
     return this._frameLifetimePool;
   },
@@ -99,8 +100,10 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
    * the pool.
    */
   destroy: function() {
-    this.conn.removeActorPool(this._frameLifetimePool);
-    this._frameLifetimePool = null;
+    if (this._frameLifetimePool) {
+      this._frameLifetimePool.destroy();
+      this._frameLifetimePool = null;
+    }
   },
 
   getEnvironment: function() {
