@@ -4,8 +4,9 @@
 // Tests the Search Tips feature, which displays a prompt to use the Urlbar on
 // the newtab page and on the user's default search engine's homepage.
 // Specifically, it tests that the Tips appear when they should be appearing.
-// This doesn't test the max-shown-count limit because it requires restarting
-// the browser.
+// This doesn't test the max-shown-count limit or the restriction on tips when
+// we show the default browser prompt because those require restarting the
+// browser.
 
 "use strict";
 
