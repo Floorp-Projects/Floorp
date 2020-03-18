@@ -39,10 +39,10 @@ class RenderPassEncoder final : public ObjectBase,
 
   ffi::WGPURawPass mRaw;
   // keep all the used objects alive while the pass is recorded
-  std::vector<RefPtr<const BindGroup>> mUsedBindGroups;
-  std::vector<RefPtr<const Buffer>> mUsedBuffers;
-  std::vector<RefPtr<const RenderPipeline>> mUsedPipelines;
-  std::vector<RefPtr<const TextureView>> mUsedTextureViews;
+  nsTArray<RefPtr<const BindGroup>> mUsedBindGroups;
+  nsTArray<RefPtr<const Buffer>> mUsedBuffers;
+  nsTArray<RefPtr<const RenderPipeline>> mUsedPipelines;
+  nsTArray<RefPtr<const TextureView>> mUsedTextureViews;
 
  public:
   void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
