@@ -172,8 +172,9 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: windows2012-32-shippable/opt
-        worker-type: b-win2012
+        worker-type: b-linux
         worker:
+            docker-image: {in-tree: debian9-amd64-build}
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
@@ -181,20 +182,29 @@ jobs:
             mozconfig-variant: profile-generate
             config:
                 - builds/releng_base_firefox.py
-                - builds/taskcluster_base_windows.py
-                - builds/taskcluster_base_win32.py
+                - builds/releng_base_linux_64_builds.py
             tooltool-downloads: internal
             extra-config:
                 stage_platform: win32
+                mozconfig_platform: win32
+                env:
+                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
         fetches:
             toolchain:
-                - win64-clang-cl
-                - win64-dump-syms
-                - win64-rust
-                - win64-rust-size
-                - win64-cbindgen
-                - win64-nasm
-                - win64-node
+                - linux64-binutils
+                - linux64-clang-win-cross
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-dump-syms
+                - linux64-wine
+                - linux64-liblowercase
+            fetch:
+                - nsis-3.01-win
+                - upx-3.95-win
 
     win64-shippable/opt:
         description: "Win64 Shippable PGO Instrumented"
@@ -204,8 +214,9 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: windows2012-64-shippable/opt
-        worker-type: b-win2012
+        worker-type: b-linux
         worker:
+            docker-image: {in-tree: debian9-amd64-build}
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
         run:
@@ -213,17 +224,26 @@ jobs:
             mozconfig-variant: profile-generate
             config:
                 - builds/releng_base_firefox.py
-                - builds/taskcluster_base_windows.py
-                - builds/taskcluster_base_win64.py
+                - builds/releng_base_linux_64_builds.py
             tooltool-downloads: internal
             extra-config:
                 stage_platform: win64
+                mozconfig_platform: win64
+                env:
+                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
         fetches:
             toolchain:
-                - win64-clang-cl
-                - win64-dump-syms
-                - win64-rust
-                - win64-rust-size
-                - win64-cbindgen
-                - win64-nasm
-                - win64-node
+                - linux64-binutils
+                - linux64-clang-win-cross
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-dump-syms
+                - linux64-wine
+                - linux64-liblowercase
+            fetch:
+                - nsis-3.01-win
+                - upx-3.95-win
