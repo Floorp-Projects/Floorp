@@ -175,10 +175,12 @@ def windows_toolchain(config, job, taskdesc):
 
     worker = taskdesc['worker'] = job['worker']
 
-    worker['artifacts'] = [{
+    # Allow the job to specify where artifacts come from.
+    worker.setdefault('artifacts', [{
         'path': r'public\build',
         'type': 'directory',
-    }]
+    }])
+
     worker['chain-of-trust'] = True
 
     # There were no caches on generic-worker before bug 1519472, and they cause
@@ -186,7 +188,7 @@ def windows_toolchain(config, job, taskdesc):
     # tasks are ready.
     run['use-caches'] = False
 
-    env = worker['env']
+    env = worker.setdefault('env', {})
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
