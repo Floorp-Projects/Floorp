@@ -2379,12 +2379,10 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
                               bgArenas, bgTaskCount, SliceBudget::unlimited(),
                               lock);
 
-  ParallelWorker fgTask(this, UpdateArenaListSegmentPointers, fgArenas,
-                        SliceBudget::unlimited(), lock);
+  AutoUnlockHelperThreadState unlock(lock);
 
-  {
-    AutoUnlockHelperThreadState unlock(lock);
-    fgTask.runFromMainThread();
+  for (; !fgArenas.done(); fgArenas.next()) {
+    UpdateArenaListSegmentPointers(this, fgArenas.get());
   }
 }
 
