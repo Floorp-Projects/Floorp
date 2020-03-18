@@ -44,7 +44,7 @@ var bin = wasmTextToBinary(
       (func $x2 (import "m" "x2") (type $f2))
 
       (func (export "hello") (param f64) (param i32) (result f64)
-       (call_indirect $f2 (local.get 0) (local.get 1)))
+       (call_indirect (type $f2) (local.get 0) (local.get 1)))
 
       (func $doit (param f64) (result f64)
        (f64.sqrt (local.get 0)))
