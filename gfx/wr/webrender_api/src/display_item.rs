@@ -78,6 +78,8 @@ pub struct CommonItemProperties {
     pub hit_info: Option<ItemTag>,
     /// Various flags describing properties of this primitive.
     pub flags: PrimitiveFlags,
+    /// The unique id of this display item.
+    pub item_key: Option<ItemKey>
 }
 
 impl CommonItemProperties {
@@ -92,6 +94,7 @@ impl CommonItemProperties {
             clip_id: space_and_clip.clip_id,
             hit_info: None,
             flags: PrimitiveFlags::default(),
+            item_key: None,
         }
     }
 }
@@ -162,8 +165,7 @@ pub enum DisplayItem {
     PopStackingContext,
     PopAllShadows,
 
-    ReuseItems(ItemKey),
-    RetainedItems(ItemKey),
+    ReuseItem(ItemKey),
 }
 
 /// This is a "complete" version of the DisplayItem, with all implicit trailing
@@ -205,6 +207,8 @@ pub enum DebugDisplayItem {
     PopReferenceFrame,
     PopStackingContext,
     PopAllShadows,
+
+    ReuseItem(ItemKey),
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
@@ -1501,8 +1505,7 @@ impl DisplayItem {
             DisplayItem::Rectangle(..) => "rectangle",
             DisplayItem::ScrollFrame(..) => "scroll_frame",
             DisplayItem::SetGradientStops => "set_gradient_stops",
-            DisplayItem::ReuseItems(..) => "reuse_item",
-            DisplayItem::RetainedItems(..) => "retained_items",
+            DisplayItem::ReuseItem(..) => "reuse_item",
             DisplayItem::StickyFrame(..) => "sticky_frame",
             DisplayItem::Text(..) => "text",
             DisplayItem::YuvImage(..) => "yuv_image",
