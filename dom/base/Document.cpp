@@ -3877,10 +3877,8 @@ bool Document::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
   nsCOMPtr<nsIPrincipal> callerPrincipal =
       nsContentUtils::SubjectPrincipal(aCx);
   nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
-  bool allowed = false;
-  callerPrincipal->IsL10nAllowed(win ? win->GetDocumentURI() : nullptr,
-                                 &allowed);
-  return allowed;
+  return nsContentUtils::PrincipalAllowsL10n(
+      *callerPrincipal, win ? win->GetDocumentURI() : nullptr);
 }
 
 void Document::LocalizationLinkAdded(Element* aLinkElement) {
@@ -3989,9 +3987,8 @@ void Document::InitialDocumentTranslationCompleted() {
 }
 
 bool Document::AllowsL10n() const {
-  bool allowed = false;
-  NodePrincipal()->IsL10nAllowed(GetDocumentURI(), &allowed);
-  return allowed;
+  return nsContentUtils::PrincipalAllowsL10n(*NodePrincipal(),
+                                             GetDocumentURI());
 }
 
 bool Document::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {
