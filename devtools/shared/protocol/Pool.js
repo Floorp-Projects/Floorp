@@ -14,19 +14,22 @@ var EventEmitter = require("devtools/shared/event-emitter");
  * A protocol object that can manage the lifetime of other protocol
  * objects. Pools are used on both sides of the connection to help coordinate lifetimes.
  *
- * @param optional conn
- *   Either a DevToolsServerConnection or a DevToolsClient.  Must have
+ * @param {DevToolsServerConnection|DevToolsClient} [conn]
+ *   Either a DevToolsServerConnection or a DevToolsClient. Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
+ * @param {String} [label]
+ *   An optional label for the Pool.
  * @constructor
  */
 class Pool extends EventEmitter {
-  constructor(conn) {
+  constructor(conn, label) {
     super();
 
     if (conn) {
       this.conn = conn;
     }
+    this._label = label;
     this.__poolMap = null;
   }
 
