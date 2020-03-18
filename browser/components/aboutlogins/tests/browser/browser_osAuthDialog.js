@@ -4,6 +4,19 @@
 ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
 
 add_task(async function test() {
+  info(
+    `updatechannel: ${UpdateUtils.getUpdateChannel(false)}; platform: ${
+      AppConstants.platform
+    }`
+  );
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    ok(
+      true,
+      `skipping test since oskeystore cannot be automated in this environment`
+    );
+    return;
+  }
+
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
 
   await BrowserTestUtils.openNewForegroundTab({
