@@ -2196,7 +2196,6 @@ pub struct WrState {
     pipeline_id: WrPipelineId,
     frame_builder: WebRenderFrameBuilder,
     current_tag: Option<ItemTag>,
-    current_item_key: Option<ItemKey>,
 }
 
 #[no_mangle]
@@ -2207,7 +2206,6 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId, content_size: LayoutSi
         pipeline_id: pipeline_id,
         frame_builder: WebRenderFrameBuilder::with_capacity(pipeline_id, content_size, capacity),
         current_tag: None,
-        current_item_key: None,
     });
 
     Box::into_raw(state)
@@ -2583,7 +2581,6 @@ fn common_item_properties_for_rect(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     }
 }
 
@@ -2654,7 +2651,6 @@ pub extern "C" fn wr_dp_push_rect_with_parent_clip(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_rect(&prim_info, color);
@@ -2705,7 +2701,6 @@ pub extern "C" fn wr_dp_push_backdrop_filter_with_parent_clip(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -2736,7 +2731,6 @@ pub extern "C" fn wr_dp_push_clear_rect(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(true, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_clear_rect(&prim_info);
@@ -2765,7 +2759,6 @@ pub extern "C" fn wr_dp_push_hit_test(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_hit_test(&prim_info);
@@ -2793,7 +2786,6 @@ pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(true, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_clear_rect(&prim_info);
@@ -2822,7 +2814,6 @@ pub extern "C" fn wr_dp_push_image(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, prefer_compositor_surface),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     let alpha_type = if premultiplied_alpha {
@@ -2861,7 +2852,6 @@ pub extern "C" fn wr_dp_push_repeating_image(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     let alpha_type = if premultiplied_alpha {
@@ -2909,7 +2899,6 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, prefer_compositor_surface),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_yuv_image(
@@ -2949,7 +2938,6 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, prefer_compositor_surface),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_yuv_image(
@@ -2988,7 +2976,6 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, prefer_compositor_surface),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_yuv_image(
@@ -3027,7 +3014,6 @@ pub extern "C" fn wr_dp_push_text(
         clip_id: space_and_clip.clip_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3085,7 +3071,6 @@ pub extern "C" fn wr_dp_push_line(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3128,7 +3113,6 @@ pub extern "C" fn wr_dp_push_border(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3178,7 +3162,6 @@ pub extern "C" fn wr_dp_push_border_image(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3237,7 +3220,6 @@ pub extern "C" fn wr_dp_push_border_gradient(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3300,7 +3282,6 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3362,7 +3343,6 @@ pub extern "C" fn wr_dp_push_border_conic_gradient(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3406,7 +3386,6 @@ pub extern "C" fn wr_dp_push_linear_gradient(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3450,7 +3429,6 @@ pub extern "C" fn wr_dp_push_radial_gradient(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3493,7 +3471,6 @@ pub extern "C" fn wr_dp_push_conic_gradient(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state
@@ -3527,7 +3504,6 @@ pub extern "C" fn wr_dp_push_box_shadow(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
-        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_box_shadow(
@@ -3544,19 +3520,16 @@ pub extern "C" fn wr_dp_push_box_shadow(
 
 #[no_mangle]
 pub extern "C" fn wr_dp_start_item_group(state: &mut WrState, key: ItemKey) {
-    state.current_item_key = Some(key);
     state.frame_builder.dl_builder.start_item_group(key);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState) {
-    state.current_item_key = None;
     state.frame_builder.dl_builder.cancel_item_group();
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_finish_item_group(state: &mut WrState, key: ItemKey) -> bool {
-    state.current_item_key = None;
     state.frame_builder.dl_builder.finish_item_group(key)
 }
 
