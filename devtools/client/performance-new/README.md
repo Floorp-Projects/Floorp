@@ -32,9 +32,9 @@ This is the remote view of the about:profiling page. It is embedded in the about
 
 ### Profiler Popup
 
-The popup can be enabled by going to `Tools -> Web Developer -> Enable Profiler Toolbar Icon", or by visiting [profiler.firefox.com] and clicking `Enable Profiler Menu Button`. This UI is not a React Redux app, but has a vanilla browser chrome implementation. This was done to make the popup as fast as possible, with a trade-off of some complexity with dealing with the non-standard (i.e. not a normal webpage) browser chrome environment. The popup is designed to be as low overhead as possible in order to get the cleanest performance profiles. Special care must be taken to not impact browser startup times when working with this implementation, as it also turns on the global profiler shortcuts.
+The popup is enabled by default on Nightly and Dev Edition, but it's not added to the navbar. Once the profiler menu button is added to the navbar, or other places in the UI, the shortcuts for the profiler will work. In any release channel the popup can be enabled by visiting [profiler.firefox.com] and clicking `Enable Profiler Menu Button`. This flips the pref `"devtools.performance.popup.feature-flag"` and the profiler button will always be available in the list of buttons for the Firefox UI.
 
-At the time of this writing, the popup feature is not enabled by default. This pref is `"devtools.performance.popup.feature-flag"`.
+The popup UI is not a React Redux app, but has a vanilla browser chrome implementation. This was done to make the popup as fast as possible, with a trade-off of some complexity with dealing with the non-standard (i.e. not a normal webpage) browser chrome environment. The popup is designed to be as low overhead as possible in order to get the cleanest performance profiles. Special care must be taken to not impact browser startup times when working with this implementation, as it also turns on the global profiler shortcuts.
 
 ## Injecting profiles into [profiler.firefox.com]
 

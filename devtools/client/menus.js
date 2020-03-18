@@ -56,11 +56,6 @@ loader.lazyImporter(
   "BrowserToolboxLauncher",
   "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
-loader.lazyImporter(
-  this,
-  "ProfilerMenuButton",
-  "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
-);
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
@@ -122,14 +117,6 @@ exports.menuitems = [
       BrowserConsoleManager.openBrowserConsoleOrFocus();
     },
     keyId: "browserConsole",
-  },
-  {
-    id: "menu_toggleProfilerButtonMenu",
-    l10nKey: "toggleProfilerButtonMenu",
-    checkbox: true,
-    oncommand(event) {
-      ProfilerMenuButton.toggle(event.target.ownerDocument);
-    },
   },
   {
     id: "menu_responsiveUI",
