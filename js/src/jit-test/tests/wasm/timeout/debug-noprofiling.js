@@ -12,18 +12,18 @@ var t = new WebAssembly.Table({
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 (module
-    (import "imports" "t" (table 1 funcref))
     (func $iloop loop $top br $top end)
-    (elem (i32.const 0) $iloop))
+    (import "imports" "t" (table1 funcref))
+    (elem (i32.const0) $iloop))
 `)), { imports: { t } });
 
 outer = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 (module
-    (import "imports" "t" (table 1 funcref))
+    (import "imports" "t" (table1 funcref))
     (type $v2v (func))
     (func (export "run")
-        i32.const 0
-        call_indirect (type $v2v))
+        i32.const0
+        call_indirect $v2v)
     )`)), { imports: { t } });
 
 setJitCompilerOption('simulator.always-interrupt', 1);

@@ -1,21 +1,20 @@
 let { exports } = wasmEvalText(`(module
-    (func (export "i32") (param i32) (result i32)
+    (func (export "i32") (result i32) (param i32)
      local.get 0
     )
 
-    (func (export "f32") (param f32) (result f32)
+    (func (export "f32") (result f32) (param f32)
      local.get 0
     )
 
-    (func (export "f64") (param f64) (result f64)
+    (func (export "f64") (result f64) (param f64)
      local.get 0
     )
 
-    (func (export "mixed_args")
+    (func (export "mixed_args") (result f64)
         (param i32) (param i32) (param i32) (param i32) (param i32) ;; 5 i32
         (param $f64 f64) ;; 1 f64
         (param i32)
-        (result f64)
      local.get $f64
     )
 )`);
@@ -80,10 +79,9 @@ function call(func, coercion, arg) {
 // Test high number of arguments.
 // All integers.
 let {func} = wasmEvalText(`(module
-    (func (export "func")
+    (func (export "func") (result i32)
         ${Array(32).join('(param i32)')}
         (param $last i32)
-        (result i32)
      local.get $last
     )
 )`).exports;
@@ -98,10 +96,9 @@ let {func} = wasmEvalText(`(module
 
 // All floats.
 func = wasmEvalText(`(module
-    (func (export "func")
+    (func (export "func") (result i32)
         ${Array(32).join('(param f64)')}
         (param $last i32)
-        (result i32)
      local.get $last
     )
 )`).exports.func;
@@ -124,10 +121,9 @@ for (let i = 0; i < 32; i++) {
 }
 
 func = wasmEvalText(`(module
-    (func (export "func")
+    (func (export "func") (result i32)
         ${Array(32).join('(param f64)')}
         (param $last i32)
-        (result i32)
      local.get $last
     )
 )`).exports.func;

@@ -29,19 +29,19 @@ const DEBUG = false;
 let t =
   `(module
      (type $typeOfFn0
-           (func (param i32) (param anyref) (param i32)
-                 (param anyref) (param anyref) (param i32) (result i32)))
+           (func (result i32) (param i32) (param anyref) (param i32)
+                              (param anyref) (param anyref) (param i32)))
      (table 1 1 funcref)
      (elem (i32.const 0) $fn0)
 
-     (import "" "alloc" (func $alloc (result anyref)))
-     (import "" "quitp" (func $quitp (result i32)))
-     (import "" "check3" (func $check3 (param anyref) (param anyref) (param anyref)))
+     (import $alloc "" "alloc" (func (result anyref)))
+     (import $quitp "" "quitp" (func (result i32)))
+     (import $check3 "" "check3" (func (param anyref) (param anyref) (param anyref)))
 
      ;; -- fn 0
      (func $fn0 (export "fn0")
-                 (param $arg1 i32) (param $arg2 anyref) (param $arg3 i32)
-                 (param $arg4 anyref) (param $arg5 anyref) (param $arg6 i32) (result i32)
+                (result i32) (param $arg1 i32) (param $arg2 anyref) (param $arg3 i32)
+                             (param $arg4 anyref) (param $arg5 anyref) (param $arg6 i32)
        (local $i i32)
 
        ;; spinloop to waste time
@@ -59,13 +59,13 @@ let t =
 
      ;; -- fn 1
      (func $fn1 (export "fn1") (param $arg1 anyref) (result i32)
-       (loop (result i32)
+       (loop i32
          ;; call direct to $fn0
          (call $fn0 (i32.const 10) (local.get $arg1) (i32.const 12)
                     (local.get $arg1) (local.get $arg1) (i32.const 15))
 
          ;; call indirect to table index 0, which is $fn0
-         (call_indirect (type $typeOfFn0)
+         (call_indirect $typeOfFn0
                     (i32.const 10) (local.get $arg1) (i32.const 12)
                     (local.get $arg1) (local.get $arg1) (i32.const 15)
                     (i32.const 0)) ;; table index

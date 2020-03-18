@@ -65,9 +65,9 @@ const unusedValuesError = /unused values not explicitly dropped by end of block/
 function jsify(wasmVal) {
     if (wasmVal === 'nan')
         return NaN;
-    if (wasmVal === 'inf')
+    if (wasmVal === 'infinity')
         return Infinity;
-    if (wasmVal === '-inf')
+    if (wasmVal === '-infinity')
         return Infinity;
     if (wasmVal === '-0')
         return -0;

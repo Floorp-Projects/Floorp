@@ -5,8 +5,10 @@ gczeal(2, 100);
 function f(x, initFunc) {
     newGlobal({newCompartment: true});
     g.eval(`
-        var binary = wasmTextToBinary('${x}');
-        var offsets = wasmCodeOffsets(binary);
+        var {
+            binary,
+            offsets
+        } = wasmTextToBinary('${x}', true);
         new WebAssembly.Instance(new WebAssembly.Module(binary));
     `);
     var {
@@ -19,7 +21,7 @@ function f(x, initFunc) {
     })
 };
 try {
-    f('(module (func nop nop) (export "" (func 0)))',
+    f('(module (funcnopnop)(export "" 0))',
         function({
             wasmScript,
             breakpoints

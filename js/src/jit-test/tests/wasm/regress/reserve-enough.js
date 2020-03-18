@@ -9,5 +9,5 @@ wasmEvalText(
 function loopy(n) {
     if (n == 0)
 	return "(nop)";
-    return `(block $out${n} (loop $in${n} ${loopy(n-1)}))`;
+    return `(loop $out${n} $in${n} ${loopy(n-1)})`;
 }

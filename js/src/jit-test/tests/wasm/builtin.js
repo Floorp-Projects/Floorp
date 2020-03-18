@@ -13,8 +13,8 @@ function unary(name) {
     let f64 = Math[name];
 
     let i = wasmEvalText(`(module
-        (import "math" "func" (func $f32 (param f32) (result f32)))
-        (import "math" "func" (func $f64 (param f64) (result f64)))
+        (import $f32 "math" "func" (param f32) (result f32))
+        (import $f64 "math" "func" (param f64) (result f64))
 
         (table $t 10 funcref)
         (type $f_f (func (param f32) (result f32)))
@@ -28,7 +28,7 @@ function unary(name) {
         (func (export "f32_t") (param f32) (result f32)
             local.get 0
             i32.const 0
-            call_indirect (type $f_f)
+            call_indirect $f_f
         )
         (func (export "f64") (param f64) (result f64)
             local.get 0
@@ -37,7 +37,7 @@ function unary(name) {
         (func (export "f64_t") (param f64) (result f64)
             local.get 0
             i32.const 1
-            call_indirect (type $d_d)
+            call_indirect $d_d
         )
     )`, imports).exports;
 
@@ -62,8 +62,8 @@ function binary(name) {
     let f64 = Math[name];
 
     let i = wasmEvalText(`(module
-        (import "math" "func" (func $f32 (param f32) (param f32) (result f32)))
-        (import "math" "func" (func $f64 (param f64) (param f64) (result f64)))
+        (import $f32 "math" "func" (param f32) (param f32) (result f32))
+        (import $f64 "math" "func" (param f64) (param f64) (result f64))
 
         (table $t 10 funcref)
         (type $ff_f (func (param f32) (param f32) (result f32)))
@@ -79,7 +79,7 @@ function binary(name) {
             local.get 0
             local.get 1
             i32.const 0
-            call_indirect (type $ff_f)
+            call_indirect $ff_f
         )
         (func (export "f64") (param f64) (param f64) (result f64)
             local.get 0
@@ -90,7 +90,7 @@ function binary(name) {
             local.get 0
             local.get 1
             i32.const 1
-            call_indirect (type $dd_d)
+            call_indirect $dd_d
         )
     )`, imports).exports;
 

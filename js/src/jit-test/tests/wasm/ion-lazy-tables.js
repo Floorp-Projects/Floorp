@@ -15,7 +15,7 @@ const EXPECTED_STACKS = [SLOW_ENTRY_STACK, FAST_ENTRY_STACK, INLINED_CALL_STACK]
 
 function main() {
     var { table } = wasmEvalText(`(module
-        (func $add (param i32) (param i32) (result i32)
+        (func $add (result i32) (param i32) (param i32)
          local.get 0
          local.get 1
          i32.add
@@ -35,7 +35,7 @@ function withTier2() {
     setJitCompilerOption('wasm.delay-tier2', 1);
 
     var module = new WebAssembly.Module(wasmTextToBinary(`(module
-        (func $add (param i32) (param i32) (result i32)
+        (func $add (result i32) (param i32) (param i32)
          local.get 0
          local.get 1
          i32.add

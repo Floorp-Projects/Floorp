@@ -1,5 +1,0 @@
-invalid character in string '\u{7f}'
-     --> tests/parse-fail/string7.wat:1:2
-      |
-    1 | ""
-      |  ^

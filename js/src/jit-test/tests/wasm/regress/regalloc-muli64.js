@@ -10,5 +10,5 @@ assertEq(wasmEvalText(`(module
             )
         )
     )
-    (export "" (func 0))
+    (export "" 0)
 )`).exports[""](), 121);
