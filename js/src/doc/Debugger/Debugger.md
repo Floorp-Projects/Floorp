@@ -168,6 +168,11 @@ debugger evaluation associated with the debugger that has the `onNativeCall`
 hook.  Such evaluation methods include `Debugger.Object.executeInGlobal`,
 `Debugger.Frame.eval`, and associated methods.
 
+Separately, any Debugger hooks triggered during calls to
+`Debugger.Object.executeInGlobal`, `Debugger.Frame.eval`, and associated methods
+will only be triggered on Debugger objects owned by the Debugger performing
+the evaluation.
+
 ### `onExceptionUnwind(frame, value)`
 The exception <i>value</i> has been thrown, and has propagated to
 <i>frame</i>; <i>frame</i> is the youngest remaining stack frame, and is a

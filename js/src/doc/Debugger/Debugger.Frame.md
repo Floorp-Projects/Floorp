@@ -469,6 +469,10 @@ The <i>options</i> argument is as for
 Also like `eval`, if this frame's `environment` property is `null` or
 `type` property is `wasmcall`, throw a `TypeError`.
 
+Note: If this method is called on an object whose owner
+[Debugger object][debugger-object] has an onNativeCall handler, only hooks
+on objects associated with that debugger will be called during the evaluation.
+
 Accessing this property will throw if `.onStack == false`.
 
 
