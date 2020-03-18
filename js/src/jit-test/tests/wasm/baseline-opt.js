@@ -21,7 +21,7 @@ function testEqzBrIf(value, type, untaken, taken, expected) {
 			     (br_if $b (${type}.eqz (local.get 0)))
 			     (local.set 1 (i32.const ${untaken})))
 			    (local.get 1))
-			   (export "f" 0))`).exports["f"];
+			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
 }
 
@@ -38,7 +38,7 @@ function testCmpBrIf(value, type, untaken, taken, expected) {
 			     (br_if $b (${type}.eq (local.get 0) (${type}.const ${value})))
 			     (local.set 1 (i32.const ${untaken})))
 			    (local.get 1))
-			   (export "f" 0))`).exports["f"];
+			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
 }
 
@@ -53,7 +53,7 @@ function testEqzSelect(value, type, iftrue, iffalse, expected) {
 			    (select (i32.const ${iftrue})
 			            (i32.const ${iffalse})
 			            (${type}.eqz (local.get 0))))
-			   (export "f" 0))`).exports["f"];
+			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
 }
 
@@ -67,7 +67,7 @@ function testCmpSelect(value, type, iftrue, iffalse, expected) {
 			    (select (i32.const ${iftrue})
 			            (i32.const ${iffalse})
 			            (${type}.eq (local.get 0) (${type}.const ${value}))))
-			   (export "f" 0))`).exports["f"];
+			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
 }
 
@@ -84,7 +84,7 @@ function testEqzIf(value, type, trueBranch, falseBranch, expected) {
 				(local.set 1 (i32.const ${trueBranch}))
 			        (local.set 1 (i32.const ${falseBranch})))
 			    (local.get 1))
-			   (export "f" 0))`).exports["f"];
+			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
 }
 
@@ -100,7 +100,7 @@ function testCmpIf(value, type, trueBranch, falseBranch, expected) {
 				(local.set 1 (i32.const ${trueBranch}))
 			        (local.set 1 (i32.const ${falseBranch})))
 			    (local.get 1))
-			   (export "f" 0))`).exports["f"];
+			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
 }
 

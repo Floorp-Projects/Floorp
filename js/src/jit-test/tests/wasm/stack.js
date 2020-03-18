@@ -63,5 +63,5 @@ wasmFullPass(` (module
 
    (func $returnVoid)
 
-   (export "run" 0)
+   (export "run" (func 0))
 )`, 33);

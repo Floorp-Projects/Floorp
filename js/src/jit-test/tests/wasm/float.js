@@ -1,32 +1,32 @@
-wasmFullPass('(module (func (result f32) (f32.const -1)) (export "run" 0))', -1);
-wasmFullPass('(module (func (result f32) (f32.const 1)) (export "run" 0))', 1);
-wasmFullPass('(module (func (result f64) (f64.const -2)) (export "run" 0))', -2);
-wasmFullPass('(module (func (result f64) (f64.const 2)) (export "run" 0))', 2);
-wasmFullPass('(module (func (result f64) (f64.const 4294967296)) (export "run" 0))', 4294967296);
-wasmFullPass('(module (func (result f32) (f32.const 1.5)) (export "run" 0))', 1.5);
-wasmFullPass('(module (func (result f64) (f64.const 2.5)) (export "run" 0))', 2.5);
-wasmFullPass('(module (func (result f64) (f64.const 10e2)) (export "run" 0))', 10e2);
-wasmFullPass('(module (func (result f32) (f32.const 10e2)) (export "run" 0))', 10e2);
-wasmFullPass('(module (func (result f64) (f64.const -0x8000000000000000)) (export "run" 0))', -0x8000000000000000);
-wasmFullPass('(module (func (result f64) (f64.const -9223372036854775808)) (export "run" 0))', -9223372036854775808);
-wasmFullPass('(module (func (result f64) (f64.const 1797693134862315708145274e284)) (export "run" 0))', 1797693134862315708145274e284);
+wasmFullPass('(module (func (result f32) (f32.const -1)) (export "run" (func 0)))', -1);
+wasmFullPass('(module (func (result f32) (f32.const 1)) (export "run" (func 0)))', 1);
+wasmFullPass('(module (func (result f64) (f64.const -2)) (export "run" (func 0)))', -2);
+wasmFullPass('(module (func (result f64) (f64.const 2)) (export "run" (func 0)))', 2);
+wasmFullPass('(module (func (result f64) (f64.const 4294967296)) (export "run" (func 0)))', 4294967296);
+wasmFullPass('(module (func (result f32) (f32.const 1.5)) (export "run" (func 0)))', 1.5);
+wasmFullPass('(module (func (result f64) (f64.const 2.5)) (export "run" (func 0)))', 2.5);
+wasmFullPass('(module (func (result f64) (f64.const 10e2)) (export "run" (func 0)))', 10e2);
+wasmFullPass('(module (func (result f32) (f32.const 10e2)) (export "run" (func 0)))', 10e2);
+wasmFullPass('(module (func (result f64) (f64.const -0x8000000000000000)) (export "run" (func 0)))', -0x8000000000000000);
+wasmFullPass('(module (func (result f64) (f64.const -9223372036854775808)) (export "run" (func 0)))', -9223372036854775808);
+wasmFullPass('(module (func (result f64) (f64.const 1797693134862315708145274e284)) (export "run" (func 0)))', 1797693134862315708145274e284);
 
 function testUnary(type, opcode, op, expect) {
-    wasmFullPass('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (local.get 0))) (export "run" 0))',
+    wasmFullPass('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (local.get 0))) (export "run" (func 0)))',
                  expect,
                  {},
                  op);
 }
 
 function testBinary(type, opcode, lhs, rhs, expect) {
-    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (local.get 0) (local.get 1))) (export "run" 0))',
+    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (local.get 0) (local.get 1))) (export "run" (func 0)))',
                  expect,
                  {},
                  lhs, rhs);
 }
 
 function testComparison(type, opcode, lhs, rhs, expect) {
-    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (local.get 0) (local.get 1))) (export "run" 0))',
+    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (local.get 0) (local.get 1))) (export "run" (func 0)))',
                  expect,
                  {},
                  lhs, rhs);

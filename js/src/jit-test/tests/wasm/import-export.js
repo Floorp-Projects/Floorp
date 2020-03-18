@@ -110,7 +110,7 @@ wasmFailValidateText('(module (import "a" "b" (table 2 1 funcref)))', /maximum l
 
 // Import wasm-wasm type mismatch
 
-var e = wasmEvalText('(module (func $i2v (param i32)) (export "i2v" $i2v) (func $f2v (param f32)) (export "f2v" $f2v))').exports;
+var e = wasmEvalText('(module (func $i2v (param i32)) (export "i2v" (func $i2v)) (func $f2v (param f32)) (export "f2v" (func $f2v)))').exports;
 var i2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param i32)))'));
 var f2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param f32)))'));
 assertEq(new Instance(i2vm, {a:{b:e.i2v}}) instanceof Instance, true);
@@ -178,12 +178,12 @@ var code = wasmTextToBinary('(module)');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).length, 0);
 
-var code = wasmTextToBinary('(module (func) (export "foo" 0))');
+var code = wasmTextToBinary('(module (func) (export "foo" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "foo");
 assertEq(e.foo(), undefined);
 
-var code = wasmTextToBinary('(module (func) (export "foo" 0) (export "bar" 0))');
+var code = wasmTextToBinary('(module (func) (export "foo" (func 0)) (export "bar" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "foo,bar");
 assertEq(e.foo(), undefined);
@@ -201,7 +201,7 @@ assertEq(e.foo, e.bar);
 assertEq(e.foo instanceof Memory, true);
 assertEq(e.foo.buffer.byteLength, 64*1024);
 
-var code = wasmTextToBinary('(module (memory 1 1) (func) (export "foo" 0) (export "bar" memory))');
+var code = wasmTextToBinary('(module (memory 1 1) (func) (export "foo" (func 0)) (export "bar" memory))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "foo,bar");
 assertEq(e.foo(), undefined);
@@ -209,7 +209,7 @@ assertEq(e.bar instanceof Memory, true);
 assertEq(e.bar instanceof Memory, true);
 assertEq(e.bar.buffer.byteLength, 64*1024);
 
-var code = wasmTextToBinary('(module (memory 1 1) (func) (export "bar" memory) (export "foo" 0))');
+var code = wasmTextToBinary('(module (memory 1 1) (func) (export "bar" memory) (export "foo" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "bar,foo");
 assertEq(e.foo(), undefined);
@@ -235,7 +235,7 @@ assertEq(e.t2 instanceof Table, true);
 assertEq(e.t1, e.t2);
 assertEq(e.t1.length, 2);
 
-var code = wasmTextToBinary('(module (table 2 funcref) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" 0))');
+var code = wasmTextToBinary('(module (table 2 funcref) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t,m,f");
 assertEq(e.f(), undefined);
@@ -243,7 +243,7 @@ assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
 assertEq(e.t.length, 2);
 
-var code = wasmTextToBinary('(module (table 1 funcref) (memory 1 1) (func) (export "m" memory) (export "f" 0) (export "t" table))');
+var code = wasmTextToBinary('(module (table 1 funcref) (memory 1 1) (func) (export "m" memory) (export "f" (func 0)) (export "t" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "m,f,t");
 assertEq(e.f(), undefined);
@@ -267,11 +267,11 @@ var text = `(module
     (table 4 funcref)
     (elem (i32.const 0) $f)
     (elem (i32.const 2) $g)
-    (export "f1" $f)
+    (export "f1" (func $f))
     (export "tbl1" table)
-    (export "f2" $f)
+    (export "f2" (func $f))
     (export "tbl2" table)
-    (export "f3" $h)
+    (export "f3" (func $h))
     (func (export "run") (result i32) (call_indirect (type 0) (i32.const 2)))
 )`;
 wasmFullPass(text, 2);
@@ -301,10 +301,10 @@ assertEq(e.tbl1.get(0), e.tbl1.get(3));
 
 var args;
 var m = new Module(wasmTextToBinary(`(module
-    (export "a" $a) (import $a "" "a" (param f32))
-    (export "b" $b) (import $b "" "b" (param i32) (result i32))
-    (export "c" $c) (import $c "" "c" (result i32))
-    (export "d" $d) (import $d "" "d")
+    (export "a" (func $a)) (import $a "" "a" (param f32))
+    (export "b" (func $b)) (import $b "" "b" (param i32) (result i32))
+    (export "c" (func $c)) (import $c "" "c" (result i32))
+    (export "d" (func $d)) (import $d "" "d")
 )`));
 var js = function() { args = arguments; return 42 }
 var e = new Instance(m, {"":{a:js, b:js, c:js, d:js}}).exports;
@@ -347,7 +347,7 @@ var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
 assertEq(tbl, e.bar);
 
-var code = wasmTextToBinary('(module (import "a" "b" (table 2 2 funcref)) (func $foo) (elem (i32.const 0) $foo) (export "foo" $foo))');
+var code = wasmTextToBinary('(module (import "a" "b" (table 2 2 funcref)) (func $foo) (elem (i32.const 0) $foo) (export "foo" (func $foo)))');
 var tbl = new Table({initial:2, maximum:2, element:"funcref"});
 var e1 = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(e1.foo, tbl.get(0));
@@ -365,13 +365,13 @@ var m = new Module(wasmTextToBinary(`(module
     (import $bar "" "bar" (result i32))
     (func $baz (result i32) (i32.const 13))
     (elem (i32.const 0) $foo $bar $baz)
-    (export "foo" $foo)
-    (export "bar" $bar)
-    (export "baz" $baz)
+    (export "foo" (func $foo))
+    (export "bar" (func $bar))
+    (export "baz" (func $baz))
     (export "tbl" table)
 )`));
 var jsFun = () => 83;
-var wasmFun = new Instance(new Module(wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" 0))'))).exports.foo;
+var wasmFun = new Instance(new Module(wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" (func 0)))'))).exports.foo;
 var e1 = new Instance(m, {"":{foo:jsFun, bar:wasmFun}}).exports;
 assertEq(jsFun === e1.foo, false);
 assertEq(wasmFun, e1.bar);
@@ -412,15 +412,15 @@ assertEq(e4.baz, e4.tbl.get(2));
 
 // i64 is fully allowed for imported wasm functions
 
-var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (local.get 0) (i64.const 10))) (export "exp" $exp))');
+var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (local.get 0) (i64.const 10))) (export "exp" (func $exp)))');
 var e1 = new Instance(new Module(code1)).exports;
-var code2 = wasmTextToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" $f))');
+var code2 = wasmTextToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" (func $f)))');
 var e2 = new Instance(new Module(code2), {a:{b:e1.exp}}).exports;
 assertEq(e2.f(), 52);
 
 // Non-existent export errors
 
-wasmFailValidateText('(module (export "a" 0))', /exported function index out of bounds/);
+wasmFailValidateText('(module (export "a" (func 0)))', /exported function index out of bounds/);
 wasmFailValidateText('(module (export "a" global 0))', /exported global index out of bounds/);
 wasmFailValidateText('(module (export "a" memory))', /exported memory index out of bounds/);
 wasmFailValidateText('(module (export "a" table))', /exported table index out of bounds/);
@@ -439,7 +439,7 @@ var m = new Module(wasmTextToBinary(`
         (data (i32.const 100) "\\0c\\0d")
         (func $get (param $p i32) (result i32)
             (i32.load8_u (local.get $p)))
-        (export "get" $get))
+        (export "get" (func $get)))
 `));
 var mem = new Memory({initial:1, maximum:1});
 var {get} = new Instance(m, {a:{b:mem}}).exports;
@@ -500,8 +500,8 @@ var m = new Module(wasmTextToBinary(`
         (elem (i32.const 0) $f)
         (data (global.get $memOff) "\\02")
         (elem (global.get $tblOff) $g)
-        (export "f" $f)
-        (export "g" $g))
+        (export "f" (func $f))
+        (export "g" (func $g)))
 `));
 
 // Active segments are applied in order (this is observable if they overlap).
@@ -646,15 +646,15 @@ assertEq(tbl.get(3)(), undefined);
 
 // Cross-instance calls
 
-var i1 = new Instance(new Module(wasmTextToBinary(`(module (func) (func (param i32) (result i32) (i32.add (local.get 0) (i32.const 1))) (func) (export "f" 1))`)));
-var i2 = new Instance(new Module(wasmTextToBinary(`(module (import $imp "a" "b" (param i32) (result i32)) (func $g (result i32) (call $imp (i32.const 13))) (export "g" $g))`)), {a:{b:i1.exports.f}});
+var i1 = new Instance(new Module(wasmTextToBinary(`(module (func) (func (param i32) (result i32) (i32.add (local.get 0) (i32.const 1))) (func) (export "f" (func 1)))`)));
+var i2 = new Instance(new Module(wasmTextToBinary(`(module (import $imp "a" "b" (param i32) (result i32)) (func $g (result i32) (call $imp (i32.const 13))) (export "g" (func $g)))`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.g(), 14);
 
 var i1 = new Instance(new Module(wasmTextToBinary(`(module
     (memory 1 1)
     (data (i32.const 0) "\\42")
     (func $f (result i32) (i32.load (i32.const 0)))
-    (export "f" $f)
+    (export "f" (func $f))
 )`)));
 var i2 = new Instance(new Module(wasmTextToBinary(`(module
     (import $imp "a" "b" (result i32))
@@ -665,7 +665,7 @@ var i2 = new Instance(new Module(wasmTextToBinary(`(module
     (func $def (result i32) (i32.load (i32.const 0)))
     (type $v2i (func (result i32)))
     (func $call (param i32) (result i32) (call_indirect (type $v2i) (local.get 0)))
-    (export "call" $call)
+    (export "call" (func $call))
 )`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.call(0), 0x42);
 assertEq(i2.exports.call(1), 0x13);
@@ -682,7 +682,7 @@ var m = new Module(wasmTextToBinary(`(module
             (i32.add
                 (i32.load (i32.const 0))
                 (call $next))))
-    (export "call" $call)
+    (export "call" (func $call))
 )`));
 var e = {call:() => 1000};
 for (var i = 0; i < 10; i++)
@@ -797,8 +797,8 @@ assertEq(e.call(), 1090);
                         (i32.add (memory.size) (call $imp1))
                         (memory.size))
                     (call $imp2)))
-            (export "impstub" $imp1)
-            (export "test" $test))
+            (export "impstub" (func $imp1))
+            (export "test" (func $test)))
     `)), {a:{m:g.mem, f1:g.f1, f2:g.Math.abs}});
 
     for (var i = 0; i < 20; i++) {
@@ -812,7 +812,7 @@ assertEq(e.call(), 1090);
             (import $imp "a" "othertest" (result i32))
             (import "a" "m" (memory 1))
             (func (result i32) (i32.add (call $imp) (memory.size)))
-            (export "test" 1))
+            (export "test" (func 1)))
     `;
     g.i1 = i1;
     g.evaluate("i2 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`" + src + "`)), {a:{m:mem,othertest:i1.exports.test}})");
