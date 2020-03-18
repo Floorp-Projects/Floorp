@@ -65,7 +65,7 @@ foo = ['A list of strings', 'that go over 80 characters', 'to test if autopep8 f
 
 def test_lint_excluded_file(lint, paths, config):
     # First file is globally excluded, second one is from .flake8 config.
-    files = paths('bad.py', 'subdir/exclude/bad.py')
+    files = paths('bad.py', 'subdir/exclude/bad.py', 'subdir/exclude/exclude_subdir')
     config['exclude'] = paths('bad.py')
     results = lint(files, config)
     print(results)
@@ -97,7 +97,7 @@ def test_lint_excluded_file_with_glob(lint, paths, config):
 def test_lint_excluded_file_with_no_filter(lint, paths, config):
     results = lint(paths('subdir/exclude'), use_filters=False)
     print(results)
-    assert len(results) == 2
+    assert len(results) == 4
 
 
 def test_lint_uses_custom_extensions(lint, paths):
