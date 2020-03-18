@@ -8,7 +8,7 @@ const { Cu } = require("chrome");
 const {
   setBreakpointAtEntryPoints,
 } = require("devtools/server/actors/breakpoint");
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
@@ -104,6 +104,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   typeName: "source",
 
   initialize: function({ source, thread, isInlineSource, contentType }) {
+    Actor.prototype.initialize.call(this, thread.conn);
+
     this._threadActor = thread;
     this._url = null;
     this._source = source;
@@ -186,8 +188,9 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   destroy: function() {
-    if (this.registeredPool && this.registeredPool.sourceActors) {
-      delete this.registeredPool.sourceActors[this.actorID];
+    const parent = this.getParent();
+    if (parent && parent.sourceActors) {
+      delete parent.sourceActors[this.actorID];
     }
   },
 

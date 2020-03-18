@@ -11,7 +11,7 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 const Services = require("Services");
 const { Cc, Ci, Cu } = require("chrome");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { ActorPool } = require("devtools/server/actors/common");
+const { Pool } = require("devtools/shared/protocol/Pool");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { ObjectActor } = require("devtools/server/actors/object");
 const { LongStringActor } = require("devtools/server/actors/string");
@@ -184,8 +184,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this.conn = connection;
     this.parentActor = parentActor;
 
-    this._actorPool = new ActorPool(this.conn);
-    this.conn.addActorPool(this._actorPool);
+    this._pool = new Pool(this.conn);
 
     this._prefs = {};
     this.dbg = this.parentActor.dbg;
@@ -234,12 +233,12 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   _gripDepth: null,
 
   /**
-   * Actor pool for all of the actors we send to the client.
+   * Pool for all of the actors we send to the client.
    * @private
    * @type object
-   * @see ActorPool
+   * @see Pool
    */
-  _actorPool: null,
+  _pool: null,
 
   /**
    * Web Console-related preferences.
@@ -447,7 +446,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       this._onChangedToplevelDocument
     );
 
-    this.conn.removeActorPool(this._actorPool);
+    this._pool.destroy();
 
     if (this.parentActor.isRootActor) {
       Services.obs.removeObserver(
@@ -460,7 +459,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       this.dbg.onConsoleMessage = null;
     }
 
-    this._actorPool = null;
+    this._pool = null;
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalWindow = null;
@@ -489,7 +488,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     const actor = new EnvironmentActor(environment, this);
-    this._actorPool.addActor(actor);
+    this._pool.manage(actor);
     environment.actor = actor;
 
     return actor;
@@ -502,7 +501,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    */
   createValueGrip: function(value) {
-    return createValueGrip(value, this._actorPool, this.objectGrip);
+    return createValueGrip(value, this._pool, this.objectGrip);
   },
 
   /**
@@ -542,7 +541,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param object object
    *        The object you want.
    * @param object pool
-   *        An ActorPool where the new actor instance is added.
+   *        A Pool where the new actor instance is added.
    * @param object
    *        The object grip.
    */
@@ -564,7 +563,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       },
       this.conn
     );
-    pool.addActor(actor);
+    pool.manage(actor);
     return actor.form();
   },
 
@@ -574,13 +573,13 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param string string
    *        The string you want to create the grip for.
    * @param object pool
-   *        An ActorPool where the new actor instance is added.
+   *        A Pool where the new actor instance is added.
    * @return object
    *         A LongStringActor object that wraps the given string.
    */
   longStringGrip: function(string, pool) {
     const actor = new LongStringActor(this.conn, string);
-    pool.addActor(actor);
+    pool.manage(actor);
     return actor.form();
   },
 
@@ -596,7 +595,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   _createStringGrip: function(string) {
     if (string && stringIsLong(string)) {
-      return this.longStringGrip(string, this._actorPool);
+      return this.longStringGrip(string, this._pool);
     }
     return string;
   },
@@ -608,17 +607,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    */
   getActorByID: function(actorID) {
-    return this._actorPool.get(actorID);
-  },
-
-  /**
-   * Release an actor.
-   *
-   * @param object actor
-   *        The actor instance you want to release.
-   */
-  releaseActor: function(actor) {
-    this._actorPool.removeActor(actor);
+    return this._pool.get(actorID);
   },
 
   /**

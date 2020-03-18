@@ -240,9 +240,9 @@ BreakpointActor.prototype = {
   delete: function() {
     // Remove from the breakpoint store.
     this.threadActor.breakpointActorMap.deleteActor(this.location);
-    this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
     this.removeScripts();
+    this.destroy();
   },
 };
 
