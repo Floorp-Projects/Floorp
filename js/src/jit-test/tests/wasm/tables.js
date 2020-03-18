@@ -26,13 +26,13 @@ assertSegmentFitError(() => wasmEvalText(`(module (table 10 funcref) (elem (i32.
 assertSegmentFitError(() => wasmEvalText(`(module (table 10 funcref) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`));
 assertSegmentFitError(() => wasmEvalText(`(module (table 0 funcref) (func) (elem (i32.const 0x10001)))`));
 
-assertSegmentFitError(() => wasmEvalText(`(module (table 10 funcref) (import "globals" "a" (global i32)) (elem (global.get 0) $f0) ${callee(0)})`, {globals:{a:10}}));
-assertSegmentFitError(() => wasmEvalText(`(module (table 10 funcref) (import "globals" "a" (global i32)) (elem (global.get 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}));
+assertSegmentFitError(() => wasmEvalText(`(module (import "globals" "a" (global i32)) (table 10 funcref) (elem (global.get 0) $f0) ${callee(0)})`, {globals:{a:10}}));
+assertSegmentFitError(() => wasmEvalText(`(module (import "globals" "a" (global i32)) (table 10 funcref) (elem (global.get 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}));
 
 assertEq(new Module(wasmTextToBinary(`(module (table 10 funcref) (elem (i32.const 1) $f0 $f0) (elem (i32.const 0) $f0) ${callee(0)})`)) instanceof Module, true);
 assertEq(new Module(wasmTextToBinary(`(module (table 10 funcref) (elem (i32.const 1) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`)) instanceof Module, true);
-wasmEvalText(`(module (table 10 funcref) (import "globals" "a" (global i32)) (elem (i32.const 1) $f0 $f0) (elem (global.get 0) $f0) ${callee(0)})`, {globals:{a:0}});
-wasmEvalText(`(module (table 10 funcref) (import "globals" "a" (global i32)) (elem (global.get 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}});
+wasmEvalText(`(module (import "globals" "a" (global i32)) (table 10 funcref) (elem (i32.const 1) $f0 $f0) (elem (global.get 0) $f0) ${callee(0)})`, {globals:{a:0}});
+wasmEvalText(`(module (import "globals" "a" (global i32)) (table 10 funcref) (elem (global.get 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}});
 
 // Explicit table index in a couple of ways, note this requires us to talk about the table type also.
 assertEq(new Module(wasmTextToBinary(`(module
@@ -99,7 +99,7 @@ assertErrorMessage(() => call(6), RuntimeError, /indirect call to null/);
 assertErrorMessage(() => call(10), RuntimeError, /index out of bounds/);
 
 var imports = {a:{b:()=>42}};
-var call = wasmEvalText(`(module (table 10 funcref) (elem (i32.const 0) $f0 $f1 $f2) ${callee(0)} (import "a" "b" (func $f1)) (import "a" "b" (func $f2 (result i32))) ${caller})`, imports).exports.call;
+var call = wasmEvalText(`(module (import "a" "b" (func $f1)) (import "a" "b" (func $f2 (result i32))) (table 10 funcref) (elem (i32.const 0) $f0 $f1 $f2) ${callee(0)} ${caller})`, imports).exports.call;
 assertEq(call(0), 0);
 assertErrorMessage(() => call(1), RuntimeError, /indirect call signature mismatch/);
 assertEq(call(2), 42);
@@ -165,7 +165,7 @@ var m = new Module(wasmTextToBinary(`(module
     (type $i2i (func (param i32) (result i32)))
     (import "a" "mem" (memory 1))
     (import "a" "tbl" (table 10 funcref))
-    (import $imp "a" "imp" (result i32))
+    (import "a" "imp" (func $imp (result i32)))
     (func $call (param $i i32) (result i32)
         (i32.add
             (call $imp)

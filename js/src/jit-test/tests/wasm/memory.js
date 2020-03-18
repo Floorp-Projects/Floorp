@@ -309,7 +309,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
               (memory 1)
               (data (i32.const 0) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
               (data (i32.const 16) "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-              (func (param i32) (local i32 i32 i32 i32 f32 f64) (result i32)
+              (func (param i32) (result i32) (local i32 i32 i32 i32 f32 f64)
                (local.set 1 (i32.load8_s offset=4 (local.get 0)))
                (local.set 2 (i32.load16_s (local.get 1)))
                (i32.store8 offset=4 (local.get 0) (local.get 1))
@@ -466,7 +466,7 @@ new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 (offset (i32
 new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data ""))`));
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 ""))`)),
                    SyntaxError,
-                   /data segment with memory index must have offset/);
+                   /wasm text error/);
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 1 (i32.const 0) ""))`)),
-                   SyntaxError,
-                   /can't handle non-default memory/);
+                   WebAssembly.CompileError,
+                   /memory index must be zero/);

@@ -6,7 +6,7 @@ const { assertStackTrace, startProfiling, endProfiling, assertEqPreciseStacks } 
 enableGeckoProfiling();
 
 let { add } = wasmEvalText(`(module
-    (func $add (export "add") (result i32) (param i32) (param i32)
+    (func $add (export "add") (param i32) (param i32) (result i32)
      local.get 0
      i32.const 42
      i32.eq
@@ -32,7 +32,7 @@ function main() {
         } catch (e) {
             assertEq(i, 42);
             assertEq(e.message.includes("unreachable"), true);
-            assertStackTrace(e, ['wasm-function[0]', 'main', '']);
+            assertStackTrace(e, ['add', 'main', '']);
         }
         let stack = endProfiling();
         assertEqPreciseStacks(stack, [INLINED_CALL_STACK, FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
