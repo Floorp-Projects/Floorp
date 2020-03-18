@@ -11222,6 +11222,9 @@ static GetPropertyResultFlags IonGetPropertyICFlags(
              GetPropertyResultFlags::AllowDouble;
   }
 
+  // If WarpBuilder is enabled the IC should support all possible results.
+  MOZ_ASSERT_IF(JitOptions.warpBuilder, flags == GetPropertyResultFlags::All);
+
   return flags;
 }
 
