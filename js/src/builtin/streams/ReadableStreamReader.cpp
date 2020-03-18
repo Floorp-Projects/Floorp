@@ -24,7 +24,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Runtime.h"        // JSRuntime
 
-#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::SetSettledPromiseIsHandled
+#include "builtin/Promise-inl.h" // js::SetSettledPromiseIsHandled
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapInternalSlot
 #include "vm/List-inl.h"         // js::StoreNewListInFixedSlot
 #include "vm/Realm-inl.h"        // js::AutoRealm
@@ -113,7 +113,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     }
 
     // Step c. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-    SetSettledPromiseIsHandled(cx, promise);
+    js::SetSettledPromiseIsHandled(cx, promise);
   }
 
   if (!promise) {
@@ -211,7 +211,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericRelease(
   }
 
   // Step 5: Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-  SetSettledPromiseIsHandled(cx, unwrappedClosedPromise);
+  js::SetSettledPromiseIsHandled(cx, unwrappedClosedPromise);
 
   // Step 6: Set reader.[[ownerReadableStream]].[[reader]] to undefined.
   unwrappedStream->clearReader();
