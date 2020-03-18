@@ -537,7 +537,7 @@ void Selection::Disconnect() {
 
   uint32_t count = mRanges.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    mRanges[i].mRange->SetSelection(nullptr);
+    mRanges[i].mRange->UnregisterSelection();
   }
 
   if (mAutoScrollTimer) {
@@ -911,7 +911,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
     if (!mRanges.AppendElement(StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    aRange->SetSelection(this);
+    const RefPtr<Selection> selection{this};
+    aRange->RegisterSelection(*selection);
 
     *aOutIndex = 0;
     return NS_OK;
@@ -948,7 +949,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
     if (!mRanges.InsertElementAt(startIndex, StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    aRange->SetSelection(this);
+    const RefPtr<Selection> selection{this};
+    aRange->RegisterSelection(*selection);
     *aOutIndex = startIndex;
     return NS_OK;
   }
@@ -970,7 +972,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   // Remove all the overlapping ranges
   for (int32_t i = startIndex; i < endIndex; ++i) {
-    mRanges[i].mRange->SetSelection(nullptr);
+    mRanges[i].mRange->UnregisterSelection();
   }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
@@ -995,7 +997,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
     return NS_ERROR_OUT_OF_MEMORY;
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
-    temp[i].mRange->SetSelection(this);
+    const RefPtr<Selection> selection{this};
+    temp[i].mRange->RegisterSelection(*selection);
   }
 
   *aOutIndex = startIndex + insertionPoint;
@@ -1018,7 +1021,7 @@ nsresult Selection::RemoveRangeInternal(nsRange& aRange) {
   if (idx < 0) return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   mRanges.RemoveElementAt(idx);
-  aRange.SetSelection(nullptr);
+  aRange.UnregisterSelection();
   return NS_OK;
 }
 
@@ -1039,7 +1042,7 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
   SetAnchorFocusRange(-1);
 
   for (uint32_t i = 0; i < mRanges.Length(); ++i) {
-    mRanges[i].mRange->SetSelection(nullptr);
+    mRanges[i].mRange->UnregisterSelection();
     SelectFrames(aPresContext, mRanges[i].mRange, false);
   }
   mRanges.Clear();
