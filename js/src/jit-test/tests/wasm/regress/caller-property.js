@@ -1,4 +1,4 @@
-const { g } = wasmEvalText(`(module (func $f) (export "g" $f))`).exports;
+const { g } = wasmEvalText(`(module (func $f) (export "g" (func $f)))`).exports;
 
 function testCaller() {
   return g.caller;

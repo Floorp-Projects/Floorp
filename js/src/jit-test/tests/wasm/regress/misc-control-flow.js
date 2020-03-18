@@ -1,25 +1,25 @@
 wasmFailValidateText(`(module
    (func (result i32) (param i32)
      (loop (if (i32.const 0) (br 0)) (local.get 0)))
-   (export "" 0)
+   (export "" (func 0))
 )`, /unused values not explicitly dropped by end of block/);
 
 wasmFailValidateText(`(module
    (func (param i32)
      (loop (if (i32.const 0) (br 0)) (local.get 0)))
-   (export "" 0)
+   (export "" (func 0))
 )`, /unused values not explicitly dropped by end of block/);
 
 wasmFailValidateText(`(module
    (func (result i32) (param i32)
      (loop (if (i32.const 0) (br 0)) (drop (local.get 0))))
-   (export "" 0)
+   (export "" (func 0))
 )`, emptyStackError);
 
 assertEq(wasmEvalText(`(module
    (func (result i32) (param i32)
      (loop (if (i32.const 0) (br 0))) (local.get 0))
-   (export "" 0)
+   (export "" (func 0))
 )`).exports[""](42), 42);
 
 wasmEvalText(`(module (func $func$0
@@ -77,7 +77,7 @@ wasmEvalText(`
   )
  )
 
- (export "" 1)
+ (export "" (func 1))
 )
 `).exports[""]();
 
@@ -97,7 +97,7 @@ wasmEvalText(`
                             (call 0 (i32.const 42))
                             (br $b (i32.const 10)))))
                 (i32.const 44))))
-    (export "foo" 4))
+    (export "foo" (func 4)))
 `, {
     check: {
         one(x) {
@@ -118,7 +118,7 @@ assertEq(wasmEvalText(`(module (func
   (i32.const 3)
  )
  drop
-) (export "" 0))`).exports[""](), undefined);
+) (export "" (func 0)))`).exports[""](), undefined);
 
 wasmEvalText(`(module (func (result i32)
  (return (i32.const 0))

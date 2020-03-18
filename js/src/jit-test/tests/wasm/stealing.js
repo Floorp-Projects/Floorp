@@ -2,7 +2,7 @@ var exp = wasmEvalText(`(module
     (memory 1)
     (export "mem" memory)
     (func $f (result i32) (i32.load (i32.const 0)))
-    (export "f" $f)
+    (export "f" (func $f))
 )`).exports;
 
 var ab = exp.mem.buffer;
