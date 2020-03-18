@@ -12,6 +12,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
 interface nsIXPCTestInterfaceA;
 interface nsIXPCTestInterfaceB;
 
@@ -108,4 +109,7 @@ interface nsIXPCTestParams : nsISupports {
 
   // Test for optional array size_is.
   ACString             testStringArrayOptionalSize([array, size_is(aLength)] in string a, [optional] in unsigned long aLength);
+
+  // Test for omitted optional out parameter.
+  void                 testOmittedOptionalOut([optional] out nsIURI aOut);
 };
