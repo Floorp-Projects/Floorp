@@ -106,8 +106,8 @@ endif
 
 ident:
 	@printf 'fx_revision '
-	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py \
 	    '$(STAGEDIST)'/application.ini App SourceStamp
 	@printf 'buildid '
-	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py \
 	    '$(STAGEDIST)'/application.ini App BuildID
