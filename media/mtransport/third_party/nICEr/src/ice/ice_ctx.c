@@ -765,7 +765,7 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
     /* Sort interfaces by preference */
     if(ctx->interface_prioritizer) {
       for(i=0;i<addr_ct;i++){
-        if(r=nr_interface_prioritizer_add_interface(ctx->interface_prioritizer,addrs+i)) {
+        if((r=nr_interface_prioritizer_add_interface(ctx->interface_prioritizer,addrs+i)) && (r!=R_ALREADY)) {
           r_log(LOG_ICE,LOG_ERR,"ICE(%s): unable to add interface ",ctx->label);
           ABORT(r);
         }

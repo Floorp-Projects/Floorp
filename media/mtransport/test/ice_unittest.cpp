@@ -543,6 +543,18 @@ class IceTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
+  void SetCtxFlags(bool default_route_only) {
+    test_utils_->sts_target()->Dispatch(
+        WrapRunnable(ice_ctx_, &NrIceCtx::SetCtxFlags, default_route_only),
+        NS_DISPATCH_SYNC);
+  }
+
+  nsTArray<NrIceStunAddr> GetStunAddrs() { return ice_ctx_->GetStunAddrs(); }
+
+  void SetStunAddrs(const nsTArray<NrIceStunAddr>& addrs) {
+    ice_ctx_->SetStunAddrs(addrs);
+  }
+
   void UseNat() { nat_->enabled_ = true; }
 
   void SetTimerDivider(int div) { ice_ctx_->internal_SetTimerAccelarator(div); }
@@ -2557,6 +2569,51 @@ TEST_F(WebRtcIceConnectTest, TestConnectIceRestartRoleConflict) {
   ASSERT_NE(p2role, p3_->GetControlling());
 
   p3_ = nullptr;
+}
+
+TEST_F(WebRtcIceConnectTest,
+       TestIceRestartWithMultipleInterfacesAndUserStartingScreenSharing) {
+  const char* FAKE_WIFI_ADDR = "10.0.0.1";
+  const char* FAKE_WIFI_IF_NAME = "wlan9";
+
+  // prepare a fake wifi interface
+  nr_local_addr wifi_addr;
+  wifi_addr.interface.type = NR_INTERFACE_TYPE_WIFI;
+  wifi_addr.interface.estimated_speed = 1000;
+
+  int r = nr_str_port_to_transport_addr(FAKE_WIFI_ADDR, 0, IPPROTO_UDP,
+                                        &(wifi_addr.addr));
+  ASSERT_EQ(0, r);
+  strncpy(wifi_addr.addr.ifname, FAKE_WIFI_IF_NAME, MAXIFNAME);
+
+  // setup initial ICE connection between p1_ and p2_
+  UseNat();
+  AddStream(1);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
+                   NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
+  ASSERT_TRUE(Gather(kDefaultTimeout, true));
+  Connect();
+
+  // verify the connection is working
+  SendReceive(p1_.get(), p2_.get());
+
+  // simulate user accepting permissions for screen sharing
+  p2_->SetCtxFlags(false);
+
+  // and having an additional non-default interface
+  nsTArray<NrIceStunAddr> stunAddr = p2_->GetStunAddrs();
+  stunAddr.InsertElementAt(0, NrIceStunAddr(&wifi_addr));
+  p2_->SetStunAddrs(stunAddr);
+
+  std::cout << "-------------------------------------------------" << std::endl;
+
+  // now restart ICE
+  p2_->RestartIce();
+  ASSERT_FALSE(p2_->gathering_complete());
+
+  // verify that we can successfully gather candidates
+  p2_->Gather();
+  EXPECT_TRUE_WAIT(p2_->gathering_complete(), kDefaultTimeout);
 }
 
 TEST_F(WebRtcIceConnectTest, TestConnectTcp) {
