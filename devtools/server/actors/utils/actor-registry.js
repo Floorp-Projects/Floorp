@@ -127,11 +127,6 @@ const ActorRegistry = {
       constructor: "PreferenceActor",
       type: { global: true },
     });
-    this.registerModule("devtools/server/actors/actor-registry", {
-      prefix: "actorRegistry",
-      constructor: "ActorRegistryActor",
-      type: { global: true },
-    });
     this.registerModule("devtools/server/actors/addon/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
