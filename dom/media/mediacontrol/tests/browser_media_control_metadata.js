@@ -335,16 +335,6 @@ add_task(async function testMetadataAfterTabNavigation() {
 /**
  * The following are helper functions.
  */
-function waitUntilMainMediaControllerChanged() {
-  return BrowserUtils.promiseObserved("main-media-controller-changed");
-}
-
-function waitUntilControllerMetadataChanged() {
-  return BrowserUtils.promiseObserved(
-    "media-session-controller-metadata-changed"
-  );
-}
-
 function playMedia(tab) {
   const playPromise = SpecialPowers.spawn(
     tab.linkedBrowser,
@@ -407,55 +397,4 @@ function setNullMediaMetadata(tab) {
     content.navigator.mediaSession.metadata = null;
   });
   return Promise.all([promise, waitUntilControllerMetadataChanged()]);
-}
-
-function isCurrentMetadataEqualTo(metadata) {
-  const current = ChromeUtils.getCurrentActiveMediaMetadata();
-  is(
-    current.title,
-    metadata.title,
-    `tile '${current.title}' is equal to ${metadata.title}`
-  );
-  is(
-    current.artist,
-    metadata.artist,
-    `artist '${current.artist}' is equal to ${metadata.artist}`
-  );
-  is(
-    current.album,
-    metadata.album,
-    `album '${current.album}' is equal to ${metadata.album}`
-  );
-  is(
-    current.artwork.length,
-    metadata.artwork.length,
-    `artwork length '${current.artwork.length}' is equal to ${metadata.artwork.length}`
-  );
-  for (let idx = 0; idx < metadata.artwork.length; idx++) {
-    // the current src we got would be a completed path of the image, so we do
-    // not check if they are equal, we check if the current src includes the
-    // metadata's file name. Eg. "http://foo/bar.jpg" v.s. "bar.jpg"
-    ok(
-      current.artwork[idx].src.includes(metadata.artwork[idx].src),
-      `artwork src '${current.artwork[idx].src}' includes ${metadata.artwork[idx].src}`
-    );
-    is(
-      current.artwork[idx].sizes,
-      metadata.artwork[idx].sizes,
-      `artwork sizes '${current.artwork[idx].sizes}' is equal to ${metadata.artwork[idx].sizes}`
-    );
-    is(
-      current.artwork[idx].type,
-      metadata.artwork[idx].type,
-      `artwork type '${current.artwork[idx].type}' is equal to ${metadata.artwork[idx].type}`
-    );
-  }
-}
-
-function isCurrentMetadataEmpty() {
-  const current = ChromeUtils.getCurrentActiveMediaMetadata();
-  is(current.title, "", `current title should be empty`);
-  is(current.artist, "", `current title should be empty`);
-  is(current.album, "", `current album should be empty`);
-  is(current.artwork.length, 0, `current artwork should be empty`);
 }
