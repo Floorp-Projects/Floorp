@@ -163,7 +163,6 @@ nsresult nsLayoutStatics::Initialize() {
 
   nsGlobalWindowInner::Init();
   nsGlobalWindowOuter::Init();
-  Navigator::Init();
 
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {
