@@ -17,6 +17,7 @@
 #include "nsISupportsUtils.h"
 #include "nsITimedChannel.h"
 #include "nsIUploadChannel2.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
 #include "nsThreadUtils.h"
@@ -283,10 +284,28 @@ nsresult TRR::SendHTTPRequest() {
     } else {
       uri = mRec->mTrrServer;
     }
-    uri.Append(NS_LITERAL_CSTRING("?dns="));
-    uri.Append(body);
-    LOG(("TRR::SendHTTPRequest GET dns=%s\n", body.get()));
+
     rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
+    if (NS_FAILED(rv)) {
+      LOG(("TRR:SendHTTPRequest: NewURI failed!\n"));
+      return rv;
+    }
+
+    nsAutoCString query;
+    rv = dnsURI->GetQuery(query);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (query.IsEmpty()) {
+      query.Assign(NS_LITERAL_CSTRING("?dns="));
+  } else {
+      query.Append(NS_LITERAL_CSTRING("&dns="));
+    }
+    query.Append(body);
+
+    rv = NS_MutateURI(dnsURI).SetQuery(query).Finalize(dnsURI);
+    LOG(("TRR::SendHTTPRequest GET dns=%s\n", body.get()));
   } else {
     rv = DohEncode(body, disableECS);
     NS_ENSURE_SUCCESS(rv, rv);
