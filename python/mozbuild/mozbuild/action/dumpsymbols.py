@@ -48,7 +48,7 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     os_arch = buildconfig.substs['OS_ARCH']
     if os_arch == 'WINNT':
         sym_store_args.extend(['-c', '--vcs-info'])
-        if 'PDBSTR' in buildconfig.substs:
+        if os.environ.get('PDBSTR_PATH'):
             sym_store_args.append('-i')
     elif os_arch == 'Darwin':
         cpu = {
