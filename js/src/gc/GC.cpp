@@ -2311,15 +2311,6 @@ void ArenasToUpdate::next() {
   settle();
 }
 
-static size_t CellUpdateBackgroundTaskCount() {
-  if (!CanUseExtraThreads()) {
-    return 1;  // GCRuntime::startTask will run the work on the main thread.
-  }
-
-  size_t targetTaskCount = HelperThreadState().cpuCount / 2;
-  return std::min(std::max(targetTaskCount, size_t(1)), MaxParallelWorkers);
-}
-
 static bool CanUpdateKindInBackground(AllocKind kind) {
   // We try to update as many GC things in parallel as we can, but there are
   // kinds for which this might not be safe:
@@ -2364,9 +2355,8 @@ void GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone) {
   }
 }
 
-void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
-                                   size_t bgTaskCount) {
-  AllocKinds fgKinds = bgTaskCount == 0 ? kinds : ForegroundUpdateKinds(kinds);
+void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds) {
+  AllocKinds fgKinds = ForegroundUpdateKinds(kinds);
   AllocKinds bgKinds = kinds - fgKinds;
 
   ArenasToUpdate fgArenas(zone, fgKinds);
@@ -2376,8 +2366,7 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
 
   AutoRunParallelWork bgTasks(this, UpdateArenaListSegmentPointers,
                               gcstats::PhaseKind::COMPACT_UPDATE_CELLS,
-                              bgArenas, bgTaskCount, SliceBudget::unlimited(),
-                              lock);
+                              bgArenas, SliceBudget::unlimited(), lock);
 
   AutoUnlockHelperThreadState unlock(lock);
 
@@ -2443,15 +2432,13 @@ static constexpr AllocKinds UpdatePhaseThree{AllocKind::SCOPE,
                                              AllocKind::OBJECT16_BACKGROUND};
 
 void GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone) {
-  size_t bgTaskCount = CellUpdateBackgroundTaskCount();
-
-  updateCellPointers(zone, UpdatePhaseOne, bgTaskCount);
+  updateCellPointers(zone, UpdatePhaseOne);
 
   // UpdatePhaseTwo: Update TypeDescrs before all other objects as typed
   // objects access these objects when we trace them.
   updateTypeDescrObjects(trc, zone);
 
-  updateCellPointers(zone, UpdatePhaseThree, bgTaskCount);
+  updateCellPointers(zone, UpdatePhaseThree);
 }
 
 /*
@@ -4051,7 +4038,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
     ArenasToUnmark unmarkingWork(this);
     AutoRunParallelWork unmarkCollectedZones(
         this, UnmarkArenaListSegment, gcstats::PhaseKind::UNMARK, unmarkingWork,
-        CellUpdateBackgroundTaskCount(), SliceBudget::unlimited(), helperLock);
+        SliceBudget::unlimited(), helperLock);
 
     /* Clear mark state for WeakMaps in parallel with other work. */
     AutoRunParallelTask unmarkWeakMaps(this, &GCRuntime::unmarkWeakMaps,
@@ -5626,15 +5613,6 @@ void WeakCacheSweepIterator::settle() {
              (sweepCache && sweepCache->needsIncrementalBarrier()));
 }
 
-static size_t WeakCacheSweepTaskCount() {
-  if (!CanUseExtraThreads()) {
-    return 1;
-  }
-
-  size_t targetTaskCount = HelperThreadState().cpuCount;
-  return std::min(targetTaskCount, MaxParallelWorkers);
-}
-
 IncrementalProgress GCRuntime::sweepWeakCaches(JSFreeOp* fop,
                                                SliceBudget& budget) {
   if (weakCachesToSweep.ref().isNothing()) {
@@ -5650,7 +5628,7 @@ IncrementalProgress GCRuntime::sweepWeakCaches(JSFreeOp* fop,
   {
     AutoRunParallelWork runWork(this, IncrementalSweepWeakCache,
                                 gcstats::PhaseKind::SWEEP_WEAK_CACHES, work,
-                                WeakCacheSweepTaskCount(), budget, lock);
+                                budget, lock);
     AutoUnlockHelperThreadState unlock(lock);
   }
 

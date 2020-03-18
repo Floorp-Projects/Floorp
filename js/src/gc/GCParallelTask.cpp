@@ -6,6 +6,9 @@
 
 #include "gc/GCParallelTask.h"
 
+#include "mozilla/MathAlgorithms.h"
+
+#include "gc/ParallelWork.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 
@@ -152,4 +155,14 @@ bool js::GCParallelTask::isIdle() const {
 bool js::GCParallelTask::wasStarted() const {
   AutoLockHelperThreadState lock;
   return wasStarted(lock);
+}
+
+/* static */
+size_t js::gc::ParallelWorkerCount() {
+  if (!CanUseExtraThreads()) {
+    return 1;  // GCRuntime::startTask will run the work on the main thread.
+  }
+
+  size_t targetTaskCount = HelperThreadState().cpuCount / 2;
+  return mozilla::Clamp(targetTaskCount, size_t(1), MaxParallelWorkers);
 }
