@@ -1276,6 +1276,10 @@ var gIdentityHandler = {
   },
 
   onDragStart(event) {
+    const TEXT_SIZE = 14;
+    const IMAGE_SIZE = 16;
+    const SPACING = 5;
+
     if (gURLBar.getAttribute("pageproxystate") != "valid") {
       return;
     }
@@ -1292,13 +1296,40 @@ var gIdentityHandler = {
     );
     canvas.width = 550 * scale;
     let ctx = canvas.getContext("2d");
-    ctx.font = `${14 * scale}px sans-serif`;
-    ctx.fillText(`${value}`, 20 * scale, 14 * scale);
+    ctx.font = `${TEXT_SIZE * scale}px sans-serif`;
     let tabIcon = gBrowser.selectedTab.iconImage;
     let image = new Image();
     image.src = tabIcon.src;
+    let textWidth = ctx.measureText(value).width / scale;
+    let textHeight = parseInt(ctx.font, 10) / scale;
+    let imageHorizontalOffset, imageVerticalOffset;
+    imageHorizontalOffset = imageVerticalOffset = SPACING;
+    let textHorizontalOffset = image.width ? IMAGE_SIZE + SPACING * 2 : SPACING;
+    let textVerticalOffset = textHeight + SPACING - 1;
+    let backgroundColor = "white";
+    let textColor = "black";
+    let totalWidth = image.width
+      ? textWidth + IMAGE_SIZE + 3 * SPACING
+      : textWidth + 2 * SPACING;
+    let totalHeight = image.width
+      ? IMAGE_SIZE + 2 * SPACING
+      : textHeight + 2 * SPACING;
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, totalWidth * scale, totalHeight * scale);
+    ctx.fillStyle = textColor;
+    ctx.fillText(
+      `${value}`,
+      textHorizontalOffset * scale,
+      textVerticalOffset * scale
+    );
     try {
-      ctx.drawImage(image, 0, 0, 16 * scale, 16 * scale);
+      ctx.drawImage(
+        image,
+        imageHorizontalOffset * scale,
+        imageVerticalOffset * scale,
+        IMAGE_SIZE * scale,
+        IMAGE_SIZE * scale
+      );
     } catch (e) {
       // Sites might specify invalid data URIs favicons that
       // will result in errors when trying to draw, we can
