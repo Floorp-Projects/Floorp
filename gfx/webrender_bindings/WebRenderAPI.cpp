@@ -1011,6 +1011,8 @@ void DisplayListBuilder::PopStackingContext(bool aIsReferenceFrame) {
 
 wr::WrClipChainId DisplayListBuilder::DefineClipChain(
     const nsTArray<wr::WrClipId>& aClips, bool aParentWithCurrentChain) {
+  CancelGroup();
+
   const uint64_t* parent = nullptr;
   if (aParentWithCurrentChain &&
       mCurrentSpaceAndClipChain.clip_chain != wr::ROOT_CLIP_CHAIN) {
@@ -1027,6 +1029,8 @@ wr::WrClipId DisplayListBuilder::DefineClip(
     const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
     const nsTArray<wr::ComplexClipRegion>* aComplex,
     const wr::ImageMask* aMask) {
+  CancelGroup();
+
   WrClipId clipId;
   if (aParent) {
     clipId = wr_dp_define_clip_with_parent_clip(
@@ -1473,7 +1477,7 @@ void DisplayListBuilder::StartGroup(nsPaintedDisplayItem* aItem) {
   mCurrentCacheSlot = mDisplayItemCache->AssignSlot(aItem);
 
   if (mCurrentCacheSlot) {
-    wr_dp_start_item_group(mWrState, mCurrentCacheSlot.ref());
+    wr_dp_start_item_group(mWrState);
   }
 }
 

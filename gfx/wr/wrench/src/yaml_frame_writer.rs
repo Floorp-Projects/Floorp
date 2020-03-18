@@ -1498,8 +1498,12 @@ impl YamlFrameWriter {
                 DisplayItem::PopAllShadows => {
                     str_node(&mut v, "type", "pop-all-shadows");
                 }
-                DisplayItem::ReuseItem(key) => {
-                    str_node(&mut v, "type", "reuse-item");
+                DisplayItem::ReuseItems(key) => {
+                    str_node(&mut v, "type", "reuse-items");
+                    usize_node(&mut v, "key", key as usize);
+                }
+                DisplayItem::RetainedItems(key) => {
+                    str_node(&mut v, "type", "retained-items");
                     usize_node(&mut v, "key", key as usize);
                 }
             }
