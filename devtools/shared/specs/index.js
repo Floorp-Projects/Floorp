@@ -23,11 +23,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/shared/fronts/accessibility",
   },
   {
-    types: ["actorActor", "actorRegistry"],
-    spec: "devtools/shared/specs/actor-registry",
-    front: "devtools/shared/fronts/actor-registry",
-  },
-  {
     types: ["addons"],
     spec: "devtools/shared/specs/addon/addons",
     front: "devtools/shared/fronts/addon/addons",
