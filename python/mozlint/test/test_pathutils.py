@@ -22,7 +22,7 @@ def assert_paths(a, b):
     assert set(map(normalize, a)) == set(map(normalize, b))
 
 
-TEST_CASES = (
+@pytest.mark.parametrize('test', (
     {
         'paths': ['a.js', 'subdir1/subdir3/d.js'],
         'include': ['.'],
@@ -71,10 +71,7 @@ TEST_CASES = (
         'exclude': [],
         'expected': [],
     }
-)
-
-
-@pytest.mark.parametrize('test', TEST_CASES)
+))
 def test_filterpaths(test):
     expected = test.pop('expected')
     expected_exclude = test.pop('expected_exclude', [])
@@ -82,6 +79,31 @@ def test_filterpaths(test):
     paths, exclude = pathutils.filterpaths(root, **test)
     assert_paths(paths, expected)
     assert_paths(exclude, expected_exclude)
+
+
+@pytest.mark.parametrize('test', (
+    {
+        'paths': ['subdir1/b.js'],
+        'config': {
+            'exclude': ['subdir1'],
+            'extensions': 'js',
+        },
+        'expected': [],
+    },
+    {
+        'paths': ['subdir1/subdir3'],
+        'config': {
+            'exclude': ['subdir1'],
+            'extensions': 'js',
+        },
+        'expected': [],
+    },
+))
+def test_expand_exclusions(test):
+    expected = test.pop('expected', [])
+
+    paths = list(pathutils.expand_exclusions(test['paths'], test['config'], root))
+    assert_paths(paths, expected)
 
 
 @pytest.mark.parametrize('paths,expected', [
