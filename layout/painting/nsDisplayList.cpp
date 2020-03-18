@@ -5693,13 +5693,17 @@ bool nsDisplayBorder::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   nsRect rect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
+  aBuilder.StartGroup(this);
   ImgDrawResult drawResult = nsCSSRendering::CreateWebRenderCommandsForBorder(
       this, mFrame, rect, aBuilder, aResources, aSc, aManager,
       aDisplayListBuilder);
 
   if (drawResult == ImgDrawResult::NOT_SUPPORTED) {
+    aBuilder.CancelGroup();
     return false;
   }
+
+  aBuilder.FinishGroup();
 
   nsDisplayBorderGeometry::UpdateDrawResult(this, drawResult);
   return true;
@@ -9539,9 +9543,18 @@ bool nsDisplayText::CreateWebRenderCommands(
   RefPtr<gfxContext> textDrawer = aBuilder.GetTextContext(
       aResources, aSc, aManager, this, bounds, deviceOffset);
 
-  RenderToContext(textDrawer, aDisplayListBuilder, true);
+  aBuilder.StartGroup(this);
 
-  return textDrawer->GetTextDrawer()->Finish();
+  RenderToContext(textDrawer, aDisplayListBuilder, true);
+  const bool result = textDrawer->GetTextDrawer()->Finish();
+
+  if (result) {
+    aBuilder.FinishGroup();
+  } else {
+    aBuilder.CancelGroup();
+  }
+
+  return result;
 }
 
 void nsDisplayText::RenderToContext(gfxContext* aCtx,
