@@ -1668,7 +1668,7 @@ nsresult WebSocketImpl::AsyncOpen(
   MOZ_ASSERT_IF(!aTransportProvider, aNegotiatedExtensions.IsEmpty());
 
   nsCString asciiOrigin;
-  nsresult rv = nsContentUtils::GetASCIIOrigin(aPrincipal, asciiOrigin);
+  nsresult rv = aPrincipal->GetAsciiOrigin(asciiOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aTransportProvider) {
