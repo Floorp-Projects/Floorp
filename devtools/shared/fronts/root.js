@@ -170,24 +170,36 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
   /** Get the target fronts for all worker threads running in any process. */
   async listAllWorkerTargets() {
-    // List workers from the Parent process
-    let { workers } = await this.listWorkers();
+    const listParentWorkers = async () => {
+      const { workers } = await this.listWorkers();
+      return workers;
+    };
+    const listChildWorkers = async () => {
+      const processes = await this.listProcesses();
+      const processWorkers = await Promise.all(
+        processes.map(async processDescriptorFront => {
+          // Ignore parent process
+          if (processDescriptorFront.isParent) {
+            return [];
+          }
+          const front = await processDescriptorFront.getTarget();
+          if (!front) {
+            return [];
+          }
+          const response = await front.listWorkers();
+          return response.workers;
+        })
+      );
 
-    // And then from the Child processes
-    const processes = await this.listProcesses();
-    for (const processDescriptorFront of processes) {
-      // Ignore parent process
-      if (processDescriptorFront.isParent) {
-        continue;
-      }
-      const front = await processDescriptorFront.getTarget();
-      if (front) {
-        const response = await front.listWorkers();
-        workers = workers.concat(response.workers);
-      }
-    }
+      return processWorkers.flat();
+    };
 
-    return workers;
+    const [parentWorkers, childWorkers] = await Promise.all([
+      listParentWorkers(),
+      listChildWorkers(),
+    ]);
+
+    return parentWorkers.concat(childWorkers);
   }
 
   /**
