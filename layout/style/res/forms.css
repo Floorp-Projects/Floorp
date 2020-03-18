@@ -73,7 +73,7 @@ fieldset {
   padding-block-end: 0.625em;
   padding-inline-start: 0.75em;
   padding-inline-end: 0.75em;
-  border: 2px groove ThreeDLightShadow;
+  border: 2px groove ThreeDFace;
   min-inline-size: min-content;
 }
 
