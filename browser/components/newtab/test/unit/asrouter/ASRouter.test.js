@@ -2656,6 +2656,22 @@ describe("ASRouter", () => {
           "something"
         );
       });
+      it("should call openPreferences with the correct entrypoint if defined", async () => {
+        let [testMessage] = Router.state.messages;
+        testMessage.button_action = {
+          type: "OPEN_PREFERENCES_PAGE",
+          data: { category: "something", entrypoint: "unittest" },
+        };
+        const msg = fakeExecuteUserAction(testMessage.button_action);
+        await Router.onMessage(msg);
+
+        assert.calledOnce(msg.target.browser.ownerGlobal.openPreferences);
+        assert.calledWithExactly(
+          msg.target.browser.ownerGlobal.openPreferences,
+          "something",
+          { urlParams: { entrypoint: "unittest" } }
+        );
+      });
     });
 
     describe("#onMessage: INSTALL_ADDON_FROM_URL", () => {
