@@ -6,7 +6,6 @@
 
 DevToolsModules(
     'accessibility.js',
-    'actor-registry-utils.js',
     'actor-registry.js',
     'breakpoint-actor-map.js',
     'css-grid-utils.js',
