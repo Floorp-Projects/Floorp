@@ -506,6 +506,7 @@ void Animation::Cancel(PostRestyleMode aPostRestyle) {
 
     if (mFinished) {
       mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      mFinished->SetSettledPromiseIsHandled();
     }
     ResetFinishedPromise();
 
@@ -1617,6 +1618,7 @@ void Animation::ResetPendingTasks() {
 
   if (mReady) {
     mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    mReady->SetSettledPromiseIsHandled();
     mReady = nullptr;
   }
 }
