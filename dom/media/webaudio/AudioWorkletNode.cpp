@@ -10,10 +10,15 @@
 #include "js/Array.h"  // JS::{Get,Set}ArrayLength, JS::NewArrayLength
 #include "mozilla/dom/AudioWorkletNodeBinding.h"
 #include "mozilla/dom/AudioParamMapBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/ErrorEvent.h"
+#include "nsIScriptGlobalObject.h"
 #include "AudioParam.h"
 #include "AudioDestinationNode.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
+#include "nsReadableUtils.h"
+#include "mozilla/Span.h"
 #include "PlayingRefChangeHandler.h"
 #include "nsPrintfCString.h"
 
@@ -30,6 +35,14 @@ struct NamedAudioParamTimeline {
         mTimeline(aParamDescriptor.mDefaultValue) {}
   const nsString mName;
   AudioParamTimeline mTimeline;
+};
+
+struct ProcessorErrorDetails {
+  ProcessorErrorDetails() : mLineno(0), mColno(0) {}
+  unsigned mLineno;
+  unsigned mColno;
+  nsString mFilename;
+  nsString mMessage;
 };
 
 class WorkletNodeEngine final : public AudioNodeEngine {
@@ -109,6 +122,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   bool CallProcess(AudioNodeTrack* aTrack, JSContext* aCx,
                    JS::Handle<JS::Value> aCallable);
   void ProduceSilence(AudioNodeTrack* aTrack, Span<AudioBlock> aOutput);
+  void SendErrorToMainThread(AudioNodeTrack* aTrack,
+                             const ProcessorErrorDetails& aDetails);
 
   void ReleaseJSResources() {
     mInputs.mPorts.clearAndFree();
@@ -159,13 +174,70 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   bool mKeepEngineActive = true;
 };
 
+void WorkletNodeEngine::SendErrorToMainThread(
+    AudioNodeTrack* aTrack, const ProcessorErrorDetails& aDetails) {
+  RefPtr<AudioNodeTrack> track = aTrack;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "WorkletNodeEngine::SendProcessorError",
+      [track = std::move(track), aDetails]() mutable {
+        AudioWorkletNode* node =
+            static_cast<AudioWorkletNode*>(track->Engine()->NodeMainThread());
+        if (!node) {
+          return;
+        }
+        node->DispatchProcessorErrorEvent(aDetails);
+      }));
+}
+
 void WorkletNodeEngine::SendProcessorError(AudioNodeTrack* aTrack,
                                            JSContext* aCx) {
-  /**
-   * Note that once an exception is thrown, the processor will output silence
-   * throughout its lifetime.
-   */
+  // Note that once an exception is thrown, the processor will output silence
+  // throughout its lifetime.
   ReleaseJSResources();
+  // The processor errored out while getting a context, try to tell the node
+  // anyways.
+  if (!aCx) {
+    ProcessorErrorDetails details;
+    details.mMessage.Assign(u"Unknown processor error");
+    SendErrorToMainThread(aTrack, details);
+    return;
+  }
+
+  js::ErrorReport jsReport(aCx);
+  JS::Rooted<JS::Value> exn(aCx);
+  JS::Rooted<JSObject*> exnStack(aCx);
+  if (JS_GetPendingException(aCx, &exn)) {
+    exnStack.set(JS::GetPendingExceptionStack(aCx));
+    JS_ClearPendingException(aCx);
+    if (!jsReport.init(aCx, exn, js::ErrorReport::WithSideEffects)) {
+      ProcessorErrorDetails details;
+      details.mMessage.Assign(u"Unknown processor error");
+      SendErrorToMainThread(aTrack, details);
+      // Set the exception and stack back to have it in the console with a stack
+      // trace.
+      JS::SetPendingExceptionAndStack(aCx, exn, exnStack);
+      return;
+    }
+
+    ProcessorErrorDetails details;
+
+    CopyUTF8toUTF16(mozilla::MakeStringSpan(jsReport.report()->filename),
+                    details.mFilename);
+
+    xpc::ErrorReport::ErrorReportToMessageString(jsReport.report(),
+                                                 details.mMessage);
+    details.mLineno = jsReport.report()->lineno;
+    details.mColno = jsReport.report()->column;
+    MOZ_ASSERT(!jsReport.report()->isMuted);
+
+    SendErrorToMainThread(aTrack, details);
+
+    // Set the exception and stack back to have it in the console with a stack
+    // trace.
+    JS::SetPendingExceptionAndStack(aCx, exn, exnStack);
+  } else {
+    NS_WARNING("No exception, but processor errored out?");
+  }
 }
 
 void WorkletNodeEngine::ConstructProcessor(
@@ -752,6 +824,21 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
 
 AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const {
   return mParameters.get();
+}
+
+void AudioWorkletNode::DispatchProcessorErrorEvent(
+    const ProcessorErrorDetails& aDetails) {
+  if (HasListenersFor(nsGkAtoms::onprocessorerror)) {
+    RootedDictionary<ErrorEventInit> init(RootingCx());
+    init.mMessage = aDetails.mMessage;
+    init.mFilename = aDetails.mFilename;
+    init.mLineno = aDetails.mLineno;
+    init.mColno = aDetails.mColno;
+    RefPtr<ErrorEvent> errorEvent = ErrorEvent::Constructor(
+        this, NS_LITERAL_STRING("processorerror"), init);
+    MOZ_ASSERT(errorEvent);
+    DispatchTrustedEvent(errorEvent);
+  }
 }
 
 JSObject* AudioWorkletNode::WrapObject(JSContext* aCx,
