@@ -1056,8 +1056,9 @@ struct nsGridContainerFrame::TrackSizingFunctions {
    */
   uint32_t InitRepeatTracks(const NonNegativeLengthPercentageOrNormal& aGridGap,
                             nscoord aMinSize, nscoord aSize, nscoord aMaxSize) {
-    uint32_t repeatTracks =
-        CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize);
+    const uint32_t repeatTracks =
+        CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize) *
+        NumRepeatTracks();
     SetNumRepeatTracks(repeatTracks);
     // Blank out the removed flags for each of these tracks.
     mRemovedRepeatTracks.SetLength(repeatTracks);
@@ -1073,15 +1074,19 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     if (!mHasRepeatAuto) {
       return 0;
     }
-    // Spec quotes are from https://drafts.csswg.org/css-grid/#repeat-notation
-    const uint32_t numTracks = mExpandedTracks.Length();
+    // Note that this uses NumRepeatTracks and mRepeatAutoStart/End, although
+    // the result of this method is used to change those values to a fully
+    // expanded value. Spec quotes are from
+    // https://drafts.csswg.org/css-grid/#repeat-notation
+    const uint32_t repeatDelta = mHasRepeatAuto ? NumRepeatTracks() - 1 : 0;
+    const uint32_t numTracks = mExpandedTracks.Length() + repeatDelta;
     MOZ_ASSERT(numTracks >= 1, "expected at least the repeat() track");
     nscoord maxFill = aSize != NS_UNCONSTRAINEDSIZE ? aSize : aMaxSize;
     if (maxFill == NS_UNCONSTRAINEDSIZE && aMinSize == 0) {
       // "Otherwise, the specified track list repeats only once."
       return 1;
     }
-    nscoord repeatTrackSize = 0;
+    nscoord repeatTrackSum = 0;
     // Note that one repeat() track size is included in |sum| in this loop.
     nscoord sum = 0;
     const nscoord percentBasis = aSize;
@@ -1099,12 +1104,12 @@ struct nsGridContainerFrame::TrackSizingFunctions {
         }
       }
       nscoord trackSize = ::ResolveToDefiniteSize(*coord, percentBasis);
-      if (i == mRepeatAutoStart) {
+      if (i >= mRepeatAutoStart && i < mRepeatAutoEnd) {
         // Use a minimum 1px for the repeat() track-size.
         if (trackSize < AppUnitsPerCSSPixel()) {
           trackSize = AppUnitsPerCSSPixel();
         }
-        repeatTrackSize = trackSize;
+        repeatTrackSum += trackSize;
       }
       sum += trackSize;
     }
@@ -1121,7 +1126,9 @@ struct nsGridContainerFrame::TrackSizingFunctions {
       return 1;
     }
     // Calculate the max number of tracks that fits without overflow.
-    div_t q = div(spaceToFill, repeatTrackSize + gridGap);
+    // Since we already have one repetition in sum, we can simply add one grid
+    // gap for each element in the repeat.
+    div_t q = div(spaceToFill, repeatTrackSum + gridGap * NumRepeatTracks());
     // The +1 here is for the one repeat track we already accounted for above.
     uint32_t numRepeatTracks = q.quot + 1;
     if (q.rem != 0 && maxFill == NS_UNCONSTRAINEDSIZE) {
@@ -1132,8 +1139,12 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     }
     // Clamp the number of repeat tracks so that the last line <= kMaxLine.
     // (note that |numTracks| already includes one repeat() track)
-    const uint32_t maxRepeatTracks = kMaxLine - numTracks;
-    return std::min(numRepeatTracks, maxRepeatTracks);
+    MOZ_ASSERT(numTracks >= NumRepeatTracks());
+    MOZ_ASSERT(kMaxLine > numTracks - NumRepeatTracks());
+    const uint32_t maxRepeatTrackCount =
+        kMaxLine - (numTracks - NumRepeatTracks());
+    const uint32_t maxRepetitions = maxRepeatTrackCount / NumRepeatTracks();
+    return std::min(numRepeatTracks, maxRepetitions);
   }
 
   /**
