@@ -44,7 +44,7 @@ use std::os::raw::c_void;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::SystemTime;
 use std::u32;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
@@ -53,7 +53,7 @@ use crate::util::drain_filter;
 const DEFAULT_TILE_SIZE: TileSize = 512;
 
 // Counter for generating unique native surface ids
-static NEXT_NATIVE_SURFACE_ID: AtomicU64 = AtomicU64::new(0);
+static NEXT_NATIVE_SURFACE_ID: AtomicUsize = AtomicUsize::new(0);
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -1787,7 +1787,7 @@ impl ResourceCache {
         tile_size: DeviceIntSize,
         is_opaque: bool,
     ) -> NativeSurfaceId {
-        let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed));
+        let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed) as u64);
 
         self.pending_native_surface_updates.push(
             NativeSurfaceOperation {
