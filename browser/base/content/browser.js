@@ -9081,6 +9081,8 @@ TabModalPromptBox.prototype = {
 };
 
 var ConfirmationHint = {
+  _timerID: null,
+
   /**
    * Shows a transient, non-interactive confirmation hint anchored to an
    * element, usually used in response to a user action to reaffirm that it was
@@ -9103,6 +9105,8 @@ var ConfirmationHint = {
    *
    */
   show(anchor, messageId, options = {}) {
+    this._reset();
+
     this._message.textContent = gBrowserBundle.GetStringFromName(
       `confirmationHint.${messageId}.label`
     );
@@ -9130,8 +9134,7 @@ var ConfirmationHint = {
       "popupshown",
       () => {
         this._animationBox.setAttribute("animate", "true");
-
-        setTimeout(() => {
+        this._timerID = setTimeout(() => {
           this._panel.hidePopup(true);
         }, DURATION + 120);
       },
@@ -9141,8 +9144,8 @@ var ConfirmationHint = {
     this._panel.addEventListener(
       "popuphidden",
       () => {
-        this._panel.removeAttribute("hidearrow");
-        this._animationBox.removeAttribute("animate");
+        // reset the timerId in case our timeout wasn't the cause of the popup being hidden
+        this._reset();
       },
       { once: true }
     );
@@ -9152,6 +9155,15 @@ var ConfirmationHint = {
       position: "bottomcenter topleft",
       triggerEvent: options.event,
     });
+  },
+
+  _reset() {
+    if (this._timerID) {
+      clearTimeout(this._timerID);
+      this._timerID = null;
+    }
+    this._panel.removeAttribute("hidearrow");
+    this._animationBox.removeAttribute("animate");
   },
 
   get _panel() {
