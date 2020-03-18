@@ -82,9 +82,27 @@ void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
 }
 
 template <typename T>
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
+                                 nsTArray<RefPtr<const T>>& field,
+                                 const char* name, uint32_t flags) {
+  for (auto& element : field) {
+    CycleCollectionNoteChild(callback, const_cast<T*>(element.get()), name,
+                             flags);
+  }
+}
+
+template <typename T>
 void ImplCycleCollectionUnlink(const RefPtr<T>& field) {
   const auto mutPtr = const_cast<RefPtr<T>*>(&field);
   ImplCycleCollectionUnlink(*mutPtr);
+}
+
+template <typename T>
+void ImplCycleCollectionUnlink(nsTArray<RefPtr<const T>>& field) {
+  for (auto& element : field) {
+    ImplCycleCollectionUnlink(element);
+  }
+  field.Clear();
 }
 
 #endif  // GPU_OBJECT_MODEL_H_
