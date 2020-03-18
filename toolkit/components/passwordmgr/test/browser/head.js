@@ -330,7 +330,11 @@ async function waitForDoorhanger(browser, type) {
   await TestUtils.waitForCondition(() => {
     notif = PopupNotifications.getNotification("password", browser);
     if (notif && type !== "any") {
-      return notif.options.passwordNotificationType == type;
+      return (
+        notif.options.passwordNotificationType == type &&
+        notif.anchorElement &&
+        BrowserTestUtils.is_visible(notif.anchorElement)
+      );
     }
     return notif;
   }, `Waiting for a ${type} notification`);

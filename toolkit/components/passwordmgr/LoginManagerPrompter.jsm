@@ -439,7 +439,7 @@ class LoginManagerPrompter {
       showOptions.dismissed && showOptions.extraAttr == "attention"
         ? ATTENTION_NOTIFICATION_TIMEOUT_MS
         : NOTIFICATION_TIMEOUT_MS;
-    PopupNotifications.show(
+    let notification = PopupNotifications.show(
       browser,
       notificationID,
       promptMsg,
@@ -540,8 +540,8 @@ class LoginManagerPrompter {
     );
 
     if (notifySaved) {
-      let notification = PopupNotifications.getNotification(notificationID);
       let anchor = notification.anchorElement;
+      log.debug("Showing the ConfirmationHint");
       anchor.ownerGlobal.ConfirmationHint.show(anchor, "passwordSaved");
     }
   }
