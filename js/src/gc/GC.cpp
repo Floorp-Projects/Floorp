@@ -3998,14 +3998,6 @@ static size_t UnmarkArenaListSegment(GCRuntime* gc,
   return count * 256;
 }
 
-void GCRuntime::unmarkCollectedZones() {
-  ArenasToUnmark work(this);
-  AutoLockHelperThreadState lock;
-  AutoRunParallelWork unmark(
-      this, UnmarkArenaListSegment, gcstats::PhaseKind::UNMARK, work,
-      CellUpdateBackgroundTaskCount(), SliceBudget::unlimited(), lock);
-}
-
 void GCRuntime::unmarkWeakMaps() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     /* Unmark all weak maps in the zones being collected. */
@@ -4051,14 +4043,17 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
   {
     gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::PREPARE);
 
+    AutoLockHelperThreadState helperLock;
+
     /*
      * Clear all mark state for the zones we are collecting. This is linear in
      * the size of the heap we are collecting and so can be slow. Do this in
-     * parallel across multiple helper threads before any other processing.
+     * parallel across multiple helper threads.
      */
-    unmarkCollectedZones();
-
-    AutoLockHelperThreadState helperLock;
+    ArenasToUnmark unmarkingWork(this);
+    AutoRunParallelWork unmarkCollectedZones(
+        this, UnmarkArenaListSegment, gcstats::PhaseKind::UNMARK, unmarkingWork,
+        CellUpdateBackgroundTaskCount(), SliceBudget::unlimited(), helperLock);
 
     /* Clear mark state for WeakMaps in parallel with other work. */
     AutoRunParallelTask unmarkWeakMaps(this, &GCRuntime::unmarkWeakMaps,
