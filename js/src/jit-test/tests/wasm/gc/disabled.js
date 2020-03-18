@@ -9,7 +9,7 @@ let simpleTests = [
     "(module (func $test (local anyref)))",
     "(module (func $test (param anyref)))",
     "(module (func $test (result anyref) (ref.null)))",
-    "(module (func $test (block anyref (unreachable)) unreachable))",
+    "(module (func $test (block (result anyref) (unreachable)) unreachable))",
     "(module (func $test (local anyref) (result i32) (ref.is_null (local.get 0))))",
     `(module (import "a" "b" (param anyref)))`,
     `(module (import "a" "b" (result anyref)))`,
