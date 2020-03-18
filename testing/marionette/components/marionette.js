@@ -337,10 +337,6 @@ class MarionetteParentProcess {
         Services.obs.addObserver(this, "command-line-startup");
         Services.obs.addObserver(this, "toplevel-window-ready");
         Services.obs.addObserver(this, "marionette-startup-requested");
-
-        for (let [pref, value] of EnvironmentPrefs.from(ENV_PRESERVE_PREFS)) {
-          Preferences.set(pref, value);
-        }
         break;
 
       // In safe mode the command line handlers are getting parsed after the
@@ -354,10 +350,18 @@ class MarionetteParentProcess {
           this.enabled = true;
         }
 
-        // We want to suppress the modal dialog that's shown
-        // when starting up in safe-mode to enable testing.
-        if (this.enabled && Services.appinfo.inSafeMode) {
-          Services.obs.addObserver(this, "domwindowopened");
+        if (this.enabled) {
+          // Only set preferences to preserve in a new profile
+          // when Marionette is enabled.
+          for (let [pref, value] of EnvironmentPrefs.from(ENV_PRESERVE_PREFS)) {
+            Preferences.set(pref, value);
+          }
+
+          // We want to suppress the modal dialog that's shown
+          // when starting up in safe-mode to enable testing.
+          if (Services.appinfo.inSafeMode) {
+            Services.obs.addObserver(this, "domwindowopened");
+          }
         }
 
         break;
