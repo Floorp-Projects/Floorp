@@ -34,6 +34,7 @@ const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
     // it so we need to manually leave on destroy so that we don't leak
     // memory.
     this._releaseActor();
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   /**

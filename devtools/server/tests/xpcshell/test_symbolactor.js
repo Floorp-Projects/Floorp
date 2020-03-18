@@ -23,6 +23,7 @@ function makeMockSymbolActor() {
     symbolActors: {
       [symbol]: actor,
     },
+    unmanage: () => {},
   };
   actor.getParent = () => parentPool;
   return actor;

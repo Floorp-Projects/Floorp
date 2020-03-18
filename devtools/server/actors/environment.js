@@ -34,6 +34,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
    */
   destroy: function() {
     this.obj.actor = null;
+    Actor.prototype.destroy.call(this);
   },
 
   /**
