@@ -22,10 +22,10 @@ wasmFullPass(` (module
        i32.const 17
        i32.store
      end
-     block (result i32)
-     block (result i32)
+     block i32
+     block i32
      i32.const 2
-     if (result i32)
+     if i32
        i32.const 500
      else
        i32.const 501
@@ -63,5 +63,5 @@ wasmFullPass(` (module
 
    (func $returnVoid)
 
-   (export "run" (func 0))
+   (export "run" 0)
 )`, 33);

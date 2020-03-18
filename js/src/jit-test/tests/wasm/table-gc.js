@@ -7,7 +7,7 @@ const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 const RuntimeError = WebAssembly.RuntimeError;
 
-var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i))) (export "call" (func $call))`
+var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (local.get $i))) (export "call" $call)`
 var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 // A table should not hold exported functions alive and exported functions
@@ -15,7 +15,7 @@ var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 // hold instances alive and instances hold imported tables alive. Nothing
 // should hold the export object alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 2 funcref) (export "tbl" (table 0)) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
+var i = wasmEvalText(`(module (table 2 funcref) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -53,7 +53,7 @@ assertEq(finalizeCount(), 3);
 
 // A table should hold the instance of any of its elements alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 1 funcref) (export "tbl" (table 0)) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
+var i = wasmEvalText(`(module (table 1 funcref) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -78,7 +78,7 @@ assertEq(finalizeCount(), 3);
 
 // Null elements shouldn't keep anything alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 2 funcref) (export "tbl" (table 0)) ${caller})`);
+var i = wasmEvalText(`(module (table 2 funcref) (export "tbl" table) ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 i.edge = makeFinalizeObserver();
@@ -98,7 +98,7 @@ assertEq(finalizeCount(), 2);
 
 // Before initialization, a table is not bound to any instance.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (func $f0 (result i32) (i32.const 0)) (export "f0" (func $f0)))`);
+var i = wasmEvalText(`(module (func $f0 (result i32) (i32.const 0)) (export "f0" $f0))`);
 var t = new Table({initial:4, element:"funcref"});
 i.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
@@ -114,7 +114,7 @@ assertEq(finalizeCount(), 2);
 // When a Table is created (uninitialized) and then first assigned, it keeps the
 // first element's Instance alive (as above).
 resetFinalizeCount();
-var i = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" (func $f)))`);
+var i = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" $f))`);
 var f = i.exports.f;
 var t = new Table({initial:1, element:"funcref"});
 i.edge = makeFinalizeObserver();
@@ -144,8 +144,8 @@ assertEq(finalizeCount(), 3);
 // Once all of an instance's elements in a Table have been clobbered, the
 // Instance should not be reachable.
 resetFinalizeCount();
-var i1 = wasmEvalText(`(module (func $f1 (result i32) (i32.const 13)) (export "f1" (func $f1)))`);
-var i2 = wasmEvalText(`(module (func $f2 (result i32) (i32.const 42)) (export "f2" (func $f2)))`);
+var i1 = wasmEvalText(`(module (func $f1 (result i32) (i32.const 13)) (export "f1" $f1))`);
+var i2 = wasmEvalText(`(module (func $f2 (result i32) (i32.const 42)) (export "f2" $f2))`);
 var f1 = i1.exports.f1;
 var f2 = i2.exports.f2;
 var t = new Table({initial:2, element:"funcref"});
@@ -192,9 +192,9 @@ function runTest() {
 }
 var i = wasmEvalText(
     `(module
-        (import "a" "b" (func $imp (result i32)))
+        (import $imp "a" "b" (result i32))
         (func $f (param i32) (result i32) (call $imp))
-        (export "f" (func $f))
+        (export "f" $f)
     )`,
     {a:{b:runTest}}
 );
@@ -207,8 +207,8 @@ var m = new Module(wasmTextToBinary(`(module
         (local.set $i (i32.sub (local.get $i) (i32.const 1)))
         (i32.add
             (i32.const 1)
-            (call_indirect (type $i2i) (local.get $i) (local.get $i))))
-    (export "f" (func $f))
+            (call_indirect $i2i (local.get $i) (local.get $i))))
+    (export "f" $f)
 )`));
 for (var i = 1; i < N; i++) {
     var inst = new Instance(m, {a:{b:tbl}});

@@ -12,6 +12,6 @@ assertEq(wasmEvalText(`
     local.get $p
     br_if 0
   )
-  (export "f" (func $f))
+  (export "f" $f)
 )
 `).exports.f(42), undefined);

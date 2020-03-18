@@ -5,7 +5,7 @@ g.eval(`(function() {
 })()`);
 
 var module = new WebAssembly.Module(wasmTextToBinary(`
-  (module (import $imp "" "inc") (func) (func $start (call $imp)) (start $start) (export "" (func $start)))
+  (module (import $imp "" "inc") (func) (func $start (call $imp)) (start $start) (export "" $start))
 `));
 
 var imports = {

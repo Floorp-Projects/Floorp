@@ -1,11 +1,11 @@
 function linearModule(min, max, ops, current_memory, grow_memory) {
   var opsText = ops.map(function (op) {
     if (op[0] == "CM") {
-      res = `(if (result i32) (i32.ne (${current_memory}) (i32.const ${op[1]}))
+      res = `(if i32 (i32.ne (${current_memory}) (i32.const ${op[1]}))
                   (i32.load offset=10 (i32.const 4294967295))
                   (i32.const 0))`
     } else if (op[0] == "GM") {
-      res = `(if (result i32) (i32.ne (${grow_memory} (i32.const ${op[1]})) (i32.const ${op[2]}))
+      res = `(if i32 (i32.ne (${grow_memory} (i32.const ${op[1]})) (i32.const ${op[2]}))
                  (i32.load offset=10 (i32.const 4294967295))
                  (i32.const 0))`
     } else if (op[0] == "L") {
@@ -36,7 +36,7 @@ function linearModule(min, max, ops, current_memory, grow_memory) {
        (func (result i32)
          (drop ` + opsText + `)
          (${current_memory})
-       ) (export "run" (func 0)))`;
+       ) (export "run" 0))`;
 
   return text;
 }
