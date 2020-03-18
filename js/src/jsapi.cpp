@@ -99,6 +99,7 @@
 #include "wasm/WasmModule.h"
 #include "wasm/WasmProcess.h"
 
+#include "builtin/Promise-inl.h"
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -3826,6 +3827,28 @@ JS_PUBLIC_API JS::Value JS::GetPromiseResult(JS::HandleObject promiseObj) {
 JS_PUBLIC_API bool JS::GetPromiseIsHandled(JS::HandleObject promiseObj) {
   PromiseObject* promise = &promiseObj->as<PromiseObject>();
   return !promise->isUnhandled();
+}
+
+JS_PUBLIC_API void JS::SetSettledPromiseIsHandled(JSContext* cx,
+                                                  JS::HandleObject promise) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(promise);
+
+  mozilla::Maybe<AutoRealm> ar;
+  Rooted<PromiseObject*> promiseObj(cx);
+  if (IsWrapper(promise)) {
+    promiseObj = promise->maybeUnwrapAs<PromiseObject>();
+    if (!promiseObj) {
+      ReportAccessDenied(cx);
+      return;
+    }
+    ar.emplace(cx, promiseObj);
+  } else {
+    promiseObj = promise.as<PromiseObject>();
+  }
+
+  js::SetSettledPromiseIsHandled(cx, promiseObj);
 }
 
 JS_PUBLIC_API JSObject* JS::GetPromiseAllocationSite(JS::HandleObject promise) {

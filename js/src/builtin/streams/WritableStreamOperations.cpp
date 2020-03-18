@@ -30,8 +30,9 @@
 #include "vm/List.h"           // js::ListObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
+#include "builtin/Promise-inl.h"  // js::SetSettledPromiseIsHandled
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
-#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::RejectUnwrappedPromiseWithError, js::SetSettledPromiseIsHandled
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::RejectUnwrappedPromiseWithError
 #include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::closedPromise
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndDowncastObject
@@ -862,7 +863,7 @@ MOZ_MUST_USE bool js::WritableStreamRejectCloseAndClosedPromiseIfNeeded(
       return false;
     }
 
-    SetSettledPromiseIsHandled(cx, unwrappedClosedPromise);
+    js::SetSettledPromiseIsHandled(cx, unwrappedClosedPromise);
   }
 
   return true;

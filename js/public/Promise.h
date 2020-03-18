@@ -355,6 +355,14 @@ extern JS_PUBLIC_API JS::Value GetPromiseResult(JS::HandleObject promise);
  */
 extern JS_PUBLIC_API bool GetPromiseIsHandled(JS::HandleObject promise);
 
+/*
+ * Given a settled (i.e. fulfilled or rejected, not pending) promise, sets
+ * |promise.[[PromiseIsHandled]]| to true and removes it from the list of
+ * unhandled rejected promises.
+ */
+extern JS_PUBLIC_API void SetSettledPromiseIsHandled(JSContext* cx,
+                                                     JS::HandleObject promise);
+
 /**
  * Returns a js::SavedFrame linked list of the stack that lead to the given
  * Promise's allocation.
