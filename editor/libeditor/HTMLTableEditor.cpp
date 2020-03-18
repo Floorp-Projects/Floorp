@@ -3877,7 +3877,10 @@ void HTMLEditor::SetSelectionAfterTableEdit(Element* aTable, int32_t aRow,
   }
   // Last resort: Set selection to start of doc
   // (it's very bad to not have a valid selection!)
-  SetSelectionAtDocumentStart();
+  DebugOnly<nsresult> rvIgnored = SetSelectionAtDocumentStart();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "HTMLEditor::SetSelectionAtDocumentStart() failed, but ignored");
 }
 
 NS_IMETHODIMP

@@ -139,11 +139,11 @@ class HTMLEditor final : public TextEditor,
   bool GetReturnInParagraphCreatesNewParagraph();
 
   // TextEditor overrides
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult Init(Document& aDoc, Element* aRoot,
-                        nsISelectionController* aSelCon, uint32_t aFlags,
-                        const nsAString& aValue) override;
-  NS_IMETHOD BeginningOfDocument() override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& aDoc, Element* aRoot,
+                                           nsISelectionController* aSelCon,
+                                           uint32_t aFlags,
+                                           const nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD BeginningOfDocument() override;
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
   /**
@@ -165,8 +165,7 @@ class HTMLEditor final : public TextEditor,
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() override;
 
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult HandleKeyPressEvent(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() override;
   virtual already_AddRefed<nsIContent> GetFocusedContentForIME() override;
@@ -266,8 +265,8 @@ class HTMLEditor final : public TextEditor,
    *                            this creates an <a> element.
    * @return                    Newly created element.
    */
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Element> CreateElementWithDefaults(const nsAtom& aTagName);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> CreateElementWithDefaults(
+      const nsAtom& aTagName);
 
   /**
    * Indent or outdent content around Selection.
@@ -575,8 +574,8 @@ class HTMLEditor final : public TextEditor,
    * activation of an inline table editing UI element
    * @param aUIAnonymousElement [IN] the inline table editing UI element
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DoInlineTableEditingAction(const Element& aUIAnonymousElement);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DoInlineTableEditingAction(const Element& aUIAnonymousElement);
 
   /**
    * GetElementOrParentByTagName() looks for an element node whose name matches
@@ -641,8 +640,8 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aString   the string to be inserted
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertTextWithQuotations(const nsAString& aStringToInsert);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertTextWithQuotations(const nsAString& aStringToInsert);
 
   MOZ_CAN_RUN_SCRIPT nsresult InsertHTMLAsAction(
       const nsAString& aInString, nsIPrincipal* aPrincipal = nullptr);
@@ -681,8 +680,7 @@ class HTMLEditor final : public TextEditor,
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult DeleteSelectionWithTransaction(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult DeleteSelectionWithTransaction(
       EDirection aAction, EStripWrappers aStripWrappers) override;
 
   /**
@@ -727,8 +725,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult InsertTextWithTransaction(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertTextWithTransaction(
       Document& aDocument, const nsAString& aStringToInsert,
       const EditorRawDOMPoint& aPointToInsert,
       EditorRawDOMPoint* aPointAfterInsertedString = nullptr) override;
@@ -741,14 +738,13 @@ class HTMLEditor final : public TextEditor,
    *                            elements which are last sibling of each level
    *                            are cloned to aNewBlock.
    * @param aNewBlock           New block container element.
-   * @param aNewBrElement       If this method creates a new <br> element for
+   * @param aNewBRElement       If this method creates a new <br> element for
    *                            placeholder, this is set to the new <br>
    *                            element.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult CopyLastEditableChildStylesWithTransaction(
+  MOZ_CAN_RUN_SCRIPT nsresult CopyLastEditableChildStylesWithTransaction(
       Element& aPreviousBlock, Element& aNewBlock,
-      RefPtr<Element>* aNewBrElement);
+      RefPtr<Element>* aNewBRElement);
 
   /**
    * RemoveBlockContainerWithTransaction() removes aElement from the DOM tree
@@ -758,20 +754,17 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aElement            Block element to be removed.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveBlockContainerWithTransaction(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  RemoveBlockContainerWithTransaction(Element& aElement);
 
   virtual Element* GetEditorRoot() const override;
   using EditorBase::IsEditable;
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult RemoveAttributeOrEquivalent(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult RemoveAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute,
       bool aSuppressTransaction) override;
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult SetAttributeOrEquivalent(Element* aElement,
-                                            nsAtom* aAttribute,
-                                            const nsAString& aValue,
-                                            bool aSuppressTransaction) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult SetAttributeOrEquivalent(
+      Element* aElement, nsAtom* aAttribute, const nsAString& aValue,
+      bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
 
@@ -853,8 +846,7 @@ class HTMLEditor final : public TextEditor,
    * a cell which contains first selection range.  This does not return
    * error even if selection is not in cell element, just does nothing.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTableCellContentsWithTransaction();
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteTableCellContentsWithTransaction();
 
   static void IsNextCharInNodeWhitespace(nsIContent* aContent, int32_t aOffset,
                                          bool* outIsSpace, bool* outIsNBSP,
@@ -887,8 +879,8 @@ class HTMLEditor final : public TextEditor,
    * @param aEnabled [IN] true to absolutely position the element,
    *                      false to put it back in the normal flow
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetPositionToAbsoluteOrStatic(Element& aElement, bool aEnabled);
+  MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsoluteOrStatic(Element& aElement,
+                                                            bool aEnabled);
 
   /**
    * adds aChange to the z-index of an arbitrary element.
@@ -992,14 +984,15 @@ class HTMLEditor final : public TextEditor,
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
-                                        int32_t aStartOffset,
-                                        int32_t aEndOffset);
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnTextNode(FontSize aDir,
+                                                           Text& aTextNode,
+                                                           int32_t aStartOffset,
+                                                           int32_t aEndOffset);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
-                                   nsAtom* aAttribute, const nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyOnNode(nsIContent& aNode,
+                                                      nsAtom& aProperty,
+                                                      nsAtom* aAttribute,
+                                                      const nsAString& aValue);
 
   /**
    * SplitAncestorStyledInlineElementsAtRangeEdges() splits all ancestor inline
@@ -2833,6 +2826,38 @@ class HTMLEditor final : public TextEditor,
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
 
+  template <typename PT, typename CT>
+  MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG MOZ_MUST_USE nsresult
+  CollapseSelectionTo(const EditorDOMPointBase<PT, CT>& aPoint) {
+    ErrorResult error;
+    CollapseSelectionTo(aPoint, error);
+    return error.StealNSResult();
+  }
+
+  template <typename PT, typename CT>
+  MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG void CollapseSelectionTo(
+      const EditorDOMPointBase<PT, CT>& aPoint, ErrorResult& aRv) {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    MOZ_ASSERT(!aRv.Failed());
+
+    SelectionRefPtr()->Collapse(aPoint, aRv);
+    if (NS_WARN_IF(Destroyed())) {
+      aRv = NS_ERROR_EDITOR_DESTROYED;
+      return;
+    }
+    NS_WARNING_ASSERTION(!aRv.Failed(), "Selection::Collapse() failed");
+  }
+
+  MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG MOZ_MUST_USE nsresult
+  CollapseSelectionToStartOf(nsINode& aNode) {
+    return CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0));
+  }
+
+  MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG void CollapseSelectionToStartOf(
+      nsINode& aNode, ErrorResult& aRv) {
+    CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0), aRv);
+  }
+
   /**
    * InitEditorContentAndSelection() may insert `<br>` elements and padding
    * `<br>` elements if they are required for `<body>` or document element.
@@ -2843,8 +2868,7 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InitEditorContentAndSelection();
 
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult SelectAllInternal() override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult SelectAllInternal() override;
 
   /**
    * SelectContentInternal() sets Selection to aContentToSelect to
@@ -2852,14 +2876,15 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aContentToSelect    The content which should be selected.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SelectContentInternal(nsIContent& aContentToSelect);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SelectContentInternal(nsIContent& aContentToSelect);
 
   /**
    * CollapseSelectionAfter() collapses Selection after aElement.
    * If aElement is an orphan node or not in editing host, returns error.
    */
-  nsresult CollapseSelectionAfter(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  CollapseSelectionAfter(Element& aElement);
 
   /**
    * GetElementOrParentByTagNameAtSelection() looks for an element node whose
@@ -3353,12 +3378,11 @@ class HTMLEditor final : public TextEditor,
       SplitAtEdges aSplitAtEdges);
 
   /**
-   * InsertBrElementAtSelectionWithTransaction() inserts a new <br> element at
+   * InsertBRElementAtSelectionWithTransaction() inserts a new <br> element at
    * selection.  If there is non-collapsed selection ranges, the selected
    * ranges is deleted first.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertBrElementAtSelectionWithTransaction();
+  MOZ_CAN_RUN_SCRIPT nsresult InsertBRElementAtSelectionWithTransaction();
 
   /**
    * InsertTextWithQuotationsInternal() replaces selection with new content.
@@ -3368,8 +3392,8 @@ class HTMLEditor final : public TextEditor,
    * with <span _moz_quote="true">, and each chunk not starting with ">" is
    * inserted as normal text.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
 
   /**
    * IndentAsSubAction() indents the content around Selection.
@@ -3381,8 +3405,7 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult OutdentAsSubAction();
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult LoadHTML(const nsAString& aInputString);
+  MOZ_CAN_RUN_SCRIPT nsresult LoadHTML(const nsAString& aInputString);
 
   /**
    * SetInlinePropertyInternal() stores new style with `mTypeInState` if
@@ -3425,8 +3448,7 @@ class HTMLEditor final : public TextEditor,
    * @param aSourceToInsert     HTML source fragment to replace the children
    *                            of <head> element.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult ReplaceHeadContentsWithSourceWithTransaction(
+  MOZ_CAN_RUN_SCRIPT nsresult ReplaceHeadContentsWithSourceWithTransaction(
       const nsAString& aSourceToInsert);
 
   nsresult GetCSSBackgroundColorState(bool* aMixed, nsAString& aOutColor,
@@ -3446,14 +3468,14 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult
   SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
-  virtual void InitializeSelectionAncestorLimit(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InitializeSelectionAncestorLimit(
       nsIContent& aAncestorLimit) override;
 
   /**
    * Make the given selection span the entire document.
    */
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult SelectEntireDocument() override;
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual nsresult SelectEntireDocument()
+      override;
 
   /**
    * Use this to assure that selection is set after attribute nodes when
@@ -3462,7 +3484,8 @@ class HTMLEditor final : public TextEditor,
    * This will stop at a table, however, since we don't want to
    * "drill down" into nested tables.
    */
-  void CollapseSelectionToDeepestNonTableFirstChild(nsINode* aNode);
+  MOZ_CAN_RUN_SCRIPT void CollapseSelectionToDeepestNonTableFirstChild(
+      nsINode* aNode);
 
   /**
    * Returns TRUE if sheet was loaded, false if it wasn't.
@@ -3542,7 +3565,8 @@ class HTMLEditor final : public TextEditor,
    *                        keep selection ranges if user has already been
    *                        changed.
    */
-  nsresult MaybeCollapseSelectionAtFirstEditableNode(
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MaybeCollapseSelectionAtFirstEditableNode(
       bool aIgnoreIfSelectionInEditingHost);
 
   class BlobReader final {
@@ -3556,8 +3580,7 @@ class HTMLEditor final : public TextEditor,
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
 
-    MOZ_CAN_RUN_SCRIPT
-    nsresult OnResult(const nsACString& aResult);
+    MOZ_CAN_RUN_SCRIPT nsresult OnResult(const nsACString& aResult);
     nsresult OnError(const nsAString& aErrorName);
 
    private:
@@ -3579,7 +3602,7 @@ class HTMLEditor final : public TextEditor,
   virtual void RemoveEventListeners() override;
 
   bool ShouldReplaceRootElement();
-  void NotifyRootChanged();
+  MOZ_CAN_RUN_SCRIPT void NotifyRootChanged();
   Element* GetBodyElement();
 
   /**
@@ -3594,7 +3617,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Return TRUE if aElement is a table-related elemet and caret was set.
    */
-  bool SetCaretInTableCell(dom::Element* aElement);
+  MOZ_CAN_RUN_SCRIPT bool SetCaretInTableCell(dom::Element* aElement);
 
   /**
    * HandleTabKeyPressInTable() handles "Tab" key press in table if selection
@@ -3632,9 +3655,8 @@ class HTMLEditor final : public TextEditor,
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
-                                           InsertPosition aInsertPosition);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTableCellsWithTransaction(
+      int32_t aNumberOfCellsToInsert, InsertPosition aInsertPosition);
 
   /**
    * InsertTableColumnsWithTransaction() inserts columns before or after
@@ -3648,9 +3670,8 @@ class HTMLEditor final : public TextEditor,
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
-                                             InsertPosition aInsertPosition);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
+      int32_t aNumberOfColumnsToInsert, InsertPosition aInsertPosition);
 
   /**
    * InsertTableRowsWithTransaction() inserts <tr> elements before or after
@@ -3664,9 +3685,8 @@ class HTMLEditor final : public TextEditor,
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
-                                          InsertPosition aInsertPosition);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTableRowsWithTransaction(
+      int32_t aNumberOfRowsToInsert, InsertPosition aInsertPosition);
 
   /**
    * Insert a new cell after or before supplied aCell.
@@ -3674,9 +3694,9 @@ class HTMLEditor final : public TextEditor,
    * of course)
    * This doesn't change or use the current selection.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertCell(Element* aCell, int32_t aRowSpan, int32_t aColSpan,
-                      bool aAfter, bool aIsHeader, Element** aNewCell);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertCell(Element* aCell, int32_t aRowSpan,
+                                         int32_t aColSpan, bool aAfter,
+                                         bool aIsHeader, Element** aNewCell);
 
   /**
    * DeleteSelectedTableColumnsWithTransaction() removes cell elements which
@@ -3695,9 +3715,8 @@ class HTMLEditor final : public TextEditor,
    *                                    ignored if 2 ore more cells are
    *                                    selected.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteSelectedTableColumnsWithTransaction(
-      int32_t aNumberOfColumnsToDelete);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectedTableColumnsWithTransaction(int32_t aNumberOfColumnsToDelete);
 
   /**
    * DeleteTableColumnWithTransaction() removes cell elements which belong
@@ -3711,9 +3730,8 @@ class HTMLEditor final : public TextEditor,
    * @param aRowIndex           Index of the column which you want to remove.
    *                            0 is the first column.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTableColumnWithTransaction(Element& aTableElement,
-                                            int32_t aColumnIndex);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteTableColumnWithTransaction(
+      Element& aTableElement, int32_t aColumnIndex);
 
   /**
    * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
@@ -3730,9 +3748,8 @@ class HTMLEditor final : public TextEditor,
    * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteSelectedTableRowsWithTransaction(
-      int32_t aNumberOfRowsToDelete);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectedTableRowsWithTransaction(int32_t aNumberOfRowsToDelete);
 
   /**
    * DeleteTableRowWithTransaction() removes a <tr> element whose index in
@@ -3745,9 +3762,8 @@ class HTMLEditor final : public TextEditor,
    * @param aRowIndex           Index of the <tr> element which you want to
    *                            remove.  0 is the first row.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTableRowWithTransaction(Element& aTableElement,
-                                         int32_t aRowIndex);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
 
   /**
    * DeleteTableCellWithTransaction() removes table cell elements.  If two or
@@ -3763,8 +3779,8 @@ class HTMLEditor final : public TextEditor,
    * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete);
 
   /**
    * DeleteAllChildrenWithTransaction() removes all children of aElement from
@@ -3772,15 +3788,15 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aElement        The element whose children you want to remove.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteAllChildrenWithTransaction(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteAllChildrenWithTransaction(Element& aElement);
 
   /**
    * Move all contents from aCellToMerge into aTargetCell (append at end).
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult MergeCells(RefPtr<Element> aTargetCell, RefPtr<Element> aCellToMerge,
-                      bool aDeleteCellToMerge);
+  MOZ_CAN_RUN_SCRIPT nsresult MergeCells(RefPtr<Element> aTargetCell,
+                                         RefPtr<Element> aCellToMerge,
+                                         bool aDeleteCellToMerge);
 
   /**
    * DeleteTableElementAndChildren() removes aTableElement (and its children)
@@ -3788,8 +3804,8 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aTableElement   The <table> element which you want to remove.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTableElementAndChildrenWithTransaction(Element& aTableElement);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteTableElementAndChildrenWithTransaction(Element& aTableElement);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetColSpan(Element* aCell, int32_t aColSpan);
   MOZ_CAN_RUN_SCRIPT nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
@@ -3837,15 +3853,13 @@ class HTMLEditor final : public TextEditor,
   nsresult GetCellSpansAt(Element* aTable, int32_t aRowIndex, int32_t aColIndex,
                           int32_t& aActualRowSpan, int32_t& aActualColSpan);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SplitCellIntoColumns(Element* aTable, int32_t aRowIndex,
-                                int32_t aColIndex, int32_t aColSpanLeft,
-                                int32_t aColSpanRight, Element** aNewCell);
+  MOZ_CAN_RUN_SCRIPT nsresult SplitCellIntoColumns(
+      Element* aTable, int32_t aRowIndex, int32_t aColIndex,
+      int32_t aColSpanLeft, int32_t aColSpanRight, Element** aNewCell);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SplitCellIntoRows(Element* aTable, int32_t aRowIndex,
-                             int32_t aColIndex, int32_t aRowSpanAbove,
-                             int32_t aRowSpanBelow, Element** aNewCell);
+  MOZ_CAN_RUN_SCRIPT nsresult SplitCellIntoRows(
+      Element* aTable, int32_t aRowIndex, int32_t aColIndex,
+      int32_t aRowSpanAbove, int32_t aRowSpanBelow, Element** aNewCell);
 
   MOZ_CAN_RUN_SCRIPT nsresult CopyCellBackgroundColor(Element* aDestCell,
                                                       Element* aSourceCell);
@@ -3868,14 +3882,14 @@ class HTMLEditor final : public TextEditor,
    *                                or <table> element itself.  Otherwise,
    *                                this returns NS_OK but does nothing.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult NormalizeTableInternal(Element& aTableOrElementInTable);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  NormalizeTableInternal(Element& aTableOrElementInTable);
 
   /**
    * Fallback method: Call this after using ClearSelection() and you
    * failed to set selection to some other content in the document.
    */
-  nsresult SetSelectionAtDocumentStart();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SetSelectionAtDocumentStart();
 
   static Element* GetEnclosingTable(nsINode* aNode);
 
@@ -3897,33 +3911,29 @@ class HTMLEditor final : public TextEditor,
   /**
    * InsertObject() inserts given object at aPointToInsert.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
-                        bool aIsSafe, Document* aSourceDoc,
-                        const EditorDOMPoint& aPointToInsert,
-                        bool aDoDeleteSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertObject(const nsACString& aType,
+                                           nsISupports* aObject, bool aIsSafe,
+                                           Document* aSourceDoc,
+                                           const EditorDOMPoint& aPointToInsert,
+                                           bool aDoDeleteSelection);
 
   // factored methods for handling insertion of data from transferables
   // (drag&drop or clipboard)
-  virtual nsresult PrepareTransferable(nsITransferable** transferable) override;
-  nsresult PrepareHTMLTransferable(nsITransferable** transferable);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertFromTransferable(nsITransferable* transferable,
-                                  Document* aSourceDoc,
-                                  const nsAString& aContextStr,
-                                  const nsAString& aInfoStr,
-                                  bool havePrivateHTMLFlavor,
-                                  bool aDoDeleteSelection);
+  virtual nsresult PrepareTransferable(
+      nsITransferable** aTransferable) override;
+  nsresult PrepareHTMLTransferable(nsITransferable** aTransferable);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferable(
+      nsITransferable* aTransferable, Document* aSourceDoc,
+      const nsAString& aContextStr, const nsAString& aInfoStr,
+      bool aHavePrivateHTMLFlavor, bool aDoDeleteSelection);
 
   /**
    * InsertFromDataTransfer() is called only when user drops data into
    * this editor.  Don't use this method for other purposes.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                  int32_t aIndex, Document* aSourceDoc,
-                                  const EditorDOMPoint& aDroppedAt,
-                                  bool aDoDeleteSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertFromDataTransfer(
+      dom::DataTransfer* aDataTransfer, int32_t aIndex, Document* aSourceDoc,
+      const EditorDOMPoint& aDroppedAt, bool aDoDeleteSelection);
 
   bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
@@ -3932,9 +3942,9 @@ class HTMLEditor final : public TextEditor,
   nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
   nsresult CreateDOMFragmentFromPaste(
       const nsAString& aInputString, const nsAString& aContextStr,
-      const nsAString& aInfoStr, nsCOMPtr<nsINode>* outFragNode,
-      nsCOMPtr<nsINode>* outStartNode, nsCOMPtr<nsINode>* outEndNode,
-      int32_t* outStartOffset, int32_t* outEndOffset, bool aTrustedInput);
+      const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
+      nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
+      int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput);
   nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
                          Document* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
@@ -4077,13 +4087,12 @@ class HTMLEditor final : public TextEditor,
   /**
    * Increase/decrease the font size of selection.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RelativeFontChange(FontSize aDir);
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChange(FontSize aDir);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnNode(int32_t aSizeChange,
+                                                       nsIContent* aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeHelper(int32_t aSizeChange,
+                                                       nsINode* aNode);
 
   /**
    * Helper routines for inline style.
@@ -4182,9 +4191,10 @@ class HTMLEditor final : public TextEditor,
    *                    AutoSelectionSetterAfterTableEdit stack-based object to
    *                    insure we reset the caret in a table-editing method.
    */
-  MOZ_CAN_RUN_SCRIPT
-  void SetSelectionAfterTableEdit(Element* aTable, int32_t aRow, int32_t aCol,
-                                  int32_t aDirection, bool aSelected);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionAfterTableEdit(Element* aTable,
+                                                     int32_t aRow, int32_t aCol,
+                                                     int32_t aDirection,
+                                                     bool aSelected);
 
   void RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                   nsIDOMEventListener* aListener,
