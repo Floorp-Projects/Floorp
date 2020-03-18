@@ -88,6 +88,17 @@ TestParams.prototype = {
     arr.forEach((x) => rv += x);
     return rv;
   },
+  testOmittedOptionalOut(o) {
+    if (typeof o != "object" || o.value !== undefined) {
+      throw new Components.Exception(
+        "unexpected value",
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
+    }
+    o.value = Cc["@mozilla.org/network/io-service;1"]
+      .getService(Ci.nsIIOService)
+      .newURI("http://example.com/");
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);
