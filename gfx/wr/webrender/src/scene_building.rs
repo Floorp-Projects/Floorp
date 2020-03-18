@@ -1510,8 +1510,9 @@ impl<'a> SceneBuilder<'a> {
                 unreachable!("Should have returned in parent method.")
             }
 
-            DisplayItem::ReuseItem(..) => {
-                unreachable!("Iterator logic error")
+            DisplayItem::ReuseItems(key) |
+            DisplayItem::RetainedItems(key) => {
+                unreachable!("Iterator logic error: {:?}", key);
             }
 
             DisplayItem::PushShadow(info) => {
