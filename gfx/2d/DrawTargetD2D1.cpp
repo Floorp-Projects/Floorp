@@ -90,6 +90,9 @@ DrawTargetD2D1::~DrawTargetD2D1() {
 }
 
 bool DrawTargetD2D1::IsValid() const {
+  if (mInitState != InitState::Uninitialized && !IsDeviceContextValid()) {
+    return false;
+  }
   if (NS_IsMainThread()) {
     // Uninitialized DTs are considered valid.
     return mInitState != InitState::Failure;
@@ -2274,7 +2277,7 @@ void DrawTargetD2D1::PushD2DLayer(ID2D1DeviceContext* aDC,
                  nullptr);
 }
 
-bool DrawTargetD2D1::IsDeviceContextValid() {
+bool DrawTargetD2D1::IsDeviceContextValid() const {
   uint32_t seqNo;
   return mDC && Factory::GetD2D1Device(&seqNo) && seqNo == mDeviceSeq;
 }

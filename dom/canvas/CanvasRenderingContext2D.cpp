@@ -1296,7 +1296,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
       RestoreClipsAndTransformToTarget();
     }
 
-    if (mTarget) {
+    if (mTarget && mTarget->IsValid()) {
       return true;
     }
   }
