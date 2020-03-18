@@ -725,31 +725,33 @@ impl TextureCache {
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
     ) -> Self {
-        if cfg!(target_os = "macos") {
-            // On MBP integrated Intel GPUs, texture arrays appear to be
-            // implemented as a single texture of stacked layers, and that
-            // texture appears to be subject to the texture size limit. As such,
-            // allocating more than 32 512x512 regions results in a dimension
-            // longer than 16k (the max texture size), causing incorrect behavior.
-            //
-            // So we clamp the number of layers on mac. This results in maximum
-            // texture array size of 32MB, which isn't ideal but isn't terrible
-            // either. OpenGL on mac is not long for this earth, so this may be
-            // good enough until we have WebRender on gfx-rs (on Metal).
-            //
-            // Note that we could also define this more generally in terms of
-            // |max_texture_size / TEXTURE_REGION_DIMENSION|, except:
-            //   * max_texture_size is actually clamped beyond the device limit
-            //     by Gecko to 8192, so we'd need to thread the raw device value
-            //     here, and:
-            //   * The bug we're working around is likely specific to a single
-            //     driver family, and those drivers are also likely to share
-            //     the same max texture size of 16k. If we do encounter a driver
-            //     with the same bug but a lower max texture size, we might need
-            //     to rethink our strategy anyway, since a limit below 32MB might
-            //     start to introduce performance issues.
-            max_texture_layers = max_texture_layers.min(32);
-        }
+        // On MBP integrated Intel GPUs, texture arrays appear to be
+        // implemented as a single texture of stacked layers, and that
+        // texture appears to be subject to the texture size limit. As such,
+        // allocating more than 32 512x512 regions results in a dimension
+        // longer than 16k (the max texture size), causing incorrect behavior.
+        //
+        // So we clamp the number of layers on mac. This results in maximum
+        // texture array size of 32MB, which isn't ideal but isn't terrible
+        // either. OpenGL on mac is not long for this earth, so this may be
+        // good enough until we have WebRender on gfx-rs (on Metal).
+        //
+        // On other platform, we also clamp the number of textures per layer
+        // to avoid the cost of resizing large texture arrays (at the expense
+        // of batching efficiency).
+        //
+        // Note that we could also define this more generally in terms of
+        // |max_texture_size / TEXTURE_REGION_DIMENSION|, except:
+        //   * max_texture_size is actually clamped beyond the device limit
+        //     by Gecko to 8192, so we'd need to thread the raw device value
+        //     here, and:
+        //   * The bug we're working around is likely specific to a single
+        //     driver family, and those drivers are also likely to share
+        //     the same max texture size of 16k. If we do encounter a driver
+        //     with the same bug but a lower max texture size, we might need
+        //     to rethink our strategy anyway, since a limit below 32MB might
+        //     start to introduce performance issues.
+        max_texture_layers = max_texture_layers.min(32);
 
         let mut pending_updates = TextureUpdateList::new();
 
