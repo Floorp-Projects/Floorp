@@ -4,7 +4,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
+// _AboutLogins is only exported for testing
+var EXPORTED_SYMBOLS = ["AboutLoginsParent", "_AboutLogins"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -321,12 +322,18 @@ class AboutLoginsParent extends JSWindowActorParent {
           );
         }
 
+        if (Date.now() < AboutLogins._authExpirationTime) {
+          this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", true);
+          return;
+        }
+
         // This does no harm if master password isn't set.
         let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
           Ci.nsIPK11TokenDB
         );
         let token = tokendb.getInternalKeyToken();
 
+        let loggedIn = false;
         // Use the OS auth dialog if there is no master password
         if (token.checkPassword("")) {
           if (AppConstants.platform == "macosx") {
@@ -344,40 +351,41 @@ class AboutLoginsParent extends JSWindowActorParent {
               },
             ]
           );
-          let loggedIn = await OSKeyStore.ensureLoggedIn(
+          loggedIn = await OSKeyStore.ensureLoggedIn(
             messageText.value,
             captionText.value,
             ownerGlobal,
             false
           );
-          this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", loggedIn);
-          return;
+        } else {
+          // If a master password prompt is already open, just exit early and return false.
+          // The user can re-trigger it after responding to the already open dialog.
+          if (Services.logins.uiBusy) {
+            this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", false);
+            return;
+          }
+
+          // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
+          try {
+            // Relogin and ask for the master password.
+            token.login(true); // 'true' means always prompt for token password. User will be prompted until
+            // clicking 'Cancel' or entering the correct password.
+          } catch (e) {
+            // An exception will be thrown if the user cancels the login prompt dialog.
+            // User is also logged out of Software Security Device.
+          }
+          loggedIn = token.isLoggedIn();
         }
 
-        // If a master password prompt is already open, just exit early and return false.
-        // The user can re-trigger it after responding to the already open dialog.
-        if (Services.logins.uiBusy) {
-          this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", false);
-          return;
+        if (loggedIn) {
+          const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+          AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
         }
-
-        // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
-        try {
-          // Relogin and ask for the master password.
-          token.login(true); // 'true' means always prompt for token password. User will be prompted until
-          // clicking 'Cancel' or entering the correct password.
-        } catch (e) {
-          // An exception will be thrown if the user cancels the login prompt dialog.
-          // User is also logged out of Software Security Device.
-        }
-
-        this.sendAsyncMessage(
-          "AboutLogins:MasterPasswordResponse",
-          token.isLoggedIn()
-        );
+        this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", loggedIn);
         break;
       }
       case "AboutLogins:Subscribe": {
+        AboutLogins._authExpirationTime = Number.NEGATIVE_INFINITY;
         if (!AboutLogins._observersAdded) {
           Services.obs.addObserver(AboutLogins, "passwordmgr-crypto-login");
           Services.obs.addObserver(
@@ -497,6 +505,7 @@ class AboutLoginsParent extends JSWindowActorParent {
 var AboutLogins = {
   _subscribers: new WeakSet(),
   _observersAdded: false,
+  _authExpirationTime: Number.NEGATIVE_INFINITY,
 
   async observe(subject, topic, type) {
     if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
@@ -830,6 +839,7 @@ var AboutLogins = {
     this.updatePasswordSyncNotificationState(this.getSyncState(), latest);
   },
 };
+var _AboutLogins = AboutLogins;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
