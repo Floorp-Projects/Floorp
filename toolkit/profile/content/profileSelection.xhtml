@@ -8,24 +8,25 @@
 
 <?xml-stylesheet href="chrome://mozapps/skin/profile/profileSelection.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
-<!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/profileSelection.dtd">
-%profileDTD;
-]>
+<!DOCTYPE window>
 
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   class="non-resizable"
-  title="&windowtitle.label;"
+  data-l10n-id="profile-selection-window"
   orient="vertical"
   style="width: 30em;"
   onload="startup();">
 <dialog id="profileWindow"
   buttons="accept,cancel"
-  buttonlabelaccept="&start.label;"
-  buttonlabelcancel="&exit.label;">
+  buttonidaccept="profile-selection-button-accept"
+  buttonidcancel="profile-selection-button-cancel">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="toolkit/global/profileSelection.ftl"/>
+  </linkset>
 
   <script src="chrome://global/content/customElements.js"/>
 
@@ -36,19 +37,19 @@
 
   <script src="chrome://mozapps/content/profile/profileSelection.js"/>
 
-  <description class="label">&pmDescription.label;</description>
+  <description class="label" data-l10n-id="profile-manager-description"></description>
 
   <separator class="thin"/>
 
   <hbox class="profile-box indent" flex="1">
 
     <vbox id="managebuttons">
-      <button id="newbutton" label="&newButton.label;"
-              accesskey="&newButton.accesskey;" oncommand="CreateProfileWizard();"/>
-      <button id="renbutton" label="&renameButton.label;"
-              accesskey="&renameButton.accesskey;" oncommand="RenameProfile();"/>
-      <button id="delbutton" label="&deleteButton.label;"
-              accesskey="&deleteButton.accesskey;" oncommand="ConfirmDelete();"/>
+      <button id="newbutton" data-l10n-id="profile-selection-new-button"
+              oncommand="CreateProfileWizard();"/>
+      <button id="renbutton" data-l10n-id="profile-selection-rename-button"
+              oncommand="RenameProfile();"/>
+      <button id="delbutton" data-l10n-id="profile-selection-delete-button"
+              oncommand="ConfirmDelete();"/>
     </vbox>
 
     <separator flex="1"/>
@@ -60,10 +61,9 @@
       </richlistbox>
 
       <!-- Bug 257777 -->
-      <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/>
+      <checkbox id="offlineState" data-l10n-id="profile-manager-work-offline"/>
 
-      <checkbox id="autoSelectLastProfile" label="&useSelected.label;"
-                accesskey="&useSelected.accesskey;"/>
+      <checkbox id="autoSelectLastProfile" data-l10n-id="profile-manager-use-selected"/>
     </vbox>
 
   </hbox>
