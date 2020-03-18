@@ -199,7 +199,9 @@ add_task(async function test_create_login() {
       continue;
     }
 
-    let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+      loginResult: true,
+    });
     await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
