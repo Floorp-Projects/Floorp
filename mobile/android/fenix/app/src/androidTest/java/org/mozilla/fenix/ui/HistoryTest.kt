@@ -81,6 +81,77 @@ class HistoryTest {
     }
 
     @Test
+    fun copyHistoryItemURLTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openHistory {
+        }.openThreeDotMenu {
+        }.clickCopy {
+            verifyCopySnackBarText()
+        }
+    }
+
+    @Test
+    fun shareHistoryItemTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openHistory {
+        }.openThreeDotMenu {
+        }.clickShare {
+            verifyShareOverlay()
+            verifyShareTabFavicon()
+            verifyShareTabTitle()
+            verifyShareTabUrl()
+        }
+    }
+
+    @Test
+    fun openHistoryItemInNewTabTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openHistory {
+        }.openThreeDotMenu {
+        }.clickOpenInNormalTab {
+            verifyPageContent(firstWebPage.content)
+        }.openHomeScreen {
+            verifyOpenTabsHeader()
+        }
+    }
+
+    @Test
+    fun openHistoryItemInNewPrivateTabTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openHistory {
+        }.openThreeDotMenu {
+        }.clickOpenInPrivateTab {
+            verifyPageContent(firstWebPage.content)
+        }.openHomeScreen {
+            verifyPrivateSessionHeader()
+        }
+    }
+
+    @Test
     fun deleteHistoryItemTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -90,8 +161,8 @@ class HistoryTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
-            openOverflowMenu()
-            clickThreeDotMenuDelete()
+        }.openThreeDotMenu {
+        }.clickDelete {
             verifyEmptyHistoryView()
         }
     }

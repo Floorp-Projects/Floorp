@@ -55,6 +55,8 @@ class HistoryRobot {
 
     fun verifyTestPageUrl(expectedUrl: Uri) = assertPageUrl(expectedUrl)
 
+    fun verifyCopySnackBarText() = assertCopySnackBarText()
+
     fun verifyDeleteConfirmationMessage() = assertDeleteConfirmationMessage()
 
     fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
@@ -66,11 +68,7 @@ class HistoryRobot {
             ),
             waitingTime
         )
-        overflowMenu().click()
-    }
-
-    fun clickThreeDotMenuDelete() {
-        threeDotMenuDeleteButton().click()
+        threeDotMenu().click()
     }
 
     fun clickDeleteHistoryButton() {
@@ -92,6 +90,15 @@ class HistoryRobot {
             HistoryRobot().interact()
             return Transition()
         }
+
+        fun openThreeDotMenu(interact: ThreeDotMenuHistoryItemRobot.() -> Unit):
+            ThreeDotMenuHistoryItemRobot.Transition {
+
+            threeDotMenu().click()
+
+            ThreeDotMenuHistoryItemRobot().interact()
+            return ThreeDotMenuHistoryItemRobot.Transition()
+        }
     }
 }
 
@@ -106,9 +113,9 @@ private fun testPageTitle() = onView(allOf(withId(R.id.title), withText("Test_Pa
 
 private fun pageUrl() = onView(withId(R.id.url))
 
-private fun overflowMenu() = onView(withId(R.id.overflow_menu))
+private fun threeDotMenu() = onView(withId(R.id.overflow_menu))
 
-private fun threeDotMenuDeleteButton() = onView(withId(R.id.simple_text))
+private fun snackBarText() = onView(withId(R.id.snackbar_text))
 
 private fun deleteAllHistoryButton() = onView(withId(R.id.delete_button))
 
@@ -143,3 +150,5 @@ private fun assertDeleteConfirmationMessage() =
     onView(withText("This will delete all of your browsing data."))
         .inRoot(isDialog())
         .check(matches(isDisplayed()))
+
+private fun assertCopySnackBarText() = snackBarText().check(matches(withText("URL copied")))
