@@ -33,6 +33,7 @@ static void TestList() {
   SomeClass one(1), two(2), three(3);
 
   MOZ_RELEASE_ASSERT(list.isEmpty());
+  MOZ_RELEASE_ASSERT(list.length() == 0);
   MOZ_RELEASE_ASSERT(!list.getFirst());
   MOZ_RELEASE_ASSERT(!list.getLast());
   MOZ_RELEASE_ASSERT(!list.popFirst());
@@ -53,7 +54,12 @@ static void TestList() {
   MOZ_RELEASE_ASSERT(!two.isInList());
   MOZ_RELEASE_ASSERT(!three.isInList());
 
+  MOZ_RELEASE_ASSERT(list.contains(&one));
+  MOZ_RELEASE_ASSERT(!list.contains(&two));
+  MOZ_RELEASE_ASSERT(!list.contains(&three));
+
   MOZ_RELEASE_ASSERT(!list.isEmpty());
+  MOZ_RELEASE_ASSERT(list.length() == 1);
   MOZ_RELEASE_ASSERT(list.getFirst()->mValue == 1);
   MOZ_RELEASE_ASSERT(list.getLast()->mValue == 1);
 
@@ -63,6 +69,7 @@ static void TestList() {
     CheckListValues(list, check);
   }
 
+  MOZ_RELEASE_ASSERT(list.length() == 2);
   MOZ_RELEASE_ASSERT(list.getFirst()->mValue == 2);
   MOZ_RELEASE_ASSERT(list.getLast()->mValue == 1);
 
@@ -72,6 +79,7 @@ static void TestList() {
     CheckListValues(list, check);
   }
 
+  MOZ_RELEASE_ASSERT(list.length() == 3);
   MOZ_RELEASE_ASSERT(list.getFirst()->mValue == 2);
   MOZ_RELEASE_ASSERT(list.getLast()->mValue == 3);
 
@@ -153,6 +161,7 @@ static void TestList() {
     x->incr();
   }
 
+  MOZ_RELEASE_ASSERT(list.length() == 2);
   MOZ_RELEASE_ASSERT(list.getFirst() == &two);
   MOZ_RELEASE_ASSERT(list.getLast() == &three);
   MOZ_RELEASE_ASSERT(list.getFirst()->mValue == 3);
