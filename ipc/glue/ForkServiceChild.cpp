@@ -125,7 +125,13 @@ already_AddRefed<ForkServerLauncher> ForkServerLauncher::Create() {
 NS_IMETHODIMP
 ForkServerLauncher::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
-  if (!mHaveStartedClient && strcmp(aTopic, "final-ui-startup") == 0) {
+  if (strcmp(aTopic, NS_XPCOM_STARTUP_CATEGORY) == 0) {
+    nsCOMPtr<nsIObserverService> obsSvc =
+      mozilla::services::GetObserverService();
+    MOZ_ASSERT(obsSvc != nullptr);
+    // preferences are not available until final-ui-startup
+    obsSvc->AddObserver(this, "final-ui-startup", false);
+  } else if (!mHaveStartedClient && strcmp(aTopic, "final-ui-startup") == 0) {
     if (StaticPrefs::dom_ipc_forkserver_enable_AtStartup()) {
       mHaveStartedClient = true;
       ForkServiceChild::StartForkServer();
