@@ -7,7 +7,7 @@ for (let i = 15; i --> 0;) {
     params += `\n(param i64)`;
     locals += `\n(local i64)`;
     tests = `
-    (if i64
+    (if (result i64)
         (i64.eq
             (local.get ${i + 8})
             (local.get ${i})
