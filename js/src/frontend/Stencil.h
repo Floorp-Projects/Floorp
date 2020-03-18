@@ -441,12 +441,15 @@ class ScopeCreationData {
   }
 };
 
+class EmptyGlobalScopeType {};
+
 // These types all end up being baked into GC things as part of stencil
 // instantiation. Currently, GCCellPtr is part of this list while we complete
 // Stencil, but eventually will be removed.
 using ScriptThingVariant =
     mozilla::Variant<JS::GCCellPtr, BigIntIndex, ObjLiteralCreationData,
-                     RegExpIndex, ScopeIndex, FunctionIndex>;
+                     RegExpIndex, ScopeIndex, FunctionIndex,
+                     EmptyGlobalScopeType>;
 
 // A vector of things destined to be converted to GC things.
 using ScriptThingsVector = GCVector<ScriptThingVariant>;
@@ -518,5 +521,9 @@ struct GCPolicy<js::frontend::TypedIndex<T>>
 template <>
 struct GCPolicy<js::frontend::FunctionIndex>
     : JS::IgnoreGCPolicy<js::frontend::FunctionIndex> {};
+
+template <>
+struct GCPolicy<js::frontend::EmptyGlobalScopeType>
+    : JS::IgnoreGCPolicy<js::frontend::EmptyGlobalScopeType> {};
 }  // namespace JS
 #endif /* frontend_Stencil_h */
