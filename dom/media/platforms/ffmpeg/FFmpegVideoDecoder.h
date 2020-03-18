@@ -92,6 +92,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   bool CreateVAAPIDeviceContext();
   void InitVAAPICodecContext();
   AVCodec* FindVAAPICodec();
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
   MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
                                MediaDataDecoder::DecodedData& aResults);
