@@ -13,7 +13,7 @@ dbg.onExceptionUnwind = (frame, value) => {
 
 sandbox.innerCode = wasmTextToBinary(`(module
     (import "imports" "tbl" (table 1 anyfunc))
-    (import $setNull "imports" "setNull" (func))
+    (import "imports" "setNull" (func $setNull))
     (func $trap
         call $setNull
         unreachable
@@ -25,7 +25,7 @@ sandbox.outerCode = wasmTextToBinary(`(module
     (type $v2v (func))
     (func (export "run")
         i32.const 0
-        call_indirect $v2v
+        call_indirect (type $v2v)
     )
 )`);
 

@@ -8,7 +8,7 @@ load(libdir + "wasm.js");
 
 var offsets;
 wasmRunWithDebugger(
-    '(module (func (nop) (nop)) (export "test" 0))',
+    '(module (func (nop) (nop)) (export "test" (func 0)))',
     undefined,
     function ({dbg}) {
         offsets = [];
