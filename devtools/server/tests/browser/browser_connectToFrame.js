@@ -38,11 +38,11 @@ add_task(async function() {
         DevToolsServer.init();
 
         const { Actor } = require("devtools/shared/protocol/Actor");
-        class TestActor extends Actor {
+        class ConnectToFrameTestActor extends Actor {
           constructor(conn, tab) {
             super(conn);
             dump("instantiate test actor\n");
-            this.typeName = "test";
+            this.typeName = "connectToFrameTest";
             this.requestTypes = {
               hello: this.hello,
             };
@@ -58,10 +58,10 @@ add_task(async function() {
 
         ActorRegistry.addTargetScopedActor(
           {
-            constructorName: "TestActor",
-            constructorFun: TestActor,
+            constructorName: "ConnectToFrameTestActor",
+            constructorFun: ConnectToFrameTestActor,
           },
-          "testActor"
+          "connectToFrameTestActor"
         );
       },
     false
@@ -79,18 +79,18 @@ add_task(async function() {
     const conn = transport._serverConnection;
     const client = new DevToolsClient(transport);
     const actor = await connectToFrame(conn, browser);
-    ok(actor.testActor, "Got the test actor");
+    ok(actor.connectToFrameTestActor, "Got the test actor");
 
     // Ensure sending at least one request to our actor,
     // otherwise it won't be instantiated, nor be destroyed...
     await client.request({
-      to: actor.testActor,
+      to: actor.connectToFrameTestActor,
       type: "hello",
     });
 
     // Connect a second client in parallel to assert that it received a distinct set of
     // target actors
-    await initAndCloseSecondClient(actor.testActor);
+    await initAndCloseSecondClient(actor.connectToFrameTestActor);
 
     ok(
       DevToolsServer.initialized,
@@ -126,9 +126,9 @@ add_task(async function() {
     const conn = transport._serverConnection;
     const client = new DevToolsClient(transport);
     const actor = await connectToFrame(conn, browser);
-    ok(actor.testActor, "Got a test actor for the second connection");
+    ok(actor.connectToFrameTestActor, "Got a test actor for the second connection");
     isnot(
-      actor.testActor,
+      actor.connectToFrameTestActor,
       firstActor,
       "We get different actor instances between two connections"
     );

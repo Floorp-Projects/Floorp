@@ -131,6 +131,14 @@ var DevToolsServer = {
 
     this._initialized = true;
     this._onSocketListenerAccepted = this._onSocketListenerAccepted.bind(this);
+
+    if (!isWorker) {
+      // Mochitests watch this observable in order to register the custom actor
+      // test-actor.js.
+      // Services.obs is not available in workers.
+      const subject = { wrappedJSObject: ActorRegistry };
+      Services.obs.notifyObservers(subject, "devtools-server-initialized");
+    }
   },
 
   get protocol() {

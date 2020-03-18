@@ -19,7 +19,6 @@ add_task(async function() {
 
   const dbg = await initDebugger("doc-script-switching.html");
   const { toolbox } = dbg;
-  await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);
 
   // Bug 1562165: the WhyPaused element is displayed for a few hundred ms when adding an

@@ -21,7 +21,6 @@ add_task(async function() {
   const { jsterm, toolbox } = hud;
   const { autocompletePopup } = jsterm;
 
-  await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);
   const inspectorFront = await toolbox.target.getFront("inspector");
 

@@ -1,13 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* exported TestActor, TestActorFront */
+/* exported TestActor, TestFront */
 
 "use strict";
 
 // A helper actor for inspector and markupview tests.
-
-const { Ci, Cu } = require("chrome");
+const { Ci, Cu, Cc } = require("chrome");
 const Services = require("Services");
 const {
   getRect,
@@ -60,7 +59,7 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
 }
 
 var testSpec = protocol.generateActorSpec({
-  typeName: "testActor",
+  typeName: "test",
 
   methods: {
     getNumberOfElementMatches: {
@@ -296,8 +295,9 @@ var testSpec = protocol.generateActorSpec({
   },
 });
 
-var TestActor = (exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
+var TestActor = protocol.ActorClassWithSpec(testSpec, {
   initialize: function(conn, targetActor, options) {
+    protocol.Actor.prototype.initialize.call(this, conn);
     this.conn = conn;
     this.targetActor = targetActor;
   },
@@ -838,11 +838,21 @@ var TestActor = (exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   getWindowDimensions: function() {
     return getWindowDimensions(this.content);
   },
-}));
+});
+exports.TestActor = TestActor;
 
-class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
-  constructor(client, highlighter) {
-    super(client);
+class TestFront extends protocol.FrontClassWithSpec(testSpec) {
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
+    this.formAttributeName = "testActor";
+  }
+
+  async initialize() {
+    const inspectorFront = await this.targetFront.getFront("inspector");
+    this.highlighter = inspectorFront.highlighter;
+  }
+
+  setHighlighter(highlighter) {
     this.highlighter = highlighter;
   }
 
@@ -1172,8 +1182,7 @@ class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
     return { d, points };
   }
 }
-exports.TestActorFront = TestActorFront;
-
+protocol.registerFront(TestFront);
 /**
  * Check whether a point is included in a polygon.
  * Taken and tweaked from:
