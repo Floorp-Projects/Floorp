@@ -6,12 +6,12 @@
 var tbl = new WebAssembly.Table({initial:1, element:"funcref"});
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module
+    (import "imports" "tbl" (table 1 funcref))
     (func $iloop
         loop $top
             br $top
         end
     )
-    (import "imports" "tbl" (table 1 funcref))
     (elem (i32.const 0) $iloop)
 )`)), {imports:{tbl}});
 
