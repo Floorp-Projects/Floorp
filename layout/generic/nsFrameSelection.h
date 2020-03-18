@@ -673,7 +673,7 @@ class nsFrameSelection final {
   nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
                                                  const nsPoint& aPoint,
                                                  nsIFrame** aRetFrame,
-                                                 nsPoint& aRetPoint);
+                                                 nsPoint& aRetPoint) const;
 
   /**
    * @param aPresShell is the parameter to be used for most of the other calls
