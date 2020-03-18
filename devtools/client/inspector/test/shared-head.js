@@ -7,13 +7,6 @@
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* globals getTestActor, openToolboxForTab, gBrowser */
 /* import-globals-from ../../shared/test/shared-head.js */
-/* import-globals-from ../../shared/test/test-actor-registry.js */
-
-// Import helpers registering the test-actor in remote targets
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this
-);
 
 var {
   getInplaceEditorForSpan: inplaceEditor,

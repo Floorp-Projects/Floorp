@@ -21,12 +21,6 @@ const HTML = `
 `;
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
-// Import helpers registering the test-actor in remote targets
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this
-);
-
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = hud.toolbox;
