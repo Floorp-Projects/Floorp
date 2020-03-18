@@ -7,7 +7,7 @@ for (let i = 15; i --> 0;) {
     params += `\n(param i64)`;
     locals += `\n(local i64)`;
     tests = `
-    (if (result i64)
+    (if i64
         (i64.eq
             (local.get ${i + 8})
             (local.get ${i})
@@ -18,8 +18,8 @@ for (let i = 15; i --> 0;) {
 }
 
 let code = `(module
-   (func $i64
-     ${params} (result i64) ${locals}
+   (func $i64 (result i64)
+     ${params} ${locals}
      ${tests}
    )
 )`
@@ -29,7 +29,7 @@ wasmEvalText(code);
 // Bounds check elimination.
 assertEq(wasmEvalText(`(module
     (memory 1)
-    (func (param $p i32) (result i32) (local $l i32)
+    (func (param $p i32) (local $l i32) (result i32)
         (local.set $l (i32.const 0))
         (if
             (local.get $p)
@@ -49,5 +49,5 @@ assertEq(wasmEvalText(`(module
         (local.get $l)
     )
     (data (i32.const 0) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
-    (export "test" (func 0))
+    (export "test" 0)
 )`).exports["test"](3), 6);

@@ -1,7 +1,7 @@
 wasmFullPass(`(module
-    (func $test (param i32) (param i32) (result i32) (i32.add (local.get 0) (local.get 1)))
+    (func $test (result i32) (param i32) (param i32) (i32.add (local.get 0) (local.get 1)))
     (func $run (result i32) (call $test (i32.const 1) (i32.const ${Math.pow(2, 31) - 1})))
-    (export "run" (func $run))
+    (export "run" $run)
 )`, -Math.pow(2, 31));
 
 wasmFullPass(`(module
@@ -17,7 +17,7 @@ wasmFullPass(`(module
         i32.add
     )
     (func) (func) (func)
-(export "run" (func 0)))`, 43);
+(export "run" 0))`, 43);
 
 wasmFullPass(`
 (module
@@ -28,7 +28,7 @@ wasmFullPass(`
 
 // Global section.
 wasmFullPass(`(module
- (import "globals" "x" (global $imported i32))
+ (import $imported "globals" "x" (global i32))
  (global $mut_local (mut i32) (i32.const 0))
  (global $imm_local i32 (i32.const 37))
  (global $imm_local_2 i32 (global.get 0))
@@ -43,7 +43,7 @@ wasmFullPass(`(module
   global.get $imm_local_2
   i32.add
  )
- (export "run" (func $get))
+ (export "run" $get)
 )`, 13 + 42 + 37 + 42, { globals: {x: 42} });
 
 // Memory.
@@ -66,7 +66,7 @@ wasmFullPass(`(module
         i32.const 1
         i32.load offset=2
     )
-    (export "mem" (memory 0))
+    (export "mem" memory)
 )`, 0x050403, {"": {memory}});
 
 // Tables.
@@ -80,7 +80,7 @@ wasmFullPass(`(module
     (elem (i32.const 2) $foo)
     (func (export "run") (param i32) (result i32)
         local.get 0
-        call_indirect (type $t)
+        call_indirect $t
     )
 )`, 3, {}, 0);
 
@@ -96,7 +96,7 @@ wasmFullPass(`(module
     (elem (i32.const 2) $foo)
     (func (export "run") (param i32) (result i32)
         local.get 0
-        call_indirect (type $t)
+        call_indirect $t
     )
 )`, 3, {"":{table}}, 0);
 
@@ -123,7 +123,7 @@ for (let [p, result] of [
     [42, 4]
 ]) {
     wasmFullPass(`(module
-        (func (export "run") (param $p i32) (result i32) (local $n i32)
+        (func (export "run") (result i32) (param $p i32) (local $n i32)
             i32.const 0
             local.set $n
             block $c block $b block $a
