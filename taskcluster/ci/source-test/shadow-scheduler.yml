@@ -19,7 +19,7 @@ job-defaults:
     run-on-projects: ['autoland']
     run:
         using: mach
-        mach: taskgraph optimized -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized_tasks.list
+        mach: taskgraph optimized -v -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized_tasks.list
         sparse-profile: taskgraph
 
 relevant_tests:
