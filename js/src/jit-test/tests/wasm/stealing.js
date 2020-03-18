@@ -1,6 +1,6 @@
 var exp = wasmEvalText(`(module
     (memory 1)
-    (export "mem" memory)
+    (export "mem" (memory 0))
     (func $f (result i32) (i32.load (i32.const 0)))
     (export "f" (func $f))
 )`).exports;
