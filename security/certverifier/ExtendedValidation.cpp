@@ -334,6 +334,20 @@ static const struct EVInfo kEVInfos[] = {
     "RWtQVA==",
   },
   {
+    // CN=Entrust Root Certification Authority - G4,OU="(c) 2015 Entrust, Inc. - for authorized use only",OU=See www.entrust.net/legal-terms,O="Entrust, Inc.",C=US
+    "2.16.840.1.114028.10.1.2",
+    "Entrust EV OID",
+    { 0xDB, 0x35, 0x17, 0xD1, 0xF6, 0x73, 0x2A, 0x2D, 0x5A, 0xB9, 0x7C,
+      0x53, 0x3E, 0xC7, 0x07, 0x79, 0xEE, 0x32, 0x70, 0xA6, 0x2F, 0xB4,
+      0xAC, 0x42, 0x38, 0x37, 0x24, 0x60, 0xE6, 0xF0, 0x1E, 0x88 },
+    "MIG+MQswCQYDVQQGEwJVUzEWMBQGA1UEChMNRW50cnVzdCwgSW5jLjEoMCYGA1UE"
+    "CxMfU2VlIHd3dy5lbnRydXN0Lm5ldC9sZWdhbC10ZXJtczE5MDcGA1UECxMwKGMp"
+    "IDIwMTUgRW50cnVzdCwgSW5jLiAtIGZvciBhdXRob3JpemVkIHVzZSBvbmx5MTIw"
+    "MAYDVQQDEylFbnRydXN0IFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgLSBH"
+    "NA==",
+    "ANm1Q3+vqTkPAAAAAFVlrVg=",
+  },
+  {
     // CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE
     "2.23.140.1.1",
     "CA/Browser Forum EV OID",
