@@ -574,6 +574,7 @@ android-hw-arm7-pgo-unittests:
     - jsreftest
 
 android-hw-aarch64-pgo-unittests:
+    - jittest
     - mochitest-media
 
 android-hw-arm7-debug-unittests:
@@ -581,6 +582,7 @@ android-hw-arm7-debug-unittests:
     - jsreftest
 
 android-hw-aarch64-debug-unittests:
+    - jittest
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
