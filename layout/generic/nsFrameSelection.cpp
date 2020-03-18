@@ -283,7 +283,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
     while (i--) {
       range = aSelection->mRanges[i].mRange;
       if (range->IsGenerated()) {
-        range->SetSelection(nullptr);
+        range->UnregisterSelection();
         aSelection->SelectFrames(presContext, range, false);
         aSelection->mRanges.RemoveElementAt(i);
       }
