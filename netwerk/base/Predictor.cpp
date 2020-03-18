@@ -33,6 +33,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
@@ -1212,7 +1213,7 @@ nsresult Predictor::Prefetch(nsIURI* uri, nsIURI* referrer,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(referrer);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new dom::ReferrerInfo(referrer);
   rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
   NS_ENSURE_SUCCESS(rv, rv);
   // XXX - set a header here to indicate this is a prefetch?
@@ -2182,7 +2183,7 @@ Predictor::OnPredictPrefetch(nsIURI* aURI, uint32_t httpStatus) {
 
   MOZ_DIAGNOSTIC_ASSERT(aURI, "aURI must not be null");
 
-  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+  for (auto* cp : dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
     PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
@@ -2209,7 +2210,7 @@ Predictor::OnPredictPreconnect(nsIURI* aURI) {
 
   MOZ_DIAGNOSTIC_ASSERT(aURI, "aURI must not be null");
 
-  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+  for (auto* cp : dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
     PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
@@ -2236,7 +2237,7 @@ Predictor::OnPredictDNS(nsIURI* aURI) {
 
   MOZ_DIAGNOSTIC_ASSERT(aURI, "aURI must not be null");
 
-  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+  for (auto* cp : dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
     PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
