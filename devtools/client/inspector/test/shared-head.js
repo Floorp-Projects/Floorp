@@ -5,7 +5,7 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* globals registerTestActor, getTestActor, openToolboxForTab, gBrowser */
+/* globals getTestActor, openToolboxForTab, gBrowser */
 /* import-globals-from ../../shared/test/shared-head.js */
 /* import-globals-from ../../shared/test/test-actor-registry.js */
 
@@ -42,7 +42,6 @@ var openInspector = async function(hostType) {
     await inspector.once("inspector-updated");
   }
 
-  await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);
 
   return { toolbox, inspector, testActor };

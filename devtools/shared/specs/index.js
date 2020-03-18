@@ -345,7 +345,8 @@ function lazyLoadSpec(type) {
       require(modulePath);
     } catch (e) {
       throw new Error(
-        `Unable to load lazy spec module '${modulePath}' for type '${type}'`
+        `Unable to load lazy spec module '${modulePath}' for type '${type}'.
+        Error: ${e}`
       );
     }
     lazySpecs.delete(type);
