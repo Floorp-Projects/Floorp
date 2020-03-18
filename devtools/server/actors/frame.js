@@ -104,6 +104,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
       this._frameLifetimePool.destroy();
       this._frameLifetimePool = null;
     }
+    Actor.prototype.destroy.call(this);
   },
 
   getEnvironment: function() {

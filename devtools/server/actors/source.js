@@ -192,6 +192,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     if (parent && parent.sourceActors) {
       delete parent.sourceActors[this.actorID];
     }
+    Actor.prototype.destroy.call(this);
   },
 
   get isWasm() {

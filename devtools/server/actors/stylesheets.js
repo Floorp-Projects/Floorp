@@ -90,7 +90,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   },
 
   initialize: function(mediaRule, parentActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
+    protocol.Actor.prototype.initialize.call(this, parentActor.conn);
 
     this.rawRule = mediaRule;
     this.parentActor = parentActor;
@@ -323,10 +323,11 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
         TRANSITION_PSEUDO_CLASS
       );
     }
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   initialize: function(styleSheet, parentActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
+    protocol.Actor.prototype.initialize.call(this, parentActor.conn);
 
     this.rawSheet = styleSheet;
     this.parentActor = parentActor;
@@ -632,7 +633,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   initialize: function(conn, targetActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
+    protocol.Actor.prototype.initialize.call(this, targetActor.conn);
 
     this.parentActor = targetActor;
 
