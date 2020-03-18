@@ -68,6 +68,9 @@ add_task(async function test_migrated_permission_to_optional() {
     "http://other.com/*",
   ];
 
+  // Restart the addon manager to flush the AddonInternal instance created
+  // when installing the addon above.  See bug 1622117.
+  await AddonTestUtils.promiseRestartManager();
   await extension.upgrade(extensionData);
 
   equal(extension.version, "2.0", "Expected extension version");
