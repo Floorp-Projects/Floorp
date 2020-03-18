@@ -1177,6 +1177,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    */
   MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
                              MutableHandleValue vp);
+  MOZ_MUST_USE bool getFrame(JSContext* cx, MutableHandleDebuggerFrame result);
   MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
                              MutableHandleDebuggerFrame result);
   MOZ_MUST_USE bool getFrame(JSContext* cx,
