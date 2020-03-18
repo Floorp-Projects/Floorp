@@ -13,7 +13,8 @@
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(ComputePassEncoder, mParent)
+GPU_IMPL_CYCLE_COLLECTION(ComputePassEncoder, mParent, mUsedBindGroups,
+                          mUsedPipelines)
 GPU_IMPL_JS_WRAP(ComputePassEncoder)
 
 ffi::WGPURawPass BeginComputePass(RawId aEncoderId,
@@ -38,7 +39,7 @@ void ComputePassEncoder::SetBindGroup(
     uint32_t aSlot, const BindGroup& aBindGroup,
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
   if (mValid) {
-    mUsedBindGroups.push_back(&aBindGroup);
+    mUsedBindGroups.AppendElement(&aBindGroup);
     ffi::wgpu_compute_pass_set_bind_group(&mRaw, aSlot, aBindGroup.mId,
                                           aDynamicOffsets.Elements(),
                                           aDynamicOffsets.Length());
@@ -47,7 +48,7 @@ void ComputePassEncoder::SetBindGroup(
 
 void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
   if (mValid) {
-    mUsedPipelines.push_back(&aPipeline);
+    mUsedPipelines.AppendElement(&aPipeline);
     ffi::wgpu_compute_pass_set_pipeline(&mRaw, aPipeline.mId);
   }
 }
