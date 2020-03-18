@@ -138,7 +138,7 @@ add_task(async function test_login_item() {
 
   let onDeletePromise;
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    // Can only test Edit mode in debug builds
+    // Can only test Edit mode in official builds
     onDeletePromise = waitForDelete();
     await deleteFirstLoginAfterEdit();
     await onDeletePromise;
