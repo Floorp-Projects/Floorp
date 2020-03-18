@@ -1,7 +1,7 @@
 Flake8
 ======
 
-`Flake8 <https://flake8.readthedocs.io/en/latest/>`__ is a popular lint wrapper for python. Under the hood, it runs three other tools and
+`Flake8 <https://flake8.pycqa.org/en/latest/index.html>`__ is a popular lint wrapper for python. Under the hood, it runs three other tools and
 combines their results:
 
 * `pep8 <http://pep8.readthedocs.io/en/latest/>`__ for checking style
@@ -25,22 +25,12 @@ flake8.
 Configuration
 -------------
 
-Only directories explicitly whitelisted will have flake8 run against them. To enable flake8 linting
-in a source directory, it must be added to the ``include`` directive in ```tools/lint/flake8.lint``.
-If you wish to exclude a subdirectory of an included one, you can add it to the ``exclude``
-directive.
+Path configuration is defined in the root `.flake8`_ file. Please update this file rather than
+``tools/lint/flake8.yml`` if you need to exclude a new path. For an overview of the supported
+configuration, see `flake8's documentation`_.
 
-The default configuration file lives in ``topsrcdir/.flake8``. The default configuration can be
-overridden for a given subdirectory by creating a new ``.flake8`` file in the subdirectory. Be warned
-that ``.flake8`` files cannot inherit from one another, so all configuration you wish to keep must
-be re-defined.
-
-.. warning::
-
-    Only ``.flake8`` files that live in a directory that is explicitly included in the ``include``
-    directive will be considered. See `bug 1277851 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277851>`__ for more details.
-
-For an overview of the supported configuration, see `flake8's documentation <https://flake8.readthedocs.io/en/latest/config.html>`__.
+.. _.flake8: https://searchfox.org/mozilla-central/source/.flake8
+.. _flake8's documentation: https://flake8.pycqa.org/en/latest/user/configuration.html
 
 Autofix
 -------
