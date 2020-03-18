@@ -474,6 +474,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         requireComponents.core.engine,
                         requireComponents.core.sessionManager,
                         requireComponents.backgroundServices.accountManager,
+                        requireComponents.backgroundServices.serverConfig,
                         setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)
                     ),
                     owner = this,

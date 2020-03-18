@@ -58,7 +58,7 @@ class BackgroundServices(
             Build.MODEL
         )
 
-    private val serverConfig = FxaServer.config(context)
+    val serverConfig = FxaServer.config(context)
     private val deviceConfig = DeviceConfig(
         name = defaultDeviceName(context),
         type = DeviceType.MOBILE,
