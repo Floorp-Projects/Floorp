@@ -2581,6 +2581,11 @@ class ADBDevice(ADBCommand):
                         header, line, traceback.format_exc()))
                     raise ADBError('get_process_list: %s: %s: %s' % (
                         header, line, adb_process))
+                except IndexError:
+                    self._logger.error('get_process_list: %s %s els %s pid_i %s user_i %s\n%s' % (
+                        header, line, els, pid_i, user_i, traceback.format_exc()))
+                    raise ADBError('get_process_list: %s: %s els %s pid_i %s user_i %s: %s' % (
+                        header, line, els, pid_i, user_i, adb_process))
                 line = adb_process.stdout_file.readline()
             self._logger.debug('get_process_list: %s' % ret)
             return ret
