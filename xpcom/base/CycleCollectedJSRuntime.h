@@ -11,6 +11,7 @@
 
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
@@ -109,8 +110,11 @@ class JSHolderMap {
 
   using EntryVector = SegmentedVector<Entry, 1024, InfallibleAllocPolicy>;
 
+  using EntryMap = mozilla::HashMap<void*, Entry*, DefaultHasher<void*>,
+                                    InfallibleAllocPolicy>;
+
   EntryVector mJSHolders;
-  nsDataHashtable<nsPtrHashKey<void>, Entry*> mJSHolderMap;
+  EntryMap mJSHolderMap;
 };
 
 class CycleCollectedJSRuntime {
