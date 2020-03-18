@@ -27,7 +27,8 @@
 #include "vm/JSContext.h"      // JSContext
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
-#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::SetSettledPromiseIsHandled
+#include "builtin/Promise-inl.h"  // js::SetSettledPromiseIsHandled
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined
 #include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::setCloseRequest
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
 #include "vm/Compartment-inl.h"  // js::UnwrapAnd{DowncastObject,TypeCheckThis}
@@ -185,7 +186,7 @@ static bool EnsurePromiseRejected(
   }
 
   // 4.6.{5,6} step 3: Set writer.[[<field>]].[[PromiseIsHandled]] to true.
-  SetSettledPromiseIsHandled(cx, unwrappedPromise);
+  js::SetSettledPromiseIsHandled(cx, unwrappedPromise);
   return true;
 }
 

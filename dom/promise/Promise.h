@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include "js/Promise.h"
 #include "js/TypeDecls.h"
 #include "jspubtd.h"
 #include "mozilla/Attributes.h"
@@ -179,6 +180,15 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   void MaybeRejectBrokenly(const T& aArg);  // Not implemented by default; see
                                             // specializations in the .cpp for
                                             // the T values we support.
+
+  // Mark a settled promise as already handled so that rejections will not
+  // be reported as unhandled.
+  void SetSettledPromiseIsHandled() {
+    AutoEntryScript aes(mGlobal, "Set settled promise handled");
+    JSContext* cx = aes.cx();
+    JS::RootedObject promiseObj(cx, mPromiseObj);
+    JS::SetSettledPromiseIsHandled(cx, promiseObj);
+  }
 
   // WebIDL
 
