@@ -737,13 +737,9 @@ class Dumper_Win32(Dumper):
         # Call SourceIndex to create the .stream file
         result = SourceIndex(sourceFileStream, stream_output_path, vcs_root)
         if self.copy_debug:
-            pdbstr = buildconfig.substs["PDBSTR"]
-            wine = buildconfig.substs.get('WINE')
-            if wine:
-                cmd = [wine, pdbstr]
-            else:
-                cmd = [pdbstr]
-            subprocess.call(cmd + ["-w", "-p:" + os.path.basename(debug_file),
+            pdbstr_path = os.environ.get("PDBSTR_PATH")
+            pdbstr = os.path.normpath(pdbstr_path)
+            subprocess.call([pdbstr, "-w", "-p:" + os.path.basename(debug_file),
                              "-i:" + os.path.basename(streamFilename), "-s:srcsrv"],
                             cwd=os.path.dirname(stream_output_path))
             # clean up all the .stream files when done
@@ -950,8 +946,9 @@ to canonical locations in the source repository. Specify
 
     #check to see if the pdbstr.exe exists
     if options.srcsrv:
-        if 'PDBSTR' not in buildconfig.substs:
-            print("pdbstr was not found by configure.\n", file=sys.stderr)
+        pdbstr = os.environ.get("PDBSTR_PATH")
+        if not os.path.exists(pdbstr):
+            print("Invalid path to pdbstr.exe - please set/check PDBSTR_PATH.\n", file=sys.stderr)
             sys.exit(1)
 
     if len(args) < 3:
