@@ -5,12 +5,7 @@
 
 "use strict";
 
-// Import helpers registering the test-actor in remote targets
-/* globals getTestActor, Task, openToolboxForTab, gBrowser */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this
-);
+/* globals Task, openToolboxForTab, gBrowser */
 
 // shared-head.js handles imports, constants, and utility functions
 // Load the shared-head file first.

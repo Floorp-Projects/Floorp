@@ -5,12 +5,6 @@
 // Tests that clicking the DOM node button in any ObjectInspect
 // opens the Inspector panel
 
-// Import helpers registering the test-actor in remote targets
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this
-);
-
 add_task(async function() {
   // Ensures the end panel is wide enough to show the inspector icon
   await pushPref("devtools.debugger.end-panel-size", 600);
