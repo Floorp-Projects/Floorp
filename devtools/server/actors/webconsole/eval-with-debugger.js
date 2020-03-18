@@ -503,7 +503,7 @@ function getDbgWindow(options, dbg, webConsole) {
     return { bindSelf: null, dbgWindow };
   }
 
-  const actor = webConsole.getActorByID(options.selectedObjectActor);
+  const actor = webConsole.actor(options.selectedObjectActor);
 
   if (!actor) {
     return { bindSelf: null, dbgWindow };
