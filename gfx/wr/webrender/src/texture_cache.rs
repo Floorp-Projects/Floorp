@@ -460,11 +460,11 @@ impl EvictionThresholdBuilder {
     }
 
     fn build(self) -> EvictionThreshold {
-        const MAX_MEMORY_PRESSURE_BYTES: f64 = (500 * 1024 * 1024) as f64;
+        const MAX_MEMORY_PRESSURE_BYTES: f64 = (300 * 512 * 512 * 4) as f64;
         // Compute the memory pressure factor in the range of [0, 1.0].
         let pressure_factor = if self.scale_by_pressure {
             let bytes_allocated = total_gpu_bytes_allocated() as f64;
-            1.0 - (bytes_allocated / MAX_MEMORY_PRESSURE_BYTES).min(1.0)
+            1.0 - (bytes_allocated / MAX_MEMORY_PRESSURE_BYTES).min(0.98)
         } else {
             1.0
         };
@@ -1091,7 +1091,7 @@ impl TextureCache {
     fn default_eviction(&self) -> EvictionThreshold {
         EvictionThresholdBuilder::new(self.now)
             .max_frames(200)
-            .max_time_s(3)
+            .max_time_s(2)
             .scale_by_pressure()
             .build()
     }
