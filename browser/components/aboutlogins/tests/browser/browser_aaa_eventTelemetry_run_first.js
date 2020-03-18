@@ -94,9 +94,7 @@ add_task(async function test_telemetry_events() {
 
   // Show the password
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-      loginResult: true,
-    });
+    let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       let loginItem = content.document.querySelector("login-item");
       let revealCheckbox = loginItem.shadowRoot.querySelector(
@@ -117,9 +115,7 @@ add_task(async function test_telemetry_events() {
     });
     await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-      loginResult: true,
-    });
+    reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       let loginItem = content.document.querySelector("login-item");
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");

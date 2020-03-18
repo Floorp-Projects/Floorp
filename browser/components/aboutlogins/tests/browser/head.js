@@ -7,15 +7,6 @@ let { LoginBreaches } = ChromeUtils.import(
 let { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-let { _AboutLogins } = ChromeUtils.import(
-  "resource:///actors/AboutLoginsParent.jsm"
-);
-let { OSKeyStoreTestUtils } = ChromeUtils.import(
-  "resource://testing-common/OSKeyStoreTestUtils.jsm"
-);
-let { LoginTestUtils } = ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
-);
 
 let nsLoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
@@ -144,59 +135,3 @@ add_task(async function setup() {
     SpecialPowers.postConsoleSentinel();
   });
 });
-
-/**
- * Waits for the master password prompt and performs an action.
- * @param {string} action Set to "authenticate" to log in or "cancel" to
- *        close the dialog without logging in.
- */
-function waitForMPDialog(action) {
-  const BRAND_BUNDLE = Services.strings.createBundle(
-    "chrome://branding/locale/brand.properties"
-  );
-  const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
-  let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
-  return dialogShown.then(function([subject]) {
-    let dialog = subject.Dialog;
-    let expected = "Password Required - " + BRAND_FULL_NAME;
-    is(dialog.args.title, expected, "Dialog is the Master Password dialog");
-    if (action == "authenticate") {
-      SpecialPowers.wrap(dialog.ui.password1Textbox).setUserInput(
-        LoginTestUtils.masterPassword.masterPassword
-      );
-      dialog.ui.button0.click();
-    } else if (action == "cancel") {
-      dialog.ui.button1.click();
-    }
-    return BrowserTestUtils.waitForEvent(window, "DOMModalDialogClosed");
-  });
-}
-
-/**
- * Allows for tests to reset the MP auth expiration and
- * return a promise that will resolve after the MP dialog has
- * been presented.
- *
- * @param {string} action Set to "authenticate" to log in or "cancel" to
- *        close the dialog without logging in.
- * @returns {Promise} Resolves after the MP dialog has been presented and actioned upon
- */
-function forceAuthTimeoutAndWaitForMPDialog(action) {
-  const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes (duplicated from AboutLoginsParent.jsm)
-  _AboutLogins._authExpirationTime -= AUTH_TIMEOUT_MS + 1;
-  return waitForMPDialog(action);
-}
-
-/**
- * Allows for tests to reset the OS auth expiration and
- * return a promise that will resolve after the OS auth dialog has
- * been presented.
- *
- * @param {bool} loginResult True if the auth prompt should pass, otherwise false will fail
- * @returns {Promise} Resolves after the OS auth dialog has been presented
- */
-function forceAuthTimeoutAndWaitForOSKeyStoreLogin({ loginResult }) {
-  const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes (duplicated from AboutLoginsParent.jsm)
-  _AboutLogins._authExpirationTime -= AUTH_TIMEOUT_MS + 1;
-  return OSKeyStoreTestUtils.waitForOSKeyStoreLogin(loginResult);
-}
