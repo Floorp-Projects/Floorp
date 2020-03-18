@@ -6816,6 +6816,13 @@ inline bool LStackArea::ResultIterator::isGcPointer() const {
   MOZ_ASSERT(!done());
   MWasmStackResultArea* area = alloc_.ins()->toWasmStackResultArea()->mir();
   MIRType type = area->result(idx_).type();
+#ifndef JS_PUNBOX64
+  // LDefinition::TypeFrom isn't defined for MIRType::Int64 values on
+  // this platform, so here we have a special case.
+  if (type == MIRType::Int64) {
+    return false;
+  }
+#endif
   return LDefinition::TypeFrom(type) == LDefinition::OBJECT;
 }
 
@@ -6838,15 +6845,28 @@ class LWasmStackResult64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
   LWasmStackResult64() : LInstructionHelper(classOpcode) {}
 
   MWasmStackResult* mir() const { return mir_->toWasmStackResult(); }
-  LStackSlot result(uint32_t base) const {
-    return LStackSlot(base - mir()->result().offset());
+  LStackSlot result(uint32_t base, LDefinition* def) {
+    uint32_t offset = base - mir()->result().offset();
+#if defined(JS_NUNBOX32)
+    if (def == getDef(INT64LOW_INDEX)) {
+      offset -= INT64LOW_OFFSET;
+    } else {
+      MOZ_ASSERT(def == getDef(INT64HIGH_INDEX));
+      offset -= INT64HIGH_OFFSET;
+    }
+#else
+    MOZ_ASSERT(def == getDef(0));
+#endif
+    return LStackSlot(offset);
   }
 };
 
-inline LStackSlot LStackArea::resultAlloc(LInstruction* lir) const {
+inline LStackSlot LStackArea::resultAlloc(LInstruction* lir,
+                                          LDefinition* def) const {
   if (lir->isWasmStackResult64()) {
-    return lir->toWasmStackResult64()->result(base());
+    return lir->toWasmStackResult64()->result(base(), def);
   }
+  MOZ_ASSERT(def == lir->getDef(0));
   return lir->toWasmStackResult()->result(base());
 }
 

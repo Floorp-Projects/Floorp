@@ -1738,7 +1738,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
                                          RegPtr dest) {
     MOZ_ASSERT(results.height() <= masm.framePushed());
     uint32_t offsetFromSP = masm.framePushed() - results.height();
-    masm.movePtr(AsRegister(sp_), dest);
+    masm.moveStackPtrTo(dest);
     if (offsetFromSP) {
       masm.addPtr(Imm32(offsetFromSP), dest);
     }

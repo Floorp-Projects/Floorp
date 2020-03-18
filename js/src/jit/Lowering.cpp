@@ -4445,6 +4445,7 @@ void LIRGenerator::visitWasmStackArg(MWasmStackArg* ins) {
 void LIRGenerator::visitWasmRegisterResult(MWasmRegisterResult* ins) {
   auto* lir = new (alloc()) LWasmRegisterResult();
   uint32_t vreg = getVirtualRegister();
+  MOZ_ASSERT(ins->type() != MIRType::Int64);
   auto type = LDefinition::TypeFrom(ins->type());
   lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ins->loc())));
   ins->setVirtualRegister(vreg);
