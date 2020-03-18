@@ -46,9 +46,9 @@ class BackgroundServices(
     private val context: Context,
     private val push: Push,
     crashReporter: CrashReporter,
-    historyStorage: PlacesHistoryStorage,
-    bookmarkStorage: PlacesBookmarksStorage,
-    passwordsStorage: SyncableLoginsStorage
+    historyStorage: Lazy<PlacesHistoryStorage>,
+    bookmarkStorage: Lazy<PlacesBookmarksStorage>,
+    passwordsStorage: Lazy<SyncableLoginsStorage>
 ) {
     fun defaultDeviceName(context: Context): String =
         context.getString(

@@ -23,7 +23,7 @@ object GeckoProvider {
     @Synchronized
     fun getOrCreateRuntime(
         context: Context,
-        storage: LoginsStorage
+        storage: Lazy<LoginsStorage>
     ): GeckoRuntime {
         if (runtime == null) {
             runtime = createRuntime(context, storage)
@@ -34,7 +34,7 @@ object GeckoProvider {
 
     private fun createRuntime(
         context: Context,
-        storage: LoginsStorage
+        storage: Lazy<LoginsStorage>
     ): GeckoRuntime {
         val builder = GeckoRuntimeSettings.Builder()
 

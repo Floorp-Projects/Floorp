@@ -38,6 +38,7 @@ import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -52,6 +53,8 @@ import java.util.concurrent.TimeUnit
  */
 @Mockable
 class Core(private val context: Context) {
+    private val logger = Logger("Core")
+
     /**
      * The browser engine component initialized based on the build
      * configuration (see build variants).
@@ -62,7 +65,7 @@ class Core(private val context: Context) {
             remoteDebuggingEnabled = context.settings().isRemoteDebuggingEnabled,
             testingModeEnabled = false,
             trackingProtectionPolicy = trackingProtectionPolicyFactory.createTrackingProtectionPolicy(),
-            historyTrackingDelegate = HistoryDelegate(historyStorage),
+            historyTrackingDelegate = HistoryDelegate(lazyHistoryStorage),
             preferredColorScheme = getPreferredColorScheme(),
             automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
             fontInflationEnabled = context.settings().shouldUseAutoSize,
@@ -73,7 +76,7 @@ class Core(private val context: Context) {
         GeckoEngine(
             context,
             defaultSettings,
-            GeckoProvider.getOrCreateRuntime(context, passwordsStorage)
+            GeckoProvider.getOrCreateRuntime(context, lazyPasswordsStorage)
         ).also {
             WebCompatFeature.install(it)
         }
@@ -85,7 +88,7 @@ class Core(private val context: Context) {
     val client: Client by lazy {
         GeckoViewFetchClient(
             context,
-            GeckoProvider.getOrCreateRuntime(context, passwordsStorage)
+            GeckoProvider.getOrCreateRuntime(context, lazyPasswordsStorage)
         )
     }
 
@@ -184,15 +187,28 @@ class Core(private val context: Context) {
         )
     }
 
-    /**
-     * The storage component to persist browsing history (with the exception of
-     * private sessions).
-     */
-    val historyStorage by lazy { PlacesHistoryStorage(context) }
+    // Lazy wrappers around storage components are used to pass references to these components without
+    // initializing them until they're accessed.
+    // Use these for startup-path code, where we don't want to do any work that's not strictly necessary.
+    // For example, this is how the GeckoEngine delegates (history, logins) are configured.
+    // We can fully initialize GeckoEngine without initialized our storage.
+    val lazyHistoryStorage = lazy {
+        logger.info("Initializing history storage")
+        PlacesHistoryStorage(context)
+    }
+    val lazyBookmarksStorage = lazy {
+        logger.info("Initializing bookmarks storage")
+        PlacesBookmarksStorage(context)
+    }
+    val lazyPasswordsStorage = lazy {
+        logger.info("Initializing logins storage")
+        SyncableLoginsStorage(context, passwordsEncryptionKey)
+    }
 
-    val bookmarksStorage by lazy { PlacesBookmarksStorage(context) }
-
-    val passwordsStorage by lazy { SyncableLoginsStorage(context, passwordsEncryptionKey) }
+    // For most other application code (non-startup), these wrappers are perfectly fine and more ergonomic.
+    val historyStorage by lazy { lazyHistoryStorage.value }
+    val bookmarksStorage by lazy { lazyBookmarksStorage.value }
+    val passwordsStorage by lazy { lazyPasswordsStorage.value }
 
     val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
 
