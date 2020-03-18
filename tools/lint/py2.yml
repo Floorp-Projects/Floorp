@@ -31,6 +31,7 @@ py2:
         - xpcom
 
         # These paths are intentionally excluded (Python 3 only)
+        - config/printconfigsetting.py
         - python/mozlint
         - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/github-sync
