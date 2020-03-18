@@ -377,14 +377,21 @@ export interface PerformancePref {
    */
   UIBaseUrlPathPref: "devtools.performance.recording.ui-base-url-path";
   /**
+   * The profiler's menu button and its popup can be enabled/disabled by the user.
+   * This pref controls whether the user has turned it on or not. Note that this
+   * preference is also used outside of the type-checked files, so make sure
+   * and update it elsewhere.
+   */
+  PopupEnabled: "devtools.performance.popup.enabled";
+  /**
    * The profiler popup has some introductory text explaining what it is the first
    * time that you open it. After that, it is not displayed by default.
    */
   PopupIntroDisplayed: "devtools.performance.popup.intro-displayed";
   /**
    * This preference is used outside of the performance-new type system
-   * (in DevToolsStartup). It toggles the availability of the profiler menu
-   * button in the customization palette.
+   * (in DevToolsStartup). It toggles the availability of the menu item
+   * "Tools -> Web Developer -> Enable Profiler Toolbar Icon".
    */
   PopupFeatureFlag: "devtools.performance.popup.feature-flag";
 }
