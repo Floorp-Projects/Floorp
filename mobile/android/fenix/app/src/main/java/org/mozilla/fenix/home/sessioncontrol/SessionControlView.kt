@@ -44,6 +44,7 @@ private fun normalModeAdapterItems(
     val items = mutableListOf<AdapterItem>()
 
     if (topSites.isNotEmpty()) {
+        items.add(AdapterItem.TopSiteHeader)
         items.add(AdapterItem.TopSiteList(topSites))
     }
 

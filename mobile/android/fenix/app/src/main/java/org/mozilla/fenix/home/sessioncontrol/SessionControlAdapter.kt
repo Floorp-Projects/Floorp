@@ -28,6 +28,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescript
 import org.mozilla.fenix.home.sessioncontrol.viewholders.SaveTabGroupViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingAutomaticSignInViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFinishViewHolder
@@ -70,6 +71,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         }
     }
 
+    object TopSiteHeader : AdapterItem(TopSiteHeaderViewHolder.LAYOUT_ID)
     data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID)
 
     object SaveTabGroup : AdapterItem(SaveTabGroupViewHolder.LAYOUT_ID)
@@ -163,6 +165,7 @@ class SessionControlAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
             TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, interactor)
+            TopSiteHeaderViewHolder.LAYOUT_ID -> TopSiteHeaderViewHolder(view)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, interactor)
             TopSiteViewHolder.LAYOUT_ID -> TopSiteViewHolder(view, interactor)
             SaveTabGroupViewHolder.LAYOUT_ID -> SaveTabGroupViewHolder(view, interactor)
