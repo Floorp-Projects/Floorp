@@ -592,6 +592,7 @@ const CFR_MESSAGES = [
             type: "OPEN_PREFERENCES_PAGE",
             data: {
               category: "sync",
+              entrypoint: "cfr-save-login",
             },
           },
         },

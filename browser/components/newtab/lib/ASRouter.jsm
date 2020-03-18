@@ -1917,7 +1917,12 @@ class _ASRouter {
         );
         break;
       case ra.OPEN_PREFERENCES_PAGE:
-        target.browser.ownerGlobal.openPreferences(action.data.category);
+        target.browser.ownerGlobal.openPreferences(
+          action.data.category,
+          action.data.entrypoint && {
+            urlParams: { entrypoint: action.data.entrypoint },
+          }
+        );
         break;
       case ra.OPEN_APPLICATIONS_MENU:
         UITour.showMenu(target.browser.ownerGlobal, action.data.args);
