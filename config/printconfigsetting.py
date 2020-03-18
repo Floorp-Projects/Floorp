@@ -2,32 +2,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import print_function
-import configobj
 import sys
-import re
-from StringIO import StringIO
+
+from configparser import (
+    ConfigParser,
+    NoOptionError,
+    NoSectionError,
+)
 
 try:
-    (file, section, key) = sys.argv[1:]
+    (filename, section, key) = sys.argv[1:]
 except ValueError:
-    print("Usage: printconfigsetting.py <file> <section> <setting>")
+    print("Usage: printconfigsetting.py <filename> <section> <setting>")
     sys.exit(1)
 
-with open(file) as fh:
-    content = re.sub('^\s*;', '#', fh.read(), flags=re.M)
-
-c = configobj.ConfigObj(StringIO(content))
+cfg = ConfigParser()
+cfg.read(filename)
 
 try:
-    s = c[section]
-except KeyError:
-    print >>sys.stderr, "Section [%s] not found." % section
+    print(cfg.get(section, key))
+except NoOptionError:
+    print("Key %s not found." % key, file=sys.stderr)
     sys.exit(1)
-
-try:
-    print(s[key])
-except KeyError:
-    print >>sys.stderr, "Key %s not found." % key
+except NoSectionError:
+    print("Section [%s] not found." % section, file=sys.stderr)
     sys.exit(1)
