@@ -261,8 +261,14 @@ class WindowSurfaceWayland : public WindowSurface {
   nsWindow* mWindow;
   // Buffer screen rects helps us understand if we operate on
   // the same window size as we're called on WindowSurfaceWayland::Lock().
-  // mBufferScreenRect is window size when our wayland buffer was allocated.
-  LayoutDeviceIntRect mBufferScreenRect;
+  // mLockedScreenRect is window size when our wayland buffer was allocated.
+  LayoutDeviceIntRect mLockedScreenRect;
+
+  // WidgetRect is an actual size of mozcontainer widget. It can be
+  // different than mLockedScreenRect during resize when mBounds are updated
+  // immediately but actual GtkWidget size is updated asynchronously
+  // (see Bug 1489463).
+  LayoutDeviceIntRect mWidgetRect;
   nsWaylandDisplay* mWaylandDisplay;
 
   // Actual buffer (backed by wl_buffer) where all drawings go into.
@@ -326,9 +332,6 @@ class WindowSurfaceWayland : public WindowSurface {
   bool mBufferNeedsClear;
 
   bool mIsMainThread;
-
-  // Image caching strategy, see RenderingCacheMode for details.
-  RenderingCacheMode mRenderingCacheMode;
 
   static bool UseDMABufBackend();
   static bool mUseDMABufInitialized;
