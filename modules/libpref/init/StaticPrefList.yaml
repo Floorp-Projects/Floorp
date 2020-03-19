@@ -2664,6 +2664,21 @@
   value: 5000
   mirror: always
 
+- name: dom.vibrator.enabled
+  type: bool
+  value: true
+  mirror: always
+
+- name: dom.vibrator.max_vibrate_ms
+  type: uint32_t
+  value: 10000
+  mirror: always
+
+- name: dom.vibrator.max_vibrate_list_len
+  type: uint32_t
+  value: 128
+  mirror: always
+
 # Is support for Window.visualViewport enabled?
 - name: dom.visualviewport.enabled
   type: bool
