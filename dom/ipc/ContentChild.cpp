@@ -775,16 +775,16 @@ void ContentChild::SetProcessName(const nsAString& aName) {
 
 NS_IMETHODIMP
 ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
-                            bool aCalledFromJS, bool aWidthSpecified,
-                            nsIURI* aURI, const nsAString& aName,
-                            const nsACString& aFeatures, bool aForceNoOpener,
-                            bool aForceNoReferrer,
+                            bool aCalledFromJS, bool aPositionSpecified,
+                            bool aSizeSpecified, nsIURI* aURI,
+                            const nsAString& aName, const nsACString& aFeatures,
+                            bool aForceNoOpener, bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
-  return ProvideWindowCommon(nullptr, aParent, false, aChromeFlags,
-                             aCalledFromJS, aWidthSpecified, aURI, aName,
-                             aFeatures, aForceNoOpener, aForceNoReferrer,
-                             aLoadState, aWindowIsNew, aReturn);
+  return ProvideWindowCommon(
+      nullptr, aParent, false, aChromeFlags, aCalledFromJS, aPositionSpecified,
+      aSizeSpecified, aURI, aName, aFeatures, aForceNoOpener, aForceNoReferrer,
+      aLoadState, aWindowIsNew, aReturn);
 }
 
 static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
@@ -863,10 +863,11 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
 
 nsresult ContentChild::ProvideWindowCommon(
     BrowserChild* aTabOpener, mozIDOMWindowProxy* aParent, bool aIframeMoz,
-    uint32_t aChromeFlags, bool aCalledFromJS, bool aWidthSpecified,
-    nsIURI* aURI, const nsAString& aName, const nsACString& aFeatures,
-    bool aForceNoOpener, bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
-    bool* aWindowIsNew, BrowsingContext** aReturn) {
+    uint32_t aChromeFlags, bool aCalledFromJS, bool aPositionSpecified,
+    bool aSizeSpecified, nsIURI* aURI, const nsAString& aName,
+    const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
+    nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+    BrowsingContext** aReturn) {
   *aReturn = nullptr;
 
   nsAutoPtr<IPCTabContext> ipcContext;
@@ -943,8 +944,9 @@ nsresult ContentChild::ProvideWindowCommon(
     MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
 
     Unused << SendCreateWindowInDifferentProcess(
-        aTabOpener, aChromeFlags, aCalledFromJS, aWidthSpecified, uriToLoad,
-        features, fullZoom, name, triggeringPrincipal, csp, referrerInfo);
+        aTabOpener, aChromeFlags, aCalledFromJS, aPositionSpecified,
+        aSizeSpecified, uriToLoad, features, fullZoom, name,
+        triggeringPrincipal, csp, referrerInfo);
 
     // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
     // the window open as far as it is concerned.
@@ -1197,9 +1199,9 @@ nsresult ContentChild::ProvideWindowCommon(
     }
 
     SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS,
-                     aWidthSpecified, uriToLoad, features, fullZoom,
-                     Principal(triggeringPrincipal), csp, referrerInfo,
-                     std::move(resolve), std::move(reject));
+                     aPositionSpecified, aSizeSpecified, uriToLoad, features,
+                     fullZoom, Principal(triggeringPrincipal), csp,
+                     referrerInfo, std::move(resolve), std::move(reject));
   }
 
   // =======================

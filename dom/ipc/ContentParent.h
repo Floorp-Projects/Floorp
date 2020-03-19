@@ -521,17 +521,17 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvCreateWindow(
       PBrowserParent* aThisBrowserParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      const bool& aWidthSpecified, const Maybe<URIParams>& aURIToLoad,
-      const nsCString& aFeatures, const float& aFullZoom,
-      const IPC::Principal& aTriggeringPrincipal,
+      const bool& aPositionSpecified, const bool& aSizeSpecified,
+      const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
+      const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
       nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       CreateWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
-      const bool& aCalledFromJS, const bool& aWidthSpecified,
-      const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
-      const float& aFullZoom, const nsString& aName,
+      const bool& aCalledFromJS, const bool& aPositionSpecified,
+      const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
+      const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
       nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
       nsIReferrerInfo* aReferrerInfo);
 
@@ -727,8 +727,9 @@ class ContentParent final
   // compatibility with GeckoView.
   mozilla::ipc::IPCResult CommonCreateWindow(
       PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
-      const bool& aCalledFromJS, const bool& aWidthSpecified,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      const bool& aCalledFromJS, const bool& aPositionSpecified,
+      const bool& aSizeSpecified, nsIURI* aURIToLoad,
+      const nsCString& aFeatures, const float& aFullZoom,
       uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
       nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
       int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
