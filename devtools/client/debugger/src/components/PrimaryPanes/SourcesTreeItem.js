@@ -283,7 +283,10 @@ class SourceTreeItem extends Component<Props, State> {
 
     if (source) {
       return (
-        <SourceIcon source={source} shouldHide={icon => icon === "extension"} />
+        <SourceIcon
+          source={source}
+          modifier={icon => (icon === "extension" ? "javascript" : icon)}
+        />
       );
     }
 
