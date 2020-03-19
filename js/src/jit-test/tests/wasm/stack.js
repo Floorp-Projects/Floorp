@@ -25,7 +25,7 @@ wasmFullPass(` (module
      block (result i32)
      block (result i32)
      i32.const 2
-     if i32
+     if (result i32)
        i32.const 500
      else
        i32.const 501
