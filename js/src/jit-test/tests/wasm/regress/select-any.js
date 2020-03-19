@@ -7,7 +7,7 @@ var m1 = wasmEvalText(
    (select
      (unreachable)
      (return (nop))
-     (loop i32 (i32.const 1))
+     (loop (result i32) (i32.const 1))
    )
    drop
   )
