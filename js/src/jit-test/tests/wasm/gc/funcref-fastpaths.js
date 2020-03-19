@@ -47,8 +47,8 @@ function js_funcref_stackarg(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, p) {
 
 var ins1 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (import $f "" "f" (func (param funcref)))
-       (import $g "" "g" (func (param i32) (param i32) (param i32) (param i32) (param i32)
+       (import "" "f" (func $f (param funcref)))
+       (import "" "g" (func $g (param i32) (param i32) (param i32) (param i32) (param i32)
                                (param i32) (param i32) (param i32) (param i32) (param i32)
                                (param funcref)))
        (func (export "run1") (param funcref) (result funcref)

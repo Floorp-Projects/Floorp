@@ -83,13 +83,13 @@ assertErrorMessage(() => wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $box (struct (field $x i32)))
-      (import "m" "f" (param (ref $box))))`),
+      (import "m" "f" (func (param (ref $box)))))`),
                    WebAssembly.CompileError,
                    /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
-      (import "m" "f" (param anyref)))`),
+      (import "m" "f" (func (param anyref))))`),
          "object");
 
 // Imported function can't return ref type, but anyref is OK.
@@ -98,13 +98,13 @@ assertErrorMessage(() => wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $box (struct (field $x i32)))
-      (import "m" "f" (param i32) (result (ref $box))))`),
+      (import "m" "f" (func (param i32) (result (ref $box)))))`),
                    WebAssembly.CompileError,
                    /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
-      (import "m" "f" (param i32) (result anyref)))`),
+      (import "m" "f" (func (param i32) (result anyref))))`),
          "object");
 
 // Imported global can't be of Ref type (irrespective of mutability), though anyref is OK.

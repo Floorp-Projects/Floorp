@@ -37,8 +37,8 @@ var bin = wasmTextToBinary(
        (local.set $l (call $cdr (local.get $p)))
        ;; TODO: eventually also a test with global.get
        ;; blocks and if with result type
-       (block (ref $cons)
-        (if (ref $cons) (i32.eqz (i32.const 0))
+       (block (result (ref $cons))
+        (if (result (ref $cons)) (i32.eqz (i32.const 0))
             (unreachable)
             (ref.null))))
 
@@ -92,7 +92,7 @@ assertErrorMessage(() => wasmEvalText(`
  (gc_feature_opt_in 3)
  (func (param (ref $odd)) (unreachable)))
 `),
-SyntaxError, /Type label.*not found/);
+SyntaxError, /failed to find type/);
 
 // Ref type mismatch in parameter is allowed through the prefix rule
 // but not if the structs are incompatible.
@@ -193,7 +193,7 @@ assertErrorMessage(() => wasmEvalText(`
  (type $x (func (param i32)))
  (func $f (param (ref $x)) (unreachable)))
 `),
-SyntaxError, /Type label.*not found/);
+WebAssembly.CompileError, /ref does not reference a struct type/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
