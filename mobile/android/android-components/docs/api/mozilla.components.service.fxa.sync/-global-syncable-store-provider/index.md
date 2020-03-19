@@ -14,7 +14,7 @@ available instances of stores within an application.
 
 | Name | Summary |
 |---|---|
-| [configureStore](configure-store.md) | `fun configureStore(storePair: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`SyncEngine`](../../mozilla.components.service.fxa/-sync-engine/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Configure an instance of [SyncableStore](../../mozilla.components.concept.sync/-syncable-store/index.md) for a [SyncEngine](../../mozilla.components.service.fxa/-sync-engine/index.md) enum. |
+| [configureStore](configure-store.md) | `fun configureStore(storePair: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`SyncEngine`](../../mozilla.components.service.fxa/-sync-engine/index.md)`, `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`>>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Configure an instance of [SyncableStore](../../mozilla.components.concept.sync/-syncable-store/index.md) for a [SyncEngine](../../mozilla.components.service.fxa/-sync-engine/index.md) enum. |
 
 ### Extension Functions
 
