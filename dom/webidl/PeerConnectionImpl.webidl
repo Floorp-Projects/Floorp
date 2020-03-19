@@ -61,20 +61,6 @@ interface PeerConnectionImpl  {
   void closeStreams();
 
   [Throws]
-  void addRIDExtension(MediaStreamTrack recvTrack, unsigned short extensionId);
-  [Throws]
-  void addRIDFilter(MediaStreamTrack recvTrack, DOMString rid);
-
-  // Inserts CSRC data for the RtpSourceObserver for testing
-  [Throws]
-  void insertAudioLevelForContributingSource(MediaStreamTrack recvTrack,
-                                             unsigned long source,
-                                             DOMHighResTimeStamp timestamp,
-                                             unsigned long rtpTimestamp,
-                                             boolean hasLevel,
-                                             byte level);
-
-  [Throws]
   void enablePacketDump(unsigned long level,
                         mozPacketDumpType type,
                         boolean sending);
