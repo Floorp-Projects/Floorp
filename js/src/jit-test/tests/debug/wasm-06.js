@@ -26,7 +26,7 @@ var m = new WebAssembly.Instance(new WebAssembly.Module(wasm), lib);`);
 // of the frame and environment properties.
 var onEnterFrameCalled, onLeaveFrameCalled, onExceptionUnwindCalled, testComplete;
 runWasmWithDebugger(
-    '(module (func (result i32) (i32.const 42)) (export "test" 0))', undefined,
+    '(module (func (result i32) (i32.const 42)) (export "test" (func 0)))', undefined,
     function (dbg) {
         var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
         assertEq(!!wasmScript, true);
@@ -73,7 +73,7 @@ runWasmWithDebugger(
 
 // Checking the dbg.getNewestFrame() and frame.older.
 runWasmWithDebugger(
-    '(module (import $fn1 "env" "ex") (func $fn2 (call $fn1)) (export "test" $fn2))',
+    '(module (import "env" "ex" (func $fn1)) (func $fn2 (call $fn1)) (export "test" (func $fn2)))',
     '{env: { ex: () => { }}}',
     function (dbg) {
         onEnterFrameCalled = 0;
@@ -115,7 +115,7 @@ runWasmWithDebugger(
 
 // Checking if we can enumerate frames and find 'wasmcall' one.
 runWasmWithDebugger(
-    '(module (import $fn1 "env" "ex") (func $fn2 (call $fn1)) (export "test" $fn2))',
+    '(module (import "env" "ex" (func $fn1)) (func $fn2 (call $fn1)) (export "test" (func $fn2)))',
     '{env: { ex: () => { debugger; }}}',
     function (dbg) {
         testComplete = false;
@@ -135,7 +135,7 @@ runWasmWithDebugger(
 
 // Checking if onPop works without onEnterFrame handler.
 runWasmWithDebugger(
-    '(module (import $fn1 "env" "ex") (func $fn2 (call $fn1)) (export "test" $fn2))',
+    '(module (import "env" "ex" (func $fn1)) (func $fn2 (call $fn1)) (export "test" (func $fn2)))',
     '{env: { ex: () => { debugger; }}}',
     function (dbg) {
         onLeaveFrameCalled = 0;
@@ -155,7 +155,7 @@ runWasmWithDebugger(
 
 // Checking if function return values are not changed.
 runWasmWithDebugger(
-    '(module (func (result f64) (f64.const 0.42)) (export "test" 0))', undefined,
+    '(module (func (result f64) (f64.const 0.42)) (export "test" (func 0)))', undefined,
     function (dbg) {
         dbg.onEnterFrame = function (frame) {
             dbg.onPop = function () {};
@@ -167,7 +167,7 @@ runWasmWithDebugger(
     }
 );
 runWasmWithDebugger(
-    '(module (func (result f32) (f32.const 4.25)) (export "test" 0))', undefined,
+    '(module (func (result f32) (f32.const 4.25)) (export "test" (func 0)))', undefined,
     function (dbg) {
         dbg.onEnterFrame = function (frame) {
             dbg.onPop = function () {};
@@ -182,7 +182,7 @@ runWasmWithDebugger(
 // Checking if onEnterFrame/onExceptionUnwind work during exceptions --
 // `unreachable` causes wasm to throw WebAssembly.RuntimeError exception.
 runWasmWithDebugger(
-    '(module (func (unreachable)) (export "test" 0))', undefined,
+    '(module (func (unreachable)) (export "test" (func 0)))', undefined,
     function (dbg) {
        onEnterFrameCalled = 0;
        onLeaveFrameCalled = 0;
@@ -210,7 +210,7 @@ runWasmWithDebugger(
 // Checking if onEnterFrame/onExceptionUnwind work during exceptions
 // originated in the JavaScript import call.
 runWasmWithDebugger(
-    '(module (import $fn1 "env" "ex") (func $fn2 (call $fn1)) (export "test" $fn2))',
+    '(module (import "env" "ex" (func $fn1)) (func $fn2 (call $fn1)) (export "test" (func $fn2)))',
     '{env: { ex: () => { throw new Error(); }}}',
     function (dbg) {
        onEnterFrameCalled = 0;
@@ -238,7 +238,7 @@ runWasmWithDebugger(
 
 // Checking throwing in the handler.
 runWasmWithDebugger(
-    '(module (func (unreachable)) (export "test" 0))', undefined,
+    '(module (func (unreachable)) (export "test" (func 0)))', undefined,
     function (dbg) {
         dbg.uncaughtExceptionHook = function (value) {
             assertEq(value instanceof Error, true);
@@ -254,7 +254,7 @@ runWasmWithDebugger(
     }
 );
 runWasmWithDebugger(
-    '(module (func (unreachable)) (export "test" 0))', undefined,
+    '(module (func (unreachable)) (export "test" (func 0)))', undefined,
     function (dbg) {
         dbg.uncaughtExceptionHook = function (value) {
             assertEq(value instanceof Error, true);
@@ -274,7 +274,7 @@ runWasmWithDebugger(
 
 // Checking resumption values for JS_THROW.
 runWasmWithDebugger(
-    '(module (func (nop)) (export "test" 0))', undefined,
+    '(module (func (nop)) (export "test" (func 0)))', undefined,
     function (dbg, g) {
         dbg.onEnterFrame = function (frame) {
             if (frame.type !== "wasmcall") return;
@@ -286,7 +286,7 @@ runWasmWithDebugger(
     }
 );
 runWasmWithDebugger(
-    '(module (func (nop)) (export "test" 0))', undefined,
+    '(module (func (nop)) (export "test" (func 0)))', undefined,
     function (dbg, g) {
         dbg.onEnterFrame = function (frame) {
             if (frame.type !== "wasmcall") return;
@@ -302,7 +302,7 @@ runWasmWithDebugger(
 
 // Checking resumption values for JS_RETURN (not implemented by wasm baseline).
 runWasmWithDebugger(
-    '(module (func (unreachable)) (export "test" 0))', undefined,
+    '(module (func (unreachable)) (export "test" (func 0)))', undefined,
     function (dbg) {
         dbg.onEnterFrame = function (frame) {
             if (frame.type !== "wasmcall") return;
@@ -315,7 +315,7 @@ runWasmWithDebugger(
     }
 );
 runWasmWithDebugger(
-    '(module (func (unreachable)) (export "test" 0))', undefined,
+    '(module (func (unreachable)) (export "test" (func 0)))', undefined,
     function (dbg) {
         dbg.onEnterFrame = function (frame) {
             if (frame.type !== "wasmcall") return;
