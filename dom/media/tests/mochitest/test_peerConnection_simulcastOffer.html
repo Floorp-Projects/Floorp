@@ -19,7 +19,7 @@
     is(receivers.length, 1, "We have exactly one RTP receiver");
     const receiver = receivers[0];
 
-    SpecialPowers.wrap(pc._pc).mozAddRIDExtension(receiver, extensionId);
+    SpecialPowers.wrap(receiver).mozAddRIDExtension(extensionId);
   }
 
   function selectRecvRID(pc, rid) {
@@ -27,7 +27,7 @@
     is(receivers.length, 1, "We have exactly one RTP receiver");
     const receiver = receivers[0];
 
-    SpecialPowers.wrap(pc._pc).mozAddRIDFilter(receiver, rid);
+    SpecialPowers.wrap(receiver).mozAddRIDFilter(rid);
   }
 
   runNetworkTest(() =>
