@@ -670,7 +670,7 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   }
   // nothing to do if editor isn't editable or clicked on out of the editor.
   RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  if (textEditor->IsReadonly() || textEditor->IsDisabled() ||
+  if (textEditor->IsReadonly() ||
       !textEditor->IsAcceptableInputEvent(aMouseClickEvent)) {
     return NS_OK;
   }
@@ -840,8 +840,8 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
     return NS_OK;
   }
 
-  bool notEditable = !dropParentContent->IsEditable() ||
-                     mEditorBase->IsReadonly() || mEditorBase->IsDisabled();
+  bool notEditable =
+      !dropParentContent->IsEditable() || mEditorBase->IsReadonly();
 
   // First of all, hide caret if we won't insert the drop data into the editor
   // obviously.
@@ -977,7 +977,7 @@ bool EditorEventListener::DragEventHasSupportingData(
 bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
   MOZ_ASSERT(
       !DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr()));
-  MOZ_ASSERT(!mEditorBase->IsReadonly() && !mEditorBase->IsDisabled());
+  MOZ_ASSERT(!mEditorBase->IsReadonly());
   MOZ_ASSERT(DragEventHasSupportingData(aDragEvent));
 
   // If there is no source node, this is probably an external drag and the
@@ -1086,8 +1086,8 @@ nsresult EditorEventListener::HandleChangeComposition(
     return NS_OK;
   }
 
-  // if we are readonly or disabled, then do nothing.
-  if (textEditor->IsReadonly() || textEditor->IsDisabled()) {
+  // if we are readonly, then do nothing.
+  if (textEditor->IsReadonly()) {
     return NS_OK;
   }
 
@@ -1117,11 +1117,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
     return NS_OK;
   }
 
-  // Don't turn on selection and caret when the editor is disabled.
   RefPtr<EditorBase> editorBase(mEditorBase);
-  if (editorBase->IsDisabled()) {
-    return NS_OK;
-  }
 
   // Spell check a textarea the first time that it is focused.
   SpellCheckIfNeeded();

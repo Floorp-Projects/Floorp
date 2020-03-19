@@ -5933,6 +5933,29 @@ Nullable<WindowProxyHolder> Document::GetDefaultView() const {
   return WindowProxyHolder(win->GetBrowsingContext());
 }
 
+nsIContent* Document::GetUnretargetedFocusedContent() const {
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+  if (!window) {
+    return nullptr;
+  }
+  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+  nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
+      window, nsFocusManager::eOnlyCurrentWindow,
+      getter_AddRefs(focusedWindow));
+  if (!focusedContent) {
+    return nullptr;
+  }
+  // be safe and make sure the element is from this document
+  if (focusedContent->OwnerDoc() != this) {
+    return nullptr;
+  }
+
+  if (focusedContent->ChromeOnlyAccess()) {
+    return focusedContent->FindFirstNonChromeOnlyAccessContent();
+  }
+  return focusedContent;
+}
+
 Element* Document::GetActiveElement() {
   // Get the focused element.
   Element* focusedElement = GetRetargetedFocusedElement();
