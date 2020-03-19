@@ -590,7 +590,8 @@ def command_task_artifacts(args):
     for fetch in fetches:
         extdir = pathlib.Path(args.dest)
         if 'dest' in fetch:
-            extdir = extdir.joinpath(fetch['dest'])
+            # Note: normpath doesn't like pathlib.Path in python 3.5
+            extdir = pathlib.Path(os.path.normpath(str(extdir.joinpath(fetch['dest']))))
         extdir.mkdir(parents=True, exist_ok=True)
         root_url = os.environ['TASKCLUSTER_ROOT_URL']
         if fetch['artifact'].startswith('public/'):
