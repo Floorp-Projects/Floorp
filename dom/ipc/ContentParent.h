@@ -35,7 +35,6 @@
 #include "nsPluginTags.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
-#include "nsIContentParent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIRemoteTab.h"
@@ -133,7 +132,6 @@ struct CancelContentJSOptions;
 
 class ContentParent final
     : public PContentParent,
-      public nsIContentParent,
       public nsIObserver,
       public nsIDOMGeoPositionCallback,
       public nsIDOMGeoPositionErrorCallback,
@@ -1302,8 +1300,6 @@ class ContentParent final
 
   static bool ShouldSyncPreference(const char16_t* aData);
 
-  NS_IMETHOD GetChildID(uint64_t* aChildID) override;
-
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
@@ -1494,10 +1490,6 @@ class RemoteWindowContext final : public nsIRemoteWindowContext,
   ~RemoteWindowContext() = default;
   RefPtr<BrowserParent> mBrowserParent;
 };
-
-inline nsISupports* ToSupports(mozilla::dom::ContentParent* aContentParent) {
-  return static_cast<nsIContentParent*>(aContentParent);
-}
 
 }  // namespace dom
 }  // namespace mozilla
