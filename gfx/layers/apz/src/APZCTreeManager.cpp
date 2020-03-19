@@ -891,9 +891,68 @@ bool APZCTreeManager::AdvanceAnimations(Maybe<wr::RenderRoot> aRenderRoot,
   return AdvanceAnimationsInternal(lock, std::move(aRenderRoot), aSampleTime);
 }
 
+ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
+    const MutexAutoLock& aProofOfMapLock, ClippedCompositionBoundsMap& aDestMap,
+    ScrollableLayerGuid aGuid) {
+  auto insertResult = aDestMap.insert(std::make_pair(aGuid, ParentLayerRect()));
+  if (!insertResult.second) {
+    // We already computed it for this one, early-exit. This might happen
+    // because on a later iteration of mApzcMap we might encounter an ancestor
+    // of an APZC that we processed on an earlier iteration. In this case we
+    // would have computed the ancestor's clipped composition bounds when
+    // recursing up on the earlier iteration.
+    return insertResult.first->second;
+  }
+
+  ParentLayerRect bounds = mApzcMap[aGuid].apzc->GetCompositionBounds();
+  const auto& mapEntry = mApzcMap.find(aGuid);
+  MOZ_ASSERT(mapEntry != mApzcMap.end());
+  if (mapEntry->second.parent.isNothing()) {
+    // Recursion base case, where the APZC with guid `aGuid` has no parent.
+    // In this case, we don't need to clip `bounds` any further and can just
+    // early exit.
+    insertResult.first->second = bounds;
+    return bounds;
+  }
+
+  ScrollableLayerGuid parentGuid = mapEntry->second.parent.value();
+  auto parentBoundsEntry = aDestMap.find(parentGuid);
+  // If aDestMap doesn't contain the parent entry yet, we recurse to compute
+  // that one first.
+  ParentLayerRect parentClippedBounds =
+      (parentBoundsEntry == aDestMap.end())
+          ? ComputeClippedCompositionBounds(aProofOfMapLock, aDestMap,
+                                            parentGuid)
+          : parentBoundsEntry->second;
+
+  // The parent layer's async transform applies to the current layer to take
+  // `bounds` into the same coordinate space as `parentClippedBounds`. However,
+  // we're going to do the inverse operation and unapply this transform to
+  // `parentClippedBounds` to bring it into the same coordinate space as
+  // `bounds`.
+  AsyncTransform appliesToLayer =
+      mApzcMap[parentGuid].apzc->GetCurrentAsyncTransform(
+          AsyncPanZoomController::eForCompositing);
+
+  // Do the unapplication
+  LayerRect parentClippedBoundsInParentLayerSpace =
+      (parentClippedBounds - appliesToLayer.mTranslation) /
+      appliesToLayer.mScale;
+
+  // And then clip `bounds` by the parent's comp bounds in the current space.
+  bounds = bounds.Intersect(
+      ViewAs<ParentLayerPixel>(parentClippedBoundsInParentLayerSpace,
+                               PixelCastJustification::MovingDownToChildren));
+
+  // Done!
+  insertResult.first->second = bounds;
+  return bounds;
+}
+
 bool APZCTreeManager::AdvanceAnimationsInternal(
     const MutexAutoLock& aProofOfMapLock, Maybe<wr::RenderRoot> aRenderRoot,
     const TimeStamp& aSampleTime) {
+  ClippedCompositionBoundsMap clippedCompBounds;
   bool activeAnimations = false;
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second.apzc;
@@ -901,7 +960,14 @@ bool APZCTreeManager::AdvanceAnimationsInternal(
       // If this APZC belongs to a different render root, skip over it
       continue;
     }
-    apzc->ReportCheckerboard(aSampleTime);
+
+    // Note that this call is recursive, but it early-exits if called again
+    // with the same guid. So this loop is still amortized O(n) with respect to
+    // the number of APZCs.
+    ParentLayerRect clippedBounds = ComputeClippedCompositionBounds(
+        aProofOfMapLock, clippedCompBounds, mapping.first);
+
+    apzc->ReportCheckerboard(aSampleTime, clippedBounds);
     activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
   }
   return activeAnimations;
