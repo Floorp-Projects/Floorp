@@ -1367,6 +1367,13 @@
   value: true
   mirror: always
 
+# Synchronize transform animations with geometric animations on the
+# main thread.
+- name: dom.animations.mainthread-synchronization-with-geometric-animations
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for AudioWorklet enabled?
 - name: dom.audioworklet.enabled
   type: bool
