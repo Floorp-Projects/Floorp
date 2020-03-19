@@ -18,7 +18,9 @@
 use bumpalo;
 use jsparagus::ast::source_atom_set::SourceAtomSet;
 use jsparagus::ast::types::Program;
-use jsparagus::emitter::{emit, EmitError, EmitOptions, EmitResult};
+use jsparagus::emitter::{
+    emit, BindingName, EmitError, EmitOptions, EmitResult, GCThing, ScopeData, ScopeNote,
+};
 use jsparagus::parser::{parse_module, parse_script, ParseError, ParseOptions};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -61,12 +63,118 @@ pub struct SmooshCompileOptions {
 }
 
 #[repr(C)]
+pub enum SmooshGCThingKind {
+    ScopeIndex,
+}
+
+#[repr(C)]
+pub struct SmooshGCThing {
+    kind: SmooshGCThingKind,
+    scope_index: usize,
+}
+
+impl From<GCThing> for SmooshGCThing {
+    fn from(item: GCThing) -> Self {
+        match item {
+            GCThing::Scope(index) => Self {
+                kind: SmooshGCThingKind::ScopeIndex,
+                scope_index: index.into(),
+            },
+        }
+    }
+}
+
+#[repr(C)]
+pub enum SmooshScopeDataKind {
+    Global,
+    Lexical,
+}
+
+#[repr(C)]
+pub struct SmooshBindingName {
+    name: usize,
+    is_closed_over: bool,
+    is_top_level_function: bool,
+}
+
+impl From<BindingName> for SmooshBindingName {
+    fn from(info: BindingName) -> Self {
+        Self {
+            name: info.name.into(),
+            is_closed_over: info.is_closed_over,
+            is_top_level_function: info.is_top_level_function,
+        }
+    }
+}
+
+#[repr(C)]
+pub struct SmooshScopeData {
+    kind: SmooshScopeDataKind,
+    bindings: CVec<SmooshBindingName>,
+    let_start: usize,
+    const_start: usize,
+    enclosing: usize,
+    first_frame_slot: u32,
+}
+
+impl From<ScopeData> for SmooshScopeData {
+    fn from(data: ScopeData) -> Self {
+        match data {
+            ScopeData::Global(mut data) => Self {
+                kind: SmooshScopeDataKind::Global,
+                bindings: CVec::from(data.bindings.drain(..).map(|x| x.into()).collect()),
+                let_start: data.let_start,
+                const_start: data.const_start,
+                enclosing: 0,
+                first_frame_slot: 0,
+            },
+            ScopeData::Lexical(mut data) => Self {
+                kind: SmooshScopeDataKind::Lexical,
+                bindings: CVec::from(data.bindings.drain(..).map(|x| x.into()).collect()),
+                let_start: 0,
+                const_start: data.const_start,
+                enclosing: data.enclosing.into(),
+                first_frame_slot: data.first_frame_slot.into(),
+            },
+        }
+    }
+}
+
+#[repr(C)]
+pub struct SmooshScopeNote {
+    index: u32,
+    start: u32,
+    length: u32,
+    parent: u32,
+}
+
+impl From<ScopeNote> for SmooshScopeNote {
+    fn from(note: ScopeNote) -> Self {
+        let start = usize::from(note.start) as u32;
+        let end = usize::from(note.end) as u32;
+        let parent = match note.parent {
+            Some(index) => usize::from(index) as u32,
+            None => std::u32::MAX,
+        };
+        Self {
+            index: usize::from(note.scope_index) as u32,
+            start,
+            length: end - start,
+            parent,
+        }
+    }
+}
+
+#[repr(C)]
 pub struct SmooshResult {
     unimplemented: bool,
     error: CVec<u8>,
     bytecode: CVec<u8>,
     atoms: CVec<usize>,
     all_atoms: CVec<CVec<u8>>,
+    gcthings: CVec<SmooshGCThing>,
+    scopes: CVec<SmooshScopeData>,
+    scope_notes: CVec<SmooshScopeNote>,
 
     /// Line and column numbers for the first character of source.
     lineno: usize,
@@ -124,6 +232,9 @@ impl SmooshResult {
             bytecode: CVec::empty(),
             atoms: CVec::empty(),
             all_atoms: CVec::empty(),
+            gcthings: CVec::empty(),
+            scopes: CVec::empty(),
+            scope_notes: CVec::empty(),
             lineno: 0,
             column: 0,
             main_offset: 0,
@@ -162,7 +273,7 @@ pub unsafe extern "C" fn run_smoosh(
             unimplemented: false,
             error: CVec::empty(),
             bytecode: CVec::from(result.bytecode),
-            atoms: CVec::from(result.atoms.drain(..).map(|s| s.into_raw()).collect()),
+            atoms: CVec::from(result.atoms.drain(..).map(|s| s.into()).collect()),
             all_atoms: CVec::from(
                 result
                     .all_atoms
@@ -170,10 +281,13 @@ pub unsafe extern "C" fn run_smoosh(
                     .map(|a| CVec::from(a.into_bytes()))
                     .collect(),
             ),
+            gcthings: CVec::from(result.gcthings.drain(..).map(|x| x.into()).collect()),
+            scopes: CVec::from(result.scopes.drain(..).map(|x| x.into()).collect()),
+            scope_notes: CVec::from(result.scope_notes.drain(..).map(|x| x.into()).collect()),
             lineno: result.lineno,
             column: result.column,
             main_offset: result.main_offset,
-            max_fixed_slots: result.max_fixed_slots,
+            max_fixed_slots: result.max_fixed_slots.into(),
             maximum_stack_depth: result.maximum_stack_depth,
             body_scope_index: result.body_scope_index,
             num_ic_entries: result.num_ic_entries,
@@ -271,6 +385,9 @@ pub unsafe extern "C" fn free_smoosh(result: SmooshResult) {
     for v in result.all_atoms.into() {
         let _ = v.into();
     }
+    let _ = result.gcthings.into();
+    let _ = result.scopes.into();
+    let _ = result.scope_notes.into();
     //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
 }
 

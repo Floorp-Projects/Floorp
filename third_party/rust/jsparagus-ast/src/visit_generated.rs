@@ -1378,10 +1378,8 @@ pub trait Pass<'alloc> {
             Expression::LiteralNullExpression { .. } => {
                 self.visit_enum_expression_variant_literal_null_expression()
             }
-            Expression::LiteralNumericExpression { value, .. } => {
-                self.visit_enum_expression_variant_literal_numeric_expression(
-                    value,
-                )
+            Expression::LiteralNumericExpression(ast) => {
+                self.visit_enum_expression_variant_literal_numeric_expression(ast)
             }
             Expression::LiteralRegExpExpression { pattern, global, ignore_case, multi_line, sticky, unicode, .. } => {
                 self.visit_enum_expression_variant_literal_reg_exp_expression(
@@ -1588,25 +1586,22 @@ pub trait Pass<'alloc> {
 
     fn visit_enum_expression_variant_literal_numeric_expression(
         &mut self,
-        value: &mut f64,
+        ast: &mut NumericLiteral,
     ) {
-        self.enter_enum_expression_variant_literal_numeric_expression(
-            value,
-        );
-        self.leave_enum_expression_variant_literal_numeric_expression(
-            value,
-        );
+        self.enter_enum_expression_variant_literal_numeric_expression(ast);
+        self.visit_numeric_literal(ast);
+        self.leave_enum_expression_variant_literal_numeric_expression(ast);
     }
 
     fn enter_enum_expression_variant_literal_numeric_expression(
         &mut self,
-        value: &mut f64,
+        ast: &mut NumericLiteral,
     ) {
     }
 
     fn leave_enum_expression_variant_literal_numeric_expression(
         &mut self,
-        value: &mut f64,
+        ast: &mut NumericLiteral,
     ) {
     }
 
@@ -2514,6 +2509,9 @@ pub trait Pass<'alloc> {
             PropertyName::StaticPropertyName(ast) => {
                 self.visit_enum_property_name_variant_static_property_name(ast)
             }
+            PropertyName::StaticNumericPropertyName(ast) => {
+                self.visit_enum_property_name_variant_static_numeric_property_name(ast)
+            }
         }
         self.leave_property_name(ast);
     }
@@ -2566,6 +2564,27 @@ pub trait Pass<'alloc> {
     ) {
     }
 
+    fn visit_enum_property_name_variant_static_numeric_property_name(
+        &mut self,
+        ast: &mut NumericLiteral,
+    ) {
+        self.enter_enum_property_name_variant_static_numeric_property_name(ast);
+        self.visit_numeric_literal(ast);
+        self.leave_enum_property_name_variant_static_numeric_property_name(ast);
+    }
+
+    fn enter_enum_property_name_variant_static_numeric_property_name(
+        &mut self,
+        ast: &mut NumericLiteral,
+    ) {
+    }
+
+    fn leave_enum_property_name_variant_static_numeric_property_name(
+        &mut self,
+        ast: &mut NumericLiteral,
+    ) {
+    }
+
     fn visit_call_expression(&mut self, ast: &mut CallExpression<'alloc>) {
         self.enter_call_expression(ast);
         self.visit_expression_or_super(&mut ast.callee);
@@ -2587,6 +2606,9 @@ pub trait Pass<'alloc> {
             }
             ClassElementName::StaticPropertyName(ast) => {
                 self.visit_enum_class_element_name_variant_static_property_name(ast)
+            }
+            ClassElementName::StaticNumericPropertyName(ast) => {
+                self.visit_enum_class_element_name_variant_static_numeric_property_name(ast)
             }
             ClassElementName::PrivateFieldName(ast) => {
                 self.visit_enum_class_element_name_variant_private_field_name(ast)
@@ -2640,6 +2662,27 @@ pub trait Pass<'alloc> {
     fn leave_enum_class_element_name_variant_static_property_name(
         &mut self,
         ast: &mut StaticPropertyName,
+    ) {
+    }
+
+    fn visit_enum_class_element_name_variant_static_numeric_property_name(
+        &mut self,
+        ast: &mut NumericLiteral,
+    ) {
+        self.enter_enum_class_element_name_variant_static_numeric_property_name(ast);
+        self.visit_numeric_literal(ast);
+        self.leave_enum_class_element_name_variant_static_numeric_property_name(ast);
+    }
+
+    fn enter_enum_class_element_name_variant_static_numeric_property_name(
+        &mut self,
+        ast: &mut NumericLiteral,
+    ) {
+    }
+
+    fn leave_enum_class_element_name_variant_static_numeric_property_name(
+        &mut self,
+        ast: &mut NumericLiteral,
     ) {
     }
 
@@ -4608,6 +4651,17 @@ pub trait Pass<'alloc> {
     }
 
     fn leave_static_property_name(&mut self, ast: &mut StaticPropertyName) {
+    }
+
+    fn visit_numeric_literal(&mut self, ast: &mut NumericLiteral) {
+        self.enter_numeric_literal(ast);
+        self.leave_numeric_literal(ast);
+    }
+
+    fn enter_numeric_literal(&mut self, ast: &mut NumericLiteral) {
+    }
+
+    fn leave_numeric_literal(&mut self, ast: &mut NumericLiteral) {
     }
 
     fn visit_array_expression_element(&mut self, ast: &mut ArrayExpressionElement<'alloc>) {

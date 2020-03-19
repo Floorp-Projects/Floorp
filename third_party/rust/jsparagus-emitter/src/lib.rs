@@ -2,14 +2,24 @@ mod ast_emitter;
 mod compilation_info;
 mod dis;
 mod emitter;
+mod emitter_scope;
 mod forward_jump_emitter;
+mod frame_slot;
+mod gcthings;
 pub mod opcode;
+pub mod opcode_info;
 mod reference_op_emitter;
+mod scope;
+mod scope_notes;
+mod scope_pass;
 mod script_atom_set;
 
 extern crate jsparagus_ast as ast;
 
 pub use crate::emitter::{EmitError, EmitOptions, EmitResult};
+pub use crate::gcthings::GCThing;
+pub use crate::scope::{BindingName, ScopeData};
+pub use crate::scope_notes::ScopeNote;
 pub use dis::dis;
 
 use ast::source_atom_set::SourceAtomSet;
@@ -19,7 +29,8 @@ pub fn emit<'alloc>(
     options: &EmitOptions,
     atoms: SourceAtomSet<'alloc>,
 ) -> Result<EmitResult, EmitError> {
-    ast_emitter::emit_program(ast, options, atoms)
+    let scope_data_map = scope_pass::generate_scope_data(ast);
+    ast_emitter::emit_program(ast, options, atoms, scope_data_map)
 }
 
 #[cfg(test)]

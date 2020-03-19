@@ -77,6 +77,7 @@ pub enum StackValue<'alloc> {
     Module(arena::Box<'alloc, Module<'alloc>>),
     ModuleItems(arena::Box<'alloc, ModuleItems<'alloc>>),
     NamedObjectProperty(arena::Box<'alloc, NamedObjectProperty<'alloc>>),
+    NumericLiteral(arena::Box<'alloc, NumericLiteral>),
     ObjectAssignmentTarget(arena::Box<'alloc, ObjectAssignmentTarget<'alloc>>),
     ObjectBinding(arena::Box<'alloc, ObjectBinding<'alloc>>),
     ObjectExpression(arena::Box<'alloc, ObjectExpression<'alloc>>),
@@ -734,6 +735,15 @@ impl<'alloc> StackValueItem<'alloc> for NamedObjectProperty<'alloc> {
         match sv {
             StackValue::NamedObjectProperty(v) => Ok(v),
             _ => Err(format!("StackValue expected NamedObjectProperty, got {:?}", sv)),
+        }
+    }
+}
+
+impl<'alloc> StackValueItem<'alloc> for NumericLiteral {
+    fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
+        match sv {
+            StackValue::NumericLiteral(v) => Ok(v),
+            _ => Err(format!("StackValue expected NumericLiteral, got {:?}", sv)),
         }
     }
 }
@@ -1564,6 +1574,13 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, NamedObjectProperty<'al
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::NamedObjectProperty(self))
+    }
+}
+
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, NumericLiteral> {
+    type Error = Infallible;
+    fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
+        Ok(StackValue::NumericLiteral(self))
     }
 }
 

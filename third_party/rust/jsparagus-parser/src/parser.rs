@@ -1,7 +1,7 @@
 use crate::simulator::Simulator;
 use ast::SourceLocation;
 use generated_parser::{
-    actions, AstBuilder, AstBuilderDelegate, ErrorCode, ParseError, ParserTrait, Result,
+    full_actions, AstBuilder, AstBuilderDelegate, ErrorCode, ParseError, ParserTrait, Result,
     StackValue, Term, TermValue, TerminalId, Token, TABLES,
 };
 
@@ -47,7 +47,7 @@ impl<'alloc> ParserTrait<'alloc, StackValue<'alloc>> for Parser<'alloc> {
             // Execute any actions, such as reduce actions ast builder actions.
             while state >= TABLES.shift_count {
                 assert!(state < TABLES.action_count + TABLES.shift_count);
-                if actions(self, state)? {
+                if full_actions(self, state)? {
                     return Ok(true);
                 }
                 state = self.state();
@@ -71,12 +71,15 @@ impl<'alloc> ParserTrait<'alloc, StackValue<'alloc>> for Parser<'alloc> {
         self.state_stack.pop().unwrap();
         self.node_stack.pop().unwrap()
     }
-    fn check_not_on_new_line(&self, peek: usize) -> Result<bool> {
+    fn check_not_on_new_line(&mut self, peek: usize) -> Result<bool> {
         let sv = &self.node_stack[self.node_stack.len() - peek].value;
         if let StackValue::Token(ref token) = sv {
-            if token.is_on_new_line {
-                return Err(ParseError::LexerError);
+            if !token.is_on_new_line {
+                return Ok(true);
             }
+            self.rewind(peek - 1);
+            let tv = self.pop();
+            self.try_error_handling(tv)?;
             return Ok(false);
         }
         Err(ParseError::NoLineTerminatorHereExpectedToken)

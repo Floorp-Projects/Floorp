@@ -92,8 +92,8 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
         self.sp -= 1;
         TermValue { term: t, value: () }
     }
-    fn check_not_on_new_line(&self, _peek: usize) -> Result<bool> {
-        Ok(false)
+    fn check_not_on_new_line(&mut self, _peek: usize) -> Result<bool> {
+        Ok(true)
     }
 }
 
