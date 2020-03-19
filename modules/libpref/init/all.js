@@ -2055,19 +2055,6 @@ pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://global/locale/intl.properties");
 pref("font.cjk_pref_fallback_order",        "zh-cn,zh-hk,zh-tw,ja,ko");
 
-// Android-specific pref to control if keydown and keyup events are fired even
-// in during composition.  Note that those prefs are ignored if
-// "dom.keyboardevent.dispatch_during_composition" is false.
-#ifdef MOZ_WIDGET_ANDROID
-  // If true and intl.ime.hack.on_any_apps.fire_key_events_for_composition is
-  // false, dispatch the keydown and keyup events only on IME-unaware web apps.
-  // So, this supports web apps which listen to only keydown or keyup events
-  // to get a change to do something at every text input.
-  pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", true);
-#else
-  pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", false);
-#endif // MOZ_WIDGET_ANDROID
-
 // If you use legacy Chinese IME which puts an ideographic space to composition
 // string as placeholder, this pref might be useful.  If this is true and when
 // web contents forcibly commits composition (e.g., moving focus), the
