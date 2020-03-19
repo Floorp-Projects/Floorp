@@ -304,8 +304,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
 nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
                                    const bool aAccessibleCaretEnabled) {
   for (size_t i = 0; i < ArrayLength(mDomSelections); i++) {
-    mDomSelections[i] = new Selection(this);
-    mDomSelections[i]->SetType(kPresentSelectionTypes[i]);
+    mDomSelections[i] = new Selection(kPresentSelectionTypes[i], this);
   }
 
 #ifdef XP_MACOSX
