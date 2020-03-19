@@ -14,9 +14,10 @@ use std::env::temp_dir;
 fn open_shm_file(id: &str) -> Result<File> {
     #[cfg(target_os = "linux")]
     {
+        let id_cstring = std::ffi::CString::new(id).unwrap();
         unsafe {
             let r = libc::syscall(libc::SYS_memfd_create,
-                                  std::ffi::CString::new(id).unwrap().as_ptr(),
+                                  id_cstring.as_ptr(),
                                   0);
             if r >= 0 {
                 use std::os::unix::io::FromRawFd as _;
