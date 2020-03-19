@@ -1926,6 +1926,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void StartListeningMediaControlEventIfNeeded();
   void StopListeningMediaControlEventIfNeeded();
   RefPtr<MediaControlEventListener> mMediaControlEventListener;
+
+  // Return true if the media element is being used in picture in picture mode.
+  bool IsBeingUsedInPictureInPictureMode() const;
 };
 
 // Check if the context is chrome or has the debugger or tabs permission
