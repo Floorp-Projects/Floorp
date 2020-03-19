@@ -2948,6 +2948,12 @@
   value: true
   mirror: always
 
+# W3C pointer events draft.
+- name: dom.w3c_pointer_events.implicit_capture
+  type: bool
+  value: false
+  mirror: always
+
 # Is support for Navigator.webdriver enabled?
 - name: dom.webdriver.enabled
   type: bool
