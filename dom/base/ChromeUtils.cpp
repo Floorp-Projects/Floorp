@@ -23,6 +23,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/JSWindowActorService.h"
@@ -1185,6 +1186,11 @@ void ChromeUtils::GenerateMediaControlKeysTestEvent(
     service->GenerateMediaControlKeysTestEvent(
         ConvertMediaControlKeysTestEventToMediaControlKeysEvent(aEvent));
   }
+}
+
+/* static */
+nsIContentChild* ChromeUtils::GetContentChild(const GlobalObject&) {
+  return ContentChild::GetSingleton();
 }
 
 /* static */

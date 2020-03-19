@@ -11,9 +11,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/JSWindowActor.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsIContentChild.h"
 
 namespace mozilla {
 namespace dom {
