@@ -62,7 +62,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsISeekableStream.h"
 #include "nsITelemetry.h"
-#if defined(XP_WIN) && defined(EARLY_BETA_OR_EARLIER)
+#if defined(XP_WIN)
 #  include "other/UntrustedModules.h"
 #endif
 #include "nsJSUtils.h"
@@ -685,7 +685,7 @@ TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t* ret) {
 
 NS_IMETHODIMP
 TelemetryImpl::GetUntrustedModuleLoadEvents(JSContext* cx, Promise** aPromise) {
-#if defined(XP_WIN) && defined(EARLY_BETA_OR_EARLIER)
+#if defined(XP_WIN)
   return Telemetry::GetUntrustedModuleLoadEvents(cx, aPromise);
 #else
   return NS_ERROR_NOT_IMPLEMENTED;

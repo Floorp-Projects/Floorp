@@ -852,10 +852,7 @@ var Impl = {
 
             // Start the untrusted modules ping, which reports events where
             // untrusted modules were loaded into the Firefox process.
-            if (
-              AppConstants.EARLY_BETA_OR_EARLIER &&
-              AppConstants.platform == "win"
-            ) {
+            if (AppConstants.platform == "win") {
               TelemetryUntrustedModulesPing.start();
             }
           }
