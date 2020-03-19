@@ -32,7 +32,7 @@ pub struct Simulator<'alloc, 'parser> {
 }
 
 impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
-    fn shift(&mut self, tv: TermValue<()>) -> Result<bool> {
+    fn shift(&mut self, tv: TermValue<()>) -> Result<'alloc, bool> {
         // Shift the new terminal/nonterminal and its associated value.
         let mut state = self.state();
         assert!(state < TABLES.shift_count);
@@ -92,8 +92,8 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
         self.sp -= 1;
         TermValue { term: t, value: () }
     }
-    fn check_not_on_new_line(&self, _peek: usize) -> Result<bool> {
-        Ok(false)
+    fn check_not_on_new_line(&mut self, _peek: usize) -> Result<'alloc, bool> {
+        Ok(true)
     }
 }
 
@@ -122,7 +122,7 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
         }
     }
 
-    pub fn write_token(&mut self, token: &Token) -> Result<()> {
+    pub fn write_token(&mut self, token: &Token) -> Result<'alloc, ()> {
         // Shift the token with the associated StackValue.
         let accept = self.shift(TermValue {
             term: Term::Terminal(token.terminal_id),
@@ -134,7 +134,7 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
         Ok(())
     }
 
-    pub fn close(&mut self, _position: usize) -> Result<()> {
+    pub fn close(&mut self, _position: usize) -> Result<'alloc, ()> {
         // Shift the End terminal with the associated StackValue.
         let accept = self.shift(TermValue {
             term: Term::Terminal(TerminalId::End),
@@ -152,7 +152,7 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
     }
 
     // Simulate the action of Parser::try_error_handling.
-    fn try_error_handling(&mut self, t: TermValue<()>) -> Result<bool> {
+    fn try_error_handling(&mut self, t: TermValue<()>) -> Result<'alloc, bool> {
         if let Term::Terminal(term) = t.term {
             let bogus_loc = SourceLocation::new(0, 0);
             let token = &Token::basic_token(term, bogus_loc);

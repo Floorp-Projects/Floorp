@@ -127,7 +127,7 @@ fr_CA{
             mong{"Chiffres mongols"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         category-list{"{0} : {1}"}
     }

@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import argparse
 import glob as pyglob
+import io as pyio
 import json
 import os
 import sys
@@ -237,6 +238,29 @@ def add_copy_input_requests(requests, config, common_vars):
     return result
 
 
+class IO(object):
+    """I/O operations required when computing the build actions"""
+
+    def __init__(self, src_dir):
+        self.src_dir = src_dir
+
+    def glob(self, pattern):
+        absolute_paths = pyglob.glob(os.path.join(self.src_dir, pattern))
+        # Strip off the absolute path suffix so we are left with a relative path.
+        relative_paths = [v[len(self.src_dir)+1:] for v in sorted(absolute_paths)]
+        # For the purposes of icutools.databuilder, force Unix-style directory separators.
+        # Within the Python code, including BUILDRULES.py and user-provided config files,
+        # directory separators are normalized to '/', including on Windows platforms.
+        return [v.replace("\\", "/") for v in relative_paths]
+
+    def read_locale_deps(self, tree):
+        return self._read_json("%s/LOCALE_DEPS.json" % tree)
+
+    def _read_json(self, filename):
+        with pyio.open(os.path.join(self.src_dir, filename), "r", encoding="utf-8-sig") as f:
+            return json.load(CommentStripper(f))
+
+
 def main(argv):
     args = flag_parser.parse_args(argv)
     config = Config(args)
@@ -252,15 +276,11 @@ def main(argv):
             key: "$(%s)" % key
             for key in list(makefile_vars.keys()) + makefile_env
         }
-        common["GLOB_DIR"] = args.src_dir
         common["FILTERS_DIR"] = config.filter_dir
         common["CWD_DIR"] = os.getcwd()
     else:
         makefile_vars = None
         common = {
-            # GLOB_DIR is used now, whereas IN_DIR is used during execution phase.
-            # There is no useful distinction in unix-exec or windows-exec mode.
-            "GLOB_DIR": args.src_dir,
             "SRC_DIR": args.src_dir,
             "IN_DIR": args.src_dir,
             "OUT_DIR": args.out_dir,
@@ -272,14 +292,6 @@ def main(argv):
             "ICUDATA_CHAR": "l"
         }
 
-    def glob(pattern):
-        result_paths = pyglob.glob("{GLOB_DIR}/{PATTERN}".format(
-            GLOB_DIR = args.src_dir,
-            PATTERN = pattern
-        ))
-        # For the purposes of icutools.databuilder, force Unix-style directory separators.
-        return [v.replace("\\", "/")[len(args.src_dir)+1:] for v in sorted(result_paths)]
-
     # Automatically load BUILDRULES from the src_dir
     sys.path.append(args.src_dir)
     try:
@@ -288,7 +300,8 @@ def main(argv):
         print("Cannot find BUILDRULES! Did you set your --src_dir?", file=sys.stderr)
         sys.exit(1)
 
-    requests = BUILDRULES.generate(config, glob, common)
+    io = IO(args.src_dir)
+    requests = BUILDRULES.generate(config, io, common)
 
     if "fileReplacements" in config.filters_json_data:
         tmp_in_dir = "{TMP_DIR}/in".format(**common)
@@ -298,7 +311,7 @@ def main(argv):
             common["IN_DIR"] = tmp_in_dir
         requests = add_copy_input_requests(requests, config, common)
 
-    requests = filtration.apply_filters(requests, config)
+    requests = filtration.apply_filters(requests, config, io)
     requests = utils.flatten_requests(requests, config, common)
 
     build_dirs = utils.compute_directories(requests)

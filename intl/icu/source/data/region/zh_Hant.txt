@@ -315,5 +315,5 @@ zh_Hant{
         SZ{"史瓦濟蘭"}
         TL{"東帝汶"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

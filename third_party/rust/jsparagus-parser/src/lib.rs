@@ -37,7 +37,7 @@ pub fn parse_script<'alloc>(
     source: &'alloc str,
     _options: &ParseOptions,
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
-) -> Result<arena::Box<'alloc, Script<'alloc>>> {
+) -> Result<'alloc, arena::Box<'alloc, Script<'alloc>>> {
     Ok(parse(allocator, source, START_STATE_SCRIPT, atoms)?.to_ast()?)
 }
 
@@ -46,7 +46,7 @@ pub fn parse_module<'alloc>(
     source: &'alloc str,
     _options: &ParseOptions,
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
-) -> Result<arena::Box<'alloc, Module<'alloc>>> {
+) -> Result<'alloc, arena::Box<'alloc, Module<'alloc>>> {
     Ok(parse(allocator, source, START_STATE_MODULE, atoms)?.to_ast()?)
 }
 
@@ -55,7 +55,7 @@ fn parse<'alloc>(
     source: &'alloc str,
     start_state: usize,
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
-) -> Result<StackValue<'alloc>> {
+) -> Result<'alloc, StackValue<'alloc>> {
     let mut tokens = Lexer::new(allocator, source.chars(), atoms.clone());
 
     TABLES.check();
@@ -76,7 +76,7 @@ pub fn is_partial_script<'alloc>(
     allocator: &'alloc bumpalo::Bump,
     source: &'alloc str,
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
-) -> Result<bool> {
+) -> Result<'alloc, bool> {
     let mut parser = Parser::new(
         AstBuilder::new(allocator, atoms.clone()),
         START_STATE_SCRIPT,

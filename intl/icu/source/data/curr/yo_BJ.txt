@@ -252,5 +252,5 @@ yo_BJ{
             other{"owóníná àìmɔ̀"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

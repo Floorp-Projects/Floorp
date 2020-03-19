@@ -163,7 +163,7 @@ ha{
             }
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         generic{
             DateTimePatterns{

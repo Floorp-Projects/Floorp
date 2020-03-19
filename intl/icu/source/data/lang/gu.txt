@@ -858,7 +858,7 @@ gu{
         PINYIN{"પિનયિન રોમનાઇઝેશન"}
         WADEGILE{"વેડ-ગિલ્સ રોમનાઇઝેશન"}
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — તમામ"}
         category-list{"{0}: {1}"}

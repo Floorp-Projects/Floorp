@@ -13,7 +13,7 @@ LispTokenizer = lexer.LexicalGrammar("( )", SYMBOL=r'[!%&*+:<=>?@A-Z^_a-z~]+')
 
 
 def prod(body, method_name):
-    return Production(body, CallMethod(method_name, list(range(len(body)))))
+    return Production(body, CallMethod(method_name, list(range(len(body))), "AstBuilder", False))
 
 
 class GenTestCase(unittest.TestCase):
@@ -835,7 +835,7 @@ class GenTestCase(unittest.TestCase):
                 [name, "(", ")", ";"],
                 [name, "=", name, ";"],
                 Production(["yield", name, ";"],
-                           reducer=CallMethod("yield_stmt", [1]),
+                           reducer=CallMethod("yield_stmt", [1], "AstBuilder", False),
                            condition=('Yield', True)),
             ], None),
             'name': NtDef(('Yield',), [
@@ -843,7 +843,7 @@ class GenTestCase(unittest.TestCase):
                 # Specifically ask for a method here, because otherwise we
                 # wouldn't get one and then type checking would fail.
                 Production(["yield"],
-                           CallMethod("yield_as_name", []),
+                           CallMethod("yield_as_name", [], "AstBuilder", False),
                            condition=('Yield', False)),
             ], None),
         }, variable_terminals=["IDENT"])
@@ -1072,7 +1072,7 @@ class GenTestCase(unittest.TestCase):
         """A method can be called only in an intermediate reduce expression."""
 
         # The reduce expression `f(g($0))`.
-        reducer = CallMethod("f", [CallMethod("g", [0])])
+        reducer = CallMethod("f", [CallMethod("g", [0], "AstBuilder", False)], "AstBuilder", False)
 
         # The grammar `goal ::= NAME => f(g($1))`.
         grammar = Grammar(

@@ -1686,10 +1686,7 @@ class nsContextMenu {
     // Let's try to unescape it using a character set
     // in case the address is not ASCII.
     try {
-      addresses = Services.textToSubURI.unEscapeURIForUI(
-        this.contentData.charSet,
-        addresses
-      );
+      addresses = Services.textToSubURI.unEscapeURIForUI(addresses);
     } catch (ex) {
       // Do nothing.
     }

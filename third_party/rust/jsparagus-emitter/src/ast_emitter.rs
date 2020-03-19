@@ -4,13 +4,15 @@
 
 use crate::compilation_info::CompilationInfo;
 use crate::emitter::{EmitError, EmitOptions, EmitResult, InstructionWriter};
+use crate::emitter_scope::{EmitterScopeStack, NameLocation};
 use crate::opcode::Opcode;
 use crate::reference_op_emitter::{
-    AssignmentEmitter, CallEmitter, ElemReferenceEmitter, GetElemEmitter, GetNameEmitter,
-    GetPropEmitter, GetSuperElemEmitter, GetSuperPropEmitter, NameReferenceEmitter, NewEmitter,
-    PropReferenceEmitter,
+    AssignmentEmitter, CallEmitter, DeclarationEmitter, ElemReferenceEmitter, GetElemEmitter,
+    GetNameEmitter, GetPropEmitter, GetSuperElemEmitter, GetSuperPropEmitter, NameReferenceEmitter,
+    NewEmitter, PropReferenceEmitter,
 };
-use ast::source_atom_set::SourceAtomSet;
+use crate::scope::ScopeDataMap;
+use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet, SourceAtomSetIndex};
 use ast::types::*;
 
 use crate::forward_jump_emitter::{ForwardJumpEmitter, JumpKind};
@@ -20,8 +22,9 @@ pub fn emit_program<'alloc>(
     ast: &Program,
     options: &EmitOptions,
     atoms: SourceAtomSet<'alloc>,
-) -> Result<EmitResult, EmitError> {
-    let mut emitter = AstEmitter::new(options, atoms);
+    scope_data_map: ScopeDataMap,
+) -> Result<EmitResult<'alloc>, EmitError> {
+    let mut emitter = AstEmitter::new(options, atoms, scope_data_map);
 
     match ast {
         Program::Script(script) => emitter.emit_script(script)?,
@@ -37,22 +40,37 @@ pub struct AstEmitter<'alloc, 'opt> {
     pub emit: InstructionWriter,
     options: &'opt EmitOptions,
     compilation_info: CompilationInfo<'alloc>,
+    scope_stack: EmitterScopeStack,
 }
 
 impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
-    fn new(options: &'opt EmitOptions, atoms: SourceAtomSet<'alloc>) -> Self {
+    fn new(
+        options: &'opt EmitOptions,
+        atoms: SourceAtomSet<'alloc>,
+        scope_data_map: ScopeDataMap,
+    ) -> Self {
         Self {
             emit: InstructionWriter::new(),
             options,
-            compilation_info: CompilationInfo::new(atoms),
+            compilation_info: CompilationInfo::new(atoms, scope_data_map),
+            scope_stack: EmitterScopeStack::new(),
         }
     }
 
+    pub fn lookup_name(&mut self, name: SourceAtomSetIndex) -> NameLocation {
+        self.scope_stack.lookup_name(name)
+    }
+
     fn emit_script(&mut self, ast: &Script) -> Result<(), EmitError> {
+        self.scope_stack
+            .enter_global(&mut self.emit, &self.compilation_info.scope_data_map);
+
         for statement in &ast.statements {
             self.emit_statement(statement)?;
         }
         self.emit.ret_rval();
+
+        self.scope_stack.leave_global(&mut self.emit);
 
         Ok(())
     }
@@ -62,8 +80,20 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             Statement::ClassDeclaration(_) => {
                 return Err(EmitError::NotImplemented("TODO: ClassDeclaration"));
             }
-            Statement::BlockStatement { .. } => {
-                return Err(EmitError::NotImplemented("TODO: BlockStatement"));
+            Statement::BlockStatement { block, .. } => {
+                let scope_data_index = self.compilation_info.scope_data_map.get_index(block);
+
+                self.scope_stack.enter_lexical(
+                    &mut self.emit,
+                    &mut self.compilation_info.scope_data_map,
+                    scope_data_index,
+                );
+
+                for statement in &block.statements {
+                    self.emit_statement(statement)?;
+                }
+
+                self.scope_stack.leave_lexical(&mut self.emit);
             }
             Statement::BreakStatement { .. } => {
                 return Err(EmitError::NotImplemented("TODO: BreakStatement"));
@@ -122,10 +152,8 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             Statement::TryFinallyStatement { .. } => {
                 return Err(EmitError::NotImplemented("TODO: TryFinallyStatement"));
             }
-            Statement::VariableDeclarationStatement(_ast) => {
-                return Err(EmitError::NotImplemented(
-                    "TODO: VariableDeclarationStatement",
-                ));
+            Statement::VariableDeclarationStatement(ast) => {
+                self.emit_variable_declaration_statement(ast)?;
             }
             Statement::WhileStatement { .. } => {
                 return Err(EmitError::NotImplemented("TODO: WhileStatement"));
@@ -137,6 +165,47 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                 return Err(EmitError::NotImplemented("TODO: FunctionDeclaration"));
             }
         };
+
+        Ok(())
+    }
+
+    fn emit_variable_declaration_statement(
+        &mut self,
+        ast: &VariableDeclaration,
+    ) -> Result<(), EmitError> {
+        match ast.kind {
+            VariableDeclarationKind::Var { .. } => {}
+            VariableDeclarationKind::Let { .. } | VariableDeclarationKind::Const { .. } => {}
+        }
+
+        for decl in &ast.declarators {
+            if let Some(init) = &decl.init {
+                self.emit_declaration_assignment(&decl.binding, &init)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn emit_declaration_assignment(
+        &mut self,
+        binding: &Binding,
+        init: &Expression,
+    ) -> Result<(), EmitError> {
+        match binding {
+            Binding::BindingIdentifier(binding) => {
+                let name = binding.name.value;
+                DeclarationEmitter {
+                    lhs: |emitter| Ok(NameReferenceEmitter { name }.emit_for_declaration(emitter)),
+                    rhs: |emitter| emitter.emit_expression(init),
+                }
+                .emit(self)?;
+                self.emit.pop();
+            }
+            _ => {
+                return Err(EmitError::NotImplemented("BindingPattern"));
+            }
+        }
 
         Ok(())
     }
@@ -159,7 +228,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
 
         if let Some(alternate) = &if_statement.alternate {
             let then_jump = ForwardJumpEmitter {
-                jump: JumpKind::IfEq,
+                jump: JumpKind::Goto,
             }
             .emit(self);
             // ^^ part of then branch
@@ -196,8 +265,8 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                 self.emit.null();
             }
 
-            Expression::LiteralNumericExpression { value, .. } => {
-                self.emit_numeric_expression(*value);
+            Expression::LiteralNumericExpression(num) => {
+                self.emit_numeric_expression(num.value);
             }
 
             Expression::LiteralRegExpExpression { .. } => {
@@ -444,23 +513,39 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                     expression,
                     ..
                 },
-            )) => {
-                self.emit_expression(expression)?;
-
-                match property_name {
-                    PropertyName::StaticPropertyName(StaticPropertyName { value, .. }) => {
-                        let name_index = self.emit.get_atom_index(*value);
-                        self.emit.init_prop(name_index);
-                    }
-                    PropertyName::ComputedPropertyName(ComputedPropertyName { .. }) => {
-                        return Err(EmitError::NotImplemented("TODO: computed property"))
+            )) => match property_name {
+                PropertyName::StaticPropertyName(StaticPropertyName { value, .. }) => {
+                    match self.to_property_index(*value) {
+                        Some(value) => {
+                            self.emit.double_(value as f64);
+                            self.emit_expression(expression)?;
+                            self.emit.init_elem();
+                        }
+                        None => {
+                            self.emit_expression(expression)?;
+                            let name_index = self.emit.get_atom_index(*value);
+                            self.emit.init_prop(name_index);
+                        }
                     }
                 }
-            }
+                PropertyName::StaticNumericPropertyName(NumericLiteral { value, .. }) => {
+                    self.emit.double_(*value);
+                    self.emit_expression(expression)?;
+                    self.emit.init_elem();
+                }
+                PropertyName::ComputedPropertyName(ComputedPropertyName { .. }) => {
+                    return Err(EmitError::NotImplemented("TODO: computed property"))
+                }
+            },
             _ => return Err(EmitError::NotImplemented("TODO: non data property")),
         }
 
         Ok(())
+    }
+
+    fn to_property_index(&self, index: SourceAtomSetIndex) -> Option<u32> {
+        let s = self.compilation_info.atoms.get(index);
+        s.parse::<u32>().ok()
     }
 
     fn emit_array_expression(&mut self, array: &ArrayExpression) -> Result<(), EmitError> {
@@ -637,6 +722,9 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             callee: |emitter| match callee {
                 ExpressionOrSuper::Expression(expr) => match &**expr {
                     Expression::IdentifierExpression(IdentifierExpression { name, .. }) => {
+                        if name.value == CommonSourceAtomSetIndices::eval() {
+                            return Err(EmitError::NotImplemented("TODO: direct eval"));
+                        }
                         Ok(NameReferenceEmitter { name: name.value }.emit_for_call(emitter))
                     }
 

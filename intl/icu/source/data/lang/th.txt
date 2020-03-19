@@ -1060,7 +1060,7 @@ th{
         VALLADER{"วัลลาเดอร์"}
         WADEGILE{"การถอดอักษรแบบเวด-ไจลส์"}
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — ทั้งหมด"}
         category-list{"{0}: {1}"}

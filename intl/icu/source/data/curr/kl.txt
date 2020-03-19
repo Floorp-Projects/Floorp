@@ -17,5 +17,5 @@ kl{
             other{"euro"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

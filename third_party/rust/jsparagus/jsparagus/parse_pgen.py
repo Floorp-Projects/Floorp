@@ -20,15 +20,19 @@ pgen_lexer = LexicalGrammar(
     IDENT=r'[A-Za-z_](?:\w|[_-])*',
     STR=r'"[^\\\n"]*"',
     MATCH=r'\$(?:0|[1-9][0-9]*)',
+    COMMENT=r'//.*',
 )
 
 
-def list_of(e):
+def list_of(e, allow_comments = False):
     nt = e + 's'
-    return [
+    prods = [
         Production([e], CallMethod('single', (0,))),
         Production([nt, e], CallMethod('append', (0, 1))),
     ]
+    if allow_comments:
+        prods.append(Production(['COMMENT'], CallMethod('empty', (0,))))
+    return prods
 
 
 def call_method(name, body):
@@ -66,9 +70,10 @@ pgen_grammar = Grammar(
             prod(['nt_defs', 'nt_def'], 'nt_defs_append'),
         ],
         'nt_def': [
-            prod([Optional('goal'), 'nt', 'IDENT', '{', gen.Optional('prods'), '}'], 'nt_def'),
+            prod([Optional('COMMENT'), Optional('goal'), 'nt', 'IDENT', '{',
+                  gen.Optional('prods'), '}'], 'nt_def'),
         ],
-        'prods': list_of('prod'),
+        'prods': list_of('prod', allow_comments = True),
         'prod': [
             prod(['terms', gen.Optional('reducer'), ';'], 'prod'),
         ],
@@ -96,7 +101,7 @@ pgen_grammar = Grammar(
         ],
     },
     goal_nts=['grammar'],
-    variable_terminals=['IDENT', 'STR', 'MATCH']
+    variable_terminals=['IDENT', 'STR', 'MATCH', 'COMMENT']
 )
 
 
@@ -131,6 +136,9 @@ class AstBuilder:
         nonterminals, goal_nts = nt_defs
         return (token_defs or default_token_list, nonterminals, goal_nts)
 
+    def empty(self, value):
+        return []
+
     def single(self, value):
         return [value]
 
@@ -146,6 +154,9 @@ class AstBuilder:
     def var_token(self, name):
         return (name, None)
 
+    def comment(self, comment):
+        pass
+
     def nt_defs_single(self, nt_def):
         return self.nt_defs_append(({}, []), nt_def)
 
@@ -159,7 +170,7 @@ class AstBuilder:
             goal_nts.append(nt)
         return grammar, goal_nts
 
-    def nt_def(self, goal_kw, ident, prods):
+    def nt_def(self, _comment, goal_kw, ident, prods):
         is_goal = goal_kw == "goal"
         prods = [Production(body, reducer) for body, reducer in prods]
         return (is_goal, ident, prods)

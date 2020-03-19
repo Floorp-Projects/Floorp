@@ -16,9 +16,12 @@
 ##  unicode/ucnv.h -	0
 ##
 ##    .. etc.  Anything other than zero is an error. (except for the deprecation tests, where '1' is the correct value)
-##              
+##
 ##  If a header fails the C compile test it is likely because the header is a
-##  C++ header and isn't properly guarded by the U_SHOW_CPLUSPLUS_API macro.
+##  C++ header and it isn't properly guarded by the U_SHOW_CPLUSPLUS_API macro.
+##
+##  If a header fails the cppguardtest test it is likely because the header doesn't
+##  include the utypes.h header first *before* using the macro U_SHOW_CPLUSPLUS_API.
 ##
 ##  If a header fails because it is deprecated, add it to the 'dfiles.txt'
 ##
@@ -37,7 +40,7 @@ all:
 	@echo Please read this Makefile for more information.
 	@echo run \'$(MAKE) check\' to run the test "(use -k if you don't want to stop on errs)"
 
-check: dtest ctest cpptest drafttest deprtest internaltest obsoletetest
+check: dtest ctest cpptest drafttest deprtest internaltest obsoletetest cppguardtest
 
 headertest:
 	@FAIL=0;stub=ht_stub_$(NAME.headers).$(SUFFIX.headers); for file in "$(prefix)/include/unicode"/*.h ; do \
@@ -108,6 +111,24 @@ dtest:
 	echo "$@: $$NONE - exit status $$FAIL" ; \
 	exit $$FAIL
 
+cppguardtest:
+	@FAIL=0;stub=ht_stub_cppguardtest.cpp; for file in "$(prefix)/include/unicode"/*.h ; do \
+		incfile=`basename $$file` ; \
+		if grep -q "U_SHOW_CPLUSPLUS_API" $$file ; then \
+			echo "$@ unicode/$$incfile" ; \
+			echo "#include <unicode/$$incfile>" > $$stub ; \
+			echo 'void junk(){}' >> $$stub ; \
+			echo '#if !defined(U_SHOW_CPLUSPLUS_API)' >> $$stub ; \
+			echo "#error The header '$$incfile' refers to the macro U_SHOW_CPLUSPLUS_API (defined in utypes.h) but either does not include utypes.h or does so incorrectly." >> $$stub ; \
+			echo '#endif' >> $$stub ; \
+			$(COMPILE.cc) $(cppflags) $$stub || FAIL=1 ; \
+			rm -f $$stub; \
+		else \
+			echo "$@ skipping unicode/$$incfile" ; \
+		fi ; \
+	done ; \
+	exit $$FAIL
+
 clean:
 	-@rm -f ht_*
 
@@ -118,4 +139,4 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	&& CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-.PHONY:	doclean check all headertest cpptest dtest ctest clean distclean
+.PHONY:	doclean check all headertest cpptest dtest cppguardtest ctest clean distclean

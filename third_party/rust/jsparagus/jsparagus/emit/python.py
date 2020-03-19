@@ -16,7 +16,7 @@ def write_python_parse_table(out, parse_table):
         assert isinstance(act, Action)
         assert not act.is_inconsistent()
         if isinstance(act, Reduce):
-            out.write("{}replay = [StateTermValue(0, {}, value)]\n".format(indent, repr(act.nt)))
+            out.write("{}replay = [StateTermValue(0, {}, value, False)]\n".format(indent, repr(act.nt)))
             if act.replay > 0:
                 out.write("{}replay = replay + parser.stack[-{}:]\n".format(indent, act.replay))
             if act.replay + act.pop > 0:
@@ -26,10 +26,8 @@ def write_python_parse_table(out, parse_table):
         if isinstance(act, Lookahead):
             raise ValueError("Unexpected Lookahead action")
         if isinstance(act, CheckNotOnNewLine):
-            # TODO: This code does not handle larger lookahead.
-            if act.offset == -1:
-                out.write("{}if lexer.saw_line_terminator():\n".format(indent))
-                out.write("{}    raise ShiftError()\n".format(indent))
+            out.write("{}if not parser.check_not_on_new_line(lexer, {}):\n".format(indent, -act.offset))
+            out.write("{}    return\n".format(indent))
             return indent, True
         if isinstance(act, FilterFlag):
             out.write("{}if parser.flags[{}][-1] == {}:\n".format(indent, act.flag, act.value))
@@ -92,7 +90,7 @@ def write_python_parse_table(out, parse_table):
                 raise
             if res:
                 out.write("{}top = parser.stack.pop()\n".format(indent))
-                out.write("{}top = StateTermValue({}, top.term, top.value)\n"
+                out.write("{}top = StateTermValue({}, top.term, top.value, top.new_line)\n"
                           .format(indent, dest))
                 out.write("{}parser.stack.append(top)\n".format(indent))
             out.write("{}return\n".format(indent))

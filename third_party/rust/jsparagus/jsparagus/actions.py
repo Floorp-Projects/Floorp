@@ -211,17 +211,40 @@ class FunCall(Action):
     pushpathne non-terminal. The replay attribute of a reduce action correspond
     to the number of stack elements which would have to be popped and pushed
     again using the parser table after reducing this operation. """
-    __slots__ = 'method', 'offset', 'args', 'set_to'
-    def __init__(self, method, alias_read, alias_write, args, set_to = None, offset = 0):
+    __slots__ = 'trait', 'method', 'offset', 'args', 'fallible', 'set_to'
+    def __init__(self, method, args,
+                 trait = "AstBuilder",
+                 fallible = False,
+                 set_to = "val",
+                 offset = 0,
+                 alias_read = [],
+                 alias_write = []):
         super().__init__(alias_read, alias_write)
+        self.trait = trait       # Trait on which this method is implemented.
         self.method = method     # Method and argument to be read for calling it.
+        self.fallible = fallible # Whether the function call can fail.
         self.offset = offset     # Offset to add to each argument offset.
         self.args = args         # Tuple of arguments offsets.
         self.set_to = set_to     # Temporary variable name to set with the result.
     def __str__(self):
-        return "FunCall({}, {}, {}, {})".format(self.method, self.offset, self.args, self.set_to)
+        return "{} = {}::{}({}){} [off: {}]".format(
+            self.set_to, self.trait, self.method,
+            ", ".join(map(str, self.args)),
+            self.fallible and '?' or '',
+            self.offset)
+    def __repr__(self):
+        return "FunCall({})".format(', '.join(map(repr, [
+            self.trait, self.method, self.fallible, self.read, self.write,
+            self.args, self.set_to, self.offset
+        ])))
     def shifted_action(self, shifted_term):
-        return FunCall(self.method, self.read, self.write, self.args, self.set_to, offset = self.offset + 1)
+        return FunCall(self.method, self.args,
+                       trait = self.trait,
+                       fallible = self.fallible,
+                       set_to = self.set_to,
+                       offset = self.offset + 1,
+                       alias_read = self.read,
+                       alias_write = self.write)
 
 class Seq(Action):
     """Aggregate multiple actions in one statement. Note, that the aggregated
@@ -237,6 +260,8 @@ class Seq(Action):
         assert all([not a.is_condition() for a in actions[1:]])
         assert all([not a.update_stack() for a in actions[:-1]])
     def __str__(self):
+        return "{{ {} }}".format("; ".join(map(str, self.actions)))
+    def __repr__(self):
         return "Seq({})".format(repr(self.actions))
     def is_condition(self):
         return self.actions[0].is_condition()

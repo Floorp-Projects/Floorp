@@ -888,7 +888,7 @@ pt{
         VALENCIA{"valenciano"}
         WADEGILE{"romanização Wade-Giles"}
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — todos"}
         category-list{"{0}: {1}"}

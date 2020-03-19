@@ -840,7 +840,7 @@ kn{
             vaii{"ವಾಯ್ ಅಂಕೆಗಳು"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — ಎಲ್ಲ"}
         category-list{"{0}: {1}"}

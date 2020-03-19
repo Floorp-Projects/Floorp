@@ -1,6 +1,6 @@
-# GraphemeBreakTest-12.0.0.txt
-# Date: 2019-02-21, 07:57:26 GMT
-# © 2019 Unicode®, Inc.
+# GraphemeBreakTest-cldr-13.0.0.txt
+# Date: 2020-02-07, 21:43:46 GMT
+# © 2020 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -760,15 +760,6 @@
 ÷ 0061 × 0308 ÷ 0062 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] COMBINING DIAERESIS (Extend_ExtCccZwj) ÷ [999.0] LATIN SMALL LETTER B (Other) ÷ [0.3]
 ÷ 0061 × 0903 ÷ 0062 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.1] DEVANAGARI SIGN VISARGA (SpacingMark) ÷ [999.0] LATIN SMALL LETTER B (Other) ÷ [0.3]
 ÷ 0061 ÷ 0600 × 0062 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) ÷ [999.0] ARABIC NUMBER SIGN (Prepend) × [9.2] LATIN SMALL LETTER B (Other) ÷ [0.3]
-÷ 0915 ÷ 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) ÷ [999.0] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
-÷ 0915 × 094D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
-÷ 0915 × 094D × 200D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
-÷ 0915 × 093C × 200D × 094D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN NUKTA (Extend_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
-÷ 0915 × 093C × 094D × 200D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN NUKTA (Extend_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
-÷ 0915 × 094D × 0924 × 094D × 092F ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER YA (LinkingConsonant) ÷ [0.3]
-÷ 0915 × 094D ÷ 0061 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) ÷ [999.0] LATIN SMALL LETTER A (Other) ÷ [0.3]
-÷ 0061 × 094D ÷ 0924 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) ÷ [999.0] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
-÷ 003F × 094D ÷ 0924 ÷	#  ÷ [0.2] QUESTION MARK (Other) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) ÷ [999.0] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
 ÷ 1F476 × 1F3FF ÷ 1F476 ÷	#  ÷ [0.2] BABY (ExtPict) × [9.0] EMOJI MODIFIER FITZPATRICK TYPE-6 (Extend) ÷ [999.0] BABY (ExtPict) ÷ [0.3]
 ÷ 0061 × 1F3FF ÷ 1F476 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] EMOJI MODIFIER FITZPATRICK TYPE-6 (Extend) ÷ [999.0] BABY (ExtPict) ÷ [0.3]
 ÷ 0061 × 1F3FF ÷ 1F476 × 200D × 1F6D1 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] EMOJI MODIFIER FITZPATRICK TYPE-6 (Extend) ÷ [999.0] BABY (ExtPict) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [11.0] OCTAGONAL SIGN (ExtPict) ÷ [0.3]
@@ -777,7 +768,17 @@
 ÷ 0061 × 200D ÷ 1F6D1 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) ÷ [999.0] OCTAGONAL SIGN (ExtPict) ÷ [0.3]
 ÷ 2701 × 200D × 2701 ÷	#  ÷ [0.2] UPPER BLADE SCISSORS (Other) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [11.0] UPPER BLADE SCISSORS (Other) ÷ [0.3]
 ÷ 0061 × 200D ÷ 2701 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) ÷ [999.0] UPPER BLADE SCISSORS (Other) ÷ [0.3]
+÷ 0915 ÷ 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) ÷ [999.0] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 094D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 094D × 094D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 094D × 200D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 093C × 200D × 094D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN NUKTA (Extend_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 093C × 094D × 200D × 0924 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN NUKTA (Extend_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 094D × 0924 × 094D × 092F ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) × [9.3] DEVANAGARI LETTER YA (LinkingConsonant) ÷ [0.3]
+÷ 0915 × 094D ÷ 0061 ÷	#  ÷ [0.2] DEVANAGARI LETTER KA (LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) ÷ [999.0] LATIN SMALL LETTER A (Other) ÷ [0.3]
+÷ 0061 × 094D ÷ 0924 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) ÷ [999.0] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
+÷ 003F × 094D ÷ 0924 ÷	#  ÷ [0.2] QUESTION MARK (Other) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_Virama_ExtCccZwj) ÷ [999.0] DEVANAGARI LETTER TA (LinkingConsonant) ÷ [0.3]
 #
-# Lines: 755
+# Lines: 756
 #
 # EOF

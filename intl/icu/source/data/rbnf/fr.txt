@@ -201,5 +201,5 @@ fr{
             "2: =%%spellout-ordinal=;",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

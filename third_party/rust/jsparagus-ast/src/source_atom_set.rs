@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::set::IndexSet;
 
 /// Index into SourceAtomSet.atoms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -9,9 +9,11 @@ impl SourceAtomSetIndex {
     fn new(index: usize) -> Self {
         Self { index }
     }
+}
 
-    pub fn into_raw(self) -> usize {
-        self.index
+impl From<SourceAtomSetIndex> for usize {
+    fn from(index: SourceAtomSetIndex) -> usize {
+        index.index
     }
 }
 
@@ -158,18 +160,14 @@ for_all_common_atoms!(define_struct);
 /// WARNING: This set itself does *NOT* map to JSScript::atoms().
 #[derive(Debug)]
 pub struct SourceAtomSet<'alloc> {
-    atoms: Vec<String>,
-
-    /// Cache for the case the same string is inserted multiple times.
-    atom_indices: HashMap<&'alloc str, SourceAtomSetIndex>,
+    atoms: IndexSet<&'alloc str>,
 }
 
 impl<'alloc> SourceAtomSet<'alloc> {
     // Create a set, with all common atoms inserted.
     pub fn new() -> Self {
         let mut result = Self {
-            atoms: Vec::new(),
-            atom_indices: HashMap::new(),
+            atoms: IndexSet::new(),
         };
         result.insert_common_atoms();
         result
@@ -181,10 +179,7 @@ impl<'alloc> SourceAtomSet<'alloc> {
             ($self: ident,
              $(($s:tt, $method:ident, $variant:ident),)*) => {
                 $(
-                    $self.atoms.push($s.to_string());
-                    $self
-                        .atom_indices
-                        .insert($s, CommonSourceAtomSetIndices::$method());
+                    $self.atoms.insert($s);
                 )*
             };
         }
@@ -197,29 +192,22 @@ impl<'alloc> SourceAtomSet<'alloc> {
     // it with the result of this method.
     pub fn new_uninitialized() -> Self {
         Self {
-            atoms: Vec::new(),
-            atom_indices: HashMap::new(),
+            atoms: IndexSet::new(),
         }
     }
 
     pub fn insert(&mut self, s: &'alloc str) -> SourceAtomSetIndex {
-        match self.atom_indices.get(s) {
-            Some(index) => return *index,
-            _ => {}
-        }
-
-        let index = self.atoms.len();
-        self.atoms.push(s.to_string());
-        let result = SourceAtomSetIndex::new(index);
-        self.atom_indices.insert(s, result);
-        result
+        let (index, _) = self.atoms.insert_full(s);
+        SourceAtomSetIndex::new(index)
     }
 
-    pub fn get(&self, index: SourceAtomSetIndex) -> String {
-        self.atoms[index.into_raw()].clone()
+    pub fn get(&self, index: SourceAtomSetIndex) -> &'alloc str {
+        self.atoms.get_index(usize::from(index)).unwrap()
     }
+}
 
-    pub fn into_vec(self) -> Vec<String> {
-        self.atoms
+impl<'alloc> From<SourceAtomSet<'alloc>> for Vec<&'alloc str> {
+    fn from(set: SourceAtomSet<'alloc>) -> Vec<&'alloc str> {
+        set.atoms.into_iter().collect()
     }
 }

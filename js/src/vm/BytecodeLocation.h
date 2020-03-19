@@ -19,6 +19,8 @@ using RawBytecodeLocationOffset = uint32_t;
 class PropertyName;
 class RegExpObject;
 
+enum class FunctionPrefixKind;
+
 class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset_;
 
@@ -95,6 +97,7 @@ class BytecodeLocation {
   inline PropertyName* getPropertyName(const JSScript* script) const;
   inline JS::BigInt* getBigInt(const JSScript* script) const;
   inline js::RegExpObject* getRegExp(const JSScript* script) const;
+  inline js::Scope* getScope(const JSScript* script) const;
 
   uint32_t getSymbolIndex() const {
     MOZ_ASSERT(is(JSOp::Symbol));
@@ -182,6 +185,8 @@ class BytecodeLocation {
 
   bool isStrictEqualityOp() const { return IsStrictEqualityOp(getOp()); }
 
+  bool isStrictSetOp() const { return IsStrictSetPC(rawBytecode_); }
+
   bool isNameOp() const { return IsNameOp(getOp()); }
 
   // Accessors:
@@ -238,6 +243,11 @@ class BytecodeLocation {
   uint32_t getCallArgc() const {
     MOZ_ASSERT(JOF_OPTYPE(getOp()) == JOF_ARGC);
     return GET_ARGC(rawBytecode_);
+  }
+
+  FunctionPrefixKind getFunctionPrefixKind() const {
+    MOZ_ASSERT(is(JSOp::SetFunName));
+    return FunctionPrefixKind(GET_UINT8(rawBytecode_));
   }
 
   int8_t getInt8() const {

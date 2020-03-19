@@ -8,5 +8,5 @@ es_BR{
             "real brasileño",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

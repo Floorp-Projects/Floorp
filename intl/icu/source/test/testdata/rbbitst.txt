@@ -1234,9 +1234,9 @@ Calls to xxx will return an implementor of this interface.  \u2029•</data>
 #     Monkey test failure lines can, with slight reformatting, be copied into this section
 #     as test cases.  The error display from here is more informative.
 #
-<data>•\ufffc•\u30e3\u000c<100>\u1b39\u300a\u002f\u203a\u200b•\ufffc•\uaf64•\udcfb•</data>
+<data>•\ufffc•\u30e3\u000c<100>\u1b39•\u300a\u002f\u203a\u200b•\ufffc•\uaf64•\udcfb•</data>
 <data>•\u114d\u31f3•\ube44\u002d•\u0362\u24e2\u276e\u2014\u205f\ufe16•\uc877•\u0fd0\u000a<100>\u20a3•</data>
-<data>•\u080a\u215b\U0001d7d3\u002c•\u2025\U000e012e•\u02df\u118d\u0029\ua8d6\u0085<100>\u6cc4\u2024\u202f\ufffc•</data>
+<data>•\u080a\u215b\U0001d7d3\u002c\u2025\U000e012e•\u02df\u118d\u0029\ua8d6\u0085<100>\u6cc4\u2024\u202f\ufffc•</data>
 
 # Test for #10176 (in root)
 <line>

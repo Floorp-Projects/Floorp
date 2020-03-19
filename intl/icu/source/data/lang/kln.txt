@@ -48,5 +48,5 @@ kln{
         zh{"kutitab China"}
         zu{"kutitab Zulu"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }
