@@ -2744,6 +2744,8 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
        aAllocation->x, aAllocation->y, aAllocation->width,
        aAllocation->height));
 
+  mBoundsAreValid = true;
+
   LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
   if (mBounds.Size() == size) {
     // We were already resized at nsWindow::OnConfigureEvent() so skip it.
@@ -3529,13 +3531,17 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   // once the window is shown.
   //
   // See https://gitlab.gnome.org/GNOME/gtk/issues/1044
-  if (!mIsShown) {
-    aEvent->changed_mask = static_cast<GdkWindowState>(
-        aEvent->changed_mask & ~GDK_WINDOW_STATE_MAXIMIZED);
-  } else if (aEvent->changed_mask & GDK_WINDOW_STATE_WITHDRAWN &&
-             aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
-    aEvent->changed_mask = static_cast<GdkWindowState>(
-        aEvent->changed_mask | GDK_WINDOW_STATE_MAXIMIZED);
+  //
+  // This is fixed in Gtk 3.24+
+  if (gtk_check_version(3, 24, 0) != nullptr) {
+    if (!mIsShown) {
+      aEvent->changed_mask = static_cast<GdkWindowState>(
+          aEvent->changed_mask & ~GDK_WINDOW_STATE_MAXIMIZED);
+    } else if (aEvent->changed_mask & GDK_WINDOW_STATE_WITHDRAWN &&
+               aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
+      aEvent->changed_mask = static_cast<GdkWindowState>(
+          aEvent->changed_mask | GDK_WINDOW_STATE_MAXIMIZED);
+    }
   }
 
   // This is a workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1395
