@@ -7780,6 +7780,13 @@ void HTMLMediaElement::ClearStopMediaControlTimerIfNeeded() {
   }
 }
 
+bool HTMLMediaElement::IsBeingUsedInPictureInPictureMode() const {
+  if (!IsVideo()) {
+    return false;
+  }
+  return static_cast<const HTMLVideoElement*>(this)->IsCloningElementVisually();
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
