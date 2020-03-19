@@ -11,6 +11,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "mozilla/Logging.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -91,6 +92,7 @@ nsLoadGroup::nsLoadGroup()
       mStatus(NS_OK),
       mIsCanceling(false),
       mDefaultLoadIsTimed(false),
+      mBrowsingContextDiscarded(false),
       mTimedRequests(0),
       mCachedRequests(0) {
   LOG(("LOADGROUP [%p]: Created.\n", this));
@@ -106,6 +108,11 @@ nsLoadGroup::~nsLoadGroup() {
     mRequestContextService->RemoveRequestContext(mRequestContext->GetID());
   }
 
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    Unused << os->RemoveObserver(this, "last-pb-context-exited");
+  }
+
   LOG(("LOADGROUP [%p]: Destroyed.\n", this));
 }
 
@@ -113,7 +120,7 @@ nsLoadGroup::~nsLoadGroup() {
 // nsISupports methods:
 
 NS_IMPL_ISUPPORTS(nsLoadGroup, nsILoadGroup, nsILoadGroupChild, nsIRequest,
-                  nsISupportsPriority, nsISupportsWeakReference)
+                  nsISupportsPriority, nsISupportsWeakReference, nsIObserver)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -960,6 +967,31 @@ nsresult nsLoadGroup::Init() {
         getter_AddRefs(mRequestContext));
   }
 
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  NS_ENSURE_STATE(os);
+
+  Unused << os->AddObserver(this, "last-pb-context-exited", true);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) {
+  MOZ_ASSERT(!strcmp(aTopic, "last-pb-context-exited"));
+
+  OriginAttributes attrs = nsContentUtils::GetOriginAttributes(this);
+  if (attrs.mPrivateBrowsingId == 0) {
+    return NS_OK;
+  }
+
+  mBrowsingContextDiscarded = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::GetIsBrowsingContextDiscarded(bool* aIsBrowsingContextDiscarded) {
+  *aIsBrowsingContextDiscarded = mBrowsingContextDiscarded;
   return NS_OK;
 }
 
