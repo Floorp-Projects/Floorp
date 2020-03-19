@@ -334,9 +334,8 @@ GetTopWindowExcludingExtensionAccessibleContentFrames(
 bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aCacheKey, const uint64_t& aChannelId,
-    const TimeStamp& aAsyncOpenTime, const Maybe<uint32_t>& aDocumentOpenFlags,
-    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
-    uint64_t aOuterWindowId, nsresult* aRv) {
+    const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
+    Maybe<ClientInfo>&& aInfo, uint64_t aOuterWindowId, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -446,16 +445,19 @@ bool DocumentLoadListener::Open(
   // across any serviceworker related data between channels as needed.
   AddClientChannelHelperInParent(mChannel, std::move(aInfo));
 
-  if (aDocumentOpenFlags) {
-    RefPtr<ParentProcessDocumentOpenInfo> openInfo =
-        new ParentProcessDocumentOpenInfo(mParentChannelListener,
-                                          *aDocumentOpenFlags, browsingContext);
-    openInfo->Prepare();
+  // Recalculate the openFlags, matching the logic in use in Content process.
+  // NOTE: The only case not handled here to mirror Content process is
+  // redirecting to re-use the channel.
+  MOZ_ASSERT(!aLoadState->GetPendingRedirectedChannel());
+  uint32_t openFlags = nsDocShell::ComputeURILoaderFlags(
+      browsingContext, aLoadState->LoadType());
 
-    *aRv = mChannel->AsyncOpen(openInfo);
-  } else {
-    *aRv = mChannel->AsyncOpen(mParentChannelListener);
-  }
+  RefPtr<ParentProcessDocumentOpenInfo> openInfo =
+      new ParentProcessDocumentOpenInfo(mParentChannelListener, openFlags,
+                                        browsingContext);
+  openInfo->Prepare();
+
+  *aRv = mChannel->AsyncOpen(openInfo);
   if (NS_FAILED(*aRv)) {
     mParentChannelListener = nullptr;
     return false;

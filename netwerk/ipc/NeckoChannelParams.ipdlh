@@ -418,7 +418,6 @@ struct DocumentChannelCreationArgs {
   uint64_t channelId;
   uint32_t loadFlags;
   uint32_t cacheKey;
-  uint32_t? documentOpenFlags;
   bool pluginsAllowed;
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
