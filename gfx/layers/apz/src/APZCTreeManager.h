@@ -205,6 +205,14 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                           const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 
   /**
+   * Walk through all the APZCs and do the sampling steps needed when
+   * advancing to the next frame. The APZCs walked can be restricted to a
+   * specific render root by providing that as the first argument.
+   */
+  bool AdvanceAnimations(Maybe<wr::RenderRoot> aRenderRoot,
+                         const TimeStamp& aSampleTime);
+
+  /**
    * Refer to the documentation of APZInputBridge::ReceiveInputEvent() and
    * APZEventResult.
    */
@@ -743,6 +751,23 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   static already_AddRefed<GeckoContentController> GetContentController(
       LayersId aLayersId);
 
+  bool AdvanceAnimationsInternal(const MutexAutoLock& aProofOfMapLock,
+                                 Maybe<wr::RenderRoot> aRenderRoot,
+                                 const TimeStamp& aSampleTime);
+
+  using ClippedCompositionBoundsMap =
+      std::unordered_map<ScrollableLayerGuid, ParentLayerRect,
+                         ScrollableLayerGuid::HashIgnoringPresShellFn,
+                         ScrollableLayerGuid::EqualIgnoringPresShellFn>;
+  // This is a recursive function that populates `aDestMap` with the clipped
+  // composition bounds for the APZC corresponding to `aGuid` and returns those
+  // bounds as a convenience. It recurses to also populate `aDestMap` with that
+  // APZC's ancestors. In order to do this it needs to access mApzcMap
+  // and therefore requires the caller to hold the map lock.
+  ParentLayerRect ComputeClippedCompositionBounds(
+      const MutexAutoLock& aProofOfMapLock,
+      ClippedCompositionBoundsMap& aDestMap, ScrollableLayerGuid aGuid);
+
  protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.
@@ -797,12 +822,24 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * mFixedPositionInfo.
    */
   mutable mozilla::Mutex mMapLock;
+
   /**
-   * A map for quick access to get APZC instances by guid, without having to
+   * Helper structure to store a bunch of things in mApzcMap so that they can
+   * be used from the sampler thread.
+   */
+  struct ApzcMapData {
+    // A pointer to the APZC itself
+    RefPtr<AsyncPanZoomController> apzc;
+    // The parent APZC's guid, or Nothing() if there is no parent
+    Maybe<ScrollableLayerGuid> parent;
+  };
+
+  /**
+   * A map for quick access to get some APZC data by guid, without having to
    * acquire the tree lock. mMapLock must be acquired while accessing or
    * modifying mApzcMap.
    */
-  std::unordered_map<ScrollableLayerGuid, RefPtr<AsyncPanZoomController>,
+  std::unordered_map<ScrollableLayerGuid, ApzcMapData,
                      ScrollableLayerGuid::HashIgnoringPresShellFn,
                      ScrollableLayerGuid::EqualIgnoringPresShellFn>
       mApzcMap;

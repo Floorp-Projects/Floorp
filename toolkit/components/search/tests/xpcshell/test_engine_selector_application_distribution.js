@@ -69,8 +69,6 @@ const engineSelector = new SearchEngineSelector();
 add_task(async function setup() {
   await useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
-
-  await engineSelector.init();
 });
 
 add_task(async function test_no_distribution_preference() {

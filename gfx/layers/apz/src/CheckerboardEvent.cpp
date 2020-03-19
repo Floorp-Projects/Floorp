@@ -8,6 +8,8 @@
 
 #include <algorithm>  // for std::sort
 
+static mozilla::LazyLogModule sApzCheckLog("apz.checkerboard");
+
 namespace mozilla {
 namespace layers {
 
@@ -120,6 +122,7 @@ bool CheckerboardEvent::RecordFrameInfo(uint32_t aCssPixelsCheckerboarded) {
 }
 
 void CheckerboardEvent::StartEvent() {
+  MOZ_LOG(sApzCheckLog, LogLevel::Debug, ("Starting checkerboard event"));
   MOZ_ASSERT(!mCheckerboardingActive);
   mCheckerboardingActive = true;
   mStartTime = TimeStamp::Now();
@@ -140,6 +143,7 @@ void CheckerboardEvent::StartEvent() {
 }
 
 void CheckerboardEvent::StopEvent() {
+  MOZ_LOG(sApzCheckLog, LogLevel::Debug, ("Stopping checkerboard event"));
   mCheckerboardingActive = false;
   mEndTime = TimeStamp::Now();
 

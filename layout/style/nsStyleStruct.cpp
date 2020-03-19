@@ -1969,7 +1969,7 @@ nsStyleImageLayers::Layer::Layer()
       mClip(StyleGeometryBox::BorderBox),
       mAttachment(StyleImageLayerAttachment::Scroll),
       mBlendMode(StyleBlend::Normal),
-      mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
+      mComposite(StyleMaskComposite::Add),
       mMaskMode(StyleMaskMode::MatchSource) {}
 
 nsStyleImageLayers::Layer::~Layer() = default;

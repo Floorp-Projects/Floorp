@@ -9,6 +9,7 @@
 
 #include "nsIProxyInfo.h"
 #include "nsString.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 
 // Use to support QI nsIProxyInfo to nsProxyInfo
@@ -86,7 +87,9 @@ class nsProxyInfo final : public nsIProxyInfo {
   nsCString mConnectionIsolationKey;
   int32_t mPort;
   uint32_t mFlags;
-  uint32_t mResolveFlags;
+  // We need to read on multiple threads, but don't need to sync on anything
+  // else
+  Atomic<uint32_t, Relaxed> mResolveFlags;
   uint32_t mTimeout;
   nsProxyInfo* mNext;
 };

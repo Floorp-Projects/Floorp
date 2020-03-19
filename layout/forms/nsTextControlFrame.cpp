@@ -1053,42 +1053,21 @@ nsresult nsTextControlFrame::AttributeChanged(int32_t aNameSpaceID,
     return NS_OK;
   }
 
-  if (nsGkAtoms::readonly == aAttribute) {
-    if (AttributeExists(nsGkAtoms::readonly)) {  // set readonly
+  if (nsGkAtoms::readonly == aAttribute || nsGkAtoms::disabled == aAttribute) {
+    if (AttributeExists(aAttribute)) {
       if (nsContentUtils::IsFocusedContent(mContent)) {
         selCon->SetCaretEnabled(false);
       }
       textEditor->AddFlags(nsIEditor::eEditorReadonlyMask);
-    } else {  // unset readonly
-      if (!textEditor->IsDisabled() &&
-          nsContentUtils::IsFocusedContent(mContent)) {
-        selCon->SetCaretEnabled(true);
-      }
-      textEditor->RemoveFlags(nsIEditor::eEditorReadonlyMask);
-    }
-    return NS_OK;
-  }
-
-  if (nsGkAtoms::disabled == aAttribute) {
-    int16_t displaySelection = nsISelectionController::SELECTION_OFF;
-    const bool focused = nsContentUtils::IsFocusedContent(mContent);
-    const bool hasAttr = AttributeExists(nsGkAtoms::disabled);
-    bool disable;
-    if (hasAttr) {  // set disabled
-      disable = true;
-    } else {  // unset disabled
-      disable = false;
-      displaySelection = focused ? nsISelectionController::SELECTION_ON
-                                 : nsISelectionController::SELECTION_HIDDEN;
-    }
-    selCon->SetDisplaySelection(displaySelection);
-    if (focused) {
-      selCon->SetCaretEnabled(!hasAttr);
-    }
-    if (disable) {
-      textEditor->AddFlags(nsIEditor::eEditorDisabledMask);
     } else {
-      textEditor->RemoveFlags(nsIEditor::eEditorDisabledMask);
+      if (!AttributeExists(aAttribute == nsGkAtoms::readonly
+                               ? nsGkAtoms::disabled
+                               : nsGkAtoms::readonly)) {
+        if (nsContentUtils::IsFocusedContent(mContent)) {
+          selCon->SetCaretEnabled(true);
+        }
+        textEditor->RemoveFlags(nsIEditor::eEditorReadonlyMask);
+      }
     }
     return NS_OK;
   }

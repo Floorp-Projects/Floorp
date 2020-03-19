@@ -15,6 +15,9 @@ class nsAtom;
 namespace mozilla {
 
 class HTMLEditUtils final {
+  using Element = dom::Element;
+  using Selection = dom::Selection;
+
  public:
   static bool IsInlineStyle(nsINode* aNode);
   /**

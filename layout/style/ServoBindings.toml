@@ -164,6 +164,7 @@ rusty-enums = [
     "mozilla::StyleVectorEffect",
     "mozilla::StyleBackfaceVisibility",
     "mozilla::StyleBlend",
+    "mozilla::StyleMaskComposite",
 ]
 whitelist-vars = [
     "NS_AUTHOR_SPECIFIED_.*",

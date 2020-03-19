@@ -1739,9 +1739,13 @@ var gIdentityHandler = {
     indicator.appendChild(icon);
     indicator.appendChild(text);
 
-    document
-      .getElementById("identity-popup-geo-container")
-      .appendChild(indicator);
+    let geoContainer = document.getElementById("identity-popup-geo-container");
+
+    // Check whether geoContainer still exists.
+    // We are async, the identity popup could have been closed already.
+    if (geoContainer) {
+      geoContainer.appendChild(indicator);
+    }
   },
 
   _createBlockedPopupIndicator(aTotalBlockedPopups) {
