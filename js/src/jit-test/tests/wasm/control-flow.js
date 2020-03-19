@@ -416,8 +416,8 @@ assertEq(called, 0);
 
 // br/br_if and loop
 wasmFullPass(`(module (func (param i32) (result i32) (loop $out $in i32 (br $out (local.get 0)))) (export "run" (func 0)))`, 1, {}, 1);
-wasmFullPass(`(module (func (param i32) (result i32) (loop $in i32 (br 1 (local.get 0)))) (export "run" (func 0)))`, 1, {}, 1);
-wasmFullPass(`(module (func (param i32) (result i32) (block $out i32 (loop $in i32 (br $out (local.get 0))))) (export "run" (func 0)))`, 1, {}, 1);
+wasmFullPass(`(module (func (param i32) (result i32) (loop $in (result i32) (br 1 (local.get 0)))) (export "run" (func 0)))`, 1, {}, 1);
+wasmFullPass(`(module (func (param i32) (result i32) (block $out i32 (loop $in (result i32) (br $out (local.get 0))))) (export "run" (func 0)))`, 1, {}, 1);
 
 wasmFailValidateText(`(module (func (param i32) (result i32)
   (loop $out $in
@@ -434,7 +434,7 @@ wasmFullPass(`(module
   (result i32)
   (local i32)
   (block $out i32
-    (loop $in i32
+    (loop $in (result i32)
      (local.set 0 (i32.add (local.get 0) (i32.const 1)))
      (if
         (i32.ge_s (local.get 0) (i32.const 7))
@@ -451,7 +451,7 @@ wasmFullPass(`(module
   (result i32)
   (local i32)
   (block $out i32
-   (loop $in i32
+   (loop $in (result i32)
     (local.set 0 (i32.add (local.get 0) (i32.const 1)))
     (br_if $out (local.get 0) (i32.ge_s (local.get 0) (i32.const 7)))
     (br $in)
@@ -474,7 +474,7 @@ wasmFullPass('(module (func (loop $a (br 1))) (export "run" (func 0)))', undefin
 wasmFullPass('(module (func (loop $a (br_if $a (i32.const 0)))) (export "run" (func 0)))', undefined);
 wasmFullPass('(module (func (loop $a $b (br $a))) (export "run" (func 0)))', undefined);
 wasmFullPass('(module (func (block $a (loop $b (br $a)))) (export "run" (func 0)))', undefined);
-wasmFullPass('(module (func (result i32) (loop i32 (i32.const 1))) (export "run" (func 0)))', 1);
+wasmFullPass('(module (func (result i32) (loop (result i32) (i32.const 1))) (export "run" (func 0)))', 1);
 
 wasmFullPass(`(module (func (result i32) (local i32)
   (loop
