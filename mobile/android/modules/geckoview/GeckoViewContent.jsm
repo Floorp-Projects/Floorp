@@ -114,7 +114,7 @@ class GeckoViewContent extends GeckoViewModule {
         break;
       }
       case "GeckoView:ZoomToInput":
-        this.messageManager.sendAsyncMessage(aEvent);
+        this.messageManager.sendAsyncMessage(aEvent, aData);
         break;
       case "GeckoView:ScrollBy":
         this.messageManager.sendAsyncMessage(aEvent, aData);
