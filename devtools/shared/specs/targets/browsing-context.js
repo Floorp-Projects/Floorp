@@ -18,8 +18,7 @@ types.addDictType("browsingContextTarget.attach", {
 });
 
 types.addDictType("browsingContextTarget.switchtoframe", {
-  error: "nullable:string",
-  message: "nullable:string",
+  message: "string",
 });
 
 types.addDictType("browsingContextTarget.listframes", {
@@ -35,8 +34,7 @@ types.addDictType("browsingContextTarget.window", {
 });
 
 types.addDictType("browsingContextTarget.workers", {
-  error: "nullable:string",
-  workers: "nullable:array:workerTarget",
+  workers: "array:workerTarget",
 });
 
 types.addDictType("browsingContextTarget.reload", {
