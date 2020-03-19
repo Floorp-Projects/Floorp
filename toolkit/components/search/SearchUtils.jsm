@@ -23,6 +23,8 @@ var SearchUtils = {
 
   BROWSER_SEARCH_PREF,
 
+  SETTINGS_KEY: "search-config",
+
   /**
    * Topic used for events involving the service itself.
    */

@@ -6206,13 +6206,18 @@ nsBrowserAccess.prototype = {
         browsingContext =
           window.content && BrowsingContext.getFromWindow(window.content);
         if (aURI) {
-          let loadflags = isExternal
-            ? Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL
-            : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+          let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+          if (isExternal) {
+            loadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+          } else if (!aTriggeringPrincipal.isSystemPrincipal) {
+            // XXX this code must be reviewed and changed when bug 1616353
+            // lands.
+            loadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIRST_LOAD;
+          }
           gBrowser.loadURI(aURI.spec, {
             triggeringPrincipal: aTriggeringPrincipal,
             csp: aCsp,
-            flags: loadflags,
+            loadFlags,
             referrerInfo,
           });
         }

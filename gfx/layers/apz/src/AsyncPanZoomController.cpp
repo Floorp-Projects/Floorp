@@ -4327,93 +4327,52 @@ CSSRect AsyncPanZoomController::GetVisibleRect(
   return visible;
 }
 
-ParentLayerRect AsyncPanZoomController::RecursivelyClipCompBounds(
-    const ParentLayerRect& aChildCompBounds) const {
-  // The childCompBounds is in the ParentLayer space of a child layer, which
-  // is the Layer space of this layer, so we can cast it.
-  LayerRect compBoundsInLayerSpace = ViewAs<LayerPixel>(
-      aChildCompBounds, PixelCastJustification::MovingDownToChildren);
-
-  // Apply the async transform from this layer and then clip with this
-  // layer's composition bounds.
-  AsyncTransform appliesToLayer =
-      GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
-  ParentLayerRect compBoundsInParentSpace =
-      (compBoundsInLayerSpace * appliesToLayer.mScale) +
-      appliesToLayer.mTranslation;
-
-  {  // hold lock while reading Metrics()
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    compBoundsInParentSpace =
-        compBoundsInParentSpace.Intersect(Metrics().GetCompositionBounds());
-  }
-
-  // Recurse up the tree
-  if (mParent) {
-    // Make sure we're not holding our lock when we do this, to be extra safe.
-    mRecursiveMutex.AssertNotCurrentThreadIn();
-    compBoundsInParentSpace =
-        mParent->RecursivelyClipCompBounds(compBoundsInParentSpace);
-  }
-
-  // Undo async transformation from above to produce return value in the same
-  // coordinate space as the input parameter.
-  compBoundsInLayerSpace =
-      (compBoundsInParentSpace - appliesToLayer.mTranslation) /
-      appliesToLayer.mScale;
-  return ViewAs<ParentLayerPixel>(compBoundsInLayerSpace,
-                                  PixelCastJustification::MovingDownToChildren);
-}
-
-CSSRect AsyncPanZoomController::GetRecursivelyVisibleRect() const {
-  CSSRect visible;
-  ParentLayerRect compBounds;
-  CSSToParentLayerScale2D zoom;
-
-  {  // scope mutex
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    visible = GetVisibleRect(lock);  // relative to scrolled frame origin
-    compBounds = Metrics().GetCompositionBounds();
-    zoom = Metrics().GetZoom();
-  }
-
-  if (mParent) {
-    // compBounds and clippedCompBounds are relative to the layer tree origin
-    ParentLayerRect clippedCompBounds =
-        mParent->RecursivelyClipCompBounds(compBounds);
-
-    // the "*RelativeToItself*" variables are relative to the comp bounds origin
-    ParentLayerRect visiblePartOfCompBoundsRelativeToItself =
-        clippedCompBounds - compBounds.TopLeft();
-
-    CSSRect visiblePartOfCompBoundsRelativeToItselfInCssSpace =
-        (visiblePartOfCompBoundsRelativeToItself / zoom);
-
-    // this one is relative to the scrolled frame origin, same as `visible`
-    CSSRect visiblePartOfCompBoundsInCssSpace =
-        visiblePartOfCompBoundsRelativeToItselfInCssSpace + visible.TopLeft();
-
-    visible = visible.Intersect(visiblePartOfCompBoundsInCssSpace);
-  }
-
-  return visible;
-}
-
-uint32_t AsyncPanZoomController::GetCheckerboardMagnitude() const {
+uint32_t AsyncPanZoomController::GetCheckerboardMagnitude(
+    const ParentLayerRect& aClippedCompositionBounds) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() +
                     mLastContentPaintMetrics.GetScrollOffset();
-  CSSRect visible = GetVisibleRect(lock);
+  painted.Inflate(CSSMargin::FromAppUnits(
+      nsMargin(1, 1, 1, 1)));  // fuzz for rounding error
+
+  CSSRect visible = GetVisibleRect(lock);  // relative to scrolled frame origin
+  if (visible.IsEmpty() || painted.Contains(visible)) {
+    // early-exit if we're definitely not checkerboarding
+    return 0;
+  }
+
+  // aClippedCompositionBounds and Metrics().GetCompositionBounds() are both
+  // relative to the layer tree origin.
+  // The "*RelativeToItself*" variables are relative to the comp bounds origin
+  ParentLayerRect visiblePartOfCompBoundsRelativeToItself =
+      aClippedCompositionBounds - Metrics().GetCompositionBounds().TopLeft();
+
+  CSSRect visiblePartOfCompBoundsRelativeToItselfInCssSpace =
+      (visiblePartOfCompBoundsRelativeToItself / Metrics().GetZoom());
+
+  // This one is relative to the scrolled frame origin, same as `visible`
+  CSSRect visiblePartOfCompBoundsInCssSpace =
+      visiblePartOfCompBoundsRelativeToItselfInCssSpace + visible.TopLeft();
+
+  visible = visible.Intersect(visiblePartOfCompBoundsInCssSpace);
 
   CSSIntRegion checkerboard;
   // Round so as to minimize checkerboarding; if we're only showing fractional
   // pixels of checkerboarding it's not really worth counting
   checkerboard.Sub(RoundedIn(visible), RoundedOut(painted));
-  return checkerboard.Area();
+  uint32_t area = checkerboard.Area();
+  if (area) {
+    APZC_LOG_FM(Metrics(),
+                "%p is currently checkerboarding (painted %s visible %s)", this,
+                Stringify(painted).c_str(), Stringify(visible).c_str());
+  }
+  return area;
 }
 
-void AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime) {
+void AsyncPanZoomController::ReportCheckerboard(
+    const TimeStamp& aSampleTime,
+    const ParentLayerRect& aClippedCompositionBounds) {
   if (mLastCheckerboardReport == aSampleTime) {
     // This function will get called multiple times for each APZC on a single
     // composite (once for each layer it is attached to). Only report the
@@ -4424,7 +4383,7 @@ void AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime) {
 
   bool recordTrace = StaticPrefs::apz_record_checkerboarding();
   bool forTelemetry = Telemetry::CanRecordExtended();
-  uint32_t magnitude = GetCheckerboardMagnitude();
+  uint32_t magnitude = GetCheckerboardMagnitude(aClippedCompositionBounds);
 
   // IsInTransformingState() acquires the APZC lock and thus needs to
   // be called before acquiring mCheckerboardEventLock.
@@ -4472,26 +4431,6 @@ void AsyncPanZoomController::FlushActiveCheckerboardReport() {
   // Pretend like we got a frame with 0 pixels checkerboarded. This will
   // terminate the checkerboard event and flush it out
   UpdateCheckerboardEvent(lock, 0);
-}
-
-bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
-  CSSRect painted;
-  {  // scope lock
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    painted = mLastContentPaintMetrics.GetDisplayPort() +
-              mLastContentPaintMetrics.GetScrollOffset();
-  }
-
-  painted.Inflate(CSSMargin::FromAppUnits(
-      nsMargin(1, 1, 1, 1)));  // fuzz for rounding error
-  CSSRect visible = GetRecursivelyVisibleRect();
-  if (visible.IsEmpty() || painted.Contains(visible)) {
-    return false;
-  }
-  APZC_LOG_FM(Metrics(),
-              "%p is currently checkerboarding (painted %s visible %s)", this,
-              Stringify(painted).c_str(), Stringify(visible).c_str());
-  return true;
 }
 
 void AsyncPanZoomController::NotifyLayersUpdated(

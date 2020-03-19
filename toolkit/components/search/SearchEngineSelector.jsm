@@ -11,16 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
-
-const EXT_SEARCH_PREFIX = "resource://search-extensions/";
-const DEFAULT_CONFIG_URL = `${EXT_SEARCH_PREFIX}engines.json`;
-const ENGINE_CONFIG_PREF = "search.config.url";
 
 const USER_LOCALE = "$USER_LOCALE";
 
@@ -85,19 +81,84 @@ function aboveMaxVersion(config, version) {
  */
 class SearchEngineSelector {
   /**
-   * @param {string} url - Location of the configuration.
+   * @param {function} listener
+   *   A listener for configuration update changes.
    */
-  async init(url = DEFAULT_CONFIG_URL) {
-    let configUrl = Services.prefs.getStringPref(ENGINE_CONFIG_PREF, url);
-    this.configuration = await this.getEngineConfiguration(configUrl);
+  constructor(listener) {
+    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
+    this._remoteConfig = RemoteSettings(SearchUtils.SETTINGS_KEY);
+    this._listenerAdded = false;
+    this._onConfigurationUpdated = this._onConfigurationUpdated.bind(this);
+    this._changeListener = listener;
   }
 
   /**
-   * @param {string} url - Location of the configuration.
+   * Handles getting the configuration from remote settings.
    */
-  async getEngineConfiguration(url) {
-    const response = await fetch(url);
-    return (await response.json()).data;
+  async getEngineConfiguration() {
+    if (this._getConfigurationPromise) {
+      return this._getConfigurationPromise;
+    }
+
+    this._configuration = await (this._getConfigurationPromise = this._getConfiguration());
+    delete this._getConfigurationPromise;
+
+    if (!this._listenerAdded) {
+      this._remoteConfig.on("sync", this._onConfigurationUpdated);
+      this._listenerAdded = true;
+    }
+
+    return this._configuration;
+  }
+
+  /**
+   * Obtains the configuration from remote settings. This includes
+   * verifying the signature of the record within the database.
+   *
+   * If the signature in the database is invalid, the database will be wiped
+   * and the stored dump will be used, until the settings next update.
+   *
+   * Note that this may cause a network check of the certificate, but that
+   * should generally be quick.
+   *
+   * @param {boolean} [firstTime]
+   *   Internal boolean to indicate if this is the first time check or not.
+   * @returns {array}
+   *   An array of objects in the database, or an empty array if none
+   *   could be obtained.
+   */
+  async _getConfiguration(firstTime = true) {
+    let result = [];
+    try {
+      result = await this._remoteConfig.get();
+    } catch (ex) {
+      if (
+        ex instanceof RemoteSettingsClient.InvalidSignatureError &&
+        firstTime
+      ) {
+        // The local database is invalid, try and reset it.
+        await this._remoteConfig.db.clear();
+        await this._remoteConfig.db.close();
+        // Now call this again.
+        return this._getConfiguration(false);
+      }
+      // Don't throw an error just log it, just continue with no data, and hopefully
+      // a sync will fix things later on.
+      Cu.reportError(ex);
+    }
+    return result;
+  }
+
+  /**
+   * Handles updating of the configuration. Note that the search service is
+   * only updated after a period where the user is observed to be idle.
+   */
+  _onConfigurationUpdated({ data: { current } }) {
+    this._configuration = current;
+
+    if (this._changeListener) {
+      this._changeListener();
+    }
   }
 
   /**
@@ -110,7 +171,10 @@ class SearchEngineSelector {
    *   optionally "privateDefault" which is an object containing the engine
    *   details for the engine which should be the default in Private Browsing mode.
    */
-  fetchEngineConfiguration(locale, region, channel, distroID) {
+  async fetchEngineConfiguration(locale, region, channel, distroID) {
+    if (!this._configuration) {
+      await this.getEngineConfiguration();
+    }
     let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let name = getAppInfo("name");
     let version = getAppInfo("version");
@@ -120,7 +184,7 @@ class SearchEngineSelector {
     let engines = [];
     const lcLocale = locale.toLowerCase();
     const lcRegion = region.toLowerCase();
-    for (let config of this.configuration) {
+    for (let config of this._configuration) {
       const appliesTo = config.appliesTo || [];
       const applies = appliesTo.filter(section => {
         if ("cohort" in section && cohort != section.cohort) {

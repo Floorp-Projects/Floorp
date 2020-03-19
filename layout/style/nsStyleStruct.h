@@ -228,8 +228,8 @@ struct nsStyleImageLayers {
 
     // This property is used for mask layer only.
     // For a background layer, it should always be the initial value, which is
-    // NS_STYLE_COMPOSITE_MODE_ADD.
-    uint8_t mComposite;  // NS_STYLE_MASK_COMPOSITE_*
+    // StyleMaskComposite::Add.
+    mozilla::StyleMaskComposite mComposite;
 
     // mask-only property. This property is used for mask layer only. For a
     // background layer, it should always be the initial value, which is

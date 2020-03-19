@@ -91,19 +91,16 @@ async function useTestEngines(
     .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-extensions", Services.io.newURI(url));
   if (gModernConfig) {
+    const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
     if (config) {
-      return sinon
-        .stub(SearchEngineSelector.prototype, "getEngineConfiguration")
-        .returns(config);
+      return sinon.stub(settings, "get").returns(config);
     }
     let chan = NetUtil.newChannel({
       uri: "resource://search-extensions/engines.json",
       loadUsingSystemPrincipal: true,
     });
     let json = parseJsonFromStream(chan.open());
-    return sinon
-      .stub(SearchEngineSelector.prototype, "getEngineConfiguration")
-      .returns(json.data);
+    return sinon.stub(settings, "get").returns(json.data);
   }
   return null;
 }

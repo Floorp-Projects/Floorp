@@ -6,4 +6,5 @@
 
 HOST_SOURCES += [
     # 'AlphaChecker.cpp',
+    'TempRefPtrChecker.cpp',
 ]

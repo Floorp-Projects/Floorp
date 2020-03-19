@@ -99,26 +99,10 @@ void APZSampler::SampleForWebRender(
   mApz->SampleForWebRender(aTxn, sampleTime, aRenderRoot, aEpochsBeingRendered);
 }
 
-bool APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
-                                  const TimeStamp& aSampleTime) {
+bool APZSampler::AdvanceAnimations(const TimeStamp& aSampleTime) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
-
-  // TODO: eventually we can drop the aLayer argument and just walk the APZ
-  // tree directly in mApz.
-
-  bool activeAnimations = false;
-
-  ForEachNodePostOrder<ForwardIterator>(
-      aLayer,
-      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics) {
-        if (AsyncPanZoomController* apzc = aLayerMetrics.GetApzc()) {
-          apzc->ReportCheckerboard(aSampleTime);
-          activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
-        }
-      });
-
-  return activeAnimations;
+  return mApz->AdvanceAnimations(Nothing(), aSampleTime);
 }
 
 LayerToParentLayerMatrix4x4 APZSampler::ComputeTransformForScrollThumb(

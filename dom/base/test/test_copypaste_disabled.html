@@ -1,0 +1,90 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="copypaste.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+@font-face {
+  font-family: Ahem;
+  src: url("Ahem.ttf");
+}
+body { font-family: Ahem; font-size: 20px; }
+input, textarea {
+  font: inherit;
+  -moz-appearance: none;
+  padding: 0;
+  border: 0;
+  scrollbar-width: none;
+}
+</style>
+
+<input id="disabled-input" disabled value="abcd"> efgh <br> <textarea rows=1 id="disabled-textarea" disabled>ijkl</textarea> mnop
+
+<script>
+function dragSelect(e, x1, x2, x3) {
+  dir = x2 > x1 ? 1 : -1;
+  synthesizeMouse(e, x1, 5, { type: "mousedown" });
+  synthesizeMouse(e, x1 + dir, 5, { type: "mousemove" });
+  if (x3)
+    synthesizeMouse(e, x3, 5, { type: "mousemove" });
+  synthesizeMouse(e, x2 - dir, 5, { type: "mousemove" });
+  synthesizeMouse(e, x2, 5, { type: "mouseup" });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  const docShell = SpecialPowers.wrap(window).docShell;
+
+  const documentViewer = docShell.contentViewer.QueryInterface(
+    SpecialPowers.Ci.nsIContentViewerEdit
+  );
+
+  const clipboard = SpecialPowers.Services.clipboard;
+
+  function copySelectionToClipboard() {
+    return SimpleTest.promiseClipboardChange(
+      () => true,
+      () => {
+        documentViewer.copySelection();
+      }
+    );
+  }
+
+  function getLoadContext() {
+    return docShell.QueryInterface(SpecialPowers.Ci.nsILoadContext);
+  }
+
+  function getClipboardData(mime) {
+    var transferable = SpecialPowers.Cc[
+      "@mozilla.org/widget/transferable;1"
+    ].createInstance(SpecialPowers.Ci.nsITransferable);
+    transferable.init(getLoadContext());
+    transferable.addDataFlavor(mime);
+    clipboard.getData(transferable, 1);
+    var data = SpecialPowers.createBlankObject();
+    transferable.getTransferData(mime, data);
+    return data;
+  }
+
+  function testClipboardValue(mime, expected) {
+    var data = SpecialPowers.wrap(getClipboardData(mime));
+    is(
+      data.value == null
+        ? data.value
+        : data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data,
+      expected,
+      mime + " value in the clipboard"
+    );
+    return data.value;
+  }
+
+  for (let id of ["disabled-input", "disabled-textarea"]) {
+    let element = document.getElementById(id);
+    dragSelect(element, 0, 60);
+    await copySelectionToClipboard();
+    testClipboardValue("text/unicode", element.value.substr(0, 3));
+  }
+
+  SimpleTest.finish();
+});
+</script>
