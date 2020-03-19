@@ -11,7 +11,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIContentChild.h"
 
 namespace mozilla {
 
@@ -203,8 +202,6 @@ class ChromeUtils {
 
   static void GenerateMediaControlKeysTestEvent(
       const GlobalObject& aGlobal, MediaControlKeysTestEvent aEvent);
-
-  static nsIContentChild* GetContentChild(const GlobalObject&);
 
   // This function would only be used for testing.
   static void GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
