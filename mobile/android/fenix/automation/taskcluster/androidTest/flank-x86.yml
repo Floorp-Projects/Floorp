@@ -41,8 +41,8 @@ gcloud:
    - package org.mozilla.fenix.ui
 
   device:
-   - model: Nexus6 
-     version: 25
+   - model: Nexus6P
+     version: 27
    - model: Pixel2 
      version: 28
 
