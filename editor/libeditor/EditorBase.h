@@ -874,7 +874,13 @@ class EditorBase : public nsIEditor,
 
     bool IsCanceled() const { return mBeforeInputEventCanceled; }
 
-    const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
+    const RefPtr<Selection>& SelectionRefPtr() const {
+      MOZ_ASSERT(!mSelection ||
+                 (mSelection->GetType() == SelectionType::eNormal));
+
+      return mSelection;
+    }
+
     nsIPrincipal* GetPrincipal() const { return mPrincipal; }
     EditAction GetEditAction() const { return mEditAction; }
 
@@ -1040,6 +1046,8 @@ class EditorBase : public nsIEditor,
     }
 
     void UpdateSelectionCache(Selection& aSelection) {
+      MOZ_ASSERT(aSelection.GetType() == SelectionType::eNormal);
+
       AutoEditActionDataSetter* actionData = this;
       while (actionData) {
         if (actionData->mSelection) {
@@ -1217,6 +1225,9 @@ class EditorBase : public nsIEditor,
    */
   const RefPtr<Selection>& SelectionRefPtr() const {
     MOZ_ASSERT(mEditActionData);
+    MOZ_ASSERT(mEditActionData->SelectionRefPtr()->GetType() ==
+               SelectionType::eNormal);
+
     return mEditActionData->SelectionRefPtr();
   }
 
