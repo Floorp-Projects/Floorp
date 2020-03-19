@@ -34,8 +34,8 @@ wasmEvalText(`(module (func
 
 wasmEvalText(`(module (func (result i32)
   (select
-    (block i32
-      (drop (block i32
+    (block (result i32)
+      (drop (block (result i32)
         (br_table
          1
          0
@@ -93,7 +93,7 @@ wasmEvalText(`
             (block $b i32
                 (if (i32.const 1)
                     (call 0
-                        (block i32
+                        (block (result i32)
                             (call 0 (i32.const 42))
                             (br $b (i32.const 10)))))
                 (i32.const 44))))
