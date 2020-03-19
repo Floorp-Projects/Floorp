@@ -55,7 +55,7 @@ def guess_mozinfo_from_task(task):
 def get_runtimes(platform):
     base = os.path.join(GECKO, 'testing', 'runtimes', 'manifest-runtimes-{}.json')
     for key in ('android', 'windows'):
-        if key in platform:
+        if platform in key:
             path = base.format(key)
             break
     else:
