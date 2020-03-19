@@ -1793,7 +1793,11 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
 }
 
 void Selection::RemoveAllRanges(ErrorResult& aRv) {
-  if (!mFrameSelection) return;  // nothing to do
+  if (!mFrameSelection) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
+
   RefPtr<nsPresContext> presContext = GetPresContext();
   nsresult result = Clear(presContext);
   if (NS_FAILED(result)) {
@@ -2882,7 +2886,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
                                    ScrollAxis aVertical, ScrollAxis aHorizontal,
                                    int32_t aFlags) {
   if (!mFrameSelection) {
-    return NS_OK;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<PresShell> presShell = mFrameSelection->GetPresShell();
@@ -3149,8 +3153,12 @@ void Selection::DeleteFromDocument(ErrorResult& aRv) {
 
 void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
                        const nsAString& aGranularity, ErrorResult& aRv) {
-  // Silently exit if there's no selection or no focus node.
-  if (!mFrameSelection || !GetAnchorFocusRange() || !GetFocusNode()) {
+  if (!mFrameSelection) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
+
+  if (!GetAnchorFocusRange() || !GetFocusNode()) {
     return;
   }
 
@@ -3277,6 +3285,7 @@ void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
                                          const RawRangeBoundary& aFocusRef,
                                          ErrorResult& aRv) {
   if (!mFrameSelection) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
   }
 
@@ -3368,7 +3377,9 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
  * new language is left-to-right
  */
 nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
-  if (!mFrameSelection) return NS_ERROR_NOT_INITIALIZED;  // Can't do selection
+  if (!mFrameSelection) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
 
