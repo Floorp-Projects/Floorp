@@ -28,6 +28,7 @@
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -110,20 +111,8 @@
 namespace mozilla {
 namespace dom {
 
-static bool sVibratorEnabled = false;
-static uint32_t sMaxVibrateMS = 0;
-static uint32_t sMaxVibrateListLen = 0;
 static const nsLiteralCString kVibrationPermissionType =
     NS_LITERAL_CSTRING("vibration");
-
-/* static */
-void Navigator::Init() {
-  Preferences::AddBoolVarCache(&sVibratorEnabled, "dom.vibrator.enabled", true);
-  Preferences::AddUintVarCache(&sMaxVibrateMS, "dom.vibrator.max_vibrate_ms",
-                               10000);
-  Preferences::AddUintVarCache(&sMaxVibrateListLen,
-                               "dom.vibrator.max_vibrate_list_len", 128);
-}
 
 Navigator::Navigator(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
@@ -758,17 +747,18 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
 
   nsTArray<uint32_t> pattern(aPattern);
 
-  if (pattern.Length() > sMaxVibrateListLen) {
-    pattern.SetLength(sMaxVibrateListLen);
+  if (pattern.Length() > StaticPrefs::dom_vibrator_max_vibrate_list_len()) {
+    pattern.SetLength(StaticPrefs::dom_vibrator_max_vibrate_list_len());
   }
 
   for (size_t i = 0; i < pattern.Length(); ++i) {
-    pattern[i] = std::min(sMaxVibrateMS, pattern[i]);
+    pattern[i] =
+        std::min(StaticPrefs::dom_vibrator_max_vibrate_ms(), pattern[i]);
   }
 
-  // The spec says we check sVibratorEnabled after we've done the sanity
+  // The spec says we check dom.vibrator.enabled after we've done the sanity
   // checking on the pattern.
-  if (!sVibratorEnabled) {
+  if (!StaticPrefs::dom_vibrator_enabled()) {
     return true;
   }
 
