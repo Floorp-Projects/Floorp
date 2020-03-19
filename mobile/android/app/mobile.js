@@ -392,9 +392,6 @@ pref("security.alternate_certificate_error_page", "certerror");
 
 pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616712.
 
-// Block insecure active content on https pages
-pref("security.mixed_content.block_active_content", true);
-
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
 
