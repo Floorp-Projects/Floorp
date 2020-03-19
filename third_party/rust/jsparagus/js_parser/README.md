@@ -8,7 +8,7 @@ In this directory:
 *   **es.esgrammar** - The actual grammar for ECMAScript, in emu-grammar
     format, extracted automatically from the spec.
 
-*   **extract-es-grammar.py** - The script that creates *es.esgrammar*.
+*   **extract_es_grammar.py** - The script that creates *es.esgrammar*.
 
 *   **es-simplified.esgrammar** - A hacked version of *es.esgrammar* that
     jsparagus can actually handle.

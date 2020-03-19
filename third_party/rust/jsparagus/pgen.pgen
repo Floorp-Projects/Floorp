@@ -7,6 +7,7 @@
 var token IDENT;
 var token STR;
 var token MATCH;
+var token COMMENT;
 token Eq = "=";
 token Arrow = "=>";
 token Semi = ";";
@@ -43,12 +44,13 @@ nt nt_defs {
 }
 
 nt nt_def {
-    "goal"? "nt" IDENT "{" prods? "}" => nt_def($0, $2, $4);
+    COMMENT? "goal"? "nt" IDENT "{" prods? "}" => nt_def($0, $1, $3, $5);
 }
 
 nt prods {
     prod => single($0);
     prods prod => append($0, $1);
+    COMMENT => empty($0);
 }
 
 nt prod {

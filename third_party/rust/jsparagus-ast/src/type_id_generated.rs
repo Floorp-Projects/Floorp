@@ -78,6 +78,7 @@ pub enum NodeTypeId {
     ShorthandProperty,
     ComputedPropertyName,
     StaticPropertyName,
+    NumericLiteral,
     ArrayExpressionElement,
     ArrayExpression,
     ArrowExpressionBody,
@@ -549,6 +550,12 @@ impl<'alloc> NodeTypeIdAccessor for ComputedPropertyName<'alloc> {
 impl<'alloc> NodeTypeIdAccessor for StaticPropertyName {
     fn get_type_id(&self) -> NodeTypeId {
         NodeTypeId::StaticPropertyName
+    }
+}
+
+impl<'alloc> NodeTypeIdAccessor for NumericLiteral {
+    fn get_type_id(&self) -> NodeTypeId {
+        NodeTypeId::NumericLiteral
     }
 }
 

@@ -18,6 +18,10 @@ class OrderedSet:
     def add(self, v):
         self._data[v] = 1
 
+    def extend(self, iterable):
+        for v in iterable:
+            self.add(v)
+
     def remove(self, v):
         del self._data[v]
 
