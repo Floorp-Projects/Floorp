@@ -102,7 +102,7 @@ es_419{
             wara{"dígitos en Warang Citi"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         enclosed{"{0} — Adjunto"}
         extended{"{0} — Extendido"}

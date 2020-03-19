@@ -92,5 +92,5 @@ to{
     CurrencyUnitPatterns{
         other{"{1} {0}"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

@@ -6,16 +6,15 @@
 #  file:  line_loose_cj.txt
 #
 # Reference Line Break rules for intltest rbbi/RBBIMonkeyTest.
-# Rules derived from Unicode Standard Annex #14 Revision 40 for Unicode 11.0
+# Rules derived from Unicode Standard Annex #14 Revision 44 for Unicode 13.0
 #
 # Note: Rule syntax and the monkey test itself are still a work in progress.
 #       They are expected to change with review and the addition of support for rule tailoring.
 #
 #         Line Breaking Rules
 #         Implement default line breaking as defined by
-#         Unicode Standard Annex #14 Revision 34 for Unicode 8.0
-#         http://www.unicode.org/reports/tr14/
-#         tailored as noted in 2nd paragraph below..
+#         Unicode Standard Annex #14
+#         http://www.unicode.org/reports/tr14/, tailored as noted below.
 #
 #         This tailors the line break behavior to correspond to CSS
 #         line-break=loose (BCP47 -u-lb-loose) as defined for Chinese & Japanese.
@@ -86,6 +85,13 @@ WJ = [:LineBreak =  Word_Joiner:];
 XX = [:LineBreak =  Unknown:];
 ZW = [:LineBreak =  ZWSpace:];
 ZWJ = [:LineBreak =  ZWJ:];
+
+# OP30 and CP30 are variants of OP and CP that appear in rule LB30 from UAX 14.
+# Limitations of this monkey test rule parser require that these definitions be pulled out
+# rather than appearing in-line in LB 30.
+
+OP30 = [OP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
+CP30 = [CP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
 
 # LB1 - Resolve AI, CB, CJ, SA, SG, and XX into other line breaking classes
 AL = [AL AI SG XX ];
@@ -196,11 +202,8 @@ LB21.2:      BB CM* [^CM CB];
 
 LB21b:       SY CM* HL;
 
-LB22.1:        (AL | HL | CM) CM* IN;   # The CM is from LB10, treat an unattached CM as AL.
-LB22.2:       EX CM* IN;
-LB22.3:       (ID | EB | EM) CM* IN;
-# LB22.4:       IN CM* IN;  # delete this rule for CSS loose.
-LB22.5:       NU CM* IN;
+
+LB22:        [^IN] CM* IN;   # For CSS Loose, allow breaks between adjacent ellipses characters.
 
 LB23.1:      (AL | HL | CM) CM* NU;
 LB23.2:      NU CM* (AL | HL);
@@ -227,13 +230,13 @@ LB28:        (AL | HL | CM)CM* (AL | HL);
 LB29:        IS CM* (AL | HL);
 
 # LB30  is adjusted for unattached leading CM being treated as AL.
-LB30.1:      (AL | CM | HL | NU) CM* OP;
-LB30.2:      CP CM* (AL | HL | NU);
+LB30.1:      (AL | CM | HL | NU) CM* OP30;
+LB30.2:      CP30 CM* (AL | HL | NU);
 
 # LB30a  keep pairs of RI together.
-LB30a.1:     RI CM* RI         ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS CM];
-LB30a.2:     RI CM* RI CM* CMS ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS CM];
-LB30a.3:     RI CM* RI CM* [BK CR LF NL SP ZW WJ GL CL CP EX IS SY QU BA HY NS ZWJ]?;
+LB30a.1:     RI CM* RI         ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS IN CM];
+LB30a.2:     RI CM* RI CM* CMS ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS IN CM];
+LB30a.3:     RI CM* RI CM* [BK CR LF NL SP ZW WJ GL CL CP EX IS SY QU BA HY NS IN ZWJ]?;
 
 # LB30b Do not break between Emoji Base and Emoji Modifier
 LB30b:       EB CM* EM;

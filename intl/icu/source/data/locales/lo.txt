@@ -263,7 +263,7 @@ lo{
         }
         native{"laoo"}
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         chinese{
             DateTimePatterns{

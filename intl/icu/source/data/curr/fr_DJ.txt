@@ -7,5 +7,5 @@ fr_DJ{
             "franc djiboutien",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

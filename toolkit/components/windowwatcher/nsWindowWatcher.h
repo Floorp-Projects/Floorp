@@ -53,8 +53,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static int32_t GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
                                        uint32_t aChromeFlags,
                                        bool aCalledFromJS,
-                                       bool aPositionSpecified,
-                                       bool aSizeSpecified);
+                                       bool aWidthSpecified);
 
   // Will first look for a caller on the JS stack, and then fall back on
   // aCurrentContext if it can't find one.
@@ -86,10 +85,15 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static nsresult URIfromURL(const char* aURL, mozIDOMWindowProxy* aParent,
                              nsIURI** aURI);
 
-  static uint32_t CalculateChromeFlagsForChild(const nsACString& aFeaturesStr);
+  static bool ShouldOpenPopup(const nsACString& aFeatures,
+                              const SizeSpec& aSizeSpec);
+
+  static uint32_t CalculateChromeFlagsForChild(const nsACString& aFeaturesStr,
+                                               const SizeSpec& aSizeSpec);
 
   static uint32_t CalculateChromeFlagsForParent(mozIDOMWindowProxy* aParent,
                                                 const nsACString& aFeaturesStr,
+                                                const SizeSpec& aSizeSpec,
                                                 bool aDialog, bool aChromeURL,
                                                 bool aHasChromeParent,
                                                 bool aCalledFromJS);
@@ -121,10 +125,9 @@ class nsWindowWatcher : public nsIWindowWatcher,
 
   static uint32_t CalculateChromeFlagsHelper(uint32_t aInitialFlags,
                                              const nsACString& aFeatures,
+                                             const SizeSpec& aSizeSpec,
                                              bool& presenceFlag,
-                                             bool aDialog = false,
-                                             bool aHasChromeParent = false,
-                                             bool aChromeURL = false);
+                                             bool aHasChromeParent = false);
   static uint32_t EnsureFlagsSafeForContent(uint32_t aChromeFlags,
                                             bool aChromeURL = false);
 

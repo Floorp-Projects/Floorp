@@ -21,6 +21,6 @@ jobs:
     - name: Initialize repository
       run: make init
     - name: Build
-      run: make all
+      run: RUSTFLAGS="-D warnings" make all
     - name: Test
       run: make check

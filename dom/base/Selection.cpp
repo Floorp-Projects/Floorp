@@ -326,15 +326,20 @@ void Selection::ToStringWithFormat(const nsAString& aFormatType,
 }
 
 void Selection::SetInterlinePosition(bool aHintRight, ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
     return;
   }
+
   mFrameSelection->SetHint(aHintRight ? CARET_ASSOCIATE_AFTER
                                       : CARET_ASSOCIATE_BEFORE);
 }
 
 bool Selection::GetInterlinePosition(ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
     return false;
@@ -361,6 +366,8 @@ bool Selection::IsEditorSelection() const {
 
 Nullable<int16_t> Selection::GetCaretBidiLevel(
     mozilla::ErrorResult& aRv) const {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return Nullable<int16_t>();
@@ -373,6 +380,8 @@ Nullable<int16_t> Selection::GetCaretBidiLevel(
 
 void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
                                   mozilla::ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -519,11 +528,12 @@ nsresult Selection::MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
   return AddRangesForSelectableNodes(&aRange, aOutIndex);
 }
 
-Selection::Selection(nsFrameSelection* aFrameSelection)
+Selection::Selection(SelectionType aSelectionType,
+                     nsFrameSelection* aFrameSelection)
     : mFrameSelection(aFrameSelection),
       mCachedOffsetForFrame(nullptr),
       mDirection(eDirNext),
-      mSelectionType(SelectionType::eNormal),
+      mSelectionType(aSelectionType),
       mCustomColors(nullptr),
       mSelectionChangeBlockerCount(0),
       mUserInitiated(false),
@@ -1236,6 +1246,8 @@ nsresult Selection::GetIndicesForInterval(
 }
 
 nsresult Selection::GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!aReturnFrame) return NS_ERROR_NULL_POINTER;
 
   int32_t frameOffset = 0;
@@ -1660,6 +1672,8 @@ nsresult Selection::GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
 }
 
 nsIContent* Selection::GetAncestorLimiter() const {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (mFrameSelection) {
     return mFrameSelection->GetAncestorLimiter();
   }
@@ -1667,6 +1681,8 @@ nsIContent* Selection::GetAncestorLimiter() const {
 }
 
 void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
     frameSelection->SetAncestorLimiter(aLimiter);
@@ -1695,6 +1711,7 @@ nsresult Selection::StartAutoScrollTimer(nsIFrame* aFrame,
                                          const nsPoint& aPoint,
                                          uint32_t aDelay) {
   MOZ_ASSERT(aFrame, "Need a frame");
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
   nsresult result;
   if (!mFrameSelection) {
@@ -1793,7 +1810,11 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
 }
 
 void Selection::RemoveAllRanges(ErrorResult& aRv) {
-  if (!mFrameSelection) return;  // nothing to do
+  if (!mFrameSelection) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
+
   RefPtr<nsPresContext> presContext = GetPresContext();
   nsresult result = Clear(presContext);
   if (NS_FAILED(result)) {
@@ -2882,7 +2903,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
                                    ScrollAxis aVertical, ScrollAxis aHorizontal,
                                    int32_t aFlags) {
   if (!mFrameSelection) {
-    return NS_OK;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<PresShell> presShell = mFrameSelection->GetPresShell();
@@ -3149,8 +3170,12 @@ void Selection::DeleteFromDocument(ErrorResult& aRv) {
 
 void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
                        const nsAString& aGranularity, ErrorResult& aRv) {
-  // Silently exit if there's no selection or no focus node.
-  if (!mFrameSelection || !GetAnchorFocusRange() || !GetFocusNode()) {
+  if (!mFrameSelection) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
+
+  if (!GetAnchorFocusRange() || !GetFocusNode()) {
     return;
   }
 
@@ -3277,6 +3302,7 @@ void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
                                          const RawRangeBoundary& aFocusRef,
                                          ErrorResult& aRv) {
   if (!mFrameSelection) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
   }
 
@@ -3368,7 +3394,9 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
  * new language is left-to-right
  */
 nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
-  if (!mFrameSelection) return NS_ERROR_NOT_INITIALIZED;  // Can't do selection
+  if (!mFrameSelection) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
 

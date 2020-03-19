@@ -265,5 +265,5 @@ ku{
         FK{"Giravên Falkland"}
         TL{"Tîmora Rojhilat"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

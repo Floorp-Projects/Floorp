@@ -11,31 +11,32 @@
  */
 
 /*
- * Created on Fri Apr 12 13:11:07 2019 from UCD data files with version info:
+ * Created on Thu Mar 12 09:57:47 2020 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2019-03-05, 22:57:00 GMT [KW]
-# © 2019 Unicode®, Inc.
+# Date: 2020-03-06, 20:34:00 GMT [KW]
+# © 2020 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
+# For terms of use, see https://www.unicode.org/terms_of_use.html
 #
 # For documentation, see the following:
 # NamesList.html
 # UAX #38, "Unicode Han Database (Unihan)"
-# UAX #44, "Unicode Character Database."
+# UAX #44, "Unicode Character Database"
+# UTS #51, "Unicode Emoji"
 #
-# The UAXes can be accessed at http://www.unicode.org/versions/Unicode12.0.0/
+# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode13.0.0/
 
-This directory contains the preliminary data files under development
-for the Unicode Character Database, for Version 12.1.0 of the Unicode Standard.
+This directory contains the final data files 
+for the Unicode Character Database, for Version 13.0.0 of the Unicode Standard.
 
 # IdentifierStatus.txt
-# Date: 2019-01-30, 12:52:06 GMT
+# Date: 2020-02-07, 22:02:47 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2018-11-09 21:36:19 GMT [JHJ]
+# Date: 2020-02-18 18:27:33 GMT [JHJ]
 
 # VerticalOrientation-17.txt
 # Date: 2016-10-20, 07:00:00 GMT [EM, KI, LI]
@@ -248,8 +249,12 @@ enum class Script : int16_t {
   NYIAKENG_PUACHUE_HMONG = 186,
   NANDINAGARI = 187,
   WANCHO = 188,
+  CHORASMIAN = 189,
+  DIVES_AKURU = 190,
+  KHITAN_SMALL_SCRIPT = 191,
+  YEZIDI = 192,
 
-  NUM_SCRIPT_CODES = 189,
+  NUM_SCRIPT_CODES = 193,
 
   INVALID = -1
 };

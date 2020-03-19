@@ -8,5 +8,5 @@ en_PN{
             "New Zealand Dollar",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

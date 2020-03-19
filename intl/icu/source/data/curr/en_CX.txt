@@ -8,5 +8,5 @@ en_CX{
             "Australian Dollar",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

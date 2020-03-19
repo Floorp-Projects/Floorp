@@ -3,9 +3,12 @@ use std::iter;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::{parse_script, ParseOptions};
+use ast::source_atom_set::SourceAtomSet;
 use ast::{arena, source_location::SourceLocation, types::*};
 use bumpalo::{self, Bump};
 use generated_parser::{self, AstBuilder, ParseError, Result, TerminalId};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[cfg(all(feature = "unstable", test))]
 mod benchmarks {
@@ -60,13 +63,14 @@ fn chunks_to_string<'a, T: IntoChunks<'a>>(code: T) -> String {
 fn try_parse<'alloc, 'source, Source>(
     allocator: &'alloc Bump,
     code: Source,
-) -> Result<arena::Box<'alloc, Script<'alloc>>>
+) -> Result<'alloc, arena::Box<'alloc, Script<'alloc>>>
 where
     Source: IntoChunks<'source>,
 {
     let buf = arena::alloc_str(allocator, &chunks_to_string(code));
     let options = ParseOptions::new();
-    parse_script(allocator, &buf, &options)
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    parse_script(allocator, &buf, &options, atoms.clone())
 }
 
 fn assert_parses<'alloc, T: IntoChunks<'alloc>>(code: T) {
@@ -128,11 +132,12 @@ fn assert_incomplete<'alloc, T: IntoChunks<'alloc>>(code: T) {
 // same sequence of tokens (although possibly at different offsets).
 fn assert_same_tokens<'alloc>(left: &str, right: &str) {
     let allocator = &Bump::new();
-    let mut left_lexer = Lexer::new(allocator, left.chars());
-    let mut right_lexer = Lexer::new(allocator, right.chars());
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    let mut left_lexer = Lexer::new(allocator, left.chars(), atoms.clone());
+    let mut right_lexer = Lexer::new(allocator, right.chars(), atoms.clone());
 
     let mut parser = Parser::new(
-        AstBuilder::new(allocator),
+        AstBuilder::new(allocator, atoms.clone()),
         generated_parser::START_STATE_MODULE,
     );
 
@@ -163,9 +168,10 @@ fn assert_same_tokens<'alloc>(left: &str, right: &str) {
 fn assert_can_close_after<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
     let buf = chunks_to_string(code);
-    let mut lexer = Lexer::new(allocator, buf.chars());
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    let mut lexer = Lexer::new(allocator, buf.chars(), atoms.clone());
     let mut parser = Parser::new(
-        AstBuilder::new(allocator),
+        AstBuilder::new(allocator, atoms.clone()),
         generated_parser::START_STATE_SCRIPT,
     );
     loop {
@@ -438,6 +444,7 @@ fn test_awkward_chunks() {
 
     let allocator = &Bump::new();
     let actual = try_parse(allocator, &vec!["x/", "=2;"]).unwrap();
+    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
     let expected = Script {
         directives: arena::Vec::new_in(allocator),
         statements: bumpalo::vec![
@@ -451,7 +458,7 @@ fn test_awkward_chunks() {
                     binding: SimpleAssignmentTarget::AssignmentTargetIdentifier(
                         AssignmentTargetIdentifier {
                             name: Identifier {
-                                value: "x",
+                                value: atoms.borrow_mut().insert("x"),
                                 loc: SourceLocation::new(0, 1),
                             },
                             loc: SourceLocation::new(0, 1),
@@ -459,10 +466,10 @@ fn test_awkward_chunks() {
                     ),
                     expression: arena::alloc(
                         allocator,
-                        Expression::LiteralNumericExpression {
+                        Expression::LiteralNumericExpression(NumericLiteral {
                             value: 2.0,
                             loc: SourceLocation::new(3, 4),
-                        },
+                        }),
                     ),
                     loc: SourceLocation::new(0, 4),
                 },

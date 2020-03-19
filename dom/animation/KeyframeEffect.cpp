@@ -1658,6 +1658,10 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     return true;
   }
 
+  const bool enableMainthreadSynchronizationWithGeometricAnimations =
+      StaticPrefs::
+          dom_animations_mainthread_synchronization_with_geometric_animations();
+
   for (const AnimationProperty& property : mProperties) {
     // If there is a property for animations level that is overridden by
     // !important rules, it should not block other animations from running
@@ -1674,7 +1678,8 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
       continue;
     }
     // Check for geometric properties
-    if (IsGeometricProperty(property.mProperty)) {
+    if (enableMainthreadSynchronizationWithGeometricAnimations &&
+        IsGeometricProperty(property.mProperty)) {
       aPerformanceWarning =
           AnimationPerformanceWarning::Type::TransformWithGeometricProperties;
       return true;

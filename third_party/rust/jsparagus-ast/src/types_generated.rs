@@ -349,10 +349,7 @@ pub enum Expression<'alloc> {
     LiteralNullExpression {
         loc: SourceLocation,
     },
-    LiteralNumericExpression {
-        value: f64,
-        loc: SourceLocation,
-    },
+    LiteralNumericExpression(NumericLiteral),
     LiteralRegExpExpression {
         pattern: SourceAtomSetIndex,
         global: bool,
@@ -477,6 +474,7 @@ pub enum OptionalChain<'alloc> {
 pub enum PropertyName<'alloc> {
     ComputedPropertyName(ComputedPropertyName<'alloc>),
     StaticPropertyName(StaticPropertyName),
+    StaticNumericPropertyName(NumericLiteral),
 }
 
 #[derive(Debug, PartialEq)]
@@ -490,6 +488,7 @@ pub struct CallExpression<'alloc> {
 pub enum ClassElementName<'alloc> {
     ComputedPropertyName(ComputedPropertyName<'alloc>),
     StaticPropertyName(StaticPropertyName),
+    StaticNumericPropertyName(NumericLiteral),
     PrivateFieldName(PrivateIdentifier),
 }
 
@@ -859,6 +858,12 @@ pub struct ComputedPropertyName<'alloc> {
 #[derive(Debug, PartialEq)]
 pub struct StaticPropertyName {
     pub value: SourceAtomSetIndex,
+    pub loc: SourceLocation,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct NumericLiteral {
+    pub value: f64,
     pub loc: SourceLocation,
 }
 

@@ -212,6 +212,9 @@ struct MOZ_RAII AutoPrepareFocusRange {
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
+    MOZ_ASSERT(aSelection);
+    MOZ_ASSERT(aSelection->GetType() == SelectionType::eNormal);
+
     if (aSelection->mRanges.Length() <= 1) {
       return;
     }
@@ -304,8 +307,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
 nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
                                    const bool aAccessibleCaretEnabled) {
   for (size_t i = 0; i < ArrayLength(mDomSelections); i++) {
-    mDomSelections[i] = new Selection(this);
-    mDomSelections[i]->SetType(kPresentSelectionTypes[i]);
+    mDomSelections[i] = new Selection(kPresentSelectionTypes[i], this);
   }
 
 #ifdef XP_MACOSX
@@ -458,7 +460,7 @@ void nsFrameSelection::SetDesiredPos(nsPoint aPos) {
 
 nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
     nsIFrame* aFrame, const nsPoint& aPoint, nsIFrame** aRetFrame,
-    nsPoint& aRetPoint) {
+    nsPoint& aRetPoint) const {
   //
   // The whole point of this method is to return a frame and point that
   // that lie within the same valid subtree as the anchor node's frame,
@@ -472,7 +474,9 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
   // return the frame for the root of the subtree.
   //
 
-  if (!aFrame || !aRetFrame) return NS_ERROR_NULL_POINTER;
+  if (!aFrame || !aRetFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *aRetFrame = aFrame;
   aRetPoint = aPoint;
@@ -482,11 +486,15 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
   //
 
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
+  if (!mDomSelections[index]) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   nsCOMPtr<nsIContent> anchorContent =
       do_QueryInterface(mDomSelections[index]->GetAnchorNode());
-  if (!anchorContent) return NS_ERROR_FAILURE;
+  if (!anchorContent) {
+    return NS_ERROR_FAILURE;
+  }
 
   //
   // Now find the root of the subtree containing the anchor's content.
@@ -550,7 +558,9 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
 
   *aRetFrame = anchorRoot->GetPrimaryFrame();
 
-  if (!*aRetFrame) return NS_ERROR_FAILURE;
+  if (!*aRetFrame) {
+    return NS_ERROR_FAILURE;
+  }
 
   //
   // Now make sure that aRetPoint is converted to the same coordinate

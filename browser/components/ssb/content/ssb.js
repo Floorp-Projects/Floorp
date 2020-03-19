@@ -45,6 +45,8 @@ function init() {
     Ci.nsIWebProgress.NOTIFY_STATE_ALL
   );
   gSSBBrowser.src = uri.spec;
+
+  document.getElementById("title").textContent = gSSB.name;
 }
 
 class ProgressListener {

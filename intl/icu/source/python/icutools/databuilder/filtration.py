@@ -12,7 +12,6 @@ import sys
 
 from . import *
 from . import utils
-from .locale_dependencies import data as DEPENDENCY_DATA
 from .request_types import *
 
 
@@ -21,7 +20,8 @@ from .request_types import *
 # TODO(ICU-20301): Make this inherit from abc.ABC.
 class Filter(object):
     @staticmethod
-    def create_from_json(json_data):
+    def create_from_json(json_data, io):
+        assert io != None
         if "filterType" in json_data:
             filter_type = json_data["filterType"]
         else:
@@ -36,9 +36,9 @@ class Filter(object):
         elif filter_type == "exclude":
             return ExclusionFilter()
         elif filter_type == "union":
-            return UnionFilter(json_data)
+            return UnionFilter(json_data, io)
         elif filter_type == "locale":
-            return LocaleFilter(json_data)
+            return LocaleFilter(json_data, io)
         else:
             print("Error: Unknown filterType option: %s" % filter_type, file=sys.stderr)
             return None
@@ -50,11 +50,18 @@ class Filter(object):
             assert self.match(file)
         return [request]
 
-    @classmethod
-    def _file_to_file_stem(cls, file):
+    @staticmethod
+    def _file_to_file_stem(file):
         start = file.filename.rfind("/")
         limit = file.filename.rfind(".")
         return file.filename[start+1:limit]
+
+    @staticmethod
+    def _file_to_subdir(file):
+        limit = file.filename.rfind("/")
+        if limit == -1:
+            return None
+        return file.filename[:limit]
 
     @abstractmethod
     def match(self, file):
@@ -133,11 +140,11 @@ class RegexFilter(WhitelistBlacklistFilter):
 
 
 class UnionFilter(Filter):
-    def __init__(self, json_data):
+    def __init__(self, json_data, io):
         # Collect the sub-filters.
         self.sub_filters = []
         for filter_json in json_data["unionOf"]:
-            self.sub_filters.append(Filter.create_from_json(filter_json))
+            self.sub_filters.append(Filter.create_from_json(filter_json, io))
 
     def match(self, file):
         """Match iff any of the sub-filters match."""
@@ -151,36 +158,31 @@ LANGUAGE_SCRIPT_REGEX = re.compile(r"^([a-z]{2,3})_[A-Z][a-z]{3}$")
 LANGUAGE_ONLY_REGEX = re.compile(r"^[a-z]{2,3}$")
 
 class LocaleFilter(Filter):
-    def __init__(self, json_data):
-        self.locales_requested = set()
-        self.locales_required = set()
+    def __init__(self, json_data, io):
+        self.locales_requested = list(json_data["whitelist"])
         self.include_children = json_data.get("includeChildren", True)
         self.include_scripts = json_data.get("includeScripts", False)
 
-        # Compute the requested and required locales.
-        for locale in json_data["whitelist"]:
-            self._add_locale_and_parents(locale)
-
-    def _add_locale_and_parents(self, locale):
-        # Store the locale as *requested*
-        self.locales_requested.add(locale)
-        # Store the locale and its dependencies as *required*
-        while locale is not None:
-            self.locales_required.add(locale)
-            locale = self._get_parent_locale(locale)
+        # Load the dependency graph from disk
+        self.dependency_data_by_tree = {
+            tree: io.read_locale_deps(tree)
+            for tree in utils.ALL_TREES
+        }
 
     def match(self, file):
+        tree = self._file_to_subdir(file)
+        assert tree is not None
         locale = self._file_to_file_stem(file)
 
         # A locale is *required* if it is *requested* or an ancestor of a
         # *requested* locale.
-        if locale in self.locales_required:
+        if locale in self._locales_required(tree):
             return True
 
         # Resolve include_scripts and include_children.
-        return self._match_recursive(locale)
+        return self._match_recursive(locale, tree)
 
-    def _match_recursive(self, locale):
+    def _match_recursive(self, locale, tree):
         # Base case: return True if we reached a *requested* locale,
         # or False if we ascend out of the locale tree.
         if locale is None:
@@ -192,42 +194,51 @@ class LocaleFilter(Filter):
         # This causes sr_Latn to check sr instead of going directly to root.
         if self.include_scripts:
             match = LANGUAGE_SCRIPT_REGEX.match(locale)
-            if match and self._match_recursive(match.group(1)):
+            if match and self._match_recursive(match.group(1), tree):
                 return True
 
         # Check if we are a descendant of a *requested* locale.
         if self.include_children:
-            parent = self._get_parent_locale(locale)
-            if self._match_recursive(parent):
+            parent = self._get_parent_locale(locale, tree)
+            if self._match_recursive(parent, tree):
                 return True
 
         # No matches.
         return False
 
-    @classmethod
-    def _get_parent_locale(cls, locale):
-        if locale in DEPENDENCY_DATA["parents"]:
-            return DEPENDENCY_DATA["parents"][locale]
-        if locale in DEPENDENCY_DATA["aliases"]:
-            return DEPENDENCY_DATA["aliases"][locale]
+    def _get_parent_locale(self, locale, tree):
+        """Gets the parent locale in the given tree, according to dependency data."""
+        dependency_data = self.dependency_data_by_tree[tree]
+        if "parents" in dependency_data and locale in dependency_data["parents"]:
+            return dependency_data["parents"][locale]
+        if "aliases" in dependency_data and locale in dependency_data["aliases"]:
+            return dependency_data["aliases"][locale]
         if LANGUAGE_ONLY_REGEX.match(locale):
             return "root"
         i = locale.rfind("_")
         if i < 0:
+            assert locale == "root"
             return None
         return locale[:i]
 
+    def _locales_required(self, tree):
+        """Returns a generator of all required locales in the given tree."""
+        for locale in self.locales_requested:
+            while locale is not None:
+                yield locale
+                locale = self._get_parent_locale(locale, tree)
 
-def apply_filters(requests, config):
+
+def apply_filters(requests, config, io):
     """Runs the filters and returns a new list of requests."""
-    requests = _apply_file_filters(requests, config)
-    requests = _apply_resource_filters(requests, config)
+    requests = _apply_file_filters(requests, config, io)
+    requests = _apply_resource_filters(requests, config, io)
     return requests
 
 
-def _apply_file_filters(old_requests, config):
+def _apply_file_filters(old_requests, config, io):
     """Filters out entire files."""
-    filters = _preprocess_file_filters(old_requests, config)
+    filters = _preprocess_file_filters(old_requests, config, io)
     new_requests = []
     for request in old_requests:
         category = request.category
@@ -238,7 +249,7 @@ def _apply_file_filters(old_requests, config):
     return new_requests
 
 
-def _preprocess_file_filters(requests, config):
+def _preprocess_file_filters(requests, config, io):
     all_categories = set(
         request.category
         for request in requests
@@ -261,7 +272,7 @@ def _preprocess_file_filters(requests, config):
         elif filter_json == "include":
             pass  # no-op
         else:
-            filters[category] = Filter.create_from_json(filter_json)
+            filters[category] = Filter.create_from_json(filter_json, io)
     if "featureFilters" in json_data:
         for category in json_data["featureFilters"]:
             if category not in all_categories:
@@ -363,14 +374,14 @@ class ResourceFilterInfo(object):
                 i += 1
         return new_requests
 
-    @classmethod
-    def _generate_resource_filter_txt(cls, rules):
+    @staticmethod
+    def _generate_resource_filter_txt(rules):
         result = "# Caution: This file is automatically generated\n\n"
         result += "\n".join(rules)
         return result
 
 
-def _apply_resource_filters(all_requests, config):
+def _apply_resource_filters(all_requests, config, io):
     """Creates filters for looking within resource bundle files."""
     json_data = config.filters_json_data
     if "resourceFilters" not in json_data:
@@ -379,7 +390,7 @@ def _apply_resource_filters(all_requests, config):
     collected = {}
     for entry in json_data["resourceFilters"]:
         if "files" in entry:
-            file_filter = Filter.create_from_json(entry["files"])
+            file_filter = Filter.create_from_json(entry["files"], io)
         else:
             file_filter = InclusionFilter()
         for category in entry["categories"]:

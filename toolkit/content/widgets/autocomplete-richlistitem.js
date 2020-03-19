@@ -378,7 +378,7 @@
     }
 
     _unescapeUrl(url) {
-      return Services.textToSubURI.unEscapeURIForUI("UTF-8", url);
+      return Services.textToSubURI.unEscapeURIForUI(url);
     }
 
     _reuseAcItem() {

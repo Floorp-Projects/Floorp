@@ -235,5 +235,5 @@ naq{
             "Zimbabwe Dollari",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

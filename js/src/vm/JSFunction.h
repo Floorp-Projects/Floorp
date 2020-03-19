@@ -22,11 +22,10 @@ class FunctionExtended;
 struct SelfHostedLazyScript;
 
 using Native = JSNative;
-}  // namespace js
 
-static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET = 2;
-static const uint32_t JSSLOT_BOUND_FUNCTION_THIS = 3;
-static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS = 4;
+static constexpr uint32_t BoundFunctionEnvTargetSlot = 2;
+static constexpr uint32_t BoundFunctionEnvThisSlot = 3;
+static constexpr uint32_t BoundFunctionEnvArgsSlot = 4;
 
 static const char FunctionConstructorMedialSigils[] = ") {\n";
 static const char FunctionConstructorFinalBrace[] = "\n}";
@@ -333,6 +332,8 @@ class FunctionFlags {
   bool isNativeConstructor() const { return hasFlags(NATIVE_CTOR); }
 };
 
+}  // namespace js
+
 class JSFunction : public js::NativeObject {
  public:
   static const JSClass class_;
@@ -350,6 +351,7 @@ class JSFunction : public js::NativeObject {
    * If any of these flags needs to be accessed in off-thread JIT
    * compilation, copy it to js::jit::WrappedFunction.
    */
+  using FunctionFlags = js::FunctionFlags;
   FunctionFlags flags_;
 
   union U {

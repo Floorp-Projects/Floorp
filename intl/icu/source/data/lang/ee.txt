@@ -295,7 +295,7 @@ ee{
             tibt{"tibet digitwo"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"gbegbɔgblɔ {0}"}
         script{"gbeŋɔŋlɔ {0}"}

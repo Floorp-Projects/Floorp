@@ -111,5 +111,5 @@ ig{
             other{"(ego amaghị)"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

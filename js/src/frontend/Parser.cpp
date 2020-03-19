@@ -875,6 +875,16 @@ typename Scope::Data* NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc,
   return bindings;
 }
 
+GlobalScope::Data* NewEmptyGlobalScopeData(JSContext* cx, LifoAlloc& alloc,
+                                           uint32_t numBindings) {
+  return NewEmptyBindingData<GlobalScope>(cx, alloc, numBindings);
+}
+
+LexicalScope::Data* NewEmptyLexicalScopeData(JSContext* cx, LifoAlloc& alloc,
+                                             uint32_t numBindings) {
+  return NewEmptyBindingData<LexicalScope>(cx, alloc, numBindings);
+}
+
 namespace detail {
 
 template <class Data>

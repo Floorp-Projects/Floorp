@@ -7,5 +7,5 @@ ha_GH{
             "GHS",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }
