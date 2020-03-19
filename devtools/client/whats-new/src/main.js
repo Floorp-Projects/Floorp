@@ -25,48 +25,43 @@ const aside = {
   header: "Instantly Send Tabs to Mobile",
   content: `Test your site on mobile and other devices without having to copy, paste, or leave the browser.`,
   cta: "Learn More About Send Tabs",
-  href: `https://support.mozilla.org/kb/send-tab-firefox-other-devices?${utmParams}`,
+  href: `https://play.google.com/store/apps/details?id=org.mozilla.fennec_aurora&referrer=utm_source%3Dmozilla%26utm_medium%3DReferral%26utm_campaign%3Dmozilla-org${utmParams}`,
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 74 & 73)",
+  title: "What’s New in DevTools (Firefox 75)",
   linkText: "Read more",
-  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/74?${utmParams}`,
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/75?${utmParams}`,
   features: [
     {
-      header: `Debugging Async/Await Stacks`,
-      description: `Awaiting call stacks in the Debugger allow you to examine the promise-driven function calls at previous points in time.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}`,
+      header: `Instant evaluation for Console expressions`,
+      description: `Identify and fix errors more rapidly than before. As long as expressions typed into the Web Console are side-effect free, their results will be previewed while you type.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}`,
     },
     {
-      header: `Optional chaining in Console`,
-      description: `Freshly landed support for the optional chaining operator "?." which can also be used with Console's autocomplete.`,
-      href: `https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining?${utmParams}`,
+      header: `Measurement area is now resizable`,
+      description: `Quickly drag the area on the fly to measure the height, width and diagonal in your page. Enable the feature in Setting, under "Available Toolbox Buttons".`,
+      href: `https://developer.mozilla.org/docs/Tools/Measure_a_portion_of_the_page?${utmParams}`,
     },
     {
-      header: `New in 73: More WebSocket protocols`,
-      description: `WAMP-encoded data is now decoded into a readable payload (on top of SignalR, Socket.IO, etc) to make it easier to debug various WebSocket message formats.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/Inspecting_web_sockets?${utmParams}#Supported_WS_protocols`,
+      header: `Event breakpoints for WebSockets`,
+      description: `Newly added event breakpoint types in the Debugger let you pause or log when WebSocket event handlers get executed.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/Set_event_listener_breakpoints?${utmParams}`,
     },
     {
-      header: `New in 73: CORS Network Errors`,
-      description: `To make CORS network errors harder to miss, Console now shows them as errors and not warnings.`,
-      href: `https://wiki.developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors?${utmParams}`,
+      header: `Use XPath to find DOM elements`,
+      description: `XPath queries, common in automation tools, can now be used in Inspector’s HTML search to test expressions and find matching elements.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Examine_and_edit_HTML?${utmParams}#XPath_search`,
     },
     {
-      header: `New in 73: Performance Highlights`,
-      description: `We made fast-firing requests in Network panel and large JavaScript source maps in Debugger a lot snappier.`,
-      href: `https://hacks.mozilla.org/2020/02/firefox-73-is-upon-us/?${utmParams}`,
+      header: `Polished Network analysis`,
+      description: `Optimized table rendering renders many simultaneous requests much faster. Borders between columns and higher contrast state for filter buttons makes reading easier.`,
+      href: `https://wiki.developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
     },
     {
-      header: `New in 73: CSP Style Directives No Longer Prevent CSS Edits`,
-      description: `Editing an element’s inline style from Inspector’s rule-view now works even if style-src is blocked by CSP.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Examine_and_edit_CSS?${utmParams}`,
-    },
-    {
-      header: `New in 72: Correct Meta Viewport in Responsive Design Mode`,
-      description: `RDM with touch simulation enabled will now correctly simulate the meta viewport rendering of a mobile device.`,
-      href: `https://developer.mozilla.org/docs/Tools/Responsive_Design_Mode?${utmParams}`,
+      header: `Request blocking with “*” wildcards`,
+      description: `Use URL patterns with * wildcards in Network’s Request Blocking panel to test how resilient your site is when matches requests fail.`,
+      href: `https://wiki.developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}#Blocking_specific_URLs`,
     },
   ],
 };
@@ -85,11 +80,6 @@ const dev = {
       header: `Inspect & Debug Service Workers`,
       description: `Start, pause and debug your Service Workers and inspect your Web App Manifests within the long-awaited Application panel.`,
       href: `https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers?${utmParams}`,
-    },
-    {
-      header: `Instantly evaluated Console previews`,
-      description: `Peek into the results of your current Console expression and autocomplete values as you type.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}`,
     },
   ],
 };
