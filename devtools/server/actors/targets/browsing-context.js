@@ -595,11 +595,7 @@ const browsingContextTargetPrototype = {
     } catch (e) {
       // ignore
     }
-    if (
-      metadata &&
-      metadata["inner-window-id"] &&
-      metadata["inner-window-id"] == id
-    ) {
+    if (metadata?.["inner-window-id"] && metadata["inner-window-id"] == id) {
       return true;
     }
 
@@ -1033,7 +1029,7 @@ const browsingContextTargetPrototype = {
    * Reload the page in this browsing context.
    */
   reload(request) {
-    const force = request && request.options && request.options.force;
+    const force = request?.options?.force;
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     Services.tm.dispatchToMainThread(

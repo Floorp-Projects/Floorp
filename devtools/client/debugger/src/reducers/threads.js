@@ -118,7 +118,7 @@ export function startsWithThreadActor(state: State, path: string) {
   const threadActors = getAllThreads(state).map(t => t.actor);
 
   const match = path.match(new RegExp(`(${threadActors.join("|")})\/(.*)`));
-  return match && match[1];
+  return match?.[1];
 }
 
 type OuterState = { threads: ThreadsState };

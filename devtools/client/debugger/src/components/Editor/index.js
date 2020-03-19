@@ -466,7 +466,7 @@ class Editor extends PureComponent<Props, State> {
     }
 
     // if user clicks gutter to set breakpoint on blackboxed source, un-blackbox the source.
-    if (selectedSource && selectedSource.isBlackBoxed) {
+    if (selectedSource?.isBlackBoxed) {
       toggleBlackBox(cx, selectedSource);
     }
 
@@ -689,7 +689,7 @@ class Editor extends PureComponent<Props, State> {
     return (
       <div
         className={classnames("editor-wrapper", {
-          blackboxed: selectedSource && selectedSource.isBlackBoxed,
+          blackboxed: selectedSource?.isBlackBoxed,
           "skip-pausing": skipPausing,
         })}
         ref={c => (this.$editorWrapper = c)}

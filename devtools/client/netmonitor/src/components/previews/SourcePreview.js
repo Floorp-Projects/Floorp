@@ -134,7 +134,7 @@ class SourcePreview extends Component {
   findSearchResult() {
     const { targetSearchResult, resetTargetSearchResult } = this.props;
 
-    if (targetSearchResult && targetSearchResult.line) {
+    if (targetSearchResult?.line) {
       const { line } = targetSearchResult;
       // scroll the editor to center the line
       // with the target search result

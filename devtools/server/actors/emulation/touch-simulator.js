@@ -468,7 +468,7 @@ TouchSimulator.prototype = {
   },
 
   getContent(target) {
-    const win = target && target.ownerDocument ? target.ownerGlobal : null;
+    const win = target?.ownerDocument ? target.ownerGlobal : null;
     return win;
   },
 

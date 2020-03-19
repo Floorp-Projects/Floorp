@@ -199,10 +199,9 @@ class CustomRequestPanel extends Component {
         ? queryArray.map(({ name, value }) => name + "=" + value).join("\n")
         : "";
     }
-    const postData =
-      requestPostData && requestPostData.postData.text
-        ? requestPostData.postData.text
-        : "";
+    const postData = requestPostData?.postData.text
+      ? requestPostData.postData.text
+      : "";
 
     return div(
       { className: "custom-request-panel" },

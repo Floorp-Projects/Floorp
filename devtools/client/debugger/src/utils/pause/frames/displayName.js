@@ -67,10 +67,7 @@ const displayNameMap = {
 
 function mapDisplayNames(frame, library) {
   const { displayName } = frame;
-  return (
-    (displayNameMap[library] && displayNameMap[library][displayName]) ||
-    displayName
-  );
+  return displayNameMap[library]?.[displayName] || displayName;
 }
 
 function getFrameDisplayName(frame: Frame): string {

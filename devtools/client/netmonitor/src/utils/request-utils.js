@@ -197,7 +197,7 @@ function getUrl(url) {
  */
 function getUrlProperty(input, property) {
   const url = getUrl(input);
-  return url && url[property] ? url[property] : "";
+  return url?.[property] ? url[property] : "";
 }
 
 /**

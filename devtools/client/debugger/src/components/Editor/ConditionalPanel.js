@@ -203,7 +203,7 @@ export class ConditionalPanel extends PureComponent<Props> {
 
   getDefaultValue() {
     const { breakpoint, log } = this.props;
-    const options = (breakpoint && breakpoint.options) || {};
+    const options = breakpoint?.options || {};
     return log ? options.logValue : options.condition;
   }
 

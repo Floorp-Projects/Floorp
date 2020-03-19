@@ -69,7 +69,7 @@ class EagerEvaluation extends Component {
     const result = terminalEagerResult.getGrip
       ? terminalEagerResult.getGrip()
       : terminalEagerResult;
-    const isError = result && result.class && result.class === "Error";
+    const isError = result?.class && result.class === "Error";
 
     return REPS.Rep({
       key: "rep",
@@ -101,7 +101,7 @@ class EagerEvaluation extends Component {
 }
 
 function canHighlightObject(obj) {
-  const grip = obj && obj.getGrip && obj.getGrip();
+  const grip = obj?.getGrip && obj.getGrip();
   return (
     grip &&
     (REPS.ElementNode.supportsObject(grip) ||

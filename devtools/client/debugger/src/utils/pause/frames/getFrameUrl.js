@@ -4,10 +4,8 @@
 
 // @flow
 
-import { get } from "lodash";
-
 import type { Frame } from "../../../types";
 
 export function getFrameUrl(frame: Frame) {
-  return get(frame, "source.url", "") || "";
+  return frame?.source?.url ?? "";
 }

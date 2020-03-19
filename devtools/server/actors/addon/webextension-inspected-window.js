@@ -190,7 +190,7 @@ CustomizedReload.prototype = {
     }
 
     const document = subject;
-    const window = document && document.defaultView;
+    const window = document?.defaultView;
 
     // Filter out non interesting documents.
     if (!document || !document.location || !window) {
@@ -629,14 +629,12 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
             throwErr &&
             typeof throwErr === "object" &&
             throwErr.unsafeDereference();
-          const message =
-            unsafeDereference && unsafeDereference.toString
-              ? unsafeDereference.toString()
-              : String(throwErr);
-          const stack =
-            unsafeDereference && unsafeDereference.stack
-              ? unsafeDereference.stack
-              : null;
+          const message = unsafeDereference?.toString
+            ? unsafeDereference.toString()
+            : String(throwErr);
+          const stack = unsafeDereference?.stack
+            ? unsafeDereference.stack
+            : null;
 
           return {
             exceptionInfo: {

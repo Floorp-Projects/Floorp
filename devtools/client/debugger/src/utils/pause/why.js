@@ -46,11 +46,11 @@ export function getPauseReason(why?: ?Why): string | null {
 }
 
 export function isException(why: Why) {
-  return why && why.type && why.type === "exception";
+  return why?.type === "exception";
 }
 
 export function isInterrupted(why: ?Why) {
-  return why && why.type && why.type === "interrupted";
+  return why?.type === "interrupted";
 }
 
 export function inDebuggerEval(why: ?Why) {

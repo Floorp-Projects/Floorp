@@ -193,8 +193,8 @@ describe("pause", () => {
             },
           },
         },
-        mappings: { "1": null },
-        original: { "1": { pending: false, scope: null } },
+        mappings: { "1": undefined },
+        original: { "1": { pending: false, scope: undefined } },
       });
 
       expect(

@@ -116,7 +116,7 @@ class ADBAddon extends EventEmitter {
       return;
     }
     this.status = ADB_ADDON_STATES.PREPARING;
-    if (addon && addon.userDisabled) {
+    if (addon?.userDisabled) {
       await addon.enable();
     } else {
       const install = await AddonManager.getInstallForURL(this._getXpiLink(), {

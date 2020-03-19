@@ -57,10 +57,9 @@ function EvaluationResult(props) {
     typeof message.messageText !== "undefined" &&
     message.messageText !== null
   ) {
-    const messageText =
-      message.messageText && message.messageText.getGrip
-        ? message.messageText.getGrip()
-        : message.messageText;
+    const messageText = message.messageText?.getGrip
+      ? message.messageText.getGrip()
+      : message.messageText;
     if (typeof messageText === "string") {
       messageBody = messageText;
     } else if (

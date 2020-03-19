@@ -250,7 +250,7 @@ define(function(require, exports, module) {
       // Get components for rendering cells.
       let renderCell = this.props.renderCell || RenderCell;
       let renderLabelCell = this.props.renderLabelCell || RenderLabelCell;
-      if (decorator && decorator.renderLabelCell) {
+      if (decorator?.renderLabelCell) {
         renderLabelCell =
           decorator.renderLabelCell(member.object) || renderLabelCell;
       }
@@ -263,7 +263,7 @@ define(function(require, exports, module) {
           value: this.props.provider.getValue(member.object, col.id),
         });
 
-        if (decorator && decorator.renderCell) {
+        if (decorator?.renderCell) {
           renderCell = decorator.renderCell(member.object, col.id);
         }
 

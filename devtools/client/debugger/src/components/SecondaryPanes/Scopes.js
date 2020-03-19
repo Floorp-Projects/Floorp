@@ -272,18 +272,14 @@ const mapStateToProps = state => {
   } = getOriginalFrameScope(
     state,
     cx.thread,
-    selectedSource && selectedSource.id,
-    selectedFrame && selectedFrame.id
+    selectedSource?.id,
+    selectedFrame?.id
   ) || { scope: null, pending: false };
 
   const {
     scope: generatedFrameScopes,
     pending: generatedPending,
-  } = getGeneratedFrameScope(
-    state,
-    cx.thread,
-    selectedFrame && selectedFrame.id
-  ) || {
+  } = getGeneratedFrameScope(state, cx.thread, selectedFrame?.id) || {
     scope: null,
     pending: false,
   };

@@ -94,7 +94,7 @@ export function buildGeneratedBindingList(
             desc: () => Promise.resolve(bindings[name]),
           });
         } else {
-          const globalGrip = globalScope && globalScope.object;
+          const globalGrip = globalScope?.object;
           if (globalGrip) {
             // Should always exist, just checking to keep Flow happy.
 

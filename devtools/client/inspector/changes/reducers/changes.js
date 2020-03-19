@@ -249,7 +249,7 @@ const reducers = {
       rule.selectors.push(selector);
     }
 
-    if (change.remove && change.remove.length) {
+    if (change.remove?.length) {
       for (const decl of change.remove) {
         // Find the position of any added declaration which matches the incoming
         // declaration to be removed.
@@ -307,7 +307,7 @@ const reducers = {
       }
     }
 
-    if (change.add && change.add.length) {
+    if (change.add?.length) {
       for (const decl of change.add) {
         // Find the position of any removed declaration which matches the incoming
         // declaration to be added.

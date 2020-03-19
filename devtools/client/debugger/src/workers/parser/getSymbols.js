@@ -311,16 +311,11 @@ function extendSnippet(
   path?: { node: Node },
   prevPath?: SimplePath
 ) {
-  const computed = path && path.node.computed;
-  const prevComputed = prevPath && prevPath.node.computed;
+  const computed = path?.node.computed;
+  const prevComputed = prevPath?.node.computed;
   const prevArray = t.isArrayExpression(prevPath);
   const array = t.isArrayExpression(path);
-  const value =
-    (path &&
-      path.node.property &&
-      path.node.property.extra &&
-      path.node.property.extra.raw) ||
-    "";
+  const value = path?.node.property?.extra?.raw || "";
 
   if (expression === "") {
     if (computed) {
@@ -460,7 +455,7 @@ function getSnippet(
   }
 
   if (t.isObjectExpression(path)) {
-    const parentPath = prevPath && prevPath.parentPath;
+    const parentPath = prevPath?.parentPath;
     return getObjectSnippet(parentPath, prevPath, expression);
   }
 

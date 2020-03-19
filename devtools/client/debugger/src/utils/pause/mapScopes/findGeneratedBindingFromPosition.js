@@ -260,7 +260,7 @@ async function mapImportReferenceToDescriptor({
     for (
       let op = meta, index = 0;
       op && mappingContains(range, op) && desc && index < 2;
-      index++, op = op && op.parent
+      index++, op = op?.parent
     ) {
       // Calling could potentially trigger side-effects, which would not
       // be ideal for this case.

@@ -254,13 +254,13 @@ function update(
         ...threadState().frameScopes.original,
         [selectedFrameId]: {
           pending: status !== "done",
-          scope: value && value.scope,
+          scope: value?.scope,
         },
       };
 
       const mappings = {
         ...threadState().frameScopes.mappings,
-        [selectedFrameId]: value && value.mappings,
+        [selectedFrameId]: value?.mappings,
       };
 
       return updateThreadState({
@@ -417,7 +417,7 @@ function getPauseLocation(state, action) {
     return null;
   }
 
-  const frame = frames && frames[0];
+  const frame = frames?.[0];
   if (!frame) {
     return previousLocation;
   }
@@ -635,7 +635,7 @@ export function getSelectedFrameId(state: State, thread: ThreadId) {
 
 export function getTopFrame(state: State, thread: ThreadId) {
   const frames = getFrames(state, thread);
-  return frames && frames[0];
+  return frames?.[0];
 }
 
 export function getSkipPausing(state: State) {
@@ -680,7 +680,7 @@ export function getInlinePreviewExpression(
   const previews = getThreadPauseState(state.pause, thread).inlinePreview[
     getGeneratedFrameId(frameId)
   ];
-  return previews && previews[line] && previews[line][expression];
+  return previews?.[line]?.[expression];
 }
 
 // NOTE: currently only used for chrome
