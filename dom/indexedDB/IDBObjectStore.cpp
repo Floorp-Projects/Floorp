@@ -79,7 +79,7 @@ IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
 
 struct IDBObjectStore::StructuredCloneWriteInfo {
   JSAutoStructuredCloneBuffer mCloneBuffer;
-  nsTArray<StructuredCloneFile> mFiles;
+  nsTArray<StructuredCloneFileChild> mFiles;
   IDBDatabase* mDatabase;
   uint64_t mOffsetToKeyProp;
 
@@ -117,7 +117,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo {
 //   what strong references have been acquired so that they can be freed even
 //   if a de-serialization does not occur.
 struct IDBObjectStore::StructuredCloneInfo {
-  nsTArray<StructuredCloneFile> mFiles;
+  nsTArray<StructuredCloneFileChild> mFiles;
 };
 
 namespace {
@@ -229,7 +229,7 @@ bool StructuredCloneWriteCallback(JSContext* aCx,
       return false;
     }
 
-    const DebugOnly<StructuredCloneFile*> newFile =
+    const DebugOnly<StructuredCloneFileChild*> newFile =
         cloneWriteInfo->mFiles.EmplaceBack(mutableFile);
     MOZ_ASSERT(newFile);
 
@@ -293,8 +293,9 @@ bool StructuredCloneWriteCallback(JSContext* aCx,
         }
       }
 
-      const DebugOnly<StructuredCloneFile*> newFile =
-          cloneWriteInfo->mFiles.EmplaceBack(StructuredCloneFile::eBlob, blob);
+      const DebugOnly<StructuredCloneFileChild*> newFile =
+          cloneWriteInfo->mFiles.EmplaceBack(StructuredCloneFileBase::eBlob,
+                                             blob);
       MOZ_ASSERT(newFile);
 
       return true;
@@ -337,8 +338,8 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      const DebugOnly<StructuredCloneFile*> newFile =
-          cloneInfo->mFiles.EmplaceBack(StructuredCloneFile::eBlob, blob);
+      const DebugOnly<StructuredCloneFileChild*> newFile =
+          cloneInfo->mFiles.EmplaceBack(StructuredCloneFileBase::eBlob, blob);
       MOZ_ASSERT(newFile);
 
       return true;
@@ -360,7 +361,7 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      const DebugOnly<StructuredCloneFile*> newFile =
+      const DebugOnly<StructuredCloneFileChild*> newFile =
           cloneInfo->mFiles.EmplaceBack(mutableFile);
       MOZ_ASSERT(newFile);
 
@@ -421,17 +422,17 @@ JSObject* CopyingStructuredCloneReadCallback(
       return nullptr;
     }
 
-    StructuredCloneFile& file = cloneInfo->mFiles[aData];
+    StructuredCloneFileChild& file = cloneInfo->mFiles[aData];
 
     switch (static_cast<StructuredCloneTags>(aTag)) {
       case SCTAG_DOM_BLOB:
-        MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
+        MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eBlob);
         MOZ_ASSERT(!file.Blob().IsFile());
 
         return WrapAsJSObject(aCx, file.MutableBlob());
 
       case SCTAG_DOM_FILE: {
-        MOZ_ASSERT(file.Type() == StructuredCloneFile::eBlob);
+        MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eBlob);
 
         JS::Rooted<JSObject*> result(aCx);
 
@@ -453,7 +454,7 @@ JSObject* CopyingStructuredCloneReadCallback(
       }
 
       case SCTAG_DOM_MUTABLEFILE:
-        MOZ_ASSERT(file.Type() == StructuredCloneFile::eMutableFile);
+        MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eMutableFile);
 
         return WrapAsJSObject(aCx, file.MutableMutableFile());
 
@@ -606,7 +607,8 @@ void IDBObjectStore::AppendIndexUpdateInfo(
 }
 
 // static
-void IDBObjectStore::ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo) {
+void IDBObjectStore::ClearCloneReadInfo(
+    StructuredCloneReadInfoChild& aReadInfo) {
   // This is kind of tricky, we only want to release stuff on the main thread,
   // but we can end up being called on other threads if we have already been
   // cleared on the main thread.
@@ -826,7 +828,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   commonParams.indexUpdateInfos().SwapElements(updateInfo);
 
   // Convert any blobs or mutable files into FileAddInfo.
-  nsTArray<StructuredCloneFile>& files = cloneWriteInfo.mFiles;
+  nsTArray<StructuredCloneFileChild>& files = cloneWriteInfo.mFiles;
 
   if (!files.IsEmpty()) {
     const uint32_t count = files.Length();
@@ -840,13 +842,13 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
     IDBDatabase* const database = mTransaction->Database();
 
     for (uint32_t index = 0; index < count; index++) {
-      StructuredCloneFile& file = files[index];
+      StructuredCloneFileChild& file = files[index];
 
       FileAddInfo* const fileAddInfo = fileAddInfos.AppendElement(fallible);
       MOZ_ASSERT(fileAddInfo);
 
       switch (file.Type()) {
-        case StructuredCloneFile::eBlob: {
+        case StructuredCloneFileBase::eBlob: {
           MOZ_ASSERT(file.HasBlob());
           MOZ_ASSERT(!file.HasMutableFile());
 
@@ -859,12 +861,12 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
           }
 
           fileAddInfo->file() = fileActor;
-          fileAddInfo->type() = StructuredCloneFile::eBlob;
+          fileAddInfo->type() = StructuredCloneFileBase::eBlob;
 
           break;
         }
 
-        case StructuredCloneFile::eMutableFile: {
+        case StructuredCloneFileBase::eMutableFile: {
           MOZ_ASSERT(file.HasMutableFile());
           MOZ_ASSERT(!file.HasBlob());
 
@@ -877,13 +879,13 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
           }
 
           fileAddInfo->file() = mutableFileActor;
-          fileAddInfo->type() = StructuredCloneFile::eMutableFile;
+          fileAddInfo->type() = StructuredCloneFileBase::eMutableFile;
 
           break;
         }
 
-        case StructuredCloneFile::eWasmBytecode:
-        case StructuredCloneFile::eWasmCompiled: {
+        case StructuredCloneFileBase::eWasmBytecode:
+        case StructuredCloneFileBase::eWasmCompiled: {
           MOZ_ASSERT(file.HasBlob());
           MOZ_ASSERT(!file.HasMutableFile());
 
