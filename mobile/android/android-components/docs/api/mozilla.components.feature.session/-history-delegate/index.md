@@ -10,7 +10,7 @@ Implementation of the [HistoryTrackingDelegate](../../mozilla.components.concept
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `HistoryDelegate(historyStorage: `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`)`<br>Implementation of the [HistoryTrackingDelegate](../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.md) which delegates work to an instance of [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md). |
+| [&lt;init&gt;](-init-.md) | `HistoryDelegate(historyStorage: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`>)`<br>Implementation of the [HistoryTrackingDelegate](../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.md) which delegates work to an instance of [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md). |
 
 ### Functions
 

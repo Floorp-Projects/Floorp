@@ -11,7 +11,7 @@ information about why it can or cannot.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DefaultLoginValidationDelegate(storage: `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, scope: CoroutineScope = CoroutineScope(IO))`<br>A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
+| [&lt;init&gt;](-init-.md) | `DefaultLoginValidationDelegate(storage: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`>, scope: CoroutineScope = CoroutineScope(IO))`<br>A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
 
 ### Functions
 
