@@ -6,6 +6,10 @@
 
 /* global XPCNativeWrapper */
 
+// protocol.js uses objects as exceptions in order to define
+// error packets.
+/* eslint-disable no-throw-literal */
+
 /*
  * BrowsingContextTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
@@ -988,7 +992,9 @@ const browsingContextTargetPrototype = {
 
   attach(request) {
     if (this.exited) {
-      return { type: "exited" };
+      throw {
+        error: "exited",
+      };
     }
 
     this._attach();
