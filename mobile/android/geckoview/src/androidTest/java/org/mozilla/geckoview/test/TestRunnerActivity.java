@@ -19,12 +19,8 @@ import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebRequestError;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -261,28 +257,11 @@ public class TestRunnerActivity extends Activity {
         }
     }
 
-    private void ensureNetworkAvailable() {
-        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        cm.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onLost(Network network) {
-                throw new RuntimeException("Network has been lost");
-            }
-        });
-
-        NetworkInfo network = cm.getActiveNetworkInfo();
-        if (network == null || !network.isConnected()) {
-            throw new RuntimeException("No network available");
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         final Intent intent = getIntent();
-
-        ensureNetworkAvailable();
 
         if (sRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
