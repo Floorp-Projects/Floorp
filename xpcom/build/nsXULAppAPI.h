@@ -400,16 +400,6 @@ XRE_API(void, XRE_SetAndroidChildFds,
 
 XRE_API(void, XRE_SetProcessType, (const char* aProcessTypeString))
 
-// Used in child processes.
-#if defined(XP_WIN)
-// Uses uintptr_t, even though it's really a HANDLE, because including
-// <windows.h> here caused compilation issues.
-XRE_API(bool, XRE_SetRemoteExceptionHandler,
-        (const char* aPipe, uintptr_t aCrashTimeAnnotationFile))
-#else
-XRE_API(bool, XRE_SetRemoteExceptionHandler, (const char* aPipe))
-#endif
-
 XRE_API(nsresult, XRE_InitChildProcess,
         (int aArgc, char* aArgv[], const XREChildData* aChildData))
 
