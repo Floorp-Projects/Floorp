@@ -312,7 +312,7 @@ extern void UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei);
 // Compute the pc needed to unwind the scope to the beginning of the block
 // pointed to by the try note.
 extern jsbytecode* UnwindEnvironmentToTryPc(JSScript* script,
-                                            const JSTryNote* tn);
+                                            const TryNote* tn);
 
 namespace detail {
 
@@ -321,8 +321,8 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
   uint32_t pcOffset_;
   TryNoteFilter isTryNoteValid_;
 
-  const JSTryNote* tn_;
-  const JSTryNote* tnEnd_;
+  const TryNote* tn_;
+  const TryNote* tnEnd_;
 
   void settle() {
     for (; tn_ != tnEnd_; ++tn_) {
@@ -458,7 +458,7 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
     return offset - start < length;
   }
   bool done() const { return tn_ == tnEnd_; }
-  const JSTryNote* operator*() const { return tn_; }
+  const TryNote* operator*() const { return tn_; }
 };
 
 }  // namespace detail
@@ -480,7 +480,7 @@ class MOZ_STACK_CLASS TryNoteIter
 class NoOpTryNoteFilter {
  public:
   explicit NoOpTryNoteFilter() = default;
-  bool operator()(const JSTryNote*) { return true; }
+  bool operator()(const TryNote*) { return true; }
 };
 
 // Iterator over all try notes. Code using this iterator is not allowed to

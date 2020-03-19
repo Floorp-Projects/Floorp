@@ -17,6 +17,8 @@
  * Data shared between the vm and stencil structures.
  */
 
+namespace js {
+
 /*
  * [SMDOC] Try Notes
  *
@@ -42,7 +44,7 @@
  *    of loops here is helpful for heuristics that need to know
  *    whether a given op is inside a loop.
  */
-enum JSTryNoteKind {
+enum TryNoteKind {
   JSTRY_CATCH,
   JSTRY_FINALLY,
   JSTRY_FOR_IN,
@@ -55,12 +57,17 @@ enum JSTryNoteKind {
 /*
  * Exception handling record.
  */
-struct JSTryNote {
-  uint32_t kind;       /* one of JSTryNoteKind */
+struct TryNote {
+  uint32_t kind;       /* one of TryNoteKind */
   uint32_t stackDepth; /* stack depth upon exception handler entry */
   uint32_t start;      /* start of the try statement or loop relative
                           to script->code() */
   uint32_t length;     /* length of the try statement or loop */
+
+  TryNote(uint32_t kind, uint32_t stackDepth, uint32_t start, uint32_t length)
+      : kind(kind), stackDepth(stackDepth), start(start), length(length) {}
+
+  TryNote() = default;
 
   bool isLoop() const {
     switch (kind) {
@@ -78,7 +85,6 @@ struct JSTryNote {
   }
 };
 
-namespace js {
 // A block scope has a range in bytecode: it is entered at some offset, and left
 // at some later offset.  Scopes can be nested.  Given an offset, the
 // ScopeNote containing that offset whose with the highest start value
@@ -390,7 +396,7 @@ class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
 //  L1:
 //   (OPTIONAL) Array of ScopeNote constituting scopeNotes()
 //  L2:
-//   (OPTIONAL) Array of JSTryNote constituting tryNotes()
+//   (OPTIONAL) Array of TryNote constituting tryNotes()
 //  L3:
 // ----
 //
@@ -542,7 +548,7 @@ class alignas(uint32_t) ImmutableScriptData final {
       mozilla::Span<const jssrcnote> notes,
       mozilla::Span<const uint32_t> resumeOffsets,
       mozilla::Span<const ScopeNote> scopeNotes,
-      mozilla::Span<const JSTryNote> tryNotes);
+      mozilla::Span<const TryNote> tryNotes);
 
   static js::UniquePtr<ImmutableScriptData> new_(
       JSContext* cx, uint32_t codeLength, uint32_t noteLength,
@@ -592,9 +598,9 @@ class alignas(uint32_t) ImmutableScriptData final {
     return mozilla::MakeSpan(offsetToPointer<ScopeNote>(scopeNotesOffset()),
                              offsetToPointer<ScopeNote>(tryNotesOffset()));
   }
-  mozilla::Span<JSTryNote> tryNotes() {
-    return mozilla::MakeSpan(offsetToPointer<JSTryNote>(tryNotesOffset()),
-                             offsetToPointer<JSTryNote>(endOffset()));
+  mozilla::Span<TryNote> tryNotes() {
+    return mozilla::MakeSpan(offsetToPointer<TryNote>(tryNotesOffset()),
+                             offsetToPointer<TryNote>(endOffset()));
   }
 
   static constexpr size_t offsetOfCode() {
