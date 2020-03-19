@@ -3653,17 +3653,20 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
   }
 
   {  // add some additional "current state" into the returned APZTestData
-    RecursiveMutexAutoLock treeLock(
-        mTreeLock);                   // for IsCurrentlyCheckerboarding
-    MutexAutoLock mapLock(mMapLock);  // for mApzcMap
+    MutexAutoLock mapLock(mMapLock);
+
+    ClippedCompositionBoundsMap clippedCompBounds;
     for (const auto& mapping : mApzcMap) {
       if (mapping.first.mLayersId != aLayersId) {
         continue;
       }
+
+      ParentLayerRect clippedBounds = ComputeClippedCompositionBounds(
+          mapLock, clippedCompBounds, mapping.first);
       AsyncPanZoomController* apzc = mapping.second.apzc;
       std::string viewId = std::to_string(mapping.first.mScrollId);
       std::string apzcState;
-      if (apzc->IsCurrentlyCheckerboarding()) {
+      if (apzc->GetCheckerboardMagnitude(clippedBounds)) {
         apzcState += "checkerboarding,";
       }
       aOutData->RecordAdditionalData(viewId, apzcState);
