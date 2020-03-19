@@ -19,6 +19,67 @@ async function createTabAndLoad(url, inputWindow = null) {
 }
 
 /**
+ * Play the specific media and wait until it plays successfully and the main
+ * controller has been updated.
+ *
+ * @param {tab} tab
+ *        The tab that contains the media which we would play
+ * @param {string} elementId
+ *        The element Id of the media which we would play
+ * @return {Promise}
+ *         Resolve when the media has been starting playing and the main
+ *         controller has been updated.
+ */
+function playMedia(tab, elementId) {
+  const playPromise = SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [elementId],
+    Id => {
+      const video = content.document.getElementById(Id);
+      if (!video) {
+        ok(false, `can't get the media element!`);
+      }
+      return video.play();
+    }
+  );
+  return Promise.all([
+    playPromise,
+    waitUntilMainMediaControllerPlaybackChanged(),
+  ]);
+}
+
+/**
+ * Pause the specific media and wait until it pauses successfully and the main
+ * controller has been updated.
+ *
+ * @param {tab} tab
+ *        The tab that contains the media which we would pause
+ * @param {string} elementId
+ *        The element Id of the media which we would pause
+ * @return {Promise}
+ *         Resolve when the media has been paused and the main controller has
+ *         been updated.
+ */
+function pauseMedia(tab, elementId) {
+  const pausePromise = SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [elementId],
+    Id => {
+      const video = content.document.getElementById(Id);
+      if (!video) {
+        ok(false, `can't get the media element!`);
+      }
+      ok(!video.paused, `video is playing before calling pause`);
+      video.pause();
+    }
+  );
+  return Promise.all([
+    pausePromise,
+    waitUntilMainMediaControllerPlaybackChanged(),
+  ]);
+}
+
+/**
  * Returns a promise that resolves when the specific media starts playing.
  *
  * @param {tab} tab

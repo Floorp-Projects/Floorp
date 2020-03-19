@@ -42,7 +42,7 @@ add_task(async function testDefaultMetadataForPageWithoutMediaSession() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`should use default metadata because of lacking of media session`);
   await isUsingDefaultMetadata(tab);
@@ -56,7 +56,7 @@ add_task(async function testDefaultMetadataForPageUsingEmptyMetadata() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`create empty media metadata`);
   await setMediaMetadata(tab, {
@@ -78,7 +78,7 @@ add_task(async function testDefaultMetadataForPageUsingNullMetadata() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`create empty media metadata`);
   await setNullMediaMetadata(tab);
@@ -95,7 +95,7 @@ add_task(async function testMetadataWithEmptyTitleAndArtwork() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`create media metadata with empty title and artwork`);
   await setMediaMetadata(tab, {
@@ -117,7 +117,7 @@ add_task(async function testMetadataWithoutTitleAndArtwork() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`create media metadata with empty title and artwork`);
   await setMediaMetadata(tab, {
@@ -142,7 +142,7 @@ add_task(async function testMetadataInPrivateBrowsing() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY, privateWindow);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`set metadata`);
   let metadata = {
@@ -168,7 +168,7 @@ add_task(async function testSetMetadataFromMediaSessionAPI() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`set metadata`);
   let metadata = {
@@ -223,10 +223,10 @@ add_task(async function testSetMetadataAfterMediaPaused() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media in order to let this tab be controlled`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`pause media`);
-  await pauseMedia(tab);
+  await pauseMedia(tab, testVideoId);
 
   info(`set metadata after media is paused`);
   let metadata = {
@@ -249,7 +249,7 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
   const tab1 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media in tab1`);
-  await playMedia(tab1);
+  await playMedia(tab1, testVideoId);
 
   info(`set metadata for tab1`);
   let metadata = {
@@ -276,7 +276,7 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
   await setMediaMetadata(tab2, metadata);
 
   info(`start media in tab2`);
-  await playMedia(tab2);
+  await playMedia(tab2, testVideoId);
 
   info(`current active metadata should become metadata from tab2`);
   await isCurrentMetadataEqualTo(metadata);
@@ -305,7 +305,7 @@ add_task(async function testMetadataAfterTabNavigation() {
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`set metadata`);
   let metadata = {
@@ -335,32 +335,6 @@ add_task(async function testMetadataAfterTabNavigation() {
 /**
  * The following are helper functions.
  */
-function playMedia(tab) {
-  const playPromise = SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [testVideoId],
-    Id => {
-      const video = content.document.getElementById(Id);
-      if (!video) {
-        ok(false, `can't get the media element!`);
-      }
-      return video.play();
-    }
-  );
-  return Promise.all([playPromise, waitUntilMainMediaControllerChanged()]);
-}
-
-function pauseMedia(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [testVideoId], Id => {
-    const video = content.document.getElementById(Id);
-    if (!video) {
-      ok(false, `can't get the media element!`);
-    }
-    ok(!video.paused, `video is playing before calling pause`);
-    video.pause();
-  });
-}
-
 async function isUsingDefaultMetadata(tab, options = {}) {
   let metadata = ChromeUtils.getCurrentActiveMediaMetadata();
   if (options.isPrivateBrowsing) {
