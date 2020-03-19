@@ -1460,6 +1460,14 @@
   value: false
   mirror: always
 
+# Disable moz* APIs in DataTransfer.
+# Should be accessed via DataTransfer::MozAtAPIsEnabled.
+- name: dom.datatransfer.mozAtAPIs
+  type: bool
+  value: false
+  mirror: always
+  do_not_use_directly: true
+
 # Any how many seconds we allow external protocol URLs in iframe when not in
 # single events
 - name: dom.delay.block_external_protocol_in_iframes
