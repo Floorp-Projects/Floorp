@@ -36,7 +36,7 @@ function linearModule(min, max, ops, current_memory, grow_memory) {
        (func (result i32)
          (drop ` + opsText + `)
          (${current_memory})
-       ) (export "run" 0))`;
+       ) (export "run" (func 0)))`;
 
   return text;
 }

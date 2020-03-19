@@ -14,7 +14,7 @@ function loadModuleSrc(type, ext, offset, align, drop = false) {
           (local.get 0)
          )
          ${maybeDrop}
-       ) (export "" 0))`;
+       ) (export "" (func 0)))`;
 }
 function loadModule(type, ext, offset, align, drop = false) {
     return wasmEvalText(loadModuleSrc(type, ext, offset, align, drop)).exports[""];
@@ -33,14 +33,14 @@ function storeModuleSrc(type, ext, offset, align) {
           (local.get 0)
           (local.get 1)
          )
-       ) (export "store" 0)
+       ) (export "store" (func 0))
        (func $load (param i32) (result ${type})
         (${type}.load${load_ext}
          offset=${offset}
          ${align != 0 ? 'align=' + align : ''}
          (local.get 0)
         )
-       ) (export "load" 1))`;
+       ) (export "load" (func 1)))`;
 }
 function storeModule(type, ext, offset, align) {
     return wasmEvalText(storeModuleSrc(type, ext, offset, align)).exports;
@@ -59,14 +59,14 @@ function storeModuleCstSrc(type, ext, offset, align, value) {
           (local.get 0)
           (${type}.const ${value})
          )
-       ) (export "store" 0)
+       ) (export "store" (func 0))
        (func $load (param i32) (result ${type})
         (${type}.load${load_ext}
          offset=${offset}
          ${align != 0 ? 'align=' + align : ''}
          (local.get 0)
         )
-       ) (export "load" 1))`;
+       ) (export "load" (func 1)))`;
 }
 function storeModuleCst(type, ext, offset, align, value) {
     return wasmEvalText(storeModuleCstSrc(type, ext, offset, align, value)).exports;
@@ -122,11 +122,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" 0))`, /can't touch memory/);
+    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" (func 0)))`, /can't touch memory/);
 }
 
 function badStoreModule(type, ext) {
-    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" 0))`, /can't touch memory/);
+    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" (func 0)))`, /can't touch memory/);
 }
 
 // Can't touch memory.
@@ -337,7 +337,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
                  )
                 )
                )
-              ) (export "" 0))`
+              ) (export "" (func 0)))`
             ).exports[""](1), 50464523);
         }
 

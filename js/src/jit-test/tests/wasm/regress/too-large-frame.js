@@ -6,7 +6,7 @@ wasmEvalText(
 `(module
   (func $func0 (result i32) ${locals()}
    (i32.const 0))
-  (export "" 0))`);
+  (export "" (func 0)))`);
 
 } catch (e) {
     // The wasm baseline compiler throws OOM on too-large frames, so

@@ -8,7 +8,7 @@ assertErrorMessage(() => wasmEvalText('(moduler'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (func) (export "a'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (func (local $a i32) (param $b f32)))'), SyntaxError, parsingError);
 
-assertErrorMessage(() => wasmEvalText('(module (func $a) (func) (export "a" $a) (export "b" $b))'), SyntaxError, /Function label '\$b' not found/);
+assertErrorMessage(() => wasmEvalText('(module (func $a) (func) (export "a" (func $a)) (export "b" (func $b)))'), SyntaxError, /Function label '\$b' not found/);
 assertErrorMessage(() => wasmEvalText('(module (import $foo "a" "b") (import $foo "a" "b"))'), SyntaxError, /duplicate function import/);
 assertErrorMessage(() => wasmEvalText('(module (func $foo) (func $foo))'), SyntaxError, /duplicate function/);
 assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate var/);

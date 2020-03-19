@@ -6,7 +6,7 @@ wasmFullPass(`
 		(func $f1)
 		(elem declared $f1)
 		(func $run)
-		(export "run" $run)
+		(export "run" (func $run))
 	)
 `);
 
@@ -47,6 +47,6 @@ wasmAssert(`
 			table.get 0
 			ref.is_null
 		)
-		(export "at" $at)
+		(export "at" (func $at))
 	)
 `, [{type: 'i32', func: '$at', args: ['i32.const 0'], expected: '1'}]);
