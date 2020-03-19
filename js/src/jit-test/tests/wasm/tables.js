@@ -171,7 +171,7 @@ var m = new Module(wasmTextToBinary(`(module
             (call $imp)
             (i32.add
                 (i32.load (i32.const 0))
-                (if i32 (i32.eqz (local.get $i))
+                (if (result i32) (i32.eqz (local.get $i))
                     (then (i32.const 0))
                     (else
                         (local.set $i (i32.sub (local.get $i) (i32.const 1)))
