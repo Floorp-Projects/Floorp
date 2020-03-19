@@ -113,8 +113,8 @@ wasmEvalText(`
 assertEq(wasmEvalText(`(module (func
  return
  (select
-  (loop i32 (i32.const 1))
-  (loop i32 (i32.const 2))
+  (loop (result i32) (i32.const 1))
+  (loop (result i32) (i32.const 2))
   (i32.const 3)
  )
  drop
@@ -123,8 +123,8 @@ assertEq(wasmEvalText(`(module (func
 wasmEvalText(`(module (func (result i32)
  (return (i32.const 0))
  (select
-  (loop i32 (i32.const 1))
-  (loop i32 (i32.const 2))
+  (loop (result i32) (i32.const 1))
+  (loop (result i32) (i32.const 2))
   (i32.const 3)
  )
 ))`);
@@ -207,7 +207,7 @@ wasmFailValidateText(`
 wasmFailValidateText(`
 (module
   (func (result i32)
-    (loop i32
+    (loop (result i32)
       (i32.const 0)
       (br_table 1 0 (i32.const 15))
     )

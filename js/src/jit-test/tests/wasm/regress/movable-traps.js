@@ -23,7 +23,7 @@ for (let body of bodies) {
     wasmFullPass(`
     (module
         (func $f (param $x i32) (result i32)
-            loop $top i32
+            loop $top (result i32)
                 local.get $x
                 if
                     local.get $x
