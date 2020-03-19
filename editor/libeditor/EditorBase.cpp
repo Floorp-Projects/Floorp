@@ -6096,6 +6096,9 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
   // If we're nested edit action, copies necessary data from the parent.
   if (mParentData) {
     mSelection = mParentData->mSelection;
+    MOZ_ASSERT(!mSelection ||
+               (mSelection->GetType() == SelectionType::eNormal));
+
     // If we're eNotEditing, we should inherit the parent's edit action.
     // This may occur if creator or its callee use public methods which
     // just returns something.
@@ -6115,6 +6118,9 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
     if (NS_WARN_IF(!mSelection)) {
       return;
     }
+
+    MOZ_ASSERT(mSelection->GetType() == SelectionType::eNormal);
+
     mEditAction = aEditAction;
     mDirectionOfTopLevelEditSubAction = eNone;
     if (mEditorBase.mIsHTMLEditorClass) {
