@@ -6,3 +6,4 @@
 // to be in alpha stage development.
 
 // CHECK(AlphaChecker, "alpha-checker")
+CHECK(TempRefPtrChecker, "performance-temp-refptr")

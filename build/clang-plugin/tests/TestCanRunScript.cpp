@@ -375,7 +375,11 @@ struct DisallowConstNonRefPtrMemberArgs {
 };
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_1() {
+#ifdef MOZ_CLANG_PLUGIN_ALPHA
   RefPtr<RefCountedBase>(new RefCountedBase())->method_test(); // expected-warning {{performance issue: temporary 'RefPtr<RefCountedBase>' is only dereferenced here once which involves short-lived AddRef/Release calls}}
+#else
+  RefPtr<RefCountedBase>(new RefCountedBase())->method_test();
+#endif
 }
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_2() {
