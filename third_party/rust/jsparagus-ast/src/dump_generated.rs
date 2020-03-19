@@ -575,12 +575,8 @@ impl<'alloc> ASTDump for Expression<'alloc> {
             Expression::LiteralNullExpression { .. } => {
                 write!(out, "LiteralNullExpression").expect("failed to dump");
             }
-            Expression::LiteralNumericExpression { value, .. } => {
-                write!(out, "(LiteralNumericExpression").expect("failed to dump");
-                write!(out, " ").expect("failed to dump");
-                write!(out, "value=").expect("failed to dump");
-                value.dump_with_atoms_at(out, atoms, depth + 1);
-                write!(out, ")").expect("failed to dump");
+            Expression::LiteralNumericExpression(ast) => {
+                ast.dump_with_atoms_at(out, atoms, depth);
             }
             Expression::LiteralRegExpExpression { pattern, global, ignore_case, multi_line, sticky, unicode, .. } => {
                 write!(out, "(LiteralRegExpExpression").expect("failed to dump");
@@ -843,6 +839,9 @@ impl<'alloc> ASTDump for PropertyName<'alloc> {
             PropertyName::StaticPropertyName(ast) => {
                 ast.dump_with_atoms_at(out, atoms, depth);
             }
+            PropertyName::StaticNumericPropertyName(ast) => {
+                ast.dump_with_atoms_at(out, atoms, depth);
+            }
         }
     }
 }
@@ -871,6 +870,9 @@ impl<'alloc> ASTDump for ClassElementName<'alloc> {
                 ast.dump_with_atoms_at(out, atoms, depth);
             }
             ClassElementName::StaticPropertyName(ast) => {
+                ast.dump_with_atoms_at(out, atoms, depth);
+            }
+            ClassElementName::StaticNumericPropertyName(ast) => {
                 ast.dump_with_atoms_at(out, atoms, depth);
             }
             ClassElementName::PrivateFieldName(ast) => {
@@ -1709,6 +1711,18 @@ impl<'alloc> ASTDump for StaticPropertyName {
         where W: io::Write
     {
         write!(out, "(StaticPropertyName").expect("failed to dump");
+        write!(out, " ").expect("failed to dump");
+        write!(out, "value=").expect("failed to dump");
+        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        write!(out, ")").expect("failed to dump");
+    }
+}
+
+impl<'alloc> ASTDump for NumericLiteral {
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+        where W: io::Write
+    {
+        write!(out, "(NumericLiteral").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
         self.value.dump_with_atoms_at(out, atoms, depth + 1);

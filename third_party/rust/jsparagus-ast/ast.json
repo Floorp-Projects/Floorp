@@ -196,9 +196,7 @@
     },
     "LiteralInfinityExpression": null,
     "LiteralNullExpression": null,
-    "LiteralNumericExpression": {
-      "value": "f64"
-    },
+    "LiteralNumericExpression": "NumericLiteral",
     "LiteralRegExpExpression": {
       "pattern": "SourceAtomSetIndex",
       "global": "bool",
@@ -297,7 +295,8 @@
   "PropertyName": {
     "_type": "enum",
     "ComputedPropertyName": "ComputedPropertyName",
-    "StaticPropertyName": "StaticPropertyName"
+    "StaticPropertyName": "StaticPropertyName",
+    "StaticNumericPropertyName": "NumericLiteral"
   },
   "CallExpression": {
     "_type": "struct",
@@ -308,6 +307,7 @@
     "_type": "enum",
     "ComputedPropertyName": "ComputedPropertyName",
     "StaticPropertyName": "StaticPropertyName",
+    "StaticNumericPropertyName": "NumericLiteral",
     "PrivateFieldName": "PrivateIdentifier"
   },
   "ObjectProperty": {
@@ -589,6 +589,10 @@
   "StaticPropertyName": {
     "_type": "struct",
     "value": "SourceAtomSetIndex"
+  },
+  "NumericLiteral": {
+    "_type": "struct",
+    "value": "f64"
   },
   "ArrayExpressionElement": {
     "_type": "enum",

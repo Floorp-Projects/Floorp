@@ -8447,6 +8447,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_getimport(PropertyName* name) {
   ModuleEnvironmentObject* targetEnv;
   MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(name), &targetEnv, &shape));
 
+  // We always use a type barrier because the slot's value can be modified by
+  // JSOP_SETALIASEDVAR without triggering type updates. This matches
+  // JSOP_GETALIASEDVAR.
   TemporaryTypeSet* types = bytecodeTypes(pc);
   BarrierKind barrier = BarrierKind::TypeSet;
   MOZ_TRY(loadStaticSlot(targetEnv, barrier, types, shape->slot()));

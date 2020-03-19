@@ -896,7 +896,7 @@ to{
             tibt{"fika fakatipeti"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — kotoa"}
         category-list{"{0}: {1}"}

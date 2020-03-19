@@ -253,5 +253,5 @@ yo_BJ{
     Countries%variant{
         TL{"Ìlà Òòrùn Tímɔ̀"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

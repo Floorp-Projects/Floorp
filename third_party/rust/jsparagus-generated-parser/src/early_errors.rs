@@ -18,35 +18,35 @@ impl DeclarationInfo {
     }
 }
 
-pub type EarlyErrorsResult = Result<(), ParseError>;
+pub type EarlyErrorsResult<'alloc> = Result<(), ParseError<'alloc>>;
 
 pub trait LexicalEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult;
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc>;
 }
 
 pub trait VarEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult;
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc>;
 }
 
 pub trait ParameterEarlyErrorsContext {
-    fn declare(
+    fn declare<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult;
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc>;
 }
 
 // ===========================================================================
@@ -62,7 +62,7 @@ impl IdentifierEarlyErrorsContext {
         Self {}
     }
 
-    fn is_strict(&self) -> Result<bool, ParseError> {
+    fn is_strict<'alloc>(&self) -> Result<bool, ParseError<'alloc>> {
         Err(ParseError::NotImplemented(
             "strict-mode-only early error is not yet supported",
         ))
@@ -70,7 +70,7 @@ impl IdentifierEarlyErrorsContext {
 
     // Not used due to NotImplemented before the callsite.
     /*
-    fn is_module(&self) -> Result<bool, ParseError> {
+    fn is_module(&self) -> Result<bool, ParseError<'alloc>> {
         Err(ParseError::NotImplemented(
             "module-only early error is not yet supported",
         ))
@@ -104,8 +104,8 @@ impl IdentifierEarlyErrorsContext {
     pub fn check_binding_identifier<'alloc>(
         &self,
         token: &arena::Box<'alloc, Token>,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         if Self::is_arguments_identifier(token) || Self::is_eval_identifier(token) {
             // Static Semantics: Early Errors
             // https://tc39.es/ecma262/#sec-identifiers-static-semantics-early-errors
@@ -150,8 +150,8 @@ impl IdentifierEarlyErrorsContext {
     pub fn check_label_identifier<'alloc>(
         &self,
         token: &arena::Box<'alloc, Token>,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         if Self::is_yield_identifier(token) {
             return self.check_yield_common(token, atoms);
         }
@@ -166,8 +166,8 @@ impl IdentifierEarlyErrorsContext {
     pub fn check_identifier_reference<'alloc>(
         &self,
         token: &arena::Box<'alloc, Token>,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         if Self::is_yield_identifier(token) {
             return self.check_yield_common(token, atoms);
         }
@@ -182,8 +182,8 @@ impl IdentifierEarlyErrorsContext {
     fn check_yield_common<'alloc>(
         &self,
         _token: &arena::Box<'alloc, Token>,
-        _atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        _atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-identifiers-static-semantics-early-errors
         //
@@ -228,8 +228,8 @@ impl IdentifierEarlyErrorsContext {
     fn check_await_common<'alloc>(
         &self,
         _token: &arena::Box<'alloc, Token>,
-        _atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        _atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-identifiers-static-semantics-early-errors
         //
@@ -322,8 +322,8 @@ impl IdentifierEarlyErrorsContext {
     fn check_identifier<'alloc>(
         &self,
         token: &arena::Box<'alloc, Token>,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         match token.terminal_id {
             TerminalId::NameWithEscape => {
                 let name = token.value.as_atom();
@@ -592,7 +592,7 @@ impl BlockEarlyErrorsContext {
         }
     }
 
-    fn is_strict(&self) -> Result<bool, ParseError> {
+    fn is_strict<'alloc>(&self) -> Result<bool, ParseError<'alloc>> {
         Err(ParseError::NotImplemented(
             "strict-mode-only early error is not yet supported",
         ))
@@ -600,13 +600,13 @@ impl BlockEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for BlockEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_lexical(kind));
 
         // Static Semantics: Early Errors
@@ -670,13 +670,13 @@ impl LexicalEarlyErrorsContext for BlockEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for BlockEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_var(kind));
 
         // Static Semantics: Early Errors
@@ -753,13 +753,13 @@ impl LexicalForHeadEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for LexicalForHeadEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_lexical(kind));
 
         // Static Semantics: Early Errors
@@ -832,13 +832,13 @@ impl InternalForBodyEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for InternalForBodyEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        _atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        _atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_var(kind));
 
         self.var_names_of_stmt
@@ -864,13 +864,13 @@ impl LexicalForBodyEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for LexicalForBodyEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-for-statement-static-semantics-early-errors
         //
@@ -938,7 +938,7 @@ impl CaseBlockEarlyErrorsContext {
         BlockEarlyErrorsContext::is_supported_var(kind)
     }
 
-    fn is_strict(&self) -> Result<bool, ParseError> {
+    fn is_strict<'alloc>(&self) -> Result<bool, ParseError<'alloc>> {
         Err(ParseError::NotImplemented(
             "strict-mode-only early error is not yet supported",
         ))
@@ -946,13 +946,13 @@ impl CaseBlockEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for CaseBlockEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_lexical(kind));
 
         // Static Semantics: Early Errors
@@ -1013,13 +1013,13 @@ impl LexicalEarlyErrorsContext for CaseBlockEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for CaseBlockEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_var(kind));
 
         // Static Semantics: Early Errors
@@ -1075,12 +1075,12 @@ impl CatchParameterEarlyErrorsContext {
 }
 
 impl ParameterEarlyErrorsContext for CatchParameterEarlyErrorsContext {
-    fn declare(
+    fn declare<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // BoundNames of CatchParameter
         //
         // CatchParameter => BindingIdentifier
@@ -1124,13 +1124,13 @@ impl CatchBlockEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for CatchBlockEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-try-statement-static-semantics-early-errors
         //
@@ -1150,13 +1150,13 @@ impl LexicalEarlyErrorsContext for CatchBlockEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for CatchBlockEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-try-statement-static-semantics-early-errors
         //
@@ -1236,12 +1236,12 @@ impl FormalParametersEarlyErrorsContext {
 }
 
 impl ParameterEarlyErrorsContext for FormalParametersEarlyErrorsContext {
-    fn declare(
+    fn declare<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // BoundNames of FormalParameterList
         //
         // Static Semantics: BoundNames
@@ -1308,12 +1308,12 @@ impl UniqueFormalParametersEarlyErrorsContext {
 }
 
 impl ParameterEarlyErrorsContext for UniqueFormalParametersEarlyErrorsContext {
-    fn declare(
+    fn declare<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         let kind = DeclarationKind::FormalParameter;
 
         // Static Semantics: Early Errors
@@ -1466,13 +1466,13 @@ impl InternalFunctionBodyEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for InternalFunctionBodyEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_lexical(kind));
 
         // Static Semantics: Early Errors
@@ -1520,13 +1520,13 @@ impl LexicalEarlyErrorsContext for InternalFunctionBodyEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for InternalFunctionBodyEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_var(kind));
 
         // Static Semantics: Early Errors
@@ -1583,13 +1583,13 @@ impl FunctionBodyEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for FunctionBodyEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-function-definitions-static-semantics-early-errors
         //
@@ -1675,13 +1675,13 @@ impl LexicalEarlyErrorsContext for FunctionBodyEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for FunctionBodyEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         self.body.declare_var(name, kind, offset, atoms)
     }
 }
@@ -1713,13 +1713,13 @@ impl UniqueFunctionBodyEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for UniqueFunctionBodyEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-arrow-function-definitions-static-semantics-early-errors
         //
@@ -1819,13 +1819,13 @@ impl LexicalEarlyErrorsContext for UniqueFunctionBodyEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for UniqueFunctionBodyEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         self.body.declare_var(name, kind, offset, atoms)
     }
 }
@@ -1889,13 +1889,13 @@ impl ScriptEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for ScriptEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_lexical(kind));
 
         // Static Semantics: Early Errors
@@ -1942,13 +1942,13 @@ impl LexicalEarlyErrorsContext for ScriptEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for ScriptEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_var(kind));
 
         // Static Semantics: Early Errors
@@ -2075,12 +2075,12 @@ impl ModuleEarlyErrorsContext {
     }
 
     #[allow(dead_code)]
-    pub fn add_exported_name(
+    pub fn add_exported_name<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-module-semantics-static-semantics-early-errors
         //
@@ -2108,7 +2108,10 @@ impl ModuleEarlyErrorsContext {
     }
 
     #[allow(dead_code)]
-    pub fn check_exported_name(&self, atoms: &SourceAtomSet) -> EarlyErrorsResult {
+    pub fn check_exported_name<'alloc>(
+        &self,
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         // Static Semantics: Early Errors
         // https://tc39.es/ecma262/#sec-module-semantics-static-semantics-early-errors
         //
@@ -2131,13 +2134,13 @@ impl ModuleEarlyErrorsContext {
 }
 
 impl LexicalEarlyErrorsContext for ModuleEarlyErrorsContext {
-    fn declare_lex(
+    fn declare_lex<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_lexical(kind));
 
         // Static Semantics: Early Errors
@@ -2196,13 +2199,13 @@ impl LexicalEarlyErrorsContext for ModuleEarlyErrorsContext {
 }
 
 impl VarEarlyErrorsContext for ModuleEarlyErrorsContext {
-    fn declare_var(
+    fn declare_var<'alloc>(
         &mut self,
         name: SourceAtomSetIndex,
         kind: DeclarationKind,
         offset: usize,
-        atoms: &SourceAtomSet,
-    ) -> EarlyErrorsResult {
+        atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc> {
         debug_assert!(Self::is_supported_var(kind));
 
         // Static Semantics: Early Errors

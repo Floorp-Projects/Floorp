@@ -148,7 +148,7 @@ yo{
             latn{"Díjíítì Ìwọ̀ Oòrùn"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"Èdè: {0}"}
         script{"Ìṣọwọ́kọ̀wé: {0}"}

@@ -60,7 +60,7 @@ mi{
             latn{"Ngā Mati Pākehā"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"Reo: {0}"}
         script{"Momotuhi: {0}"}

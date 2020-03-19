@@ -545,7 +545,7 @@ ps{
             tibt{"تبتي اعداد"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} - ټول"}
         compatibility{"{0} - مطابقت"}

@@ -12,14 +12,14 @@
 
 ##############################################################################
 # Keep the following in sync with the version - see common/unicode/uvernum.h
-U_ICUDATA_NAME=icudt65
+U_ICUDATA_NAME=icudt66
 ##############################################################################
 !IF "$(UWP)" == "UWP"
 # Optionally change the name of the data file for the UWP version.
-U_ICUDATA_NAME=icudt65
+U_ICUDATA_NAME=icudt66
 !ENDIF
 U_ICUDATA_ENDIAN_SUFFIX=l
-UNICODE_VERSION=12.1
+UNICODE_VERSION=13.0
 ICU_LIB_TARGET=$(DLL_OUTPUT)\$(U_ICUDATA_NAME).dll
 
 #  ICUMAKE
@@ -270,7 +270,7 @@ $(COREDATA_TS):
 		--mode windows-exec \
 		--src_dir "$(ICUSRCDATA)" \
 		--tool_dir "$(ICUTOOLS)" \
-		--tool_cfg "$(CFG)" \
+		--tool_cfg "$(CFGTOOLS)" \
 		--out_dir "$(ICUBLD_PKG)" \
 		--tmp_dir "$(ICUTMP)" \
 		--filter_file "$(ICU_DATA_FILTER_FILE)" \

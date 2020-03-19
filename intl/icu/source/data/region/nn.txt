@@ -307,5 +307,5 @@ nn{
         FK{"Falklandsøyane (Islas Malvinas)"}
         TL{"Aust-Timor"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

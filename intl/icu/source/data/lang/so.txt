@@ -373,7 +373,7 @@ so{
             tibt{"Godka Tirada Tibetan"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} dhamaan"}
         compatibility{"{0} — waafaqsanaanta"}

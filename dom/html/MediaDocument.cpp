@@ -258,15 +258,12 @@ void MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel) {
   url->GetFileName(fileName);
   if (fileName.IsEmpty()) return;
 
-  nsAutoCString docCharset;
   // Now that the charset is set in |StartDocumentLoad| to the charset of
   // the document viewer instead of a bogus value ("windows-1252" set in
   // |Document|'s ctor), the priority is given to the current charset.
   // This is necessary to deal with a media document being opened in a new
   // window or a new tab.
-  if (mCharacterSetSource != kCharsetUninitialized) {
-    mCharacterSet->Name(docCharset);
-  } else {
+  if (mCharacterSetSource == kCharsetUninitialized) {
     // resort to UTF-8
     SetDocumentCharacterSet(UTF_8_ENCODING);
   }
@@ -276,7 +273,7 @@ void MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel) {
       do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     // UnEscapeURIForUI always succeeds
-    textToSubURI->UnEscapeURIForUI(docCharset, fileName, aResult);
+    textToSubURI->UnEscapeURIForUI(fileName, aResult);
   } else {
     CopyUTF8toUTF16(fileName, aResult);
   }

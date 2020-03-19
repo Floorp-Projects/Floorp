@@ -56,6 +56,11 @@ inline js::RegExpObject* BytecodeLocation::getRegExp(
   return script->getRegExp(this->rawBytecode_);
 }
 
+inline js::Scope* BytecodeLocation::getScope(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  return script->getScope(this->rawBytecode_);
+}
+
 inline Scope* BytecodeLocation::innermostScope(const JSScript* script) const {
   MOZ_ASSERT(this->isValid());
   return script->innermostScope(this->rawBytecode_);

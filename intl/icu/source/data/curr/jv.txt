@@ -1117,5 +1117,5 @@ jv{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

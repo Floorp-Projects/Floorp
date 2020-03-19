@@ -176,6 +176,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
           }, "apz-repaints-flushed");
         };
 
+        let { force } = aMsg.data;
+
         let gotResize = false;
         let onResize = function() {
           gotResize = true;
@@ -203,7 +205,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         // input if there is no resize event at the end of the interval.
         content.setTimeout(() => {
           removeEventListener("resize", onResize, { capture: true });
-          if (!gotResize) {
+          if (!gotResize && force) {
             onResize();
           }
         }, 500);

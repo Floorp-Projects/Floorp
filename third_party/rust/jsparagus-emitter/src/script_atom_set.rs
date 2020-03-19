@@ -10,9 +10,11 @@ impl ScriptAtomSetIndex {
     fn new(index: u32) -> Self {
         Self { index }
     }
+}
 
-    pub fn into_raw(self) -> u32 {
-        self.index
+impl From<ScriptAtomSetIndex> for u32 {
+    fn from(index: ScriptAtomSetIndex) -> u32 {
+        index.index
     }
 }
 
@@ -35,8 +37,10 @@ impl ScriptAtomSet {
         let (index, _) = self.atoms.insert_full(value);
         ScriptAtomSetIndex::new(index as u32)
     }
+}
 
-    pub fn into_vec(mut self) -> Vec<SourceAtomSetIndex> {
-        self.atoms.drain(..).collect()
+impl From<ScriptAtomSet> for Vec<SourceAtomSetIndex> {
+    fn from(set: ScriptAtomSet) -> Vec<SourceAtomSetIndex> {
+        set.atoms.into_iter().collect()
     }
 }

@@ -9,6 +9,7 @@ then paste it into opcode.rs.
 import argparse
 import os
 import re
+import shutil
 import sys
 
 parser = argparse.ArgumentParser(description='Update opcode.rs')
@@ -49,6 +50,11 @@ if not os.path.exists(emitter_dest_path):
     print('{} does not exist'.format(emitter_dest_path),
           file=sys.stderr)
     sys.exit(1)
+
+copy_dir = os.path.join(args.PATH_TO_JSPARAGUS,
+                        'crates/emitter/src/copy')
+if not os.path.exists(copy_dir):
+    os.makedirs(copy_dir)
 
 
 def extract_opcodes(path):
@@ -290,3 +296,8 @@ flags = extract_flags(util_path)
 
 update_opcode(opcode_dest_path, opcodes, flags)
 update_emit(emitter_dest_path)
+
+shutil.copyfile(opcodes_path,
+                os.path.join(copy_dir, os.path.basename(opcodes_path)))
+shutil.copyfile(util_path,
+                os.path.join(copy_dir, os.path.basename(util_path)))

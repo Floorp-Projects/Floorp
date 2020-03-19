@@ -63,7 +63,8 @@ class Selection final : public nsSupportsWeakReference,
   /**
    * @param aFrameSelection can be nullptr.
    */
-  explicit Selection(nsFrameSelection* aFrameSelection);
+  explicit Selection(SelectionType aSelectionType,
+                     nsFrameSelection* aFrameSelection);
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Selection)
 
@@ -645,9 +646,6 @@ class Selection final : public nsSupportsWeakReference,
 
  public:
   SelectionType GetType() const { return mSelectionType; }
-  void SetType(SelectionType aSelectionType) {
-    mSelectionType = aSelectionType;
-  }
 
   SelectionCustomColors* GetCustomColors() const { return mCustomColors.get(); }
 
@@ -834,7 +832,7 @@ class Selection final : public nsSupportsWeakReference,
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
   CachedOffsetForFrame* mCachedOffsetForFrame;
   nsDirection mDirection;
-  SelectionType mSelectionType;
+  const SelectionType mSelectionType;
   UniquePtr<SelectionCustomColors> mCustomColors;
 
   // Non-zero if we don't want any changes we make to the selection to be

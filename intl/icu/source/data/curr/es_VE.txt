@@ -22,5 +22,5 @@ es_VE{
             other{"bolívares soberanos"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

@@ -303,5 +303,5 @@ ksh{
         CI{"de Älfebeijnköß"}
         FK{"de malleviinesche Enselle"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

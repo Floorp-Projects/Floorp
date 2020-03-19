@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 from icutools.databuilder import *
-from icutools.databuilder import locale_dependencies
 from icutools.databuilder import utils
 from icutools.databuilder.request_types import *
 
@@ -14,76 +13,69 @@ import os
 import sys
 
 
-def generate(config, glob, common_vars):
+def generate(config, io, common_vars):
     requests = []
 
-    if len(glob("misc/*")) == 0:
+    if len(io.glob("misc/*")) == 0:
         print("Error: Cannot find data directory; please specify --src_dir", file=sys.stderr)
         exit(1)
 
-    requests += generate_cnvalias(config, glob, common_vars)
-    requests += generate_ulayout(config, glob, common_vars)
-    requests += generate_confusables(config, glob, common_vars)
-    requests += generate_conversion_mappings(config, glob, common_vars)
-    requests += generate_brkitr_brk(config, glob, common_vars)
-    requests += generate_stringprep(config, glob, common_vars)
-    requests += generate_brkitr_dictionaries(config, glob, common_vars)
-    requests += generate_normalization(config, glob, common_vars)
-    requests += generate_coll_ucadata(config, glob, common_vars)
-    requests += generate_full_unicore_data(config, glob, common_vars)
-    requests += generate_unames(config, glob, common_vars)
-    requests += generate_misc(config, glob, common_vars)
-    requests += generate_curr_supplemental(config, glob, common_vars)
-    requests += generate_translit(config, glob, common_vars)
+    requests += generate_cnvalias(config, io, common_vars)
+    requests += generate_ulayout(config, io, common_vars)
+    requests += generate_confusables(config, io, common_vars)
+    requests += generate_conversion_mappings(config, io, common_vars)
+    requests += generate_brkitr_brk(config, io, common_vars)
+    requests += generate_stringprep(config, io, common_vars)
+    requests += generate_brkitr_dictionaries(config, io, common_vars)
+    requests += generate_normalization(config, io, common_vars)
+    requests += generate_coll_ucadata(config, io, common_vars)
+    requests += generate_full_unicore_data(config, io, common_vars)
+    requests += generate_unames(config, io, common_vars)
+    requests += generate_misc(config, io, common_vars)
+    requests += generate_curr_supplemental(config, io, common_vars)
+    requests += generate_translit(config, io, common_vars)
 
     # Res Tree Files
     # (input dirname, output dirname, resfiles.mk path, mk version var, mk source var, use pool file, dep files)
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "locales",
         None,
-        "icu-locale-deprecates.xml",
         config.use_pool_bundle,
         [])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "curr",
         "curr",
-        "icu-locale-deprecates.xml",
         config.use_pool_bundle,
         [])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "lang",
         "lang",
-        "icu-locale-deprecates.xml",
         config.use_pool_bundle,
         [])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "region",
         "region",
-        "icu-locale-deprecates.xml",
         config.use_pool_bundle,
         [])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "zone",
         "zone",
-        "icu-locale-deprecates.xml",
         config.use_pool_bundle,
         [])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "unit",
         "unit",
-        "icu-locale-deprecates.xml",
         config.use_pool_bundle,
         [])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "coll",
         "coll",
-        "icu-coll-deprecates.xml",
         # Never use pool bundle for coll, brkitr, or rbnf
         False,
         # Depends on timezoneTypes.res and keyTypeData.res.
@@ -91,18 +83,16 @@ def generate(config, glob, common_vars):
         # TODO: Bake keyTypeData.res into the common library?
         [DepTarget("coll_ucadata"), DepTarget("misc_res"), InFile("unidata/UCARules.txt")])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "brkitr",
         "brkitr",
-        "icu-locale-deprecates.xml",
         # Never use pool bundle for coll, brkitr, or rbnf
         False,
         [DepTarget("brkitr_brk"), DepTarget("dictionaries")])
 
-    requests += generate_tree(config, glob, common_vars,
+    requests += generate_tree(config, io, common_vars,
         "rbnf",
         "rbnf",
-        "icu-rbnf-deprecates.xml",
         # Never use pool bundle for coll, brkitr, or rbnf
         False,
         [])
@@ -119,7 +109,7 @@ def generate(config, glob, common_vars):
     return requests
 
 
-def generate_cnvalias(config, glob, common_vars):
+def generate_cnvalias(config, io, common_vars):
     # UConv Name Aliases
     input_file = InFile("mappings/convrtrs.txt")
     output_file = OutFile("cnvalias.icu")
@@ -138,7 +128,7 @@ def generate_cnvalias(config, glob, common_vars):
     ]
 
 
-def generate_confusables(config, glob, common_vars):
+def generate_confusables(config, io, common_vars):
     # CONFUSABLES
     txt1 = InFile("unidata/confusables.txt")
     txt2 = InFile("unidata/confusablesWholeScript.txt")
@@ -159,9 +149,9 @@ def generate_confusables(config, glob, common_vars):
     ]
 
 
-def generate_conversion_mappings(config, glob, common_vars):
+def generate_conversion_mappings(config, io, common_vars):
     # UConv Conversion Table Files
-    input_files = [InFile(filename) for filename in glob("mappings/*.ucm")]
+    input_files = [InFile(filename) for filename in io.glob("mappings/*.ucm")]
     output_files = [OutFile("%s.cnv" % v.filename[9:-4]) for v in input_files]
     # TODO: handle BUILD_SPECIAL_CNV_FILES? Means to add --ignore-siso-check flag to makeconv
     return [
@@ -181,9 +171,9 @@ def generate_conversion_mappings(config, glob, common_vars):
     ]
 
 
-def generate_brkitr_brk(config, glob, common_vars):
+def generate_brkitr_brk(config, io, common_vars):
     # BRK Files
-    input_files = [InFile(filename) for filename in glob("brkitr/rules/*.txt")]
+    input_files = [InFile(filename) for filename in io.glob("brkitr/rules/*.txt")]
     output_files = [OutFile("brkitr/%s.brk" % v.filename[13:-4]) for v in input_files]
     return [
         RepeatedExecutionRequest(
@@ -202,9 +192,9 @@ def generate_brkitr_brk(config, glob, common_vars):
     ]
 
 
-def generate_stringprep(config, glob, common_vars):
+def generate_stringprep(config, io, common_vars):
     # SPP FILES
-    input_files = [InFile(filename) for filename in glob("sprep/*.txt")]
+    input_files = [InFile(filename) for filename in io.glob("sprep/*.txt")]
     output_files = [OutFile("%s.spp" % v.filename[6:-4]) for v in input_files]
     bundle_names = [v.filename[6:-4] for v in input_files]
     return [
@@ -225,9 +215,9 @@ def generate_stringprep(config, glob, common_vars):
     ]
 
 
-def generate_brkitr_dictionaries(config, glob, common_vars):
+def generate_brkitr_dictionaries(config, io, common_vars):
     # Dict Files
-    input_files = [InFile(filename) for filename in glob("brkitr/dictionaries/*.txt")]
+    input_files = [InFile(filename) for filename in io.glob("brkitr/dictionaries/*.txt")]
     output_files = [OutFile("brkitr/%s.dict" % v.filename[20:-4]) for v in input_files]
     extra_options_map = {
         "brkitr/dictionaries/burmesedict.txt": "--bytes --transform offset-0x1000",
@@ -256,9 +246,9 @@ def generate_brkitr_dictionaries(config, glob, common_vars):
     ]
 
 
-def generate_normalization(config, glob, common_vars):
+def generate_normalization(config, io, common_vars):
     # NRM Files
-    input_files = [InFile(filename) for filename in glob("in/*.nrm")]
+    input_files = [InFile(filename) for filename in io.glob("in/*.nrm")]
     # nfc.nrm is pre-compiled into C++; see generate_full_unicore_data
     input_files.remove(InFile("in/nfc.nrm"))
     output_files = [OutFile(v.filename[3:]) for v in input_files]
@@ -277,7 +267,7 @@ def generate_normalization(config, glob, common_vars):
     ]
 
 
-def generate_coll_ucadata(config, glob, common_vars):
+def generate_coll_ucadata(config, io, common_vars):
     # Collation Dependency File (ucadata.icu)
     input_file = InFile("in/coll/ucadata-%s.icu" % config.coll_han_type)
     output_file = OutFile("coll/ucadata.icu")
@@ -295,7 +285,7 @@ def generate_coll_ucadata(config, glob, common_vars):
     ]
 
 
-def generate_full_unicore_data(config, glob, common_vars):
+def generate_full_unicore_data(config, io, common_vars):
     # The core Unicode properties files (pnames.icu, uprops.icu, ucase.icu, ubidi.icu)
     # are hardcoded in the common DLL and therefore not included in the data package any more.
     # They are not built by default but need to be built for ICU4J data,
@@ -325,7 +315,7 @@ def generate_full_unicore_data(config, glob, common_vars):
     ]
 
 
-def generate_unames(config, glob, common_vars):
+def generate_unames(config, io, common_vars):
     # Unicode Character Names
     input_file = InFile("in/unames.icu")
     output_file = OutFile("unames.icu")
@@ -343,7 +333,7 @@ def generate_unames(config, glob, common_vars):
     ]
 
 
-def generate_ulayout(config, glob, common_vars):
+def generate_ulayout(config, io, common_vars):
     # Unicode text layout properties
     basename = "ulayout"
     input_file = InFile("in/%s.icu" % basename)
@@ -362,9 +352,9 @@ def generate_ulayout(config, glob, common_vars):
     ]
 
 
-def generate_misc(config, glob, common_vars):
+def generate_misc(config, io, common_vars):
     # Misc Data Res Files
-    input_files = [InFile(filename) for filename in glob("misc/*.txt")]
+    input_files = [InFile(filename) for filename in io.glob("misc/*.txt")]
     input_basenames = [v.filename[5:] for v in input_files]
     output_files = [OutFile("%s.res" % v[:-4]) for v in input_basenames]
     return [
@@ -386,7 +376,7 @@ def generate_misc(config, glob, common_vars):
     ]
 
 
-def generate_curr_supplemental(config, glob, common_vars):
+def generate_curr_supplemental(config, io, common_vars):
     # Currency Supplemental Res File
     input_file = InFile("curr/supplementalData.txt")
     input_basename = "supplementalData.txt"
@@ -409,13 +399,13 @@ def generate_curr_supplemental(config, glob, common_vars):
     ]
 
 
-def generate_translit(config, glob, common_vars):
+def generate_translit(config, io, common_vars):
     input_files = [
         InFile("translit/root.txt"),
         InFile("translit/en.txt"),
         InFile("translit/el.txt")
     ]
-    dep_files = set(InFile(filename) for filename in glob("translit/*.txt"))
+    dep_files = set(InFile(filename) for filename in io.glob("translit/*.txt"))
     dep_files -= set(input_files)
     dep_files = list(sorted(dep_files))
     input_basenames = [v.filename[9:] for v in input_files]
@@ -445,18 +435,17 @@ def generate_translit(config, glob, common_vars):
 
 def generate_tree(
         config,
-        glob,
+        io,
         common_vars,
         sub_dir,
         out_sub_dir,
-        xml_filename,
         use_pool_bundle,
         dep_targets):
     requests = []
     category = "%s_tree" % sub_dir
     out_prefix = "%s/" % out_sub_dir if out_sub_dir else ""
     # TODO: Clean this up for curr
-    input_files = [InFile(filename) for filename in glob("%s/*.txt" % sub_dir)]
+    input_files = [InFile(filename) for filename in io.glob("%s/*.txt" % sub_dir)]
     if sub_dir == "curr":
         input_files.remove(InFile("curr/supplementalData.txt"))
     input_basenames = [v.filename[len(sub_dir)+1:] for v in input_files]
@@ -532,7 +521,11 @@ def generate_tree(
         "root",
     ])
     # Put alias locales in a separate structure; see ICU-20627
-    alias_locales = set(locale_dependencies.data["aliases"].keys())
+    dependency_data = io.read_locale_deps(sub_dir)
+    if "aliases" in dependency_data:
+        alias_locales = set(dependency_data["aliases"].keys())
+    else:
+        alias_locales = set()
     alias_files = []
     installed_files = []
     for f in input_files:
@@ -541,7 +534,7 @@ def generate_tree(
             continue
         destination = alias_files if file_stem in alias_locales else installed_files
         destination.append(f)
-    cldr_version = locale_dependencies.data["cldrVersion"] if sub_dir == "locales" else None
+    cldr_version = dependency_data["cldrVersion"] if sub_dir == "locales" else None
     index_file_txt = TmpFile("{IN_SUB_DIR}/{INDEX_NAME}.txt".format(
         IN_SUB_DIR = sub_dir,
         **common_vars

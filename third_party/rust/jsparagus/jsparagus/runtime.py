@@ -47,7 +47,7 @@ def throw_syntax_error(actions, state, t, tokens):
         tokens.throw("expected one of {!r}, got {!r}"
                      .format(sorted(expected), t))
 
-StateTermValue = collections.namedtuple("StateTermValue", "state term value")
+StateTermValue = collections.namedtuple("StateTermValue", "state term value new_line")
 class ShiftError(Exception): pass
 class ShiftAccept(Exception): pass
 
@@ -75,7 +75,7 @@ class Parser:
 
     def __init__(self, actions, error_codes, entry_state, methods):
         self.actions = actions
-        self.stack = [StateTermValue(entry_state, None, None)]
+        self.stack = [StateTermValue(entry_state, None, None, False)]
         self.replay = []
         self.flags = collections.defaultdict(lambda: [])
         self.error_codes = error_codes
@@ -141,7 +141,7 @@ class Parser:
                     self._dbg_where("error: {}".format(str(stv.term)))
                 continue
             state = goto
-            self.stack.append(StateTermValue(state, stv.term, stv.value))
+            self.stack.append(StateTermValue(state, stv.term, stv.value, stv.new_line))
             action = self.actions[state]
             while not isinstance(action, dict):  # Action
                 if self.debug:
@@ -162,7 +162,8 @@ class Parser:
     def write_terminal(self, lexer, t):
         assert not self.closed
         try:
-            self._shift(StateTermValue(0, t, lexer.take()), lexer)
+            stv = StateTermValue(0, t, lexer.take(), lexer.saw_line_terminator())
+            self._shift(stv, lexer)
         except ShiftAccept:
             if self.debug:
                 self._dbg_where("(write_terminal accept)")
@@ -177,7 +178,7 @@ class Parser:
         assert not self.closed
         self.closed = True
         try:
-            self._shift(StateTermValue(0, End(), End()), lexer)
+            self._shift(StateTermValue(0, End(), End(), False), lexer)
         except ShiftAccept:
             if self.debug:
                 self._dbg_where("(close accept)")
@@ -188,6 +189,17 @@ class Parser:
             assert self.stack[0].term is None
             assert isinstance(self.stack[1].term, Nt)
             return self.stack[1].value
+
+    def check_not_on_new_line(self, lexer, peek):
+        if peek <= 0:
+            raise ValueError("check_not_on_new_line got an impossible peek offset")
+        if not self.stack[-peek].new_line:
+            return True
+        for _ in range(peek - 1):
+            self.replay.append(self.stack.pop())
+        stv = self.stack.pop()
+        self._try_error_handling(lexer, stv)
+        return False
 
     def _try_error_handling(self, lexer, stv):
         # Error recovery version of the code in write_terminal. Three differences
@@ -204,7 +216,7 @@ class Parser:
         if error_code is not None:
             self.on_recover(error_code, lexer, stv)
             self.replay.append(stv)
-            self.replay.append(StateTermValue(0, ErrorToken(), stv.value))
+            self.replay.append(StateTermValue(0, ErrorToken(), stv.value, stv.new_line))
         elif stv.term == End():
             lexer.throw_unexpected_end()
             raise

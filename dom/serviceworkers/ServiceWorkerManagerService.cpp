@@ -88,17 +88,12 @@ void ServiceWorkerManagerService::PropagateRegistration(
     return;
   }
 
-  DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
     MOZ_ASSERT(parent);
 
     if (parent->ID() != aParentID) {
       Unused << parent->SendNotifyRegister(aData);
-#ifdef DEBUG
-    } else {
-      parentFound = true;
-#endif
     }
   }
 
@@ -116,10 +111,6 @@ void ServiceWorkerManagerService::PropagateRegistration(
           }
         }
       }));
-
-#ifdef DEBUG
-  MOZ_ASSERT(parentFound);
-#endif
 }
 
 void ServiceWorkerManagerService::PropagateSoftUpdate(
@@ -131,24 +122,13 @@ void ServiceWorkerManagerService::PropagateSoftUpdate(
     return;
   }
 
-  DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
     MOZ_ASSERT(parent);
 
     nsString scope(aScope);
     Unused << parent->SendNotifySoftUpdate(aOriginAttributes, scope);
-
-#ifdef DEBUG
-    if (parent->ID() == aParentID) {
-      parentFound = true;
-    }
-#endif
   }
-
-#ifdef DEBUG
-  MOZ_ASSERT(parentFound);
-#endif
 }
 
 void ServiceWorkerManagerService::PropagateUnregister(
@@ -177,7 +157,6 @@ void ServiceWorkerManagerService::PropagateUnregister(
     return;
   }
 
-  DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
     MOZ_ASSERT(parent);
@@ -185,16 +164,8 @@ void ServiceWorkerManagerService::PropagateUnregister(
     if (parent->ID() != aParentID) {
       nsString scope(aScope);
       Unused << parent->SendNotifyUnregister(aPrincipalInfo, scope);
-#ifdef DEBUG
-    } else {
-      parentFound = true;
-#endif
     }
   }
-
-#ifdef DEBUG
-  MOZ_ASSERT(parentFound);
-#endif
 }
 
 void ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
@@ -205,7 +176,6 @@ void ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
     return;
   }
 
-  DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
     MOZ_ASSERT(parent);
@@ -213,16 +183,8 @@ void ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
     if (parent->ID() != aParentID) {
       nsCString host(aHost);
       Unused << parent->SendNotifyRemove(host);
-#ifdef DEBUG
-    } else {
-      parentFound = true;
-#endif
     }
   }
-
-#ifdef DEBUG
-  MOZ_ASSERT(parentFound);
-#endif
 }
 
 void ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID) {
@@ -238,23 +200,14 @@ void ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID) {
 
   service->RemoveAll();
 
-  DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
     MOZ_ASSERT(parent);
 
     if (parent->ID() != aParentID) {
       Unused << parent->SendNotifyRemoveAll();
-#ifdef DEBUG
-    } else {
-      parentFound = true;
-#endif
     }
   }
-
-#ifdef DEBUG
-  MOZ_ASSERT(parentFound);
-#endif
 }
 
 void ServiceWorkerManagerService::ProcessUpdaterActor(

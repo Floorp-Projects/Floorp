@@ -65,6 +65,14 @@ class ESTestCase(unittest.TestCase):
         self.assert_syntax_error(
             "switch (value) { case 1: break case 2: console.log('2'); }")
 
+    def test_asi_after_no_line_terminator_here(self):
+        self.assert_parses('''\
+           function f() {
+             return
+               x;
+           }
+        ''')
+
     def test_asi_suppressed(self):
         # The specification says ASI does not happen in the production
         # EmptyStatement : `;`.

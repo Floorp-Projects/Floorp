@@ -743,7 +743,7 @@ ka{
             tibt{"ტიბეტური ციფრები"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — ყველა"}
         category-list{"{0}: {1}"}

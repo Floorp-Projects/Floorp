@@ -1268,5 +1268,5 @@ so{
             other{"Kawajada Sambiya"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

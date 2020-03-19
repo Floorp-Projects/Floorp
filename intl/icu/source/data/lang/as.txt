@@ -552,7 +552,7 @@ as{
             tibt{"তিব্বতী অংক"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — সকলো"}
         category-list{"{0}: {1}"}

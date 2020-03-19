@@ -223,10 +223,7 @@ function makeUrlbarResult(tokens, info) {
         if (!title) {
           // If the url doesn't have an host (e.g. javascript urls), comment
           // will be empty, and we can't build the usual title. Thus use the url.
-          title = Services.textToSubURI.unEscapeURIForUI(
-            "UTF-8",
-            action.params.url
-          );
+          title = Services.textToSubURI.unEscapeURIForUI(action.params.url);
         } else if (tokens && tokens.length > 1) {
           title = UrlbarUtils.strings.formatStringFromName(
             "bookmarkKeywordSearch",

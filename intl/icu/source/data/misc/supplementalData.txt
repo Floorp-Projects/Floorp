@@ -2104,7 +2104,7 @@ supplementalData:table(nofallback){
             "islamic-tbla",
         }
     }
-    cldrVersion{"36"}
+    cldrVersion{"36.1"}
     codeMappings{
         {
             "AA",
@@ -7718,10 +7718,12 @@ supplementalData:table(nofallback){
                 "Cari",
                 "Cham",
                 "Cher",
+                "Chrs",
                 "Copt",
                 "Cprt",
                 "Cyrl",
                 "Deva",
+                "Diak",
                 "Dogr",
                 "Dsrt",
                 "Dupl",
@@ -7760,6 +7762,7 @@ supplementalData:table(nofallback){
                 "Khar",
                 "Khmr",
                 "Khoj",
+                "Kits",
                 "Knda",
                 "Kore",
                 "Kthi",
@@ -7848,6 +7851,7 @@ supplementalData:table(nofallback){
                 "Wcho",
                 "Xpeo",
                 "Xsux",
+                "Yezi",
                 "Yiii",
             }
             reserved{

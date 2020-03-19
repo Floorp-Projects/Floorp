@@ -673,7 +673,7 @@ class nsFrameSelection final {
   nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
                                                  const nsPoint& aPoint,
                                                  nsIFrame** aRetFrame,
-                                                 nsPoint& aRetPoint);
+                                                 nsPoint& aRetPoint) const;
 
   /**
    * @param aPresShell is the parameter to be used for most of the other calls
@@ -759,11 +759,6 @@ class nsFrameSelection final {
   friend class mozilla::dom::Selection;
   friend class mozilla::SelectionChangeEventDispatcher;
   friend struct mozilla::AutoPrepareFocusRange;
-#ifdef DEBUG
-  void printSelection();  // for debugging
-#endif                    /* DEBUG */
-
-  void ResizeBuffer(uint32_t aNewBufSize);
 
   /*HELPER METHODS*/
   // Whether MoveCaret should use logical or visual movement,

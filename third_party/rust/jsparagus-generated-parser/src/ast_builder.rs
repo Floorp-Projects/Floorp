@@ -123,9 +123,9 @@ impl<'alloc> AstBuilder<'alloc> {
         vec![in self.allocator; value]
     }
 
-    fn collect_vec_from_results<T, C>(&self, results: C) -> Result<arena::Vec<'alloc, T>>
+    fn collect_vec_from_results<T, C>(&self, results: C) -> Result<'alloc, arena::Vec<'alloc, T>>
     where
-        C: IntoIterator<Item = Result<T>>,
+        C: IntoIterator<Item = Result<'alloc, T>>,
     {
         let mut out = self.new_vec();
         for result in results {
@@ -146,7 +146,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn identifier_reference(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Identifier>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Identifier>> {
         self.on_identifier_reference(&token)?;
         Ok(self.alloc(self.identifier(token)))
     }
@@ -155,7 +155,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn binding_identifier(
         &mut self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, BindingIdentifier>> {
+    ) -> Result<'alloc, arena::Box<'alloc, BindingIdentifier>> {
         self.on_binding_identifier(&token)?;
         let loc = token.loc;
         Ok(self.alloc(BindingIdentifier {
@@ -168,7 +168,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn binding_identifier_yield(
         &mut self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, BindingIdentifier>> {
+    ) -> Result<'alloc, arena::Box<'alloc, BindingIdentifier>> {
         self.on_binding_identifier(&token)?;
         let loc = token.loc;
         Ok(self.alloc(BindingIdentifier {
@@ -184,7 +184,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn binding_identifier_await(
         &mut self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, BindingIdentifier>> {
+    ) -> Result<'alloc, arena::Box<'alloc, BindingIdentifier>> {
         self.on_binding_identifier(&token)?;
         let loc = token.loc;
         Ok(self.alloc(BindingIdentifier {
@@ -200,7 +200,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn label_identifier(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Label>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Label>> {
         self.on_label_identifier(&token)?;
         let loc = token.loc;
         Ok(self.alloc(Label {
@@ -265,7 +265,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn uncover_parenthesized_expression(
         &self,
         parenthesized: arena::Box<'alloc, CoverParenthesized<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         match parenthesized.unbox() {
             CoverParenthesized::Expression { expression, .. } => {
                 // TODO - does this need to rewalk the expression to look for
@@ -301,7 +301,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn assignment_target_maybe_default_to_binding(
         &self,
         target: AssignmentTargetMaybeDefault<'alloc>,
-    ) -> Result<Parameter<'alloc>> {
+    ) -> Result<'alloc, Parameter<'alloc>> {
         match target {
             AssignmentTargetMaybeDefault::AssignmentTarget(target) => Ok(Parameter::Binding(
                 self.assignment_target_to_binding(target)?,
@@ -320,7 +320,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn assignment_target_property_to_binding_property(
         &self,
         target: AssignmentTargetProperty<'alloc>,
-    ) -> Result<BindingProperty<'alloc>> {
+    ) -> Result<'alloc, BindingProperty<'alloc>> {
         Ok(match target {
             AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(
                 AssignmentTargetPropertyIdentifier {
@@ -348,7 +348,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn assignment_rest_property_to_binding_identifier(
         &self,
         target: AssignmentTarget<'alloc>,
-    ) -> Result<arena::Box<'alloc, BindingIdentifier>> {
+    ) -> Result<'alloc, arena::Box<'alloc, BindingIdentifier>> {
         match target {
             // ({...x} = dv) => {}
             AssignmentTarget::SimpleAssignmentTarget(
@@ -381,7 +381,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn assignment_target_to_binding(
         &self,
         target: AssignmentTarget<'alloc>,
-    ) -> Result<Binding<'alloc>> {
+    ) -> Result<'alloc, Binding<'alloc>> {
         match target {
             // (a = dv) => {}
             AssignmentTarget::SimpleAssignmentTarget(
@@ -414,8 +414,8 @@ impl<'alloc> AstBuilder<'alloc> {
                             .map(|target| self.assignment_target_maybe_default_to_binding(target))
                             .transpose()
                     }))?;
-                let rest: Option<Result<arena::Box<'alloc, Binding<'alloc>>>> = rest.map(
-                    |rest_target| -> Result<arena::Box<'alloc, Binding<'alloc>>> {
+                let rest: Option<Result<'alloc, arena::Box<'alloc, Binding<'alloc>>>> = rest.map(
+                    |rest_target| -> Result<'alloc, arena::Box<'alloc, Binding<'alloc>>> {
                         Ok(self.alloc(self.assignment_target_to_binding(rest_target.unbox())?))
                     },
                 );
@@ -461,7 +461,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn object_property_to_binding_property(
         &self,
         op: ObjectProperty<'alloc>,
-    ) -> Result<BindingProperty<'alloc>> {
+    ) -> Result<'alloc, BindingProperty<'alloc>> {
         match op {
             ObjectProperty::NamedObjectProperty(NamedObjectProperty::DataProperty(
                 DataProperty {
@@ -507,7 +507,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn spread_expression_to_rest_binding(
         &self,
         expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, BindingIdentifier>> {
+    ) -> Result<'alloc, arena::Box<'alloc, BindingIdentifier>> {
         Ok(match expression.unbox() {
             Expression::IdentifierExpression(IdentifierExpression { name, loc }) => {
                 self.alloc(BindingIdentifier { name, loc })
@@ -539,7 +539,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn object_expression_to_object_binding(
         &self,
         object: ObjectExpression<'alloc>,
-    ) -> Result<ObjectBinding<'alloc>> {
+    ) -> Result<'alloc, ObjectBinding<'alloc>> {
         let mut properties = object.properties;
         let loc = object.loc;
         let rest = self.pop_trailing_spread_property(&mut properties);
@@ -559,7 +559,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn array_elements_to_parameters(
         &self,
         elements: arena::Vec<'alloc, ArrayExpressionElement<'alloc>>,
-    ) -> Result<arena::Vec<'alloc, Option<Parameter<'alloc>>>> {
+    ) -> Result<'alloc, arena::Vec<'alloc, Option<Parameter<'alloc>>>> {
         self.collect_vec_from_results(elements.into_iter().map(|element| match element {
                 ArrayExpressionElement::Expression(expr) =>
                     Ok(Some(self.expression_to_parameter(expr.unbox())?)),
@@ -590,7 +590,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn expression_to_binding_no_default(
         &self,
         expression: Expression<'alloc>,
-    ) -> Result<Binding<'alloc>> {
+    ) -> Result<'alloc, Binding<'alloc>> {
         match expression {
             Expression::IdentifierExpression(IdentifierExpression { name, loc }) => {
                 Ok(Binding::BindingIdentifier(BindingIdentifier { name, loc }))
@@ -624,7 +624,10 @@ impl<'alloc> AstBuilder<'alloc> {
         }
     }
 
-    fn expression_to_parameter(&self, expression: Expression<'alloc>) -> Result<Parameter<'alloc>> {
+    fn expression_to_parameter(
+        &self,
+        expression: Expression<'alloc>,
+    ) -> Result<'alloc, Parameter<'alloc>> {
         match expression {
             Expression::AssignmentExpression {
                 binding,
@@ -648,7 +651,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn expression_to_parameter_list(
         &self,
         expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Vec<'alloc, Parameter<'alloc>>> {
+    ) -> Result<'alloc, arena::Vec<'alloc, Parameter<'alloc>>> {
         // When the production
         // *ArrowParameters* `:` *CoverParenthesizedExpressionAndArrowParameterList*
         // is recognized the following grammar is used to refine the
@@ -680,7 +683,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn arguments_to_parameter_list(
         &self,
         arguments: Arguments<'alloc>,
-    ) -> Result<arena::Box<'alloc, FormalParameters<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, FormalParameters<'alloc>>> {
         let loc = arguments.loc;
         let mut items = self.new_vec();
         let mut rest: Option<Binding<'alloc>> = None;
@@ -755,12 +758,14 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn numeric_literal(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let loc = token.loc;
-        Ok(self.alloc(Expression::LiteralNumericExpression {
-            value: Self::numeric_literal_value(token),
-            loc,
-        }))
+        Ok(
+            self.alloc(Expression::LiteralNumericExpression(NumericLiteral {
+                value: Self::numeric_literal_value(token),
+                loc,
+            })),
+        )
     }
 
     // Literal : NumericLiteral
@@ -771,7 +776,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn bigint_literal(
         &self,
         _token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         Err(ParseError::NotImplemented("BigInt"))
     }
 
@@ -779,7 +784,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn string_literal(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let loc = token.loc;
         // Hack: Prevent emission for scripts with "use strict"
         // directive.
@@ -1044,7 +1049,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn property_name_identifier(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, PropertyName<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
         let value = token.value.as_atom();
         if value == CommonSourceAtomSetIndices::__proto__() {
             return Err(ParseError::NotImplemented("__proto__ as property name"));
@@ -1063,7 +1068,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn property_name_string(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, PropertyName<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
         let value = token.value.as_atom();
         if value == CommonSourceAtomSetIndices::__proto__() {
             return Err(ParseError::NotImplemented("__proto__ as property name"));
@@ -1082,12 +1087,11 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn property_name_numeric(
         &self,
         token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, PropertyName<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
         let loc = token.loc;
-        let s = self.alloc_str(&format!("{:?}", Self::numeric_literal_value(token)));
-        let value = self.atoms.borrow_mut().insert(s);
+        let value = Self::numeric_literal_value(token);
         Ok(
-            self.alloc(PropertyName::StaticPropertyName(StaticPropertyName {
+            self.alloc(PropertyName::StaticNumericPropertyName(NumericLiteral {
                 value,
                 loc,
             })),
@@ -1102,7 +1106,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn property_name_bigint(
         &self,
         _token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, PropertyName<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
         Err(ParseError::NotImplemented("BigInt"))
     }
 
@@ -1124,7 +1128,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _name: arena::Box<'alloc, Identifier>,
         _initializer: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, ObjectProperty<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, ObjectProperty<'alloc>>> {
         // Awkward. This needs to be stored somehow until we reach an enclosing
         // context where it can be reinterpreted as a default value in an
         // object destructuring assignment pattern.
@@ -1157,7 +1161,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _head: arena::Box<'alloc, Token>,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
         _spans: arena::Box<'alloc, Void>,
-    ) -> Result<arena::Box<'alloc, TemplateExpression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, TemplateExpression<'alloc>>> {
         Err(ParseError::NotImplemented("template strings"))
     }
 
@@ -1167,7 +1171,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _middle_list: Option<arena::Box<'alloc, Void>>,
         _tail: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("template strings"))
     }
 
@@ -1176,7 +1180,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _middle: arena::Box<'alloc, Token>,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("template strings"))
     }
 
@@ -1186,7 +1190,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _middle_list: arena::Box<'alloc, Void>,
         _middle: arena::Box<'alloc, Token>,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("template strings"))
     }
 
@@ -1273,7 +1277,7 @@ impl<'alloc> AstBuilder<'alloc> {
     // OptionalChain : `?.` TemplateLiteral
     pub fn error_optional_chain_with_template(
         &self,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         Err(ParseError::IllegalCharacter('`'))
     }
 
@@ -1590,7 +1594,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         operand: arena::Box<'alloc, Expression<'alloc>>,
         operator_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let operand = self.expression_to_simple_assignment_target(operand)?;
         let operand_loc = operand.get_loc();
         Ok(self.alloc(Expression::UpdateExpression {
@@ -1608,7 +1612,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         operand: arena::Box<'alloc, Expression<'alloc>>,
         operator_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let operand = self.expression_to_simple_assignment_target(operand)?;
         let operand_loc = operand.get_loc();
         Ok(self.alloc(Expression::UpdateExpression {
@@ -1626,7 +1630,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         operator_token: arena::Box<'alloc, Token>,
         operand: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let operand = self.expression_to_simple_assignment_target(operand)?;
         let operand_loc = operand.get_loc();
         Ok(self.alloc(Expression::UpdateExpression {
@@ -1644,7 +1648,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         operator_token: arena::Box<'alloc, Token>,
         operand: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let operand = self.expression_to_simple_assignment_target(operand)?;
         let operand_loc = operand.get_loc();
         Ok(self.alloc(Expression::UpdateExpression {
@@ -1924,7 +1928,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         mut elements: arena::Vec<'alloc, ArrayExpressionElement<'alloc>>,
         loc: SourceLocation,
-    ) -> Result<ArrayAssignmentTarget<'alloc>> {
+    ) -> Result<'alloc, ArrayAssignmentTarget<'alloc>> {
         let spread = self.pop_trailing_spread_element(&mut elements);
         let elements =
             self.collect_vec_from_results(elements.into_iter().map(|element| match element {
@@ -1936,7 +1940,7 @@ impl<'alloc> AstBuilder<'alloc> {
                 )),
                 ArrayExpressionElement::Elision { .. } => Ok(None),
             }))?;
-        let rest: Option<Result<arena::Box<'alloc, AssignmentTarget<'alloc>>>> =
+        let rest: Option<Result<'alloc, arena::Box<'alloc, AssignmentTarget<'alloc>>>> =
             spread.map(|expr| Ok(self.alloc(self.expression_to_assignment_target(expr)?)));
         let rest = rest.transpose()?;
         Ok(ArrayAssignmentTarget {
@@ -1949,7 +1953,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn object_property_to_assignment_target_property(
         &self,
         property: arena::Box<'alloc, ObjectProperty<'alloc>>,
-    ) -> Result<AssignmentTargetProperty<'alloc>> {
+    ) -> Result<'alloc, AssignmentTargetProperty<'alloc>> {
         Ok(match property.unbox() {
             ObjectProperty::NamedObjectProperty(NamedObjectProperty::MethodDefinition(_)) => {
                 return Err(ParseError::ObjectPatternWithMethod)
@@ -1994,14 +1998,14 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         mut properties: arena::Vec<'alloc, arena::Box<'alloc, ObjectProperty<'alloc>>>,
         loc: SourceLocation,
-    ) -> Result<ObjectAssignmentTarget<'alloc>> {
+    ) -> Result<'alloc, ObjectAssignmentTarget<'alloc>> {
         let spread = self.pop_trailing_spread_property(&mut properties);
         let properties = self.collect_vec_from_results(
             properties
                 .into_iter()
                 .map(|p| self.object_property_to_assignment_target_property(p)),
         )?;
-        let rest: Option<Result<arena::Box<'alloc, AssignmentTarget<'alloc>>>> =
+        let rest: Option<Result<'alloc, arena::Box<'alloc, AssignmentTarget<'alloc>>>> =
             spread.map(|expr| Ok(self.alloc(self.expression_to_assignment_target(expr)?)));
         let rest = rest.transpose()?;
         Ok(ObjectAssignmentTarget {
@@ -2014,7 +2018,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn expression_to_assignment_target_maybe_default(
         &self,
         expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<AssignmentTargetMaybeDefault<'alloc>> {
+    ) -> Result<'alloc, AssignmentTargetMaybeDefault<'alloc>> {
         Ok(match expression.unbox() {
             Expression::AssignmentExpression {
                 binding,
@@ -2037,7 +2041,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn expression_to_assignment_target(
         &self,
         expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<AssignmentTarget<'alloc>> {
+    ) -> Result<'alloc, AssignmentTarget<'alloc>> {
         Ok(match expression.unbox() {
             Expression::ArrayExpression(ArrayExpression { elements, loc }) => {
                 AssignmentTarget::AssignmentTargetPattern(
@@ -2064,7 +2068,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn expression_to_simple_assignment_target(
         &self,
         expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<SimpleAssignmentTarget<'alloc>> {
+    ) -> Result<'alloc, SimpleAssignmentTarget<'alloc>> {
         Ok(match expression.unbox() {
             // Static Semantics: AssignmentTargetType
             // https://tc39.es/ecma262/#sec-identifiers-static-semantics-assignmenttargettype
@@ -2162,7 +2166,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         left_hand_side: arena::Box<'alloc, Expression<'alloc>>,
         value: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let target = self.expression_to_assignment_target(left_hand_side)?;
         let target_loc = target.get_loc();
         let value_loc = value.get_loc();
@@ -2241,7 +2245,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left_hand_side: arena::Box<'alloc, Expression<'alloc>>,
         operator: arena::Box<'alloc, CompoundAssignmentOperator>,
         value: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let target = self.expression_to_simple_assignment_target(left_hand_side)?;
         let target_loc = target.get_loc();
         let value_loc = value.get_loc();
@@ -2271,7 +2275,7 @@ impl<'alloc> AstBuilder<'alloc> {
         open_token: arena::Box<'alloc, Token>,
         statements: Option<arena::Box<'alloc, arena::Vec<'alloc, Statement<'alloc>>>>,
         close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Block<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Block<'alloc>>> {
         self.check_block_bindings(open_token.loc.start)?;
 
         Ok(self.alloc(Block {
@@ -2327,7 +2331,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         kind: arena::Box<'alloc, VariableDeclarationKind>,
         declarators: arena::Box<'alloc, arena::Vec<'alloc, VariableDeclarator<'alloc>>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let binding_kind = match &*kind {
             VariableDeclarationKind::Let { .. } => BindingKind::Let,
             VariableDeclarationKind::Const { .. } => BindingKind::Const,
@@ -2366,7 +2370,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         kind: arena::Box<'alloc, VariableDeclarationKind>,
         declarators: arena::Box<'alloc, arena::Vec<'alloc, VariableDeclarator<'alloc>>>,
-    ) -> Result<arena::Box<'alloc, VariableDeclarationOrExpression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, VariableDeclarationOrExpression<'alloc>>> {
         let binding_kind = match &*kind {
             VariableDeclarationKind::Let { .. } => BindingKind::Let,
             VariableDeclarationKind::Const { .. } => BindingKind::Const,
@@ -2704,7 +2708,7 @@ impl<'alloc> AstBuilder<'alloc> {
         test: arena::Box<'alloc, Expression<'alloc>>,
         consequent: arena::Box<'alloc, Statement<'alloc>>,
         alternate: Option<arena::Box<'alloc, Statement<'alloc>>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&consequent)?;
         if let Some(ref stmt) = alternate {
             self.check_single_statement(&stmt)?;
@@ -2732,7 +2736,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn make_block_stmt_from_function_decl(
         &mut self,
         fun: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let fun_loc = fun.get_loc();
 
         // Annex B. FunctionDeclarations in IfStatement Statement Clauses
@@ -2760,7 +2764,7 @@ impl<'alloc> AstBuilder<'alloc> {
         }))
     }
 
-    fn is_strict(&self) -> Result<bool> {
+    fn is_strict(&self) -> Result<'alloc, bool> {
         Err(ParseError::NotImplemented(
             "strict-mode-only early error is not yet supported",
         ))
@@ -2773,7 +2777,7 @@ impl<'alloc> AstBuilder<'alloc> {
         stmt: arena::Box<'alloc, Statement<'alloc>>,
         test: arena::Box<'alloc, Expression<'alloc>>,
         close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
 
         Ok(self.alloc(Statement::DoWhileStatement {
@@ -2789,7 +2793,7 @@ impl<'alloc> AstBuilder<'alloc> {
         while_token: arena::Box<'alloc, Token>,
         test: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
 
         let stmt_loc = stmt.get_loc();
@@ -2809,7 +2813,7 @@ impl<'alloc> AstBuilder<'alloc> {
         test: Option<arena::Box<'alloc, Expression<'alloc>>>,
         update: Option<arena::Box<'alloc, Expression<'alloc>>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.for_statement_common(for_token, init, test, update, stmt)
     }
@@ -2822,7 +2826,7 @@ impl<'alloc> AstBuilder<'alloc> {
         test: Option<arena::Box<'alloc, Expression<'alloc>>>,
         update: Option<arena::Box<'alloc, Expression<'alloc>>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.check_lexical_for_bindings(&init.get_loc())?;
         self.for_statement_common(for_token, Some(init), test, update, stmt)
@@ -2835,7 +2839,7 @@ impl<'alloc> AstBuilder<'alloc> {
         test: Option<arena::Box<'alloc, Expression<'alloc>>>,
         update: Option<arena::Box<'alloc, Expression<'alloc>>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let stmt_loc = stmt.get_loc();
         Ok(self.alloc(Statement::ForStatement {
             init,
@@ -2893,7 +2897,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget<'alloc>,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.for_in_statement_common(for_token, left, right, stmt)
     }
@@ -2905,7 +2909,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget<'alloc>,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.check_lexical_for_bindings(&left.get_loc())?;
         self.for_in_statement_common(for_token, left, right, stmt)
@@ -2917,7 +2921,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget<'alloc>,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let stmt_loc = stmt.get_loc();
         Ok(self.alloc(Statement::ForInStatement {
             left,
@@ -2956,7 +2960,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn for_assignment_target(
         &self,
         expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<VariableDeclarationOrAssignmentTarget<'alloc>> {
+    ) -> Result<'alloc, VariableDeclarationOrAssignmentTarget<'alloc>> {
         Ok(VariableDeclarationOrAssignmentTarget::AssignmentTarget(
             self.expression_to_assignment_target(expression)?,
         ))
@@ -2977,7 +2981,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget<'alloc>,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.for_of_statement_common(for_token, left, right, stmt)
     }
@@ -2989,7 +2993,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget<'alloc>,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.check_lexical_for_bindings(&left.get_loc())?;
         self.for_of_statement_common(for_token, left, right, stmt)
@@ -3001,7 +3005,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget<'alloc>,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let stmt_loc = stmt.get_loc();
         Ok(self.alloc(Statement::ForOfStatement {
             left,
@@ -3019,7 +3023,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.for_await_of_statement_common(for_token, left, right, stmt)
     }
@@ -3031,7 +3035,7 @@ impl<'alloc> AstBuilder<'alloc> {
         left: VariableDeclarationOrAssignmentTarget,
         right: arena::Box<'alloc, Expression<'alloc>>,
         stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
         self.check_lexical_for_bindings(&left.get_loc())?;
         self.for_await_of_statement_common(for_token, left, right, stmt)
@@ -3043,7 +3047,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _left: VariableDeclarationOrAssignmentTarget,
         _right: arena::Box<'alloc, Expression<'alloc>>,
         _stmt: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         Err(ParseError::NotImplemented(
             "for await statement (missing from AST)",
         ))
@@ -3190,7 +3194,7 @@ impl<'alloc> AstBuilder<'alloc> {
         open_token: arena::Box<'alloc, Token>,
         cases: Option<arena::Box<'alloc, arena::Vec<'alloc, SwitchCase<'alloc>>>>,
         close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_case_block_binding(open_token.loc.start)?;
 
         Ok(self.alloc(Statement::SwitchStatement {
@@ -3217,7 +3221,7 @@ impl<'alloc> AstBuilder<'alloc> {
         default_case: arena::Box<'alloc, SwitchDefault<'alloc>>,
         post_default_cases: Option<arena::Box<'alloc, arena::Vec<'alloc, SwitchCase<'alloc>>>>,
         close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Statement<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_case_block_binding(open_token.loc.start)?;
 
         Ok(self.alloc(Statement::SwitchStatementWithDefault {
@@ -3385,7 +3389,7 @@ impl<'alloc> AstBuilder<'alloc> {
         catch_token: arena::Box<'alloc, Token>,
         binding: arena::Box<'alloc, Binding<'alloc>>,
         body: arena::Box<'alloc, Block<'alloc>>,
-    ) -> Result<arena::Box<'alloc, CatchClause<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, CatchClause<'alloc>>> {
         let catch_loc = catch_token.loc;
         let body_loc = body.loc;
 
@@ -3408,7 +3412,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         catch_token: arena::Box<'alloc, Token>,
         body: arena::Box<'alloc, Block<'alloc>>,
-    ) -> Result<arena::Box<'alloc, CatchClause<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, CatchClause<'alloc>>> {
         let catch_loc = catch_token.loc;
         let body_loc = body.loc;
 
@@ -3464,7 +3468,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<Function<'alloc>> {
+    ) -> Result<'alloc, Function<'alloc>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -3498,7 +3502,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<Function<'alloc>> {
+    ) -> Result<'alloc, Function<'alloc>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -3532,7 +3536,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<Function<'alloc>> {
+    ) -> Result<'alloc, Function<'alloc>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -3566,7 +3570,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<Function<'alloc>> {
+    ) -> Result<'alloc, Function<'alloc>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -3669,7 +3673,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         params: arena::Box<'alloc, FormalParameters<'alloc>>,
         body: arena::Box<'alloc, ArrowExpressionBody<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         self.check_unique_function_bindings(params.loc.start, params.loc.end)?;
 
         let params_loc = params.loc;
@@ -3702,7 +3706,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn uncover_arrow_parameters(
         &self,
         covered: arena::Box<'alloc, CoverParenthesized<'alloc>>,
-    ) -> Result<arena::Box<'alloc, FormalParameters<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, FormalParameters<'alloc>>> {
         Ok(match covered.unbox() {
             CoverParenthesized::Expression { expression, loc } => self.alloc(FormalParameters {
                 items: self.expression_to_parameter_list(expression)?,
@@ -3743,7 +3747,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, MethodDefinition<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, MethodDefinition<'alloc>>> {
         let name_loc = name.get_loc();
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
@@ -3793,7 +3797,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, MethodDefinition<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, MethodDefinition<'alloc>>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -3823,7 +3827,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, MethodDefinition<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, MethodDefinition<'alloc>>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -3887,7 +3891,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, MethodDefinition<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, MethodDefinition<'alloc>>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -4017,6 +4021,9 @@ impl<'alloc> AstBuilder<'alloc> {
         self.alloc(match name.unbox() {
             PropertyName::ComputedPropertyName(cpn) => ClassElementName::ComputedPropertyName(cpn),
             PropertyName::StaticPropertyName(spn) => ClassElementName::StaticPropertyName(spn),
+            PropertyName::StaticNumericPropertyName(snpn) => {
+                ClassElementName::StaticNumericPropertyName(snpn)
+            }
         })
     }
 
@@ -4067,6 +4074,15 @@ impl<'alloc> AstBuilder<'alloc> {
         )
     }
 
+    // ClassElement : `static` MethodDefinition
+    pub fn class_element_static_field(
+        &self,
+        _static_token: arena::Box<'alloc, Token>,
+        _field: arena::Box<'alloc, ClassElement<'alloc>>,
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
+        Err(ParseError::NotImplemented("class static field"))
+    }
+
     // ClassElement : `;`
     pub fn class_element_empty(
         &self,
@@ -4085,7 +4101,7 @@ impl<'alloc> AstBuilder<'alloc> {
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, MethodDefinition<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, MethodDefinition<'alloc>>> {
         let param_open_loc = param_open_token.loc;
         let param_close_loc = param_close_token.loc;
         let body_close_loc = body_close_token.loc;
@@ -4125,7 +4141,7 @@ impl<'alloc> AstBuilder<'alloc> {
         async_token: arena::Box<'alloc, Token>,
         identifier: arena::Box<'alloc, BindingIdentifier>,
         body: arena::Box<'alloc, ArrowExpressionBody<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let params = self.arrow_parameters_bare(identifier);
 
         self.check_unique_function_bindings(params.loc.start, params.loc.end)?;
@@ -4143,7 +4159,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         params: arena::Box<'alloc, Expression<'alloc>>,
         body: arena::Box<'alloc, ArrowExpressionBody<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let (params, call_loc) = self.async_arrow_parameters(params)?;
 
         self.check_unique_function_bindings(params.loc.start, params.loc.end)?;
@@ -4163,7 +4179,7 @@ impl<'alloc> AstBuilder<'alloc> {
     fn async_arrow_parameters(
         &self,
         call_expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<(arena::Box<'alloc, FormalParameters<'alloc>>, SourceLocation)> {
+    ) -> Result<'alloc, (arena::Box<'alloc, FormalParameters<'alloc>>, SourceLocation)> {
         match call_expression.unbox() {
             Expression::CallExpression(CallExpression {
                 callee: ce,
@@ -4206,7 +4222,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn script(
         &mut self,
         script: Option<arena::Box<'alloc, Script<'alloc>>>,
-    ) -> Result<arena::Box<'alloc, Script<'alloc>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Script<'alloc>>> {
         self.check_script_bindings()?;
 
         Ok(match script {
@@ -4245,7 +4261,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn module(
         &mut self,
         body: Option<arena::Box<'alloc, arena::Vec<'alloc, Statement<'alloc>>>>,
-    ) -> Result<arena::Box<'alloc, arena::Vec<'alloc, Statement<'alloc>>>> {
+    ) -> Result<'alloc, arena::Box<'alloc, arena::Vec<'alloc, Statement<'alloc>>>> {
         self.check_module_bindings()?;
 
         Ok(body.unwrap_or_else(|| self.alloc(self.new_vec())))
@@ -4275,7 +4291,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _import_clause: Option<arena::Box<'alloc, Void>>,
         _module_specifier: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4289,7 +4305,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _default_binding: Option<arena::Box<'alloc, BindingIdentifier>>,
         _name_space_import: Option<arena::Box<'alloc, Void>>,
         _named_imports: Option<arena::Box<'alloc, Void>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4297,12 +4313,12 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn name_space_import(
         &self,
         _name: arena::Box<'alloc, BindingIdentifier>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
     // NamedImports : `{` `}`
-    pub fn imports_list_empty(&self) -> Result<arena::Box<'alloc, Void>> {
+    pub fn imports_list_empty(&self) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4312,7 +4328,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _list: arena::Box<'alloc, Void>,
         _item: arena::Box<'alloc, Void>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4320,7 +4336,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn import_specifier(
         &self,
         _name: arena::Box<'alloc, BindingIdentifier>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4329,7 +4345,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _original_name: arena::Box<'alloc, Token>,
         _local_name: arena::Box<'alloc, BindingIdentifier>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4337,7 +4353,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn module_specifier(
         &self,
         _token: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Token>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Token>> {
         Err(ParseError::NotImplemented("import"))
     }
 
@@ -4345,7 +4361,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_all_from(
         &self,
         _module_specifier: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4354,7 +4370,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _export_clause: arena::Box<'alloc, Void>,
         _module_specifier: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4362,7 +4378,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_set(
         &self,
         _export_clause: arena::Box<'alloc, Void>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4370,7 +4386,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_vars(
         &self,
         _statement: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4378,7 +4394,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_declaration(
         &self,
         _declaration: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4386,7 +4402,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_default_hoistable(
         &self,
         _declaration: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4394,7 +4410,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_default_class(
         &self,
         _class_declaration: arena::Box<'alloc, Statement<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4402,12 +4418,12 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_default_value(
         &self,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
     // ExportClause : `{` `}`
-    pub fn exports_list_empty(&self) -> Result<arena::Box<'alloc, Void>> {
+    pub fn exports_list_empty(&self) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4417,7 +4433,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _list: arena::Box<'alloc, Void>,
         _export_specifier: arena::Box<'alloc, Void>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4425,7 +4441,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn export_specifier(
         &self,
         _identifier: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
@@ -4434,13 +4450,13 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _local_name: arena::Box<'alloc, Token>,
         _exported_name: arena::Box<'alloc, Token>,
-    ) -> Result<arena::Box<'alloc, Void>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Void>> {
         Err(ParseError::NotImplemented("export"))
     }
 
     // Check Early Error for BindingIdentifier and note binding info to the
     // stack.
-    fn on_binding_identifier(&mut self, token: &arena::Box<'alloc, Token>) -> Result<()> {
+    fn on_binding_identifier(&mut self, token: &arena::Box<'alloc, Token>) -> Result<'alloc, ()> {
         let context = IdentifierEarlyErrorsContext::new();
         context.check_binding_identifier(token, &self.atoms.borrow())?;
 
@@ -4461,13 +4477,13 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check Early Error for IdentifierReference.
-    fn on_identifier_reference(&self, token: &arena::Box<'alloc, Token>) -> Result<()> {
+    fn on_identifier_reference(&self, token: &arena::Box<'alloc, Token>) -> Result<'alloc, ()> {
         let context = IdentifierEarlyErrorsContext::new();
         context.check_identifier_reference(token, &self.atoms.borrow())
     }
 
     // Check Early Error for LabelIdentifier.
-    fn on_label_identifier(&self, token: &arena::Box<'alloc, Token>) -> Result<()> {
+    fn on_label_identifier(&self, token: &arena::Box<'alloc, Token>) -> Result<'alloc, ()> {
         let context = IdentifierEarlyErrorsContext::new();
         context.check_label_identifier(token, &self.atoms.borrow())
     }
@@ -4539,7 +4555,7 @@ impl<'alloc> AstBuilder<'alloc> {
 
     // Declare bindings to Block-like context, where function declarations
     // are lexical.
-    fn declare_block<T>(&self, context: &mut T, index: usize) -> Result<()>
+    fn declare_block<T>(&self, context: &mut T, index: usize) -> Result<'alloc, ()>
     where
         T: LexicalEarlyErrorsContext + VarEarlyErrorsContext,
     {
@@ -4603,7 +4619,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check bindings in Block.
-    fn check_block_bindings(&mut self, start_of_block_offset: usize) -> Result<()> {
+    fn check_block_bindings(&mut self, start_of_block_offset: usize) -> Result<'alloc, ()> {
         let mut context = BlockEarlyErrorsContext::new();
         let index = self.find_first_binding(start_of_block_offset);
         self.declare_block(&mut context, index)?;
@@ -4618,7 +4634,7 @@ impl<'alloc> AstBuilder<'alloc> {
         context: &mut LexicalForHeadEarlyErrorsContext,
         from: usize,
         to: usize,
-    ) -> Result<()> {
+    ) -> Result<'alloc, ()> {
         for info in self.bindings.iter().skip(from).take(to - from) {
             match info.kind {
                 BindingKind::Let => {
@@ -4651,7 +4667,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         context: &mut LexicalForBodyEarlyErrorsContext,
         index: usize,
-    ) -> Result<()> {
+    ) -> Result<'alloc, ()> {
         for info in self.bindings.iter().skip(index) {
             match info.kind {
                 BindingKind::Var => {
@@ -4672,7 +4688,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check bindings in lexical for-statement.
-    fn check_lexical_for_bindings(&mut self, bindings_loc: &SourceLocation) -> Result<()> {
+    fn check_lexical_for_bindings(&mut self, bindings_loc: &SourceLocation) -> Result<'alloc, ()> {
         let mut head_context = LexicalForHeadEarlyErrorsContext::new();
 
         let head_index = self.find_first_binding(bindings_loc.start);
@@ -4687,7 +4703,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check bindings in CaseBlock of switch-statement.
-    fn check_case_block_binding(&mut self, start_of_block_offset: usize) -> Result<()> {
+    fn check_case_block_binding(&mut self, start_of_block_offset: usize) -> Result<'alloc, ()> {
         let mut context = CaseBlockEarlyErrorsContext::new();
 
         let index = self.find_first_binding(start_of_block_offset);
@@ -4698,7 +4714,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Declare bindings to the parameter of function or catch.
-    fn declare_param<T>(&self, context: &mut T, from: usize, to: usize) -> Result<()>
+    fn declare_param<T>(&self, context: &mut T, from: usize, to: usize) -> Result<'alloc, ()>
     where
         T: ParameterEarlyErrorsContext,
     {
@@ -4714,7 +4730,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         is_simple: bool,
         bindings_loc: &SourceLocation,
-    ) -> Result<()> {
+    ) -> Result<'alloc, ()> {
         let mut param_context = if is_simple {
             CatchParameterEarlyErrorsContext::new_with_binding_identifier()
         } else {
@@ -4733,7 +4749,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check bindings in Catch with no parameter and Block.
-    fn check_catch_no_param_bindings(&mut self, catch_offset: usize) -> Result<()> {
+    fn check_catch_no_param_bindings(&mut self, catch_offset: usize) -> Result<'alloc, ()> {
         let body_index = self.find_first_binding(catch_offset);
 
         let param_context = CatchParameterEarlyErrorsContext::new_with_binding_identifier();
@@ -4746,7 +4762,7 @@ impl<'alloc> AstBuilder<'alloc> {
 
     // Declare bindings to script-or-function-like context, where function
     // declarations are body-level.
-    fn declare_script_or_function<T>(&self, context: &mut T, index: usize) -> Result<()>
+    fn declare_script_or_function<T>(&self, context: &mut T, index: usize) -> Result<'alloc, ()>
     where
         T: LexicalEarlyErrorsContext + VarEarlyErrorsContext,
     {
@@ -4807,7 +4823,7 @@ impl<'alloc> AstBuilder<'alloc> {
         is_simple: bool,
         start_of_param_offset: usize,
         end_of_param_offset: usize,
-    ) -> Result<()> {
+    ) -> Result<'alloc, ()> {
         let mut param_context = if is_simple {
             FormalParametersEarlyErrorsContext::new_simple()
         } else {
@@ -4830,7 +4846,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         start_of_param_offset: usize,
         end_of_param_offset: usize,
-    ) -> Result<()> {
+    ) -> Result<'alloc, ()> {
         let mut param_context = UniqueFormalParametersEarlyErrorsContext::new();
 
         let param_index = self.find_first_binding(start_of_param_offset);
@@ -4845,7 +4861,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check bindings in Script.
-    fn check_script_bindings(&mut self) -> Result<()> {
+    fn check_script_bindings(&mut self) -> Result<'alloc, ()> {
         let mut context = ScriptEarlyErrorsContext::new();
         self.declare_script_or_function(&mut context, 0)?;
         self.pop_bindings_from(0);
@@ -4854,7 +4870,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // Check bindings in Module.
-    fn check_module_bindings(&mut self) -> Result<()> {
+    fn check_module_bindings(&mut self) -> Result<'alloc, ()> {
         let mut context = ModuleEarlyErrorsContext::new();
         self.declare_script_or_function(&mut context, 0)?;
         self.pop_bindings_from(0);
@@ -4887,7 +4903,10 @@ impl<'alloc> AstBuilder<'alloc> {
     // https://tc39.es/ecma262/#sec-if-statement-static-semantics-early-errors
     // https://tc39.es/ecma262/#sec-semantics-static-semantics-early-errors
     // https://tc39.es/ecma262/#sec-with-statement-static-semantics-early-errors
-    fn check_single_statement(&self, stmt: &arena::Box<'alloc, Statement<'alloc>>) -> Result<()> {
+    fn check_single_statement(
+        &self,
+        stmt: &arena::Box<'alloc, Statement<'alloc>>,
+    ) -> Result<'alloc, ()> {
         // * It is a Syntax Error if IsLabelledFunction(Statement) is true.
         if self.is_labelled_function(stmt) {
             return Err(ParseError::LabelledFunctionDeclInSingleStatement);

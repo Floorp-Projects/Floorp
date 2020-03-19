@@ -13,7 +13,7 @@ en_AU{
             }
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         chinese{
             monthNames{
