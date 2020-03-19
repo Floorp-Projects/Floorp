@@ -251,7 +251,7 @@ def analyzeLogs():
     block = int(options.block, 16)
 
     if block not in blocks:
-        print('Object ' + block + ' not found in traces.')
+        print('Object ' + options.block + ' not found in traces.')
         print('It could still be the target of some nodes.')
         return
 
