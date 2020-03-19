@@ -176,7 +176,6 @@
 }
 
 #identity-box[pageproxystate="valid"].notSecure > #identity-icon,
-#identity-box[pageproxystate="valid"].insecureLoginForms > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveContent > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
 }
