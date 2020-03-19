@@ -52,7 +52,7 @@ yo_BJ{
             latn{"Díjíítì Ìwɔ̀ Oòrùn"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         script{"Ìshɔwɔ́kɔ̀wé: {0}"}
     }

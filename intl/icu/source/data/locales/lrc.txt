@@ -36,7 +36,7 @@ lrc{
         }
         native{"arabext"}
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         default{"persian"}
         generic{

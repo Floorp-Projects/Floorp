@@ -280,5 +280,5 @@ ha{
             other{"(Kudin da ba a sani ba)"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

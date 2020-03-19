@@ -303,7 +303,7 @@ ha{
             latn{"Lambobi na yammacin"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"Harshe: {0}"}
         script{"Rubutu: {0}"}

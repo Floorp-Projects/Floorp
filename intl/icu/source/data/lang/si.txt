@@ -557,7 +557,7 @@ si{
             tibt{"ටිබෙට ඉලක්කම්"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — සියල්ල"}
         category-list{"{0}: {1}"}

@@ -82,5 +82,5 @@ lrc{
             other{"پیل نادیار"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

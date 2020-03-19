@@ -464,7 +464,7 @@ ce{
             persian{"гӀажарийн"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"Мотт: {0}"}
         script{"Скрипт: {0}"}
