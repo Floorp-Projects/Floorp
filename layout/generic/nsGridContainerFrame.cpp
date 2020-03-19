@@ -1277,9 +1277,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
       if (!repeat.count.IsNumber()) {
         MOZ_ASSERT(i == mRepeatAutoStart);
         mRepeatAutoStart = mExpandedTracks.Length();
-        // The + 1 indicates the number of values in the repeat.
-        // TODO: This will need to be updated in bug 1341507
-        mRepeatAutoEnd = mRepeatAutoStart + 1;
+        mRepeatAutoEnd = mRepeatAutoStart + repeat.track_sizes.Length();
         mExpandedTracks.AppendElement(std::make_pair(i, size_t(0)));
         continue;
       }
