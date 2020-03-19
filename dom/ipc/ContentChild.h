@@ -21,6 +21,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsAutoPtr.h"
 #include "nsHashKeys.h"
+#include "nsIContentChild.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
 #include "nsStringFwd.h"
@@ -79,6 +80,7 @@ enum class MediaControlKeysEvent : uint32_t;
 
 class ContentChild final
     : public PContentChild,
+      public nsIContentChild,
       public nsIWindowProvider,
       public CPOWManagerGetter,
       public mozilla::ipc::IShmemAllocator,
@@ -91,6 +93,7 @@ class ContentChild final
   friend class PContentChild;
 
  public:
+  NS_DECL_NSICONTENTCHILD
   NS_DECL_NSIWINDOWPROVIDER
 
   ContentChild();
@@ -893,6 +896,10 @@ class ContentChild final
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
+
+inline nsISupports* ToSupports(mozilla::dom::ContentChild* aContentChild) {
+  return static_cast<nsIContentChild*>(aContentChild);
+}
 
 }  // namespace dom
 }  // namespace mozilla

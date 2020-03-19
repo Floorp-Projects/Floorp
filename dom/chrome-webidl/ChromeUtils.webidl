@@ -446,6 +446,12 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   void generateMediaControlKeysTestEvent(MediaControlKeysTestEvent aEvent);
 
+  /**
+   * ContentChild of the current process.
+   */
+  [ChromeOnly]
+  readonly attribute nsIContentChild? contentChild;
+
   // This is used to get the media metadata from the current main controller in
   // testing.
   [ChromeOnly]
