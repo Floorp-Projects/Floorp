@@ -433,7 +433,7 @@ class RustParserWriter:
         self.write(0, "}")
         self.write(0, "")
         self.write(0, "pub trait ParserTrait<'alloc, Value> {")
-        self.write(1, "fn shift(&mut self, tv: TermValue<Value>) -> Result<bool>;")
+        self.write(1, "fn shift(&mut self, tv: TermValue<Value>) -> Result<'alloc, bool>;")
         self.write(1, "fn replay(&mut self, tv: TermValue<Value>);")
         self.write(1, "fn rewind(&mut self, n: usize) {")
         self.write(2, "for _ in 0..n {")
@@ -443,7 +443,7 @@ class RustParserWriter:
         self.write(1, "}")
         self.write(1, "fn epsilon(&mut self, state: usize);")
         self.write(1, "fn pop(&mut self) -> TermValue<Value>;")
-        self.write(1, "fn check_not_on_new_line(&mut self, peek: usize) -> Result<bool>;")
+        self.write(1, "fn check_not_on_new_line(&mut self, peek: usize) -> Result<'alloc, bool>;")
         self.write(0, "}")
         self.write(0, "")
 
@@ -620,7 +620,7 @@ class RustParserWriter:
             used_variables = set()
             traits = mode_traits
             has_ast_builder = ast_builder in traits
-            self.write(0, "pub fn {}<'alloc, Handler>(parser: &mut Handler, state: usize) -> Result<bool>",
+            self.write(0, "pub fn {}<'alloc, Handler>(parser: &mut Handler, state: usize) -> Result<'alloc, bool>",
                        mode)
             self.write(0, "where")
             self.write(1, "Handler: {}", ' + '.join(map(self.type_to_rust, traits)))
@@ -661,7 +661,7 @@ class RustParserWriter:
         self.write(1, "handler: &mut AstBuilder<'alloc>,")
         self.write(1, "prod: usize,")
         self.write(1, "stack: &mut std::vec::Vec<StackValue<'alloc>>,")
-        self.write(0, ") -> Result<NonterminalId> {")
+        self.write(0, ") -> Result<'alloc, NonterminalId> {")
         self.write(1, "match prod {")
         for i, prod in enumerate(self.prods):
             # If prod.nt is not in nonterminals, that means it's a goal

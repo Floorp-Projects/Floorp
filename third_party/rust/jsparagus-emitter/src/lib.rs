@@ -28,7 +28,7 @@ pub fn emit<'alloc>(
     ast: &mut ast::types::Program,
     options: &EmitOptions,
     atoms: SourceAtomSet<'alloc>,
-) -> Result<EmitResult, EmitError> {
+) -> Result<EmitResult<'alloc>, EmitError> {
     let scope_data_map = scope_pass::generate_scope_data(ast);
     ast_emitter::emit_program(ast, options, atoms, scope_data_map)
 }

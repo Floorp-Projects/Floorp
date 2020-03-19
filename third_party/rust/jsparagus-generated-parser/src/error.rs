@@ -4,7 +4,7 @@ use crate::Token;
 use std::{convert::Infallible, error::Error, fmt};
 
 #[derive(Debug)]
-pub enum ParseError {
+pub enum ParseError<'alloc> {
     // Lexical errors
     IllegalCharacter(char),
     InvalidEscapeSequence,
@@ -21,7 +21,7 @@ pub enum ParseError {
     UnexpectedEnd,
     InvalidAssignmentTarget,
     InvalidParameter,
-    InvalidIdentifier(String, usize),
+    InvalidIdentifier(&'alloc str, usize),
     AstError(String),
 
     // Destructuring errors
@@ -35,9 +35,9 @@ pub enum ParseError {
     ArrowHeadInvalid,
     ArrowParametersWithNonFinalRest,
 
-    DuplicateBinding(String, DeclarationKind, usize, DeclarationKind, usize),
-    DuplicateExport(String, usize, usize),
-    MissingExport(String, usize),
+    DuplicateBinding(&'alloc str, DeclarationKind, usize, DeclarationKind, usize),
+    DuplicateExport(&'alloc str, usize, usize),
+    MissingExport(&'alloc str, usize),
 
     // Annex B. FunctionDeclarations in IfStatement Statement Clauses
     // https://tc39.es/ecma262/#sec-functiondeclarations-in-ifstatement-statement-clauses
@@ -45,7 +45,7 @@ pub enum ParseError {
     LabelledFunctionDeclInSingleStatement,
 }
 
-impl ParseError {
+impl<'alloc> ParseError<'alloc> {
     pub fn message(&self) -> String {
         match self {
             ParseError::IllegalCharacter(c) => format!("illegal character: {:?}", c),
@@ -110,30 +110,30 @@ impl ParseError {
     }
 }
 
-impl PartialEq for ParseError {
+impl<'alloc> PartialEq for ParseError<'alloc> {
     fn eq(&self, other: &ParseError) -> bool {
         format!("{:?}", self) == format!("{:?}", other)
     }
 }
 
-impl fmt::Display for ParseError {
+impl<'alloc> fmt::Display for ParseError<'alloc> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message())
     }
 }
 
-impl From<Infallible> for ParseError {
-    fn from(err: Infallible) -> ParseError {
+impl<'alloc> From<Infallible> for ParseError<'alloc> {
+    fn from(err: Infallible) -> ParseError<'alloc> {
         match err {}
     }
 }
 
-impl From<AstError> for ParseError {
-    fn from(err: AstError) -> ParseError {
+impl<'alloc> From<AstError> for ParseError<'alloc> {
+    fn from(err: AstError) -> ParseError<'alloc> {
         ParseError::AstError(err)
     }
 }
 
-impl Error for ParseError {}
+impl<'alloc> Error for ParseError<'alloc> {}
 
-pub type Result<T> = std::result::Result<T, ParseError>;
+pub type Result<'alloc, T> = std::result::Result<T, ParseError<'alloc>>;

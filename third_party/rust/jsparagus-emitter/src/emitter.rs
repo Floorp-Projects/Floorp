@@ -94,10 +94,10 @@ impl EmitOptions {
 
 /// The output of bytecode-compiling a script or module.
 #[derive(Debug)]
-pub struct EmitResult {
+pub struct EmitResult<'alloc> {
     pub bytecode: Vec<u8>,
     pub atoms: Vec<SourceAtomSetIndex>,
-    pub all_atoms: Vec<String>,
+    pub all_atoms: Vec<&'alloc str>,
     pub gcthings: Vec<GCThing>,
     pub scopes: Vec<ScopeData>,
     pub scope_notes: Vec<ScopeNote>,
@@ -155,7 +155,10 @@ impl InstructionWriter {
         }
     }
 
-    pub fn into_emit_result(self, compilation_info: CompilationInfo) -> EmitResult {
+    pub fn into_emit_result<'alloc>(
+        self,
+        compilation_info: CompilationInfo<'alloc>,
+    ) -> EmitResult<'alloc> {
         EmitResult {
             bytecode: self.bytecode,
             atoms: self.atoms.into(),
