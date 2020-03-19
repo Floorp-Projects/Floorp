@@ -10,11 +10,11 @@ let bodies = [
     i32.rem_s
     `,
     `
-    f64.const 1.7976931348623157e+308
+    f64.const 1797693134862315708145274e284
     i64.trunc_s/f64
     `,
     `
-    f32.const 3.40282347e+38
+    f32.const 1797693134862315708145274e284
     i32.trunc_s/f32
     `
 ];
@@ -23,7 +23,7 @@ for (let body of bodies) {
     wasmFullPass(`
     (module
         (func $f (param $x i32) (result i32)
-            loop $top (result i32)
+            loop $top i32
                 local.get $x
                 if
                     local.get $x
@@ -33,6 +33,6 @@ for (let body of bodies) {
                 br $top
             end
         )
-        (export "run" (func $f))
+        (export "run" $f)
     )`, 42, {}, 42);
 }

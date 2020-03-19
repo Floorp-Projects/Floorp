@@ -15,8 +15,8 @@
 var refmod = new WebAssembly.Module(wasmTextToBinary(
     `(module
       (gc_feature_opt_in 3)
-      (import "" "tbl" (table $tbl 4 funcref))
-      (import "" "print" (func $print (param i32)))
+      (import $tbl "" "tbl" (table 4 funcref))
+      (import $print "" "print" (func (param i32)))
 
       ;; Just a dummy
       (type $s (struct (field i32)))
@@ -34,17 +34,17 @@ var refmod = new WebAssembly.Module(wasmTextToBinary(
        (ref.null))
 
       (func (export "test_h")
-       (call_indirect (type $htype) (ref.null) (i32.const 2)))
+       (call_indirect $htype (ref.null) (i32.const 2)))
 
       (func (export "test_i")
-       (drop (call_indirect (type $itype) (i32.const 3))))
+       (drop (call_indirect $itype (i32.const 3))))
 
      )`));
 
 var nonrefmod = new WebAssembly.Module(wasmTextToBinary(
     `(module
-      (import "" "tbl" (table $tbl 4 funcref))
-      (import "" "print" (func $print (param i32)))
+      (import $tbl "" "tbl" (table 4 funcref))
+      (import $print "" "print" (func (param i32)))
 
       (type $ftype (func (param i32)))
       (type $gtype (func (result i32)))
@@ -53,11 +53,11 @@ var nonrefmod = new WebAssembly.Module(wasmTextToBinary(
 
       ;; Should fail because of the signature mismatch: parameter
       (func (export "test_f")
-       (call_indirect (type $ftype) (i32.const 37) (i32.const 0)))
+       (call_indirect $ftype (i32.const 37) (i32.const 0)))
 
       ;; Should fail because of the signature mismatch: return value
       (func (export "test_g")
-       (drop (call_indirect (type $gtype) (i32.const 1))))
+       (drop (call_indirect $gtype (i32.const 1))))
 
       (func $h (param i32)
        (call $print (i32.const 2)))

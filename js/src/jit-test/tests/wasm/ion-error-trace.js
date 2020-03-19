@@ -18,13 +18,13 @@ var imports = {
 };
 
 var instance = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module
-    (import "main" "f" (func $main))
-    (func $lol (export "add") (param i32) (param i32) (result i32)
+    (import $main "main" "f" (func))
+    (func $lol (export "add") (result i32) (param i32) (param i32)
      local.get 0
      local.get 1
      call $add
     )
-    (func $add (param i32) (param i32) (result i32)
+    (func $add (result i32) (param i32) (param i32)
      local.get 0
      i32.const 5000
      i32.eq
@@ -81,13 +81,13 @@ var imports = {
 };
 
 var instance = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module
-    (import "main" "f" (func $main))
-    (func $lol (export "add") (param i32) (param i32) (result i32)
+    (import $main "main" "f" (func))
+    (func $lol (export "add") (result i32) (param i32) (param i32)
      local.get 0
      local.get 1
      call $add
     )
-    (func $add (param i32) (param i32) (result i32)
+    (func $add (result i32) (param i32) (param i32)
      local.get 0
      i32.const 5000
      i32.eq

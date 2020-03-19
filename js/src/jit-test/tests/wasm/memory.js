@@ -14,7 +14,7 @@ function loadModuleSrc(type, ext, offset, align, drop = false) {
           (local.get 0)
          )
          ${maybeDrop}
-       ) (export "" (func 0)))`;
+       ) (export "" 0))`;
 }
 function loadModule(type, ext, offset, align, drop = false) {
     return wasmEvalText(loadModuleSrc(type, ext, offset, align, drop)).exports[""];
@@ -33,14 +33,14 @@ function storeModuleSrc(type, ext, offset, align) {
           (local.get 0)
           (local.get 1)
          )
-       ) (export "store" (func 0))
+       ) (export "store" 0)
        (func $load (param i32) (result ${type})
         (${type}.load${load_ext}
          offset=${offset}
          ${align != 0 ? 'align=' + align : ''}
          (local.get 0)
         )
-       ) (export "load" (func 1)))`;
+       ) (export "load" 1))`;
 }
 function storeModule(type, ext, offset, align) {
     return wasmEvalText(storeModuleSrc(type, ext, offset, align)).exports;
@@ -59,14 +59,14 @@ function storeModuleCstSrc(type, ext, offset, align, value) {
           (local.get 0)
           (${type}.const ${value})
          )
-       ) (export "store" (func 0))
+       ) (export "store" 0)
        (func $load (param i32) (result ${type})
         (${type}.load${load_ext}
          offset=${offset}
          ${align != 0 ? 'align=' + align : ''}
          (local.get 0)
         )
-       ) (export "load" (func 1)))`;
+       ) (export "load" 1))`;
 }
 function storeModuleCst(type, ext, offset, align, value) {
     return wasmEvalText(storeModuleCstSrc(type, ext, offset, align, value)).exports;
@@ -122,11 +122,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" (func 0)))`, /can't touch memory/);
+    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" 0))`, /can't touch memory/);
 }
 
 function badStoreModule(type, ext) {
-    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" (func 0)))`, /can't touch memory/);
+    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" 0))`, /can't touch memory/);
 }
 
 // Can't touch memory.
@@ -309,7 +309,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
               (memory 1)
               (data (i32.const 0) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
               (data (i32.const 16) "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
-              (func (param i32) (result i32) (local i32 i32 i32 i32 f32 f64)
+              (func (param i32) (local i32 i32 i32 i32 f32 f64) (result i32)
                (local.set 1 (i32.load8_s offset=4 (local.get 0)))
                (local.set 2 (i32.load16_s (local.get 1)))
                (i32.store8 offset=4 (local.get 0) (local.get 1))
@@ -337,7 +337,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
                  )
                 )
                )
-              ) (export "" (func 0)))`
+              ) (export "" 0))`
             ).exports[""](1), 50464523);
         }
 
@@ -466,7 +466,7 @@ new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 (offset (i32
 new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data ""))`));
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 ""))`)),
                    SyntaxError,
-                   /wasm text error/);
+                   /data segment with memory index must have offset/);
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 1 (i32.const 0) ""))`)),
-                   WebAssembly.CompileError,
-                   /memory index must be zero/);
+                   SyntaxError,
+                   /can't handle non-default memory/);

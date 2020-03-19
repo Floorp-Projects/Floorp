@@ -1,5 +1,0 @@
-unterminated block comment
-     --> tests/parse-fail/block1.wat:1:1
-      |
-    1 | (;
-      | ^

@@ -30,5 +30,5 @@ wasmEvalText(`(module
         drop
         drop
     )
-    (export "run" (func $run))
+    (export "run" $run)
 )`);
