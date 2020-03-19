@@ -96,12 +96,8 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
 
   void InsertDTMFTone(int tone, uint32_t duration);
 
-  bool HasReceiveTrack(const dom::MediaStreamTrack* aReceiveTrack) const;
-
   // TODO: These are for stats; try to find a cleaner way.
   RefPtr<MediaPipelineTransmit> GetSendPipeline();
-
-  RefPtr<MediaPipelineReceive> GetReceivePipeline();
 
   std::string GetTransportId() const {
     return mJsepTransceiver->mTransport.mTransportId;
