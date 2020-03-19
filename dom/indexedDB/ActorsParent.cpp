@@ -6254,8 +6254,8 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   }
 
   // Called when receiving from the child.
-  DatabaseFile(BlobImpl* aBlobImpl, FileInfo* aFileInfo)
-      : mBlobImpl(aBlobImpl), mFileInfo(aFileInfo) {
+  DatabaseFile(RefPtr<BlobImpl> aBlobImpl, FileInfo* aFileInfo)
+      : mBlobImpl(std::move(aBlobImpl)), mFileInfo(aFileInfo) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(*mBlobImpl);
     MOZ_ASSERT(mFileInfo);
@@ -14102,9 +14102,6 @@ PBackgroundIDBDatabaseFileParent*
 Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
-  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aIPCBlob);
-  MOZ_ASSERT(blobImpl);
-
   RefPtr<FileInfo> fileInfo = GetBlob(aIPCBlob);
   RefPtr<DatabaseFile> actor;
 
@@ -14115,7 +14112,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
     fileInfo = mFileManager->CreateFileInfo();
     MOZ_ASSERT(fileInfo);
 
-    actor = new DatabaseFile(blobImpl, fileInfo);
+    actor = new DatabaseFile(IPCBlobUtils::Deserialize(aIPCBlob), fileInfo);
   }
 
   MOZ_ASSERT(actor);
