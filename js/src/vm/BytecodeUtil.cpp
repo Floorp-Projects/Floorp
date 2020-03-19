@@ -908,7 +908,7 @@ bool BytecodeParser::parse() {
         // by a thrown exception but is not caught by a later handler in the
         // same function: no more code will execute, and it does not matter what
         // is defined.
-        for (const JSTryNote& tn : script_->trynotes()) {
+        for (const TryNote& tn : script_->trynotes()) {
           if (tn.start == offset + JSOpLength_Try) {
             uint32_t catchOffset = tn.start + tn.length;
             if (tn.kind == JSTRY_CATCH) {

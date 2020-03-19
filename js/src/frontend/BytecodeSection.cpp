@@ -141,18 +141,14 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
   return true;
 }
 
-bool CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth,
+bool CGTryNoteList::append(TryNoteKind kind, uint32_t stackDepth,
                            BytecodeOffset start, BytecodeOffset end) {
   MOZ_ASSERT(start <= end);
 
   // Offsets are given relative to sections, but we only expect main-section
   // to have TryNotes. In finish() we will fixup base offset.
 
-  JSTryNote note;
-  note.kind = kind;
-  note.stackDepth = stackDepth;
-  note.start = start.toUint32();
-  note.length = (end - start).toUint32();
+  TryNote note(kind, stackDepth, start.toUint32(), (end - start).toUint32());
 
   return list.append(note);
 }
