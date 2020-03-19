@@ -3064,6 +3064,10 @@ void gfxPlatform::InitWebRenderConfig() {
     featureComp.UserEnable("Enabled");
   }
 
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::GFX_OS_COMPOSITOR,
+      gfx::gfxConfig::IsEnabled(gfx::Feature::WEBRENDER_COMPOSITOR));
+
   // Initialize WebRender partial present config.
   // Partial present is used only when WebRender compositor is not used.
   if (StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0) {
