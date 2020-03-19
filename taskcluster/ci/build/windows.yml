@@ -1146,8 +1146,9 @@ win64-aarch64-eme/opt:
         platform: windows2012-aarch64/opt
         symbol: Be
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian9-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
@@ -1162,8 +1163,7 @@ win64-aarch64-eme/opt:
         secrets: true
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - builds/taskcluster_base_win64.py
+            - builds/releng_base_linux_64_builds.py
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
@@ -1172,7 +1172,11 @@ win64-aarch64-eme/opt:
         win64-aarch64-opt: build-win64-aarch64/opt
     fetches:
         toolchain:
-            - win64-node
+            - linux64-node
+            - linux64-wine
+        fetch:
+            - nsis-3.01-win
+            - upx-3.95-win
 
 win64-aarch64-shippable/opt:
     description: "AArch64 Win64 Shippable"
@@ -1192,8 +1196,9 @@ win64-aarch64-shippable/opt:
         platform: windows2012-aarch64-shippable/opt
         symbol: B
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian9-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
@@ -1208,8 +1213,7 @@ win64-aarch64-shippable/opt:
         secrets: true
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - builds/taskcluster_base_win64.py
+            - builds/releng_base_linux_64_builds.py
             - taskcluster_nightly.py
         extra-config:
             stage_platform: win64-aarch64
@@ -1224,48 +1228,52 @@ win64-aarch64-shippable/opt:
         win64-aarch64-opt:
             - artifact: target.test_packages.json
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.common.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.cppunittest.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.mochitest.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.reftest.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.talos.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.raptor.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.condprof.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.awsy.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.xpcshell.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.web-platform.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.updater-dep.tests.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.generated-files.tar.gz
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
             - artifact: target.langpack.xpi
               extract: false
-              dest: ../public/build
+              dest: ../artifacts
         toolchain:
-            - win64-node
+            - linux64-node
+            - linux64-wine
+        fetch:
+            - nsis-3.01-win
+            - upx-3.95-win
 
 win64-aarch64-shippable-no-eme/opt:
     description: "AArch64 Win64 Shippable w/o EME"
