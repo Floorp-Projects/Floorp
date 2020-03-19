@@ -49,8 +49,6 @@ function run_test() {
   // disable network changed events to avoid the the risk of having the dns
   // cache getting flushed behind our back
   ps.setBoolPref("network.notify.changed", false);
-  // Localhost is hardcoded to loopback and isn't cached, disable that with this pref
-  ps.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 
   registerCleanupFunction(function() {
     ps.clearUserPref("network.notify.changed");
