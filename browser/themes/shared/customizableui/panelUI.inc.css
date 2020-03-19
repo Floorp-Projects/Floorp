@@ -1644,7 +1644,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #PanelUI-panic-warning {
-  color: #C11F14;
+  color: #d74345;
   text-align: center;
   width: 100%;
   margin-top: 20px;
