@@ -28,6 +28,9 @@
     <string name="mozac_feature_prompt_error_unknown_cause">လော့အင်ကိုမသိမ်းဆည်းနိုင်ပါ</string>
     <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
     <string name="mozac_feature_prompt_logins_save_message">ဤဝင်ရောက်မှုကိုသိမ်းရန် %s ကိုလိုလားပါသလား။</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">စာသားထည့်သွင်းရန်ပြထားသောလမ်းညွှန်စာသား</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">အရောင်ရွေးပါ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->

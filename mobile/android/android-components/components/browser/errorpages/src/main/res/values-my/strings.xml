@@ -130,14 +130,39 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">အကြောင်းအရာ မစုံလင်သော အမှား</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>သင် တောင်းဆိုထားသော စာမျက်နှာအား ရယူရာတွင် အခက်အခဲတခု ဖြစ်ပွား နေသဖြင့် ဖွင့်ပြမပေးနိုင်ပါ </p>
+      <ul>
+        <li>ကျေးဇူးပြုပြီး ဝက်ဆိုက် ပိုင်ရှင်အား ယခု ပြသာနာနှင့်ပတ်သတ်ပြီး ဆက်သွယ် အကြောင်းကြားပေးပါ။</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">အကြောင်းအရာပျက်နေတယ်</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>သင်တောင်းဆိုထားသောစာမျက်နှာအား ရယူရာတွင်အခက်အခဲဖြစ်နေသဖြင့် ဖွင့်ပြမပေးနိုင်ပါ။</p>
+      <ul>
+        <li>ကျေးဇူးပြုပြီး ဝက်ဆိုက် ပိုင်ရှင်အား ယခု ပြသာနာနှင့်ပတ်သတ်ပြီး အကြောင်းကြားပေးပါ။</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">အကြောင်းအရာ အန်ကုဒ်ဒင်း အမှား</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>သင်တောင်းဆိုထားသောစာမျက်နှာအား ရယူရာတွင်အခက်အခဲဖြစ်နေသဖြင့် ဖွင့်ပြမပေးနိုင်ပါ။</p>
+      <ul>
+        <li>ကျေးဇူးပြုပြီး ဝက်ဆိုက် ပိုင်ရှင်အား ယခု ပြသာနာနှင့်ပတ်သတ်ပြီး အကြောင်းကြားပေးပါ။</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">လိပ်စာမတွေ့ပါ</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>ဘရောက်ဇာသည်ပေးထားသောလိပ်စာအတွက် host server ကိုရှာမရပါ။ </p>
+      <ul>
+        <li>ဥပမာ လိပ်စာအတွက်စာရိုက်အမှားများကိုစစ်ဆေးပါ။
+          <strong>ww</strong>.example.com instead of
+          <strong>www</strong>.example.com.</li>
+        <li>စာမျက်နှာတစ်ခုမျှဖွင့်မရပါက ဝိုင်ဖိုင်ချိတ်ဆက်မှုကိုစစ်ပါ။</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">အင်တာနက်ချိတ်ဆက်မှု မရှိပါ</string>
@@ -148,11 +173,24 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">မမှန်ကန်သောလိပ်စာ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>ပေးထားသောလိပ်စာသည် သတ်မှတ်ထားသော ပုံစံမျိုးဖြင့်မဟုတ်ပါ။ ကျေးဇူးပြုပြီး ရှာဖွေရေးဘားကို စစ်ဆေးပြီး ထပ်မံ ဆောင်ရွက်ကြည့်ပါ။</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">လိပ်စာမမှန်ကန်ပါ</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ဝဘ်လိပ်စာများကိုအများအားဖြင့်အောက်ပါအတိုင်းရေးကြသည်။<strong>http://www.example.com/</strong></li>
+        <li>မျဉ်းစောင်းလေးပါသည်ကိုဂရုပြုပါ။ (နမူနာ<strong>/</strong>)</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">မသိသောပရိုတိုကော</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>လိပ်စာက protocol ကိုသတ်မှတ်သည် (ဥပမာ -<q>wxyz://</q>) ဘရောက်ဇာမှ မသိသော‌ကြောင့် ဘရောက်ဇာမှ ဤဆိုက်ကိုမချိတ်ဆက်နိုင်ပါ။</p>
+      <ul>
+        <li>သင် multimedia သို့မဟုတ်အခြားစာမဟုတ်သောဝန်ဆောင်မှုများကိုရယူရန်ကြိုးစားနေပါသလား။ အပိုလိုအပ်ချက်များအတွက် site ကိုစစ်ဆေးပါ။ </li>
+        <li>browser သည်၎င်းတို့ကိုအသိမပြုမီ အချို့သော protocol များသည် third-party software သို့မဟုတ် plugins လိုအပ်လိမ့်မည်။</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ဖိုင်ရှာမတွေ့ပါ</string>
