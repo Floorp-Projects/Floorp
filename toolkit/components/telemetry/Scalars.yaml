@@ -3143,6 +3143,23 @@ gfx:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+  os_compositor:
+    bug_numbers:
+      - 1623492
+    description: >
+      Boolean indicating whether the os compositor is being used by WebRender.
+      Only collected in the first subsession.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jmuizelaar@mozilla.com
+    products:
+      - 'firefox'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
 
 # The following section contains the form autofill related scalars.
 formautofill:
