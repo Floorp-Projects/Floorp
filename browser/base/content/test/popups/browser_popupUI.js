@@ -61,34 +61,25 @@ add_task(async function titlebar_buttons_visibility() {
   const BUTTONS_MAY_VISIBLE = true;
   const BUTTONS_NEVER_VISIBLE = false;
 
-  // Always open a new window.
-  // With default behavior, it opens a new tab, that doesn't affect button
-  // visibility at all.
-  Services.prefs.setIntPref("browser.link.open_newwindow", 2);
-
-  const drawInTitlebarValues = [
-    [true, BUTTONS_MAY_VISIBLE],
-    [false, BUTTONS_NEVER_VISIBLE],
-  ];
-  const windowFeaturesValues = [
-    // Opens a popup
-    ["width=300,height=100", BUTTONS_NEVER_VISIBLE],
-    ["toolbar", BUTTONS_NEVER_VISIBLE],
-    ["menubar", BUTTONS_NEVER_VISIBLE],
-    ["menubar,toolbar", BUTTONS_NEVER_VISIBLE],
-
-    // Opens a new window
-    ["", BUTTONS_MAY_VISIBLE],
-  ];
+  const drawInTitlebarValues = {
+    true: BUTTONS_MAY_VISIBLE,
+    false: BUTTONS_NEVER_VISIBLE,
+  };
+  const windowFeaturesValues = {
+    "width=300,height=100": BUTTONS_NEVER_VISIBLE,
+    toolbar: BUTTONS_MAY_VISIBLE,
+    menubar: BUTTONS_NEVER_VISIBLE,
+    "menubar,toolbar": BUTTONS_MAY_VISIBLE,
+  };
   const menuBarShownValues = [true, false];
 
-  for (const [drawInTitlebar, drawInTitlebarButtons] of drawInTitlebarValues) {
-    Services.prefs.setBoolPref("browser.tabs.drawInTitlebar", drawInTitlebar);
+  for (const drawInTitlebar of Object.keys(drawInTitlebarValues)) {
+    Services.prefs.setBoolPref(
+      "browser.tabs.drawInTitlebar",
+      drawInTitlebar == "true"
+    );
 
-    for (const [
-      windowFeatures,
-      windowFeaturesButtons,
-    ] of windowFeaturesValues) {
+    for (const windowFeatures of Object.keys(windowFeaturesValues)) {
       for (const menuBarShown of menuBarShownValues) {
         CustomizableUI.setToolbarVisibility("toolbar-menubar", menuBarShown);
 
@@ -118,8 +109,8 @@ add_task(async function titlebar_buttons_visibility() {
 
         const params = `drawInTitlebar=${drawInTitlebar}, windowFeatures=${windowFeatures}, menuBarShown=${menuBarShown}`;
         if (
-          drawInTitlebarButtons == BUTTONS_MAY_VISIBLE &&
-          windowFeaturesButtons == BUTTONS_MAY_VISIBLE
+          drawInTitlebarValues[drawInTitlebar] == BUTTONS_MAY_VISIBLE &&
+          windowFeaturesValues[windowFeatures] == BUTTONS_MAY_VISIBLE
         ) {
           ok(
             buttonsInMenubarShown || buttonsInTabbarShown,
@@ -146,5 +137,4 @@ add_task(async function titlebar_buttons_visibility() {
 
   CustomizableUI.setToolbarVisibility("toolbar-menubar", false);
   Services.prefs.clearUserPref("browser.tabs.drawInTitlebar");
-  Services.prefs.clearUserPref("browser.link.open_newwindow");
 });
