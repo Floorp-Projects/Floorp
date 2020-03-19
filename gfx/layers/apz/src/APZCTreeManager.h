@@ -809,12 +809,24 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * mFixedPositionInfo.
    */
   mutable mozilla::Mutex mMapLock;
+
   /**
-   * A map for quick access to get APZC instances by guid, without having to
+   * Helper structure to store a bunch of things in mApzcMap so that they can
+   * be used from the sampler thread.
+   */
+  struct ApzcMapData {
+    // A pointer to the APZC itself
+    RefPtr<AsyncPanZoomController> apzc;
+    // The parent APZC's guid, or Nothing() if there is no parent
+    Maybe<ScrollableLayerGuid> parent;
+  };
+
+  /**
+   * A map for quick access to get some APZC data by guid, without having to
    * acquire the tree lock. mMapLock must be acquired while accessing or
    * modifying mApzcMap.
    */
-  std::unordered_map<ScrollableLayerGuid, RefPtr<AsyncPanZoomController>,
+  std::unordered_map<ScrollableLayerGuid, ApzcMapData,
                      ScrollableLayerGuid::HashIgnoringPresShellFn,
                      ScrollableLayerGuid::EqualIgnoringPresShellFn>
       mApzcMap;
