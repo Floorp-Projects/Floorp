@@ -18,7 +18,7 @@ g.eval("Debugger(parent).onExceptionUnwind = function () {};");
 
 let module = new WebAssembly.Module(wasmTextToBinary(`
     (module
-        (import $imp "a" "b" (result i32))
+        (import "a" "b" (func $imp (result i32)))
         (memory 1 1)
         (table 2 2 anyfunc)
         (elem (i32.const 0) $imp $def)
