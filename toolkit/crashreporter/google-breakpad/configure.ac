@@ -73,7 +73,8 @@ AC_HEADER_STDC
 AC_SYS_LARGEFILE
 AX_PTHREAD
 AC_CHECK_HEADERS([a.out.h sys/random.h])
-AC_CHECK_FUNCS([arc4random getrandom])
+AC_CHECK_FUNCS([arc4random getcontext getrandom])
+AM_CONDITIONAL([HAVE_GETCONTEXT], [test "x$ac_cv_func_getcontext" = xyes])
 
 AX_CXX_COMPILE_STDCXX(11, noext, mandatory)
 
@@ -187,19 +188,15 @@ AC_ARG_ENABLE(system-test-libs,
               [system_test_libs=false])
 AM_CONDITIONAL(SYSTEM_TEST_LIBS, test x$system_test_libs = xtrue)
 
-AC_ARG_VAR([GMOCK_CONFIG], [Path to gmock-config script])
 AC_ARG_VAR([GMOCK_CFLAGS], [Compiler flags for gmock])
 AC_ARG_VAR([GMOCK_LIBS], [Linker flags for gmock])
-AC_ARG_VAR([GTEST_CONFIG], [Path to gtest-config script])
 AC_ARG_VAR([GTEST_CFLAGS], [Compiler flags for gtest])
 AC_ARG_VAR([GTEST_LIBS], [Linker flags for gtest])
 if test x$system_test_libs = xtrue; then
-  AC_CHECK_TOOL([GMOCK_CONFIG], [gmock-config])
-  AC_CHECK_TOOL([GTEST_CONFIG], [gtest-config])
-  GMOCK_CFLAGS=`$GMOCK_CONFIG --cppflags --cxxflags`
-  GMOCK_LIBS=`$GMOCK_CONFIG --ldflags --libs`
-  GTEST_CFLAGS=`$GTEST_CONFIG --cppflags --cxxflags`
-  GTEST_LIBS=`$GTEST_CONFIG --ldflags --libs`
+  : "${GMOCK_CFLAGS:=-pthread}"
+  : "${GMOCK_LIBS:=-lgmock -lgtest -pthread -lpthread}"
+  : "${GTEST_CFLAGS:=-pthread}"
+  : "${GTEST_LIBS:=-lgtest -pthread -lpthread}"
 fi
 
 AC_ARG_ENABLE(selftest,

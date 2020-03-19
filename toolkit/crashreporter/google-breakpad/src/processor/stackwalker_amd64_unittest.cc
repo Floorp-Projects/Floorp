@@ -62,6 +62,7 @@ using google_breakpad::test_assembler::Section;
 using std::vector;
 using testing::_;
 using testing::AnyNumber;
+using testing::DoAll;
 using testing::Return;
 using testing::SetArgumentPointee;
 using testing::Test;

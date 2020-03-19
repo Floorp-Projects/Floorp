@@ -41,14 +41,31 @@
 namespace google_breakpad {
 namespace sym_upload {
 
-typedef struct {
+enum class UploadProtocol {
+  SYM_UPLOAD_V1,
+  SYM_UPLOAD_V2,
+};
+
+constexpr char kBreakpadSymbolType[] = "BREAKPAD";
+
+struct Options {
+  Options() : upload_protocol(UploadProtocol::SYM_UPLOAD_V1), force(false) {}
+
   string symbolsPath;
   string uploadURLStr;
   string proxy;
   string proxy_user_pwd;
   string version;
   bool success;
-} Options;
+  UploadProtocol upload_protocol;
+  bool force;
+  string api_key;
+
+  // These only need to be set for native symbol uploads.
+  string code_file;
+  string debug_id;
+  string type;
+};
 
 // Starts upload to symbol server with options.
 void Start(Options* options);

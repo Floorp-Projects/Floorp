@@ -556,8 +556,8 @@ MinidumpGenerator::WriteContextARM64(breakpad_thread_state_data_t state,
   MDRawContextARM64_Old *context_ptr = context.get();
   context_ptr->context_flags = MD_CONTEXT_ARM64_FULL_OLD;
 
-#define AddGPR(a) context_ptr->iregs[a] = \
-    REGISTER_FROM_THREADSTATE(machine_state, x[a])
+#define AddGPR(a)                                                              \
+  context_ptr->iregs[a] = ARRAY_REGISTER_FROM_THREADSTATE(machine_state, x, a)
 
   context_ptr->iregs[29] = REGISTER_FROM_THREADSTATE(machine_state, fp);
   context_ptr->iregs[30] = REGISTER_FROM_THREADSTATE(machine_state, lr);

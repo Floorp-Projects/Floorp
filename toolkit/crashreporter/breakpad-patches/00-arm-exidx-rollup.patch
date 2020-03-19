@@ -1,39 +1,39 @@
 diff --git a/Makefile.am b/Makefile.am
-index 42386be..e8f7402 100644
+index 9a25d9d4..07206601 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -524,6 +524,8 @@ src_tools_linux_dump_syms_dump_syms_SOURCES = \
- 	src/common/dwarf/bytereader.cc \
- 	src/common/dwarf/dwarf2diehandler.cc \
- 	src/common/dwarf/dwarf2reader.cc \
+@@ -571,6 +571,8 @@ src_tools_linux_core2md_core2md_LDADD = \
+ 	src/client/linux/libbreakpad_client.a
+ 
+ src_tools_linux_dump_syms_dump_syms_SOURCES = \
 +	src/common/arm_ex_reader.cc \
 +	src/common/arm_ex_to_module.cc \
- 	src/common/linux/crc32.cc \
- 	src/common/linux/dump_symbols.cc \
- 	src/common/linux/elf_symbols_to_module.cc \
-@@ -573,6 +575,8 @@ src_tools_mac_dump_syms_dump_syms_CXXFLAGS= \
- 	-DHAVE_MACH_O_NLIST_H
+ 	src/common/dwarf_cfi_to_module.cc \
+ 	src/common/dwarf_cu_to_module.cc \
+ 	src/common/dwarf_line_to_module.cc \
+@@ -660,6 +662,8 @@ src_tools_mac_dump_syms_dump_syms_mac_LDADD= \
+ 	$(RUST_DEMANGLE_LIBS)
  
  src_common_dumper_unittest_SOURCES = \
 +	src/common/arm_ex_reader.cc \
 +	src/common/arm_ex_to_module.cc \
  	src/common/byte_cursor_unittest.cc \
+ 	src/common/convert_UTF.cc \
  	src/common/dwarf_cfi_to_module.cc \
- 	src/common/dwarf_cfi_to_module_unittest.cc \
-@@ -1336,6 +1340,10 @@ EXTRA_DIST = \
- 	src/common/linux/crc32.cc \
- 	src/common/linux/dump_symbols.cc \
- 	src/common/linux/dump_symbols.h \
+@@ -1348,6 +1352,10 @@ EXTRA_DIST = \
+ 	src/client/windows/sender/crash_report_sender.cc \
+ 	src/client/windows/sender/crash_report_sender.h \
+ 	src/client/windows/sender/crash_report_sender.gyp \
 +	src/common/arm_ex_reader.cc \
 +	src/common/arm_ex_reader.h \
 +	src/common/arm_ex_to_module.cc \
 +	src/common/arm_ex_to_module.h \
- 	src/common/linux/elf_symbols_to_module.cc \
- 	src/common/linux/elf_symbols_to_module.h \
- 	src/common/linux/elfutils.cc \
+ 	src/common/dwarf/dwarf2diehandler.h \
+ 	src/common/dwarf/dwarf2enums.h \
+ 	src/common/dwarf/line_state_machine.h \
 diff --git a/src/common/arm_ex_reader.cc b/src/common/arm_ex_reader.cc
 new file mode 100644
-index 0000000..2d1ed98
+index 00000000..2d1ed983
 --- /dev/null
 +++ b/src/common/arm_ex_reader.cc
 @@ -0,0 +1,487 @@
@@ -526,7 +526,7 @@ index 0000000..2d1ed98
 +}  // namespace arm_ex_reader
 diff --git a/src/common/arm_ex_reader.h b/src/common/arm_ex_reader.h
 new file mode 100644
-index 0000000..9b54e8a
+index 00000000..9b54e8a0
 --- /dev/null
 +++ b/src/common/arm_ex_reader.h
 @@ -0,0 +1,114 @@
@@ -646,7 +646,7 @@ index 0000000..9b54e8a
 +#endif // COMMON_ARM_EX_READER_H__
 diff --git a/src/common/arm_ex_to_module.cc b/src/common/arm_ex_to_module.cc
 new file mode 100644
-index 0000000..c326744
+index 00000000..c326744f
 --- /dev/null
 +++ b/src/common/arm_ex_to_module.cc
 @@ -0,0 +1,209 @@
@@ -861,7 +861,7 @@ index 0000000..c326744
 +}  // namespace arm_ex_to_module
 diff --git a/src/common/arm_ex_to_module.h b/src/common/arm_ex_to_module.h
 new file mode 100644
-index 0000000..f413a16
+index 00000000..f413a16a
 --- /dev/null
 +++ b/src/common/arm_ex_to_module.h
 @@ -0,0 +1,119 @@
@@ -985,10 +985,10 @@ index 0000000..f413a16
 +
 +#endif // COMMON_ARM_EX_TO_MODULE__
 diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
-index 1e96ca6..4222ce3 100644
+index 0eea2b54..e398f7b3 100644
 --- a/src/common/linux/dump_symbols.cc
 +++ b/src/common/linux/dump_symbols.cc
-@@ -52,6 +52,7 @@
+@@ -54,6 +54,7 @@
  #include <utility>
  #include <vector>
  
@@ -996,7 +996,7 @@ index 1e96ca6..4222ce3 100644
  #include "common/dwarf/bytereader-inl.h"
  #include "common/dwarf/dwarf2diehandler.h"
  #include "common/dwarf_cfi_to_module.h"
-@@ -71,6 +72,11 @@
+@@ -76,6 +77,11 @@
  #endif
  #include "common/using_std_string.h"
  
@@ -1008,7 +1008,7 @@ index 1e96ca6..4222ce3 100644
  // This namespace contains helper functions.
  namespace {
  
-@@ -373,6 +379,52 @@ bool LoadDwarfCFI(const string& dwarf_filename,
+@@ -429,6 +435,52 @@ bool LoadDwarfCFI(const string& dwarf_filename,
    return true;
  }
  
@@ -1061,7 +1061,7 @@ index 1e96ca6..4222ce3 100644
  bool LoadELF(const string& obj_file, MmapWrapper* map_wrapper,
               void** elf_header) {
    int obj_fd = open(obj_file.c_str(), O_RDONLY);
-@@ -756,6 +808,29 @@ bool LoadSymbols(const string& obj_file,
+@@ -846,6 +898,29 @@ bool LoadSymbols(const string& obj_file,
      }
    }
  
@@ -1092,10 +1092,10 @@ index 1e96ca6..4222ce3 100644
      fprintf(stderr, "%s: file contains no debugging information"
              " (no \".stab\" or \".debug_info\" sections)\n",
 diff --git a/src/common/module.cc b/src/common/module.cc
-index fa798f4..ca52f9f 100644
+index aff22127..a3544029 100644
 --- a/src/common/module.cc
 +++ b/src/common/module.cc
-@@ -63,7 +63,7 @@ Module::~Module() {
+@@ -64,7 +64,7 @@ Module::~Module() {
         it != functions_.end(); ++it) {
      delete *it;
    }
@@ -1104,13 +1104,17 @@ index fa798f4..ca52f9f 100644
         it != stack_frame_entries_.end(); ++it) {
      delete *it;
    }
-@@ -119,8 +119,14 @@ void Module::AddFunctions(vector<Function *>::iterator begin,
+@@ -130,12 +130,18 @@ void Module::AddFunctions(vector<Function *>::iterator begin,
      AddFunction(*it);
  }
  
 -void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
--  stack_frame_entries_.push_back(stack_frame_entry);
 +void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
+   if (!AddressIsInModule(stack_frame_entry->address)) {
+     return;
+   }
+ 
+-  stack_frame_entries_.push_back(stack_frame_entry);
 +  std::pair<StackFrameEntrySet::iterator,bool> ret =
 +      stack_frame_entries_.insert(stack_frame_entry);
 +  if (!ret.second) {
@@ -1121,7 +1125,7 @@ index fa798f4..ca52f9f 100644
  }
  
  void Module::AddExtern(Extern *ext) {
-@@ -180,8 +186,25 @@ void Module::GetFiles(vector<File *> *vec) {
+@@ -199,8 +205,25 @@ void Module::GetFiles(vector<File *> *vec) {
      vec->push_back(it->second);
  }
  
@@ -1149,7 +1153,7 @@ index fa798f4..ca52f9f 100644
  }
  
  void Module::AssignSourceIds() {
-@@ -286,7 +309,7 @@ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
+@@ -331,7 +354,7 @@ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
  
    if (symbol_data != NO_CFI) {
      // Write out 'STACK CFI INIT' and 'STACK CFI' records.
@@ -1159,10 +1163,10 @@ index fa798f4..ca52f9f 100644
           frame_it != stack_frame_entries_.end(); ++frame_it) {
        StackFrameEntry *entry = *frame_it;
 diff --git a/src/common/module.h b/src/common/module.h
-index 65b5595..299bc38 100644
+index 7309cedd..37758605 100644
 --- a/src/common/module.h
 +++ b/src/common/module.h
-@@ -176,6 +176,13 @@ class Module {
+@@ -185,6 +185,13 @@ class Module {
      }
    };
  
@@ -1176,7 +1180,7 @@ index 65b5595..299bc38 100644
    // Create a new module with the given name, operating system,
    // architecture, and ID string.
    Module(const string &name, const string &os, const string &architecture,
-@@ -256,6 +263,10 @@ class Module {
+@@ -273,6 +280,10 @@ class Module {
    // a more appropriate interface.)
    void GetStackFrameEntries(vector<StackFrameEntry *> *vec) const;
  
@@ -1187,7 +1191,7 @@ index 65b5595..299bc38 100644
    // Find those files in this module that are actually referred to by
    // functions' line number data, and assign them source id numbers.
    // Set the source id numbers for all other files --- unused by the
-@@ -316,6 +327,9 @@ class Module {
+@@ -342,6 +353,9 @@ class Module {
    // A set containing Extern structures, sorted by address.
    typedef set<Extern *, ExternCompare> ExternSet;
  
@@ -1197,7 +1201,7 @@ index 65b5595..299bc38 100644
    // The module owns all the files and functions that have been added
    // to it; destroying the module frees the Files and Functions these
    // point to.
-@@ -324,7 +338,7 @@ class Module {
+@@ -350,7 +364,7 @@ class Module {
  
    // The module owns all the call frame info entries that have been
    // added to it.
@@ -1207,10 +1211,10 @@ index 65b5595..299bc38 100644
    // The module owns all the externs that have been added to it;
    // destroying the module frees the Externs these point to.
 diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
-index 0b64327..bf72736 100644
+index 37fee5dd..b855f186 100644
 --- a/src/common/module_unittest.cc
 +++ b/src/common/module_unittest.cc
-@@ -326,11 +326,6 @@ TEST(Construct, AddFrames) {
+@@ -344,11 +344,6 @@ TEST(Construct, AddFrames) {
    m.Write(s, ALL_SYMBOL_DATA);
    string contents = s.str();
    EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
@@ -1222,7 +1226,7 @@ index 0b64327..bf72736 100644
                 "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
                 " .cfa: Whose woods are these\n"
                 "STACK CFI 36682fad3763ffff"
-@@ -338,7 +333,12 @@ TEST(Construct, AddFrames) {
+@@ -356,7 +351,12 @@ TEST(Construct, AddFrames) {
                 " stromboli: his house is in\n"
                 "STACK CFI 47ceb0f63c269d7f"
                 " calzone: the village though"
@@ -1236,7 +1240,7 @@ index 0b64327..bf72736 100644
                 contents.c_str());
  
    // Check that GetStackFrameEntries works.
-@@ -346,10 +346,18 @@ TEST(Construct, AddFrames) {
+@@ -364,10 +364,18 @@ TEST(Construct, AddFrames) {
    m.GetStackFrameEntries(&entries);
    ASSERT_EQ(3U, entries.size());
    // Check first entry.
@@ -1259,7 +1263,7 @@ index 0b64327..bf72736 100644
    // Check second entry.
    EXPECT_EQ(0x8064f3af5e067e38ULL, entries[1]->address);
    EXPECT_EQ(0x0de2a5ee55509407ULL, entries[1]->size);
-@@ -361,18 +369,10 @@ TEST(Construct, AddFrames) {
+@@ -379,18 +387,10 @@ TEST(Construct, AddFrames) {
    EXPECT_THAT(entries[1]->initial_rules, ContainerEq(entry2_initial));
    ASSERT_EQ(0U, entries[1]->rule_changes.size());
    // Check third entry.
@@ -1282,10 +1286,11 @@ index 0b64327..bf72736 100644
  }
  
  TEST(Construct, UniqueFiles) {
-@@ -544,3 +544,62 @@ TEST(Construct, FunctionsAndThumbExternsWithSameAddress) {
-                "PUBLIC cc00 0 arm_func\n",
-                contents.c_str());
- }
+@@ -612,5 +612,63 @@ TEST(Write, OutOfRangeAddresses) {
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "STACK CFI INIT 2000 100 \n",
+                s.str().c_str());
++}
 +
 +TEST(Lookup, StackFrameEntries) {
 +  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
@@ -1319,7 +1324,7 @@ index 0b64327..bf72736 100644
 +  entry3->rule_changes[0x36682fad3763ffffULL][".cfa"] =
 +    "I think I know";
 +  m.AddStackFrameEntry(entry3);
-+
+ 
 +  Module::StackFrameEntry* s = m.FindStackFrameEntryByAddress(0x1000);
 +  EXPECT_EQ(entry3, s);
 +  s = m.FindStackFrameEntryByAddress(0x18FF);
@@ -1344,4 +1349,4 @@ index 0b64327..bf72736 100644
 +  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
 +  s = m.FindStackFrameEntryByAddress(0x3A00);
 +  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
-+}
+ }

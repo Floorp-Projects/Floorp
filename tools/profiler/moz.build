@@ -81,6 +81,8 @@ if CONFIG['MOZ_GECKO_PROFILER']:
                 '/toolkit/crashreporter/google-breakpad/src/common/linux/linux_libc_support.cc',
                 '/toolkit/crashreporter/google-breakpad/src/common/linux/memory_mapped_file.cc',
             ]
+            if not CONFIG['HAVE_GETCONTEXT']:
+                SOURCES += ['/toolkit/crashreporter/google-breakpad/src/common/linux/breakpad_getcontext.S']
         if CONFIG['CPU_ARCH'] == 'arm':
             SOURCES += [
                 'core/EHABIStackWalk.cpp',
@@ -115,9 +117,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
             '/toolkit/crashreporter/google-breakpad/src/common/android/include',
             'lul',
         ]
-
-    if not CONFIG['MOZ_CRASHREPORTER'] and CONFIG['OS_TARGET'] == 'Android':
-        SOURCES += ['/toolkit/crashreporter/google-breakpad/src/common/android/breakpad_getcontext.S']
 
     if CONFIG['ENABLE_TESTS']:
         DIRS += ['tests/gtest']
