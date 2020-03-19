@@ -4199,10 +4199,6 @@ pref("full-screen-api.warning.delay", 500);
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("pointer-lock-api.warning.timeout", 3000);
 
-pref("dom.vibrator.enabled", true);
-pref("dom.vibrator.max_vibrate_ms", 10000);
-pref("dom.vibrator.max_vibrate_list_len", 128);
-
 // Push
 
 pref("dom.push.loglevel", "Error");
