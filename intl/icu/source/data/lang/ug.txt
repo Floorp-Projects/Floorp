@@ -830,7 +830,7 @@ ug{
         VALENCIA{"ۋالېنسىيە"}
         WADEGILE{"ۋېي ئائىلىسى پىنيىن لاتىنلاشتۇرۇش"}
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"تىل: {0}"}
         script{"يېزىق: {0}"}

@@ -273,7 +273,7 @@ ku{
             roman{"hejmarên romî"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     codePatterns{
         language{"ziman: {0}"}
         script{"nivîs: {0}"}

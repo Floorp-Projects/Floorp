@@ -612,6 +612,7 @@ keyTypeData:table(nofallback){
             cham{""}
             cyrl{""}
             deva{""}
+            diak{""}
             ethi{""}
             finance{""}
             fullwide{""}

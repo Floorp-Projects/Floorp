@@ -7,5 +7,5 @@ so_DJ{
             "Faran Jabuuti",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

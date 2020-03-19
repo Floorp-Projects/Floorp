@@ -1,13 +1,19 @@
 # Copyright (C) 2018 and later: Unicode, Inc. and others.
 # License & terms of use: http://www.unicode.org/copyright.html
 
+import io as pyio
+import json
+import os
 import unittest
 
 from .. import InFile
+from ..comment_stripper import CommentStripper
 from ..filtration import Filter
 
 EXAMPLE_FILE_STEMS = [
     "af_NA",
+    "af_VARIANT",
+    "af_ZA_VARIANT",
     "af_ZA",
     "af",
     "ar",
@@ -33,6 +39,7 @@ EXAMPLE_FILE_STEMS = [
     "sr_Cyrl",
     "sr_Latn_BA",
     "sr_Latn_CS",
+    "sr_Latn_ME_VARIANT",
     "sr_Latn_ME",
     "sr_Latn",
     "sr_ME",
@@ -43,6 +50,7 @@ EXAMPLE_FILE_STEMS = [
     "vai_Vaii_LR",
     "vai_Vaii",
     "vai",
+    "yue",
     "zh_CN",
     "zh_Hans_CN",
     "zh_Hans_HK",
@@ -60,12 +68,29 @@ EXAMPLE_FILE_STEMS = [
     "zh"
 ]
 
+
+class TestIO(object):
+    def __init__(self):
+        pass
+
+    def read_locale_deps(self, tree):
+        if tree not in ("brkitr", "locales", "rbnf"):
+            return None
+        with pyio.open(os.path.join(
+                os.path.dirname(__file__),
+                "sample_data",
+                tree,
+                "LOCALE_DEPS.json"
+                ), "r", encoding="utf-8-sig") as f:
+            return json.load(CommentStripper(f))
+
+
 class FiltrationTest(unittest.TestCase):
 
     def test_exclude(self):
         self._check_filter(Filter.create_from_json({
             "filterType": "exclude"
-        }), [
+        }, TestIO()), [
         ])
 
     def test_default_whitelist(self):
@@ -74,7 +99,7 @@ class FiltrationTest(unittest.TestCase):
                 "ars",
                 "zh_Hans"
             ]
-        }), [
+        }, TestIO()), [
             "ars",
             "zh_Hans"
         ])
@@ -88,7 +113,7 @@ class FiltrationTest(unittest.TestCase):
                 "ars",
                 "zh_Hans"
             ]
-        }), expected_matches)
+        }, TestIO()), expected_matches)
 
     def test_language_whitelist(self):
         self._check_filter(Filter.create_from_json({
@@ -97,9 +122,11 @@ class FiltrationTest(unittest.TestCase):
                 "af",
                 "bs"
             ]
-        }), [
+        }, TestIO()), [
             "root",
             "af_NA",
+            "af_VARIANT",
+            "af_ZA_VARIANT",
             "af_ZA",
             "af",
             "bs_BA",
@@ -113,6 +140,8 @@ class FiltrationTest(unittest.TestCase):
     def test_language_blacklist(self):
         expected_matches = set(EXAMPLE_FILE_STEMS)
         expected_matches.remove("af_NA")
+        expected_matches.remove("af_VARIANT")
+        expected_matches.remove("af_ZA_VARIANT")
         expected_matches.remove("af_ZA")
         expected_matches.remove("af")
         self._check_filter(Filter.create_from_json({
@@ -120,7 +149,7 @@ class FiltrationTest(unittest.TestCase):
             "blacklist": [
                 "af"
             ]
-        }), expected_matches)
+        }, TestIO()), expected_matches)
 
     def test_regex_whitelist(self):
         self._check_filter(Filter.create_from_json({
@@ -129,7 +158,7 @@ class FiltrationTest(unittest.TestCase):
                 r"^ar.*$",
                 r"^zh$"
             ]
-        }), [
+        }, TestIO()), [
             "ar",
             "ar_SA",
             "ars",
@@ -148,7 +177,7 @@ class FiltrationTest(unittest.TestCase):
                 r"^ar.*$",
                 r"^zh$"
             ]
-        }), expected_matches)
+        }, TestIO()), expected_matches)
 
     def test_locale_basic(self):
         self._check_filter(Filter.create_from_json({
@@ -164,7 +193,7 @@ class FiltrationTest(unittest.TestCase):
                 "vai_Latn", # Language with non-default script
                 "zh_Hans" # Language with default script
             ]
-        }), [
+        }, TestIO()), [
             "root",
             # bs: should include the full dependency tree of bs_BA
             "bs_BA",
@@ -210,7 +239,7 @@ class FiltrationTest(unittest.TestCase):
                 "vai_Latn",
                 "zh_Hans"
             ]
-        }), [
+        }, TestIO()), [
             "root",
             "bs_BA",
             "bs_Latn_BA",
@@ -238,7 +267,7 @@ class FiltrationTest(unittest.TestCase):
                 "vai_Latn",
                 "zh_Hans"
             ]
-        }), [
+        }, TestIO()), [
             "root",
             # bs: includeScripts only works for language-only (without region)
             "bs_BA",
@@ -259,6 +288,7 @@ class FiltrationTest(unittest.TestCase):
             "sr_Cyrl",
             "sr_Latn_BA",
             "sr_Latn_CS",
+            "sr_Latn_ME_VARIANT",
             "sr_Latn_ME",
             "sr_Latn",
             "sr_ME",
@@ -290,7 +320,7 @@ class FiltrationTest(unittest.TestCase):
                 "vai_Latn",
                 "zh_Hans"
             ]
-        }), [
+        }, TestIO()), [
             "root",
             # bs: includeScripts only works for language-only (without region)
             "bs_BA",
@@ -331,7 +361,7 @@ class FiltrationTest(unittest.TestCase):
                     ]
                 }
             ]
-        }), [
+        }, TestIO()), [
             "ars",
             "zh_Hans",
             "bs_BA",
@@ -343,9 +373,47 @@ class FiltrationTest(unittest.TestCase):
             "zh"
         ])
 
-    def _check_filter(self, filter, expected_matches):
+    def test_hk_deps_normal(self):
+        self._check_filter(Filter.create_from_json({
+            "filterType": "locale",
+            "whitelist": [
+                "zh_HK"
+            ]
+        }, TestIO()), [
+            "root",
+            "zh_Hant",
+            "zh_Hant_HK",
+            "zh_HK",
+        ])
+
+    def test_hk_deps_rbnf(self):
+        self._check_filter(Filter.create_from_json({
+            "filterType": "locale",
+            "whitelist": [
+                "zh_HK"
+            ]
+        }, TestIO()), [
+            "root",
+            "yue",
+            "zh_Hant_HK",
+            "zh_HK",
+        ], "rbnf")
+
+    def test_no_alias_parent_structure(self):
+        self._check_filter(Filter.create_from_json({
+            "filterType": "locale",
+            "whitelist": [
+                "zh_HK"
+            ]
+        }, TestIO()), [
+            "root",
+            "zh_HK",
+            "zh",
+        ], "brkitr")
+
+    def _check_filter(self, filter, expected_matches, tree="locales"):
         for file_stem in EXAMPLE_FILE_STEMS:
-            is_match = filter.match(InFile("locales/%s.txt" % file_stem))
+            is_match = filter.match(InFile("%s/%s.txt" % (tree, file_stem)))
             expected_match = file_stem in expected_matches
             self.assertEqual(is_match, expected_match, file_stem)
 

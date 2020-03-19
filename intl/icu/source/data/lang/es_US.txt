@@ -72,7 +72,7 @@ es_US{
             laoo{"números en lao"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         historic{"{0} — Históricos"}
         miscellaneous{"{0} — Varios"}

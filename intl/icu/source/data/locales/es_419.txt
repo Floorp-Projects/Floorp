@@ -95,7 +95,7 @@ es_419{
             }
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         coptic{
             monthNames{

@@ -289,7 +289,7 @@ be{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         buddhist{
             DateTimePatterns{

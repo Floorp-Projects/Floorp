@@ -36,5 +36,5 @@ sw_CD{
         udm{"Kiudumurti"}
         yi{"Kiyidi"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }
