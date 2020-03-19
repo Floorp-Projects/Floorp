@@ -205,11 +205,6 @@ enum class TableSelectionMode : uint32_t {
 }  // namespace mozilla
 class nsIScrollableFrame;
 
-/**
- * Methods which are marked with *unsafe* should be handled with special care.
- * They may cause nsFrameSelection to be deleted, if strong pointer isn't used,
- * or they may cause other objects to be deleted.
- */
 class nsFrameSelection final {
  public:
   typedef mozilla::CaretAssociationHint CaretAssociateHint;
@@ -260,8 +255,9 @@ class nsFrameSelection final {
    *
    * @param aPoint is relative to aFrame
    */
-  /*unsafe*/
-  void HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HandleDrag(nsIFrame* aFrame,
+                                              const nsPoint& aPoint);
 
   /**
    * HandleTableSelection will set selection to a table, cell, etc
@@ -287,10 +283,11 @@ class nsFrameSelection final {
    * @param aMouseEvent passed in so we can get where event occurred
    * and what keys are pressed
    */
-  /*unsafe*/
-  nsresult HandleTableSelection(nsINode* aParentContent, int32_t aContentOffset,
-                                mozilla::TableSelectionMode aTarget,
-                                mozilla::WidgetMouseEvent* aMouseEvent);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  HandleTableSelection(nsINode* aParentContent, int32_t aContentOffset,
+                       mozilla::TableSelectionMode aTarget,
+                       mozilla::WidgetMouseEvent* aMouseEvent);
 
   /**
    * Add cell to the selection with `SelectionType::eNormal`.
@@ -417,10 +414,10 @@ class nsFrameSelection final {
    *   * SCROLL_FIRST_ANCESTOR_ONLY: if set, only the first ancestor will be
    *     scrolled into view.
    */
-  /*unsafe*/
-  nsresult ScrollSelectionIntoView(mozilla::SelectionType aSelectionType,
-                                   SelectionRegion aRegion,
-                                   int16_t aFlags) const;
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  ScrollSelectionIntoView(mozilla::SelectionType aSelectionType,
+                          SelectionRegion aRegion, int16_t aFlags) const;
 
   /**
    * RepaintSelection repaints the selected frames that are inside the
@@ -500,8 +497,10 @@ class nsFrameSelection final {
    * @param aAmount     amount of movement (char/line; word/page; eol/doc)
    * @param aExtend     continue selection
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PhysicalMove(int16_t aDirection,
+                                                    int16_t aAmount,
+                                                    bool aExtend);
 
   /**
    * CharacterMove will generally be called from the nsiselectioncontroller
@@ -510,22 +509,23 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult CharacterMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterMove(bool aForward,
+                                                     bool aExtend);
 
   /**
    * CharacterExtendForDelete extends the selection forward (logically) to
    * the next character cell, so that the selected cell can be deleted.
    */
-  /*unsafe*/
-  nsresult CharacterExtendForDelete();
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterExtendForDelete();
 
   /**
    * CharacterExtendForBackspace extends the selection backward (logically) to
    * the previous character cell, so that the selected cell can be deleted.
    */
-  /*unsafe*/
-  nsresult CharacterExtendForBackspace();
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterExtendForBackspace();
 
   /**
    * WordMove will generally be called from the nsiselectioncontroller
@@ -534,16 +534,16 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult WordMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WordMove(bool aForward, bool aExtend);
 
   /**
    * WordExtendForDelete extends the selection backward or forward (logically)
    * to the next word boundary, so that the selected word can be deleted.
    * @param aForward select forward in document.
    */
-  /*unsafe*/
-  nsresult WordExtendForDelete(bool aForward);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WordExtendForDelete(bool aForward);
 
   /**
    * LineMove will generally be called from the nsiselectioncontroller
@@ -552,8 +552,8 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult LineMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult LineMove(bool aForward, bool aExtend);
 
   /**
    * IntraLineMove will generally be called from the nsiselectioncontroller
@@ -562,8 +562,9 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult IntraLineMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult IntraLineMove(bool aForward,
+                                                     bool aExtend);
 
   /**
    * Select All will generally be called from the nsiselectioncontroller
@@ -764,10 +765,10 @@ class nsFrameSelection final {
   // Whether MoveCaret should use logical or visual movement,
   // or follow the bidi.edit.caret_movement_style preference.
   enum CaretMovementStyle { eLogical, eVisual, eUsePrefStyle };
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult MoveCaret(nsDirection aDirection, bool aContinueSelection,
-                     nsSelectionAmount aAmount,
-                     CaretMovementStyle aMovementStyle);
+  MOZ_CAN_RUN_SCRIPT nsresult MoveCaret(nsDirection aDirection,
+                                        bool aContinueSelection,
+                                        nsSelectionAmount aAmount,
+                                        CaretMovementStyle aMovementStyle);
 
   nsresult FetchDesiredPos(
       nsPoint& aDesiredPos);  // the position requested by the Key Handling for
@@ -816,13 +817,11 @@ class nsFrameSelection final {
     // (according to GetFirstCellNodeInRange).
     nsRange* GetNextCellRange(const mozilla::dom::Selection& aNormalSelection);
 
-    // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    nsresult HandleSelection(nsINode* aParentContent, int32_t aContentOffset,
-                             mozilla::TableSelectionMode aTarget,
-                             mozilla::WidgetMouseEvent* aMouseEvent,
-                             bool aDragState,
-                             mozilla::dom::Selection& aNormalSelection);
+    MOZ_CAN_RUN_SCRIPT nsresult
+    HandleSelection(nsINode* aParentContent, int32_t aContentOffset,
+                    mozilla::TableSelectionMode aTarget,
+                    mozilla::WidgetMouseEvent* aMouseEvent, bool aDragState,
+                    mozilla::dom::Selection& aNormalSelection);
 
     // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
     MOZ_CAN_RUN_SCRIPT_BOUNDARY

@@ -357,8 +357,11 @@ class Selection final : public nsSupportsWeakReference,
    * "documentboundary".  Throws NS_ERROR_INVALID_ARG if alter, direction,
    * or granularity has an unrecognized value.
    */
-  void Modify(const nsAString& aAlter, const nsAString& aDirection,
-              const nsAString& aGranularity, mozilla::ErrorResult& aRv);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Modify(const nsAString& aAlter,
+                                          const nsAString& aDirection,
+                                          const nsAString& aGranularity,
+                                          mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,

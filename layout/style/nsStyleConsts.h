@@ -784,11 +784,12 @@ enum class StyleBlend : uint8_t {
 };
 
 // composite
-#define NS_STYLE_MASK_COMPOSITE_ADD 0
-#define NS_STYLE_MASK_COMPOSITE_SUBTRACT 1
-#define NS_STYLE_MASK_COMPOSITE_INTERSECT 2
-#define NS_STYLE_MASK_COMPOSITE_EXCLUDE 3
-
+enum class StyleMaskComposite : uint8_t {
+  Add = 0,
+  Subtract,
+  Intersect,
+  Exclude
+};
 // See nsStyleText::mControlCharacterVisibility
 #define NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN 0
 #define NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE 1

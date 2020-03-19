@@ -648,14 +648,15 @@ class UrlbarInput {
 
         if (
           result.heuristic &&
+          this.window.gKeywordURIFixup &&
           UrlbarUtils.looksLikeSingleWordHost(originalUntrimmedValue)
         ) {
-          // The docshell when fixes a single word to a search, also checks the
-          // dns and prompts the user whether they wanted to rather visit that
-          // as a host. On a positive answer, it adds to the domains whitelist
-          // that we use to make decisions. Because here we are directly asking
-          // for a search, bypassing the docshell, we must do it here.
-          // See URIFixupChild.jsm and keyword-uri-fixup.
+          // When fixing a single word to a search, the docShell also checks the
+          // DNS and asks the user whether they would rather visit that as a
+          // host. On a positive answer, it adds to the domain whitelist that
+          // we use to make decisions. Because we are directly asking for a
+          // search here, bypassing the docShell, we need invoke the same check
+          // ourselves. See also URIFixupChild.jsm and keyword-uri-fixup.
           let flags =
             Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
             Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;

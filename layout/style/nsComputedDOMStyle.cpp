@@ -1326,8 +1326,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
   }
 
   nsAutoString result;
-  mComputedStyle->GetComputedPropertyValue(
-      eCSSProperty__moz_osx_font_smoothing, result);
+  mComputedStyle->GetComputedPropertyValue(eCSSProperty__moz_osx_font_smoothing,
+                                           result);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetString(result);
   return val.forget();
@@ -2476,7 +2476,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
   if (svg->mMask.mImageCount > 1 ||
       firstLayer.mClip != StyleGeometryBox::BorderBox ||
       firstLayer.mOrigin != StyleGeometryBox::BorderBox ||
-      firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
+      firstLayer.mComposite != StyleMaskComposite::Add ||
       firstLayer.mMaskMode != StyleMaskMode::MatchSource ||
       firstLayer.mPosition != Position::FromPercentage(0.0f) ||
       !firstLayer.mRepeat.IsInitialValue() ||

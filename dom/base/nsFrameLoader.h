@@ -211,6 +211,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void RequestEpochUpdate(uint32_t aEpoch);
 
+  void RequestSHistoryUpdate(bool aImmediately = false);
+
   void Print(uint64_t aOuterWindowID, nsIPrintSettings* aPrintSettings,
              nsIWebProgressListener* aProgressListener,
              mozilla::ErrorResult& aRv);

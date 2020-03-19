@@ -83,6 +83,23 @@ interface nsISelectionController : nsISelectionDisplay
     [noscript,nostdcall,notxpcom,binaryname(GetSelection)]
     Selection getDOMSelection(in short aType);
 
+   /**
+    * Called when the selection controller should take the focus.
+    *
+    * This will take care to hide the previously-focused selection, show this
+    * selection, and repaint both.
+    */
+   [noscript,nostdcall,notxpcom]
+   void selectionWillTakeFocus();
+
+   /**
+    * Called when the selection controller has lost the focus.
+    *
+    * This will take care to hide and repaint the selection.
+    */
+   [noscript,nostdcall,notxpcom]
+   void selectionWillLoseFocus();
+
    const short SCROLL_SYNCHRONOUS = 1<<1;
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
    const short SCROLL_CENTER_VERTICALLY = 1<<4;

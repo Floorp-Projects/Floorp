@@ -88,37 +88,38 @@ const TESTS = [
   },
 ];
 
-function getConfigUrl(testInput) {
-  return (
-    "data:application/json," +
-    JSON.stringify({
-      data: testInput.map(info => ({
-        engineName: info[0],
-        orderHint: info[1],
-        default: info[2],
-        defaultPrivate: info[3],
-        appliesTo: [
-          {
-            included: { everywhere: true },
-          },
-        ],
-      })),
-    })
-  );
+function getConfigData(testInput) {
+  return testInput.map(info => ({
+    engineName: info[0],
+    orderHint: info[1],
+    default: info[2],
+    defaultPrivate: info[3],
+    appliesTo: [
+      {
+        included: { everywhere: true },
+      },
+    ],
+  }));
 }
 
 const engineSelector = new SearchEngineSelector();
 
 add_task(async function() {
+  const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+  const getStub = sinon.stub(settings, "get");
+
   let i = 0;
   for (const test of TESTS) {
-    await engineSelector.init(getConfigUrl(test.input));
+    // Remove the existing configuration and update the stub to return the data
+    // for this test.
+    delete engineSelector._configuration;
+    getStub.returns(getConfigData(test.input));
 
-    const { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
-      "us",
-      "en-US",
-      "default"
-    );
+    const {
+      engines,
+      privateDefault,
+    } = await engineSelector.fetchEngineConfiguration("us", "en-US", "default");
+
     let names = engines.map(obj => obj.engineName);
     Assert.deepEqual(
       names,

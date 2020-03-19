@@ -59,7 +59,7 @@ const tests = [
   },
   {
     desc: "Reload the page.",
-    setup: async ({ panel }) => reload(panel.target),
+    setup: async ({ panel }) => reload(panel.accessibilityProxy.currentTarget),
     expected: {
       tree: [
         {

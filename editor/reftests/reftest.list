@@ -95,9 +95,9 @@ skip-if(Android) needs-focus == spellcheck-non-latin-korean.html spellcheck-non-
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
 fuzzy-if(browserIsRemote,0-255,0-3) asserts-if(browserIsRemote,0-3) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # bug 959132 for assertions
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-2824) == 642800.html 642800-ref.html
-== selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
-!= selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
-!= selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
+needs-focus == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
+needs-focus != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
+needs-focus != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
 == 672709.html 672709-ref.html
 == 338427-1.html 338427-1-ref.html
 needs-focus == 674212-spellcheck.html 674212-spellcheck-ref.html
