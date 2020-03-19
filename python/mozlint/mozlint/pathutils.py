@@ -205,7 +205,7 @@ def filterpaths(root, paths, include, exclude=None, extensions=None):
             for p, f in path.finder.find(pattern):
                 discard.add(path.join(p))
 
-    return [f.path for f in keep], collapse([f.path for f in discard])
+    return [f.path for f in keep if f.exists], collapse([f.path for f in discard if f.exists])
 
 
 def findobject(path):
