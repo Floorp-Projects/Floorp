@@ -62,7 +62,7 @@ testFailInstantiate(code, {js:{foo:42}}, TypeError);
 
 var text = `(module\n`;
 text += ` (func (result i32) i32.const 0)\n`;
-for (var i = 1; i <= 100; i++)
+for (var i = 1; i <= 200; i++)
     text += ` (func (result i32) (i32.add (i32.const ${i}) (call ${i-1})))\n`;
 text += ` (func (export "run") (result i32) call 100)\n`;
 text += `)`;

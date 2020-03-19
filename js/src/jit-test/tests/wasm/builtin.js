@@ -13,8 +13,8 @@ function unary(name) {
     let f64 = Math[name];
 
     let i = wasmEvalText(`(module
-        (import $f32 "math" "func" (param f32) (result f32))
-        (import $f64 "math" "func" (param f64) (result f64))
+        (import "math" "func" (func $f32 (param f32) (result f32)))
+        (import "math" "func" (func $f64 (param f64) (result f64)))
 
         (table $t 10 funcref)
         (type $f_f (func (param f32) (result f32)))
@@ -62,8 +62,8 @@ function binary(name) {
     let f64 = Math[name];
 
     let i = wasmEvalText(`(module
-        (import $f32 "math" "func" (param f32) (param f32) (result f32))
-        (import $f64 "math" "func" (param f64) (param f64) (result f64))
+        (import "math" "func" (func $f32 (param f32) (param f32) (result f32)))
+        (import "math" "func" (func $f64 (param f64) (param f64) (result f64)))
 
         (table $t 10 funcref)
         (type $ff_f (func (param f32) (param f32) (result f32)))

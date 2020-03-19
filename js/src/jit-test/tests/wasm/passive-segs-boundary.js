@@ -243,7 +243,7 @@ mem_test("data.drop 1 (i32.const 42)", "",
 // init: too many args
 mem_test("(memory.init 1 (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 1))",
          "",
-         SyntaxError, /parsing wasm text at/);
+         WebAssembly.CompileError, /unused values/);
 
 // init: too few args
 mem_test("(memory.init 1 (i32.const 1) (i32.const 1))", "",
@@ -369,7 +369,7 @@ tab_test("elem.drop 1 (i32.const 42)", "",
 // init: too many args
 tab_test("(table.init 1 (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 1))",
          "",
-         SyntaxError, /parsing wasm text at/);
+         WebAssembly.CompileError, /unused values/);
 
 // init: too few args
 tab_test("(table.init 1 (i32.const 1) (i32.const 1))", "",

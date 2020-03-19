@@ -216,26 +216,26 @@ testConversion('i64', 'trunc_u', 'f32', 18446742974197923840.0, "0xffffff0000000
 testTrap('i64', 'trunc_s', 'f64', 9223372036854776000.0);
 testTrap('i64', 'trunc_s', 'f64', -9223372036854778000.0);
 testTrap('i64', 'trunc_s', 'f64', "nan");
-testTrap('i64', 'trunc_s', 'f64', "infinity");
-testTrap('i64', 'trunc_s', 'f64', "-infinity");
+testTrap('i64', 'trunc_s', 'f64', "inf");
+testTrap('i64', 'trunc_s', 'f64', "-inf");
 
 testTrap('i64', 'trunc_u', 'f64', -1);
 testTrap('i64', 'trunc_u', 'f64', 18446744073709551616.0);
 testTrap('i64', 'trunc_u', 'f64', "nan");
-testTrap('i64', 'trunc_u', 'f64', "infinity");
-testTrap('i64', 'trunc_u', 'f64', "-infinity");
+testTrap('i64', 'trunc_u', 'f64', "inf");
+testTrap('i64', 'trunc_u', 'f64', "-inf");
 
 testTrap('i64', 'trunc_s', 'f32', 9223372036854776000.0);
 testTrap('i64', 'trunc_s', 'f32', -9223372586610630000.0);
 testTrap('i64', 'trunc_s', 'f32', "nan");
-testTrap('i64', 'trunc_s', 'f32', "infinity");
-testTrap('i64', 'trunc_s', 'f32', "-infinity");
+testTrap('i64', 'trunc_s', 'f32', "inf");
+testTrap('i64', 'trunc_s', 'f32', "-inf");
 
 testTrap('i64', 'trunc_u', 'f32', 18446744073709551616.0);
 testTrap('i64', 'trunc_u', 'f32', -1);
 testTrap('i64', 'trunc_u', 'f32', "nan");
-testTrap('i64', 'trunc_u', 'f32', "infinity");
-testTrap('i64', 'trunc_u', 'f32', "-infinity");
+testTrap('i64', 'trunc_u', 'f32', "inf");
+testTrap('i64', 'trunc_u', 'f32', "-inf");
 
 testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, "0x40440ccccccccca0");
 testConversion('f64', 'reinterpret', 'i64', "0x40440ccccccccca0", 40.09999999999968);
@@ -273,26 +273,26 @@ testConversion('i32', 'trunc_u:sat', 'f64', p(2, 32), -1);
 testConversion('i64', 'trunc_s:sat', 'f64', 9223372036854776000.0, s64max);
 testConversion('i64', 'trunc_s:sat', 'f64', -9223372036854778000.0, s64min);
 testConversion('i64', 'trunc_s:sat', 'f64', 'nan', '0');
-testConversion('i64', 'trunc_s:sat', 'f64', 'infinity', s64max);
-testConversion('i64', 'trunc_s:sat', 'f64', '-infinity', s64min);
+testConversion('i64', 'trunc_s:sat', 'f64', 'inf', s64max);
+testConversion('i64', 'trunc_s:sat', 'f64', '-inf', s64min);
 
 testConversion('i64', 'trunc_u:sat', 'f64', -1, '0');
 testConversion('i64', 'trunc_u:sat', 'f64', 18446744073709551616.0, u64max);
 testConversion('i64', 'trunc_u:sat', 'f64', 'nan', '0');
-testConversion('i64', 'trunc_u:sat', 'f64', 'infinity', u64max);
-testConversion('i64', 'trunc_u:sat', 'f64', '-infinity', '0');
+testConversion('i64', 'trunc_u:sat', 'f64', 'inf', u64max);
+testConversion('i64', 'trunc_u:sat', 'f64', '-inf', '0');
 
 testConversion('i64', 'trunc_s:sat', 'f32', 9223372036854776000.0, s64max);
 testConversion('i64', 'trunc_s:sat', 'f32', -9223372586610630000.0, s64min);
 testConversion('i64', 'trunc_s:sat', 'f32', 'nan', '0');
-testConversion('i64', 'trunc_s:sat', 'f32', 'infinity', s64max);
-testConversion('i64', 'trunc_s:sat', 'f32', '-infinity', s64min);
+testConversion('i64', 'trunc_s:sat', 'f32', 'inf', s64max);
+testConversion('i64', 'trunc_s:sat', 'f32', '-inf', s64min);
 
 testConversion('i64', 'trunc_u:sat', 'f32', 18446744073709551616.0, u64max);
 testConversion('i64', 'trunc_u:sat', 'f32', -1, '0');
 testConversion('i64', 'trunc_u:sat', 'f32', 'nan', '0');
-testConversion('i64', 'trunc_u:sat', 'f32', 'infinity', u64max);
-testConversion('i64', 'trunc_u:sat', 'f32', '-infinity', '0');
+testConversion('i64', 'trunc_u:sat', 'f32', 'inf', u64max);
+testConversion('i64', 'trunc_u:sat', 'f32', '-inf', '0');
 
 testSignExtension('i32', 'extend8_s', 'i32', 0x7F, 0x7F);
 testSignExtension('i32', 'extend8_s', 'i32', 0x80, -0x80);
@@ -312,8 +312,8 @@ testConversion('i32', 'trunc_s', 'f32', p(2, 31) - 128, p(2, 31) - 128); // last
 testConversion('i32', 'trunc_s', 'f32', -p(2, 31), -p(2,31)); // last f32 value exactly representable > -2**31 - 1.
 
 testTrap('i32', 'trunc_s', 'f32', 'nan');
-testTrap('i32', 'trunc_s', 'f32', 'infinity');
-testTrap('i32', 'trunc_s', 'f32', '-infinity');
+testTrap('i32', 'trunc_s', 'f32', 'inf');
+testTrap('i32', 'trunc_s', 'f32', '-inf');
 testTrap('i32', 'trunc_s', 'f32', p(2, 31));
 testTrap('i32', 'trunc_s', 'f32', -p(2,31) - 256);
 
@@ -323,8 +323,8 @@ testConversion('i32', 'trunc_s', 'f64', -p(2,31) - 0.999, -p(2,31)); // example 
 
 // f64:
 testTrap('i32', 'trunc_s', 'f64', 'nan');
-testTrap('i32', 'trunc_s', 'f64', 'infinity');
-testTrap('i32', 'trunc_s', 'f64', '-infinity');
+testTrap('i32', 'trunc_s', 'f64', 'inf');
+testTrap('i32', 'trunc_s', 'f64', '-inf');
 testTrap('i32', 'trunc_s', 'f64', p(2,31));
 testTrap('i32', 'trunc_s', 'f64', -p(2,31) - 1);
 
@@ -336,8 +336,8 @@ testConversion('i32', 'trunc_u', 'f32', p(2,32) - 256, (p(2,32) - 256)|0); // la
 testConversion('i32', 'trunc_u', 'f32', -0.99, 0); // example value near the bottom.
 
 testTrap('i32', 'trunc_u', 'f32', 'nan');
-testTrap('i32', 'trunc_u', 'f32', 'infinity');
-testTrap('i32', 'trunc_u', 'f32', '-infinity');
+testTrap('i32', 'trunc_u', 'f32', 'inf');
+testTrap('i32', 'trunc_u', 'f32', '-inf');
 testTrap('i32', 'trunc_u', 'f32', -1);
 testTrap('i32', 'trunc_u', 'f32', p(2,32));
 
@@ -347,8 +347,8 @@ testConversion('i32', 'trunc_u', 'f64', p(2,32) - 0.001, (p(2,32) - 1)|0); // ex
 testConversion('i32', 'trunc_u', 'f64', -0.99999, 0); // example value near the bottom.
 
 testTrap('i32', 'trunc_u', 'f64', 'nan');
-testTrap('i32', 'trunc_u', 'f64', 'infinity');
-testTrap('i32', 'trunc_u', 'f64', '-infinity');
+testTrap('i32', 'trunc_u', 'f64', 'inf');
+testTrap('i32', 'trunc_u', 'f64', '-inf');
 testTrap('i32', 'trunc_u', 'f64', -1);
 testTrap('i32', 'trunc_u', 'f64', p(2,32));
 

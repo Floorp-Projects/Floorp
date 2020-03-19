@@ -43,11 +43,11 @@ function gen_tab_impmod_t(insn)
      (elem (i32.const 12) 7 5 2 3 6)
      (elem func 5 9 2 7 6)
      ;; -------- Imports --------
-     (import "a" "if0" (result i32))    ;; index 0
-     (import "a" "if1" (result i32))
-     (import "a" "if2" (result i32))
-     (import "a" "if3" (result i32))
-     (import "a" "if4" (result i32))    ;; index 4
+     (import "a" "if0" (func (result i32)))    ;; index 0
+     (import "a" "if1" (func (result i32)))
+     (import "a" "if2" (func (result i32)))
+     (import "a" "if3" (func (result i32)))
+     (import "a" "if4" (func (result i32)))    ;; index 4
      ;; -------- Functions --------
      (func (result i32) (i32.const 5))  ;; index 5
      (func (result i32) (i32.const 6))
@@ -260,23 +260,24 @@ mem_test("(memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
          "(memory.copy (i32.const 19) (i32.const 20) (i32.const 5))",
          [e,e,3,1,4, 1,e,2,7,1, 8,e,7,e,7, 5,2,7,e,9, e,7,e,8,8, e,e,e,e,e]);
 
-// DataCount section is present but value is too low for the number of data segments
-assertErrorMessage(() => wasmEvalText(
-    `(module
-       (datacount 1)
-       (data "")
-       (data ""))`),
-                   WebAssembly.CompileError,
-                   /number of data segments does not match declared count/);
+function checkDataCount(count, err) {
+    let binary = moduleWithSections(
+        [v2vSigSection,
+         dataCountSection(count),
+         dataSection([
+           {offset: 0, elems: []},
+           {offset: 0, elems: []},
+         ])
+        ]);
+    assertErrorMessage(() => new WebAssembly.Module(binary),
+                       WebAssembly.CompileError,
+                       err);
+}
 
+// DataCount section is present but value is too low for the number of data segments
+checkDataCount(1, /number of data segments does not match declared count/);
 // DataCount section is present but value is too high for the number of data segments
-assertErrorMessage(() => wasmEvalText(
-    `(module
-       (datacount 3)
-       (data "")
-       (data ""))`),
-                   WebAssembly.CompileError,
-                   /number of data segments does not match declared count/);
+checkDataCount(3, /number of data segments does not match declared count/);
 
 // DataCount section is not present but memory.init or data.drop uses it
 function checkNoDataCount(body, err) {
